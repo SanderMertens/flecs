@@ -12,25 +12,21 @@ ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 ECS_DECLARE(EcsScriptTemplate);
 
-static
-ECS_CTOR(EcsScriptTemplateRoot, ptr, {
+static ECS_CTOR(EcsScriptTemplateRoot, ptr, {
     ecs_vec_init_t(NULL, &ptr->observers, ecs_script_ref_t, 0);
 })
 
-static
-ECS_MOVE(EcsScriptTemplateRoot, dst, src, {
+static ECS_MOVE(EcsScriptTemplateRoot, dst, src, {
     ecs_vec_fini_t(NULL, &dst->observers, ecs_script_ref_t);
     dst->observers = src->observers;
     ecs_vec_init_t(NULL, &src->observers, ecs_script_ref_t, 0);
 })
 
-static
-ECS_DTOR(EcsScriptTemplateRoot, ptr, {
+static ECS_DTOR(EcsScriptTemplateRoot, ptr, {
     ecs_vec_fini_t(NULL, &ptr->observers, ecs_script_ref_t);
 })
 
-static
-void flecs_script_template_root_on_remove(
+static void flecs_script_template_root_on_remove(
     ecs_iter_t *it)
 {
     ecs_world_t *world = it->world;
@@ -50,8 +46,7 @@ void flecs_script_template_root_on_remove(
     }
 }
 
-static
-void flecs_template_set_event_free(EcsScriptTemplateSetEvent *ptr) {
+static void flecs_template_set_event_free(EcsScriptTemplateSetEvent *ptr) {
     if (ptr->entities != &ptr->entity_storage) {
         ecs_os_free(ptr->entities);
     }
@@ -60,8 +55,7 @@ void flecs_template_set_event_free(EcsScriptTemplateSetEvent *ptr) {
     }
 }
 
-static
-ECS_MOVE(EcsScriptTemplateSetEvent, dst, src, {
+static ECS_MOVE(EcsScriptTemplateSetEvent, dst, src, {
     flecs_template_set_event_free(dst);
 
     *dst = *src;
@@ -78,13 +72,11 @@ ECS_MOVE(EcsScriptTemplateSetEvent, dst, src, {
     src->data = NULL;
 })
 
-static
-ECS_DTOR(EcsScriptTemplateSetEvent, ptr, {
+static ECS_DTOR(EcsScriptTemplateSetEvent, ptr, {
     flecs_template_set_event_free(ptr);
 })
 
-static
-void flecs_script_template_on_add(
+static void flecs_script_template_on_add(
     ecs_iter_t *it)
 {
     ecs_world_t *world = it->world;
@@ -103,8 +95,7 @@ void flecs_script_template_on_add(
 }
 
 /* Template component ctor to initialize prop or mut default values */
-static
-void flecs_script_template_ctor(
+static void flecs_script_template_ctor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *ti,
@@ -183,8 +174,7 @@ void flecs_script_template_muts_ctor(
 }
 
 /* Defer template instantiation if we're in deferred mode. */
-static
-void flecs_script_template_defer_on_set(
+static void flecs_script_template_defer_on_set(
     ecs_iter_t *it,
     ecs_entity_t template_entity,
     ecs_entity_t component,
@@ -215,16 +205,13 @@ void flecs_script_template_defer_on_set(
     });
 }
 
-static
-void flecs_script_template_ref_on_set(
+static void flecs_script_template_ref_on_set(
     ecs_iter_t *it);
 
-static
-void flecs_script_template_instance_ref_on_set(
+static void flecs_script_template_instance_ref_on_set(
     ecs_iter_t *it);
 
-static
-void flecs_script_template_update_instance_observers(
+static void flecs_script_template_update_instance_observers(
     ecs_world_t *world,
     ecs_script_template_t *template,
     ecs_entity_t template_entity,
@@ -281,8 +268,7 @@ void flecs_script_template_update_instance_observers(
     ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
 }
 
-static
-void flecs_script_template_instantiate_vars(
+static void flecs_script_template_instantiate_vars(
     ecs_script_vars_t *vars,
     const ecs_script_template_t *template,
     const EcsStruct *props_st,
@@ -309,8 +295,7 @@ void flecs_script_template_instantiate_vars(
     }
 }
 
-static
-int flecs_script_template_instantiate(
+static int flecs_script_template_instantiate(
     ecs_world_t *world,
     ecs_entity_t template_entity,
     ecs_entity_t component,
@@ -495,8 +480,7 @@ int flecs_script_template_instantiate(
     return result;
 }
 
-static
-void flecs_script_template_ref_on_set(
+static void flecs_script_template_ref_on_set(
     ecs_iter_t *it)
 {
     ecs_script_ref_ctx_t *ctx = it->ctx;
@@ -556,8 +540,7 @@ void flecs_script_template_ref_on_set(
     }
 }
 
-static
-void flecs_script_template_instance_ref_on_set(
+static void flecs_script_template_instance_ref_on_set(
     ecs_iter_t *it)
 {
     ecs_script_ref_ctx_t *ctx = it->ctx;
@@ -598,8 +581,7 @@ void flecs_script_template_instance_ref_on_set(
     }
 }
 
-static
-void flecs_on_template_set_event(
+static void flecs_on_template_set_event(
     ecs_iter_t *it)
 {
     ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
@@ -618,8 +600,7 @@ void flecs_on_template_set_event(
 }
 
 /* Template on_set handler to update contents for new property values */
-static
-void flecs_script_template_on_set(
+static void flecs_script_template_on_set(
     ecs_iter_t *it,
     ecs_entity_t template_entity)
 {
@@ -677,8 +658,7 @@ void flecs_script_template_on_muts_set(
     flecs_script_template_on_set(it, template_entity);
 }
 
-static
-void flecs_script_template_delete_observers(
+static void flecs_script_template_delete_observers(
     ecs_world_t *world,
     ecs_script_template_t *template)
 {
@@ -692,8 +672,7 @@ void flecs_script_template_delete_observers(
     ecs_vec_clear(&template->observers);
 }
 
-static
-void flecs_script_template_on_remove(
+static void flecs_script_template_on_remove(
     ecs_iter_t *it)
 {
     ecs_world_t *world = it->world;
@@ -725,8 +704,7 @@ void flecs_script_template_on_remove(
     }
 }
 
-static
-int flecs_script_template_eval_var(
+static int flecs_script_template_eval_var(
     ecs_script_visit_t *_v,
     ecs_script_var_node_t *node,
     bool mut)
@@ -838,8 +816,7 @@ int flecs_script_template_eval_var(
     return 0;
 }
 
-static
-int flecs_script_template_eval(
+static int flecs_script_template_eval(
     ecs_script_visit_t *v,
     ecs_script_node_t *node)
 {
@@ -869,8 +846,7 @@ int flecs_script_template_eval(
     return flecs_script_check_node(v, node);
 }
 
-static
-int flecs_script_template_preprocess(
+static int flecs_script_template_preprocess(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_t *template)
 {
@@ -900,8 +876,7 @@ int flecs_script_template_preprocess(
     return result;
 }
 
-static
-int flecs_script_template_hoist_using(
+static int flecs_script_template_hoist_using(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_t *template)
 {
@@ -919,8 +894,7 @@ int flecs_script_template_hoist_using(
     return 0;
 }
 
-static
-int flecs_script_template_hoist_vars(
+static int flecs_script_template_hoist_vars(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_t *template,
     ecs_script_vars_t *vars)
@@ -947,8 +921,7 @@ int flecs_script_template_hoist_vars(
     return 0;
 }
 
-static
-ecs_script_template_t* flecs_script_template_init(
+static ecs_script_template_t* flecs_script_template_init(
     ecs_script_impl_t *script)
 {
     ecs_allocator_t *a = &script->allocator;
@@ -1112,6 +1085,9 @@ void flecs_script_template_import(
     ECS_TAG_DEFINE(world, EcsScriptTemplate);
 
     ecs_add_id(world, EcsScriptTemplate, EcsPairIsTag);
+#ifdef FLECS_CONSTRAINT_TRAITS
+    ecs_add_id(world, EcsScriptTemplate, EcsRelationship);
+#endif
 
     ecs_set_hooks(world, EcsScriptTemplateSetEvent, {
         .ctor = flecs_default_ctor,

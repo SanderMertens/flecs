@@ -25,7 +25,9 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     // module resources.
     c_.add(flecs::Sparse);
 
+#ifdef FLECS_CONSTRAINT_TRAITS
     c_.add(flecs::Singleton);
+#endif
 
     ecs_set_scope(world, c_);
     world.emplace<T>(world);

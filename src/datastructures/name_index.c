@@ -5,8 +5,7 @@
 
 #include "../private_api.h"
 
-static
-uint64_t flecs_name_index_hash(
+static uint64_t flecs_name_index_hash(
     const void *ptr)
 {
     const ecs_hashed_string_t *str = ptr;
@@ -14,8 +13,7 @@ uint64_t flecs_name_index_hash(
     return str->hash;
 }
 
-static
-int flecs_name_index_compare(
+static int flecs_name_index_compare(
     const void *ptr1, 
     const void *ptr2)
 {
@@ -88,8 +86,7 @@ ecs_hashmap_t* flecs_name_index_copy(
     return result;
 }
 
-static
-ecs_hashed_string_t flecs_get_hashed_string(
+static ecs_hashed_string_t flecs_get_hashed_string(
     const char *name,
     ecs_size_t length,
     uint64_t hash)

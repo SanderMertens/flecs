@@ -3,12 +3,14 @@
 ## Introduction
 Prefabs are entities that can be used as templates for other entities. They can provide a convenient API for creating assets natively in the ECS. Prefabs have the following features:
 
+Prefab support requires the `FLECS_PREFAB` addon. The addon is enabled in the
+default build and must be selected explicitly in a custom build.
+
 - Prefab components can be shared across instances
 - Inherited components can be overridden on a per-instance basis
 - Inherited components can be auto-overridden on a per-prefab basis
 - Prefab inheritance makes creating variations easy
 - Prefabs can have children that are instantiated for instances
-- Prefab children can be easily identified with prefab slots
 - Prefabs are runtime accessible and modifiable
 - Prefabs can be mapped to types for easy access in the C++ API
 - Natively supported by Flecs Script & the JSON serializer
@@ -966,40 +968,27 @@ let inst_cockpit = inst.lookup("Cockpit");
 </ul>
 </div>
 
-## Prefab Slots
-When a prefab hierarchy is instantiated often code will want to refer to a specific instantiated child. A typical example is a turret prefab with a turret head that needs to rotate.
-
-While it is possible to lookup a child by name and store it on a component, this adds boilerplate and reduces efficiency. Prefab slots make this easier.
-
-A prefab child can be created as a slot. Slots are created as relationships on the instance, with as target of the relationship the instantiated child. The slot is added as a `DontFragment` relationship which doesn't fragment archetypes.
-
-The following example shows how to create and use a prefab slot:
+## Prefab Child Slots
+Prefab hierarchies that use the `Parent` component make it possible to easily find an instance child from the prefab child with `ecs_get_target`:
 
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
 
 ```c
-// Create a prefab hierarchy.
-ecs_entity_t SpaceShip = ecs_entity(ecs, { 
-    .name = "SpaceShip", 
-    .add = ecs_ids( EcsPrefab ) 
+ecs_entity_t SpaceShip = ecs_entity(world, {
+    .name = "SpaceShip",
+    .add = ecs_ids(EcsPrefab)
 });
 
-ecs_entity_t Cockpit = ecs_entity(ecs, { 
-    .name = "Cockpit",
-    .parent = SpaceShip,
-    .add = ecs_ids( 
-        EcsPrefab, 
-        ecs_pair(EcsSlotOf, SpaceShip) // mark as slot
-    )
-});
+ecs_entity_t Cockpit = ecs_new_w_parent(
+    world, SpaceShip, "Cockpit");
 
 // Instantiate the prefab hierarchy
 ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, SpaceShip);
 
-// Lookup instantiated child
-ecs_entity_t inst_cockpit = ecs_target(world, inst, Cockpit, 0);
+// Get the instance child from the prefab child
+ecs_entity_t inst_cockpit = ecs_get_target(world, inst, Cockpit, 0);
 ```
 
 </li>
@@ -1007,45 +996,14 @@ ecs_entity_t inst_cockpit = ecs_target(world, inst, Cockpit, 0);
 
 ```cpp
 flecs::entity SpaceShip = world.prefab("SpaceShip");
-flecs::entity Cockpit = world.prefab("Cockpit")
-    .child_of(SpaceShip)
-    .slot(); // Defaults to (SlotOf, SpaceShip)
+flecs::entity Cockpit = world.prefab(
+    flecs::Parent{SpaceShip}, "Cockpit");
 
 // Instantiate the prefab hierarchy
-flecs::entity inst = ecs.entity().is_a(SpaceShip);
+flecs::entity inst = world.entity().is_a(SpaceShip);
 
-// Lookup instantiated child
-flecs::entity inst_cockpit = inst.target(CockPit);
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-Entity spaceship = world.Prefab("Spaceship");
-Entity cockpit = world.Prefab("Cockpit")
-    .ChildOf(spaceship)
-    .SlotOf(spaceship);
-
-// Instantiate the prefab hierarchy
-Entity inst = ecs.Entity().IsA(spaceship);
-
-// Lookup instantiated child
-Entity instCockpit = inst.Target(cockpit);
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-let spaceship = world.prefab_named("Spaceship");
-let cockpit = world.prefab_named("Cockpit").child_of_id(spaceship).slot(); // Defaults to (SlotOf, spaceship)
-
-// Instantiate the prefab hierarchy
-let inst = world.entity().is_a_id(spaceship);
-
-// Lookup instantiated child
-let inst_cockpit = inst.target_id(cockpit, 0);
+// Get the instance child from the prefab child
+flecs::entity inst_cockpit = inst.target(Cockpit);
 ```
 
 </li>

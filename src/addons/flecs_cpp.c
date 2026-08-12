@@ -22,8 +22,7 @@
 #define ECS_CLASS_LEN (-1 + (ecs_size_t)sizeof(ECS_CLASS_PREFIX))
 #define ECS_ENUM_LEN (-1 + (ecs_size_t)sizeof(ECS_ENUM_PREFIX))
 
-static
-ecs_size_t ecs_cpp_strip_prefix(
+static ecs_size_t ecs_cpp_strip_prefix(
     char *typeName,
     ecs_size_t len,
     const char *prefix,
@@ -37,8 +36,7 @@ ecs_size_t ecs_cpp_strip_prefix(
     return len;
 }
 
-static 
-void ecs_cpp_trim_type_name(
+static void ecs_cpp_trim_type_name(
     char *typeName) 
 {
     ecs_size_t len = ecs_os_strlen(typeName);
@@ -124,8 +122,7 @@ char* ecs_cpp_get_symbol_name(
     return symbol_name;
 }
 
-static
-const char* flecs_cpp_func_rchr(
+static const char* flecs_cpp_func_rchr(
     const char *func_name,
     ecs_size_t func_name_len,
     ecs_size_t func_back_len,
@@ -138,8 +135,7 @@ const char* flecs_cpp_func_rchr(
     return r;
 }
 
-static
-const char* flecs_cpp_func_max(
+static const char* flecs_cpp_func_max(
     const char *a,
     const char *b)
 {
@@ -224,7 +220,11 @@ ecs_entity_t ecs_cpp_component_register(
     const char *cpp_symbol = desc->cpp_symbol;
 
     bool existing = false;
+#ifdef FLECS_MULTI_WORLD
     ecs_entity_t c = flecs_component_ids_get(world, desc->ids_index);
+#else
+    ecs_entity_t c = *desc->id_storage;
+#endif
 
     if (!c || !ecs_is_alive(world, c)) {
     } else {
@@ -373,10 +373,8 @@ ecs_entity_t ecs_cpp_component_register(
     }
 
     /* When a component is implicitly registered, ensure that it is not
-     * registered in the current scope of the application and that "with"
-     * components do not get added to the component entity. */
+     * registered in the current scope of the application. */
     prev_scope = ecs_set_scope(world, module);
-    ecs_entity_t prev_with = ecs_set_with(world, 0);
     char *existing_name = NULL;
 
     /* If an explicit id is provided, it is possible that the symbol and
@@ -439,11 +437,14 @@ ecs_entity_t ecs_cpp_component_register(
     ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_os_free(existing_name);
 
-    ecs_set_with(world, prev_with);
     ecs_set_scope(world, prev_scope);
 
-    /* Set world-local component id */
+    /* Set component id before invoking callbacks that can request it. */
+#ifdef FLECS_MULTI_WORLD
     flecs_component_ids_set(world, desc->ids_index, c);
+#else
+    *desc->id_storage = c;
+#endif
 
     if (desc->lifecycle_action && desc->size && !existing) {
         desc->lifecycle_action(world, c);
@@ -474,7 +475,9 @@ void ecs_cpp_enum_init(
 #else
     /* Make sure that enums still behave the same even without meta */
     ecs_add_id(world, id, EcsExclusive);
+#ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, id, EcsOneOf);
+#endif
 #endif
 }
 
@@ -672,7 +675,7 @@ ecs_entity_t ecs_cpp_new(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (!parent && !name) {
-        if (!stage->scope && !stage->with) {
+        if (!stage->scope) {
             ecs_entity_t result = flecs_new_id(world);
             flecs_add_to_root_table(world, result);
             return result;

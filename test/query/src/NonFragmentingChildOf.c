@@ -3335,7 +3335,9 @@ void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_after_rang
 void NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_toggle_range(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, CanToggle);
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_id(world, Foo, EcsCanToggle);
 
     ecs_entity_t p_1 = ecs_new(world);
     ecs_entity_t p_2 = ecs_new(world);
@@ -6534,8 +6536,7 @@ void NonFragmentingChildOf_this_src_childof_wildcard_w_component(void) {
     ecs_fini(world);
 }
 
-static
-bool query_skip_builtin(ecs_world_t *world, ecs_iter_t *it) {
+static bool query_skip_builtin(ecs_world_t *world, ecs_iter_t *it) {
     while (ecs_query_next(it)) {
         if (!ecs_table_has_flags(it->table, EcsTableHasBuiltins)) {
             if (!ecs_table_has_id(world, it->table, ecs_childof(EcsFlecs))) {
@@ -10094,7 +10095,9 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_children_w_component(void) {
 void NonFragmentingChildOf_this_up_childof_2_lvl_children_on_instantiate_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_entity_t ecs_id(Bar) = Bar;
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
@@ -10210,7 +10213,9 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_children_w_component_on_instant
 void NonFragmentingChildOf_this_up_childof_2_lvl_children_on_instantiate_dont_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Bar, (OnInstantiate, DontInherit));
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_entity_t ecs_id(Bar) = Bar;
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsDontInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
@@ -10365,7 +10370,9 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_w_component(void)
 void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_on_instantiate_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_entity_t ecs_id(Bar) = Bar;
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
@@ -10420,7 +10427,9 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_on_instantiate_in
 void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_on_instantiate_dont_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Bar, (OnInstantiate, DontInherit));
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_entity_t ecs_id(Bar) = Bar;
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsDontInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
@@ -12400,7 +12409,9 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component(vo
 void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_on_instantiate_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_entity_t ecs_id(Bar) = Bar;
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
     ECS_TAG(world, Foo);
 
     ecs_entity_t b = ecs_new(world);
@@ -12540,7 +12551,9 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component_on
 void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_on_instantiate_dont_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Bar, (OnInstantiate, DontInherit));
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_entity_t ecs_id(Bar) = Bar;
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsDontInherit);
     ECS_TAG(world, Foo);
 
     ecs_entity_t b = ecs_new(world);
@@ -12732,7 +12745,9 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_on_instan
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_entity_t ecs_id(Bar) = Bar;
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
@@ -12803,7 +12818,9 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_on_instan
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
-    ECS_ENTITY(world, Bar, (OnInstantiate, DontInherit));
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_entity_t ecs_id(Bar) = Bar;
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsDontInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);

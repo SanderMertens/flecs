@@ -26,9 +26,6 @@ extern "C" {
  * cycle-detected error. */
 #define ECS_MAX_RECURSION (512)
 
-/** Maximum length of a parser token (used by parser-related addons). */
-#define ECS_MAX_TOKEN_SIZE (256)
-
 /** Convert a C module name into a path.
  * This operation converts a PascalCase name to a path, for example, MyFooModule
  * into my.foo.module.
@@ -140,6 +137,11 @@ char* flecs_asprintf(
     const char *fmt,
     ...);
 
+#ifdef FLECS_PARSER
+
+/** Maximum length of a parser token (used by parser-related addons). */
+#define ECS_MAX_TOKEN_SIZE (256)
+
 /** Write an escaped character.
  * Write a character to an output string, inserting an escape character if necessary.
  *
@@ -222,6 +224,8 @@ const char* flecs_parse_digit(
     char *token,
     int32_t token_size);
 
+#endif
+
 /* Convert an identifier to snake case. */
 FLECS_API
 char* flecs_to_snake_case(
@@ -247,7 +251,6 @@ typedef struct ecs_suspend_readonly_state_t {
     bool cmd_flushing;
     int32_t defer_count;
     ecs_entity_t scope;
-    ecs_entity_t with;
     ecs_commands_t cmd_stack[2];
     ecs_commands_t *cmd;
     ecs_stage_t *stage;
@@ -314,6 +317,8 @@ FLECS_API
 int32_t flecs_poly_refcount(
     ecs_poly_t *poly);
 
+#ifdef FLECS_MULTI_WORLD
+
 /** Get an unused index for the static world-local component ID array.
  * This operation returns an unused index for the world-local component ID
  * array. This index can be used by language bindings to obtain a component ID.
@@ -359,6 +364,8 @@ void flecs_component_ids_set(
     int32_t index,
     ecs_entity_t id);
 
+#endif
+
 /** Query iterator function for trivially cached queries.
  * This operation can be called if an iterator matches the conditions for
  * trivial iteration.
@@ -367,8 +374,10 @@ void flecs_component_ids_set(
  * @return Whether the query has more results.
  */
 FLECS_API
+#ifdef FLECS_CACHED_QUERIES
 bool flecs_query_trivial_cached_next(
     ecs_iter_t *it);
+#endif
 
 #ifdef FLECS_EXCLUSIVE_ACCESS
 /** Check if the current thread has exclusive access to the world.

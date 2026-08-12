@@ -109,6 +109,9 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### Territory Control 2
 [![image](docs/img/projects/territory_control.png)](https://store.steampowered.com/app/690290/Territory_Control_2/)
 
+### Polyzonia
+[![image](docs/img/projects/polyzonia.png)](https://store.steampowered.com/app/4651670/Polyzonia/)
+
 ### Resistance is Brutal
 [![image](docs/img/projects/resistance_is_brutal.jpg)](https://store.steampowered.com/app/3378140/Resistance_Is_Brutal/)
 
@@ -141,6 +144,9 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 
 ### ECS survivors
 [![image](docs/img/projects/ecs_survivors.png)](https://laurent-voisard.itch.io/ecs-survivors/)
+
+### 8402
+[![image](docs/img/projects/8402.png)](https://voidlucky.itch.io/8402)
 
 ### Tome Tumble Tournament
 [![image](docs/img/projects/tome_tumble.png)](https://terzalo.itch.io/tome-tumble-tournament)

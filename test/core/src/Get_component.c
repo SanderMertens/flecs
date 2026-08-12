@@ -35,7 +35,9 @@ void Get_component_get_1_from_2(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e, Position, Velocity);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
     test_assert(e != 0);
 
     test_assert(ecs_get_type(world, e)->array[0] == ecs_id(Position));
@@ -49,7 +51,9 @@ void Get_component_get_2_from_2(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e, Position, Velocity);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
     test_assert(e != 0);
 
     test_assert(ecs_get_type(world, e)->array[1] == ecs_id(Velocity));
@@ -64,7 +68,10 @@ void Get_component_get_2_from_3(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e, Position, Velocity, Mass);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+    ecs_add(world, e, Mass);
     test_assert(e != 0);
 
     test_assert(ecs_get_type(world, e)->array[1] == ecs_id(Velocity));
@@ -72,8 +79,7 @@ void Get_component_get_2_from_3(void) {
     ecs_fini(world);
 }
 
-static
-void Test_main_stage(ecs_iter_t *it) {
+static void Test_main_stage(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     for (int i = 0; i < it->count; i ++) {
@@ -97,8 +103,7 @@ void Get_component_get_1_from_2_in_progress_from_main_stage(void) {
     ecs_fini(world);
 }
 
-static
-void Add_in_progress(ecs_iter_t *it) {
+static void Add_in_progress(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = 0;
 
     if (it->field_count >= 2) {
@@ -130,8 +135,7 @@ void Get_component_get_1_from_2_add_in_progress(void) {
     ecs_fini(world);
 }
 
-static
-void Add_in_progress_test_main(ecs_iter_t *it) {
+static void Add_in_progress_test_main(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
@@ -162,8 +166,7 @@ void Get_component_get_both_from_2_add_in_progress(void) {
     ecs_fini(world);
 }
 
-static
-void Add_remove_in_progress_test_main(ecs_iter_t *it) {
+static void Add_remove_in_progress_test_main(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
@@ -217,7 +220,8 @@ void Get_component_ensure_equal_get(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
     test_assert(e != 0);
 
     test_assert(ecs_ensure(world, e, Position) == ecs_get(world, e,

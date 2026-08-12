@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 typedef struct {
     ecs_flags64_t mask;
     bool has_bitset;
@@ -28,8 +30,7 @@ static inline int32_t flecs_ctz64(uint64_t v) {
 #endif
 }
 
-static
-flecs_query_row_mask_t flecs_query_get_row_mask(
+static flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_iter_t *it,
     ecs_table_t *table,
     int32_t block_index,
@@ -81,8 +82,7 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
     return (flecs_query_row_mask_t){ mask, has_bitset };
 }
 
-static
-bool flecs_query_toggle_for_up(
+static bool flecs_query_toggle_for_up(
     ecs_iter_t *it,
     ecs_flags64_t and_fields,
     ecs_flags64_t not_fields)
@@ -115,8 +115,7 @@ bool flecs_query_toggle_for_up(
     return true;
 }
 
-static
-bool flecs_query_toggle_cmp(
+static bool flecs_query_toggle_cmp(
     const ecs_query_op_t *op,
     bool redo,
     ecs_query_run_ctx_t *ctx,
@@ -342,3 +341,4 @@ repeat: {}
     return result;
 }
 
+#endif // FLECS_QUERY_PLANS

@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_CACHED_QUERIES
+
 /* Initialize cached query iterator. */
 void flecs_query_cache_iter_init(
     ecs_iter_t *it,
@@ -35,8 +37,7 @@ void flecs_query_cache_iter_init(
 
 /* Find next match in cache. This function is called for non-trivial caches and
  * handles features like wildcards, up traversal and grouping. */
-static
-ecs_query_cache_match_t* flecs_query_cache_next(
+static ecs_query_cache_match_t* flecs_query_cache_next(
     const ecs_query_run_ctx_t *ctx,
     bool always_match_empty)
 {
@@ -115,7 +116,11 @@ ecs_query_cache_match_t* flecs_query_cache_next(
             qit->cur ++;
         }
 
+#ifdef FLECS_QUERY_PLANS
         ctx->vars[0].range.table = table;
+#else
+        it->table = table;
+#endif
 
         return qm;
     }
@@ -123,8 +128,7 @@ ecs_query_cache_match_t* flecs_query_cache_next(
 
 /* Find next match in trivial cache. A trivial cache doesn't have to handle
  * wildcards, multiple groups or fields matched through up traversal. */
-static
-ecs_query_cache_match_t* flecs_query_trivial_cache_next(
+static ecs_query_cache_match_t* flecs_query_trivial_cache_next(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_iter_t *it = ctx->it;
@@ -156,17 +160,19 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
     }
 }
 
-static
-ecs_query_cache_match_t* flecs_query_test(
+static ecs_query_cache_match_t* flecs_query_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo)
 {
     ecs_iter_t *it = ctx->it;
     if (!redo) {
-        ecs_var_t *var = &ctx->vars[0];
-        ecs_table_t *table = var->range.table;
+#ifdef FLECS_QUERY_PLANS
+        ecs_table_t *table = ctx->vars[0].range.table;
+#else
+        ecs_table_t *table = it->table;
+#endif
         ecs_assert(table != NULL, ECS_INVALID_OPERATION, 
-            "the variable set on the iterator is missing a table");
+            "the iterator constraint is missing a table");
 
         ecs_query_cache_table_t *qt = flecs_query_cache_get_table(
             ctx->query->cache, table);
@@ -191,41 +197,10 @@ ecs_query_cache_match_t* flecs_query_test(
     return qm;
 }
 
-static
-void flecs_query_cache_init_mapped_fields(
-    const ecs_query_run_ctx_t *ctx,
-    ecs_query_cache_match_t *node)
-{
-    ecs_iter_t *it = ctx->it;
-    const ecs_query_impl_t *impl = ctx->query;
-    ecs_query_cache_t *cache = impl->cache;
-    ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INTERNAL_ERROR, NULL);
-
-    int32_t i, field_count = cache->query->field_count;
-    int8_t *field_map = cache->field_map;
-    int16_t *columns = ECS_CONST_CAST(int16_t*, it->columns);
-
-    for (i = 0; i < field_count; i ++) {
-        int8_t field_index = field_map[i];
-        it->trs[field_index] = node->_trs ? node->_trs[i] : NULL;
-        columns[field_index] = node->base.columns[i];
-
-        it->ids[field_index] = node->_ids[i];
-        it->sources[field_index] = node->_sources[i];
-
-        ecs_termset_t bit = (ecs_termset_t)(1u << i);
-        ecs_termset_t field_bit = (ecs_termset_t)(1u << field_index);
-
-        ECS_TERMSET_COND(it->set_fields, field_bit, node->base.set_fields & bit);
-        ECS_TERMSET_COND(it->up_fields, field_bit, node->_up_fields & bit);
-    }
-}
-
 /* Reset the cache iteration cursor to the start of the iteration. This is
  * called when the cache operation is entered fresh (redo == false), which
  * happens when a preceding operation in the plan yields a new result. */
-static
-void flecs_query_cache_iter_restart(
+static void flecs_query_cache_iter_restart(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_iter_t *it = ctx->it;
@@ -246,30 +221,6 @@ void flecs_query_cache_iter_restart(
     }
 }
 
-/* Iterate cache for query that's partially cached */
-bool flecs_query_cache_search(
-    const ecs_query_run_ctx_t *ctx,
-    bool redo)
-{
-    ecs_assert(!flecs_query_cache_is_trivial(ctx->query->cache),
-        ECS_INTERNAL_ERROR, NULL);
-
-    if (!redo) {
-        flecs_query_cache_iter_restart(ctx);
-    }
-
-    ecs_query_cache_match_t *node = flecs_query_cache_next(ctx, false);
-    if (!node) {
-        return false;
-    }
-
-    flecs_query_cache_init_mapped_fields(ctx, node);
-    ctx->vars[0].range.count = node->_count;
-    ctx->vars[0].range.offset = node->_offset;
-
-    return true;
-}
-
 /* Iterate cache for query that's entirely cached */
 bool flecs_query_is_cache_search(
     const ecs_query_run_ctx_t *ctx,
@@ -287,15 +238,16 @@ bool flecs_query_is_cache_search(
         return false;
     }
 
-    ctx->vars[0].range.count = node->_count;
-    ctx->vars[0].range.offset = node->_offset;
-
     ecs_iter_t *it = ctx->it;
     it->trs = node->_trs;
     it->columns = node->base.columns;
     it->ids = node->_ids;
     it->sources = node->_sources;
     it->set_fields = node->base.set_fields;
+#ifdef FLECS_QUERY_PLANS
+    ctx->vars[0].range.count = node->_count;
+    ctx->vars[0].range.offset = node->_offset;
+#endif
     it->up_fields = node->_up_fields;
 
 #ifdef FLECS_DEBUG
@@ -310,21 +262,6 @@ bool flecs_query_is_trivial_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
     return flecs_query_trivial_cache_next(ctx) != NULL;
-}
-
-/* Test if query that is partially cached matches constrained $this */
-bool flecs_query_cache_test(
-    const ecs_query_run_ctx_t *ctx,
-    bool redo)
-{
-    ecs_query_cache_match_t *node = flecs_query_test(ctx, redo);
-    if (!node) {
-        return false;
-    }
-
-    flecs_query_cache_init_mapped_fields(ctx, node);
-
-    return true;
 }
 
 /* Test if query that is entirely cached matches constrained $this */
@@ -363,10 +300,13 @@ bool flecs_query_is_trivial_cache_test(
 
     ecs_iter_t *it = ctx->it;
     if (!redo) {
-        ecs_var_t *var = &ctx->vars[0];
-        ecs_table_t *table = var->range.table;
+#ifdef FLECS_QUERY_PLANS
+        ecs_table_t *table = ctx->vars[0].range.table;
+#else
+        ecs_table_t *table = it->table;
+#endif
         ecs_assert(table != NULL, ECS_INVALID_OPERATION, 
-            "the variable set on the iterator is missing a table");
+            "the iterator constraint is missing a table");
 
         ecs_query_cache_t *cache = ctx->query->cache;
         ecs_query_cache_table_t *qt = flecs_query_cache_get_table(cache, table);
@@ -383,3 +323,78 @@ bool flecs_query_is_trivial_cache_test(
 
     return false;
 }
+
+#ifdef FLECS_QUERY_PLANS
+
+static void flecs_query_cache_init_mapped_fields(
+    const ecs_query_run_ctx_t *ctx,
+    ecs_query_cache_match_t *node)
+{
+    ecs_iter_t *it = ctx->it;
+    const ecs_query_impl_t *impl = ctx->query;
+    ecs_query_cache_t *cache = impl->cache;
+    ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INTERNAL_ERROR, NULL);
+
+    int32_t i, field_count = cache->query->field_count;
+    int8_t *field_map = cache->field_map;
+    int16_t *columns = ECS_CONST_CAST(int16_t*, it->columns);
+
+    for (i = 0; i < field_count; i ++) {
+        int8_t field_index = field_map[i];
+        it->trs[field_index] = node->_trs ? node->_trs[i] : NULL;
+        columns[field_index] = node->base.columns[i];
+
+        it->ids[field_index] = node->_ids[i];
+        it->sources[field_index] = node->_sources[i];
+
+        ecs_termset_t bit = (ecs_termset_t)(1u << i);
+        ecs_termset_t field_bit = (ecs_termset_t)(1u << field_index);
+
+        ECS_TERMSET_COND(it->set_fields, field_bit, node->base.set_fields & bit);
+        ECS_TERMSET_COND(it->up_fields, field_bit, node->_up_fields & bit);
+    }
+}
+
+/* Iterate cache for query that's partially cached */
+bool flecs_query_cache_search(
+    const ecs_query_run_ctx_t *ctx,
+    bool redo)
+{
+    ecs_assert(!flecs_query_cache_is_trivial(ctx->query->cache),
+        ECS_INTERNAL_ERROR, NULL);
+
+    if (!redo) {
+        flecs_query_cache_iter_restart(ctx);
+    }
+
+    ecs_query_cache_match_t *node = flecs_query_cache_next(ctx, false);
+    if (!node) {
+        return false;
+    }
+
+    flecs_query_cache_init_mapped_fields(ctx, node);
+    ctx->vars[0].range.table = node->base.table;
+    ctx->vars[0].range.count = node->_count;
+    ctx->vars[0].range.offset = node->_offset;
+
+    return true;
+}
+
+/* Test if query that is partially cached matches constrained $this */
+bool flecs_query_cache_test(
+    const ecs_query_run_ctx_t *ctx,
+    bool redo)
+{
+    ecs_query_cache_match_t *node = flecs_query_test(ctx, redo);
+    if (!node) {
+        return false;
+    }
+
+    flecs_query_cache_init_mapped_fields(ctx, node);
+
+    return true;
+}
+
+#endif // FLECS_QUERY_PLANS
+
+#endif

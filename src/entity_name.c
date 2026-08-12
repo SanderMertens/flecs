@@ -7,8 +7,7 @@
 
 #define ECS_NAME_BUFFER_LENGTH (64)
 
-static
-bool flecs_path_append(
+static bool flecs_path_append(
     const ecs_world_t *world, 
     ecs_entity_t parent, 
     ecs_entity_t child, 
@@ -19,6 +18,12 @@ bool flecs_path_append(
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(sep[0] != 0, ECS_INVALID_PARAMETER, NULL);
+#ifndef FLECS_PARSER
+    if (escape) {
+        ecs_abort(ECS_UNSUPPORTED,
+            "escaped paths require the FLECS_PARSER addon");
+    }
+#endif
 
     ecs_entity_t cur = 0;
     const char *name = NULL;
@@ -70,8 +75,11 @@ bool flecs_path_append(
             const char *name_ptr;
             char ch;
             for (name_ptr = name; (ch = name_ptr[0]); name_ptr ++) {
+#ifdef FLECS_PARSER
                 char esc[3];
+#endif
                 if (ch != sep[0]) {
+#ifdef FLECS_PARSER
                     if (escape) {
                         flecs_chresc(esc, ch, '\"');
                         ecs_strbuf_appendch(buf, esc[0]);
@@ -81,11 +89,16 @@ bool flecs_path_append(
                     } else {
                         ecs_strbuf_appendch(buf, ch);
                     }
+#else
+                    ecs_strbuf_appendch(buf, ch);
+#endif
                 } else {
                     if (!escape) {
                         ecs_strbuf_appendch(buf, '\\');
                         ecs_strbuf_appendch(buf, sep[0]);
-                    } else {
+                    }
+#ifdef FLECS_PARSER
+                    else {
                         ecs_strbuf_appendlit(buf, "\\\\");
                         flecs_chresc(esc, ch, '\"');
                         ecs_strbuf_appendch(buf, esc[0]);
@@ -93,6 +106,7 @@ bool flecs_path_append(
                             ecs_strbuf_appendch(buf, esc[1]);
                         }
                     }
+#endif
                 }
             }
         } else {
@@ -142,8 +156,7 @@ ecs_entity_t flecs_name_to_id(
     return res;
 }
 
-static
-ecs_entity_t flecs_get_builtin(
+static ecs_entity_t flecs_get_builtin(
     const char *name)
 {
     if (name[0] == '.' && name[1] == '\0') {
@@ -159,8 +172,7 @@ ecs_entity_t flecs_get_builtin(
     return 0;
 }
 
-static
-const char* flecs_path_elem(
+static const char* flecs_path_elem(
     const char *path,
     const char *sep,
     char **buffer_out,
@@ -235,8 +247,7 @@ const char* flecs_path_elem(
     }
 }
 
-static
-const char* flecs_path_elem_n(
+static const char* flecs_path_elem_n(
     const char *path,
     const char *sep,
     ecs_size_t sep_len,
@@ -265,8 +276,7 @@ const char* flecs_path_elem_n(
     return NULL;
 }
 
-static
-ecs_entity_t flecs_lookup_child_n(
+static ecs_entity_t flecs_lookup_child_n(
     const ecs_world_t *world,
     ecs_entity_t parent,
     const char *name,
@@ -286,13 +296,15 @@ ecs_entity_t flecs_lookup_child_n(
             }
         }
 
-        if (i == length && value && value < UINT32_MAX &&
-            ecs_is_alive(world, value))
-        {
-            if (parent && !ecs_has_pair(world, value, EcsChildOf, parent)) {
-                return 0;
+        if (i == length && value && value < UINT32_MAX) {
+            /* Resolve current generation for recycled ids */
+            ecs_entity_t e = flecs_entities_get_alive(world, value);
+            if (e) {
+                if (parent && !ecs_has_pair(world, e, EcsChildOf, parent)) {
+                    return 0;
+                }
+                return e;
             }
-            return value;
         }
     }
 
@@ -307,8 +319,7 @@ ecs_entity_t flecs_lookup_child_n(
     return 0;
 }
 
-static
-bool flecs_is_root_path(
+static bool flecs_is_root_path(
     const char *path,
     const char *prefix)
 {
@@ -319,8 +330,7 @@ bool flecs_is_root_path(
     }
 }
 
-static
-ecs_entity_t flecs_get_parent_from_path(
+static ecs_entity_t flecs_get_parent_from_path(
     const ecs_world_t *world,
     ecs_entity_t parent,
     const char **path_ptr,
@@ -371,8 +381,7 @@ ecs_entity_t flecs_get_parent_from_path(
     return parent;
 }
 
-static
-void flecs_on_set_symbol(
+static void flecs_on_set_symbol(
     ecs_iter_t *it) 
 {
     EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
@@ -521,8 +530,7 @@ void ecs_on_set(EcsIdentifier)(
     }
 }
 
-static
-void flecs_reparent_name_index_intern(
+static void flecs_reparent_name_index_intern(
     const ecs_entity_t *entities,
     ecs_hashmap_t *src_index,
     ecs_hashmap_t *dst_index,
@@ -923,8 +931,7 @@ const char* ecs_set_name_prefix(
     return old_prefix;
 }
 
-static
-void flecs_add_path(
+static void flecs_add_path(
     ecs_world_t *world,
     bool defer_suspend,
     ecs_entity_t parent,
@@ -1075,8 +1082,7 @@ ecs_entity_t ecs_new_from_path_w_sep(
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
 
-static
-const char* flecs_get_identifier(
+static const char* flecs_get_identifier(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)

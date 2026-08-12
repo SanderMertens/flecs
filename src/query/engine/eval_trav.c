@@ -5,8 +5,9 @@
 
 #include "../../private_api.h"
 
-static
-bool flecs_query_trav_fixed_src_reflexive(
+#ifdef FLECS_QUERY_PLANS
+
+static bool flecs_query_trav_fixed_src_reflexive(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,
     ecs_table_range_t *range,
@@ -50,8 +51,7 @@ bool flecs_query_trav_fixed_src_reflexive(
     return true;
 }
 
-static
-bool flecs_query_trav_unknown_src_reflexive(
+static bool flecs_query_trav_unknown_src_reflexive(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,
     ecs_entity_t trav,
@@ -76,8 +76,7 @@ bool flecs_query_trav_unknown_src_reflexive(
     return true;
 }
 
-static
-bool flecs_query_trav_fixed_src_up_fixed_second(
+static bool flecs_query_trav_fixed_src_up_fixed_second(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -112,8 +111,7 @@ bool flecs_query_trav_fixed_src_up_fixed_second(
     return true;
 }
 
-static
-bool flecs_query_trav_unknown_src_up_fixed_second(
+static bool flecs_query_trav_unknown_src_up_fixed_second(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -180,8 +178,7 @@ bool flecs_query_trav_unknown_src_up_fixed_second(
     return false;
 }
 
-static
-bool flecs_query_trav_yield_reflexive_src(
+static bool flecs_query_trav_yield_reflexive_src(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,
     ecs_table_range_t *range,
@@ -220,8 +217,7 @@ bool flecs_query_trav_yield_reflexive_src(
     return true;
 }
 
-static
-bool flecs_query_trav_fixed_src_up_unknown_second(
+static bool flecs_query_trav_fixed_src_up_unknown_second(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -287,3 +283,5 @@ bool flecs_query_trav(
         }
     }
 }
+
+#endif // FLECS_QUERY_PLANS

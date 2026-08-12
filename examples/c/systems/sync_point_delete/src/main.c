@@ -126,9 +126,9 @@ int main(int argc, char *argv[]) {
     //          }
     //      },
     //      .entity = {
-    //          .name = "DeleteEntity",
-    //          .add = ecs_ids(ecs_dependson(EcsOnUpdate))
+    //          .name = "DeleteEntity"
     //      },
+    //      .phase = EcsOnUpdate,
     //      .callback = DeleteEntity
     //  });
 

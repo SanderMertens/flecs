@@ -7,8 +7,7 @@
 
 #ifdef FLECS_JSON
 
-static
-const char* flecs_json_inout_str(
+static const char* flecs_json_inout_str(
     int16_t kind)
 {
     switch(kind) {
@@ -22,8 +21,7 @@ const char* flecs_json_inout_str(
     }
 }
 
-static
-const char* flecs_json_oper_str(
+static const char* flecs_json_oper_str(
     int16_t kind)
 {
     switch(kind) {
@@ -38,8 +36,7 @@ const char* flecs_json_oper_str(
     }
 }
 
-static
-void flecs_json_serialize_term_entity(
+static void flecs_json_serialize_term_entity(
     const ecs_world_t *world,
     ecs_entity_t e,
     ecs_strbuf_t *buf)
@@ -61,8 +58,7 @@ void flecs_json_serialize_term_entity(
     }
 }
 
-static
-void flecs_json_serialize_term_ref(
+static void flecs_json_serialize_term_ref(
     const ecs_world_t *world,
     const ecs_term_ref_t *ref,
     ecs_strbuf_t *buf)
@@ -88,8 +84,7 @@ void flecs_json_serialize_term_ref(
     flecs_json_object_pop(buf);
 }
 
-static
-void flecs_json_serialize_term_trav(
+static void flecs_json_serialize_term_trav(
     const ecs_world_t *world,
     const ecs_term_t *term,
     ecs_strbuf_t *buf)
@@ -118,8 +113,7 @@ void flecs_json_serialize_term_trav(
     flecs_json_array_pop(buf);
 }
 
-static
-void flecs_json_serialize_term(
+static void flecs_json_serialize_term(
     const ecs_world_t *world,
     const ecs_query_t *q,
     int t,
@@ -134,6 +128,7 @@ void flecs_json_serialize_term(
     flecs_json_memberl(buf, "has_value");
     flecs_json_bool(buf, !!((1llu << term->field_index) & q->data_fields));
 
+#ifdef FLECS_PREFAB
     ecs_entity_t first_id = ECS_TERM_REF_ID(&term->first);
     if (term->first.id & EcsIsEntity && first_id) {
         if (ecs_has_pair(world, first_id, EcsOnInstantiate, EcsInherit)) {
@@ -141,6 +136,7 @@ void flecs_json_serialize_term(
             flecs_json_true(buf);
         }
     }
+#endif
 
     flecs_json_memberl(buf, "oper");
     flecs_json_string(buf, flecs_json_oper_str(term->oper));

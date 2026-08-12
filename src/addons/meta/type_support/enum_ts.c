@@ -56,8 +56,7 @@ static ECS_DTOR(EcsConstants, ptr, {
     flecs_ordered_constants_dtor(&ptr->ordered_constants);
 })
 
-static
-int flecs_add_constant_to_enum(
+static int flecs_add_constant_to_enum(
     ecs_world_t *world, 
     ecs_entity_t type, 
     ecs_entity_t e,
@@ -256,8 +255,7 @@ int flecs_add_constant_to_enum(
     return 0;
 }
 
-static
-int flecs_add_constant_to_bitmask(
+static int flecs_add_constant_to_bitmask(
     ecs_world_t *world, 
     ecs_entity_t type, 
     ecs_entity_t e,
@@ -353,8 +351,7 @@ int flecs_add_constant_to_bitmask(
     return 0;
 }
 
-static
-void flecs_add_enum(ecs_iter_t *it) {
+static void flecs_add_enum(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     EcsEnum *data = ecs_field(it, EcsEnum, 0);
@@ -381,13 +378,14 @@ void flecs_add_enum(ecs_iter_t *it) {
         }
 
         ecs_add_id(world, e, EcsExclusive);
+#ifdef FLECS_CONSTRAINT_TRAITS
         ecs_add_id(world, e, EcsOneOf);
+#endif
         ecs_add_id(world, e, EcsPairIsTag);
     }
 }
 
-static
-void flecs_add_bitmask(ecs_iter_t *it) {
+static void flecs_add_bitmask(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     int i, count = it->count;
@@ -400,8 +398,7 @@ void flecs_add_bitmask(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_add_constant(ecs_iter_t *it) {
+static void flecs_add_constant(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     int i, count = it->count;
@@ -581,29 +578,29 @@ ecs_entity_t ecs_bitmask_init(
 void flecs_meta_enum_init(
     ecs_world_t *world)
 {
+    ecs_entity_t enum_component = ecs_entity(world, { .id = ecs_id(EcsEnum),
+        .name = "enum", .symbol = "EcsEnum" });
+    ecs_add_pair(world, enum_component, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsEnum),
-            .name = "enum", .symbol = "EcsEnum",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = enum_component,
         .type.size = sizeof(EcsEnum),
         .type.alignment = ECS_ALIGNOF(EcsEnum)
     });
 
+    ecs_entity_t bitmask = ecs_entity(world, { .id = ecs_id(EcsBitmask),
+        .name = "bitmask", .symbol = "EcsBitmask" });
+    ecs_add_pair(world, bitmask, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsBitmask),
-            .name = "bitmask", .symbol = "EcsBitmask",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = bitmask,
         .type.size = sizeof(EcsBitmask),
         .type.alignment = ECS_ALIGNOF(EcsBitmask)
     });
 
+    ecs_entity_t constants = ecs_entity(world, { .id = ecs_id(EcsConstants),
+        .name = "constants", .symbol = "EcsConstants" });
+    ecs_add_pair(world, constants, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsConstants),
-            .name = "constants", .symbol = "EcsConstants",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = constants,
         .type.size = sizeof(EcsConstants),
         .type.alignment = ECS_ALIGNOF(EcsConstants)
     });
@@ -654,8 +651,6 @@ void flecs_meta_enum_init(
         .global_observer = true
     });
 
-    ecs_set(world, ecs_id(EcsEnum),    EcsDefaultChildComponent, {EcsConstant});
-    ecs_set(world, ecs_id(EcsBitmask), EcsDefaultChildComponent, {EcsConstant});
 }
 
 #endif

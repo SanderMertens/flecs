@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 void flecs_query_set_iter_this(
     ecs_iter_t *it,
     const ecs_query_run_ctx_t *ctx)
@@ -356,8 +358,7 @@ void flecs_query_it_set_tr(
             !(it->up_fields & (1llu << field_index))) ? tr->column : -1;
 }
 
-static
-ecs_id_t flecs_query_it_set_id(
+static ecs_id_t flecs_query_it_set_id(
     ecs_iter_t *it,
     ecs_table_t *table,
     int32_t field_index,
@@ -416,3 +417,5 @@ bool flecs_query_table_filter(
     uint32_t filter = flecs_ito(uint32_t, other);
     return (table->flags & filter_mask & filter) != 0;
 }
+
+#endif // FLECS_QUERY_PLANS

@@ -39,8 +39,7 @@ static ECS_MOVE(EcsStruct, dst, src, {
 
 static ECS_DTOR(EcsStruct, ptr, { flecs_struct_dtor(ptr); })
 
-static
-void flecs_set_struct_member(
+static void flecs_set_struct_member(
     ecs_member_t *member,
     ecs_entity_t entity,
     ecs_member_t *m,
@@ -51,6 +50,7 @@ void flecs_set_struct_member(
     member->count = m->count;
     member->unit = unit;
     member->offset = m->offset;
+    member->use_offset = m->use_offset;
 
     ecs_os_strset(ECS_CONST_CAST(char**, &member->name), m->name);
 
@@ -59,8 +59,7 @@ void flecs_set_struct_member(
     member->warning_range = m->warning_range;
 }
 
-static
-int flecs_add_member_to_struct(
+static int flecs_add_member_to_struct(
     ecs_world_t *world,
     ecs_entity_t struct_type,
     ecs_entity_t member_entity,
@@ -293,8 +292,7 @@ int flecs_add_member_to_struct(
     return 0;
 }
 
-static
-void flecs_set_member_from_component(
+static void flecs_set_member_from_component(
     ecs_world_t *world,
     ecs_entity_t e,
     EcsMember *member,
@@ -311,6 +309,7 @@ void flecs_set_member_from_component(
         .type = member->type,
         .count = member->count,
         .offset = member->offset,
+        .use_offset = member->use_offset,
         .unit = member->unit
     };
 
@@ -323,8 +322,7 @@ void flecs_set_member_from_component(
     flecs_add_member_to_struct(world, struct_type, e, &m);
 }
 
-static
-void flecs_set_member(ecs_iter_t *it) {
+static void flecs_set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsMember *member = ecs_field(it, EcsMember, 0);
     EcsMemberRanges *ranges = ecs_table_get_id(world, it->table, 
@@ -337,8 +335,7 @@ void flecs_set_member(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_set_member_ranges(ecs_iter_t *it) {
+static void flecs_set_member_ranges(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsMemberRanges *ranges = ecs_field(it, EcsMemberRanges, 0);
     EcsMember *member = ecs_table_get_id(world, it->table, 
@@ -354,8 +351,7 @@ void flecs_set_member_ranges(ecs_iter_t *it) {
     }
 }
 
-static
-bool flecs_member_range_overlaps(
+static bool flecs_member_range_overlaps(
     const ecs_member_value_range_t *range,
     const ecs_member_value_range_t *with)
 {
@@ -376,8 +372,7 @@ bool flecs_member_range_overlaps(
     return false;
 }
 
-static
-bool flecs_type_is_number(
+static bool flecs_type_is_number(
     ecs_world_t *world,
     ecs_entity_t type)
 {
@@ -413,8 +408,7 @@ bool flecs_type_is_number(
     }
 }
 
-static
-int flecs_member_validate_ranges(
+static int flecs_member_validate_ranges(
     ecs_world_t *world,
     ecs_entity_t type,
     const ecs_member_t *member,
@@ -487,8 +481,7 @@ error:
     return -1;
 }
 
-static
-void flecs_struct_create_member_entity(
+static void flecs_struct_create_member_entity(
     ecs_world_t *world,
     ecs_entity_t type,
     const ecs_member_t *member,
@@ -500,6 +493,7 @@ void flecs_struct_create_member_entity(
         .type = member->type,
         .count = member->count,
         .offset = member->offset,
+        .use_offset = member->use_offset,
         .unit = member->unit
     });
 
@@ -649,29 +643,30 @@ ecs_member_t* ecs_struct_get_nth_member(
 void flecs_meta_struct_init(
     ecs_world_t *world)
 {
+    ecs_entity_t member = ecs_entity(world, { .id = ecs_id(EcsMember),
+        .name = "member", .symbol = "EcsMember" });
+    ecs_add_pair(world, member, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsMember),
-            .name = "member", .symbol = "EcsMember",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = member,
         .type.size = sizeof(EcsMember),
         .type.alignment = ECS_ALIGNOF(EcsMember)
     });
 
+    ecs_entity_t member_ranges = ecs_entity(world, {
+        .id = ecs_id(EcsMemberRanges),
+        .name = "member_ranges", .symbol = "EcsMemberRanges" });
+    ecs_add_pair(world, member_ranges, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsMemberRanges),
-            .name = "member_ranges", .symbol = "EcsMemberRanges",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = member_ranges,
         .type.size = sizeof(EcsMemberRanges),
         .type.alignment = ECS_ALIGNOF(EcsMemberRanges)
     });
 
+    ecs_entity_t struct_component = ecs_entity(world, { .id = ecs_id(EcsStruct),
+        .name = "struct", .symbol = "EcsStruct" });
+    ecs_add_pair(world, struct_component, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsStruct),
-            .name = "struct", .symbol = "EcsStruct",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = struct_component,
         .type.size = sizeof(EcsStruct),
         .type.alignment = ECS_ALIGNOF(EcsStruct)
     });
@@ -705,9 +700,7 @@ void flecs_meta_struct_init(
         .global_observer = true
     });
 
-    ecs_set(world, ecs_id(EcsStruct),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
     ecs_add_pair(world, ecs_id(EcsStruct), EcsWith, ecs_id(EcsComponent));
-    ecs_set(world, ecs_id(EcsMember),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
 }
 
 #endif

@@ -1,7 +1,6 @@
 #include <addons.h>
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = NULL;
     Mass *m = NULL;
@@ -43,9 +42,12 @@ void SystemPeriodic_1_type_1_component(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
@@ -91,9 +93,18 @@ void SystemPeriodic_1_type_3_component(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e1, Position, Velocity, Mass);
-    ECS_ENTITY(world, e2, Position, Velocity, Mass);
-    ECS_ENTITY(world, e3, Position, Velocity, Mass);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e1, Mass);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e2, Mass);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_add(world, e3, Mass);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, Mass);
 
@@ -172,9 +183,14 @@ void SystemPeriodic_3_type_1_component(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Mass);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Mass);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
@@ -225,9 +241,19 @@ void SystemPeriodic_2_type_3_component(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity, Mass);
-    ECS_ENTITY(world, e2, Position, Velocity, Mass);
-    ECS_ENTITY(world, e3, Position, Velocity, Mass, Rotation);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e1, Mass);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e2, Mass);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_add(world, e3, Mass);
+    ecs_add(world, e3, Rotation);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, Mass);
 
@@ -308,12 +334,18 @@ void SystemPeriodic_2_type_3_component(void) {
 void SystemPeriodic_1_type_1_component_1_tag(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position, Tag);
-    ECS_ENTITY(world, e2, Position, Tag);
-    ECS_ENTITY(world, e3, Position, Tag);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add_id(world, e1, Tag);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add_id(world, e2, Tag);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add_id(world, e3, Tag);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Tag);
 
@@ -357,12 +389,17 @@ void SystemPeriodic_1_type_1_component_1_tag(void) {
 void SystemPeriodic_2_type_1_component_1_tag(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position, Tag);
-    ECS_ENTITY(world, e2, Position, Tag);
-    ECS_ENTITY(world, e3, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add_id(world, e1, Tag);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add_id(world, e2, Tag);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Tag);
 
@@ -404,9 +441,13 @@ void SystemPeriodic_2_type_1_and_1_not(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity);
 
@@ -448,9 +489,16 @@ void SystemPeriodic_2_type_2_and_1_not(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity, Mass);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_add(world, e3, Mass);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, !Mass);
 
@@ -505,9 +553,17 @@ void SystemPeriodic_2_type_2_and_2_not(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e3, Position, Velocity, Mass);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e2, Rotation);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_add(world, e3, Mass);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, !Mass, !Rotation);
 
@@ -555,10 +611,18 @@ void SystemPeriodic_4_type_1_and_1_or(void) {
     ECS_COMPONENT(world, Position_1);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position_1, Velocity);
-    ECS_ENTITY(world, e3, Position, Position_1, Velocity);
-    ECS_ENTITY(world, e4, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position_1);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Position_1);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Velocity);
 
     ecs_set(world, e3, Position_1, {0, 0});
     ecs_set(world, e4, Velocity, {0, 0});
@@ -604,10 +668,18 @@ void SystemPeriodic_4_type_1_and_1_or_of_3(void) {
     ECS_COMPONENT(world, Position_2);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position_2, Velocity);
-    ECS_ENTITY(world, e3, Position_1, Position_2, Velocity);
-    ECS_ENTITY(world, e4, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position_2);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position_1);
+    ecs_add(world, e3, Position_2);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Velocity);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position || Position_1 || Position_2, Velocity);
 
@@ -652,8 +724,12 @@ void SystemPeriodic_1_type_1_and_1_or(void) {
     ECS_COMPONENT(world, Position_1);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position || Position_1, Velocity);
 
@@ -681,8 +757,12 @@ void SystemPeriodic_1_type_1_and_1_or(void) {
     ecs_delete(world, e1);
     ecs_delete(world, e2);
 
-    ECS_ENTITY(world, e3, Position_1, Velocity);
-    ECS_ENTITY(world, e4, Position_1, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position_1);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position_1);
+    ecs_add(world, e4, Velocity);
     
     ecs_progress(world, 1);
 
@@ -708,9 +788,14 @@ void SystemPeriodic_2_type_1_and_1_optional(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Velocity);
 
@@ -772,9 +857,17 @@ void SystemPeriodic_2_type_2_and_1_optional(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e1, Position, Velocity, Mass);
-    ECS_ENTITY(world, e2, Position, Velocity, Mass);
-    ECS_ENTITY(world, e3, Position, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e1, Mass);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e2, Mass);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, ?Mass);
 
@@ -850,12 +943,22 @@ void SystemPeriodic_6_type_1_and_2_optional(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity, Mass);
-    ECS_ENTITY(world, e3, Position, Mass);
-    ECS_ENTITY(world, e4, Position);
-    ECS_ENTITY(world, e5, Velocity);
-    ECS_ENTITY(world, e6, Mass);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e2, Mass);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Mass);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Velocity);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Mass);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Velocity, ?Mass);
 
@@ -949,7 +1052,8 @@ void SystemPeriodic_match_2_systems_w_populated_table(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, Dummy_1, EcsOnUpdate, Position);
     ECS_SYSTEM(world, Dummy_2, EcsOnUpdate, Position);
@@ -997,7 +1101,8 @@ void SystemPeriodic_ensure_optional_is_unset_column(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, TestOptional_w_column, EcsOnUpdate, Position, ?Velocity);
     
@@ -1025,7 +1130,8 @@ void SystemPeriodic_ensure_optional_is_null_shared(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?Velocity(up));
     
@@ -1052,23 +1158,19 @@ static int normal_count;
 static int normal_count_2;
 static int normal_count_3;
 
-static
-void OnPeriodSystem(ecs_iter_t *it) {
+static void OnPeriodSystem(ecs_iter_t *it) {
     on_period_count ++;
 }
 
-static
-void NormalSystem(ecs_iter_t *it) {
+static void NormalSystem(ecs_iter_t *it) {
     normal_count ++;
 }
 
-static
-void NormalSystem2(ecs_iter_t *it) {
+static void NormalSystem2(ecs_iter_t *it) {
     normal_count_2 ++;
 }
 
-static
-void NormalSystem3(ecs_iter_t *it) {
+static void NormalSystem3(ecs_iter_t *it) {
     normal_count_3 ++;
 }
 
@@ -1076,7 +1178,8 @@ void SystemPeriodic_on_period(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, e, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, OnPeriodSystem, EcsOnUpdate, Position);
     ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
@@ -1112,7 +1215,8 @@ void SystemPeriodic_on_period_long_delta(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, OnPeriodSystem, EcsOnUpdate, Position);
     ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
@@ -1139,7 +1243,8 @@ void SystemPeriodic_disabled(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
 
@@ -1167,7 +1272,8 @@ void SystemPeriodic_2_disabled(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
     ECS_SYSTEM(world, NormalSystem2, EcsOnUpdate, Position);
@@ -1210,79 +1316,6 @@ void SystemPeriodic_2_disabled(void) {
     ecs_fini(world);
 }
 
-void SystemPeriodic_disabled_feature(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ECS_ENTITY(world, e, Position);
-
-    ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
-    ECS_SYSTEM(world, NormalSystem2, EcsOnUpdate, Position);
-
-    ECS_PREFAB(world, Type, NormalSystem, NormalSystem2);
-
-    ecs_progress(world, 0);
-
-    test_int(normal_count, 1);
-    test_int(normal_count_2, 1);
-
-    ecs_enable(world, Type, false);
-
-    ecs_progress(world, 0);
-
-    test_int(normal_count, 1);
-    test_int(normal_count_2, 1);
-
-    ecs_enable(world, Type, true);
-
-    ecs_progress(world, 0);
-
-    test_int(normal_count, 2);
-    test_int(normal_count_2, 2);
-
-    ecs_fini(world);
-}
-
-void SystemPeriodic_disabled_nested_feature(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ECS_ENTITY(world, e, Position);
-
-    ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
-    ECS_SYSTEM(world, NormalSystem2, EcsOnUpdate, Position);
-    ECS_SYSTEM(world, NormalSystem3, EcsOnUpdate, Position);
-
-    ECS_PREFAB(world, NestedType, NormalSystem2, NormalSystem3);
-    ECS_PREFAB(world, Type, NormalSystem, NestedType);
-
-    ecs_progress(world, 0);
-
-    test_int(normal_count, 1);
-    test_int(normal_count_2, 1);
-    test_int(normal_count_3, 1);
-
-    ecs_enable(world, Type, false);
-
-    ecs_progress(world, 0);
-
-    test_int(normal_count, 1);
-    test_int(normal_count_2, 1);
-    test_int(normal_count_3, 1);
-
-    ecs_enable(world, Type, true);
-
-    ecs_progress(world, 0);
-
-    test_int(normal_count, 2);
-    test_int(normal_count_2, 2);
-    test_int(normal_count_3, 2);
-
-    ecs_fini(world);
-}
-
 void TwoRefs(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = ecs_field(it, Velocity, 1);
@@ -1303,8 +1336,11 @@ void SystemPeriodic_two_refs(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e, Position, Velocity);
-    ECS_ENTITY(world, E2, Mass);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+    ecs_entity_t E2 = ecs_entity(world, { .name = "E2" });
+    ecs_add(world, E2, Mass);
 
     ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, Position(e), Velocity(e), e(), Mass);
 
@@ -1335,8 +1371,11 @@ void SystemPeriodic_filter_disabled(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, Entity1, Position);
-    ECS_ENTITY(world, Entity2, Position, Disabled);
+    ecs_entity_t Entity1 = ecs_entity(world, { .name = "Entity1" });
+    ecs_add(world, Entity1, Position);
+    ecs_entity_t Entity2 = ecs_entity(world, { .name = "Entity2" });
+    ecs_add(world, Entity2, Position);
+    ecs_add_id(world, Entity2, EcsDisabled);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
@@ -1360,8 +1399,11 @@ void SystemPeriodic_match_disabled(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, Entity1, Position);
-    ECS_ENTITY(world, Entity2, Position, Disabled);
+    ecs_entity_t Entity1 = ecs_entity(world, { .name = "Entity1" });
+    ecs_add(world, Entity1, Position);
+    ecs_entity_t Entity2 = ecs_entity(world, { .name = "Entity2" });
+    ecs_add(world, Entity2, Position);
+    ecs_add_id(world, Entity2, EcsDisabled);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Disabled);
 
@@ -1387,8 +1429,11 @@ void SystemPeriodic_match_disabled_and_enabled(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, Entity1, Position);
-    ECS_ENTITY(world, Entity2, Position, Disabled);
+    ecs_entity_t Entity1 = ecs_entity(world, { .name = "Entity1" });
+    ecs_add(world, Entity1, Position);
+    ecs_entity_t Entity2 = ecs_entity(world, { .name = "Entity2" });
+    ecs_add(world, Entity2, Position);
+    ecs_add_id(world, Entity2, EcsDisabled);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Disabled);
 
@@ -1415,8 +1460,11 @@ void SystemPeriodic_match_prefab(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, Entity1, Position);
-    ECS_ENTITY(world, Entity2, Position, Prefab);
+    ecs_entity_t Entity1 = ecs_entity(world, { .name = "Entity1" });
+    ecs_add(world, Entity1, Position);
+    ecs_entity_t Entity2 = ecs_entity(world, { .name = "Entity2" });
+    ecs_add(world, Entity2, Position);
+    ecs_add_id(world, Entity2, EcsPrefab);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Prefab);
 
@@ -1442,8 +1490,11 @@ void SystemPeriodic_match_prefab_and_normal(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, Entity1, Position);
-    ECS_ENTITY(world, Entity2, Position, Prefab);
+    ecs_entity_t Entity1 = ecs_entity(world, { .name = "Entity1" });
+    ecs_add(world, Entity1, Position);
+    ecs_entity_t Entity2 = ecs_entity(world, { .name = "Entity2" });
+    ecs_add(world, Entity2, Position);
+    ecs_add_id(world, Entity2, EcsPrefab);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Prefab);
 
@@ -1465,8 +1516,7 @@ void SystemPeriodic_match_prefab_and_normal(void) {
     ecs_fini(world);
 }
 
-static
-void TestIsSharedOnNotSet(ecs_iter_t *it) {
+static void TestIsSharedOnNotSet(ecs_iter_t *it) {
     test_assert(ecs_field_is_self(it, 1) != false);
 }
 
@@ -1476,7 +1526,8 @@ void SystemPeriodic_is_shared_on_column_not_set(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, Entity, Position);
+    ecs_entity_t Entity = ecs_entity(world, { .name = "Entity" });
+    ecs_add(world, Entity, Position);
 
     ECS_SYSTEM(world, TestIsSharedOnNotSet, EcsOnUpdate, Position, ?Velocity);
 
@@ -1497,9 +1548,14 @@ void SystemPeriodic_owned_column(void) {
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, base, Velocity);
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, (IsA, base));
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+    ecs_add(world, base, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add_pair(world, e2, EcsIsA, base);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(self));
 
@@ -1529,9 +1585,14 @@ void SystemPeriodic_owned_not_column(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, base, Velocity);
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, (IsA, base));
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+    ecs_add(world, base, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add_pair(world, e2, EcsIsA, base);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity(self));
 
@@ -1567,10 +1628,17 @@ void SystemPeriodic_owned_or_column(void) {
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, base, Velocity);
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Mass);
-    ECS_ENTITY(world, e3, Position, (IsA, base));
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+    ecs_add(world, base, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Mass);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add_pair(world, e3, EcsIsA, base);
 
     ECS_SYSTEM(world, OwnedOr, EcsOnUpdate, Position, Velocity(self) || Mass(self));
 
@@ -1603,10 +1671,16 @@ void SystemPeriodic_shared_column(void) {
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, base, Velocity);
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, (IsA, base));
-    ECS_ENTITY(world, e3, Position);
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+    ecs_add(world, base, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add_pair(world, e2, EcsIsA, base);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(up IsA));
 
@@ -1634,9 +1708,14 @@ void SystemPeriodic_shared_not_column(void) {
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, base, Velocity);
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, (IsA, base));
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+    ecs_add(world, base, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add_pair(world, e2, EcsIsA, base);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity(up IsA));
 
@@ -1671,12 +1750,22 @@ void SystemPeriodic_shared_or_column(void) {
     ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, base1, Velocity);
-    ECS_ENTITY(world, base2, Mass);
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Mass);
-    ECS_ENTITY(world, e3, Position, (IsA, base1));
-    ECS_ENTITY(world, e4, Position, (IsA, base2));
+    ecs_entity_t base1 = ecs_entity(world, { .name = "base1" });
+    ecs_add(world, base1, Velocity);
+    ecs_entity_t base2 = ecs_entity(world, { .name = "base2" });
+    ecs_add(world, base2, Mass);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Mass);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add_pair(world, e3, EcsIsA, base1);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add_pair(world, e4, EcsIsA, base2);
 
     ECS_SYSTEM(world, SharedOr, EcsOnUpdate, Position, Velocity(up IsA) || Mass(up IsA));
 
@@ -1710,9 +1799,14 @@ void SystemPeriodic_container_dont_match_inheritance(void) {
 
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, base, Velocity);
-    ECS_ENTITY(world, e1, Position, (IsA, base));
-    ECS_ENTITY(world, e2, Position, (ChildOf, base));
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+    ecs_add(world, base, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add_pair(world, e2, EcsChildOf, base);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(up));
 
@@ -1741,9 +1835,14 @@ void SystemPeriodic_cascade_dont_match_inheritance(void) {
 
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, base, Velocity);
-    ECS_ENTITY(world, e1, Position, (IsA, base));
-    ECS_ENTITY(world, e2, Position, (ChildOf, base));
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+    ecs_add(world, base, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add_pair(world, e2, EcsChildOf, base);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Velocity(cascade));
 
@@ -1775,8 +1874,9 @@ void SystemPeriodic_not_from_entity(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e, Position);
-    ECS_ENTITY(world, e2, 0);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity(e2));
 
@@ -1796,8 +1896,7 @@ void SystemPeriodic_not_from_entity(void) {
     ecs_fini(world);
 }
 
-static
-void TestContext(ecs_iter_t *it) {
+static void TestContext(ecs_iter_t *it) {
     void *world_ctx = ecs_get_ctx(it->world);
     test_assert(world_ctx == it->ctx);
     int32_t *ctx = it->ctx;
@@ -1826,7 +1925,8 @@ void SystemPeriodic_get_sys_context_from_param(void) {
     int32_t param = 0;
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, e, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, TestContext, EcsOnUpdate, Position);
 
@@ -1932,13 +2032,18 @@ void SystemPeriodic_and_type(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_PREFAB(world, MyType, Position, Velocity);
+    ecs_entity_t MyType = ecs_entity(world, { .name = "MyType" });
+    ecs_add_id(world, MyType, EcsPrefab);
+    ecs_add(world, MyType, Position);
+    ecs_add(world, MyType, Velocity);
 
     ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, and | MyType);
 
     ecs_new_w(world, Position);
     ecs_new_w(world, Velocity);
-    ECS_ENTITY(world, e, Position, Velocity);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
 
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
@@ -1963,7 +2068,10 @@ void SystemPeriodic_or_type(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_PREFAB(world, MyType, Position, Velocity);
+    ecs_entity_t MyType = ecs_entity(world, { .name = "MyType" });
+    ecs_add_id(world, MyType, EcsPrefab);
+    ecs_add(world, MyType, Position);
+    ecs_add(world, MyType, Velocity);
 
     ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, or | MyType);
 

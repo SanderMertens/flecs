@@ -11,7 +11,9 @@ typedef struct ecs_stage_allocators_t {
     ecs_stack_t iter_stack;
     ecs_block_allocator_t cmd_entry_chunk;
     ecs_block_allocator_t query_impl;
+#ifdef FLECS_CACHED_QUERIES
     ecs_block_allocator_t query_cache;
+#endif
 } ecs_stage_allocators_t;
 
 /** A stage is a context that allows for safely using the API from multiple 
@@ -21,7 +23,7 @@ typedef struct ecs_stage_allocators_t {
  * 
  *  - A command queue for deferred ECS operations and events
  *  - Thread-specific allocators
- *  - Thread-specific world state (like current scope, with, current system)
+ *  - Thread-specific world state (like current scope, current system)
  *  - Thread-specific buffers for preventing allocations
  */
 struct ecs_stage_t {
@@ -48,7 +50,6 @@ struct ecs_stage_t {
 
     /* Namespacing */
     ecs_entity_t scope;              /* Entity of current scope */
-    ecs_entity_t with;               /* Id to add by default to new entities */
     ecs_entity_t base;               /* Currently instantiated top-level base */
     const ecs_entity_t *lookup_path; /* Search path used by lookup operations */
 

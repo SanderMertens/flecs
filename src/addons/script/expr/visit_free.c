@@ -8,18 +8,17 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
-static
-void flecs_expr_value_visit_free(
+static void flecs_expr_value_visit_free(
     ecs_script_t *script,
     ecs_expr_value_node_t *node)
 {
     if (node->ptr != &node->storage) {
-        ecs_ptr_free(script->world, node->node.type, node->ptr);
+        ecs_ptr_free_w_type_info(script->world, node->node.type_info, node->ptr);
+        flecs_type_info_release(node->node.type_info);
     }
 }
 
-static
-void flecs_expr_interpolated_string_visit_free(
+static void flecs_expr_interpolated_string_visit_free(
     ecs_script_t *script,
     ecs_expr_interpolated_string_t *node)
 {
@@ -46,8 +45,7 @@ void flecs_expr_interpolated_string_visit_free(
         char, node->buffer_size, node->buffer);
 }
 
-static
-void flecs_expr_initializer_visit_free(
+static void flecs_expr_initializer_visit_free(
     ecs_script_t *script,
     ecs_expr_initializer_t *node)
 {
@@ -63,16 +61,14 @@ void flecs_expr_initializer_visit_free(
     ecs_vec_fini_t(a, &node->elements, ecs_expr_initializer_element_t);
 }
 
-static
-void flecs_expr_unary_visit_free(
+static void flecs_expr_unary_visit_free(
     ecs_script_t *script,
     ecs_expr_unary_t *node)
 {
     flecs_expr_visit_free(script, node->expr);
 }
 
-static
-void flecs_expr_binary_visit_free(
+static void flecs_expr_binary_visit_free(
     ecs_script_t *script,
     ecs_expr_binary_t *node)
 {
@@ -80,16 +76,14 @@ void flecs_expr_binary_visit_free(
     flecs_expr_visit_free(script, node->right);
 }
 
-static
-void flecs_expr_identifier_visit_free(
+static void flecs_expr_identifier_visit_free(
     ecs_script_t *script,
     ecs_expr_identifier_t *node)
 {
     flecs_expr_visit_free(script, node->expr);
 }
 
-static
-void flecs_expr_function_visit_free(
+static void flecs_expr_function_visit_free(
     ecs_script_t *script,
     ecs_expr_function_t *node)
 {
@@ -97,16 +91,14 @@ void flecs_expr_function_visit_free(
     flecs_expr_visit_free(script, (ecs_expr_node_t*)node->args);
 }
 
-static
-void flecs_expr_member_visit_free(
+static void flecs_expr_member_visit_free(
     ecs_script_t *script,
     ecs_expr_member_t *node)
 {
     flecs_expr_visit_free(script, node->left);
 }
 
-static
-void flecs_expr_element_visit_free(
+static void flecs_expr_element_visit_free(
     ecs_script_t *script,
     ecs_expr_element_t *node)
 {
@@ -114,8 +106,7 @@ void flecs_expr_element_visit_free(
     flecs_expr_visit_free(script, node->index);
 }
 
-static
-void flecs_expr_match_visit_free(
+static void flecs_expr_match_visit_free(
     ecs_script_t *script,
     ecs_expr_match_t *node)
 {
@@ -141,8 +132,7 @@ void flecs_expr_match_visit_free(
         &node->elements, ecs_expr_match_element_t);
 }
 
-static
-void flecs_expr_new_visit_free(
+static void flecs_expr_new_visit_free(
     ecs_script_t *script,
     ecs_expr_new_t *node)
 {
@@ -151,8 +141,7 @@ void flecs_expr_new_visit_free(
     }
 }
 
-static
-void flecs_expr_cast_visit_free(
+static void flecs_expr_cast_visit_free(
     ecs_script_t *script,
     ecs_expr_cast_t *node)
 {

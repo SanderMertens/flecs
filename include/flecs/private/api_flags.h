@@ -78,7 +78,7 @@ extern "C" {
 #define EcsIdInheritable               (1u << 15)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags. */
-#define EcsIdHasOnRemove               (1u << 17) 
+#define EcsIdHasOnRemove               (1u << 17)
 #define EcsIdHasOnSet                  (1u << 18)
 #define EcsIdHasOnTableCreate          (1u << 19)
 #define EcsIdHasOnTableDelete          (1u << 20)
@@ -87,10 +87,11 @@ extern "C" {
 #define EcsIdMatchDontFragment         (1u << 23) /* For (*, T) wildcards. */
 #define EcsIdOrderedChildren           (1u << 24)
 #define EcsIdSingleton                 (1u << 25)
+#define EcsIdHasUpNotify               (1u << 31)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
         EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdSparse|\
-        EcsIdOrderedChildren)
+        EcsIdOrderedChildren|EcsIdHasUpNotify)
 #define EcsIdPrefabChildren            (1u << 26)
 
 #define EcsIdMarkedForDelete           (1u << 30)
@@ -104,10 +105,13 @@ extern "C" {
 #define ECS_ID_ON_DELETE_TARGET_FLAG(id) (1u << (3 + ((id) - EcsRemove)))
 
 /* Utilities for converting from flags to instantiate policies and vice versa. */
+#ifdef FLECS_PREFAB
 #define ECS_ID_ON_INSTANTIATE(flags) \
     ((ecs_entity_t[]){EcsOverride, EcsOverride, EcsInherit, 0, EcsDontInherit}\
         [(((flags) & EcsIdOnInstantiateMask) >> 6)])
-#define ECS_ID_ON_INSTANTIATE_FLAG(id) (1u << (6 + ((id) - EcsOverride)))
+#endif
+#define ECS_ID_ON_INSTANTIATE_FLAG(id) \
+    (1u << (8 - (EcsDontInherit - (id))))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,6 +221,7 @@ extern "C" {
 #define EcsObserverYieldOnCreate       (1u << 8u)  /* Yield matching entities when creating observer. */
 #define EcsObserverYieldOnDelete       (1u << 9u)  /* Yield matching entities when deleting observer. */
 #define EcsObserverKeepAlive           (1u << 11u) /* Observer keeps component alive (same value as EcsTermKeepAlive). */
+#define EcsObserverIsUpNotify          (1u << 12u)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
@@ -255,15 +260,16 @@ extern "C" {
 #define EcsTableEdgeReparent           (1u << 28u)
 #define EcsTableMarkedForDelete        (1u << 29u)
 #define EcsTableNotEmpty               (1u << 30u) /* Does the table have entities. */
+#define EcsTableHasUpNotify            (1u << 31u)
 
 /* Composite table flags */
 #define EcsTableHasLifecycle     (EcsTableHasCtors | EcsTableHasDtors)
 #define EcsTableIsComplex        (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
 #define EcsTableHasAddActions    (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
 #define EcsTableHasRemoveActions (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
-#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse)
-#define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse)
-#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasOrderedChildren)
+#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUpNotify)
+#define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse | EcsTableHasUpNotify)
+#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasOrderedChildren | EcsTableHasUpNotify)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Aperiodic action flags (used by ecs_run_aperiodic())

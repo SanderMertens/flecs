@@ -9,8 +9,7 @@
 
 #ifdef FLECS_TIMER
 
-static
-void ProgressTimers(ecs_iter_t *it) {
+static void ProgressTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_field(it, EcsTimer, 0);
     EcsTickSource *tick_source = ecs_field(it, EcsTickSource, 1);
 
@@ -48,8 +47,7 @@ void ProgressTimers(ecs_iter_t *it) {
     }
 }
 
-static
-void ProgressRateFilters(ecs_iter_t *it) {
+static void ProgressRateFilters(ecs_iter_t *it) {
     EcsRateFilter *filter = ecs_field(it, EcsRateFilter, 0);
     EcsTickSource *tick_dst = ecs_field(it, EcsTickSource, 1);
 
@@ -87,8 +85,7 @@ void ProgressRateFilters(ecs_iter_t *it) {
     }
 }
 
-static
-void ProgressTickSource(ecs_iter_t *it) {
+static void ProgressTickSource(ecs_iter_t *it) {
     EcsTickSource *tick_src = ecs_field(it, EcsTickSource, 0);
 
     /* If tick source has no filters, tick unconditionally */
@@ -260,8 +257,7 @@ error:
     return;
 }
 
-static
-void RandomizeTimers(ecs_iter_t *it) {
+static void RandomizeTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_field(it, EcsTimer, 0);
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -304,7 +300,8 @@ void FlecsTimerImport(
 
     /* Timer handling */
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "ProgressTimers", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
+        .entity = ecs_entity(world, {.name = "ProgressTimers"}),
+        .phase = EcsPreFrame,
         .query.terms = {
             { .id = ecs_id(EcsTimer) },
             { .id = ecs_id(EcsTickSource) }
@@ -314,7 +311,8 @@ void FlecsTimerImport(
 
     /* Rate filter handling */
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "ProgressRateFilters", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
+        .entity = ecs_entity(world, {.name = "ProgressRateFilters"}),
+        .phase = EcsPreFrame,
         .query.terms = {
             { .id = ecs_id(EcsRateFilter), .inout = EcsIn },
             { .id = ecs_id(EcsTickSource), .inout = EcsOut }
@@ -324,7 +322,8 @@ void FlecsTimerImport(
 
     /* TickSource without a timer or rate filter just increases each frame */
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "ProgressTickSource", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
+        .entity = ecs_entity(world, { .name = "ProgressTickSource" }),
+        .phase = EcsPreFrame,
         .query.terms = {
             { .id = ecs_id(EcsTickSource), .inout = EcsOut },
             { .id = ecs_id(EcsRateFilter), .oper = EcsNot },

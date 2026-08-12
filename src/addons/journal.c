@@ -7,8 +7,7 @@
 
 #ifdef FLECS_JOURNAL
 
-static
-char* flecs_journal_entitystr(
+static char* flecs_journal_entitystr(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
@@ -17,7 +16,7 @@ char* flecs_journal_entitystr(
     if (_path && !strchr(_path, '.')) {
         path = flecs_asprintf("#[blue]%s", _path);
     } else {
-        uint32_t gen = entity >> 32;
+        uint32_t gen = (uint32_t)(entity >> 32);
         if (gen) {
             path = flecs_asprintf("#[normal]_%u_%u", (uint32_t)entity, gen);
         } else {
@@ -27,8 +26,7 @@ char* flecs_journal_entitystr(
     return path;
 }
 
-static
-char* flecs_journal_idstr(
+static char* flecs_journal_idstr(
     ecs_world_t *world,
     ecs_id_t id)
 {

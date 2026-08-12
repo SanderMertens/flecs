@@ -4,9 +4,10 @@
  */
 
 #include "flecs.h"
-#include "stats.h"
 
 #ifdef FLECS_STATS
+
+#include "stats.h"
 
 ECS_COMPONENT_DECLARE(FlecsStats);
 
@@ -33,8 +34,7 @@ typedef struct {
     int32_t interval;
 } ecs_aggregate_stats_ctx_t;
 
-static
-void MonitorStats(ecs_iter_t *it) {
+static void MonitorStats(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
     ecs_monitor_stats_ctx_t *ctx = it->ctx;
 
@@ -127,8 +127,7 @@ void MonitorStats(ecs_iter_t *it) {
     }
 }
 
-static
-void ReduceStats(ecs_iter_t *it) {
+static void ReduceStats(ecs_iter_t *it) {
     ecs_reduce_stats_ctx_t *ctx = it->ctx;
 
     void *dst = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
@@ -154,8 +153,7 @@ void ReduceStats(ecs_iter_t *it) {
     }
 }
 
-static
-void AggregateStats(ecs_iter_t *it) {
+static void AggregateStats(ecs_iter_t *it) {
     ecs_aggregate_stats_ctx_t *ctx = it->ctx;
     int32_t interval = ctx->interval;
 
@@ -227,8 +225,7 @@ void AggregateStats(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_monitor_ctx_free(
+static void flecs_monitor_ctx_free(
     void *ptr)
 {
     ecs_monitor_stats_ctx_t *ctx = ptr;
@@ -238,15 +235,13 @@ void flecs_monitor_ctx_free(
     ecs_os_free(ctx);
 }
 
-static
-void flecs_reduce_ctx_free(
+static void flecs_reduce_ctx_free(
     void *ptr)
 {
     ecs_os_free(ptr);
 }
 
-static
-void flecs_aggregate_ctx_free(
+static void flecs_aggregate_ctx_free(
     void *ptr)
 {
     ecs_os_free(ptr);
@@ -275,7 +270,8 @@ void flecs_stats_api_import(
         ctx->query = q;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1s", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1s" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1s),
                 .src.id = EcsWorld 
@@ -293,7 +289,8 @@ void flecs_stats_api_import(
         ctx->api = *api;
 
         mw1m = ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1m", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1m" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1m),
                 .src.id = EcsWorld 
@@ -302,7 +299,7 @@ void flecs_stats_api_import(
                 .src.id = EcsWorld 
             }},
             .callback = ReduceStats,
-            .interval = 1.0,
+            .interval = (ecs_ftime_t)1,
             .ctx = ctx,
             .ctx_free = flecs_reduce_ctx_free
         });
@@ -314,7 +311,8 @@ void flecs_stats_api_import(
         ctx->api = *api;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1h", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1h" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1h),
                 .src.id = EcsWorld 
@@ -337,7 +335,8 @@ void flecs_stats_api_import(
         ctx->interval = FlecsDayIntervalCount;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1d", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1d" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1d),
                 .src.id = EcsWorld 
@@ -360,7 +359,8 @@ void flecs_stats_api_import(
         ctx->interval = FlecsWeekIntervalCount;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1w", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1w" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1w),
                 .src.id = EcsWorld 

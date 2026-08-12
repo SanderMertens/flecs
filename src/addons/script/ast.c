@@ -15,8 +15,7 @@
 #define flecs_ast_append(parser, vec, T, node) \
     ecs_vec_append_t(&parser->script->allocator, &vec, T*)[0] = node
 
-static
-void* flecs_ast_new_(
+static void* flecs_ast_new_(
     ecs_parser_t *parser,
     ecs_size_t size, 
     ecs_script_node_kind_t kind)
@@ -46,8 +45,7 @@ bool flecs_scope_is_empty(
     return ecs_vec_count(&scope->stmts) == 0;
 }
 
-static
-int flecs_script_name_to_expr(
+static int flecs_script_name_to_expr(
     ecs_parser_t *parser,
     const char *name,
     ecs_expr_node_t** out)
@@ -101,8 +99,7 @@ error:
     return NULL;
 }
 
-static
-int flecs_script_set_id(
+static int flecs_script_set_id(
     ecs_parser_t *parser,
     ecs_script_id_t *id,
     const char *first,
@@ -200,21 +197,6 @@ ecs_script_component_t* flecs_script_insert_component(
     const char *name)
 {
     return flecs_script_insert_pair_component(parser, name, NULL);
-}
-
-ecs_script_default_component_t* flecs_script_insert_default_component(
-    ecs_parser_t *parser)
-{
-    ecs_script_scope_t *scope = parser->scope;
-    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_script_default_component_t *result = flecs_ast_new(
-            parser, ecs_script_default_component_t, EcsAstDefaultComponent);
-
-    flecs_ast_append(parser, scope->stmts, 
-        ecs_script_default_component_t, result);
-
-    return result;
 }
 
 ecs_script_var_component_t* flecs_script_insert_var_component(

@@ -5,9 +5,10 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_CACHED_QUERIES
+
 /* Free cache entry element. */
-static
-void flecs_query_cache_match_elem_fini(
+static void flecs_query_cache_match_elem_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *qm)
 {
@@ -58,8 +59,7 @@ void flecs_query_cache_match_fini(
 }
 
 /* Initialize cache entry element. */
-static
-void flecs_query_cache_match_set(
+static void flecs_query_cache_match_set(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *qm,
     ecs_iter_t *it)
@@ -186,8 +186,7 @@ bool flecs_query_cache_match_next(
 
 /* Same as flecs_query_cache_match_next, but for rematching. This function will
  * overwrite existing cache entries with new match data. */
-static
-bool flecs_query_cache_rematch_next(
+static bool flecs_query_cache_rematch_next(
     ecs_query_cache_t *cache,
     ecs_iter_t *it)
 {
@@ -204,10 +203,6 @@ bool flecs_query_cache_rematch_next(
     int32_t wildcard_elem = 0;
 
     bool result = true, has_more = true;
-
-    /* So we can tell which tables in the cache got rematched. All tables for 
-     * which this counter hasn't changed are no longer matched by the query. */
-    first->rematch_count = cache->rematch_count;
 
     do {
         flecs_query_cache_match_set(cache, qm, it);
@@ -267,93 +262,70 @@ bool flecs_query_cache_rematch_next(
     } while (true);
 }
 
-/* Rematch query cache. This function is called whenever something happened that
- * could have caused a previously matching table to no longer match with the 
- * query. This function is not called for regular table creation or deletion.
- * 
- * An example of when this function is called is when a query matched a 
- * component on a parent, and that component was removed from the parent. This
- * means that tables with (ChildOf, parent) previously matched the query, but
- * after the component got removed, no longer match.
- * 
- * This operation is expensive, since it needs to:
- * - make sure that optional fields matched on parents are updated
- * - make sure that groups are up to date for all the matched tables
- * - remove tables that no longer match from the cache.
- */
-void flecs_query_rematch(
+static void flecs_query_rematch_table(
     ecs_world_t *world,
-    ecs_query_t *q)
+    ecs_query_impl_t *impl,
+    ecs_table_t *table)
 {
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_allocator_t *a = &world->allocator;
-
-    ecs_iter_t it;
-    ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Queries with trivial caches can't trigger rematching */
     ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INTERNAL_ERROR, NULL);
 
-    if (cache->monitor_generation == world->monitor_generation) {
+    if (table->flags & EcsTableNotQueryable) {
         return;
     }
 
-    ecs_os_perf_trace_push("flecs.query.rematch");
+    ecs_iter_t it = flecs_query_iter(world, cache->query);
+    ECS_BIT_SET(it.flags, EcsIterNoData);
 
-    cache->monitor_generation = world->monitor_generation;
-    cache->match_count ++;
+    ecs_table_range_t range = { .table = table };
+    ecs_iter_set_var_as_range(&it, 0, &range);
 
-    world->info.rematch_count_total ++;
-    int32_t rematch_count = ++ cache->rematch_count;
+    if (!ecs_query_next(&it)) {
+        flecs_query_cache_remove_table(cache, table);
+        return;
+    }
+
+    if (flecs_query_cache_rematch_next(cache, &it)) {
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    }
+}
+
+void flecs_query_revalidate_table(
+    ecs_world_t *world,
+    ecs_query_impl_t *impl,
+    uint64_t table_id)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_query_cache_t *cache = impl->cache;
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_t *table = flecs_sparse_get_t(
+        &world->store.tables, ecs_table_t, table_id);
+    if (!table) {
+        return;
+    }
+
+    ecs_os_perf_trace_push("flecs.query.revalidate_table");
 
     ecs_time_t t = {0};
     if (world->flags & EcsWorldMeasureFrameTime) {
         ecs_time_measure(&t);
     }
 
-    it = ecs_query_iter(world, cache->query);
-    ECS_BIT_SET(it.flags, EcsIterNoData);
+    world->info.eval_comp_monitors_total ++;
+    cache->match_count ++;
 
-    if (!ecs_query_next(&it)) {
-        flecs_query_cache_remove_all_tables(cache);
-        goto done;
-    }
-
-    while (flecs_query_cache_rematch_next(cache, &it)) { }
-
-    /* Iterate all tables in cache, remove ones that weren't just matched */
-    ecs_vec_t unmatched; ecs_vec_init_t(a, &unmatched, ecs_table_t*, 0);
-    ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
-    ecs_query_cache_group_t *cur = cache->first_group;
-    do {
-        int32_t i, count = ecs_vec_count(&cur->tables);
-        for (i = 0; i < count; i ++) {
-            ecs_query_cache_match_t *qm = 
-                ecs_vec_get(&cur->tables, elem_size, i);
-            if (qm->rematch_count != rematch_count) {
-                /* Collect tables, don't modify map while updating it */
-                ecs_vec_append_t(a, &unmatched, ecs_table_t*)[0] = 
-                    qm->base.table;
-            }
-        }
-    } while ((cur = cur->next));
-
-    /* Actually unmatch tables */
-    int32_t i, count = ecs_vec_count(&unmatched);
-    ecs_table_t **unmatched_tables = ecs_vec_first(&unmatched);
-    for (i = 0; i < count; i ++) {
-        flecs_query_cache_remove_table(cache, unmatched_tables[i]);
-        ecs_assert(flecs_query_cache_get_table(
-            cache, unmatched_tables[i]) == NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-    ecs_vec_fini_t(a, &unmatched, ecs_table_t*);
+    flecs_query_rematch_table(world, impl, table);
 
     if (world->flags & EcsWorldMeasureFrameTime) {
         world->info.rematch_time_total += (ecs_ftime_t)ecs_time_measure(&t);
     }
 
-done:
-    ecs_os_perf_trace_pop("flecs.query.rematch");
+    ecs_os_perf_trace_pop("flecs.query.revalidate_table");
 }
+
+#endif

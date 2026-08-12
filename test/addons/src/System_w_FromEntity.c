@@ -1,7 +1,6 @@
 #include <addons.h>
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Mass *m_ptr = ecs_field(it, Mass, 0);
 
     Position *p = NULL;
@@ -42,8 +41,10 @@ void System_w_FromEntity_2_column_1_from_entity(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e1, Mass);
-    ECS_ENTITY(world, e2, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Mass);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(e1), Position);
 
@@ -78,15 +79,13 @@ static bool dummy_invoked = 0;
 static ecs_entity_t dummy_component = 0;
 static ecs_entity_t dummy_source = 0;
 
-static
-void dummy_reset(void) {
+static void dummy_reset(void) {
     dummy_invoked = false;
     dummy_component = 0;
     dummy_source = 0;
 }
 
-static
-void Dummy(ecs_iter_t *it) {
+static void Dummy(ecs_iter_t *it) {
     dummy_invoked = 1;
     dummy_component = ecs_field_id(it, 0);
     dummy_source = ecs_field_src(it, 0);
@@ -97,7 +96,8 @@ void System_w_FromEntity_task_from_entity(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(e1));
 
@@ -121,7 +121,8 @@ void System_w_FromEntity_task_not_from_entity(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, !Position(e1));
 

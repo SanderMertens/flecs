@@ -18,12 +18,11 @@ static ECS_MOVE(EcsDocDescription, dst, src, {
     src->value = NULL;
 })
 
-static ECS_DTOR(EcsDocDescription, ptr, { 
+static ECS_DTOR(EcsDocDescription, ptr, {
     ecs_os_free((char*)ptr->value);
 })
 
-static
-void flecs_doc_set(
+static void flecs_doc_set(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t kind,
@@ -196,6 +195,9 @@ void FlecsDocImport(
 #endif
 
     ecs_add_pair(world, ecs_id(EcsDocDescription), EcsOnInstantiate, EcsDontInherit);
+#ifdef FLECS_CONSTRAINT_TRAITS
+    ecs_add_id(world, ecs_id(EcsDocDescription), EcsRelationship);
+#endif
 }
 
 #endif

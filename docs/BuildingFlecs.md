@@ -132,6 +132,10 @@ clang++ my_project.o flecs.o -o my_project
 ### Customizing distr files
 The distr folder contains two sets of files: one that contains the entire source code ([distr/flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.c), [distr/flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.h)) and one that strips all addons ([distr/flecs_no_addons.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs_no_addons.c), [distr/flecs_no_addons.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs_no_addons.h)). 
 
+The no-addon distribution also excludes `FLECS_SANITIZE`. Use the regular
+distribution with a custom addon selection when sanitizer-specific allocator
+and storage checks are needed.
+
 It is possible to customize which compile-time flags get disabled when generating a distr build. In order to do this, add an `amalgamate` configuration to [project.json](project.json), and rerun bake on the repository. The following is an example of a configuration that generates a configuration without the C++ addon:
 
 ```json
@@ -399,7 +403,7 @@ cmake -S. -Bbuild_android -GNinja --preset=Android
 Then run command `ninja` in `build_android` directory to start build.
 
 ## Addons
-Flecs has a modular architecture that makes it easy to only build the features you really need. By default all addons are built. To customize a build, first define `FLECS_CUSTOM_BUILD`, then add defines for the addons you need. For example:
+Flecs has a modular architecture that makes it easy to only build the features you really need. The regular distribution enables the default addon set declared in `flecs.h`. To customize a build, first define `FLECS_CUSTOM_BUILD`, then add defines for the addons you need. For example:
 
 ```c
 #define FLECS_CUSTOM_BUILD  // Don't build all addons
@@ -417,7 +421,14 @@ The following addons can be configured:
 Addon         | Description                                      | Define              |
 --------------|--------------------------------------------------|---------------------|
 [Cpp](/flecs/group__cpp.html)                              | C++17 API                                        | FLECS_CPP           |
+[Cached Queries](/flecs/md_docs_2Queries.html)             | Cached query support                             | FLECS_CACHED_QUERIES |
+[Constraint Traits](/flecs/group__c__addons__constraint__traits.html) | Constraint trait support              | FLECS_CONSTRAINT_TRAITS |
+[Entity Ranges](/flecs/group__c__addons__entity__ranges.html) | Entity id range management                    | FLECS_ENTITY_RANGES |
+[Frame](/flecs/group__c__addons__frame.html)               | Frame management                                 | FLECS_FRAME         |
 [Module](/flecs/group__c__addons__module.html)             | Organize game logic into reusable modules        | FLECS_MODULE        |
+[Multi World](/flecs/group__c__addons.html)                | Support C++ component IDs across multiple worlds | FLECS_MULTI_WORLD   |
+[Prefab](/flecs/md_docs_2PrefabsManual.html)               | Prefab inheritance and instantiation             | FLECS_PREFAB        |
+[Query Plans](/flecs/md_docs_2Queries.html)                | Nontrivial query compilation and inspection      | FLECS_QUERY_PLANS   |
 [System](/flecs/group__c__addons__system.html)             | Create & run systems                             | FLECS_SYSTEM        |
 [Pipeline](/flecs/group__c__addons__pipeline.html)         | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
 [Timer](/flecs/group__c__addons__timer.html)               | Run systems at time intervals or at a rate       | FLECS_TIMER         |
@@ -427,7 +438,7 @@ Addon         | Description                                      | Define       
 [Doc](/flecs/group__c__addons__doc.html)                   | Add documentation to components, systems & more  | FLECS_DOC           |
 [Http](/flecs/group__c__addons__http.html)                 | Tiny HTTP server for processing simple requests  | FLECS_HTTP          |
 [Rest](/flecs/group__c__addons__rest.html)                 | REST API for showing entities in the browser     | FLECS_REST          |
-Parser                                                     | Parser utilities used by script & query DSL      | FLECS_PARSER        |
+Parser                                                     | Parser utilities used by meta, script & query DSL | FLECS_PARSER       |
 [Query DSL](https://www.flecs.dev/flecs/md_docs_2FlecsQueryLanguage.html) | Query DSL parser                  | FLECS_QUERY_DSL     |
 [Script](/flecs/group__c__addons__script.html)             | DSL for scenes, assets and configuration         | FLECS_SCRIPT        |
 [Script Platform](/flecs/group__c__addons__script__platform.html) | Expose platform constants to scripts      | FLECS_SCRIPT_PLATFORM |
@@ -438,6 +449,8 @@ Parser                                                     | Parser utilities us
 [Journal](/flecs/group__c__addons__journal.html)           | Journaling of API functions                      | FLECS_JOURNAL       |
 [App](/flecs/group__c__addons__app.html)                   | Flecs application framework                      | FLECS_APP           |
 [OS API Impl](/flecs/group__c__addons__os__api__impl.html) | Default OS API implementation for Posix/Win32    | FLECS_OS_API_IMPL   |
+
+Addons automatically enable their dependencies. A blacklist define causes a build error when another enabled addon requires the blacklisted addon.
 
 The following example shows how to build Flecs without any addons using bake. Run the command from the repository root:
 

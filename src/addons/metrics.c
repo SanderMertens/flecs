@@ -441,8 +441,7 @@ static void UpdateCountIds(ecs_iter_t *it) {
 }
 
 /** Initialize member metric */
-static
-int flecs_member_metric_init(
+static int flecs_member_metric_init(
     ecs_world_t *world,
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)
@@ -589,8 +588,7 @@ error:
 }
 
 /** Initialize id metric */
-static
-int flecs_id_metric_init(
+static int flecs_id_metric_init(
     ecs_world_t *world,
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)
@@ -620,8 +618,7 @@ error:
 }
 
 /** Initialize oneof metric */
-static
-int flecs_oneof_metric_init(
+static int flecs_oneof_metric_init(
     ecs_world_t *world,
     ecs_entity_t metric,
     ecs_entity_t scope,
@@ -690,8 +687,7 @@ error:
     return -1;
 }
 
-static
-int flecs_count_id_targets_metric_init(
+static int flecs_count_id_targets_metric_init(
     ecs_world_t *world,
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)
@@ -712,8 +708,7 @@ error:
     return -1;
 }
 
-static
-int flecs_count_ids_metric_init(
+static int flecs_count_ids_metric_init(
     ecs_world_t *world,
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)
@@ -899,7 +894,9 @@ void FlecsMetricsImport(ecs_world_t *world) {
         .move = ecs_move(EcsMetricCountTargets)
     });
 
+#ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, EcsMetric, EcsOneOf);
+#endif
 
 #ifdef FLECS_DOC
     ECS_OBSERVER(world, SetMetricDocName, EcsOnSet, 
@@ -912,37 +909,37 @@ void FlecsMetricsImport(ecs_world_t *world) {
     ECS_SYSTEM(world, UpdateGaugeMemberInstance, EcsPreStore, 
         [out]  Value, 
         [in]   MemberInstance,
-        [none] (Metric, Gauge));
+        [none] (Metric, Metric.Gauge));
 
     ECS_SYSTEM(world, UpdateCounterMemberInstance, EcsPreStore, 
         [out]  Value, 
         [in]   MemberInstance,
-        [none] (Metric, Counter));
+        [none] (Metric, Metric.Counter));
 
     ECS_SYSTEM(world, UpdateCounterIncrementMemberInstance, EcsPreStore, 
         [out]  Value, 
         [in]   MemberInstance,
-        [none] (Metric, CounterIncrement));
+        [none] (Metric, Metric.CounterIncrement));
 
     ECS_SYSTEM(world, UpdateGaugeIdInstance, EcsPreStore, 
         [out]  Value, 
         [in]   IdInstance,
-        [none] (Metric, Gauge));
+        [none] (Metric, Metric.Gauge));
 
     ECS_SYSTEM(world, UpdateCounterIdInstance, EcsPreStore, 
         [inout] Value, 
         [in]    IdInstance,
-        [none]  (Metric, Counter));
+        [none]  (Metric, Metric.Counter));
 
     ECS_SYSTEM(world, UpdateGaugeOneOfInstance, EcsPreStore, 
         [none] (_, Value), 
         [in]   OneOfInstance,
-        [none] (Metric, Gauge));
+        [none] (Metric, Metric.Gauge));
 
     ECS_SYSTEM(world, UpdateCounterOneOfInstance, EcsPreStore, 
         [none] (_, Value), 
         [in]   OneOfInstance,
-        [none] (Metric, Counter));
+        [none] (Metric, Metric.Counter));
 
     ECS_SYSTEM(world, UpdateCountIds, EcsPreStore, 
         [inout] CountIds, Value);

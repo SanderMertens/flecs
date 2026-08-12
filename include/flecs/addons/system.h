@@ -272,10 +272,8 @@ void ecs_system_set_group(
  *
  * @code
  * ecs_system(world, {
- *   .entity = ecs_entity(world, {
- *     .name = "MyEntity",
- *     .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
- *   }),
+ *   .entity = ecs_entity(world, { .name = "MyEntity" }),
+ *   .phase = EcsOnUpdate,
  *   .query.terms = {
  *     { ecs_id(Position) },
  *     { ecs_id(Velocity) }

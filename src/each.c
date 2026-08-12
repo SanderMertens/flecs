@@ -5,8 +5,7 @@
 
 #include "private_api.h"
 
-static
-bool flecs_each_component_record(
+static bool flecs_each_component_record(
     ecs_iter_t *it,
     ecs_component_record_t *cr,
     ecs_id_t id)
@@ -47,6 +46,10 @@ ecs_iter_t ecs_each_id(
         .field_count = 1,
         .next = ecs_each_next
     };
+
+    ecs_table_cache_iter_t *cache_it = &it.priv_.iter.each.it;
+    cache_it->elems = NULL;
+    cache_it->remaining = 0;
 
     ecs_component_record_t *cr = flecs_components_get(world, id);
     if (!cr) {
@@ -92,8 +95,7 @@ bool ecs_each_next(
     }
 }
 
-static
-bool flecs_children_next_ordered(
+static bool flecs_children_next_ordered(
     ecs_iter_t *it)
 {
     return ecs_children_next(it);

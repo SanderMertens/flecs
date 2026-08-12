@@ -30,7 +30,7 @@ void New_component(void) {
 void New_tag(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
 
     ecs_entity_t e = ecs_new_w_id(world, Tag);
     test_assert(e != 0);
@@ -245,8 +245,10 @@ void New_create_w_explicit_id_2_worlds(void) {
     ecs_set_scope(world_1, p1);
     ecs_set_scope(world_2, p2);
 
-    ECS_ENTITY_DEFINE(world_1, Foo, 0);
-    ECS_ENTITY_DEFINE(world_2, Foo, 0);
+    Foo = ecs_entity(world_1, { .id = Foo, .name = "Foo" });
+    ecs_id(Foo) = Foo;
+    Foo = ecs_entity(world_2, { .id = Foo, .name = "Foo" });
+    ecs_id(Foo) = Foo;
 
     char *path = ecs_get_path(world_1, Foo);
     test_str(path, "Parent.Foo");
@@ -258,218 +260,6 @@ void New_create_w_explicit_id_2_worlds(void) {
 
     ecs_fini(world_1);
     ecs_fini(world_2);
-}
-
-void New_new_w_id_0_w_with(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-
-    ecs_set_with(world, Tag);
-
-    test_expect_abort();
-    ecs_new_w_id(world, 0);
-}
-
-void New_new_w_id_w_with(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_TAG(world, Tag2);
-
-    ecs_set_with(world, Tag);
-
-    ecs_entity_t e = ecs_new_w_id(world, Tag2);
-    test_assert(e != 0);
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(ecs_has(world, e, Tag2));
-
-    test_int(ecs_set_with(world, 0), Tag);
-
-    ecs_fini(world);
-}
-
-void New_new_w_id_w_with_w_scope(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_TAG(world, Tag2);
-
-    ecs_set_with(world, Tag);
-
-    ecs_entity_t parent = ecs_new(world);
-    ecs_set_scope(world, parent);
-
-    ecs_entity_t e = ecs_new_w_id(world, Tag2);
-    test_assert(e != 0);
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(ecs_has(world, e, Tag2));
-    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
-
-    test_int(ecs_set_with(world, 0), Tag);
-    test_int(ecs_set_scope(world, 0), parent);
-
-    ecs_fini(world);
-}
-
-void New_new_w_id_w_with_defer(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_TAG(world, Tag2);
-
-    ecs_set_with(world, Tag);
-
-    ecs_defer_begin(world);
-
-    ecs_entity_t e = ecs_new_w_id(world, Tag2);
-    test_assert(e != 0);
-    
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(!ecs_has(world, e, Tag2));
-
-    ecs_defer_end(world);
-
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(ecs_has(world, e, Tag2));
-
-    test_int(ecs_set_with(world, 0), Tag);
-
-    ecs_fini(world);
-}
-
-void New_new_w_id_w_with_defer_w_scope(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_TAG(world, Tag2);
-
-    ecs_set_with(world, Tag);
-
-    ecs_entity_t parent = ecs_new(world);
-    ecs_set_scope(world, parent);
-
-    ecs_defer_begin(world);
-
-    ecs_entity_t e = ecs_new_w_id(world, Tag2);
-    test_assert(e != 0);
-    test_assert(ecs_get_table(world, e) != NULL);
-
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(!ecs_has(world, e, Tag2));
-    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
-
-    ecs_defer_end(world);
-
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(ecs_has(world, e, Tag2));
-    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
-
-    test_int(ecs_set_with(world, 0), Tag);
-    test_int(ecs_set_scope(world, 0), parent);
-
-    ecs_fini(world);
-}
-
-void New_new_w_type_w_with(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_COMPONENT(world, Position);
-
-    ecs_set_with(world, Tag);
-
-    ecs_entity_t e = ecs_new_w(world, Position);
-    test_assert(e != 0);
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(ecs_has(world, e, Position));
-
-    test_int(ecs_set_with(world, 0), Tag);
-
-    ecs_fini(world);
-}
-
-void New_new_w_type_w_with_w_scope(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_COMPONENT(world, Position);
-
-    ecs_set_with(world, Tag);
-
-    ecs_entity_t parent = ecs_new(world);
-    ecs_set_scope(world, parent);
-
-    ecs_entity_t e = ecs_new_w(world, Position);
-    test_assert(e != 0);
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(ecs_has(world, e, Position));
-    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
-
-    test_int(ecs_set_with(world, 0), Tag);
-    test_int(ecs_set_scope(world, 0), parent);
-
-    ecs_fini(world);
-}
-
-void New_new_w_type_w_with_defer(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_COMPONENT(world, Position);
-
-    ecs_set_with(world, Tag);
-
-    ecs_defer_begin(world);
-
-    ecs_entity_t e = ecs_new_w(world, Position);
-    test_assert(e != 0);
-    
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(!ecs_has(world, e, Position));
-
-    ecs_defer_end(world);
-
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(ecs_has(world, e, Position));
-
-    test_int(ecs_set_with(world, 0), Tag);
-
-    ecs_fini(world);
-}
-
-void New_new_w_type_w_with_defer_w_scope(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_COMPONENT(world, Position);
-
-    ecs_set_with(world, Tag);
-
-    ecs_entity_t parent = ecs_new(world);
-    ecs_set_scope(world, parent);
-
-    ecs_defer_begin(world);
-
-    ecs_entity_t e = ecs_new_w(world, Position);
-    test_assert(e != 0);
-
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
-
-    ecs_defer_end(world);
-
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(ecs_has(world, e, Position));
-    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
-
-    test_int(ecs_set_with(world, 0), Tag);
-    test_int(ecs_set_scope(world, 0), parent);
-
-    ecs_fini(world);
 }
 
 void New_new_w_table(void) {

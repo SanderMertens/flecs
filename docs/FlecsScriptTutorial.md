@@ -243,18 +243,18 @@ That works, but the code is starting to look a bit unwieldy. There are lots of m
 First lets define two variables for the color and box shape of the pillars. We already saw an example of a variable when we defined `PI`. These looks similar, except that because they are composite values, we also define their type:
 
 ```js
-const color = Rgb: {0.15, 0.1, 0.05}
-const pillar_box : Box = {2, 10, 2}
+const color: Rgb = {0.15, 0.1, 0.05}
+const pillar_box: Box = {2, 10, 2}
 ```
 
 This is better, but `pillar_box` still contains values that we have to update each time we want to change the shape of our fence. Instead we can do this, which is a bit more typing now but will be easier to maintain later:
 
 ```js
 const height = 10
-const color = Rgb: {0.15, 0.1, 0.05}
+const color: Rgb = {0.15, 0.1, 0.05}
 
 const pillar_width = 2
-const pillar_box : Box = {
+const pillar_box: Box = {
   $pillar_width, 
   $height, 
   $pillar_width
@@ -324,7 +324,7 @@ Let's also create a variable for the bar shape and bar height, similar to what w
 ```js
 const bar_height = 2
 const bar_depth = $pillar_width/2
-const bar_box : Box = {$width, $bar_height, $bar_depth}
+const bar_box: Box = {$width, $bar_height, $bar_depth}
 ```
 
 With that in place, we can cleanup the entity code for the bars:
@@ -475,27 +475,9 @@ Let's take the existing `width`, `height` and `color` variables, and change them
 
 ```js
 template Fence {
-  prop width = flecs.meta.f32: 20
-  prop height = flecs.meta.f32: 10
-  prop color = Rgb: {0.15, 0.1, 0.05}
-
-  // fence code
-}
-```
-
-We can get rid of the `flecs.meta.` prefix by adding this to the top of our script:
-
-```js
-using flecs.meta
-```
-
-The code can now be changed to this:
-
-```js
-template Fence {
-  prop width = f32: 20
-  prop height = f32: 10
-  prop color = Rgb: {0.15, 0.1, 0.05}
+  prop width: f32 = 20
+  prop height: f32 = 10
+  prop color: Rgb = {0.15, 0.1, 0.05}
 
   // fence code
 }
@@ -646,7 +628,7 @@ fence :- Fence{}
 And increase the `width` of the fence to `60`:
 
 ```js
-  prop width = f32: 60
+  prop width: f32 = 60
 ```
 
 We now get a number of pillars that matches the fence length:
@@ -681,10 +663,10 @@ When put together, this is what it looks like:
 
 ```js
 template Enclosing {
-  prop width = f32: 40
-  prop height = f32: 10
-  prop depth = f32: 40
-  prop color = Rgb: {0.15, 0.1, 0.05}
+  prop width: f32 = 40
+  prop height: f32 = 10
+  prop depth: f32 = 40
+  prop color: Rgb = {0.15, 0.1, 0.05}
   
   // enclosing code goes here
 }

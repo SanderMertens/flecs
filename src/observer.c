@@ -10,8 +10,7 @@
 
 #include "private_api.h"
 
-static
-ecs_entity_t flecs_get_observer_event(
+static ecs_entity_t flecs_get_observer_event(
     ecs_term_t *term,
     ecs_entity_t event)
 {
@@ -27,8 +26,7 @@ ecs_entity_t flecs_get_observer_event(
     return event;
 }
 
-static
-ecs_flags32_t flecs_id_flag_for_event(
+static ecs_flags32_t flecs_id_flag_for_event(
     ecs_entity_t e)
 {
     if (e == EcsOnAdd) {
@@ -53,61 +51,89 @@ ecs_flags32_t flecs_id_flag_for_event(
     return 0;
 }
 
-static
-void flecs_inc_observer_count(
+static void flecs_inc_observer_count(
     ecs_world_t *world,
     ecs_entity_t event,
     ecs_event_record_t *evt,
     ecs_id_t id,
-    int32_t value)
+    int32_t value,
+    bool up_notify)
 {
     ecs_event_id_record_t *idt = flecs_event_id_record_ensure(world, evt, id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
-    
+
     int32_t result = idt->observer_count += value;
-    if (result == 1) {
+    int32_t category_result;
+    if (up_notify) {
+        category_result = idt->up_notify_count += value;
+    } else {
+        category_result = result - idt->up_notify_count;
+    }
+
+    if (category_result == value && value > 0) {
         /* Notify framework that there are observers for the event/id. This 
          * allows parts of the code to skip event evaluation early */
-        flecs_notify_tables(world, id, &(ecs_table_event_t){
-            .kind = EcsTableTriggersForId,
-            .event = event
-        });
+        if (up_notify) {
+            flecs_notify_tables(world, id, &(ecs_table_event_t){
+                .kind = EcsTableUpNotifyForId,
+                .event = event
+            });
 
-        ecs_flags32_t flags = flecs_id_flag_for_event(event);
-        if (flags) {
             ecs_component_record_t *cr = flecs_components_get(world, id);
             if (cr) {
-                cr->flags |= flags;
+                cr->flags |= EcsIdHasUpNotify;
             }
+        } else {
+            flecs_notify_tables(world, id, &(ecs_table_event_t){
+                .kind = EcsTableTriggersForId,
+                .event = event
+            });
 
-            /* Track that we've created an OnSet observer so we know not to take
-             * fast code path when doing a set operation. */
-            if (event == EcsOnSet || event == EcsWildcard) {
-                if (id < FLECS_HI_COMPONENT_ID) {
-                    world->non_trivial_set[id] = true;
+            ecs_flags32_t flags = flecs_id_flag_for_event(event);
+            if (flags) {
+                ecs_component_record_t *cr = flecs_components_get(world, id);
+                if (cr) {
+                    cr->flags |= flags;
                 }
-                
-                if (id == EcsWildcard || id == EcsAny) {
-                    ecs_os_memset_n(world->non_trivial_set, true, bool, 
-                        FLECS_HI_COMPONENT_ID);
+
+                /* Track that we've created an OnSet observer so we know not to
+                 * take fast code path when doing a set operation. */
+                if (event == EcsOnSet || event == EcsWildcard) {
+                    if (id < FLECS_HI_COMPONENT_ID) {
+                        world->non_trivial_set[id] = true;
+                    }
+
+                    if (id == EcsWildcard || id == EcsAny) {
+                        ecs_os_memset_n(world->non_trivial_set, true, bool,
+                            FLECS_HI_COMPONENT_ID);
+                    }
                 }
             }
         }
-    } else if (result == 0) {
+    } else if (category_result == 0 && value < 0) {
         /* Ditto, but the reverse */
-        flecs_notify_tables(world, id, &(ecs_table_event_t){
-            .kind = EcsTableNoTriggersForId,
-            .event = event
-        });
-
-        ecs_flags32_t flags = flecs_id_flag_for_event(event);
-        if (flags) {
+        if (up_notify) {
             ecs_component_record_t *cr = flecs_components_get(world, id);
             if (cr) {
-                cr->flags &= ~flags;
+                cr->flags &= ~EcsIdHasUpNotify;
+            }
+        } else {
+            flecs_notify_tables(world, id, &(ecs_table_event_t){
+                .kind = EcsTableNoTriggersForId,
+                .event = event
+            });
+
+            ecs_flags32_t flags = flecs_id_flag_for_event(event);
+            if (flags) {
+                ecs_component_record_t *cr = flecs_components_get(world, id);
+                if (cr) {
+                    cr->flags &= ~flags;
+                }
             }
         }
+    }
 
+    if (result == 0) {
         flecs_event_id_record_remove(evt, id);
         ecs_os_free(idt);
     }
@@ -115,19 +141,18 @@ void flecs_inc_observer_count(
     if (ECS_PAIR_FIRST(id) == EcsChildOf) {
         ecs_observable_t *observable = &world->observable;
         if (event == EcsOnAdd) {
-            ecs_event_record_t *er_onset = 
+            ecs_event_record_t *er_onset =
                 flecs_event_record_ensure(observable, EcsOnSet);
             flecs_inc_observer_count(
-                world, EcsOnSet, er_onset, ecs_id(EcsParent), value);
+                world, EcsOnSet, er_onset, ecs_id(EcsParent), value, false);
         } else {
             flecs_inc_observer_count(
-                world, event, evt, ecs_id(EcsParent), value);
+                world, event, evt, ecs_id(EcsParent), value, up_notify);
         }
     }
 }
 
-static
-ecs_id_t flecs_observer_id(
+static ecs_id_t flecs_observer_id(
     ecs_id_t id)
 {
     if (ECS_IS_PAIR(id)) {
@@ -142,8 +167,7 @@ ecs_id_t flecs_observer_id(
     return id;
 }
 
-static
-void flecs_register_observer_for_event_and_id(
+static void flecs_register_observer_for_event_and_id(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *o,
@@ -168,15 +192,15 @@ void flecs_register_observer_for_event_and_id(
     ecs_map_init_if(observers, &world->allocator);
     ecs_map_insert_ptr(observers, impl->id, o);
 
-    flecs_inc_observer_count(world, event, er, term_id, 1);
+    bool up_notify = (impl->flags & EcsObserverIsUpNotify) != 0;
+    flecs_inc_observer_count(world, event, er, term_id, 1, up_notify);
     if (trav && (term_id != ecs_id(EcsParent))) {
-        flecs_inc_observer_count(world, event, er, 
-            ecs_pair(trav, EcsWildcard), 1);
+        flecs_inc_observer_count(world, event, er,
+            ecs_pair(trav, EcsWildcard), 1, up_notify);
     }
 }
 
-static
-void flecs_register_observer_for_id(
+static void flecs_register_observer_for_id(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *o,
@@ -205,8 +229,7 @@ void flecs_register_observer_for_id(
     }
 }
 
-static
-void flecs_uni_observer_register(
+static void flecs_uni_observer_register(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *o)
@@ -241,8 +264,7 @@ void flecs_uni_observer_register(
     }
 }
 
-static
-void flecs_unregister_observer_for_id(
+static void flecs_unregister_observer_for_id(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *o,
@@ -281,16 +303,16 @@ void flecs_unregister_observer_for_id(
             ecs_map_fini(id_observers);
         }
 
-        flecs_inc_observer_count(world, event, er, term_id, -1);
+        bool up_notify = (impl->flags & EcsObserverIsUpNotify) != 0;
+        flecs_inc_observer_count(world, event, er, term_id, -1, up_notify);
         if (trav && (term_id != ecs_id(EcsParent))) {
-            flecs_inc_observer_count(world, event, er, 
-                ecs_pair(trav, EcsWildcard), -1);
+            flecs_inc_observer_count(world, event, er,
+                ecs_pair(trav, EcsWildcard), -1, up_notify);
         }
     }
 }
 
-static
-void flecs_unregister_observer(
+static void flecs_unregister_observer(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *o)
@@ -329,8 +351,7 @@ void flecs_unregister_observer(
     }
 }
 
-static
-bool flecs_ignore_observer(
+static bool flecs_ignore_observer(
     ecs_observer_t *o,
     ecs_table_t *table)
 {
@@ -353,22 +374,21 @@ bool flecs_ignore_observer(
     return result;
 }
 
-static
-void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
+static void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     it->ctx = o->ctx;
     it->callback = o->callback;
     o->callback(it);
 }
 
-static
-bool flecs_observer_query_has_range(
+static bool flecs_observer_query_has_range(
     const ecs_query_t *query,
     ecs_table_range_t *range,
     const ecs_term_t *term,
     ecs_id_t event_id,
     ecs_iter_t *it)
 {
+#ifdef FLECS_QUERY_PLANS
     bool first_var = (term->first.id & EcsIsVariable) && term->first.name;
     bool second_var = (term->second.id & EcsIsVariable) && term->second.name;
     if (!first_var && !second_var) {
@@ -391,10 +411,14 @@ bool flecs_observer_query_has_range(
     }
 
     return ecs_query_next(it);
+#else
+    (void)term;
+    (void)event_id;
+    return ecs_query_has_range(query, range, it);
+#endif
 }
 
-static
-void flecs_observer_invoke(
+static void flecs_observer_invoke(
     ecs_observer_t *o,
     ecs_iter_t *it)
 {
@@ -415,8 +439,7 @@ void flecs_observer_invoke(
     }
 }
 
-static
-void flecs_uni_observer_invoke(
+static void flecs_uni_observer_invoke(
     ecs_world_t *world,
     ecs_observer_t *o,
     ecs_iter_t *it,
@@ -537,12 +560,13 @@ void flecs_uni_observer_invoke(
     world->info.observers_ran_total ++;
 }
 
-void flecs_observers_invoke(
+static void flecs_observers_invoke_intern(
     ecs_world_t *world,
     ecs_map_t *observers,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t trav)
+    ecs_entity_t trav,
+    bool up_notify_only)
 {
     if (ecs_map_is_init(observers)) {
         ECS_TABLE_LOCK(it->world, table);
@@ -550,6 +574,12 @@ void flecs_observers_invoke(
         ecs_map_iter_t oit = ecs_map_iter(observers);
         while (ecs_map_next(&oit)) {
             ecs_observer_t *o = ecs_map_ptr(&oit);
+            if (up_notify_only &&
+                !(flecs_observer_impl(o)->flags & EcsObserverIsUpNotify))
+            {
+                continue;
+            }
+
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
             flecs_uni_observer_invoke(world, o, it, table, trav);
 
@@ -562,8 +592,27 @@ void flecs_observers_invoke(
     }
 }
 
-static
-void flecs_multi_observer_invoke(
+void flecs_observers_invoke(
+    ecs_world_t *world,
+    ecs_map_t *observers,
+    ecs_iter_t *it,
+    ecs_table_t *table,
+    ecs_entity_t trav)
+{
+    flecs_observers_invoke_intern(world, observers, it, table, trav, false);
+}
+
+void flecs_observers_invoke_up_notify(
+    ecs_world_t *world,
+    ecs_map_t *observers,
+    ecs_iter_t *it,
+    ecs_table_t *table,
+    ecs_entity_t trav)
+{
+    flecs_observers_invoke_intern(world, observers, it, table, trav, true);
+}
+
+static void flecs_multi_observer_invoke(
     ecs_iter_t *it) 
 {
     ecs_observer_t *o = it->ctx;
@@ -711,8 +760,7 @@ done:
     return;
 }
 
-static
-void flecs_multi_observer_invoke_no_query(
+static void flecs_multi_observer_invoke_no_query(
     ecs_iter_t *it) 
 {
     ecs_observer_t *o = it->ctx;
@@ -758,8 +806,7 @@ bool flecs_default_next_callback(ecs_iter_t *it) {
 }
 
 /* Run action for children of multi observer */
-static
-void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
+static void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     ecs_run_action_t run = o->run;
 
@@ -777,8 +824,7 @@ void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
     flecs_multi_observer_invoke(it);
 }
 
-static
-void flecs_observer_yield_existing(
+static void flecs_observer_yield_existing(
     ecs_world_t *world,
     ecs_observer_t *o,
     bool yield_on_remove)
@@ -835,8 +881,7 @@ void flecs_observer_yield_existing(
     ecs_defer_end(world);
 }
 
-static
-int flecs_uni_observer_init(
+static int flecs_uni_observer_init(
     ecs_world_t *world,
     ecs_observer_t *o,
     ecs_id_t component_id,
@@ -877,8 +922,7 @@ int flecs_uni_observer_init(
     return 0;
 }
 
-static
-int flecs_observer_add_child(
+static int flecs_observer_add_child(
     ecs_world_t *world,
     ecs_observer_t *o,
     const ecs_observer_desc_t *child_desc)
@@ -899,8 +943,7 @@ int flecs_observer_add_child(
     return 0;
 }
 
-static
-int flecs_multi_observer_init(
+static int flecs_multi_observer_init(
     ecs_world_t *world,
     ecs_observer_t *o,
     const ecs_observer_desc_t *desc)
@@ -1099,15 +1142,13 @@ error:
     return -1;
 }
 
-static
-void flecs_observer_poly_fini(void *ptr) {
+static void flecs_observer_poly_fini(void *ptr) {
     flecs_observer_fini(ptr);
 }
 
 /* Small helper that allows simple observers which are rejected by the regular
  * query fast path to be created without relying on query plans. */
-static
-bool flecs_observer_finalize_simple_special(
+static bool flecs_observer_finalize_simple_special(
     ecs_world_t *world,
     ecs_query_t *q,
     const ecs_query_desc_t *desc)
@@ -1126,7 +1167,6 @@ bool flecs_observer_finalize_simple_special(
     ecs_query_validator_ctx_t ctx = {
         .world = world,
         .desc = desc,
-        .query = q,
         .term = &term
     };
 
@@ -1135,13 +1175,18 @@ bool flecs_observer_finalize_simple_special(
     }
 
     bool is_wildcard = ecs_id_is_wildcard(term.id);
+    bool is_any = term.id == EcsAny;
     bool is_disabled = term.id == EcsDisabled;
+#ifdef FLECS_PREFAB
     bool is_prefab = term.id == EcsPrefab;
+#else
+    bool is_prefab = false;
+#endif
 
     if ((!is_wildcard && !is_disabled && !is_prefab) ||
         term.oper != EcsAnd ||
         !ecs_term_match_this(&term) ||
-        (is_wildcard && !(term.flags_ & EcsTermIsCacheable)) ||
+        (is_wildcard && !is_any && !(term.flags_ & EcsTermIsCacheable)) ||
         ((term.src.id & EcsTraverseFlags) != EcsSelf) || term.trav ||
         (term.flags_ & (EcsTermIsToggle|EcsTermDontFragment|
             EcsTermIsSparse|EcsTermTransitive|EcsTermReflexive|
@@ -1241,7 +1286,8 @@ ecs_observer_t* flecs_observer_init(
             bool trivial_observer = (dummy_query.term_count == 1) &&
                 ((dummy_query.flags & EcsQueryIsTrivial) ||
                     ((dummy_query.flags & EcsQueryMatchWildcards) &&
-                     (dummy_query.terms[0].flags_ & EcsTermIsCacheable) &&
+                     ((dummy_query.terms[0].flags_ & EcsTermIsCacheable) ||
+                        (dummy_query.terms[0].id == EcsAny)) &&
                      (dummy_query.terms[0].oper == EcsAnd))) &&
                 (dummy_query.flags & EcsQueryMatchOnlySelf) &&
                 !dummy_query.row_fields;
@@ -1278,7 +1324,9 @@ ecs_observer_t* flecs_observer_init(
     ecs_check(query->term_count > 0, ECS_INVALID_PARAMETER,
         "observer must have at least one term");
 
-    int i, var_count = 0;
+    int i;
+#ifdef FLECS_QUERY_PLANS
+    int var_count = 0;
     for (i = 0; i < query->term_count; i ++) {
         ecs_term_t *term = &query->terms[i];
         if (!ecs_term_match_this(term)) {
@@ -1292,6 +1340,7 @@ ecs_observer_t* flecs_observer_init(
     ecs_check(query->term_count > var_count, ECS_UNSUPPORTED,
         "observers with only non-$this variable sources are not yet supported");
     (void)var_count;
+#endif
 
     o->run = desc->run;
     o->callback = desc->callback;

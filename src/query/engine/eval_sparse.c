@@ -5,8 +5,9 @@
 
 #include "../../private_api.h"
 
-static
-bool flecs_query_sparse_init_sparse(
+#ifdef FLECS_QUERY_PLANS
+
+static bool flecs_query_sparse_init_sparse(
     ecs_query_sparse_ctx_t *op_ctx,
     ecs_component_record_t *cr)
 {
@@ -31,8 +32,7 @@ bool flecs_query_sparse_init_sparse(
     return true;
 }
 
-static
-void flecs_query_sparse_init_range(
+static void flecs_query_sparse_init_range(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_sparse_ctx_t *op_ctx)
@@ -47,8 +47,7 @@ void flecs_query_sparse_init_range(
     op_ctx->cur = range.offset - 1; 
 }
 
-static
-bool flecs_query_sparse_next_entity(
+static bool flecs_query_sparse_next_entity(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_sparse_ctx_t *op_ctx,
@@ -117,8 +116,7 @@ next:
     return true;
 }
 
-static
-bool flecs_query_sparse_select_id(
+static bool flecs_query_sparse_select_id(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -181,8 +179,7 @@ next:
     return true;
 }
 
-static
-bool flecs_query_sparse_select_wildcard(
+static bool flecs_query_sparse_select_wildcard(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -248,8 +245,7 @@ next_component: {
     goto next;
 }
 
-static
-bool flecs_query_sparse_next_wildcard_pair(
+static bool flecs_query_sparse_next_wildcard_pair(
     ecs_query_sparse_ctx_t *op_ctx)
 {
     ecs_component_record_t *cr = op_ctx->cr;
@@ -270,8 +266,7 @@ bool flecs_query_sparse_next_wildcard_pair(
     return true;
 }
 
-static
-bool flecs_query_sparse_select_all_wildcard_pairs(
+static bool flecs_query_sparse_select_all_wildcard_pairs(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -340,8 +335,7 @@ bool flecs_query_sparse_select(
     }
 }
 
-static
-bool flecs_query_sparse_with_id(
+static bool flecs_query_sparse_with_id(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -379,8 +373,7 @@ no_sparse:
     return not;
 }
 
-static
-bool flecs_query_sparse_with_exclusive(
+static bool flecs_query_sparse_with_exclusive(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -415,8 +408,7 @@ bool flecs_query_sparse_with_exclusive(
     return false;
 }
 
-static
-bool flecs_query_sparse_with_wildcard(
+static bool flecs_query_sparse_with_wildcard(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -512,8 +504,7 @@ next_component: {
     goto next;
 }
 
-static
-bool flecs_query_sparse_with_all_wildcard_pairs(
+static bool flecs_query_sparse_with_all_wildcard_pairs(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -799,3 +790,5 @@ next:
 
     return true;
 }
+
+#endif // FLECS_QUERY_PLANS

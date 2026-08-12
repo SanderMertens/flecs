@@ -1,19 +1,16 @@
 #include <query.h>
 
-static
-int term_count(ecs_query_t *q) {
+static int term_count(ecs_query_t *q) {
     test_assert(q != NULL);
     return q->term_count;
 }
 
-static
-ecs_term_t* query_terms(ecs_query_t *q) {
+static ecs_term_t* query_terms(ecs_query_t *q) {
     test_assert(q != NULL);
     return q->terms;
 }
 
-static
-void print_term_id_flags(ecs_id_t value) {
+static void print_term_id_flags(ecs_id_t value) {
     if (value & EcsIsEntity) {
         printf("|EcsIsEntity");
     }
@@ -3101,7 +3098,8 @@ void Parser_pred_implicit_subject_implicit_superset_cascade_w_rel(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "Pred(cascade Rel)",
@@ -3126,7 +3124,8 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel(void
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "Pred(self|cascade Rel)",
@@ -3150,7 +3149,8 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel(void
 void Parser_pred_implicit_subject_superset_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Pred, (OnInstantiate, Inherit));
+    ecs_entity_t Pred = ecs_entity(world, { .name = "Pred" });
+    ecs_add_pair(world, Pred, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "Pred(up IsA)",
@@ -3174,7 +3174,8 @@ void Parser_pred_implicit_subject_superset_childof(void) {
 void Parser_pred_implicit_subject_cascade_superset_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Pred, (OnInstantiate, Inherit));
+    ecs_entity_t Pred = ecs_entity(world, { .name = "Pred" });
+    ecs_add_pair(world, Pred, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "Pred(cascade|up IsA)",
@@ -3198,7 +3199,8 @@ void Parser_pred_implicit_subject_cascade_superset_childof(void) {
 void Parser_pred_implicit_subject_superset_cascade_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Pred, (OnInstantiate, Inherit));
+    ecs_entity_t Pred = ecs_entity(world, { .name = "Pred" });
+    ecs_add_pair(world, Pred, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "Pred(up|cascade IsA)",
@@ -3222,7 +3224,8 @@ void Parser_pred_implicit_subject_superset_cascade_childof(void) {
 void Parser_pred_implicit_subject_superset_cascade_childof_optional(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Pred, (OnInstantiate, Inherit));
+    ecs_entity_t Pred = ecs_entity(world, { .name = "Pred" });
+    ecs_add_pair(world, Pred, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "?Pred(up|cascade IsA)",
@@ -3337,7 +3340,8 @@ void Parser_subj_entity_w_explicit_self_superset(void) {
 void Parser_subj_entity_w_explicit_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Pred, (OnInstantiate, Inherit));
+    ecs_entity_t Pred = ecs_entity(world, { .name = "Pred" });
+    ecs_add_pair(world, Pred, EcsOnInstantiate, EcsInherit);
     ECS_TAG(world, Subj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
@@ -3362,7 +3366,8 @@ void Parser_subj_entity_w_explicit_superset_relation(void) {
 void Parser_subj_entity_w_explicit_self_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Pred, (OnInstantiate, Inherit));
+    ecs_entity_t Pred = ecs_entity(world, { .name = "Pred" });
+    ecs_add_pair(world, Pred, EcsOnInstantiate, EcsInherit);
     ECS_TAG(world, Subj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
@@ -4256,8 +4261,10 @@ void Parser_invalid_variable_only(void) {
 void Parser_oneof_self_pred_w_relative_obj(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, OneOf);
-    ECS_ENTITY(world, Obj, (ChildOf, Rel));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsOneOf);
+    ecs_entity_t Obj = ecs_entity(world, { .name = "Obj" });
+    ecs_add_pair(world, Obj, EcsChildOf, Rel);
 
     test_assert( ecs_lookup_child(world, 0, "Obj") == 0 ); // sanity check
 
@@ -4283,8 +4290,10 @@ void Parser_oneof_other_pred_w_relative_obj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Parent);
-    ECS_ENTITY(world, Rel, (OneOf, Parent));
-    ECS_ENTITY(world, Obj, (ChildOf, Parent));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOneOf, Parent);
+    ecs_entity_t Obj = ecs_entity(world, { .name = "Obj" });
+    ecs_add_pair(world, Obj, EcsChildOf, Parent);
 
     test_assert( ecs_lookup_child(world, 0, "Obj") == 0 ); // sanity check
 
@@ -4311,7 +4320,8 @@ void Parser_oneof_self_pred_w_invalid_obj(void) {
     
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, OneOf);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsOneOf);
     ECS_TAG(world, Obj);
 
     test_assert( ecs_lookup_child(world, 0, "Obj") != 0 ); // sanity check
@@ -4329,7 +4339,8 @@ void Parser_oneof_other_pred_w_invalid_obj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Parent);
-    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOneOf, Parent);
     ECS_TAG(world, Obj);
 
     test_assert( ecs_lookup_child(world, 0, "Obj") != 0 ); // sanity check
@@ -4344,8 +4355,10 @@ void Parser_oneof_other_pred_w_invalid_obj(void) {
 void Parser_oneof_w_other_entity_w_same_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, OneOf);
-    ECS_ENTITY(world, Obj, (ChildOf, Rel));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsOneOf);
+    ecs_entity_t Obj = ecs_entity(world, { .name = "Obj" });
+    ecs_add_pair(world, Obj, EcsChildOf, Rel);
     ecs_entity_t obj_2 = ecs_entity(world, { .name = "Obj" });
 
     test_uint( ecs_lookup_child(world, 0, "Obj"), obj_2 );
@@ -4373,8 +4386,10 @@ void Parser_oneof_w_other_entity_w_same_name(void) {
 void Parser_oneof_w_other_entity_w_same_name_w_set_scope(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, OneOf);
-    ECS_ENTITY(world, Obj, (ChildOf, Rel));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsOneOf);
+    ecs_entity_t Obj = ecs_entity(world, { .name = "Obj" });
+    ecs_add_pair(world, Obj, EcsChildOf, Rel);
 
     ecs_entity_t p = ecs_entity(world, { .name = "parent" });
     ecs_entity_t obj_2 = ecs_entity(world, { .name = "Obj" });
@@ -4407,7 +4422,8 @@ void Parser_oneof_w_other_entity_w_same_name_w_set_scope(void) {
 void Parser_oneof_w_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, OneOf);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsOneOf);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "(Rel, *)"
@@ -4432,7 +4448,8 @@ void Parser_oneof_w_wildcard(void) {
 void Parser_oneof_w_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, OneOf);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsOneOf);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "(Rel, _)"
@@ -4457,8 +4474,10 @@ void Parser_oneof_w_any(void) {
 void Parser_oneof_w_fullpath(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, OneOf);
-    ECS_ENTITY(world, Obj, (ChildOf, Rel));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsOneOf);
+    ecs_entity_t Obj = ecs_entity(world, { .name = "Obj" });
+    ecs_add_pair(world, Obj, EcsChildOf, Rel);
     ecs_entity_t obj_2 = ecs_entity(world, { .name = "Obj" });
 
     test_uint( ecs_lookup_child(world, 0, "Obj"), obj_2 );

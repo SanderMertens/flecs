@@ -23,8 +23,7 @@ void Deinit(ecs_iter_t *it) {
     }
 }
 
-static
-void Remove_from_current(ecs_iter_t *it) {
+static void Remove_from_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
@@ -143,8 +142,7 @@ void TriggerOnRemove_delete_no_match(void) {
 
 static Position old_position = {0};
 
-static
-void RemovePosition(ecs_iter_t *it) {
+static void RemovePosition(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
 
     test_assert(it->count == 1);
@@ -197,8 +195,7 @@ void TriggerOnRemove_delete_watched(void) {
 
 static bool dummy_called = false;
 
-static
-void Dummy(ecs_iter_t *it) {
+static void Dummy(ecs_iter_t *it) {
     dummy_called = true;
 }
 
@@ -214,9 +211,15 @@ void TriggerOnRemove_on_remove_in_on_update(void) {
     IterData ctx = {.component = ecs_id(Velocity)};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
 
     ecs_progress(world, 1);
 
@@ -239,8 +242,7 @@ typedef struct DummyComp {
     int value;
 } DummyComp;
 
-static
-void RemoveDummyComp(ecs_iter_t *it) { 
+static void RemoveDummyComp(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         test_assert(ecs_is_valid(it->world, it->entities[i]));
@@ -346,8 +348,7 @@ typedef struct on_remove_has_tag_t {
     ecs_entity_t tag;
 } on_remove_has_tag_t;
 
-static
-void OnRemoveHasTag(ecs_iter_t *it) {
+static void OnRemoveHasTag(ecs_iter_t *it) {
     on_remove_has_tag_t *ctx = it->ctx;
     test_assert(ctx != NULL);
 

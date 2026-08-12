@@ -1,7 +1,6 @@
 #include <core.h>
 
-static
-void OnPosition(ecs_iter_t *it) {
+static void OnPosition(ecs_iter_t *it) {
     probe_iter(it);
 }
 
@@ -231,7 +230,9 @@ void Monitor_1_comp_prefab_new(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ECS_PREFAB(world, Prefab, Position);
+    ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
+    ecs_add_id(world, Prefab, EcsPrefab);
+    ecs_add(world, Prefab, Position);
 
     test_int(ctx.invoked, 0);
 

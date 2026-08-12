@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 const EcsParent* flecs_query_tree_get_parents(
     ecs_table_range_t range)
 {
@@ -13,8 +15,7 @@ const EcsParent* flecs_query_tree_get_parents(
     return ecs_table_get_column(range.table, parent_column - 1, range.offset);
 }
 
-static
-bool flecs_query_tree_select_tgt(
+static bool flecs_query_tree_select_tgt(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -38,8 +39,7 @@ bool flecs_query_tree_select_tgt(
     return true;
 }
 
-static
-bool flecs_query_tree_with_parent(
+static bool flecs_query_tree_with_parent(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -78,8 +78,7 @@ repeat:
     return true;
 }
 
-static
-bool flecs_query_tree_select(
+static bool flecs_query_tree_select(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -120,8 +119,7 @@ bool flecs_query_tree_select(
     return flecs_query_tree_select_tgt(op, redo, ctx);
 }
 
-static
-bool flecs_query_tree_select_any(
+static bool flecs_query_tree_select_any(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -168,8 +166,7 @@ next:
     }
 }
 
-static
-bool flecs_query_tree_select_wildcard(
+static bool flecs_query_tree_select_wildcard(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -431,8 +428,7 @@ bool flecs_query_tree_with(
     return true;
 }
 
-static
-bool flecs_query_tree_with_pre(
+static bool flecs_query_tree_with_pre(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -462,8 +458,7 @@ bool flecs_query_tree_with_pre(
     return false;
 }
 
-static
-bool flecs_query_children_select(
+static bool flecs_query_children_select(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -551,8 +546,7 @@ next:
     }
 }
 
-static
-bool flecs_query_children_with(
+static bool flecs_query_children_with(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -924,3 +918,5 @@ yield: {
 
     return true;
 }
+
+#endif // FLECS_QUERY_PLANS

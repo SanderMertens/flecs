@@ -73,8 +73,7 @@
                 "remove_low_after_ensure_high",
                 "recreate_pages_after_shrink",
                 "create_low_page_after_high",
-                "bitset_negative_index",
-                "vec_set_min_size_w_type_info"
+                "bitset_negative_index"
             ]
         }, {
             "id": "Strbuf",

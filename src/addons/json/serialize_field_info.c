@@ -7,8 +7,7 @@
 
 #ifdef FLECS_JSON
 
-static
-bool flecs_json_serialize_get_field_ctx(
+static bool flecs_json_serialize_get_field_ctx(
     const ecs_world_t *world,
     const ecs_iter_t *it,
     int32_t f,

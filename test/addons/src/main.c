@@ -222,8 +222,6 @@ void SystemPeriodic_on_period(void);
 void SystemPeriodic_on_period_long_delta(void);
 void SystemPeriodic_disabled(void);
 void SystemPeriodic_2_disabled(void);
-void SystemPeriodic_disabled_feature(void);
-void SystemPeriodic_disabled_nested_feature(void);
 void SystemPeriodic_two_refs(void);
 void SystemPeriodic_filter_disabled(void);
 void SystemPeriodic_match_disabled(void);
@@ -342,7 +340,6 @@ void Stats_get_entity_count(void);
 void Stats_get_pipeline_stats_w_task_system(void);
 void Stats_get_not_alive_entity_count(void);
 void Stats_progress_stats_systems(void);
-void Stats_progress_stats_systems_w_empty_table_flag(void);
 
 // Testsuite 'Memory'
 void Memory_query_memory_no_cache(void);
@@ -471,6 +468,8 @@ void Http_teardown(void);
 void Http_teardown_started(void);
 void Http_teardown_stopped(void);
 void Http_stop_start(void);
+void Http_decode_plus(void);
+void Http_query_params_max(void);
 
 // Testsuite 'Rest'
 void Rest_teardown(void);
@@ -484,6 +483,7 @@ void Rest_call(void);
 void Rest_call_string(void);
 void Rest_call_missing_argument(void);
 void Rest_call_not_found(void);
+void Rest_entity_not_found_w_dot_sep(void);
 void Rest_tables(void);
 void Rest_components(void);
 void Rest_type_info_non_existing_entity(void);
@@ -503,6 +503,8 @@ void Rest_import_rest_after_mini(void);
 void Rest_get_pipeline_stats_after_delete_system(void);
 void Rest_request_world_summary_before_monitor_sys_run(void);
 void Rest_escape_backslash(void);
+void Rest_entity_name_w_spaces(void);
+void Rest_query_w_spaces(void);
 void Rest_request_small_buffer_plus_one(void);
 void Rest_request_ending_in_pct(void);
 void Rest_request_ending_in_2_pct(void);
@@ -1431,14 +1433,6 @@ bake_test_case SystemPeriodic_testcases[] = {
         SystemPeriodic_2_disabled
     },
     {
-        "disabled_feature",
-        SystemPeriodic_disabled_feature
-    },
-    {
-        "disabled_nested_feature",
-        SystemPeriodic_disabled_nested_feature
-    },
-    {
         "two_refs",
         SystemPeriodic_two_refs
     },
@@ -1856,10 +1850,6 @@ bake_test_case Stats_testcases[] = {
     {
         "progress_stats_systems",
         Stats_progress_stats_systems
-    },
-    {
-        "progress_stats_systems_w_empty_table_flag",
-        Stats_progress_stats_systems_w_empty_table_flag
     }
 };
 
@@ -2321,6 +2311,14 @@ bake_test_case Http_testcases[] = {
     {
         "stop_start",
         Http_stop_start
+    },
+    {
+        "decode_plus",
+        Http_decode_plus
+    },
+    {
+        "query_params_max",
+        Http_query_params_max
     }
 };
 
@@ -2368,6 +2366,10 @@ bake_test_case Rest_testcases[] = {
     {
         "call_not_found",
         Rest_call_not_found
+    },
+    {
+        "entity_not_found_w_dot_sep",
+        Rest_entity_not_found_w_dot_sep
     },
     {
         "tables",
@@ -2444,6 +2446,14 @@ bake_test_case Rest_testcases[] = {
     {
         "escape_backslash",
         Rest_escape_backslash
+    },
+    {
+        "entity_name_w_spaces",
+        Rest_entity_name_w_spaces
+    },
+    {
+        "query_w_spaces",
+        Rest_query_w_spaces
     },
     {
         "request_small_buffer_plus_one",
@@ -2793,6 +2803,7 @@ const char* MultiThread_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThread_params[] = {
     {"worker_kind", (char**)MultiThread_worker_kind_param, 2}
 };
+
 const char* MultiThreadStaging_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThreadStaging_params[] = {
     {"worker_kind", (char**)MultiThreadStaging_worker_kind_param, 2}
@@ -2824,7 +2835,7 @@ static bake_test_suite suites[] = {
         "SystemPeriodic",
         NULL,
         NULL,
-        48,
+        46,
         SystemPeriodic_testcases
     },
     {
@@ -2887,7 +2898,7 @@ static bake_test_suite suites[] = {
         "Stats",
         NULL,
         NULL,
-        13,
+        12,
         Stats_testcases
     },
     {
@@ -2940,14 +2951,14 @@ static bake_test_suite suites[] = {
         "Http",
         NULL,
         NULL,
-        4,
+        6,
         Http_testcases
     },
     {
         "Rest",
         NULL,
         NULL,
-        41,
+        44,
         Rest_testcases
     },
     {

@@ -4,14 +4,15 @@
  */
 
 #include "flecs.h"
+
+#ifdef FLECS_STATS
+
 #include "stats.h"
 #include "../pipeline/pipeline.h"
 
 #ifdef FLECS_REST
 #include "../http/http.h"
 #endif
-
-#ifdef FLECS_STATS
 
 ECS_COMPONENT_DECLARE(ecs_entities_memory_t);
 ECS_COMPONENT_DECLARE(ecs_component_index_memory_t);
@@ -23,8 +24,7 @@ ECS_COMPONENT_DECLARE(ecs_table_histogram_t);
 ECS_COMPONENT_DECLARE(ecs_allocator_memory_t);
 ECS_COMPONENT_DECLARE(EcsWorldMemory);
 
-static
-ecs_size_t flecs_ballocator_memory_get(
+static ecs_size_t flecs_ballocator_memory_get(
     const ecs_block_allocator_t *allocator)
 {
     ecs_size_t result = 0;
@@ -42,8 +42,7 @@ ecs_size_t flecs_ballocator_memory_get(
     return result;
 }
 
-static
-ecs_size_t flecs_map_memory_get(
+static ecs_size_t flecs_map_memory_get(
     const ecs_map_t *map,
     ecs_size_t element_size)
 {
@@ -56,8 +55,7 @@ ecs_size_t flecs_map_memory_get(
     return result;
 }
 
-static
-ecs_size_t flecs_hashmap_memory_get(
+static ecs_size_t flecs_hashmap_memory_get(
     const ecs_hashmap_t *name_index)
 {
     const ecs_map_t *map = &name_index->impl;
@@ -76,8 +74,7 @@ ecs_size_t flecs_hashmap_memory_get(
     return result;
 }
 
-static
-ecs_size_t flecs_sparse_memory_get(
+static ecs_size_t flecs_sparse_memory_get(
     const ecs_sparse_t *sparse,
     ecs_size_t element_size)
 {
@@ -107,8 +104,7 @@ ecs_size_t flecs_sparse_memory_get(
     return result;
 }
 
-static
-ecs_size_t flecs_allocator_memory_get(
+static ecs_size_t flecs_allocator_memory_get(
     const ecs_allocator_t *allocator)
 {
     ecs_size_t result = 0;
@@ -130,8 +126,7 @@ ecs_size_t flecs_allocator_memory_get(
     return result;
 }
 
-static
-ecs_size_t flecs_stack_memory_get(
+static ecs_size_t flecs_stack_memory_get(
     const ecs_stack_t *stack)
 {
     ecs_size_t result = 0;
@@ -144,8 +139,7 @@ ecs_size_t flecs_stack_memory_get(
     return result;
 }
 
-static
-ecs_size_t flecs_identifier_memory_get(
+static ecs_size_t flecs_identifier_memory_get(
     const ecs_world_t *world,
     ecs_entity_t tag)
 {
@@ -164,8 +158,7 @@ ecs_size_t flecs_identifier_memory_get(
 }
 
 #ifdef FLECS_DOC
-static
-ecs_size_t flecs_doc_string_memory_get(
+static ecs_size_t flecs_doc_string_memory_get(
     const ecs_world_t *world,
     ecs_entity_t tag)
 {
@@ -322,6 +315,7 @@ void ecs_query_memory_get(
     }
     
     /* Query cache memory */
+#ifdef FLECS_CACHED_QUERIES
     if (impl->cache) {
         ecs_query_cache_t *cache = impl->cache;
 
@@ -384,10 +378,10 @@ void ecs_query_memory_get(
         ecs_query_memory_get(cache->query, result);
         result->count --; /* Don't double count query */
     }
+#endif
 }
 
-static
-ecs_size_t flecs_query_total_memory_get(
+static ecs_size_t flecs_query_total_memory_get(
     const ecs_query_t *query)
 {
     ecs_query_memory_t memory = {0};
@@ -419,8 +413,7 @@ error:
     return result;
 }
 
-static
-void flecs_component_memory_get_sparse(
+static void flecs_component_memory_get_sparse(
     const ecs_component_record_t *cr,
     ecs_component_memory_t *result)
 {
@@ -493,8 +486,7 @@ error:
     return result;
 }
 
-static
-void flecs_table_graph_edge_memory_get(
+static void flecs_table_graph_edge_memory_get(
     const ecs_graph_edge_t *edge,
     ecs_table_memory_t *result)
 {
@@ -508,8 +500,7 @@ void flecs_table_graph_edge_memory_get(
     }
 }
 
-static
-void flecs_table_graph_edges_memory_get(
+static void flecs_table_graph_edges_memory_get(
     const ecs_graph_edges_t *edges,
     ecs_table_memory_t *result)
 {
@@ -653,8 +644,7 @@ ecs_table_histogram_t ecs_table_histogram_get(
     return result;
 }
 
-static
-ecs_size_t flecs_event_record_memory_get(
+static ecs_size_t flecs_event_record_memory_get(
     const ecs_event_record_t *er)
 {
     ecs_size_t result = flecs_map_memory_get(&er->event_ids, 
@@ -671,8 +661,7 @@ ecs_size_t flecs_event_record_memory_get(
     return result;
 }
 
-static
-ecs_size_t flecs_observer_memory_get(
+static ecs_size_t flecs_observer_memory_get(
     const ecs_observer_impl_t *o)
 {
     ecs_size_t result = ECS_SIZEOF(ecs_observer_impl_t);
@@ -695,8 +684,7 @@ ecs_size_t flecs_observer_memory_get(
     return result;
 }
 
-static
-ecs_size_t flecs_observers_memory_get(
+static ecs_size_t flecs_observers_memory_get(
     const ecs_world_t *world)
 {
     ecs_size_t result = 0;
@@ -725,8 +713,7 @@ ecs_size_t flecs_observers_memory_get(
     return result;
 }
 
-static
-ecs_size_t flecs_observer_index_memory_get(
+static ecs_size_t flecs_observer_index_memory_get(
     const ecs_world_t *world)
 {
     const ecs_observable_t *o = &world->observable;
@@ -752,8 +739,7 @@ ecs_size_t flecs_observer_index_memory_get(
     return result;
 }
 
-static
-void flecs_system_memory_get(
+static void flecs_system_memory_get(
     const ecs_world_t *world,
     ecs_misc_memory_t *result)
 {
@@ -775,8 +761,7 @@ void flecs_system_memory_get(
     }
 }
 
-static
-void flecs_pipeline_memory_get(
+static void flecs_pipeline_memory_get(
     const ecs_world_t *world,
     ecs_misc_memory_t *result)
 {
@@ -799,23 +784,8 @@ void flecs_pipeline_memory_get(
     }
 }
 
-static
-void flecs_rematch_monitor_memory_get(
-    const ecs_world_t *world,
-    ecs_misc_memory_t *result)
-{
-    ecs_map_iter_t it = ecs_map_iter(&world->monitors.monitors);
-    while (ecs_map_next(&it)) {
-        ecs_monitor_t *m = ecs_map_ptr(&it);
-        result->bytes_rematch_monitor += ECS_SIZEOF(ecs_monitor_t);
-        result->bytes_rematch_monitor += ecs_vec_size(&m->queries) *
-            ECS_SIZEOF(void*);
-    }
-}
-
 #ifdef FLECS_META
-static
-void flecs_reflection_memory_get(
+static void flecs_reflection_memory_get(
     const ecs_world_t *world,
     ecs_misc_memory_t *result)
 {
@@ -889,8 +859,7 @@ void flecs_reflection_memory_get(
 }
 #endif
 
-static
-void flecs_stats_memory_get(
+static void flecs_stats_memory_get(
     const ecs_world_t *world,
     ecs_misc_memory_t *result)
 {
@@ -937,8 +906,7 @@ void flecs_stats_memory_get(
 }
 
 #ifdef FLECS_REST
-static
-void flecs_http_memory_get(
+static void flecs_http_memory_get(
     ecs_http_server_t *srv,
     ecs_misc_memory_t *result)
 {
@@ -969,11 +937,8 @@ void flecs_http_memory_get(
         }
     }
 }
-#endif
 
-#ifdef FLECS_REST
-static
-void flecs_rest_memory_get(
+static void flecs_rest_memory_get(
     const ecs_world_t *world,
     ecs_misc_memory_t *result)
 {
@@ -993,8 +958,7 @@ void flecs_rest_memory_get(
 }
 #endif
 
-static
-void flecs_tree_spawner_memory_get(
+static void flecs_tree_spawner_memory_get(
     const ecs_world_t *world,
     ecs_misc_memory_t *result)
 {
@@ -1036,7 +1000,6 @@ ecs_misc_memory_t ecs_misc_memory_get(
     result.bytes_observers = flecs_observer_index_memory_get(world);
     flecs_system_memory_get(world, &result);
     flecs_pipeline_memory_get(world, &result);
-    flecs_rematch_monitor_memory_get(world, &result);
 
     #ifdef FLECS_META
         flecs_reflection_memory_get(world, &result);
@@ -1050,8 +1013,10 @@ ecs_misc_memory_t ecs_misc_memory_get(
     result.bytes_prefab_child_indices = flecs_map_memory_get(
         &world->prefab_child_indices, 0);
 
+#ifdef FLECS_MULTI_WORLD
     result.bytes_component_ids += 
         ecs_vec_size(&world->component_ids) * ECS_SIZEOF(ecs_entity_t);
+#endif
     
     result.bytes_table_lookup += 
         flecs_hashmap_memory_get(&world->store.table_map);
@@ -1138,8 +1103,10 @@ ecs_allocator_memory_t ecs_allocator_memory_get(
             &stage->allocators.cmd_entry_chunk);
         result.bytes_query_impl += flecs_ballocator_memory_get(
             &stage->allocators.query_impl);
+#ifdef FLECS_CACHED_QUERIES
         result.bytes_query_cache += flecs_ballocator_memory_get(
             &stage->allocators.query_cache);
+#endif
         result.bytes_misc += ecs_vec_size(&stage->variables) * 
             ECS_SIZEOF(ecs_query_var_t);
         result.bytes_misc += ecs_vec_size(&stage->operations) * 
@@ -1153,8 +1120,7 @@ error:
 }
 
 #ifdef FLECS_META
-static
-int flecs_world_memory_serialize(
+static int flecs_world_memory_serialize(
     const ecs_serializer_t *s, 
     const void *ptr)
 {
@@ -1351,8 +1317,7 @@ void flecs_stats_memory_register_reflection(
 #endif
 }
 
-static
-ecs_size_t flecs_get_memory_total(
+static ecs_size_t flecs_get_memory_total(
     const ecs_world_t *world,
     const void *ptr,
     ecs_entity_t type)

@@ -1,7 +1,6 @@
 #include <addons.h>
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Position *p_parent = ecs_field(it, Position, 1);
 
@@ -26,10 +25,14 @@ void SystemCascade_cascade_depth_1(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
-    ECS_ENTITY(world, e4, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade));
     ecs_set(world, e1, Position, {1, 2});
@@ -87,12 +90,18 @@ void SystemCascade_cascade_depth_2(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
-    ECS_ENTITY(world, e4, Position);
-    ECS_ENTITY(world, e5, Position);
-    ECS_ENTITY(world, e6, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade));
     ecs_set(world, e1, Position, {1, 2});
@@ -163,12 +172,18 @@ void SystemCascade_cascade_depth_2_new_syntax(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
-    ECS_ENTITY(world, e4, Position);
-    ECS_ENTITY(world, e5, Position);
-    ECS_ENTITY(world, e6, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade ChildOf));
     ecs_set(world, e1, Position, {1, 2});
@@ -234,8 +249,7 @@ void SystemCascade_cascade_depth_2_new_syntax(void) {
     ecs_fini(world);
 }
 
-static
-void AddParent(ecs_iter_t *it) {
+static void AddParent(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Position *p_parent = ecs_field(it, Position, 1);
 
@@ -257,10 +271,14 @@ void SystemCascade_add_after_match(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
-    ECS_ENTITY(world, e4, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
 
     ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade));
     ecs_entity_t parent = ecs_new(world);
@@ -329,10 +347,14 @@ void SystemCascade_adopt_after_match(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
-    ECS_ENTITY(world, e4, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
 
     ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade));
     ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));
@@ -394,12 +416,17 @@ void SystemCascade_custom_relation_cascade_depth_1(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
-    ECS_ENTITY(world, e4, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_set(world, e1, Position, {1, 2});
@@ -456,14 +483,21 @@ void SystemCascade_custom_relation_cascade_depth_2(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
-    ECS_ENTITY(world, e4, Position);
-    ECS_ENTITY(world, e5, Position);
-    ECS_ENTITY(world, e6, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_set(world, e1, Position, {1, 2});
@@ -533,12 +567,17 @@ void SystemCascade_custom_relation_add_after_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
-    ECS_ENTITY(world, e4, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
 
     ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_entity_t parent = ecs_new(world);
@@ -606,12 +645,17 @@ void SystemCascade_custom_relation_adopt_after_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
-    ECS_ENTITY(world, e4, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
 
     ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));

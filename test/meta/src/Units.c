@@ -633,9 +633,8 @@ void Units_define_twice_remove_quantity(void) {
 void Units_set_unit(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids( EcsQuantity )
-    });
+    ecs_entity_t q = ecs_new(world);
+    ecs_add_id(world, q, EcsQuantity);
     test_assert(q != 0);
 
     ecs_entity_t u = ecs_new(world);
@@ -682,9 +681,8 @@ void Units_set_unit(void) {
 void Units_set_unit_w_derived(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids( EcsQuantity )
-    });
+    ecs_entity_t q = ecs_new(world);
+    ecs_add_id(world, q, EcsQuantity);
     test_assert(q != 0);
 
     ecs_entity_t d = ecs_new(world);
@@ -740,9 +738,8 @@ void Units_set_unit_w_derived(void) {
 void Units_set_unit_w_over(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids( EcsQuantity )
-    });
+    ecs_entity_t q = ecs_new(world);
+    ecs_add_id(world, q, EcsQuantity);
     test_assert(q != 0);
 
     ecs_entity_t d = ecs_new(world);
@@ -806,9 +803,8 @@ void Units_set_unit_w_over(void) {
 void Units_set_unit_w_prefix(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids( EcsQuantity )
-    });
+    ecs_entity_t q = ecs_new(world);
+    ecs_add_id(world, q, EcsQuantity);
     test_assert(q != 0);
 
     ecs_entity_t d = ecs_new(world);

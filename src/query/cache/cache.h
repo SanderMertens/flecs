@@ -8,6 +8,17 @@
 
 #include "../types.h"
 
+typedef struct ecs_query_cache_t ecs_query_cache_t;
+
+#ifdef FLECS_CACHED_QUERIES
+void flecs_query_cache_bootstrap(
+    ecs_world_t *world);
+
+void flecs_query_revalidate_table(
+    ecs_world_t *world,
+    ecs_query_impl_t *impl,
+    uint64_t table_id);
+
 /** Table match data.
  * Each table matched by the query is represented by an ecs_query_cache_match_t
  * instance. A table may match a query multiple times (due to wildcard queries)
@@ -27,7 +38,6 @@ struct ecs_query_cache_match_t {
     ecs_entity_t *_sources;           /* Sources of ids. */
     ecs_termset_t _up_fields;         /* Fields that are matched through traversal. */
     int32_t *_monitor;                /* Used to monitor table for changes. */
-    int32_t rematch_count;            /* Track whether table was rematched. */
     ecs_vec_t *wildcard_matches;      /* Additional matches for table for wildcard queries. */
 };
 
@@ -53,12 +63,15 @@ typedef struct ecs_query_cache_allocators_t {
 } ecs_query_cache_allocators_t;
 
 /** Query that is automatically matched against tables */
-typedef struct ecs_query_cache_t {
+struct ecs_query_cache_t {
     /* Uncached query used to populate the cache */
     ecs_query_t *query;
 
     /* Observer to keep the cache in sync */
     ecs_observer_t *observer;
+
+    ecs_observer_t *rematch_observer;
+    ecs_observer_t *ancestry_observer;
 
     /* Tables matched with query */
     ecs_map_t tables;
@@ -87,13 +100,9 @@ typedef struct ecs_query_cache_t {
     void *group_by_ctx;
     ecs_ctx_free_t group_by_ctx_free;
 
-    /* Monitor generation */
-    int32_t monitor_generation;
-
     int32_t cascade_by;              /* Identify cascade term */
     int32_t match_count;             /* How often have tables been (un)matched */
     int32_t prev_match_count;        /* Track if sorting is needed */
-    int32_t rematch_count;           /* Track which tables were added during rematch */
     
     ecs_entity_t entity;             /* Entity associated with query */
 
@@ -105,7 +114,7 @@ typedef struct ecs_query_cache_t {
 
     /* Query-level allocators */
     ecs_query_cache_allocators_t allocators;
-} ecs_query_cache_t;
+};
 
 ecs_query_cache_t* flecs_query_cache_init(
     ecs_query_impl_t *impl,
@@ -131,5 +140,7 @@ ecs_size_t flecs_query_cache_elem_size(
 #include "group.h"
 #include "match.h"
 #include "change_detection.h"
+
+#endif // FLECS_CACHED_QUERIES
 
 #endif

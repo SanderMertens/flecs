@@ -76,10 +76,12 @@ void flecs_ordered_entities_append(
          * corresponding instance child. */
         ecs_map_ensure(&world->prefab_child_indices, e)[0] = 
             flecs_ito(uint64_t, ecs_vec_count(&pr->ordered_children) - 1);
+#ifdef FLECS_PREFAB
     } else {
         ecs_assert(
             !ecs_owns_id(world, ecs_pair_second(world, cr->id), EcsPrefab),
             ECS_INTERNAL_ERROR, NULL);
+#endif
     }
 }
 
@@ -127,8 +129,7 @@ void flecs_ordered_entities_remove(
     }
 }
 
-static
-void flecs_ordered_entities_unparent_internal(
+static void flecs_ordered_entities_unparent_internal(
     ecs_world_t *world,
     const ecs_table_t *entities_table,
     const ecs_table_t *table,

@@ -5,8 +5,7 @@
 
 #include "private_api.h"
 
-static
-ecs_table_t* flecs_find_table_remove(
+static ecs_table_t* flecs_find_table_remove(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
@@ -21,8 +20,7 @@ error:
     return NULL;
 }
 
-static
-ecs_cmd_t* flecs_cmd_new(
+static ecs_cmd_t* flecs_cmd_new(
     ecs_stage_t *stage)
 {
     ecs_cmd_t *cmd = ecs_vec_append_t(&stage->allocator, &stage->cmd->queue, 
@@ -35,8 +33,7 @@ ecs_cmd_t* flecs_cmd_new(
     return cmd;
 }
 
-static
-ecs_cmd_t* flecs_cmd_new_batched(
+static ecs_cmd_t* flecs_cmd_new_batched(
     ecs_stage_t *stage, 
     ecs_entity_t e)
 {
@@ -275,6 +272,7 @@ bool flecs_defer_remove(
         cmd->id = id;
         cmd->entity = entity;
 
+#ifdef FLECS_PREFAB
         /* If an override is removed, restore the component to the value of
          * the overridden component. This serves two purposes:
          *
@@ -331,15 +329,14 @@ bool flecs_defer_remove(
                 }
             }
         }
-
+#endif
         return true;
     }
     return false;
 }
 
 /* Return existing component pointer & type info */
-static
-flecs_component_ptr_t flecs_defer_get_existing(
+static flecs_component_ptr_t flecs_defer_get_existing(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *r,
@@ -417,6 +414,68 @@ error:
     return NULL;
 }
 
+static
+void* flecs_defer_find_cmd_value(
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_cmd_entry_t *entry = flecs_sparse_get_t(
+        &stage->cmd->entries, ecs_cmd_entry_t, entity);
+    if (!entry || entry->first == -1) {
+        return NULL;
+    }
+
+    ecs_cmd_t *cmds = ecs_vec_first_t(&stage->cmd->queue, ecs_cmd_t);
+    if (cmds[entry->last].entity != entity) {
+        return NULL;
+    }
+
+    void *result = NULL;
+    int32_t cur = entry->first;
+    do {
+        ecs_cmd_t *cmd = &cmds[cur];
+        switch(cmd->kind) {
+        case EcsCmdSet:
+        case EcsCmdSetDontFragment:
+        case EcsCmdEmplace:
+        case EcsCmdEnsure:
+        case EcsCmdEnsureDontFragment:
+            if (cmd->id == id) {
+                result = cmd->is._1.value;
+            }
+            break;
+        case EcsCmdRemove:
+            if (cmd->id == id) {
+                result = NULL;
+            }
+            break;
+        case EcsCmdClone:
+        case EcsCmdClear:
+        case EcsCmdDelete:
+            result = NULL;
+            break;
+        case EcsCmdBulkNew:
+        case EcsCmdAdd:
+        case EcsCmdModified:
+        case EcsCmdModifiedNoHook:
+        case EcsCmdAddModified:
+        case EcsCmdPath:
+        case EcsCmdOnDeleteAction:
+        case EcsCmdEnable:
+        case EcsCmdDisable:
+        case EcsCmdEvent:
+        case EcsCmdSkip:
+            break;
+        }
+
+        int32_t next = cmd->next_for_entity;
+        cur = next < 0 ? -next : next;
+    } while (cur);
+
+    return result;
+}
+
 void* flecs_defer_ensure(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -426,19 +485,26 @@ void* flecs_defer_ensure(
 {
     ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
-    cmd->entity = entity;
-    cmd->id = id;
-
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_component_ptr_t ptr = flecs_defer_get_existing(
         world, entity, r, id, size);
 
     const ecs_type_info_t *ti = ptr.ti;
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER,
         "provided component is not a type");
     ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
         "bad size for component in ensure");
+
+    if (!ptr.ptr) {
+        void *existing = flecs_defer_find_cmd_value(stage, entity, id);
+        if (existing) {
+            return existing;
+        }
+    }
+
+    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
+    cmd->entity = entity;
+    cmd->id = id;
 
     ecs_table_t *table = r->table;
     if (!ptr.ptr) {
@@ -711,8 +777,7 @@ void flecs_enqueue(
     }
 }
 
-static
-void flecs_flush_bulk_new(
+static void flecs_flush_bulk_new(
     ecs_world_t *world,
     ecs_cmd_t *cmd)
 {
@@ -732,8 +797,7 @@ void flecs_flush_bulk_new(
     ecs_os_free(entities);
 }
 
-static
-void flecs_dtor_value(
+static void flecs_dtor_value(
     ecs_world_t *world,
     ecs_id_t id,
     void *value)
@@ -743,8 +807,7 @@ void flecs_dtor_value(
     flecs_type_info_dtor(value, 1, ti);
 }
 
-static
-void flecs_free_cmd_event(
+static void flecs_free_cmd_event(
     ecs_world_t *world,
     ecs_event_desc_t *desc)
 {
@@ -763,8 +826,7 @@ void flecs_free_cmd_event(
     }
 }
 
-static
-void flecs_discard_cmd(
+static void flecs_discard_cmd(
     ecs_world_t *world,
     ecs_cmd_t *cmd)
 {
@@ -782,8 +844,7 @@ void flecs_discard_cmd(
     }
 }
 
-static
-bool flecs_remove_invalid(
+static bool flecs_remove_invalid(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_id_t *id_out)
@@ -834,8 +895,7 @@ bool flecs_remove_invalid(
     return true;
 }
 
-static
-void flecs_cmd_batch_for_entity(
+static void flecs_cmd_batch_for_entity(
     ecs_world_t *world,
     ecs_table_diff_builder_t *diff,
     ecs_entity_t entity,
@@ -1086,7 +1146,7 @@ void flecs_cmd_batch_for_entity(
             case EcsCmdEnable:
             case EcsCmdDisable:
             case EcsCmdEvent:
-            case EcsCmdSkip:
+                case EcsCmdSkip:
                 break;
             }
         } while ((cur = next_for_entity));
@@ -1098,21 +1158,6 @@ void flecs_cmd_batch_for_entity(
         ecs_table_diff_t add_diff = ECS_TABLE_DIFF_INIT;
         add_diff.added = added;
         add_diff.added_flags = table_diff.added_flags;
-
-        if (r->row & EcsEntityIsTraversable) {
-            /* Update monitors since we didn't do this in flecs_commit. Do this
-             * before calling flecs_actions_move_add() since this can trigger
-             * prefab instantiation logic. When that happens, prefab children
-             * can be created for this instance which would mean that the table
-             * count of cr would always be >0.
-             * Since those tables are new, we don't have to invoke component
-             * monitors since queries will have correctly matched them. */
-            ecs_component_record_t *cr = flecs_components_get(
-                world, ecs_pair(EcsWildcard, entity));
-            if (cr && flecs_table_cache_count(&cr->cache)) {
-                flecs_update_component_monitors(world, &added, NULL);
-            }
-        }
 
         bool update_parent_records = !table_diff.removed.count ||
             !(start_table->flags & EcsTableHasParent);

@@ -232,8 +232,6 @@
                 "on_period_long_delta",
                 "disabled",
                 "2_disabled",
-                "disabled_feature",
-                "disabled_nested_feature",
                 "two_refs",
                 "filter_disabled",
                 "match_disabled",
@@ -369,8 +367,7 @@
                 "get_entity_count",
                 "get_pipeline_stats_w_task_system",
                 "get_not_alive_entity_count",
-                "progress_stats_systems",
-                "progress_stats_systems_w_empty_table_flag"
+                "progress_stats_systems"
             ]
         }, {
             "id": "Memory",
@@ -518,7 +515,9 @@
                 "teardown",
                 "teardown_started",
                 "teardown_stopped",
-                "stop_start"
+                "stop_start",
+                "decode_plus",
+                "query_params_max"
             ]
         }, {
             "id": "Rest",
@@ -534,6 +533,7 @@
                 "call_string",
                 "call_missing_argument",
                 "call_not_found",
+                "entity_not_found_w_dot_sep",
                 "tables",
                 "components",
                 "type_info_non_existing_entity",
@@ -553,6 +553,8 @@
                 "get_pipeline_stats_after_delete_system",
                 "request_world_summary_before_monitor_sys_run",
                 "escape_backslash",
+                "entity_name_w_spaces",
+                "query_w_spaces",
                 "request_small_buffer_plus_one",
                 "request_ending_in_pct",
                 "request_ending_in_2_pct",

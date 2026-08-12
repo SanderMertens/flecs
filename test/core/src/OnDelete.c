@@ -1459,8 +1459,7 @@ void OnDelete_stresstest_many_relations_on_delete(void) {
 static ecs_entity_t trigger_entity;
 static int trigger_count;
 
-static
-void dummy_on_remove(ecs_iter_t *it) {
+static void dummy_on_remove(ecs_iter_t *it) {
     test_int(it->count, 1);
     trigger_entity = it->entities[0];
 
@@ -1504,8 +1503,7 @@ typedef struct {
     ecs_entity_t other;
 } Entity;
 
-static 
-void delete_on_remove(ecs_iter_t *it) {
+static void delete_on_remove(ecs_iter_t *it) {
     test_int(it->count, 1);
     Entity *comp = ecs_field(it, Entity, 0);
     test_assert(comp != NULL);
@@ -1514,8 +1512,7 @@ void delete_on_remove(ecs_iter_t *it) {
     trigger_count ++;
 }
 
-static 
-void delete_self_on_remove(ecs_iter_t *it) {
+static void delete_self_on_remove(ecs_iter_t *it) {
     ecs_entity_t e = *(ecs_entity_t*)it->ctx;
     test_int(it->count, 1);
     ecs_delete(it->world, e);
@@ -2388,7 +2385,9 @@ void OnDelete_deep_clean_256(void) {
 void OnDelete_id_w_disabled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, CanToggle);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t ecs_id(Tag) = Tag;
+    ecs_add_id(world, Tag, EcsCanToggle);
 
 
     ecs_entity_t e1 = ecs_new_w(world, Tag);
@@ -2506,8 +2505,7 @@ void OnDelete_delete_with_w_relation(void) {
 
 static int delete_target_invoked = 0;
 
-static
-void DeleteTarget(ecs_iter_t *it) {
+static void DeleteTarget(ecs_iter_t *it) {
     ecs_id_t pair = ecs_field_id(it, 0);
     test_assert(ecs_id_is_pair(pair));
     ecs_delete(it->world, ECS_PAIR_SECOND(pair));
@@ -2541,8 +2539,7 @@ void OnDelete_delete_self_in_on_remove(void) {
     ecs_fini(world);
 }
 
-static
-void DeleteOther(ecs_iter_t *it) {
+static void DeleteOther(ecs_iter_t *it) {
     ecs_entity_t *ctx = it->ctx;
     test_assert(ctx != NULL);
 
@@ -2588,8 +2585,7 @@ void OnDelete_delete_nested_in_on_remove(void) {
     ecs_fini(world);
 }
 
-static
-void AddRemoved(ecs_iter_t *it) {
+static void AddRemoved(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 0);
     for (int i = 0; i < it->count; i ++) {
         ecs_new_w_id(it->world, id); /* create entity with removed id */
@@ -2618,7 +2614,8 @@ void OnDelete_delete_tree_w_query(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
 
     ecs_query_t *q = ecs_query(world, { .expr = "Tag(up Rel)" });

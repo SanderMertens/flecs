@@ -14,8 +14,7 @@ void ecs_vec_init(
     ecs_vec_init_w_dbg_info(allocator, v, size, elem_count, NULL);
 }
 
-static
-void* flecs_vec_alloc(
+static void* flecs_vec_alloc(
     struct ecs_allocator_t *allocator,
     ecs_size_t size,
     int32_t elem_count,
@@ -33,8 +32,7 @@ void* flecs_vec_alloc(
     return NULL;
 }
 
-static
-void flecs_vec_free(
+static void flecs_vec_free(
     struct ecs_allocator_t *allocator,
     ecs_size_t elem_size,
     int32_t size,
@@ -143,31 +141,6 @@ ecs_vec_t ecs_vec_copy(
     };
 }
 
-ecs_vec_t ecs_vec_copy_shrink(
-    ecs_allocator_t *allocator,
-    const ecs_vec_t *v,
-    ecs_size_t size)
-{
-    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
-    int32_t count = v->count;
-    void *array = NULL;
-    if (count) {
-        if (allocator) {
-            array = flecs_dup(allocator, size * count, v->array);
-        } else {
-            array = ecs_os_memdup(v->array, size * count);
-        }
-    }
-    return (ecs_vec_t) {
-        .count = count,
-        .size = count,
-        .array = array
-#ifdef FLECS_SANITIZE
-        , .elem_size = size
-#endif
-    };
-}
-
 void ecs_vec_reclaim(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -238,28 +211,6 @@ void ecs_vec_set_min_size(
     ecs_size_t size,
     int32_t elem_count)
 {
-    if (elem_count > vec->size) {
-        ecs_vec_set_size(allocator, vec, size, elem_count);
-    }
-}
-
-void ecs_vec_set_min_size_w_type_info(
-    struct ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size,
-    int32_t elem_count,
-    const ecs_type_info_t *ti)
-{
-    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_vec_init_if(vec, size);
-#ifdef FLECS_SANITIZE
-    if (!vec->type_name) {
-        vec->type_name = ti ? ti->name : NULL;
-    }
-#else
-    (void)ti;
-#endif
-
     if (elem_count > vec->size) {
         ecs_vec_set_size(allocator, vec, size, elem_count);
     }

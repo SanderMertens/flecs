@@ -4,14 +4,14 @@
  */
 
 #include "flecs.h"
-#include "stats.h"
 
 #ifdef FLECS_STATS
 
+#include "stats.h"
+
 ECS_COMPONENT_DECLARE(EcsWorldSummary);
 
-static 
-void flecs_copy_world_summary(
+static void flecs_copy_world_summary(
     ecs_world_t *world,
     EcsWorldSummary *dst)
 {
@@ -70,8 +70,7 @@ void flecs_copy_world_summary(
     dst->build_info = *ecs_get_build_info();
 }
 
-static
-void UpdateWorldSummary(ecs_iter_t *it) {
+static void UpdateWorldSummary(ecs_iter_t *it) {
     EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 0);
 
     int32_t i, count = it->count;
@@ -80,8 +79,7 @@ void UpdateWorldSummary(ecs_iter_t *it) {
     }
 }
 
-static
-void OnSetWorldSummary(ecs_iter_t *it) {
+static void OnSetWorldSummary(ecs_iter_t *it) {
     EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 0);
 
     int32_t i, count = it->count;
@@ -146,10 +144,8 @@ void FlecsWorldSummaryImport(
     const ecs_world_info_t *info = ecs_get_world_info(world);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { 
-            .name = "UpdateWorldSummary",
-            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsPreFrame))
-        }),
+        .entity = ecs_entity(world, { .name = "UpdateWorldSummary" }),
+        .phase = EcsPreFrame,
         .query.terms = {{ .id = ecs_id(EcsWorldSummary) }},
         .callback = UpdateWorldSummary
     });

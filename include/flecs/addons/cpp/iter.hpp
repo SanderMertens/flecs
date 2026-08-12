@@ -268,15 +268,6 @@ public:
         return iter_->term_index;
     }
 
-    /** Convert current iterator result to string.
-     *
-     * @return String representation of the current iterator result.
-     */
-    flecs::string str() const {
-        char *s = ecs_iter_str(iter_);
-        return flecs::string(s);
-    }
-
     /** Get read-only access to field data.
      * If the specified field index does not match with the provided type, the
      * function will assert.
@@ -384,6 +375,7 @@ public:
             iter_->entities, static_cast<size_t>(iter_->count), false);
     }
 
+#ifdef FLECS_CACHED_QUERIES
     /** Check if the current table has changed since the last iteration.
      * Can only be used when iterating queries and/or systems.
      *
@@ -411,7 +403,9 @@ public:
     uint64_t group_id() const {
         return ecs_iter_get_group(iter_);
     }
+#endif
 
+#ifdef FLECS_QUERY_PLANS
     /** Get value of variable by ID.
      * Get value of a query variable for current result.
      *
@@ -427,6 +421,7 @@ public:
      * @return The variable value.
      */
     flecs::entity get_var(const char *name) const;
+#endif
 
     /** Progress iterator.
      * This operation should only be called from a context where the iterator is

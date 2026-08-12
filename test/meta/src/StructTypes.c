@@ -1106,3 +1106,85 @@ void StructTypes_use_before_registering_reflection_w_hooks(void) {
     ecs_fini(world);
 }
 
+
+void StructTypes_struct_w_use_offset_w_member_entities(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{ 
+            .name = "y",
+            .type = ecs_id(ecs_i32_t),
+            .offset = offsetof(Position, y),
+            .use_offset = true
+        }, { 
+            .name = "x",
+            .type = ecs_id(ecs_i32_t),
+            .offset = offsetof(Position, x),
+            .use_offset = true
+        }},
+        .create_member_entities = true
+    });
+
+    test_assert(s == ecs_id(Position));
+
+    const EcsComponent *cptr = ecs_get(world, s, EcsComponent);
+    test_assert(cptr != NULL);
+    test_int(cptr->size, sizeof(Position));
+    test_int(cptr->alignment, ECS_ALIGNOF(Position));
+
+    meta_test_struct(world, s, Position);
+    meta_test_member(world, s, Position, x, ecs_id(ecs_i32_t), 0);
+    meta_test_member(world, s, Position, y, ecs_id(ecs_i32_t), 0);
+
+    ecs_member_t *mx = ecs_struct_get_member(world, s, "x");
+    test_assert(mx != NULL);
+    test_bool(mx->use_offset, true);
+    test_int(mx->offset, offsetof(Position, x));
+
+    ecs_member_t *my = ecs_struct_get_member(world, s, "y");
+    test_assert(my != NULL);
+    test_bool(my->use_offset, true);
+    test_int(my->offset, offsetof(Position, y));
+
+    ecs_entity_t mex = ecs_lookup_child(world, s, "x");
+    test_assert(mex != 0);
+    const EcsMember *memx = ecs_get(world, mex, EcsMember);
+    test_assert(memx != NULL);
+    test_bool(memx->use_offset, true);
+    test_int(memx->offset, offsetof(Position, x));
+
+    ecs_fini(world);
+}
+
+void StructTypes_struct_w_use_offset_zero_w_member_entities(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{ 
+            .name = "x",
+            .type = ecs_id(ecs_i32_t),
+            .offset = offsetof(Position, x),
+            .use_offset = true
+        }},
+        .create_member_entities = true
+    });
+
+    test_assert(s == ecs_id(Position));
+
+    ecs_member_t *mx = ecs_struct_get_member(world, s, "x");
+    test_assert(mx != NULL);
+    test_bool(mx->use_offset, true);
+    test_int(mx->offset, 0);
+
+    const EcsType *mptr = ecs_get(world, s, EcsType);
+    test_assert(mptr != NULL);
+    test_bool(mptr->partial, true);
+
+    ecs_fini(world);
+}

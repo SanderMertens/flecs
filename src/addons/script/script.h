@@ -33,6 +33,34 @@ typedef struct EcsScriptUpdateEvent {
 
 extern ECS_COMPONENT_DECLARE(EcsScriptUpdateEvent);
 
+/* Context passed to script visitor callbacks. */
+typedef struct ecs_script_visitor_ctx_t {
+    ecs_world_t *world;
+    ecs_entity_t entity;                         /* Entity being defined */
+    ecs_entity_t kind;                           /* Kind with the visitor */
+    struct ecs_expr_initializer_t *initializer;  /* Initializer AST */
+    struct ecs_script_eval_visitor_t *eval;      /* Script evaluation context */
+    void *ctx;                                   /* User context */
+} ecs_script_visitor_ctx_t;
+
+/* Script visitor callback. */
+typedef int(*ecs_script_visitor_action_t)(
+    const ecs_script_visitor_ctx_t *ctx);
+
+/* Component that customizes how initializer syntax is interpreted. When an
+ * entity kind has this component, the initializer AST of a "Kind entity(...)"
+ * statement is passed to the visitor callback instead of being assigned as a
+ * component value. This is used to implement the type definition syntax
+ * ("struct Position(x: f32, y: f32)", "enum Color(Red, Green, Blue)").
+ * Private for now; can become a public customization point once the
+ * expression AST types are public. */
+typedef struct EcsScriptVisitor {
+    ecs_script_visitor_action_t visit;
+    void *ctx;
+} EcsScriptVisitor;
+
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsScriptVisitor);
+
 struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_allocator_t allocator;
@@ -71,6 +99,11 @@ struct ecs_script_runtime_t {
     ecs_vec_t with;
     ecs_vec_t with_type_info;
     ecs_vec_t annot;
+
+    /* Tag added to entities created by the currently evaluating managed
+     * script. Carried on the world runtime so evaluation triggered from hooks
+     * (such as template instantiation) inherits it. */
+    ecs_id_t current_tag;
 
     char *error_name;
     int32_t include_depth;
@@ -141,6 +174,17 @@ int flecs_script_apply_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
     ecs_script_annot_t *annot);
+
+/* Type visitors (implement struct/enum/bitmask initializer syntax) */
+
+int flecs_script_struct_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+int flecs_script_enum_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+int flecs_script_bitmask_visit(
+    const ecs_script_visitor_ctx_t *ctx);
 
 /* Script functions */
 double flecs_lerp(

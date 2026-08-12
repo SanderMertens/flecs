@@ -25,8 +25,7 @@ int64_t ecs_block_allocator_free_count = 0;
  * allocation sizes, which are more likely to be reused. */
 #define FLECS_MIN_CHUNKS_PER_BLOCK 1
 
-static
-ecs_block_allocator_chunk_header_t* flecs_balloc_block(
+static ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
 {
     if (!allocator->chunk_size) {
@@ -87,14 +86,6 @@ void flecs_ballocator_init(
 #endif
 }
 
-ecs_block_allocator_t* flecs_ballocator_new(
-    ecs_size_t size)
-{
-    ecs_block_allocator_t *result = ecs_os_calloc_t(ecs_block_allocator_t);
-    flecs_ballocator_init(result, size);
-    return result;
-}
-
 void flecs_ballocator_fini(
     ecs_block_allocator_t *ba)
 {
@@ -136,13 +127,6 @@ void flecs_ballocator_fini(
 
     ba->block_head = NULL;
 #endif
-}
-
-void flecs_ballocator_free(
-    ecs_block_allocator_t *ba)
-{
-    flecs_ballocator_fini(ba);
-    ecs_os_free(ba);
 }
 
 void* flecs_balloc(
@@ -328,23 +312,4 @@ void* flecs_brealloc_w_dbg_info(
 #endif
 
     return result;
-}
-
-void* flecs_bdup(
-    ecs_block_allocator_t *ba,
-    void *memory)
-{
-#ifdef FLECS_USE_OS_ALLOC
-    if (memory && ba->data_size) {
-        return ecs_os_memdup(memory, ba->data_size);
-    } else {
-        return NULL;
-    }
-#else
-    void *result = flecs_balloc(ba);
-    if (result) {
-        ecs_os_memcpy(result, memory, ba->data_size);
-    }
-    return result;
-#endif
 }

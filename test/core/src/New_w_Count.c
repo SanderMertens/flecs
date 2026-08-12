@@ -40,7 +40,7 @@ void New_w_Count_component(void) {
 void New_w_Count_tag(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
 
     const ecs_entity_t *ids = ecs_bulk_new_w_id(world, Tag, 1000);
     test_assert(ids != NULL);
@@ -539,7 +539,8 @@ void New_w_Count_bulk_init_2_components_tag_w_value(void) {
 void New_w_Count_add_after_bulk(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t ecs_id(Tag) = Tag;
 
     const ecs_entity_t *ids = ecs_bulk_new_w_id(world, Tag, 10);
     test_assert(ids != NULL);
@@ -699,7 +700,7 @@ void New_w_Count_bulk_ids_w_1_exceed_32_bits(void) {
 	install_test_abort();
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
 
     const ecs_entity_range_t *range = ecs_entity_range_new(world, UINT32_MAX, 0);
     ecs_entity_range_set(world, range);
@@ -714,7 +715,7 @@ void New_w_Count_bulk_ids_w_2_exceed_32_bits(void) {
 	install_test_abort();
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
 
     const ecs_entity_range_t *range = ecs_entity_range_new(world, UINT32_MAX, 0);
     ecs_entity_range_set(world, range);

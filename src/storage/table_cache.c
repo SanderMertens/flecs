@@ -19,8 +19,7 @@
 
 #define FLECS_TABLE_CACHE_INDEX_THRESHOLD (4)
 
-static
-void flecs_table_cache_move(
+static void flecs_table_cache_move(
     ecs_table_cache_t *cache,
     ecs_table_cache_elem_t *records,
     int32_t dst,
@@ -39,8 +38,7 @@ void flecs_table_cache_move(
     }
 }
 
-static
-void flecs_table_cache_swap(
+static void flecs_table_cache_swap(
     ecs_table_cache_t *cache,
     ecs_table_cache_elem_t *records,
     int32_t a,
@@ -64,8 +62,7 @@ void flecs_table_cache_swap(
     }
 }
 
-static
-int32_t flecs_table_cache_find(
+static int32_t flecs_table_cache_find(
     const ecs_table_cache_t *cache,
     const ecs_table_t *table)
 {

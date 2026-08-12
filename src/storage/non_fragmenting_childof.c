@@ -5,8 +5,7 @@
 
 #include "../private_api.h"
 
-static
-void flecs_add_non_fragmenting_child_to_table(
+static void flecs_add_non_fragmenting_child_to_table(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t entity,
@@ -37,8 +36,7 @@ void flecs_add_non_fragmenting_child_to_table(
     world->non_fragmenting_child_count ++;
 }
 
-static
-void flecs_remove_non_fragmenting_child_from_table(
+static void flecs_remove_non_fragmenting_child_from_table(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     const ecs_table_t *table)
@@ -97,18 +95,19 @@ int flecs_add_non_fragmenting_child_w_records(
 
     flecs_tree_spawner_assert_not_instantiated(world, parent);
 
+#ifdef FLECS_PREFAB
     ecs_record_t *r_parent = flecs_entities_get(world, parent);
     if (r_parent->table->flags & EcsTableIsPrefab) {
         ecs_add_id(world, entity, EcsPrefab);
     }
+#endif
 
     return 0;
 error:
     return -1;
 }
 
-static
-ecs_component_record_t* flecs_add_non_fragmenting_child(
+static ecs_component_record_t* flecs_add_non_fragmenting_child(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t entity)
@@ -124,8 +123,7 @@ ecs_component_record_t* flecs_add_non_fragmenting_child(
     return cr;
 }
 
-static
-ecs_component_record_t* flecs_remove_non_fragmenting_child(
+static ecs_component_record_t* flecs_remove_non_fragmenting_child(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t entity)
@@ -154,8 +152,7 @@ ecs_component_record_t* flecs_remove_non_fragmenting_child(
     return cr;
 }
 
-static
-void flecs_on_reparent_update_name(
+static void flecs_on_reparent_update_name(
     ecs_world_t *world,
     ecs_entity_t e,
     EcsIdentifier *name,
@@ -187,8 +184,7 @@ void flecs_on_reparent_update_name(
     }
 }
 
-static
-void flecs_on_replace_parent(ecs_iter_t *it) {
+static void flecs_on_replace_parent(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsParent *old = ecs_field(it, EcsParent, 0);
     EcsParent *new = ecs_field(it, EcsParent, 1);
@@ -249,9 +245,6 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
          * it can trigger a table move that reads the parent value. */
         old[i].value = new_parent;
 
-        ecs_record_t *r = flecs_entities_get(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
         int32_t depth = cr_parent->pair->depth;
 
         /* If the entity had a parent before, it has a ParentDepth pair that
@@ -266,15 +259,6 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
             if (cr) {
                 flecs_component_update_childof_w_depth(world, cr, depth + 1);
             }
-        }
-
-        if (r->row & EcsEntityIsTraversable) {
-            ecs_id_t added = ecs_childof(new_parent);
-            ecs_id_t removed = ecs_childof(old_parent);
-
-            flecs_update_component_monitors(world, 
-                &(ecs_type_t){ .count = 1, .array = &added },
-                &(ecs_type_t) { .count = 1, .array = &removed });
         }
 
         flecs_journal_end();

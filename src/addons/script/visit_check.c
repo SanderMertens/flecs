@@ -8,8 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-static
-bool flecs_script_scope_has_entity(
+static bool flecs_script_scope_has_entity(
     ecs_script_scope_t *scope,
     const char *name)
 {
@@ -32,8 +31,7 @@ bool flecs_script_scope_has_entity(
     return false;
 }
 
-static
-bool flecs_script_check_unresolved_identifier(
+static bool flecs_script_check_unresolved_identifier(
     const ecs_world_t *world,
     const char *value,
     void *ctx)
@@ -46,8 +44,7 @@ bool flecs_script_check_unresolved_identifier(
     return flecs_script_scope_has_entity(v->template->node->scope, value);
 }
 
-static
-int flecs_script_check_expr(
+static int flecs_script_check_expr(
     ecs_script_eval_visitor_t *v,
     ecs_expr_node_t **expr_ptr,
     ecs_entity_t *type)
@@ -130,8 +127,7 @@ int flecs_script_check_scope(
     return 0;
 }
 
-static
-int flecs_script_check_entity(
+static int flecs_script_check_entity(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node)
 {
@@ -141,27 +137,17 @@ int flecs_script_check_entity(
         };
 
         if (!ecs_os_strcmp(node->kind, "prefab")) {
+#ifdef FLECS_PREFAB
             id.eval = EcsPrefab;
-        } else if (!ecs_os_strcmp(node->kind, "slot")) {
+#else
+            flecs_script_eval_error(v, node, "prefabs are unsupported in this "
+                "flecs build, enable FLECS_PREFAB addon");
+#endif
         } else if (flecs_script_eval_id(v, node, &id)) {
             return -1;
         }
 
         node->eval_kind = id.eval;
-    } else {
-        /* Inherit kind from parent kind's DefaultChildComponent, if it exists */
-        ecs_script_scope_t *scope = ecs_script_current_scope(v);
-        if (scope && scope->default_component_eval) {
-            node->eval_kind = scope->default_component_eval;
-        }
-    }
-
-    if (node->eval_kind) {
-        const EcsDefaultChildComponent *default_comp = ecs_get(
-            v->world, node->eval_kind, EcsDefaultChildComponent);
-        if (default_comp && default_comp->component) {
-            node->scope->default_component_eval = default_comp->component;
-        }
     }
 
     if (node->name_expr && !node->name_expr->type_info) {
@@ -187,8 +173,7 @@ int flecs_script_check_entity(
     return 0;
 }
 
-static
-int flecs_script_check_tag(
+static int flecs_script_check_tag(
     ecs_script_eval_visitor_t *v,
     ecs_script_tag_t *node)
 {
@@ -216,8 +201,7 @@ int flecs_script_check_tag(
     return 0;
 }
 
-static
-int flecs_script_check_component(
+static int flecs_script_check_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_component_t *node)
 {
@@ -237,8 +221,16 @@ int flecs_script_check_component(
     }
 
     if (v->is_with_scope) {
-        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        flecs_script_eval_error(v, node, "invalid component in with scope");
         return -1;
+    }
+
+    /* If the id has a script visitor the initializer AST is passed to the
+     * visitor as-is during evaluation, don't type check it. */
+    if (!node->id.second && node->id.eval &&
+        ecs_has(v->world, node->id.eval, EcsScriptVisitor))
+    {
+        return 0;
     }
 
     if (node->expr) {
@@ -295,8 +287,7 @@ int flecs_script_check_component(
     return 0;
 }
 
-static
-int flecs_script_check_var_component(
+static int flecs_script_check_var_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_component_t *node)
 {
@@ -312,47 +303,7 @@ int flecs_script_check_var_component(
     return 0;
 }
 
-static
-int flecs_script_check_default_component(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_default_component_t *node)
-{
-    if (!v->entity) {
-        flecs_script_eval_error(v, node,
-            "missing entity for default component");
-        return -1;
-    }
-
-    ecs_script_scope_t *scope = ecs_script_current_scope(v);
-    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(scope->node.kind == EcsAstScope, ECS_INTERNAL_ERROR, NULL);
-    scope = scope->parent;
-    if (!scope) {
-        return 0;
-    }
-
-    ecs_id_t default_type = scope->default_component_eval;
-    if (!default_type) {
-        return 0;
-    }
-
-    const ecs_type_info_t *ti = ecs_get_type_info(v->world, default_type);
-    if (!ti) {
-        return 0;
-    }
-
-    if (node->expr && !node->expr->type_info) {
-        ecs_entity_t type = ti->component;
-        if (flecs_script_check_expr(v, &node->expr, &type)) {
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
-static
-int flecs_script_check_with_var(
+static int flecs_script_check_with_var(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_component_t *node)
 {
@@ -368,8 +319,7 @@ int flecs_script_check_with_var(
     return 0;
 }
 
-static
-int flecs_script_check_with_tag(
+static int flecs_script_check_with_tag(
     ecs_script_eval_visitor_t *v,
     ecs_script_tag_t *node)
 {
@@ -380,8 +330,7 @@ int flecs_script_check_with_tag(
     return 0;
 }
 
-static
-int flecs_script_check_with_component(
+static int flecs_script_check_with_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_component_t *node)
 {
@@ -400,8 +349,7 @@ int flecs_script_check_with_component(
     return 0;
 }
 
-static
-int flecs_script_check_with(
+static int flecs_script_check_with(
     ecs_script_eval_visitor_t *v,
     ecs_script_with_t *node)
 {
@@ -421,8 +369,7 @@ int flecs_script_check_with(
     return 0;
 }
 
-static
-int flecs_script_check_using(
+static int flecs_script_check_using(
     ecs_script_eval_visitor_t *v,
     ecs_script_using_t *node)
 {
@@ -430,16 +377,14 @@ int flecs_script_check_using(
     return -1;
 }
 
-static
-int flecs_script_check_const(
+static int flecs_script_check_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node)
 {
     return flecs_script_eval_const(v, node, false);
 }
 
-static
-int flecs_script_check_pair_scope(
+static int flecs_script_check_pair_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_pair_scope_t *node)
 {
@@ -464,8 +409,7 @@ int flecs_script_check_pair_scope(
     return 0;
 }
 
-static
-int flecs_script_check_if(
+static int flecs_script_check_if(
     ecs_script_eval_visitor_t *v,
     ecs_script_if_t *node)
 {
@@ -484,8 +428,7 @@ int flecs_script_check_if(
     return 0;
 }
 
-static
-int flecs_script_check_for_range(
+static int flecs_script_check_for_range(
     ecs_script_eval_visitor_t *v,
     ecs_script_for_range_t *node)
 {
@@ -519,8 +462,7 @@ int flecs_script_check_for_range(
     return 0;
 }
 
-static
-int flecs_script_check_annot(
+static int flecs_script_check_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_annot_t *node)
 {
@@ -558,9 +500,6 @@ int flecs_script_check_node(
     case EcsAstVarComponent:
         return flecs_script_check_var_component(
             v, (ecs_script_var_component_t*)node);
-    case EcsAstDefaultComponent:
-        return flecs_script_check_default_component(
-            v, (ecs_script_default_component_t*)node);
     case EcsAstWithVar:
         return flecs_script_check_with_var(
             v, (ecs_script_var_component_t*)node);

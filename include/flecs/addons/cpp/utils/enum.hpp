@@ -319,14 +319,27 @@ struct enum_reflection {
  */
 template<typename T>
 struct enum_constant {
+#ifdef FLECS_MULTI_WORLD
     /** Global index used to obtain a world-local entity ID. */
     int32_t index;
+#else
+    /** Entity ID for the constant. */
+    flecs::entity_t id;
+#endif
     /** The constant value. */
     T value;
     /** Offset from the previous constant value. */
     T offset;
     /** The constant name. */
     const char *name;
+
+    bool discovered() const {
+#ifdef FLECS_MULTI_WORLD
+        return index != 0;
+#else
+        return name != nullptr || id != 0;
+#endif
+    }
 };
 
 /** @private Class that scans an enum for constants, extracts names, and creates entities. */
@@ -389,10 +402,12 @@ private:
                 me.constants[me.max].value = v;
                 me.constants[me.max].offset = v - last_value;
                 me.constants[me.max].name = name;
+#ifdef FLECS_MULTI_WORLD
                 if (!me.constants[me.max].index) {
                     me.constants[me.max].index =
                         flecs_component_ids_index_get();
                 }
+#endif
 
                 return v;
             } else {
@@ -423,6 +438,7 @@ public:
         return instance;
     }
 
+#ifndef FLECS_MULTI_WORLD
     /** Get entity for a given enum value. */
     flecs::entity_t entity(E value) const {
         int index = index_by_value(value);
@@ -431,6 +447,7 @@ public:
         }
         return 0;
     }
+#endif
 
     /** Register enum constants for a world. */
     void register_for_world(flecs::world_t *world, flecs::entity_t id) {
@@ -442,12 +459,16 @@ public:
         ecs_cpp_enum_init(world, id, type<U>::id(world));
 
         for (U v = 0; v < static_cast<U>(max + 1); v ++) {
-            if (constants[v].index) {
+            if (constants[v].discovered()) {
                 flecs::entity_t constant = ecs_cpp_enum_constant_register(world,
                     type<E>::id(world), 0, constants[v].name, &constants[v].value,
                     type<U>::id(world), sizeof(U));
 
+#ifdef FLECS_MULTI_WORLD
                 flecs_component_ids_set(world, constants[v].index, constant);
+#else
+                constants[v].id = constant;
+#endif
             }
         }
 
@@ -512,7 +533,7 @@ struct enum_data {
         if (index < 0) {
             return false;
         }
-        return impl_.constants[index].index != 0;
+        return impl_.constants[index].discovered();
     }
 
     /**
@@ -592,11 +613,18 @@ struct enum_data {
     #ifdef FLECS_CPP_NO_ENUM_REFLECTION
     void register_constant(flecs::world_t *world, U v, flecs::entity_t e) {
         if (v < 128) {
+#ifdef FLECS_MULTI_WORLD
             if (!impl_.constants[v].index) {
                 impl_.constants[v].index = flecs_component_ids_index_get();
             }
+#endif
 
+#ifdef FLECS_MULTI_WORLD
             flecs_component_ids_set(world, impl_.constants[v].index, e);
+#else
+            (void)world;
+            impl_.constants[v].id = e;
+#endif
 
             impl_.max ++;
 

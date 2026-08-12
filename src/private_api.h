@@ -6,10 +6,8 @@
 #ifndef FLECS_PRIVATE_H
 #define FLECS_PRIVATE_H
 
-#ifndef __MACH__
-#ifndef _POSIX_C_SOURCE
+#if !defined(__MACH__) && !defined(_POSIX_C_SOURCE)
 #define _POSIX_C_SOURCE 200809L
-#endif
 #endif
 
 #include <ctype.h>
@@ -18,6 +16,18 @@
 #include <stddef.h>
 
 #include "flecs.h"
+
+#ifdef ECS_TARGET_WINDOWS
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 #include "flecs/datastructures/bitset.h"
 #include "datastructures/name_index.h"
 #include "storage/entity_index.h"
@@ -32,14 +42,16 @@
 #include "entity_name.h"
 #include "commands.h"
 #include "entity.h"
-#include "instantiate.h"
+#include "addons/prefab/prefab.h"
 #include "observable.h"
 #include "iter.h"
 #include "poly.h"
-#include "tree_spawner.h"
 #include "stage.h"
 #include "world.h"
 #include "addons/journal.h"
+#ifdef FLECS_PIPELINE
+#include "addons/pipeline/pipeline.h"
+#endif
 
 /* Used in id records to keep track of entities used with id flags */
 extern const ecs_entity_t EcsFlag;
@@ -64,9 +76,11 @@ void flecs_bootstrap(
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
     ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);
 
-#define flecs_bootstrap_trait(world, name)\
-    flecs_bootstrap_tag(world, name)\
-    ecs_add_id(world, name, EcsTrait)
+void flecs_bootstrap_make_alive(
+    ecs_world_t *world,
+    ecs_entity_t e);
+
+#include "addons/constraint_traits/constraint_traits.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////

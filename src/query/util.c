@@ -5,6 +5,12 @@
 
 #include "../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
+ecs_var_id_t flecs_utovar(uint64_t val) {
+    return flecs_uto(uint8_t, val);
+}
+
 const char* flecs_query_op_str(
     uint16_t kind)
 {
@@ -87,10 +93,6 @@ ecs_query_lbl_t flecs_itolbl(int64_t val) {
 
 ecs_var_id_t flecs_itovar(int64_t val) {
     return flecs_ito(uint8_t, val);
-}
-
-ecs_var_id_t flecs_utovar(uint64_t val) {
-    return flecs_uto(uint8_t, val);
 }
 
 bool flecs_term_is_builtin_pred(
@@ -246,8 +248,18 @@ ecs_allocator_t* flecs_query_get_allocator(
     }
 }
 
-static
-int32_t flecs_query_op_ref_str(
+ecs_id_t flecs_query_iter_set_id(
+    ecs_iter_t *it,
+    int8_t field,
+    ecs_id_t id)
+{
+    ecs_assert(!(it->flags & EcsIterImmutableCacheData),
+        ECS_INTERNAL_ERROR, NULL);
+    it->ids[field] = id;
+    return id;
+}
+
+static int32_t flecs_query_op_ref_str(
     const ecs_query_impl_t *query,
     ecs_query_ref_t *ref,
     ecs_flags16_t flags,
@@ -293,8 +305,7 @@ int32_t flecs_query_op_ref_str(
     return color_chars;
 }
 
-static
-void flecs_query_str_append_bitset(
+static void flecs_query_str_append_bitset(
     ecs_strbuf_t *buf,
     ecs_flags64_t bitset)
 {
@@ -308,8 +319,7 @@ void flecs_query_str_append_bitset(
     ecs_strbuf_list_pop(buf, "}");
 }
 
-static
-void flecs_query_plan_w_profile(
+static void flecs_query_plan_w_profile(
     const ecs_query_t *q,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
@@ -478,11 +488,13 @@ char* ecs_query_plans(
 
     flecs_query_plan_w_profile(q, NULL, &buf);
 
+#ifdef FLECS_CACHED_QUERIES
     ecs_query_impl_t *impl = flecs_query_impl(q);
     if (impl->cache) {
         ecs_strbuf_appendstr(&buf, "---\n");
         flecs_query_plan_w_profile(impl->cache->query, NULL, &buf);
     }
+#endif
 
 #ifdef FLECS_LOG
     char *str = ecs_strbuf_get(&buf);
@@ -493,8 +505,9 @@ char* ecs_query_plans(
     return ecs_strbuf_get(&buf);
 }
 
-static
-void flecs_query_str_add_id(
+#endif // FLECS_QUERY_PLANS
+
+static void flecs_query_str_add_id(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     const ecs_term_t *term,
@@ -733,6 +746,8 @@ void flecs_query_apply_iter_flags(
     ECS_BIT_COND(it->flags, EcsIterNoData, query->data_fields == 0);
 }
 
+#ifdef FLECS_CACHED_QUERIES
+
 void flecs_query_reclaim(
     ecs_query_t *query)
 {
@@ -745,13 +760,4 @@ void flecs_query_reclaim(
     }
 }
 
-ecs_id_t flecs_query_iter_set_id(
-    ecs_iter_t *it,
-    int8_t field,
-    ecs_id_t id)
-{
-    ecs_assert(!(it->flags & EcsIterImmutableCacheData), 
-        ECS_INTERNAL_ERROR, NULL);
-    it->ids[field] = id;
-    return id;
-}
+#endif // FLECS_CACHED_QUERIES

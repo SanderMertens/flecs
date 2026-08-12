@@ -1,0 +1,276 @@
+/**
+ * @file addons/frame.c
+ * @brief Frame management.
+ */
+
+#include "../private_api.h"
+
+#ifdef FLECS_FRAME
+
+static ecs_ftime_t flecs_insert_sleep(
+    ecs_world_t *world,
+    ecs_time_t *stop)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_time_t start = *stop, now = start;
+    ecs_ftime_t delta_time = (ecs_ftime_t)ecs_time_measure(stop);
+
+    if (ECS_EQZERO(world->info.target_fps)) {
+        return delta_time;
+    }
+
+    ecs_os_perf_trace_push("flecs.insert_sleep");
+
+    ecs_ftime_t target_delta_time =
+        ((ecs_ftime_t)1.0 / (ecs_ftime_t)world->info.target_fps);
+
+    /* Calculate the time we need to sleep by taking the measured delta from the
+     * previous frame, and subtracting it from target_delta_time. */
+    ecs_ftime_t sleep = target_delta_time - delta_time;
+
+    /* Pick a sleep interval that is smaller than the time one frame should take,
+     * which increases the sleep precision. */
+    ecs_ftime_t sleep_time = sleep / (ecs_ftime_t)8.0;
+    if (sleep_time < 0) {
+        sleep_time = 0;
+        delta_time = (ecs_ftime_t)ecs_time_measure(&now);
+    } else {
+        do {
+            /* Only call sleep when sleep_time is not 0. On some platforms, even
+            * a sleep with a timeout of 0 can cause stutter. */
+            if (ECS_NEQZERO(sleep_time)) {
+                ecs_sleepf((double)sleep_time);
+            }
+
+            now = start;
+            delta_time = (ecs_ftime_t)ecs_time_measure(&now);
+        } while ((target_delta_time - delta_time) >
+            (sleep_time / (ecs_ftime_t)2.0));
+    }
+
+    ecs_os_perf_trace_pop("flecs.insert_sleep");
+
+    *stop = now;
+    return delta_time;
+}
+
+static ecs_ftime_t flecs_start_measure_frame(
+    ecs_world_t *world,
+    ecs_ftime_t user_delta_time)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_ftime_t delta_time = 0;
+
+    if ((world->flags & EcsWorldMeasureFrameTime) ||
+        (ECS_EQZERO(user_delta_time)))
+    {
+        ecs_time_t t = world->frame_start_time;
+        do {
+            if (world->frame_start_time.nanosec || world->frame_start_time.sec){
+                delta_time = flecs_insert_sleep(world, &t);
+            } else {
+                ecs_time_measure(&t);
+                if (ECS_NEQZERO(world->info.target_fps)) {
+                    delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
+                } else {
+                    /* Best guess */
+                    delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0;
+
+                    if (ECS_EQZERO(delta_time)) {
+                        delta_time = user_delta_time;
+                        break;
+                    }
+                }
+            }
+
+        /* Keep trying while delta_time is zero */
+        } while (ECS_EQZERO(delta_time));
+
+        world->frame_start_time = t;
+
+        /* Keep track of total time passed in world */
+        world->info.world_time_total_raw += (double)delta_time;
+    }
+
+    return (ecs_ftime_t)delta_time;
+}
+
+static void flecs_stop_measure_frame(
+    ecs_world_t* world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (world->flags & EcsWorldMeasureFrameTime) {
+        ecs_time_t t = world->frame_start_time;
+        world->info.frame_time_total += (ecs_ftime_t)ecs_time_measure(&t);
+    }
+}
+
+ecs_ftime_t ecs_frame_begin(
+    ecs_world_t *world,
+    ecs_ftime_t user_delta_time)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot begin frame while world is in readonly mode");
+    ecs_check(!(world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION,
+        "cannot begin frame while frame is already in progress");
+    ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(),
+        ECS_MISSING_OS_API, "get_time");
+
+    /* Start measuring total frame time */
+    ecs_ftime_t delta_time = flecs_start_measure_frame(world, user_delta_time);
+    if (ECS_EQZERO(user_delta_time)) {
+        user_delta_time = delta_time;
+    }
+
+    world->info.delta_time_raw = user_delta_time;
+    world->info.delta_time = user_delta_time * world->info.time_scale;
+
+    /* Keep track of total scaled time passed in world */
+    world->info.world_time_total += (double)world->info.delta_time;
+
+    /* Command buffer capturing */
+    world->on_commands_active = world->on_commands;
+    world->on_commands = NULL;
+
+    world->on_commands_ctx_active = world->on_commands_ctx;
+    world->on_commands_ctx = NULL;
+
+    ecs_run_aperiodic(world, 0);
+
+    world->flags |= EcsWorldFrameInProgress;
+
+    return world->info.delta_time;
+error:
+    return (ecs_ftime_t)0;
+}
+
+void ecs_frame_end(
+    ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot end frame while world is in readonly mode");
+    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION,
+        "cannot end frame while frame is not in progress");
+
+    world->info.frame_count_total ++;
+
+    int32_t i, count = world->stage_count;
+    for (i = 0; i < count; i ++) {
+        flecs_stage_merge_post_frame(world, world->stages[i]);
+    }
+
+    flecs_stop_measure_frame(world);
+
+    /* Reset command handler each frame */
+    world->on_commands_active = NULL;
+    world->on_commands_ctx_active = NULL;
+
+    world->flags &= ~EcsWorldFrameInProgress;
+
+error:
+    return;
+}
+
+void ecs_run_post_frame(
+    ecs_world_t *world,
+    ecs_fini_action_t action,
+    void *ctx)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION,
+        "cannot register post frame action while frame is not in progress");
+
+    ecs_action_elem_t *elem = ecs_vec_append_t(&stage->allocator,
+        &stage->post_frame_actions, ecs_action_elem_t);
+    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    elem->action = action;
+    elem->ctx = ctx;
+error:
+    return;
+}
+
+void ecs_quit(
+    ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_stage_from_world(&world);
+    world->flags |= EcsWorldQuit;
+error:
+    return;
+}
+
+bool ecs_should_quit(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+    return ECS_BIT_IS_SET(world->flags, EcsWorldQuit);
+error:
+    return true;
+}
+
+void ecs_measure_frame_time(
+    ecs_world_t *world,
+    bool enable)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+
+    if (ECS_EQZERO(world->info.target_fps) || enable) {
+        ECS_BIT_COND(world->flags, EcsWorldMeasureFrameTime, enable);
+    }
+error:
+    return;
+}
+
+void ecs_measure_system_time(
+    ecs_world_t *world,
+    bool enable)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ECS_BIT_COND(world->flags, EcsWorldMeasureSystemTime, enable);
+error:
+    return;
+}
+
+void ecs_set_target_fps(
+    ecs_world_t *world,
+    ecs_ftime_t fps)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+
+    ecs_measure_frame_time(world, true);
+    world->info.target_fps = fps;
+error:
+    return;
+}
+
+void ecs_set_time_scale(
+    ecs_world_t *world,
+    ecs_ftime_t scale)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot set time scale while world is in readonly mode");
+    world->info.time_scale = scale;
+}
+
+void ecs_reset_clock(
+    ecs_world_t *world)
+{
+    world->info.world_time_total = 0;
+    world->info.world_time_total_raw = 0;
+}
+
+#endif

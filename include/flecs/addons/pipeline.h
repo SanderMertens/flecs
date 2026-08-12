@@ -47,7 +47,7 @@ extern "C" {
 /** Convenience macro to create a forward-declared pipeline.
  * Usage:
  * @code
- * ECS_ENTITY_DECLARE(MyPipeline);
+ * ECS_DECLARE(MyPipeline);
  * ECS_PIPELINE_DEFINE(world, MyPipeline, Update || Physics || Render)
  * @endcode
  */
@@ -187,26 +187,6 @@ FLECS_API
 bool ecs_progress(
     ecs_world_t *world,
     ecs_ftime_t delta_time);
-
-/** Set time scale.
- * Increase or decrease simulation speed by the provided multiplier.
- *
- * @param world The world.
- * @param scale The scale to apply (default = 1).
- */
-FLECS_API
-void ecs_set_time_scale(
-    ecs_world_t *world,
-    ecs_ftime_t scale);
-
-/** Reset world clock.
- * Reset the clock that keeps track of the total time passed in the simulation.
- *
- * @param world The world.
- */
-FLECS_API
-void ecs_reset_clock(
-    ecs_world_t *world);
 
 /** Run pipeline.
  * This will run all systems in the provided pipeline. This operation may be

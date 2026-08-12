@@ -28,18 +28,6 @@ typedef struct ecs_world_allocators_t {
     ecs_vec_t tree_spawner;
 } ecs_world_allocators_t;
 
-/* Component monitor */
-typedef struct ecs_monitor_t {
-    ecs_vec_t queries;               /* vector<ecs_query_cache_t*> */
-    bool is_dirty;                   /* Should queries be rematched? */
-} ecs_monitor_t;
-
-/* Component monitors */
-typedef struct ecs_monitor_set_t {
-    ecs_map_t monitors;              /* map<id, ecs_monitor_t> */
-    bool is_dirty;                   /* Should monitors be evaluated? */
-} ecs_monitor_set_t;
-
 /* Data stored for id marked for deletion */
 typedef struct ecs_marked_id_t {
     ecs_component_record_t *cr;
@@ -137,9 +125,6 @@ struct ecs_world_t {
     /* --  Data storage -- */
     ecs_store_t store;
 
-    /* Used to track when cache needs to be updated */
-    ecs_monitor_set_t monitors;      /* map<id, ecs_monitor_t> */
-
     /* -- Systems -- */
     ecs_entity_t pipeline;           /* Current pipeline */
 
@@ -152,7 +137,9 @@ struct ecs_world_t {
     int32_t stage_count;             /* Number of stages */
 
     /* -- Component ids -- */
+#ifdef FLECS_MULTI_WORLD
     ecs_vec_t component_ids;         /* World local component ids */
+#endif
 
     /* Index of prefab children in ordered children vector. Used by ecs_get_target. */
     ecs_map_t prefab_child_indices;
@@ -189,12 +176,6 @@ struct ecs_world_t {
 
     /* -- World flags -- */
     ecs_flags32_t flags;
-
-    /* -- Default query flags -- */
-    ecs_flags32_t default_query_flags;
-
-    /* Count that increases when component monitors change */
-    int32_t monitor_generation;
 
     /* -- Allocators -- */
     ecs_world_allocators_t allocators; /* Static allocation sizes */
@@ -239,28 +220,13 @@ void flecs_type_info_free(
     ecs_world_t *world,
     ecs_entity_t component);
 
-/* Check component monitors (triggers query cache revalidation, not related to
- * EcsMonitor). */
-void flecs_eval_component_monitors(
-    ecs_world_t *world);
+/* Increase type info refcount. */
+void flecs_type_info_claim(
+    const ecs_type_info_t *ti);
 
-/* Register component monitor. */
-void flecs_monitor_register(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    ecs_query_t *query);
-
-/* Unregister component monitor. */
-void flecs_monitor_unregister(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    ecs_query_t *query);
-
-/* Update component monitors for added/removed components. */
-void flecs_update_component_monitors(
-    ecs_world_t *world,
-    ecs_type_t *added,
-    ecs_type_t *removed);
+/* Decrease type info refcount, free when it reaches 0. */
+void flecs_type_info_release(
+    const ecs_type_info_t *ti);
 
 /* Notify tables with component of event (or all tables if id is 0). */
 void flecs_notify_tables(
@@ -366,5 +332,16 @@ bool flecs_component_is_delete_locked(
             }\
         }\
     }
+
+#ifdef FLECS_MULTI_WORLD
+void flecs_multi_world_init(
+    ecs_world_t *world);
+
+void flecs_multi_world_fini(
+    ecs_world_t *world);
+#else
+#define flecs_multi_world_init(world) (void)world
+#define flecs_multi_world_fini(world) (void)world
+#endif
 
 #endif

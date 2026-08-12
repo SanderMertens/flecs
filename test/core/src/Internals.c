@@ -4,8 +4,7 @@ void Internals_setup(void) {
     ecs_log_set_level(-3);
 }
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = ecs_field(it, Velocity, 1);
     Mass *m = ecs_field(it, Mass, 2);
@@ -33,8 +32,10 @@ void Internals_deactivate_table(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
@@ -56,8 +57,10 @@ void Internals_activate_table(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
 
     test_assert(true);
 
@@ -72,8 +75,10 @@ void Internals_activate_deactivate_table(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
 
     /* System is now matched with archetype of entities. Delete entities to
      * deactivate table for system */
@@ -93,8 +98,10 @@ void Internals_activate_deactivate_reactive(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
 
     /* System is now matched with archetype of entities. Delete entities to
      * deactivate table for system */
@@ -102,8 +109,10 @@ void Internals_activate_deactivate_reactive(void) {
     ecs_delete(world, e2);
 
     /* Add entities of same type to trigger table reactivation */
-    ECS_ENTITY(world, e3, Position);
-    ECS_ENTITY(world, e4, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
 
     test_assert(true);
 
@@ -119,8 +128,10 @@ void Internals_activate_deactivate_activate_other(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
 
     /* System is now matched with archetype of entities. Delete entities to
      * deactivate table for system */
@@ -128,8 +139,12 @@ void Internals_activate_deactivate_activate_other(void) {
     ecs_delete(world, e2);
 
     /* Add entities of different type to trigger new table activation */
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
 
     test_assert(true);
 
@@ -138,8 +153,7 @@ void Internals_activate_deactivate_activate_other(void) {
 
 static int invoked = 0;
 
-static
-void CreateNewTable(ecs_iter_t *it) {
+static void CreateNewTable(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     int32_t i;
@@ -148,8 +162,7 @@ void CreateNewTable(ecs_iter_t *it) {
     }
 }
 
-static
-void ManualSystem(ecs_iter_t *it) {
+static void ManualSystem(ecs_iter_t *it) {
     invoked ++;
 }
 
@@ -159,7 +172,8 @@ void Internals_no_double_system_table_after_merge(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, CreateNewTable, EcsOnUpdate, Position, Velocity());
     ECS_SYSTEM(world, ManualSystem, 0, Position, Velocity);

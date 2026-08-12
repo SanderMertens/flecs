@@ -250,24 +250,6 @@ struct entity_builder : entity_view {
         return depends_on(target);
     }
 
-    /** Shortcut for `add(SlotOf, entity)`.
-     *
-     * @param second The second element of the pair.
-     */
-    const Self& slot_of(entity_t second) const  {
-        return this->add(flecs::SlotOf, second);
-    }
-
-    /** Shortcut for `add(SlotOf, target(ChildOf))`.
-     */
-    const Self& slot() const  {
-        ecs_check(ecs_get_target(world_, id_, flecs::ChildOf, 0), 
-            ECS_INVALID_PARAMETER, "add ChildOf pair before using slot()");
-        return this->slot_of(this->target(flecs::ChildOf));
-    error:
-        return to_base();
-    }
-
     /** Shortcut for `add(ChildOf, entity)`.
      *
      * @tparam T The type associated with the entity.
@@ -284,15 +266,6 @@ struct entity_builder : entity_view {
     template <typename T>
     const Self& depends_on() const  {
         return this->depends_on(_::type<T>::id(this->world_));
-    }
-
-    /** Shortcut for `add(SlotOf, entity)`.
-     *
-     * @tparam T The type associated with the entity.
-     */
-    template <typename T>
-    const Self& slot_of() const  {
-        return this->slot_of(_::type<T>::id(this->world_));
     }
 
     /** Remove a component from an entity.
@@ -1119,46 +1092,6 @@ struct entity_builder : entity_view {
         flecs::emplace<Second>(this->world_, this->id_, 
             ecs_pair(first, second),
             FLECS_FWD(args)...);
-        return to_base();
-    }
-
-    /** Entities created in the function will have the current entity.
-     * This operation is thread-safe.
-     *
-     * @param func The function to call.
-     */
-    template <typename Func>
-    const Self& with(const Func& func) const  {
-        ecs_id_t prev = ecs_set_with(this->world_, this->id_);
-        func();
-        ecs_set_with(this->world_, prev);
-        return to_base();
-    }
-
-    /** Entities created in the function will have `(First, this)`.
-     * This operation is thread-safe.
-     *
-     * @tparam First The first element of the pair.
-     * @param func The function to call.
-     */
-    template <typename First, typename Func>
-    const Self& with(const Func& func) const  {
-        with(_::type<First>::id(this->world_), func);
-        return to_base();
-    }
-
-    /** Entities created in the function will have `(first, this)`.
-     * This operation is thread-safe.
-     *
-     * @param first The first element of the pair.
-     * @param func The function to call.
-     */
-    template <typename Func>
-    const Self& with(entity_t first, const Func& func) const  {
-        ecs_id_t prev = ecs_set_with(this->world_, 
-            ecs_pair(first, this->id_));
-        func();
-        ecs_set_with(this->world_, prev);
         return to_base();
     }
 

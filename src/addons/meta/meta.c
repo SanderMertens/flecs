@@ -16,6 +16,7 @@ void flecs_type_serializer_dtor(
     
     for (i = 0; i < count; i ++) {
         ecs_meta_op_t *op = &ops[i];
+        ecs_os_free(ECS_CONST_CAST(char*, op->name));
         if (op->kind == EcsOpPushStruct) {
             if (op->is.members) {
                 flecs_name_index_free(op->is.members);
@@ -36,9 +37,31 @@ static ECS_COPY(EcsTypeSerializer, dst, src, {
     
     for (o = 0; o < count; o ++) {
         ecs_meta_op_t *op = &ops[o];
+        if (op->name) {
+            op->name = ecs_os_strdup(op->name);
+        }
+    }
+
+    for (o = 0; o < count; o ++) {
+        ecs_meta_op_t *op = &ops[o];
         if (op->kind == EcsOpPushStruct) {
             if (op->is.members) {
                 op->is.members = flecs_name_index_copy(op->is.members);
+
+                /* Repoint the name index keys to the copied name strings, as
+                 * the index doesn't own its keys. The index maps member names
+                 * to the offset of the member op relative to the op after the
+                 * push op. */
+                flecs_hashmap_iter_t it = flecs_hashmap_iter(op->is.members);
+                ecs_hashed_string_t *key;
+                uint64_t *op_index;
+                while ((op_index = flecs_hashmap_next_w_key(
+                    &it, ecs_hashed_string_t, &key, uint64_t)))
+                {
+                    ecs_meta_op_t *mbr_op = &ops[o + 1 + flecs_uto(
+                        int32_t, *op_index)];
+                    key->value = ECS_CONST_CAST(char*, mbr_op->name);
+                }
             }
         }
     }
@@ -50,12 +73,11 @@ static ECS_MOVE(EcsTypeSerializer, dst, src, {
     src->ops = (ecs_vec_t){0};
 })
 
-static ECS_DTOR(EcsTypeSerializer, ptr, { 
+static ECS_DTOR(EcsTypeSerializer, ptr, {
     flecs_type_serializer_dtor(ptr);
 })
 
-static
-const char* flecs_type_kind_str(
+static const char* flecs_type_kind_str(
     ecs_type_kind_t kind)
 {
     switch(kind) {
@@ -74,8 +96,7 @@ const char* flecs_type_kind_str(
 
 
 #ifdef FLECS_DEBUG
-static
-bool flecs_meta_detect_cycles_w_stack(
+static bool flecs_meta_detect_cycles_w_stack(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_entity_t target,
@@ -267,11 +288,11 @@ void FlecsMetaImport(
 
     flecs_bootstrap_component(world, EcsTypeSerializer);
 
+    ecs_entity_t type_component = ecs_entity(world, { .id = ecs_id(EcsType),
+        .name = "type", .symbol = "EcsType" });
+    ecs_add_pair(world, type_component, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsType),
-            .name = "type", .symbol = "EcsType",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = type_component,
         .type.size = sizeof(EcsType),
         .type.alignment = ECS_ALIGNOF(EcsType),
     });

@@ -24,26 +24,23 @@ int main(int argc, char *argv[]) {
 
     // Create 3 dummy systems.
     ecs_system(ecs, {
-        .entity = ecs_entity(ecs, {
-            .name = "CollisionSystem",
-            .add = ecs_ids( ecs_dependson(Collisions) )
-        }),
+        .entity = ecs_entity(ecs, { .name = "CollisionSystem" }),
+
+        .phase = Collisions,
         .callback = Sys
     });
 
     ecs_system(ecs, {
-        .entity = ecs_entity(ecs, {
-            .name = "PhysicsSystem",
-            .add = ecs_ids( ecs_dependson(Physics) )
-        }),
+        .entity = ecs_entity(ecs, { .name = "PhysicsSystem" }),
+
+        .phase = Physics,
         .callback = Sys
     });
 
     ecs_system(ecs, {
-        .entity = ecs_entity(ecs, {
-            .name = "GameSystem",
-            .add = ecs_ids( ecs_dependson(Update) )
-        }),
+        .entity = ecs_entity(ecs, { .name = "GameSystem" }),
+
+        .phase = Update,
         .callback = Sys
     });
 

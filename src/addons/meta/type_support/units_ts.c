@@ -67,8 +67,7 @@ static ECS_MOVE(EcsUnitPrefix, dst, src, {
 
 static ECS_DTOR(EcsUnitPrefix, ptr, { flecs_unit_prefix_dtor(ptr); })
 
-static
-bool flecs_unit_validate(
+static bool flecs_unit_validate(
     ecs_world_t *world,
     ecs_entity_t t,
     EcsUnit *data)
@@ -190,8 +189,7 @@ error:
     return false;
 }
 
-static
-void flecs_set_unit(ecs_iter_t *it) {
+static void flecs_set_unit(ecs_iter_t *it) {
     EcsUnit *u = ecs_field(it, EcsUnit, 0);
 
     ecs_world_t *world = it->world;
@@ -203,8 +201,7 @@ void flecs_set_unit(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_unit_quantity_monitor(ecs_iter_t *it) {
+static void flecs_unit_quantity_monitor(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     int i, count = it->count;
@@ -313,29 +310,35 @@ ecs_entity_t ecs_quantity_init(
 void flecs_meta_units_init(
     ecs_world_t *world)
 {
+    ecs_entity_t unit = ecs_entity(world, { .id = ecs_id(EcsUnit),
+        .name = "unit", .symbol = "EcsUnit" });
+#ifdef FLECS_PREFAB
+    ecs_add_pair(world, unit, EcsOnInstantiate, EcsInherit);
+#endif
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsUnit),
-            .name = "unit", .symbol = "EcsUnit",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsInherit))
-        }),
+        .entity = unit,
         .type.size = sizeof(EcsUnit),
         .type.alignment = ECS_ALIGNOF(EcsUnit)
     });
 
+    ecs_entity_t unit_prefix = ecs_entity(world, { .id = ecs_id(EcsUnitPrefix),
+        .name = "unit_prefix", .symbol = "EcsUnitPrefix" });
+#ifdef FLECS_PREFAB
+    ecs_add_pair(world, unit_prefix, EcsOnInstantiate, EcsInherit);
+#endif
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsUnitPrefix),
-            .name = "unit_prefix", .symbol = "EcsUnitPrefix",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsInherit))
-        }),
+        .entity = unit_prefix,
         .type.size = sizeof(EcsUnitPrefix),
         .type.alignment = ECS_ALIGNOF(EcsUnitPrefix)
     });
 
+    ecs_entity_t quantity = ecs_entity(world, { .id = EcsQuantity,
+        .name = "quantity", .symbol = "EcsQuantity" });
+#ifdef FLECS_PREFAB
+    ecs_add_pair(world, quantity, EcsOnInstantiate, EcsInherit);
+#endif
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = EcsQuantity,
-            .name = "quantity", .symbol = "EcsQuantity",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsInherit))
-        })
+        .entity = quantity
     });
 
     ecs_set_hooks(world, EcsUnit, { 

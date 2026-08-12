@@ -50,14 +50,10 @@ int flecs_query_trivial_has_range(
 void flecs_query_iter_constrain(
     ecs_iter_t *it);
 
-/* Rematch query after cache could have been invalidated */
-void flecs_query_rematch(
-    ecs_world_t *world,
-    ecs_query_t *q);
-
+#ifdef FLECS_CACHED_QUERIES
 /* Reclaim memory from queries */
 void flecs_query_reclaim(
     ecs_query_t *query);
-
 #endif
 
+#endif

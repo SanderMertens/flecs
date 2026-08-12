@@ -9,8 +9,7 @@
 #ifdef FLECS_META
 
 /* Opaque type serializer for addon vector */
-static
-int flecs_addon_vec_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int flecs_addon_vec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     char ***data = ECS_CONST_CAST(char***, ptr);
     char **addons = data[0];
     do {
@@ -19,8 +18,7 @@ int flecs_addon_vec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-static
-size_t flecs_addon_vec_count(const void *ptr) {
+static size_t flecs_addon_vec_count(const void *ptr) {
     int32_t count = 0;
     char ***data = ECS_CONST_CAST(char***, ptr);
     char **addons = data[0];
@@ -30,16 +28,14 @@ size_t flecs_addon_vec_count(const void *ptr) {
     return flecs_ito(size_t, count);
 }
 
-static
-int flecs_const_str_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int flecs_const_str_serialize(const ecs_serializer_t *ser, const void *ptr) {
     char **data = ECS_CONST_CAST(char**, ptr);
     ser->value(ser, ecs_id(ecs_string_t), data);
     return 0;
 }
 
 /* Initialize reflection data for core components */
-static
-void flecs_meta_import_core_definitions(
+static void flecs_meta_import_core_definitions(
     ecs_world_t *world)
 {
     ecs_struct(world, {
@@ -65,13 +61,6 @@ void flecs_meta_import_core_definitions(
         .entity = ecs_id(EcsParent),
         .members = {
             { .name = "value", .type = ecs_id(ecs_entity_t) }
-        }
-    });
-
-    ecs_struct(world, {
-        .entity = ecs_id(EcsDefaultChildComponent),
-        .members = {
-            { .name = "component", .type = ecs_id(ecs_entity_t) }
         }
     });
 
@@ -149,8 +138,7 @@ void flecs_meta_import_core_definitions(
 }
 
 /* Initialize reflection data for meta components */
-static
-void flecs_meta_import_meta_definitions(
+static void flecs_meta_import_meta_definitions(
     ecs_world_t *world)
 {
     ecs_entity_t type_kind = ecs_enum_init(world, &(ecs_enum_desc_t){
@@ -231,6 +219,35 @@ void flecs_meta_import_meta_definitions(
             { .name = "value", .type = vr },
             { .name = "warning", .type = vr },
             { .name = "error", .type = vr }
+        }
+    });
+
+    ecs_entity_t member_t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, { .name = "member_t" }),
+        .members = {
+            { .name = "name", .type = ecs_id(ecs_string_t) },
+            { .name = "type", .type = ecs_id(ecs_entity_t) },
+            { .name = "count", .type = ecs_id(ecs_i32_t) },
+            { .name = "offset", .type = ecs_id(ecs_i32_t) },
+            { .name = "unit", .type = ecs_id(ecs_entity_t) },
+            { .name = "use_offset", .type = ecs_id(ecs_bool_t) },
+            { .name = "range", .type = vr },
+            { .name = "error_range", .type = vr },
+            { .name = "warning_range", .type = vr },
+            { .name = "size", .type = ecs_id(ecs_i32_t) },
+            { .name = "member", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
+    ecs_entity_t member_vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "member_vec_t" }),
+        .type = member_t
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(EcsStruct),
+        .members = {
+            { .name = "members", .type = member_vec }
         }
     });
 

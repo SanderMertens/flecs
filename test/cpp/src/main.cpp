@@ -208,13 +208,6 @@ void Entity_set_2_after_fluent(void);
 void Entity_set_2_before_fluent(void);
 void Entity_set_2_after_set_1(void);
 void Entity_set_2_after_set_2(void);
-void Entity_with_self(void);
-void Entity_with_relation_type_self(void);
-void Entity_with_relation_self(void);
-void Entity_with_self_w_name(void);
-void Entity_with_self_nested(void);
-void Entity_with_after_builder_method(void);
-void Entity_with_before_builder_method(void);
 void Entity_with_scope(void);
 void Entity_with_scope_nested(void);
 void Entity_with_scope_nested_same_name_as_parent(void);
@@ -227,9 +220,6 @@ void Entity_defer_new_w_scope_name(void);
 void Entity_defer_new_w_scope_nested_name(void);
 void Entity_defer_new_w_deferred_scope_nested_name(void);
 void Entity_defer_new_w_scope(void);
-void Entity_defer_new_w_with(void);
-void Entity_defer_new_w_name_scope_with(void);
-void Entity_defer_w_with_implicit_component(void);
 void Entity_defer_suspend_resume(void);
 void Entity_defer_ensure(void);
 void Entity_entity_id_str(void);
@@ -272,12 +262,19 @@ void Entity_child_of_w_type(void);
 void Entity_child(void);
 void Entity_child_custom_rel(void);
 void Entity_child_custom_type(void);
-void Entity_slot_of(void);
-void Entity_slot_of_w_type(void);
-void Entity_slot(void);
 void Entity_id_get_entity(void);
 void Entity_id_get_invalid_entity(void);
 void Entity_each_in_stage(void);
+void Entity_each_w_dont_fragment_component(void);
+void Entity_each_w_dont_fragment_tag(void);
+void Entity_each_w_dont_fragment_pair(void);
+void Entity_each_w_only_dont_fragment(void);
+void Entity_each_w_only_dont_fragment_tag(void);
+void Entity_each_w_only_dont_fragment_pair(void);
+void Entity_each_pair_w_dont_fragment_mixed(void);
+void Entity_each_rel_w_dont_fragment_mixed(void);
+void Entity_each_pair_w_dont_fragment(void);
+void Entity_each_rel_w_dont_fragment(void);
 void Entity_iter_recycled_parent(void);
 void Entity_get_lambda_from_stage(void);
 void Entity_default_ctor(void);
@@ -1418,12 +1415,6 @@ void World_count_pair_type_id(void);
 void World_count_pair_id(void);
 void World_staged_count(void);
 void World_async_stage_add(void);
-void World_with_tag(void);
-void World_with_tag_type(void);
-void World_with_relation(void);
-void World_with_relation_type(void);
-void World_with_relation_object_type(void);
-void World_with_tag_nested(void);
 void World_with_scope(void);
 void World_with_scope_nested(void);
 void World_with_scope_type(void);
@@ -2514,34 +2505,6 @@ bake_test_case Entity_testcases[] = {
         Entity_set_2_after_set_2
     },
     {
-        "with_self",
-        Entity_with_self
-    },
-    {
-        "with_relation_type_self",
-        Entity_with_relation_type_self
-    },
-    {
-        "with_relation_self",
-        Entity_with_relation_self
-    },
-    {
-        "with_self_w_name",
-        Entity_with_self_w_name
-    },
-    {
-        "with_self_nested",
-        Entity_with_self_nested
-    },
-    {
-        "with_after_builder_method",
-        Entity_with_after_builder_method
-    },
-    {
-        "with_before_builder_method",
-        Entity_with_before_builder_method
-    },
-    {
         "with_scope",
         Entity_with_scope
     },
@@ -2588,18 +2551,6 @@ bake_test_case Entity_testcases[] = {
     {
         "defer_new_w_scope",
         Entity_defer_new_w_scope
-    },
-    {
-        "defer_new_w_with",
-        Entity_defer_new_w_with
-    },
-    {
-        "defer_new_w_name_scope_with",
-        Entity_defer_new_w_name_scope_with
-    },
-    {
-        "defer_w_with_implicit_component",
-        Entity_defer_w_with_implicit_component
     },
     {
         "defer_suspend_resume",
@@ -2770,18 +2721,6 @@ bake_test_case Entity_testcases[] = {
         Entity_child_custom_type
     },
     {
-        "slot_of",
-        Entity_slot_of
-    },
-    {
-        "slot_of_w_type",
-        Entity_slot_of_w_type
-    },
-    {
-        "slot",
-        Entity_slot
-    },
-    {
         "id_get_entity",
         Entity_id_get_entity
     },
@@ -2792,6 +2731,46 @@ bake_test_case Entity_testcases[] = {
     {
         "each_in_stage",
         Entity_each_in_stage
+    },
+    {
+        "each_w_dont_fragment_component",
+        Entity_each_w_dont_fragment_component
+    },
+    {
+        "each_w_dont_fragment_tag",
+        Entity_each_w_dont_fragment_tag
+    },
+    {
+        "each_w_dont_fragment_pair",
+        Entity_each_w_dont_fragment_pair
+    },
+    {
+        "each_w_only_dont_fragment",
+        Entity_each_w_only_dont_fragment
+    },
+    {
+        "each_w_only_dont_fragment_tag",
+        Entity_each_w_only_dont_fragment_tag
+    },
+    {
+        "each_w_only_dont_fragment_pair",
+        Entity_each_w_only_dont_fragment_pair
+    },
+    {
+        "each_pair_w_dont_fragment_mixed",
+        Entity_each_pair_w_dont_fragment_mixed
+    },
+    {
+        "each_rel_w_dont_fragment_mixed",
+        Entity_each_rel_w_dont_fragment_mixed
+    },
+    {
+        "each_pair_w_dont_fragment",
+        Entity_each_pair_w_dont_fragment
+    },
+    {
+        "each_rel_w_dont_fragment",
+        Entity_each_rel_w_dont_fragment
     },
     {
         "iter_recycled_parent",
@@ -7260,30 +7239,6 @@ bake_test_case World_testcases[] = {
         World_async_stage_add
     },
     {
-        "with_tag",
-        World_with_tag
-    },
-    {
-        "with_tag_type",
-        World_with_tag_type
-    },
-    {
-        "with_relation",
-        World_with_relation
-    },
-    {
-        "with_relation_type",
-        World_with_relation_type
-    },
-    {
-        "with_relation_object_type",
-        World_with_relation_object_type
-    },
-    {
-        "with_tag_nested",
-        World_with_tag_nested
-    },
-    {
         "with_scope",
         World_with_scope
     },
@@ -8466,7 +8421,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        399,
+        396,
         Entity_testcases
     },
     {
@@ -8594,7 +8549,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        128,
+        122,
         World_testcases
     },
     {

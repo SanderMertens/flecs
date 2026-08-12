@@ -3,12 +3,13 @@
  * @brief Stats addon.
  */
 
-#include "stats.h"
-
-#include "../system/system.h"
-#include "../pipeline/pipeline.h"
+#include "flecs.h"
 
 #ifdef FLECS_STATS
+
+#include "stats.h"
+#include "../system/system.h"
+#include "../pipeline/pipeline.h"
 
 #define ECS_GAUGE_RECORD(m, t, value)\
     flecs_gauge_record(m, t, (ecs_float_t)(value))
@@ -22,22 +23,19 @@
 #define ECS_METRIC_LAST(stats)\
     ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->last_, -ECS_SIZEOF(ecs_metric_t)))
 
-static
-int32_t t_next(
+static int32_t t_next(
     int32_t t)
 {
     return (t + 1) % ECS_STAT_WINDOW;
 }
 
-static
-int32_t t_prev(
+static int32_t t_prev(
     int32_t t)
 {
     return (t - 1 + ECS_STAT_WINDOW) % ECS_STAT_WINDOW;
 }
 
-static
-void flecs_gauge_record(
+static void flecs_gauge_record(
     ecs_metric_t *m,
     int32_t t,
     ecs_float_t value)
@@ -47,8 +45,7 @@ void flecs_gauge_record(
     m->gauge.max[t] = value;
 }
 
-static
-double flecs_counter_record(
+static double flecs_counter_record(
     ecs_metric_t *m,
     int32_t t,
     double value)
@@ -64,8 +61,7 @@ double flecs_counter_record(
     return gauge_value;
 }
 
-static
-void flecs_metric_print(
+static void flecs_metric_print(
     const char *name,
     ecs_float_t value)
 {
@@ -73,8 +69,7 @@ void flecs_metric_print(
     ecs_trace("%s: %*s %.2f", name, 32 - len, "", (double)value);
 }
 
-static
-void flecs_gauge_print(
+static void flecs_gauge_print(
     const char *name,
     int32_t t,
     const ecs_metric_t *m)
@@ -82,8 +77,7 @@ void flecs_gauge_print(
     flecs_metric_print(name, m->gauge.avg[t]);
 }
 
-static
-void flecs_counter_print(
+static void flecs_counter_print(
     const char *name,
     int32_t t,
     const ecs_metric_t *m)
@@ -174,8 +168,7 @@ error:
     return;
 }
 
-static
-void flecs_stats_reduce(
+static void flecs_stats_reduce(
     ecs_metric_t *dst_cur,
     ecs_metric_t *dst_last,
     ecs_metric_t *src_cur,
@@ -187,8 +180,7 @@ void flecs_stats_reduce(
     }
 }
 
-static
-void flecs_stats_reduce_last(
+static void flecs_stats_reduce_last(
     ecs_metric_t *dst_cur,
     ecs_metric_t *dst_last,
     ecs_metric_t *src_cur,
@@ -209,8 +201,7 @@ void flecs_stats_reduce_last(
     }
 }
 
-static
-void flecs_stats_repeat_last(
+static void flecs_stats_repeat_last(
     ecs_metric_t *cur,
     ecs_metric_t *last,
     int32_t t)
@@ -221,8 +212,7 @@ void flecs_stats_repeat_last(
     }
 }
 
-static
-void flecs_stats_copy_last(
+static void flecs_stats_copy_last(
     ecs_metric_t *dst_cur,
     ecs_metric_t *dst_last,
     ecs_metric_t *src_cur,

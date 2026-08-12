@@ -8546,9 +8546,12 @@ void Operators_1_ent_src_not_pair_rel_var_written(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, RelA, Tag);
-    ECS_ENTITY(world, RelB, Tag);
-    ECS_ENTITY(world, RelC, Tag);
+    ecs_entity_t RelA = ecs_entity(world, { .name = "RelA" });
+    ecs_add_id(world, RelA, Tag);
+    ecs_entity_t RelB = ecs_entity(world, { .name = "RelB" });
+    ecs_add_id(world, RelB, Tag);
+    ecs_entity_t RelC = ecs_entity(world, { .name = "RelC" });
+    ecs_add_id(world, RelC, Tag);
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
 
@@ -8594,9 +8597,12 @@ void Operators_1_ent_src_not_pair_tgt_var_written(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
-    ECS_ENTITY(world, TgtA, Tag);
-    ECS_ENTITY(world, TgtB, Tag);
-    ECS_ENTITY(world, TgtC, Tag);
+    ecs_entity_t TgtA = ecs_entity(world, { .name = "TgtA" });
+    ecs_add_id(world, TgtA, Tag);
+    ecs_entity_t TgtB = ecs_entity(world, { .name = "TgtB" });
+    ecs_add_id(world, TgtB, Tag);
+    ecs_entity_t TgtC = ecs_entity(world, { .name = "TgtC" });
+    ecs_add_id(world, TgtC, Tag);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add_pair(world, e1, RelA, TgtA);
@@ -8640,9 +8646,12 @@ void Operators_1_ent_src_not_pair_rel_tgt_var_written(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
-    ECS_ENTITY(world, RelA, (Tag, TgtA));
-    ECS_ENTITY(world, RelB, (Tag, TgtA));
-    ECS_ENTITY(world, RelC, (Tag, TgtB));
+    ecs_entity_t RelA = ecs_entity(world, { .name = "RelA" });
+    ecs_add_pair(world, RelA, Tag, TgtA);
+    ecs_entity_t RelB = ecs_entity(world, { .name = "RelB" });
+    ecs_add_pair(world, RelB, Tag, TgtA);
+    ecs_entity_t RelC = ecs_entity(world, { .name = "RelC" });
+    ecs_add_pair(world, RelC, Tag, TgtB);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add_pair(world, e1, RelA, TgtA);
@@ -8687,9 +8696,12 @@ void Operators_1_ent_src_not_pair_rel_tgt_same_var_written(void) {
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelA);
-    ECS_ENTITY(world, RelB, Tag);
-    ECS_ENTITY(world, TgtA, Tag);
-    ECS_ENTITY(world, TgtB, Tag);
+    ecs_entity_t RelB = ecs_entity(world, { .name = "RelB" });
+    ecs_add_id(world, RelB, Tag);
+    ecs_entity_t TgtA = ecs_entity(world, { .name = "TgtA" });
+    ecs_add_id(world, TgtA, Tag);
+    ecs_entity_t TgtB = ecs_entity(world, { .name = "TgtB" });
+    ecs_add_id(world, TgtB, Tag);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add_pair(world, e1, RelA, TgtA);
@@ -8733,7 +8745,10 @@ void Operators_and_from_fixed_src(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_PREFAB(world, Type, TagA, TagB);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add_id(world, Type, TagA);
+    ecs_add_id(world, Type, TagB);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
@@ -8777,7 +8792,10 @@ void Operators_not_from_fixed_src(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_PREFAB(world, Type, TagA, TagB);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add_id(world, Type, TagA);
+    ecs_add_id(world, Type, TagB);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
@@ -8838,7 +8856,10 @@ void Operators_or_from_fixed_src(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_PREFAB(world, Type, TagA, TagB);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add_id(world, Type, TagA);
+    ecs_add_id(world, Type, TagB);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
@@ -8905,7 +8926,10 @@ void Operators_and_from_this(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
-    ECS_PREFAB(world, Type, TagA, TagB);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add_id(world, Type, TagA);
+    ecs_add_id(world, Type, TagB);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
@@ -8969,7 +8993,10 @@ void Operators_not_from_this(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
-    ECS_PREFAB(world, Type, TagA, TagB);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add_id(world, Type, TagA);
+    ecs_add_id(world, Type, TagB);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
@@ -9086,7 +9113,10 @@ void Operators_or_from_this(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
-    ECS_PREFAB(world, Type, TagA, TagB);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add_id(world, Type, TagA);
+    ecs_add_id(world, Type, TagB);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
@@ -9198,7 +9228,10 @@ void Operators_and_from_this_written(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
     ECS_TAG(world, TagD);
-    ECS_PREFAB(world, Type, TagA, TagB);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add_id(world, Type, TagA);
+    ecs_add_id(world, Type, TagB);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, TagD);
@@ -9269,7 +9302,10 @@ void Operators_not_from_this_written(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
     ECS_TAG(world, TagD);
-    ECS_PREFAB(world, Type, TagA, TagB);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add_id(world, Type, TagA);
+    ecs_add_id(world, Type, TagB);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, TagD);
@@ -9414,7 +9450,10 @@ void Operators_or_from_this_written(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
     ECS_TAG(world, TagD);
-    ECS_PREFAB(world, Type, TagA, TagB);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add_id(world, Type, TagA);
+    ecs_add_id(world, Type, TagB);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, TagD);
@@ -9672,7 +9711,10 @@ void Operators_and_from_existing_and_new_table(void) {
     ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_add(world, e1, Velocity);
 
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = Type, .oper = EcsAndFrom }},
@@ -9718,7 +9760,10 @@ void Operators_not_from_existing_and_new_table(void) {
 
     ecs_entity_t e2 = ecs_new_w(world, Foo);
 
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -9768,7 +9813,10 @@ void Operators_or_from_existing_and_new_table(void) {
 
     ecs_entity_t e1 = ecs_new_w(world, Position);
 
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = Type, .oper = EcsOrFrom }},

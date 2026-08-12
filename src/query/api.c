@@ -5,13 +5,6 @@
 
 #include "../private_api.h"
 
-/* Placeholder arrays for queries that only have the $this variable */
-ecs_query_var_t flecs_this_array = {
-    .kind = EcsVarTable,
-    .table_id = EcsVarNone
-};
-char *flecs_this_name_array = NULL;
-
 ecs_mixins_t ecs_query_t_mixins = {
     .type_name = "ecs_query_t",
     .elems = {
@@ -20,6 +13,15 @@ ecs_mixins_t ecs_query_t_mixins = {
         [EcsMixinDtor] = offsetof(ecs_query_impl_t, dtor)
     }
 };
+
+#ifdef FLECS_QUERY_PLANS
+
+/* Placeholder arrays for queries that only have the $this variable */
+ecs_query_var_t flecs_this_array = {
+    .kind = EcsVarTable,
+    .table_id = EcsVarNone
+};
+char *flecs_this_name_array = NULL;
 
 int32_t ecs_query_find_var(
     const ecs_query_t *q,
@@ -66,12 +68,17 @@ bool ecs_query_var_is_entity(
     return flecs_query_impl(q)->vars[var_id].kind == EcsVarEntity;
 }
 
-static
-int flecs_query_set_caching_policy(
+#endif // FLECS_QUERY_PLANS
+
+static int flecs_query_set_caching_policy(
     ecs_query_impl_t *impl,
     const ecs_query_desc_t *desc)
 {
     ecs_query_cache_kind_t kind = desc->cache_kind;
+#ifndef FLECS_CACHED_QUERIES
+    /* Cached query policies are unavailable without the addon. */
+    kind = EcsQueryCacheNone;
+#endif
     bool require_caching = desc->group_by || desc->group_by_callback || 
             desc->order_by || desc->order_by_callback || 
             (desc->flags & EcsQueryDetectChanges);
@@ -123,6 +130,7 @@ int flecs_query_set_caching_policy(
         return 0;
     }
 
+#ifdef FLECS_CACHED_QUERIES
     /* Entire query must be cached */
     if (desc->cache_kind == EcsQueryCacheAll) {
         if (impl->pub.flags & EcsQueryIsCacheable) {
@@ -173,26 +181,18 @@ int flecs_query_set_caching_policy(
             }
         }
     }
+#endif
 
     return 0;
 }
 
-static
-int flecs_query_create_cache(
+#ifdef FLECS_CACHED_QUERIES
+
+static int flecs_query_create_cache(
     ecs_query_impl_t *impl,
     ecs_query_desc_t *desc)
 {
     ecs_query_t *q = &impl->pub;
-    if (flecs_query_set_caching_policy(impl, desc)) {
-        return -1;
-    }
-
-    if (q->cache_kind != EcsQueryCacheNone) {
-        flecs_check_exclusive_world_access_write(impl->pub.real_world);
-    } else {
-        flecs_check_exclusive_world_access_read(impl->pub.real_world);
-    }
-
     if ((q->cache_kind != EcsQueryCacheNone) && !q->entity) {
         /* Cached queries need an entity handle for observer components */
         q->entity = ecs_new(q->world);
@@ -239,33 +239,14 @@ int flecs_query_create_cache(
 
             ecs_os_memcpy_n(impl->cache->field_map, field_map, int8_t, dst_count);
         }
-    } else {
-        /* Check if query has features that are unsupported for uncached */
-        ecs_assert(q->cache_kind == EcsQueryCacheNone, ECS_INTERNAL_ERROR, NULL);
-
-        if (!(q->flags & EcsQueryNested)) {
-            /* If uncached query is not created to populate a cached query, it
-             * should not have cascade modifiers */
-            int32_t i, count = q->term_count;
-            ecs_term_t *terms = q->terms;
-            for (i = 0; i < count; i ++) {
-                ecs_term_t *term = &terms[i];
-                if (term->src.id & EcsCascade) {
-                    char *query_str = ecs_query_str(q);
-                    ecs_err(
-                        "cascade is unsupported for uncached query\n  %s",
-                        query_str);
-                    ecs_os_free(query_str);
-                    goto error;
-                }
-            }
-        }
     }
 
     return 0;
 error:
     return -1;
 }
+
+#endif // FLECS_CACHED_QUERIES
 
 void flecs_query_copy_arrays(
     ecs_query_t *q)
@@ -278,8 +259,7 @@ void flecs_query_copy_arrays(
         ? flecs_calloc_n(a, ecs_component_record_t*, q->field_count) : NULL;
 }
 
-static
-void flecs_query_free_arrays(
+static void flecs_query_free_arrays(
     ecs_query_t *q)
 {
     ecs_allocator_t *a = &flecs_query_impl(q)->stage->allocator;
@@ -289,8 +269,7 @@ void flecs_query_free_arrays(
     flecs_free_n(a, ecs_component_record_t*, q->field_count, flecs_query_impl(q)->cr_cache);
 }
 
-static
-void flecs_query_fini(
+static void flecs_query_fini(
     ecs_query_impl_t *impl)
 {
     ecs_stage_t *stage = impl->stage;
@@ -305,6 +284,7 @@ void flecs_query_fini(
         impl->binding_ctx_free(impl->pub.binding_ctx);
     }
 
+#ifdef FLECS_QUERY_PLANS
     if (impl->vars != &flecs_this_array) {
         flecs_free(a, (ECS_SIZEOF(ecs_query_var_t) + ECS_SIZEOF(char*)) * 
             impl->var_size, impl->vars);
@@ -314,6 +294,7 @@ void flecs_query_fini(
 
     flecs_free_n(a, ecs_query_op_t, impl->op_count, impl->ops);
     flecs_free_n(a, ecs_var_id_t, impl->pub.field_count, impl->src_vars);
+#endif
     flecs_free_n(a, int32_t, impl->pub.field_count, impl->monitor);
 
     ecs_query_t *q = &impl->pub;
@@ -334,10 +315,12 @@ void flecs_query_fini(
         flecs_free(&impl->stage->allocator, impl->tokens_len, impl->tokens);
     }
 
+#ifdef FLECS_CACHED_QUERIES
     if (impl->cache) {
         flecs_free_n(a, int8_t, FLECS_TERM_COUNT_MAX, impl->cache->field_map);
         flecs_query_cache_fini(impl);
     }
+#endif
 
     flecs_query_free_arrays(q);
 
@@ -345,13 +328,11 @@ void flecs_query_fini(
     flecs_bfree(&stage->allocators.query_impl, impl);
 }
 
-static
-void flecs_query_poly_fini(void *ptr) {
+static void flecs_query_poly_fini(void *ptr) {
     flecs_query_fini(ptr);
 }
 
-static
-void flecs_query_add_self_ref(
+static void flecs_query_add_self_ref(
     ecs_query_t *q)
 {
     if (q->entity) {
@@ -380,8 +361,7 @@ void ecs_query_fini(
     }
 }
 
-static
-ecs_query_t* flecs_query_init(
+static ecs_query_t* flecs_query_init(
     ecs_world_t *world,
     const ecs_query_desc_t *const_desc)
 {
@@ -421,12 +401,25 @@ ecs_query_t* flecs_query_init(
     result->ctx_free = const_desc->ctx_free;
     result->binding_ctx_free = const_desc->binding_ctx_free;
     result->dtor = flecs_query_poly_fini;
+
+    if (flecs_query_set_caching_policy(result, &desc)) {
+        goto error;
+    }
+
+    if (result->pub.cache_kind != EcsQueryCacheNone) {
+        flecs_check_exclusive_world_access_write(result->pub.real_world);
+    } else {
+        flecs_check_exclusive_world_access_read(result->pub.real_world);
+    }
+
+#ifdef FLECS_CACHED_QUERIES
     result->cache = NULL;
 
     /* Initialize query cache if necessary */
     if (flecs_query_create_cache(result, &desc)) {
         goto error;
     }
+#endif
 
     if (flecs_query_compile(world, stage, result)) {
         goto error;
@@ -536,7 +529,8 @@ bool ecs_query_has_table(
     }
 
     *it = ecs_query_iter(q->world, q);
-    ecs_iter_set_var_as_table(it, 0, table);
+    ecs_table_range_t range = { .table = table };
+    ecs_iter_set_var_as_range(it, 0, &range);
     return ecs_query_next(it);
 error:
     return false;
@@ -586,19 +580,24 @@ ecs_query_count_t ecs_query_count(
     while (ecs_query_next(&it)) {
         result.results ++;
         result.entities += it.count;
+#ifdef FLECS_CACHED_QUERIES
         ecs_iter_skip(&it);
+#endif
     }
 
     if ((q->flags & EcsQueryMatchOnlySelf) && 
        !(q->flags & EcsQueryMatchWildcards)) 
     {
         result.tables = result.results;
-    } else if (q->flags & EcsQueryIsCacheable) {
+    }
+#ifdef FLECS_CACHED_QUERIES
+    else if (q->flags & EcsQueryIsCacheable) {
         ecs_query_impl_t *impl = flecs_query_impl(q);
         if (impl->cache) {
             result.tables = ecs_map_count(&impl->cache->tables);
         }
     }
+#endif
 
     return result;
 }
@@ -611,6 +610,8 @@ bool ecs_query_is_true(
     ecs_iter_t it = flecs_query_iter(q->world, q);
     return ecs_iter_is_true(&it);
 }
+
+#ifdef FLECS_CACHED_QUERIES
 
 int32_t ecs_query_match_count(
     const ecs_query_t *q)
@@ -636,6 +637,8 @@ const ecs_query_t* ecs_query_get_cache_query(
     }
 }
 
+#endif // FLECS_CACHED_QUERIES
+
 const ecs_query_t* ecs_query_get(
     const ecs_world_t *world,
     ecs_entity_t query)
@@ -648,6 +651,8 @@ const ecs_query_t* ecs_query_get(
         return poly_comp->poly;
     }
 }
+
+#ifdef FLECS_CACHED_QUERIES
 
 void ecs_iter_set_group(
     ecs_iter_t *it,
@@ -732,3 +737,5 @@ const ecs_map_t* ecs_query_get_groups(
 error:
     return NULL;
 }
+
+#endif // FLECS_CACHED_QUERIES

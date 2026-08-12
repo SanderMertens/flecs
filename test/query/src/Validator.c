@@ -1,7 +1,6 @@
 #include <query.h>
 
-static
-void query_flags_to_str(uint64_t value) {
+static void query_flags_to_str(uint64_t value) {
     if (value & EcsQueryMatchPrefab) {
         printf("EcsQueryMatchPrefab|");
     }
@@ -346,7 +345,8 @@ void Validator_validate_1_term_acyclic_same_subj_obj(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
 
     test_assert(NULL == ecs_query(world, {
@@ -359,7 +359,9 @@ void Validator_validate_1_term_acyclic_same_subj_obj(void) {
 void Validator_validate_1_term_acyclic_reflexive_same_subj_obj(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Traversable, Reflexive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
+    ecs_add_id(world, Rel, EcsReflexive);
     ECS_TAG(world, Foo);
 
     ecs_query_t *q = ecs_query(world, {
@@ -416,7 +418,8 @@ void Validator_validate_1_term_acyclic_same_subj_obj_var(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     test_assert(NULL == ecs_query(world, {
         .terms = {{ 
@@ -432,7 +435,9 @@ void Validator_validate_1_term_acyclic_same_subj_obj_var(void) {
 void Validator_validate_1_term_acyclic_reflexive_same_subj_obj_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Traversable, Reflexive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
+    ecs_add_id(world, Rel, EcsReflexive);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ 
@@ -481,7 +486,8 @@ void Validator_validate_1_term_non_acyclic_superset(void) {
 void Validator_validate_1_term_dont_inherit_default_set(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, (OnInstantiate, DontInherit));
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsDontInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = Tag }}
@@ -505,7 +511,8 @@ void Validator_validate_1_term_dont_inherit_default_set(void) {
 void Validator_validate_1_term_dont_inherit_pair_default_set(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, (OnInstantiate, DontInherit));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsDontInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = ecs_pair(Rel, EcsWildcard) }}
@@ -529,7 +536,8 @@ void Validator_validate_1_term_dont_inherit_pair_default_set(void) {
 void Validator_validate_1_term_inherit_default_set(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = Tag }}
@@ -553,7 +561,8 @@ void Validator_validate_1_term_inherit_default_set(void) {
 void Validator_validate_1_term_inherit_pair_default_set(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, (OnInstantiate, Inherit));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = ecs_pair(Rel, EcsWildcard) }}
@@ -577,7 +586,8 @@ void Validator_validate_1_term_inherit_pair_default_set(void) {
 void Validator_validate_1_term_override_default_set(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, (OnInstantiate, Override));
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsOverride);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = Tag }}
@@ -601,7 +611,8 @@ void Validator_validate_1_term_override_default_set(void) {
 void Validator_validate_1_term_override_pair_default_set(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, (OnInstantiate, Override));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsOverride);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = ecs_pair(Rel, EcsWildcard) }}
@@ -675,7 +686,8 @@ void Validator_validate_1_term_up_no_inherit_pair(void) {
 void Validator_validate_1_term_up_override(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, (OnInstantiate, Override));
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsOverride);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = Tag, .src.id = EcsUp }}
@@ -700,7 +712,8 @@ void Validator_validate_1_term_up_override(void) {
 void Validator_validate_1_term_up_override_pair(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, (OnInstantiate, Override));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsOverride);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.id = EcsUp }}
@@ -755,7 +768,8 @@ void Validator_validate_1_term_up_isa_no_inherit_pair(void) {
 void Validator_validate_1_term_up_isa_override(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, (OnInstantiate, Override));
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsOverride);
 
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
@@ -770,7 +784,8 @@ void Validator_validate_1_term_up_isa_override(void) {
 void Validator_validate_1_term_up_isa_override_pair(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, (OnInstantiate, Override));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsOverride);
 
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
@@ -922,7 +937,8 @@ void Validator_validate_1_term_optional_only(void) {
 void Validator_validate_1_term_transitive_pair(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Transitive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTransitive);
     ECS_TAG(world, Tgt);
     
     ecs_query_t *q = ecs_query(world, {
@@ -1377,7 +1393,8 @@ void Validator_validate_1_w_pred_name(void) {
 void Validator_validate_1_w_final_pred_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, Final);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_add_id(world, Tag, EcsFinal);
 
     ecs_query_t *q = ecs_query(world, {
         .terms[0].first.name = "Tag"
@@ -2034,7 +2051,8 @@ void Validator_validate_w_no_transitive_pair(void) {
 void Validator_validate_w_transitive_pair_any_src(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, LocatedIn, Transitive);
+    ecs_entity_t LocatedIn = ecs_entity(world, { .name = "LocatedIn" });
+    ecs_add_id(world, LocatedIn, EcsTransitive);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -2056,7 +2074,8 @@ void Validator_validate_w_transitive_pair_any_src(void) {
 void Validator_validate_w_transitive_pair(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, LocatedIn, Transitive);
+    ecs_entity_t LocatedIn = ecs_entity(world, { .name = "LocatedIn" });
+    ecs_add_id(world, LocatedIn, EcsTransitive);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -2074,7 +2093,8 @@ void Validator_validate_w_transitive_pair(void) {
 void Validator_validate_w_transitive_tag_no_pair(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, LocatedIn, Transitive);
+    ecs_entity_t LocatedIn = ecs_entity(world, { .name = "LocatedIn" });
+    ecs_add_id(world, LocatedIn, EcsTransitive);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -2092,7 +2112,8 @@ void Validator_validate_w_transitive_tag_no_pair(void) {
 void Validator_validate_w_transitive_tag_self_tgt(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, LocatedIn, Transitive);
+    ecs_entity_t LocatedIn = ecs_entity(world, { .name = "LocatedIn" });
+    ecs_add_id(world, LocatedIn, EcsTransitive);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -2110,7 +2131,8 @@ void Validator_validate_w_transitive_tag_self_tgt(void) {
 void Validator_validate_w_transitive_tag_any_tgt(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, LocatedIn, Transitive);
+    ecs_entity_t LocatedIn = ecs_entity(world, { .name = "LocatedIn" });
+    ecs_add_id(world, LocatedIn, EcsTransitive);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -2380,7 +2402,8 @@ void Validator_validate_w_inherited_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
-    ECS_ENTITY(world, MeleeUnit, (IsA, Unit));
+    ecs_entity_t MeleeUnit = ecs_entity(world, { .name = "MeleeUnit" });
+    ecs_add_pair(world, MeleeUnit, EcsIsA, Unit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -2400,7 +2423,8 @@ void Validator_validate_w_inherited_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
-    ECS_ENTITY(world, MeleeUnit, (IsA, Unit));
+    ecs_entity_t MeleeUnit = ecs_entity(world, { .name = "MeleeUnit" });
+    ecs_add_pair(world, MeleeUnit, EcsIsA, Unit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -2999,7 +3023,8 @@ void Validator_validate_custom_trav_w_inherit_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
@@ -3028,7 +3053,8 @@ void Validator_validate_custom_trav_w_inherit_id_w_self_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
@@ -3057,7 +3083,8 @@ void Validator_validate_custom_trav_w_inherit_id_w_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
@@ -3561,7 +3588,8 @@ void Validator_validate_simple_w_inherited_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
-    ECS_ENTITY(world, MeleeUnit, (IsA, Unit));
+    ecs_entity_t MeleeUnit = ecs_entity(world, { .name = "MeleeUnit" });
+    ecs_add_pair(world, MeleeUnit, EcsIsA, Unit);
 
     ecs_new_w(world, Unit);
 
@@ -4220,6 +4248,36 @@ void Validator_exceed_max_var_count(void) {
     ecs_log_set_level(-4);
     test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "(*,*,*,*,*,*,*,*,*,*,*),(*,*,*,*,*,*,*,*,*,*,*,*,*)"
+    }));
+
+    ecs_fini(world);
+}
+
+void Validator_query_for_relationship_trait_as_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, rel, EcsRelationship);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .terms = {{ rel }}
+    }));
+
+    ecs_fini(world);
+}
+
+void Validator_query_for_relationship_trait_as_component_2_terms(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, rel, EcsRelationship);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .terms = {{ Foo }, { rel }}
     }));
 
     ecs_fini(world);

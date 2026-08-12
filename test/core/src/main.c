@@ -95,18 +95,11 @@ void Entity_init_id(void);
 void Entity_init_id_exceed_32_bits(void);
 void Entity_init_id_name(void);
 void Entity_init_id_path(void);
-void Entity_init_id_add_1_comp(void);
-void Entity_init_id_add_2_comp(void);
 void Entity_init_id_w_scope(void);
 void Entity_init_id_name_w_scope(void);
 void Entity_init_id_path_w_scope(void);
 void Entity_init_id_fullpath_w_scope(void);
 void Entity_init_id_fullpath_w_scope_existing(void);
-void Entity_init_id_name_1_comp(void);
-void Entity_init_id_name_2_comp(void);
-void Entity_init_id_name_2_comp_w_scope(void);
-void Entity_id_add_1_comp(void);
-void Entity_id_add_2_comp(void);
 void Entity_init_id_path_w_sep(void);
 void Entity_find_id_name(void);
 void Entity_find_w_existing_id_name(void);
@@ -121,14 +114,8 @@ void Entity_find_id_name_mismatch(void);
 void Entity_find_id_name_mismatch_w_scope(void);
 void Entity_find_id_path_mismatch(void);
 void Entity_find_id_path_mismatch_w_scope(void);
-void Entity_find_id_add_1_comp(void);
-void Entity_find_id_add_2_comp(void);
 void Entity_init_w_scope_name(void);
 void Entity_init_w_core_name(void);
-void Entity_init_w_with(void);
-void Entity_init_w_with_w_name(void);
-void Entity_init_w_with_w_scope(void);
-void Entity_init_w_with_w_name_scope(void);
 void Entity_is_valid(void);
 void Entity_is_recycled_valid(void);
 void Entity_is_0_valid(void);
@@ -206,38 +193,14 @@ void Entity_set_version_on_nonempty_entity(void);
 void Entity_set_version_while_deferred(void);
 void Entity_set_version_on_not_alive(void);
 void Entity_get_version_after_reuse(void);
-void Entity_commit_w_on_add(void);
-void Entity_commit_w_on_remove(void);
-void Entity_commit_w_cmd_in_observer(void);
+void Entity_add_ids_w_on_add(void);
+void Entity_add_ids_w_cmd_in_observer(void);
 void Entity_entity_init_existing_no_sep(void);
-void Entity_entity_init_w_set_1_comp(void);
-void Entity_entity_init_w_set_2_comp(void);
-void Entity_entity_init_w_set_1_comp_1_tag(void);
-void Entity_entity_init_w_set_2_comp_2_tag(void);
-void Entity_entity_init_w_set_1_comp_w_name(void);
-void Entity_entity_init_w_set_1_comp_existing(void);
-void Entity_entity_init_w_set_1_comp_existing_empty(void);
-void Entity_entity_init_w_set_1_comp_1_tag_w_set(void);
-void Entity_entity_init_w_set_w_hook(void);
-void Entity_entity_init_w_set_w_observer(void);
-void Entity_entity_init_w_set_1_comp_defer(void);
-void Entity_entity_init_w_set_2_comp_defer(void);
-void Entity_entity_init_w_set_1_comp_1_tag_defer(void);
-void Entity_entity_init_w_set_2_comp_2_tag_defer(void);
-void Entity_entity_init_w_set_1_comp_w_name_defer(void);
-void Entity_entity_init_w_set_1_comp_existing_defer(void);
-void Entity_entity_init_w_set_1_comp_existing_empty_defer(void);
-void Entity_entity_init_w_set_1_comp_1_tag_w_set_defer(void);
-void Entity_entity_init_w_set_1_comp_suspend_defer(void);
 void Entity_insert_1_comp(void);
 void Entity_insert_2_comp(void);
 void Entity_insert_1_comp_1_tag(void);
 void Entity_entity_w_parent(void);
 void Entity_entity_w_parent_w_name(void);
-void Entity_entity_w_parent_w_add(void);
-void Entity_entity_w_parent_w_add_w_parent(void);
-void Entity_entity_w_parent_w_set(void);
-void Entity_entity_w_parent_w_set_w_parent(void);
 void Entity_entity_w_new_id_and_double_dot(void);
 void Entity_entity_w_existing_id_and_double_dot(void);
 void Entity_entity_w_large_id_name(void);
@@ -314,8 +277,6 @@ void Iter_page_iter_w_fini(void);
 void Iter_worker_iter_w_fini(void);
 void Iter_rule_page_iter_w_fini(void);
 void Iter_rule_worker_iter_w_fini(void);
-void Iter_to_str_before_next(void);
-void Iter_to_str(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -397,15 +358,6 @@ void New_new_component_id_skip_used(void);
 void New_new_component_id_skip_to_hi_id(void);
 void New_new_w_entity_0(void);
 void New_create_w_explicit_id_2_worlds(void);
-void New_new_w_id_0_w_with(void);
-void New_new_w_id_w_with(void);
-void New_new_w_type_w_with(void);
-void New_new_w_id_w_with_w_scope(void);
-void New_new_w_type_w_with_w_scope(void);
-void New_new_w_id_w_with_defer(void);
-void New_new_w_id_w_with_defer_w_scope(void);
-void New_new_w_type_w_with_defer(void);
-void New_new_w_type_w_with_defer_w_scope(void);
 void New_new_w_table(void);
 void New_new_w_null_table(void);
 void New_new_w_table_component(void);
@@ -1155,7 +1107,6 @@ void OrderedChildren_get_ordered_children_from_prefab_instance_3_children_differ
 void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
 void OrderedChildren_prefab_w_nested_ordered_children(void);
 void OrderedChildren_prefab_w_nested_ordered_children_2(void);
-void OrderedChildren_prefab_w_slots(void);
 void OrderedChildren_prefab_get_target_after_reorder(void);
 void OrderedChildren_recreate_named_child(void);
 void OrderedChildren_lookup_after_move_to_root(void);
@@ -1454,16 +1405,6 @@ void Set_emplace_w_observer_w_add(void);
 void Set_emplace_existing_w_check(void);
 void Set_emplace_pair(void);
 
-// Testsuite 'ReadWrite'
-void ReadWrite_read(void);
-void ReadWrite_nested_read(void);
-void ReadWrite_write(void);
-void ReadWrite_nested_write(void);
-void ReadWrite_add_while_read(void);
-void ReadWrite_add_while_write(void);
-void ReadWrite_read_from_stage(void);
-void ReadWrite_write_from_stage(void);
-
 // Testsuite 'Lookup'
 void Lookup_setup(void);
 void Lookup_lookup(void);
@@ -1479,6 +1420,18 @@ void Lookup_lookup_by_id(void);
 void Lookup_lookup_path_anonymous_parent(void);
 void Lookup_lookup_path_0_parent(void);
 void Lookup_lookup_path_0_parent_w_scope(void);
+void Lookup_lookup_path_name_id(void);
+void Lookup_lookup_path_name_id_not_in_parent(void);
+void Lookup_lookup_path_name_name_id(void);
+void Lookup_lookup_path_name_name_id_not_in_parent(void);
+void Lookup_lookup_path_name_id_name(void);
+void Lookup_lookup_path_name_id_name_not_in_parent(void);
+void Lookup_lookup_path_id_name_name(void);
+void Lookup_lookup_path_id_name_name_not_alive(void);
+void Lookup_lookup_path_name_id_recycled(void);
+void Lookup_lookup_path_name_name_id_recycled(void);
+void Lookup_lookup_path_name_id_name_recycled(void);
+void Lookup_lookup_path_id_name_name_recycled(void);
 void Lookup_lookup_recycled_by_id(void);
 void Lookup_lookup_symbol_by_id(void);
 void Lookup_lookup_name_w_digit(void);
@@ -2370,6 +2323,36 @@ void Observer_multi_term_on_set_w_base_and_3_instances_in_different_tables(void)
 void Observer_propagate_isa_two_bases_dirty_reachable_cache(void);
 void Observer_propagate_on_set_2_lvls(void);
 void Observer_propagate_on_set_2_lvls_2_terms(void);
+void Observer_propagate_masked_add_to_grandparent(void);
+void Observer_propagate_masked_remove_from_grandparent(void);
+void Observer_propagate_add_to_grandparent_invoked_for_parent(void);
+void Observer_propagate_up_add_to_parent_w_child_owned(void);
+void Observer_propagate_self_up_add_to_parent_w_child_owned(void);
+void Observer_propagate_up_remove_from_parent_w_child_owned(void);
+void Observer_propagate_self_up_remove_from_parent_w_child_owned(void);
+void Observer_propagate_remove_from_parent_w_grandparent_owned(void);
+void Observer_propagate_add_to_parent_w_grandparent_owned(void);
+void Observer_propagate_add_to_grandparent(void);
+void Observer_propagate_remove_from_grandparent(void);
+void Observer_propagate_add_to_parent_w_subtree(void);
+void Observer_propagate_add_stops_at_owned_table(void);
+void Observer_propagate_reparent_w_both_parents_owned(void);
+void Observer_propagate_reparent_from_owned_to_empty_parent(void);
+void Observer_propagate_reparent_from_empty_to_owned_parent(void);
+void Observer_propagate_reparent_parent_w_subtree(void);
+void Observer_propagate_unparent_w_parent_owned(void);
+void Observer_propagate_remove_first_wildcard_pair(void);
+void Observer_propagate_add_second_wildcard_pair(void);
+void Observer_propagate_isa_add_to_base(void);
+void Observer_propagate_isa_remove_from_base(void);
+void Observer_propagate_isa_remove_from_base_w_second_base(void);
+void Observer_propagate_isa_add_to_second_base(void);
+void Observer_propagate_isa_masked_add_to_base_of_base(void);
+void Observer_propagate_isa_add_to_base_of_base(void);
+void Observer_propagate_custom_rel_add_to_target(void);
+void Observer_propagate_custom_rel_remove_from_target(void);
+void Observer_propagate_custom_rel_masked_add(void);
+void Observer_propagate_add_to_grandparent_w_parent_inherited(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -2424,7 +2407,6 @@ void TriggerOnAdd_2_systems_w_table_creation(void);
 void TriggerOnAdd_2_systems_w_table_creation_in_progress(void);
 void TriggerOnAdd_sys_context(void);
 void TriggerOnAdd_get_sys_context_from_param(void);
-void TriggerOnAdd_remove_added_component_in_on_add_w_set(void);
 void TriggerOnAdd_on_add_in_on_add(void);
 void TriggerOnAdd_on_remove_in_on_add(void);
 void TriggerOnAdd_on_set_in_on_add(void);
@@ -2486,7 +2468,7 @@ void Monitor_yield_existing(void);
 
 // Testsuite 'Prefab'
 void Prefab_setup(void);
-void Prefab_enable_prefab_w_isa_variant(void);
+void Prefab_disable_prefab_w_isa_variant(void);
 void Prefab_new_w_prefab(void);
 void Prefab_new_w_count_prefab(void);
 void Prefab_new_w_type_w_prefab(void);
@@ -2595,20 +2577,6 @@ void Prefab_override_dont_inherit(void);
 void Prefab_prefab_child_w_dont_inherit_component(void);
 void Prefab_prefab_child_override(void);
 void Prefab_prefab_child_override_w_exclusive_pair(void);
-void Prefab_prefab_1_slot(void);
-void Prefab_prefab_2_slots(void);
-void Prefab_prefab_w_nested_slot(void);
-void Prefab_prefab_w_mixed_slots(void);
-void Prefab_prefab_variant_w_slot(void);
-void Prefab_prefab_variant_w_base_slot(void);
-void Prefab_prefab_variant_w_mixed_slots(void);
-void Prefab_override_slot(void);
-void Prefab_2_instances_w_slots_same_table(void);
-void Prefab_slot_has_union(void);
-void Prefab_slot_override(void);
-void Prefab_base_slot_override(void);
-void Prefab_has_slot_after_delete(void);
-void Prefab_has_slot_after_clear(void);
 void Prefab_override_twice_w_add(void);
 void Prefab_override_twice_w_set(void);
 void Prefab_auto_override_copy_once(void);
@@ -2620,8 +2588,8 @@ void Prefab_child_of_prefab_w_prefab_is_prefab_w_component(void);
 void Prefab_override_exclusive(void);
 void Prefab_override_exclusive_2_lvls(void);
 void Prefab_hierarchy_w_recycled_id(void);
-void Prefab_disable_ids(void);
-void Prefab_disable_nested_ids(void);
+void Prefab_disable_prefab(void);
+void Prefab_disable_nested_prefab(void);
 void Prefab_prefab_w_children_w_isa_auto_override(void);
 void Prefab_prefab_child_w_override(void);
 void Prefab_prefab_child_w_override_and_higher_component(void);
@@ -2668,7 +2636,6 @@ void Prefab_defer_instantiate_and_set_inherit_and_override(void);
 void Prefab_defer_instantiate_and_set_inherit_and_new(void);
 void Prefab_instantiate_while_defer_suspended(void);
 void Prefab_instantiate_w_union_while_defer_suspended(void);
-void Prefab_instantiate_w_slot_while_defer_suspended(void);
 void Prefab_instantiate_w_sparse_component_while_defer_suspended(void);
 void Prefab_instantiate_w_sparse_tag_while_defer_suspended(void);
 void Prefab_instantiate_w_sparse_pair_while_defer_suspended(void);
@@ -3001,8 +2968,6 @@ void Type_setup(void);
 void Type_type_of_1_tostr(void);
 void Type_type_of_2_tostr(void);
 void Type_type_of_2_tostr_no_id(void);
-void Type_invalid_entity_type_expression(void);
-void Type_invalid_system_type_expression(void);
 void Type_get_type(void);
 void Type_get_type_from_empty(void);
 void Type_get_type_from_0(void);
@@ -3019,8 +2984,6 @@ void Type_entity_str_small_buffer(void);
 void Type_role_pair_str(void);
 void Type_role_owned_str(void);
 void Type_role_disabled_str(void);
-void Type_large_type_expr(void);
-void Type_large_type_expr_limit(void);
 
 // Testsuite 'Commands'
 void Commands_defer_ensure_dont_fragment_w_set(void);
@@ -3045,6 +3008,11 @@ void Commands_defer_twice_in_progress(void);
 void Commands_run_w_defer(void);
 void Commands_system_in_progress_w_defer(void);
 void Commands_defer_ensure(void);
+void Commands_defer_ensure_twice(void);
+void Commands_defer_ensure_twice_w_remove(void);
+void Commands_defer_ensure_after_set(void);
+void Commands_defer_ensure_3x_vector_append(void);
+void Commands_defer_ensure_3x_vector_append_existing(void);
 void Commands_defer_ensure_no_modify(void);
 void Commands_defer_ensure_w_modify(void);
 void Commands_defer_modify(void);
@@ -3272,7 +3240,6 @@ void SingleThreadStaging_add_to_world_while_readonly(void);
 void SingleThreadStaging_add_to_world_and_stage_while_readonly(void);
 void SingleThreadStaging_lookup_after_stage_count_change(void);
 void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void);
-void SingleThreadStaging_with_after_stage_count_change(void);
 
 // Testsuite 'Stresstests'
 void Stresstests_setup(void);
@@ -3748,14 +3715,6 @@ bake_test_case Entity_testcases[] = {
         Entity_init_id_path
     },
     {
-        "init_id_add_1_comp",
-        Entity_init_id_add_1_comp
-    },
-    {
-        "init_id_add_2_comp",
-        Entity_init_id_add_2_comp
-    },
-    {
         "init_id_w_scope",
         Entity_init_id_w_scope
     },
@@ -3774,26 +3733,6 @@ bake_test_case Entity_testcases[] = {
     {
         "init_id_fullpath_w_scope_existing",
         Entity_init_id_fullpath_w_scope_existing
-    },
-    {
-        "init_id_name_1_comp",
-        Entity_init_id_name_1_comp
-    },
-    {
-        "init_id_name_2_comp",
-        Entity_init_id_name_2_comp
-    },
-    {
-        "init_id_name_2_comp_w_scope",
-        Entity_init_id_name_2_comp_w_scope
-    },
-    {
-        "id_add_1_comp",
-        Entity_id_add_1_comp
-    },
-    {
-        "id_add_2_comp",
-        Entity_id_add_2_comp
     },
     {
         "init_id_path_w_sep",
@@ -3852,36 +3791,12 @@ bake_test_case Entity_testcases[] = {
         Entity_find_id_path_mismatch_w_scope
     },
     {
-        "find_id_add_1_comp",
-        Entity_find_id_add_1_comp
-    },
-    {
-        "find_id_add_2_comp",
-        Entity_find_id_add_2_comp
-    },
-    {
         "init_w_scope_name",
         Entity_init_w_scope_name
     },
     {
         "init_w_core_name",
         Entity_init_w_core_name
-    },
-    {
-        "init_w_with",
-        Entity_init_w_with
-    },
-    {
-        "init_w_with_w_name",
-        Entity_init_w_with_w_name
-    },
-    {
-        "init_w_with_w_scope",
-        Entity_init_w_with_w_scope
-    },
-    {
-        "init_w_with_w_name_scope",
-        Entity_init_w_with_w_name_scope
     },
     {
         "is_valid",
@@ -4192,96 +4107,16 @@ bake_test_case Entity_testcases[] = {
         Entity_get_version_after_reuse
     },
     {
-        "commit_w_on_add",
-        Entity_commit_w_on_add
+        "add_ids_w_on_add",
+        Entity_add_ids_w_on_add
     },
     {
-        "commit_w_on_remove",
-        Entity_commit_w_on_remove
-    },
-    {
-        "commit_w_cmd_in_observer",
-        Entity_commit_w_cmd_in_observer
+        "add_ids_w_cmd_in_observer",
+        Entity_add_ids_w_cmd_in_observer
     },
     {
         "entity_init_existing_no_sep",
         Entity_entity_init_existing_no_sep
-    },
-    {
-        "entity_init_w_set_1_comp",
-        Entity_entity_init_w_set_1_comp
-    },
-    {
-        "entity_init_w_set_2_comp",
-        Entity_entity_init_w_set_2_comp
-    },
-    {
-        "entity_init_w_set_1_comp_1_tag",
-        Entity_entity_init_w_set_1_comp_1_tag
-    },
-    {
-        "entity_init_w_set_2_comp_2_tag",
-        Entity_entity_init_w_set_2_comp_2_tag
-    },
-    {
-        "entity_init_w_set_1_comp_w_name",
-        Entity_entity_init_w_set_1_comp_w_name
-    },
-    {
-        "entity_init_w_set_1_comp_existing",
-        Entity_entity_init_w_set_1_comp_existing
-    },
-    {
-        "entity_init_w_set_1_comp_existing_empty",
-        Entity_entity_init_w_set_1_comp_existing_empty
-    },
-    {
-        "entity_init_w_set_1_comp_1_tag_w_set",
-        Entity_entity_init_w_set_1_comp_1_tag_w_set
-    },
-    {
-        "entity_init_w_set_w_hook",
-        Entity_entity_init_w_set_w_hook
-    },
-    {
-        "entity_init_w_set_w_observer",
-        Entity_entity_init_w_set_w_observer
-    },
-    {
-        "entity_init_w_set_1_comp_defer",
-        Entity_entity_init_w_set_1_comp_defer
-    },
-    {
-        "entity_init_w_set_2_comp_defer",
-        Entity_entity_init_w_set_2_comp_defer
-    },
-    {
-        "entity_init_w_set_1_comp_1_tag_defer",
-        Entity_entity_init_w_set_1_comp_1_tag_defer
-    },
-    {
-        "entity_init_w_set_2_comp_2_tag_defer",
-        Entity_entity_init_w_set_2_comp_2_tag_defer
-    },
-    {
-        "entity_init_w_set_1_comp_w_name_defer",
-        Entity_entity_init_w_set_1_comp_w_name_defer
-    },
-    {
-        "entity_init_w_set_1_comp_existing_defer",
-        Entity_entity_init_w_set_1_comp_existing_defer
-    },
-    {
-        "entity_init_w_set_1_comp_existing_empty_defer",
-        Entity_entity_init_w_set_1_comp_existing_empty_defer
-    },
-    {
-        "entity_init_w_set_1_comp_1_tag_w_set_defer",
-        Entity_entity_init_w_set_1_comp_1_tag_w_set_defer
-    },
-    {
-        "entity_init_w_set_1_comp_suspend_defer",
-        Entity_entity_init_w_set_1_comp_suspend_defer
     },
     {
         "insert_1_comp",
@@ -4302,22 +4137,6 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_w_parent_w_name",
         Entity_entity_w_parent_w_name
-    },
-    {
-        "entity_w_parent_w_add",
-        Entity_entity_w_parent_w_add
-    },
-    {
-        "entity_w_parent_w_add_w_parent",
-        Entity_entity_w_parent_w_add_w_parent
-    },
-    {
-        "entity_w_parent_w_set",
-        Entity_entity_w_parent_w_set
-    },
-    {
-        "entity_w_parent_w_set_w_parent",
-        Entity_entity_w_parent_w_set_w_parent
     },
     {
         "entity_w_new_id_and_double_dot",
@@ -4612,14 +4431,6 @@ bake_test_case Iter_testcases[] = {
     {
         "rule_worker_iter_w_fini",
         Iter_rule_worker_iter_w_fini
-    },
-    {
-        "to_str_before_next",
-        Iter_to_str_before_next
-    },
-    {
-        "to_str",
-        Iter_to_str
     }
 };
 
@@ -4925,42 +4736,6 @@ bake_test_case New_testcases[] = {
     {
         "create_w_explicit_id_2_worlds",
         New_create_w_explicit_id_2_worlds
-    },
-    {
-        "new_w_id_0_w_with",
-        New_new_w_id_0_w_with
-    },
-    {
-        "new_w_id_w_with",
-        New_new_w_id_w_with
-    },
-    {
-        "new_w_type_w_with",
-        New_new_w_type_w_with
-    },
-    {
-        "new_w_id_w_with_w_scope",
-        New_new_w_id_w_with_w_scope
-    },
-    {
-        "new_w_type_w_with_w_scope",
-        New_new_w_type_w_with_w_scope
-    },
-    {
-        "new_w_id_w_with_defer",
-        New_new_w_id_w_with_defer
-    },
-    {
-        "new_w_id_w_with_defer_w_scope",
-        New_new_w_id_w_with_defer_w_scope
-    },
-    {
-        "new_w_type_w_with_defer",
-        New_new_w_type_w_with_defer
-    },
-    {
-        "new_w_type_w_with_defer_w_scope",
-        New_new_w_type_w_with_defer_w_scope
     },
     {
         "new_w_table",
@@ -7911,10 +7686,6 @@ bake_test_case OrderedChildren_testcases[] = {
         OrderedChildren_prefab_w_nested_ordered_children_2
     },
     {
-        "prefab_w_slots",
-        OrderedChildren_prefab_w_slots
-    },
-    {
         "prefab_get_target_after_reorder",
         OrderedChildren_prefab_get_target_after_reorder
     },
@@ -9057,41 +8828,6 @@ bake_test_case Set_testcases[] = {
     }
 };
 
-bake_test_case ReadWrite_testcases[] = {
-    {
-        "read",
-        ReadWrite_read
-    },
-    {
-        "nested_read",
-        ReadWrite_nested_read
-    },
-    {
-        "write",
-        ReadWrite_write
-    },
-    {
-        "nested_write",
-        ReadWrite_nested_write
-    },
-    {
-        "add_while_read",
-        ReadWrite_add_while_read
-    },
-    {
-        "add_while_write",
-        ReadWrite_add_while_write
-    },
-    {
-        "read_from_stage",
-        ReadWrite_read_from_stage
-    },
-    {
-        "write_from_stage",
-        ReadWrite_write_from_stage
-    }
-};
-
 bake_test_case Lookup_testcases[] = {
     {
         "lookup",
@@ -9144,6 +8880,54 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_path_0_parent_w_scope",
         Lookup_lookup_path_0_parent_w_scope
+    },
+    {
+        "lookup_path_name_id",
+        Lookup_lookup_path_name_id
+    },
+    {
+        "lookup_path_name_id_not_in_parent",
+        Lookup_lookup_path_name_id_not_in_parent
+    },
+    {
+        "lookup_path_name_name_id",
+        Lookup_lookup_path_name_name_id
+    },
+    {
+        "lookup_path_name_name_id_not_in_parent",
+        Lookup_lookup_path_name_name_id_not_in_parent
+    },
+    {
+        "lookup_path_name_id_name",
+        Lookup_lookup_path_name_id_name
+    },
+    {
+        "lookup_path_name_id_name_not_in_parent",
+        Lookup_lookup_path_name_id_name_not_in_parent
+    },
+    {
+        "lookup_path_id_name_name",
+        Lookup_lookup_path_id_name_name
+    },
+    {
+        "lookup_path_id_name_name_not_alive",
+        Lookup_lookup_path_id_name_name_not_alive
+    },
+    {
+        "lookup_path_name_id_recycled",
+        Lookup_lookup_path_name_id_recycled
+    },
+    {
+        "lookup_path_name_name_id_recycled",
+        Lookup_lookup_path_name_name_id_recycled
+    },
+    {
+        "lookup_path_name_id_name_recycled",
+        Lookup_lookup_path_name_id_name_recycled
+    },
+    {
+        "lookup_path_id_name_name_recycled",
+        Lookup_lookup_path_id_name_name_recycled
     },
     {
         "lookup_recycled_by_id",
@@ -12674,6 +12458,126 @@ bake_test_case Observer_testcases[] = {
     {
         "propagate_on_set_2_lvls_2_terms",
         Observer_propagate_on_set_2_lvls_2_terms
+    },
+    {
+        "propagate_masked_add_to_grandparent",
+        Observer_propagate_masked_add_to_grandparent
+    },
+    {
+        "propagate_masked_remove_from_grandparent",
+        Observer_propagate_masked_remove_from_grandparent
+    },
+    {
+        "propagate_add_to_grandparent_invoked_for_parent",
+        Observer_propagate_add_to_grandparent_invoked_for_parent
+    },
+    {
+        "propagate_up_add_to_parent_w_child_owned",
+        Observer_propagate_up_add_to_parent_w_child_owned
+    },
+    {
+        "propagate_self_up_add_to_parent_w_child_owned",
+        Observer_propagate_self_up_add_to_parent_w_child_owned
+    },
+    {
+        "propagate_up_remove_from_parent_w_child_owned",
+        Observer_propagate_up_remove_from_parent_w_child_owned
+    },
+    {
+        "propagate_self_up_remove_from_parent_w_child_owned",
+        Observer_propagate_self_up_remove_from_parent_w_child_owned
+    },
+    {
+        "propagate_remove_from_parent_w_grandparent_owned",
+        Observer_propagate_remove_from_parent_w_grandparent_owned
+    },
+    {
+        "propagate_add_to_parent_w_grandparent_owned",
+        Observer_propagate_add_to_parent_w_grandparent_owned
+    },
+    {
+        "propagate_add_to_grandparent",
+        Observer_propagate_add_to_grandparent
+    },
+    {
+        "propagate_remove_from_grandparent",
+        Observer_propagate_remove_from_grandparent
+    },
+    {
+        "propagate_add_to_parent_w_subtree",
+        Observer_propagate_add_to_parent_w_subtree
+    },
+    {
+        "propagate_add_stops_at_owned_table",
+        Observer_propagate_add_stops_at_owned_table
+    },
+    {
+        "propagate_reparent_w_both_parents_owned",
+        Observer_propagate_reparent_w_both_parents_owned
+    },
+    {
+        "propagate_reparent_from_owned_to_empty_parent",
+        Observer_propagate_reparent_from_owned_to_empty_parent
+    },
+    {
+        "propagate_reparent_from_empty_to_owned_parent",
+        Observer_propagate_reparent_from_empty_to_owned_parent
+    },
+    {
+        "propagate_reparent_parent_w_subtree",
+        Observer_propagate_reparent_parent_w_subtree
+    },
+    {
+        "propagate_unparent_w_parent_owned",
+        Observer_propagate_unparent_w_parent_owned
+    },
+    {
+        "propagate_remove_first_wildcard_pair",
+        Observer_propagate_remove_first_wildcard_pair
+    },
+    {
+        "propagate_add_second_wildcard_pair",
+        Observer_propagate_add_second_wildcard_pair
+    },
+    {
+        "propagate_isa_add_to_base",
+        Observer_propagate_isa_add_to_base
+    },
+    {
+        "propagate_isa_remove_from_base",
+        Observer_propagate_isa_remove_from_base
+    },
+    {
+        "propagate_isa_remove_from_base_w_second_base",
+        Observer_propagate_isa_remove_from_base_w_second_base
+    },
+    {
+        "propagate_isa_add_to_second_base",
+        Observer_propagate_isa_add_to_second_base
+    },
+    {
+        "propagate_isa_masked_add_to_base_of_base",
+        Observer_propagate_isa_masked_add_to_base_of_base
+    },
+    {
+        "propagate_isa_add_to_base_of_base",
+        Observer_propagate_isa_add_to_base_of_base
+    },
+    {
+        "propagate_custom_rel_add_to_target",
+        Observer_propagate_custom_rel_add_to_target
+    },
+    {
+        "propagate_custom_rel_remove_from_target",
+        Observer_propagate_custom_rel_remove_from_target
+    },
+    {
+        "propagate_custom_rel_masked_add",
+        Observer_propagate_custom_rel_masked_add
+    },
+    {
+        "propagate_add_to_grandparent_w_parent_inherited",
+        Observer_propagate_add_to_grandparent_w_parent_inherited
     }
 };
 
@@ -12876,10 +12780,6 @@ bake_test_case TriggerOnAdd_testcases[] = {
     {
         "get_sys_context_from_param",
         TriggerOnAdd_get_sys_context_from_param
-    },
-    {
-        "remove_added_component_in_on_add_w_set",
-        TriggerOnAdd_remove_added_component_in_on_add_w_set
     },
     {
         "on_add_in_on_add",
@@ -13102,8 +13002,8 @@ bake_test_case Monitor_testcases[] = {
 
 bake_test_case Prefab_testcases[] = {
     {
-        "enable_prefab_w_isa_variant",
-        Prefab_enable_prefab_w_isa_variant
+        "disable_prefab_w_isa_variant",
+        Prefab_disable_prefab_w_isa_variant
     },
     {
         "new_w_prefab",
@@ -13538,62 +13438,6 @@ bake_test_case Prefab_testcases[] = {
         Prefab_prefab_child_override_w_exclusive_pair
     },
     {
-        "prefab_1_slot",
-        Prefab_prefab_1_slot
-    },
-    {
-        "prefab_2_slots",
-        Prefab_prefab_2_slots
-    },
-    {
-        "prefab_w_nested_slot",
-        Prefab_prefab_w_nested_slot
-    },
-    {
-        "prefab_w_mixed_slots",
-        Prefab_prefab_w_mixed_slots
-    },
-    {
-        "prefab_variant_w_slot",
-        Prefab_prefab_variant_w_slot
-    },
-    {
-        "prefab_variant_w_base_slot",
-        Prefab_prefab_variant_w_base_slot
-    },
-    {
-        "prefab_variant_w_mixed_slots",
-        Prefab_prefab_variant_w_mixed_slots
-    },
-    {
-        "override_slot",
-        Prefab_override_slot
-    },
-    {
-        "2_instances_w_slots_same_table",
-        Prefab_2_instances_w_slots_same_table
-    },
-    {
-        "slot_has_union",
-        Prefab_slot_has_union
-    },
-    {
-        "slot_override",
-        Prefab_slot_override
-    },
-    {
-        "base_slot_override",
-        Prefab_base_slot_override
-    },
-    {
-        "has_slot_after_delete",
-        Prefab_has_slot_after_delete
-    },
-    {
-        "has_slot_after_clear",
-        Prefab_has_slot_after_clear
-    },
-    {
         "override_twice_w_add",
         Prefab_override_twice_w_add
     },
@@ -13638,12 +13482,12 @@ bake_test_case Prefab_testcases[] = {
         Prefab_hierarchy_w_recycled_id
     },
     {
-        "disable_ids",
-        Prefab_disable_ids
+        "disable_prefab",
+        Prefab_disable_prefab
     },
     {
-        "disable_nested_ids",
-        Prefab_disable_nested_ids
+        "disable_nested_prefab",
+        Prefab_disable_nested_prefab
     },
     {
         "prefab_w_children_w_isa_auto_override",
@@ -13828,10 +13672,6 @@ bake_test_case Prefab_testcases[] = {
     {
         "instantiate_w_union_while_defer_suspended",
         Prefab_instantiate_w_union_while_defer_suspended
-    },
-    {
-        "instantiate_w_slot_while_defer_suspended",
-        Prefab_instantiate_w_slot_while_defer_suspended
     },
     {
         "instantiate_w_sparse_component_while_defer_suspended",
@@ -15134,14 +14974,6 @@ bake_test_case Type_testcases[] = {
         Type_type_of_2_tostr_no_id
     },
     {
-        "invalid_entity_type_expression",
-        Type_invalid_entity_type_expression
-    },
-    {
-        "invalid_system_type_expression",
-        Type_invalid_system_type_expression
-    },
-    {
         "get_type",
         Type_get_type
     },
@@ -15204,14 +15036,6 @@ bake_test_case Type_testcases[] = {
     {
         "role_disabled_str",
         Type_role_disabled_str
-    },
-    {
-        "large_type_expr",
-        Type_large_type_expr
-    },
-    {
-        "large_type_expr_limit",
-        Type_large_type_expr_limit
     }
 };
 
@@ -15303,6 +15127,26 @@ bake_test_case Commands_testcases[] = {
     {
         "defer_ensure",
         Commands_defer_ensure
+    },
+    {
+        "defer_ensure_twice",
+        Commands_defer_ensure_twice
+    },
+    {
+        "defer_ensure_twice_w_remove",
+        Commands_defer_ensure_twice_w_remove
+    },
+    {
+        "defer_ensure_after_set",
+        Commands_defer_ensure_after_set
+    },
+    {
+        "defer_ensure_3x_vector_append",
+        Commands_defer_ensure_3x_vector_append
+    },
+    {
+        "defer_ensure_3x_vector_append_existing",
+        Commands_defer_ensure_3x_vector_append_existing
     },
     {
         "defer_ensure_no_modify",
@@ -16202,10 +16046,6 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "lookup_w_scope_after_stage_count_change",
         SingleThreadStaging_lookup_w_scope_after_stage_count_change
-    },
-    {
-        "with_after_stage_count_change",
-        SingleThreadStaging_with_after_stage_count_change
     }
 };
 
@@ -16716,7 +16556,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        152,
+        115,
         Entity_testcases
     },
     {
@@ -16730,7 +16570,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        62,
+        60,
         Iter_testcases
     },
     {
@@ -16751,7 +16591,7 @@ static bake_test_suite suites[] = {
         "New",
         New_setup,
         NULL,
-        29,
+        20,
         New_testcases
     },
     {
@@ -16809,7 +16649,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        49,
+        48,
         OrderedChildren_testcases
     },
     {
@@ -16862,17 +16702,10 @@ static bake_test_suite suites[] = {
         Set_testcases
     },
     {
-        "ReadWrite",
-        NULL,
-        NULL,
-        8,
-        ReadWrite_testcases
-    },
-    {
         "Lookup",
         Lookup_setup,
         NULL,
-        75,
+        87,
         Lookup_testcases
     },
     {
@@ -16914,7 +16747,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        355,
+        385,
         Observer_testcases
     },
     {
@@ -16928,7 +16761,7 @@ static bake_test_suite suites[] = {
         "TriggerOnAdd",
         TriggerOnAdd_setup,
         NULL,
-        30,
+        29,
         TriggerOnAdd_testcases
     },
     {
@@ -16956,7 +16789,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        205,
+        190,
         Prefab_testcases
     },
     {
@@ -16984,21 +16817,21 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        23,
+        19,
         Type_testcases
     },
     {
         "Commands",
         NULL,
         NULL,
-        180,
+        185,
         Commands_testcases
     },
     {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        67,
+        66,
         SingleThreadStaging_testcases
     },
     {
@@ -17046,5 +16879,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("core", argc, argv, suites, 48);
+    return bake_test_run("core", argc, argv, suites, 47);
 }

@@ -35,8 +35,7 @@ error:
 }
 
 /* Get current scope */
-static
-ecs_meta_scope_t* flecs_cursor_get_scope(
+static ecs_meta_scope_t* flecs_cursor_get_scope(
     const ecs_meta_cursor_t *cursor)
 {
     ecs_check(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -46,8 +45,7 @@ error:
 }
 
 /* Restore scope, if dotmember was used */
-static
-ecs_meta_scope_t* flecs_cursor_restore_scope(
+static ecs_meta_scope_t* flecs_cursor_restore_scope(
     ecs_meta_cursor_t *cursor,
     const ecs_meta_scope_t* scope)
 {
@@ -61,8 +59,7 @@ error:
 }
 
 /* Get current operation for scope */
-static
-ecs_meta_op_t* flecs_cursor_get_op(
+static ecs_meta_op_t* flecs_cursor_get_op(
     ecs_meta_scope_t *scope)
 {
     ecs_assert(scope->ops != NULL, ECS_INVALID_OPERATION, 
@@ -70,8 +67,7 @@ ecs_meta_op_t* flecs_cursor_get_op(
     return &scope->ops[scope->ops_cur];
 }
 
-static
-ecs_meta_op_kind_t flecs_cursor_get_collection_kind(
+static ecs_meta_op_kind_t flecs_cursor_get_collection_kind(
     ecs_meta_scope_t *scope)
 {
     /* Can only get collection kind for collection scope */
@@ -88,8 +84,7 @@ ecs_meta_op_kind_t flecs_cursor_get_collection_kind(
     return push->kind;
 }
 
-static
-ecs_size_t flecs_cursor_get_elem_size(
+static ecs_size_t flecs_cursor_get_elem_size(
     ecs_meta_scope_t *scope)
 {
     /* Can only get element size for collection scope */
@@ -104,8 +99,7 @@ ecs_size_t flecs_cursor_get_elem_size(
 }
 
 /* Get pointer to current field/element */
-static
-void* flecs_meta_cursor_get_ptr(
+static void* flecs_meta_cursor_get_ptr(
     const ecs_world_t *world,
     const ecs_meta_cursor_t *cursor,
     ecs_meta_scope_t *scope)
@@ -190,7 +184,10 @@ void* flecs_meta_cursor_get_ptr(
             return NULL;
         }
 
-        ecs_assert(scope->ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!scope->ptr) {
+            return NULL;
+        }
+
         return opaque->ensure_member(scope->ptr, op->name);
     } else {
         ecs_err("invalid operation for opaque type");
@@ -198,8 +195,7 @@ void* flecs_meta_cursor_get_ptr(
     }
 }
 
-static
-int flecs_meta_cursor_push_type(
+static int flecs_meta_cursor_push_type(
     const ecs_world_t *world,
     ecs_meta_scope_t *scope,
     ecs_entity_t type,
@@ -252,8 +248,7 @@ void* ecs_meta_get_ptr(
         flecs_cursor_get_scope(cursor));
 }
 
-static
-int flecs_meta_array_bounds_check(
+static int flecs_meta_array_bounds_check(
     ecs_meta_cursor_t *cursor,
     ecs_meta_scope_t *scope)
 {
@@ -339,8 +334,7 @@ int ecs_meta_elem(
     return 0;
 }
 
-static
-int flecs_meta_cursor_lookup(
+static int flecs_meta_cursor_lookup(
     ecs_meta_cursor_t *cursor,
     const char *value,
     ecs_entity_t *out)
@@ -361,8 +355,7 @@ int flecs_meta_cursor_lookup(
     return 0;
 }
 
-static
-int flecs_meta_cursor_from_str(
+static int flecs_meta_cursor_from_str(
     ecs_meta_cursor_t *cursor,
     ecs_map_t *constants,
     ecs_meta_op_kind_t op_kind,
@@ -571,8 +564,7 @@ error:
     return -1;
 }
 
-static
-int flecs_meta_cursor_parse_map_key(
+static int flecs_meta_cursor_parse_map_key(
     ecs_meta_cursor_t *cursor,
     const ecs_meta_op_t *op,
     const char *value,
@@ -614,8 +606,7 @@ int flecs_meta_cursor_parse_map_key(
     return 0;
 }
 
-static
-int flecs_meta_map_ensure_key(
+static int flecs_meta_map_ensure_key(
     ecs_meta_cursor_t *cursor,
     ecs_meta_scope_t *scope,
     ecs_map_key_t key)
@@ -652,8 +643,7 @@ int flecs_meta_map_ensure_key(
     return 0;
 }
 
-static
-int flecs_meta_map_member(
+static int flecs_meta_map_member(
     ecs_meta_cursor_t *cursor,
     ecs_meta_scope_t *scope,
     const char *name)
@@ -676,8 +666,7 @@ int flecs_meta_map_member(
     return flecs_meta_map_ensure_key(cursor, scope, key);
 }
 
-static
-bool flecs_meta_op_is_value(
+static bool flecs_meta_op_is_value(
     const ecs_meta_op_t *op)
 {
     if (op->kind == EcsOpPushValue) {
@@ -689,8 +678,7 @@ bool flecs_meta_op_is_value(
     return false;
 }
 
-static
-void* flecs_meta_cursor_value_ensure(
+static void* flecs_meta_cursor_value_ensure(
     ecs_meta_cursor_t *cursor,
     void *ptr,
     ecs_entity_t type)
@@ -708,8 +696,7 @@ void* flecs_meta_cursor_value_ensure(
     return v->ptr;
 }
 
-static
-int flecs_meta_value_member(
+static int flecs_meta_value_member(
     ecs_meta_cursor_t *cursor,
     ecs_meta_scope_t *scope,
     const char *name,
@@ -750,8 +737,7 @@ int flecs_meta_value_member(
     return 0;
 }
 
-static
-int flecs_meta_member(
+static int flecs_meta_member(
     ecs_meta_cursor_t *cursor,
     const char *name,
     bool try)
@@ -854,8 +840,7 @@ error:
     return -1;
 }
 
-static
-const char* flecs_meta_parse_member(
+static const char* flecs_meta_parse_member(
     const char *start,
     char *token_out)
 {
@@ -878,8 +863,7 @@ const char* flecs_meta_parse_member(
     return ptr;
 }
 
-static
-const char* flecs_meta_parse_elem(
+static const char* flecs_meta_parse_elem(
     const char *start,
     int32_t *elem_out)
 {
@@ -917,8 +901,7 @@ const char* flecs_meta_parse_elem(
     return ptr + 1;
 }
 
-static
-int flecs_meta_dotmember(
+static int flecs_meta_dotmember(
     ecs_meta_cursor_t *cursor,
     const char *name,
     bool try)
@@ -1092,6 +1075,10 @@ int ecs_meta_push(
         next_scope->is_empty_scope = true;
         next_scope->is_moved_scope = false;
         scope->elem = 0;
+    }
+
+    if (next_scope->opaque && !cursor->scope[0].ptr) {
+        ptr = NULL;
     }
 
     if (op->kind == EcsOpPushValue) {
@@ -1487,8 +1474,7 @@ case EcsOpBool:\
     flecs_meta_set_t(ecs_bool_t, dst, value != 0);\
     break
 
-static
-void flecs_meta_conversion_error(
+static void flecs_meta_conversion_error(
     ecs_meta_cursor_t *cursor,
     ecs_meta_op_t *op,
     const char *from)
@@ -2530,8 +2516,7 @@ error:
     return 0;
 }
 
-static
-double flecs_meta_to_float(
+static double flecs_meta_to_float(
     ecs_meta_op_kind_t kind,
     const void *ptr)
 {

@@ -3,8 +3,10 @@
 void Plan_reordered_plan_1(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
     ECS_TAG(world, Rel);
 
     ecs_query_t *r = ecs_query(world, {
@@ -38,8 +40,10 @@ void Plan_reordered_plan_1(void) {
 void Plan_reordered_plan_2(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
     ECS_TAG(world, Rel);
 
     ecs_query_t *r = ecs_query(world, {
@@ -76,8 +80,10 @@ void Plan_reordered_plan_2(void) {
 void Plan_reordered_plan_1_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo, ChildOf($this, $p, $gp, $ggp), Bar($ggp)"
@@ -110,8 +116,10 @@ void Plan_reordered_plan_1_childof(void) {
 void Plan_reordered_plan_2_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo($ggp), ChildOf($this, $p, $gp, $ggp), Bar($this)"
@@ -330,8 +338,10 @@ void Plan_reordered_plan_7(void) {
 void Plan_1_trivial_plan(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(self)"
@@ -353,8 +363,10 @@ void Plan_1_trivial_plan(void) {
 void Plan_2_trivial_plan(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(self), Bar(self)"
@@ -425,8 +437,10 @@ void Plan_3_trivial_plan_w_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -450,8 +464,10 @@ void Plan_3_trivial_plan_w_pair(void) {
 void Plan_3_trivial_plan_w_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
     ECS_TAG(world, Rel);
 
     ecs_entity(world, { .name = "p" });
@@ -483,8 +499,10 @@ void Plan_3_trivial_plan_w_wildcard(void) {
 void Plan_3_trivial_plan_w_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
     ECS_TAG(world, Rel);
 
     ecs_entity(world, { .name = "p" });
@@ -516,8 +534,10 @@ void Plan_3_trivial_plan_w_any(void) {
 void Plan_3_trivial_plan_w_pair_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -547,8 +567,10 @@ void Plan_3_trivial_plan_w_pair_childof(void) {
 void Plan_3_trivial_plan_w_wildcard_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -579,8 +601,10 @@ void Plan_3_trivial_plan_w_wildcard_childof(void) {
 void Plan_3_trivial_plan_w_any_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -816,8 +840,10 @@ void Plan_3_trivial_plan_w_any_component_childof(void) {
 void Plan_3_trivial_plan_w_any_cached(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -855,8 +881,12 @@ void Plan_3_trivial_plan_w_any_cached(void) {
 void Plan_3_trivial_plan_w_any_cached_no_expr(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_entity_t ecs_id(Bar) = Bar;
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -952,7 +982,8 @@ void Plan_2_trivial_component_w_none(void) {
 void Plan_2_trivial_plan_w_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
     ECS_TAG(world, Rel);
 
     ecs_query_t *r = ecs_query(world, {
@@ -982,7 +1013,8 @@ void Plan_2_trivial_plan_w_wildcard(void) {
 void Plan_2_trivial_plan_w_wildcard_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(self), ChildOf(self, *)"
@@ -1012,8 +1044,10 @@ void Plan_2_trivial_plan_w_wildcard_childof(void) {
 void Plan_this_before_fixed_src(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1045,8 +1079,10 @@ void Plan_this_before_fixed_src(void) {
 void Plan_fixed_src_before_this(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1078,8 +1114,10 @@ void Plan_fixed_src_before_this(void) {
 void Plan_var_before_fixed_src(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1113,8 +1151,10 @@ void Plan_var_before_fixed_src(void) {
 void Plan_fixed_src_before_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1148,8 +1188,10 @@ void Plan_fixed_src_before_var(void) {
 void Plan_this_before_fixed_src_w_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1183,8 +1225,10 @@ void Plan_this_before_fixed_src_w_not(void) {
 void Plan_this_before_fixed_src_w_first_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1217,8 +1261,10 @@ void Plan_this_before_fixed_src_w_first_var(void) {
 void Plan_this_before_fixed_src_w_first_var_w_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1254,8 +1300,10 @@ void Plan_this_before_fixed_src_w_first_var_w_not(void) {
 void Plan_this_before_fixed_src_w_second_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1288,8 +1336,10 @@ void Plan_this_before_fixed_src_w_second_var(void) {
 void Plan_this_before_fixed_src_w_second_var_w_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Bar = ecs_entity(world, { .name = "Bar" });
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -3660,7 +3710,8 @@ void Plan_up_w_custom_rel(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ Foo, .src.id = EcsUp, .trav = Rel }},
@@ -3689,7 +3740,8 @@ void Plan_up_w_custom_rel_cached(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ Foo, .src.id = EcsUp, .trav = Rel }},
@@ -3730,7 +3782,8 @@ void Plan_self_up_w_custom_rel(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ Foo, .src.id = EcsSelf | EcsUp, .trav = Rel }},
@@ -3759,7 +3812,8 @@ void Plan_self_up_w_custom_rel_cached(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ Foo, .src.id = EcsSelf | EcsUp, .trav = Rel }},

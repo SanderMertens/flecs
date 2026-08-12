@@ -5,9 +5,10 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 /* Find tables with requested component that have traversable entities. */
-static
-bool flecs_query_up_select_table(
+static bool flecs_query_up_select_table(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -62,13 +63,13 @@ bool flecs_query_up_select_table(
     impl->row = range.offset;
     impl->end = range.offset + range.count;
     impl->matched = it->ids[op->field_index];
+    impl->start_down_walk = true;
 
     return true;
 }
 
 /* Find next traversable entity in table. */
-static
-ecs_trav_down_t* flecs_query_up_find_next_traversable(
+static ecs_trav_down_t* flecs_query_up_find_next_traversable(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_up_select_trav_kind_t trav_kind)
@@ -185,6 +186,8 @@ bool flecs_query_up_select(
 
         impl->down = NULL;
         impl->cache_elem = 0;
+        impl->last_down_table = NULL;
+        impl->start_down_walk = false;
     }
 
     /* Get last used entry from down traversal cache. Cache entries in the down
@@ -236,6 +239,17 @@ next_down_entry:
         } else {
             /* Evaluate next entity in table */
             impl->row ++;
+        }
+
+        if (impl->start_down_walk) {
+            impl->start_down_walk = false;
+
+            if (table == impl->last_down_table) {
+                impl->table = NULL;
+                continue;
+            }
+
+            impl->last_down_table = table;
         }
 
         /* Get down cache entry for next traversable entity in table */
@@ -486,3 +500,5 @@ bool flecs_query_self_up(
             FlecsQueryUpSelectSelfUp, FlecsQueryUpSelectDefault);
     }
 }
+
+#endif // FLECS_QUERY_PLANS

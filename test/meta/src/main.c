@@ -186,6 +186,8 @@ void StructTypes_overlapping_value_error_range(void);
 void StructTypes_overlapping_value_warning_range(void);
 void StructTypes_struct_w_16_alignment(void);
 void StructTypes_struct_w_use_offset(void);
+void StructTypes_struct_w_use_offset_w_member_entities(void);
+void StructTypes_struct_w_use_offset_zero_w_member_entities(void);
 void StructTypes_direct_cycle(void);
 void StructTypes_indirect_cycle(void);
 void StructTypes_use_before_registering_reflection(void);
@@ -927,6 +929,9 @@ void SerializeToJson_value_vector(void);
 void SerializeToJson_value_map(void);
 void SerializeToJson_struct_w_value(void);
 void SerializeToJson_value_roundtrip(void);
+void SerializeToJson_ecs_struct_1_member(void);
+void SerializeToJson_ecs_struct_2_members(void);
+void SerializeToJson_ecs_struct_3_members(void);
 
 // Testsuite 'SerializeEntityToJson'
 void SerializeEntityToJson_serialize_empty(void);
@@ -2122,6 +2127,14 @@ bake_test_case StructTypes_testcases[] = {
     {
         "struct_w_use_offset",
         StructTypes_struct_w_use_offset
+    },
+    {
+        "struct_w_use_offset_w_member_entities",
+        StructTypes_struct_w_use_offset_w_member_entities
+    },
+    {
+        "struct_w_use_offset_zero_w_member_entities",
+        StructTypes_struct_w_use_offset_zero_w_member_entities
     },
     {
         "direct_cycle",
@@ -5041,6 +5054,18 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "value_roundtrip",
         SerializeToJson_value_roundtrip
+    },
+    {
+        "ecs_struct_1_member",
+        SerializeToJson_ecs_struct_1_member
+    },
+    {
+        "ecs_struct_2_members",
+        SerializeToJson_ecs_struct_2_members
+    },
+    {
+        "ecs_struct_3_members",
+        SerializeToJson_ecs_struct_3_members
     }
 };
 
@@ -7046,7 +7071,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        36,
+        38,
         StructTypes_testcases
     },
     {
@@ -7109,7 +7134,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        91,
+        94,
         SerializeToJson_testcases
     },
     {

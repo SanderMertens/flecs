@@ -4,8 +4,7 @@ void SystemManual_setup(void) {
     ecs_log_set_level(-3);
 }
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = NULL;
     Mass *m = NULL;
@@ -42,9 +41,12 @@ void SystemManual_1_type_1_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, Iter, 0, Position);
 
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
     
 
     Probe ctx = {0};

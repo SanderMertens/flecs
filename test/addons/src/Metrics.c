@@ -835,10 +835,15 @@ void Metrics_oneof_gauge_3_entities(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
-    ECS_ENTITY(world, Color, OneOf, Exclusive);
-    ECS_ENTITY(world, Red,   (ChildOf, Color));
-    ECS_ENTITY(world, Green, (ChildOf, Color));
-    ECS_ENTITY(world, Blue,  (ChildOf, Color));
+    ecs_entity_t Color = ecs_entity(world, { .name = "Color" });
+    ecs_add_id(world, Color, EcsOneOf);
+    ecs_add_id(world, Color, EcsExclusive);
+    ecs_entity_t Red = ecs_entity(world, { .name = "Red" });
+    ecs_add_pair(world, Red, EcsChildOf, Color);
+    ecs_entity_t Green = ecs_entity(world, { .name = "Green" });
+    ecs_add_pair(world, Green, EcsChildOf, Color);
+    ecs_entity_t Blue = ecs_entity(world, { .name = "Blue" });
+    ecs_add_pair(world, Blue, EcsChildOf, Color);
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.color" }),
@@ -909,10 +914,15 @@ void Metrics_oneof_gauge_3_entities_1_existing(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
-    ECS_ENTITY(world, Color, OneOf, Exclusive);
-    ECS_ENTITY(world, Red,   (ChildOf, Color));
-    ECS_ENTITY(world, Green, (ChildOf, Color));
-    ECS_ENTITY(world, Blue,  (ChildOf, Color));
+    ecs_entity_t Color = ecs_entity(world, { .name = "Color" });
+    ecs_add_id(world, Color, EcsOneOf);
+    ecs_add_id(world, Color, EcsExclusive);
+    ecs_entity_t Red = ecs_entity(world, { .name = "Red" });
+    ecs_add_pair(world, Red, EcsChildOf, Color);
+    ecs_entity_t Green = ecs_entity(world, { .name = "Green" });
+    ecs_add_pair(world, Green, EcsChildOf, Color);
+    ecs_entity_t Blue = ecs_entity(world, { .name = "Blue" });
+    ecs_add_pair(world, Blue, EcsChildOf, Color);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, Color, Red);
 
@@ -984,10 +994,15 @@ void Metrics_oneof_gauge_w_remove(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
-    ECS_ENTITY(world, Color, OneOf, Exclusive);
-    ECS_ENTITY(world, Red,   (ChildOf, Color));
-    ECS_ENTITY(world, Green, (ChildOf, Color));
-    ECS_ENTITY(world, Blue,  (ChildOf, Color));
+    ecs_entity_t Color = ecs_entity(world, { .name = "Color" });
+    ecs_add_id(world, Color, EcsOneOf);
+    ecs_add_id(world, Color, EcsExclusive);
+    ecs_entity_t Red = ecs_entity(world, { .name = "Red" });
+    ecs_add_pair(world, Red, EcsChildOf, Color);
+    ecs_entity_t Green = ecs_entity(world, { .name = "Green" });
+    ecs_add_pair(world, Green, EcsChildOf, Color);
+    ecs_entity_t Blue = ecs_entity(world, { .name = "Blue" });
+    ecs_add_pair(world, Blue, EcsChildOf, Color);
     ECS_TAG(world, Foo);
 
     ecs_entity_t m = ecs_metric(world, {
@@ -1096,10 +1111,15 @@ void Metrics_oneof_gauge_w_clear(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
-    ECS_ENTITY(world, Color, OneOf, Exclusive);
-    ECS_ENTITY(world, Red,   (ChildOf, Color));
-    ECS_ENTITY(world, Green, (ChildOf, Color));
-    ECS_ENTITY(world, Blue,  (ChildOf, Color));
+    ecs_entity_t Color = ecs_entity(world, { .name = "Color" });
+    ecs_add_id(world, Color, EcsOneOf);
+    ecs_add_id(world, Color, EcsExclusive);
+    ecs_entity_t Red = ecs_entity(world, { .name = "Red" });
+    ecs_add_pair(world, Red, EcsChildOf, Color);
+    ecs_entity_t Green = ecs_entity(world, { .name = "Green" });
+    ecs_add_pair(world, Green, EcsChildOf, Color);
+    ecs_entity_t Blue = ecs_entity(world, { .name = "Blue" });
+    ecs_add_pair(world, Blue, EcsChildOf, Color);
     ECS_TAG(world, Foo);
 
     ecs_entity_t m = ecs_metric(world, {
@@ -1208,10 +1228,15 @@ void Metrics_oneof_gauge_w_delete(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
-    ECS_ENTITY(world, Color, OneOf, Exclusive);
-    ECS_ENTITY(world, Red,   (ChildOf, Color));
-    ECS_ENTITY(world, Green, (ChildOf, Color));
-    ECS_ENTITY(world, Blue,  (ChildOf, Color));
+    ecs_entity_t Color = ecs_entity(world, { .name = "Color" });
+    ecs_add_id(world, Color, EcsOneOf);
+    ecs_add_id(world, Color, EcsExclusive);
+    ecs_entity_t Red = ecs_entity(world, { .name = "Red" });
+    ecs_add_pair(world, Red, EcsChildOf, Color);
+    ecs_entity_t Green = ecs_entity(world, { .name = "Green" });
+    ecs_add_pair(world, Green, EcsChildOf, Color);
+    ecs_entity_t Blue = ecs_entity(world, { .name = "Blue" });
+    ecs_add_pair(world, Blue, EcsChildOf, Color);
     ECS_TAG(world, Foo);
 
     ecs_entity_t m = ecs_metric(world, {
@@ -1320,10 +1345,15 @@ void Metrics_oneof_to_snake_case(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
-    ECS_ENTITY(world, Color, OneOf, Exclusive);
-    ECS_ENTITY(world, RedColor,    (ChildOf, Color));
-    ECS_ENTITY(world, Green_Color, (ChildOf, Color));
-    ECS_ENTITY(world, Blue,        (ChildOf, Color));
+    ecs_entity_t Color = ecs_entity(world, { .name = "Color" });
+    ecs_add_id(world, Color, EcsOneOf);
+    ecs_add_id(world, Color, EcsExclusive);
+    ecs_entity_t RedColor = ecs_entity(world, { .name = "RedColor" });
+    ecs_add_pair(world, RedColor, EcsChildOf, Color);
+    ecs_entity_t Green_Color = ecs_entity(world, { .name = "Green_Color" });
+    ecs_add_pair(world, Green_Color, EcsChildOf, Color);
+    ecs_entity_t Blue = ecs_entity(world, { .name = "Blue" });
+    ecs_add_pair(world, Blue, EcsChildOf, Color);
     ECS_TAG(world, Foo);
 
     ecs_entity_t m = ecs_metric(world, {
@@ -1534,10 +1564,15 @@ void Metrics_oneof_counter(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
-    ECS_ENTITY(world, Color, OneOf, Exclusive);
-    ECS_ENTITY(world, Red,   (ChildOf, Color));
-    ECS_ENTITY(world, Green, (ChildOf, Color));
-    ECS_ENTITY(world, Blue,  (ChildOf, Color));
+    ecs_entity_t Color = ecs_entity(world, { .name = "Color" });
+    ecs_add_id(world, Color, EcsOneOf);
+    ecs_add_id(world, Color, EcsExclusive);
+    ecs_entity_t Red = ecs_entity(world, { .name = "Red" });
+    ecs_add_pair(world, Red, EcsChildOf, Color);
+    ecs_entity_t Green = ecs_entity(world, { .name = "Green" });
+    ecs_add_pair(world, Green, EcsChildOf, Color);
+    ecs_entity_t Blue = ecs_entity(world, { .name = "Blue" });
+    ecs_add_pair(world, Blue, EcsChildOf, Color);
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.color" }),

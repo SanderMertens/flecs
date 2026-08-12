@@ -5,8 +5,43 @@
 
 #include "../../private_api.h"
 
-static
-bool flecs_query_var_is_anonymous(
+static bool flecs_query_needs_plan(
+    const ecs_query_impl_t *query)
+{
+    ecs_flags32_t flags = query->pub.flags;
+
+    if (query->cache) {
+        if (flags & EcsQueryIsCacheable) {
+            if (!(flags & EcsQueryCacheWithFilter)) {
+                return false;
+            }
+        }
+    } else {
+        ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
+        if ((flags & trivial_flags) == trivial_flags) {
+            if (!(flags & EcsQueryMatchWildcards)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+#ifdef FLECS_QUERY_PLANS
+static void flecs_query_compile_trivial(
+    ecs_query_impl_t *query)
+{
+    /* Initialize space for $this variable */
+    query->pub.var_count = 1;
+    query->var_count = 1;
+    query->var_size = 1;
+    query->vars = &flecs_this_array;
+    query->pub.vars = &flecs_this_name_array;
+    query->pub.flags |= EcsQueryHasTableThisVar;
+}
+
+static bool flecs_query_var_is_anonymous(
     const ecs_query_impl_t *query,
     ecs_var_id_t var_id)
 {
@@ -68,7 +103,7 @@ ecs_var_id_t flecs_query_add_var(
         var = ecs_vec_append_t(NULL, vars, ecs_query_var_t);
         result = var->id = flecs_itovar(ecs_vec_count(vars));
     } else {
-        ecs_dbg_assert(query->var_count < query->var_size, 
+        ecs_dbg_assert(query->var_count < query->var_size,
             ECS_INTERNAL_ERROR, NULL);
         var = &query->vars[query->var_count];
         result = var->id = flecs_itovar(query->var_count);
@@ -97,8 +132,7 @@ ecs_var_id_t flecs_query_add_var(
     return result;
 }
 
-static
-ecs_var_id_t flecs_query_add_var_for_term_id(
+static ecs_var_id_t flecs_query_add_var_for_term_id(
     ecs_query_impl_t *query,
     ecs_term_ref_t *term_id,
     ecs_vec_t *vars,
@@ -125,8 +159,7 @@ ecs_var_id_t flecs_query_add_var_for_term_id(
  * - ensure variables created inside scopes are anonymous
  * - place anonymous variables after public variables in vars array
  */
-static
-int flecs_query_discover_vars(
+static int flecs_query_discover_vars(
     ecs_stage_t *stage,
     ecs_query_impl_t *query)
 {
@@ -455,8 +488,7 @@ error:
     return -1;
 }
 
-static
-bool flecs_query_var_is_unknown(
+static bool flecs_query_var_is_unknown(
     ecs_query_impl_t *query,
     ecs_var_id_t var_id,
     ecs_query_compile_ctx_t *ctx)
@@ -475,8 +507,7 @@ bool flecs_query_var_is_unknown(
 
 /* Returns whether term is unknown. A term is unknown when it has variable
  * elements (first, second, src) that are all unknown. */
-static
-bool flecs_query_term_is_unknown(
+static bool flecs_query_term_is_unknown(
     ecs_query_impl_t *query, 
     ecs_term_t *term, 
     ecs_query_compile_ctx_t *ctx) 
@@ -522,8 +553,7 @@ bool flecs_query_term_is_unknown(
 /* Find the next known term from specified offset. This function is used to find
  * a term that can be evaluated before a term that is unknown. Evaluating known
  * before unknown terms can significantly decrease the search space. */
-static
-int32_t flecs_query_term_next_known(
+static int32_t flecs_query_term_next_known(
     ecs_query_impl_t *query, 
     ecs_query_compile_ctx_t *ctx,
     int32_t offset,
@@ -561,8 +591,7 @@ int32_t flecs_query_term_next_known(
 
 /* If the first part of a query contains more than one trivial term, insert a
  * special instruction which batch-evaluates multiple terms. */
-static
-void flecs_query_insert_trivial_search(
+static void flecs_query_insert_trivial_search(
     ecs_query_impl_t *query,
     ecs_flags64_t *compiled,
     ecs_query_compile_ctx_t *ctx)
@@ -649,8 +678,7 @@ void flecs_query_insert_trivial_search(
     }
 }
 
-static
-void flecs_query_insert_cache_search(
+static void flecs_query_insert_cache_search(
     ecs_query_impl_t *query,
     ecs_flags64_t *compiled,
     ecs_query_compile_ctx_t *ctx)
@@ -663,10 +691,13 @@ void flecs_query_insert_cache_search(
     int32_t childof_term = -1;
     bool has_childof_trav = false;
 
+#ifdef FLECS_CACHED_QUERIES
     if (q->cache_kind == EcsQueryCacheAll) {
         /* If all terms are cacheable, make sure no other terms are compiled */
         *compiled = 0xFFFFFFFFFFFFFFFF;
-    } else if (q->cache_kind == EcsQueryCacheAuto) {
+    } else
+#endif
+    if (q->cache_kind == EcsQueryCacheAuto) {
         /* The query is partially cacheable */
         ecs_term_t *terms = q->terms;
         int32_t i, count = q->term_count;
@@ -740,23 +771,20 @@ void flecs_query_insert_cache_search(
     }
 }
 
-static
-bool flecs_term_ref_match_multiple(
+static bool flecs_term_ref_match_multiple(
     ecs_term_ref_t *ref)
 {
     return (ref->id & EcsIsVariable) && (ECS_TERM_REF_ID(ref) != EcsAny);
 }
 
-static
-bool flecs_term_match_multiple(
+static bool flecs_term_match_multiple(
     ecs_term_t *term)
 {
     return flecs_term_ref_match_multiple(&term->first) ||
         flecs_term_ref_match_multiple(&term->second);
 }
 
-static
-int flecs_query_insert_toggle(
+static int flecs_query_insert_toggle(
     ecs_query_impl_t *impl,
     ecs_query_compile_ctx_t *ctx)
 {
@@ -862,8 +890,7 @@ int flecs_query_insert_toggle(
     return 0;
 }
 
-static
-int flecs_query_insert_fixed_src_terms(
+static int flecs_query_insert_fixed_src_terms(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
     ecs_flags64_t *compiled,
@@ -921,32 +948,8 @@ int flecs_query_compile(
 {
     /* Compile query to operations. Only necessary for non-trivial queries, as
      * trivial queries use trivial iterators that don't use query ops. */
-    bool needs_plan = true;
-    ecs_flags32_t flags = query->pub.flags;
-    
-    if (query->cache) {
-        if (flags & EcsQueryIsCacheable) {
-            if (!(flags & EcsQueryCacheWithFilter)) {
-                needs_plan = false;
-            }
-        }
-    } else {
-        ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
-        if ((flags & trivial_flags) == trivial_flags) {
-            if (!(flags & EcsQueryMatchWildcards)) {
-                needs_plan = false;
-            }
-        }
-    }
-
-    if (!needs_plan) {
-        /* Initialize space for $this variable */
-        query->pub.var_count = 1;
-        query->var_count = 1;
-        query->var_size = 1;
-        query->vars = &flecs_this_array;
-        query->pub.vars = &flecs_this_name_array;
-        query->pub.flags |= EcsQueryHasTableThisVar;
+    if (!flecs_query_needs_plan(query)) {
+        flecs_query_compile_trivial(query);
         return 0;
     }
 
@@ -981,7 +984,10 @@ int flecs_query_compile(
      * insert instruction that initializes ecs_iter_t::ids. This allows for the
      * insertion of simpler instructions later on. 
      * If the query is entirely cacheable, ids are populated by the cache. */
-    if (q->cache_kind != EcsQueryCacheAll) {
+#ifdef FLECS_CACHED_QUERIES
+    if (q->cache_kind != EcsQueryCacheAll)
+#endif
+    {
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &terms[i];
             if (flecs_term_is_fixed_id(q, term) || 
@@ -1206,3 +1212,22 @@ int flecs_query_compile(
 
     return 0;
 }
+
+#else
+
+int flecs_query_compile(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_query_impl_t *query)
+{
+    (void)world; (void)stage;
+    (void)query;
+    (void)flecs_query_needs_plan;
+    ecs_check(!flecs_query_needs_plan(query), ECS_UNSUPPORTED,
+        "query uses features that require the FLECS_QUERY_PLANS addon");
+    return 0;
+error:
+    return -1;
+}
+
+#endif

@@ -5,8 +5,9 @@
 
 #include "../../private_api.h"
 
-static
-const char* flecs_query_name_arg(
+#ifdef FLECS_QUERY_PLANS
+
+static const char* flecs_query_name_arg(
     const ecs_query_op_t *op,
     ecs_query_run_ctx_t *ctx)
 {
@@ -15,8 +16,7 @@ const char* flecs_query_name_arg(
     return term->second.name;
 }
 
-static
-bool flecs_query_match_substr_i(
+static bool flecs_query_match_substr_i(
     const char *name,
     const char *match)
 {
@@ -40,8 +40,7 @@ bool flecs_query_match_substr_i(
     return false;
 }
 
-static
-bool flecs_query_compare_range(
+static bool flecs_query_compare_range(
     const ecs_table_range_t *l,
     const ecs_table_range_t *r)
 {
@@ -65,8 +64,7 @@ bool flecs_query_compare_range(
     return true;
 }
 
-static
-bool flecs_query_pred_eq_w_range(
+static bool flecs_query_pred_eq_w_range(
     const ecs_query_op_t *op,
     bool redo,
     ecs_query_run_ctx_t *ctx,
@@ -131,8 +129,7 @@ bool flecs_query_pred_eq_name(
     return flecs_query_pred_eq_w_range(op, redo, ctx, r);
 }
 
-static
-bool flecs_query_pred_neq_w_range(
+static bool flecs_query_pred_neq_w_range(
     const ecs_query_op_t *op,
     bool redo,
     ecs_query_run_ctx_t *ctx,
@@ -217,8 +214,7 @@ bool flecs_query_pred_neq_w_range(
     }
 }
 
-static
-bool flecs_query_pred_match(
+static bool flecs_query_pred_match(
     const ecs_query_op_t *op,
     bool redo,
     ecs_query_run_ctx_t *ctx,
@@ -340,3 +336,5 @@ bool flecs_query_pred_neq_name(
     ecs_table_range_t r = flecs_range_from_entity(ctx->world, e);
     return flecs_query_pred_neq_w_range(op, redo, ctx, r);
 }
+
+#endif // FLECS_QUERY_PLANS

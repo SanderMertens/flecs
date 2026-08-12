@@ -3,14 +3,16 @@
 void Cascade_existing_isa_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t ecs_id(Tag) = Tag;
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
     ecs_entity_t e0 = ecs_new_w(world, Tag);
-    ecs_entity_t e1 = ecs_entity(world, { .add = ecs_ids( ecs_pair(EcsIsA, e0)) });
-    ecs_entity_t e2 = ecs_entity(world, { .add = ecs_ids( ecs_pair(EcsIsA, e1)) });
-    ecs_entity_t e3 = ecs_entity(world, { .add = ecs_ids( ecs_pair(EcsIsA, e2)) });
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, e0);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, e2);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Tag(cascade IsA)",
@@ -47,7 +49,9 @@ void Cascade_existing_isa_cascade(void) {
 void Cascade_new_isa_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t ecs_id(Tag) = Tag;
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -58,9 +62,9 @@ void Cascade_new_isa_cascade(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Tag);
-    ecs_entity_t e1 = ecs_entity(world, { .add = ecs_ids( ecs_pair(EcsIsA, e0)) });
-    ecs_entity_t e2 = ecs_entity(world, { .add = ecs_ids( ecs_pair(EcsIsA, e1)) });
-    ecs_entity_t e3 = ecs_entity(world, { .add = ecs_ids( ecs_pair(EcsIsA, e2)) });
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, e0);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, e2);
 
     ecs_add_id(world, e2, Foo); /* mix up order */
     ecs_add_id(world, e1, Bar);
@@ -178,14 +182,15 @@ void Cascade_existing_custom_rel_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
     ecs_entity_t e0 = ecs_new_w(world, Tag);
-    ecs_entity_t e1 = ecs_entity(world, { .add = ecs_ids( ecs_pair(Rel, e0)) });
-    ecs_entity_t e2 = ecs_entity(world, { .add = ecs_ids( ecs_pair(Rel, e1)) });
-    ecs_entity_t e3 = ecs_entity(world, { .add = ecs_ids( ecs_pair(Rel, e2)) });
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, e0);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, e2);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Tag(cascade Rel)",
@@ -222,7 +227,8 @@ void Cascade_new_custom_rel_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -233,9 +239,9 @@ void Cascade_new_custom_rel_cascade(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Tag);
-    ecs_entity_t e1 = ecs_entity(world, { .add = ecs_ids( ecs_pair(Rel, e0)) });
-    ecs_entity_t e2 = ecs_entity(world, { .add = ecs_ids( ecs_pair(Rel, e1)) });
-    ecs_entity_t e3 = ecs_entity(world, { .add = ecs_ids( ecs_pair(Rel, e2)) });
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, e0);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, e2);
 
     ecs_add_id(world, e2, Foo); /* mix up order */
     ecs_add_id(world, e1, Bar);
@@ -266,7 +272,8 @@ void Cascade_cascade_w_2_depths(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -314,7 +321,8 @@ void Cascade_cascade_w_3_depths(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -362,7 +370,8 @@ void Cascade_cascade_w_2_depths_desc(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -410,7 +419,8 @@ void Cascade_cascade_w_3_depths_desc(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -559,7 +569,8 @@ void Cascade_cascade_rematch_2_lvls(void) {
 void Cascade_cascade_rematch_2_lvls_2_relations(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, R, Traversable);
+    ecs_entity_t R = ecs_entity(world, { .name = "R" });
+    ecs_add_id(world, R, EcsTraversable);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e_0 = ecs_insert(world, ecs_value(Position, {10, 20}));
@@ -616,7 +627,8 @@ void Cascade_cascade_rematch_2_lvls_2_relations(void) {
 void Cascade_cascade_topological(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, R, Traversable);
+    ecs_entity_t R = ecs_entity(world, { .name = "R" });
+    ecs_add_id(world, R, EcsTraversable);
     ECS_TAG(world, Tag);
 
     ecs_entity_t e1 = ecs_new_w(world, Tag);
@@ -758,7 +770,8 @@ void Cascade_cascade_desc_rematch_2_lvls(void) {
 void Cascade_cascade_desc_rematch_2_lvls_2_relations(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, R, Traversable);
+    ecs_entity_t R = ecs_entity(world, { .name = "R" });
+    ecs_add_id(world, R, EcsTraversable);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e_0 = ecs_insert(world, ecs_value(Position, {10, 20}));
@@ -815,7 +828,8 @@ void Cascade_cascade_desc_rematch_2_lvls_2_relations(void) {
 void Cascade_cascade_desc_topological(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, R, Traversable);
+    ecs_entity_t R = ecs_entity(world, { .name = "R" });
+    ecs_add_id(world, R, EcsTraversable);
     ECS_TAG(world, Tag);
 
     ecs_entity_t e1 = ecs_new_w(world, Tag);
@@ -1256,7 +1270,8 @@ void Cascade_nested_target_deletion(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{
@@ -2039,6 +2054,221 @@ void Cascade_cascade_in_or_chain(void) {
     });
 
     test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Cascade_rematch_after_depth_only_change(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t m1 = ecs_new(world);
+    ecs_entity_t m2 = ecs_new_w_pair(world, EcsChildOf, m1);
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {1, 2}));
+    ecs_add_pair(world, e1, EcsChildOf, m1);
+
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {3, 4}));
+    ecs_add_pair(world, e2, EcsChildOf, m2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, ?Position(cascade)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove_pair(world, m2, EcsChildOf, m1);
+    ecs_add_pair(world, m1, EcsChildOf, m2);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cascade_rematch_after_depth_only_change_2_lvls(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t m1 = ecs_new(world);
+    ecs_entity_t a = ecs_new_w_pair(world, EcsChildOf, m1);
+    ecs_entity_t b = ecs_new_w_pair(world, EcsChildOf, a);
+
+    ecs_entity_t s = ecs_insert(world, ecs_value(Position, {1, 2}));
+    ecs_add_pair(world, s, EcsChildOf, m1);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(Position, {3, 4}));
+    ecs_add_pair(world, c1, EcsChildOf, a);
+
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(Position, {5, 6}));
+    ecs_add_pair(world, c2, EcsChildOf, b);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, ?Position(cascade)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], s);
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], c1);
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], c2);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_entity_t n1 = ecs_new(world);
+    ecs_entity_t n2 = ecs_new_w_pair(world, EcsChildOf, n1);
+    ecs_add_pair(world, a, EcsChildOf, n2);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], s);
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 2);
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], c1);
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 4);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], c2);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cascade_rematch_after_depth_only_change_custom_rel(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t R = ecs_entity(world, { .name = "R" });
+    ecs_add_id(world, R, EcsTraversable);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t m1 = ecs_new(world);
+    ecs_entity_t m2 = ecs_new_w_pair(world, R, m1);
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {1, 2}));
+    ecs_add_pair(world, e1, R, m1);
+
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {3, 4}));
+    ecs_add_pair(world, e2, R, m2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, ?Position(cascade R)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove_pair(world, m2, R, m1);
+    ecs_add_pair(world, m1, R, m2);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, 2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

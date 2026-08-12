@@ -7,8 +7,7 @@
 
 #ifdef FLECS_JSON
 
-static
-void flecs_json_serialize_field_info(
+static void flecs_json_serialize_field_info(
     const ecs_world_t *world,
     const ecs_iter_t *it, 
     ecs_strbuf_t *buf,
@@ -33,8 +32,7 @@ void flecs_json_serialize_field_info(
     flecs_json_array_pop(buf);
 }
 
-static
-void flecs_json_serialize_query_info(
+static void flecs_json_serialize_query_info(
     const ecs_world_t *world,
     const ecs_iter_t *it, 
     ecs_strbuf_t *buf)
@@ -48,8 +46,7 @@ void flecs_json_serialize_query_info(
     flecs_json_serialize_query(world, q, buf);
 }
 
-static
-void flecs_json_serialize_query_plan(
+static void flecs_json_serialize_query_plan(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
@@ -64,7 +61,10 @@ void flecs_json_serialize_query_plan(
 
     const ecs_query_t *q = desc->query;
     flecs_poly_assert(q, ecs_query_t);
-    const ecs_query_t *cq = ecs_query_get_cache_query(q);
+    const ecs_query_t *cq = NULL;
+#ifdef FLECS_CACHED_QUERIES
+    cq = ecs_query_get_cache_query(q);
+#endif
     
     flecs_json_memberl(buf, "query_plan");
 
@@ -110,8 +110,7 @@ void flecs_json_serialize_query_plan(
     ecs_log_enable_colors(prev_color);
 }
 
-static
-void flecs_json_serialize_query_profile(
+static void flecs_json_serialize_query_profile(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     const ecs_iter_t *it,
@@ -199,8 +198,7 @@ void flecs_json_serialize_query_profile(
     flecs_json_object_pop(buf);
 }
 
-static
-void flecs_iter_free_ser_ctx(
+static void flecs_iter_free_ser_ctx(
     ecs_iter_t *it,
     ecs_json_ser_ctx_t *ser_ctx)
 {
@@ -210,8 +208,7 @@ void flecs_iter_free_ser_ctx(
     }
 }
 
-static
-void flecs_json_accum_query_term_type_info(
+static void flecs_json_accum_query_term_type_info(
     const ecs_world_t *world,
     const ecs_iter_t *it,
     ecs_json_ser_ctx_t *ser_ctx)

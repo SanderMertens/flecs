@@ -24,8 +24,7 @@ const int16_t flecs_table_empty_component_map[FLECS_HI_COMPONENT_ID] = {0};
 /* Table sanity check to detect storage issues. Only enabled in SANITIZE mode as
  * this can severely slow down many ECS operations. */
 #ifdef FLECS_SANITIZE
-static
-void flecs_table_check_sanity(
+static void flecs_table_check_sanity(
     ecs_table_t *table) 
 {
     int32_t i, count = ecs_table_count(table);
@@ -94,8 +93,7 @@ void flecs_table_check_sanity(
 
 /* Set flags for type hooks so table operations can quickly check whether a
  * fast or complex operation that invokes hooks is required. */
-static
-ecs_flags32_t flecs_type_info_flags(
+static ecs_flags32_t flecs_type_info_flags(
     const ecs_type_info_t *ti) 
 {
     ecs_flags32_t flags = 0;
@@ -122,8 +120,7 @@ ecs_flags32_t flecs_type_info_flags(
     return flags;  
 }
 
-static
-void flecs_table_init_columns(
+static void flecs_table_init_columns(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column_count)
@@ -200,8 +197,7 @@ void flecs_table_init_columns(
 }
 
 /* Initialize table storage */
-static
-void flecs_table_init_data(
+static void flecs_table_init_data(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -221,8 +217,7 @@ void flecs_table_init_data(
 /* Initialize table flags. Table flags are used in lots of scenarios to quickly
  * check the features of a table without having to inspect the table type. Table
  * flags are typically used to early-out of potentially expensive operations. */
-static
-void flecs_table_init_flags(
+static void flecs_table_init_flags(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -262,8 +257,10 @@ void flecs_table_init_flags(
 
         if (id == EcsModule) {
             table->flags |= EcsTableHasModule;
+#ifdef FLECS_PREFAB
         } else if (id == EcsPrefab) {
             table->flags |= EcsTableIsPrefab;
+#endif
         } else if (id == EcsDisabled) {
             table->flags |= EcsTableIsDisabled;
         } else if (id == EcsNotQueryable) {
@@ -293,20 +290,27 @@ void flecs_table_init_flags(
             }
         } else if (ECS_PAIR_FIRST(id) == EcsOnInstantiate) {
             ecs_entity_t inherit_kind = ECS_PAIR_SECOND(id);
+#ifdef FLECS_PREFAB
             if (inherit_kind == EcsInherit) {
                 table->trait_flags |= EcsIdOnInstantiateInherit;
-            } else if (inherit_kind == EcsDontInherit) {
-                table->trait_flags |= EcsIdOnInstantiateDontInherit;
             } else if (inherit_kind == EcsOverride) {
                 table->trait_flags |= EcsIdOnInstantiateOverride;
+            }
+#endif
+            if (inherit_kind == EcsDontInherit) {
+                table->trait_flags |= EcsIdOnInstantiateDontInherit;
             }
         } else if (id == EcsCanToggle) {
             table->trait_flags |= EcsIdCanToggle;
         } else if (id == EcsInheritable) {
             table->trait_flags |= EcsIdInheritable;
-        } else if (id == EcsSingleton) {
+        }
+#ifdef FLECS_CONSTRAINT_TRAITS
+        else if (id == EcsSingleton) {
             table->trait_flags |= EcsIdSingleton;
-        } else if (id == EcsSparse) {
+        }
+#endif
+        else if (id == EcsSparse) {
             table->trait_flags |= EcsIdSparse;
         } else if (id == EcsDontFragment) {
             table->trait_flags |= EcsIdDontFragment;
@@ -377,8 +381,7 @@ void flecs_table_init_flags(
 }
 
 /* Utility function that appends an element to the table record array */
-static
-void flecs_table_append_to_records(
+static void flecs_table_append_to_records(
     ecs_world_t *world,
     ecs_vec_t *records,
     ecs_id_t id,
@@ -407,8 +410,7 @@ void flecs_table_append_to_records(
     }
 }
 
-static
-void flecs_table_init_overrides(
+static void flecs_table_init_overrides(
     ecs_world_t *world, 
     ecs_table_t *table, 
     const ecs_table_record_t *tr)
@@ -444,8 +446,7 @@ void flecs_table_init_overrides(
     table->data.overrides = o;
 }
 
-static
-void flecs_table_fini_overrides(
+static void flecs_table_fini_overrides(
     ecs_world_t *world, 
     ecs_table_t *table)
 {
@@ -467,8 +468,7 @@ void flecs_table_fini_overrides(
     flecs_wfree_t(world, ecs_table_overrides_t, o);
 }
 
-static
-void flecs_table_update_overrides(
+static void flecs_table_update_overrides(
     ecs_world_t *world, 
     ecs_table_t *table)
 {
@@ -534,8 +534,7 @@ void flecs_table_update_overrides(
     }
 }
 
-static
-void flecs_table_emit(
+static void flecs_table_emit(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t event)
@@ -794,9 +793,11 @@ void flecs_table_init(
         /* Initialize column index (will be overwritten by init_data) */
         tr->column = -1;
 
+#ifdef FLECS_PREFAB
         if (ECS_ID_ON_INSTANTIATE(cr->flags) == EcsOverride) {
             table->flags |= EcsTableHasOverrides;
         }
+#endif
 
         if ((i < table->type.count) && (cr->type_info != NULL)) {
             if (!(cr->flags & EcsIdSparse)) {
@@ -846,8 +847,7 @@ void flecs_table_init(
 }
 
 /* Unregister table from id records */
-static
-void flecs_table_records_unregister(
+static void flecs_table_records_unregister(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -874,8 +874,7 @@ void flecs_table_records_unregister(
 /* Keep track of what kind of builtin event observers are registered that can
  * potentially match the table. This allows code to early out of calling the
  * emit function that notifies observers. */
-static
-void flecs_table_add_trigger_flags(
+static void flecs_table_add_trigger_flags(
     ecs_world_t *world, 
     ecs_table_t *table, 
     ecs_id_t id,
@@ -910,8 +909,7 @@ void flecs_table_add_trigger_flags(
 
 /* Invoke OnRemove observers for all entities in table. Useful during table 
  * deletion or when clearing entities from a table. */
-static
-void flecs_table_notify_on_remove(
+static void flecs_table_notify_on_remove(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -925,8 +923,7 @@ void flecs_table_notify_on_remove(
 }
 
 /* Invoke type hook for entities in table */
-static
-void flecs_table_invoke_hook(
+static void flecs_table_invoke_hook(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_iter_action_t callback,
@@ -948,8 +945,7 @@ void flecs_table_invoke_hook(
         table->type.array[type_index], column->ti, event, callback, NULL);
 }
 
-static
-void flecs_table_invoke_ctor_for_array(
+static void flecs_table_invoke_ctor_for_array(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column_index,
@@ -998,8 +994,7 @@ void flecs_table_invoke_ctor_for_array(
     flecs_type_info_ctor(ptr, count, ti);
 }
 
-static
-void flecs_table_invoke_ctor(
+static void flecs_table_invoke_ctor(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column_index,
@@ -1016,8 +1011,7 @@ void flecs_table_invoke_ctor(
 }
 
 /* Destruct components */
-static
-void flecs_table_invoke_dtor(
+static void flecs_table_invoke_dtor(
     ecs_column_t *column,
     int32_t row,
     int32_t count)
@@ -1031,8 +1025,7 @@ void flecs_table_invoke_dtor(
 }
 
 /* Run hooks that get invoked when component is added to entity */
-static
-void flecs_table_invoke_add_hooks(
+static void flecs_table_invoke_add_hooks(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column_index,
@@ -1059,8 +1052,7 @@ void flecs_table_invoke_add_hooks(
 }
 
 /* Run hooks that get invoked when component is removed from entity */
-static
-void flecs_table_invoke_remove_hooks(
+static void flecs_table_invoke_remove_hooks(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_column_t *column,
@@ -1085,8 +1077,7 @@ void flecs_table_invoke_remove_hooks(
     }
 }
 
-static
-void flecs_table_remove_dont_fragment(
+static void flecs_table_remove_dont_fragment(
     ecs_world_t *world,
     ecs_entity_t e)
 {
@@ -1095,8 +1086,7 @@ void flecs_table_remove_dont_fragment(
 }
 
 /* Destruct all components and/or delete all entities in table */
-static
-void flecs_table_dtor_all(
+static void flecs_table_dtor_all(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -1163,8 +1153,7 @@ void flecs_table_dtor_all(
     "a " #operation " operation failed because the table is locked, fix by surrounding the operation with defer_begin()/defer_end()"
 
 /* Cleanup table storage */
-static
-void flecs_table_fini_data(
+static void flecs_table_fini_data(
     ecs_world_t *world,
     ecs_table_t *table,
     bool do_on_remove,
@@ -1374,8 +1363,7 @@ void flecs_table_traversable_add(
 
 /* Mark table column dirty. This usually happens as the result of a set 
  * operation, or iteration of a query with [out] fields. */
-static
-void flecs_table_mark_table_dirty(
+static void flecs_table_mark_table_dirty(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t index)
@@ -1446,8 +1434,7 @@ int32_t* flecs_table_get_dirty_state(
 }
 
 /* Table move logic for bitset (toggle component) column */
-static
-void flecs_table_move_bitset_columns(
+static void flecs_table_move_bitset_columns(
     ecs_table_t *dst_table, 
     int32_t dst_index,
     ecs_table_t *src_table, 
@@ -1537,8 +1524,7 @@ void flecs_table_move_bitset_columns(
 
 /* Grow table column. When a column needs to be reallocated this function takes
  * care of correctly invoking ctor/move/dtor hooks. */
-static
-void flecs_table_grow_column(
+static void flecs_table_grow_column(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column_index,
@@ -1602,8 +1588,7 @@ void flecs_table_grow_column(
 }
 
 /* Grow all data structures in a table */
-static
-int32_t flecs_table_grow_data(
+static int32_t flecs_table_grow_data(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t to_add,
@@ -1691,8 +1676,7 @@ int32_t flecs_table_grow_data(
     return count;
 }
 
-static
-void flecs_table_copy_elem(
+static void flecs_table_copy_elem(
     void *dst_ptr,
     const void *src_ptr,
     ecs_size_t size)
@@ -1727,8 +1711,7 @@ void flecs_table_copy_elem(
 }
 
 /* Append operation for tables that don't have any complex logic */
-static
-void flecs_table_fast_append(
+static void flecs_table_fast_append(
     ecs_table_t *table)
 {
     /* Add elements to each column array */
@@ -1838,8 +1821,7 @@ void flecs_table_append(
 }
 
 /* Delete operation for tables that don't have any complex logic */
-static
-void flecs_table_fast_delete(
+static void flecs_table_fast_delete(
     ecs_table_t *table,
     int32_t row)
 {
@@ -1976,8 +1958,7 @@ void flecs_table_delete(
 }
 
 /* Move operation for tables that don't have any complex logic */
-static
-void flecs_table_fast_move(
+static void flecs_table_fast_move(
     ecs_table_t *dst_table,
     int32_t dst_index,
     ecs_table_t *src_table,
@@ -2190,8 +2171,7 @@ bool flecs_table_shrink(
 }
 
 /* Swap operation for bitset (toggle component) columns */
-static
-void flecs_table_swap_bitset_columns(
+static void flecs_table_swap_bitset_columns(
     ecs_table_t *table,
     int32_t row_1,
     int32_t row_2)
@@ -2210,8 +2190,7 @@ void flecs_table_swap_bitset_columns(
 }
 
 /* Swap two rows in a table. Used for table sorting. */
-static
-void flecs_table_swap(
+static void flecs_table_swap(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t row_1,
@@ -2298,8 +2277,7 @@ void flecs_table_swap(
     flecs_table_check_sanity(table);
 }
 
-static
-void flecs_table_merge_vec(
+static void flecs_table_merge_vec(
     ecs_vec_t *dst,
     ecs_vec_t *src,
     int32_t size,
@@ -2330,8 +2308,7 @@ void flecs_table_merge_vec(
 }
 
 /* Merge data from one table column into other table column */
-static
-void flecs_table_merge_column(
+static void flecs_table_merge_column(
     ecs_world_t *world,
     ecs_vec_t *dst_vec,
     ecs_vec_t *src_vec,
@@ -2369,8 +2346,7 @@ void flecs_table_merge_column(
 }
 
 /* Merge storage of two tables. */
-static
-void flecs_table_merge_data(
+static void flecs_table_merge_data(
     ecs_world_t *world,
     ecs_table_t *dst_table,
     ecs_table_t *src_table,
@@ -2534,13 +2510,18 @@ void flecs_table_notify(
     case EcsTableTriggersForId:
         flecs_table_add_trigger_flags(world, table, id, event->event);
         break;
+    case EcsTableUpNotifyForId:
+        table->flags |= EcsTableHasUpNotify;
+        if (id) {
+            flecs_table_edges_add_flags(world, table, id, EcsTableHasUpNotify);
+        }
+        break;
     case EcsTableNoTriggersForId:
         break; /* TODO */
     }
 }
 
-static
-int32_t flecs_table_get_toggle_column(
+static int32_t flecs_table_get_toggle_column(
     ecs_table_t *table,
     ecs_id_t id)
 {
@@ -2982,9 +2963,11 @@ int32_t ecs_table_get_depth(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, rel), ECS_INVALID_PARAMETER, NULL);
+#ifdef FLECS_CONSTRAINT_TRAITS
     ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER,
         "cannot safely determine depth for relationship that is not acyclic "
             "(add Acyclic property to relationship)");
+#endif
 
     world = ecs_get_world(world);
 

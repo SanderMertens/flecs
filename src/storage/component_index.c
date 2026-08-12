@@ -16,8 +16,7 @@
 
 #include "../private_api.h"
 
-static
-ecs_id_record_elem_t* flecs_component_elem(
+static ecs_id_record_elem_t* flecs_component_elem(
     ecs_component_record_t *head,
     ecs_id_record_elem_t *list,
     ecs_component_record_t *cr)
@@ -25,8 +24,7 @@ ecs_id_record_elem_t* flecs_component_elem(
     return ECS_OFFSET(cr->pair, (uintptr_t)list - (uintptr_t)head->pair);
 }
 
-static
-void flecs_component_elem_insert(
+static void flecs_component_elem_insert(
     ecs_component_record_t *head,
     ecs_component_record_t *cr,
     ecs_id_record_elem_t *elem)
@@ -42,8 +40,7 @@ void flecs_component_elem_insert(
     head_elem->next = cr;
 }
 
-static
-void flecs_component_elem_remove(
+static void flecs_component_elem_remove(
     ecs_component_record_t *cr,
     ecs_id_record_elem_t *elem)
 {
@@ -59,8 +56,7 @@ void flecs_component_elem_remove(
     }
 }
 
-static
-void flecs_insert_id_elem(
+static void flecs_insert_id_elem(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_id_t wildcard,
@@ -90,8 +86,7 @@ void flecs_insert_id_elem(
     }
 }
 
-static
-void flecs_remove_id_elem(
+static void flecs_remove_id_elem(
     ecs_component_record_t *cr,
     ecs_id_t wildcard)
 {
@@ -117,8 +112,7 @@ void flecs_remove_id_elem(
     }
 }
 
-static
-ecs_id_t flecs_component_hash(
+static ecs_id_t flecs_component_hash(
     ecs_id_t id)
 {
     id = ecs_strip_generation(id);
@@ -200,8 +194,7 @@ void flecs_component_record_init_dont_fragment(
     ecs_vec_init_t(&world->allocator, &cr->dont_fragment_tables, uint64_t, 0);
 }
 
-static
-void flecs_component_record_fini_dont_fragment(
+static void flecs_component_record_fini_dont_fragment(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
@@ -248,8 +241,7 @@ void flecs_component_record_init_exclusive(
     flecs_component_init_sparse(world, cr);
 }
 
-static
-void flecs_component_fini_sparse(
+static void flecs_component_fini_sparse(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
@@ -264,8 +256,7 @@ void flecs_component_fini_sparse(
     }
 }
 
-static
-ecs_flags32_t flecs_component_event_flags(
+static ecs_flags32_t flecs_component_event_flags(
     const ecs_world_t *world,
     ecs_id_t id)
 {
@@ -282,6 +273,10 @@ ecs_flags32_t flecs_component_event_flags(
         |EcsIdHasOnSet
         |EcsIdHasOnTableCreate
         |EcsIdHasOnTableDelete);
+
+    bool up_notify = flecs_up_notify_observers_exist(o, id, EcsOnAdd);
+    up_notify |= flecs_up_notify_observers_exist(o, id, EcsOnRemove);
+    result |= up_notify * EcsIdHasUpNotify;
 
     return result;
 }
@@ -302,8 +297,7 @@ void flecs_component_ordered_children_init(
     }
 }
 
-static
-ecs_flags32_t flecs_component_get_flags_intern(
+static ecs_flags32_t flecs_component_get_flags_intern(
     const ecs_world_t *world,
     ecs_id_t id,
     ecs_entity_t rel,
@@ -372,8 +366,7 @@ ecs_flags32_t flecs_component_get_flags(
     return flecs_component_get_flags_intern(world, id, rel, tgt, ti);
 }
 
-static
-void flecs_component_record_check_constraints(
+static void flecs_component_record_check_constraints(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t rel,
@@ -396,70 +389,14 @@ void flecs_component_record_check_constraints(
             return;
         }
 
-        if (tgt) {
-            ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
-
-            /* Can't use relationship as target */
-            if (ecs_has_id(world, tgt, EcsRelationship)) {
-                if (!ecs_id_is_wildcard(rel) && 
-                    !ecs_has_id(world, rel, EcsTrait))
-                {
-                    ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as target"
-                        " in pair '%s': '%s' has the Relationship trait",
-                            flecs_errstr(ecs_get_path(world, tgt)),
-                            flecs_errstr_1(ecs_id_str(world, cr->id)),
-                            flecs_errstr_2(ecs_get_path(world, tgt)));
-                }
-            }
+#ifdef FLECS_CONSTRAINT_TRAITS
+        if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
+            goto error;
         }
-
-        if (ecs_has_id(world, rel, EcsTarget)) {
-            ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as relationship "
-                "in pair '%s': '%s' has the Target trait",
-                    flecs_errstr(ecs_get_path(world, rel)),
-                    flecs_errstr_1(ecs_id_str(world, cr->id)),
-                    flecs_errstr_2(ecs_get_path(world, rel)));
-        }
+#endif
 
         if (tgt && !ecs_id_is_wildcard(tgt)) {
-            /* Check if target of relationship satisfies OneOf property */
-            ecs_entity_t oneof = flecs_get_oneof(world, rel);
-            if (oneof) {
-                if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
-                    if (oneof == rel) {
-                        ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                            "cannot use '%s' as target in pair '%s': "
-                            "relationship '%s' has the OneOf trait and '%s' "
-                            "is not a child of '%s'",
-                                flecs_errstr(ecs_get_path(world, tgt)),
-                                flecs_errstr_1(ecs_id_str(world, cr->id)),
-                                flecs_errstr_2(ecs_get_path(world, rel)),
-                                flecs_errstr_3(ecs_get_path(world, tgt)),
-                                flecs_errstr_4(ecs_get_path(world, rel)));
-                        } else {
-                            ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                                "cannot use '%s' as target in pair '%s': "
-                                "relationship '%s' has (OneOf, %s) and '%s' "
-                                "is not a child of '%s'",
-                                    flecs_errstr(ecs_get_path(world, tgt)),
-                                    flecs_errstr_1(ecs_id_str(world, cr->id)),
-                                    flecs_errstr_2(ecs_get_path(world, rel)),
-                                    flecs_errstr_3(ecs_get_path(world, oneof)),
-                                    flecs_errstr_4(ecs_get_path(world, tgt)),
-                                    flecs_errstr_5(ecs_get_path(world, oneof)));
-                        }
-                }
-            }
-
-            /* Check if we're not trying to inherit from a final target */
             if (rel == EcsIsA) {
-                if (ecs_has_id(world, tgt, EcsFinal)) {
-                    ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                        "cannot add '(IsA, %s)': '%s' has the Final trait",
-                            flecs_errstr(ecs_get_path(world, tgt)),
-                            flecs_errstr_1(ecs_get_path(world, tgt)));
-                }
-
                 if (flecs_component_is_trait_locked(world, tgt)) {
                     if (!ecs_has_id(world, tgt, EcsInheritable) && !ecs_has_pair(world, tgt, EcsIsA, EcsWildcard)) {
                         ecs_throw(ECS_INVALID_OPERATION, 
@@ -470,31 +407,17 @@ void flecs_component_record_check_constraints(
                 }
             }
         }
-    } else {
-        bool is_tgt = false;
-        if (ecs_has_id(world, rel, EcsRelationship) ||
-            (is_tgt = ecs_has_id(world, rel, EcsTarget)))
-        {
-            if (is_tgt) {
-                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                    "cannot use '%s' by itself: it has the Target trait and "
-                    "must be used in pair with relationship",
-                        flecs_errstr(ecs_get_path(world, rel)));
-            } else {
-                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                    "cannot use '%s' by itself: it has the Relationship trait "
-                    "and must be used in pair with target",
-                        flecs_errstr(ecs_get_path(world, rel)));
-            }
-        }
+#ifdef FLECS_CONSTRAINT_TRAITS
+    } else if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
+        goto error;
+#endif
     }
 error:
     return;
 #endif
 }
 
-static
-ecs_component_record_t* flecs_component_new(
+static ecs_component_record_t* flecs_component_new(
     ecs_world_t *world,
     ecs_id_t id)
 {
@@ -678,8 +601,7 @@ ecs_component_record_t* flecs_component_new(
     return cr;
 }
 
-static
-void flecs_component_assert_empty(
+static void flecs_component_assert_empty(
     ecs_component_record_t *cr)
 {
     (void)cr;
@@ -687,8 +609,7 @@ void flecs_component_assert_empty(
         ECS_INTERNAL_ERROR, NULL);
 }
 
-static
-void flecs_component_free(
+static void flecs_component_free(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
@@ -906,6 +827,20 @@ ecs_sparse_t* flecs_component_get_sparse(
     return cr->sparse;
 }
 
+ecs_component_record_t* flecs_component_dont_fragment_first(
+    const ecs_world_t *world)
+{
+    world = ecs_get_world(world);
+    return world->cr_non_fragmenting_head;
+}
+
+ecs_component_record_t* flecs_component_dont_fragment_next(
+    const ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INVALID_PARAMETER, NULL);
+    return cr->non_fragmenting.next;
+}
+
 ecs_hashmap_t* flecs_component_name_index_ensure(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -975,8 +910,7 @@ void flecs_components_fini(
     ecs_os_free(world->id_index_lo);
 }
 
-static
-ecs_flags32_t flecs_id_flags(
+static ecs_flags32_t flecs_id_flags(
     ecs_world_t *world,
     ecs_id_t id)
 {
@@ -1151,8 +1085,7 @@ int32_t flecs_component_get_childof_depth(
     return cr->pair->depth;
 }
 
-static
-void flecs_entities_update_childof_depth(
+static void flecs_entities_update_childof_depth(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {

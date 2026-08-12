@@ -8,7 +8,7 @@ void Lookup_setup(void) {
 void Lookup_lookup(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, MyEntity, 0);
+    ecs_entity_t MyEntity = ecs_entity(world, { .name = "MyEntity" });
 
     ecs_entity_t lookup = ecs_lookup(world, "MyEntity");
     test_assert(lookup != 0);
@@ -20,7 +20,7 @@ void Lookup_lookup(void) {
 void Lookup_lookup_w_null_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, MyEntity, 0);
+    ecs_entity_t MyEntity = ecs_entity(world, { .name = "MyEntity" });
 
     /* Ensure this doesn't crash the lookup function */
     ecs_set_name(world, 0, NULL);
@@ -73,8 +73,8 @@ void Lookup_lookup_not_found(void) {
 void Lookup_lookup_child(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Parent1, 0);
-    ECS_ENTITY(world, Parent2, 0);
+    ecs_entity_t Parent1 = ecs_entity(world, { .name = "Parent1" });
+    ecs_entity_t Parent2 = ecs_entity(world, { .name = "Parent2" });
 
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, Parent1);
     ecs_set_name(world, e1, "Child");
@@ -207,6 +207,176 @@ void Lookup_lookup_path_0_parent_w_scope(void) {
     test_assert(ecs_lookup(world, "parent.foo") == c);
 
     ecs_set_scope(world, 0);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_name_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    ecs_make_alive(world, 1234);
+    ecs_add_pair(world, 1234, EcsChildOf, foo);
+
+    test_assert(ecs_lookup(world, "foo.#1234") == 1234);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_name_id_not_in_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity(world, { .name = "foo" });
+    ecs_make_alive(world, 1234);
+
+    test_assert(ecs_lookup(world, "foo.#1234") == 0);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_name_name_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "bar", .parent = foo });
+    ecs_make_alive(world, 1234);
+    ecs_add_pair(world, 1234, EcsChildOf, bar);
+
+    test_assert(ecs_lookup(world, "foo.bar.#1234") == 1234);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_name_name_id_not_in_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    ecs_entity(world, { .name = "bar", .parent = foo });
+    ecs_make_alive(world, 1234);
+    ecs_add_pair(world, 1234, EcsChildOf, foo);
+
+    test_assert(ecs_lookup(world, "foo.bar.#1234") == 0);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_name_id_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    ecs_make_alive(world, 1234);
+    ecs_add_pair(world, 1234, EcsChildOf, foo);
+    ecs_entity_t bar = ecs_entity(world, { .name = "bar", .parent = 1234 });
+
+    test_assert(ecs_lookup(world, "foo.#1234.bar") == bar);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_name_id_name_not_in_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity(world, { .name = "foo" });
+    ecs_make_alive(world, 1234);
+    ecs_entity(world, { .name = "bar", .parent = 1234 });
+
+    test_assert(ecs_lookup(world, "foo.#1234.bar") == 0);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_id_name_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_make_alive(world, 1234);
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo", .parent = 1234 });
+    ecs_entity_t bar = ecs_entity(world, { .name = "bar", .parent = foo });
+
+    test_assert(ecs_lookup(world, "#1234.foo.bar") == bar);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_id_name_name_not_alive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    ecs_entity(world, { .name = "bar", .parent = foo });
+
+    test_assert(ecs_lookup(world, "#1234.foo.bar") == 0);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_name_id_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+    ecs_entity_t r = ecs_new_w_pair(world, EcsChildOf, foo);
+    test_assert((uint32_t)r == (uint32_t)e);
+    test_assert(r != e);
+
+    char buf[32];
+    sprintf(buf, "foo.#%u", (uint32_t)r);
+    test_assert(ecs_lookup(world, buf) == r);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_name_name_id_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "bar", .parent = foo });
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+    ecs_entity_t r = ecs_new_w_pair(world, EcsChildOf, bar);
+    test_assert((uint32_t)r == (uint32_t)e);
+    test_assert(r != e);
+
+    char buf[32];
+    sprintf(buf, "foo.bar.#%u", (uint32_t)r);
+    test_assert(ecs_lookup(world, buf) == r);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_name_id_name_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+    ecs_entity_t r = ecs_new_w_pair(world, EcsChildOf, foo);
+    test_assert((uint32_t)r == (uint32_t)e);
+    test_assert(r != e);
+
+    ecs_entity_t bar = ecs_entity(world, { .name = "bar", .parent = r });
+
+    char buf[32];
+    sprintf(buf, "foo.#%u.bar", (uint32_t)r);
+    test_assert(ecs_lookup(world, buf) == bar);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_id_name_name_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+    ecs_entity_t r = ecs_new(world);
+    test_assert((uint32_t)r == (uint32_t)e);
+    test_assert(r != e);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo", .parent = r });
+    ecs_entity_t bar = ecs_entity(world, { .name = "bar", .parent = foo });
+
+    char buf[32];
+    sprintf(buf, "#%u.foo.bar", (uint32_t)r);
+    test_assert(ecs_lookup(world, buf) == bar);
 
     ecs_fini(world);
 }

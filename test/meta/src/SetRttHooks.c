@@ -20,8 +20,7 @@ typedef struct {
     int16_t value;
 } SetRttOpaque;
 
-static
-int value_cmp(ecs_world_t *world, ecs_entity_t type, const void *a,
+static int value_cmp(ecs_world_t *world, ecs_entity_t type, const void *a,
     const void *b)
 {
     return ecs_value_compare(world,
@@ -29,8 +28,7 @@ int value_cmp(ecs_world_t *world, ecs_entity_t type, const void *a,
         &(ecs_value_t){.type = type, .ptr = ECS_CONST_CAST(void*, b)});
 }
 
-static
-bool value_eq(ecs_world_t *world, ecs_entity_t type, const void *a,
+static bool value_eq(ecs_world_t *world, ecs_entity_t type, const void *a,
     const void *b)
 {
     return ecs_value_equals(world,
@@ -38,8 +36,7 @@ bool value_eq(ecs_world_t *world, ecs_entity_t type, const void *a,
         &(ecs_value_t){.type = type, .ptr = ECS_CONST_CAST(void*, b)});
 }
 
-static
-ecs_entity_t define_struct_with_ints(ecs_world_t *world) {
+static ecs_entity_t define_struct_with_ints(ecs_world_t *world) {
     ECS_COMPONENT(world, StructWithInts);
     ecs_struct(world, {
         .entity = ecs_id(StructWithInts),
@@ -225,8 +222,7 @@ void SetRttHooks_equals_nested_struct(void) {
     ecs_fini(world);
 }
 
-static
-ecs_entity_t define_struct_without_hooks(ecs_world_t *world) {
+static ecs_entity_t define_struct_without_hooks(ecs_world_t *world) {
     ECS_COMPONENT(world, StructWithInts);
     ecs_struct(world, {
         .entity = ecs_id(StructWithInts),

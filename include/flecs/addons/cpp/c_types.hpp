@@ -60,7 +60,9 @@ enum oper_kind_t {
 enum query_cache_kind_t {
     QueryCacheDefault = EcsQueryCacheDefault, /**< Default query cache. */
     QueryCacheAuto = EcsQueryCacheAuto,       /**< Auto query cache. */
+#ifdef FLECS_CACHED_QUERIES
     QueryCacheAll = EcsQueryCacheAll,         /**< Cache all. */
+#endif
     QueryCacheNone = EcsQueryCacheNone        /**< No caching. */
 };
 
@@ -79,8 +81,6 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 /** Built-in EcsPoly type. */
 using Poly = EcsPoly;
-/** Built-in EcsDefaultChildComponent type. */
-using DefaultChildComponent = EcsDefaultChildComponent;
 /** Built-in EcsParent type. */
 using Parent = EcsParent;
 
@@ -90,8 +90,12 @@ static const flecs::entity_t Query = EcsQuery;
 static const flecs::entity_t Observer = EcsObserver;
 /** Built-in Module tag. */
 static const flecs::entity_t Module = EcsModule;
+
+#ifdef FLECS_PREFAB
 /** Built-in Prefab tag. */
 static const flecs::entity_t Prefab = EcsPrefab;
+#endif
+
 /** Built-in Disabled tag. */
 static const flecs::entity_t Disabled = EcsDisabled;
 /** Built-in Empty tag. */
@@ -100,10 +104,12 @@ static const flecs::entity_t Empty = EcsEmpty;
 static const flecs::entity_t Monitor = EcsMonitor;
 /** Built-in System tag. */
 static const flecs::entity_t System = EcsSystem;
+#ifdef FLECS_PIPELINE
 /** Built-in Pipeline tag. */
 static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
 /** Built-in Phase tag. */
 static const flecs::entity_t Phase = EcsPhase;
+#endif
 /** Built-in Constant tag. */
 static const flecs::entity_t Constant = EcsConstant;
 /** Built-in ParentDepth tag. */
@@ -119,6 +125,25 @@ static const flecs::entity_t OnSet = EcsOnSet;
 static const flecs::entity_t OnTableCreate = EcsOnTableCreate;
 /** Built-in OnTableDelete event. */
 static const flecs::entity_t OnTableDelete = EcsOnTableDelete;
+
+#ifdef FLECS_CONSTRAINT_TRAITS
+/** Acyclic trait. */
+static const flecs::entity_t Acyclic = EcsAcyclic;
+/** Final trait. */
+static const flecs::entity_t Final = EcsFinal;
+/** OneOf trait. */
+static const flecs::entity_t OneOf = EcsOneOf;
+/** Relationship tag. */
+static const flecs::entity_t Relationship = EcsRelationship;
+/** Target tag. */
+static const flecs::entity_t Target = EcsTarget;
+/** Trait tag. */
+static const flecs::entity_t Trait = EcsTrait;
+/** Singleton tag. */
+static const flecs::entity_t Singleton = EcsSingleton;
+/** Symmetric trait. */
+static const flecs::entity_t Symmetric = EcsSymmetric;
+#endif
 
 /** Self term flag. */
 static const uint64_t Self = EcsSelf;
@@ -158,39 +183,27 @@ static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
 /** Reflexive trait. */
 static const flecs::entity_t Reflexive = EcsReflexive;
-/** Final trait. */
-static const flecs::entity_t Final = EcsFinal;
 /** Inheritable trait. */
 static const flecs::entity_t Inheritable = EcsInheritable;
 /** PairIsTag trait. */
 static const flecs::entity_t PairIsTag = EcsPairIsTag;
 /** Exclusive trait. */
 static const flecs::entity_t Exclusive = EcsExclusive;
-/** Acyclic trait. */
-static const flecs::entity_t Acyclic = EcsAcyclic;
 /** Traversable trait. */
 static const flecs::entity_t Traversable = EcsTraversable;
-/** Symmetric trait. */
-static const flecs::entity_t Symmetric = EcsSymmetric;
 /** With trait. */
 static const flecs::entity_t With = EcsWith;
-/** OneOf trait. */
-static const flecs::entity_t OneOf = EcsOneOf;
-/** Trait tag. */
-static const flecs::entity_t Trait = EcsTrait;
-/** Relationship tag. */
-static const flecs::entity_t Relationship = EcsRelationship;
-/** Target tag. */
-static const flecs::entity_t Target = EcsTarget;
 /** CanToggle trait. */
 static const flecs::entity_t CanToggle = EcsCanToggle;
 
 /** OnInstantiate trait. */
 static const flecs::entity_t OnInstantiate = EcsOnInstantiate;
+#ifdef FLECS_PREFAB
 /** Override trait. */
 static const flecs::entity_t Override = EcsOverride;
 /** Inherit trait. */
 static const flecs::entity_t Inherit = EcsInherit;
+#endif
 /** DontInherit trait. */
 static const flecs::entity_t DontInherit = EcsDontInherit;
 
@@ -211,13 +224,8 @@ static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
 /** DependsOn relationship. */
 static const flecs::entity_t DependsOn = EcsDependsOn;
-/** SlotOf relationship. */
-static const flecs::entity_t SlotOf = EcsSlotOf;
-
 /** OrderedChildren tag. */
 static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
-/** Singleton tag. */
-static const flecs::entity_t Singleton = EcsSingleton;
 
 /** Name identifier. */
 static const flecs::entity_t Name = EcsName;

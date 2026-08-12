@@ -11,8 +11,7 @@
 #define flecs_expr_ast_new(parser, T, kind)\
     (T*)flecs_expr_ast_new_(parser, ECS_SIZEOF(T), kind)
 
-static
-void* flecs_expr_ast_new_(
+static void* flecs_expr_ast_new_(
     ecs_parser_t *parser,
     ecs_size_t size, 
     ecs_expr_node_kind_t kind)
@@ -269,8 +268,7 @@ ecs_expr_new_t* flecs_expr_new(
     return result;
 }
 
-static
-bool flecs_expr_explicit_cast_allowed(
+static bool flecs_expr_explicit_cast_allowed(
     ecs_world_t *world,
     ecs_entity_t from,
     ecs_entity_t to)
