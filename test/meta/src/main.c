@@ -86,6 +86,18 @@ void EnumTypes_enum_w_underlying_u32(void);
 void EnumTypes_enum_w_underlying_u64(void);
 void EnumTypes_set_enum(void);
 void EnumTypes_set_enum_w_underlying_type(void);
+void EnumTypes_constant_to_entity(void);
+void EnumTypes_constant_to_entity_not_found(void);
+void EnumTypes_constant_to_entity_not_a_type(void);
+void EnumTypes_constant_to_entity_w_underlying_i8(void);
+void EnumTypes_constant_to_entity_w_underlying_i16(void);
+void EnumTypes_constant_to_entity_w_underlying_i32(void);
+void EnumTypes_constant_to_entity_w_underlying_i64(void);
+void EnumTypes_constant_to_entity_w_underlying_u8(void);
+void EnumTypes_constant_to_entity_w_underlying_u16(void);
+void EnumTypes_constant_to_entity_w_underlying_u32(void);
+void EnumTypes_constant_to_entity_w_underlying_u64(void);
+void EnumTypes_constant_to_entity_w_bitmask(void);
 
 // Testsuite 'BitmaskTypes'
 void BitmaskTypes_bitmask_1_constant(void);
@@ -1742,6 +1754,54 @@ bake_test_case EnumTypes_testcases[] = {
     {
         "set_enum_w_underlying_type",
         EnumTypes_set_enum_w_underlying_type
+    },
+    {
+        "constant_to_entity",
+        EnumTypes_constant_to_entity
+    },
+    {
+        "constant_to_entity_not_found",
+        EnumTypes_constant_to_entity_not_found
+    },
+    {
+        "constant_to_entity_not_a_type",
+        EnumTypes_constant_to_entity_not_a_type
+    },
+    {
+        "constant_to_entity_w_underlying_i8",
+        EnumTypes_constant_to_entity_w_underlying_i8
+    },
+    {
+        "constant_to_entity_w_underlying_i16",
+        EnumTypes_constant_to_entity_w_underlying_i16
+    },
+    {
+        "constant_to_entity_w_underlying_i32",
+        EnumTypes_constant_to_entity_w_underlying_i32
+    },
+    {
+        "constant_to_entity_w_underlying_i64",
+        EnumTypes_constant_to_entity_w_underlying_i64
+    },
+    {
+        "constant_to_entity_w_underlying_u8",
+        EnumTypes_constant_to_entity_w_underlying_u8
+    },
+    {
+        "constant_to_entity_w_underlying_u16",
+        EnumTypes_constant_to_entity_w_underlying_u16
+    },
+    {
+        "constant_to_entity_w_underlying_u32",
+        EnumTypes_constant_to_entity_w_underlying_u32
+    },
+    {
+        "constant_to_entity_w_underlying_u64",
+        EnumTypes_constant_to_entity_w_underlying_u64
+    },
+    {
+        "constant_to_entity_w_bitmask",
+        EnumTypes_constant_to_entity_w_bitmask
     }
 };
 
@@ -7050,7 +7110,7 @@ static bake_test_suite suites[] = {
         "EnumTypes",
         NULL,
         NULL,
-        19,
+        31,
         EnumTypes_testcases
     },
     {

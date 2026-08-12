@@ -92,7 +92,19 @@
                 "enum_w_underlying_u32",
                 "enum_w_underlying_u64",
                 "set_enum",
-                "set_enum_w_underlying_type"
+                "set_enum_w_underlying_type",
+                "constant_to_entity",
+                "constant_to_entity_not_found",
+                "constant_to_entity_not_a_type",
+                "constant_to_entity_w_underlying_i8",
+                "constant_to_entity_w_underlying_i16",
+                "constant_to_entity_w_underlying_i32",
+                "constant_to_entity_w_underlying_i64",
+                "constant_to_entity_w_underlying_u8",
+                "constant_to_entity_w_underlying_u16",
+                "constant_to_entity_w_underlying_u32",
+                "constant_to_entity_w_underlying_u64",
+                "constant_to_entity_w_bitmask"
             ]
         }, {
             "id": "BitmaskTypes",

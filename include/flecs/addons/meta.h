@@ -1062,6 +1062,27 @@ ecs_size_t ecs_meta_op_get_elem_count(
     const ecs_meta_op_t *op,
     const void *ptr);
 
+/* Utility functions for working with enum and bitmask types. */
+
+/** Find the entity for an enum constant with the provided value.
+ * The value is interpreted according to the underlying type of the enum. For
+ * enums with an unsigned underlying type the value is reinterpreted as an
+ * unsigned integer, which means that a constant with value UINT64_MAX can be
+ * found by passing -1.
+ *
+ * This operation also works for bitmask types.
+ *
+ * @param world The world.
+ * @param type The enum (or bitmask) type.
+ * @param value The constant value.
+ * @return The entity for the constant, or 0 if no constant was found.
+ */
+FLECS_API
+ecs_entity_t ecs_constant_to_entity(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    int64_t value);
+
 /* Utility functions for working with pointers to dynamically created
  * values. */
 

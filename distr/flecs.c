@@ -94846,6 +94846,30 @@ ecs_entity_t ecs_bitmask_init(
     return t;
 }
 
+ecs_entity_t ecs_constant_to_entity(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    int64_t value)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
+
+    const EcsConstants *ptr = ecs_get(world, type, EcsConstants);
+    if (!ptr || !ptr->constants) {
+        return 0;
+    }
+
+    const ecs_enum_constant_t *c = ecs_map_get_deref(
+        ptr->constants, ecs_enum_constant_t, (ecs_map_key_t)value);
+    if (!c) {
+        return 0;
+    }
+
+    return c->constant;
+error:
+    return 0;
+}
+
 void flecs_meta_enum_init(
     ecs_world_t *world)
 {
