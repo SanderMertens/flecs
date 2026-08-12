@@ -23,6 +23,31 @@ static void flecs_script_initializer_set_full(
     }
 }
 
+static const char* flecs_script_skip_newlines(
+    ecs_parser_t *parser,
+    const char *pos)
+{
+    const char *old_token_cur = parser->token_cur;
+    const char *lookahead;
+    ecs_token_t token;
+
+    while ((lookahead = flecs_token(parser, pos, &token, true))) {
+        if (token.kind != EcsTokNewline) {
+            break;
+        }
+
+        pos = lookahead;
+    }
+
+    if (old_token_cur > parser->token_keep) {
+        parser->token_cur = ECS_CONST_CAST(char*, old_token_cur);
+    } else {
+        parser->token_cur = parser->token_keep;
+    }
+
+    return pos;
+}
+
 /* Parse scope (statements inside {}) */
 static const char* flecs_script_scope(
     ecs_parser_t *parser,
@@ -266,6 +291,8 @@ static const char* flecs_script_if_stmt(
 
     // if expr
     Expr('\0',
+        pos = flecs_script_skip_newlines(parser, pos);
+
         // if expr {
         Parse_1('{', {
             ecs_script_if_t *stmt = flecs_script_insert_if(parser);
@@ -275,49 +302,37 @@ static const char* flecs_script_if_stmt(
                 goto error;
             }
 
-            // if expr { } else
-            LookAhead_1(EcsTokKeywordElse, 
-                pos = lookahead;
+            // if expr { }\n else
+            {
+                const char *stmt_pos = pos;
+                pos = flecs_script_skip_newlines(parser, pos);
 
-                Parse(
-                    // if expr { } else if
-                    case EcsTokKeywordIf: {
-                        Scope(stmt->if_false,
-                            pos = flecs_script_if_stmt(parser, pos);
-                        )
-                        if (!pos) {
-                            goto error;
+                LookAhead_1(EcsTokKeywordElse,
+                    // if expr { } else\n
+                    pos = flecs_script_skip_newlines(parser, lookahead);
+
+                    Parse(
+                        // if expr { } else if
+                        case EcsTokKeywordIf: {
+                            Scope(stmt->if_false,
+                                pos = flecs_script_if_stmt(parser, pos);
+                            )
+                            if (!pos) {
+                                goto error;
+                            }
+                            return pos;
                         }
-                        return pos;
-                    }
 
-                    // if expr { } else\n if
-                    case EcsTokNewline: {
-                        Parse(
-                            case EcsTokKeywordIf: {
-                                Scope(stmt->if_false,
-                                    pos = flecs_script_if_stmt(parser, pos);
-                                )
-                                if (!pos) {
-                                    goto error;
-                                }
-                                return pos;
-                            }
-
-                            // if expr { } else\n {
-                            case '{': {
-                                return flecs_script_scope(
-                                    parser, stmt->if_false, pos);
-                            }
-                        )
-                    }
-
-                    // if expr { } else {
-                    case '{': {
-                        return flecs_script_scope(parser, stmt->if_false, pos);
-                    }
+                        // if expr { } else {
+                        case '{': {
+                            return flecs_script_scope(
+                                parser, stmt->if_false, pos);
+                        }
+                    )
                 )
-            )
+
+                pos = stmt_pos;
+            }
 
             EndOfRule;
         });
@@ -722,14 +737,11 @@ template_stmt: {
         ecs_script_template_node_t *template = flecs_script_insert_template(
             parser, Token(1));
 
-        Parse(
-            // template SpaceShip {
-            case '{':
-                return flecs_script_scope(parser, template->scope, pos);
+        pos = flecs_script_skip_newlines(parser, pos);
 
-            // template SpaceShip\n
-            EcsTokEndOfStatement:
-                EndOfRule;
+        // template SpaceShip {
+        Parse_1('{',
+            return flecs_script_scope(parser, template->scope, pos);
         )
     )
 }
@@ -779,6 +791,8 @@ for_stmt: {
                     stmt->from = from;
                     stmt->to = to;
 
+                    pos = flecs_script_skip_newlines(parser, pos);
+
                     Parse_1('{', {
                         return flecs_script_scope(parser, stmt->scope, pos);
                     });
@@ -799,19 +813,27 @@ fn_stmt: {
             goto error;
         }
 
-        Parse_2(EcsTokArrow, EcsTokIdentifier, {
-            fn->return_type = Token(4);
-            fn->return_type_node.pos = parser->pos;
+        pos = flecs_script_skip_newlines(parser, pos);
 
-            Parse_1('{', {
-                pos = flecs_script_fn_body(parser, fn, pos);
-                if (!pos) {
-                    goto error;
-                }
+        Parse_1(EcsTokArrow,
+            pos = flecs_script_skip_newlines(parser, pos);
 
-                EndOfRule;
+            Parse_1(EcsTokIdentifier, {
+                fn->return_type = Token(4);
+                fn->return_type_node.pos = parser->pos;
+
+                pos = flecs_script_skip_newlines(parser, pos);
+
+                Parse_1('{', {
+                    pos = flecs_script_fn_body(parser, fn, pos);
+                    if (!pos) {
+                        goto error;
+                    }
+
+                    EndOfRule;
+                })
             })
-        })
+        )
     })
 }
 

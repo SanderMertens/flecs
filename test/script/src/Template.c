@@ -6,10 +6,8 @@ void Template_template_no_scope(void) {
     const char *expr =
     LINE "template Tree";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -30,6 +28,29 @@ void Template_template_no_props(void) {
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    test_assert(ent != 0);
+    test_assert(ecs_has_id(world, ent, foo));
+
+    ecs_fini(world);
+}
+
+void Template_template_newline_before_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "template Tree"
+    LINE "{"
+    LINE "  Foo"
+    LINE "}"
+    LINE "Tree ent()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);

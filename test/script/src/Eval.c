@@ -7011,6 +7011,112 @@ void Eval_if_true_no_else(void) {
     ecs_fini(world);
 }
 
+void Eval_if_newline_before_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if true"
+    LINE "{"
+    LINE "  a{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_multiline_cond_newline_before_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if true &&"
+    LINE "  true"
+    LINE "{"
+    LINE "  a{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_newline_before_else(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if false {"
+    LINE "  a{}"
+    LINE "}"
+    LINE "else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_newline_before_else_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if false {"
+    LINE "  a{}"
+    LINE "}"
+    LINE "else if true {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_newline_before_else_and_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if false {"
+    LINE "  a{}"
+    LINE "}"
+    LINE "else"
+    LINE "{"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_multiple_newlines_before_else_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if false {"
+    LINE "  a{}"
+    LINE "} else"
+    LINE ""
+    LINE ""
+    LINE "{"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
 void Eval_if_false(void) {
     ecs_world_t *world = ecs_init();
 
@@ -10845,6 +10951,22 @@ void Eval_for_range_min_1_2(void) {
         test_int(p->x, 1);
         test_int(p->y, 2);
     }
+
+    ecs_fini(world);
+}
+
+void Eval_for_range_newline_before_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "for i in 0..2"
+    LINE "{"
+    LINE "  \"e_{$i}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "e_0") != 0);
+    test_assert(ecs_lookup(world, "e_1") != 0);
 
     ecs_fini(world);
 }
@@ -15162,8 +15284,9 @@ void Eval_template_stmt_w_comment(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "template Tree // define Tree"
-    LINE "template Bush"
+    HEAD "Foo {}"
+    LINE "template Tree { Foo } // define Tree"
+    LINE "template Bush { Foo }"
     LINE "e {}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);

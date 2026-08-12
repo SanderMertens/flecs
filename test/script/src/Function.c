@@ -27,6 +27,92 @@ void Function_simple(void) {
     ecs_fini(world);
 }
 
+void Function_newline_before_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "fn add(a: i32, b: i32) -> i32"
+    LINE "{"
+    LINE "  a + b"
+    LINE "}"
+    LINE "Foo { Position: {add(2, 3), add(10, 20)} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
+void Function_newline_before_return_type_operator(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "fn add(a: i32, b: i32)"
+    LINE "  -> i32 { a + b }"
+    LINE "Foo { Position: {add(2, 3), add(10, 20)} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
+void Function_newline_after_return_type_operator(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "fn add(a: i32, b: i32) ->"
+    LINE "  i32 { a + b }"
+    LINE "Foo { Position: {add(2, 3), add(10, 20)} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
 void Function_no_args(void) {
     ecs_world_t *world = ecs_init();
 
