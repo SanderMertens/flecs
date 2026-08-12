@@ -204,6 +204,11 @@ void flecs_script_frame_pop(
 #define flecs_script_eval_error(v, node, ...)\
     flecs_script_visit_error(v, node, __VA_ARGS__)
 
+const char* flecs_script_name_to_var(
+    const char *name);
+
+#define flecs_script_name_is_var(name) (flecs_script_name_to_var(name) != NULL)
+
 int flecs_script_find_entity(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t from,
@@ -226,6 +231,11 @@ const ecs_type_info_t* flecs_script_get_type_info(
     ecs_script_eval_visitor_t *v,
     void *node,
     ecs_id_t id);
+
+int flecs_script_eval_type_expr(
+    ecs_script_eval_visitor_t *v,
+    ecs_expr_node_t **expr_ptr,
+    ecs_entity_t type);
 
 int flecs_script_eval_expr(
     ecs_script_eval_visitor_t *v,
@@ -302,6 +312,14 @@ int flecs_script_eval_id(
     ecs_script_eval_visitor_t *v,
     void *node,
     ecs_script_id_t *id);
+
+bool flecs_script_can_default_ctor(
+    ecs_world_t *world,
+    ecs_id_t component);
+
+ecs_entity_t flecs_script_pair_expr_type(
+    ecs_world_t *world,
+    ecs_entity_t first);
 
 int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,

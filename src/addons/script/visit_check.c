@@ -65,10 +65,10 @@ static int flecs_script_check_expr(
         .script_visitor = v
     };
 
-    ecs_assert(expr->type_info == NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (flecs_expr_visit_type(script, expr_ptr, &desc)) {
-        goto error;
+    if (expr->type_info == NULL) {
+        if (flecs_expr_visit_type(script, expr_ptr, &desc)) {
+            goto error;
+        }
     }
 
     if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
@@ -221,6 +221,31 @@ static int flecs_script_check_component(
 
     if (node->expr) {
         if (!node->id.eval) {
+            ecs_entity_t type = 0;
+            if (node->id.second && !node->id.first_expr &&
+                node->id.first[0] != '$' &&
+                ecs_os_strcmp(node->id.first, "this"))
+            {
+                ecs_entity_t first = 0;
+                if (flecs_script_find_entity(
+                    v, 0, node->id.first, NULL, NULL, &first, NULL) || !first)
+                {
+                    flecs_script_eval_error(v, node,
+                        "unresolved identifier '%s'", node->id.first);
+                    return -1;
+                }
+
+                type = flecs_script_pair_expr_type(v->world, first);
+            }
+
+            if (!type) {
+                return 0;
+            }
+
+            if (flecs_script_check_expr(v, &node->expr, &type)) {
+                return -1;
+            }
+
             return 0;
         }
 

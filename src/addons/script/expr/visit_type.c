@@ -2924,9 +2924,12 @@ static int flecs_expr_new_visit_type(
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
-    (void)script;
     (void)cur;
-    (void)desc;
+
+    if (flecs_script_type_visit_new_expr(script, node->entity, desc)) {
+        return -1;
+    }
+
     node->node.type = ecs_id(ecs_entity_t);
     return 0;
 }

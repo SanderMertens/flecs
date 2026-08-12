@@ -62,6 +62,12 @@ int flecs_script_struct_visit(
         if (elem->value->kind == EcsExprInitializer ||
             elem->value->kind == EcsExprEmptyInitializer)
         {
+            if (flecs_script_eval_type_expr(
+                v, &elem->value, ecs_id(EcsMember)))
+            {
+                return -1;
+            }
+
             ecs_value_t value = {
                 .ptr = ecs_ensure_id(world, m, ecs_id(EcsMember),
                     flecs_ito(size_t, ti->size)),
@@ -76,6 +82,12 @@ int flecs_script_struct_visit(
 
             ecs_modified(world, m, EcsMember);
         } else {
+            if (flecs_script_eval_type_expr(
+                v, &elem->value, ecs_id(ecs_entity_t)))
+            {
+                return -1;
+            }
+
             ecs_entity_t type = 0;
             ecs_value_t value = {
                 .ptr = &type,

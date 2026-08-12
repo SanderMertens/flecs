@@ -72,6 +72,12 @@ static int flecs_script_constants_visit(
                 return -1;
             }
 
+            if (flecs_script_eval_type_expr(
+                v, &cfg_elem->value, ecs_id(ecs_entity_t)))
+            {
+                return -1;
+            }
+
             ecs_value_t value = {
                 .ptr = &underlying,
                 .type = ecs_id(ecs_entity_t)
@@ -124,6 +130,10 @@ static int flecs_script_constants_visit(
             if (!ti) {
                 flecs_expr_visit_error(script, elem->value,
                     "underlying type is not a type");
+                return -1;
+            }
+
+            if (flecs_script_eval_type_expr(v, &elem->value, underlying)) {
                 return -1;
             }
 

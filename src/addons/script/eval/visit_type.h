@@ -44,6 +44,8 @@ typedef struct ecs_script_type_visitor_t {
     struct ecs_script_eval_visitor_t *eval;
     struct ecs_script_type_scope_t *root;
     int32_t no_eval;
+    int32_t no_typing;
+    int32_t template_body;
 
     /* Current scope. Pushed/popped by the AST visitor for lexical scopes. A script may reopen the same scope multiple times:
      * a {
@@ -81,11 +83,16 @@ void flecs_script_type_visit_fini(
     ecs_script_type_visitor_t *v);
 
 /* Visitor for resolving symbols in script. Walks the AST and populates the
- * visitor with the state necessary to resolve the symbols defined by the 
+ * visitor with the state necessary to resolve the symbols defined by the
  * script. */
 int flecs_script_visit_type(
     ecs_script_type_visitor_t *visitor,
     ecs_script_node_t *node);
+
+int flecs_script_type_visit_new_expr(
+    ecs_script_t *script,
+    ecs_script_entity_t *entity,
+    const ecs_expr_eval_desc_t *desc);
 
 /* Looks up a symbol based on the current state of the visitor. If the string 
  * cannot be resolved to any of the symbols defined in the script, the function

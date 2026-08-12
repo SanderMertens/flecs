@@ -423,7 +423,8 @@ void FlecsScriptImport(
     });
 
     ecs_set(world, ecs_id(EcsBitmask), EcsScriptVisitor, {
-        .visit = flecs_script_bitmask_visit
+        .visit = flecs_script_bitmask_visit,
+        .type_pass = true
     });
 
     ecs_set_hooks(world, EcsScript, {

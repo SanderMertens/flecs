@@ -42,12 +42,14 @@ struct ecs_script_task_t {
     ecs_script_runner_t runner;
     ecs_script_eval_desc_t eval_desc;
     ecs_script_vars_t *initial_vars;
+    ecs_vec_t entity_slots;
     ecs_entity_t entity;
     void *ctx;
     ecs_ctx_free_t ctx_free;
     int32_t iterations;
     int32_t completed_iterations;
     bool has_owner_vars;
+    bool started;
     ecs_script_task_loop_t loop;
     ecs_script_task_status_t status;
 };
@@ -631,6 +633,8 @@ ecs_script_task_t* ecs_script_task_new(
         flecs_script_impl(result->script), &result->eval_desc);
     result->runner.can_suspend = true;
     result->runner.async_entity = result->entity;
+    ecs_vec_init_t(NULL, &result->entity_slots, ecs_entity_t, 0);
+    result->runner.v.entity_slots = &result->entity_slots;
     if (result->entity) {
         ecs_script_eval_visitor_t *v = &result->runner.v;
         v->vars = flecs_script_vars_push(
@@ -667,6 +671,39 @@ ecs_script_task_status_t ecs_script_task_resume(
     if (result) {
         flecs_log_capture_push(true);
     }
+
+    if (!task->started) {
+        task->started = true;
+
+        ecs_script_impl_t *impl = flecs_script_impl(task->script);
+        ecs_script_type_visitor_t type_visitor;
+        flecs_script_type_visit_init(
+            &type_visitor, task->script->world, impl);
+        type_visitor.eval = &task->runner.v;
+        type_visitor.no_eval = 1;
+
+        int r = 0;
+        if (flecs_script_visit_include(&task->runner.v, impl->root)) {
+            r = -1;
+        } else if (flecs_script_visit_type(
+            &type_visitor, (ecs_script_node_t*)impl->root))
+        {
+            r = -1;
+        }
+
+        flecs_script_type_visit_fini(&type_visitor);
+
+        if (r) {
+            task->status = EcsScriptTaskError;
+            if (result) {
+                result->error = flecs_log_capture_pop();
+                flecs_log_get_captured_error_pos(
+                    &result->line, &result->column);
+            }
+            return task->status;
+        }
+    }
+
     flecs_script_run_status_t status = flecs_script_runner_run_scope(
         &task->runner, flecs_script_impl(task->script)->root);
     if (status == FlecsScriptRunDone) {
@@ -752,6 +789,7 @@ void ecs_script_task_free(
             task->runner.v.vars);
     }
     flecs_script_runner_fini(&task->runner, &task->eval_desc);
+    ecs_vec_fini_t(NULL, &task->entity_slots, ecs_entity_t);
     ecs_script_runtime_free(task->eval_desc.runtime);
     if (task->ctx_free) {
         task->ctx_free(task->ctx);

@@ -843,6 +843,52 @@ static int flecs_script_template_eval_var(
     return 0;
 }
 
+static int flecs_script_template_finalize_expr(
+    ecs_script_eval_visitor_t *v,
+    ecs_expr_node_t **expr_ptr)
+{
+    ecs_expr_node_t *expr = *expr_ptr;
+    if (!expr || !expr->type_info) {
+        return 0;
+    }
+
+    ecs_script_impl_t *impl = v->base.script;
+    ecs_script_t *script = &impl->pub;
+
+    ecs_expr_eval_desc_t desc = {
+        .name = script->name,
+        .lookup_action = flecs_script_find_entity_action,
+        .lookup_ctx = v,
+        .vars = v->vars,
+        .type = expr->type,
+        .runtime = v->r,
+        .disable_dynamic_variable_binding = true,
+        .script_visitor = v
+    };
+
+    ecs_vec_t *refs = NULL, *dynamic_refs = NULL;
+    if (v->script_entity) {
+        refs = &impl->refs;
+    }
+    if (v->instance_template) {
+        if (!refs) {
+            refs = &v->instance_template->refs;
+        }
+        dynamic_refs = &v->instance_template->dynamic_refs;
+    }
+    if (refs) {
+        if (flecs_expr_visit_refs(script, expr, refs, dynamic_refs, refs)) {
+            return -1;
+        }
+    }
+
+    if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
+        return -1;
+    }
+
+    return 0;
+}
+
 static int flecs_script_template_eval(
     ecs_script_visit_t *v,
     ecs_script_node_t *node)
@@ -854,9 +900,19 @@ static int flecs_script_template_eval(
             "nested templates are not allowed");
         return -1;
     } else if (node->kind == EcsAstProp) {
+        if (flecs_script_template_finalize_expr(
+            eval_v, &((ecs_script_var_node_t*)node)->expr))
+        {
+            return -1;
+        }
         return flecs_script_template_eval_var(
             v, (ecs_script_var_node_t*)node, false);
     } else if (node->kind == EcsAstMut) {
+        if (flecs_script_template_finalize_expr(
+            eval_v, &((ecs_script_var_node_t*)node)->expr))
+        {
+            return -1;
+        }
         return flecs_script_template_eval_var(
             v, (ecs_script_var_node_t*)node, true);
     } else if (node->kind == EcsAstConst) {
@@ -864,7 +920,11 @@ static int flecs_script_template_eval(
         ecs_script_template_t *instance_template = eval_v->instance_template;
         eval_v->script_entity = 0;
         eval_v->instance_template = eval_v->template;
-        int result = flecs_script_check_node(v, node);
+        int result = flecs_script_template_finalize_expr(
+            eval_v, &((ecs_script_var_node_t*)node)->expr);
+        if (!result) {
+            result = flecs_script_check_node(v, node);
+        }
         eval_v->script_entity = script_entity;
         eval_v->instance_template = instance_template;
         return result;

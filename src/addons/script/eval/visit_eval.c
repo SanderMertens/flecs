@@ -131,6 +131,9 @@ ecs_script_var_t* flecs_script_find_var(
     int32_t *sp)
 {
     if (sp && sp[0] != -1) {
+        if (!vars || sp[0] >= (vars->sp + ecs_vec_count(&vars->vars))) {
+            return NULL;
+        }
         return ecs_script_vars_from_sp(vars, sp[0]);
     } else {
         ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
@@ -161,15 +164,9 @@ static ecs_entity_t flecs_script_eval_name_expr(
     ecs_expr_node_t *expr = *expr_ptr;
 
     if (!expr->type_info) {
-        if (flecs_expr_visit_type(script, expr_ptr, &desc)) {
-            return 0;
-        }
-
-        if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
-            return 0;
-        }
-
-        expr = *expr_ptr;
+        flecs_script_eval_error(v, node,
+            "name expression was not typed by type visitor");
+        return 0;
     }
 
     ecs_value_t value = { .type = ecs_id(ecs_string_t) };
@@ -197,6 +194,24 @@ static ecs_entity_t flecs_script_eval_name_expr(
     return result;
 }
 
+const char* flecs_script_name_to_var(
+    const char *name)
+{
+    if (!name) {
+        return NULL;
+    }
+
+    if (name[0] == '$') {
+        return &name[1];
+    }
+
+    if (!ecs_os_strcmp(name, "this")) {
+        return name;
+    }
+
+    return NULL;
+}
+
 int flecs_script_find_entity(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t from,
@@ -211,9 +226,9 @@ int flecs_script_find_entity(
     }
 
     ecs_entity_t result = 0;
-    bool is_this = !ecs_os_strcmp(path, "this");
+    const char *var_name = flecs_script_name_to_var(path);
 
-    if (path[0] != '$' && !is_this) {
+    if (!var_name) {
         bool valid_path = flecs_script_valid_lookup_path(path);
 
         if (name_expr && *name_expr) {
@@ -263,9 +278,7 @@ int flecs_script_find_entity(
             goto error;
         }
 
-        if (!is_this) {
-            path ++;
-        }
+        path = var_name;
     }
 
     const ecs_script_var_t *var = flecs_script_find_var(
@@ -429,13 +442,7 @@ int flecs_script_eval_id(
 
     if (v->template) {
         /* Can't resolve variables while preprocessing template scope */
-        const char *first_var = NULL;
-        if (id->first[0] == '$') {
-            first_var = &id->first[1];
-        } else if (!ecs_os_strcmp(id->first, "this")) {
-            first_var = id->first;
-        }
-
+        const char *first_var = flecs_script_name_to_var(id->first);
         if (first_var) {
             if (flecs_script_find_var(v->vars, first_var,
                 &id->first_sp))
@@ -448,15 +455,7 @@ int flecs_script_eval_id(
             }
         }
 
-        const char *second_var = NULL;
-        if (id->second) {
-            if (id->second[0] == '$') {
-                second_var = &id->second[1];
-            } else if (!ecs_os_strcmp(id->second, "this")) {
-                second_var = id->second;
-            }
-        }
-
+        const char *second_var = flecs_script_name_to_var(id->second);
         if (second_var) {
             if (flecs_script_find_var(v->vars, second_var,
                 &id->second_sp))
@@ -565,37 +564,44 @@ int flecs_script_prepare_expr(
         .script_visitor = v
     };
 
+    (void)desc;
+
     if (expr->type_info == NULL) {
-        if (flecs_expr_visit_type(script, expr_ptr, &desc)) {
-            goto error;
-        }
-
-        expr = *expr_ptr;
-
-        ecs_vec_t *refs = NULL, *dynamic_refs = NULL;
-        if (v->script_entity) {
-            refs = &impl->refs;
-        }
-        if (v->instance_template) {
-            if (!refs) {
-                refs = &v->instance_template->refs;
-            }
-            dynamic_refs = &v->instance_template->dynamic_refs;
-        }
-        if (refs) {
-            if (flecs_expr_visit_refs(script, expr, refs, dynamic_refs, refs)) {
-                goto error;
-            }
-        }
-
-        if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
-            goto error;
-        }
+        flecs_script_eval_error(v, NULL,
+            "expression was not typed by type visitor");
+        goto error;
     }
 
     return 0;
 error:
     return -1;
+}
+
+int flecs_script_eval_type_expr(
+    ecs_script_eval_visitor_t *v,
+    ecs_expr_node_t **expr_ptr,
+    ecs_entity_t type)
+{
+    ecs_expr_node_t *expr = *expr_ptr;
+    ecs_assert(expr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (expr->type_info != NULL) {
+        return 0;
+    }
+
+    ecs_script_t *script = &v->base.script->pub;
+    ecs_expr_eval_desc_t desc = {
+        .name = script->name,
+        .lookup_action = flecs_script_find_entity_action,
+        .lookup_ctx = v,
+        .vars = v->vars,
+        .type = type,
+        .runtime = v->r,
+        .disable_dynamic_variable_binding = true,
+        .script_visitor = v
+    };
+
+    return flecs_expr_visit_type(script, expr_ptr, &desc);
 }
 
 int flecs_script_eval_expr(
@@ -933,7 +939,23 @@ static ecs_entity_t flecs_script_get_src(
     return entity;
 }
 
-static bool flecs_script_can_default_ctor(
+ecs_entity_t flecs_script_pair_expr_type(
+    ecs_world_t *world,
+    ecs_entity_t first)
+{
+    if (ecs_has_id(world, first, EcsPairIsTag)) {
+        return 0;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, first);
+    if (!ti) {
+        return 0;
+    }
+
+    return ti->component;
+}
+
+bool flecs_script_can_default_ctor(
     ecs_world_t *world,
     ecs_id_t component)
 {
