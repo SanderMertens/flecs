@@ -17386,9 +17386,55 @@ ecs_value_t ecs_const_var_get(
     const ecs_world_t *world,
     ecs_entity_t var);
 
+/** Return pointer to the value of a const variable.
+ * This operation returns the value of a const variable, casted to the specified
+ * type. If the type is equal to that of the const variable, no cast is 
+ * performed. If the variable cannot be casted to the specified type, the 
+ * operation will throw an error.
+ * 
+ * The returned value is owned by the caller. If the returned value contains
+ * allocated memory, this needs to be freed by the caller.
+ *
+ * This operation is intended to be used by the ecs_const_var_get_t macro.
+ *
+ * @param world The world.
+ * @param name The name of the const variable.
+ * @param type The requested type.
+ * @param size The size of the requested type.
+ * @param out Storage for the value of the const variable.
+ * @return Pointer to the value of the const variable.
+ */
+FLECS_API
+void* ecs_const_var_get_w_type(
+    const ecs_world_t *world,
+    const char *name,
+    ecs_entity_t type,
+    ecs_size_t size,
+    void *out);
+
+/** Return pointer to the value of a const variable.
+ * This operation returns the value of a const variable, casted to the specified
+ * type. If the type is equal to that of the const variable, no cast is 
+ * performed. If the variable cannot be casted to the specified type, the 
+ * operation will throw an error.
+ * 
+ * The returned value is owned by the caller. If the returned value contains
+ * allocated memory, this needs to be freed by the caller.
+ *
+ * When the operation fails, a zero initialized value is returned.
+ *
+ * @param world The world.
+ * @param name The name of the const variable.
+ * @param T The requested type.
+ * @return The value of the const variable.
+ */
+#define ecs_const_var_get_t(world, name, T)\
+    (*ECS_CAST(T*, ecs_const_var_get_w_type(\
+        world, name, ecs_id(T), ECS_SIZEOF(T), &(T){0})))
+
 /** Mark const var as modified.
  * This will notify OnSet observers.
- * 
+ *
  * @param world The world.
  * @param var The const variable.
  */

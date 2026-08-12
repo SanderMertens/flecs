@@ -213,6 +213,54 @@ error:
     return (ecs_value_t){0};
 }
 
+void* ecs_const_var_get_w_type(
+    const ecs_world_t *world,
+    const char *name,
+    ecs_entity_t type,
+    ecs_size_t size,
+    void *out)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(out != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_entity_t var = ecs_lookup(world, name);
+    const EcsScriptConstVar *v = NULL;
+    if (var) {
+        v = ecs_get(world, var, EcsScriptConstVar);
+    }
+
+    if (!v) {
+        ecs_err("const variable '%s' not found", name);
+        goto error;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, type);
+    if (!ti) {
+        ecs_err("requested type for const variable '%s' is not a valid type",
+            name);
+        goto error;
+    }
+
+    if (ti->size != size) {
+        ecs_err("size of requested type for const variable '%s' does not "
+            "match size of provided type", name);
+        goto error;
+    }
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, out);
+    if (ecs_meta_set_value(&cur, &v->value)) {
+        ecs_err("value of const variable '%s' cannot be converted to "
+            "requested type", name);
+        goto error;
+    }
+
+    return out;
+error:
+    return out;
+}
+
 void ecs_const_var_modified(
     ecs_world_t *world,
     ecs_entity_t entity)

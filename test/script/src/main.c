@@ -1952,6 +1952,47 @@ void Refs_ref_declared_in_same_script_w_fn_other_scripts(void);
 void Refs_global_const_var_declared_in_same_script_w_template(void);
 void Refs_reeval_instantiates_template_w_global_const_var_ref(void);
 
+// Testsuite 'ConstVar'
+void ConstVar_get_bool(void);
+void ConstVar_get_char(void);
+void ConstVar_get_byte(void);
+void ConstVar_get_u8(void);
+void ConstVar_get_u16(void);
+void ConstVar_get_u32(void);
+void ConstVar_get_u64(void);
+void ConstVar_get_i8(void);
+void ConstVar_get_i16(void);
+void ConstVar_get_i32(void);
+void ConstVar_get_i64(void);
+void ConstVar_get_f32(void);
+void ConstVar_get_f64(void);
+void ConstVar_get_uptr(void);
+void ConstVar_get_iptr(void);
+void ConstVar_get_string(void);
+void ConstVar_get_string_is_owned(void);
+void ConstVar_get_struct_w_string_is_owned(void);
+void ConstVar_get_entity(void);
+void ConstVar_get_id(void);
+void ConstVar_get_struct(void);
+void ConstVar_get_nested_struct(void);
+void ConstVar_get_in_parent(void);
+void ConstVar_get_from_script(void);
+void ConstVar_get_not_found(void);
+void ConstVar_get_not_a_const_var(void);
+void ConstVar_get_w_invalid_size(void);
+void ConstVar_get_w_invalid_type(void);
+void ConstVar_get_i32_as_i64(void);
+void ConstVar_get_i32_as_f64(void);
+void ConstVar_get_f64_as_i32(void);
+void ConstVar_get_u32_as_u64(void);
+void ConstVar_get_u8_as_i32(void);
+void ConstVar_get_bool_as_i32(void);
+void ConstVar_get_i32_as_string(void);
+void ConstVar_get_string_as_i32(void);
+void ConstVar_get_struct_as_i32(void);
+void ConstVar_get_i32_as_struct(void);
+void ConstVar_get_struct_as_other_struct(void);
+
 bake_test_case Eval_testcases[] = {
     {
         "null",
@@ -9650,6 +9691,165 @@ bake_test_case Refs_testcases[] = {
     }
 };
 
+bake_test_case ConstVar_testcases[] = {
+    {
+        "get_bool",
+        ConstVar_get_bool
+    },
+    {
+        "get_char",
+        ConstVar_get_char
+    },
+    {
+        "get_byte",
+        ConstVar_get_byte
+    },
+    {
+        "get_u8",
+        ConstVar_get_u8
+    },
+    {
+        "get_u16",
+        ConstVar_get_u16
+    },
+    {
+        "get_u32",
+        ConstVar_get_u32
+    },
+    {
+        "get_u64",
+        ConstVar_get_u64
+    },
+    {
+        "get_i8",
+        ConstVar_get_i8
+    },
+    {
+        "get_i16",
+        ConstVar_get_i16
+    },
+    {
+        "get_i32",
+        ConstVar_get_i32
+    },
+    {
+        "get_i64",
+        ConstVar_get_i64
+    },
+    {
+        "get_f32",
+        ConstVar_get_f32
+    },
+    {
+        "get_f64",
+        ConstVar_get_f64
+    },
+    {
+        "get_uptr",
+        ConstVar_get_uptr
+    },
+    {
+        "get_iptr",
+        ConstVar_get_iptr
+    },
+    {
+        "get_string",
+        ConstVar_get_string
+    },
+    {
+        "get_string_is_owned",
+        ConstVar_get_string_is_owned
+    },
+    {
+        "get_struct_w_string_is_owned",
+        ConstVar_get_struct_w_string_is_owned
+    },
+    {
+        "get_entity",
+        ConstVar_get_entity
+    },
+    {
+        "get_id",
+        ConstVar_get_id
+    },
+    {
+        "get_struct",
+        ConstVar_get_struct
+    },
+    {
+        "get_nested_struct",
+        ConstVar_get_nested_struct
+    },
+    {
+        "get_in_parent",
+        ConstVar_get_in_parent
+    },
+    {
+        "get_from_script",
+        ConstVar_get_from_script
+    },
+    {
+        "get_not_found",
+        ConstVar_get_not_found
+    },
+    {
+        "get_not_a_const_var",
+        ConstVar_get_not_a_const_var
+    },
+    {
+        "get_w_invalid_size",
+        ConstVar_get_w_invalid_size
+    },
+    {
+        "get_w_invalid_type",
+        ConstVar_get_w_invalid_type
+    },
+    {
+        "get_i32_as_i64",
+        ConstVar_get_i32_as_i64
+    },
+    {
+        "get_i32_as_f64",
+        ConstVar_get_i32_as_f64
+    },
+    {
+        "get_f64_as_i32",
+        ConstVar_get_f64_as_i32
+    },
+    {
+        "get_u32_as_u64",
+        ConstVar_get_u32_as_u64
+    },
+    {
+        "get_u8_as_i32",
+        ConstVar_get_u8_as_i32
+    },
+    {
+        "get_bool_as_i32",
+        ConstVar_get_bool_as_i32
+    },
+    {
+        "get_i32_as_string",
+        ConstVar_get_i32_as_string
+    },
+    {
+        "get_string_as_i32",
+        ConstVar_get_string_as_i32
+    },
+    {
+        "get_struct_as_i32",
+        ConstVar_get_struct_as_i32
+    },
+    {
+        "get_i32_as_struct",
+        ConstVar_get_i32_as_struct
+    },
+    {
+        "get_struct_as_other_struct",
+        ConstVar_get_struct_as_other_struct
+    }
+};
+
 const char* Format_folding_param[] = {"enabled", "disabled"};
 bake_test_param Format_params[] = {
     {"folding", (char**)Format_folding_param, 2}
@@ -9769,9 +9969,16 @@ static bake_test_suite suites[] = {
         NULL,
         88,
         Refs_testcases
+    },
+    {
+        "ConstVar",
+        NULL,
+        NULL,
+        39,
+        ConstVar_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 14);
+    return bake_test_run("script", argc, argv, suites, 15);
 }
