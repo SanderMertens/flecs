@@ -103950,11 +103950,13 @@ static int flecs_expr_function_visit_type(
     const ecs_expr_eval_desc_t *desc)
 {
     bool is_method = false;
+    bool is_split = false;
     char *last_elem = NULL;
     const char *func_identifier = NULL;
+    ecs_expr_member_t *replaced_member = NULL;
 
     if (node->left->kind == EcsExprIdentifier) {
-        /* If identifier contains '.' separator(s), this is a method call, 
+        /* If identifier contains '.' separator(s), this is a method call,
          * otherwise it's a regular function. */
         ecs_expr_identifier_t *ident = (ecs_expr_identifier_t*)node->left;
         func_identifier = ident->value;
@@ -103964,8 +103966,9 @@ static int flecs_expr_function_visit_type(
             node->function_name = last_elem + 1;
             last_elem[0] = '\0';
             is_method = true;
+            is_split = true;
         } else {
-            node->function_name = ident->value;   
+            node->function_name = ident->value;
         }
 
     } else if (node->left->kind == EcsExprMember) {
@@ -103976,12 +103979,11 @@ static int flecs_expr_function_visit_type(
         if (!last_elem) {
             node->left = member->left;
             node->function_name = member->member_name;
-
-            member->left = NULL; /* Prevent cleanup */
-            flecs_expr_visit_free(script, (ecs_expr_node_t*)member);
+            replaced_member = member;
         } else {
             node->function_name = last_elem + 1;
             last_elem[0] = '\0';
+            is_split = true;
         }
         is_method = true;
     }
@@ -104006,6 +104008,7 @@ static int flecs_expr_function_visit_type(
             /* If identifier could be a function (not a method), try that */
             if (func_identifier) {
                 is_method = false;
+                is_split = false;
                 last_elem[0] = '.';
                 node->function_name = func_identifier;
                 goto try_function;
@@ -104089,12 +104092,29 @@ try_function:
             goto error;
         }
     } else {
-        ecs_assert(node->node.type != EcsScriptVectorType, 
+        ecs_assert(node->node.type != EcsScriptVectorType,
             ECS_INTERNAL_ERROR, NULL);
+    }
+
+    if (replaced_member) {
+        replaced_member->left = NULL; /* Prevent cleanup */
+        flecs_expr_visit_free(script, (ecs_expr_node_t*)replaced_member);
     }
 
     return 0;
 error:
+    /* Undo mutations so the expression can be visited again, which can happen
+     * when a script is evaluated multiple times. */
+    if (is_split) {
+        last_elem[0] = '.';
+    }
+    if (replaced_member) {
+        node->left = (ecs_expr_node_t*)replaced_member;
+        node->function_name = NULL;
+    }
+    if (node->node.kind == EcsExprMethod) {
+        node->node.kind = EcsExprFunction;
+    }
     return -1;
 }
 

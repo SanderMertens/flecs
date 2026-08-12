@@ -340,6 +340,7 @@ void Eval_assign_call_func(void);
 void Eval_assign_call_scoped_func(void);
 void Eval_assign_call_scoped_func_w_using(void);
 void Eval_eval_w_vars(void);
+void Eval_eval_twice_w_failed_method_call(void);
 void Eval_eval_w_runtime(void);
 void Eval_eval_w_other_vars(void);
 void Eval_eval_w_vars_different_order(void);
@@ -3276,6 +3277,10 @@ bake_test_case Eval_testcases[] = {
     {
         "eval_w_vars",
         Eval_eval_w_vars
+    },
+    {
+        "eval_twice_w_failed_method_call",
+        Eval_eval_twice_w_failed_method_call
     },
     {
         "eval_w_runtime",
@@ -9670,7 +9675,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        539,
+        540,
         Eval_testcases
     },
     {
