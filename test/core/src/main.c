@@ -2115,6 +2115,7 @@ void Observer_query_eval_w_component_that_triggered_observer(void);
 void Observer_query_eval_w_pair_first_var_that_triggered_observer(void);
 void Observer_query_eval_w_pair_second_var_that_triggered_observer(void);
 void Observer_query_eval_w_pair_both_vars_that_triggered_observer(void);
+void Observer_query_eval_skip_value_pair_targets_for_var_eval(void);
 void Observer_observer_w_2_fixed_src(void);
 void Observer_1_term_wildcard_batched(void);
 void Observer_2_terms_wildcard_batched(void);
@@ -11628,6 +11629,10 @@ bake_test_case Observer_testcases[] = {
         Observer_query_eval_w_pair_both_vars_that_triggered_observer
     },
     {
+        "query_eval_skip_value_pair_targets_for_var_eval",
+        Observer_query_eval_skip_value_pair_targets_for_var_eval
+    },
+    {
         "observer_w_2_fixed_src",
         Observer_observer_w_2_fixed_src
     },
@@ -16747,7 +16752,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        385,
+        386,
         Observer_testcases
     },
     {

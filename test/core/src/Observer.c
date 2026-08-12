@@ -6294,6 +6294,25 @@ void Observer_query_eval_w_pair_both_vars_that_triggered_observer(void) {
     ecs_fini(world);
 }
 
+void Observer_query_eval_skip_value_pair_targets_for_var_eval(void) {
+    ecs_world_t* const	world	= ecs_mini();
+
+    ECS_TAG(world, valRel);
+    ECS_TAG(world, tag);
+
+    // In the same way that pair terms aren't evaluated as sources, neither should value-pair targets
+    ECS_OBSERVER(world, Dummy, EcsOnRemove, (valRel, $Tgt), tag($Tgt));
+
+    const ecs_entity_t	e1		= ecs_new(world);
+    ecs_add_id					(world, e1, tag);
+    ecs_add_id					(world, e1, ecs_value_pair(valRel, 0));
+    ecs_remove_id				(world, e1, ecs_pair(valRel, EcsWildcard));
+
+    test_assert(!dummy_called);
+
+    ecs_fini(world);
+}
+
 void Observer_observer_w_2_fixed_src(void) {
     ecs_world_t *world = ecs_init();
 
