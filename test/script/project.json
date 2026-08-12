@@ -344,6 +344,7 @@
                 "assign_call_scoped_func",
                 "assign_call_scoped_func_w_using",
                 "eval_w_vars",
+                "eval_twice_w_failed_method_call",
                 "eval_w_runtime",
                 "eval_w_other_vars",
                 "eval_w_vars_different_order",
