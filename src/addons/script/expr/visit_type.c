@@ -1278,20 +1278,25 @@ static int flecs_expr_binary_visit_type(
     /* Number of elements in vector, if vector operation */
     int32_t vector_elem_count = 0;
 
-    if (cur->valid) {
+    /* Operands are visited with a copy of the cursor. Visiting an operand can
+     * move the cursor to the type of the operand, which must not be visible to
+     * the expression that this binary expression is a part of. */
+    ecs_meta_cursor_t operand_cur = *cur;
+
+    if (operand_cur.valid) {
         /* Provides a hint to the type visitor. The lvalue type will be used to
          * reduce the number of casts where possible. */
-        node->node.type = ecs_meta_get_type(cur);
+        node->node.type = ecs_meta_get_type(&operand_cur);
 
         /* If the result of the binary expression is a boolean, it's likely a
          * conditional expression. We don't want to hint that the operands
          * of conditional expressions should be cast to booleans. */
         if (node->node.type == ecs_id(ecs_bool_t)) {
-            ecs_os_zeromem(cur);
+            ecs_os_zeromem(&operand_cur);
         }
     }
 
-    if (flecs_expr_visit_type_priv(script, node->left, cur, desc)) {
+    if (flecs_expr_visit_type_priv(script, node->left, &operand_cur, desc)) {
         goto error;
     }
 
@@ -1300,7 +1305,7 @@ static int flecs_expr_binary_visit_type(
         goto error;
     }
 
-    ecs_meta_cursor_t right_cur = *cur;
+    ecs_meta_cursor_t right_cur = operand_cur;
     if (node->right->kind == EcsExprIdentifier) {
         if (ecs_get(script->world, node->left->type, EcsEnum) != NULL) {
             /* If the left hand side is an enum, interpret untyped identifiers

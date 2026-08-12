@@ -258,6 +258,9 @@ void Eval_if_true_in_scope(void);
 void Eval_if_false_in_scope(void);
 void Eval_if_lt(void);
 void Eval_if_lt_const(void);
+void Eval_if_enum_eq_and_var(void);
+void Eval_if_enum_eq_or_var(void);
+void Eval_if_enum_eq_and_member(void);
 void Eval_if_tab_after_keyword(void);
 void Eval_if_else_if(void);
 void Eval_if_else_if_else(void);
@@ -2945,6 +2948,18 @@ bake_test_case Eval_testcases[] = {
     {
         "if_lt_const",
         Eval_if_lt_const
+    },
+    {
+        "if_enum_eq_and_var",
+        Eval_if_enum_eq_and_var
+    },
+    {
+        "if_enum_eq_or_var",
+        Eval_if_enum_eq_or_var
+    },
+    {
+        "if_enum_eq_and_member",
+        Eval_if_enum_eq_and_member
     },
     {
         "if_tab_after_keyword",
@@ -9655,7 +9670,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        536,
+        539,
         Eval_testcases
     },
     {
