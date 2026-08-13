@@ -119,19 +119,23 @@ void flecs_script_update_ref_observers(
     ecs_vec_t *observers,
     ecs_iter_action_t callback)
 {
-    ecs_script_ref_t *new_refs = ecs_vec_first(refs);
+    ecs_script_ref_mon_t *new_refs = ecs_vec_first(refs);
     int32_t i, new_count = ecs_vec_count(refs);
 
-    ecs_script_ref_t *old_refs = ecs_vec_first(observers);
+    ecs_script_ref_mon_t *old_refs = ecs_vec_first(observers);
     int32_t j, old_count = ecs_vec_count(observers);
 
     ecs_vec_t result;
-    ecs_vec_init_t(NULL, &result, ecs_script_ref_t, new_count);
+    ecs_vec_init_t(NULL, &result, ecs_script_ref_mon_t, new_count);
 
     for (i = 0; i < new_count; i ++) {
         ecs_entity_t entity = new_refs[i].entity;
         ecs_id_t component = new_refs[i].component;
         ecs_entity_t observer = 0;
+
+        if (!entity) {
+            continue;
+        }
 
         for (j = 0; j < old_count; j ++) {
             if (old_refs[j].observer &&
@@ -149,10 +153,11 @@ void flecs_script_update_ref_observers(
                 world, script, instance, entity, component, callback);
         }
 
-        ecs_script_ref_t *ref = ecs_vec_append_t(
-            NULL, &result, ecs_script_ref_t);
+        ecs_script_ref_mon_t *ref = ecs_vec_append_t(
+            NULL, &result, ecs_script_ref_mon_t);
         ref->entity = entity;
         ref->name = NULL;
+        ref->slot = -1;
         ref->component = component;
         ref->observer = observer;
     }
@@ -163,7 +168,7 @@ void flecs_script_update_ref_observers(
         }
     }
 
-    ecs_vec_fini_t(NULL, observers, ecs_script_ref_t);
+    ecs_vec_fini_t(NULL, observers, ecs_script_ref_mon_t);
     *observers = result;
 }
 

@@ -51,13 +51,13 @@ static void flecs_script_type_scope_clear_vars(
             continue;
         }
 
-        if (!flecs_script_symbol_is_var(symbol->kind)) {
+        if (!flecs_script_symbol_is_var(symbol->ref.kind)) {
             continue;
         }
 
-        ecs_size_t len = ecs_os_strlen(symbol->name);
+        ecs_size_t len = ecs_os_strlen(symbol->ref.name);
         flecs_name_index_remove(&scope->symbols,
-            flecs_ito(uint64_t, i + 1), flecs_hash(symbol->name, len));
+            flecs_ito(uint64_t, i + 1), flecs_hash(symbol->ref.name, len));
     }
 
     scope->variable_count = 0;
@@ -77,13 +77,13 @@ static int32_t flecs_script_type_declare(
         ecs_script_symbol_t *symbol = ecs_vec_get_t(
             &v->symbols, ecs_script_symbol_t, index);
         if ((kind == EcsScriptSymbolEntity) &&
-            (symbol->kind == EcsScriptSymbolEntity))
+            (symbol->ref.kind == EcsScriptSymbolEntity))
         {
             return index;
         }
 
         flecs_script_visit_error(v, node,
-            "symbol '%s' redeclared", symbol->name);
+            "symbol '%s' redeclared", symbol->ref.name);
         return -1;
     }
 
@@ -92,8 +92,8 @@ static int32_t flecs_script_type_declare(
     ecs_script_symbol_t *symbol = ecs_vec_append_t(
         a, &v->symbols, ecs_script_symbol_t);
     ecs_os_memset_t(symbol, 0, ecs_script_symbol_t);
-    symbol->name = ecs_os_strdup(name);
-    symbol->kind = kind;
+    symbol->ref.name = name;
+    symbol->ref.kind = kind;
     symbol->parent = scope;
 
     switch(kind) {
@@ -101,20 +101,21 @@ static int32_t flecs_script_type_declare(
     case EcsScriptSymbolProp:
     case EcsScriptSymbolMut:
     case EcsScriptSymbolArgument:
-        symbol->is.variable = v->variable_count ++;
+        symbol->ref.is.variable = v->variable_count ++;
         scope->variable_count ++;
         break;
     case EcsScriptSymbolEntity:
     case EcsScriptSymbolGlobalConst:
     case EcsScriptSymbolGlobalMut:
-        symbol->is.entity = v->entity_count ++;
+        symbol->ref.is.entity = v->entity_count ++;
         break;
     case EcsScriptSymbolUnresolved:
+    case EcsScriptSymbolExpression:
         break;
     }
 
     flecs_name_index_ensure(&scope->symbols,
-        flecs_ito(uint64_t, index + 1), symbol->name, len, 0);
+        flecs_ito(uint64_t, index + 1), symbol->ref.name, len, 0);
 
     return index;
 }
@@ -205,18 +206,18 @@ static int flecs_script_type_body(
     int32_t prev_variable_count = v->variable_count;
     int32_t prev_entity_count = v->entity_count;
 
-    ecs_script_type_scope_t *type_scope = flecs_script_type_scope_new(v, NULL);
+    ecs_script_type_scope_t *type_scope = flecs_script_type_scope_new(
+        v, prev_scope);
     v->cur = type_scope;
-    v->variable_count = 0;
-    v->entity_count = 0;
 
     if (type_scope_out) {
         type_scope_out[0] = type_scope;
     }
 
-    /* Template instances are evaluated with a variable stack that holds $this,
-     * followed by the props and muts of the template. Declare $this here so
-     * that the slots assigned by the type visitor line up with that stack. */
+    /* Template instances are evaluated with a variable stack that holds the
+     * hoisted variables of the outer scope, followed by $this and the props
+     * and muts of the template. Declare $this here so that the slots assigned
+     * by the type visitor line up with that stack. */
     int result = flecs_script_type_declare_var(
         v, node, "this", EcsScriptSymbolConst);
     if (!result) {
@@ -224,8 +225,13 @@ static int flecs_script_type_body(
         bool mirror_vars = flecs_script_type_can_type(v);
         if (mirror_vars) {
             prev_vars = v->eval->vars;
-            v->eval->vars = flecs_script_vars_push(
-                NULL, &v->eval->r->stack, &v->eval->r->allocator);
+            if (v->eval->vars) {
+                v->eval->vars = flecs_script_vars_push(
+                    v->eval->vars, NULL, NULL);
+            } else {
+                v->eval->vars = flecs_script_vars_push(
+                    NULL, &v->eval->r->stack, &v->eval->r->allocator);
+            }
             ecs_script_var_t *this_var = ecs_script_vars_declare(
                 v->eval->vars, "this");
             this_var->value.type = ecs_id(ecs_entity_t);
@@ -234,9 +240,7 @@ static int flecs_script_type_body(
         }
 
         v->no_eval ++;
-        v->template_body ++;
         result = ecs_script_visit_scope(v, scope);
-        v->template_body --;
         v->no_eval --;
 
         if (mirror_vars) {
@@ -293,22 +297,13 @@ static int flecs_script_type_expr(
         .script_visitor = eval
     };
 
-    flecs_log_capture_push(true);
-    int result = flecs_expr_visit_type(script, expr_ptr, &desc);
-    char *err = flecs_log_capture_pop();
-    ecs_os_free(err);
-
-    if (result) {
-        return 1;
-    }
-
-    if (v->template_body) {
-        return 0;
+    if (flecs_expr_visit_type(script, expr_ptr, &desc)) {
+        return -1;
     }
 
     if (track_refs && eval->script_entity) {
         if (flecs_expr_visit_refs(
-            script, *expr_ptr, &impl->refs, NULL, &impl->refs))
+            script, *expr_ptr, v->refs, v->dynamic_refs, v->refs))
         {
             return -1;
         }
@@ -346,11 +341,26 @@ static bool flecs_script_name_is_static(
     return true;
 }
 
+static const ecs_script_symbol_t* flecs_script_type_lookup_root(
+    const ecs_script_type_visitor_t *v,
+    const char *name)
+{
+    return flecs_script_type_lookup_scope(v, v->root, name);
+}
+
+bool flecs_script_type_is_root_entity_symbol(
+    const ecs_script_type_visitor_t *v,
+    const char *name)
+{
+    const ecs_script_symbol_t *symbol = flecs_script_type_lookup_root(v, name);
+    return symbol && symbol->ref.kind == EcsScriptSymbolEntity;
+}
+
 static bool flecs_script_type_id_elem_resolvable(
     ecs_script_type_visitor_t *v,
     const char *name)
 {
-    if (flecs_script_lookup_symbol(v, name).kind != EcsScriptSymbolUnresolved) {
+    if (flecs_script_lookup_symbol(v, name).ref.kind != EcsScriptSymbolUnresolved) {
         return true;
     }
 
@@ -364,9 +374,9 @@ static bool flecs_script_type_id_elem_resolvable(
 
     bool result = false;
     ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, cur);
-    if (symbol.kind == EcsScriptSymbolEntity) {
-        if (symbol.external) {
-            result = ecs_lookup_path_w_sep(v->world, symbol.is.external,
+    if (symbol.ref.kind == EcsScriptSymbolEntity) {
+        if (symbol.ref.external) {
+            result = ecs_lookup_path_w_sep(v->world, symbol.ref.is.external,
                 &next[1], NULL, NULL, false) != 0;
         } else {
             const ecs_script_type_scope_t *scope = symbol.scope;
@@ -380,7 +390,7 @@ static bool flecs_script_type_id_elem_resolvable(
 
                 const ecs_script_symbol_t *s = scope ?
                     flecs_script_type_lookup_scope(v, scope, cur) : NULL;
-                if (!s || s->kind != EcsScriptSymbolEntity) {
+                if (!s || s->ref.kind != EcsScriptSymbolEntity) {
                     result = false;
                     break;
                 }
@@ -394,27 +404,125 @@ static bool flecs_script_type_id_elem_resolvable(
     return result;
 }
 
-static int flecs_script_type_id_name_exprs(
-    ecs_script_type_visitor_t *v,
-    ecs_script_id_t *id)
+static ecs_script_symbol_t flecs_script_type_lookup_path(
+    const ecs_script_type_visitor_t *v,
+    const char *name)
 {
-    if (v->template_body) {
-        return 0;
+    char *path = ecs_os_strdup(name);
+    char *cur = path, *next = strchr(cur, '.');
+    next[0] = '\0';
+
+    ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, cur);
+    if (symbol.ref.kind == EcsScriptSymbolEntity && !symbol.ref.external) {
+        do {
+            const ecs_script_type_scope_t *scope = symbol.scope;
+            cur = &next[1];
+            next = strchr(cur, '.');
+            if (next) {
+                next[0] = '\0';
+            }
+
+            const ecs_script_symbol_t *s = scope ?
+                flecs_script_type_lookup_scope(v, scope, cur) : NULL;
+            if (!s || s->ref.kind != EcsScriptSymbolEntity) {
+                symbol.ref.kind = EcsScriptSymbolUnresolved;
+                break;
+            }
+
+            symbol = *s;
+        } while (next);
+
+        ecs_os_free(path);
+        symbol.ref.name = name;
+        return symbol;
     }
 
-    if (id->first_expr && !flecs_script_name_is_var(id->first)) {
-        if (flecs_script_type_name_expr(v, &id->first_expr) == -1) {
+    ecs_os_free(path);
+    return flecs_script_lookup_symbol(v, name);
+}
+
+static int flecs_script_type_resolve_ref(
+    ecs_script_type_visitor_t *v,
+    ecs_script_node_t *node,
+    ecs_script_ref_t *ref,
+    const ecs_script_ref_t *first_ref,
+    bool allow_unresolved)
+{
+    if (ref->kind == EcsScriptSymbolExpression) {
+        if (!flecs_script_name_is_var(ref->name)) {
+            if (!ref->is.expr->type_info) {
+                if (flecs_script_type_name_expr(v, &ref->is.expr) == -1) {
+                    return -1;
+                }
+            }
+        }
+        return 1;
+    }
+
+    if (ref->kind != EcsScriptSymbolUnresolved) {
+        if (ref->kind == EcsScriptSymbolEntity && ref->external) {
+            return 0;
+        }
+        return 1;
+    }
+
+    const char *name = ref->name;
+
+    const char *var_name = flecs_script_name_to_var(name);
+    if (var_name) {
+        ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, var_name);
+        if (flecs_script_symbol_is_var(symbol.ref.kind)) {
+            ref->kind = symbol.ref.kind;
+            ref->is.variable = symbol.ref.is.variable;
+        } else if (symbol.ref.kind == EcsScriptSymbolUnresolved) {
+            flecs_script_visit_error(v, node,
+                "unresolved variable '%s'", name);
             return -1;
+        }
+        return 1;
+    }
+
+    if (!flecs_script_name_is_static(name)) {
+        return 1;
+    }
+
+    ecs_script_symbol_t symbol;
+    if (!strchr(name, '.')) {
+        symbol = flecs_script_lookup_symbol(v, name);
+    } else {
+        symbol = flecs_script_type_lookup_path(v, name);
+    }
+
+    if (symbol.ref.kind == EcsScriptSymbolEntity) {
+        ref->kind = EcsScriptSymbolEntity;
+        ref->external = symbol.ref.external;
+        ref->is = symbol.ref.is;
+        return ref->external ? 0 : 1;
+    }
+
+    if (symbol.ref.kind != EcsScriptSymbolUnresolved) {
+        return 1;
+    }
+
+    if (first_ref) {
+        if (first_ref->kind != EcsScriptSymbolEntity || !first_ref->external ||
+            flecs_get_oneof(v->world, first_ref->is.external))
+        {
+            return 1;
         }
     }
 
-    if (id->second_expr && !flecs_script_name_is_var(id->second)) {
-        if (flecs_script_type_name_expr(v, &id->second_expr) == -1) {
-            return -1;
-        }
+    if (allow_unresolved) {
+        return 1;
     }
 
-    return 0;
+    if (flecs_script_type_id_elem_resolvable(v, name)) {
+        return 1;
+    }
+
+    flecs_script_visit_error(v, node,
+        "unresolved identifier '%s'", name);
+    return -1;
 }
 
 static int flecs_script_type_component_id(
@@ -426,59 +534,35 @@ static int flecs_script_type_component_id(
         return 1;
     }
 
-    if (id->eval && !id->dynamic) {
-        return 0;
-    }
-
-    if (id->first_expr || id->second_expr) {
-        if (flecs_script_type_id_name_exprs(v, id)) {
-            return -1;
-        }
-
-        return 1;
-    }
-
-    flecs_log_capture_push(true);
-    int result = flecs_script_eval_id(v->eval, node, id);
-    char *err = flecs_log_capture_pop();
-    ecs_os_free(err);
-
-    if (!result) {
-        return 0;
-    }
-
-    if (!flecs_script_type_can_eval(v)) {
-        return 1;
-    }
-
-    if (!id->first_expr && flecs_script_name_is_static(id->first) &&
-        !flecs_script_type_id_elem_resolvable(v, id->first))
-    {
-        flecs_script_visit_error(v, node,
-            "unresolved identifier '%s'", id->first);
+    int fr = flecs_script_type_resolve_ref(v, node, &id->first_ref, NULL, false);
+    if (fr == -1) {
         return -1;
     }
 
-    if (id->second && !id->second_expr &&
-        flecs_script_name_is_static(id->second) &&
-        !flecs_script_type_id_elem_resolvable(v, id->second))
-    {
-        bool oneof = false;
-        ecs_script_symbol_t first = flecs_script_lookup_symbol(v, id->first);
-        if (first.kind != EcsScriptSymbolEntity || !first.external ||
-            flecs_get_oneof(v->world, first.is.external))
-        {
-            oneof = true;
-        }
-
-        if (!oneof) {
-            flecs_script_visit_error(v, node,
-                "unresolved identifier '%s'", id->second);
+    int sr = 0;
+    if (id->second_ref.name) {
+        sr = flecs_script_type_resolve_ref(
+            v, node, &id->second_ref, &id->first_ref, false);
+        if (sr == -1) {
             return -1;
         }
     }
 
-    return 1;
+    return (fr || sr) ? 1 : 0;
+}
+
+static ecs_id_t flecs_script_type_id_to_world_id(
+    const ecs_script_id_t *id)
+{
+    ecs_assert(id->first_ref.kind == EcsScriptSymbolEntity &&
+        id->first_ref.external, ECS_INTERNAL_ERROR, NULL);
+    if (id->second_ref.name) {
+        ecs_assert(id->second_ref.kind == EcsScriptSymbolEntity &&
+            id->second_ref.external, ECS_INTERNAL_ERROR, NULL);
+        return ecs_pair(
+            id->first_ref.is.external, id->second_ref.is.external);
+    }
+    return id->first_ref.is.external;
 }
 
 static int flecs_script_type_check_default_ctor(
@@ -490,17 +574,19 @@ static int flecs_script_type_check_default_ctor(
         return 0;
     }
 
-    if (!flecs_script_can_default_ctor(v->world, id->eval)) {
-        if (id->second) {
+    if (!flecs_script_can_default_ctor(
+        v->world, flecs_script_type_id_to_world_id(id)))
+    {
+        if (id->second_ref.name) {
             flecs_script_visit_error(v, node,
                 "cannot add (%s, %s), "
                 "type is not default constructible",
-                id->first, id->second);
+                id->first_ref.name, id->second_ref.name);
         } else {
             flecs_script_visit_error(v, node,
                 "cannot add %s, "
                 "type is not default constructible",
-                id->first);
+                id->first_ref.name);
         }
         return -1;
     }
@@ -534,34 +620,25 @@ static int flecs_script_type_pair_expr_type(
     const ecs_script_id_t *id,
     ecs_entity_t *type_out)
 {
+    (void)node;
     *type_out = 0;
 
     if (!flecs_script_type_can_type(v)) {
         return 0;
     }
 
-    if (!id->second || id->first_expr) {
+    if (!id->second_ref.name) {
         return 0;
     }
 
-    if (!flecs_script_name_is_static(id->first)) {
+    if (id->first_ref.kind != EcsScriptSymbolEntity ||
+        !id->first_ref.external)
+    {
         return 0;
     }
 
-    flecs_log_capture_push(true);
-    ecs_entity_t first = 0;
-    int result = flecs_script_find_entity(
-        v->eval, 0, id->first, NULL, NULL, &first, NULL);
-    char *err = flecs_log_capture_pop();
-    ecs_os_free(err);
-
-    if (result || !first) {
-        flecs_script_visit_error(v, node,
-            "unresolved identifier '%s'", id->first);
-        return -1;
-    }
-
-    *type_out = flecs_script_pair_expr_type(v->world, first);
+    *type_out = flecs_script_pair_expr_type(
+        v->world, id->first_ref.is.external);
     return 0;
 }
 
@@ -594,22 +671,38 @@ static int flecs_script_type_component(
                 if (flecs_script_type_expr(v, &node->expr, type, true) == -1) {
                     return -1;
                 }
+            } else if (flecs_script_type_can_type(v)) {
+                const ecs_script_id_t *id = &node->id;
+                bool dynamic =
+                    id->first_ref.kind == EcsScriptSymbolExpression ||
+                    id->second_ref.kind == EcsScriptSymbolExpression ||
+                    flecs_script_symbol_is_var(id->first_ref.kind) ||
+                    flecs_script_symbol_is_var(id->second_ref.kind) ||
+                    (id->second_ref.name &&
+                        id->second_ref.kind == EcsScriptSymbolUnresolved);
+                if (!dynamic) {
+                    flecs_script_visit_error(v, node,
+                        "unresolved identifier '%s'", id->first_ref.name);
+                    return -1;
+                }
             }
         }
 
         return 0;
     }
 
+    ecs_id_t world_id = flecs_script_type_id_to_world_id(&node->id);
+
     /* If the id has a script visitor the initializer AST is passed to the
      * visitor as-is during evaluation, don't type check it. */
-    if (!node->id.second && ecs_get(
-        v->world, node->id.eval, EcsScriptVisitor))
+    if (!node->id.second_ref.name && ecs_get(
+        v->world, world_id, EcsScriptVisitor))
     {
         return 0;
     }
 
     const ecs_type_info_t *ti = flecs_script_get_type_info(
-        v->eval, node, node->id.eval);
+        v->eval, node, world_id);
     if (!ti) {
         return -1;
     }
@@ -643,19 +736,6 @@ static int flecs_script_type_scope(
     return flecs_script_type_scope_stmts_no_eval(v, node, NULL);
 }
 
-static bool flecs_script_type_has_tree_annot(
-    ecs_script_type_visitor_t *v)
-{
-    int32_t i, count = ecs_vec_count(&v->eval->r->annot);
-    ecs_script_annot_t **annots = ecs_vec_first(&v->eval->r->annot);
-    for (i = 0; i < count; i ++) {
-        if (!ecs_os_strcmp(annots[i]->name, "tree")) {
-            return true;
-        }
-    }
-    return false;
-}
-
 static bool flecs_script_type_entity_is_type_pass(
     ecs_script_type_visitor_t *v,
     ecs_script_entity_t *node)
@@ -665,14 +745,78 @@ static bool flecs_script_type_entity_is_type_pass(
     }
 
     ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, node->kind);
-    if (symbol.kind != EcsScriptSymbolEntity || !symbol.external) {
+    if (symbol.ref.kind != EcsScriptSymbolEntity || !symbol.ref.external) {
         return false;
     }
 
     const EcsScriptVisitor *visitor = ecs_get(
-        v->world, symbol.is.external, EcsScriptVisitor);
+        v->world, symbol.ref.is.external, EcsScriptVisitor);
 
     return visitor && visitor->type_pass;
+}
+
+static ecs_entity_t flecs_script_type_slot_entity(
+    ecs_script_type_visitor_t *v,
+    int32_t slot)
+{
+    return flecs_script_entity_slot_get(v->eval, slot);
+}
+
+static void flecs_script_type_externalize_symbol(
+    ecs_script_type_visitor_t *v,
+    int32_t symbol_index,
+    ecs_entity_t entity)
+{
+    if (symbol_index == -1 || !entity) {
+        return;
+    }
+
+    ecs_script_symbol_t *symbol = ecs_vec_get_t(
+        &v->symbols, ecs_script_symbol_t, symbol_index);
+    symbol->ref.kind = EcsScriptSymbolEntity;
+    symbol->ref.external = true;
+    symbol->ref.is.external = entity;
+}
+
+static int flecs_script_type_ensure_parent(
+    ecs_script_type_visitor_t *v,
+    ecs_script_node_t *node,
+    const char *kind,
+    ecs_script_type_scope_t *scope,
+    ecs_entity_t *parent_out)
+{
+    if (scope == v->root) {
+        *parent_out = v->eval->parent;
+        return 0;
+    }
+
+    if (!scope->parent) {
+        return 1;
+    }
+
+    ecs_entity_t parent = 0;
+    int result = flecs_script_type_ensure_parent(
+        v, node, kind, scope->parent, &parent);
+    if (result) {
+        return result;
+    }
+
+    if (!scope->name) {
+        flecs_script_visit_error(v, node, "illegal scope for %s", kind);
+        return -1;
+    }
+
+    ecs_script_eval_visitor_t *eval = v->eval;
+    ecs_entity_t prev_parent = eval->parent;
+    eval->parent = parent;
+    ecs_entity_t entity = flecs_script_create_entity(eval, scope->name);
+    eval->parent = prev_parent;
+    if (!entity) {
+        return -1;
+    }
+
+    *parent_out = entity;
+    return 0;
 }
 
 static int flecs_script_type_entity(
@@ -680,7 +824,6 @@ static int flecs_script_type_entity(
     ecs_script_entity_t *node)
 {
     ecs_script_type_scope_t *scope = NULL;
-    bool can_eval = flecs_script_type_can_eval(v);
     bool plain_name = node->name && !node->name_expr && !node->name_is_var;
 
     if (node->name_expr) {
@@ -688,128 +831,156 @@ static int flecs_script_type_entity(
             return -1;
         }
     }
-    bool tree = node->non_fragmenting_parent ||
-        (can_eval && flecs_script_type_has_tree_annot(v));
-    bool eager = can_eval && plain_name && !tree;
+    bool tree = node->non_fragmenting_parent;
 
     node->type_pass = false;
 
-    bool type_pass = eager && flecs_script_type_entity_is_type_pass(v, node);
+    bool type_pass = plain_name && !tree && v->eval && !v->template_depth &&
+        flecs_script_type_entity_is_type_pass(v, node);
 
-    ecs_entity_t kind = 0;
-    if (eager && !type_pass && node->kind) {
-        if (!flecs_script_name_is_static(node->kind)) {
-            eager = false;
-        } else if (!ecs_os_strcmp(node->kind, "prefab")) {
-#ifdef FLECS_PREFAB
-            kind = EcsPrefab;
-#else
-            eager = false;
-#endif
-        } else if (flecs_script_find_entity(
-            v->eval, 0, node->kind, NULL, NULL, &kind, NULL) || !kind)
-        {
-            eager = false;
-        }
-    }
-
+    int32_t symbol_index = -1;
     if (node->name && !node->name_expr) {
-        int32_t index = flecs_script_type_declare_entity(
+        symbol_index = flecs_script_type_declare_entity(
             v, &node->node, node->name);
-        if (index == -1) {
+        if (symbol_index == -1) {
             return -1;
         }
 
         ecs_script_symbol_t *symbol = ecs_vec_get_t(
-            &v->symbols, ecs_script_symbol_t, index);
+            &v->symbols, ecs_script_symbol_t, symbol_index);
         if (!symbol->scope) {
             symbol->scope = flecs_script_type_scope_new(v, symbol->parent);
         }
 
         if (node->entity_slot == -1) {
-            node->entity_slot = symbol->is.entity;
+            node->entity_slot = symbol->ref.is.entity;
         }
         scope = symbol->scope;
+
+        if (plain_name && !scope->name) {
+            scope->name = node->name;
+        }
     } else if (node->entity_slot == -1) {
         node->entity_slot = v->entity_count ++;
     }
 
     if (type_pass) {
-        node->type_pass = true;
-
-        if (flecs_script_type_scope_stmts_no_eval(v, node->scope, scope)) {
+        ecs_entity_t parent = 0;
+        int m = flecs_script_type_ensure_parent(
+            v, &node->node, node->kind, v->cur, &parent);
+        if (m == -1) {
             return -1;
         }
 
-        return flecs_script_eval_entity(v->eval, NULL, node, NULL);
+        if (m == 0) {
+            node->type_pass = true;
+
+            if (flecs_script_type_scope_stmts_no_eval(v, node->scope, scope)) {
+                return -1;
+            }
+
+            ecs_script_eval_visitor_t *eval = v->eval;
+            ecs_entity_t prev_parent = eval->parent;
+            eval->parent = parent;
+            int result = flecs_script_eval_entity(eval, NULL, node, NULL);
+            eval->parent = prev_parent;
+
+            if (result) {
+                return -1;
+            }
+
+            flecs_script_type_externalize_symbol(v, symbol_index,
+                flecs_script_type_slot_entity(v, node->entity_slot));
+
+            return 0;
+        }
     }
 
-    if (can_eval) {
-        ecs_vec_clear(&v->eval->r->annot);
-    }
-
-    if (!eager) {
-        return flecs_script_type_scope_stmts_no_eval(v, node->scope, scope);
-    }
-
-    ecs_script_eval_visitor_t *eval = v->eval;
-    ecs_entity_t prev_parent = eval->parent;
-    ecs_entity_t entity = flecs_script_create_entity(eval, node->name);
-    if (!entity) {
-        return -1;
-    }
-
-    if (eval->entity_slots && node->entity_slot >= 0) {
-        flecs_script_set_entity_slot(
-            eval->entity_slots, node->entity_slot, entity);
-    }
-
-    if (kind) {
-        ecs_add_id(v->world, entity, kind);
-    }
-
-    eval->parent = entity;
-
-    int result = flecs_script_type_scope_stmts(v, node->scope, scope);
-
-    eval->parent = prev_parent;
-
-    return result;
+    return flecs_script_type_scope_stmts_no_eval(v, node->scope, scope);
 }
 
 static int flecs_script_type_template(
     ecs_script_type_visitor_t *v,
     ecs_script_template_node_t *node)
 {
-    bool can_eval = flecs_script_type_can_eval(v);
+    bool can_eval = v->eval != NULL;
 
-    if (flecs_script_type_declare_entity(v, &node->node, node->name) == -1) {
+    if (v->template_depth) {
+        flecs_script_visit_error(v, node,
+            "templates cannot be nested");
         return -1;
     }
+
+    int32_t symbol_index = flecs_script_type_declare_entity(
+        v, &node->node, node->name);
+    if (symbol_index == -1) {
+        return -1;
+    }
+
+    ecs_vec_t refs;
+    ecs_vec_t dynamic_refs;
+    ecs_vec_init_t(NULL, &refs, ecs_script_ref_mon_t, 0);
+    ecs_vec_init_t(NULL, &dynamic_refs, ecs_script_ref_mon_t, 0);
+
+    ecs_vec_t *prev_refs = v->refs;
+    ecs_vec_t *prev_dynamic_refs = v->dynamic_refs;
+    v->refs = &refs;
+    v->dynamic_refs = &dynamic_refs;
 
     ecs_script_type_scope_t *body_scope = NULL;
-    if (flecs_script_type_body(v, &node->node, node->scope, &body_scope)) {
-        return -1;
+    v->template_depth ++;
+    int result = flecs_script_type_body(
+        v, &node->node, node->scope, &body_scope);
+    v->template_depth --;
+
+    v->refs = prev_refs;
+    v->dynamic_refs = prev_dynamic_refs;
+
+    if (!result && can_eval) {
+        ecs_entity_t parent = 0;
+        int m = flecs_script_type_ensure_parent(
+            v, &node->node, "template", v->cur, &parent);
+        if (m == -1) {
+            result = -1;
+        } else if (m == 0) {
+            ecs_script_eval_visitor_t *eval = v->eval;
+            ecs_script_type_scope_t *prev_scope = v->cur;
+            v->cur = body_scope;
+            ecs_entity_t prev_parent = eval->parent;
+            eval->parent = parent;
+            ecs_entity_t template_entity = 0;
+            result = flecs_script_eval_template(
+                eval, node, &refs, &dynamic_refs, v->entity_count,
+                &template_entity);
+            eval->parent = prev_parent;
+            v->cur = prev_scope;
+
+            flecs_script_type_externalize_symbol(
+                v, symbol_index, template_entity);
+        }
     }
 
-    if (can_eval) {
-        ecs_script_type_scope_t *prev_scope = v->cur;
-        v->cur = body_scope;
-        int result = flecs_script_eval_template(v->eval, node);
-        v->cur = prev_scope;
-        return result;
-    }
+    ecs_vec_fini_t(NULL, &refs, ecs_script_ref_mon_t);
+    ecs_vec_fini_t(NULL, &dynamic_refs, ecs_script_ref_mon_t);
 
-    return 0;
+    return result;
 }
 
 static int flecs_script_type_function(
     ecs_script_type_visitor_t *v,
     ecs_script_function_node_t *node)
 {
-    bool can_eval = flecs_script_type_can_eval(v);
+    bool can_eval = v->eval != NULL;
 
-    if (flecs_script_type_declare_entity(v, &node->node, node->name) == -1) {
+    if (v->template_depth) {
+        flecs_script_visit_error(v, node,
+            "functions cannot be declared inside templates");
+        return -1;
+    }
+
+    int32_t symbol_index = flecs_script_type_declare_entity(
+        v, &node->node, node->name);
+    if (symbol_index == -1) {
         return -1;
     }
 
@@ -817,7 +988,8 @@ static int flecs_script_type_function(
     int32_t prev_variable_count = v->variable_count;
     int32_t prev_entity_count = v->entity_count;
 
-    ecs_script_type_scope_t *fn_scope = flecs_script_type_scope_new(v, NULL);
+    ecs_script_type_scope_t *fn_scope = flecs_script_type_scope_new(
+        v, prev_scope);
     v->cur = fn_scope;
     v->variable_count = 0;
     v->entity_count = 0;
@@ -847,9 +1019,23 @@ done:
     v->entity_count = prev_entity_count;
 
     if (!result && can_eval) {
-        v->cur = fn_scope;
-        result = flecs_script_eval_function(v->eval, node);
-        v->cur = prev_scope;
+        ecs_entity_t parent = 0;
+        int m = flecs_script_type_ensure_parent(
+            v, &node->node, "function", v->cur, &parent);
+        if (m == -1) {
+            result = -1;
+        } else if (m == 0) {
+            ecs_script_eval_visitor_t *eval = v->eval;
+            v->cur = fn_scope;
+            ecs_entity_t prev_parent = eval->parent;
+            eval->parent = parent;
+            ecs_entity_t fn_entity = 0;
+            result = flecs_script_eval_function(eval, node, &fn_entity);
+            eval->parent = prev_parent;
+            v->cur = prev_scope;
+
+            flecs_script_type_externalize_symbol(v, symbol_index, fn_entity);
+        }
     }
 
     return result;
@@ -1090,18 +1276,18 @@ static ecs_entity_t flecs_script_type_var_type(
         return 0;
     }
 
-    ecs_entity_t type = 0;
-    flecs_log_capture_push(true);
-    int result = flecs_script_find_entity(
-        v->eval, 0, var->type, NULL, NULL, &type, NULL);
-    char *err = flecs_log_capture_pop();
-    ecs_os_free(err);
-
-    if (result) {
-        return 0;
+    ecs_script_symbol_t symbol;
+    if (!strchr(var->type, '.')) {
+        symbol = flecs_script_lookup_symbol(v, var->type);
+    } else {
+        symbol = flecs_script_type_lookup_path(v, var->type);
     }
 
-    return type;
+    if (symbol.ref.kind == EcsScriptSymbolEntity && symbol.ref.external) {
+        return symbol.ref.is.external;
+    }
+
+    return 0;
 }
 
 static int flecs_script_type_prop(
@@ -1164,11 +1350,27 @@ static int flecs_script_type_export(
         }
     }
 
-    if (!flecs_script_type_can_eval(v) || var->is_await) {
+    if (!v->eval || v->template_depth || var->is_await) {
         return 0;
     }
 
-    return flecs_script_eval_const(v->eval, var, true);
+    ecs_entity_t parent = 0;
+    int m = flecs_script_type_ensure_parent(
+        v, node, "export variable", v->cur, &parent);
+    if (m == -1) {
+        return -1;
+    }
+    if (m == 1) {
+        return 0;
+    }
+
+    ecs_script_eval_visitor_t *eval = v->eval;
+    ecs_entity_t prev_parent = eval->parent;
+    eval->parent = parent;
+    int result = flecs_script_eval_const(eval, var, true);
+    eval->parent = prev_parent;
+
+    return result;
 }
 
 static int flecs_script_type_const(
@@ -1200,7 +1402,7 @@ static int flecs_script_type_const(
         var_type = var->expr->type;
     }
 
-    if (!flecs_script_type_can_eval(v) || var->is_await || !var->expr ||
+    if (!flecs_script_type_can_type(v) || var->is_await || !var->expr ||
         var->expr->kind == EcsExprNew || var->expr->kind == EcsExprScript)
     {
         ecs_script_var_t *mirror = ecs_script_vars_declare(
@@ -1262,12 +1464,6 @@ static int flecs_script_type_annot(
         return -1;
     }
 
-    if (flecs_script_type_can_eval(v)) {
-        ecs_script_runtime_t *r = v->eval->r;
-        ecs_vec_append_t(&r->allocator, &r->annot,
-            ecs_script_annot_t*)[0] = node;
-    }
-
     return 0;
 }
 
@@ -1296,8 +1492,16 @@ static int flecs_script_type_node(
         return flecs_script_type_with(v, (ecs_script_with_t*)node);
     case EcsAstPairScope: {
         ecs_script_pair_scope_t *pair_scope = (ecs_script_pair_scope_t*)node;
+        ecs_script_id_t *id = &pair_scope->id;
         if (flecs_script_type_can_type(v)) {
-            if (flecs_script_type_id_name_exprs(v, &pair_scope->id)) {
+            if (flecs_script_type_resolve_ref(
+                v, node, &id->first_ref, NULL, true) == -1)
+            {
+                return -1;
+            }
+            if (id->second_ref.name && flecs_script_type_resolve_ref(
+                v, node, &id->second_ref, &id->first_ref, true) == -1)
+            {
                 return -1;
             }
         }
@@ -1335,7 +1539,21 @@ static int flecs_script_type_node(
         }
         return 0;
     case EcsAstVarComponent:
-    case EcsAstWithVar:
+    case EcsAstWithVar: {
+        ecs_script_var_component_t *vc = (ecs_script_var_component_t*)node;
+        if (vc->sp == -1) {
+            ecs_script_symbol_t symbol = flecs_script_lookup_symbol(
+                v, vc->name);
+            if (flecs_script_symbol_is_var(symbol.ref.kind)) {
+                vc->sp = symbol.ref.is.variable;
+            } else if (symbol.ref.kind == EcsScriptSymbolUnresolved) {
+                flecs_script_visit_error(v, node,
+                    "unresolved variable '%s'", vc->name);
+                return -1;
+            }
+        }
+        return 0;
+    }
     case EcsAstInclude:
         return 0;
     }
@@ -1361,6 +1579,9 @@ void flecs_script_type_visit_init(
     v->cur = flecs_script_type_scope_new(v, NULL);
     v->root = v->cur;
 
+    v->refs = &script->refs;
+    v->dynamic_refs = NULL;
+
     script->type_visitor = v;
 }
 
@@ -1375,13 +1596,6 @@ void flecs_script_type_visit_fini(
     for (i = 0; i < count; i ++) {
         flecs_name_index_fini(&scopes[i]->symbols);
         flecs_free_t(a, ecs_script_type_scope_t, scopes[i]);
-    }
-
-    count = ecs_vec_count(&v->symbols);
-    ecs_script_symbol_t *symbols = ecs_vec_first_t(
-        &v->symbols, ecs_script_symbol_t);
-    for (i = 0; i < count; i ++) {
-        ecs_os_free(symbols[i].name);
     }
 
     ecs_vec_fini_t(a, &v->scopes, ecs_script_type_scope_t*);
@@ -1439,14 +1653,8 @@ int flecs_script_type_visit_new_expr(
         return 0;
     }
 
-    if (desc->script_visitor &&
-        ((ecs_script_eval_visitor_t*)desc->script_visitor)->template)
-    {
-        return 0;
-    }
-
     if (v) {
-        if (v->template_body || !v->eval || !v->base.visit) {
+        if (!v->eval || !v->base.visit) {
             return 0;
         }
 
@@ -1538,7 +1746,9 @@ ecs_script_symbol_t flecs_script_lookup_symbol(
     const ecs_script_type_visitor_t *v,
     const char *name)
 {
-    ecs_script_symbol_t result = { .kind = EcsScriptSymbolUnresolved };
+    ecs_script_symbol_t result = {
+        .ref = { .kind = EcsScriptSymbolUnresolved, .name = name }
+    };
 
     const ecs_script_type_scope_t *scope = v->cur;
     while (scope) {
@@ -1553,9 +1763,9 @@ ecs_script_symbol_t flecs_script_lookup_symbol(
 
     ecs_entity_t e = flecs_script_type_lookup_world(v, name);
     if (e) {
-        result.kind = EcsScriptSymbolEntity;
-        result.external = true;
-        result.is.external = e;
+        result.ref.kind = EcsScriptSymbolEntity;
+        result.ref.external = true;
+        result.ref.is.external = e;
     }
 
     return result;

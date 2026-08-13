@@ -18,7 +18,6 @@ ECS_DECLARE(EcsScriptVectorType);
 
 static ECS_CTOR(EcsScript, ptr, {
     ecs_os_zeromem(ptr);
-    ecs_vec_init_t(NULL, &ptr->entities, ecs_entity_t, 0);
 })
 
 static ECS_MOVE(EcsScript, dst, src, {
@@ -37,16 +36,12 @@ static ECS_MOVE(EcsScript, dst, src, {
     dst->template_ = src->template_;
     dst->observers = src->observers;
 
-    ecs_vec_fini_t(NULL, &dst->entities, ecs_entity_t);
-    dst->entities = src->entities;
-
     src->filename = NULL;
     src->code = NULL;
     src->error = NULL;
     src->script = NULL;
     src->template_ = NULL;
     ecs_os_zeromem(&src->observers);
-    ecs_vec_init_t(NULL, &src->entities, ecs_entity_t, 0);
 })
 
 static ECS_DTOR(EcsScript, ptr, {
@@ -59,8 +54,7 @@ static ECS_DTOR(EcsScript, ptr, {
         ecs_script_free(ptr->script);
     }
 
-    ecs_vec_fini_t(NULL, &ptr->observers, ecs_script_ref_t);
-    ecs_vec_fini_t(NULL, &ptr->entities, ecs_entity_t);
+    ecs_vec_fini_t(NULL, &ptr->observers, ecs_script_ref_mon_t);
 
     ecs_os_free(ptr->filename);
     ecs_os_free(ptr->code);
@@ -87,7 +81,8 @@ ecs_script_t* flecs_script_new(
     result->root = flecs_script_scope_new(&parser);
     result->pub.world = world;
     result->refcount = 1;
-    ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_t, 0);
+    ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_mon_t, 0);
+    ecs_vec_init_t(NULL, &result->entities, ecs_entity_t, 0);
     return &result->pub;
 }
 
@@ -181,7 +176,8 @@ void ecs_script_free(
     if (!--impl->refcount) {
         flecs_script_visit_free(script);
         flecs_expr_visit_free(script, impl->expr);
-        ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_t);
+        ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_mon_t);
+        ecs_vec_fini_t(NULL, &impl->entities, ecs_entity_t);
         flecs_free(&impl->allocator,
             impl->token_buffer_size, impl->token_buffer);
         flecs_allocator_fini(&impl->allocator);
@@ -290,13 +286,13 @@ int flecs_script_update(
         if (!instance) {
             s = ecs_ensure(world, e, EcsScript);
             ecs_vec_t *script_refs = &flecs_script_impl(s->script)->refs;
-            ecs_script_ref_t *refs = ecs_vec_first(script_refs);
+            ecs_script_ref_mon_t *refs = ecs_vec_first(script_refs);
             int32_t i;
             for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
                 if (refs[i].entity && ecs_has_pair(
                     world, refs[i].entity, ecs_id(EcsScript), e))
                 {
-                    ecs_vec_remove_t(script_refs, ecs_script_ref_t, i);
+                    ecs_vec_remove_t(script_refs, ecs_script_ref_mon_t, i);
                 }
             }
             flecs_script_update_ref_observers(world, e, 0,

@@ -1557,14 +1557,14 @@ void Await_with_enter_error_restores_state(void) {
     test_int(ecs_script_task_resume(task, &result),
         EcsScriptTaskError);
     test_assert(result.error != NULL);
-    test_int(await_tracked_ctor_count, 1);
-    test_int(await_tracked_dtor_count, 1);
+    test_int(await_tracked_ctor_count, 0);
+    test_int(await_tracked_dtor_count, 0);
 
     ecs_os_free(result.error);
 
     ecs_script_task_free(task);
-    test_int(await_tracked_ctor_count, 1);
-    test_int(await_tracked_dtor_count, 1);
+    test_int(await_tracked_ctor_count, 0);
+    test_int(await_tracked_dtor_count, 0);
     ecs_script_free(script);
     ecs_fini(world);
 }

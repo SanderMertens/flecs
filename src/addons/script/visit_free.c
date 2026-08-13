@@ -22,11 +22,11 @@ static void flecs_script_id_free(
     ecs_script_visit_t *v,
     ecs_script_id_t *id)
 {
-    if (id->first_expr) {
-        flecs_expr_visit_free(&v->script->pub, id->first_expr);
+    if (id->first_ref.kind == EcsScriptSymbolExpression) {
+        flecs_expr_visit_free(&v->script->pub, id->first_ref.is.expr);
     }
-    if (id->second_expr) {
-        flecs_expr_visit_free(&v->script->pub, id->second_expr);
+    if (id->second_ref.kind == EcsScriptSymbolExpression) {
+        flecs_expr_visit_free(&v->script->pub, id->second_ref.is.expr);
     }
 }
 

@@ -28,12 +28,23 @@ typedef struct ecs_script_eval_visitor_t {
     /* When set, entities created by entity statements are stored in this vector
      * at the slot assigned by the type visitor. vec<ecs_entity_t> */
     ecs_vec_t *entity_slots;
+
+    /* Slots below entity_slot_base resolve through base_entity_slots (the
+     * entity table of the script that owns the statements being evaluated).
+     * Used when instantiating templates, which have their own slot table but
+     * can reference entities created by the script. */
+    int32_t entity_slot_base;
+    ecs_vec_t *base_entity_slots;
 } ecs_script_eval_visitor_t;
 
 void flecs_script_set_entity_slot(
-    ecs_vec_t *entity_slots,
+    ecs_script_eval_visitor_t *v,
     int32_t slot,
     ecs_entity_t entity);
+
+ecs_entity_t flecs_script_entity_slot_get(
+    ecs_script_eval_visitor_t *v,
+    int32_t slot);
 
 int flecs_script_eval(
     const ecs_script_t *script,
@@ -260,14 +271,6 @@ int flecs_script_eval_node(
     ecs_script_visit_t *v,
     ecs_script_node_t *node);
 
-int flecs_script_check_node(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node);
-
-int flecs_script_check_scope(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_scope_t *node);
-
 /* For statement (see visit_for.c) */
 
 int flecs_script_step_for(
@@ -311,7 +314,11 @@ int flecs_script_eval_scope(
 int flecs_script_eval_id(
     ecs_script_eval_visitor_t *v,
     void *node,
-    ecs_script_id_t *id);
+    ecs_script_id_t *id,
+    ecs_id_t *out);
+
+bool flecs_script_id_is_static(
+    const ecs_script_id_t *id);
 
 bool flecs_script_can_default_ctor(
     ecs_world_t *world,

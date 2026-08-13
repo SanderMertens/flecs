@@ -106,7 +106,6 @@ typedef struct EcsScript {
     ecs_script_t *script;               /**< Parsed script object. */
     ecs_script_template_t *template_;   /**< Only set for template scripts. */
     ecs_vec_t observers;                /**< Observers for referenced components. */
-    ecs_vec_t entities;                 /**< Entities created by script, indexed by entity slot. vec<ecs_entity_t> */
 } EcsScript;
 
 /** Script function context. */

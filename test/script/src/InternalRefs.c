@@ -22,7 +22,8 @@ const ecs_vec_t* script_entities(
 {
     const EcsScript *ptr = ecs_get(world, script, EcsScript);
     test_assert(ptr != NULL);
-    return &ptr->entities;
+    test_assert(ptr->script != NULL);
+    return &flecs_script_impl(ptr->script)->entities;
 }
 
 static

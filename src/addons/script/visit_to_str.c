@@ -75,11 +75,11 @@ static void flecs_script_id_to_str(
         }
     }
 
-    if (id->second) {
-        flecs_scriptbuf_append(v, "(%s, %s)", 
-            id->first, id->second);
+    if (id->second_ref.name) {
+        flecs_scriptbuf_append(v, "(%s, %s)",
+            id->first_ref.name, id->second_ref.name);
     } else {
-        flecs_scriptbuf_appendstr(v, id->first);
+        flecs_scriptbuf_appendstr(v, id->first_ref.name);
     }
 }
 

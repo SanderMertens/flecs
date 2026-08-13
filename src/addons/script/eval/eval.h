@@ -45,6 +45,7 @@ typedef struct ecs_script_user_function_t {
     ecs_script_function_node_t *node;
     ecs_vec_t refs;
     ecs_vec_t using;
+    int32_t entity_slot_base;
 } ecs_script_user_function_t;
 
 void flecs_script_user_function_callback(
@@ -58,6 +59,7 @@ void flecs_script_user_function_ctx_free(
 
 int flecs_script_eval_function(
     ecs_script_eval_visitor_t *v,
-    ecs_script_function_node_t *node);
+    ecs_script_function_node_t *node,
+    ecs_entity_t *entity_out);
 
 #endif

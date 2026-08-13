@@ -2249,7 +2249,7 @@ void Template_prop_without_using_meta(void) {
     ecs_fini(world);
 }
 
-void Template_var_from_outer_scope_not_visible(void) {
+void Template_hoisted_var_from_outer_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2271,13 +2271,20 @@ void Template_var_from_outer_scope_not_visible(void) {
     LINE "}"
     LINE "Tree foo(height: 20)";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }
 
-void Template_var_from_outer_scopes_not_visible(void) {
+void Template_hoisted_var_from_outer_scopes(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2300,13 +2307,20 @@ void Template_var_from_outer_scopes_not_visible(void) {
     LINE "}"
     LINE "parent.Tree foo()";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }
 
-void Template_masked_var_from_outer_scope_not_visible(void) {
+void Template_hoisted_masked_var_from_outer_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2330,8 +2344,79 @@ void Template_masked_var_from_outer_scope_not_visible(void) {
     LINE "}"
     LINE "parent.Tree foo()";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_hoisted_var_instantiate_after_run(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr_1 =
+    HEAD "const v = 10"
+    LINE "template Tree {"
+    LINE "  Position: {v, 20}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr_1, NULL) == 0);
+
+    const char *expr_2 =
+    HEAD "Tree foo()";
+
+    test_assert(ecs_script_run(world, NULL, expr_2, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_hoisted_var_w_script_entity(void) {
+    test_quarantine("13 Aug 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    HEAD "tgt {}"
+    LINE "const t = tgt"
+    LINE "template Tree {"
+    LINE "  (Rel, $t)"
+    LINE "}"
+    LINE "Tree foo()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    ecs_entity_t tgt = ecs_lookup(world, "tgt");
+    test_assert(foo != 0);
+    test_assert(tgt != 0);
+
+    test_assert(ecs_has_pair(world, foo, Rel, tgt));
 
     ecs_fini(world);
 }

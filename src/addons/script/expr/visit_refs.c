@@ -44,16 +44,48 @@ static const char* flecs_expr_ref_var_name(
     return NULL;
 }
 
+static int32_t flecs_expr_ref_slot(
+    ecs_expr_node_t *node)
+{
+    if (!node) {
+        return -1;
+    }
+
+    if (node->kind == EcsExprInternalEntity) {
+        return ((ecs_expr_internal_entity_t*)node)->slot;
+    } else if (node->kind == EcsExprIdentifier) {
+        return flecs_expr_ref_slot(((ecs_expr_identifier_t*)node)->expr);
+    }
+
+    return -1;
+}
+
+static ecs_entity_t flecs_expr_ref_slot_resolve(
+    const ecs_script_user_function_t *uf,
+    int32_t slot)
+{
+    const ecs_vec_t *slots = &flecs_script_impl(uf->script)->entities;
+    if (slot < 0 || slot >= ecs_vec_count(slots)) {
+        return 0;
+    }
+
+    return ecs_vec_get_t(ECS_CONST_CAST(ecs_vec_t*, slots),
+        ecs_entity_t, slot)[0];
+}
+
 static void flecs_expr_add_ref(
     ecs_vec_t *refs,
     ecs_entity_t entity,
     const char *name,
-    ecs_id_t component)
+    ecs_id_t component,
+    int32_t slot)
 {
-    ecs_script_ref_t *elems = ecs_vec_first(refs);
+    ecs_script_ref_mon_t *elems = ecs_vec_first(refs);
     int32_t i, count = ecs_vec_count(refs);
     for (i = 0; i < count; i ++) {
-        if (elems[i].entity == entity && elems[i].component == component) {
+        if (elems[i].entity == entity && elems[i].component == component &&
+            elems[i].slot == slot)
+        {
             const char *elem_name = elems[i].name;
             if ((!elem_name && !name) || (elem_name && name &&
                 !ecs_os_strcmp(elem_name, name)))
@@ -63,9 +95,10 @@ static void flecs_expr_add_ref(
         }
     }
 
-    ecs_script_ref_t *ref = ecs_vec_append_t(NULL, refs, ecs_script_ref_t);
+    ecs_script_ref_mon_t *ref = ecs_vec_append_t(NULL, refs, ecs_script_ref_mon_t);
     ref->entity = entity;
     ref->name = name;
+    ref->slot = slot;
     ref->component = component;
     ref->observer = 0;
 }
@@ -92,7 +125,7 @@ int flecs_expr_visit_refs(
          * can change the outcome of a reevaluation. */
         if (refs && n->global && n->global_component == ecs_id(EcsScriptMutVar))
         {
-            flecs_expr_add_ref(refs, n->global, NULL, n->global_component);
+            flecs_expr_add_ref(refs, n->global, NULL, n->global_component, -1);
         }
         break;
     }
@@ -187,11 +220,19 @@ int flecs_expr_visit_refs(
                 script->world, n->calldata.function, EcsScriptFunction);
             if (fn && fn->binding_ctx) {
                 ecs_script_user_function_t *uf = fn->binding_ctx;
-                ecs_script_ref_t *uf_refs = ecs_vec_first(&uf->refs);
+                ecs_script_ref_mon_t *uf_refs = ecs_vec_first(&uf->refs);
                 int32_t i, count = ecs_vec_count(&uf->refs);
                 for (i = 0; i < count; i ++) {
-                    flecs_expr_add_ref(fn_refs, uf_refs[i].entity,
-                        uf_refs[i].name, uf_refs[i].component);
+                    ecs_entity_t entity = uf_refs[i].entity;
+                    if (!entity && uf_refs[i].slot != -1) {
+                        entity = flecs_expr_ref_slot_resolve(
+                            uf, uf_refs[i].slot);
+                        if (!entity) {
+                            continue;
+                        }
+                    }
+                    flecs_expr_add_ref(fn_refs, entity,
+                        uf_refs[i].name, uf_refs[i].component, -1);
                 }
             }
         }
@@ -226,11 +267,18 @@ int flecs_expr_visit_refs(
         ecs_entity_t entity = flecs_expr_ref_entity(n->left);
         ecs_id_t component = n->node.type;
         if (entity && component) {
-            flecs_expr_add_ref(refs, entity, NULL, component);
+            flecs_expr_add_ref(refs, entity, NULL, component, -1);
         } else if (component && dynamic_refs) {
             const char *var_name = flecs_expr_ref_var_name(n->left);
             if (var_name) {
-                flecs_expr_add_ref(dynamic_refs, 0, var_name, component);
+                flecs_expr_add_ref(dynamic_refs, 0, var_name, component, -1);
+            }
+        }
+
+        if (!entity && component && refs) {
+            int32_t slot = flecs_expr_ref_slot(n->left);
+            if (slot != -1) {
+                flecs_expr_add_ref(refs, 0, NULL, component, slot);
             }
         }
         if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs, fn_refs)) {

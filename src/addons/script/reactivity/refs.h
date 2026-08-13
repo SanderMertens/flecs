@@ -6,12 +6,13 @@
 #ifndef FLECS_SCRIPT_REFS_H
 #define FLECS_SCRIPT_REFS_H
 
-typedef struct ecs_script_ref_t {
+typedef struct ecs_script_ref_mon_t {
     ecs_entity_t entity;
     const char *name;
+    int32_t slot;
     ecs_id_t component;
     ecs_entity_t observer;
-} ecs_script_ref_t;
+} ecs_script_ref_mon_t;
 
 typedef struct ecs_script_ref_ctx_t {
     ecs_entity_t script;

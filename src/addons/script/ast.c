@@ -127,6 +127,31 @@ error:
     return NULL;
 }
 
+static int flecs_script_set_ref(
+    ecs_parser_t *parser,
+    ecs_script_ref_t *ref,
+    const char *name)
+{
+    ref->name = name;
+    ref->kind = EcsScriptSymbolUnresolved;
+
+    if (!name || flecs_script_name_is_var(name)) {
+        return 0;
+    }
+
+    ecs_expr_node_t *expr = NULL;
+    if (flecs_script_name_to_expr(parser, name, &expr)) {
+        return -1;
+    }
+
+    if (expr) {
+        ref->kind = EcsScriptSymbolExpression;
+        ref->is.expr = expr;
+    }
+
+    return 0;
+}
+
 static int flecs_script_set_id(
     ecs_parser_t *parser,
     ecs_script_id_t *id,
@@ -134,21 +159,13 @@ static int flecs_script_set_id(
     const char *second)
 {
     ecs_assert(first != NULL, ECS_INTERNAL_ERROR, NULL);
-    id->first = first;
-    id->second = second;
-    id->first_sp = -1;
-    id->second_sp = -1;
 
-    if (flecs_script_name_to_expr(parser, first, &id->first_expr)) {
+    if (flecs_script_set_ref(parser, &id->first_ref, first)) {
         return -1;
     }
 
-    if (flecs_script_name_to_expr(parser, second, &id->second_expr)) {
+    if (flecs_script_set_ref(parser, &id->second_ref, second)) {
         return -1;
-    }
-
-    if (id->first_expr || id->second_expr) {
-        id->dynamic = true;
     }
 
     return 0;

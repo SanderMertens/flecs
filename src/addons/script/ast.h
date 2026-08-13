@@ -49,25 +49,34 @@ struct ecs_script_scope_t {
     ecs_vec_t components; /* vec<ecs_id_t> */
 };
 
+typedef enum ecs_script_symbol_kind_t {
+    EcsScriptSymbolUnresolved,      /* symbol is not (yet) resolved. Must be first so zero-initialized refs are unresolved. */
+    EcsScriptSymbolConst,           /* const variable. */
+    EcsScriptSymbolProp,            /* prop variable. */
+    EcsScriptSymbolMut,             /* mut variable. */
+    EcsScriptSymbolArgument,        /* function argument. */
+    EcsScriptSymbolGlobalConst,     /* global const variable (export const). */
+    EcsScriptSymbolGlobalMut,       /* global mut variable (export mut). */
+    EcsScriptSymbolEntity,          /* reference to entity defined in script. */
+    EcsScriptSymbolExpression       /* Expression symbol, like string name expressions. (only used in eval visitor, not in type visitor). */
+} ecs_script_symbol_kind_t;
+
+typedef struct ecs_script_ref_t {
+    ecs_script_symbol_kind_t kind;   /* Kind of symbol. */
+    const char *name;                /* Name of the symbol (used as key in symbols table during type visit, used for debugging in eval visitor). */
+    bool external;                   /* If true, symbol is not defined by script. */
+    union {
+        ecs_entity_t external;       /* External reference to entity. Only set if external is true. */
+        int32_t entity;              /* Slot in internal entity reference table. Only set if external is false. */
+        int32_t variable;            /* Variable stack slot. Only set if external is false. */
+        ecs_expr_node_t *expr;       /* Expression that yields reference to symbol. */
+    } is;
+} ecs_script_ref_t;
+
 typedef struct ecs_script_id_t {
-    const char *first;
-    const char *second;
-    ecs_id_t flag;
-    ecs_id_t eval;
-
-    /* If first or second refer to a variable, these are the cached variable 
-     * stack pointers so we don't have to lookup variables by name. */
-    int32_t first_sp; 
-    int32_t second_sp;
-
-    /* In case first/second are specified as interpolated strings. */
-    ecs_expr_node_t *first_expr;
-    ecs_expr_node_t *second_expr;
-
-    /* If true, the lookup result for this id cannot be cached. This is the case
-     * for entities that are defined inside of templates, which have different
-     * values for each instantiation. */
-    bool dynamic;
+    ecs_script_ref_t first_ref;
+    ecs_script_ref_t second_ref;
+    ecs_id_t flag;  /* Flag applied to id (like TOGGLE) */
 } ecs_script_id_t;
 
 typedef struct ecs_script_tag_t {

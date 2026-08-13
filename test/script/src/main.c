@@ -663,6 +663,7 @@ void Collection_vector_literal_f64(void);
 void Collection_vector_literal_int(void);
 void Collection_vector_literal_string(void);
 void Collection_vector_literal_entity(void);
+void Collection_vector_literal_entity_mut(void);
 void Collection_vector_literal_int_float(void);
 void Collection_vector_literal_float_int(void);
 void Collection_vector_literal_mixed_int(void);
@@ -853,6 +854,7 @@ void Function_arrow_no_spaces(void);
 void Function_arrow_split_dash_gt(void);
 void Function_nested_runtime_error(void);
 void Function_const_runtime_error(void);
+void Function_fn_w_hoisted_var(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -902,9 +904,11 @@ void Template_template_w_pair_w_unresolved_var_second(void);
 void Template_template_w_pair_scope_w_unresolved_var_first(void);
 void Template_template_w_pair_scope_w_unresolved_var_second(void);
 void Template_prop_without_using_meta(void);
-void Template_var_from_outer_scope_not_visible(void);
-void Template_var_from_outer_scopes_not_visible(void);
-void Template_masked_var_from_outer_scope_not_visible(void);
+void Template_hoisted_var_from_outer_scope(void);
+void Template_hoisted_var_from_outer_scopes(void);
+void Template_hoisted_masked_var_from_outer_scope(void);
+void Template_hoisted_var_instantiate_after_run(void);
+void Template_hoisted_var_w_script_entity(void);
 void Template_anonymous_template_instance(void);
 void Template_anonymous_template_instance_no_scope(void);
 void Template_anonymous_template_instance_w_prop(void);
@@ -993,7 +997,7 @@ void Mut_tree_parent(void);
 void Mut_child_name_from_string(void);
 void Mut_value_name(void);
 void Mut_const_value_name(void);
-void Mut_var_from_outer_scope_not_visible(void);
+void Mut_hoisted_var_from_outer_scope(void);
 void Mut_nested_template(void);
 void Mut_redeclare_mut_as_mut(void);
 void Mut_redeclare_mut_as_const(void);
@@ -4924,6 +4928,10 @@ bake_test_case Collection_testcases[] = {
         Collection_vector_literal_entity
     },
     {
+        "vector_literal_entity_mut",
+        Collection_vector_literal_entity_mut
+    },
+    {
         "vector_literal_int_float",
         Collection_vector_literal_int_float
     },
@@ -5667,6 +5675,10 @@ bake_test_case Function_testcases[] = {
     {
         "const_runtime_error",
         Function_const_runtime_error
+    },
+    {
+        "fn_w_hoisted_var",
+        Function_fn_w_hoisted_var
     }
 };
 
@@ -5860,16 +5872,24 @@ bake_test_case Template_testcases[] = {
         Template_prop_without_using_meta
     },
     {
-        "var_from_outer_scope_not_visible",
-        Template_var_from_outer_scope_not_visible
+        "hoisted_var_from_outer_scope",
+        Template_hoisted_var_from_outer_scope
     },
     {
-        "var_from_outer_scopes_not_visible",
-        Template_var_from_outer_scopes_not_visible
+        "hoisted_var_from_outer_scopes",
+        Template_hoisted_var_from_outer_scopes
     },
     {
-        "masked_var_from_outer_scope_not_visible",
-        Template_masked_var_from_outer_scope_not_visible
+        "hoisted_masked_var_from_outer_scope",
+        Template_hoisted_masked_var_from_outer_scope
+    },
+    {
+        "hoisted_var_instantiate_after_run",
+        Template_hoisted_var_instantiate_after_run
+    },
+    {
+        "hoisted_var_w_script_entity",
+        Template_hoisted_var_w_script_entity
     },
     {
         "anonymous_template_instance",
@@ -6219,8 +6239,8 @@ bake_test_case Mut_testcases[] = {
         Mut_const_value_name
     },
     {
-        "var_from_outer_scope_not_visible",
-        Mut_var_from_outer_scope_not_visible
+        "hoisted_var_from_outer_scope",
+        Mut_hoisted_var_from_outer_scope
     },
     {
         "nested_template",
@@ -11447,7 +11467,7 @@ static bake_test_suite suites[] = {
         "Collection",
         NULL,
         NULL,
-        96,
+        97,
         Collection_testcases
     },
     {
@@ -11468,14 +11488,14 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        78,
+        79,
         Function_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        97,
+        99,
         Template_testcases
     },
     {

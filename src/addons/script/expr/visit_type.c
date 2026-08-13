@@ -316,6 +316,9 @@ static bool flecs_expr_oper_valid_for_type(
     case EcsTokKeywordInclude:
     case EcsTokKeywordFn:
     case EcsTokKeywordAwait:
+    case EcsTokKeywordScript:
+    case EcsTokKeywordTry:
+    case EcsTokKeywordCatch:
     case EcsTokArrow:
     case EcsTokEnd:
     default:
@@ -467,6 +470,9 @@ static int flecs_expr_type_for_operator(
     case EcsTokKeywordInclude:
     case EcsTokKeywordFn:
     case EcsTokKeywordAwait:
+    case EcsTokKeywordScript:
+    case EcsTokKeywordTry:
+    case EcsTokKeywordCatch:
     case EcsTokArrow:
     case EcsTokEnd:
     default:
@@ -1659,8 +1665,9 @@ static int flecs_expr_identifier_visit_symbol(
     ecs_expr_identifier_t *node = (ecs_expr_identifier_t*)*node_ptr;
     ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, node->value);
 
-    switch(symbol.kind) {
+    switch(symbol.ref.kind) {
     case EcsScriptSymbolUnresolved:
+    case EcsScriptSymbolExpression:
         return 1;
     case EcsScriptSymbolConst:
     case EcsScriptSymbolProp:
@@ -1668,7 +1675,7 @@ static int flecs_expr_identifier_visit_symbol(
     case EcsScriptSymbolArgument: {
         ecs_expr_variable_t *result = flecs_expr_variable_from(
             script, (ecs_expr_node_t*)node, node->value);
-        result->sp = symbol.is.variable;
+        result->sp = symbol.ref.is.variable;
         flecs_expr_replace(script, node_ptr, (ecs_expr_node_t*)result);
         break;
     }
@@ -1681,12 +1688,12 @@ static int flecs_expr_identifier_visit_symbol(
         break;
     }
     case EcsScriptSymbolEntity:
-        if (!symbol.external) {
+        if (!symbol.ref.external) {
             ecs_expr_internal_entity_t *result =
-                flecs_expr_internal_entity_from(script, symbol.is.entity);
+                flecs_expr_internal_entity_from(script, symbol.ref.is.entity);
             flecs_expr_replace(script, node_ptr, (ecs_expr_node_t*)result);
         } else {
-            ecs_entity_t e = symbol.is.external;
+            ecs_entity_t e = symbol.ref.is.external;
 
             /* Entities that store a global variable value are resolved as
              * global variables, not as entity references. */
@@ -1911,12 +1918,12 @@ static void flecs_expr_variable_visit_symbol(
 
     ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, node->name);
 
-    switch(symbol.kind) {
+    switch(symbol.ref.kind) {
     case EcsScriptSymbolConst:
     case EcsScriptSymbolProp:
     case EcsScriptSymbolMut:
     case EcsScriptSymbolArgument:
-        node->sp = symbol.is.variable;
+        node->sp = symbol.ref.is.variable;
         break;
     case EcsScriptSymbolGlobalConst:
     case EcsScriptSymbolGlobalMut:
@@ -1924,6 +1931,7 @@ static void flecs_expr_variable_visit_symbol(
         break;
     case EcsScriptSymbolEntity:
     case EcsScriptSymbolUnresolved:
+    case EcsScriptSymbolExpression:
         break;
     }
 }
@@ -2297,11 +2305,27 @@ static int flecs_expr_function_visit_type(
 
 try_function:
     if (!is_method) {
-        ecs_entity_t func = desc->lookup_action(
-            world, node->function_name, desc->lookup_ctx);
+        ecs_entity_t func = 0;
+        ecs_script_type_visitor_t *tv =
+            flecs_script_impl(script)->type_visitor;
+        if (tv) {
+            ecs_script_symbol_t symbol = flecs_script_lookup_symbol(
+                tv, node->function_name);
+            if (symbol.ref.kind == EcsScriptSymbolEntity &&
+                symbol.ref.external)
+            {
+                func = symbol.ref.is.external;
+            }
+        }
+
         if (!func) {
-            flecs_expr_visit_error(script, node, 
-                "unresolved function identifier '%s'", 
+            func = desc->lookup_action(
+                world, node->function_name, desc->lookup_ctx);
+        }
+
+        if (!func) {
+            flecs_expr_visit_error(script, node,
+                "unresolved function identifier '%s'",
                 node->function_name);
             goto error;
         }

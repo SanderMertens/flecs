@@ -547,15 +547,7 @@ static int flecs_expr_internal_entity_visit_eval(
     ecs_expr_value_t *out)
 {
     ecs_script_eval_visitor_t *v = ctx->desc ? ctx->desc->script_visitor : NULL;
-    ecs_vec_t *slots = v ? v->entity_slots : NULL;
-
-    if (!slots || node->slot >= ecs_vec_count(slots)) {
-        flecs_expr_visit_error(ctx->script, node,
-            "entity reference is not initialized");
-        return -1;
-    }
-
-    ecs_entity_t e = ecs_vec_get_t(slots, ecs_entity_t, node->slot)[0];
+    ecs_entity_t e = v ? flecs_script_entity_slot_get(v, node->slot) : 0;
     if (!e) {
         flecs_expr_visit_error(ctx->script, node,
             "entity reference is not initialized");
@@ -580,11 +572,17 @@ static int flecs_expr_variable_visit_eval(
         "variables available at parse time are not provided");
 
     const ecs_script_var_t *var = flecs_script_find_var(
-        ctx->desc->vars, node->name, 
+        ctx->desc->vars, node->name,
             ctx->desc->disable_dynamic_variable_binding ? &node->sp : NULL);
     if (!var) {
         flecs_expr_visit_error(ctx->script, node, "unresolved variable '%s'",
             node->name);
+        goto error;
+    }
+
+    if (!var->value.ptr) {
+        flecs_expr_visit_error(ctx->script, node,
+            "variable '%s' is not initialized", node->name);
         goto error;
     }
 

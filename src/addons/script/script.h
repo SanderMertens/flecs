@@ -61,6 +61,12 @@ struct ecs_script_impl_t {
     int32_t token_buffer_size;
     int32_t refcount;
     ecs_vec_t refs;
+
+    /* Entities created by the last evaluation of the script, indexed by
+     * entity slot. Used to resolve references to script entities from
+     * template instantiations. vec<ecs_entity_t> */
+    ecs_vec_t entities;
+
     bool evaluating;
 };
 

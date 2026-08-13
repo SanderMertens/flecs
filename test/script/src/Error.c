@@ -666,7 +666,7 @@ void Error_component_in_with_scope_2(void) {
     LINE "  }\n"
     LINE "}\n"
     LINE "\n"
-    LINE "e : HouseWithSide\n"
+    LINE "e : HouseWithSide {}\n"
     ;
 
     ecs_log_set_level(-4);

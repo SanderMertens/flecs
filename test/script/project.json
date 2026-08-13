@@ -669,6 +669,7 @@
                 "vector_literal_int",
                 "vector_literal_string",
                 "vector_literal_entity",
+                "vector_literal_entity_mut",
                 "vector_literal_int_float",
                 "vector_literal_float_int",
                 "vector_literal_mixed_int",
@@ -864,7 +865,8 @@
                 "arrow_no_spaces",
                 "arrow_split_dash_gt",
                 "nested_runtime_error",
-                "const_runtime_error"
+                "const_runtime_error",
+                "fn_w_hoisted_var"
             ]
         }, {
             "id": "Template",
@@ -916,9 +918,11 @@
                 "template_w_pair_scope_w_unresolved_var_first",
                 "template_w_pair_scope_w_unresolved_var_second",
                 "prop_without_using_meta",
-                "var_from_outer_scope_not_visible",
-                "var_from_outer_scopes_not_visible",
-                "masked_var_from_outer_scope_not_visible",
+                "hoisted_var_from_outer_scope",
+                "hoisted_var_from_outer_scopes",
+                "hoisted_masked_var_from_outer_scope",
+                "hoisted_var_instantiate_after_run",
+                "hoisted_var_w_script_entity",
                 "anonymous_template_instance",
                 "anonymous_template_instance_no_scope",
                 "anonymous_template_instance_w_prop",
@@ -1009,7 +1013,7 @@
                 "child_name_from_string",
                 "value_name",
                 "const_value_name",
-                "var_from_outer_scope_not_visible",
+                "hoisted_var_from_outer_scope",
                 "nested_template",
                 "redeclare_mut_as_mut",
                 "redeclare_mut_as_const",

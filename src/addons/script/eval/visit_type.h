@@ -9,33 +9,15 @@
 
 typedef struct ecs_script_type_scope_t {
     struct ecs_script_type_scope_t *parent;
+    const char *name;       /* Entity name, if scope is a named entity scope */
     ecs_hashmap_t symbols;  /* Symbols table. name_index<string, index_into_symbols> */
     int32_t variable_count; /* Number of variables in scope */
 } ecs_script_type_scope_t;
 
-typedef enum ecs_script_symbol_kind_t {
-    EcsScriptSymbolConst,           /* const variable. */
-    EcsScriptSymbolProp,            /* prop variable. */
-    EcsScriptSymbolMut,             /* mut variable. */
-    EcsScriptSymbolArgument,        /* function argument. */
-    EcsScriptSymbolGlobalConst,     /* global const variable (export const). */
-    EcsScriptSymbolGlobalMut,       /* global mut variable (export mut). */
-    EcsScriptSymbolEntity,          /* reference to entity defined in script. */
-    EcsScriptSymbolUnresolved
-} ecs_script_symbol_kind_t;
-
 typedef struct ecs_script_symbol_t {
-    char *name;                      /* Name of the symbol (owned, used as key in symbols table). */
-    ecs_script_symbol_kind_t kind;   /* Kind of symbol. */
+    ecs_script_ref_t ref;
     ecs_script_type_scope_t *parent; /* Scope in which symbol is defined (internal only). */
     ecs_script_type_scope_t *scope;  /* Child scope (for entity scopes, internal only). */
-    bool external;                   /* If true, symbol is not defined by script (not stored in symbols, synthesized by flecs_script_lookup_symbol). */
-
-    union {
-        ecs_entity_t external;       /* External reference to entity. Only set if external is true. */
-        int32_t entity;              /* Slot in internal entity reference table. Only set if external is false. */
-        int32_t variable;            /* Variable stack slot. Only set if external is false. */
-    } is;
 } ecs_script_symbol_t;
 
 typedef struct ecs_script_type_visitor_t {
@@ -45,7 +27,10 @@ typedef struct ecs_script_type_visitor_t {
     struct ecs_script_type_scope_t *root;
     int32_t no_eval;
     int32_t no_typing;
-    int32_t template_body;
+    int32_t template_depth;
+
+    ecs_vec_t *refs;
+    ecs_vec_t *dynamic_refs;
 
     /* Current scope. Pushed/popped by the AST visitor for lexical scopes. A script may reopen the same scope multiple times:
      * a {
@@ -113,6 +98,10 @@ int flecs_script_type_visit_new_expr(
  * Name expressions ("e_{i}") are not supported by this operation.
  */
 ecs_script_symbol_t flecs_script_lookup_symbol(
+    const ecs_script_type_visitor_t *v,
+    const char *name);
+
+bool flecs_script_type_is_root_entity_symbol(
     const ecs_script_type_visitor_t *v,
     const char *name);
 

@@ -23,6 +23,15 @@ struct ecs_script_template_t {
     ecs_script_template_vars_t props;
     ecs_script_template_vars_t muts;
 
+    /* Variables hoisted from the scope the template is declared in. Values
+     * are captured when the template is created. */
+    ecs_vec_t hoisted;
+    int32_t first_var_sp;
+
+    /* First entity slot of the template body. Slots below this value resolve
+     * through the entity table of the script that declared the template. */
+    int32_t first_entity_slot;
+
     /* Template AST node */
     ecs_script_template_node_t *node;
 
@@ -78,7 +87,11 @@ typedef struct EcsScriptTemplateSetEvent {
 
 int flecs_script_eval_template(
     ecs_script_eval_visitor_t *v,
-    ecs_script_template_node_t *template);
+    ecs_script_template_node_t *node,
+    ecs_vec_t *refs,
+    ecs_vec_t *dynamic_refs,
+    int32_t first_entity_slot,
+    ecs_entity_t *entity_out);
 
 void flecs_script_template_fini(
     ecs_script_impl_t *script,
