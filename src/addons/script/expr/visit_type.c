@@ -2356,6 +2356,16 @@ static int flecs_expr_element_visit_type(
             goto error;
         }
 
+        if (node->index->type != ecs_id(ecs_i64_t)) {
+            ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
+                script, node->index, ecs_id(ecs_i64_t));
+            if (!cast) {
+                goto error;
+            }
+
+            node->index = cast;
+        }
+
         node->node.type = ecs_meta_get_type(cur);
 
         const ecs_type_info_t *elem_ti = ecs_get_type_info(

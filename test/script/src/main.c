@@ -1131,6 +1131,10 @@ void Expr_var_member(void);
 void Expr_var_member_member(void);
 void Expr_var_element(void);
 void Expr_var_element_out_of_range(void);
+void Expr_var_element_w_var_index(void);
+void Expr_var_element_w_i64_var_index(void);
+void Expr_var_member_element_w_var_member_index(void);
+void Expr_var_vector_member_element_w_var_member_index(void);
 void Expr_var_element_element(void);
 void Expr_var_member_element(void);
 void Expr_var_member_element_inline(void);
@@ -6450,6 +6454,22 @@ bake_test_case Expr_testcases[] = {
         Expr_var_element_out_of_range
     },
     {
+        "var_element_w_var_index",
+        Expr_var_element_w_var_index
+    },
+    {
+        "var_element_w_i64_var_index",
+        Expr_var_element_w_i64_var_index
+    },
+    {
+        "var_member_element_w_var_member_index",
+        Expr_var_member_element_w_var_member_index
+    },
+    {
+        "var_vector_member_element_w_var_member_index",
+        Expr_var_vector_member_element_w_var_member_index
+    },
+    {
         "var_element_element",
         Expr_var_element_element
     },
@@ -9919,7 +9939,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        350,
+        354,
         Expr_testcases,
         1,
         Expr_params
