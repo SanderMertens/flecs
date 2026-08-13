@@ -107927,9 +107927,10 @@ static int flecs_expr_visit_type_ex(
     case EcsExprSwizzle:
         break;
     case EcsExprMethod:
+        break;
     case EcsExprComponent:
-        /* Expressions are derived by type visitor */
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        *cur = ecs_meta_cursor(script->world, node->type, NULL);
+        break;
     }
 
     node = *node_ptr;
