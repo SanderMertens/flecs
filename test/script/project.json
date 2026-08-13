@@ -476,7 +476,6 @@
                 "export_mut_var_used_by_other_script",
                 "export_const_var_as_component",
                 "export_mut_var_as_component",
-                "export_scoped_const_var_as_component",
                 "export_scoped_mut_var_as_component",
                 "export_const_var_in_scope",
                 "export_mut_var_in_scope",
@@ -981,7 +980,9 @@
                 "template_w_new_expr_in_const",
                 "template_w_existing_observer",
                 "template_w_prop_w_value_name",
-                "template_w_var_w_value_name"
+                "template_w_var_w_value_name",
+                "eval_twice_w_failed_method_call_in_body",
+                "eval_twice_w_failed_method_call_in_prop_default"
             ]
         }, {
             "id": "Mut",

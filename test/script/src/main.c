@@ -968,6 +968,8 @@ void Template_template_w_new_expr_in_const(void);
 void Template_template_w_existing_observer(void);
 void Template_template_w_prop_w_value_name(void);
 void Template_template_w_var_w_value_name(void);
+void Template_eval_twice_w_failed_method_call_in_body(void);
+void Template_eval_twice_w_failed_method_call_in_prop_default(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -6138,6 +6140,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_var_w_value_name",
         Template_template_w_var_w_value_name
+    },
+    {
+        "eval_twice_w_failed_method_call_in_body",
+        Template_eval_twice_w_failed_method_call_in_body
+    },
+    {
+        "eval_twice_w_failed_method_call_in_prop_default",
+        Template_eval_twice_w_failed_method_call_in_prop_default
     }
 };
 
@@ -11555,7 +11565,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        99,
+        101,
         Template_testcases
     },
     {

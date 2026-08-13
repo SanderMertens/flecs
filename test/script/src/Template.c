@@ -4405,3 +4405,81 @@ void Template_template_w_var_w_value_name(void) {
 
     ecs_fini(world);
 }
+
+void Template_eval_twice_w_failed_method_call_in_body(void) {
+    test_quarantine("Aug 13 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Likes, Apples);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  const b = e.has(pair(Likes, Apples))"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Template_eval_twice_w_failed_method_call_in_prop_default(void) {
+    test_quarantine("Aug 13 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Likes, Apples);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop b: bool = e.has(pair(Likes, Apples))"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}

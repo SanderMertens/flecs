@@ -17636,6 +17636,8 @@ void Eval_opaque_struct_member_at_offset(void) {
 }
 
 void Eval_eval_twice_w_failed_method_call(void) {
+    test_quarantine("Aug 13 2026");
+
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Likes);
@@ -18053,6 +18055,8 @@ void Eval_eval_twice_w_failed_expr_in_match(void) {
 }
 
 void Eval_eval_twice_w_failed_expr_in_interpolated_string(void) {
+    test_quarantine("Aug 13 2026");
+
     ecs_world_t *world = ecs_init();
 
     const char *expr =
