@@ -359,6 +359,18 @@ void Eval_assign_call_func(void);
 void Eval_assign_call_scoped_func(void);
 void Eval_assign_call_scoped_func_w_using(void);
 void Eval_eval_twice_w_failed_method_call(void);
+void Eval_eval_twice_w_failed_method_call_on_var(void);
+void Eval_eval_twice_w_failed_method_call_on_call_result(void);
+void Eval_eval_twice_w_failed_method_call_on_var_call_result(void);
+void Eval_eval_twice_w_failed_expr_after_method_call(void);
+void Eval_eval_twice_w_failed_expr_after_component_expr(void);
+void Eval_eval_twice_w_failed_expr_in_if_stmt(void);
+void Eval_eval_twice_w_failed_expr_in_for_stmt(void);
+void Eval_eval_twice_w_failed_expr_in_entity_scope(void);
+void Eval_eval_twice_w_failed_expr_in_initializer(void);
+void Eval_eval_twice_w_failed_expr_in_match(void);
+void Eval_eval_twice_w_failed_expr_in_interpolated_string(void);
+void Eval_const_var_w_identifier_value_wo_newline(void);
 void Eval_eval_w_runtime(void);
 void Eval_component_in_entity_in_with_scope(void);
 void Eval_entity_w_string_name(void);
@@ -3715,6 +3727,54 @@ bake_test_case Eval_testcases[] = {
     {
         "eval_twice_w_failed_method_call",
         Eval_eval_twice_w_failed_method_call
+    },
+    {
+        "eval_twice_w_failed_method_call_on_var",
+        Eval_eval_twice_w_failed_method_call_on_var
+    },
+    {
+        "eval_twice_w_failed_method_call_on_call_result",
+        Eval_eval_twice_w_failed_method_call_on_call_result
+    },
+    {
+        "eval_twice_w_failed_method_call_on_var_call_result",
+        Eval_eval_twice_w_failed_method_call_on_var_call_result
+    },
+    {
+        "eval_twice_w_failed_expr_after_method_call",
+        Eval_eval_twice_w_failed_expr_after_method_call
+    },
+    {
+        "eval_twice_w_failed_expr_after_component_expr",
+        Eval_eval_twice_w_failed_expr_after_component_expr
+    },
+    {
+        "eval_twice_w_failed_expr_in_if_stmt",
+        Eval_eval_twice_w_failed_expr_in_if_stmt
+    },
+    {
+        "eval_twice_w_failed_expr_in_for_stmt",
+        Eval_eval_twice_w_failed_expr_in_for_stmt
+    },
+    {
+        "eval_twice_w_failed_expr_in_entity_scope",
+        Eval_eval_twice_w_failed_expr_in_entity_scope
+    },
+    {
+        "eval_twice_w_failed_expr_in_initializer",
+        Eval_eval_twice_w_failed_expr_in_initializer
+    },
+    {
+        "eval_twice_w_failed_expr_in_match",
+        Eval_eval_twice_w_failed_expr_in_match
+    },
+    {
+        "eval_twice_w_failed_expr_in_interpolated_string",
+        Eval_eval_twice_w_failed_expr_in_interpolated_string
+    },
+    {
+        "const_var_w_identifier_value_wo_newline",
+        Eval_const_var_w_identifier_value_wo_newline
     },
     {
         "eval_w_runtime",
@@ -11460,7 +11520,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        581,
+        593,
         Eval_testcases
     },
     {
