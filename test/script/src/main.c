@@ -217,6 +217,7 @@ void Eval_multi_line_comment_in_value(void);
 void Eval_multi_line_comment_in_value_after_scope(void);
 void Eval_module_stmt(void);
 void Eval_nested_module_stmt(void);
+void Eval_module_stmt_w_component_from_parent_module(void);
 void Eval_module_stmt_w_scope(void);
 void Eval_module_stmt_w_nested_scope(void);
 void Eval_assign_singleton_tag(void);
@@ -647,6 +648,7 @@ void Collection_array_too_many_vars(void);
 void Collection_vector_elem(void);
 void Collection_vector_index_elem(void);
 void Collection_vector_struct_elem(void);
+void Collection_vector_member_elem_w_member_index(void);
 void Collection_vector_string_elem(void);
 void Collection_vector_empty(void);
 void Collection_vector_nested(void);
@@ -3172,6 +3174,10 @@ bake_test_case Eval_testcases[] = {
         Eval_nested_module_stmt
     },
     {
+        "module_stmt_w_component_from_parent_module",
+        Eval_module_stmt_w_component_from_parent_module
+    },
+    {
         "module_stmt_w_scope",
         Eval_module_stmt_w_scope
     },
@@ -4885,6 +4891,10 @@ bake_test_case Collection_testcases[] = {
     {
         "vector_struct_elem",
         Collection_vector_struct_elem
+    },
+    {
+        "vector_member_elem_w_member_index",
+        Collection_vector_member_elem_w_member_index
     },
     {
         "vector_string_elem",
@@ -11580,14 +11590,14 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        609,
+        610,
         Eval_testcases
     },
     {
         "Collection",
         NULL,
         NULL,
-        97,
+        98,
         Collection_testcases
     },
     {

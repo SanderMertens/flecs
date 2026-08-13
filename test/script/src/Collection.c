@@ -1077,6 +1077,64 @@ void Collection_vector_struct_elem(void) {
     ecs_fini(world);
 }
 
+void Collection_vector_member_elem_w_member_index(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t point = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(point != 0);
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Points" }),
+        .type = point
+    });
+
+    test_assert(vec != 0);
+
+    ecs_entity_t game = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Game" }),
+        .members = {
+            {"index", ecs_id(ecs_i32_t)},
+            {"points", vec}
+        }
+    });
+
+    test_assert(game != 0);
+
+    const char *expr =
+    HEAD "const g: Game = {index: 1, points: [{10, 20}, {30, 40}]}"
+    LINE "const p = g.points[g.index]"
+    LINE "e {"
+    LINE "  Position: {p.x, p.y}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
 void Collection_vector_string_elem(void) {
     ecs_world_t *world = ecs_init();
 

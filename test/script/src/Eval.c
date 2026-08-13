@@ -6070,6 +6070,48 @@ void Eval_nested_module_stmt(void) {
     ecs_fini(world);
 }
 
+void Eval_module_stmt_w_component_from_parent_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "game" });
+    ecs_add_id(world, parent, EcsModule);
+
+    ecs_set_scope(world, parent);
+    ecs_entity_t leg = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Leg" }),
+        .members = {
+            {"phase", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_set_scope(world, 0);
+
+    test_assert(leg != 0);
+
+    const char *expr =
+    HEAD "module game.assets"
+    LINE "prefab Bunny {"
+    LINE "  leg {"
+    LINE "    Leg: {phase: 1}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t bunny = ecs_lookup(world, "game.assets.Bunny");
+    test_assert(bunny != 0);
+    test_assert(ecs_has_id(world, bunny, EcsPrefab));
+
+    ecs_entity_t bunny_leg = ecs_lookup(world, "game.assets.Bunny.leg");
+    test_assert(bunny_leg != 0);
+    test_assert(ecs_has_id(world, bunny_leg, leg));
+
+    const float *phase = ecs_get_id(world, bunny_leg, leg);
+    test_assert(phase != NULL);
+    test_flt(phase[0], 1);
+
+    ecs_fini(world);
+}
+
 void Eval_module_stmt_w_scope(void) {
     ecs_world_t *world = ecs_init();
 

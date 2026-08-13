@@ -63385,13 +63385,15 @@ void ecs_set_os_api_impl(void) {
 #define LookAhead_2(tok1, tok2, ...)\
     LookAhead_1(tok1, \
         const char *old_ptr = pos;\
+        bool lookahead_matched = false;\
         pos = lookahead;\
         LookAhead(\
             case tok2: {\
+                lookahead_matched = true;\
                 __VA_ARGS__\
             }\
         )\
-        if (pos != lookahead) {\
+        if (!lookahead_matched || pos != lookahead) {\
             pos = old_ptr;\
         }\
     )
@@ -63399,13 +63401,15 @@ void ecs_set_os_api_impl(void) {
 #define LookAhead_3(tok1, tok2, tok3, ...)\
     LookAhead_2(tok1, tok2, \
         const char *old_ptr = pos;\
+        bool lookahead_matched = false;\
         pos = lookahead;\
         LookAhead(\
             case tok3: {\
+                lookahead_matched = true;\
                 __VA_ARGS__\
             }\
         )\
-        if (pos != lookahead) {\
+        if (!lookahead_matched || pos != lookahead) {\
             pos = old_ptr;\
         }\
     )
