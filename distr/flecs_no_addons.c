@@ -3735,7 +3735,7 @@ void flecs_bootstrap(
 
     /* DontFragment components are always sparse */
     ecs_add_pair(world, EcsDontFragment, EcsWith, EcsSparse);
-
+    
     /* Acyclic/Traversable components */
     ecs_add_id(world, EcsIsA, EcsTraversable);
     ecs_add_id(world, EcsDependsOn, EcsTraversable);
@@ -23372,7 +23372,7 @@ static int flecs_query_set_caching_policy(
     ecs_query_cache_kind_t kind = desc->cache_kind;
     /* Cached query policies are unavailable without the addon. */
     kind = EcsQueryCacheNone;
-    bool require_caching = desc->group_by || desc->group_by_callback ||
+    bool require_caching = desc->group_by || desc->group_by_callback || 
             desc->order_by || desc->order_by_callback || 
             (desc->flags & EcsQueryDetectChanges);
 
