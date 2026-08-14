@@ -1570,8 +1570,12 @@ static int flecs_expr_identifier_variable_member_visit_type(
         return 1;
     }
 
+    char *var_name = flecs_strdup(
+        &flecs_script_impl(script)->allocator, node->value);
+    member_sep[0] = '.';
+
     ecs_expr_variable_t *var_node = flecs_expr_variable_from(
-        script, (ecs_expr_node_t*)node, node->value);
+        script, (ecs_expr_node_t*)node, var_name);
     ecs_expr_member_t *member_node = flecs_expr_member_from(
         script, (ecs_expr_node_t*)var_node, &member_sep[1]);
 
