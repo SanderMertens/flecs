@@ -3527,3 +3527,348 @@ void Error_oneof_pair_target_shadowed_by_script_entity(void) {
 
     ecs_fini(world);
 }
+
+void Error_any_as_pair_first(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "e { (_, Likes) }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "wildcard") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_any_as_pair_second(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "e { (Likes, _) }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "wildcard") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_any_as_pair_first_from_template_prop(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "Apples {}"
+    LINE "template T {"
+    LINE "  prop rel: entity = Likes"
+    LINE "  child { (rel, Apples) }"
+    LINE "}"
+    LINE "T ok()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, "T bad(_)", &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "anonymous") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_any_as_tag_from_template_prop(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "template T {"
+    LINE "  prop tag: entity = Likes"
+    LINE "  child { tag }"
+    LINE "}"
+    LINE "T ok()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, "T bad(_)", &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "anonymous") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_any_as_with_tag_from_template_prop(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "template T {"
+    LINE "  prop tag: entity = Likes"
+    LINE "  with tag {"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "}"
+    LINE "T ok()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, "T bad(_)", &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "anonymous") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_any_from_interpolated_pair_first(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "const n = \"_\""
+    LINE "e { (\"{n}\", Likes) }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_zero_entity_var_as_pair_second(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "Foo {}"
+    LINE "const p = Foo.parent()"
+    LINE "e { (Likes, $p) }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "unresolved") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_zero_entity_var_as_pair_first_from_template_prop(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "Apples {}"
+    LINE "Root {}"
+    LINE "template T {"
+    LINE "  prop rel: entity = Likes"
+    LINE "  child { (rel, Apples) }"
+    LINE "}"
+    LINE "T ok()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    const char *expr_bad =
+    HEAD "const z = Root.parent()"
+    LINE "T bad($z)";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr_bad, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "unresolved") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_zero_entity_var_as_with_tag_from_template_prop(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "Root {}"
+    LINE "template T {"
+    LINE "  prop tag: entity = Likes"
+    LINE "  with tag {"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "}"
+    LINE "T ok()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    const char *expr_bad =
+    HEAD "const z = Root.parent()"
+    LINE "T bad($z)";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr_bad, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "unresolved") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_unresolved_interpolated_pair_first(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "const n = \"DoesNotExist\""
+    LINE "e { (\"{n}\", Likes) }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "unresolved") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_any_from_interpolated_pair_component(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    test_assert(ecs_id(Position) != 0);
+
+    const char *expr =
+    HEAD "const n = \"_\""
+    LINE "e { (\"{n}\", Position): {10, 20} }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "wildcard") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_runtime_any_as_with_tag_from_template_prop(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "template T {"
+    LINE "  prop tag: entity = Likes"
+    LINE "  with tag {"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "}"
+    LINE "T ok()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    const char *expr_bad =
+    HEAD "const w = #0.lookup(\"_\")"
+    LINE "T bad($w)";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr_bad, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "wildcard") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_runtime_any_as_with_component_from_template_prop(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    test_assert(ecs_id(Position) != 0);
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop comp: entity = Position"
+    LINE "  with comp(10, 20) {"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "}"
+    LINE "T ok()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    const char *expr_bad =
+    HEAD "const w = #0.lookup(\"_\")"
+    LINE "T bad($w)";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr_bad, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "wildcard") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_runtime_any_as_pair_scope_target(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "const w = #0.lookup(\"_\")"
+    LINE "(Likes, $w) {"
+    LINE "  e {}"
+    LINE "}";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "wildcard") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}

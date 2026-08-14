@@ -105,16 +105,6 @@ static void flecs_script_with_set_count(
     ecs_vec_set_count_t(a, &v->r->with_type_info, ecs_type_info_t*, count);
 }
 
-static ecs_value_t* flecs_script_with_last(
-    ecs_script_eval_visitor_t *v)
-{
-    int32_t count = ecs_vec_count(&v->r->with);
-    if (count) {
-        return ecs_vec_get_t(&v->r->with, ecs_value_t, count - 2);
-    }
-    return NULL;
-}
-
 static int32_t flecs_script_with_count(
     ecs_script_eval_visitor_t *v)
 {
@@ -210,7 +200,6 @@ int flecs_script_symbol_lookup(
     ecs_script_eval_visitor_t *v = desc ? desc->script_visitor : NULL;
     const ecs_script_vars_t *vars = desc ? desc->vars : NULL;
     bool explicit_var = name[0] == '$';
-    bool is_this = !ecs_os_strcmp(name, "this");
     const char *var_name = explicit_var ? &name[1] : name;
 
     if ((lookup_kind & FlecsScriptLookupVariable) && vars) {
@@ -222,13 +211,7 @@ int flecs_script_symbol_lookup(
         }
     }
 
-    if (explicit_var || (is_this &&
-        !(lookup_kind & FlecsScriptLookupEntity)))
-    {
-        return -1;
-    }
-
-    if (!(lookup_kind & FlecsScriptLookupEntity)) {
+    if (explicit_var || !(lookup_kind & FlecsScriptLookupEntity)) {
         return -1;
     }
 
@@ -383,48 +366,51 @@ ecs_entity_t flecs_script_create_entity(
     return result;
 }
 
-static ecs_entity_t flecs_script_eval_id_part(
+int flecs_script_eval_id_elem(
     ecs_script_eval_visitor_t *v,
+    void *node,
     ecs_expr_node_t **name_expr,
     ecs_entity_t eval,
     int32_t slot,
-    int32_t sp)
+    int32_t sp,
+    ecs_entity_t *elem)
 {
+    ecs_entity_t result = eval;
     if (name_expr && *name_expr) {
-        return flecs_script_eval_name_expr(v, NULL, name_expr, true);
-    }
-    if (slot != -1) {
-        return flecs_script_symbol_entity(v, slot);
-    }
-    if (sp != -1) {
+        result = flecs_script_eval_name_expr(v, NULL, name_expr, true);
+    } else if (slot != -1) {
+        result = flecs_script_symbol_entity(v, slot);
+    } else if (sp != -1) {
         ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, sp);
-        if (!var || var->value.type != ecs_id(ecs_entity_t) ||
-            !var->value.ptr)
+        result = 0;
+        if (var && var->value.type == ecs_id(ecs_entity_t) &&
+            var->value.ptr)
         {
-            return 0;
+            result = *(ecs_entity_t*)var->value.ptr;
         }
-        return *(ecs_entity_t*)var->value.ptr;
     }
-    return eval;
+
+    if (result == EcsWildcard || result == EcsAny) {
+        flecs_script_eval_error(v, node,
+            "cannot use wildcard entity as id element");
+        return -1;
+    }
+
+    elem[0] = result;
+    return 0;
 }
 
-int flecs_script_eval_id(
+static int flecs_script_eval_id(
     ecs_script_eval_visitor_t *v,
     void *node,
     ecs_script_id_t *id)
 {
-    if (!id->first || (!id->first[0] && !id->first_expr)) {
-        flecs_script_eval_error(v, node, "invalid component identifier");
+    ecs_entity_t first;
+    if (flecs_script_eval_id_elem(v, node, &id->first_expr,
+        id->first_eval, id->first_symbol, id->first_sp, &first))
+    {
         return -1;
     }
-
-    if (id->second && !id->second[0] && !id->second_expr) {
-        flecs_script_eval_error(v, node, "invalid pair identifier");
-        return -1;
-    }
-
-    ecs_entity_t first = flecs_script_eval_id_part(v,
-        &id->first_expr, id->first_eval, id->first_symbol, id->first_sp);
     if (!first) {
         flecs_script_eval_error(v, node,
             "unresolved identifier '%s'", id->first);
@@ -432,42 +418,21 @@ int flecs_script_eval_id(
     }
 
     if (id->second) {
-        ecs_entity_t second = flecs_script_eval_id_part(v,
-            &id->second_expr, id->second_eval,
-            id->second_symbol, id->second_sp);
+        ecs_entity_t second;
+        if (flecs_script_eval_id_elem(v, node, &id->second_expr,
+            id->second_eval, id->second_symbol, id->second_sp, &second))
+        {
+            return -1;
+        }
         if (!second) {
             flecs_script_eval_error(v, node,
                 "unresolved identifier '%s'", id->second);
             return -1;
         }
-        if (first == EcsAny || second == EcsAny) {
-            flecs_script_eval_error(v, node,
-                "cannot use anonymous entity as element of pair");
-            return -1;
-        }
         id->eval = id->flag | ecs_pair(first, second);
     } else {
-        if (first == EcsAny) {
-            flecs_script_eval_error(v, node,
-                "cannot use anonymous entity as component or tag");
-            return -1;
-        }
         id->eval = id->flag | first;
     }
-    return 0;
-}
-
-int flecs_script_prepare_expr(
-    ecs_script_eval_visitor_t *v,
-    ecs_expr_node_t **expr_ptr,
-    ecs_entity_t type)
-{
-    (void)type;
-    (void)v;
-    ecs_expr_node_t *expr = *expr_ptr;
-    ecs_assert(expr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(expr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    (void)expr;
 
     return 0;
 }
@@ -477,9 +442,8 @@ int flecs_script_eval_expr(
     ecs_expr_node_t **expr_ptr,
     ecs_value_t *value)
 {
-    if (flecs_script_prepare_expr(v, expr_ptr, value->type)) {
-        return -1;
-    }
+    ecs_assert(*expr_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert((*expr_ptr)->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_script_t *script = &v->base.script->pub;
     ecs_expr_eval_desc_t desc = {
@@ -517,17 +481,6 @@ void flecs_script_eval_scope_leave(
 {
     v->vars = ecs_script_vars_pop(v->vars);
     v->parent = state->parent;
-}
-
-int flecs_script_eval_scope(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_scope_t *node)
-{
-    flecs_script_scope_state_t state;
-    flecs_script_eval_scope_enter(v, node, &state);
-    int result = ecs_script_visit_scope(v, node);
-    flecs_script_eval_scope_leave(v, &state);
-    return result;
 }
 
 static void flecs_script_apply_non_fragmenting_childof(
@@ -855,23 +808,7 @@ static int flecs_script_eval_tag(
         }
     }
 
-    if (v->is_with_scope) {
-        flecs_script_eval_error(v, node, "invalid component in with scope");
-        return -1;
-    }
-
-    if (!v->entity) {
-        if (node->id.second) {
-            flecs_script_eval_error(
-                v, node, "missing entity for pair (%s, %s)",
-                node->id.first, node->id.second);
-        } else {
-            flecs_script_eval_error(v, node, "missing entity for tag %s", 
-                node->id.first);
-        }
-        return -1;
-    }
-
+    ecs_assert(v->entity != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_entity_t src = flecs_script_get_src(
         v, v->entity->eval, node->id.eval);
     ecs_add_id(v->world, src, node->id.eval);
@@ -906,21 +843,7 @@ static int flecs_script_eval_component(
         }
     }
 
-    if (!v->entity) {
-        if (node->id.second) {
-            flecs_script_eval_error(v, node, "missing entity for pair (%s, %s)",
-                node->id.first, node->id.second);
-        } else {
-            flecs_script_eval_error(v, node, "missing entity for component %s", 
-                node->id.first);
-        }
-        return -1;
-    }
-
-    if (v->is_with_scope) {
-        flecs_script_eval_error(v, node, "invalid component in with scope");
-        return -1;
-    }
+    ecs_assert(v->entity != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!node->id.second) {
         const EcsScriptVisitor *visitor = ecs_get(
@@ -1228,7 +1151,8 @@ int flecs_script_eval_const(
     const ecs_type_info_t *ti = ecs_get_type_info(v->world, type);
     if (!ti) {
         flecs_script_eval_error(v, node,
-            "type for variable '%s' is invalid", node->name);
+            "invalid type %s for variable '%s'",
+            flecs_errstr(ecs_get_path(v->world, type)), node->name);
         return -1;
     }
 
@@ -1298,9 +1222,13 @@ int flecs_script_eval_pair_scope_enter(
     ecs_script_pair_scope_t *node,
     flecs_script_pair_scope_state_t *state)
 {
-    ecs_entity_t first = flecs_script_eval_id_part(v,
-        &node->id.first_expr, node->id.first_eval,
-        node->id.first_symbol, node->id.first_sp);
+    ecs_entity_t first;
+    if (flecs_script_eval_id_elem(v, node, &node->id.first_expr,
+        node->id.first_eval, node->id.first_symbol, node->id.first_sp,
+        &first))
+    {
+        return -1;
+    }
     if (!first && node->id.first_symbol != -1) {
         first = flecs_script_create_entity(v, node->id.first);
         if (!first) {
@@ -1311,9 +1239,13 @@ int flecs_script_eval_pair_scope_enter(
         return -1;
     }
 
-    ecs_entity_t second = flecs_script_eval_id_part(v,
-        &node->id.second_expr, node->id.second_eval,
-        node->id.second_symbol, node->id.second_sp);
+    ecs_entity_t second;
+    if (flecs_script_eval_id_elem(v, node, &node->id.second_expr,
+        node->id.second_eval, node->id.second_symbol, node->id.second_sp,
+        &second))
+    {
+        return -1;
+    }
     if (!second && node->id.second_symbol != -1) {
         second = flecs_script_create_entity(v, node->id.second);
         if (second) {
@@ -1908,6 +1840,24 @@ static void flecs_script_frame_leave(
     case EcsAstIf:
     case EcsAstTry:
         break;
+    case EcsAstTag:
+    case EcsAstComponent:
+    case EcsAstVarComponent:
+    case EcsAstWithVar:
+    case EcsAstWithTag:
+    case EcsAstWithComponent:
+    case EcsAstUsing:
+    case EcsAstModule:
+    case EcsAstAnnotation:
+    case EcsAstTemplate:
+    case EcsAstProp:
+    case EcsAstMut:
+    case EcsAstConst:
+    case EcsAstExportConst:
+    case EcsAstExportMut:
+    case EcsAstInclude:
+    case EcsAstFunction:
+    case EcsAstAwait:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "corrupt script frame node");
     }
@@ -1982,6 +1932,24 @@ static flecs_script_run_status_t flecs_script_runner_exec(
             res = flecs_script_step_try(r, frame);
             break;
 #endif
+        case EcsAstTag:
+        case EcsAstComponent:
+        case EcsAstVarComponent:
+        case EcsAstWithVar:
+        case EcsAstWithTag:
+        case EcsAstWithComponent:
+        case EcsAstUsing:
+        case EcsAstModule:
+        case EcsAstAnnotation:
+        case EcsAstTemplate:
+        case EcsAstProp:
+        case EcsAstMut:
+        case EcsAstConst:
+        case EcsAstExportConst:
+        case EcsAstExportMut:
+        case EcsAstInclude:
+        case EcsAstFunction:
+        case EcsAstAwait:
         default:
             ecs_abort(ECS_INTERNAL_ERROR, "corrupt script frame node");
         }

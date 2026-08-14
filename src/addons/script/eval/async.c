@@ -285,9 +285,6 @@ static int flecs_script_await_args(
         &call->args->elements);
     int32_t i, count = ecs_vec_count(&call->args->elements);
     for (i = 0; i < count; i ++) {
-        if (flecs_script_prepare_expr(v, &elems[i].value, 0)) {
-            goto error;
-        }
         argv[i] = ecs_value_new(v->world, elems[i].value->type);
         if (flecs_script_eval_expr(v, &elems[i].value, &argv[i])) {
             goto error;
@@ -307,10 +304,6 @@ static int flecs_script_await_start(
     ecs_expr_node_t **expr_ptr)
 {
     ecs_script_eval_visitor_t *v = &r->v;
-    if (flecs_script_prepare_expr(v, expr_ptr, 0)) {
-        return -1;
-    }
-
     ecs_expr_node_t *expr = *expr_ptr;
     if (expr->kind != EcsExprFunction && expr->kind != EcsExprMethod) {
         flecs_script_eval_error(v, stmt,

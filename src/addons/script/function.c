@@ -8,6 +8,14 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+#ifdef FLECS_SCRIPT_ASYNC
+#define flecs_script_copy_async_callbacks(dst, src)\
+    dst->async_callback = src->async_callback;\
+    dst->async_cancel = src->async_cancel;
+#else
+#define flecs_script_copy_async_callbacks(dst, src)
+#endif
+
 static void ecs_script_params_free(ecs_vec_t *params) {
     int32_t i, count = ecs_vec_count(params);
     if (count) {
@@ -126,10 +134,7 @@ static ECS_COPY(EcsScriptFunction, dst, src, {
     dst->binding_ctx_free = NULL;
     dst->return_type = src->return_type;
     dst->callback = src->callback;
-#ifdef FLECS_SCRIPT_ASYNC
-    dst->async_callback = src->async_callback;
-    dst->async_cancel = src->async_cancel;
-#endif
+    flecs_script_copy_async_callbacks(dst, src)
     ecs_os_memcpy_n(dst->vector_callbacks, src->vector_callbacks,
         ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
     dst->ctx = src->ctx;
@@ -163,10 +168,7 @@ static ECS_COPY(EcsScriptMethod, dst, src, {
     dst->binding_ctx_free = NULL;
     dst->return_type = src->return_type;
     dst->callback = src->callback;
-#ifdef FLECS_SCRIPT_ASYNC
-    dst->async_callback = src->async_callback;
-    dst->async_cancel = src->async_cancel;
-#endif
+    flecs_script_copy_async_callbacks(dst, src)
     ecs_os_memcpy_n(dst->vector_callbacks, src->vector_callbacks,
         ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
     dst->ctx = src->ctx;

@@ -219,10 +219,14 @@ int flecs_script_eval_expr(
     ecs_expr_node_t **expr_ptr,
     ecs_value_t *value);
 
-int flecs_script_prepare_expr(
+int flecs_script_eval_id_elem(
     ecs_script_eval_visitor_t *v,
-    ecs_expr_node_t **expr_ptr,
-    ecs_entity_t type);
+    void *node,
+    ecs_expr_node_t **name_expr,
+    ecs_entity_t eval,
+    int32_t slot,
+    int32_t sp,
+    ecs_entity_t *elem);
 
 void flecs_script_eval_visit_init(
     const ecs_script_impl_t *script,
@@ -273,10 +277,6 @@ int flecs_script_visit_type(
     ecs_script_eval_visitor_t *v,
     ecs_script_scope_t *scope);
 
-int flecs_script_visit_type_template(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_template_t *template);
-
 int flecs_script_visit_type_entity_expr(
     ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
@@ -317,16 +317,7 @@ ecs_script_var_t* flecs_script_for_declare_var(
     ecs_entity_t type,
     bool alloc);
 
-/* Functions shared between check and eval visitor */
-
-int flecs_script_eval_scope(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_scope_t *node);
-
-int flecs_script_eval_id(
-    ecs_script_eval_visitor_t *v,
-    void *node,
-    ecs_script_id_t *id);
+/* Functions shared between type and eval visitor */
 
 int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,

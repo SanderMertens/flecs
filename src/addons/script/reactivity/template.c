@@ -795,6 +795,77 @@ int flecs_script_template_eval_var(
     return 0;
 }
 
+static int flecs_script_visit_type_template(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_template_t *template)
+{
+    ecs_script_type_visitor_t *t = v->type_visitor;
+    ecs_assert(t != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_script_template_node_t *tnode = template->node;
+    if (tnode->symbol_offset == -1) {
+        tnode->symbol_offset = ecs_vec_count(&v->base.script->symbols);
+    }
+    template->symbol_offset = tnode->symbol_offset;
+
+    int32_t old_table = t->table;
+    bool old_template_scope = t->template_scope;
+    flecs_script_entity_state_t *old_entity = v->entity;
+    ecs_script_entity_t instance_node = {
+        .node = {
+            .kind = EcsAstEntity,
+            .pos = template->node->node.pos
+        },
+        .symbol = -1,
+        .kind_symbol = -1,
+        .kind_sp = -1
+    };
+    flecs_script_entity_state_t instance_state = {
+        .node = &instance_node
+    };
+    v->entity = &instance_state;
+    t->template_scope = true;
+
+    ecs_script_vars_t *outer_vars = v->vars;
+    ecs_script_vars_t *type_vars = flecs_script_vars_push(
+        NULL, &v->r->stack, &v->r->allocator);
+    type_vars->world = v->world;
+
+    int32_t i, var_count = ecs_vec_count(&template->vars->vars);
+    ecs_script_var_t *src_vars = ecs_vec_first(&template->vars->vars);
+    for (i = 0; i < var_count; i ++) {
+        ecs_script_var_t *src = &src_vars[i];
+        ecs_script_var_t *dst = ecs_script_vars_define_id(
+            type_vars, src->name, src->value.type);
+        ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_ptr_copy(v->world,
+            src->value.type, dst->value.ptr, src->value.ptr);
+        dst->is_const = false;
+    }
+
+    v->vars = ecs_script_vars_push(type_vars);
+    ecs_script_var_t *this_var = ecs_script_vars_declare(v->vars, "this");
+    this_var->value.type = ecs_id(ecs_entity_t);
+
+    int32_t table = flecs_script_type_table_new(
+        t, old_table, NULL);
+    int result = flecs_script_type_scope(
+        t, template->node->scope, table, true, false);
+
+    v->vars = ecs_script_vars_pop(v->vars);
+    ecs_script_vars_pop(v->vars);
+    v->vars = outer_vars;
+    t->template_scope = old_template_scope;
+    t->table = old_table;
+    v->entity = old_entity;
+    if (tnode->symbol_count == -1) {
+        tnode->symbol_count = ecs_vec_count(
+            &v->base.script->symbols) - template->symbol_offset;
+    }
+    template->symbol_count = tnode->symbol_count;
+    return result;
+}
+
+
 static int flecs_script_template_preprocess(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_t *template)
@@ -1049,11 +1120,18 @@ int flecs_script_template_update_vars(
     for (int32_t i = 0; i < count; i ++) {
         ecs_script_var_t *src = ecs_script_vars_from_sp(
             v->vars, capture_sp[i]);
-        if (!src || !src->value.ptr ||
-            src->value.type != dst[i].value.type)
-        {
+        if (!src || !src->value.ptr) {
             flecs_script_eval_error(v, node,
-                "captured variable '%s' was not evaluated", dst[i].name);
+                "variable '%s' captured by template has no value",
+                dst[i].name);
+            return -1;
+        }
+        if (src->value.type != dst[i].value.type) {
+            flecs_script_eval_error(v, node,
+                "variable '%s' captured by template has type %s, expected %s",
+                dst[i].name,
+                flecs_errstr(ecs_get_path(v->world, src->value.type)),
+                flecs_errstr_1(ecs_get_path(v->world, dst[i].value.type)));
             return -1;
         }
         ecs_ptr_copy(v->world, src->value.type,

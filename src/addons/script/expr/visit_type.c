@@ -316,6 +316,9 @@ static bool flecs_expr_oper_valid_for_type(
     case EcsTokKeywordInclude:
     case EcsTokKeywordFn:
     case EcsTokKeywordAwait:
+    case EcsTokKeywordScript:
+    case EcsTokKeywordTry:
+    case EcsTokKeywordCatch:
     case EcsTokArrow:
     case EcsTokEnd:
     default:
@@ -467,6 +470,9 @@ static int flecs_expr_type_for_operator(
     case EcsTokKeywordInclude:
     case EcsTokKeywordFn:
     case EcsTokKeywordAwait:
+    case EcsTokKeywordScript:
+    case EcsTokKeywordTry:
+    case EcsTokKeywordCatch:
     case EcsTokArrow:
     case EcsTokEnd:
     default:
@@ -1658,6 +1664,11 @@ static int flecs_expr_identifier_visit_type(
 
         if (!lookup_result || !ecs_os_strcmp(node->value, "#0")) {
             ecs_entity_t e = symbol.entity;
+            if (e == EcsAny) {
+                flecs_expr_visit_error(script, node,
+                    "cannot use anonymous entity as value");
+                goto error;
+            }
             if (symbol.kind == FlecsScriptSymbolEntitySlot) {
                 bool is_opaque = false;
                 if (!type || type == ecs_id(ecs_value_t)) {
@@ -2163,20 +2174,15 @@ try_function:
     if (!is_method) {
         flecs_script_symbol_t symbol;
         if (flecs_script_symbol_lookup(script, desc, 0,
-            node->function_name, FlecsScriptLookupEntity, &symbol))
+            node->function_name, FlecsScriptLookupEntity, &symbol) ||
+            !symbol.entity)
         {
-            flecs_expr_visit_error(script, node, 
-                "unresolved function identifier '%s'", 
-                node->function_name);
-            goto error;
-        }
-        ecs_entity_t func = symbol.entity;
-        if (!func) {
             flecs_expr_visit_error(script, node,
                 "unresolved function identifier '%s'",
                 node->function_name);
             goto error;
         }
+        ecs_entity_t func = symbol.entity;
 
         func_data = ecs_get(world, func, EcsScriptFunction);
         if (!func_data) {
