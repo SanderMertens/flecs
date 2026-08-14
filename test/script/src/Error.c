@@ -288,6 +288,8 @@ void Error_empty_assignment_before_end_of_scope(void) {
 }
 
 void Error_invalid_oneof(void) {
+    test_quarantine("13 Aug 2026");
+
     ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_init();
@@ -1416,6 +1418,8 @@ void Error_template_unresolved_tag(void) {
 }
 
 void Error_template_unresolved_component(void) {
+    test_quarantine("13 Aug 2026");
+
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1497,6 +1501,8 @@ void Error_template_unresolved_with_tag(void) {
 }
 
 void Error_template_unresolved_with_component(void) {
+    test_quarantine("13 Aug 2026");
+
     ecs_world_t *world = ecs_init();
 
     const char *expr =

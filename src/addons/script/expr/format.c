@@ -37,14 +37,12 @@ static bool flecs_expr_format_identifier_exists(
     char ch = end[0];
     end[0] = '\0';
 
-    bool result = flecs_script_find_var(desc->vars, start, NULL) != NULL;
-    if (!result && !is_variable && desc->lookup_action) {
-        ecs_script_t *script = &parser->script->pub;
-        ecs_entity_t entity = desc->lookup_action(
-            script->world, start, desc->lookup_ctx);
-        result = entity && flecs_script_global_var_get(
-            script->world, entity, NULL).ptr != NULL;
-    }
+    ecs_script_t *script = &parser->script->pub;
+    flecs_script_symbol_t symbol;
+    bool result = !flecs_script_symbol_lookup(script, desc, 0, start,
+        is_variable ? FlecsScriptLookupVariable : FlecsScriptLookupAll,
+        &symbol) && (symbol.kind == FlecsScriptSymbolVariable ||
+            symbol.kind == FlecsScriptSymbolGlobalVariable);
 
     end[0] = ch;
     return result;

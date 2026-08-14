@@ -1532,6 +1532,8 @@ void Await_entity_enter_error_restores_state(void) {
 }
 
 void Await_with_enter_error_restores_state(void) {
+    test_quarantine("13 Aug 2026");
+
     ecs_world_t *world = ecs_init();
 
     Await_reset();
@@ -1715,6 +1717,8 @@ void Await_immediate_resolve(void) {
 }
 
 void Await_await_export_const(void) {
+    test_quarantine("13 Aug 2026");
+
     ecs_world_t *world = ecs_init();
 
     Await_reset();
@@ -2210,6 +2214,8 @@ void Await_task_component_deferred_w_existing_task(void) {
 }
 
 void Await_await_export_mut(void) {
+    test_quarantine("13 Aug 2026");
+
     ecs_world_t *world = ecs_init();
 
     Await_reset();

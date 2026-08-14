@@ -924,6 +924,8 @@
                 "template_w_pair_scope_w_unresolved_var_second",
                 "prop_without_using_meta",
                 "hoist_var",
+                "hoist_non_folded_var",
+                "hoist_component_var",
                 "hoist_vars_nested",
                 "hoist_vars_nested_w_masked",
                 "anonymous_template_instance",

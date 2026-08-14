@@ -43,6 +43,28 @@ typedef struct EcsScriptVisitor {
 
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsScriptVisitor);
 
+typedef enum flecs_script_symbol_kind_t {
+    FlecsScriptSymbolNone,
+    FlecsScriptSymbolEntity,
+    FlecsScriptSymbolEntitySlot,
+    FlecsScriptSymbolVariable,
+    FlecsScriptSymbolGlobalVariable
+} flecs_script_symbol_kind_t;
+
+typedef struct flecs_script_symbol_t {
+    flecs_script_symbol_kind_t kind;
+    ecs_entity_t entity;
+    int32_t slot;
+    int32_t sp;
+} flecs_script_symbol_t;
+
+typedef enum flecs_script_lookup_kind_t {
+    FlecsScriptLookupEntity = 1,
+    FlecsScriptLookupVariable = 2,
+    FlecsScriptLookupAll = 3,
+    FlecsScriptLookupDynamic = 4
+} flecs_script_lookup_kind_t;
+
 struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_entity_t entity; /* Set if script is managed (has EcsScript) */
@@ -55,6 +77,7 @@ struct ecs_script_impl_t {
     int32_t token_buffer_size;
     int32_t refcount;
     ecs_vec_t refs;
+    ecs_vec_t symbols;
     bool evaluating;
 };
 

@@ -213,6 +213,7 @@ ecs_expr_identifier_t* flecs_expr_identifier(
     ecs_expr_identifier_t *result = flecs_expr_ast_new(
         parser, ecs_expr_identifier_t, EcsExprIdentifier);
     result->value = value;
+    result->symbol = -1;
     return result;
 }
 

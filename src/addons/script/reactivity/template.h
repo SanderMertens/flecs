@@ -31,6 +31,7 @@ struct ecs_script_template_t {
 
     /* Hoisted variables */
     ecs_script_vars_t *vars;
+    ecs_vec_t capture_sp;
 
     /* Prop and mut members in variable declaration order */
     ecs_vec_t members;
@@ -48,6 +49,9 @@ struct ecs_script_template_t {
     ecs_vec_t observers;
 
     ecs_vec_t dynamic_refs;
+
+    int32_t symbol_offset;
+    int32_t symbol_count;
 
     int32_t refcount;
 
@@ -78,6 +82,15 @@ typedef struct EcsScriptTemplateSetEvent {
 int flecs_script_eval_template(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_node_t *template);
+
+int flecs_script_template_eval_var(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_var_node_t *node,
+    bool mut);
+
+int flecs_script_template_update_vars(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_template_node_t *node);
 
 void flecs_script_template_fini(
     ecs_script_impl_t *script,

@@ -507,14 +507,14 @@ static int flecs_expr_variable_visit_fold(
 
     ecs_expr_variable_t *node = (ecs_expr_variable_t*)*node_ptr;
 
-    ecs_script_var_t *var = flecs_script_find_var(
-        desc->vars, node->name, &node->sp);
+    ecs_script_var_t *var = ecs_script_vars_from_sp(
+        desc->vars, node->sp);
     /* Should've been caught by type visitor */
     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(var->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
     ecs_entity_t type = node->node.type;
 
-    if (var->is_const) {
+    if (var->is_const && var->value.ptr) {
         ecs_expr_value_node_t *result = flecs_expr_value_from(
             script, (ecs_expr_node_t*)node, type);
         void *value = ecs_ptr_new(script->world, type);

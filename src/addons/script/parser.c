@@ -579,7 +579,9 @@ static const char* flecs_script_fn_params(
                     ecs_script_fn_param_t *p = ecs_vec_append_t(
                         &parser->script->allocator, &fn->params,
                         ecs_script_fn_param_t);
+                    ecs_os_zeromem(p);
                     p->node = (ecs_script_node_t){ .pos = parser->pos };
+                    p->sp = -1;
                     p->name = Token(0);
                     p->type = Token(2);
                     parser->token_keep = parser->token_cur;

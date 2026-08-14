@@ -98,6 +98,7 @@ typedef struct ecs_expr_identifier_t {
     ecs_expr_node_t node;
     const char *value;
     ecs_expr_node_t *expr;
+    int32_t symbol;
 } ecs_expr_identifier_t;
 
 typedef struct ecs_expr_unary_t {

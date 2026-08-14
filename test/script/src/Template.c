@@ -2287,6 +2287,76 @@ void Template_hoist_var(void) {
     ecs_fini(world);
 }
 
+void Template_hoist_non_folded_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "fn value() -> i32 { 10 }"
+    LINE "const v = value()"
+    LINE "template Tree {"
+    LINE "  prop height: f32 = 0"
+    LINE "  Position: {v, height}"
+    LINE "}"
+    LINE "Tree foo(height: 20)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_hoist_component_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "source { Position: {10, 20} }"
+    LINE "const v = source[Position].x"
+    LINE "template Tree {"
+    LINE "  prop height: f32 = 0"
+    LINE "  Position: {v, height}"
+    LINE "}"
+    LINE "Tree foo(height: 30)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
 void Template_hoist_vars_nested(void) {
     ecs_world_t *world = ecs_init();
 

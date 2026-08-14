@@ -162,8 +162,8 @@ static int flecs_script_include_node(
             goto done;
         }
 
-        ecs_script_eval_desc_t desc = { 
-            .runtime = ecs_script_runtime_new() 
+        ecs_script_eval_desc_t desc = {
+            .runtime = ecs_script_runtime_new()
         };
 
         if (ecs_script_eval(included, &desc, NULL)) {
