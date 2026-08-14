@@ -3523,11 +3523,13 @@ void Error_oneof_pair_target_shadowed_by_script_entity(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "not found in parent") != NULL);
     ecs_os_free(result.error);
 
     ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-    test_assert(!ecs_has_pair(world, e, rel, EcsWildcard));
+    if (e) {
+        test_assert(!ecs_has_pair(world, e, rel, EcsWildcard));
+    }
 
     ecs_fini(world);
 }
