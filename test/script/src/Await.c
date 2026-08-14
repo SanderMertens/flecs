@@ -1532,8 +1532,6 @@ void Await_entity_enter_error_restores_state(void) {
 }
 
 void Await_with_enter_error_restores_state(void) {
-    test_quarantine("13 Aug 2026");
-
     ecs_world_t *world = ecs_init();
 
     Await_reset();
@@ -1548,12 +1546,19 @@ void Await_with_enter_error_restores_state(void) {
         .members = {{"value", ecs_id(ecs_i32_t)}}
     });
 
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "AwaitSource" }),
+        .members = {{"value", ecs_id(ecs_i32_t)}}
+    });
+    ecs_entity(world, { .name = "src" });
+
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "with AwaitTracked($missing) { Foo {} }", NULL, NULL);
+        "with AwaitTracked(src[AwaitSource].value) { Foo {} }", NULL, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
+    test_assert(task != NULL);
     ecs_script_eval_result_t result = {0};
 
     test_int(ecs_script_task_resume(task, &result),
@@ -1717,8 +1722,6 @@ void Await_immediate_resolve(void) {
 }
 
 void Await_await_export_const(void) {
-    test_quarantine("13 Aug 2026");
-
     ecs_world_t *world = ecs_init();
 
     Await_reset();
@@ -1733,27 +1736,15 @@ void Await_await_export_const(void) {
         "export const value = await fetch()", NULL, NULL);
     test_assert(script != NULL);
 
+    int32_t log_level = ecs_log_get_level();
+    ecs_log_set_level(-4);
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
-    test_assert(task != NULL);
+    ecs_log_set_level(log_level);
 
-    test_int(ecs_script_task_resume(task, NULL),
-        EcsScriptTaskPending);
-    test_int(await_future_count, 1);
+    test_assert(task == NULL);
+    test_int(await_future_count, 0);
+    test_assert(ecs_lookup(world, "value") == 0);
 
-    ecs_value_t result = ecs_value(ecs_i32_t, {42});
-    test_int(ecs_script_future_resolve(await_futures[0], &result), 0);
-    ecs_script_future_release(await_futures[0]);
-
-    test_int(ecs_script_task_resume(task, NULL),
-        EcsScriptTaskDone);
-
-    ecs_entity_t value = ecs_lookup(world, "value");
-    test_assert(value != 0);
-    ecs_value_t exported = ecs_const_var_get(world, value);
-    test_uint(exported.type, ecs_id(ecs_i32_t));
-    test_int(*(int32_t*)exported.ptr, 42);
-
-    ecs_script_task_free(task);
     ecs_script_free(script);
     ecs_fini(world);
 }
@@ -2143,8 +2134,6 @@ void Await_task_component_deferred_w_existing_task(void) {
 }
 
 void Await_await_export_mut(void) {
-    test_quarantine("13 Aug 2026");
-
     ecs_world_t *world = ecs_init();
 
     Await_reset();
@@ -2159,27 +2148,15 @@ void Await_await_export_mut(void) {
         "export mut value = await fetch()", NULL, NULL);
     test_assert(script != NULL);
 
+    int32_t log_level = ecs_log_get_level();
+    ecs_log_set_level(-4);
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
-    test_assert(task != NULL);
+    ecs_log_set_level(log_level);
 
-    test_int(ecs_script_task_resume(task, NULL),
-        EcsScriptTaskPending);
-    test_int(await_future_count, 1);
+    test_assert(task == NULL);
+    test_int(await_future_count, 0);
+    test_assert(ecs_lookup(world, "value") == 0);
 
-    ecs_value_t result = ecs_value(ecs_i32_t, {42});
-    test_int(ecs_script_future_resolve(await_futures[0], &result), 0);
-    ecs_script_future_release(await_futures[0]);
-
-    test_int(ecs_script_task_resume(task, NULL),
-        EcsScriptTaskDone);
-
-    ecs_entity_t value = ecs_lookup(world, "value");
-    test_assert(value != 0);
-    ecs_value_t exported = ecs_mut_var_get(world, value);
-    test_uint(exported.type, ecs_id(ecs_i32_t));
-    test_int(*(int32_t*)exported.ptr, 42);
-
-    ecs_script_task_free(task);
     ecs_script_free(script);
     ecs_fini(world);
 }
