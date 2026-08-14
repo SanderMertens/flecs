@@ -2075,11 +2075,11 @@ int flecs_script_eval_entity(
     if (v) {
         flecs_script_runner_init_nested(&runner, v);
     } else {
-        /* Safe const cast, script won't modify variables since it only
-         * contains an entity statement. */
-        desc.vars = ECS_CONST_CAST(ecs_script_vars_t*, vars);
         flecs_script_runner_init(&runner,
             (const ecs_script_impl_t*)script, &desc);
+        if (vars) {
+            flecs_script_eval_push_vars(&runner.v, vars);
+        }
     }
 
     flecs_script_frame_push(&runner, (ecs_script_node_t*)node);
@@ -2090,6 +2090,9 @@ int flecs_script_eval_entity(
 
     ecs_assert(runner.frame_count == 0, ECS_INTERNAL_ERROR, NULL);
     if (!v) {
+        if (vars) {
+            flecs_script_eval_pop_vars(&runner.v);
+        }
         flecs_script_runner_fini(&runner, &desc);
     }
 
@@ -2145,26 +2148,33 @@ void flecs_script_eval_visit_init(
         }
     }
 
-    if (desc && desc->vars) {
-        ecs_allocator_t *a = &v->r->allocator;
-        v->vars = flecs_script_vars_push(v->vars, &v->r->stack, a);
-        v->vars->parent = desc->vars;
-        v->vars->sp = ecs_vec_count(&desc->vars->vars);
-
-    }
 }
 
 void flecs_script_eval_visit_fini(
     ecs_script_eval_visitor_t *v,
     const ecs_script_eval_desc_t *desc)
 {
-    if (desc && desc->vars) {
-        v->vars = ecs_script_vars_pop(v->vars);
-    }
-
     if (!desc || (v->r != desc->runtime)) {
         ecs_script_runtime_free(v->r);
     }
+}
+
+void flecs_script_eval_push_vars(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_vars_t *vars)
+{
+    /* Safe const cast, evaluated code only contains an entity statement and
+     * won't modify the variables. */
+    v->vars = flecs_script_vars_push(
+        v->vars, &v->r->stack, &v->r->allocator);
+    v->vars->parent = ECS_CONST_CAST(ecs_script_vars_t*, vars);
+    v->vars->sp = ecs_vec_count(&vars->vars);
+}
+
+void flecs_script_eval_pop_vars(
+    ecs_script_eval_visitor_t *v)
+{
+    v->vars = ecs_script_vars_pop(v->vars);
 }
 
 int flecs_script_eval(
@@ -2199,11 +2209,16 @@ int flecs_script_eval(
 
     flecs_script_runner_init(&runner, impl, &priv_desc);
     int r = 0;
-    if (flecs_script_visit_include(&runner.v, impl->root)) {
-        r = -1;
-    } else if (flecs_script_visit_type(&runner.v, impl->root)) {
-        r = -1;
-    } else if (flecs_script_runner_run_scope(&runner, impl->root) !=
+    if (!impl->compiled) {
+        if (flecs_script_visit_include(&runner.v, impl->root)) {
+            r = -1;
+        } else if (flecs_script_visit_type(&runner.v, impl->root)) {
+            r = -1;
+        } else {
+            impl->compiled = true;
+        }
+    }
+    if (!r && flecs_script_runner_run_scope(&runner, impl->root) !=
         FlecsScriptRunDone)
     {
         r = -1;

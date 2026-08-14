@@ -79,6 +79,7 @@ struct ecs_script_impl_t {
     ecs_vec_t refs;
     ecs_vec_t symbols;
     bool evaluating;
+    bool compiled;
 };
 
 typedef struct ecs_function_calldata_t {

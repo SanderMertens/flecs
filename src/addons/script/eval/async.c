@@ -624,8 +624,6 @@ ecs_script_task_t* ecs_script_task_new(
         result->ctx_free = desc->ctx_free;
         result->loop = desc->loop;
         result->iterations = desc->iterations;
-        result->eval_desc.vars = ECS_CONST_CAST(
-            ecs_script_vars_t*, desc->vars);
     }
     flecs_script_runner_init(&result->runner,
         flecs_script_impl(result->script), &result->eval_desc);
@@ -645,12 +643,14 @@ ecs_script_task_t* ecs_script_task_new(
             result->script->world, ecs_id(ecs_entity_t));
         result->has_owner_vars = true;
     }
-    if (flecs_script_visit_include(
-        &result->runner.v, flecs_script_impl(result->script)->root) ||
-        flecs_script_visit_type(
-            &result->runner.v, flecs_script_impl(result->script)->root))
-    {
-        goto task_error;
+    ecs_script_impl_t *impl = flecs_script_impl(result->script);
+    if (!impl->compiled) {
+        if (flecs_script_visit_include(&result->runner.v, impl->root) ||
+            flecs_script_visit_type(&result->runner.v, impl->root))
+        {
+            goto task_error;
+        }
+        impl->compiled = true;
     }
     if (result->entity) {
         flecs_script_task_register(result);

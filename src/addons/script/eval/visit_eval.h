@@ -229,6 +229,16 @@ void flecs_script_eval_visit_init(
     ecs_script_eval_visitor_t *v,
     const ecs_script_eval_desc_t *desc);
 
+/* Push/pop a variable scope that exposes external variables to evaluation.
+ * Used when evaluating entity statements embedded in expressions, which can
+ * reference variables of the expression they're embedded in. */
+void flecs_script_eval_push_vars(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_vars_t *vars);
+
+void flecs_script_eval_pop_vars(
+    ecs_script_eval_visitor_t *v);
+
 void flecs_script_eval_visit_fini(
     ecs_script_eval_visitor_t *v,
     const ecs_script_eval_desc_t *desc);
