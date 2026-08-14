@@ -1606,3 +1606,37 @@ void Mut_eval_error_w_runtime(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Mut_hoisted_var_from_outer_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "const global = 10"
+    LINE "template Foo {"
+    LINE "  mut value: f32 = 20"
+    LINE "  Position: {global, value}"
+    LINE "}"
+    LINE "Foo e()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}

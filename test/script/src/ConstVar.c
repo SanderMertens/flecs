@@ -712,3 +712,34 @@ void ConstVar_get_struct_as_other_struct(void) {
 
     ecs_fini(world);
 }
+
+void ConstVar_nested_const_shadows_export_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    test_assert(ecs_id(Position) != 0);
+
+    const char *expr =
+    HEAD "export const speed = 10"
+    LINE "parent {"
+    LINE "  const speed = 5"
+    LINE "  child { Position: {speed, speed} }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child = ecs_lookup(world, "parent.child");
+    test_assert(child != 0);
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 5);
+
+    ecs_fini(world);
+}

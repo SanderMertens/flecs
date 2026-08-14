@@ -2254,3 +2254,167 @@ void Await_await_export_mut(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Await_interleaved_tasks(void) {
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ECS_TAG(world, Tag);
+
+    ecs_async_function(world, {
+        .name = "step",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_script_t *scripts[2] = {
+        ecs_script_parse(world, NULL,
+            "EntityA {\n"
+            "  await step()\n"
+            "  Tag\n"
+            "}", NULL, NULL),
+        ecs_script_parse(world, NULL,
+            "EntityB {\n"
+            "  await step()\n"
+            "  Tag\n"
+            "}", NULL, NULL)
+    };
+    test_assert(scripts[0] != NULL);
+    test_assert(scripts[1] != NULL);
+
+    ecs_script_task_t *tasks[2] = {
+        ecs_script_task_new(scripts[0], NULL),
+        ecs_script_task_new(scripts[1], NULL)
+    };
+
+    test_int(ecs_script_task_resume(tasks[0], NULL),
+        EcsScriptTaskPending);
+    test_int(ecs_script_task_resume(tasks[1], NULL),
+        EcsScriptTaskPending);
+
+    ecs_value_t result = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(await_futures[0], &result), 0);
+    ecs_script_future_release(await_futures[0]);
+    test_int(ecs_script_task_resume(tasks[0], NULL),
+        EcsScriptTaskDone);
+
+    ecs_entity_t entity_a = ecs_lookup(world, "EntityA");
+    ecs_entity_t entity_b = ecs_lookup(world, "EntityB");
+    test_assert(entity_a != 0);
+    test_assert(entity_b != 0);
+    test_assert(ecs_has(world, entity_a, Tag));
+    test_assert(!ecs_has(world, entity_b, Tag));
+
+    test_int(ecs_script_future_resolve(await_futures[1], &result), 0);
+    ecs_script_future_release(await_futures[1]);
+    test_int(ecs_script_task_resume(tasks[1], NULL),
+        EcsScriptTaskDone);
+    test_assert(ecs_has(world, entity_b, Tag));
+
+    ecs_script_task_free(tasks[0]);
+    ecs_script_task_free(tasks[1]);
+    ecs_script_free(scripts[0]);
+    ecs_script_free(scripts[1]);
+    ecs_fini(world);
+}
+
+void Await_second_task_same_script_while_suspended(void) {
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "Tag {}\n"
+        "e {}\n"
+        "const v = await fetch()\n"
+        "e { Tag }", NULL, NULL);
+    test_assert(script != NULL);
+
+    ecs_script_task_t *task_a = ecs_script_task_new(script, NULL);
+    test_assert(task_a != NULL);
+    test_int(ecs_script_task_resume(task_a, NULL),
+        EcsScriptTaskPending);
+    test_int(await_future_count, 1);
+
+    ecs_script_task_t *task_b = ecs_script_task_new(script, NULL);
+    test_assert(task_b != NULL);
+
+    ecs_value_t value = ecs_value(ecs_i32_t, {10});
+    test_int(ecs_script_future_resolve(await_futures[0], &value), 0);
+    ecs_script_future_release(await_futures[0]);
+
+    test_int(ecs_script_task_resume(task_a, NULL),
+        EcsScriptTaskDone);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t tag = ecs_lookup(world, "Tag");
+    test_assert(e != 0);
+    test_assert(tag != 0);
+    test_assert(ecs_has_id(world, e, tag));
+
+    ecs_script_task_free(task_a);
+    ecs_script_task_free(task_b);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Await_loop_forever_recreate_deleted_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "e {}\n"
+        "const v = await fetch()", NULL, NULL);
+    test_assert(script != NULL);
+
+    ecs_script_task_t *task = ecs_script_task_new(script, &(
+        ecs_script_task_desc_t){ .loop = EcsScriptTaskLoopForever });
+    test_assert(task != NULL);
+
+    test_int(ecs_script_task_resume(task, NULL),
+        EcsScriptTaskPending);
+    test_int(await_future_count, 1);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_value_t value = ecs_value(ecs_i32_t, {10});
+    test_int(ecs_script_future_resolve(await_futures[0], &value), 0);
+    ecs_script_future_release(await_futures[0]);
+
+    ecs_delete(world, e);
+
+    test_int(ecs_script_task_resume(task, NULL),
+        EcsScriptTaskPending);
+    test_int(await_future_count, 1);
+
+    test_int(ecs_script_task_resume(task, NULL),
+        EcsScriptTaskPending);
+    test_int(await_future_count, 2);
+
+    ecs_entity_t e2 = ecs_lookup(world, "e");
+    test_assert(e2 != 0);
+    test_assert(ecs_is_alive(world, e2));
+
+    ecs_script_task_cancel(task);
+    test_int(ecs_script_task_resume(task, NULL),
+        EcsScriptTaskCancelled);
+
+    ecs_script_task_free(task);
+    ecs_script_free(script);
+    ecs_fini(world);
+}

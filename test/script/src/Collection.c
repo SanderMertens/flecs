@@ -2818,3 +2818,37 @@ void Collection_range_literal_non_vector_type(void) {
 
     ecs_fini(world);
 }
+
+void Collection_vector_literal_entity_mut(void) {
+    test_quarantine("Aug 13 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e1 {}"
+    LINE "e2 {}"
+    LINE "export mut v = [e1, e2]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_mut_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<entity>");
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_entity_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
+
+    ecs_entity_t *elems = ecs_vec_first(value.ptr);
+    test_uint(elems[0], ecs_lookup(world, "e1"));
+    test_uint(elems[1], ecs_lookup(world, "e2"));
+
+    ecs_fini(world);
+}

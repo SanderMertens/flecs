@@ -8903,6 +8903,29 @@ void Eval_path_tag_in_module(void) {
     ecs_fini(world);
 }
 
+void Eval_path_tag_in_module_w_module_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "module foo"
+    LINE "Bar {}"
+    LINE "e {"
+    LINE "  foo.Bar"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t tag = ecs_lookup(world, "foo.Bar");
+    test_assert(tag != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "foo.e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has_id(world, e, tag));
+
+    ecs_fini(world);
+}
+
 void Eval_path_tag_in_nested_scope(void) {
     test_quarantine("13 Aug 2026");
     ecs_world_t *world = ecs_init();
@@ -18681,6 +18704,627 @@ void Eval_export_mut_var_is_not_const_var(void) {
 
     test_assert(ecs_mut_var_get(world, v).ptr != NULL);
     test_assert(ecs_const_var_get(world, v).ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Eval_expr_path_to_local_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "parent {"
+    LINE "  child {}"
+    LINE "}"
+    LINE "e {"
+    LINE "  entity: parent.child"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child = ecs_lookup(world, "parent.child");
+    test_assert(child != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get_id(world, e, ecs_id(ecs_entity_t));
+    test_assert(ptr != NULL);
+    test_uint(*ptr, child);
+
+    ecs_fini(world);
+}
+
+void Eval_expr_path_to_nested_local_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "parent {"
+    LINE "  child {"
+    LINE "    grand_child {}"
+    LINE "  }"
+    LINE "}"
+    LINE "e {"
+    LINE "  entity: parent.child.grand_child"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t grand_child = ecs_lookup(world, "parent.child.grand_child");
+    test_assert(grand_child != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get_id(world, e, ecs_id(ecs_entity_t));
+    test_assert(ptr != NULL);
+    test_uint(*ptr, grand_child);
+
+    ecs_fini(world);
+}
+
+void Eval_eval_twice_w_failed_method_call_on_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Likes, Apples);
+
+    const char *expr =
+    HEAD "const v = e"
+    LINE "const b = $v.has(pair(Likes, Apples))";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_eval_twice_w_failed_method_call_on_call_result(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Likes, Apples);
+
+    const char *expr =
+    HEAD "const b = e.parent().has(pair(Likes, Apples))";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_eval_twice_w_failed_method_call_on_var_call_result(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Likes, Apples);
+
+    const char *expr =
+    HEAD "const v = e"
+    LINE "const b = $v.parent().has(pair(Likes, Apples))";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_eval_twice_w_failed_expr_after_method_call(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_id(world, e, Likes);
+
+    const char *expr =
+    HEAD "const b = e.has(Likes) && nope";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_eval_twice_w_failed_expr_after_component_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "const b = e[Position].x + nope";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_eval_twice_w_failed_expr_in_if_stmt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_id(world, e, Likes);
+
+    const char *expr =
+    HEAD "if e.has(Likes) && nope {"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_eval_twice_w_failed_expr_in_for_stmt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {3, 4});
+
+    const char *expr =
+    HEAD "for i in 0..e[PositionI].x + nope {"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_eval_twice_w_failed_expr_in_entity_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "ent {"
+    LINE "  Position: {e[Position].x, nope}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_eval_twice_w_failed_expr_in_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "const c: Position = {e[Position].x, nope}";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_eval_twice_w_failed_expr_in_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {3, 4});
+
+    const char *expr =
+    HEAD "const b = match e[PositionI].x {"
+    LINE "  0: 1"
+    LINE "  1: nope"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_eval_twice_w_failed_expr_in_interpolated_string(void) {
+    test_quarantine("Aug 13 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const n = 5"
+    LINE "const s = \"n is {n} and {nope}\"";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_const_var_w_identifier_value_wo_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr =
+    HEAD "const c = Foo";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_pair_scope_new_target_eval_twice(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Rel {}"
+    LINE "(Rel, NewTarget) {"
+    LINE "  child_a {}"
+    LINE "}"
+    LINE "later_entity {}"
+    ;
+
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, NULL, NULL);
+    test_assert(s != NULL);
+
+    test_int(0, ecs_script_eval(s, NULL, NULL));
+    test_int(0, ecs_script_eval(s, NULL, NULL));
+
+    test_assert(ecs_lookup(world, "NewTarget") != 0);
+    test_assert(ecs_lookup(world, "later_entity") != 0);
+
+    ecs_script_free(s);
+    ecs_fini(world);
+}
+
+void Eval_for_loop_named_child_in_interpolated_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "for i in 0..2 {"
+    LINE "  \"parent_$i\" {"
+    LINE "    Child {}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "parent_0") != 0);
+    test_assert(ecs_lookup(world, "parent_1") != 0);
+    test_assert(ecs_lookup(world, "parent_0.Child") != 0);
+    test_assert(ecs_lookup(world, "parent_1.Child") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_scope_after_export_const_same_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const Foo = 10"
+    LINE "Foo {"
+    LINE "  Bar {}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_assert(ecs_lookup(world, "Foo.Bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_existing_child_of_reopened_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "Parent" });
+    ecs_entity_t child = ecs_entity(world, { .name = "child", .parent = parent });
+
+    const char *expr =
+    HEAD "Rel {}"
+    LINE "Parent {"
+    LINE "  other {}"
+    LINE "}"
+    LINE "e {"
+    LINE "  (Rel, Parent.child)"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    test_assert(rel != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, rel, child));
+
+    ecs_fini(world);
+}
+
+void Eval_pair_scope_target_shadowed_by_root_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t red_root = ecs_entity(world, { .name = "Red" });
+
+    const char *expr =
+    HEAD "Palette {"
+    LINE "  (Color, Red) {"
+    LINE "    Crimson {}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t palette_red = ecs_lookup(world, "Palette.Red");
+    test_assert(palette_red != 0);
+    ecs_entity_t color = ecs_lookup(world, "Palette.Color");
+    test_assert(color != 0);
+    ecs_entity_t crimson = ecs_lookup(world, "Palette.Crimson");
+    test_assert(crimson != 0);
+    test_assert(ecs_has_pair(world, crimson, color, palette_red));
+    test_assert(!ecs_has_pair(world, crimson, color, red_root));
+
+    ecs_fini(world);
+}
+
+void Eval_pair_scope_predeclared_entity_export_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "(Likes, Bob) {"
+    LINE "}"
+    LINE "Bob {"
+    LINE "  export const X = 10"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "Bob.X") != 0);
+    test_assert(ecs_lookup(world, "X") == 0);
 
     ecs_fini(world);
 }
