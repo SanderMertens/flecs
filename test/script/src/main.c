@@ -1192,6 +1192,20 @@ void Error_entity_comma_list(void);
 void Error_entity_comma_list_in_scope(void);
 void Error_entity_comma_list_w_trailing_comma(void);
 void Error_oneof_pair_target_shadowed_by_script_entity(void);
+void Error_any_as_pair_first(void);
+void Error_any_as_pair_second(void);
+void Error_any_as_pair_first_from_template_prop(void);
+void Error_any_as_tag_from_template_prop(void);
+void Error_any_as_with_tag_from_template_prop(void);
+void Error_any_from_interpolated_pair_first(void);
+void Error_zero_entity_var_as_pair_second(void);
+void Error_zero_entity_var_as_pair_first_from_template_prop(void);
+void Error_zero_entity_var_as_with_tag_from_template_prop(void);
+void Error_unresolved_interpolated_pair_first(void);
+void Error_any_from_interpolated_pair_component(void);
+void Error_runtime_any_as_with_tag_from_template_prop(void);
+void Error_runtime_any_as_with_component_from_template_prop(void);
+void Error_runtime_any_as_pair_scope_target(void);
 
 // Testsuite 'Format'
 void Format_precision_f32_literal(void);
@@ -7024,6 +7038,62 @@ bake_test_case Error_testcases[] = {
     {
         "oneof_pair_target_shadowed_by_script_entity",
         Error_oneof_pair_target_shadowed_by_script_entity
+    },
+    {
+        "any_as_pair_first",
+        Error_any_as_pair_first
+    },
+    {
+        "any_as_pair_second",
+        Error_any_as_pair_second
+    },
+    {
+        "any_as_pair_first_from_template_prop",
+        Error_any_as_pair_first_from_template_prop
+    },
+    {
+        "any_as_tag_from_template_prop",
+        Error_any_as_tag_from_template_prop
+    },
+    {
+        "any_as_with_tag_from_template_prop",
+        Error_any_as_with_tag_from_template_prop
+    },
+    {
+        "any_from_interpolated_pair_first",
+        Error_any_from_interpolated_pair_first
+    },
+    {
+        "zero_entity_var_as_pair_second",
+        Error_zero_entity_var_as_pair_second
+    },
+    {
+        "zero_entity_var_as_pair_first_from_template_prop",
+        Error_zero_entity_var_as_pair_first_from_template_prop
+    },
+    {
+        "zero_entity_var_as_with_tag_from_template_prop",
+        Error_zero_entity_var_as_with_tag_from_template_prop
+    },
+    {
+        "unresolved_interpolated_pair_first",
+        Error_unresolved_interpolated_pair_first
+    },
+    {
+        "any_from_interpolated_pair_component",
+        Error_any_from_interpolated_pair_component
+    },
+    {
+        "runtime_any_as_with_tag_from_template_prop",
+        Error_runtime_any_as_with_tag_from_template_prop
+    },
+    {
+        "runtime_any_as_with_component_from_template_prop",
+        Error_runtime_any_as_with_component_from_template_prop
+    },
+    {
+        "runtime_any_as_pair_scope_target",
+        Error_runtime_any_as_pair_scope_target
     }
 };
 
@@ -11574,7 +11644,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        153,
+        167,
         Error_testcases
     },
     {

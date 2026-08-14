@@ -1209,7 +1209,21 @@
                 "entity_comma_list",
                 "entity_comma_list_in_scope",
                 "entity_comma_list_w_trailing_comma",
-                "oneof_pair_target_shadowed_by_script_entity"
+                "oneof_pair_target_shadowed_by_script_entity",
+                "any_as_pair_first",
+                "any_as_pair_second",
+                "any_as_pair_first_from_template_prop",
+                "any_as_tag_from_template_prop",
+                "any_as_with_tag_from_template_prop",
+                "any_from_interpolated_pair_first",
+                "zero_entity_var_as_pair_second",
+                "zero_entity_var_as_pair_first_from_template_prop",
+                "zero_entity_var_as_with_tag_from_template_prop",
+                "unresolved_interpolated_pair_first",
+                "any_from_interpolated_pair_component",
+                "runtime_any_as_with_tag_from_template_prop",
+                "runtime_any_as_with_component_from_template_prop",
+                "runtime_any_as_pair_scope_target"
             ]
         }, {
             "id": "Format",
