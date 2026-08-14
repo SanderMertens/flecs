@@ -166,6 +166,10 @@ static flecs_script_type_entity_t* flecs_script_type_declare(
         if (node && !entity->node) {
             entity->node = node;
         }
+        if (has_scope && entity->child_table == -1) {
+            entity->child_table = flecs_script_type_table_new(
+                t, t->table, node);
+        }
         return entity;
     }
 
