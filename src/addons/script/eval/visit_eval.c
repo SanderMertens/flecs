@@ -304,11 +304,7 @@ static ecs_entity_t flecs_script_eval_name_expr(
     };
 
     ecs_expr_node_t *expr = *expr_ptr;
-    if (!expr->type_info) {
-        flecs_script_eval_error(v, node,
-            "entity name expression was not resolved by type visitor");
-        return 0;
-    }
+    ecs_assert(expr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_value_t value = { .type = ecs_id(ecs_string_t) };
     if (flecs_expr_visit_eval(script, expr, &desc, &value)) {
@@ -467,13 +463,11 @@ int flecs_script_prepare_expr(
     ecs_entity_t type)
 {
     (void)type;
+    (void)v;
     ecs_expr_node_t *expr = *expr_ptr;
     ecs_assert(expr != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (expr->type_info == NULL) {
-        flecs_script_eval_error(v, NULL,
-            "expression was not resolved by type visitor");
-        return -1;
-    }
+    ecs_assert(expr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    (void)expr;
 
     return 0;
 }
@@ -1038,11 +1032,7 @@ static int flecs_script_eval_var_component(
     ecs_script_var_component_t *node)
 {
     ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
-    if (!var) {
-        flecs_script_eval_error(v, node,
-            "variable '%s' was not resolved by type visitor", node->name);
-        return -1;
-    }
+    ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_value_t var_value = var->value;
 
     if (v->is_with_scope) {
@@ -1085,11 +1075,7 @@ static int flecs_script_eval_with_var(
     ecs_script_var_component_t *node)
 {
     ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
-    if (!var) {
-        flecs_script_eval_error(v, node,
-            "variable '%s' was not resolved by type visitor", node->name);
-        return -1;
-    }
+    ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_allocator_t *a = &v->r->allocator;
     ecs_value_t *value = flecs_script_with_append(a, v, NULL); // TODO: vars of non-trivial types
@@ -1187,12 +1173,7 @@ static int flecs_script_eval_using(
     int32_t len = ecs_os_strlen(node->name);
     bool wildcard = len > 2 && !ecs_os_strcmp(&node->name[len - 2], ".*");
     ecs_entity_t from = node->eval;
-
-    if (!from) {
-        flecs_script_eval_error(v, node,
-            "using path '%s' was not resolved by type visitor", node->name);
-        return -1;
-    }
+    ecs_assert(from != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (wildcard) {
         ecs_iter_t it = ecs_children(v->world, from);
@@ -1214,11 +1195,7 @@ static int flecs_script_eval_module(
     ecs_script_eval_visitor_t *v,
     ecs_script_module_t *node)
 {
-    if (!node->eval) {
-        flecs_script_eval_error(v, node,
-            "module '%s' was not resolved by type visitor", node->name);
-        return -1;
-    }
+    ecs_assert(node->eval != 0, ECS_INTERNAL_ERROR, NULL);
     v->module = node->eval;
     v->parent = node->eval;
     return 0;
@@ -1247,11 +1224,7 @@ int flecs_script_eval_const(
     }
 
     ecs_entity_t type = node->eval_type;
-    if (!type) {
-        flecs_script_eval_error(v, node,
-            "variable '%s' was not resolved by type visitor", node->name);
-        return -1;
-    }
+    ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_info_t *ti = ecs_get_type_info(v->world, type);
     if (!ti) {
         flecs_script_eval_error(v, node,
@@ -1530,32 +1503,18 @@ int flecs_script_eval_function(
         return -1;
     }
 
-    if (!node->eval_return_type) {
-        flecs_script_eval_error(v, &node->return_type_node,
-            "return type for function '%s' was not resolved by type visitor",
-            node->name);
-        return -1;
-    }
+    ecs_assert(node->eval_return_type != 0, ECS_INTERNAL_ERROR, NULL);
 
     int32_t i;
     ecs_script_fn_param_t *params = ecs_vec_first(&node->params);
     for (i = 0; i < param_count; i ++) {
-        if (!params[i].eval_type) {
-            flecs_script_eval_error(v, &params[i].node,
-                "parameter '%s' for function '%s' was not resolved by type visitor",
-                params[i].name, node->name);
-            return -1;
-        }
+        ecs_assert(params[i].eval_type != 0, ECS_INTERNAL_ERROR, NULL);
     }
 
     ecs_entity_t fn_entity = node->symbol != -1
         ? flecs_script_symbol_entity(v, node->symbol)
         : 0;
-    if (!fn_entity) {
-        flecs_script_eval_error(v, node,
-            "function '%s' was not registered by type visitor", node->name);
-        return -1;
-    }
+    ecs_assert(fn_entity != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_vec_t fn_refs;
     ecs_vec_init_t(NULL, &fn_refs, ecs_script_ref_t, 0);
@@ -1564,12 +1523,8 @@ int flecs_script_eval_function(
     ecs_script_node_t **stmts = ecs_vec_first(&node->body->stmts);
     for (i = 0; i < stmt_count; i ++) {
         ecs_script_var_node_t *var = (ecs_script_var_node_t*)stmts[i];
-        if (!var->expr || !var->expr->type_info) {
-            flecs_script_eval_error(v, var,
-                "function body was not resolved by type visitor");
-            ecs_vec_fini_t(NULL, &fn_refs, ecs_script_ref_t);
-            return -1;
-        }
+        ecs_assert(var->expr != NULL && var->expr->type_info != NULL,
+            ECS_INTERNAL_ERROR, NULL);
         if (flecs_expr_visit_refs(&v->base.script->pub,
             var->expr, &fn_refs, NULL, &fn_refs))
         {
