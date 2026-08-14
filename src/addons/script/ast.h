@@ -54,11 +54,15 @@ typedef struct ecs_script_id_t {
     const char *second;
     ecs_id_t flag;
     ecs_id_t eval;
+    ecs_entity_t first_eval;
+    ecs_entity_t second_eval;
 
     /* If first or second refer to a variable, these are the cached variable 
      * stack pointers so we don't have to lookup variables by name. */
     int32_t first_sp; 
     int32_t second_sp;
+    int32_t first_symbol;
+    int32_t second_symbol;
 
     /* In case first/second are specified as interpolated strings. */
     ecs_expr_node_t *first_expr;
@@ -97,6 +101,12 @@ struct ecs_script_entity_t {
     bool non_fragmenting_parent;
     ecs_script_scope_t *scope;
     ecs_expr_node_t *name_expr;
+    ecs_entity_t eval;
+    ecs_entity_t eval_kind;
+    int32_t kind_symbol;
+    int32_t kind_sp;
+    int32_t symbol;
+    bool is_type;
 };
 
 typedef struct ecs_script_with_t {
@@ -119,11 +129,14 @@ typedef struct ecs_script_pair_scope_t {
 typedef struct ecs_script_using_t {
     ecs_script_node_t node;
     const char *name;
+    ecs_entity_t eval;
 } ecs_script_using_t;
 
 typedef struct ecs_script_module_t {
     ecs_script_node_t node;
     const char *name;
+    ecs_entity_t eval;
+    int32_t symbol;
 } ecs_script_module_t;
 
 typedef struct ecs_script_annot_t {
@@ -136,6 +149,7 @@ typedef struct ecs_script_template_node_t {
     ecs_script_node_t node;
     const char *name;
     ecs_script_scope_t* scope;
+    int32_t symbol;
 } ecs_script_template_node_t;
 
 typedef struct ecs_script_var_node_t {
@@ -143,6 +157,9 @@ typedef struct ecs_script_var_node_t {
     const char *name;
     const char *type;
     ecs_expr_node_t *expr;
+    ecs_entity_t eval_type;
+    int32_t sp;
+    int32_t symbol;
     bool is_await;
 } ecs_script_var_node_t;
 
@@ -154,6 +171,8 @@ typedef struct ecs_script_await_t {
 typedef struct ecs_script_catch_t {
     const char *error; /* Error entity to catch. NULL for catch-all clause. */
     ecs_script_scope_t *scope;
+    ecs_entity_t eval_error;
+    int32_t error_symbol;
 } ecs_script_catch_t;
 
 typedef struct ecs_script_try_t {
@@ -172,6 +191,7 @@ typedef struct ecs_script_if_t {
 typedef struct ecs_script_for_t {
     ecs_script_node_t node;
     const char *loop_vars[3];
+    int32_t loop_var_sp[3];
     int32_t loop_var_count;
     ecs_expr_node_t *from;
     ecs_expr_node_t *to;
@@ -188,6 +208,8 @@ typedef struct ecs_script_fn_param_t {
     ecs_script_node_t node;
     const char *name;
     const char *type;
+    ecs_entity_t eval_type;
+    int32_t sp;
 } ecs_script_fn_param_t;
 
 typedef struct ecs_script_function_node_t {
@@ -198,6 +220,8 @@ typedef struct ecs_script_function_node_t {
     ecs_vec_t params;
     ecs_script_scope_t *body;
     ecs_expr_node_t *return_expr;
+    ecs_entity_t eval_return_type;
+    int32_t symbol;
 } ecs_script_function_node_t;
 
 #define ecs_script_node(kind, node)\

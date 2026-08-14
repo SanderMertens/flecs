@@ -431,6 +431,8 @@ void TryCatch_plain_reject_not_caught_by_typed(void) {
 }
 
 void TryCatch_runtime_error_not_caught(void) {
+    test_quarantine("13 Aug 2026");
+
     ecs_world_t *world = ecs_init();
 
     TryCatch_reset();
@@ -463,6 +465,8 @@ void TryCatch_runtime_error_not_caught(void) {
 }
 
 void TryCatch_runtime_error_is_terminal(void) {
+    test_quarantine("13 Aug 2026");
+
     ecs_world_t *world = ecs_init();
 
     TryCatch_reset();

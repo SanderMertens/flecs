@@ -513,6 +513,22 @@ error:
     return -1;
 }
 
+static int flecs_expr_identifier_set_entity(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_identifier_t *node,
+    ecs_expr_value_t *out,
+    ecs_entity_t entity)
+{
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        ctx->world, out->value.type, out->value.ptr);
+    if (ecs_meta_set_entity(&cur, entity)) {
+        flecs_expr_visit_error(ctx->script, node,
+            "failed to assign identifier '%s'", node->value);
+        return -1;
+    }
+    return 0;
+}
+
 static int flecs_expr_identifier_visit_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_identifier_t *node,
@@ -520,20 +536,37 @@ static int flecs_expr_identifier_visit_eval(
 {
     if (node->expr) {
         return flecs_expr_visit_eval_priv(ctx, node->expr, out);
+    } else if (node->symbol != -1) {
+        ecs_script_eval_visitor_t *v = ctx->desc
+            ? ctx->desc->script_visitor : NULL;
+        ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t entity = flecs_script_symbol_entity(v, node->symbol);
+        if (!entity) {
+            flecs_expr_visit_error(ctx->script, node,
+                "unresolved identifier '%s'", node->value);
+            goto error;
+        }
+        if (flecs_expr_identifier_set_entity(ctx, node, out,
+            entity))
+        {
+            goto error;
+        }
     } else {
-        ecs_assert(ctx->desc != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(ctx->desc->lookup_action != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_entity_t e = ctx->desc->lookup_action(
-            ctx->world, node->value, ctx->desc->lookup_ctx);
-        if (!e) {
+        flecs_script_symbol_t symbol;
+        if (flecs_script_symbol_lookup(ctx->script, ctx->desc, 0,
+            node->value, FlecsScriptLookupEntity | FlecsScriptLookupDynamic,
+            &symbol))
+        {
             flecs_expr_visit_error(ctx->script, node, 
                 "unresolved identifier '%s'", node->value);
             goto error;
         }
 
-        ecs_assert(out->value.type == ecs_id(ecs_entity_t), 
-            ECS_INTERNAL_ERROR, NULL);
-        *(ecs_entity_t*)out->value.ptr = e;
+        if (flecs_expr_identifier_set_entity(
+            ctx, node, out, symbol.entity))
+        {
+            goto error;
+        }
     }
 
     return 0;
@@ -550,10 +583,24 @@ static int flecs_expr_variable_visit_eval(
         "variables available at parse time are not provided");
     ecs_assert(ctx->desc->vars != NULL, ECS_INVALID_OPERATION,
         "variables available at parse time are not provided");
+    ecs_assert(!ctx->desc->script_visitor ||
+        ctx->desc->disable_dynamic_variable_binding,
+        ECS_INTERNAL_ERROR, NULL);
 
-    const ecs_script_var_t *var = flecs_script_find_var(
-        ctx->desc->vars, node->name, 
-            ctx->desc->disable_dynamic_variable_binding ? &node->sp : NULL);
+    const ecs_script_var_t *var;
+    if (ctx->desc->disable_dynamic_variable_binding) {
+        var = ecs_script_vars_from_sp(ctx->desc->vars, node->sp);
+    } else {
+        flecs_script_symbol_t symbol;
+        if (flecs_script_symbol_lookup(ctx->script, ctx->desc, 0,
+            node->name, FlecsScriptLookupVariable | FlecsScriptLookupDynamic,
+            &symbol))
+        {
+            symbol.sp = -1;
+        }
+        var = symbol.sp == -1 ? NULL : ecs_script_vars_from_sp(
+            ctx->desc->vars, symbol.sp);
+    }
     if (!var) {
         flecs_expr_visit_error(ctx->script, node, "unresolved variable '%s'",
             node->name);

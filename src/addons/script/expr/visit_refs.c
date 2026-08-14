@@ -9,6 +9,7 @@
 #include "../script.h"
 
 static ecs_entity_t flecs_expr_ref_entity(
+    const ecs_script_t *script,
     ecs_expr_node_t *node)
 {
     if (!node) {
@@ -21,7 +22,17 @@ static ecs_entity_t flecs_expr_ref_entity(
             return *(ecs_entity_t*)value->ptr;
         }
     } else if (node->kind == EcsExprIdentifier) {
-        return flecs_expr_ref_entity(((ecs_expr_identifier_t*)node)->expr);
+        ecs_expr_identifier_t *identifier = (ecs_expr_identifier_t*)node;
+        ecs_entity_t entity = flecs_expr_ref_entity(script, identifier->expr);
+        if (!entity && identifier->symbol != -1) {
+            ecs_script_impl_t *impl = flecs_script_impl(
+                ECS_CONST_CAST(ecs_script_t*, script));
+            if (identifier->symbol < ecs_vec_count(&impl->symbols)) {
+                entity = ecs_vec_get_t(
+                    &impl->symbols, ecs_entity_t, identifier->symbol)[0];
+            }
+        }
+        return entity;
     }
 
     return 0;
@@ -222,7 +233,7 @@ int flecs_expr_visit_refs(
     }
     case EcsExprComponent: {
         ecs_expr_element_t *n = (ecs_expr_element_t*)node;
-        ecs_entity_t entity = flecs_expr_ref_entity(n->left);
+        ecs_entity_t entity = flecs_expr_ref_entity(script, n->left);
         ecs_id_t component = n->node.type;
         if (entity && component) {
             flecs_expr_add_ref(refs, entity, NULL, component);

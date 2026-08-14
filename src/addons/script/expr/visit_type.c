@@ -794,6 +794,7 @@ static int flecs_expr_interpolated_string_visit_type(
 
             ecs_expr_eval_desc_t priv_desc = *desc;
             priv_desc.type = format.is_present ? 0 : ecs_id(ecs_string_t);
+            priv_desc.allow_unresolved_identifiers = true;
 
             ecs_meta_cursor_t value_cur = {0};
             ecs_meta_cursor_t *result_cur = format.is_present ? &value_cur : cur;
@@ -1546,16 +1547,19 @@ static int flecs_expr_identifier_variable_member_visit_type(
 
         member_sep[0] = '\0';
 
-        if (flecs_script_find_var(desc->vars, node->value, NULL)) {
-            break;
-        }
-
-        ecs_entity_t global = desc->lookup_action(
-            script->world, node->value, desc->lookup_ctx);
-        if (global && flecs_script_global_var_get(
-            script->world, global, NULL).ptr)
+        flecs_script_symbol_t symbol;
+        if (!flecs_script_symbol_lookup(script, desc, 0, node->value,
+            FlecsScriptLookupAll, &symbol))
         {
-            break;
+            if (symbol.kind == FlecsScriptSymbolVariable) {
+                break;
+            }
+            if (symbol.kind == FlecsScriptSymbolGlobalVariable &&
+                symbol.entity && flecs_script_global_var_get(
+                    script->world, symbol.entity, NULL).ptr)
+            {
+                break;
+            }
         }
 
         member_sep[0] = '.';
@@ -1600,6 +1604,7 @@ static int flecs_expr_identifier_visit_type(
         flecs_expr_visit_free(script, node->expr);
         node->expr = NULL;
     }
+    node->symbol = -1;
 
     ecs_entity_t type = node->node.type;
     if (cur->valid) {
@@ -1626,13 +1631,15 @@ static int flecs_expr_identifier_visit_type(
 
         return 0;
     } else {
-        /* Variables take precedence over entities */
-        int32_t var_sp = -1;
-        ecs_script_var_t *var = flecs_script_find_var(
-            desc->vars, node->value, &var_sp);
-        if (var) {
+        flecs_script_symbol_t symbol;
+        int lookup_result = flecs_script_symbol_lookup(
+            script, desc, 0, node->value, FlecsScriptLookupAll, &symbol);
+        if (!lookup_result && symbol.kind == FlecsScriptSymbolVariable) {
+            ecs_script_var_t *var = ecs_script_vars_from_sp(
+                desc->vars, symbol.sp);
             ecs_expr_variable_t *var_node = flecs_expr_variable_from(
                 script, (ecs_expr_node_t*)node, node->value);
+            var_node->sp = symbol.sp;
             node->expr = (ecs_expr_node_t*)var_node;
             node->node.type = var->value.type;
 
@@ -1645,10 +1652,27 @@ static int flecs_expr_identifier_visit_type(
             return 0;
         }
 
-        /* If not, try to resolve the identifier as an entity */
-        ecs_entity_t e = desc->lookup_action(
-            script->world, node->value, desc->lookup_ctx);
-        if (e || !ecs_os_strcmp(node->value, "#0")) {
+        if (!lookup_result || !ecs_os_strcmp(node->value, "#0")) {
+            ecs_entity_t e = symbol.entity;
+            if (symbol.kind == FlecsScriptSymbolEntitySlot) {
+                bool is_opaque = false;
+                if (!type || type == ecs_id(ecs_value_t)) {
+                    type = ecs_id(ecs_entity_t);
+                } else if (!flecs_expr_is_entity_type(
+                    script->world, type, &is_opaque) || is_opaque)
+                {
+                    char *type_str = ecs_get_path(script->world, type);
+                    flecs_expr_visit_error(script, node,
+                        "cannot cast identifier '%s' to %s",
+                        node->value, type_str);
+                    ecs_os_free(type_str);
+                    goto error;
+                }
+                node->symbol = symbol.slot;
+                node->node.type = type;
+                return 0;
+            }
+
             ecs_value_t global = {0};
             if (e) {
                 global = flecs_script_global_var_get(script->world, e, NULL);
@@ -1713,11 +1737,7 @@ static int flecs_expr_identifier_visit_type(
         }
 
         /* If unresolved identifiers aren't allowed here, throw error */
-        if (!desc->allow_unresolved_identifiers ||
-            (desc->unresolved_identifier_action &&
-                !desc->unresolved_identifier_action(
-                    script->world, node->value, desc->lookup_ctx)))
-        {
+        if (!desc->allow_unresolved_identifiers) {
             flecs_expr_visit_error(script, node,
                 "unresolved identifier '%s'", node->value);
             goto error;
@@ -1738,13 +1758,16 @@ static int flecs_expr_global_variable_resolve(
     const ecs_expr_eval_desc_t *desc)
 {
     ecs_world_t *world = script->world;
-    ecs_entity_t global = desc->lookup_action(
-        world, node->name, desc->lookup_ctx);
-    if (!global) {
+    flecs_script_symbol_t symbol;
+    if (flecs_script_symbol_lookup(script, desc, 0, node->name,
+        FlecsScriptLookupAll, &symbol) ||
+        symbol.kind != FlecsScriptSymbolGlobalVariable)
+    {
         flecs_expr_visit_error(script, node, "unresolved variable '%s'",
             node->name);
         goto error;
     }
+    ecs_entity_t global = symbol.entity;
 
     ecs_id_t component = 0;
     ecs_value_t value = flecs_script_global_var_get(world, global, &component);
@@ -1773,9 +1796,13 @@ static int flecs_expr_variable_visit_type(
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
-    ecs_script_var_t *var = flecs_script_find_var(
-        desc->vars, node->name, &node->sp);
-    if (var) {
+    flecs_script_symbol_t symbol;
+    if (!flecs_script_symbol_lookup(script, desc, 0, node->name,
+        FlecsScriptLookupVariable, &symbol))
+    {
+        ecs_script_var_t *var = ecs_script_vars_from_sp(
+            desc->vars, symbol.sp);
+        node->sp = symbol.sp;
         node->node.type = var->value.type;
         if (!node->node.type) {
             flecs_expr_visit_error(script, node, 
@@ -2081,8 +2108,14 @@ static int flecs_expr_function_visit_type(
 
     /* If this is a method, lookup function entity in scope of type */
     if (is_method) {
-        ecs_entity_t func = ecs_lookup_from(
-            world, node->left->type, node->function_name);
+        flecs_script_symbol_t symbol;
+        ecs_entity_t func = 0;
+        if (!flecs_script_symbol_lookup(script, desc, node->left->type,
+            node->function_name,
+            FlecsScriptLookupEntity | FlecsScriptLookupDynamic, &symbol))
+        {
+            func = symbol.entity;
+        }
         if (!func) {
             /* If identifier could be a function (not a method), try that */
             if (func_identifier) {
@@ -2124,11 +2157,19 @@ static int flecs_expr_function_visit_type(
 
 try_function:
     if (!is_method) {
-        ecs_entity_t func = desc->lookup_action(
-            world, node->function_name, desc->lookup_ctx);
-        if (!func) {
+        flecs_script_symbol_t symbol;
+        if (flecs_script_symbol_lookup(script, desc, 0,
+            node->function_name, FlecsScriptLookupEntity, &symbol))
+        {
             flecs_expr_visit_error(script, node, 
                 "unresolved function identifier '%s'", 
+                node->function_name);
+            goto error;
+        }
+        ecs_entity_t func = symbol.entity;
+        if (!func) {
+            flecs_expr_visit_error(script, node,
+                "unresolved function identifier '%s'",
                 node->function_name);
             goto error;
         }
@@ -2439,10 +2480,18 @@ static int flecs_expr_element_visit_type(
             }
 
             ecs_expr_identifier_t *ident = (ecs_expr_identifier_t*)node->index;
-            node->node.type = desc->lookup_action(
-                script->world, ident->value, desc->lookup_ctx);
-            if (!node->node.type) {
+            flecs_script_symbol_t symbol;
+            if (flecs_script_symbol_lookup(script, desc, 0, ident->value,
+                FlecsScriptLookupEntity, &symbol))
+            {
                 flecs_expr_visit_error(script, node, 
+                    "unresolved component identifier '%s'",
+                        ident->value);
+                goto error;
+            }
+            node->node.type = symbol.entity;
+            if (!node->node.type) {
+                flecs_expr_visit_error(script, node,
                     "unresolved component identifier '%s'",
                         ident->value);
                 goto error;
@@ -2759,9 +2808,13 @@ static int flecs_expr_new_visit_type(
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
-    (void)script;
     (void)cur;
-    (void)desc;
+    ecs_script_eval_visitor_t *v = desc->script_visitor;
+    if (flecs_script_visit_type_entity_expr(
+        script, desc, v, node->entity))
+    {
+        return -1;
+    }
     node->node.type = ecs_id(ecs_entity_t);
     return 0;
 }

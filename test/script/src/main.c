@@ -910,6 +910,8 @@ void Template_template_w_pair_scope_w_unresolved_var_first(void);
 void Template_template_w_pair_scope_w_unresolved_var_second(void);
 void Template_prop_without_using_meta(void);
 void Template_hoist_var(void);
+void Template_hoist_non_folded_var(void);
+void Template_hoist_component_var(void);
 void Template_hoist_vars_nested(void);
 void Template_hoist_vars_nested_w_masked(void);
 void Template_anonymous_template_instance(void);
@@ -5878,6 +5880,14 @@ bake_test_case Template_testcases[] = {
     {
         "hoist_var",
         Template_hoist_var
+    },
+    {
+        "hoist_non_folded_var",
+        Template_hoist_non_folded_var
+    },
+    {
+        "hoist_component_var",
+        Template_hoist_component_var
     },
     {
         "hoist_vars_nested",
@@ -11420,7 +11430,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        97,
+        99,
         Template_testcases
     },
     {

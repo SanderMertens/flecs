@@ -105,6 +105,9 @@ ecs_script_entity_t* flecs_script_insert_entity(
 
     ecs_script_entity_t *result = flecs_ast_new(
         parser, ecs_script_entity_t, EcsAstEntity);
+    result->symbol = -1;
+    result->kind_symbol = -1;
+    result->kind_sp = -1;
 
     if (name && !ecs_os_strcmp(name, "_")) {
         name = NULL;
@@ -137,6 +140,8 @@ static int flecs_script_set_id(
     id->second = second;
     id->first_sp = -1;
     id->second_sp = -1;
+    id->first_symbol = -1;
+    id->second_symbol = -1;
 
     if (flecs_script_name_to_expr(parser, first, &id->first_expr)) {
         return -1;
@@ -287,6 +292,7 @@ ecs_script_module_t* flecs_script_insert_module(
         parser, ecs_script_module_t, EcsAstModule);
 
     result->name = name;
+    result->symbol = -1;
 
     flecs_ast_append(parser, scope->stmts, ecs_script_module_t, result);
     return result;
@@ -319,6 +325,7 @@ ecs_script_template_node_t* flecs_script_insert_template(
 
     ecs_script_template_node_t *result = flecs_ast_new(
         parser, ecs_script_template_node_t, EcsAstTemplate);
+    result->symbol = -1;
     result->name = name;
     result->scope = flecs_script_scope_new(parser);
 
@@ -335,6 +342,8 @@ ecs_script_var_node_t* flecs_script_insert_var(
 
     ecs_script_var_node_t *result = flecs_ast_new(
         parser, ecs_script_var_node_t, EcsAstConst);
+    result->sp = -1;
+    result->symbol = -1;
     result->name = name;
 
     flecs_ast_append(parser, scope->stmts, ecs_script_var_node_t, result);
@@ -376,6 +385,7 @@ ecs_script_catch_t* flecs_script_try_add_catch(
     ecs_script_catch_t *result = ecs_vec_append_t(
         &parser->script->allocator, &stmt->catches, ecs_script_catch_t);
     ecs_os_zeromem(result);
+    result->error_symbol = -1;
     result->scope = flecs_script_scope_new(parser);
     return result;
 }
@@ -403,6 +413,9 @@ ecs_script_for_t* flecs_script_insert_for(
 
     ecs_script_for_t *result = flecs_ast_new(
         parser, ecs_script_for_t, EcsAstFor);
+    result->loop_var_sp[0] = -1;
+    result->loop_var_sp[1] = -1;
+    result->loop_var_sp[2] = -1;
     result->scope = flecs_script_scope_new(parser);
 
     flecs_ast_append(parser, scope->stmts, ecs_script_for_t, result);
@@ -433,6 +446,7 @@ ecs_script_function_node_t* flecs_script_insert_function(
 
     ecs_script_function_node_t *result = flecs_ast_new(
         parser, ecs_script_function_node_t, EcsAstFunction);
+    result->symbol = -1;
     result->name = name;
     result->body = flecs_script_scope_new(parser);
     ecs_vec_init_t(&parser->script->allocator, &result->params,

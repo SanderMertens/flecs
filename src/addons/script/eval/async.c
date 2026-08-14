@@ -431,11 +431,9 @@ static int32_t flecs_script_find_catch(
         if (!throw_id) {
             continue;
         }
-        ecs_entity_t e = 0;
-        if (flecs_script_find_entity(v, 0,
-            catches[i].error, NULL, NULL, &e, NULL))
-        {
-            continue;
+        ecs_entity_t e = catches[i].eval_error;
+        if (catches[i].error_symbol != -1) {
+            e = flecs_script_symbol_entity(v, catches[i].error_symbol);
         }
         if (e == throw_id) {
             return i;
@@ -646,10 +644,30 @@ ecs_script_task_t* ecs_script_task_new(
         var->type_info = ecs_get_type_info(
             result->script->world, ecs_id(ecs_entity_t));
         result->has_owner_vars = true;
+    }
+    if (flecs_script_visit_include(
+        &result->runner.v, flecs_script_impl(result->script)->root) ||
+        flecs_script_visit_type(
+            &result->runner.v, flecs_script_impl(result->script)->root))
+    {
+        goto task_error;
+    }
+    if (result->entity) {
         flecs_script_task_register(result);
     }
     result->initial_vars = result->runner.v.vars;
     return result;
+task_error:
+    if (result->has_owner_vars) {
+        result->runner.v.vars = ecs_script_vars_pop(result->runner.v.vars);
+    }
+    flecs_script_runner_fini(&result->runner, &result->eval_desc);
+    ecs_script_runtime_free(runtime);
+    if (result->ctx_free) {
+        result->ctx_free(result->ctx);
+    }
+    ecs_script_free(result->script);
+    ecs_os_free(result);
 error:
     return NULL;
 }

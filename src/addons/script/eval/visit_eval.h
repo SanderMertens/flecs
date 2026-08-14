@@ -23,8 +23,10 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_entity_t with_relationship;
     int32_t with_relationship_sp;
     bool is_with_scope;
-    bool dynamic_variable_binding;
     ecs_script_vars_t *vars;
+    void *type_visitor;
+    ecs_vec_t *instance_symbols;
+    int32_t symbol_offset;
 } ecs_script_eval_visitor_t;
 
 int flecs_script_eval(
@@ -203,20 +205,6 @@ void flecs_script_eval_error_(
 #define flecs_script_eval_error(v, node, ...)\
     flecs_script_eval_error_(v, (ecs_script_node_t*)node, __VA_ARGS__)
 
-int flecs_script_find_entity(
-    ecs_script_eval_visitor_t *v,
-    ecs_entity_t from,
-    const char *path,
-    ecs_expr_node_t **name_expr,
-    int32_t *frame_offset,
-    ecs_entity_t *out,
-    bool *is_var);
-
-ecs_script_var_t* flecs_script_find_var(
-    const ecs_script_vars_t *vars,
-    const char *name,
-    int32_t *frame_offset);
-
 ecs_entity_t flecs_script_create_entity(
     ecs_script_eval_visitor_t *v,
     const char *name);
@@ -249,13 +237,41 @@ int flecs_script_eval_node(
     ecs_script_visit_t *v,
     ecs_script_node_t *node);
 
-int flecs_script_check_node(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node);
+int flecs_script_symbol_lookup(
+    const ecs_script_t *script,
+    const ecs_expr_eval_desc_t *desc,
+    ecs_entity_t from,
+    const char *name,
+    flecs_script_lookup_kind_t lookup_kind,
+    flecs_script_symbol_t *symbol);
 
-int flecs_script_check_scope(
+ecs_entity_t flecs_script_symbol_entity(
+    const ecs_script_eval_visitor_t *v,
+    int32_t slot);
+
+void flecs_script_symbol_set(
     ecs_script_eval_visitor_t *v,
-    ecs_script_scope_t *node);
+    int32_t slot,
+    ecs_entity_t entity);
+
+int flecs_script_type_symbol_lookup(
+    void *ctx,
+    const char *name,
+    flecs_script_symbol_t *symbol);
+
+int flecs_script_visit_type(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_scope_t *scope);
+
+int flecs_script_visit_type_template(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_template_t *template);
+
+int flecs_script_visit_type_entity_expr(
+    ecs_script_t *script,
+    const ecs_expr_eval_desc_t *desc,
+    ecs_script_eval_visitor_t *v,
+    ecs_script_entity_t *entity);
 
 /* For statement (see visit_for.c) */
 
@@ -306,10 +322,5 @@ int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node,
     bool export);
-
-ecs_entity_t flecs_script_find_entity_action(
-    const ecs_world_t *world,
-    const char *path,
-    void *ctx);
 
 #endif

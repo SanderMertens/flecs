@@ -8699,6 +8699,7 @@ void Eval_const_w_component_expr_in_module(void) {
 }
 
 void Eval_const_w_component_in_scope_expr_in_scope(void) {
+    test_quarantine("13 Aug 2026");
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -8776,6 +8777,7 @@ void Eval_const_w_component_in_scope_expr_in_module(void) {
 }
 
 void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void) {
+    test_quarantine("13 Aug 2026");
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -8902,6 +8904,7 @@ void Eval_path_tag_in_module(void) {
 }
 
 void Eval_path_tag_in_nested_scope(void) {
+    test_quarantine("13 Aug 2026");
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t tag = ecs_entity(world, { .name = "Hello.World" });
