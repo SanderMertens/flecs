@@ -6950,7 +6950,6 @@ void Fuzzing_116(void) {
     // This crash is caused by the script creating a type with a generated dtor,
     // then creating a value for that type, and then overwriting the type.
     // Should be handled more gracefully, but not a realistic scenario.
-    test_quarantine("25 Feb 2026");
 
     const char *expr =
     HEAD "using flecs.meta"

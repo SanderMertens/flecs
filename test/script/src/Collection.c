@@ -2878,7 +2878,6 @@ void Collection_range_literal_non_vector_type(void) {
 }
 
 void Collection_vector_literal_entity_mut(void) {
-    test_quarantine("Aug 13 2026");
 
     ecs_world_t *world = ecs_init();
 

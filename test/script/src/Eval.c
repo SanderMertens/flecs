@@ -9012,7 +9012,6 @@ void Eval_path_tag_in_module_w_module_name(void) {
 }
 
 void Eval_path_tag_in_nested_scope(void) {
-    test_quarantine("13 Aug 2026");
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t tag = ecs_entity(world, { .name = "Hello.World" });
@@ -19232,7 +19231,6 @@ void Eval_eval_twice_w_failed_expr_in_match(void) {
 }
 
 void Eval_eval_twice_w_failed_expr_in_interpolated_string(void) {
-    test_quarantine("Aug 13 2026");
 
     ecs_world_t *world = ecs_init();
 

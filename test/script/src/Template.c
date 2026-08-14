@@ -4596,7 +4596,6 @@ void Template_hoisted_var_instantiate_after_run(void) {
 }
 
 void Template_hoisted_var_w_script_entity(void) {
-    test_quarantine("13 Aug 2026");
 
     ecs_world_t *world = ecs_init();
 
@@ -4623,7 +4622,6 @@ void Template_hoisted_var_w_script_entity(void) {
 }
 
 void Template_eval_twice_w_failed_method_call_in_body(void) {
-    test_quarantine("Aug 13 2026");
 
     ecs_world_t *world = ecs_init();
 
@@ -4662,7 +4660,6 @@ void Template_eval_twice_w_failed_method_call_in_body(void) {
 }
 
 void Template_eval_twice_w_failed_method_call_in_prop_default(void) {
-    test_quarantine("Aug 13 2026");
 
     ecs_world_t *world = ecs_init();
 
