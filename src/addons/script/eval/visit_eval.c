@@ -240,9 +240,6 @@ int flecs_script_symbol_lookup(
         if (!result) {
             return 0;
         }
-        if (result == -2) {
-            return -1;
-        }
     }
 
     ecs_world_t *world = script->world;
