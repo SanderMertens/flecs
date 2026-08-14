@@ -748,12 +748,7 @@ int flecs_script_template_eval_var(
     }
 
     ecs_entity_t type = node->eval_type;
-    if (!type) {
-        flecs_script_eval_error(v, node,
-            "type for %s variable '%s' was not resolved by type visitor",
-                mut ? "mut" : "prop", node->name);
-        return -1;
-    }
+    ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_info_t *ti = flecs_script_get_type_info(v, node, type);
     if (!ti) {
         return -1;
@@ -1042,11 +1037,8 @@ int flecs_script_template_update_vars(
 {
     ecs_entity_t entity = flecs_script_symbol_entity(v, node->symbol);
     const EcsScript *script = ecs_get(v->world, entity, EcsScript);
-    if (!script || !script->template_) {
-        flecs_script_eval_error(v, node,
-            "template '%s' was not resolved by type visitor", node->name);
-        return -1;
-    }
+    ecs_assert(script != NULL && script->template_ != NULL,
+        ECS_INTERNAL_ERROR, NULL);
 
     ecs_script_template_t *template = script->template_;
     int32_t count = ecs_vec_count(&template->capture_sp);
