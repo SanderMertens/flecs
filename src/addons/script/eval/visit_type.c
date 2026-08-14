@@ -92,6 +92,25 @@ static flecs_script_type_entity_t* flecs_script_type_find_in_table(
     return NULL;
 }
 
+static flecs_script_type_entity_t* flecs_script_type_find_in_parent(
+    flecs_script_type_visitor_t *t,
+    ecs_entity_t parent,
+    const char *name,
+    ecs_size_t length)
+{
+    int32_t i, count = ecs_vec_count(&t->entities);
+    flecs_script_type_entity_t *entities = ecs_vec_first(&t->entities);
+    for (i = count - 1; i >= 0; i --) {
+        flecs_script_type_entity_t *entity = &entities[i];
+        if (!entity->parent_node && entity->parent == parent &&
+            flecs_script_type_name_eq(entity->name, name, length))
+        {
+            return entity;
+        }
+    }
+    return NULL;
+}
+
 static flecs_script_type_entity_t* flecs_script_type_find(
     flecs_script_type_visitor_t *t,
     const char *name,
@@ -124,14 +143,23 @@ static flecs_script_type_entity_t* flecs_script_type_find(
         length = sep
             ? flecs_ito(ecs_size_t, sep - name)
             : ecs_os_strlen(name);
-        if (entity->child_table == -1) {
+        flecs_script_type_entity_t *next = NULL;
+        if (entity->child_table != -1) {
+            next = flecs_script_type_find_in_table(
+                t, entity->child_table, name, length);
+        }
+        if (!next) {
+            ecs_entity_t parent = flecs_script_symbol_entity(
+                t->v, entity->slot);
+            if (parent) {
+                next = flecs_script_type_find_in_parent(
+                    t, parent, name, length);
+            }
+        }
+        if (!next) {
             return NULL;
         }
-        entity = flecs_script_type_find_in_table(
-            t, entity->child_table, name, length);
-        if (!entity) {
-            return NULL;
-        }
+        entity = next;
     }
     return entity;
 }
