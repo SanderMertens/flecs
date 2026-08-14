@@ -2029,3 +2029,27 @@ void Function_const_runtime_error(void) {
 
     ecs_fini(world);
 }
+
+void Function_fn_w_hoisted_var(void) {
+    test_quarantine("Aug 13 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const x = 10"
+    LINE "fn get_x() -> i64 { x }";
+
+    test_int(ecs_script_run(world, NULL, expr, NULL), 0);
+
+    ecs_entity_t function = ecs_lookup(world, "get_x");
+    test_assert(function != 0);
+
+    ecs_value_t result = {0};
+    test_int(ecs_function_call(world, function, 0, NULL, &result), 0);
+    test_uint(result.type, ecs_id(ecs_i64_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int64_t*)result.ptr, 10);
+
+    ecs_value_fini(world, &result);
+    ecs_fini(world);
+}

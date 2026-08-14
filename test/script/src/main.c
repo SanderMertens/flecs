@@ -323,8 +323,11 @@ void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void);
 void Eval_const_w_component_and_entity_in_scope_expr_in_module(void);
 void Eval_path_tag_in_scope(void);
 void Eval_path_tag_in_module(void);
+void Eval_path_tag_in_module_w_module_name(void);
 void Eval_path_tag_in_nested_scope(void);
 void Eval_path_tag_in_nested_module(void);
+void Eval_expr_path_to_local_entity(void);
+void Eval_expr_path_to_nested_local_entity(void);
 void Eval_dont_inherit_script_pair(void);
 void Eval_update_script_w_prefab_child(void);
 void Eval_update_script_w_anonymous(void);
@@ -360,6 +363,18 @@ void Eval_assign_call_scoped_func(void);
 void Eval_assign_call_scoped_func_w_using(void);
 void Eval_eval_w_vars(void);
 void Eval_eval_twice_w_failed_method_call(void);
+void Eval_eval_twice_w_failed_method_call_on_var(void);
+void Eval_eval_twice_w_failed_method_call_on_call_result(void);
+void Eval_eval_twice_w_failed_method_call_on_var_call_result(void);
+void Eval_eval_twice_w_failed_expr_after_method_call(void);
+void Eval_eval_twice_w_failed_expr_after_component_expr(void);
+void Eval_eval_twice_w_failed_expr_in_if_stmt(void);
+void Eval_eval_twice_w_failed_expr_in_for_stmt(void);
+void Eval_eval_twice_w_failed_expr_in_entity_scope(void);
+void Eval_eval_twice_w_failed_expr_in_initializer(void);
+void Eval_eval_twice_w_failed_expr_in_match(void);
+void Eval_eval_twice_w_failed_expr_in_interpolated_string(void);
+void Eval_const_var_w_identifier_value_wo_newline(void);
 void Eval_eval_w_runtime(void);
 void Eval_eval_w_other_vars(void);
 void Eval_eval_w_vars_different_order(void);
@@ -597,6 +612,12 @@ void Eval_script_expr_followed_by_stmt(void);
 void Eval_script_expr_invalid_body(void);
 void Eval_script_expr_unterminated(void);
 void Eval_using_cleared_after_script(void);
+void Eval_pair_scope_new_target_eval_twice(void);
+void Eval_for_loop_named_child_in_interpolated_parent(void);
+void Eval_entity_scope_after_export_const_same_name(void);
+void Eval_existing_child_of_reopened_parent(void);
+void Eval_pair_scope_target_shadowed_by_root_entity(void);
+void Eval_pair_scope_predeclared_entity_export_const(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -670,6 +691,7 @@ void Collection_vector_literal_f64(void);
 void Collection_vector_literal_int(void);
 void Collection_vector_literal_string(void);
 void Collection_vector_literal_entity(void);
+void Collection_vector_literal_entity_mut(void);
 void Collection_vector_literal_int_float(void);
 void Collection_vector_literal_float_int(void);
 void Collection_vector_literal_mixed_int(void);
@@ -732,6 +754,7 @@ void Await_cancel_is_terminal(void);
 void Await_immediate_resolve(void);
 void Await_await_export_const(void);
 void Await_await_export_mut(void);
+void Await_interleaved_tasks(void);
 void Await_interleaved_tasks_dynamic_entity(void);
 void Await_await_method_receiver(void);
 void Await_task_component_added_on_task_new(void);
@@ -742,6 +765,8 @@ void Await_task_component_serialize(void);
 void Await_task_component_deferred_one_task(void);
 void Await_task_component_deferred_three_tasks(void);
 void Await_task_component_deferred_w_existing_task(void);
+void Await_second_task_same_script_while_suspended(void);
+void Await_loop_forever_recreate_deleted_entity(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_parse_try_catch_all(void);
@@ -860,6 +885,7 @@ void Function_arrow_no_spaces(void);
 void Function_arrow_split_dash_gt(void);
 void Function_nested_runtime_error(void);
 void Function_const_runtime_error(void);
+void Function_fn_w_hoisted_var(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -909,6 +935,11 @@ void Template_template_w_pair_w_unresolved_var_second(void);
 void Template_template_w_pair_scope_w_unresolved_var_first(void);
 void Template_template_w_pair_scope_w_unresolved_var_second(void);
 void Template_prop_without_using_meta(void);
+void Template_hoisted_var_from_outer_scope(void);
+void Template_hoisted_var_from_outer_scopes(void);
+void Template_hoisted_masked_var_from_outer_scope(void);
+void Template_hoisted_var_instantiate_after_run(void);
+void Template_hoisted_var_w_script_entity(void);
 void Template_hoist_var(void);
 void Template_hoist_non_folded_var(void);
 void Template_hoist_component_var(void);
@@ -961,6 +992,9 @@ void Template_template_w_new_expr_in_const(void);
 void Template_template_w_existing_observer(void);
 void Template_template_w_prop_w_value_name(void);
 void Template_template_w_var_w_value_name(void);
+void Template_eval_twice_w_failed_method_call_in_body(void);
+void Template_eval_twice_w_failed_method_call_in_prop_default(void);
+void Template_template_w_module_qualified_entity_ref(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -1002,6 +1036,7 @@ void Mut_tree_parent(void);
 void Mut_child_name_from_string(void);
 void Mut_value_name(void);
 void Mut_const_value_name(void);
+void Mut_hoisted_var_from_outer_scope(void);
 void Mut_hoist_var(void);
 void Mut_nested_template(void);
 void Mut_redeclare_mut_as_mut(void);
@@ -1167,6 +1202,7 @@ void Error_entity_path_w_string_name(void);
 void Error_entity_comma_list(void);
 void Error_entity_comma_list_in_scope(void);
 void Error_entity_comma_list_w_trailing_comma(void);
+void Error_oneof_pair_target_shadowed_by_script_entity(void);
 
 // Testsuite 'Format'
 void Format_precision_f32_literal(void);
@@ -2300,6 +2336,7 @@ void ConstVar_get_string_as_i32(void);
 void ConstVar_get_struct_as_i32(void);
 void ConstVar_get_i32_as_struct(void);
 void ConstVar_get_struct_as_other_struct(void);
+void ConstVar_nested_const_shadows_export_const(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -3559,12 +3596,24 @@ bake_test_case Eval_testcases[] = {
         Eval_path_tag_in_module
     },
     {
+        "path_tag_in_module_w_module_name",
+        Eval_path_tag_in_module_w_module_name
+    },
+    {
         "path_tag_in_nested_scope",
         Eval_path_tag_in_nested_scope
     },
     {
         "path_tag_in_nested_module",
         Eval_path_tag_in_nested_module
+    },
+    {
+        "expr_path_to_local_entity",
+        Eval_expr_path_to_local_entity
+    },
+    {
+        "expr_path_to_nested_local_entity",
+        Eval_expr_path_to_nested_local_entity
     },
     {
         "dont_inherit_script_pair",
@@ -3705,6 +3754,54 @@ bake_test_case Eval_testcases[] = {
     {
         "eval_twice_w_failed_method_call",
         Eval_eval_twice_w_failed_method_call
+    },
+    {
+        "eval_twice_w_failed_method_call_on_var",
+        Eval_eval_twice_w_failed_method_call_on_var
+    },
+    {
+        "eval_twice_w_failed_method_call_on_call_result",
+        Eval_eval_twice_w_failed_method_call_on_call_result
+    },
+    {
+        "eval_twice_w_failed_method_call_on_var_call_result",
+        Eval_eval_twice_w_failed_method_call_on_var_call_result
+    },
+    {
+        "eval_twice_w_failed_expr_after_method_call",
+        Eval_eval_twice_w_failed_expr_after_method_call
+    },
+    {
+        "eval_twice_w_failed_expr_after_component_expr",
+        Eval_eval_twice_w_failed_expr_after_component_expr
+    },
+    {
+        "eval_twice_w_failed_expr_in_if_stmt",
+        Eval_eval_twice_w_failed_expr_in_if_stmt
+    },
+    {
+        "eval_twice_w_failed_expr_in_for_stmt",
+        Eval_eval_twice_w_failed_expr_in_for_stmt
+    },
+    {
+        "eval_twice_w_failed_expr_in_entity_scope",
+        Eval_eval_twice_w_failed_expr_in_entity_scope
+    },
+    {
+        "eval_twice_w_failed_expr_in_initializer",
+        Eval_eval_twice_w_failed_expr_in_initializer
+    },
+    {
+        "eval_twice_w_failed_expr_in_match",
+        Eval_eval_twice_w_failed_expr_in_match
+    },
+    {
+        "eval_twice_w_failed_expr_in_interpolated_string",
+        Eval_eval_twice_w_failed_expr_in_interpolated_string
+    },
+    {
+        "const_var_w_identifier_value_wo_newline",
+        Eval_const_var_w_identifier_value_wo_newline
     },
     {
         "eval_w_runtime",
@@ -4653,6 +4750,30 @@ bake_test_case Eval_testcases[] = {
     {
         "using_cleared_after_script",
         Eval_using_cleared_after_script
+    },
+    {
+        "pair_scope_new_target_eval_twice",
+        Eval_pair_scope_new_target_eval_twice
+    },
+    {
+        "for_loop_named_child_in_interpolated_parent",
+        Eval_for_loop_named_child_in_interpolated_parent
+    },
+    {
+        "entity_scope_after_export_const_same_name",
+        Eval_entity_scope_after_export_const_same_name
+    },
+    {
+        "existing_child_of_reopened_parent",
+        Eval_existing_child_of_reopened_parent
+    },
+    {
+        "pair_scope_target_shadowed_by_root_entity",
+        Eval_pair_scope_target_shadowed_by_root_entity
+    },
+    {
+        "pair_scope_predeclared_entity_export_const",
+        Eval_pair_scope_predeclared_entity_export_const
     }
 };
 
@@ -4942,6 +5063,10 @@ bake_test_case Collection_testcases[] = {
         Collection_vector_literal_entity
     },
     {
+        "vector_literal_entity_mut",
+        Collection_vector_literal_entity_mut
+    },
+    {
         "vector_literal_int_float",
         Collection_vector_literal_int_float
     },
@@ -5185,6 +5310,10 @@ bake_test_case Await_testcases[] = {
         Await_await_export_mut
     },
     {
+        "interleaved_tasks",
+        Await_interleaved_tasks
+    },
+    {
         "interleaved_tasks_dynamic_entity",
         Await_interleaved_tasks_dynamic_entity
     },
@@ -5223,6 +5352,14 @@ bake_test_case Await_testcases[] = {
     {
         "task_component_deferred_w_existing_task",
         Await_task_component_deferred_w_existing_task
+    },
+    {
+        "second_task_same_script_while_suspended",
+        Await_second_task_same_script_while_suspended
+    },
+    {
+        "loop_forever_recreate_deleted_entity",
+        Await_loop_forever_recreate_deleted_entity
     }
 };
 
@@ -5685,6 +5822,10 @@ bake_test_case Function_testcases[] = {
     {
         "const_runtime_error",
         Function_const_runtime_error
+    },
+    {
+        "fn_w_hoisted_var",
+        Function_fn_w_hoisted_var
     }
 };
 
@@ -5876,6 +6017,26 @@ bake_test_case Template_testcases[] = {
     {
         "prop_without_using_meta",
         Template_prop_without_using_meta
+    },
+    {
+        "hoisted_var_from_outer_scope",
+        Template_hoisted_var_from_outer_scope
+    },
+    {
+        "hoisted_var_from_outer_scopes",
+        Template_hoisted_var_from_outer_scopes
+    },
+    {
+        "hoisted_masked_var_from_outer_scope",
+        Template_hoisted_masked_var_from_outer_scope
+    },
+    {
+        "hoisted_var_instantiate_after_run",
+        Template_hoisted_var_instantiate_after_run
+    },
+    {
+        "hoisted_var_w_script_entity",
+        Template_hoisted_var_w_script_entity
     },
     {
         "hoist_var",
@@ -6084,6 +6245,18 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_var_w_value_name",
         Template_template_w_var_w_value_name
+    },
+    {
+        "eval_twice_w_failed_method_call_in_body",
+        Template_eval_twice_w_failed_method_call_in_body
+    },
+    {
+        "eval_twice_w_failed_method_call_in_prop_default",
+        Template_eval_twice_w_failed_method_call_in_prop_default
+    },
+    {
+        "template_w_module_qualified_entity_ref",
+        Template_template_w_module_qualified_entity_ref
     }
 };
 
@@ -6243,6 +6416,10 @@ bake_test_case Mut_testcases[] = {
     {
         "const_value_name",
         Mut_const_value_name
+    },
+    {
+        "hoisted_var_from_outer_scope",
+        Mut_hoisted_var_from_outer_scope
     },
     {
         "hoist_var",
@@ -6898,6 +7075,10 @@ bake_test_case Error_testcases[] = {
     {
         "entity_comma_list_w_trailing_comma",
         Error_entity_comma_list_w_trailing_comma
+    },
+    {
+        "oneof_pair_target_shadowed_by_script_entity",
+        Error_oneof_pair_target_shadowed_by_script_entity
     }
 };
 
@@ -11372,6 +11553,10 @@ bake_test_case ConstVar_testcases[] = {
     {
         "get_struct_as_other_struct",
         ConstVar_get_struct_as_other_struct
+    },
+    {
+        "nested_const_shadows_export_const",
+        ConstVar_nested_const_shadows_export_const
     }
 };
 
@@ -11395,21 +11580,21 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        588,
+        609,
         Eval_testcases
     },
     {
         "Collection",
         NULL,
         NULL,
-        96,
+        97,
         Collection_testcases
     },
     {
         "Await",
         NULL,
         NULL,
-        45,
+        48,
         Await_testcases
     },
     {
@@ -11423,28 +11608,28 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        78,
+        79,
         Function_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        99,
+        107,
         Template_testcases
     },
     {
         "Mut",
         NULL,
         NULL,
-        50,
+        51,
         Mut_testcases
     },
     {
         "Error",
         NULL,
         NULL,
-        152,
+        153,
         Error_testcases
     },
     {
@@ -11520,7 +11705,7 @@ static bake_test_suite suites[] = {
         "ConstVar",
         NULL,
         NULL,
-        39,
+        40,
         ConstVar_testcases
     }
 };

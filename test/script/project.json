@@ -327,8 +327,11 @@
                 "const_w_component_and_entity_in_scope_expr_in_module",
                 "path_tag_in_scope",
                 "path_tag_in_module",
+                "path_tag_in_module_w_module_name",
                 "path_tag_in_nested_scope",
                 "path_tag_in_nested_module",
+                "expr_path_to_local_entity",
+                "expr_path_to_nested_local_entity",
                 "dont_inherit_script_pair",
                 "update_script_w_prefab_child",
                 "update_script_w_anonymous",
@@ -364,6 +367,18 @@
                 "assign_call_scoped_func_w_using",
                 "eval_w_vars",
                 "eval_twice_w_failed_method_call",
+                "eval_twice_w_failed_method_call_on_var",
+                "eval_twice_w_failed_method_call_on_call_result",
+                "eval_twice_w_failed_method_call_on_var_call_result",
+                "eval_twice_w_failed_expr_after_method_call",
+                "eval_twice_w_failed_expr_after_component_expr",
+                "eval_twice_w_failed_expr_in_if_stmt",
+                "eval_twice_w_failed_expr_in_for_stmt",
+                "eval_twice_w_failed_expr_in_entity_scope",
+                "eval_twice_w_failed_expr_in_initializer",
+                "eval_twice_w_failed_expr_in_match",
+                "eval_twice_w_failed_expr_in_interpolated_string",
+                "const_var_w_identifier_value_wo_newline",
                 "eval_w_runtime",
                 "eval_w_other_vars",
                 "eval_w_vars_different_order",
@@ -600,7 +615,13 @@
                 "script_expr_followed_by_stmt",
                 "script_expr_invalid_body",
                 "script_expr_unterminated",
-                "using_cleared_after_script"
+                "using_cleared_after_script",
+                "pair_scope_new_target_eval_twice",
+                "for_loop_named_child_in_interpolated_parent",
+                "entity_scope_after_export_const_same_name",
+                "existing_child_of_reopened_parent",
+                "pair_scope_target_shadowed_by_root_entity",
+                "pair_scope_predeclared_entity_export_const"
             ]
         }, {
             "id": "Collection",
@@ -676,6 +697,7 @@
                 "vector_literal_int",
                 "vector_literal_string",
                 "vector_literal_entity",
+                "vector_literal_entity_mut",
                 "vector_literal_int_float",
                 "vector_literal_float_int",
                 "vector_literal_mixed_int",
@@ -740,6 +762,7 @@
                 "immediate_resolve",
                 "await_export_const",
                 "await_export_mut",
+                "interleaved_tasks",
                 "interleaved_tasks_dynamic_entity",
                 "await_method_receiver",
                 "task_component_added_on_task_new",
@@ -749,7 +772,9 @@
                 "task_component_serialize",
                 "task_component_deferred_one_task",
                 "task_component_deferred_three_tasks",
-                "task_component_deferred_w_existing_task"
+                "task_component_deferred_w_existing_task",
+                "second_task_same_script_while_suspended",
+                "loop_forever_recreate_deleted_entity"
             ]
         }, {
             "id": "TryCatch",
@@ -871,7 +896,8 @@
                 "arrow_no_spaces",
                 "arrow_split_dash_gt",
                 "nested_runtime_error",
-                "const_runtime_error"
+                "const_runtime_error",
+                "fn_w_hoisted_var"
             ]
         }, {
             "id": "Template",
@@ -923,6 +949,11 @@
                 "template_w_pair_scope_w_unresolved_var_first",
                 "template_w_pair_scope_w_unresolved_var_second",
                 "prop_without_using_meta",
+                "hoisted_var_from_outer_scope",
+                "hoisted_var_from_outer_scopes",
+                "hoisted_masked_var_from_outer_scope",
+                "hoisted_var_instantiate_after_run",
+                "hoisted_var_w_script_entity",
                 "hoist_var",
                 "hoist_non_folded_var",
                 "hoist_component_var",
@@ -974,7 +1005,10 @@
                 "template_w_new_expr_in_const",
                 "template_w_existing_observer",
                 "template_w_prop_w_value_name",
-                "template_w_var_w_value_name"
+                "template_w_var_w_value_name",
+                "eval_twice_w_failed_method_call_in_body",
+                "eval_twice_w_failed_method_call_in_prop_default",
+                "template_w_module_qualified_entity_ref"
             ]
         }, {
             "id": "Mut",
@@ -1018,6 +1052,7 @@
                 "child_name_from_string",
                 "value_name",
                 "const_value_name",
+                "hoisted_var_from_outer_scope",
                 "hoist_var",
                 "nested_template",
                 "redeclare_mut_as_mut",
@@ -1184,7 +1219,8 @@
                 "entity_path_w_string_name",
                 "entity_comma_list",
                 "entity_comma_list_in_scope",
-                "entity_comma_list_w_trailing_comma"
+                "entity_comma_list_w_trailing_comma",
+                "oneof_pair_target_shadowed_by_script_entity"
             ]
         }, {
             "id": "Format",
@@ -2346,7 +2382,8 @@
                 "get_string_as_i32",
                 "get_struct_as_i32",
                 "get_i32_as_struct",
-                "get_struct_as_other_struct"
+                "get_struct_as_other_struct",
+                "nested_const_shadows_export_const"
             ]
         }]
     }

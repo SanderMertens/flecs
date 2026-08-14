@@ -4420,3 +4420,282 @@ void Template_template_w_var_w_value_name(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_w_module_qualified_entity_ref(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "module foo"
+    LINE ""
+    LINE "suburban {"
+    LINE "  prefab a {}"
+    LINE "}"
+    LINE ""
+    LINE "template Tree {"
+    LINE "  (IsA, foo.suburban.a)"
+    LINE "}"
+    LINE ""
+    LINE "foo.Tree inst()"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "foo.suburban.a");
+    test_assert(a != 0);
+
+    ecs_entity_t inst = ecs_lookup(world, "foo.inst");
+    test_assert(inst != 0);
+    test_assert(ecs_has_pair(world, inst, EcsIsA, a));
+
+    ecs_fini(world);
+}
+
+void Template_hoisted_var_from_outer_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "const v = 10"
+    LINE "template Tree {"
+    LINE "  prop height: f32 = 0"
+    LINE "  Position: {v, height}"
+    LINE "}"
+    LINE "Tree foo(height: 20)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_hoisted_var_from_outer_scopes(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x = 10"
+    LINE "parent {"
+    LINE "  const y = 20"
+    LINE "  template Tree {"
+    LINE "    Position: {x, y}"
+    LINE "  }"
+    LINE "}"
+    LINE "parent.Tree foo()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_hoisted_masked_var_from_outer_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x = 10"
+    LINE "parent {"
+    HEAD "  const x = 30"
+    LINE "  const y = 20"
+    LINE "  template Tree {"
+    LINE "    Position: {x, y}"
+    LINE "  }"
+    LINE "}"
+    LINE "parent.Tree foo()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_hoisted_var_instantiate_after_run(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr_1 =
+    HEAD "const v = 10"
+    LINE "template Tree {"
+    LINE "  Position: {v, 20}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr_1, NULL) == 0);
+
+    const char *expr_2 =
+    HEAD "Tree foo()";
+
+    test_assert(ecs_script_run(world, NULL, expr_2, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_hoisted_var_w_script_entity(void) {
+    test_quarantine("13 Aug 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    HEAD "tgt {}"
+    LINE "const t = tgt"
+    LINE "template Tree {"
+    LINE "  (Rel, $t)"
+    LINE "}"
+    LINE "Tree foo()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    ecs_entity_t tgt = ecs_lookup(world, "tgt");
+    test_assert(foo != 0);
+    test_assert(tgt != 0);
+
+    test_assert(ecs_has_pair(world, foo, Rel, tgt));
+
+    ecs_fini(world);
+}
+
+void Template_eval_twice_w_failed_method_call_in_body(void) {
+    test_quarantine("Aug 13 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Likes, Apples);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  const b = e.has(pair(Likes, Apples))"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Template_eval_twice_w_failed_method_call_in_prop_default(void) {
+    test_quarantine("Aug 13 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Likes, Apples);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop b: bool = e.has(pair(Likes, Apples))"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t result_1 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(result_1.error != NULL);
+    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_1.error);
+
+    ecs_script_eval_result_t result_2 = {0};
+    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(result_2.error != NULL);
+    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    ecs_os_free(result_2.error);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}

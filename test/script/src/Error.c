@@ -3505,3 +3505,29 @@ void Error_entity_comma_list_w_trailing_comma(void) {
 
     ecs_fini(world);
 }
+
+void Error_oneof_pair_target_shadowed_by_script_entity(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, rel, EcsOneOf);
+    ecs_entity(world, { .name = "A", .parent = rel });
+    ecs_entity(world, { .name = "B", .parent = rel });
+
+    const char *expr =
+    HEAD "X {}"
+    LINE "e { (Rel, X) }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(!ecs_has_pair(world, e, rel, EcsWildcard));
+
+    ecs_fini(world);
+}
