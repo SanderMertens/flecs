@@ -150,6 +150,8 @@ typedef struct ecs_script_template_node_t {
     const char *name;
     ecs_script_scope_t* scope;
     int32_t symbol;
+    int32_t symbol_offset;
+    int32_t symbol_count;
 } ecs_script_template_node_t;
 
 typedef struct ecs_script_var_node_t {

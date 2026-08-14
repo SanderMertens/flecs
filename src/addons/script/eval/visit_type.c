@@ -141,10 +141,12 @@ static int32_t flecs_script_type_slot_new(
     int32_t expected)
 {
     ecs_script_impl_t *impl = t->v->base.script;
-    int32_t result = ecs_vec_count(&impl->symbols);
     if (expected != -1) {
-        ecs_assert(expected == result, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(expected < ecs_vec_count(&impl->symbols),
+            ECS_INTERNAL_ERROR, NULL);
+        return expected;
     }
+    int32_t result = ecs_vec_count(&impl->symbols);
     ecs_vec_append_t(NULL, &impl->symbols, ecs_entity_t)[0] = 0;
     return result;
 }
@@ -1969,7 +1971,11 @@ int flecs_script_visit_type_template(
 {
     flecs_script_type_visitor_t *t = v->type_visitor;
     ecs_assert(t != NULL, ECS_INTERNAL_ERROR, NULL);
-    template->symbol_offset = ecs_vec_count(&v->base.script->symbols);
+    ecs_script_template_node_t *tnode = template->node;
+    if (tnode->symbol_offset == -1) {
+        tnode->symbol_offset = ecs_vec_count(&v->base.script->symbols);
+    }
+    template->symbol_offset = tnode->symbol_offset;
 
     int32_t old_table = t->table;
     bool old_template_scope = t->template_scope;
@@ -2021,8 +2027,11 @@ int flecs_script_visit_type_template(
     t->template_scope = old_template_scope;
     t->table = old_table;
     v->entity = old_entity;
-    template->symbol_count = ecs_vec_count(
-        &v->base.script->symbols) - template->symbol_offset;
+    if (tnode->symbol_count == -1) {
+        tnode->symbol_count = ecs_vec_count(
+            &v->base.script->symbols) - template->symbol_offset;
+    }
+    template->symbol_count = tnode->symbol_count;
     return result;
 }
 
@@ -2058,8 +2067,6 @@ int flecs_script_visit_type_entity_expr(
     ecs_vec_init_t(NULL, &t.tables, flecs_script_type_table_t, 0);
     ecs_vec_init_t(NULL, &t.entities, flecs_script_type_entity_t, 0);
     flecs_script_type_table_new(&t, -1, NULL);
-    ecs_vec_clear(&visitor.base.script->symbols);
-    ecs_vec_clear(&visitor.base.script->refs);
     visitor.type_visitor = &t;
 
     int result = flecs_script_type_entity(&t, entity, false);
@@ -2092,8 +2099,6 @@ int flecs_script_visit_type(
     ecs_vec_init_t(NULL, &t.entities, flecs_script_type_entity_t, 0);
     flecs_script_type_table_new(&t, -1, NULL);
 
-    ecs_vec_clear(&v->base.script->symbols);
-    ecs_vec_clear(&v->base.script->refs);
     v->type_visitor = &t;
     int result = flecs_script_type_scope(
         &t, scope, 0, true, true);
