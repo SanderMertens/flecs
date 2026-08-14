@@ -8941,6 +8941,62 @@ void Eval_path_tag_in_nested_module(void) {
     ecs_fini(world);
 }
 
+void Eval_expr_path_to_local_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "parent {"
+    LINE "  child {}"
+    LINE "}"
+    LINE "e {"
+    LINE "  entity: parent.child"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child = ecs_lookup(world, "parent.child");
+    test_assert(child != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get_id(world, e, ecs_id(ecs_entity_t));
+    test_assert(ptr != NULL);
+    test_uint(*ptr, child);
+
+    ecs_fini(world);
+}
+
+void Eval_expr_path_to_nested_local_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "parent {"
+    LINE "  child {"
+    LINE "    grand_child {}"
+    LINE "  }"
+    LINE "}"
+    LINE "e {"
+    LINE "  entity: parent.child.grand_child"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t grand_child = ecs_lookup(world, "parent.child.grand_child");
+    test_assert(grand_child != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get_id(world, e, ecs_id(ecs_entity_t));
+    test_assert(ptr != NULL);
+    test_uint(*ptr, grand_child);
+
+    ecs_fini(world);
+}
+
 void Eval_dont_inherit_script_pair(void) {
     ecs_world_t *world = ecs_init();
 

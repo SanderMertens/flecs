@@ -329,6 +329,8 @@
                 "path_tag_in_module",
                 "path_tag_in_nested_scope",
                 "path_tag_in_nested_module",
+                "expr_path_to_local_entity",
+                "expr_path_to_nested_local_entity",
                 "dont_inherit_script_pair",
                 "update_script_w_prefab_child",
                 "update_script_w_anonymous",

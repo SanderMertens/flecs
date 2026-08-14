@@ -356,91 +356,6 @@ bool flecs_script_type_is_root_entity_symbol(
     return symbol && symbol->ref.kind == EcsScriptSymbolEntity;
 }
 
-static bool flecs_script_type_id_elem_resolvable(
-    ecs_script_type_visitor_t *v,
-    const char *name)
-{
-    if (flecs_script_lookup_symbol(v, name).ref.kind != EcsScriptSymbolUnresolved) {
-        return true;
-    }
-
-    if (!strchr(name, '.')) {
-        return false;
-    }
-
-    char *path = ecs_os_strdup(name);
-    char *cur = path, *next = strchr(cur, '.');
-    next[0] = '\0';
-
-    bool result = false;
-    ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, cur);
-    if (symbol.ref.kind == EcsScriptSymbolEntity) {
-        if (symbol.ref.external) {
-            result = ecs_lookup_path_w_sep(v->world, symbol.ref.is.external,
-                &next[1], NULL, NULL, false) != 0;
-        } else {
-            const ecs_script_type_scope_t *scope = symbol.scope;
-            result = true;
-            do {
-                cur = &next[1];
-                next = strchr(cur, '.');
-                if (next) {
-                    next[0] = '\0';
-                }
-
-                const ecs_script_symbol_t *s = scope ?
-                    flecs_script_type_lookup_scope(v, scope, cur) : NULL;
-                if (!s || s->ref.kind != EcsScriptSymbolEntity) {
-                    result = false;
-                    break;
-                }
-
-                scope = s->scope;
-            } while (next);
-        }
-    }
-
-    ecs_os_free(path);
-    return result;
-}
-
-static ecs_script_symbol_t flecs_script_type_lookup_path(
-    const ecs_script_type_visitor_t *v,
-    const char *name)
-{
-    char *path = ecs_os_strdup(name);
-    char *cur = path, *next = strchr(cur, '.');
-    next[0] = '\0';
-
-    ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, cur);
-    if (symbol.ref.kind == EcsScriptSymbolEntity && !symbol.ref.external) {
-        do {
-            const ecs_script_type_scope_t *scope = symbol.scope;
-            cur = &next[1];
-            next = strchr(cur, '.');
-            if (next) {
-                next[0] = '\0';
-            }
-
-            const ecs_script_symbol_t *s = scope ?
-                flecs_script_type_lookup_scope(v, scope, cur) : NULL;
-            if (!s || s->ref.kind != EcsScriptSymbolEntity) {
-                symbol.ref.kind = EcsScriptSymbolUnresolved;
-                break;
-            }
-
-            symbol = *s;
-        } while (next);
-
-        ecs_os_free(path);
-        symbol.ref.name = name;
-        return symbol;
-    }
-
-    ecs_os_free(path);
-    return flecs_script_lookup_symbol(v, name);
-}
-
 static int flecs_script_type_resolve_ref(
     ecs_script_type_visitor_t *v,
     ecs_script_node_t *node,
@@ -486,12 +401,7 @@ static int flecs_script_type_resolve_ref(
         return 1;
     }
 
-    ecs_script_symbol_t symbol;
-    if (!strchr(name, '.')) {
-        symbol = flecs_script_lookup_symbol(v, name);
-    } else {
-        symbol = flecs_script_type_lookup_path(v, name);
-    }
+    ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, name);
 
     if (symbol.ref.kind == EcsScriptSymbolEntity) {
         ref->kind = EcsScriptSymbolEntity;
@@ -513,10 +423,6 @@ static int flecs_script_type_resolve_ref(
     }
 
     if (allow_unresolved) {
-        return 1;
-    }
-
-    if (flecs_script_type_id_elem_resolvable(v, name)) {
         return 1;
     }
 
@@ -1276,12 +1182,7 @@ static ecs_entity_t flecs_script_type_var_type(
         return 0;
     }
 
-    ecs_script_symbol_t symbol;
-    if (!strchr(var->type, '.')) {
-        symbol = flecs_script_lookup_symbol(v, var->type);
-    } else {
-        symbol = flecs_script_type_lookup_path(v, var->type);
-    }
+    ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, var->type);
 
     if (symbol.ref.kind == EcsScriptSymbolEntity && symbol.ref.external) {
         return symbol.ref.is.external;
@@ -1742,6 +1643,87 @@ static ecs_entity_t flecs_script_type_lookup_world(
     return ecs_lookup(v->world, name);
 }
 
+/* Lookup symbol in current scope and parent scopes. */
+static const ecs_script_symbol_t* flecs_script_type_lookup_scope_chain(
+    const ecs_script_type_visitor_t *v,
+    const char *name)
+{
+    const ecs_script_type_scope_t *scope = v->cur;
+    while (scope) {
+        const ecs_script_symbol_t *symbol =
+            flecs_script_type_lookup_scope(v, scope, name);
+        if (symbol) {
+            return symbol;
+        }
+
+        scope = scope->parent;
+    }
+
+    return NULL;
+}
+
+/* Lookup path identifier ("foo.bar") where the first element resolves to a
+ * symbol defined by the script. Returns false if the path could not be
+ * resolved, in which case the caller should look up the full path instead. */
+static bool flecs_script_type_lookup_path(
+    const ecs_script_type_visitor_t *v,
+    const char *name,
+    char *path,
+    ecs_script_symbol_t *result)
+{
+    char *cur = path, *next = strchr(cur, '.');
+    next[0] = '\0';
+
+    const ecs_script_symbol_t *first =
+        flecs_script_type_lookup_scope_chain(v, cur);
+    if (!first || first->ref.kind != EcsScriptSymbolEntity) {
+        return false;
+    }
+
+    ecs_script_symbol_t symbol = *first;
+
+    do {
+        const ecs_script_type_scope_t *scope = symbol.scope;
+        cur = &next[1];
+        next = strchr(cur, '.');
+        if (next) {
+            next[0] = '\0';
+        }
+
+        const ecs_script_symbol_t *s = scope ?
+            flecs_script_type_lookup_scope(v, scope, cur) : NULL;
+        if (!s || s->ref.kind != EcsScriptSymbolEntity) {
+            /* If symbol is an entity that exists in the world, resolve the
+             * remainder of the path in the world. */
+            ecs_entity_t e = 0;
+            if (symbol.ref.external) {
+                if (next) {
+                    next[0] = '.';
+                }
+
+                e = ecs_lookup_path_w_sep(
+                    v->world, symbol.ref.is.external, cur, NULL, NULL, false);
+            }
+
+            if (!e) {
+                return false;
+            }
+
+            symbol.ref.is.external = e;
+            symbol.parent = NULL;
+            symbol.scope = NULL;
+            break;
+        }
+
+        symbol = *s;
+    } while (next);
+
+    symbol.ref.name = name;
+    *result = symbol;
+
+    return true;
+}
+
 ecs_script_symbol_t flecs_script_lookup_symbol(
     const ecs_script_type_visitor_t *v,
     const char *name)
@@ -1750,15 +1732,19 @@ ecs_script_symbol_t flecs_script_lookup_symbol(
         .ref = { .kind = EcsScriptSymbolUnresolved, .name = name }
     };
 
-    const ecs_script_type_scope_t *scope = v->cur;
-    while (scope) {
-        const ecs_script_symbol_t *symbol =
-            flecs_script_type_lookup_scope(v, scope, name);
-        if (symbol) {
-            return *symbol;
+    if (strchr(name, '.') && !strchr(name, '\\')) {
+        char *path = ecs_os_strdup(name);
+        bool found = flecs_script_type_lookup_path(v, name, path, &result);
+        ecs_os_free(path);
+        if (found) {
+            return result;
         }
+    }
 
-        scope = scope->parent;
+    const ecs_script_symbol_t *symbol =
+        flecs_script_type_lookup_scope_chain(v, name);
+    if (symbol) {
+        return *symbol;
     }
 
     ecs_entity_t e = flecs_script_type_lookup_world(v, name);

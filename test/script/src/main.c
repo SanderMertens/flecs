@@ -325,6 +325,8 @@ void Eval_path_tag_in_scope(void);
 void Eval_path_tag_in_module(void);
 void Eval_path_tag_in_nested_scope(void);
 void Eval_path_tag_in_nested_module(void);
+void Eval_expr_path_to_local_entity(void);
+void Eval_expr_path_to_nested_local_entity(void);
 void Eval_dont_inherit_script_pair(void);
 void Eval_update_script_w_prefab_child(void);
 void Eval_update_script_w_anonymous(void);
@@ -472,7 +474,6 @@ void Eval_export_const_var_used_by_other_script(void);
 void Eval_export_mut_var_used_by_other_script(void);
 void Eval_export_const_var_as_component(void);
 void Eval_export_mut_var_as_component(void);
-void Eval_export_scoped_const_var_as_component(void);
 void Eval_export_scoped_mut_var_as_component(void);
 void Eval_export_const_var_in_scope(void);
 void Eval_export_mut_var_in_scope(void);
@@ -3595,6 +3596,14 @@ bake_test_case Eval_testcases[] = {
         Eval_path_tag_in_nested_module
     },
     {
+        "expr_path_to_local_entity",
+        Eval_expr_path_to_local_entity
+    },
+    {
+        "expr_path_to_nested_local_entity",
+        Eval_expr_path_to_nested_local_entity
+    },
+    {
         "dont_inherit_script_pair",
         Eval_dont_inherit_script_pair
     },
@@ -4181,10 +4190,6 @@ bake_test_case Eval_testcases[] = {
     {
         "export_mut_var_as_component",
         Eval_export_mut_var_as_component
-    },
-    {
-        "export_scoped_const_var_as_component",
-        Eval_export_scoped_const_var_as_component
     },
     {
         "export_scoped_mut_var_as_component",
@@ -11530,7 +11535,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        593,
+        594,
         Eval_testcases
     },
     {

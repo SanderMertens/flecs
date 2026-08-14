@@ -79,9 +79,14 @@ int flecs_script_type_visit_new_expr(
     ecs_script_entity_t *entity,
     const ecs_expr_eval_desc_t *desc);
 
-/* Looks up a symbol based on the current state of the visitor. If the string 
- * cannot be resolved to any of the symbols defined in the script, the function
- * will lookup the symbol in the world following these rules:
+/* Looks up a symbol based on the current state of the visitor. Path identifiers
+ * ("foo.bar") are resolved element by element, where each element after the
+ * first is looked up in the scope of the previous element. If an element cannot
+ * be found in the scope of a symbol that exists in the world, the remainder of
+ * the path is looked up in the world.
+ *
+ * If the string cannot be resolved to any of the symbols defined in the script,
+ * the function will lookup the symbol in the world following these rules:
  * - lookup in flecs.meta
  * - lookup in using paths
  * - lookup from module (if set)
