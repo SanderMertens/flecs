@@ -36,7 +36,21 @@ static ecs_ftime_t flecs_insert_sleep(
         sleep_time = 0;
         delta_time = (ecs_ftime_t)ecs_time_measure(&now);
     } else {
+        /* Sleep interval while the clock keeps up, largest delta measured so
+         * far, and how much was slept while stalled this frame. */
+        ecs_ftime_t initial_sleep_time = sleep_time;
+        ecs_ftime_t max_delta_time = delta_time;
+        ecs_ftime_t stalled_sleep = 0;
+        int32_t iterations = 0;
+
         do {
+            /* Ceiling on the sleeps a single frame may perform. Keeping up
+             * advances the measured delta by a quarter of the interval and
+             * stalling spends the budget below, so this is not reached. */
+            if (++iterations > ECS_FRAME_MAX_SLEEP_ITERATIONS) {
+                break;
+            }
+
             /* Only call sleep when sleep_time is not 0. On some platforms, even
             * a sleep with a timeout of 0 can cause stutter. */
             if (ECS_NEQZERO(sleep_time)) {
@@ -45,6 +59,46 @@ static ecs_ftime_t flecs_insert_sleep(
 
             now = start;
             delta_time = (ecs_ftime_t)ecs_time_measure(&now);
+
+            /* The clock keeps up if it advanced by a meaningful fraction of
+             * the interval just slept. Any advance at all would qualify a
+             * clock that ticks a nanosecond per read. */
+            if ((delta_time - max_delta_time) >=
+                (sleep_time / (ecs_ftime_t)4.0))
+            {
+                max_delta_time = delta_time;
+
+                /* Restore the interval, as the exit condition is expressed in
+                 * terms of it and would overshoot the target while escalated. */
+                sleep_time = initial_sleep_time;
+            } else {
+                /* The clock is too coarse to measure an interval this small,
+                 * or not running at all. Accumulate the requested interval,
+                 * not measured time, so neither the clock nor a replaced
+                 * sleep function needs to make progress for the frame to end. */
+                stalled_sleep += sleep_time;
+
+                /* At most one frame's worth of sleep on a clock that is not
+                 * keeping up. Never refills within the frame; a budget that
+                 * refills lets a clock that advances just enough to be
+                 * counted replay the escalation chain indefinitely. */
+                ecs_ftime_t sleep_budget = target_delta_time - stalled_sleep;
+                if (sleep_budget <= 0) {
+                    break;
+                }
+
+                if (ECS_EQZERO(sleep_time)) {
+                    /* Doubling zero stays zero, so seed the escalation with a
+                     * nonzero interval. */
+                    sleep_time = target_delta_time / (ecs_ftime_t)8.0;
+                } else {
+                    sleep_time *= (ecs_ftime_t)2.0;
+                }
+
+                if (sleep_time > sleep_budget) {
+                    sleep_time = sleep_budget;
+                }
+            }
         } while ((target_delta_time - delta_time) >
             (sleep_time / (ecs_ftime_t)2.0));
     }
@@ -67,28 +121,41 @@ static ecs_ftime_t flecs_start_measure_frame(
         (ECS_EQZERO(user_delta_time)))
     {
         ecs_time_t t = world->frame_start_time;
-        do {
-            if (world->frame_start_time.nanosec || world->frame_start_time.sec){
-                delta_time = flecs_insert_sleep(world, &t);
+
+        /* A simulated clock can legitimately start at 0, so the frame start
+         * time itself can't tell whether a previous frame measured one. */
+        if (world->flags & EcsWorldFrameStartTimeSet) {
+            delta_time = flecs_insert_sleep(world, &t);
+        } else {
+            ecs_time_measure(&t);
+            if (ECS_NEQZERO(world->info.target_fps)) {
+                delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
             } else {
-                ecs_time_measure(&t);
-                if (ECS_NEQZERO(world->info.target_fps)) {
-                    delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
-                } else {
-                    /* Best guess */
-                    delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0;
-
-                    if (ECS_EQZERO(delta_time)) {
-                        delta_time = user_delta_time;
-                        break;
-                    }
-                }
+                /* Best guess */
+                delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0;
             }
+        }
 
-        /* Keep trying while delta_time is zero */
-        } while (ECS_EQZERO(delta_time));
+        if (delta_time < ECS_FRAME_MIN_DELTA_TIME) {
+            /* A coarse or host-stepped clock can legitimately return the same
+             * instant twice. Report the smallest nonzero delta rather than
+             * measure again until the clock moves, which never returns on a
+             * host-stepped clock. The frame start time is unchanged, so the
+             * elapsed time is credited in full to the frame in which the
+             * clock next advances. */
+            delta_time = ECS_FRAME_MIN_DELTA_TIME;
+
+            /* Once per world, so a rate computed by dividing by the minimum
+             * can be traced to this rather than debugged as a spike. */
+            if (!(world->flags & EcsWorldFrameMinDeltaWarned)) {
+                world->flags |= EcsWorldFrameMinDeltaWarned;
+                ecs_warn("clock did not advance between frames, "
+                    "reporting minimal delta time");
+            }
+        }
 
         world->frame_start_time = t;
+        world->flags |= EcsWorldFrameStartTimeSet;
 
         /* Keep track of total time passed in world */
         world->info.world_time_total_raw += (double)delta_time;
@@ -249,6 +316,14 @@ void ecs_set_target_fps(
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+
+    /* Targets outside this range yield a frame time that is infinite (the
+     * reciprocal of a subnormal target overflows) or meaningless, and the
+     * comparison rejects NaN. In release builds ecs_sleepf backstops the
+     * compiled-out check by refusing durations it cannot represent. */
+    ecs_check(ECS_EQZERO(fps) || (fps >= (ecs_ftime_t)1e-9 &&
+        fps <= (ecs_ftime_t)1e9),
+        ECS_INVALID_PARAMETER, "fps must be zero or in the range 1e-9 to 1e9");
 
     ecs_measure_frame_time(world, true);
     world->info.target_fps = fps;

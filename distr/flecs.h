@@ -648,6 +648,8 @@ extern "C" {
 #define EcsWorldMeasureSystemTime     (1u << 6)
 #define EcsWorldMultiThreaded         (1u << 7)
 #define EcsWorldFrameInProgress       (1u << 8)
+#define EcsWorldFrameStartTimeSet     (1u << 9)
+#define EcsWorldFrameMinDeltaWarned   (1u << 10)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// OS API flags
@@ -13070,6 +13072,13 @@ extern "C" {
  *
  * This function should only be run from the main thread.
  *
+ * When the clock does not advance in between two measurements, a minimal
+ * nonzero delta time is returned instead of blocking until it does. The time
+ * that was not reported is credited to the frame in which the clock next
+ * advances. The first such frame logs a warning. Code that derives a rate by
+ * dividing by the delta time should treat a delta at or below 1e-9 as a frame
+ * in which no time could be measured, rather than as a rate.
+ *
  * @param world The world.
  * @param delta_time Time elapsed since the last frame.
  * @return The provided delta_time, or measured time if 0 was provided.
@@ -13164,6 +13173,23 @@ void ecs_measure_system_time(
  *
  * Note that ecs_progress() only sleeps if there is time left in the frame. Both
  * time spent in Flecs and time spent outside of Flecs are taken into account.
+ *
+ * Frame rate limiting requires the OS API get_time and sleep functions to agree
+ * about the passage of time, to within roughly a factor of four. Both may run
+ * on a virtualized timeline of any speed, but an application that replaces one
+ * of them must replace the other consistently. A clock that observes at least
+ * a quarter of each interval slept reaches the target frame time to within a
+ * sixteenth of it, blocking for as long as the disagreement costs, which stays
+ * under five frame periods. If
+ * the two disagree by more than that (for example a clock that is only stepped
+ * by a host in between frames, while sleeping does take time) frame rate
+ * limiting requests about one frame period worth of sleep and is then skipped
+ * for the remainder of that frame. If the clock is too coarse to observe an
+ * individual sleep, sleep intervals are enlarged until it can, which makes
+ * pacing coarser but keeps it working. A frame sleeps at most 128 times
+ * whatever the clock does, so it never waits for one indefinitely. An
+ * application that computes its target from untrusted input should range check
+ * it before passing it in.
  *
  * @param world The world.
  * @param fps The target FPS.
