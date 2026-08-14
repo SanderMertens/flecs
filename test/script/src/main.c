@@ -218,6 +218,7 @@ void Eval_multi_line_comment_in_value_after_scope(void);
 void Eval_module_stmt(void);
 void Eval_nested_module_stmt(void);
 void Eval_module_stmt_w_component_from_parent_module(void);
+void Eval_module_stmt_w_component_from_parent_module_managed(void);
 void Eval_module_stmt_w_scope(void);
 void Eval_module_stmt_w_nested_scope(void);
 void Eval_assign_singleton_tag(void);
@@ -3176,6 +3177,10 @@ bake_test_case Eval_testcases[] = {
     {
         "module_stmt_w_component_from_parent_module",
         Eval_module_stmt_w_component_from_parent_module
+    },
+    {
+        "module_stmt_w_component_from_parent_module_managed",
+        Eval_module_stmt_w_component_from_parent_module_managed
     },
     {
         "module_stmt_w_scope",
@@ -11590,7 +11595,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        610,
+        611,
         Eval_testcases
     },
     {
