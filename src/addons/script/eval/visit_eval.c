@@ -232,7 +232,7 @@ int flecs_script_symbol_lookup(
         return -1;
     }
 
-    if (v && v->type_visitor &&
+    if (v && v->type_visitor && !from &&
         !(lookup_kind & FlecsScriptLookupDynamic))
     {
         int result = flecs_script_type_symbol_lookup(

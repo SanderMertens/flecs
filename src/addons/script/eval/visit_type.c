@@ -527,6 +527,13 @@ static int flecs_script_type_id_part(
     if (flecs_script_symbol_lookup(&t->v->base.script->pub, &desc,
         from, name, FlecsScriptLookupAll, &symbol))
     {
+        if (from) {
+            char *parent_str = ecs_id_str(t->v->world, from);
+            flecs_script_eval_error(t->v, node,
+                "target '%s' not found in parent '%s'", name, parent_str);
+            ecs_os_free(parent_str);
+            return -1;
+        }
         flecs_script_eval_error(t->v, node,
             "unresolved identifier '%s'", name);
         return -1;
