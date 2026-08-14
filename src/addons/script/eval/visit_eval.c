@@ -722,6 +722,11 @@ int flecs_script_eval_entity_enter(
 
     if (node->symbol != -1) {
         state->eval = flecs_script_symbol_entity(v, node->symbol);
+        if (state->eval && (!ecs_is_alive(v->world, state->eval) ||
+            ecs_get_target(v->world, state->eval, EcsChildOf, 0) != v->parent))
+        {
+            state->eval = 0;
+        }
     } else if (node->eval && ecs_is_alive(v->world, node->eval)) {
         state->eval = node->eval;
     }
