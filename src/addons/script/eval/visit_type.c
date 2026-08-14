@@ -1128,21 +1128,27 @@ static int flecs_script_type_const(
     }
 
     {
-        ecs_expr_eval_desc_t desc = {
-            .name = t->v->base.script->pub.name,
-            .vars = t->v->vars,
-            .runtime = t->v->r,
-            .script_visitor = t->v
-        };
-        flecs_script_symbol_t symbol;
-        if (!flecs_script_symbol_lookup(&t->v->base.script->pub, &desc,
-            0, node->name, FlecsScriptLookupEntity, &symbol) &&
-            symbol.entity && flecs_script_global_var_get(
-                t->v->world, symbol.entity, NULL).ptr)
-        {
-            flecs_script_eval_error(t->v, node,
-                "local variable '%s' shadows an exported variable", node->name);
-            return -1;
+        flecs_script_type_table_t *table = ecs_vec_get_t(
+            &t->tables, flecs_script_type_table_t, t->table);
+        ecs_entity_t parent = t->v->parent;
+        bool parent_known = true;
+        if (table->owner) {
+            parent = table->owner->symbol != -1
+                ? flecs_script_symbol_entity(t->v, table->owner->symbol)
+                : table->owner->eval;
+            parent_known = parent != 0;
+        }
+        if (parent_known) {
+            ecs_entity_t existing = ecs_lookup_child(
+                t->v->world, parent, node->name);
+            if (existing && flecs_script_global_var_get(
+                t->v->world, existing, NULL).ptr)
+            {
+                flecs_script_eval_error(t->v, node,
+                    "local variable '%s' shadows an exported variable",
+                    node->name);
+                return -1;
+            }
         }
     }
 
