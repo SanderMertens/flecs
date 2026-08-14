@@ -1322,6 +1322,11 @@ static int flecs_script_type_pair_scope(
         {
             continue;
         }
+        if (i == 1) {
+            flecs_script_type_declare(
+                t, name, NULL, slots[i], true);
+            continue;
+        }
         ecs_expr_eval_desc_t desc = {
             .name = t->v->base.script->pub.name,
             .vars = t->v->vars,
