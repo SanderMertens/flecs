@@ -431,16 +431,20 @@ void TryCatch_plain_reject_not_caught_by_typed(void) {
 }
 
 void TryCatch_runtime_error_not_caught(void) {
-    test_quarantine("13 Aug 2026");
-
     ecs_world_t *world = ecs_init();
 
     TryCatch_reset();
     TryCatch_register_fail(world);
 
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Payload" }),
+        .members = {{"value", ecs_id(ecs_i32_t)}}
+    });
+    ecs_entity(world, { .name = "src" });
+
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
-        "  const x = $does_not_exist\n"
+        "  const x = src[Payload]\n"
         "  await fail()\n"
         "} catch {\n"
         "  Handled {}\n"
@@ -448,6 +452,7 @@ void TryCatch_runtime_error_not_caught(void) {
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
+    test_assert(task != NULL);
 
     ecs_script_eval_result_t result = {0};
     test_int(ecs_script_task_resume(task, &result),
@@ -465,22 +470,27 @@ void TryCatch_runtime_error_not_caught(void) {
 }
 
 void TryCatch_runtime_error_is_terminal(void) {
-    test_quarantine("13 Aug 2026");
-
     ecs_world_t *world = ecs_init();
 
     TryCatch_reset();
     TryCatch_register_fail(world);
 
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Payload" }),
+        .members = {{"value", ecs_id(ecs_i32_t)}}
+    });
+    ecs_entity(world, { .name = "src" });
+
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
-        "  const x = $does_not_exist\n"
+        "  const x = src[Payload]\n"
         "} catch {\n"
         "  Handled {}\n"
         "}", NULL, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
+    test_assert(task != NULL);
 
     ecs_script_eval_result_t result = {0};
     test_int(ecs_script_task_resume(task, &result),
