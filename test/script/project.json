@@ -222,6 +222,7 @@
                 "module_stmt",
                 "nested_module_stmt",
                 "module_stmt_w_component_from_parent_module",
+                "module_stmt_w_component_from_parent_module_managed",
                 "module_stmt_w_scope",
                 "module_stmt_w_nested_scope",
                 "assign_singleton_tag",
