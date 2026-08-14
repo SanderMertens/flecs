@@ -107,7 +107,6 @@ typedef struct ecs_script_task_desc_t {
                                     *   is bound to the entity, and the entity
                                     *   gets an EcsScriptTask component that
                                     *   can be used to inspect task state. */
-    const ecs_script_vars_t *vars; /**< Variables used by script. */
     void *ctx;                     /**< User context. */
     ecs_ctx_free_t ctx_free;       /**< Callback to free ctx. */
     ecs_script_task_loop_t loop;   /**< Loop mode. */

@@ -363,7 +363,6 @@ void Eval_update_template_w_tag(void);
 void Eval_assign_call_func(void);
 void Eval_assign_call_scoped_func(void);
 void Eval_assign_call_scoped_func_w_using(void);
-void Eval_eval_w_vars(void);
 void Eval_eval_twice_w_failed_method_call(void);
 void Eval_eval_twice_w_failed_method_call_on_var(void);
 void Eval_eval_twice_w_failed_method_call_on_call_result(void);
@@ -378,12 +377,6 @@ void Eval_eval_twice_w_failed_expr_in_match(void);
 void Eval_eval_twice_w_failed_expr_in_interpolated_string(void);
 void Eval_const_var_w_identifier_value_wo_newline(void);
 void Eval_eval_w_runtime(void);
-void Eval_eval_w_other_vars(void);
-void Eval_eval_w_vars_different_order(void);
-void Eval_eval_w_vars_different_order_var_component(void);
-void Eval_eval_w_vars_different_order_with_var(void);
-void Eval_eval_w_vars_different_order_pair_w_var(void);
-void Eval_eval_w_vars_different_order_pair_scope_w_var(void);
 void Eval_component_in_entity_in_with_scope(void);
 void Eval_entity_w_string_name(void);
 void Eval_entity_w_interpolated_name(void);
@@ -412,13 +405,7 @@ void Eval_const_assign_empty_initializer(void);
 void Eval_const_assign_empty_collection_initializer(void);
 void Eval_const_i32_assign_empty_initializer(void);
 void Eval_const_i32_assign_empty_collection_initializer(void);
-void Eval_component_w_match(void);
-void Eval_component_w_match_invalid(void);
-void Eval_pair_component_w_match(void);
-void Eval_component_assign_w_match(void);
-void Eval_component_assign_w_match_matched_case(void);
 void Eval_unknown_annotation(void);
-void Eval_const_w_match(void);
 void Eval_component_w_assign_add(void);
 void Eval_component_w_assign_mul(void);
 void Eval_opaque_struct_component(void);
@@ -758,7 +745,6 @@ void Await_immediate_resolve(void);
 void Await_await_export_const(void);
 void Await_await_export_mut(void);
 void Await_interleaved_tasks(void);
-void Await_interleaved_tasks_dynamic_entity(void);
 void Await_await_method_receiver(void);
 void Await_task_component_added_on_task_new(void);
 void Await_task_component_not_added_without_entity(void);
@@ -3759,10 +3745,6 @@ bake_test_case Eval_testcases[] = {
         Eval_assign_call_scoped_func_w_using
     },
     {
-        "eval_w_vars",
-        Eval_eval_w_vars
-    },
-    {
         "eval_twice_w_failed_method_call",
         Eval_eval_twice_w_failed_method_call
     },
@@ -3817,30 +3799,6 @@ bake_test_case Eval_testcases[] = {
     {
         "eval_w_runtime",
         Eval_eval_w_runtime
-    },
-    {
-        "eval_w_other_vars",
-        Eval_eval_w_other_vars
-    },
-    {
-        "eval_w_vars_different_order",
-        Eval_eval_w_vars_different_order
-    },
-    {
-        "eval_w_vars_different_order_var_component",
-        Eval_eval_w_vars_different_order_var_component
-    },
-    {
-        "eval_w_vars_different_order_with_var",
-        Eval_eval_w_vars_different_order_with_var
-    },
-    {
-        "eval_w_vars_different_order_pair_w_var",
-        Eval_eval_w_vars_different_order_pair_w_var
-    },
-    {
-        "eval_w_vars_different_order_pair_scope_w_var",
-        Eval_eval_w_vars_different_order_pair_scope_w_var
     },
     {
         "component_in_entity_in_with_scope",
@@ -3955,32 +3913,8 @@ bake_test_case Eval_testcases[] = {
         Eval_const_i32_assign_empty_collection_initializer
     },
     {
-        "component_w_match",
-        Eval_component_w_match
-    },
-    {
-        "component_w_match_invalid",
-        Eval_component_w_match_invalid
-    },
-    {
-        "pair_component_w_match",
-        Eval_pair_component_w_match
-    },
-    {
-        "component_assign_w_match",
-        Eval_component_assign_w_match
-    },
-    {
-        "component_assign_w_match_matched_case",
-        Eval_component_assign_w_match_matched_case
-    },
-    {
         "unknown_annotation",
         Eval_unknown_annotation
-    },
-    {
-        "const_w_match",
-        Eval_const_w_match
     },
     {
         "component_w_assign_add",
@@ -5327,10 +5261,6 @@ bake_test_case Await_testcases[] = {
     {
         "interleaved_tasks",
         Await_interleaved_tasks
-    },
-    {
-        "interleaved_tasks_dynamic_entity",
-        Await_interleaved_tasks_dynamic_entity
     },
     {
         "await_method_receiver",
@@ -11595,7 +11525,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        611,
+        598,
         Eval_testcases
     },
     {
@@ -11609,7 +11539,7 @@ static bake_test_suite suites[] = {
         "Await",
         NULL,
         NULL,
-        48,
+        47,
         Await_testcases
     },
     {

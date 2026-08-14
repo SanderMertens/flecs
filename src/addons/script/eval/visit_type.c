@@ -265,185 +265,6 @@ static flecs_script_type_entity_t* flecs_script_type_entity_from_node(
     return NULL;
 }
 
-static int flecs_script_type_rebind_expr(
-    flecs_script_type_visitor_t *t,
-    ecs_expr_node_t *node,
-    const ecs_expr_eval_desc_t *desc)
-{
-    if (!node) {
-        return 0;
-    }
-
-    switch (node->kind) {
-    case EcsExprValue:
-        break;
-    case EcsExprInterpolatedString: {
-        ecs_expr_interpolated_string_t *n =
-            (ecs_expr_interpolated_string_t*)node;
-        int32_t i, count = ecs_vec_count(&n->expressions);
-        ecs_expr_node_t **exprs = ecs_vec_first(&n->expressions);
-        for (i = 0; i < count; i ++) {
-            if (flecs_script_type_rebind_expr(t, exprs[i], desc)) {
-                return -1;
-            }
-        }
-        count = ecs_vec_count(&n->formats);
-        ecs_expr_format_t *formats = ecs_vec_first(&n->formats);
-        for (i = 0; i < count; i ++) {
-            if (flecs_script_type_rebind_expr(
-                t, formats[i].width, desc) ||
-                flecs_script_type_rebind_expr(
-                    t, formats[i].precision, desc))
-            {
-                return -1;
-            }
-        }
-        break;
-    }
-    case EcsExprInitializer:
-    case EcsExprEmptyInitializer: {
-        ecs_expr_initializer_t *n = (ecs_expr_initializer_t*)node;
-        int32_t i, count = ecs_vec_count(&n->elements);
-        ecs_expr_initializer_element_t *elems = ecs_vec_first(&n->elements);
-        for (i = 0; i < count; i ++) {
-            if (flecs_script_type_rebind_expr(t, elems[i].key, desc) ||
-                flecs_script_type_rebind_expr(t, elems[i].value, desc))
-            {
-                return -1;
-            }
-        }
-        break;
-    }
-    case EcsExprUnary:
-        return flecs_script_type_rebind_expr(
-            t, ((ecs_expr_unary_t*)node)->expr, desc);
-    case EcsExprBinary: {
-        ecs_expr_binary_t *n = (ecs_expr_binary_t*)node;
-        if (flecs_script_type_rebind_expr(t, n->left, desc) ||
-            flecs_script_type_rebind_expr(t, n->right, desc))
-        {
-            return -1;
-        }
-        break;
-    }
-    case EcsExprIdentifier:
-        return flecs_script_type_rebind_expr(
-            t, ((ecs_expr_identifier_t*)node)->expr, desc);
-    case EcsExprVariable: {
-        ecs_expr_variable_t *n = (ecs_expr_variable_t*)node;
-        flecs_script_symbol_t symbol;
-        if (flecs_script_symbol_lookup(&t->v->base.script->pub, desc, 0,
-            n->name, FlecsScriptLookupVariable, &symbol))
-        {
-            flecs_expr_visit_error(&t->v->base.script->pub, node,
-                "unresolved variable '%s'", n->name);
-            return -1;
-        }
-        ecs_script_var_t *var = ecs_script_vars_from_sp(
-            desc->vars, symbol.sp);
-        if (!var || var->value.type != n->node.type) {
-            flecs_expr_visit_error(&t->v->base.script->pub, node,
-                "variable '%s' has incompatible type", n->name);
-            return -1;
-        }
-        n->sp = symbol.sp;
-        break;
-    }
-    case EcsExprGlobalVariable: {
-        ecs_expr_variable_t *n = (ecs_expr_variable_t*)node;
-        flecs_script_symbol_t symbol;
-        if (flecs_script_symbol_lookup(&t->v->base.script->pub, desc, 0,
-            n->name, FlecsScriptLookupAll, &symbol) ||
-            symbol.kind != FlecsScriptSymbolGlobalVariable)
-        {
-            flecs_expr_visit_error(&t->v->base.script->pub, node,
-                "unresolved variable '%s'", n->name);
-            return -1;
-        }
-        ecs_id_t component = 0;
-        ecs_value_t value = flecs_script_global_var_get(
-            t->v->world, symbol.entity, &component);
-        if (!value.ptr || value.type != n->node.type) {
-            flecs_expr_visit_error(&t->v->base.script->pub, node,
-                "variable '%s' has incompatible type", n->name);
-            return -1;
-        }
-        n->global_value = value;
-        n->global = symbol.entity;
-        n->global_component = component;
-        break;
-    }
-    case EcsExprFunction:
-    case EcsExprMethod: {
-        ecs_expr_function_t *n = (ecs_expr_function_t*)node;
-        if (flecs_script_type_rebind_expr(t, n->left, desc) ||
-            flecs_script_type_rebind_expr(
-                t, (ecs_expr_node_t*)n->args, desc))
-        {
-            return -1;
-        }
-        break;
-    }
-    case EcsExprMember:
-        return flecs_script_type_rebind_expr(
-            t, ((ecs_expr_member_t*)node)->left, desc);
-    case EcsExprSwizzle:
-        return flecs_script_type_rebind_expr(
-            t, ((ecs_expr_swizzle_t*)node)->left, desc);
-    case EcsExprElement:
-    case EcsExprComponent: {
-        ecs_expr_element_t *n = (ecs_expr_element_t*)node;
-        if (flecs_script_type_rebind_expr(t, n->left, desc) ||
-            flecs_script_type_rebind_expr(t, n->index, desc))
-        {
-            return -1;
-        }
-        break;
-    }
-    case EcsExprMatch: {
-        ecs_expr_match_t *n = (ecs_expr_match_t*)node;
-        if (flecs_script_type_rebind_expr(t, n->expr, desc)) {
-            return -1;
-        }
-        int32_t i, count = ecs_vec_count(&n->elements);
-        ecs_expr_match_element_t *elems = ecs_vec_first(&n->elements);
-        for (i = 0; i < count; i ++) {
-            if (flecs_script_type_rebind_expr(t, elems[i].compare, desc) ||
-                flecs_script_type_rebind_expr(t, elems[i].expr, desc))
-            {
-                return -1;
-            }
-        }
-        if (flecs_script_type_rebind_expr(t, n->any.compare, desc) ||
-            flecs_script_type_rebind_expr(t, n->any.expr, desc))
-        {
-            return -1;
-        }
-        break;
-    }
-    case EcsExprRange: {
-        ecs_expr_range_t *n = (ecs_expr_range_t*)node;
-        if (flecs_script_type_rebind_expr(t, n->from, desc) ||
-            flecs_script_type_rebind_expr(t, n->to, desc))
-        {
-            return -1;
-        }
-        break;
-    }
-    case EcsExprCast:
-    case EcsExprCastNumber:
-        return flecs_script_type_rebind_expr(
-            t, ((ecs_expr_cast_t*)node)->expr, desc);
-    case EcsExprNew:
-        return flecs_script_visit_type_entity_expr(
-            &t->v->base.script->pub, desc, t->v,
-            ((ecs_expr_new_t*)node)->entity);
-    case EcsExprScript:
-        break;
-    }
-    return 0;
-}
-
 static int flecs_script_type_check_expr(
     flecs_script_type_visitor_t *t,
     ecs_expr_node_t **expr_ptr,
@@ -467,9 +288,6 @@ static int flecs_script_type_check_expr(
     }
 
     if (was_typed) {
-        if (flecs_script_type_rebind_expr(t, *expr_ptr, &desc)) {
-            return -1;
-        }
         if (expected_type && expr_ptr[0]->type != expected_type &&
             (!ecs_get(v->world, expected_type, EcsPrimitive) ||
              !ecs_get(v->world, expr_ptr[0]->type, EcsPrimitive)))
@@ -2110,14 +1928,14 @@ int flecs_script_visit_type_entity_expr(
     }
 
     ecs_script_eval_desc_t eval_desc = {
-        .vars = desc && desc->vars
-            ? ECS_CONST_CAST(ecs_script_vars_t*, desc->vars)
-            : NULL,
         .runtime = desc ? desc->runtime : NULL
     };
     ecs_script_eval_visitor_t visitor;
     flecs_script_eval_visit_init(
         flecs_script_impl(script), &visitor, &eval_desc);
+    if (desc && desc->vars) {
+        flecs_script_eval_push_vars(&visitor, desc->vars);
+    }
 
     flecs_script_type_visitor_t t = {
         .v = &visitor,
@@ -2133,6 +1951,9 @@ int flecs_script_visit_type_entity_expr(
     visitor.type_visitor = NULL;
     ecs_vec_fini_t(NULL, &t.entities, flecs_script_type_entity_t);
     ecs_vec_fini_t(NULL, &t.tables, flecs_script_type_table_t);
+    if (desc && desc->vars) {
+        flecs_script_eval_pop_vars(&visitor);
+    }
     flecs_script_eval_visit_fini(&visitor, &eval_desc);
     return result;
 }
