@@ -326,6 +326,8 @@ ecs_script_template_node_t* flecs_script_insert_template(
     ecs_script_template_node_t *result = flecs_ast_new(
         parser, ecs_script_template_node_t, EcsAstTemplate);
     result->symbol = -1;
+    result->symbol_offset = -1;
+    result->symbol_count = -1;
     result->name = name;
     result->scope = flecs_script_scope_new(parser);
 
