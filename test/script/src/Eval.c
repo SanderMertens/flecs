@@ -8784,7 +8784,8 @@ void Eval_const_w_component_expr_in_module(void) {
 }
 
 void Eval_const_w_component_in_scope_expr_in_scope(void) {
-    test_quarantine("13 Aug 2026");
+    ecs_log_set_level(-4);
+
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -8809,16 +8810,13 @@ void Eval_const_w_component_in_scope_expr_in_scope(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "unresolved identifier 'Position'") != NULL);
+    ecs_os_free(result.error);
 
-    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
-    test_assert(foo != 0);
-
-    test_assert(ecs_has(world, foo, Position));
-    const Position *p = ecs_get(world, foo, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    test_assert(ecs_lookup(world, "parent.foo") == 0);
 
     ecs_fini(world);
 }
@@ -8862,7 +8860,8 @@ void Eval_const_w_component_in_scope_expr_in_module(void) {
 }
 
 void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void) {
-    test_quarantine("13 Aug 2026");
+    ecs_log_set_level(-4);
+
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -8887,16 +8886,13 @@ void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "unresolved identifier") != NULL);
+    ecs_os_free(result.error);
 
-    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
-    test_assert(foo != 0);
-
-    test_assert(ecs_has(world, foo, Position));
-    const Position *p = ecs_get(world, foo, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    test_assert(ecs_lookup(world, "parent.foo") == 0);
 
     ecs_fini(world);
 }

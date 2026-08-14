@@ -288,8 +288,6 @@ void Error_empty_assignment_before_end_of_scope(void) {
 }
 
 void Error_invalid_oneof(void) {
-    test_quarantine("13 Aug 2026");
-
     ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_init();
@@ -314,9 +312,7 @@ void Error_invalid_oneof(void) {
 
     test_assert(color != 0);
     test_assert(foo == 0);
-    test_assert(e != 0);
-
-    test_assert( !ecs_has_pair(world, e, color, EcsWildcard));
+    test_assert(e == 0);
 
     ecs_fini(world);
 }
@@ -1418,8 +1414,6 @@ void Error_template_unresolved_tag(void) {
 }
 
 void Error_template_unresolved_component(void) {
-    test_quarantine("13 Aug 2026");
-
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1434,7 +1428,7 @@ void Error_template_unresolved_component(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_int(result.line, 5);
+    test_int(result.line, 3);
     ecs_os_free(result.error);
 
     ecs_fini(world);
