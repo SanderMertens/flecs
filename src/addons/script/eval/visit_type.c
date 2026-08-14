@@ -442,7 +442,10 @@ static int flecs_script_type_check_expr(
         if (flecs_script_type_rebind_expr(t, *expr_ptr, &desc)) {
             return -1;
         }
-        if (expected_type && expr_ptr[0]->type != expected_type) {
+        if (expected_type && expr_ptr[0]->type != expected_type &&
+            (!ecs_get(v->world, expected_type, EcsPrimitive) ||
+             !ecs_get(v->world, expr_ptr[0]->type, EcsPrimitive)))
+        {
             flecs_expr_visit_error(script, expr_ptr[0],
                 "expression has incompatible type");
             return -1;
