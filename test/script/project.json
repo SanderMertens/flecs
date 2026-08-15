@@ -1052,7 +1052,27 @@
                 "outside_template",
                 "after_const",
                 "redeclare_prop_as_mut",
-                "redeclare_mut_as_prop"
+                "redeclare_mut_as_prop",
+                "get_i32",
+                "get_string",
+                "get_string_is_owned",
+                "get_struct",
+                "get_from_script",
+                "get_not_found",
+                "get_not_a_mut_var",
+                "get_w_invalid_size",
+                "get_w_invalid_type",
+                "get_i32_as_i64",
+                "set_i32",
+                "set_string",
+                "set_string_is_copied",
+                "set_struct",
+                "set_not_found",
+                "set_not_a_mut_var",
+                "set_w_invalid_size",
+                "set_w_invalid_type",
+                "set_i32_w_i64",
+                "set_reevaluates_script"
             ]
         }, {
             "id": "Error",

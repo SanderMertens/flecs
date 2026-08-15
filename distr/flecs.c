@@ -68727,6 +68727,105 @@ error:
     return (ecs_value_t){0};
 }
 
+void* ecs_mut_var_get_w_type(
+    const ecs_world_t *world,
+    const char *name,
+    ecs_entity_t type,
+    ecs_size_t size,
+    void *out)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(out != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_entity_t var = ecs_lookup(world, name);
+    const EcsScriptMutVar *v = NULL;
+    if (var) {
+        v = ecs_get(world, var, EcsScriptMutVar);
+    }
+
+    if (!v) {
+        ecs_err("mut variable '%s' not found", name);
+        goto error;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, type);
+    if (!ti) {
+        ecs_err("requested type for mut variable '%s' is not a valid type",
+            name);
+        goto error;
+    }
+
+    if (ti->size != size) {
+        ecs_err("size of requested type for mut variable '%s' does not "
+            "match size of provided type", name);
+        goto error;
+    }
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, out);
+    if (ecs_meta_set_value(&cur, &v->value)) {
+        ecs_err("value of mut variable '%s' cannot be converted to "
+            "requested type", name);
+        goto error;
+    }
+
+    return out;
+error:
+    return out;
+}
+
+int ecs_mut_var_set_w_type(
+    ecs_world_t *world,
+    const char *name,
+    ecs_entity_t type,
+    ecs_size_t size,
+    const void *value)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(value != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_entity_t var = ecs_lookup(world, name);
+    EcsScriptMutVar *v = NULL;
+    if (var) {
+        v = ecs_get_mut(world, var, EcsScriptMutVar);
+    }
+
+    if (!v) {
+        ecs_err("mut variable '%s' not found", name);
+        goto error;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, type);
+    if (!ti) {
+        ecs_err("provided type for mut variable '%s' is not a valid type",
+            name);
+        goto error;
+    }
+
+    if (ti->size != size) {
+        ecs_err("size of provided type for mut variable '%s' does not "
+            "match size of provided value", name);
+        goto error;
+    }
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, v->value.type, v->value.ptr);
+    ecs_value_t from = { .type = type, .ptr = ECS_CONST_CAST(void*, value) };
+    if (ecs_meta_set_value(&cur, &from)) {
+        ecs_err("provided value cannot be converted to type of mut "
+            "variable '%s'", name);
+        goto error;
+    }
+
+    ecs_modified(world, var, EcsScriptMutVar);
+
+    return 0;
+error:
+    return -1;
+}
+
 void ecs_mut_var_modified(
     ecs_world_t *world,
     ecs_entity_t entity)

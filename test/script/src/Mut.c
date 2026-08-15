@@ -1640,3 +1640,407 @@ void Mut_hoisted_var_from_outer_scope(void) {
 
     ecs_fini(world);
 }
+
+void Mut_get_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_i32_t v = -100000;
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    test_int(ecs_mut_var_get_t(world, "v", ecs_i32_t), -100000);
+
+    ecs_fini(world);
+}
+
+void Mut_get_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_string_t v = "Hello World";
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_string_t),
+        .value = &v
+    }));
+
+    ecs_string_t str = ecs_mut_var_get_t(world, "v", ecs_string_t);
+    test_str(str, "Hello World");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Mut_get_string_is_owned(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_string_t v = "Hello World";
+    ecs_entity_t var = ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_string_t),
+        .value = &v
+    });
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_mut_var_get(world, var);
+    test_assert(value.ptr != NULL);
+
+    ecs_string_t str = ecs_mut_var_get_t(world, "v", ecs_string_t);
+    test_str(str, "Hello World");
+    test_assert(str != *(ecs_string_t*)value.ptr);
+    ecs_os_free(str);
+
+    test_str(*(ecs_string_t*)value.ptr, "Hello World");
+
+    ecs_fini(world);
+}
+
+void Mut_get_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Point"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    Point v = { 10.5, 20.5 };
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(Point),
+        .value = &v
+    }));
+
+    Point p = ecs_mut_var_get_t(world, "v", Point);
+    test_flt(p.x, 10.5);
+    test_flt(p.y, 20.5);
+
+    ecs_fini(world);
+}
+
+void Mut_get_from_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut x: i32 = 10";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_int(ecs_mut_var_get_t(world, "x", ecs_i32_t), 10);
+
+    ecs_fini(world);
+}
+
+void Mut_get_not_found(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_i32_t v = 10;
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    test_int(ecs_mut_var_get_t(world, "w", ecs_i32_t), 0);
+
+    ecs_fini(world);
+}
+
+void Mut_get_not_a_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity(world, { .name = "v" });
+
+    test_int(ecs_mut_var_get_t(world, "v", ecs_i32_t), 0);
+
+    ecs_fini(world);
+}
+
+void Mut_get_w_invalid_size(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_i32_t v = 10;
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    ecs_i64_t out = 0;
+
+    void *ptr = ecs_mut_var_get_w_type(
+        world, "v", ecs_id(ecs_i32_t), ECS_SIZEOF(ecs_i64_t), &out);
+    test_assert(ptr == &out);
+    test_int(out, 0);
+
+    ecs_fini(world);
+}
+
+void Mut_get_w_invalid_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_i32_t v = 10;
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    ecs_entity_t not_a_type = ecs_entity(world, { .name = "not_a_type" });
+    ecs_i32_t out = 0;
+
+    void *ptr = ecs_mut_var_get_w_type(
+        world, "v", not_a_type, ECS_SIZEOF(ecs_i32_t), &out);
+    test_assert(ptr == &out);
+    test_int(out, 0);
+
+    ecs_fini(world);
+}
+
+void Mut_get_i32_as_i64(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_i32_t v = -10;
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    test_int(ecs_mut_var_get_t(world, "v", ecs_i64_t), -10);
+
+    ecs_fini(world);
+}
+
+void Mut_set_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_i32_t v = 10;
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    test_int(0, ecs_mut_var_set_t(world, "v", ecs_i32_t, {-100000}));
+    test_int(ecs_mut_var_get_t(world, "v", ecs_i32_t), -100000);
+
+    ecs_fini(world);
+}
+
+void Mut_set_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_string_t v = "Hello World";
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_string_t),
+        .value = &v
+    }));
+
+    test_int(0, ecs_mut_var_set_t(world, "v", ecs_string_t, {"Foo Bar"}));
+
+    ecs_string_t str = ecs_mut_var_get_t(world, "v", ecs_string_t);
+    test_str(str, "Foo Bar");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Mut_set_string_is_copied(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_string_t v = "Hello World";
+    ecs_entity_t var = ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_string_t),
+        .value = &v
+    });
+    test_assert(var != 0);
+
+    char *new_value = ecs_os_strdup("Foo Bar");
+    test_int(0, ecs_mut_var_set_t(world, "v", ecs_string_t, {new_value}));
+
+    ecs_value_t value = ecs_mut_var_get(world, var);
+    test_assert(value.ptr != NULL);
+    test_str(*(ecs_string_t*)value.ptr, "Foo Bar");
+    test_assert(*(ecs_string_t*)value.ptr != new_value);
+    ecs_os_free(new_value);
+
+    ecs_fini(world);
+}
+
+void Mut_set_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Point"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    Point v = { 10.5, 20.5 };
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(Point),
+        .value = &v
+    }));
+
+    test_int(0, ecs_mut_var_set_t(world, "v", Point, {30.5, 40.5}));
+
+    Point p = ecs_mut_var_get_t(world, "v", Point);
+    test_flt(p.x, 30.5);
+    test_flt(p.y, 40.5);
+
+    ecs_fini(world);
+}
+
+void Mut_set_not_found(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_i32_t v = 10;
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    test_assert(0 != ecs_mut_var_set_t(world, "w", ecs_i32_t, {20}));
+    test_int(ecs_mut_var_get_t(world, "v", ecs_i32_t), 10);
+
+    ecs_fini(world);
+}
+
+void Mut_set_not_a_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity(world, { .name = "v" });
+
+    test_assert(0 != ecs_mut_var_set_t(world, "v", ecs_i32_t, {20}));
+
+    ecs_fini(world);
+}
+
+void Mut_set_w_invalid_size(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_i32_t v = 10;
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    ecs_i64_t value = 20;
+    test_assert(0 != ecs_mut_var_set_w_type(
+        world, "v", ecs_id(ecs_i32_t), ECS_SIZEOF(ecs_i64_t), &value));
+    test_int(ecs_mut_var_get_t(world, "v", ecs_i32_t), 10);
+
+    ecs_fini(world);
+}
+
+void Mut_set_w_invalid_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_i32_t v = 10;
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    ecs_entity_t not_a_type = ecs_entity(world, { .name = "not_a_type" });
+    ecs_i32_t value = 20;
+    test_assert(0 != ecs_mut_var_set_w_type(
+        world, "v", not_a_type, ECS_SIZEOF(ecs_i32_t), &value));
+    test_int(ecs_mut_var_get_t(world, "v", ecs_i32_t), 10);
+
+    ecs_fini(world);
+}
+
+void Mut_set_i32_w_i64(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_i32_t v = 10;
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    test_int(0, ecs_mut_var_set_t(world, "v", ecs_i64_t, {-20}));
+    test_int(ecs_mut_var_get_t(world, "v", ecs_i32_t), -20);
+
+    ecs_fini(world);
+}
+
+void Mut_set_reevaluates_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    test_assert(ecs_id(Position) != 0);
+
+    ecs_entity_t v = ecs_mut_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_f32_t),
+        .value = &(ecs_f32_t){10}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {v, 0}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+    }
+
+    test_int(0, ecs_mut_var_set_t(world, "v", ecs_f32_t, {20}));
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+    }
+
+    ecs_fini(world);
+}

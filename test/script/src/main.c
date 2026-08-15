@@ -1037,6 +1037,26 @@ void Mut_outside_template(void);
 void Mut_after_const(void);
 void Mut_redeclare_prop_as_mut(void);
 void Mut_redeclare_mut_as_prop(void);
+void Mut_get_i32(void);
+void Mut_get_string(void);
+void Mut_get_string_is_owned(void);
+void Mut_get_struct(void);
+void Mut_get_from_script(void);
+void Mut_get_not_found(void);
+void Mut_get_not_a_mut_var(void);
+void Mut_get_w_invalid_size(void);
+void Mut_get_w_invalid_type(void);
+void Mut_get_i32_as_i64(void);
+void Mut_set_i32(void);
+void Mut_set_string(void);
+void Mut_set_string_is_copied(void);
+void Mut_set_struct(void);
+void Mut_set_not_found(void);
+void Mut_set_not_a_mut_var(void);
+void Mut_set_w_invalid_size(void);
+void Mut_set_w_invalid_type(void);
+void Mut_set_i32_w_i64(void);
+void Mut_set_reevaluates_script(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -6423,6 +6443,86 @@ bake_test_case Mut_testcases[] = {
     {
         "redeclare_mut_as_prop",
         Mut_redeclare_mut_as_prop
+    },
+    {
+        "get_i32",
+        Mut_get_i32
+    },
+    {
+        "get_string",
+        Mut_get_string
+    },
+    {
+        "get_string_is_owned",
+        Mut_get_string_is_owned
+    },
+    {
+        "get_struct",
+        Mut_get_struct
+    },
+    {
+        "get_from_script",
+        Mut_get_from_script
+    },
+    {
+        "get_not_found",
+        Mut_get_not_found
+    },
+    {
+        "get_not_a_mut_var",
+        Mut_get_not_a_mut_var
+    },
+    {
+        "get_w_invalid_size",
+        Mut_get_w_invalid_size
+    },
+    {
+        "get_w_invalid_type",
+        Mut_get_w_invalid_type
+    },
+    {
+        "get_i32_as_i64",
+        Mut_get_i32_as_i64
+    },
+    {
+        "set_i32",
+        Mut_set_i32
+    },
+    {
+        "set_string",
+        Mut_set_string
+    },
+    {
+        "set_string_is_copied",
+        Mut_set_string_is_copied
+    },
+    {
+        "set_struct",
+        Mut_set_struct
+    },
+    {
+        "set_not_found",
+        Mut_set_not_found
+    },
+    {
+        "set_not_a_mut_var",
+        Mut_set_not_a_mut_var
+    },
+    {
+        "set_w_invalid_size",
+        Mut_set_w_invalid_size
+    },
+    {
+        "set_w_invalid_type",
+        Mut_set_w_invalid_type
+    },
+    {
+        "set_i32_w_i64",
+        Mut_set_i32_w_i64
+    },
+    {
+        "set_reevaluates_script",
+        Mut_set_reevaluates_script
     }
 };
 
@@ -11637,7 +11737,7 @@ static bake_test_suite suites[] = {
         "Mut",
         NULL,
         NULL,
-        51,
+        71,
         Mut_testcases
     },
     {
