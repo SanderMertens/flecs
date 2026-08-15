@@ -1081,10 +1081,21 @@ ecs_size_t ecs_meta_op_get_elem_count(
  * @return The entity for the constant, or 0 if no constant was found.
  */
 FLECS_API
-ecs_entity_t ecs_constant_to_entity(
+ecs_entity_t ecs_constant_to_entity_id(
     const ecs_world_t *world,
     ecs_entity_t type,
     int64_t value);
+
+/** Find the entity for an enum constant with the provided value.
+ * Same as ecs_constant_to_entity_id() but with a type instead of a type id.
+ *
+ * @param world The world.
+ * @param T The enum (or bitmask) type.
+ * @param value The constant value.
+ * @return The entity for the constant, or 0 if no constant was found.
+ */
+#define ecs_constant_to_entity(world, T, value)\
+    ecs_constant_to_entity_id(world, ecs_id(T), value)
 
 /* Utility functions for working with pointers to dynamically created
  * values. */

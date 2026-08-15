@@ -1139,11 +1139,11 @@ void EnumTypes_constant_to_entity(void) {
 
     test_assert(type != 0);
 
-    test_uint(ecs_constant_to_entity(world, type, 0),
+    test_uint(ecs_constant_to_entity_id(world, type, 0),
         ecs_lookup_from(world, type, "Red"));
-    test_uint(ecs_constant_to_entity(world, type, 1),
+    test_uint(ecs_constant_to_entity_id(world, type, 1),
         ecs_lookup_from(world, type, "Green"));
-    test_uint(ecs_constant_to_entity(world, type, 2),
+    test_uint(ecs_constant_to_entity_id(world, type, 2),
         ecs_lookup_from(world, type, "Blue"));
 
     ecs_fini(world);
@@ -1160,8 +1160,8 @@ void EnumTypes_constant_to_entity_not_found(void) {
 
     test_assert(type != 0);
 
-    test_uint(ecs_constant_to_entity(world, type, 3), 0);
-    test_uint(ecs_constant_to_entity(world, type, -1), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, 3), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, -1), 0);
 
     ecs_fini(world);
 }
@@ -1171,7 +1171,7 @@ void EnumTypes_constant_to_entity_not_a_type(void) {
 
     ecs_entity_t type = ecs_new(world);
 
-    test_uint(ecs_constant_to_entity(world, type, 0), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, 0), 0);
 
     ecs_fini(world);
 }
@@ -1189,16 +1189,16 @@ void EnumTypes_constant_to_entity_w_underlying_i8(void) {
 
     test_assert(type != 0);
 
-    test_uint(ecs_constant_to_entity(world, type, 0),
+    test_uint(ecs_constant_to_entity_id(world, type, 0),
         ecs_lookup_from(world, type, "Red"));
-    test_uint(ecs_constant_to_entity(world, type, 1),
+    test_uint(ecs_constant_to_entity_id(world, type, 1),
         ecs_lookup_from(world, type, "Blue"));
-    test_uint(ecs_constant_to_entity(world, type, INT8_MAX),
+    test_uint(ecs_constant_to_entity_id(world, type, INT8_MAX),
         ecs_lookup_from(world, type, "Green"));
-    test_uint(ecs_constant_to_entity(world, type, INT8_MIN),
+    test_uint(ecs_constant_to_entity_id(world, type, INT8_MIN),
         ecs_lookup_from(world, type, "Yellow"));
 
-    test_uint(ecs_constant_to_entity(world, type, 2), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, 2), 0);
 
     ecs_fini(world);
 }
@@ -1216,16 +1216,16 @@ void EnumTypes_constant_to_entity_w_underlying_i16(void) {
 
     test_assert(type != 0);
 
-    test_uint(ecs_constant_to_entity(world, type, 0),
+    test_uint(ecs_constant_to_entity_id(world, type, 0),
         ecs_lookup_from(world, type, "Red"));
-    test_uint(ecs_constant_to_entity(world, type, 1),
+    test_uint(ecs_constant_to_entity_id(world, type, 1),
         ecs_lookup_from(world, type, "Blue"));
-    test_uint(ecs_constant_to_entity(world, type, INT16_MAX),
+    test_uint(ecs_constant_to_entity_id(world, type, INT16_MAX),
         ecs_lookup_from(world, type, "Green"));
-    test_uint(ecs_constant_to_entity(world, type, INT16_MIN),
+    test_uint(ecs_constant_to_entity_id(world, type, INT16_MIN),
         ecs_lookup_from(world, type, "Yellow"));
 
-    test_uint(ecs_constant_to_entity(world, type, 2), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, 2), 0);
 
     ecs_fini(world);
 }
@@ -1243,16 +1243,16 @@ void EnumTypes_constant_to_entity_w_underlying_i32(void) {
 
     test_assert(type != 0);
 
-    test_uint(ecs_constant_to_entity(world, type, 0),
+    test_uint(ecs_constant_to_entity_id(world, type, 0),
         ecs_lookup_from(world, type, "Red"));
-    test_uint(ecs_constant_to_entity(world, type, 1),
+    test_uint(ecs_constant_to_entity_id(world, type, 1),
         ecs_lookup_from(world, type, "Blue"));
-    test_uint(ecs_constant_to_entity(world, type, INT32_MAX),
+    test_uint(ecs_constant_to_entity_id(world, type, INT32_MAX),
         ecs_lookup_from(world, type, "Green"));
-    test_uint(ecs_constant_to_entity(world, type, INT32_MIN),
+    test_uint(ecs_constant_to_entity_id(world, type, INT32_MIN),
         ecs_lookup_from(world, type, "Yellow"));
 
-    test_uint(ecs_constant_to_entity(world, type, 2), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, 2), 0);
 
     ecs_fini(world);
 }
@@ -1270,16 +1270,16 @@ void EnumTypes_constant_to_entity_w_underlying_i64(void) {
 
     test_assert(type != 0);
 
-    test_uint(ecs_constant_to_entity(world, type, 0),
+    test_uint(ecs_constant_to_entity_id(world, type, 0),
         ecs_lookup_from(world, type, "Red"));
-    test_uint(ecs_constant_to_entity(world, type, 1),
+    test_uint(ecs_constant_to_entity_id(world, type, 1),
         ecs_lookup_from(world, type, "Blue"));
-    test_uint(ecs_constant_to_entity(world, type, INT64_MAX),
+    test_uint(ecs_constant_to_entity_id(world, type, INT64_MAX),
         ecs_lookup_from(world, type, "Green"));
-    test_uint(ecs_constant_to_entity(world, type, INT64_MIN),
+    test_uint(ecs_constant_to_entity_id(world, type, INT64_MIN),
         ecs_lookup_from(world, type, "Yellow"));
 
-    test_uint(ecs_constant_to_entity(world, type, 2), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, 2), 0);
 
     ecs_fini(world);
 }
@@ -1296,15 +1296,15 @@ void EnumTypes_constant_to_entity_w_underlying_u8(void) {
 
     test_assert(type != 0);
 
-    test_uint(ecs_constant_to_entity(world, type, 0),
+    test_uint(ecs_constant_to_entity_id(world, type, 0),
         ecs_lookup_from(world, type, "Red"));
-    test_uint(ecs_constant_to_entity(world, type, 1),
+    test_uint(ecs_constant_to_entity_id(world, type, 1),
         ecs_lookup_from(world, type, "Blue"));
-    test_uint(ecs_constant_to_entity(world, type, UINT8_MAX),
+    test_uint(ecs_constant_to_entity_id(world, type, UINT8_MAX),
         ecs_lookup_from(world, type, "Green"));
 
-    test_uint(ecs_constant_to_entity(world, type, 2), 0);
-    test_uint(ecs_constant_to_entity(world, type, -1), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, 2), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, -1), 0);
 
     ecs_fini(world);
 }
@@ -1321,15 +1321,15 @@ void EnumTypes_constant_to_entity_w_underlying_u16(void) {
 
     test_assert(type != 0);
 
-    test_uint(ecs_constant_to_entity(world, type, 0),
+    test_uint(ecs_constant_to_entity_id(world, type, 0),
         ecs_lookup_from(world, type, "Red"));
-    test_uint(ecs_constant_to_entity(world, type, 1),
+    test_uint(ecs_constant_to_entity_id(world, type, 1),
         ecs_lookup_from(world, type, "Blue"));
-    test_uint(ecs_constant_to_entity(world, type, UINT16_MAX),
+    test_uint(ecs_constant_to_entity_id(world, type, UINT16_MAX),
         ecs_lookup_from(world, type, "Green"));
 
-    test_uint(ecs_constant_to_entity(world, type, 2), 0);
-    test_uint(ecs_constant_to_entity(world, type, -1), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, 2), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, -1), 0);
 
     ecs_fini(world);
 }
@@ -1346,15 +1346,15 @@ void EnumTypes_constant_to_entity_w_underlying_u32(void) {
 
     test_assert(type != 0);
 
-    test_uint(ecs_constant_to_entity(world, type, 0),
+    test_uint(ecs_constant_to_entity_id(world, type, 0),
         ecs_lookup_from(world, type, "Red"));
-    test_uint(ecs_constant_to_entity(world, type, 1),
+    test_uint(ecs_constant_to_entity_id(world, type, 1),
         ecs_lookup_from(world, type, "Blue"));
-    test_uint(ecs_constant_to_entity(world, type, UINT32_MAX),
+    test_uint(ecs_constant_to_entity_id(world, type, UINT32_MAX),
         ecs_lookup_from(world, type, "Green"));
 
-    test_uint(ecs_constant_to_entity(world, type, 2), 0);
-    test_uint(ecs_constant_to_entity(world, type, -1), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, 2), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, -1), 0);
 
     ecs_fini(world);
 }
@@ -1371,14 +1371,14 @@ void EnumTypes_constant_to_entity_w_underlying_u64(void) {
 
     test_assert(type != 0);
 
-    test_uint(ecs_constant_to_entity(world, type, 0),
+    test_uint(ecs_constant_to_entity_id(world, type, 0),
         ecs_lookup_from(world, type, "Red"));
-    test_uint(ecs_constant_to_entity(world, type, 1),
+    test_uint(ecs_constant_to_entity_id(world, type, 1),
         ecs_lookup_from(world, type, "Blue"));
-    test_uint(ecs_constant_to_entity(world, type, (int64_t)UINT64_MAX),
+    test_uint(ecs_constant_to_entity_id(world, type, (int64_t)UINT64_MAX),
         ecs_lookup_from(world, type, "Green"));
 
-    test_uint(ecs_constant_to_entity(world, type, 2), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, 2), 0);
 
     ecs_fini(world);
 }
@@ -1394,16 +1394,16 @@ void EnumTypes_constant_to_entity_w_bitmask(void) {
 
     test_assert(type != 0);
 
-    test_uint(ecs_constant_to_entity(world, type, 1),
+    test_uint(ecs_constant_to_entity_id(world, type, 1),
         ecs_lookup_from(world, type, "Lettuce"));
-    test_uint(ecs_constant_to_entity(world, type, 2),
+    test_uint(ecs_constant_to_entity_id(world, type, 2),
         ecs_lookup_from(world, type, "Bacon"));
-    test_uint(ecs_constant_to_entity(world, type, 4),
+    test_uint(ecs_constant_to_entity_id(world, type, 4),
         ecs_lookup_from(world, type, "Tomato"));
-    test_uint(ecs_constant_to_entity(world, type, 8),
+    test_uint(ecs_constant_to_entity_id(world, type, 8),
         ecs_lookup_from(world, type, "Cheese"));
 
-    test_uint(ecs_constant_to_entity(world, type, 16), 0);
+    test_uint(ecs_constant_to_entity_id(world, type, 16), 0);
 
     ecs_fini(world);
 }

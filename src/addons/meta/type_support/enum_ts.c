@@ -575,7 +575,7 @@ ecs_entity_t ecs_bitmask_init(
     return t;
 }
 
-ecs_entity_t ecs_constant_to_entity(
+ecs_entity_t ecs_constant_to_entity_id(
     const ecs_world_t *world,
     ecs_entity_t type,
     int64_t value)
