@@ -1509,6 +1509,17 @@ void Singleton_trait_add_singleton_to_other(void);
 void Singleton_trait_add_singleton_pair_to_other(void);
 void Singleton_add_trait_after_in_use(void);
 void Singleton_add_trait_after_pair_in_use(void);
+void Singleton_has(void);
+void Singleton_has_component(void);
+void Singleton_add_pair(void);
+void Singleton_remove_pair(void);
+void Singleton_add_pair_exclusive(void);
+void Singleton_remove_pair_exclusive(void);
+void Singleton_set_get_pair(void);
+void Singleton_get_mut_pair(void);
+void Singleton_ensure_pair(void);
+void Singleton_emplace_pair(void);
+void Singleton_modified_pair(void);
 
 // Testsuite 'Clone'
 void Clone_empty(void);
@@ -9231,6 +9242,50 @@ bake_test_case Singleton_testcases[] = {
     {
         "add_trait_after_pair_in_use",
         Singleton_add_trait_after_pair_in_use
+    },
+    {
+        "has",
+        Singleton_has
+    },
+    {
+        "has_component",
+        Singleton_has_component
+    },
+    {
+        "add_pair",
+        Singleton_add_pair
+    },
+    {
+        "remove_pair",
+        Singleton_remove_pair
+    },
+    {
+        "add_pair_exclusive",
+        Singleton_add_pair_exclusive
+    },
+    {
+        "remove_pair_exclusive",
+        Singleton_remove_pair_exclusive
+    },
+    {
+        "set_get_pair",
+        Singleton_set_get_pair
+    },
+    {
+        "get_mut_pair",
+        Singleton_get_mut_pair
+    },
+    {
+        "ensure_pair",
+        Singleton_ensure_pair
+    },
+    {
+        "emplace_pair",
+        Singleton_emplace_pair
+    },
+    {
+        "modified_pair",
+        Singleton_modified_pair
     }
 };
 
@@ -16712,7 +16767,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        13,
+        24,
         Singleton_testcases
     },
     {

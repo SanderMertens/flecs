@@ -1563,7 +1563,18 @@
                 "trait_add_singleton_to_other",
                 "trait_add_singleton_pair_to_other",
                 "add_trait_after_in_use",
-                "add_trait_after_pair_in_use"
+                "add_trait_after_pair_in_use",
+                "has",
+                "has_component",
+                "add_pair",
+                "remove_pair",
+                "add_pair_exclusive",
+                "remove_pair_exclusive",
+                "set_get_pair",
+                "get_mut_pair",
+                "ensure_pair",
+                "emplace_pair",
+                "modified_pair"
             ]
         }, {
             "id": "Clone",
