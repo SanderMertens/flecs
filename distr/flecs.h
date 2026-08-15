@@ -11666,6 +11666,46 @@ void ecs_table_clear_entities(
 #define ecs_singleton_modified(world, comp)\
     ecs_modified(world, ecs_id(comp), comp)
 
+/** Test if world has a singleton component. */
+#define ecs_singleton_has(world, comp)\
+    ecs_has(world, ecs_id(comp), comp)
+
+/** Add a singleton pair component. */
+#define ecs_singleton_add_pair(world, rel, tgt)\
+    ecs_add_id(world, ecs_id(rel), ecs_pair_t(rel, tgt))
+
+/** Remove a singleton pair component. */
+#define ecs_singleton_remove_pair(world, rel, tgt)\
+    ecs_remove_id(world, ecs_id(rel), ecs_pair_t(rel, tgt))
+
+/** Get a singleton pair component. */
+#define ecs_singleton_get_pair(world, rel, tgt)\
+    ecs_get_pair(world, ecs_id(rel), rel, tgt)
+
+/** Get a mutable pointer to a singleton pair component. */
+#define ecs_singleton_get_mut_pair(world, rel, tgt)\
+    ecs_get_mut_pair(world, ecs_id(rel), rel, tgt)
+
+/** Set a singleton pair component value. */
+#define ecs_singleton_set_pair(world, rel, tgt, ...)\
+    ecs_set_pair(world, ecs_id(rel), rel, tgt, __VA_ARGS__)
+
+/** Ensure a singleton pair component, return mutable pointer. */
+#define ecs_singleton_ensure_pair(world, rel, tgt)\
+    ecs_ensure_pair(world, ecs_id(rel), rel, tgt)
+
+/** Emplace a singleton pair component. */
+#define ecs_singleton_emplace_pair(world, rel, tgt, is_new)\
+    ecs_emplace_pair(world, ecs_id(rel), rel, tgt, is_new)
+
+/** Signal that a singleton pair component has been modified. */
+#define ecs_singleton_modified_pair(world, rel, tgt)\
+    ecs_modified_id(world, ecs_id(rel), ecs_pair_t(rel, tgt))
+
+/** Test if world has a singleton pair component. */
+#define ecs_singleton_has_pair(world, rel, tgt)\
+    ecs_has_id(world, ecs_id(rel), ecs_pair_t(rel, tgt))
+
 /** @} */
 
 /**
