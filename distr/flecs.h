@@ -17928,6 +17928,102 @@ ecs_value_t ecs_mut_var_get(
     const ecs_world_t *world,
     ecs_entity_t var);
 
+/** Return pointer to the value of a mut variable.
+ * This operation returns the value of a mut variable, casted to the specified
+ * type. If the type is equal to that of the mut variable, no cast is
+ * performed. If the variable cannot be casted to the specified type, the
+ * operation will throw an error.
+ *
+ * The returned value is owned by the caller. If the returned value contains
+ * allocated memory, this needs to be freed by the caller.
+ *
+ * This operation is intended to be used by the ecs_mut_var_get_t macro.
+ *
+ * @param world The world.
+ * @param name The name of the mut variable.
+ * @param type The requested type.
+ * @param size The size of the requested type.
+ * @param out Storage for the value of the mut variable.
+ * @return Pointer to the value of the mut variable.
+ */
+FLECS_API
+void* ecs_mut_var_get_w_type(
+    const ecs_world_t *world,
+    const char *name,
+    ecs_entity_t type,
+    ecs_size_t size,
+    void *out);
+
+/** Return pointer to the value of a mut variable.
+ * This operation returns the value of a mut variable, casted to the specified
+ * type. If the type is equal to that of the mut variable, no cast is
+ * performed. If the variable cannot be casted to the specified type, the
+ * operation will throw an error.
+ *
+ * The returned value is owned by the caller. If the returned value contains
+ * allocated memory, this needs to be freed by the caller.
+ *
+ * When the operation fails, a zero initialized value is returned.
+ *
+ * @param world The world.
+ * @param name The name of the mut variable.
+ * @param T The requested type.
+ * @return The value of the mut variable.
+ */
+#define ecs_mut_var_get_t(world, name, T)\
+    (*ECS_CAST(T*, ecs_mut_var_get_w_type(\
+        world, name, ecs_id(T), ECS_SIZEOF(T), &(T){0})))
+
+/** Set the value of a mut variable.
+ * This operation sets the value of a mut variable from a value of the
+ * specified type. If the type is equal to that of the mut variable, no cast is
+ * performed. If the value cannot be casted to the type of the mut variable,
+ * the operation will throw an error.
+ *
+ * The provided value is copied into the storage of the mut variable and does
+ * not need to be kept alive.
+ *
+ * On success, OnSet observers for the mut variable are notified, which causes
+ * scripts that use the variable to be reevaluated.
+ *
+ * This operation is intended to be used by the ecs_mut_var_set_t macro.
+ *
+ * @param world The world.
+ * @param name The name of the mut variable.
+ * @param type The type of the provided value.
+ * @param size The size of the provided type.
+ * @param value Pointer to the value to set.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_mut_var_set_w_type(
+    ecs_world_t *world,
+    const char *name,
+    ecs_entity_t type,
+    ecs_size_t size,
+    const void *value);
+
+/** Set the value of a mut variable.
+ * This operation sets the value of a mut variable from a value of the
+ * specified type. If the type is equal to that of the mut variable, no cast is
+ * performed. If the value cannot be casted to the type of the mut variable,
+ * the operation will throw an error.
+ *
+ * The provided value is copied into the storage of the mut variable and does
+ * not need to be kept alive.
+ *
+ * On success, OnSet observers for the mut variable are notified, which causes
+ * scripts that use the variable to be reevaluated.
+ *
+ * @param world The world.
+ * @param name The name of the mut variable.
+ * @param T The type of the provided value.
+ * @return Zero if success, non-zero if failed.
+ */
+#define ecs_mut_var_set_t(world, name, T, ...)\
+    ecs_mut_var_set_w_type(\
+        world, name, ecs_id(T), ECS_SIZEOF(T), &(T)__VA_ARGS__)
+
 /** Mark mut var as modified.
  * This will notify OnSet observers.
  *
