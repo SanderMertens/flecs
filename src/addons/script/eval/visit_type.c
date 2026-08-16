@@ -225,9 +225,10 @@ static ecs_script_type_entity_t* flecs_script_type_entity_from_node(
 
 static int flecs_script_type_lookup(
     ecs_script_type_visitor_t *t,
-    ecs_entity_t from,
+    ecs_entity_t first,
     const char *name,
     flecs_script_lookup_kind_t lookup_kind,
+    ecs_entity_t *from_out,
     flecs_script_symbol_t *symbol)
 {
     ecs_expr_eval_desc_t desc = {
@@ -236,8 +237,8 @@ static int flecs_script_type_lookup(
         .runtime = t->v->r,
         .script_visitor = t->v
     };
-    return flecs_script_symbol_lookup(
-        &t->v->base.script->pub, &desc, from, name, lookup_kind, symbol);
+    return flecs_script_id_elem_lookup(&t->v->base.script->pub, &desc,
+        first, name, lookup_kind, from_out, symbol);
 }
 
 static int flecs_script_type_resolve_type(
@@ -247,7 +248,7 @@ static int flecs_script_type_resolve_type(
 {
     flecs_script_symbol_t symbol;
     if (flecs_script_type_lookup(
-        t, 0, name, FlecsScriptLookupEntity, &symbol) || !symbol.entity)
+        t, 0, name, FlecsScriptLookupEntity, NULL, &symbol) || !symbol.entity)
     {
         return -1;
     }
@@ -324,7 +325,7 @@ static int flecs_script_type_id_elem(
     void *node,
     const char *name,
     ecs_expr_node_t **name_expr,
-    ecs_entity_t from,
+    ecs_entity_t first,
     ecs_entity_t *eval,
     int32_t *slot,
     int32_t *sp)
@@ -338,9 +339,10 @@ static int flecs_script_type_id_elem(
         return 0;
     }
 
+    ecs_entity_t from;
     flecs_script_symbol_t symbol;
     if (flecs_script_type_lookup(
-        t, from, name, FlecsScriptLookupAll, &symbol))
+        t, first, name, FlecsScriptLookupAll, &from, &symbol))
     {
         if (from) {
             char *parent_str = ecs_id_str(t->v->world, from);
@@ -408,9 +410,8 @@ static int flecs_script_type_id(
         return -1;
     }
     if (id->second) {
-        ecs_entity_t from = first ? flecs_get_oneof(t->v->world, first) : 0;
         if (flecs_script_type_id_elem(t, id, node, id->second,
-            &id->second_expr, from, &id->second_eval, &id->second_symbol,
+            &id->second_expr, first, &id->second_eval, &id->second_symbol,
             &id->second_sp))
         {
             return -1;
@@ -775,7 +776,7 @@ static int flecs_script_type_var_component(
 {
     flecs_script_symbol_t symbol;
     if (flecs_script_type_lookup(
-        t, 0, node->name, FlecsScriptLookupVariable, &symbol))
+        t, 0, node->name, FlecsScriptLookupVariable, NULL, &symbol))
     {
         flecs_script_eval_error(t->v, node,
             "unresolved variable '%s'", node->name);
@@ -1086,7 +1087,7 @@ static int flecs_script_type_pair_scope(
         }
         flecs_script_symbol_t symbol;
         if (flecs_script_type_lookup(
-            t, 0, name, FlecsScriptLookupEntity, &symbol))
+            t, 0, name, FlecsScriptLookupEntity, NULL, &symbol))
         {
             flecs_script_type_declare(
                 t, name, NULL, slots[i], true);
@@ -1156,7 +1157,7 @@ static int flecs_script_type_try(
         if (catch_->error) {
             flecs_script_symbol_t symbol;
             if (flecs_script_type_lookup(
-                t, 0, catch_->error, FlecsScriptLookupEntity, &symbol))
+                t, 0, catch_->error, FlecsScriptLookupEntity, NULL, &symbol))
             {
                 flecs_script_eval_error(t->v, node,
                     "unresolved identifier '%s'", catch_->error);
@@ -1347,7 +1348,7 @@ static int flecs_script_type_entity(
         } else {
             flecs_script_symbol_t symbol;
             if (flecs_script_type_lookup(
-                t, 0, node->kind, FlecsScriptLookupAll, &symbol))
+                t, 0, node->kind, FlecsScriptLookupAll, NULL, &symbol))
             {
                 flecs_script_eval_error(t->v, node,
                     "unresolved identifier '%s'", node->kind);
@@ -1499,7 +1500,7 @@ static int flecs_script_type_using(
 
     flecs_script_symbol_t symbol;
     int result = flecs_script_type_lookup(
-        t, 0, name, FlecsScriptLookupEntity, &symbol);
+        t, 0, name, FlecsScriptLookupEntity, NULL, &symbol);
     if (path) {
         flecs_strfree(a, path);
     }

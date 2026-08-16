@@ -231,6 +231,12 @@ void flecs_expr_visit_free(
             script, (ecs_expr_element_t*)node);
         flecs_free_t(a, ecs_expr_element_t, node);
         break;
+    case EcsExprHas:
+        flecs_expr_visit_free(script, ((ecs_expr_has_t*)node)->left);
+        flecs_expr_visit_free(script, ((ecs_expr_has_t*)node)->first);
+        flecs_expr_visit_free(script, ((ecs_expr_has_t*)node)->second);
+        flecs_free_t(a, ecs_expr_has_t, node);
+        break;
     case EcsExprMatch:
         flecs_expr_match_visit_free(
             script, (ecs_expr_match_t*)node);

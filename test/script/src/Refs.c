@@ -7141,3 +7141,484 @@ void Refs_global_mut_var_declared_in_same_script_modified(void) {
 
     ecs_fini(world);
 }
+
+void Refs_has_component_ref(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Flag: {e?[Position]}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_set(world, e, Position, {10, 20});
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, true);
+    }
+
+    ecs_remove(world, e, Position);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_has_tag_ref(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t on_fire = ecs_entity(world, { .name = "OnFire" });
+
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Flag: {e?[OnFire]}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_add_id(world, e, on_fire);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, true);
+    }
+
+    ecs_remove_id(world, e, on_fire);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_has_pair_ref(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t likes = ecs_entity(world, { .name = "Likes" });
+    ecs_entity_t pizza = ecs_entity(world, { .name = "Pizza" });
+
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Flag: {e?[(Likes, Pizza)]}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_add_pair(world, e, likes, pizza);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, true);
+    }
+
+    ecs_remove_pair(world, e, likes, pizza);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_has_singleton_ref(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Flag: {$?[Position]}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_singleton_set(world, Position, {10, 20});
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, true);
+    }
+
+    ecs_remove(world, ecs_id(Position), Position);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_has_singleton_pair_ref(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t state = ecs_entity(world, { .name = "State" });
+    ecs_entity_t playing = ecs_entity(world, { .name = "Playing" });
+
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Flag: {$?[(State, Playing)]}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_add_pair(world, state, state, playing);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, true);
+    }
+
+    ecs_remove_pair(world, state, state, playing);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_has_ref_in_const_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const b = e?[Position]"
+            LINE "foo {"
+            LINE "  Flag: {$b}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_set(world, e, Position, {10, 20});
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, true);
+    }
+
+    ecs_remove(world, e, Position);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_has_ref_in_template_component_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target: entity = flecs"
+            LINE "  Flag: {target?[Position]}"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+            LINE "inst2 { Bar: {target: e2} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+
+    {
+        const bool *b1 = ecs_get_id(world, inst1, flag);
+        const bool *b2 = ecs_get_id(world, inst2, flag);
+        test_assert(b1 != NULL); test_assert(b2 != NULL);
+        test_bool(*b1, false); test_bool(*b2, false);
+    }
+
+    ecs_set(world, e1, Position, {10, 20});
+
+    {
+        const bool *b1 = ecs_get_id(world, inst1, flag);
+        const bool *b2 = ecs_get_id(world, inst2, flag);
+        test_assert(b1 != NULL); test_assert(b2 != NULL);
+        test_bool(*b1, true); test_bool(*b2, false);
+    }
+
+    ecs_set(world, e2, Position, {10, 20});
+
+    {
+        const bool *b1 = ecs_get_id(world, inst1, flag);
+        const bool *b2 = ecs_get_id(world, inst2, flag);
+        test_assert(b1 != NULL); test_assert(b2 != NULL);
+        test_bool(*b1, true); test_bool(*b2, true);
+    }
+
+    ecs_remove(world, e1, Position);
+
+    {
+        const bool *b1 = ecs_get_id(world, inst1, flag);
+        const bool *b2 = ecs_get_id(world, inst2, flag);
+        test_assert(b1 != NULL); test_assert(b2 != NULL);
+        test_bool(*b1, false); test_bool(*b2, true);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_has_ref_and_value_ref_same_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Flag: {e?[Position]}"
+            LINE "  Mass: {e[Position].x}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, true);
+        const float *m = ecs_get_id(world, foo, mass);
+        test_assert(m != NULL);
+        test_int(*m, 10);
+    }
+
+    ecs_set(world, e, Position, {30, 20});
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, true);
+        const float *m = ecs_get_id(world, foo, mass);
+        test_assert(m != NULL);
+        test_int(*m, 30);
+    }
+
+    ecs_fini(world);
+}

@@ -3872,3 +3872,132 @@ void Error_runtime_any_as_pair_scope_target(void) {
 
     ecs_fini(world);
 }
+
+void Error_has_question_space_bracket(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL,
+        "const b = e ? [Position]", &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_has_unresolved_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "e" });
+
+    ecs_log_set_level(-4);
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "e?[DoesNotExist]", &v, NULL) == NULL);
+
+    ecs_fini(world);
+}
+
+void Error_has_unresolved_pair_first(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "e" });
+    ecs_entity(world, { .name = "Pizza" });
+
+    ecs_log_set_level(-4);
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(
+        world, "e?[(DoesNotExist, Pizza)]", &v, NULL) == NULL);
+
+    ecs_fini(world);
+}
+
+void Error_has_unresolved_pair_second(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "e" });
+    ecs_entity(world, { .name = "Likes" });
+
+    ecs_log_set_level(-4);
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(
+        world, "e?[(Likes, DoesNotExist)]", &v, NULL) == NULL);
+
+    ecs_fini(world);
+}
+
+void Error_has_on_non_entity_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "10?[Position]", &v, NULL) == NULL);
+
+    ecs_fini(world);
+}
+
+void Error_has_unterminated(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity(world, { .name = "e" });
+
+    ecs_log_set_level(-4);
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "e?[Position", &v, NULL) == NULL);
+
+    ecs_fini(world);
+}
+
+void Error_has_pair_missing_paren_close(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "e" });
+    ecs_entity(world, { .name = "Likes" });
+    ecs_entity(world, { .name = "Pizza" });
+
+    ecs_log_set_level(-4);
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "e?[(Likes, Pizza]", &v, NULL) == NULL);
+
+    ecs_fini(world);
+}
+
+void Error_has_pair_missing_second(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "e" });
+    ecs_entity(world, { .name = "Likes" });
+
+    ecs_log_set_level(-4);
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "e?[(Likes)]", &v, NULL) == NULL);
+
+    ecs_fini(world);
+}

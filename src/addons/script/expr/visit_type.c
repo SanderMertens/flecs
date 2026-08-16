@@ -283,6 +283,7 @@ static bool flecs_expr_oper_valid_for_type(
     case EcsTokParenClose:
     case EcsTokBracketOpen:
     case EcsTokBracketClose:
+    case EcsTokHasBracketOpen:
     case EcsTokMember:
     case EcsTokComma:
     case EcsTokSemiColon:
@@ -437,6 +438,7 @@ static int flecs_expr_type_for_operator(
     case EcsTokParenClose:
     case EcsTokBracketOpen:
     case EcsTokBracketClose:
+    case EcsTokHasBracketOpen:
     case EcsTokMember:
     case EcsTokComma:
     case EcsTokSemiColon:
@@ -2593,6 +2595,86 @@ error:
     return -1;
 }
 
+static int flecs_expr_has_id_elem_name(
+    ecs_script_t *script,
+    ecs_expr_has_t *node,
+    ecs_expr_node_t *elem,
+    const char **name)
+{
+    if (elem->kind != EcsExprIdentifier) {
+        flecs_expr_visit_error(script, node,
+            "expected component identifier in ?[] expression");
+        return -1;
+    }
+
+    *name = ((ecs_expr_identifier_t*)elem)->value;
+    return 0;
+}
+
+static int flecs_expr_has_visit_type(
+    ecs_script_t *script,
+    ecs_expr_has_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_expr_eval_desc_t *desc)
+{
+    const char *first_name = NULL, *second_name = NULL;
+    if (flecs_expr_has_id_elem_name(script, node, node->first, &first_name)) {
+        goto error;
+    }
+    if (node->second && flecs_expr_has_id_elem_name(
+        script, node, node->second, &second_name))
+    {
+        goto error;
+    }
+
+    ecs_entity_t first = 0;
+    const char *unresolved = NULL;
+    if (flecs_script_id_lookup(script, desc, first_name, second_name,
+        FlecsScriptLookupEntity, &first, &node->id, &unresolved))
+    {
+        flecs_expr_visit_error(script, node,
+            "unresolved component identifier '%s'", unresolved);
+        goto error;
+    }
+
+    if (node->left->kind == EcsExprVariable &&
+        !((ecs_expr_variable_t*)node->left)->name[0])
+    {
+        /* Singleton expression. Replace the $ with the entity that stores the
+         * singleton component, which is the first element of the id. */
+        flecs_expr_visit_free(script, node->left);
+        ecs_expr_value_node_t *left = flecs_expr_value_from(
+            script, (ecs_expr_node_t*)node, ecs_id(ecs_entity_t));
+        left->storage.entity = first;
+        left->ptr = &left->storage.entity;
+        node->left = (ecs_expr_node_t*)left;
+    } else {
+        ecs_meta_cursor_t left_cur = {0};
+        if (flecs_expr_visit_type_priv(script, &node->left, &left_cur, desc)) {
+            goto error;
+        }
+
+        bool is_opaque = false;
+        if (!flecs_expr_is_entity_type(
+            script->world, node->left->type, &is_opaque) || is_opaque)
+        {
+            char *type_str = ecs_get_path(script->world, node->left->type);
+            flecs_expr_visit_error(script, node,
+                "invalid usage of ?[] on non-entity type '%s'", type_str);
+            ecs_os_free(type_str);
+            goto error;
+        }
+    }
+
+    node->node.type = ecs_id(ecs_bool_t);
+
+    *cur = ecs_meta_cursor(script->world, node->node.type, NULL);
+
+    return 0;
+error:
+    return -1;
+}
+
 static bool flecs_expr_identifier_is_any(
     ecs_expr_node_t *node)
 {
@@ -2924,7 +3006,14 @@ static int flecs_expr_visit_type_ex(
         break;
     case EcsExprElement:
         if (flecs_expr_element_visit_type(
-            script, (ecs_expr_element_t*)node, cur, desc)) 
+            script, (ecs_expr_element_t*)node, cur, desc))
+        {
+            goto error;
+        }
+        break;
+    case EcsExprHas:
+        if (flecs_expr_has_visit_type(
+            script, (ecs_expr_has_t*)node, cur, desc))
         {
             goto error;
         }

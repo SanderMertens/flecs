@@ -11,6 +11,7 @@ typedef struct ecs_script_ref_t {
     const char *name;
     ecs_id_t component;
     ecs_entity_t observer;
+    bool is_has;
 } ecs_script_ref_t;
 
 typedef struct ecs_script_ref_ctx_t {
@@ -30,6 +31,7 @@ ecs_entity_t flecs_script_create_ref_observer(
     ecs_entity_t instance,
     ecs_entity_t entity,
     ecs_id_t component,
+    bool is_has,
     ecs_iter_action_t callback);
 
 void flecs_script_update_ref_observers(

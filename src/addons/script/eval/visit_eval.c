@@ -270,6 +270,69 @@ int flecs_script_symbol_lookup(
     return 0;
 }
 
+int flecs_script_id_elem_lookup(
+    const ecs_script_t *script,
+    const ecs_expr_eval_desc_t *desc,
+    ecs_entity_t first,
+    const char *name,
+    flecs_script_lookup_kind_t lookup_kind,
+    ecs_entity_t *from_out,
+    flecs_script_symbol_t *symbol)
+{
+    ecs_entity_t from = 0;
+    if (first) {
+        from = flecs_get_oneof(script->world, first);
+    }
+    if (from_out) {
+        from_out[0] = from;
+    }
+    return flecs_script_symbol_lookup(
+        script, desc, from, name, lookup_kind, symbol);
+}
+
+int flecs_script_id_lookup(
+    const ecs_script_t *script,
+    const ecs_expr_eval_desc_t *desc,
+    const char *first_name,
+    const char *second_name,
+    flecs_script_lookup_kind_t lookup_kind,
+    ecs_entity_t *first_out,
+    ecs_id_t *id_out,
+    const char **unresolved)
+{
+    flecs_script_symbol_t symbol;
+    if (flecs_script_id_elem_lookup(script, desc, 0, first_name,
+        lookup_kind, NULL, &symbol) || !symbol.entity)
+    {
+        if (unresolved) {
+            unresolved[0] = first_name;
+        }
+        return -1;
+    }
+
+    ecs_entity_t first = symbol.entity;
+    if (first_out) {
+        first_out[0] = first;
+    }
+
+    if (!second_name) {
+        id_out[0] = first;
+        return 0;
+    }
+
+    if (flecs_script_id_elem_lookup(script, desc, first, second_name,
+        lookup_kind, NULL, &symbol) || !symbol.entity)
+    {
+        if (unresolved) {
+            unresolved[0] = second_name;
+        }
+        return -1;
+    }
+
+    id_out[0] = ecs_pair(first, symbol.entity);
+    return 0;
+}
+
 static ecs_entity_t flecs_script_eval_name_expr(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,

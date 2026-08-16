@@ -7,6 +7,7 @@
 #define FLECS_SCRIPT_TEMPLATE_H
 
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
+extern ECS_COMPONENT_DECLARE(EcsScriptTemplateInstanceUpdateEvent);
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 
 typedef struct ecs_script_template_member_t {
@@ -78,6 +79,11 @@ typedef struct EcsScriptTemplateSetEvent {
     char data_storage[ECS_TEMPLATE_SMALL_SIZE];
     ecs_entity_t entity_storage;
 } EcsScriptTemplateSetEvent;
+
+typedef struct EcsScriptTemplateInstanceUpdateEvent {
+    ecs_entity_t template_entity;
+    ecs_entity_t instance;
+} EcsScriptTemplateInstanceUpdateEvent;
 
 int flecs_script_eval_template(
     ecs_script_eval_visitor_t *v,

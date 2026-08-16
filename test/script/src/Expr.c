@@ -11118,3 +11118,402 @@ void Expr_identifier_as_mut_var(void) {
 
     ecs_fini(world);
 }
+
+void Expr_has_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "e?[Position]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, false);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_set(world, e, Position, {10, 20});
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "e?[Position]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_has_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t on_fire = ecs_entity(world, { .name = "OnFire" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "e?[OnFire]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, false);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_add_id(world, e, on_fire);
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "e?[OnFire]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_has_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t likes = ecs_entity(world, { .name = "Likes" });
+    ecs_entity_t pizza = ecs_entity(world, { .name = "Pizza" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(
+            world, "e?[(Likes, Pizza)]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, false);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_add_pair(world, e, likes, pizza);
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(
+            world, "e?[(Likes, Pizza)]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_has_singleton(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "$?[Position]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, false);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_singleton_set(world, Position, {10, 20});
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "$?[Position]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_has_singleton_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t state = ecs_entity(world, { .name = "State" });
+    ecs_entity_t playing = ecs_entity(world, { .name = "Playing" });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(
+            world, "$?[(State, Playing)]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, false);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_add_pair(world, state, state, playing);
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(
+            world, "$?[(State, Playing)]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_has_not(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "!e?[Position]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_set(world, e, Position, {10, 20});
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "!e?[Position]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, false);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_has_w_space_before(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "e ?[Position]", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_has_question_space_bracket_not_has(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_expr_run(world, "e ? [Position]", &v, &desc);
+    test_assert(ptr != NULL);
+    test_assert(strchr(ptr, '?') != NULL);
+    test_assert(v.type == ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, e);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_has_pair_w_enum_constant_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t state = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "State" }),
+        .constants = {
+            {"Playing"}, {"Paused"}
+        }
+    });
+
+    test_assert(state != 0);
+    ecs_entity_t playing = ecs_lookup(world, "State.Playing");
+    test_assert(playing != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(
+            world, "e?[(State, Playing)]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, false);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_add_pair(world, e, state, playing);
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(
+            world, "e?[(State, Playing)]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_has_w_entity_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_entity_t);
+    *(ecs_entity_t*)var->value.ptr = e;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding };
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "$foo?[Position]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, false);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_set(world, e, Position, {10, 20});
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "$foo?[Position]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_has_in_binary_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t on_fire = ecs_entity(world, { .name = "OnFire" });
+    ecs_entity_t frozen = ecs_entity(world, { .name = "Frozen" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    ecs_add_id(world, e, on_fire);
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(
+            world, "e?[OnFire] && e?[Frozen]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, false);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(
+            world, "e?[OnFire] || e?[Frozen]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_add_id(world, e, frozen);
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(
+            world, "e?[OnFire] && e?[Frozen]", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}

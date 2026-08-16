@@ -324,6 +324,7 @@ int flecs_value_binary(
     case EcsTokParenClose:
     case EcsTokBracketOpen:
     case EcsTokBracketClose:
+    case EcsTokHasBracketOpen:
     case EcsTokMember:
     case EcsTokComma:
     case EcsTokSemiColon:

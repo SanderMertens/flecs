@@ -754,6 +754,13 @@ int flecs_expr_visit_fold(
             goto error;
         }
         break;
+    case EcsExprHas:
+        if (flecs_expr_visit_fold(
+            script, &((ecs_expr_has_t*)node)->left, desc))
+        {
+            goto error;
+        }
+        break;
     case EcsExprMatch:
         if (flecs_expr_match_visit_fold(script, node_ptr, desc)) {
             goto error;

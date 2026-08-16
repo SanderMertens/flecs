@@ -129,6 +129,7 @@ const char* flecs_token_kind_str(
     case EcsTokShiftRight:
     case EcsTokAddAssign:
     case EcsTokMulAssign:
+    case EcsTokHasBracketOpen:
         return "";
     case EcsTokKeywordWith:
     case EcsTokKeywordUsing:
@@ -213,6 +214,7 @@ const char* flecs_token_str(
     case EcsTokShiftRight: return ">>";
     case EcsTokAddAssign: return "+=";
     case EcsTokMulAssign: return "*=";
+    case EcsTokHasBracketOpen: return "?[";
     case EcsTokKeywordWith: return "with";
     case EcsTokKeywordUsing: return "using";
     case EcsTokKeywordProp: return "prop";
@@ -875,6 +877,7 @@ const char* flecs_token(
     Operator          ("*",        EcsTokMul)
     Operator          ("/",        EcsTokDiv)
     Operator          ("%%",       EcsTokMod)
+    OperatorMultiChar ("?[",       EcsTokHasBracketOpen)
     Operator          ("?",        EcsTokOptional)
     
     OperatorMultiChar ("..",       EcsTokRange)

@@ -1342,6 +1342,45 @@ error:
     return -1;
 }
 
+static int flecs_expr_has_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_has_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_assert(out->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_eval_visitor_t *v = ctx->desc ? ctx->desc->script_visitor : NULL;
+    if (v && v->template) {
+        *(bool*)out->value.ptr = false;
+        out->owned = true;
+        return 0;
+    }
+
+    ecs_expr_value_t *left = flecs_expr_stack_result(
+        ctx->stack, node->left);
+    if (flecs_expr_visit_eval_priv(ctx, node->left, left)) {
+        goto error;
+    }
+
+    ecs_assert(left->value.type == ecs_id(ecs_entity_t) ||
+        left->value.type == ecs_id(ecs_id_t), ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t entity = *(ecs_entity_t*)left->value.ptr;
+
+    if (entity && ecs_is_alive(ctx->world, entity)) {
+        *(bool*)out->value.ptr = ecs_has_id(ctx->world, entity, node->id);
+    } else {
+        *(bool*)out->value.ptr = false;
+    }
+
+    out->owned = true;
+
+    return 0;
+error:
+    return -1;
+}
+
 static int flecs_expr_visit_eval_priv(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_node_t *node,
@@ -1478,7 +1517,14 @@ static int flecs_expr_visit_eval_priv(
         break;
     case EcsExprComponent:
         if (flecs_expr_component_visit_eval(
-            ctx, (ecs_expr_element_t*)node, out)) 
+            ctx, (ecs_expr_element_t*)node, out))
+        {
+            goto error;
+        }
+        break;
+    case EcsExprHas:
+        if (flecs_expr_has_visit_eval(
+            ctx, (ecs_expr_has_t*)node, out))
         {
             goto error;
         }
