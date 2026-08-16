@@ -16,6 +16,7 @@ static int flecs_expr_precedence[] = {
     [EcsTokParenOpen] = 1,
     [EcsTokMember] = 1,
     [EcsTokBracketOpen] = 1,
+    [EcsTokHasBracketOpen] = 1,
     [EcsTokNot] = 2,
     [EcsTokMul] = 3,
     [EcsTokDiv] = 3,
@@ -427,8 +428,9 @@ static const char* flecs_script_parse_rhs(
             case EcsTokAnd:
             case EcsTokOr:
             case EcsTokShiftLeft:
-            case EcsTokShiftRight: 
+            case EcsTokShiftRight:
             case EcsTokBracketOpen:
+            case EcsTokHasBracketOpen:
             case EcsTokMember:
             {
                 ecs_token_kind_t oper = lookahead_token.kind;
@@ -452,6 +454,51 @@ static const char* flecs_script_parse_rhs(
                         parser, pos, tokenizer, 0, &result->index);
                     if (!pos) {
                         goto error;
+                    }
+
+                    Parse_1(']', {
+                        break;
+                    });
+
+                    break;
+                }
+
+                case EcsTokHasBracketOpen: {
+                    ecs_expr_has_t *result = flecs_expr_has(parser);
+                    result->left = *out;
+
+                    *out = (ecs_expr_node_t*)result;
+
+                    bool is_pair = false;
+
+                    {
+                        LookAhead_1('(', {
+                            pos = lookahead;
+                            is_pair = true;
+                            break;
+                        })
+                    }
+
+                    Parse_1(EcsTokIdentifier, {
+                        result->first = (ecs_expr_node_t*)
+                            flecs_expr_identifier(parser, t->value);
+                        break;
+                    });
+
+                    if (is_pair) {
+                        Parse_1(',', {
+                            break;
+                        });
+
+                        Parse_1(EcsTokIdentifier, {
+                            result->second = (ecs_expr_node_t*)
+                                flecs_expr_identifier(parser, t->value);
+                            break;
+                        });
+
+                        Parse_1(')', {
+                            break;
+                        });
                     }
 
                     Parse_1(']', {

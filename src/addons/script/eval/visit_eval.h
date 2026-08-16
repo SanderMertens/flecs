@@ -259,6 +259,25 @@ int flecs_script_symbol_lookup(
     flecs_script_lookup_kind_t lookup_kind,
     flecs_script_symbol_t *symbol);
 
+int flecs_script_id_elem_lookup(
+    const ecs_script_t *script,
+    const ecs_expr_eval_desc_t *desc,
+    ecs_entity_t first,
+    const char *name,
+    flecs_script_lookup_kind_t lookup_kind,
+    ecs_entity_t *from_out,
+    flecs_script_symbol_t *symbol);
+
+int flecs_script_id_lookup(
+    const ecs_script_t *script,
+    const ecs_expr_eval_desc_t *desc,
+    const char *first_name,
+    const char *second_name,
+    flecs_script_lookup_kind_t lookup_kind,
+    ecs_entity_t *first_out,
+    ecs_id_t *id_out,
+    const char **unresolved);
+
 ecs_entity_t flecs_script_symbol_entity(
     const ecs_script_eval_visitor_t *v,
     int32_t slot);

@@ -610,7 +610,9 @@
                 "entity_scope_after_export_const_same_name",
                 "existing_child_of_reopened_parent",
                 "pair_scope_target_shadowed_by_root_entity",
-                "pair_scope_predeclared_entity_export_const"
+                "pair_scope_predeclared_entity_export_const",
+                "has_expr_pair_w_enum_constant",
+                "has_expr_in_if"
             ]
         }, {
             "id": "Collection",
@@ -1243,7 +1245,15 @@
                 "any_from_interpolated_pair_component",
                 "runtime_any_as_with_tag_from_template_prop",
                 "runtime_any_as_with_component_from_template_prop",
-                "runtime_any_as_pair_scope_target"
+                "runtime_any_as_pair_scope_target",
+                "has_question_space_bracket",
+                "has_unresolved_component",
+                "has_unresolved_pair_first",
+                "has_unresolved_pair_second",
+                "has_on_non_entity_type",
+                "has_unterminated",
+                "has_pair_missing_paren_close",
+                "has_pair_missing_second"
             ]
         }, {
             "id": "Format",
@@ -1753,7 +1763,18 @@
                 "new_name_expr_entity",
                 "new_name_expr_entity_w_component",
                 "new_name_expr_entity_w_kind",
-                "new_entity_w_unterminated_scope"
+                "new_entity_w_unterminated_scope",
+                "has_component",
+                "has_tag",
+                "has_pair",
+                "has_singleton",
+                "has_singleton_pair",
+                "has_not",
+                "has_w_space_before",
+                "has_question_space_bracket_not_has",
+                "has_pair_w_enum_constant_target",
+                "has_w_entity_var",
+                "has_in_binary_expr"
             ]
         }, {
             "id": "ExprAst",
@@ -2362,7 +2383,15 @@
                 "global_mut_var_modified_twice",
                 "global_const_var_and_mut_var_in_same_expr",
                 "global_mut_var_declared_in_same_script_modified",
-                "reeval_during_script_preserves_using"
+                "reeval_during_script_preserves_using",
+                "has_component_ref",
+                "has_tag_ref",
+                "has_pair_ref",
+                "has_singleton_ref",
+                "has_singleton_pair_ref",
+                "has_ref_in_const_var",
+                "has_ref_in_template_component_initializer",
+                "has_ref_and_value_ref_same_component"
             ]
         }, {
             "id": "ConstVar",

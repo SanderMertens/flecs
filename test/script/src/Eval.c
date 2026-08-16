@@ -18646,3 +18646,68 @@ void Eval_pair_scope_predeclared_entity_export_const(void) {
 
     ecs_fini(world);
 }
+
+void Eval_has_expr_pair_w_enum_constant(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t state = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "State" }),
+        .constants = {
+            {"Playing"}, {"Paused"}
+        }
+    });
+
+    test_assert(state != 0);
+    ecs_entity_t playing = ecs_lookup(world, "State.Playing");
+    test_assert(playing != 0);
+
+    ecs_add_pair(world, state, state, playing);
+
+    const char *expr =
+    HEAD "const playing = $?[(State, Playing)]"
+    LINE "if playing {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_has_expr_in_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    const char *expr =
+    HEAD "if e?[Position] {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_delete(world, ecs_lookup(world, "b"));
+    ecs_set(world, e, Position, {10, 20});
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}

@@ -268,6 +268,14 @@ ecs_expr_element_t* flecs_expr_element(
     return result;
 }
 
+ecs_expr_has_t* flecs_expr_has(
+    ecs_parser_t *parser)
+{
+    ecs_expr_has_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_has_t, EcsExprHas);
+    return result;
+}
+
 ecs_expr_match_t* flecs_expr_match(
     ecs_parser_t *parser)
 {

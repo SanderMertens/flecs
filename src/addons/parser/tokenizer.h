@@ -70,6 +70,7 @@ typedef enum ecs_token_kind_t {
     EcsTokKeywordScript = 143,
     EcsTokKeywordTry = 144,
     EcsTokKeywordCatch = 145,
+    EcsTokHasBracketOpen = 146,
     EcsTokAddAssign = 136,
     EcsTokMulAssign = 137,
 } ecs_token_kind_t;

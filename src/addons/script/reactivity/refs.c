@@ -88,6 +88,7 @@ ecs_entity_t flecs_script_create_ref_observer(
     ecs_entity_t instance,
     ecs_entity_t entity,
     ecs_id_t component,
+    bool is_has,
     ecs_iter_action_t callback)
 {
     ecs_entity_t prev_scope = ecs_set_scope(world, script);
@@ -97,6 +98,11 @@ ecs_entity_t flecs_script_create_ref_observer(
         .events = { EcsOnSet },
         .callback = callback
     };
+
+    if (is_has) {
+        desc.events[0] = EcsOnAdd;
+        desc.events[1] = EcsOnRemove;
+    }
 
     ecs_script_ref_ctx_t *ctx = ecs_os_malloc_t(ecs_script_ref_ctx_t);
     ctx->script = script;
@@ -131,12 +137,14 @@ void flecs_script_update_ref_observers(
     for (i = 0; i < new_count; i ++) {
         ecs_entity_t entity = new_refs[i].entity;
         ecs_id_t component = new_refs[i].component;
+        bool is_has = new_refs[i].is_has;
         ecs_entity_t observer = 0;
 
         for (j = 0; j < old_count; j ++) {
             if (old_refs[j].observer &&
                 old_refs[j].entity == entity &&
-                old_refs[j].component == component)
+                old_refs[j].component == component &&
+                old_refs[j].is_has == is_has)
             {
                 observer = old_refs[j].observer;
                 old_refs[j].observer = 0;
@@ -146,7 +154,7 @@ void flecs_script_update_ref_observers(
 
         if (!observer) {
             observer = flecs_script_create_ref_observer(
-                world, script, instance, entity, component, callback);
+                world, script, instance, entity, component, is_has, callback);
         }
 
         ecs_script_ref_t *ref = ecs_vec_append_t(
@@ -155,6 +163,7 @@ void flecs_script_update_ref_observers(
         ref->name = NULL;
         ref->component = component;
         ref->observer = observer;
+        ref->is_has = is_has;
     }
 
     for (j = 0; j < old_count; j ++) {

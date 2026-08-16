@@ -247,6 +247,36 @@ static int flecs_expr_element_to_str(
     return 0;
 }
 
+static int flecs_expr_has_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_has_t *node)
+{
+    if (flecs_expr_node_to_str(v, node->left)) {
+        return -1;
+    }
+
+    ecs_strbuf_appendlit(v->buf, "?[");
+
+    if (node->second) {
+        ecs_strbuf_appendlit(v->buf, "(");
+        if (flecs_expr_node_to_str(v, node->first)) {
+            return -1;
+        }
+        ecs_strbuf_appendlit(v->buf, ", ");
+        if (flecs_expr_node_to_str(v, node->second)) {
+            return -1;
+        }
+        ecs_strbuf_appendlit(v->buf, ")");
+    } else {
+        if (flecs_expr_node_to_str(v, node->first)) {
+            return -1;
+        }
+    }
+
+    ecs_strbuf_appendlit(v->buf, "]");
+    return 0;
+}
+
 static int flecs_expr_range_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_range_t *node)
@@ -461,8 +491,15 @@ static int flecs_expr_node_to_str(
         break;
     case EcsExprElement:
     case EcsExprComponent:
-        if (flecs_expr_element_to_str(v, 
-            (const ecs_expr_element_t*)node)) 
+        if (flecs_expr_element_to_str(v,
+            (const ecs_expr_element_t*)node))
+        {
+            goto error;
+        }
+        break;
+    case EcsExprHas:
+        if (flecs_expr_has_to_str(v,
+            (const ecs_expr_has_t*)node))
         {
             goto error;
         }

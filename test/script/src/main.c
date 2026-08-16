@@ -607,6 +607,8 @@ void Eval_entity_scope_after_export_const_same_name(void);
 void Eval_existing_child_of_reopened_parent(void);
 void Eval_pair_scope_target_shadowed_by_root_entity(void);
 void Eval_pair_scope_predeclared_entity_export_const(void);
+void Eval_has_expr_pair_w_enum_constant(void);
+void Eval_has_expr_in_if(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -1226,6 +1228,14 @@ void Error_any_from_interpolated_pair_component(void);
 void Error_runtime_any_as_with_tag_from_template_prop(void);
 void Error_runtime_any_as_with_component_from_template_prop(void);
 void Error_runtime_any_as_pair_scope_target(void);
+void Error_has_question_space_bracket(void);
+void Error_has_unresolved_component(void);
+void Error_has_unresolved_pair_first(void);
+void Error_has_unresolved_pair_second(void);
+void Error_has_on_non_entity_type(void);
+void Error_has_unterminated(void);
+void Error_has_pair_missing_paren_close(void);
+void Error_has_pair_missing_second(void);
 
 // Testsuite 'Format'
 void Format_precision_f32_literal(void);
@@ -1726,6 +1736,17 @@ void Expr_new_name_expr_entity(void);
 void Expr_new_name_expr_entity_w_component(void);
 void Expr_new_name_expr_entity_w_kind(void);
 void Expr_new_entity_w_unterminated_scope(void);
+void Expr_has_component(void);
+void Expr_has_tag(void);
+void Expr_has_pair(void);
+void Expr_has_singleton(void);
+void Expr_has_singleton_pair(void);
+void Expr_has_not(void);
+void Expr_has_w_space_before(void);
+void Expr_has_question_space_bracket_not_has(void);
+void Expr_has_pair_w_enum_constant_target(void);
+void Expr_has_w_entity_var(void);
+void Expr_has_in_binary_expr(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_binary_f32_var_add_f32_var(void);
@@ -2318,6 +2339,14 @@ void Refs_global_mut_var_modified_twice(void);
 void Refs_global_const_var_and_mut_var_in_same_expr(void);
 void Refs_global_mut_var_declared_in_same_script_modified(void);
 void Refs_reeval_during_script_preserves_using(void);
+void Refs_has_component_ref(void);
+void Refs_has_tag_ref(void);
+void Refs_has_pair_ref(void);
+void Refs_has_singleton_ref(void);
+void Refs_has_singleton_pair_ref(void);
+void Refs_has_ref_in_const_var(void);
+void Refs_has_ref_in_template_component_initializer(void);
+void Refs_has_ref_and_value_ref_same_component(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -4753,6 +4782,14 @@ bake_test_case Eval_testcases[] = {
     {
         "pair_scope_predeclared_entity_export_const",
         Eval_pair_scope_predeclared_entity_export_const
+    },
+    {
+        "has_expr_pair_w_enum_constant",
+        Eval_has_expr_pair_w_enum_constant
+    },
+    {
+        "has_expr_in_if",
+        Eval_has_expr_in_if
     }
 };
 
@@ -7194,6 +7231,38 @@ bake_test_case Error_testcases[] = {
     {
         "runtime_any_as_pair_scope_target",
         Error_runtime_any_as_pair_scope_target
+    },
+    {
+        "has_question_space_bracket",
+        Error_has_question_space_bracket
+    },
+    {
+        "has_unresolved_component",
+        Error_has_unresolved_component
+    },
+    {
+        "has_unresolved_pair_first",
+        Error_has_unresolved_pair_first
+    },
+    {
+        "has_unresolved_pair_second",
+        Error_has_unresolved_pair_second
+    },
+    {
+        "has_on_non_entity_type",
+        Error_has_on_non_entity_type
+    },
+    {
+        "has_unterminated",
+        Error_has_unterminated
+    },
+    {
+        "has_pair_missing_paren_close",
+        Error_has_pair_missing_paren_close
+    },
+    {
+        "has_pair_missing_second",
+        Error_has_pair_missing_second
     }
 };
 
@@ -9180,6 +9249,50 @@ bake_test_case Expr_testcases[] = {
     {
         "new_entity_w_unterminated_scope",
         Expr_new_entity_w_unterminated_scope
+    },
+    {
+        "has_component",
+        Expr_has_component
+    },
+    {
+        "has_tag",
+        Expr_has_tag
+    },
+    {
+        "has_pair",
+        Expr_has_pair
+    },
+    {
+        "has_singleton",
+        Expr_has_singleton
+    },
+    {
+        "has_singleton_pair",
+        Expr_has_singleton_pair
+    },
+    {
+        "has_not",
+        Expr_has_not
+    },
+    {
+        "has_w_space_before",
+        Expr_has_w_space_before
+    },
+    {
+        "has_question_space_bracket_not_has",
+        Expr_has_question_space_bracket_not_has
+    },
+    {
+        "has_pair_w_enum_constant_target",
+        Expr_has_pair_w_enum_constant_target
+    },
+    {
+        "has_w_entity_var",
+        Expr_has_w_entity_var
+    },
+    {
+        "has_in_binary_expr",
+        Expr_has_in_binary_expr
     }
 };
 
@@ -11509,6 +11622,38 @@ bake_test_case Refs_testcases[] = {
     {
         "reeval_during_script_preserves_using",
         Refs_reeval_during_script_preserves_using
+    },
+    {
+        "has_component_ref",
+        Refs_has_component_ref
+    },
+    {
+        "has_tag_ref",
+        Refs_has_tag_ref
+    },
+    {
+        "has_pair_ref",
+        Refs_has_pair_ref
+    },
+    {
+        "has_singleton_ref",
+        Refs_has_singleton_ref
+    },
+    {
+        "has_singleton_pair_ref",
+        Refs_has_singleton_pair_ref
+    },
+    {
+        "has_ref_in_const_var",
+        Refs_has_ref_in_const_var
+    },
+    {
+        "has_ref_in_template_component_initializer",
+        Refs_has_ref_in_template_component_initializer
+    },
+    {
+        "has_ref_and_value_ref_same_component",
+        Refs_has_ref_and_value_ref_same_component
     }
 };
 
@@ -11695,7 +11840,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        598,
+        600,
         Eval_testcases
     },
     {
@@ -11744,7 +11889,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        167,
+        175,
         Error_testcases
     },
     {
@@ -11760,7 +11905,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        361,
+        372,
         Expr_testcases,
         1,
         Expr_params
@@ -11813,7 +11958,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        124,
+        132,
         Refs_testcases
     },
     {
