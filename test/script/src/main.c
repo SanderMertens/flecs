@@ -210,6 +210,31 @@ void Eval_assign_const_w_expr(void);
 void Eval_const_w_type(void);
 void Eval_typed_const_w_composite_type(void);
 void Eval_assign_var_to_typed_const_w_composite_type(void);
+void Eval_assign_match_to_typed_const_w_composite_type(void);
+void Eval_assign_match_w_var_cases_to_typed_const_w_composite_type(void);
+void Eval_assign_match_to_typed_const_w_bool(void);
+void Eval_assign_match_to_typed_const_w_char(void);
+void Eval_assign_match_to_typed_const_w_byte(void);
+void Eval_assign_match_to_typed_const_w_u8(void);
+void Eval_assign_match_to_typed_const_w_u16(void);
+void Eval_assign_match_to_typed_const_w_u32(void);
+void Eval_assign_match_to_typed_const_w_u64(void);
+void Eval_assign_match_to_typed_const_w_uptr(void);
+void Eval_assign_match_to_typed_const_w_i8(void);
+void Eval_assign_match_to_typed_const_w_i16(void);
+void Eval_assign_match_to_typed_const_w_i32(void);
+void Eval_assign_match_to_typed_const_w_i64(void);
+void Eval_assign_match_to_typed_const_w_iptr(void);
+void Eval_assign_match_to_typed_const_w_f32(void);
+void Eval_assign_match_to_typed_const_w_f64(void);
+void Eval_assign_match_to_typed_const_w_string(void);
+void Eval_assign_match_to_typed_const_w_entity(void);
+void Eval_assign_match_to_typed_const_w_id(void);
+void Eval_assign_match_to_typed_const_w_enum(void);
+void Eval_assign_match_to_typed_const_w_bitmask(void);
+void Eval_assign_match_to_typed_const_w_array(void);
+void Eval_assign_match_to_typed_const_w_vector(void);
+void Eval_assign_match_to_typed_const_w_map(void);
 void Eval_using_wildcard(void);
 void Eval_single_line_comment_in_value(void);
 void Eval_single_line_comment_in_value_after_scope(void);
@@ -3194,6 +3219,106 @@ bake_test_case Eval_testcases[] = {
     {
         "assign_var_to_typed_const_w_composite_type",
         Eval_assign_var_to_typed_const_w_composite_type
+    },
+    {
+        "assign_match_to_typed_const_w_composite_type",
+        Eval_assign_match_to_typed_const_w_composite_type
+    },
+    {
+        "assign_match_w_var_cases_to_typed_const_w_composite_type",
+        Eval_assign_match_w_var_cases_to_typed_const_w_composite_type
+    },
+    {
+        "assign_match_to_typed_const_w_bool",
+        Eval_assign_match_to_typed_const_w_bool
+    },
+    {
+        "assign_match_to_typed_const_w_char",
+        Eval_assign_match_to_typed_const_w_char
+    },
+    {
+        "assign_match_to_typed_const_w_byte",
+        Eval_assign_match_to_typed_const_w_byte
+    },
+    {
+        "assign_match_to_typed_const_w_u8",
+        Eval_assign_match_to_typed_const_w_u8
+    },
+    {
+        "assign_match_to_typed_const_w_u16",
+        Eval_assign_match_to_typed_const_w_u16
+    },
+    {
+        "assign_match_to_typed_const_w_u32",
+        Eval_assign_match_to_typed_const_w_u32
+    },
+    {
+        "assign_match_to_typed_const_w_u64",
+        Eval_assign_match_to_typed_const_w_u64
+    },
+    {
+        "assign_match_to_typed_const_w_uptr",
+        Eval_assign_match_to_typed_const_w_uptr
+    },
+    {
+        "assign_match_to_typed_const_w_i8",
+        Eval_assign_match_to_typed_const_w_i8
+    },
+    {
+        "assign_match_to_typed_const_w_i16",
+        Eval_assign_match_to_typed_const_w_i16
+    },
+    {
+        "assign_match_to_typed_const_w_i32",
+        Eval_assign_match_to_typed_const_w_i32
+    },
+    {
+        "assign_match_to_typed_const_w_i64",
+        Eval_assign_match_to_typed_const_w_i64
+    },
+    {
+        "assign_match_to_typed_const_w_iptr",
+        Eval_assign_match_to_typed_const_w_iptr
+    },
+    {
+        "assign_match_to_typed_const_w_f32",
+        Eval_assign_match_to_typed_const_w_f32
+    },
+    {
+        "assign_match_to_typed_const_w_f64",
+        Eval_assign_match_to_typed_const_w_f64
+    },
+    {
+        "assign_match_to_typed_const_w_string",
+        Eval_assign_match_to_typed_const_w_string
+    },
+    {
+        "assign_match_to_typed_const_w_entity",
+        Eval_assign_match_to_typed_const_w_entity
+    },
+    {
+        "assign_match_to_typed_const_w_id",
+        Eval_assign_match_to_typed_const_w_id
+    },
+    {
+        "assign_match_to_typed_const_w_enum",
+        Eval_assign_match_to_typed_const_w_enum
+    },
+    {
+        "assign_match_to_typed_const_w_bitmask",
+        Eval_assign_match_to_typed_const_w_bitmask
+    },
+    {
+        "assign_match_to_typed_const_w_array",
+        Eval_assign_match_to_typed_const_w_array
+    },
+    {
+        "assign_match_to_typed_const_w_vector",
+        Eval_assign_match_to_typed_const_w_vector
+    },
+    {
+        "assign_match_to_typed_const_w_map",
+        Eval_assign_match_to_typed_const_w_map
     },
     {
         "using_wildcard",
@@ -11840,7 +11965,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        600,
+        625,
         Eval_testcases
     },
     {

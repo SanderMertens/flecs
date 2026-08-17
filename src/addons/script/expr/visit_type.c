@@ -1629,13 +1629,16 @@ static int flecs_expr_identifier_visit_type(
         ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    if (type_ptr && 
-       (type_ptr->kind == EcsEnumType || type_ptr->kind == EcsBitmaskType)) 
+    if (type_ptr &&
+       (type_ptr->kind == EcsEnumType || type_ptr->kind == EcsBitmaskType) &&
+        ecs_lookup_child(script->world, type, node->value) != 0)
     {
         /* If the requested type is an enum or bitmask, use the cursor to resolve
          * the identifier to the correct type constant. This lets us type 'Red'
          * in places where we expect a value of type Color, instead of
-         * Color.Red. */
+         * Color.Red. If the identifier doesn't resolve to a constant, fall back
+         * to regular lookup so variables can be used in enum/bitmask
+         * contexts. */
         node->node.type = type;
         if (flecs_expr_constant_identifier_visit_type(script, node)) {
             goto error;
@@ -2744,11 +2747,14 @@ static int flecs_expr_match_visit_type(
             /* "Accumulate" most expressive type in result node */
             node->node.type = result_type;
         } else {
-            /* If type is not a number it must match exactly */
-            if (elem->expr->type != node->node.type) {
+            /* If type is not a number it must be castable to the match type */
+            if (elem->expr->type != node->node.type &&
+                !flecs_expr_explicit_cast_allowed(
+                    script->world, elem->expr->type, node->node.type))
+            {
                 char *got = ecs_get_path(script->world, elem->expr->type);
                 char *expect = ecs_get_path(script->world, node->node.type);
-                flecs_expr_visit_error(script, node, 
+                flecs_expr_visit_error(script, node,
                     "invalid type for case %d in match (got %s, expected %s)",
                         i + 1, got, expect);
                 ecs_os_free(got);
