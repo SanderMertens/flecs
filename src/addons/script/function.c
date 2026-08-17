@@ -262,6 +262,8 @@ void* ecs_const_var_get_w_type(
     ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(out != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    world = ecs_get_world(world);
+
     ecs_entity_t var = ecs_lookup(world, name);
     const EcsScriptConstVar *v = NULL;
     if (var) {
@@ -395,6 +397,8 @@ void* ecs_mut_var_get_w_type(
     ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(out != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    world = ecs_get_world(world);
+
     ecs_entity_t var = ecs_lookup(world, name);
     const EcsScriptMutVar *v = NULL;
     if (var) {
@@ -467,7 +471,8 @@ int ecs_mut_var_set_w_type(
         goto error;
     }
 
-    ecs_meta_cursor_t cur = ecs_meta_cursor(world, v->value.type, v->value.ptr);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        ecs_get_world(world), v->value.type, v->value.ptr);
     ecs_value_t from = { .type = type, .ptr = ECS_CONST_CAST(void*, value) };
     if (ecs_meta_set_value(&cur, &from)) {
         ecs_err("provided value cannot be converted to type of mut "
