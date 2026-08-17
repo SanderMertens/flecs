@@ -497,6 +497,16 @@ static const char* flecs_script_parse_var(
                         )
                     }
 
+                    {
+                        // const color : Color = match
+                        LookAhead_1(EcsTokKeywordMatch,
+                            Expr('\n',
+                                var->expr = EXPR;
+                                EndOfRule;
+                            )
+                        )
+                    }
+
                     // const color : Color = expr\n
                     Initializer('\n',
                         var->expr = INITIALIZER;

@@ -5780,6 +5780,1066 @@ void Eval_assign_var_to_typed_const_w_composite_type(void) {
     ecs_fini(world);
 }
 
+void Eval_assign_match_to_typed_const_w_composite_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var_pos: Position = match e[PositionI].x {"
+    LINE "  1: {10, 20}"
+    LINE "  2: {30, 40}"
+    LINE "}"
+    LINE "a { Position: var_pos }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const Position *p = ecs_get(world, a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_w_var_cases_to_typed_const_w_composite_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var_pos_a: Position = {10, 20}"
+    LINE "const var_pos_b: Position = {30, 40}"
+    LINE "const var_pos: Position = match e[PositionI].x {"
+    LINE "  1: var_pos_a"
+    LINE "  2: var_pos_b"
+    LINE "}"
+    LINE "a { Position: var_pos }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const Position *p = ecs_get(world, a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_bool(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: bool = match e[PositionI].x {"
+    LINE "  1: true"
+    LINE "  2: false"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_bool_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_bool(*ptr, true);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_char(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_char_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: char = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_char_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_byte(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_byte_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: byte = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_byte_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_uint(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_u8(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_u8_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: u8 = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_u8_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_uint(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_u16(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_u16_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: u16 = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_u16_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_uint(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_u32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_u32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: u32 = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_u32_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_uint(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_u64(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_u64_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: u64 = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_u64_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_uint(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_uptr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_uptr_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: uptr = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_uptr_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_uint(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_i8(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_i8_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: i8 = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_i8_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_i16(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_i16_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: i16 = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_i16_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: i32 = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_i32_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_i64(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_i64_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: i64 = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_i64_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_iptr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_iptr_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: iptr = match e[PositionI].x {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_iptr_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_f32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: f32 = match e[PositionI].x {"
+    LINE "  1: 10.5"
+    LINE "  2: 20.5"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_f32_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_flt(*ptr, 10.5);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_f64(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_f64_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: f64 = match e[PositionI].x {"
+    LINE "  1: 10.5"
+    LINE "  2: 20.5"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_f64_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_flt(*ptr, 10.5);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: string = match e[PositionI].x {"
+    LINE "  1: \"ten\""
+    LINE "  2: \"twenty\""
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_string_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_str(*ptr, "ten");
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "bar" });
+    test_assert(bar != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: entity = match e[PositionI].x {"
+    LINE "  1: foo"
+    LINE "  2: bar"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_entity_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_assert(*ptr == foo);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_id_t)}
+        }
+    });
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "bar" });
+    test_assert(bar != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: id = match e[PositionI].x {"
+    LINE "  1: foo"
+    LINE "  2: bar"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_id_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_assert(*ptr == foo);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_enum(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t color = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", color}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: Color = match e[PositionI].x {"
+    LINE "  1: Green"
+    LINE "  2: Blue"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const int32_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 1);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_bitmask(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t toppings = ecs_bitmask(world, {
+        .entity = ecs_entity(world, { .name = "Toppings" }),
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", toppings}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: Toppings = match e[PositionI].x {"
+    LINE "  1: Lettuce|Bacon"
+    LINE "  2: Tomato"
+    LINE "}"
+    LINE "a { Val: {var} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const uint32_t *ptr = ecs_get_id(world, a, val);
+    test_assert(ptr != NULL);
+    test_uint(*ptr, 3);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_array(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t arr = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "Arr" }),
+        .type = ecs_id(ecs_i32_t),
+        .count = 3
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: Arr = match e[PositionI].x {"
+    LINE "  1: [10, 20, 30]"
+    LINE "  2: [40, 50, 60]"
+    LINE "}"
+    LINE "a { Arr: var }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const int32_t *ptr = ecs_get_id(world, a, arr);
+    test_assert(ptr != NULL);
+    test_int(ptr[0], 10);
+    test_int(ptr[1], 20);
+    test_int(ptr[2], 30);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Vec" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: Vec = match e[PositionI].x {"
+    LINE "  1: [10, 20, 30]"
+    LINE "  2: [40, 50, 60]"
+    LINE "}"
+    LINE "a { Vec: var }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_vec_t *ptr = ecs_get_id(world, a, vec);
+    test_assert(ptr != NULL);
+    test_int(ecs_vec_count(ptr), 3);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 0), 10);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 1), 20);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 2), 30);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_match_to_typed_const_w_map(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    const char *expr =
+    HEAD "const var: Map = match e[PositionI].x {"
+    LINE "  1: [10: 100, 20: 200]"
+    LINE "  2: [30: 300, 40: 400]"
+    LINE "}"
+    LINE "a { Map: var }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const ecs_map_t *ptr = ecs_get_id(world, a, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    ecs_map_val_t *v = ecs_map_get(ptr, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+    v = ecs_map_get(ptr, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 200);
+
+    ecs_fini(world);
+}
+
 void Eval_using_wildcard(void) {
     ecs_world_t *world = ecs_init();
 

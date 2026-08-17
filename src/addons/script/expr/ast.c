@@ -308,7 +308,7 @@ ecs_expr_script_t* flecs_expr_script(
     return result;
 }
 
-static bool flecs_expr_explicit_cast_allowed(
+bool flecs_expr_explicit_cast_allowed(
     ecs_world_t *world,
     ecs_entity_t from,
     ecs_entity_t to)

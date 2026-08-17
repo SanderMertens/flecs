@@ -290,6 +290,11 @@ ecs_expr_new_t* flecs_expr_new(
 ecs_expr_script_t* flecs_expr_script(
     ecs_parser_t *parser);
 
+bool flecs_expr_explicit_cast_allowed(
+    ecs_world_t *world,
+    ecs_entity_t from,
+    ecs_entity_t to);
+
 ecs_expr_cast_t* flecs_expr_cast(
     ecs_script_t *script,
     ecs_expr_node_t *node,
