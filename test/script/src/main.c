@@ -1084,6 +1084,11 @@ void Mut_set_w_invalid_size(void);
 void Mut_set_w_invalid_type(void);
 void Mut_set_i32_w_i64(void);
 void Mut_set_reevaluates_script(void);
+void Mut_get_from_stage(void);
+void Mut_get_struct_from_stage(void);
+void Mut_set_from_stage(void);
+void Mut_set_struct_from_stage(void);
+void Mut_modified_from_stage(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -2414,6 +2419,8 @@ void ConstVar_get_struct_as_i32(void);
 void ConstVar_get_i32_as_struct(void);
 void ConstVar_get_struct_as_other_struct(void);
 void ConstVar_nested_const_shadows_export_const(void);
+void ConstVar_get_from_stage(void);
+void ConstVar_get_struct_from_stage(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -6685,6 +6692,26 @@ bake_test_case Mut_testcases[] = {
     {
         "set_reevaluates_script",
         Mut_set_reevaluates_script
+    },
+    {
+        "get_from_stage",
+        Mut_get_from_stage
+    },
+    {
+        "get_struct_from_stage",
+        Mut_get_struct_from_stage
+    },
+    {
+        "set_from_stage",
+        Mut_set_from_stage
+    },
+    {
+        "set_struct_from_stage",
+        Mut_set_struct_from_stage
+    },
+    {
+        "modified_from_stage",
+        Mut_modified_from_stage
     }
 };
 
@@ -11942,6 +11969,14 @@ bake_test_case ConstVar_testcases[] = {
     {
         "nested_const_shadows_export_const",
         ConstVar_nested_const_shadows_export_const
+    },
+    {
+        "get_from_stage",
+        ConstVar_get_from_stage
+    },
+    {
+        "get_struct_from_stage",
+        ConstVar_get_struct_from_stage
     }
 };
 
@@ -12007,7 +12042,7 @@ static bake_test_suite suites[] = {
         "Mut",
         NULL,
         NULL,
-        71,
+        76,
         Mut_testcases
     },
     {
@@ -12090,7 +12125,7 @@ static bake_test_suite suites[] = {
         "ConstVar",
         NULL,
         NULL,
-        40,
+        42,
         ConstVar_testcases
     }
 };

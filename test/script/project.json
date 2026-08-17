@@ -1099,7 +1099,12 @@
                 "set_w_invalid_size",
                 "set_w_invalid_type",
                 "set_i32_w_i64",
-                "set_reevaluates_script"
+                "set_reevaluates_script",
+                "get_from_stage",
+                "get_struct_from_stage",
+                "set_from_stage",
+                "set_struct_from_stage",
+                "modified_from_stage"
             ]
         }, {
             "id": "Error",
@@ -2460,7 +2465,9 @@
                 "get_struct_as_i32",
                 "get_i32_as_struct",
                 "get_struct_as_other_struct",
-                "nested_const_shadows_export_const"
+                "nested_const_shadows_export_const",
+                "get_from_stage",
+                "get_struct_from_stage"
             ]
         }]
     }

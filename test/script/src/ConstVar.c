@@ -743,3 +743,53 @@ void ConstVar_nested_const_shadows_export_const(void) {
 
     ecs_fini(world);
 }
+
+void ConstVar_get_from_stage(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_i32_t v = 10;
+    ecs_entity_t var = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    });
+    test_assert(var != 0);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_value_t value = ecs_const_var_get(stage, var);
+    test_assert(value.ptr != NULL);
+    test_uint(value.type, ecs_id(ecs_i32_t));
+    test_int(*(ecs_i32_t*)value.ptr, 10);
+
+    test_int(ecs_const_var_get_t(stage, "v", ecs_i32_t), 10);
+
+    ecs_fini(world);
+}
+
+void ConstVar_get_struct_from_stage(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Point"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    Point v = { 10.5, 20.5 };
+    test_assert(0 != ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(Point),
+        .value = &v
+    }));
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    Point p = ecs_const_var_get_t(stage, "v", Point);
+    test_flt(p.x, 10.5);
+    test_flt(p.y, 20.5);
+
+    ecs_fini(world);
+}
