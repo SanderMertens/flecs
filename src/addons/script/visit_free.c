@@ -146,12 +146,6 @@ static int flecs_script_stmt_free(
         flecs_script_component_free(v, (ecs_script_component_t*)node);
         flecs_free_t(a, ecs_script_component_t, node);
         break;
-    case EcsAstVarComponent:
-        flecs_free_t(a, ecs_script_var_component_t, node);
-        break;
-    case EcsAstWithVar:
-        flecs_free_t(a, ecs_script_var_component_t, node);
-        break;
     case EcsAstWithTag:
         flecs_free_t(a, ecs_script_tag_t, node);
         break;

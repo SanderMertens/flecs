@@ -171,15 +171,9 @@ static const char* flecs_script_with_expr(
                 )
             )
 
-            if (Token(0)[0] == '$') {
-                ecs_script_var_component_t *var = 
-                    flecs_script_insert_var_component(parser, &Token(0)[1]);
-                var->node.kind = EcsAstWithVar;
-            } else {
-                ecs_script_tag_t *tag =
-                    flecs_script_insert_tag(parser, Token(0));
-                tag->node.kind = EcsAstWithTag;
-            }
+            ecs_script_tag_t *tag =
+                flecs_script_insert_tag(parser, Token(0));
+            tag->node.kind = EcsAstWithTag;
 
             EndOfRule;
         }

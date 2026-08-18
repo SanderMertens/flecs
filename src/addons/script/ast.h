@@ -10,8 +10,6 @@ typedef enum ecs_script_node_kind_t {
     EcsAstScope,
     EcsAstTag,
     EcsAstComponent,
-    EcsAstVarComponent,
-    EcsAstWithVar,
     EcsAstWithTag,
     EcsAstWithComponent,
     EcsAstWith,
@@ -85,12 +83,6 @@ typedef struct ecs_script_component_t {
     ecs_expr_node_t *expr;
     bool is_collection;
 } ecs_script_component_t;
-
-typedef struct ecs_script_var_component_t {
-    ecs_script_node_t node;
-    const char *name;
-    int32_t sp;
-} ecs_script_var_component_t;
 
 struct ecs_script_entity_t {
     ecs_script_node_t node;
@@ -292,10 +284,6 @@ ecs_script_component_t* flecs_script_insert_pair_component(
     ecs_parser_t *parser,
     const char *first,
     const char *second);
-
-ecs_script_var_component_t* flecs_script_insert_var_component(
-    ecs_parser_t *parser,
-    const char *name);
 
 ecs_script_if_t* flecs_script_insert_if(
     ecs_parser_t *parser);

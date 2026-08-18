@@ -774,39 +774,6 @@ void Mut_composite(void) {
     ecs_fini(world);
 }
 
-void Mut_with_mut(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "template Foo {"
-    LINE "  mut pos: Position = {10, 20}"
-    LINE "  with $pos {"
-    LINE "    child {}"
-    LINE "  }"
-    LINE "}"
-    LINE "Foo e()";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t child = ecs_lookup(world, "e.child");
-    test_assert(child != 0);
-    const Position *p = ecs_get(world, child, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    ecs_fini(world);
-}
-
 void Mut_entity_pair(void) {
     ecs_world_t *world = ecs_init();
 

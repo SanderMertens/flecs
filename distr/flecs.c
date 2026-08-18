@@ -49042,8 +49042,6 @@ typedef enum ecs_script_node_kind_t {
     EcsAstScope,
     EcsAstTag,
     EcsAstComponent,
-    EcsAstVarComponent,
-    EcsAstWithVar,
     EcsAstWithTag,
     EcsAstWithComponent,
     EcsAstWith,
@@ -49117,12 +49115,6 @@ typedef struct ecs_script_component_t {
     ecs_expr_node_t *expr;
     bool is_collection;
 } ecs_script_component_t;
-
-typedef struct ecs_script_var_component_t {
-    ecs_script_node_t node;
-    const char *name;
-    int32_t sp;
-} ecs_script_var_component_t;
 
 struct ecs_script_entity_t {
     ecs_script_node_t node;
@@ -49324,10 +49316,6 @@ ecs_script_component_t* flecs_script_insert_pair_component(
     ecs_parser_t *parser,
     const char *first,
     const char *second);
-
-ecs_script_var_component_t* flecs_script_insert_var_component(
-    ecs_parser_t *parser,
-    const char *name);
 
 ecs_script_if_t* flecs_script_insert_if(
     ecs_parser_t *parser);
@@ -68212,24 +68200,6 @@ ecs_script_component_t* flecs_script_insert_component(
     return flecs_script_insert_pair_component(parser, name, NULL);
 }
 
-ecs_script_var_component_t* flecs_script_insert_var_component(
-    ecs_parser_t *parser,
-    const char *var_name)
-{
-    ecs_script_scope_t *scope = parser->scope;
-    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(var_name != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_script_var_component_t *result = flecs_ast_new(
-            parser, ecs_script_var_component_t, EcsAstVarComponent);
-    result->name = var_name;
-    result->sp = -1;
-
-    flecs_ast_append(parser, scope->stmts, 
-        ecs_script_var_component_t, result);
-    return result;
-}
-
 ecs_script_with_t* flecs_script_insert_with(
     ecs_parser_t *parser)
 {
@@ -69686,15 +69656,9 @@ static const char* flecs_script_with_expr(
                 )
             )
 
-            if (Token(0)[0] == '$') {
-                ecs_script_var_component_t *var = 
-                    flecs_script_insert_var_component(parser, &Token(0)[1]);
-                var->node.kind = EcsAstWithVar;
-            } else {
-                ecs_script_tag_t *tag =
-                    flecs_script_insert_tag(parser, Token(0));
-                tag->node.kind = EcsAstWithTag;
-            }
+            ecs_script_tag_t *tag =
+                flecs_script_insert_tag(parser, Token(0));
+            tag->node.kind = EcsAstWithTag;
 
             EndOfRule;
         }
@@ -72729,12 +72693,6 @@ static int flecs_script_stmt_free(
         flecs_script_component_free(v, (ecs_script_component_t*)node);
         flecs_free_t(a, ecs_script_component_t, node);
         break;
-    case EcsAstVarComponent:
-        flecs_free_t(a, ecs_script_var_component_t, node);
-        break;
-    case EcsAstWithVar:
-        flecs_free_t(a, ecs_script_var_component_t, node);
-        break;
     case EcsAstWithTag:
         flecs_free_t(a, ecs_script_tag_t, node);
         break;
@@ -72938,8 +72896,6 @@ static const char* flecs_script_node_to_str(
     case EcsAstTag:                return "tag";
     case EcsAstWithComponent:
     case EcsAstComponent:          return "component";
-    case EcsAstWithVar:
-    case EcsAstVarComponent:       return "var";
     case EcsAstWith:               return "with";
     case EcsAstUsing:              return "using";
     case EcsAstModule:             return "module";
@@ -72990,15 +72946,6 @@ static void flecs_script_component_to_str(
         flecs_scriptbuf_appendstr(v, ": ");
         flecs_expr_to_str(v, node->expr);
     }
-    flecs_scriptbuf_appendstr(v, "\n");
-}
-
-static void flecs_script_with_var_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_var_component_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    flecs_scriptbuf_append(v, "%s ", node->name);
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
@@ -73220,11 +73167,6 @@ static int flecs_script_stmt_to_str(
     case EcsAstComponent:
     case EcsAstWithComponent:
         flecs_script_component_to_str(v, (ecs_script_component_t*)node);
-        break;
-    case EcsAstVarComponent:
-    case EcsAstWithVar:
-        flecs_script_with_var_to_str(v, 
-            (ecs_script_var_component_t*)node);
         break;
     case EcsAstWith:
         flecs_script_with_to_str(v, (ecs_script_with_t*)node);
@@ -94476,7 +94418,6 @@ static void flecs_script_apply_non_fragmenting_childof_to_scope(
             break;
         }
         case EcsAstWith:
-        case EcsAstWithVar:
         case EcsAstWithTag:
         case EcsAstWithComponent:
             flecs_script_apply_non_fragmenting_childof_to_scope(
@@ -94488,7 +94429,6 @@ static void flecs_script_apply_non_fragmenting_childof_to_scope(
             break;
         case EcsAstTag:
         case EcsAstComponent:
-        case EcsAstVarComponent:        
         case EcsAstUsing:
         case EcsAstModule:
         case EcsAstAnnotation:
@@ -94889,63 +94829,6 @@ static int flecs_script_eval_component(
     } else {
         ecs_add_id(v->world, src, node->id.eval);
     }
-
-    return 0;
-}
-
-static int flecs_script_eval_var_component(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_var_component_t *node)
-{
-    ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
-    ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_value_t var_value = var->value;
-
-    if (v->is_with_scope) {
-        flecs_script_eval_error(v, node, "invalid component in with scope"); 
-        return -1;
-    }
-
-    if (!v->entity) {
-        flecs_script_eval_error(v, node, "missing entity for variable component");
-        return -1;
-    }
-
-    ecs_id_t var_id = var_value.type;
-
-    if (var_value.ptr) {
-        const ecs_type_info_t *ti = flecs_script_get_type_info(
-            v, node, var_id);
-        if (!ti) {
-            return -1;
-        }
-
-        ecs_value_t value = {
-            .ptr = ecs_ensure_id(v->world, v->entity->eval, var_id, 
-                flecs_ito(size_t, ti->size)),
-            .type = var_id
-        };
-
-        ecs_ptr_copy_w_type_info(v->world, ti, value.ptr, var_value.ptr);
-
-        ecs_modified_id(v->world, v->entity->eval, var_id);
-    } else {
-        ecs_add_id(v->world, v->entity->eval, var_id);
-    }
-
-    return 0;
-}
-
-static int flecs_script_eval_with_var(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_var_component_t *node)
-{
-    ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
-    ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_allocator_t *a = &v->r->allocator;
-    ecs_value_t *value = flecs_script_with_append(a, v, NULL); // TODO: vars of non-trivial types
-    *value = var->value;
 
     return 0;
 }
@@ -95449,12 +95332,6 @@ int flecs_script_eval_node(
     case EcsAstComponent:
         return flecs_script_eval_component(
             v, (ecs_script_component_t*)node);
-    case EcsAstVarComponent:
-        return flecs_script_eval_var_component(
-            v, (ecs_script_var_component_t*)node);
-    case EcsAstWithVar:
-        return flecs_script_eval_with_var(
-            v, (ecs_script_var_component_t*)node);
     case EcsAstWithTag:
         return flecs_script_eval_with_tag(
             v, (ecs_script_tag_t*)node);
@@ -95785,8 +95662,6 @@ static void flecs_script_frame_leave(
         break;
     case EcsAstTag:
     case EcsAstComponent:
-    case EcsAstVarComponent:
-    case EcsAstWithVar:
     case EcsAstWithTag:
     case EcsAstWithComponent:
     case EcsAstUsing:
@@ -95877,8 +95752,6 @@ static flecs_script_run_status_t flecs_script_runner_exec(
 #endif
         case EcsAstTag:
         case EcsAstComponent:
-        case EcsAstVarComponent:
-        case EcsAstWithVar:
         case EcsAstWithTag:
         case EcsAstWithComponent:
         case EcsAstUsing:
@@ -97671,23 +97544,6 @@ static int flecs_script_type_component(
     return result == 1 ? 0 : result;
 }
 
-static int flecs_script_type_var_component(
-    ecs_script_type_visitor_t *t,
-    ecs_script_var_component_t *node)
-{
-    flecs_script_symbol_t symbol;
-    if (flecs_script_type_lookup(
-        t, 0, node->name, FlecsScriptLookupVariable, NULL, &symbol))
-    {
-        flecs_script_type_unresolved_ref(t, node, node->name,
-            FlecsScriptUnresolvedVariable);
-        node->sp = -1;
-        return 0;
-    }
-    node->sp = symbol.sp;
-    return 0;
-}
-
 static int flecs_script_type_with(
     ecs_script_type_visitor_t *t,
     ecs_script_with_t *node)
@@ -98463,10 +98319,6 @@ static int flecs_script_type_node(
     case EcsAstWithComponent:
         return flecs_script_type_with_component(
             t, (ecs_script_component_t*)node);
-    case EcsAstVarComponent:
-    case EcsAstWithVar:
-        return flecs_script_type_var_component(
-            t, (ecs_script_var_component_t*)node);
     case EcsAstWith:
         return flecs_script_type_with(t, (ecs_script_with_t*)node);
     case EcsAstUsing:

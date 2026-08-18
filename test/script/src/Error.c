@@ -889,36 +889,6 @@ void Error_component_in_with_scope_after_entity(void) {
     ecs_fini(world);
 }
 
-void Error_component_in_with_var_scope(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "const pos: Position = {10, 20}"
-    LINE "with $pos {"
-    LINE "  Position: {10, 20}"
-    LINE "}"
-    LINE "";
-
-    ecs_log_set_level(-4);
-    ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
-    test_assert(result.error != NULL);
-    test_int(result.line, 3);
-    ecs_os_free(result.error);
-
-    ecs_fini(world);
-}
-
 void Error_assign_after_with_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
