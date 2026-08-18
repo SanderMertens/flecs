@@ -545,6 +545,8 @@ void flecs_meta_type_serializer_init(
 
         ptr->kind = type_ptr->kind;
         ptr->ops = ops;
+
+        ecs_modified(world, type, EcsTypeSerializer);
     }
 }
 

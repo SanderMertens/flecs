@@ -2429,7 +2429,16 @@
                 "has_singleton_pair_ref",
                 "has_ref_in_const_var",
                 "has_ref_in_template_component_initializer",
-                "has_ref_and_value_ref_same_component"
+                "has_ref_and_value_ref_same_component",
+                "wait_for_unresolved_tag",
+                "wait_for_unresolved_component",
+                "wait_for_component_on_entity",
+                "wait_for_unresolved_entity_then_component",
+                "wait_for_unresolved_entity_w_component_set_before_name",
+                "wait_for_unresolved_const_type",
+                "wait_for_multiple_unresolved_refs",
+                "wait_for_unresolved_component_entity_named_first",
+                "delete_script_while_waiting"
             ]
         }, {
             "id": "ConstVar",
