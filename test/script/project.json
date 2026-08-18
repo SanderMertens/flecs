@@ -2438,7 +2438,10 @@
                 "wait_for_unresolved_const_type",
                 "wait_for_multiple_unresolved_refs",
                 "wait_for_unresolved_component_entity_named_first",
-                "delete_script_while_waiting"
+                "delete_script_while_waiting",
+                "wait_for_has_unresolved_component",
+                "wait_for_has_unresolved_entity",
+                "has_ref_resolve_observer_on_add"
             ]
         }, {
             "id": "ConstVar",

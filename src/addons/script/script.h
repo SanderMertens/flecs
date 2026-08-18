@@ -80,7 +80,8 @@ typedef struct ecs_script_unresolved_ref_t {
 
 typedef struct ecs_script_unresolved_component_ref_t {
     ecs_entity_t entity;
-    ecs_entity_t component;
+    ecs_id_t component;
+    bool is_has;
     int32_t line;
     int32_t column;
 } ecs_script_unresolved_component_ref_t;
