@@ -7997,3 +7997,186 @@ void Refs_delete_script_while_waiting(void) {
 
     ecs_fini(world);
 }
+
+void Refs_wait_for_has_unresolved_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Flag: {e?[MissingTag]}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "foo") == 0);
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "MissingTag" });
+
+    {
+        const EcsScript *sc = ecs_get(world, s, EcsScript);
+        test_assert(sc != NULL);
+        test_assert(sc->error == NULL);
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_add_id(world, e, tag);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, true);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_wait_for_has_unresolved_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Flag: {e?[Position]}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "foo") == 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    {
+        const EcsScript *sc = ecs_get(world, s, EcsScript);
+        test_assert(sc != NULL);
+        test_assert(sc->error == NULL);
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_add(world, e, Position);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, true);
+    }
+
+    ecs_fini(world);
+}
+
+static int32_t refs_count_children(ecs_world_t *world, ecs_entity_t parent) {
+    int32_t result = 0;
+    ecs_iter_t it = ecs_children(world, parent);
+    while (ecs_children_next(&it)) {
+        result += it.count;
+    }
+    return result;
+}
+
+void Refs_has_ref_resolve_observer_on_add(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Flag: {e?[Position]}"
+            LINE "  Bar"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "foo") == 0);
+    test_int(refs_count_children(world, s), 2);
+
+    ecs_add(world, e, Position);
+
+    test_assert(ecs_lookup(world, "foo") == 0);
+    test_int(refs_count_children(world, s), 1);
+
+    ecs_entity(world, { .name = "Bar" });
+
+    {
+        const EcsScript *sc = ecs_get(world, s, EcsScript);
+        test_assert(sc != NULL);
+        test_assert(sc->error == NULL);
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, true);
+    }
+
+    ecs_remove(world, e, Position);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const bool *b = ecs_get_id(world, foo, flag);
+        test_assert(b != NULL);
+        test_bool(*b, false);
+    }
+
+    ecs_fini(world);
+}

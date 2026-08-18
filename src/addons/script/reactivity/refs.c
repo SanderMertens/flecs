@@ -216,6 +216,9 @@ static ecs_entity_t flecs_script_create_resolve_observer(
     } else {
         desc.query.terms[0].id = ref->component;
         desc.query.terms[0].src.id = ref->entity;
+        if (ref->is_has) {
+            desc.events[0] = EcsOnAdd;
+        }
     }
 
     desc.ctx = ctx;
@@ -361,12 +364,14 @@ void flecs_script_update_resolve_observers(
     for (i = 0; i < component_ref_count; i ++) {
         ecs_entity_t entity = component_refs[i].entity;
         ecs_id_t component = component_refs[i].component;
+        bool is_has = component_refs[i].is_has;
 
         ecs_script_ref_t *elems = ecs_vec_first(&resolve_refs);
         int32_t elem_count = ecs_vec_count(&resolve_refs);
         for (j = 0; j < elem_count; j ++) {
             if (!elems[j].name && elems[j].entity == entity &&
-                elems[j].component == component)
+                elems[j].component == component &&
+                elems[j].is_has == is_has)
             {
                 break;
             }
@@ -381,7 +386,7 @@ void flecs_script_update_resolve_observers(
         ref->name = NULL;
         ref->component = component;
         ref->observer = 0;
-        ref->is_has = false;
+        ref->is_has = is_has;
         ref->is_resolve = true;
     }
 

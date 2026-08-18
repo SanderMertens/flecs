@@ -2394,6 +2394,9 @@ void Refs_wait_for_unresolved_const_type(void);
 void Refs_wait_for_multiple_unresolved_refs(void);
 void Refs_wait_for_unresolved_component_entity_named_first(void);
 void Refs_delete_script_while_waiting(void);
+void Refs_wait_for_has_unresolved_component(void);
+void Refs_wait_for_has_unresolved_entity(void);
+void Refs_has_ref_resolve_observer_on_add(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -11891,6 +11894,18 @@ bake_test_case Refs_testcases[] = {
     {
         "delete_script_while_waiting",
         Refs_delete_script_while_waiting
+    },
+    {
+        "wait_for_has_unresolved_component",
+        Refs_wait_for_has_unresolved_component
+    },
+    {
+        "wait_for_has_unresolved_entity",
+        Refs_wait_for_has_unresolved_entity
+    },
+    {
+        "has_ref_resolve_observer_on_add",
+        Refs_has_ref_resolve_observer_on_add
     }
 };
 
@@ -12203,7 +12218,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        141,
+        144,
         Refs_testcases
     },
     {

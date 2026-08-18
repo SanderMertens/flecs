@@ -48996,7 +48996,8 @@ typedef struct ecs_script_unresolved_ref_t {
 
 typedef struct ecs_script_unresolved_component_ref_t {
     ecs_entity_t entity;
-    ecs_entity_t component;
+    ecs_id_t component;
+    bool is_has;
     int32_t line;
     int32_t column;
 } ecs_script_unresolved_component_ref_t;
@@ -107204,6 +107205,7 @@ static int flecs_expr_element_visit_type(
                                 ecs_script_unresolved_component_ref_t);
                         ref->entity = src;
                         ref->component = node->node.type;
+                        ref->is_has = false;
                         flecs_script_pos_to_line_col(impl->pub.code,
                             node->node.pos, &ref->line, &ref->column);
                     }
@@ -107331,8 +107333,13 @@ static int flecs_expr_has_visit_type(
     if (flecs_script_id_lookup(script, desc, first_name, second_name,
         FlecsScriptLookupEntity, &first, &node->id, &unresolved))
     {
-        flecs_expr_visit_error(script, node,
-            "unresolved component identifier '%s'", unresolved);
+        if (!flecs_expr_unresolved_ref(script, desc,
+            (ecs_expr_node_t*)node, unresolved,
+            FlecsScriptUnresolvedEntity))
+        {
+            flecs_expr_visit_error(script, node,
+                "unresolved component identifier '%s'", unresolved);
+        }
         goto error;
     }
 
@@ -107362,6 +107369,31 @@ static int flecs_expr_has_visit_type(
                 "invalid usage of ?[] on non-entity type '%s'", type_str);
             ecs_os_free(type_str);
             goto error;
+        }
+    }
+
+    ecs_script_eval_visitor_t *v = desc->script_visitor;
+    if (v && v->type_visitor) {
+        ecs_expr_node_t *left = node->left;
+        if (left->kind == EcsExprIdentifier) {
+            left = ((ecs_expr_identifier_t*)left)->expr;
+        }
+        if (left && left->kind == EcsExprValue &&
+            left->type == ecs_id(ecs_entity_t))
+        {
+            ecs_entity_t src = ((ecs_expr_value_node_t*)left)->storage.entity;
+            if (src && !ecs_has_id(script->world, src, node->id)) {
+                ecs_script_impl_t *impl = flecs_script_impl(script);
+                ecs_script_unresolved_component_ref_t *ref =
+                    ecs_vec_append_t(NULL,
+                        &impl->unresolved_component_refs,
+                        ecs_script_unresolved_component_ref_t);
+                ref->entity = src;
+                ref->component = node->id;
+                ref->is_has = true;
+                flecs_script_pos_to_line_col(impl->pub.code,
+                    node->node.pos, &ref->line, &ref->column);
+            }
         }
     }
 
@@ -109051,6 +109083,9 @@ static ecs_entity_t flecs_script_create_resolve_observer(
     } else {
         desc.query.terms[0].id = ref->component;
         desc.query.terms[0].src.id = ref->entity;
+        if (ref->is_has) {
+            desc.events[0] = EcsOnAdd;
+        }
     }
 
     desc.ctx = ctx;
@@ -109196,12 +109231,14 @@ void flecs_script_update_resolve_observers(
     for (i = 0; i < component_ref_count; i ++) {
         ecs_entity_t entity = component_refs[i].entity;
         ecs_id_t component = component_refs[i].component;
+        bool is_has = component_refs[i].is_has;
 
         ecs_script_ref_t *elems = ecs_vec_first(&resolve_refs);
         int32_t elem_count = ecs_vec_count(&resolve_refs);
         for (j = 0; j < elem_count; j ++) {
             if (!elems[j].name && elems[j].entity == entity &&
-                elems[j].component == component)
+                elems[j].component == component &&
+                elems[j].is_has == is_has)
             {
                 break;
             }
@@ -109216,7 +109253,7 @@ void flecs_script_update_resolve_observers(
         ref->name = NULL;
         ref->component = component;
         ref->observer = 0;
-        ref->is_has = false;
+        ref->is_has = is_has;
         ref->is_resolve = true;
     }
 
