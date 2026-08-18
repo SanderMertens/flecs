@@ -49023,6 +49023,12 @@ typedef enum flecs_script_lookup_kind_t {
     FlecsScriptLookupDynamic = 4
 } flecs_script_lookup_kind_t;
 
+typedef struct ecs_script_unresolved_ref_t {
+    const char *name;
+    int32_t line;
+    int32_t column;
+} ecs_script_unresolved_ref_t;
+
 struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_entity_t entity; /* Set if script is managed (has EcsScript) */
@@ -49036,6 +49042,7 @@ struct ecs_script_impl_t {
     int32_t refcount;
     ecs_vec_t refs;
     ecs_vec_t symbols;
+    ecs_vec_t unresolved_refs;
     bool evaluating;
     bool compiled;
 };
@@ -49960,6 +49967,7 @@ struct ecs_script_runtime_t {
     ecs_id_t current_tag;
 
     char *error_name;
+    char *unresolved_errors;
     int32_t include_depth;
     bool error;
 };
@@ -71200,6 +71208,8 @@ ecs_script_t* flecs_script_new(
     result->refcount = 1;
     ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &result->symbols, ecs_entity_t, 0);
+    ecs_vec_init_t(NULL, &result->unresolved_refs,
+        ecs_script_unresolved_ref_t, 0);
     return &result->pub;
 }
 
@@ -71295,6 +71305,8 @@ void ecs_script_free(
         flecs_expr_visit_free(script, impl->expr);
         ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_t);
         ecs_vec_fini_t(NULL, &impl->symbols, ecs_entity_t);
+        ecs_vec_fini_t(NULL, &impl->unresolved_refs,
+            ecs_script_unresolved_ref_t);
         flecs_free(&impl->allocator,
             impl->token_buffer_size, impl->token_buffer);
         flecs_allocator_fini(&impl->allocator);
@@ -93639,6 +93651,7 @@ void ecs_script_runtime_free(
     flecs_allocator_fini(&r->allocator);
     flecs_stack_fini(&r->stack);
     ecs_os_free(r->error_name);
+    ecs_os_free(r->unresolved_errors);
     ecs_os_free(r);
 }
 
@@ -93647,6 +93660,8 @@ void flecs_script_runtime_error_reset(
 {
     ecs_os_free(r->error_name);
     r->error_name = NULL;
+    ecs_os_free(r->unresolved_errors);
+    r->unresolved_errors = NULL;
     r->error = false;
 }
 
@@ -93657,6 +93672,8 @@ void ecs_script_runtime_clear(
     ecs_vec_clear(&r->with);
     ecs_vec_clear(&r->with_type_info);
     ecs_vec_clear(&r->using);
+    ecs_os_free(r->unresolved_errors);
+    r->unresolved_errors = NULL;
     r->error = false;
 }
 
@@ -96108,8 +96125,26 @@ int flecs_script_eval(
     }
 
     if (result) {
+        char *unresolved = priv_desc.runtime->unresolved_errors;
+        priv_desc.runtime->unresolved_errors = NULL;
         result->error = flecs_log_capture_pop();
         flecs_log_get_captured_error_pos(&result->line, &result->column);
+        if (unresolved) {
+            if (!result->error) {
+                result->error = unresolved;
+            } else if (!ecs_os_strncmp(unresolved, result->error,
+                ecs_os_strlen(result->error)))
+            {
+                ecs_os_free(result->error);
+                result->error = unresolved;
+            } else {
+                char *error = flecs_asprintf(
+                    "%s\n%s", result->error, unresolved);
+                ecs_os_free(result->error);
+                ecs_os_free(unresolved);
+                result->error = error;
+            }
+        }
         if (!r && result->error) {
             ecs_err("%s", result->error);
             ecs_os_free(result->error);
@@ -96770,6 +96805,101 @@ static bool flecs_script_type_name_eq(
     return !ecs_os_strncmp(name, value, length) && name[length] == '\0';
 }
 
+static void flecs_script_type_unresolved_ref(
+    ecs_script_type_visitor_t *t,
+    void *node,
+    const char *name)
+{
+    ecs_script_impl_t *impl = t->v->base.script;
+    const char *code = impl->pub.code;
+    const char *pos = node ? ((ecs_script_node_t*)node)->pos : NULL;
+    int32_t line = 0, column = 0;
+    if (code && pos && (pos >= code) && (pos <= &code[ecs_os_strlen(code)])) {
+        const char *ptr, *line_start = code;
+        line = 1;
+        for (ptr = code; ptr < pos; ptr ++) {
+            if (ptr[0] == '\n') {
+                line ++;
+                line_start = ptr + 1;
+            }
+        }
+        column = flecs_ito(int32_t, pos - line_start) + 1;
+    }
+
+    ecs_script_unresolved_ref_t *ref = ecs_vec_append_t(
+        NULL, &impl->unresolved_refs, ecs_script_unresolved_ref_t);
+    ref->name = name;
+    ref->line = line;
+    ref->column = column;
+}
+
+static int flecs_script_type_report_unresolved(
+    ecs_script_eval_visitor_t *v)
+{
+    ecs_script_impl_t *impl = v->base.script;
+    int32_t i, count = ecs_vec_count(&impl->unresolved_refs);
+    if (!count) {
+        return 0;
+    }
+
+    const char *code = impl->pub.code;
+    ecs_script_unresolved_ref_t *refs = ecs_vec_first(
+        &impl->unresolved_refs);
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    for (i = 0; i < count; i ++) {
+        ecs_script_unresolved_ref_t *ref = &refs[i];
+        const char *line_start = NULL;
+        if (code && ref->line) {
+            line_start = code;
+            int32_t l;
+            for (l = 1; l < ref->line && line_start; l ++) {
+                line_start = strchr(line_start, '\n');
+                if (line_start) {
+                    line_start ++;
+                }
+            }
+        }
+        if (i) {
+            ecs_strbuf_appendch(&buf, '\n');
+        }
+        if (line_start) {
+            int32_t line_len = 0;
+            while (line_start[line_len] && line_start[line_len] != '\n') {
+                line_len ++;
+            }
+            int32_t col = ref->column - 1;
+            if (col > line_len) {
+                col = line_len;
+            }
+            ecs_parser_error(impl->pub.name, code,
+                (line_start - code) + col,
+                "unresolved reference '%s'", ref->name);
+            ecs_strbuf_append(&buf, "%d: unresolved reference '%s'\n",
+                ref->line, ref->name);
+            ecs_strbuf_appendstrn(&buf, line_start, line_len);
+            ecs_strbuf_appendch(&buf, '\n');
+            int32_t c;
+            for (c = 0; c < col; c ++) {
+                ecs_strbuf_appendch(&buf, ' ');
+            }
+            ecs_strbuf_appendch(&buf, '^');
+        } else {
+            ecs_parser_error(impl->pub.name, NULL, 0,
+                "unresolved reference '%s' (line %d, column %d)",
+                ref->name, ref->line, ref->column);
+            ecs_strbuf_append(&buf,
+                "unresolved reference '%s' (line %d, column %d)",
+                ref->name, ref->line, ref->column);
+        }
+    }
+
+    ecs_os_free(v->r->unresolved_errors);
+    v->r->unresolved_errors = ecs_strbuf_get(&buf);
+
+    ecs_vec_clear(&impl->unresolved_refs);
+    return -1;
+}
+
 static ecs_script_type_entity_t* flecs_script_type_find_in_table(
     ecs_script_type_visitor_t *t,
     int32_t table,
@@ -97085,9 +97215,8 @@ static int flecs_script_type_id_elem(
             ecs_os_free(parent_str);
             return -1;
         }
-        flecs_script_eval_error(t->v, node,
-            "unresolved identifier '%s'", name);
-        return -1;
+        flecs_script_type_unresolved_ref(t, node, name);
+        return 1;
     }
 
     if (symbol.kind == FlecsScriptSymbolVariable) {
@@ -97130,11 +97259,11 @@ static int flecs_script_type_id(
     id->second_sp = -1;
     id->dynamic = id->first_expr || id->second_expr;
 
-    if (flecs_script_type_id_elem(t, id, node, id->first,
+    int result = flecs_script_type_id_elem(t, id, node, id->first,
         &id->first_expr, 0, &id->first_eval, &id->first_symbol,
-        &id->first_sp))
-    {
-        return -1;
+        &id->first_sp);
+    if (result) {
+        return result;
     }
 
     ecs_entity_t first;
@@ -97144,11 +97273,11 @@ static int flecs_script_type_id(
         return -1;
     }
     if (id->second) {
-        if (flecs_script_type_id_elem(t, id, node, id->second,
+        result = flecs_script_type_id_elem(t, id, node, id->second,
             &id->second_expr, first, &id->second_eval, &id->second_symbol,
-            &id->second_sp))
-        {
-            return -1;
+            &id->second_sp);
+        if (result) {
+            return result;
         }
         ecs_entity_t second;
         if (flecs_script_eval_id_elem(t->v, node, NULL,
@@ -97256,8 +97385,9 @@ static int flecs_script_type_tag(
     ecs_script_type_visitor_t *t,
     ecs_script_tag_t *node)
 {
-    if (flecs_script_type_id(t, node, &node->id)) {
-        return -1;
+    int result = flecs_script_type_id(t, node, &node->id);
+    if (result) {
+        return result == 1 ? 0 : -1;
     }
     if (t->v->is_with_scope) {
         flecs_script_eval_error(t->v, node, "invalid tag in with scope");
@@ -97437,15 +97567,17 @@ static int flecs_script_type_with_tag(
     ecs_script_type_visitor_t *t,
     ecs_script_tag_t *node)
 {
-    return flecs_script_type_id(t, node, &node->id);
+    int result = flecs_script_type_id(t, node, &node->id);
+    return result == 1 ? 0 : result;
 }
 
 static int flecs_script_type_with_component(
     ecs_script_type_visitor_t *t,
     ecs_script_component_t *node)
 {
-    if (flecs_script_type_id(t, node, &node->id)) {
-        return -1;
+    int result = flecs_script_type_id(t, node, &node->id);
+    if (result) {
+        return result == 1 ? 0 : -1;
     }
     if (node->expr) {
         ecs_entity_t type = flecs_script_type_component_type(t, node);
@@ -97463,8 +97595,9 @@ static int flecs_script_type_component(
     ecs_script_type_visitor_t *t,
     ecs_script_component_t *node)
 {
-    if (flecs_script_type_id(t, node, &node->id)) {
-        return -1;
+    int id_result = flecs_script_type_id(t, node, &node->id);
+    if (id_result) {
+        return id_result == 1 ? 0 : -1;
     }
     if (!t->v->entity) {
         flecs_script_eval_error(t->v, node,
@@ -97512,9 +97645,9 @@ static int flecs_script_type_var_component(
     if (flecs_script_type_lookup(
         t, 0, node->name, FlecsScriptLookupVariable, NULL, &symbol))
     {
-        flecs_script_eval_error(t->v, node,
-            "unresolved variable '%s'", node->name);
-        return -1;
+        flecs_script_type_unresolved_ref(t, node, node->name);
+        node->sp = -1;
+        return 0;
     }
     node->sp = symbol.sp;
     return 0;
@@ -97580,10 +97713,12 @@ static int flecs_script_type_const(
     if (node->type && flecs_script_type_resolve_type(
         t, node->type, &expected_type))
     {
-        flecs_script_eval_error(t->v, node,
-            "unresolved type '%s' for const variable '%s'",
-            node->type, node->name);
-        return -1;
+        flecs_script_type_unresolved_ref(t, node, node->type);
+        if (node->expr->kind == EcsExprInitializer ||
+            node->expr->kind == EcsExprEmptyInitializer)
+        {
+            return -1;
+        }
     }
     ecs_entity_t type = expected_type;
     if (flecs_script_type_check_expr(t, &node->expr, &type)) {
@@ -97694,10 +97829,12 @@ static int flecs_script_type_template_var(
     if (node->type && flecs_script_type_resolve_type(
         t, node->type, &type))
     {
-        flecs_script_eval_error(t->v, node,
-            "unresolved type '%s' for %s '%s'",
-            node->type, mut ? "mut" : "prop", node->name);
-        return -1;
+        flecs_script_type_unresolved_ref(t, node, node->type);
+        if (node->expr->kind == EcsExprInitializer ||
+            node->expr->kind == EcsExprEmptyInitializer)
+        {
+            return -1;
+        }
     }
     if (flecs_script_type_check_expr(t, &node->expr, &type)) {
         return -1;
@@ -97828,7 +97965,7 @@ static int flecs_script_type_pair_scope(
         }
     }
 
-    if (flecs_script_type_id(t, node, &node->id)) {
+    if (flecs_script_type_id(t, node, &node->id) == -1) {
         return -1;
     }
 
@@ -97893,12 +98030,8 @@ static int flecs_script_type_try(
             if (flecs_script_type_lookup(
                 t, 0, catch_->error, FlecsScriptLookupEntity, NULL, &symbol))
             {
-                flecs_script_eval_error(t->v, node,
-                    "unresolved identifier '%s'", catch_->error);
-                t->control_depth --;
-                return -1;
-            }
-            if (symbol.kind == FlecsScriptSymbolEntitySlot) {
+                flecs_script_type_unresolved_ref(t, node, catch_->error);
+            } else if (symbol.kind == FlecsScriptSymbolEntitySlot) {
                 catch_->error_symbol = symbol.slot;
             } else {
                 catch_->eval_error = symbol.entity;
@@ -97933,10 +98066,9 @@ static int flecs_script_type_function(
     if (flecs_script_type_resolve_type(
         t, node->return_type, &node->eval_return_type))
     {
-        flecs_script_eval_error(t->v, &node->return_type_node,
-            "unresolved return type '%s' for function '%s'",
-            node->return_type, node->name);
-        return -1;
+        flecs_script_type_unresolved_ref(
+            t, &node->return_type_node, node->return_type);
+        return 0;
     }
 
     ecs_entity_t parent = flecs_script_type_ensure_owner(t);
@@ -97955,10 +98087,11 @@ static int flecs_script_type_function(
         if (flecs_script_type_resolve_type(
             t, params[i].type, &params[i].eval_type))
         {
-            flecs_script_eval_error(t->v, &params[i].node,
-                "unresolved type '%s' for parameter '%s' in function '%s'",
-                params[i].type, params[i].name, node->name);
-            goto error;
+            flecs_script_type_unresolved_ref(
+                t, &params[i].node, params[i].type);
+            t->v->vars = ecs_script_vars_pop(t->v->vars);
+            t->v->vars = outer_vars;
+            return 0;
         }
         ecs_script_var_t *var = ecs_script_vars_declare(
             t->v->vars, params[i].name);
@@ -98080,15 +98213,12 @@ static int flecs_script_type_entity(
             return -1;
 #endif
         } else {
-            flecs_script_symbol_t symbol;
+            flecs_script_symbol_t symbol = {0};
             if (flecs_script_type_lookup(
                 t, 0, node->kind, FlecsScriptLookupAll, NULL, &symbol))
             {
-                flecs_script_eval_error(t->v, node,
-                    "unresolved identifier '%s'", node->kind);
-                return -1;
-            }
-            if (symbol.kind == FlecsScriptSymbolVariable) {
+                flecs_script_type_unresolved_ref(t, node, node->kind);
+            } else if (symbol.kind == FlecsScriptSymbolVariable) {
                 ecs_script_var_t *var = ecs_script_vars_from_sp(
                     t->v->vars, symbol.sp);
                 if (!var || var->value.type != ecs_id(ecs_entity_t)) {
@@ -98239,8 +98369,7 @@ static int flecs_script_type_using(
         flecs_strfree(a, path);
     }
     if (result || !symbol.entity) {
-        flecs_script_eval_error(t->v, node,
-            "unresolved path '%s' in using statement", node->name);
+        flecs_script_type_unresolved_ref(t, node, node->name);
         return -1;
     }
     node->eval = symbol.entity;
@@ -98448,6 +98577,9 @@ int flecs_script_visit_type_entity_expr(
     visitor.type_visitor = &t;
 
     int result = flecs_script_type_entity(&t, entity, false);
+    if (flecs_script_type_report_unresolved(&visitor)) {
+        result = -1;
+    }
 
     visitor.type_visitor = NULL;
     ecs_vec_fini_t(NULL, &t.entities, ecs_script_type_entity_t);
@@ -98484,6 +98616,9 @@ int flecs_script_visit_type(
     int result = flecs_script_type_scope(
         &t, scope, 0, true, true);
     v->type_visitor = NULL;
+    if (flecs_script_type_report_unresolved(v)) {
+        result = -1;
+    }
 
     ecs_vec_fini_t(NULL, &t.entities, ecs_script_type_entity_t);
     ecs_vec_fini_t(NULL, &t.tables, ecs_script_type_table_t);

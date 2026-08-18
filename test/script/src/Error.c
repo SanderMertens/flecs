@@ -3002,6 +3002,58 @@ void Error_function_unresolved_return_type_error_line(void) {
     ecs_fini(world);
 }
 
+void Error_multiple_unresolved_refs(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e1 {"
+    LINE "  MissingTag"
+    LINE "}"
+    LINE "e2 {"
+    LINE "  MissingComponent: {10}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, "test.flecs", expr, &result) != 0);
+    test_assert(result.error != NULL);
+    char *first = strstr(result.error, "unresolved reference 'MissingTag'");
+    test_assert(first != NULL);
+    test_assert(strstr(first + 1,
+        "unresolved reference 'MissingTag'") == NULL);
+    test_assert(strstr(result.error,
+        "unresolved reference 'MissingComponent'") != NULL);
+    test_assert(!strncmp(result.error, "2:", 2));
+    test_int(result.line, 2);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_multiple_unresolved_refs_w_unresolved_const_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e1 {"
+    LINE "  MissingTag"
+    LINE "}"
+    LINE "const x: MissingType = 1";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, "test.flecs", expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error,
+        "unresolved reference 'MissingTag'") != NULL);
+    test_assert(strstr(result.error,
+        "unresolved reference 'MissingType'") != NULL);
+    test_assert(!strncmp(result.error, "2:", 2));
+    test_int(result.line, 2);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
 void Error_no_error_line_column(void) {
     ecs_world_t *world = ecs_init();
 

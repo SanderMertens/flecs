@@ -65,6 +65,12 @@ typedef enum flecs_script_lookup_kind_t {
     FlecsScriptLookupDynamic = 4
 } flecs_script_lookup_kind_t;
 
+typedef struct ecs_script_unresolved_ref_t {
+    const char *name;
+    int32_t line;
+    int32_t column;
+} ecs_script_unresolved_ref_t;
+
 struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_entity_t entity; /* Set if script is managed (has EcsScript) */
@@ -78,6 +84,7 @@ struct ecs_script_impl_t {
     int32_t refcount;
     ecs_vec_t refs;
     ecs_vec_t symbols;
+    ecs_vec_t unresolved_refs;
     bool evaluating;
     bool compiled;
 };

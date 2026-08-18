@@ -79,6 +79,8 @@ ecs_script_t* flecs_script_new(
     result->refcount = 1;
     ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &result->symbols, ecs_entity_t, 0);
+    ecs_vec_init_t(NULL, &result->unresolved_refs,
+        ecs_script_unresolved_ref_t, 0);
     return &result->pub;
 }
 
@@ -174,6 +176,8 @@ void ecs_script_free(
         flecs_expr_visit_free(script, impl->expr);
         ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_t);
         ecs_vec_fini_t(NULL, &impl->symbols, ecs_entity_t);
+        ecs_vec_fini_t(NULL, &impl->unresolved_refs,
+            ecs_script_unresolved_ref_t);
         flecs_free(&impl->allocator,
             impl->token_buffer_size, impl->token_buffer);
         flecs_allocator_fini(&impl->allocator);
