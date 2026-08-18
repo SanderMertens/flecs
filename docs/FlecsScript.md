@@ -1443,18 +1443,6 @@ my_entity {
 }
 ```
 
-Additionally, variables can also be used in combination with `with` statements. When used like this the variable name must also be prefixed with a `$`:
-
-```cpp
-const wood: Color = {38, 25, 13}
-
-with $color {
-  pillar_1 {}
-  pillar_2 {}
-  pillar_3 {}
-}
-```
-
 #### Exported variables
 Variables can be exported by prefixing a variable declaration with the `export` keyword. Exported variables can be accessed by the application and from other scripts. The following example shows an exported variable:
 

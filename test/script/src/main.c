@@ -202,10 +202,6 @@ void Eval_parse_with_2_nested_values(void);
 void Eval_parse_with_value_multiline_scope_open(void);
 void Eval_parse_with_value_multiline_comment_after_paren(void);
 void Eval_parse_with_value_multiline_comment_after_scope_open(void);
-void Eval_parse_with_var(void);
-void Eval_parse_with_2_vars(void);
-void Eval_parse_with_2_nested_vars(void);
-void Eval_parse_with_var_in_scope(void);
 void Eval_assign_const_w_expr(void);
 void Eval_const_w_type(void);
 void Eval_typed_const_w_composite_type(void);
@@ -383,7 +379,6 @@ void Eval_partial_assign_to_existing_pair(void);
 void Eval_partial_assign_nested_to_existing(void);
 void Eval_partial_assign_to_inherited(void);
 void Eval_non_trivial_var_component(void);
-void Eval_non_trivial_var_with(void);
 void Eval_update_template_w_tag(void);
 void Eval_assign_call_func(void);
 void Eval_assign_call_scoped_func(void);
@@ -884,7 +879,6 @@ void Function_call_in_arithmetic(void);
 void Function_call_in_match_value(void);
 void Function_call_in_if_condition(void);
 void Function_call_in_for_body(void);
-void Function_call_in_with(void);
 void Function_call_in_const_rhs(void);
 void Function_call_via_expr_run(void);
 void Function_call(void);
@@ -972,8 +966,6 @@ void Template_template_in_scope(void);
 void Template_nested_templates_in_prefab(void);
 void Template_entity_w_2_template_instances(void);
 void Template_template_w_prefab_and_instance(void);
-void Template_template_w_with_var(void);
-void Template_template_w_with_prop(void);
 void Template_template_w_child_w_var(void);
 void Template_template_w_child_w_prop(void);
 void Template_fold_const(void);
@@ -1034,7 +1026,6 @@ void Mut_not_exposed_as_prop(void);
 void Mut_using(void);
 void Mut_type_without_using_meta(void);
 void Mut_composite(void);
-void Mut_with_mut(void);
 void Mut_entity_pair(void);
 void Mut_entity_pair_scope(void);
 void Mut_pair_component_entity_target(void);
@@ -1164,7 +1155,6 @@ void Error_component_in_with_scope_4(void);
 void Error_component_in_with_scope_5(void);
 void Error_component_in_with_scope_nested(void);
 void Error_component_in_with_scope_after_entity(void);
-void Error_component_in_with_var_scope(void);
 void Error_component_in_with_in_template(void);
 void Error_reload_script_w_component_w_error(void);
 void Error_reload_script_w_component_w_error_again(void);
@@ -3216,22 +3206,6 @@ bake_test_case Eval_testcases[] = {
         Eval_parse_with_value_multiline_comment_after_scope_open
     },
     {
-        "parse_with_var",
-        Eval_parse_with_var
-    },
-    {
-        "parse_with_2_vars",
-        Eval_parse_with_2_vars
-    },
-    {
-        "parse_with_2_nested_vars",
-        Eval_parse_with_2_nested_vars
-    },
-    {
-        "parse_with_var_in_scope",
-        Eval_parse_with_var_in_scope
-    },
-    {
         "assign_const_w_expr",
         Eval_assign_const_w_expr
     },
@@ -3938,10 +3912,6 @@ bake_test_case Eval_testcases[] = {
     {
         "non_trivial_var_component",
         Eval_non_trivial_var_component
-    },
-    {
-        "non_trivial_var_with",
-        Eval_non_trivial_var_with
     },
     {
         "update_template_w_tag",
@@ -5924,10 +5894,6 @@ bake_test_case Function_testcases[] = {
         Function_call_in_for_body
     },
     {
-        "call_in_with",
-        Function_call_in_with
-    },
-    {
         "call_in_const_rhs",
         Function_call_in_const_rhs
     },
@@ -6271,14 +6237,6 @@ bake_test_case Template_testcases[] = {
         Template_template_w_prefab_and_instance
     },
     {
-        "template_w_with_var",
-        Template_template_w_with_var
-    },
-    {
-        "template_w_with_prop",
-        Template_template_w_with_prop
-    },
-    {
         "template_w_child_w_var",
         Template_template_w_child_w_var
     },
@@ -6512,10 +6470,6 @@ bake_test_case Mut_testcases[] = {
     {
         "composite",
         Mut_composite
-    },
-    {
-        "with_mut",
-        Mut_with_mut
     },
     {
         "entity_pair",
@@ -7027,10 +6981,6 @@ bake_test_case Error_testcases[] = {
     {
         "component_in_with_scope_after_entity",
         Error_component_in_with_scope_after_entity
-    },
-    {
-        "component_in_with_var_scope",
-        Error_component_in_with_var_scope
     },
     {
         "component_in_with_in_template",
@@ -12100,7 +12050,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        625,
+        620,
         Eval_testcases
     },
     {
@@ -12128,28 +12078,28 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        79,
+        78,
         Function_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        107,
+        105,
         Template_testcases
     },
     {
         "Mut",
         NULL,
         NULL,
-        76,
+        75,
         Mut_testcases
     },
     {
         "Error",
         NULL,
         NULL,
-        183,
+        182,
         Error_testcases
     },
     {

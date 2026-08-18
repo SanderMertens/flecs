@@ -883,23 +883,6 @@ static int flecs_script_type_component(
     return result == 1 ? 0 : result;
 }
 
-static int flecs_script_type_var_component(
-    ecs_script_type_visitor_t *t,
-    ecs_script_var_component_t *node)
-{
-    flecs_script_symbol_t symbol;
-    if (flecs_script_type_lookup(
-        t, 0, node->name, FlecsScriptLookupVariable, NULL, &symbol))
-    {
-        flecs_script_type_unresolved_ref(t, node, node->name,
-            FlecsScriptUnresolvedVariable);
-        node->sp = -1;
-        return 0;
-    }
-    node->sp = symbol.sp;
-    return 0;
-}
-
 static int flecs_script_type_with(
     ecs_script_type_visitor_t *t,
     ecs_script_with_t *node)
@@ -1675,10 +1658,6 @@ static int flecs_script_type_node(
     case EcsAstWithComponent:
         return flecs_script_type_with_component(
             t, (ecs_script_component_t*)node);
-    case EcsAstVarComponent:
-    case EcsAstWithVar:
-        return flecs_script_type_var_component(
-            t, (ecs_script_var_component_t*)node);
     case EcsAstWith:
         return flecs_script_type_with(t, (ecs_script_with_t*)node);
     case EcsAstUsing:

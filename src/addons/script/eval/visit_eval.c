@@ -596,7 +596,6 @@ static void flecs_script_apply_non_fragmenting_childof_to_scope(
             break;
         }
         case EcsAstWith:
-        case EcsAstWithVar:
         case EcsAstWithTag:
         case EcsAstWithComponent:
             flecs_script_apply_non_fragmenting_childof_to_scope(
@@ -608,7 +607,6 @@ static void flecs_script_apply_non_fragmenting_childof_to_scope(
             break;
         case EcsAstTag:
         case EcsAstComponent:
-        case EcsAstVarComponent:        
         case EcsAstUsing:
         case EcsAstModule:
         case EcsAstAnnotation:
@@ -1009,63 +1007,6 @@ static int flecs_script_eval_component(
     } else {
         ecs_add_id(v->world, src, node->id.eval);
     }
-
-    return 0;
-}
-
-static int flecs_script_eval_var_component(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_var_component_t *node)
-{
-    ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
-    ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_value_t var_value = var->value;
-
-    if (v->is_with_scope) {
-        flecs_script_eval_error(v, node, "invalid component in with scope"); 
-        return -1;
-    }
-
-    if (!v->entity) {
-        flecs_script_eval_error(v, node, "missing entity for variable component");
-        return -1;
-    }
-
-    ecs_id_t var_id = var_value.type;
-
-    if (var_value.ptr) {
-        const ecs_type_info_t *ti = flecs_script_get_type_info(
-            v, node, var_id);
-        if (!ti) {
-            return -1;
-        }
-
-        ecs_value_t value = {
-            .ptr = ecs_ensure_id(v->world, v->entity->eval, var_id, 
-                flecs_ito(size_t, ti->size)),
-            .type = var_id
-        };
-
-        ecs_ptr_copy_w_type_info(v->world, ti, value.ptr, var_value.ptr);
-
-        ecs_modified_id(v->world, v->entity->eval, var_id);
-    } else {
-        ecs_add_id(v->world, v->entity->eval, var_id);
-    }
-
-    return 0;
-}
-
-static int flecs_script_eval_with_var(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_var_component_t *node)
-{
-    ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
-    ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_allocator_t *a = &v->r->allocator;
-    ecs_value_t *value = flecs_script_with_append(a, v, NULL); // TODO: vars of non-trivial types
-    *value = var->value;
 
     return 0;
 }
@@ -1569,12 +1510,6 @@ int flecs_script_eval_node(
     case EcsAstComponent:
         return flecs_script_eval_component(
             v, (ecs_script_component_t*)node);
-    case EcsAstVarComponent:
-        return flecs_script_eval_var_component(
-            v, (ecs_script_var_component_t*)node);
-    case EcsAstWithVar:
-        return flecs_script_eval_with_var(
-            v, (ecs_script_var_component_t*)node);
     case EcsAstWithTag:
         return flecs_script_eval_with_tag(
             v, (ecs_script_tag_t*)node);
@@ -1905,8 +1840,6 @@ static void flecs_script_frame_leave(
         break;
     case EcsAstTag:
     case EcsAstComponent:
-    case EcsAstVarComponent:
-    case EcsAstWithVar:
     case EcsAstWithTag:
     case EcsAstWithComponent:
     case EcsAstUsing:
@@ -1997,8 +1930,6 @@ static flecs_script_run_status_t flecs_script_runner_exec(
 #endif
         case EcsAstTag:
         case EcsAstComponent:
-        case EcsAstVarComponent:
-        case EcsAstWithVar:
         case EcsAstWithTag:
         case EcsAstWithComponent:
         case EcsAstUsing:

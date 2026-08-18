@@ -1513,44 +1513,6 @@ void Function_call_in_for_body(void) {
     ecs_fini(world);
 }
 
-void Function_call_in_with(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "fn make_pos() -> Position { {10, 20} }"
-    LINE "const p = make_pos()"
-    LINE "with $p {"
-    LINE "    Foo {}"
-    LINE "    Bar {}"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
-    test_assert(foo != 0);
-    test_assert(bar != 0);
-
-    const Position *fp = ecs_get(world, foo, Position);
-    const Position *bp = ecs_get(world, bar, Position);
-    test_assert(fp != NULL);
-    test_assert(bp != NULL);
-    test_int(fp->x, 10);
-    test_int(fp->y, 20);
-    test_int(bp->x, 10);
-    test_int(bp->y, 20);
-
-    ecs_fini(world);
-}
-
 void Function_call_in_const_rhs(void) {
     ecs_world_t *world = ecs_init();
 
