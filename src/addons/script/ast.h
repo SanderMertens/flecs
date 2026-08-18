@@ -35,12 +35,15 @@ typedef enum ecs_script_node_kind_t {
 typedef struct ecs_script_node_t {
     ecs_script_node_kind_t kind;
     const char *pos;
+    uint64_t input;
+    uint64_t direct_input;
 } ecs_script_node_t;
 
 struct ecs_script_scope_t {
     ecs_script_node_t node;
     ecs_vec_t stmts;
     ecs_script_scope_t *parent;
+    int32_t scope_slot;
 
     /* Array with component ids that are added in scope. Used to limit
      * archetype moves. */
@@ -75,12 +78,14 @@ typedef struct ecs_script_id_t {
 typedef struct ecs_script_tag_t {
     ecs_script_node_t node;
     ecs_script_id_t id;
+    int32_t component_slot;
 } ecs_script_tag_t;
 
 typedef struct ecs_script_component_t {
     ecs_script_node_t node;
     ecs_script_id_t id;
     ecs_expr_node_t *expr;
+    int32_t component_slot;
     bool is_collection;
 } ecs_script_component_t;
 
@@ -144,6 +149,7 @@ typedef struct ecs_script_template_node_t {
     int32_t symbol;
     int32_t symbol_offset;
     int32_t symbol_count;
+    int32_t root_symbol;
 } ecs_script_template_node_t;
 
 typedef struct ecs_script_var_node_t {
@@ -191,6 +197,7 @@ typedef struct ecs_script_for_t {
     ecs_expr_node_t *to;
     ecs_expr_node_t *expr;
     ecs_script_scope_t *scope;
+    int32_t for_slot;
 } ecs_script_for_t;
 
 typedef struct ecs_script_include_t {

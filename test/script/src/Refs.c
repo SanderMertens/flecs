@@ -452,7 +452,7 @@ void Refs_global_const_var_in_component_initializer(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10);
+        test_int(p->x, 20);
     }
 
     ecs_fini(world);
@@ -502,7 +502,7 @@ void Refs_global_const_var_in_with_initializer(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10);
+        test_int(p->x, 20);
     }
 
     ecs_fini(world);
@@ -556,7 +556,7 @@ void Refs_global_const_var_in_match_expr(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 100);
+        test_int(p->x, 200);
     }
 
     ecs_fini(world);
@@ -590,8 +590,8 @@ void Refs_global_const_var_in_if_expr(void) {
     *(ecs_i32_t*)cv->value.ptr = 0;
     ecs_modified(world, v, EcsScriptConstVar);
 
-    test_assert(ecs_lookup(world, "foo") != 0);
-    test_assert(ecs_lookup(world, "bar") == 0);
+    test_assert(ecs_lookup(world, "foo") == 0);
+    test_assert(ecs_lookup(world, "bar") != 0);
 
     ecs_fini(world);
 }
@@ -635,7 +635,8 @@ void Refs_global_const_var_in_for_expr(void) {
 
     test_assert(ecs_lookup(world, "e_0") != 0);
     test_assert(ecs_lookup(world, "e_1") != 0);
-    test_assert(ecs_lookup(world, "e_2") == 0);
+    test_assert(ecs_lookup(world, "e_2") != 0);
+    test_assert(ecs_lookup(world, "e_3") == 0);
 
     ecs_fini(world);
 }
@@ -732,7 +733,7 @@ void Refs_global_const_var_set_after_managed_script_deleted(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10);
+        test_int(p->x, 20);
     }
 
     ecs_delete(world, s);
@@ -796,7 +797,7 @@ void Refs_global_const_var_modified(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10);
+        test_int(p->x, 20);
     }
 
     ecs_fini(world);
@@ -910,7 +911,7 @@ void Refs_global_const_var_in_function(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 20);
+        test_int(p->x, 60);
     }
 
     ecs_fini(world);
@@ -1026,7 +1027,7 @@ void Refs_global_const_var_in_new_expr(void) {
         test_assert(x != 0);
         const Position *p = ecs_get(world, x, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10);
+        test_int(p->x, 20);
     }
 
     ecs_fini(world);
@@ -1156,7 +1157,7 @@ void Refs_global_const_var_in_function_in_new_expr(void) {
         test_assert(x != 0);
         const Position *p = ecs_get(world, x, Position);
         test_assert(p != NULL);
-        test_int(p->x, 20);
+        test_int(p->x, 60);
     }
 
     ecs_fini(world);
@@ -1258,7 +1259,7 @@ void Refs_global_const_var_in_script_function_body(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10);
+        test_int(p->x, 20);
     }
 
     ecs_fini(world);
@@ -1356,8 +1357,8 @@ void Refs_global_const_var_assigned_to_component(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10);
-        test_int(p->y, 20);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
     }
 
     ecs_fini(world);
@@ -2119,9 +2120,9 @@ void Refs_global_const_var_in_template_component_initializer(void) {
         test_assert(p1 != NULL);
         test_assert(p2 != NULL);
         test_assert(p3 != NULL);
-        test_int(p1->x, 10);
-        test_int(p2->x, 10);
-        test_int(p3->x, 10);
+        test_int(p1->x, 20);
+        test_int(p2->x, 20);
+        test_int(p3->x, 20);
     }
 
     ecs_fini(world);
@@ -2672,7 +2673,7 @@ void Refs_global_const_var_in_template_with_initializer(void) {
         const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
         const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3.foo"), Position);
         test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
-        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
     }
 
     ecs_fini(world);
@@ -2729,7 +2730,7 @@ void Refs_global_const_var_in_template_match_expr(void) {
         const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
         const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
         test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
-        test_int(p1->x, 100); test_int(p2->x, 100); test_int(p3->x, 100);
+        test_int(p1->x, 200); test_int(p2->x, 200); test_int(p3->x, 200);
     }
 
     ecs_fini(world);
@@ -2770,12 +2771,12 @@ void Refs_global_const_var_in_template_if_expr(void) {
     *(ecs_i32_t*)cv->value.ptr = 0;
     ecs_modified(world, v, EcsScriptConstVar);
 
-    test_assert(ecs_lookup(world, "inst1.foo") != 0);
-    test_assert(ecs_lookup(world, "inst2.foo") != 0);
-    test_assert(ecs_lookup(world, "inst3.foo") != 0);
-    test_assert(ecs_lookup(world, "inst1.bar") == 0);
-    test_assert(ecs_lookup(world, "inst2.bar") == 0);
-    test_assert(ecs_lookup(world, "inst3.bar") == 0);
+    test_assert(ecs_lookup(world, "inst1.foo") == 0);
+    test_assert(ecs_lookup(world, "inst2.foo") == 0);
+    test_assert(ecs_lookup(world, "inst3.foo") == 0);
+    test_assert(ecs_lookup(world, "inst1.bar") != 0);
+    test_assert(ecs_lookup(world, "inst2.bar") != 0);
+    test_assert(ecs_lookup(world, "inst3.bar") != 0);
 
     ecs_fini(world);
 }
@@ -2813,9 +2814,9 @@ void Refs_global_const_var_in_template_for_expr(void) {
     *(ecs_i32_t*)cv->value.ptr = 3;
     ecs_modified(world, v, EcsScriptConstVar);
 
-    test_assert(ecs_lookup(world, "inst1.e_2") == 0);
-    test_assert(ecs_lookup(world, "inst2.e_2") == 0);
-    test_assert(ecs_lookup(world, "inst3.e_2") == 0);
+    test_assert(ecs_lookup(world, "inst1.e_2") != 0);
+    test_assert(ecs_lookup(world, "inst2.e_2") != 0);
+    test_assert(ecs_lookup(world, "inst3.e_2") != 0);
 
     ecs_fini(world);
 }
@@ -2874,7 +2875,7 @@ void Refs_global_const_var_in_template_function(void) {
         const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
         const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
         test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
-        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+        test_int(p1->x, 60); test_int(p2->x, 60); test_int(p3->x, 60);
     }
 
     ecs_fini(world);
@@ -2935,7 +2936,7 @@ void Refs_global_const_var_in_template_new_expr(void) {
         const Position *p2 = ecs_get(world, *x2, Position);
         const Position *p3 = ecs_get(world, *x3, Position);
         test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
-        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
     }
 
     ecs_fini(world);
@@ -3003,7 +3004,7 @@ void Refs_global_const_var_in_template_function_in_new_expr(void) {
         const Position *p2 = ecs_get(world, *x2, Position);
         const Position *p3 = ecs_get(world, *x3, Position);
         test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
-        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+        test_int(p1->x, 60); test_int(p2->x, 60); test_int(p3->x, 60);
     }
 
     ecs_fini(world);
@@ -3057,7 +3058,7 @@ void Refs_global_const_var_in_template_script_function_body(void) {
         const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
         const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
         test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
-        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
     }
 
     ecs_fini(world);
@@ -3111,7 +3112,8 @@ void Refs_global_const_var_in_template_assigned_to_component(void) {
         const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
         const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
         test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
-        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+        test_int(p1->x, 30); test_int(p2->x, 30); test_int(p3->x, 30);
+        test_int(p1->y, 40); test_int(p2->y, 40); test_int(p3->y, 40);
     }
 
     ecs_fini(world);
@@ -4627,7 +4629,7 @@ void Refs_global_const_var_declared_in_same_script_w_fn_other_script(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10);
+        test_int(p->x, 20);
     }
 
     test_assert(A == ecs_lookup(world, "A"));
@@ -4697,7 +4699,7 @@ void Refs_global_const_var_declared_in_same_script_w_fn_other_scripts(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10);
+        test_int(p->x, 20);
     }
 
     test_assert(A == ecs_lookup(world, "A"));
@@ -4746,8 +4748,8 @@ void Refs_global_const_var_in_scoped_function_other_script(void) {
     *(ecs_u64_t*)value.ptr |= 1;
     ecs_modified(world, buildings_placed, EcsScriptConstVar);
 
-    test_assert(ecs_lookup(world, "hud.placed") == 0);
-    test_assert(ecs_lookup(world, "hud.not_placed") != 0);
+    test_assert(ecs_lookup(world, "hud.placed") != 0);
+    test_assert(ecs_lookup(world, "hud.not_placed") == 0);
 
     ecs_fini(world);
 }
@@ -5069,9 +5071,9 @@ void Refs_global_const_var_declared_in_same_script_w_template(void) {
         test_assert(p1 != NULL);
         test_assert(p2 != NULL);
         test_assert(p3 != NULL);
-        test_int(p1->x, 10);
-        test_int(p2->x, 10);
-        test_int(p3->x, 10);
+        test_int(p1->x, 20);
+        test_int(p2->x, 20);
+        test_int(p3->x, 20);
     }
 
     test_assert(v == ecs_lookup(world, "v"));
@@ -5126,13 +5128,23 @@ void Refs_reeval_instantiates_template_w_global_const_var_ref(void) {
     *(ecs_i32_t*)cv->value.ptr = 1;
     ecs_modified(world, v, EcsScriptConstVar);
 
-    test_assert(ecs_lookup(world, "inst") == 0);
+    ecs_entity_t inst = ecs_lookup(world, "inst");
+    test_assert(inst != 0);
+    ecs_entity_t child = ecs_lookup_child(world, inst, "child");
+    test_assert(child != 0);
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
 
     cv = ecs_ensure(world, size, EcsScriptConstVar);
     *(ecs_f32_t*)cv->value.ptr = 20;
     ecs_modified(world, size, EcsScriptConstVar);
 
-    test_assert(ecs_lookup(world, "inst") == 0);
+    test_uint(ecs_lookup(world, "inst"), inst);
+    test_uint(ecs_lookup_child(world, inst, "child"), child);
+    p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
 
     ecs_fini(world);
 }
@@ -7081,7 +7093,7 @@ void Refs_global_const_var_and_mut_var_in_same_expr(void) {
     {
         const Position *p = ecs_get(world, ecs_lookup(world, "foo"), Position);
         test_assert(p != NULL);
-        test_int(p->x, 30);
+        test_int(p->x, 120);
     }
 
     value = ecs_mut_var_get(world, m);

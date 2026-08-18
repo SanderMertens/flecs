@@ -258,10 +258,8 @@ void Mut_modified_reinstantiates(void) {
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    float *value = ecs_get_mut_id(world, e, mut);
-    test_assert(value != NULL);
-    *value = 30;
-    ecs_modified_id(world, e, mut);
+    float value = 30;
+    ecs_set_id(world, e, mut, sizeof(float), &value);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
@@ -341,10 +339,8 @@ void Mut_modified_reinstantiates_only_instance(void) {
     ecs_entity_t e2 = ecs_lookup(world, "e2");
     test_assert(e2 != 0);
 
-    float *value = ecs_get_mut_id(world, e1, mut);
-    test_assert(value != NULL);
-    *value = 20;
-    ecs_modified_id(world, e1, mut);
+    float value = 20;
+    ecs_set_id(world, e1, mut, sizeof(float), &value);
 
     const Position *p1 = ecs_get(world, e1, Position);
     test_assert(p1 != NULL);
@@ -385,10 +381,8 @@ void Mut_deferred_modified_reinstantiates(void) {
     test_assert(e != 0);
 
     ecs_defer_begin(world);
-    float *value = ecs_get_mut_id(world, e, mut);
-    test_assert(value != NULL);
-    *value = 50;
-    ecs_modified_id(world, e, mut);
+    float value = 50;
+    ecs_set_id(world, e, mut, sizeof(float), &value);
     ecs_defer_end(world);
 
     const Position *p = ecs_get(world, e, Position);
@@ -460,10 +454,8 @@ void Mut_prop_update_preserves_mut(void) {
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    float *value = ecs_get_mut_id(world, e, mut);
-    test_assert(value != NULL);
-    *value = 3;
-    ecs_modified_id(world, e, mut);
+    float value = 3;
+    ecs_set_id(world, e, mut, sizeof(float), &value);
 
     float scale = 4;
     ecs_set_id(world, e, foo, sizeof(float), &scale);
@@ -758,11 +750,8 @@ void Mut_composite(void) {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Position *state = ecs_get_mut_id(world, e, mut);
-    test_assert(state != NULL);
-    state->x = 30;
-    state->y = 40;
-    ecs_modified_id(world, e, mut);
+    Position state = {30, 40};
+    ecs_set_id(world, e, mut, sizeof(Position), &state);
 
     child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
@@ -796,10 +785,8 @@ void Mut_entity_pair(void) {
     test_assert(e != 0);
     test_assert(ecs_has_pair(world, e, Rel, EcsFlecsCore));
 
-    ecs_entity_t *target = ecs_get_mut_id(world, e, mut);
-    test_assert(target != NULL);
-    *target = EcsFlecs;
-    ecs_modified_id(world, e, mut);
+    ecs_entity_t target = EcsFlecs;
+    ecs_set_id(world, e, mut, sizeof(ecs_entity_t), &target);
 
     test_assert(ecs_has_pair(world, e, Rel, EcsFlecs));
 
@@ -1051,10 +1038,8 @@ void Mut_anonymous_children(void) {
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    int32_t *value = ecs_get_mut_id(world, e, mut);
-    test_assert(value != NULL);
-    *value = 20;
-    ecs_modified_id(world, e, mut);
+    int32_t value = 20;
+    ecs_set_id(world, e, mut, sizeof(int32_t), &value);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -1107,10 +1092,8 @@ void Mut_fold_const(void) {
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    int32_t *size = ecs_get_mut_id(world, e, mut);
-    test_assert(size != NULL);
-    *size = 16;
-    ecs_modified_id(world, e, mut);
+    int32_t size = 16;
+    ecs_set_id(world, e, mut, sizeof(int32_t), &size);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
@@ -1271,10 +1254,8 @@ void Mut_tree_parent(void) {
     ecs_entity_t child = ecs_lookup_child(world, e, "child");
     test_assert(child != 0);
 
-    int32_t *value = ecs_get_mut_id(world, e, mut);
-    test_assert(value != NULL);
-    *value = 20;
-    ecs_modified_id(world, e, mut);
+    int32_t value = 20;
+    ecs_set_id(world, e, mut, sizeof(int32_t), &value);
 
     child = ecs_lookup_child(world, e, "child");
     test_assert(child != 0);
@@ -1309,11 +1290,8 @@ void Mut_child_name_from_string(void) {
     test_assert(e != 0);
     test_assert(ecs_lookup(world, "e.child_a") != 0);
 
-    ecs_string_t *suffix = ecs_get_mut_id(world, e, mut);
-    test_assert(suffix != NULL);
-    ecs_os_free(*suffix);
-    *suffix = ecs_os_strdup("hello");
-    ecs_modified_id(world, e, mut);
+    ecs_string_t suffix = "hello";
+    ecs_set_id(world, e, mut, sizeof(ecs_string_t), &suffix);
 
     test_assert(ecs_lookup(world, "e.child_a") == 0);
     test_assert(ecs_lookup(world, "e.child_hello") != 0);

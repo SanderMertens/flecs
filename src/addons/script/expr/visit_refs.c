@@ -27,9 +27,10 @@ static ecs_entity_t flecs_expr_ref_entity(
         if (!entity && identifier->symbol != -1) {
             ecs_script_impl_t *impl = flecs_script_impl(
                 ECS_CONST_CAST(ecs_script_t*, script));
-            if (identifier->symbol < ecs_vec_count(&impl->symbols)) {
+            if (identifier->symbol < ecs_vec_count(&impl->symbol_slots)) {
                 entity = ecs_vec_get_t(
-                    &impl->symbols, ecs_entity_t, identifier->symbol)[0];
+                    &impl->symbol_slots, ecs_script_symbol_slot_t,
+                    identifier->symbol)->entity;
             }
         }
         return entity;
@@ -82,6 +83,7 @@ static void flecs_expr_add_ref(
     ref->name = name;
     ref->component = component;
     ref->observer = 0;
+    ref->input = 0;
     ref->is_has = is_has;
     ref->is_resolve = false;
 }
@@ -103,10 +105,7 @@ int flecs_expr_visit_refs(
         break;
     case EcsExprGlobalVariable: {
         ecs_expr_variable_t *n = (ecs_expr_variable_t*)node;
-        /* Const variables are folded into the expression, so only mut variables
-         * can change the outcome of a reevaluation. */
-        if (refs && n->global && n->global_component == ecs_id(EcsScriptMutVar))
-        {
+        if (refs && n->global && n->global_component) {
             flecs_expr_add_ref(refs, n->global, NULL, n->global_component,
                 false);
         }
@@ -206,6 +205,11 @@ int flecs_expr_visit_refs(
                 ecs_script_ref_t *uf_refs = ecs_vec_first(&uf->refs);
                 int32_t i, count = ecs_vec_count(&uf->refs);
                 for (i = 0; i < count; i ++) {
+                    if (refs) {
+                        flecs_expr_add_ref(refs, uf_refs[i].entity,
+                            uf_refs[i].name, uf_refs[i].component,
+                            uf_refs[i].is_has);
+                    }
                     flecs_expr_add_ref(fn_refs, uf_refs[i].entity,
                         uf_refs[i].name, uf_refs[i].component,
                         uf_refs[i].is_has);

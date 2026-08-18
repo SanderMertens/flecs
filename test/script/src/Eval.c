@@ -5486,6 +5486,36 @@ void Eval_const_w_type(void) {
     ecs_fini(world);
 }
 
+void Eval_assign_narrowing_f64_expr_to_typed_const_w_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "const x: f64 = 2.5"
+    LINE "const y: i32 = x + 1"
+    LINE "a { Position: {y, y} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+    test_assert(ecs_has(world, a, Position));
+
+    const Position *p = ecs_get(world, a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 3);
+
+    ecs_fini(world);
+}
+
 void Eval_typed_const_w_composite_type(void) {
     ecs_world_t *world = ecs_init();
 

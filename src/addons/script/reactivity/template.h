@@ -12,6 +12,7 @@ extern ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 
 typedef struct ecs_script_template_member_t {
     int32_t index;
+    uint64_t input;
     bool is_mut;
 } ecs_script_template_member_t;
 
@@ -53,6 +54,11 @@ struct ecs_script_template_t {
 
     int32_t symbol_offset;
     int32_t symbol_count;
+    int32_t root_symbol;
+    int32_t input_count;
+    int32_t scope_count;
+    int32_t component_count;
+    int32_t for_count;
 
     int32_t refcount;
 
@@ -64,6 +70,13 @@ struct ecs_script_template_t {
 
 typedef struct EcsScriptTemplateRoot {
     ecs_vec_t observers;
+    ecs_vec_t symbol_slots;
+    ecs_vec_t component_slots;
+    ecs_vec_t scope_slots;
+    ecs_vec_t for_slots;
+    uint64_t changed;
+    int32_t visit;
+    bool initialized;
 } EcsScriptTemplateRoot;
 
 /* Event used for deferring template instantiation */
@@ -71,6 +84,7 @@ typedef struct EcsScriptTemplateSetEvent {
     ecs_entity_t template_entity;
     ecs_entity_t component;
     ecs_entity_t *entities;
+    uint64_t *inputs;
     void *data;
     int32_t count;
 
@@ -78,11 +92,13 @@ typedef struct EcsScriptTemplateSetEvent {
     int64_t _align; /* Align data storage to 8 bytes */
     char data_storage[ECS_TEMPLATE_SMALL_SIZE];
     ecs_entity_t entity_storage;
+    uint64_t input_storage;
 } EcsScriptTemplateSetEvent;
 
 typedef struct EcsScriptTemplateInstanceUpdateEvent {
     ecs_entity_t template_entity;
     ecs_entity_t instance;
+    uint64_t input;
 } EcsScriptTemplateInstanceUpdateEvent;
 
 int flecs_script_eval_template(

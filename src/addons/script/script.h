@@ -86,6 +86,17 @@ typedef struct ecs_script_unresolved_component_ref_t {
     int32_t column;
 } ecs_script_unresolved_component_ref_t;
 
+typedef struct ecs_script_symbol_slot_t {
+    ecs_entity_t entity;
+    int32_t scope_slot;
+} ecs_script_symbol_slot_t;
+
+typedef struct ecs_script_component_slot_t {
+    int32_t entity_slot;
+    ecs_id_t component;
+    int32_t scope_slot;
+} ecs_script_component_slot_t;
+
 struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_entity_t entity; /* Set if script is managed (has EcsScript) */
@@ -98,9 +109,14 @@ struct ecs_script_impl_t {
     int32_t token_buffer_size;
     int32_t refcount;
     ecs_vec_t refs;
-    ecs_vec_t symbols;
+    ecs_vec_t symbol_slots;
+    ecs_vec_t component_slots;
+    ecs_vec_t scope_slots;
+    ecs_vec_t for_slots;
     ecs_vec_t unresolved_refs;
     ecs_vec_t unresolved_component_refs;
+    int32_t input_count;
+    int32_t visit;
     bool evaluating;
     bool compiled;
 };
@@ -125,6 +141,7 @@ typedef struct ecs_function_calldata_t {
 #include "eval/eval.h"
 #include "reactivity/refs.h"
 #include "reactivity/template.h"
+#include "reactivity/deps.h"
 
 ecs_script_t* flecs_script_new(
     ecs_world_t *world);

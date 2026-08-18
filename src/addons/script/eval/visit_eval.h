@@ -25,14 +25,23 @@ typedef struct ecs_script_eval_visitor_t {
     bool is_with_scope;
     ecs_script_vars_t *vars;
     void *type_visitor;
-    ecs_vec_t *instance_symbols;
+    ecs_vec_t *symbol_slots;
+    ecs_vec_t *component_slots;
+    ecs_vec_t *scope_slots;
+    ecs_vec_t *for_slots;
+    uint64_t input;
     int32_t symbol_offset;
+    int32_t visit;
+    int32_t scope_slot;
+    int32_t for_slot;
+    bool force;
 } ecs_script_eval_visitor_t;
 
 int flecs_script_eval(
     const ecs_script_t *script,
     const ecs_script_eval_desc_t *desc,
     ecs_id_t tag,
+    uint64_t input,
     ecs_script_eval_result_t *result);
 
 /* Statement evaluation state. Owned by the frame stack of the runner (or the
@@ -41,6 +50,7 @@ int flecs_script_eval(
 
 typedef struct flecs_script_scope_state_t {
     ecs_entity_t parent;
+    int32_t scope_slot;
 } flecs_script_scope_state_t;
 
 void flecs_script_eval_scope_enter(
@@ -58,7 +68,9 @@ struct flecs_script_entity_state_t {
     ecs_entity_t eval_kind;
     flecs_script_entity_state_t *prev_entity;
     ecs_entity_t prev_template_entity;
+    bool prev_force;
     bool prev_is_with_scope;
+    int32_t symbol;
 };
 
 int flecs_script_eval_entity_enter(
@@ -73,6 +85,7 @@ void flecs_script_eval_entity_leave(
 typedef struct flecs_script_with_state_t {
     ecs_stack_cursor_t *cursor;
     int32_t with_count;
+    bool force;
     bool is_with_scope;
 } flecs_script_with_state_t;
 
@@ -89,6 +102,7 @@ typedef struct flecs_script_pair_scope_state_t {
     ecs_entity_t with_relationship;
     ecs_entity_t second;
     int32_t with_relationship_sp;
+    bool force;
 } flecs_script_pair_scope_state_t;
 
 int flecs_script_eval_pair_scope_enter(
@@ -120,6 +134,8 @@ typedef struct flecs_script_for_state_t {
     void *elems;
     ecs_value_t collection;
     ecs_map_iter_t map_it;
+    int32_t for_slot;
+    bool force;
 } flecs_script_for_state_t;
 
 typedef struct flecs_script_frame_t {
@@ -132,9 +148,11 @@ typedef struct flecs_script_frame_t {
         flecs_script_with_state_t with;
         flecs_script_pair_scope_state_t pair_scope;
         struct {
-            /* Index of catch clause being executed, -1 while in try body */
             int32_t catch_index;
         } try_;
+        struct {
+            bool force;
+        } if_;
     } state;
 } flecs_script_frame_t;
 
@@ -246,6 +264,14 @@ void flecs_script_eval_pop_vars(
 void flecs_script_eval_visit_fini(
     ecs_script_eval_visitor_t *v,
     const ecs_script_eval_desc_t *desc);
+
+void flecs_script_eval_begin(
+    ecs_script_eval_visitor_t *v,
+    uint64_t input,
+    int32_t visit);
+
+void flecs_script_eval_cleanup(
+    ecs_script_eval_visitor_t *v);
 
 int flecs_script_eval_node(
     ecs_script_visit_t *v,
