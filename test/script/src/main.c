@@ -1220,6 +1220,12 @@ void Error_function_unresolved_param_type_error_line(void);
 void Error_function_unresolved_return_type_error_line(void);
 void Error_multiple_unresolved_refs(void);
 void Error_multiple_unresolved_refs_w_unresolved_const_type(void);
+void Error_unresolved_component_ref(void);
+void Error_no_unresolved_component_ref_when_component_exists(void);
+void Error_multiple_unresolved_component_refs(void);
+void Error_unresolved_component_ref_w_unresolved_component(void);
+void Error_unresolved_component_ref_w_unresolved_entity(void);
+void Error_unresolved_component_ref_w_unresolved_entity_and_component(void);
 void Error_no_error_line_column(void);
 void Error_script_parse_line_column(void);
 void Error_script_eval_line_column(void);
@@ -7235,6 +7241,30 @@ bake_test_case Error_testcases[] = {
         Error_multiple_unresolved_refs_w_unresolved_const_type
     },
     {
+        "unresolved_component_ref",
+        Error_unresolved_component_ref
+    },
+    {
+        "no_unresolved_component_ref_when_component_exists",
+        Error_no_unresolved_component_ref_when_component_exists
+    },
+    {
+        "multiple_unresolved_component_refs",
+        Error_multiple_unresolved_component_refs
+    },
+    {
+        "unresolved_component_ref_w_unresolved_component",
+        Error_unresolved_component_ref_w_unresolved_component
+    },
+    {
+        "unresolved_component_ref_w_unresolved_entity",
+        Error_unresolved_component_ref_w_unresolved_entity
+    },
+    {
+        "unresolved_component_ref_w_unresolved_entity_and_component",
+        Error_unresolved_component_ref_w_unresolved_entity_and_component
+    },
+    {
         "no_error_line_column",
         Error_no_error_line_column
     },
@@ -12059,7 +12089,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        177,
+        183,
         Error_testcases
     },
     {

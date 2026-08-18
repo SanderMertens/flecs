@@ -25,6 +25,26 @@ static int flecs_expr_visit_type_priv(
     return flecs_expr_visit_type_ex(script, node_ptr, cur, desc, false);
 }
 
+static bool flecs_expr_unresolved_ref(
+    ecs_script_t *script,
+    const ecs_expr_eval_desc_t *desc,
+    ecs_expr_node_t *node,
+    const char *name)
+{
+    ecs_script_eval_visitor_t *v = desc->script_visitor;
+    if (!v || !v->type_visitor) {
+        return false;
+    }
+
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    ecs_script_unresolved_ref_t *ref = ecs_vec_append_t(
+        NULL, &impl->unresolved_refs, ecs_script_unresolved_ref_t);
+    ref->name = name;
+    flecs_script_pos_to_line_col(impl->pub.code, node->pos,
+        &ref->line, &ref->column);
+    return true;
+}
+
 bool flecs_expr_is_type_integer(
     ecs_entity_t type)
 {
@@ -1758,8 +1778,12 @@ static int flecs_expr_identifier_visit_type(
 
         /* If unresolved identifiers aren't allowed here, throw error */
         if (!desc->allow_unresolved_identifiers) {
-            flecs_expr_visit_error(script, node,
-                "unresolved identifier '%s'", node->value);
+            if (!flecs_expr_unresolved_ref(script, desc,
+                (ecs_expr_node_t*)node, node->value))
+            {
+                flecs_expr_visit_error(script, node,
+                    "unresolved identifier '%s'", node->value);
+            }
             goto error;
         }
 
@@ -1783,8 +1807,12 @@ static int flecs_expr_global_variable_resolve(
         FlecsScriptLookupAll, &symbol) ||
         symbol.kind != FlecsScriptSymbolGlobalVariable)
     {
-        flecs_expr_visit_error(script, node, "unresolved variable '%s'",
-            node->name);
+        if (!flecs_expr_unresolved_ref(script, desc,
+            (ecs_expr_node_t*)node, node->name))
+        {
+            flecs_expr_visit_error(script, node, "unresolved variable '%s'",
+                node->name);
+        }
         goto error;
     }
     ecs_entity_t global = symbol.entity;
@@ -2513,6 +2541,31 @@ static int flecs_expr_element_visit_type(
             }
 
             node->node.kind = EcsExprComponent;
+
+            ecs_script_eval_visitor_t *v = desc->script_visitor;
+            if (v && v->type_visitor) {
+                ecs_expr_node_t *left = node->left;
+                if (left->kind == EcsExprIdentifier) {
+                    left = ((ecs_expr_identifier_t*)left)->expr;
+                }
+                if (left && left->kind == EcsExprValue &&
+                    left->type == ecs_id(ecs_entity_t))
+                {
+                    ecs_entity_t src =
+                        ((ecs_expr_value_node_t*)left)->storage.entity;
+                    if (src && !ecs_has_id(world, src, node->node.type)) {
+                        ecs_script_impl_t *impl = flecs_script_impl(script);
+                        ecs_script_unresolved_component_ref_t *ref =
+                            ecs_vec_append_t(NULL,
+                                &impl->unresolved_component_refs,
+                                ecs_script_unresolved_component_ref_t);
+                        ref->entity = src;
+                        ref->component = node->node.type;
+                        flecs_script_pos_to_line_col(impl->pub.code,
+                            node->node.pos, &ref->line, &ref->column);
+                    }
+                }
+            }
 
             *cur = ecs_meta_cursor(script->world, node->node.type, NULL);
 

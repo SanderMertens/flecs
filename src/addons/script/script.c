@@ -81,7 +81,32 @@ ecs_script_t* flecs_script_new(
     ecs_vec_init_t(NULL, &result->symbols, ecs_entity_t, 0);
     ecs_vec_init_t(NULL, &result->unresolved_refs,
         ecs_script_unresolved_ref_t, 0);
+    ecs_vec_init_t(NULL, &result->unresolved_component_refs,
+        ecs_script_unresolved_component_ref_t, 0);
     return &result->pub;
+}
+
+void flecs_script_pos_to_line_col(
+    const char *code,
+    const char *pos,
+    int32_t *line,
+    int32_t *column)
+{
+    line[0] = 0;
+    column[0] = 0;
+    if (!code || !pos || (pos < code) || (pos > &code[ecs_os_strlen(code)])) {
+        return;
+    }
+
+    const char *ptr, *line_start = code;
+    line[0] = 1;
+    for (ptr = code; ptr < pos; ptr ++) {
+        if (ptr[0] == '\n') {
+            line[0] ++;
+            line_start = ptr + 1;
+        }
+    }
+    column[0] = flecs_ito(int32_t, pos - line_start) + 1;
 }
 
 void ecs_script_clear(
@@ -178,6 +203,8 @@ void ecs_script_free(
         ecs_vec_fini_t(NULL, &impl->symbols, ecs_entity_t);
         ecs_vec_fini_t(NULL, &impl->unresolved_refs,
             ecs_script_unresolved_ref_t);
+        ecs_vec_fini_t(NULL, &impl->unresolved_component_refs,
+            ecs_script_unresolved_component_ref_t);
         flecs_free(&impl->allocator,
             impl->token_buffer_size, impl->token_buffer);
         flecs_allocator_fini(&impl->allocator);
