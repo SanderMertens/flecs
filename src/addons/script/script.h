@@ -65,8 +65,15 @@ typedef enum flecs_script_lookup_kind_t {
     FlecsScriptLookupDynamic = 4
 } flecs_script_lookup_kind_t;
 
+typedef enum flecs_script_unresolved_kind_t {
+    FlecsScriptUnresolvedEntity,
+    FlecsScriptUnresolvedComponent,
+    FlecsScriptUnresolvedVariable
+} flecs_script_unresolved_kind_t;
+
 typedef struct ecs_script_unresolved_ref_t {
     const char *name;
+    flecs_script_unresolved_kind_t kind;
     int32_t line;
     int32_t column;
 } ecs_script_unresolved_ref_t;

@@ -83,6 +83,7 @@ static void flecs_expr_add_ref(
     ref->component = component;
     ref->observer = 0;
     ref->is_has = is_has;
+    ref->is_resolve = false;
 }
 
 int flecs_expr_visit_refs(

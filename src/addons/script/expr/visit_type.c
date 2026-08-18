@@ -29,7 +29,8 @@ static bool flecs_expr_unresolved_ref(
     ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
     ecs_expr_node_t *node,
-    const char *name)
+    const char *name,
+    flecs_script_unresolved_kind_t kind)
 {
     ecs_script_eval_visitor_t *v = desc->script_visitor;
     if (!v || !v->type_visitor) {
@@ -40,6 +41,7 @@ static bool flecs_expr_unresolved_ref(
     ecs_script_unresolved_ref_t *ref = ecs_vec_append_t(
         NULL, &impl->unresolved_refs, ecs_script_unresolved_ref_t);
     ref->name = name;
+    ref->kind = kind;
     flecs_script_pos_to_line_col(impl->pub.code, node->pos,
         &ref->line, &ref->column);
     return true;
@@ -1779,7 +1781,8 @@ static int flecs_expr_identifier_visit_type(
         /* If unresolved identifiers aren't allowed here, throw error */
         if (!desc->allow_unresolved_identifiers) {
             if (!flecs_expr_unresolved_ref(script, desc,
-                (ecs_expr_node_t*)node, node->value))
+                (ecs_expr_node_t*)node, node->value,
+                FlecsScriptUnresolvedEntity))
             {
                 flecs_expr_visit_error(script, node,
                     "unresolved identifier '%s'", node->value);
@@ -1808,7 +1811,8 @@ static int flecs_expr_global_variable_resolve(
         symbol.kind != FlecsScriptSymbolGlobalVariable)
     {
         if (!flecs_expr_unresolved_ref(script, desc,
-            (ecs_expr_node_t*)node, node->name))
+            (ecs_expr_node_t*)node, node->name,
+            FlecsScriptUnresolvedVariable))
         {
             flecs_expr_visit_error(script, node, "unresolved variable '%s'",
                 node->name);

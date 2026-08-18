@@ -7622,3 +7622,378 @@ void Refs_has_ref_and_value_ref_same_component(void) {
 
     ecs_fini(world);
 }
+
+void Refs_wait_for_unresolved_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "e1 {"
+            LINE "  MissingTag"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    {
+        const EcsScript *sc = ecs_get(world, s, EcsScript);
+        test_assert(sc != NULL);
+        test_assert(sc->error != NULL);
+        test_assert(ecs_lookup(world, "e1") == 0);
+    }
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "MissingTag" });
+
+    {
+        const EcsScript *sc = ecs_get(world, s, EcsScript);
+        test_assert(sc != NULL);
+        test_assert(sc->error == NULL);
+        ecs_entity_t e1 = ecs_lookup(world, "e1");
+        test_assert(e1 != 0);
+        test_assert(ecs_has_id(world, e1, tag));
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_wait_for_unresolved_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "e1 {"
+            LINE "  Position: {10, 20}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "e1") == 0);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    {
+        const EcsScript *sc = ecs_get(world, s, EcsScript);
+        test_assert(sc != NULL);
+        test_assert(sc->error == NULL);
+        ecs_entity_t e1 = ecs_lookup(world, "e1");
+        test_assert(e1 != 0);
+        const Position *p = ecs_get(world, e1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_wait_for_component_on_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {e[Mass].value, 0}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "foo") == 0);
+
+    ecs_set(world, e, Mass, {10});
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+    }
+
+    ecs_set(world, e, Mass, {20});
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_wait_for_unresolved_entity_then_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {e[Mass].value, 0}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "foo") == 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    test_assert(ecs_lookup(world, "foo") == 0);
+
+    ecs_set(world, e, Mass, {10});
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_wait_for_unresolved_entity_w_component_set_before_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {e[Mass].value, 0}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "foo") == 0);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Mass, {10});
+
+    test_assert(ecs_lookup(world, "foo") == 0);
+
+    ecs_set_name(world, e, "e");
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_wait_for_unresolved_const_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const val: Mass = {10}"
+            LINE "e1 {"
+            LINE "  Position: {val.value, val.value}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "e1") == 0);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    {
+        ecs_entity_t e1 = ecs_lookup(world, "e1");
+        test_assert(e1 != 0);
+        const Position *p = ecs_get(world, e1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 10);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_wait_for_multiple_unresolved_refs(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "e1 {"
+            LINE "  TagA"
+            LINE "}"
+            LINE "e2 {"
+            LINE "  TagB"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "e1") == 0);
+    test_assert(ecs_lookup(world, "e2") == 0);
+
+    ecs_entity_t tag_a = ecs_entity(world, { .name = "TagA" });
+
+    test_assert(ecs_lookup(world, "e1") == 0);
+    test_assert(ecs_lookup(world, "e2") == 0);
+
+    ecs_entity_t tag_b = ecs_entity(world, { .name = "TagB" });
+
+    {
+        ecs_entity_t e1 = ecs_lookup(world, "e1");
+        test_assert(e1 != 0);
+        test_assert(ecs_has_id(world, e1, tag_a));
+        ecs_entity_t e2 = ecs_lookup(world, "e2");
+        test_assert(e2 != 0);
+        test_assert(ecs_has_id(world, e2, tag_b));
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_wait_for_unresolved_component_entity_named_first(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "e1 {"
+            LINE "  Position: {10, 20}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "e1") == 0);
+
+    ecs_entity_t pos = ecs_entity(world, { .name = "Position" });
+
+    test_assert(ecs_lookup(world, "e1") == 0);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = pos,
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    {
+        ecs_entity_t e1 = ecs_lookup(world, "e1");
+        test_assert(e1 != 0);
+        const Position *p = ecs_get(world, e1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_delete_script_while_waiting(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "e1 {"
+            LINE "  MissingTag"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "e1") == 0);
+
+    ecs_delete(world, s);
+
+    ecs_entity(world, { .name = "MissingTag" });
+
+    test_assert(ecs_lookup(world, "e1") == 0);
+
+    ecs_fini(world);
+}

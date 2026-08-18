@@ -258,6 +258,7 @@ static void flecs_script_template_update_instance_observers(
         ref->component = component;
         ref->observer = 0;
         ref->is_has = is_has;
+        ref->is_resolve = false;
     }
 
     EcsScriptTemplateRoot *root = ecs_ensure_pair(

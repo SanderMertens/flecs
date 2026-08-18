@@ -50,7 +50,7 @@ static ECS_DTOR(EcsScript, ptr, {
         ecs_script_free(ptr->script);
     }
 
-    ecs_vec_fini_t(NULL, &ptr->observers, ecs_script_ref_t);
+    flecs_script_ref_observers_fini(&ptr->observers);
 
     ecs_os_free(ptr->filename);
     ecs_os_free(ptr->code);
@@ -304,6 +304,10 @@ int flecs_script_update(
                 s->error);
         }
         flecs_script_runtime_error_reset(runtime);
+        if (!instance) {
+            flecs_script_update_resolve_observers(world, e,
+                flecs_script_impl(parsed), &s->observers);
+        }
         ecs_script_free(parsed);
         s->script = NULL;
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));

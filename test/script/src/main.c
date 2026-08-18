@@ -2385,6 +2385,15 @@ void Refs_has_singleton_pair_ref(void);
 void Refs_has_ref_in_const_var(void);
 void Refs_has_ref_in_template_component_initializer(void);
 void Refs_has_ref_and_value_ref_same_component(void);
+void Refs_wait_for_unresolved_tag(void);
+void Refs_wait_for_unresolved_component(void);
+void Refs_wait_for_component_on_entity(void);
+void Refs_wait_for_unresolved_entity_then_component(void);
+void Refs_wait_for_unresolved_entity_w_component_set_before_name(void);
+void Refs_wait_for_unresolved_const_type(void);
+void Refs_wait_for_multiple_unresolved_refs(void);
+void Refs_wait_for_unresolved_component_entity_named_first(void);
+void Refs_delete_script_while_waiting(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -11846,6 +11855,42 @@ bake_test_case Refs_testcases[] = {
     {
         "has_ref_and_value_ref_same_component",
         Refs_has_ref_and_value_ref_same_component
+    },
+    {
+        "wait_for_unresolved_tag",
+        Refs_wait_for_unresolved_tag
+    },
+    {
+        "wait_for_unresolved_component",
+        Refs_wait_for_unresolved_component
+    },
+    {
+        "wait_for_component_on_entity",
+        Refs_wait_for_component_on_entity
+    },
+    {
+        "wait_for_unresolved_entity_then_component",
+        Refs_wait_for_unresolved_entity_then_component
+    },
+    {
+        "wait_for_unresolved_entity_w_component_set_before_name",
+        Refs_wait_for_unresolved_entity_w_component_set_before_name
+    },
+    {
+        "wait_for_unresolved_const_type",
+        Refs_wait_for_unresolved_const_type
+    },
+    {
+        "wait_for_multiple_unresolved_refs",
+        Refs_wait_for_multiple_unresolved_refs
+    },
+    {
+        "wait_for_unresolved_component_entity_named_first",
+        Refs_wait_for_unresolved_component_entity_named_first
+    },
+    {
+        "delete_script_while_waiting",
+        Refs_delete_script_while_waiting
     }
 };
 
@@ -12158,7 +12203,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        132,
+        141,
         Refs_testcases
     },
     {

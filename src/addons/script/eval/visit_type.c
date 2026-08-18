@@ -39,7 +39,8 @@ static bool flecs_script_type_name_eq(
 static void flecs_script_type_unresolved_ref(
     ecs_script_type_visitor_t *t,
     void *node,
-    const char *name)
+    const char *name,
+    flecs_script_unresolved_kind_t kind)
 {
     ecs_script_impl_t *impl = t->v->base.script;
     int32_t line, column;
@@ -49,6 +50,7 @@ static void flecs_script_type_unresolved_ref(
     ecs_script_unresolved_ref_t *ref = ecs_vec_append_t(
         NULL, &impl->unresolved_refs, ecs_script_unresolved_ref_t);
     ref->name = name;
+    ref->kind = kind;
     ref->line = line;
     ref->column = column;
 }
@@ -439,7 +441,18 @@ static int flecs_script_type_id_elem(
             ecs_os_free(parent_str);
             return -1;
         }
-        flecs_script_type_unresolved_ref(t, node, name);
+        flecs_script_unresolved_kind_t ref_kind = FlecsScriptUnresolvedEntity;
+        if (!id->second) {
+            ecs_script_node_kind_t node_kind = ((ecs_script_node_t*)node)->kind;
+            if (node_kind == EcsAstComponent ||
+                node_kind == EcsAstWithComponent)
+            {
+                if (((ecs_script_component_t*)node)->expr) {
+                    ref_kind = FlecsScriptUnresolvedComponent;
+                }
+            }
+        }
+        flecs_script_type_unresolved_ref(t, node, name, ref_kind);
         return 1;
     }
 
@@ -878,7 +891,8 @@ static int flecs_script_type_var_component(
     if (flecs_script_type_lookup(
         t, 0, node->name, FlecsScriptLookupVariable, NULL, &symbol))
     {
-        flecs_script_type_unresolved_ref(t, node, node->name);
+        flecs_script_type_unresolved_ref(t, node, node->name,
+            FlecsScriptUnresolvedVariable);
         node->sp = -1;
         return 0;
     }
@@ -946,7 +960,8 @@ static int flecs_script_type_const(
     if (node->type && flecs_script_type_resolve_type(
         t, node->type, &expected_type))
     {
-        flecs_script_type_unresolved_ref(t, node, node->type);
+        flecs_script_type_unresolved_ref(t, node, node->type,
+            FlecsScriptUnresolvedComponent);
         if (node->expr->kind == EcsExprInitializer ||
             node->expr->kind == EcsExprEmptyInitializer)
         {
@@ -1063,7 +1078,8 @@ static int flecs_script_type_template_var(
     if (node->type && flecs_script_type_resolve_type(
         t, node->type, &type))
     {
-        flecs_script_type_unresolved_ref(t, node, node->type);
+        flecs_script_type_unresolved_ref(t, node, node->type,
+            FlecsScriptUnresolvedComponent);
         if (node->expr->kind == EcsExprInitializer ||
             node->expr->kind == EcsExprEmptyInitializer)
         {
@@ -1269,7 +1285,8 @@ static int flecs_script_type_try(
             if (flecs_script_type_lookup(
                 t, 0, catch_->error, FlecsScriptLookupEntity, NULL, &symbol))
             {
-                flecs_script_type_unresolved_ref(t, node, catch_->error);
+                flecs_script_type_unresolved_ref(t, node, catch_->error,
+                    FlecsScriptUnresolvedEntity);
             } else if (symbol.kind == FlecsScriptSymbolEntitySlot) {
                 catch_->error_symbol = symbol.slot;
             } else {
@@ -1306,7 +1323,8 @@ static int flecs_script_type_function(
         t, node->return_type, &node->eval_return_type))
     {
         flecs_script_type_unresolved_ref(
-            t, &node->return_type_node, node->return_type);
+            t, &node->return_type_node, node->return_type,
+            FlecsScriptUnresolvedComponent);
         return 0;
     }
 
@@ -1327,7 +1345,8 @@ static int flecs_script_type_function(
             t, params[i].type, &params[i].eval_type))
         {
             flecs_script_type_unresolved_ref(
-                t, &params[i].node, params[i].type);
+                t, &params[i].node, params[i].type,
+                FlecsScriptUnresolvedComponent);
             t->v->vars = ecs_script_vars_pop(t->v->vars);
             t->v->vars = outer_vars;
             return 0;
@@ -1462,7 +1481,8 @@ static int flecs_script_type_entity(
             if (flecs_script_type_lookup(
                 t, 0, node->kind, FlecsScriptLookupAll, NULL, &symbol))
             {
-                flecs_script_type_unresolved_ref(t, node, node->kind);
+                flecs_script_type_unresolved_ref(t, node, node->kind,
+                    FlecsScriptUnresolvedEntity);
             } else if (symbol.kind == FlecsScriptSymbolVariable) {
                 ecs_script_var_t *var = ecs_script_vars_from_sp(
                     t->v->vars, symbol.sp);
@@ -1614,7 +1634,8 @@ static int flecs_script_type_using(
         flecs_strfree(a, path);
     }
     if (result || !symbol.entity) {
-        flecs_script_type_unresolved_ref(t, node, node->name);
+        flecs_script_type_unresolved_ref(t, node, node->name,
+            FlecsScriptUnresolvedEntity);
         return -1;
     }
     node->eval = symbol.entity;
