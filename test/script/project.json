@@ -1236,6 +1236,8 @@
                 "function_duplicate_param_error_line",
                 "function_unresolved_param_type_error_line",
                 "function_unresolved_return_type_error_line",
+                "multiple_unresolved_refs",
+                "multiple_unresolved_refs_w_unresolved_const_type",
                 "no_error_line_column",
                 "script_parse_line_column",
                 "script_eval_line_column",

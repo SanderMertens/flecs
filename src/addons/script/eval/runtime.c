@@ -32,6 +32,7 @@ void ecs_script_runtime_free(
     flecs_allocator_fini(&r->allocator);
     flecs_stack_fini(&r->stack);
     ecs_os_free(r->error_name);
+    ecs_os_free(r->unresolved_errors);
     ecs_os_free(r);
 }
 
@@ -40,6 +41,8 @@ void flecs_script_runtime_error_reset(
 {
     ecs_os_free(r->error_name);
     r->error_name = NULL;
+    ecs_os_free(r->unresolved_errors);
+    r->unresolved_errors = NULL;
     r->error = false;
 }
 
@@ -50,6 +53,8 @@ void ecs_script_runtime_clear(
     ecs_vec_clear(&r->with);
     ecs_vec_clear(&r->with_type_info);
     ecs_vec_clear(&r->using);
+    ecs_os_free(r->unresolved_errors);
+    r->unresolved_errors = NULL;
     r->error = false;
 }
 

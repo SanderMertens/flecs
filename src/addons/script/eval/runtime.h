@@ -21,6 +21,7 @@ struct ecs_script_runtime_t {
     ecs_id_t current_tag;
 
     char *error_name;
+    char *unresolved_errors;
     int32_t include_depth;
     bool error;
 };

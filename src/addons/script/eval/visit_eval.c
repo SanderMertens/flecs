@@ -2264,8 +2264,26 @@ int flecs_script_eval(
     }
 
     if (result) {
+        char *unresolved = priv_desc.runtime->unresolved_errors;
+        priv_desc.runtime->unresolved_errors = NULL;
         result->error = flecs_log_capture_pop();
         flecs_log_get_captured_error_pos(&result->line, &result->column);
+        if (unresolved) {
+            if (!result->error) {
+                result->error = unresolved;
+            } else if (!ecs_os_strncmp(unresolved, result->error,
+                ecs_os_strlen(result->error)))
+            {
+                ecs_os_free(result->error);
+                result->error = unresolved;
+            } else {
+                char *error = flecs_asprintf(
+                    "%s\n%s", result->error, unresolved);
+                ecs_os_free(result->error);
+                ecs_os_free(unresolved);
+                result->error = error;
+            }
+        }
         if (!r && result->error) {
             ecs_err("%s", result->error);
             ecs_os_free(result->error);

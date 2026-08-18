@@ -1218,6 +1218,8 @@ void Error_function_unresolved_const_type_error_line(void);
 void Error_function_duplicate_param_error_line(void);
 void Error_function_unresolved_param_type_error_line(void);
 void Error_function_unresolved_return_type_error_line(void);
+void Error_multiple_unresolved_refs(void);
+void Error_multiple_unresolved_refs_w_unresolved_const_type(void);
 void Error_no_error_line_column(void);
 void Error_script_parse_line_column(void);
 void Error_script_eval_line_column(void);
@@ -7225,6 +7227,14 @@ bake_test_case Error_testcases[] = {
         Error_function_unresolved_return_type_error_line
     },
     {
+        "multiple_unresolved_refs",
+        Error_multiple_unresolved_refs
+    },
+    {
+        "multiple_unresolved_refs_w_unresolved_const_type",
+        Error_multiple_unresolved_refs_w_unresolved_const_type
+    },
+    {
         "no_error_line_column",
         Error_no_error_line_column
     },
@@ -12049,7 +12059,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        175,
+        177,
         Error_testcases
     },
     {
