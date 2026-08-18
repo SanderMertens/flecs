@@ -7751,6 +7751,167 @@ void Expr_component_inline_elem_expr_string(void) {
     ecs_fini(world);
 }
 
+void Expr_component_member_inline_elem_member_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point points[3];
+        int32_t count;
+    } Polygon;
+
+    typedef struct {
+        int32_t id;
+        Polygon polygon;
+    } Shape;
+
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Polygon) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Polygon" }),
+        .members = {
+            {"points", ecs_id(Point), .count = 3},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Shape) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Shape" }),
+        .members = {
+            {"id", ecs_id(ecs_i32_t)},
+            {"polygon", ecs_id(Polygon)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Shape, {7, {{{10, 20}, {30, 40}, {50, 60}}, 3}});
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "e[Shape].polygon.count", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    {
+        int32_t *ptr = v.ptr;
+        test_int(*ptr, 3);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_os_zeromem(&v);
+
+    test_assert(ecs_expr_run(world, "e[Shape].polygon.points[0].x", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    {
+        int32_t *ptr = v.ptr;
+        test_int(*ptr, 10);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_os_zeromem(&v);
+
+    test_assert(ecs_expr_run(world, "e[Shape].polygon.points[0].y", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    {
+        int32_t *ptr = v.ptr;
+        test_int(*ptr, 20);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_os_zeromem(&v);
+
+    test_assert(ecs_expr_run(world, "e[Shape].polygon.points[1].x", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    {
+        int32_t *ptr = v.ptr;
+        test_int(*ptr, 30);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_os_zeromem(&v);
+
+    test_assert(ecs_expr_run(world, "e[Shape].polygon.points[2].y", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    {
+        int32_t *ptr = v.ptr;
+        test_int(*ptr, 60);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_component_member_inline_elem_member_expr_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        char *value;
+    } String;
+
+    typedef struct {
+        String values[2];
+        int32_t count;
+    } Strings;
+
+    typedef struct {
+        int32_t id;
+        Strings strings;
+    } Container;
+
+    ecs_entity_t ecs_id(String) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "String" }),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Strings) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Strings" }),
+        .members = {
+            {"values", ecs_id(String), .count = 2},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Container) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Container" }),
+        .members = {
+            {"id", ecs_id(ecs_i32_t)},
+            {"strings", ecs_id(Strings)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Container, {7, {{{"Hello"}, {"World"}}, 2}});
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(
+        world, "e[Container].strings.values[0].value", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    {
+        char **ptr = v.ptr;
+        test_str(*ptr, "Hello");
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
 void Expr_component_expr_in_object(void) {
     ecs_world_t *world = ecs_init();
 

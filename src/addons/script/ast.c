@@ -37,6 +37,7 @@ ecs_script_scope_t* flecs_script_scope_new(
     flecs_ast_vec(parser, result->stmts, ecs_script_node_t);
     ecs_vec_init_t(NULL, &result->components, ecs_id_t, 0);
     result->parent = parser->scope;
+    result->scope_slot = -1;
     return result;
 }
 
@@ -187,6 +188,7 @@ ecs_script_tag_t* flecs_script_insert_pair_tag(
 
     ecs_script_tag_t *result = flecs_ast_new(
         parser, ecs_script_tag_t, EcsAstTag);
+    result->component_slot = -1;
 
     if (flecs_script_set_id(parser, &result->id, first, second)) {
         return NULL;
@@ -214,6 +216,7 @@ ecs_script_component_t* flecs_script_insert_pair_component(
 
     ecs_script_component_t *result = flecs_ast_new(
             parser, ecs_script_component_t, EcsAstComponent);
+    result->component_slot = -1;
 
     if (flecs_script_set_id(parser, &result->id, first, second)) {
         return NULL;
@@ -310,6 +313,7 @@ ecs_script_template_node_t* flecs_script_insert_template(
     result->symbol = -1;
     result->symbol_offset = -1;
     result->symbol_count = -1;
+    result->root_symbol = -1;
     result->name = name;
     result->scope = flecs_script_scope_new(parser);
 
@@ -400,6 +404,7 @@ ecs_script_for_t* flecs_script_insert_for(
     result->loop_var_sp[0] = -1;
     result->loop_var_sp[1] = -1;
     result->loop_var_sp[2] = -1;
+    result->for_slot = -1;
     result->scope = flecs_script_scope_new(parser);
 
     flecs_ast_append(parser, scope->stmts, ecs_script_for_t, result);

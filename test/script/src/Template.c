@@ -3997,10 +3997,8 @@ void Template_template_w_tree_parent_change_value(void) {
         }
 
         {
-            void *bar = ecs_get_mut_id(world, e, Bar);
-            test_assert(bar != NULL);
-            *(int32_t*)bar = 20;
-            ecs_modified_id(world, e, Bar);
+            int32_t value = 20;
+            ecs_set_id(world, e, Bar, sizeof(int32_t), &value);
         }
     }
 

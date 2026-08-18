@@ -120,6 +120,27 @@ static int flecs_script_for_enter(
     flecs_script_for_state_t *state)
 {
     ecs_os_zeromem(state);
+    state->for_slot = v->for_slot;
+    state->force = v->force;
+
+    bool visited = v->scope_slots && node->scope->scope_slot >= 0 &&
+        node->scope->scope_slot < ecs_vec_count(v->scope_slots) &&
+        ecs_vec_get_t(v->scope_slots,
+            int32_t, node->scope->scope_slot)[0] == v->visit;
+    if (!visited && v->for_slots && node->for_slot >= 0 &&
+        node->for_slot < ecs_vec_count(v->for_slots))
+    {
+        ecs_vec_t *entities = ecs_vec_get_t(
+            v->for_slots, ecs_vec_t, node->for_slot);
+        ecs_entity_t *array = ecs_vec_first(entities);
+        int32_t i, count = ecs_vec_count(entities);
+        for (i = 0; i < count; i ++) {
+            if (ecs_is_alive(v->world, array[i])) {
+                ecs_delete(v->world, array[i]);
+            }
+        }
+        ecs_vec_clear(entities);
+    }
 
     ecs_entity_t key_type = 0;
     ecs_entity_t elem_type = ecs_id(ecs_i32_t);
@@ -207,10 +228,15 @@ static int flecs_script_for_enter(
         goto error_pop;
     }
 
+    v->for_slot = node->for_slot;
+    v->force = true;
+
     return 0;
 error_pop:
     v->vars = ecs_script_vars_pop(v->vars);
 error:
+    v->for_slot = state->for_slot;
+    v->force = state->force;
     if (state->collection.type) {
         ecs_ptr_free(v->world, state->collection.type, state->collection.ptr);
         state->collection = (ecs_value_t){0, NULL};
@@ -264,11 +290,48 @@ static bool flecs_script_for_next(
     return true;
 }
 
+static void flecs_script_for_merge_slots(
+    ecs_script_eval_visitor_t *v,
+    int32_t dst_slot,
+    int32_t src_slot)
+{
+    if (!v->for_slots || dst_slot < 0 || src_slot < 0 ||
+        dst_slot >= ecs_vec_count(v->for_slots) ||
+        src_slot >= ecs_vec_count(v->for_slots))
+    {
+        return;
+    }
+
+    ecs_vec_t *dst = ecs_vec_get_t(v->for_slots, ecs_vec_t, dst_slot);
+    ecs_vec_t *src = ecs_vec_get_t(v->for_slots, ecs_vec_t, src_slot);
+    ecs_entity_t *src_array = ecs_vec_first(src);
+    int32_t i, src_count = ecs_vec_count(src);
+    for (i = 0; i < src_count; i ++) {
+        ecs_entity_t entity = src_array[i];
+        if (!ecs_is_alive(v->world, entity)) {
+            continue;
+        }
+        ecs_entity_t *dst_array = ecs_vec_first(dst);
+        int32_t j, dst_count = ecs_vec_count(dst);
+        for (j = 0; j < dst_count; j ++) {
+            if (dst_array[j] == entity) {
+                break;
+            }
+        }
+        if (j == dst_count) {
+            ecs_vec_append_t(NULL, dst, ecs_entity_t)[0] = entity;
+        }
+    }
+}
+
 void flecs_script_eval_for_leave(
     ecs_script_eval_visitor_t *v,
     flecs_script_for_state_t *state)
 {
     v->vars = ecs_script_vars_pop(v->vars);
+    flecs_script_for_merge_slots(v, state->for_slot, v->for_slot);
+    v->for_slot = state->for_slot;
+    v->force = state->force;
 
     if (state->collection.type) {
         ecs_ptr_free(v->world, state->collection.type, state->collection.ptr);

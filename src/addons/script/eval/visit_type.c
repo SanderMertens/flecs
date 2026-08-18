@@ -208,18 +208,21 @@ static ecs_script_type_entity_t* flecs_script_type_find(
     return entity;
 }
 
-static int32_t flecs_script_type_slot_new(
+int32_t flecs_script_type_slot_new(
     ecs_script_type_visitor_t *t,
     int32_t expected)
 {
     ecs_script_impl_t *impl = t->v->base.script;
     if (expected != -1) {
-        ecs_assert(expected < ecs_vec_count(&impl->symbols),
+        ecs_assert(expected < ecs_vec_count(&impl->symbol_slots),
             ECS_INTERNAL_ERROR, NULL);
         return expected;
     }
-    int32_t result = ecs_vec_count(&impl->symbols);
-    ecs_vec_append_t(NULL, &impl->symbols, ecs_entity_t)[0] = 0;
+    int32_t result = ecs_vec_count(&impl->symbol_slots);
+    ecs_script_symbol_slot_t *slot = ecs_vec_append_t(
+        NULL, &impl->symbol_slots, ecs_script_symbol_slot_t);
+    slot->entity = 0;
+    slot->scope_slot = -1;
     return result;
 }
 
@@ -1143,8 +1146,10 @@ static int flecs_script_type_for(
             ecs_vec_get_t(&t->tables, ecs_script_type_table_t,
                 t->table)->owner);
         t->control_depth ++;
+        t->for_depth ++;
         int result = flecs_script_type_scope(
             t, node->scope, table, true, false);
+        t->for_depth --;
         t->control_depth --;
         t->v->vars = ecs_script_vars_pop(t->v->vars);
         return result;
@@ -1433,7 +1438,9 @@ static int flecs_script_type_entity(
             t, node->name, node, &node->symbol, true);
         child_table = entry->child_table;
     } else {
-        node->symbol = -1;
+        if (node->symbol == -1 && !t->for_depth && !t->function_scope) {
+            node->symbol = flecs_script_type_slot_new(t, -1);
+        }
         child_table = flecs_script_type_table_new(t, t->table, node);
     }
 
@@ -1800,6 +1807,9 @@ int flecs_script_visit_type_entity_expr(
         bool old_function_scope = t->function_scope;
         t->function_scope = false;
         int result = flecs_script_type_entity(t, entity, false);
+        if (old_function_scope) {
+            entity->symbol = -1;
+        }
         t->function_scope = old_function_scope;
         return result;
     }

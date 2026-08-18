@@ -622,14 +622,13 @@ static int flecs_expr_global_variable_visit_eval(
     ecs_expr_variable_t *node,
     ecs_expr_value_t *out)
 {
-    (void)ctx;
-
     ecs_assert(ctx->desc != NULL, ECS_INVALID_OPERATION,
         "variables available at parse time are not provided");
-
-    ecs_assert(node->global_value.type == node->node.type, 
-        ECS_INTERNAL_ERROR, NULL);
-    out->value = node->global_value;
+    ecs_value_t value = flecs_script_global_var_get(
+        ctx->world, node->global, NULL);
+    ecs_assert(value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    out->value = value;
     out->owned = false;
 
     return 0;

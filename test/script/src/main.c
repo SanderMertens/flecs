@@ -204,6 +204,7 @@ void Eval_parse_with_value_multiline_comment_after_paren(void);
 void Eval_parse_with_value_multiline_comment_after_scope_open(void);
 void Eval_assign_const_w_expr(void);
 void Eval_const_w_type(void);
+void Eval_assign_narrowing_f64_expr_to_typed_const_w_i32(void);
 void Eval_typed_const_w_composite_type(void);
 void Eval_assign_var_to_typed_const_w_composite_type(void);
 void Eval_assign_match_to_typed_const_w_composite_type(void);
@@ -1681,6 +1682,8 @@ void Expr_component_expr_string(void);
 void Expr_component_member_expr_string(void);
 void Expr_component_elem_expr_string(void);
 void Expr_component_inline_elem_expr_string(void);
+void Expr_component_member_inline_elem_member_expr(void);
+void Expr_component_member_inline_elem_member_expr_string(void);
 void Expr_component_expr_in_object(void);
 void Expr_component_member_expr_in_object(void);
 void Expr_var_expr(void);
@@ -2387,6 +2390,42 @@ void Refs_delete_script_while_waiting(void);
 void Refs_wait_for_has_unresolved_component(void);
 void Refs_wait_for_has_unresolved_entity(void);
 void Refs_has_ref_resolve_observer_on_add(void);
+
+// Testsuite 'Reactivity'
+void Reactivity_external_inputs_are_isolated(void);
+void Reactivity_script_update_recreates_observers(void);
+void Reactivity_annotation_follows_dependent_statement(void);
+void Reactivity_reentrant_input_change_is_reevaluated(void);
+void Reactivity_failed_update_is_atomic(void);
+void Reactivity_extern_variables_are_isolated(void);
+void Reactivity_const_dependency_is_transitive(void);
+void Reactivity_if_inherits_branch_dependencies(void);
+void Reactivity_if_cleans_up_entities(void);
+void Reactivity_if_cleans_up_components(void);
+void Reactivity_if_cleans_up_singleton_component(void);
+void Reactivity_mutually_exclusive_component_owner(void);
+void Reactivity_mutually_exclusive_component_owner_three_branches(void);
+void Reactivity_non_exclusive_component_owner_fails(void);
+void Reactivity_template_non_exclusive_component_owner_fails(void);
+void Reactivity_partial_assignment_does_not_own_component(void);
+void Reactivity_for_clears_previous_entities(void);
+void Reactivity_nested_for_clears_previous_entities(void);
+void Reactivity_inactive_for_cleans_up_entities(void);
+void Reactivity_new_entity_survives_reevaluation(void);
+void Reactivity_new_entity_survives_skipped_statement(void);
+void Reactivity_template_props_are_isolated(void);
+void Reactivity_template_same_prop_value_skips(void);
+void Reactivity_template_muts_are_isolated(void);
+void Reactivity_template_const_dependency_is_transitive(void);
+void Reactivity_template_if_cleans_up_entities(void);
+void Reactivity_template_if_cleans_up_components(void);
+void Reactivity_template_owner_cleans_up_instance_state(void);
+void Reactivity_template_for_clears_previous_entities(void);
+void Reactivity_template_inactive_for_cleans_up_entities(void);
+void Reactivity_template_instances_have_private_slots(void);
+void Reactivity_template_capture_is_reactive(void);
+void Reactivity_sixty_four_inputs(void);
+void Reactivity_sixty_five_inputs_fail(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -3212,6 +3251,10 @@ bake_test_case Eval_testcases[] = {
     {
         "const_w_type",
         Eval_const_w_type
+    },
+    {
+        "assign_narrowing_f64_expr_to_typed_const_w_i32",
+        Eval_assign_narrowing_f64_expr_to_typed_const_w_i32
     },
     {
         "typed_const_w_composite_type",
@@ -9073,6 +9116,14 @@ bake_test_case Expr_testcases[] = {
         Expr_component_inline_elem_expr_string
     },
     {
+        "component_member_inline_elem_member_expr",
+        Expr_component_member_inline_elem_member_expr
+    },
+    {
+        "component_member_inline_elem_member_expr_string",
+        Expr_component_member_inline_elem_member_expr_string
+    },
+    {
         "component_expr_in_object",
         Expr_component_expr_in_object
     },
@@ -11859,6 +11910,145 @@ bake_test_case Refs_testcases[] = {
     }
 };
 
+bake_test_case Reactivity_testcases[] = {
+    {
+        "external_inputs_are_isolated",
+        Reactivity_external_inputs_are_isolated
+    },
+    {
+        "script_update_recreates_observers",
+        Reactivity_script_update_recreates_observers
+    },
+    {
+        "annotation_follows_dependent_statement",
+        Reactivity_annotation_follows_dependent_statement
+    },
+    {
+        "reentrant_input_change_is_reevaluated",
+        Reactivity_reentrant_input_change_is_reevaluated
+    },
+    {
+        "failed_update_is_atomic",
+        Reactivity_failed_update_is_atomic
+    },
+    {
+        "extern_variables_are_isolated",
+        Reactivity_extern_variables_are_isolated
+    },
+    {
+        "const_dependency_is_transitive",
+        Reactivity_const_dependency_is_transitive
+    },
+    {
+        "if_inherits_branch_dependencies",
+        Reactivity_if_inherits_branch_dependencies
+    },
+    {
+        "if_cleans_up_entities",
+        Reactivity_if_cleans_up_entities
+    },
+    {
+        "if_cleans_up_components",
+        Reactivity_if_cleans_up_components
+    },
+    {
+        "if_cleans_up_singleton_component",
+        Reactivity_if_cleans_up_singleton_component
+    },
+    {
+        "mutually_exclusive_component_owner",
+        Reactivity_mutually_exclusive_component_owner
+    },
+    {
+        "mutually_exclusive_component_owner_three_branches",
+        Reactivity_mutually_exclusive_component_owner_three_branches
+    },
+    {
+        "non_exclusive_component_owner_fails",
+        Reactivity_non_exclusive_component_owner_fails
+    },
+    {
+        "template_non_exclusive_component_owner_fails",
+        Reactivity_template_non_exclusive_component_owner_fails
+    },
+    {
+        "partial_assignment_does_not_own_component",
+        Reactivity_partial_assignment_does_not_own_component
+    },
+    {
+        "for_clears_previous_entities",
+        Reactivity_for_clears_previous_entities
+    },
+    {
+        "nested_for_clears_previous_entities",
+        Reactivity_nested_for_clears_previous_entities
+    },
+    {
+        "inactive_for_cleans_up_entities",
+        Reactivity_inactive_for_cleans_up_entities
+    },
+    {
+        "new_entity_survives_reevaluation",
+        Reactivity_new_entity_survives_reevaluation
+    },
+    {
+        "new_entity_survives_skipped_statement",
+        Reactivity_new_entity_survives_skipped_statement
+    },
+    {
+        "template_props_are_isolated",
+        Reactivity_template_props_are_isolated
+    },
+    {
+        "template_same_prop_value_skips",
+        Reactivity_template_same_prop_value_skips
+    },
+    {
+        "template_muts_are_isolated",
+        Reactivity_template_muts_are_isolated
+    },
+    {
+        "template_const_dependency_is_transitive",
+        Reactivity_template_const_dependency_is_transitive
+    },
+    {
+        "template_if_cleans_up_entities",
+        Reactivity_template_if_cleans_up_entities
+    },
+    {
+        "template_if_cleans_up_components",
+        Reactivity_template_if_cleans_up_components
+    },
+    {
+        "template_owner_cleans_up_instance_state",
+        Reactivity_template_owner_cleans_up_instance_state
+    },
+    {
+        "template_for_clears_previous_entities",
+        Reactivity_template_for_clears_previous_entities
+    },
+    {
+        "template_inactive_for_cleans_up_entities",
+        Reactivity_template_inactive_for_cleans_up_entities
+    },
+    {
+        "template_instances_have_private_slots",
+        Reactivity_template_instances_have_private_slots
+    },
+    {
+        "template_capture_is_reactive",
+        Reactivity_template_capture_is_reactive
+    },
+    {
+        "sixty_four_inputs",
+        Reactivity_sixty_four_inputs
+    },
+    {
+        "sixty_five_inputs_fail",
+        Reactivity_sixty_five_inputs_fail
+    }
+};
+
 bake_test_case ConstVar_testcases[] = {
     {
         "get_bool",
@@ -12050,7 +12240,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        620,
+        621,
         Eval_testcases
     },
     {
@@ -12115,7 +12305,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        372,
+        374,
         Expr_testcases,
         1,
         Expr_params
@@ -12172,6 +12362,13 @@ static bake_test_suite suites[] = {
         Refs_testcases
     },
     {
+        "Reactivity",
+        NULL,
+        NULL,
+        34,
+        Reactivity_testcases
+    },
+    {
         "ConstVar",
         NULL,
         NULL,
@@ -12181,5 +12378,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 18);
+    return bake_test_run("script", argc, argv, suites, 19);
 }

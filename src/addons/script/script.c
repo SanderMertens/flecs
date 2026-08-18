@@ -16,6 +16,17 @@ ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
 ECS_DECLARE(EcsScriptVectorType);
 
+static void flecs_script_for_slots_fini(
+    ecs_vec_t *for_slots)
+{
+    int32_t i, count = ecs_vec_count(for_slots);
+    ecs_vec_t *slots = ecs_vec_first(for_slots);
+    for (i = 0; i < count; i ++) {
+        ecs_vec_fini_t(NULL, &slots[i], ecs_entity_t);
+    }
+    ecs_vec_fini_t(NULL, for_slots, ecs_vec_t);
+}
+
 static ECS_MOVE(EcsScript, dst, src, {
     if (dst->script && (dst->script != src->script)) {
         if (dst->template_ && (dst->template_ != src->template_)) {
@@ -78,7 +89,11 @@ ecs_script_t* flecs_script_new(
     result->pub.world = world;
     result->refcount = 1;
     ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_t, 0);
-    ecs_vec_init_t(NULL, &result->symbols, ecs_entity_t, 0);
+    ecs_vec_init_t(NULL, &result->symbol_slots, ecs_script_symbol_slot_t, 0);
+    ecs_vec_init_t(NULL, &result->component_slots,
+        ecs_script_component_slot_t, 0);
+    ecs_vec_init_t(NULL, &result->scope_slots, int32_t, 0);
+    ecs_vec_init_t(NULL, &result->for_slots, ecs_vec_t, 0);
     ecs_vec_init_t(NULL, &result->unresolved_refs,
         ecs_script_unresolved_ref_t, 0);
     ecs_vec_init_t(NULL, &result->unresolved_component_refs,
@@ -200,7 +215,11 @@ void ecs_script_free(
         flecs_script_visit_free(script);
         flecs_expr_visit_free(script, impl->expr);
         ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_t);
-        ecs_vec_fini_t(NULL, &impl->symbols, ecs_entity_t);
+        ecs_vec_fini_t(NULL, &impl->symbol_slots, ecs_script_symbol_slot_t);
+        ecs_vec_fini_t(NULL, &impl->component_slots,
+            ecs_script_component_slot_t);
+        ecs_vec_fini_t(NULL, &impl->scope_slots, int32_t);
+        flecs_script_for_slots_fini(&impl->for_slots);
         ecs_vec_fini_t(NULL, &impl->unresolved_refs,
             ecs_script_unresolved_ref_t);
         ecs_vec_fini_t(NULL, &impl->unresolved_component_refs,
@@ -273,6 +292,9 @@ int flecs_script_update(
     } else {
         s->error = eval_result.error;
         ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
+        if (!instance) {
+            flecs_script_ref_observers_clear(world, &s->observers);
+        }
         result = -1;
         goto done;
     }
@@ -290,7 +312,7 @@ int flecs_script_update(
     flecs_script_impl(parsed)->evaluating = true;
     ecs_script_eval_desc_t eval_desc = { .runtime = eval_runtime };
     if (flecs_script_eval(parsed, &eval_desc,
-        flecs_script_tag(e, instance), &eval_result))
+        flecs_script_tag(e, instance), UINT64_MAX, &eval_result))
     {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
@@ -326,6 +348,7 @@ int flecs_script_update(
                     ecs_vec_remove_t(script_refs, ecs_script_ref_t, i);
                 }
             }
+            flecs_script_ref_observers_clear(world, &s->observers);
             flecs_script_update_ref_observers(world, e, 0,
                 script_refs, &s->observers, flecs_script_ref_on_set);
             ecs_vec_clear(script_refs);

@@ -27,6 +27,7 @@ typedef struct ecs_script_type_visitor_t {
     ecs_vec_t entities;
     int32_t table;
     int32_t control_depth;
+    int32_t for_depth;
     bool template_scope;
     bool function_scope;
 } ecs_script_type_visitor_t;
@@ -42,5 +43,9 @@ int32_t flecs_script_type_table_new(
     ecs_script_type_visitor_t *t,
     int32_t parent,
     ecs_script_entity_t *owner);
+
+int32_t flecs_script_type_slot_new(
+    ecs_script_type_visitor_t *t,
+    int32_t expected);
 
 #endif
