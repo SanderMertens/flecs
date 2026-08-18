@@ -9873,7 +9873,7 @@ void Eval_const_w_component_in_scope_expr_in_scope(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_assert(strstr(result.error, "unresolved identifier 'Position'") != NULL);
+    test_assert(strstr(result.error, "unresolved reference 'Position'") != NULL);
     ecs_os_free(result.error);
 
     test_assert(ecs_lookup(world, "parent.foo") == 0);
@@ -9949,7 +9949,7 @@ void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_assert(strstr(result.error, "unresolved identifier") != NULL);
+    test_assert(strstr(result.error, "unresolved reference") != NULL);
     ecs_os_free(result.error);
 
     test_assert(ecs_lookup(world, "parent.foo") == 0);
@@ -18631,13 +18631,13 @@ void Eval_eval_twice_w_failed_method_call(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -19166,13 +19166,13 @@ void Eval_eval_twice_w_failed_method_call_on_var(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -19201,13 +19201,13 @@ void Eval_eval_twice_w_failed_method_call_on_call_result(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -19237,13 +19237,13 @@ void Eval_eval_twice_w_failed_method_call_on_var_call_result(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -19271,13 +19271,13 @@ void Eval_eval_twice_w_failed_expr_after_method_call(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -19311,13 +19311,13 @@ void Eval_eval_twice_w_failed_expr_after_component_expr(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -19346,13 +19346,13 @@ void Eval_eval_twice_w_failed_expr_in_if_stmt(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -19387,13 +19387,13 @@ void Eval_eval_twice_w_failed_expr_in_for_stmt(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -19429,13 +19429,13 @@ void Eval_eval_twice_w_failed_expr_in_entity_scope(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -19469,13 +19469,13 @@ void Eval_eval_twice_w_failed_expr_in_initializer(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -19512,13 +19512,13 @@ void Eval_eval_twice_w_failed_expr_in_match(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'nope'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'nope'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -19771,3 +19771,4 @@ void Eval_has_expr_in_if(void) {
 
     ecs_fini(world);
 }
+

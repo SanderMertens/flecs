@@ -4646,13 +4646,13 @@ void Template_eval_twice_w_failed_method_call_in_body(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
@@ -4684,13 +4684,13 @@ void Template_eval_twice_w_failed_method_call_in_prop_default(void) {
     ecs_script_eval_result_t result_1 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
     test_assert(result_1.error != NULL);
-    test_assert(strstr(result_1.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_1.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
     test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
     test_assert(result_2.error != NULL);
-    test_assert(strstr(result_2.error, "unresolved identifier 'pair'") != NULL);
+    test_assert(strstr(result_2.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);

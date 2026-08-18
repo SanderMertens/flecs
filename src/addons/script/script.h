@@ -71,6 +71,13 @@ typedef struct ecs_script_unresolved_ref_t {
     int32_t column;
 } ecs_script_unresolved_ref_t;
 
+typedef struct ecs_script_unresolved_component_ref_t {
+    ecs_entity_t entity;
+    ecs_entity_t component;
+    int32_t line;
+    int32_t column;
+} ecs_script_unresolved_component_ref_t;
+
 struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_entity_t entity; /* Set if script is managed (has EcsScript) */
@@ -85,6 +92,7 @@ struct ecs_script_impl_t {
     ecs_vec_t refs;
     ecs_vec_t symbols;
     ecs_vec_t unresolved_refs;
+    ecs_vec_t unresolved_component_refs;
     bool evaluating;
     bool compiled;
 };
@@ -112,6 +120,12 @@ typedef struct ecs_function_calldata_t {
 
 ecs_script_t* flecs_script_new(
     ecs_world_t *world);
+
+void flecs_script_pos_to_line_col(
+    const char *code,
+    const char *pos,
+    int32_t *line,
+    int32_t *column);
 
 int flecs_script_update(
     ecs_world_t *world,

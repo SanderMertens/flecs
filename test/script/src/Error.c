@@ -1,4 +1,5 @@
 #include <script.h>
+#include "../../../src/addons/script/script.h"
 
 static char *os_stub_log_message = NULL;
 
@@ -3014,8 +3015,10 @@ void Error_multiple_unresolved_refs(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    test_assert(script != NULL);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, "test.flecs", expr, &result) != 0);
+    test_assert(ecs_script_eval(script, NULL, &result) != 0);
     test_assert(result.error != NULL);
     char *first = strstr(result.error, "unresolved reference 'MissingTag'");
     test_assert(first != NULL);
@@ -3027,6 +3030,19 @@ void Error_multiple_unresolved_refs(void) {
     test_int(result.line, 2);
     ecs_os_free(result.error);
 
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    test_int(ecs_vec_count(&impl->unresolved_refs), 2);
+    ecs_script_unresolved_ref_t *refs = ecs_vec_first(
+        &impl->unresolved_refs);
+    test_str(refs[0].name, "MissingTag");
+    test_int(refs[0].line, 2);
+    test_int(refs[0].column, 3);
+    test_str(refs[1].name, "MissingComponent");
+    test_int(refs[1].line, 5);
+    test_int(refs[1].column, 3);
+    test_int(ecs_vec_count(&impl->unresolved_component_refs), 0);
+
+    ecs_script_free(script);
     ecs_fini(world);
 }
 
@@ -3040,8 +3056,10 @@ void Error_multiple_unresolved_refs_w_unresolved_const_type(void) {
     LINE "const x: MissingType = 1";
 
     ecs_log_set_level(-4);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    test_assert(script != NULL);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, "test.flecs", expr, &result) != 0);
+    test_assert(ecs_script_eval(script, NULL, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error,
         "unresolved reference 'MissingTag'") != NULL);
@@ -3051,6 +3069,19 @@ void Error_multiple_unresolved_refs_w_unresolved_const_type(void) {
     test_int(result.line, 2);
     ecs_os_free(result.error);
 
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    test_int(ecs_vec_count(&impl->unresolved_refs), 2);
+    ecs_script_unresolved_ref_t *refs = ecs_vec_first(
+        &impl->unresolved_refs);
+    test_str(refs[0].name, "MissingTag");
+    test_int(refs[0].line, 2);
+    test_int(refs[0].column, 3);
+    test_str(refs[1].name, "MissingType");
+    test_int(refs[1].line, 4);
+    test_int(refs[1].column, 1);
+    test_int(ecs_vec_count(&impl->unresolved_component_refs), 0);
+
+    ecs_script_free(script);
     ecs_fini(world);
 }
 
@@ -4051,5 +4082,236 @@ void Error_has_pair_missing_second(void) {
     ecs_value_t v = {0};
     test_assert(ecs_expr_run(world, "e?[(Likes)]", &v, NULL) == NULL);
 
+    ecs_fini(world);
+}
+
+void Error_unresolved_component_ref(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    const char *expr =
+    HEAD "const v = 10"
+    LINE "const p = e[Position]";
+
+    ecs_log_set_level(-4);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    test_assert(script != NULL);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error,
+        "entity 'e' does not have component 'Position'") != NULL);
+    test_int(result.line, 2);
+    ecs_os_free(result.error);
+
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    test_int(ecs_vec_count(&impl->unresolved_component_refs), 1);
+    ecs_script_unresolved_component_ref_t *ref = ecs_vec_first(
+        &impl->unresolved_component_refs);
+    test_assert(ref->entity == e);
+    test_assert(ref->component == ecs_id(Position));
+    test_int(ref->line, 2);
+    test_int(ref->column, 11);
+    test_int(ecs_vec_count(&impl->unresolved_refs), 0);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Error_no_unresolved_component_ref_when_component_exists(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    float value[2] = {10, 20};
+    ecs_set_id(world, e, ecs_id(Position), sizeof(value), value);
+
+    const char *expr =
+    HEAD "const p = e[Position]";
+
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    test_assert(script != NULL);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_eval(script, NULL, &result) == 0);
+    test_assert(result.error == NULL);
+
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    test_int(ecs_vec_count(&impl->unresolved_component_refs), 0);
+    test_int(ecs_vec_count(&impl->unresolved_refs), 0);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Error_multiple_unresolved_component_refs(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+
+    const char *expr =
+    HEAD "const p = e1[Position]"
+    LINE "const v = e2[Velocity]";
+
+    ecs_log_set_level(-4);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    test_assert(script != NULL);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error,
+        "entity 'e1' does not have component 'Position'") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    test_int(ecs_vec_count(&impl->unresolved_component_refs), 2);
+    ecs_script_unresolved_component_ref_t *refs = ecs_vec_first(
+        &impl->unresolved_component_refs);
+    test_assert(refs[0].entity == e1);
+    test_assert(refs[0].component == ecs_id(Position));
+    test_int(refs[0].line, 1);
+    test_int(refs[0].column, 11);
+    test_assert(refs[1].entity == e2);
+    test_assert(refs[1].component == ecs_id(Velocity));
+    test_int(refs[1].line, 2);
+    test_int(refs[1].column, 11);
+    test_int(ecs_vec_count(&impl->unresolved_refs), 0);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Error_unresolved_component_ref_w_unresolved_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "e" });
+
+    const char *expr =
+    HEAD "const p = e[NoSuchComponent]";
+
+    ecs_log_set_level(-4);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    test_assert(script != NULL);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error,
+        "unresolved reference 'NoSuchComponent'") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    test_int(ecs_vec_count(&impl->unresolved_refs), 1);
+    ecs_script_unresolved_ref_t *refs = ecs_vec_first(
+        &impl->unresolved_refs);
+    test_str(refs[0].name, "NoSuchComponent");
+    test_int(refs[0].line, 1);
+    test_int(refs[0].column, 13);
+    test_int(ecs_vec_count(&impl->unresolved_component_refs), 0);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Error_unresolved_component_ref_w_unresolved_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const p = nosuchentity[Position]";
+
+    ecs_log_set_level(-4);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    test_assert(script != NULL);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error,
+        "unresolved reference 'nosuchentity'") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    test_int(ecs_vec_count(&impl->unresolved_refs), 1);
+    ecs_script_unresolved_ref_t *refs = ecs_vec_first(
+        &impl->unresolved_refs);
+    test_str(refs[0].name, "nosuchentity");
+    test_int(refs[0].line, 1);
+    test_int(refs[0].column, 11);
+    test_int(ecs_vec_count(&impl->unresolved_component_refs), 0);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Error_unresolved_component_ref_w_unresolved_entity_and_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const p = nosuchentity[NoSuchComponent]";
+
+    ecs_log_set_level(-4);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    test_assert(script != NULL);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error,
+        "unresolved reference 'nosuchentity'") != NULL);
+    test_assert(strstr(result.error,
+        "unresolved reference 'NoSuchComponent'") == NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    test_int(ecs_vec_count(&impl->unresolved_refs), 1);
+    ecs_script_unresolved_ref_t *refs = ecs_vec_first(
+        &impl->unresolved_refs);
+    test_str(refs[0].name, "nosuchentity");
+    test_int(refs[0].line, 1);
+    test_int(refs[0].column, 11);
+    test_int(ecs_vec_count(&impl->unresolved_component_refs), 0);
+
+    ecs_script_free(script);
     ecs_fini(world);
 }
