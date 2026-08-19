@@ -532,9 +532,38 @@ static int flecs_expr_global_variable_visit_fold(
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
 {
-    (void)script;
-    (void)node_ptr;
-    (void)desc;
+    ecs_expr_variable_t *node = (ecs_expr_variable_t*)*node_ptr;
+    ecs_entity_t type = node->node.type;
+
+    /* A mut variable can change after the expression is compiled, so its value
+     * is always read live. */
+    if (node->global_component == ecs_id(EcsScriptMutVar)) {
+        return 0;
+    }
+
+    /* In a template body the node is kept unfolded so its value is read live
+     * from the const variable on every (re)instantiation. */
+    ecs_script_eval_visitor_t *v = desc->script_visitor;
+    if (v && v->template) {
+        return 0;
+    }
+
+    /* Global const variables are always const, so we can always fold */
+
+    ecs_value_t global_value = flecs_script_global_var_get(
+        script->world, node->global, NULL);
+    if (!global_value.ptr) {
+        return 0;
+    }
+
+    ecs_expr_value_node_t *result = flecs_expr_value_from(
+        script, (ecs_expr_node_t*)node, type);
+    void *value = ecs_ptr_new(script->world, type);
+    ecs_ptr_copy(script->world, type, value, global_value.ptr);
+    result->ptr = value;
+    flecs_type_info_claim(result->node.type_info);
+    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
+
     return 0;
 }
 

@@ -2254,36 +2254,24 @@ void Refs_ref_in_if_expr(void);
 void Refs_ref_in_for_expr(void);
 void Refs_non_managed_script_no_update(void);
 void Refs_set_after_managed_script_deleted(void);
-void Refs_global_const_var_in_component_initializer(void);
 void Refs_global_mut_var_in_component_initializer(void);
-void Refs_global_const_var_in_with_initializer(void);
 void Refs_global_mut_var_in_with_initializer(void);
-void Refs_global_const_var_in_match_expr(void);
 void Refs_global_mut_var_in_match_expr(void);
-void Refs_global_const_var_in_if_expr(void);
 void Refs_global_mut_var_in_if_expr(void);
-void Refs_global_const_var_in_for_expr(void);
 void Refs_global_mut_var_in_for_expr(void);
 void Refs_global_const_var_non_managed_script_no_update(void);
 void Refs_global_mut_var_non_managed_script_no_update(void);
-void Refs_global_const_var_set_after_managed_script_deleted(void);
 void Refs_global_mut_var_set_after_managed_script_deleted(void);
-void Refs_global_const_var_modified(void);
 void Refs_global_mut_var_modified(void);
 void Refs_ref_in_function(void);
-void Refs_global_const_var_in_function(void);
 void Refs_global_mut_var_in_function(void);
 void Refs_ref_in_new_expr(void);
-void Refs_global_const_var_in_new_expr(void);
 void Refs_global_mut_var_in_new_expr(void);
 void Refs_ref_in_function_in_new_expr(void);
-void Refs_global_const_var_in_function_in_new_expr(void);
 void Refs_global_mut_var_in_function_in_new_expr(void);
 void Refs_ref_in_script_function_body(void);
-void Refs_global_const_var_in_script_function_body(void);
 void Refs_global_mut_var_in_script_function_body(void);
 void Refs_ref_assigned_to_component(void);
-void Refs_global_const_var_assigned_to_component(void);
 void Refs_global_mut_var_assigned_to_component(void);
 void Refs_reeval_hierarchy(void);
 void Refs_reeval_prefab_in_branch(void);
@@ -2321,7 +2309,6 @@ void Refs_global_const_var_in_template_new_expr(void);
 void Refs_global_mut_var_in_template_new_expr(void);
 void Refs_global_const_var_in_template_function_in_new_expr(void);
 void Refs_global_mut_var_in_template_function_in_new_expr(void);
-void Refs_global_const_var_in_template_script_function_body(void);
 void Refs_global_mut_var_in_template_script_function_body(void);
 void Refs_global_const_var_in_template_assigned_to_component(void);
 void Refs_global_mut_var_in_template_assigned_to_component(void);
@@ -2350,13 +2337,10 @@ void Refs_global_const_var_declared_in_same_script(void);
 void Refs_global_mut_var_declared_in_same_script(void);
 void Refs_global_const_var_declared_in_same_script_w_fn(void);
 void Refs_global_mut_var_declared_in_same_script_w_fn(void);
-void Refs_global_const_var_declared_in_same_script_w_fn_other_script(void);
 void Refs_global_mut_var_declared_in_same_script_w_fn_other_script(void);
 void Refs_global_mut_var_declared_in_same_script_w_fn_other_script_w_implicit_var(void);
-void Refs_global_const_var_declared_in_same_script_w_fn_other_scripts(void);
 void Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts(void);
 void Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts_w_implicit_var(void);
-void Refs_global_const_var_in_scoped_function_other_script(void);
 void Refs_global_mut_var_in_scoped_function_other_script(void);
 void Refs_ref_declared_in_same_script(void);
 void Refs_ref_declared_in_same_script_w_fn(void);
@@ -2364,7 +2348,6 @@ void Refs_ref_declared_in_same_script_w_fn_other_script(void);
 void Refs_ref_declared_in_same_script_w_fn_other_scripts(void);
 void Refs_global_const_var_declared_in_same_script_w_template(void);
 void Refs_global_mut_var_declared_in_same_script_w_template(void);
-void Refs_reeval_instantiates_template_w_global_const_var_ref(void);
 void Refs_reeval_instantiates_template_w_global_mut_var_ref(void);
 void Refs_global_mut_var_modified_twice(void);
 void Refs_global_const_var_and_mut_var_in_same_expr(void);
@@ -2413,6 +2396,22 @@ void Reactivity_nested_for_clears_previous_entities(void);
 void Reactivity_inactive_for_cleans_up_entities(void);
 void Reactivity_new_entity_survives_reevaluation(void);
 void Reactivity_new_entity_survives_skipped_statement(void);
+void Reactivity_with_scope_is_reactive(void);
+void Reactivity_with_expression_is_reactive(void);
+void Reactivity_pair_scope_is_reactive(void);
+void Reactivity_nested_template_is_reactive(void);
+void Reactivity_template_with_scope_is_reactive(void);
+void Reactivity_try_in_managed_script_fails(void);
+void Reactivity_try_catch_scope_dependencies(void);
+void Reactivity_await_expression_dependencies(void);
+void Reactivity_element_expr_is_reactive(void);
+void Reactivity_range_expr_is_reactive(void);
+void Reactivity_swizzle_expr_is_reactive(void);
+void Reactivity_has_expr_is_reactive(void);
+void Reactivity_method_expr_is_reactive(void);
+void Reactivity_interpolated_string_width_is_reactive(void);
+void Reactivity_interpolated_string_precision_is_reactive(void);
+void Reactivity_parse_failure_clears_observers(void);
 void Reactivity_template_props_are_isolated(void);
 void Reactivity_template_same_prop_value_skips(void);
 void Reactivity_template_muts_are_isolated(void);
@@ -11365,40 +11364,20 @@ bake_test_case Refs_testcases[] = {
         Refs_set_after_managed_script_deleted
     },
     {
-        "global_const_var_in_component_initializer",
-        Refs_global_const_var_in_component_initializer
-    },
-    {
         "global_mut_var_in_component_initializer",
         Refs_global_mut_var_in_component_initializer
-    },
-    {
-        "global_const_var_in_with_initializer",
-        Refs_global_const_var_in_with_initializer
     },
     {
         "global_mut_var_in_with_initializer",
         Refs_global_mut_var_in_with_initializer
     },
     {
-        "global_const_var_in_match_expr",
-        Refs_global_const_var_in_match_expr
-    },
-    {
         "global_mut_var_in_match_expr",
         Refs_global_mut_var_in_match_expr
     },
     {
-        "global_const_var_in_if_expr",
-        Refs_global_const_var_in_if_expr
-    },
-    {
         "global_mut_var_in_if_expr",
         Refs_global_mut_var_in_if_expr
-    },
-    {
-        "global_const_var_in_for_expr",
-        Refs_global_const_var_in_for_expr
     },
     {
         "global_mut_var_in_for_expr",
@@ -11413,16 +11392,8 @@ bake_test_case Refs_testcases[] = {
         Refs_global_mut_var_non_managed_script_no_update
     },
     {
-        "global_const_var_set_after_managed_script_deleted",
-        Refs_global_const_var_set_after_managed_script_deleted
-    },
-    {
         "global_mut_var_set_after_managed_script_deleted",
         Refs_global_mut_var_set_after_managed_script_deleted
-    },
-    {
-        "global_const_var_modified",
-        Refs_global_const_var_modified
     },
     {
         "global_mut_var_modified",
@@ -11433,20 +11404,12 @@ bake_test_case Refs_testcases[] = {
         Refs_ref_in_function
     },
     {
-        "global_const_var_in_function",
-        Refs_global_const_var_in_function
-    },
-    {
         "global_mut_var_in_function",
         Refs_global_mut_var_in_function
     },
     {
         "ref_in_new_expr",
         Refs_ref_in_new_expr
-    },
-    {
-        "global_const_var_in_new_expr",
-        Refs_global_const_var_in_new_expr
     },
     {
         "global_mut_var_in_new_expr",
@@ -11457,10 +11420,6 @@ bake_test_case Refs_testcases[] = {
         Refs_ref_in_function_in_new_expr
     },
     {
-        "global_const_var_in_function_in_new_expr",
-        Refs_global_const_var_in_function_in_new_expr
-    },
-    {
         "global_mut_var_in_function_in_new_expr",
         Refs_global_mut_var_in_function_in_new_expr
     },
@@ -11469,20 +11428,12 @@ bake_test_case Refs_testcases[] = {
         Refs_ref_in_script_function_body
     },
     {
-        "global_const_var_in_script_function_body",
-        Refs_global_const_var_in_script_function_body
-    },
-    {
         "global_mut_var_in_script_function_body",
         Refs_global_mut_var_in_script_function_body
     },
     {
         "ref_assigned_to_component",
         Refs_ref_assigned_to_component
-    },
-    {
-        "global_const_var_assigned_to_component",
-        Refs_global_const_var_assigned_to_component
     },
     {
         "global_mut_var_assigned_to_component",
@@ -11633,10 +11584,6 @@ bake_test_case Refs_testcases[] = {
         Refs_global_mut_var_in_template_function_in_new_expr
     },
     {
-        "global_const_var_in_template_script_function_body",
-        Refs_global_const_var_in_template_script_function_body
-    },
-    {
         "global_mut_var_in_template_script_function_body",
         Refs_global_mut_var_in_template_script_function_body
     },
@@ -11749,10 +11696,6 @@ bake_test_case Refs_testcases[] = {
         Refs_global_mut_var_declared_in_same_script_w_fn
     },
     {
-        "global_const_var_declared_in_same_script_w_fn_other_script",
-        Refs_global_const_var_declared_in_same_script_w_fn_other_script
-    },
-    {
         "global_mut_var_declared_in_same_script_w_fn_other_script",
         Refs_global_mut_var_declared_in_same_script_w_fn_other_script
     },
@@ -11761,20 +11704,12 @@ bake_test_case Refs_testcases[] = {
         Refs_global_mut_var_declared_in_same_script_w_fn_other_script_w_implicit_var
     },
     {
-        "global_const_var_declared_in_same_script_w_fn_other_scripts",
-        Refs_global_const_var_declared_in_same_script_w_fn_other_scripts
-    },
-    {
         "global_mut_var_declared_in_same_script_w_fn_other_scripts",
         Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts
     },
     {
         "global_mut_var_declared_in_same_script_w_fn_other_scripts_w_implicit_var",
         Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts_w_implicit_var
-    },
-    {
-        "global_const_var_in_scoped_function_other_script",
-        Refs_global_const_var_in_scoped_function_other_script
     },
     {
         "global_mut_var_in_scoped_function_other_script",
@@ -11803,10 +11738,6 @@ bake_test_case Refs_testcases[] = {
     {
         "global_mut_var_declared_in_same_script_w_template",
         Refs_global_mut_var_declared_in_same_script_w_template
-    },
-    {
-        "reeval_instantiates_template_w_global_const_var_ref",
-        Refs_reeval_instantiates_template_w_global_const_var_ref
     },
     {
         "reeval_instantiates_template_w_global_mut_var_ref",
@@ -11994,6 +11925,70 @@ bake_test_case Reactivity_testcases[] = {
     {
         "new_entity_survives_skipped_statement",
         Reactivity_new_entity_survives_skipped_statement
+    },
+    {
+        "with_scope_is_reactive",
+        Reactivity_with_scope_is_reactive
+    },
+    {
+        "with_expression_is_reactive",
+        Reactivity_with_expression_is_reactive
+    },
+    {
+        "pair_scope_is_reactive",
+        Reactivity_pair_scope_is_reactive
+    },
+    {
+        "nested_template_is_reactive",
+        Reactivity_nested_template_is_reactive
+    },
+    {
+        "template_with_scope_is_reactive",
+        Reactivity_template_with_scope_is_reactive
+    },
+    {
+        "try_in_managed_script_fails",
+        Reactivity_try_in_managed_script_fails
+    },
+    {
+        "try_catch_scope_dependencies",
+        Reactivity_try_catch_scope_dependencies
+    },
+    {
+        "await_expression_dependencies",
+        Reactivity_await_expression_dependencies
+    },
+    {
+        "element_expr_is_reactive",
+        Reactivity_element_expr_is_reactive
+    },
+    {
+        "range_expr_is_reactive",
+        Reactivity_range_expr_is_reactive
+    },
+    {
+        "swizzle_expr_is_reactive",
+        Reactivity_swizzle_expr_is_reactive
+    },
+    {
+        "has_expr_is_reactive",
+        Reactivity_has_expr_is_reactive
+    },
+    {
+        "method_expr_is_reactive",
+        Reactivity_method_expr_is_reactive
+    },
+    {
+        "interpolated_string_width_is_reactive",
+        Reactivity_interpolated_string_width_is_reactive
+    },
+    {
+        "interpolated_string_precision_is_reactive",
+        Reactivity_interpolated_string_precision_is_reactive
+    },
+    {
+        "parse_failure_clears_observers",
+        Reactivity_parse_failure_clears_observers
     },
     {
         "template_props_are_isolated",
@@ -12358,14 +12353,14 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        144,
+        127,
         Refs_testcases
     },
     {
         "Reactivity",
         NULL,
         NULL,
-        34,
+        50,
         Reactivity_testcases
     },
     {

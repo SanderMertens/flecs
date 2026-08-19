@@ -1022,13 +1022,6 @@ static int flecs_script_dep_template(
     return flecs_script_dep_template_analyze(ctx->v, template, ctx);
 }
 
-int flecs_script_analyze_template_dependencies(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_template_t *template)
-{
-    return flecs_script_dep_template_analyze(v, template, NULL);
-}
-
 int flecs_script_analyze_dependencies(
     ecs_script_eval_visitor_t *v,
     ecs_script_scope_t *scope)

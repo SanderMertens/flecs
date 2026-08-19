@@ -88,7 +88,6 @@ typedef struct ecs_expr_initializer_t {
 typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
     const char *name;
-    ecs_value_t global_value; /* Only set for global variables */
     ecs_entity_t global; /* Entity of the global variable, if any */
     ecs_id_t global_component; /* Component that stores the global value. Is
                                 * EcsScriptConstVar or EcsScriptMutVar. */
