@@ -1712,6 +1712,8 @@
                 "component_inline_elem_expr_string",
                 "component_member_inline_elem_member_expr",
                 "component_member_inline_elem_member_expr_string",
+                "component_member_inline_elem_member_elem_member_expr",
+                "var_member_inline_elem_member_expr",
                 "component_expr_in_object",
                 "component_member_expr_in_object",
                 "var_expr",

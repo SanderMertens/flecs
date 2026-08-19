@@ -7912,6 +7912,174 @@ void Expr_component_member_inline_elem_member_expr_string(void) {
     ecs_fini(world);
 }
 
+void Expr_component_member_inline_elem_member_elem_member_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point points[3];
+        int32_t count;
+    } Polygon;
+
+    typedef struct {
+        Polygon polygons[2];
+    } Polygons;
+
+    typedef struct {
+        int32_t id;
+        Polygons polygons;
+    } Scene;
+
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Polygon) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Polygon" }),
+        .members = {
+            {"points", ecs_id(Point), .count = 3},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Polygons) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Polygons" }),
+        .members = {
+            {"polygons", ecs_id(Polygon), .count = 2}
+        }
+    });
+
+    ecs_entity_t ecs_id(Scene) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Scene" }),
+        .members = {
+            {"id", ecs_id(ecs_i32_t)},
+            {"polygons", ecs_id(Polygons)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Scene, {9, {{
+        {{{1, 2}, {3, 4}, {5, 6}}, 30},
+        {{{7, 8}, {9, 10}, {11, 12}}, 31}
+    }}});
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    struct {
+        const char *expr;
+        int32_t value;
+    } cases[] = {
+        {"e[Scene].polygons.polygons[0].points[0].x", 1},
+        {"e[Scene].polygons.polygons[0].points[2].y", 6},
+        {"e[Scene].polygons.polygons[1].points[0].x", 7},
+        {"e[Scene].polygons.polygons[1].points[2].y", 12},
+        {"e[Scene].polygons.polygons[0].count", 30},
+        {"e[Scene].polygons.polygons[1].count", 31}
+    };
+
+    int32_t i;
+    for (i = 0; i < 6; i ++) {
+        ecs_os_zeromem(&v);
+        test_assert(ecs_expr_run(world, cases[i].expr, &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_i32_t));
+        test_assert(v.ptr != NULL);
+        test_int(*(int32_t*)v.ptr, cases[i].value);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_var_member_inline_elem_member_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point points[3];
+        int32_t count;
+    } Polygon;
+
+    typedef struct {
+        int32_t id;
+        Polygon polygon;
+    } Shape;
+
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Polygon) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Polygon" }),
+        .members = {
+            {"points", ecs_id(Point), .count = 3},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Shape) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Shape" }),
+        .members = {
+            {"id", ecs_id(ecs_i32_t)},
+            {"polygon", ecs_id(Polygon)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define_id(
+        vars, "shape", ecs_id(Shape));
+    test_assert(var != NULL);
+    *(Shape*)var->value.ptr = (Shape){
+        7, {{{10, 20}, {30, 40}, {50, 60}}, 3}};
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    struct {
+        const char *expr;
+        int32_t value;
+    } cases[] = {
+        {"shape.polygon.points[0].x", 10},
+        {"shape.polygon.points[0].y", 20},
+        {"shape.polygon.points[1].x", 30},
+        {"shape.polygon.points[2].y", 60},
+        {"shape.polygon.count", 3}
+    };
+
+    int32_t i;
+    for (i = 0; i < 5; i ++) {
+        ecs_os_zeromem(&v);
+        test_assert(ecs_expr_run(world, cases[i].expr, &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_i32_t));
+        test_assert(v.ptr != NULL);
+        test_int(*(int32_t*)v.ptr, cases[i].value);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+
 void Expr_component_expr_in_object(void) {
     ecs_world_t *world = ecs_init();
 

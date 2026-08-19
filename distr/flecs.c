@@ -107788,6 +107788,11 @@ static int flecs_expr_element_visit_type(
         node->elem_count = cur->scope[cur->depth - 1].elem_count;
     }
 
+    /* An element expression produces a new value. Rebase the cursor on the
+     * element type so that members resolved on the element get an offset
+     * that's relative to the element, and not to the collection. */
+    *cur = ecs_meta_cursor(script->world, node->node.type, NULL);
+
     return 0;
 not_a_collection: {
     char *type_str = ecs_get_path(script->world, node->left->type);
