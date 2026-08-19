@@ -1833,7 +1833,6 @@ static int flecs_expr_global_variable_resolve(
 
     node->node.kind = EcsExprGlobalVariable;
     node->node.type = value.type;
-    node->global_value = value;
     node->global = global;
     node->global_component = component;
 
