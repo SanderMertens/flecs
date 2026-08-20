@@ -68187,7 +68187,8 @@ static int flecs_script_name_to_expr(
     return 0;
 }
 
-/* Entity names cannot be paths (a.b) */
+/* Entity names cannot be paths (a.b). Interpolated expressions in a name can
+ * contain any valid expression, which may include '.' characters. */
 static bool flecs_script_name_is_path(
     const char *name)
 {
@@ -68195,12 +68196,25 @@ static bool flecs_script_name_is_path(
         return false;
     }
 
-    const char *ptr = strchr(name, '.');
-    while (ptr) {
-        if (ptr == name || ptr[-1] != '\\') {
+    int32_t depth = 0;
+    const char *ptr;
+    for (ptr = name; ptr[0]; ptr ++) {
+        if (ptr[0] == '\\') {
+            if (ptr[1]) {
+                ptr ++;
+            }
+            continue;
+        }
+
+        if (ptr[0] == '{') {
+            depth ++;
+        } else if (ptr[0] == '}') {
+            if (depth) {
+                depth --;
+            }
+        } else if (!depth && ptr[0] == '.') {
             return true;
         }
-        ptr = strchr(ptr + 1, '.');
     }
 
     return false;

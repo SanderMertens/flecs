@@ -2494,7 +2494,9 @@
                 "new_entity_survives_skipped_statement_in_component_expr",
                 "new_entity_survives_skipped_statement_in_template_prop",
                 "new_entity_survives_skipped_statement_in_entity_name",
-                "new_entity_survives_skipped_statement_in_if_condition"
+                "new_entity_survives_skipped_statement_in_if_condition",
+                "interpolated_name_w_indexed_expr",
+                "interpolated_name_w_indexed_expr_in_for"
             ]
         }, {
             "id": "ConstVar",

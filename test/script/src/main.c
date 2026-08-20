@@ -2448,6 +2448,8 @@ void Reactivity_new_entity_survives_skipped_statement_in_component_expr(void);
 void Reactivity_new_entity_survives_skipped_statement_in_template_prop(void);
 void Reactivity_new_entity_survives_skipped_statement_in_entity_name(void);
 void Reactivity_new_entity_survives_skipped_statement_in_if_condition(void);
+void Reactivity_interpolated_name_w_indexed_expr(void);
+void Reactivity_interpolated_name_w_indexed_expr_in_for(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -12156,6 +12158,14 @@ bake_test_case Reactivity_testcases[] = {
     {
         "new_entity_survives_skipped_statement_in_if_condition",
         Reactivity_new_entity_survives_skipped_statement_in_if_condition
+    },
+    {
+        "interpolated_name_w_indexed_expr",
+        Reactivity_interpolated_name_w_indexed_expr
+    },
+    {
+        "interpolated_name_w_indexed_expr_in_for",
+        Reactivity_interpolated_name_w_indexed_expr_in_for
     }
 };
 
@@ -12475,7 +12485,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        59,
+        61,
         Reactivity_testcases
     },
     {
