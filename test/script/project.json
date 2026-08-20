@@ -2456,6 +2456,8 @@
                 "nested_for_clears_previous_entities",
                 "inactive_for_cleans_up_entities",
                 "new_entity_survives_reevaluation",
+                "new_entity_not_duplicated_on_reevaluation",
+                "new_entity_child_reclaimed_on_reevaluation",
                 "new_entity_survives_skipped_statement",
                 "with_scope_is_reactive",
                 "with_expression_is_reactive",
@@ -2485,7 +2487,14 @@
                 "template_instances_have_private_slots",
                 "template_capture_is_reactive",
                 "sixty_four_inputs",
-                "sixty_five_inputs_fail"
+                "sixty_five_inputs_fail",
+                "new_entity_survives_skipped_statement_in_nested_initializer",
+                "new_entity_survives_skipped_statement_in_function_arg",
+                "new_entity_survives_skipped_statement_in_interpolated_string",
+                "new_entity_survives_skipped_statement_in_component_expr",
+                "new_entity_survives_skipped_statement_in_template_prop",
+                "new_entity_survives_skipped_statement_in_entity_name",
+                "new_entity_survives_skipped_statement_in_if_condition"
             ]
         }, {
             "id": "ConstVar",

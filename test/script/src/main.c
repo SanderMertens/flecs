@@ -2409,6 +2409,8 @@ void Reactivity_for_clears_previous_entities(void);
 void Reactivity_nested_for_clears_previous_entities(void);
 void Reactivity_inactive_for_cleans_up_entities(void);
 void Reactivity_new_entity_survives_reevaluation(void);
+void Reactivity_new_entity_not_duplicated_on_reevaluation(void);
+void Reactivity_new_entity_child_reclaimed_on_reevaluation(void);
 void Reactivity_new_entity_survives_skipped_statement(void);
 void Reactivity_with_scope_is_reactive(void);
 void Reactivity_with_expression_is_reactive(void);
@@ -2439,6 +2441,13 @@ void Reactivity_template_instances_have_private_slots(void);
 void Reactivity_template_capture_is_reactive(void);
 void Reactivity_sixty_four_inputs(void);
 void Reactivity_sixty_five_inputs_fail(void);
+void Reactivity_new_entity_survives_skipped_statement_in_nested_initializer(void);
+void Reactivity_new_entity_survives_skipped_statement_in_function_arg(void);
+void Reactivity_new_entity_survives_skipped_statement_in_interpolated_string(void);
+void Reactivity_new_entity_survives_skipped_statement_in_component_expr(void);
+void Reactivity_new_entity_survives_skipped_statement_in_template_prop(void);
+void Reactivity_new_entity_survives_skipped_statement_in_entity_name(void);
+void Reactivity_new_entity_survives_skipped_statement_in_if_condition(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -11993,6 +12002,14 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_new_entity_survives_reevaluation
     },
     {
+        "new_entity_not_duplicated_on_reevaluation",
+        Reactivity_new_entity_not_duplicated_on_reevaluation
+    },
+    {
+        "new_entity_child_reclaimed_on_reevaluation",
+        Reactivity_new_entity_child_reclaimed_on_reevaluation
+    },
+    {
         "new_entity_survives_skipped_statement",
         Reactivity_new_entity_survives_skipped_statement
     },
@@ -12111,6 +12128,34 @@ bake_test_case Reactivity_testcases[] = {
     {
         "sixty_five_inputs_fail",
         Reactivity_sixty_five_inputs_fail
+    },
+    {
+        "new_entity_survives_skipped_statement_in_nested_initializer",
+        Reactivity_new_entity_survives_skipped_statement_in_nested_initializer
+    },
+    {
+        "new_entity_survives_skipped_statement_in_function_arg",
+        Reactivity_new_entity_survives_skipped_statement_in_function_arg
+    },
+    {
+        "new_entity_survives_skipped_statement_in_interpolated_string",
+        Reactivity_new_entity_survives_skipped_statement_in_interpolated_string
+    },
+    {
+        "new_entity_survives_skipped_statement_in_component_expr",
+        Reactivity_new_entity_survives_skipped_statement_in_component_expr
+    },
+    {
+        "new_entity_survives_skipped_statement_in_template_prop",
+        Reactivity_new_entity_survives_skipped_statement_in_template_prop
+    },
+    {
+        "new_entity_survives_skipped_statement_in_entity_name",
+        Reactivity_new_entity_survives_skipped_statement_in_entity_name
+    },
+    {
+        "new_entity_survives_skipped_statement_in_if_condition",
+        Reactivity_new_entity_survives_skipped_statement_in_if_condition
     }
 };
 
@@ -12430,7 +12475,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        50,
+        59,
         Reactivity_testcases
     },
     {

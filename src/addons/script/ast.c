@@ -47,6 +47,25 @@ bool flecs_scope_is_empty(
     return ecs_vec_count(&scope->stmts) == 0;
 }
 
+bool flecs_script_node_is_hoisted(
+    const ecs_script_node_t *node)
+{
+    return node->kind == EcsAstEntity &&
+        ((const ecs_script_entity_t*)node)->hoisted_by != NULL;
+}
+
+void flecs_script_hoist_entity(
+    ecs_script_impl_t *script,
+    ecs_script_scope_t *scope,
+    ecs_script_node_t *owner,
+    ecs_script_entity_t *entity)
+{
+    ecs_assert(entity->hoisted_by == NULL, ECS_INTERNAL_ERROR, NULL);
+    entity->hoisted_by = owner;
+    ecs_vec_append_t(&script->allocator, &scope->stmts,
+        ecs_script_node_t*)[0] = (ecs_script_node_t*)entity;
+}
+
 static int flecs_script_name_to_expr(
     ecs_parser_t *parser,
     const char *name,
