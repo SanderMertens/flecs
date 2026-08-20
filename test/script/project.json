@@ -2517,6 +2517,11 @@
                 "for_unkeyed_only_entities_are_recreated",
                 "for_keyed_outer_condition_toggles_rows",
                 "for_keyed_per_item_condition_toggles_row",
+                "conditional_component_on_named_entity",
+                "conditional_component_on_keyed_for_entity",
+                "conditional_component_on_template_instance",
+                "two_conditional_components_toggle_independently",
+                "conditional_component_on_child_entity",
                 "interpolated_name_w_indexed_expr",
                 "interpolated_name_w_indexed_expr_in_for"
             ]

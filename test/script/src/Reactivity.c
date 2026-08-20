@@ -4033,6 +4033,422 @@ void Reactivity_for_keyed_per_item_condition_toggles_row(void) {
     ecs_fini(world);
 }
 
+void Reactivity_conditional_component_on_named_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position_i = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {1, 2}"
+            LINE "  if condition[Mass].value > 0 {"
+            LINE "    Velocity: {3, 4}"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has_id(world, foo, velocity));
+    ecs_set_id(world, foo, position_i,
+        sizeof(PositionI), &(PositionI){7, 8});
+
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){-1});
+
+    test_uint(ecs_lookup(world, "foo"), foo);
+    test_assert(ecs_is_alive(world, foo));
+    test_assert(!ecs_has_id(world, foo, velocity));
+
+    const Position *p = ecs_get_id(world, foo, position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    const PositionI *pi = ecs_get_id(world, foo, position_i);
+    test_assert(pi != NULL);
+    test_int(pi->x, 7);
+    test_int(pi->y, 8);
+
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
+
+    test_uint(ecs_lookup(world, "foo"), foo);
+    const Velocity *v = ecs_get_id(world, foo, velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 3);
+    test_int(v->y, 4);
+
+    p = ecs_get_id(world, foo, position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Reactivity_conditional_component_on_keyed_for_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t active[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"active", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, ids, sizeof(Ids),
+        &(Ids){{10, 20}, {1, 1}, 2});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "for i in 0..source[Ids].count {"
+            LINE "  const id = source[Ids].values[i]"
+            LINE "  \"row_{id}\" {"
+            LINE "    Position: {id, 0}"
+            LINE "    if source[Ids].active[i] > 0 {"
+            LINE "      Velocity: {3, 4}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t row_10 = ecs_lookup(world, "row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "row_20");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+    test_assert(ecs_has_id(world, row_10, velocity));
+    test_assert(ecs_has_id(world, row_20, velocity));
+
+    ecs_set_id(world, source, ids, sizeof(Ids),
+        &(Ids){{10, 20}, {0, 1}, 2});
+
+    test_uint(ecs_lookup(world, "row_10"), row_10);
+    test_uint(ecs_lookup(world, "row_20"), row_20);
+    test_assert(!ecs_has_id(world, row_10, velocity));
+    test_assert(ecs_has_id(world, row_20, velocity));
+
+    const Position *p = ecs_get_id(world, row_10, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+
+    ecs_set_id(world, source, ids, sizeof(Ids),
+        &(Ids){{10, 20}, {1, 1}, 2});
+
+    test_uint(ecs_lookup(world, "row_10"), row_10);
+    const Velocity *v = ecs_get_id(world, row_10, velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 3);
+    test_int(v->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_conditional_component_on_template_instance(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position_i = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Panel {"
+            LINE "  prop hover: bool = false"
+            LINE "  Position: {1, 2}"
+            LINE "  if hover {"
+            LINE "    Velocity: {3, 4}"
+            LINE "  }"
+            LINE "}"
+            LINE "Panel instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "Panel");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(panel != 0);
+    test_assert(instance != 0);
+    test_assert(!ecs_has_id(world, instance, velocity));
+    ecs_set_id(world, instance, position_i,
+        sizeof(PositionI), &(PositionI){7, 8});
+
+    struct {
+        ecs_bool_t hover;
+    } props = { true };
+    ecs_set_id(world, instance, panel, sizeof(props), &props);
+
+    test_uint(ecs_lookup(world, "instance"), instance);
+    const Velocity *v = ecs_get_id(world, instance, velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 3);
+    test_int(v->y, 4);
+
+    const PositionI *pi = ecs_get_id(world, instance, position_i);
+    test_assert(pi != NULL);
+    test_int(pi->x, 7);
+    test_int(pi->y, 8);
+
+    props.hover = false;
+    ecs_set_id(world, instance, panel, sizeof(props), &props);
+
+    test_uint(ecs_lookup(world, "instance"), instance);
+    test_assert(!ecs_has_id(world, instance, velocity));
+
+    const Position *p = ecs_get_id(world, instance, position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Reactivity_two_conditional_components_toggle_independently(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position_i = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t cond_a = ecs_entity(world, { .name = "cond_a" });
+    ecs_entity_t cond_b = ecs_entity(world, { .name = "cond_b" });
+    ecs_set_id(world, cond_a, mass, sizeof(Mass), &(Mass){1});
+    ecs_set_id(world, cond_b, mass, sizeof(Mass), &(Mass){1});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {1, 2}"
+            LINE "  if cond_a[Mass].value > 0 {"
+            LINE "    Velocity: {3, 4}"
+            LINE "  }"
+            LINE "  if cond_b[Mass].value > 0 {"
+            LINE "    PositionI: {5, 6}"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has_id(world, foo, velocity));
+    test_assert(ecs_has_id(world, foo, position_i));
+
+    ecs_set_id(world, cond_a, mass, sizeof(Mass), &(Mass){-1});
+
+    test_uint(ecs_lookup(world, "foo"), foo);
+    test_assert(!ecs_has_id(world, foo, velocity));
+    const PositionI *pi = ecs_get_id(world, foo, position_i);
+    test_assert(pi != NULL);
+    test_int(pi->x, 5);
+    test_int(pi->y, 6);
+
+    ecs_set_id(world, cond_b, mass, sizeof(Mass), &(Mass){-1});
+
+    test_uint(ecs_lookup(world, "foo"), foo);
+    test_assert(!ecs_has_id(world, foo, velocity));
+    test_assert(!ecs_has_id(world, foo, position_i));
+
+    ecs_set_id(world, cond_a, mass, sizeof(Mass), &(Mass){1});
+
+    test_uint(ecs_lookup(world, "foo"), foo);
+    const Velocity *v = ecs_get_id(world, foo, velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 3);
+    test_int(v->y, 4);
+    test_assert(!ecs_has_id(world, foo, position_i));
+
+    ecs_fini(world);
+}
+
+void Reactivity_conditional_component_on_child_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position_i = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "parent {"
+            LINE "  Position: {1, 2}"
+            LINE "  child {"
+            LINE "    Position: {3, 4}"
+            LINE "    if condition[Mass].value > 0 {"
+            LINE "      Velocity: {5, 6}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "parent");
+    ecs_entity_t child = ecs_lookup(world, "parent.child");
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, velocity));
+    ecs_set_id(world, child, position_i,
+        sizeof(PositionI), &(PositionI){7, 8});
+
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){-1});
+
+    test_uint(ecs_lookup(world, "parent"), parent);
+    test_uint(ecs_lookup(world, "parent.child"), child);
+    test_assert(!ecs_has_id(world, child, velocity));
+
+    const Position *p = ecs_get_id(world, child, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    const PositionI *pi = ecs_get_id(world, child, position_i);
+    test_assert(pi != NULL);
+    test_int(pi->x, 7);
+    test_int(pi->y, 8);
+
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
+
+    test_uint(ecs_lookup(world, "parent"), parent);
+    test_uint(ecs_lookup(world, "parent.child"), child);
+    const Velocity *v = ecs_get_id(world, child, velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 5);
+    test_int(v->y, 6);
+
+    p = ecs_get_id(world, parent, position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
 void Reactivity_interpolated_name_w_indexed_expr(void) {
     ecs_world_t *world = ecs_init();
 
