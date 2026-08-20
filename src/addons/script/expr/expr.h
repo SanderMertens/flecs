@@ -86,6 +86,18 @@ bool flecs_expr_is_type_integer(
 bool flecs_expr_is_type_number(
     ecs_entity_t type);
 
+bool flecs_expr_is_type_signed_integer(
+    ecs_entity_t type);
+
+bool flecs_expr_is_type_unsigned_integer(
+    ecs_entity_t type);
+
+bool flecs_expr_is_type_float(
+    ecs_entity_t type);
+
+bool flecs_expr_is_type_string(
+    ecs_entity_t type);
+
 ecs_size_t flecs_expr_storage_size(
     ecs_entity_t type);
 

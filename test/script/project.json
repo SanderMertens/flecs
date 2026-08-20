@@ -1425,7 +1425,17 @@
                 "boundary_precision_max_literal_value",
                 "boundary_width_max_literal_value",
                 "component_member_expression_value_precision",
-                "component_member_ratio_value_precision"
+                "component_member_ratio_value_precision",
+                "leading_zeros_i32_variable",
+                "min_width_i32_variable",
+                "min_width_i64_variable",
+                "min_width_u32_variable",
+                "align_left_string_variable",
+                "align_left_string_member",
+                "min_width_i32_component_member",
+                "precision_i32_variable_fails",
+                "scientific_i32_variable_fails",
+                "always_sign_i32_variable"
             ]
         }, {
             "id": "Expr",

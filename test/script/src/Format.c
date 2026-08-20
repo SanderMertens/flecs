@@ -3948,3 +3948,277 @@ void Format_component_member_ratio_value_precision(void) {
 
     ecs_fini(world);
 }
+
+void Format_leading_zeros_i32_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_i32_t);
+    test_assert(value != NULL);
+    *(ecs_i32_t*)value->value.ptr = 42;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:04}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "0042");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_min_width_i32_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_i32_t);
+    test_assert(value != NULL);
+    *(ecs_i32_t*)value->value.ptr = 42;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:>6}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "    42");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_min_width_i64_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_i64_t);
+    test_assert(value != NULL);
+    *(ecs_i64_t*)value->value.ptr = 42;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:>6}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "    42");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_min_width_u32_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_u32_t);
+    test_assert(value != NULL);
+    *(ecs_u32_t*)value->value.ptr = 42;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:>6}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "    42");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_align_left_string_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_string_t);
+    test_assert(value != NULL);
+    *(char**)value->value.ptr = "abc";
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:<8}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "abc     ");
+    ecs_os_free(result);
+
+    *(char**)value->value.ptr = NULL;
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_align_left_string_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        char *value;
+    } Label;
+
+    ecs_entity_t label = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Label" }),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set_id(world, e, label, sizeof(Label), &(Label){"abc"});
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"[{e[Label].value:<8}]\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "[abc     ]");
+    ecs_os_free(result);
+
+    Label *ptr = ecs_get_mut_id(world, e, label);
+    ptr->value = NULL;
+
+    ecs_fini(world);
+}
+
+void Format_min_width_i32_component_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t value;
+    } Count;
+
+    ecs_entity_t count = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Count" }),
+        .members = {
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set_id(world, e, count, sizeof(Count), &(Count){42});
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{e[Count].value * 2:>6}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "    84");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
+void Format_precision_i32_variable_fails(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_i32_t);
+    test_assert(value != NULL);
+    *(ecs_i32_t*)value->value.ptr = 42;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.2}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_scientific_i32_variable_fails(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_i32_t);
+    test_assert(value != NULL);
+    *(ecs_i32_t*)value->value.ptr = 42;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:6e}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_always_sign_i32_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_i32_t);
+    test_assert(value != NULL);
+    *(ecs_i32_t*)value->value.ptr = 42;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:+}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "+42");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
