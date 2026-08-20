@@ -59,6 +59,12 @@ int ecs_script_visit_scope_(
 
     int32_t i, count = ecs_vec_count(&scope->stmts);
     for (i = 0; i < count; i ++) {
+        /* Entities hoisted into the scope by "new" expressions are visited by
+         * the expression that created them. */
+        if (flecs_script_node_is_hoisted(nodes[i])) {
+            continue;
+        }
+
         if (!i) {
             v->prev = NULL;
         } else {

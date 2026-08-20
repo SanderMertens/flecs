@@ -882,6 +882,12 @@ static int flecs_script_dep_scope(
     ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
     int32_t i, count = ecs_vec_count(&scope->stmts);
     for (i = 0; i < count; i ++) {
+        /* Entities hoisted into the scope by "new" expressions are analyzed by
+         * the expression that created them, which adds the inputs of the entity
+         * to the statement that owns the expression. */
+        if (flecs_script_node_is_hoisted(stmts[i])) {
+            continue;
+        }
         if (flecs_script_dep_node(ctx, stmts[i])) {
             ctx->v->base.depth --;
             ctx->scope = prev_scope;
@@ -891,6 +897,9 @@ static int flecs_script_dep_scope(
     }
     uint64_t next_input = 0;
     for (i = count - 1; i >= 0; i --) {
+        if (flecs_script_node_is_hoisted(stmts[i])) {
+            continue;
+        }
         if (stmts[i]->kind == EcsAstAnnotation) {
             stmts[i]->input = next_input;
             scope->node.input |= next_input;

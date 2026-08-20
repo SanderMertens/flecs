@@ -1080,6 +1080,142 @@ void Reactivity_new_entity_survives_reevaluation(void) {
     ecs_fini(world);
 }
 
+void Reactivity_new_entity_not_duplicated_on_reevaluation(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t marker = ecs_entity(world, { .name = "Marker" });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "holder {"
+            LINE "  entity: {new { Position: {source[Mass].value, 4} Marker }}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t created = 0;
+    int32_t count = 0;
+    {
+        ecs_iter_t it = ecs_each_id(world, marker);
+        while (ecs_each_next(&it)) {
+            count += it.count;
+            created = it.entities[0];
+        }
+    }
+    test_int(count, 1);
+    test_assert(created != 0);
+
+    ecs_entity_t holder = ecs_lookup(world, "holder");
+    test_assert(holder != 0);
+    const ecs_entity_t *value = ecs_get(world, holder, ecs_entity_t);
+    test_assert(value != NULL);
+    test_uint(*value, created);
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){20});
+
+    count = 0;
+    ecs_entity_t recreated = 0;
+    {
+        ecs_iter_t it = ecs_each_id(world, marker);
+        while (ecs_each_next(&it)) {
+            count += it.count;
+            recreated = it.entities[0];
+        }
+    }
+    test_int(count, 1);
+    test_uint(recreated, created);
+
+    value = ecs_get(world, holder, ecs_entity_t);
+    test_assert(value != NULL);
+    test_uint(*value, created);
+
+    const Position *p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_new_entity_child_reclaimed_on_reevaluation(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t marker = ecs_entity(world, { .name = "Marker" });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "holder {"
+            LINE "  entity: {new {"
+            LINE "    Position: {source[Mass].value, 4}"
+            LINE "    Marker"
+            LINE "    if source[Mass].value < 15 {"
+            LINE "      child {}"
+            LINE "    }"
+            LINE "  }}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t created = 0;
+    {
+        ecs_iter_t it = ecs_each_id(world, marker);
+        while (ecs_each_next(&it)) {
+            test_int(it.count, 1);
+            created = it.entities[0];
+        }
+    }
+    test_assert(created != 0);
+
+    ecs_entity_t child = ecs_lookup_child(world, created, "child");
+    test_assert(child != 0);
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){20});
+
+    test_assert(ecs_is_alive(world, created));
+    const Position *p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(ecs_lookup_child(world, created, "child") == 0);
+
+    ecs_fini(world);
+}
+
 void Reactivity_template_props_are_isolated(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2666,6 +2802,495 @@ void Reactivity_parse_failure_clears_observers(void) {
     test_assert(s != NULL);
     test_assert(s->error != NULL);
     test_assert(s->script == NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_new_entity_survives_skipped_statement_in_nested_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t inner = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Inner" }),
+        .members = {
+            {"e", ecs_id(ecs_entity_t)}
+        }
+    });
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Outer" }),
+        .members = {
+            {"inner", inner}
+        }
+    });
+    ecs_entity_t marker = ecs_entity(world, { .name = "Marker" });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "reactive { Position: {source[Mass].value, 0} }"
+            LINE "holder {"
+            LINE "  Outer: {inner: {e: new {"
+            LINE "    Position: {3, 4}"
+            LINE "    Marker"
+            LINE "  }}}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t created = 0;
+    {
+        ecs_iter_t it = ecs_each_id(world, marker);
+        while (ecs_each_next(&it)) {
+            test_int(it.count, 1);
+            created = it.entities[0];
+        }
+    }
+    test_assert(created != 0);
+
+    const Position *p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){20});
+
+    ecs_entity_t reactive = ecs_lookup(world, "reactive");
+    test_assert(reactive != 0);
+    p = ecs_get_id(world, reactive, position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    test_assert(ecs_is_alive(world, created));
+    test_assert(ecs_has_id(world, created, marker));
+    p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_new_entity_survives_skipped_statement_in_function_arg(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t marker = ecs_entity(world, { .name = "Marker" });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "fn ident(e: entity) -> entity { e }"
+            LINE "reactive { Position: {source[Mass].value, 0} }"
+            LINE "holder {"
+            LINE "  entity: {ident(new {"
+            LINE "    Position: {3, 4}"
+            LINE "    Marker"
+            LINE "  })}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t created = 0;
+    {
+        ecs_iter_t it = ecs_each_id(world, marker);
+        while (ecs_each_next(&it)) {
+            test_int(it.count, 1);
+            created = it.entities[0];
+        }
+    }
+    test_assert(created != 0);
+
+    ecs_entity_t holder = ecs_lookup(world, "holder");
+    test_assert(holder != 0);
+    const ecs_entity_t *value = ecs_get(world, holder, ecs_entity_t);
+    test_assert(value != NULL);
+    test_uint(*value, created);
+
+    const Position *p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){20});
+
+    ecs_entity_t reactive = ecs_lookup(world, "reactive");
+    test_assert(reactive != 0);
+    p = ecs_get_id(world, reactive, position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    test_assert(ecs_is_alive(world, created));
+    test_assert(ecs_has_id(world, created, marker));
+    p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_new_entity_survives_skipped_statement_in_interpolated_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Label" }),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+    ecs_entity_t marker = ecs_entity(world, { .name = "Marker" });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "reactive { Position: {source[Mass].value, 0} }"
+            LINE "holder {"
+            LINE "  Label: {\"{new { Position: {3, 4} Marker }}\"}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t created = 0;
+    {
+        ecs_iter_t it = ecs_each_id(world, marker);
+        while (ecs_each_next(&it)) {
+            test_int(it.count, 1);
+            created = it.entities[0];
+        }
+    }
+    test_assert(created != 0);
+
+    const Position *p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){20});
+
+    ecs_entity_t reactive = ecs_lookup(world, "reactive");
+    test_assert(reactive != 0);
+    p = ecs_get_id(world, reactive, position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    test_assert(ecs_is_alive(world, created));
+    test_assert(ecs_has_id(world, created, marker));
+    p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_new_entity_survives_skipped_statement_in_component_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t marker = ecs_entity(world, { .name = "Marker" });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "reactive { Position: {source[Mass].value, 0} }"
+            LINE "holder {"
+            LINE "  Position: {(new { Position: {3, 4} Marker })[Position].x, 0}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t created = 0;
+    {
+        ecs_iter_t it = ecs_each_id(world, marker);
+        while (ecs_each_next(&it)) {
+            test_int(it.count, 1);
+            created = it.entities[0];
+        }
+    }
+    test_assert(created != 0);
+
+    ecs_entity_t holder = ecs_lookup(world, "holder");
+    test_assert(holder != 0);
+    const Position *p = ecs_get_id(world, holder, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+
+    p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){20});
+
+    ecs_entity_t reactive = ecs_lookup(world, "reactive");
+    test_assert(reactive != 0);
+    p = ecs_get_id(world, reactive, position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    test_assert(ecs_is_alive(world, created));
+    test_assert(ecs_has_id(world, created, marker));
+    p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_new_entity_survives_skipped_statement_in_template_prop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t marker = ecs_entity(world, { .name = "Marker" });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "reactive { Position: {source[Mass].value, 0} }"
+            LINE "template T {"
+            LINE "  prop e: entity = 0"
+            LINE "}"
+            LINE "T inst(new { Position: {3, 4} Marker })"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t created = 0;
+    {
+        ecs_iter_t it = ecs_each_id(world, marker);
+        while (ecs_each_next(&it)) {
+            test_int(it.count, 1);
+            created = it.entities[0];
+        }
+    }
+    test_assert(created != 0);
+
+    ecs_entity_t inst = ecs_lookup(world, "inst");
+    test_assert(inst != 0);
+
+    const Position *p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){20});
+
+    ecs_entity_t reactive = ecs_lookup(world, "reactive");
+    test_assert(reactive != 0);
+    p = ecs_get_id(world, reactive, position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    test_assert(ecs_is_alive(world, created));
+    test_assert(ecs_has_id(world, created, marker));
+    p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_new_entity_survives_skipped_statement_in_entity_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t marker = ecs_entity(world, { .name = "Marker" });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "reactive { Position: {source[Mass].value, 0} }"
+            LINE "\"holder_{new { Position: {3, 4} Marker }}\" {}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t created = 0;
+    {
+        ecs_iter_t it = ecs_each_id(world, marker);
+        while (ecs_each_next(&it)) {
+            test_int(it.count, 1);
+            created = it.entities[0];
+        }
+    }
+    test_assert(created != 0);
+
+    const Position *p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){20});
+
+    ecs_entity_t reactive = ecs_lookup(world, "reactive");
+    test_assert(reactive != 0);
+    p = ecs_get_id(world, reactive, position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    test_assert(ecs_is_alive(world, created));
+    test_assert(ecs_has_id(world, created, marker));
+    p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_new_entity_survives_skipped_statement_in_if_condition(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t marker = ecs_entity(world, { .name = "Marker" });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "reactive { Position: {source[Mass].value, 0} }"
+            LINE "if (new { Position: {3, 4} Marker }) != 0 {"
+            LINE "  holder {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t created = 0;
+    {
+        ecs_iter_t it = ecs_each_id(world, marker);
+        while (ecs_each_next(&it)) {
+            test_int(it.count, 1);
+            created = it.entities[0];
+        }
+    }
+    test_assert(created != 0);
+
+    test_assert(ecs_lookup(world, "holder") != 0);
+
+    const Position *p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){20});
+
+    ecs_entity_t reactive = ecs_lookup(world, "reactive");
+    test_assert(reactive != 0);
+    p = ecs_get_id(world, reactive, position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    test_assert(ecs_is_alive(world, created));
+    test_assert(ecs_has_id(world, created, marker));
+    p = ecs_get_id(world, created, position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
 
     ecs_fini(world);
 }

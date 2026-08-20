@@ -602,6 +602,9 @@ static void flecs_script_apply_non_fragmenting_childof_to_scope(
     ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
     for (i = 0; i < count; i ++) {
         ecs_script_node_t *stmt = stmts[i];
+        if (flecs_script_node_is_hoisted(stmt)) {
+            continue;
+        }
         switch(stmt->kind) {
         case EcsAstScope:
             flecs_script_apply_non_fragmenting_childof_to_scope(
@@ -1850,6 +1853,22 @@ static int flecs_script_step_scope(
         ecs_script_node_t *stmt = nodes[frame->pc];
         v->base.prev = frame->pc ? nodes[frame->pc - 1] : NULL;
         v->base.next = (frame->pc + 1) < count ? nodes[frame->pc + 1] : NULL;
+
+        /* Entities hoisted into the scope by "new" expressions are evaluated by
+         * the statement that owns the expression. When that statement is
+         * skipped the expression isn't evaluated, which means the scope of the
+         * hoisted entity has to be marked as visited so cleanup doesn't reclaim
+         * it. When the statement does run, the expression creates the entity
+         * again and cleanup can reclaim what the statement no longer uses. */
+        if (flecs_script_node_is_hoisted(stmt)) {
+            if (!flecs_script_stmt_run(
+                v, ((ecs_script_entity_t*)stmt)->hoisted_by))
+            {
+                flecs_script_mark_node(v, stmt);
+            }
+            frame->pc ++;
+            continue;
+        }
 
         if (!flecs_script_stmt_run(v, stmt)) {
             flecs_script_mark_node(v, stmt);
