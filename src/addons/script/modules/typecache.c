@@ -21,6 +21,42 @@ static ecs_entity_t flecs_script_typecache_get(
     return result;
 }
 
+ecs_entity_t flecs_script_array_type(
+    ecs_world_t *world,
+    ecs_entity_t elem_type,
+    int32_t count)
+{
+    ecs_assert(elem_type != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t typecache = flecs_script_typecache_get(world);
+
+    char *name = NULL;
+    const char *elem_name = ecs_get_name(world, elem_type);
+    if (elem_name && !strchr(elem_name, '.')) {
+        name = flecs_asprintf("array<%s,%d>", elem_name, count);
+        ecs_entity_t existing = ecs_lookup_child(world, typecache, name);
+        if (existing) {
+            const EcsArray *a = ecs_get(world, existing, EcsArray);
+            if (a && a->type == elem_type && a->count == count) {
+                ecs_os_free(name);
+                return existing;
+            }
+            ecs_os_free(name);
+            name = NULL;
+        }
+    }
+
+    ecs_entity_t result = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = name, .parent = typecache }),
+        .type = elem_type,
+        .count = count
+    });
+
+    ecs_os_free(name);
+    return result;
+}
+
 ecs_entity_t flecs_script_vector_type(
     ecs_world_t *world,
     ecs_entity_t elem_type)

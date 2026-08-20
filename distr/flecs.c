@@ -50754,6 +50754,11 @@ ecs_value_t flecs_script_global_var_get(
     ecs_entity_t var,
     ecs_id_t *component);
 
+ecs_entity_t flecs_script_array_type(
+    ecs_world_t *world,
+    ecs_entity_t elem_type,
+    int32_t count);
+
 ecs_entity_t flecs_script_vector_type(
     ecs_world_t *world,
     ecs_entity_t elem_type);
@@ -107877,6 +107882,32 @@ static int flecs_expr_member_visit_type(
     node->node.type = ecs_meta_get_type(cur);
     node->offset = (uintptr_t)ecs_meta_get_ptr(cur);
 
+    /* Members with an inline array count ("values: i32[3]") report the element
+     * type. Expose the member as an array type so the value can be used as a
+     * collection. */
+    const EcsType *member_type = ecs_get(world, node->node.type, EcsType);
+    if (!member_type || (member_type->kind != EcsArrayType &&
+        member_type->kind != EcsVectorType &&
+        member_type->kind != EcsMapType))
+    {
+        ecs_meta_cursor_t elem_cur = *cur;
+        int32_t elem_count = 0;
+        prev_log = ecs_log_set_level(-4);
+        if (!ecs_meta_push(&elem_cur) && ecs_meta_is_collection(&elem_cur)) {
+            elem_count = elem_cur.scope[elem_cur.depth - 1].elem_count;
+        }
+        ecs_log_set_level(prev_log);
+
+        if (elem_count > 0) {
+            ecs_entity_t array_type = flecs_script_array_type(
+                world, node->node.type, elem_count);
+            if (!array_type) {
+                goto error;
+            }
+            node->node.type = array_type;
+        }
+    }
+
     return 0;
 error:
     return -1;
@@ -109603,6 +109634,42 @@ static ecs_entity_t flecs_script_typecache_get(
         ecs_add_id(world, result, EcsModule);
         ecs_set_scope(world, prev_scope);
     }
+    return result;
+}
+
+ecs_entity_t flecs_script_array_type(
+    ecs_world_t *world,
+    ecs_entity_t elem_type,
+    int32_t count)
+{
+    ecs_assert(elem_type != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t typecache = flecs_script_typecache_get(world);
+
+    char *name = NULL;
+    const char *elem_name = ecs_get_name(world, elem_type);
+    if (elem_name && !strchr(elem_name, '.')) {
+        name = flecs_asprintf("array<%s,%d>", elem_name, count);
+        ecs_entity_t existing = ecs_lookup_child(world, typecache, name);
+        if (existing) {
+            const EcsArray *a = ecs_get(world, existing, EcsArray);
+            if (a && a->type == elem_type && a->count == count) {
+                ecs_os_free(name);
+                return existing;
+            }
+            ecs_os_free(name);
+            name = NULL;
+        }
+    }
+
+    ecs_entity_t result = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = name, .parent = typecache }),
+        .type = elem_type,
+        .count = count
+    });
+
+    ecs_os_free(name);
     return result;
 }
 

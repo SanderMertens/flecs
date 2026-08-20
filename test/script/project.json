@@ -711,6 +711,8 @@
                 "vector_literal_string",
                 "vector_literal_entity",
                 "vector_literal_entity_mut",
+                "for_inline_array_member_of_component",
+                "for_inline_array_member_of_const_var",
                 "vector_literal_int_float",
                 "vector_literal_float_int",
                 "vector_literal_mixed_int",

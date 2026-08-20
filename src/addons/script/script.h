@@ -188,6 +188,11 @@ ecs_value_t flecs_script_global_var_get(
     ecs_entity_t var,
     ecs_id_t *component);
 
+ecs_entity_t flecs_script_array_type(
+    ecs_world_t *world,
+    ecs_entity_t elem_type,
+    int32_t count);
+
 ecs_entity_t flecs_script_vector_type(
     ecs_world_t *world,
     ecs_entity_t elem_type);

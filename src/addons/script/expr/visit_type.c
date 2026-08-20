@@ -2529,6 +2529,32 @@ static int flecs_expr_member_visit_type(
     node->node.type = ecs_meta_get_type(cur);
     node->offset = (uintptr_t)ecs_meta_get_ptr(cur);
 
+    /* Members with an inline array count ("values: i32[3]") report the element
+     * type. Expose the member as an array type so the value can be used as a
+     * collection. */
+    const EcsType *member_type = ecs_get(world, node->node.type, EcsType);
+    if (!member_type || (member_type->kind != EcsArrayType &&
+        member_type->kind != EcsVectorType &&
+        member_type->kind != EcsMapType))
+    {
+        ecs_meta_cursor_t elem_cur = *cur;
+        int32_t elem_count = 0;
+        prev_log = ecs_log_set_level(-4);
+        if (!ecs_meta_push(&elem_cur) && ecs_meta_is_collection(&elem_cur)) {
+            elem_count = elem_cur.scope[elem_cur.depth - 1].elem_count;
+        }
+        ecs_log_set_level(prev_log);
+
+        if (elem_count > 0) {
+            ecs_entity_t array_type = flecs_script_array_type(
+                world, node->node.type, elem_count);
+            if (!array_type) {
+                goto error;
+            }
+            node->node.type = array_type;
+        }
+    }
+
     return 0;
 error:
     return -1;
