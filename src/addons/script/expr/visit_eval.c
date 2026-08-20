@@ -58,8 +58,7 @@ static int flecs_expr_interpolated_string_visit_eval(
                 &node->expressions, ecs_expr_node_t*, e)[0];
             ecs_expr_format_t *format = &formats[e ++];
             
-            ecs_expr_value_t *val = flecs_expr_stack_result(ctx->stack, 
-                (ecs_expr_node_t*)node);
+            ecs_expr_value_t *val = flecs_expr_stack_result(ctx->stack, expr);
             val->owned = true;
             if (flecs_expr_visit_eval_priv(ctx, expr, val)) {
                 goto error;

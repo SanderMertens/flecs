@@ -1423,7 +1423,9 @@
                 "boundary_width_negative_literal_value",
                 "boundary_width_large_literal_value",
                 "boundary_precision_max_literal_value",
-                "boundary_width_max_literal_value"
+                "boundary_width_max_literal_value",
+                "component_member_expression_value_precision",
+                "component_member_ratio_value_precision"
             ]
         }, {
             "id": "Expr",
