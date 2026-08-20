@@ -2470,6 +2470,11 @@ void Reactivity_for_keyed_multiple_keys_removed_together(void);
 void Reactivity_for_unkeyed_only_entities_are_recreated(void);
 void Reactivity_for_keyed_outer_condition_toggles_rows(void);
 void Reactivity_for_keyed_per_item_condition_toggles_row(void);
+void Reactivity_conditional_component_on_named_entity(void);
+void Reactivity_conditional_component_on_keyed_for_entity(void);
+void Reactivity_conditional_component_on_template_instance(void);
+void Reactivity_two_conditional_components_toggle_independently(void);
+void Reactivity_conditional_component_on_child_entity(void);
 void Reactivity_interpolated_name_w_indexed_expr(void);
 void Reactivity_interpolated_name_w_indexed_expr_in_for(void);
 
@@ -12270,6 +12275,26 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_for_keyed_per_item_condition_toggles_row
     },
     {
+        "conditional_component_on_named_entity",
+        Reactivity_conditional_component_on_named_entity
+    },
+    {
+        "conditional_component_on_keyed_for_entity",
+        Reactivity_conditional_component_on_keyed_for_entity
+    },
+    {
+        "conditional_component_on_template_instance",
+        Reactivity_conditional_component_on_template_instance
+    },
+    {
+        "two_conditional_components_toggle_independently",
+        Reactivity_two_conditional_components_toggle_independently
+    },
+    {
+        "conditional_component_on_child_entity",
+        Reactivity_conditional_component_on_child_entity
+    },
+    {
         "interpolated_name_w_indexed_expr",
         Reactivity_interpolated_name_w_indexed_expr
     },
@@ -12595,7 +12620,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        74,
+        79,
         Reactivity_testcases
     },
     {
