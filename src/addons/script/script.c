@@ -316,6 +316,10 @@ int flecs_script_update(
     {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
+        if (!s->error) {
+            /* A failed evaluation must never go unreported. */
+            s->error = ecs_os_strdup("failed to evaluate script");
+        }
         if (runtime->error_name && runtime->include_depth) {
             ecs_log_(-3, NULL, 0, "%s: %s: %s",
                 name ? name : "script", runtime->error_name, s->error);

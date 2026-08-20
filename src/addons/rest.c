@@ -608,7 +608,8 @@ static bool flecs_rest_script(
             ecs_strbuf_appendlit(&reply->body, ", ");
         }
 
-        char *escaped_err = flecs_astresc('"', s->error);
+        char *escaped_err = flecs_astresc('"',
+            s && s->error ? s->error : "failed to update script");
         ecs_strbuf_append(&reply->body, 
             "\"error\": \"%s\"", escaped_err);
         ecs_os_free(escaped_err);
