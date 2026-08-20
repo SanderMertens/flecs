@@ -1290,7 +1290,8 @@
                 "has_unterminated",
                 "has_pair_missing_paren_close",
                 "has_pair_missing_second",
-                "script_update_failure_is_reported"
+                "script_update_failure_is_reported",
+                "script_declares_entity_named_after_script"
             ]
         }, {
             "id": "Format",

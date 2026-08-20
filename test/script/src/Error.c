@@ -4308,3 +4308,28 @@ void Error_script_update_failure_is_reported(void) {
 
     ecs_fini(world);
 }
+
+void Error_script_declares_entity_named_after_script(void) {
+    test_quarantine("20 Aug 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_entity(world, { .name = "main" });
+
+    const char *expr =
+    HEAD "main {"
+    LINE "  Foo"
+    LINE "}";
+
+    test_assert(ecs_script_update(world, script, 0, expr) != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+
+    ecs_fini(world);
+}

@@ -1273,6 +1273,7 @@ void Error_has_unterminated(void);
 void Error_has_pair_missing_paren_close(void);
 void Error_has_pair_missing_second(void);
 void Error_script_update_failure_is_reported(void);
+void Error_script_declares_entity_named_after_script(void);
 
 // Testsuite 'Format'
 void Format_precision_f32_literal(void);
@@ -7524,6 +7525,10 @@ bake_test_case Error_testcases[] = {
     {
         "script_update_failure_is_reported",
         Error_script_update_failure_is_reported
+    },
+    {
+        "script_declares_entity_named_after_script",
+        Error_script_declares_entity_named_after_script
     }
 };
 
@@ -12449,7 +12454,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        183,
+        184,
         Error_testcases
     },
     {
