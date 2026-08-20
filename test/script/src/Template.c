@@ -4816,3 +4816,27 @@ void Template_annotation_in_if_in_template(void) {
 
     ecs_fini(world);
 }
+
+void Template_multiple_templates_dont_leak_child_names(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "module m"
+    LINE "template A {"
+    LINE "  lamp {}"
+    LINE "}"
+    LINE "template B {"
+    LINE "  bulb {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "m.A") != 0);
+    test_assert(ecs_lookup(world, "m.B") != 0);
+    test_assert(ecs_lookup(world, "m.lamp") == 0);
+    test_assert(ecs_lookup(world, "m.bulb") == 0);
+    test_assert(ecs_lookup(world, "lamp") == 0);
+    test_assert(ecs_lookup(world, "bulb") == 0);
+
+    ecs_fini(world);
+}
