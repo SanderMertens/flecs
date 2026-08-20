@@ -1287,7 +1287,8 @@
                 "has_on_non_entity_type",
                 "has_unterminated",
                 "has_pair_missing_paren_close",
-                "has_pair_missing_second"
+                "has_pair_missing_second",
+                "script_update_failure_is_reported"
             ]
         }, {
             "id": "Format",

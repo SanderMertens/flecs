@@ -4285,3 +4285,26 @@ void Error_unresolved_component_ref_w_unresolved_entity_and_component(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Error_script_update_failure_is_reported(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_entity(world, { .name = "main" });
+
+    test_assert(ecs_script_update(world, script, 0, "e {}") == 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    test_assert(ecs_script_update(world, script, 0, "e { NoSuchTag }") != 0);
+
+    s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+    test_assert(s->error[0] != '\0');
+
+    ecs_fini(world);
+}

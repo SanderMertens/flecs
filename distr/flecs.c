@@ -27788,7 +27788,8 @@ static bool flecs_rest_script(
             ecs_strbuf_appendlit(&reply->body, ", ");
         }
 
-        char *escaped_err = flecs_astresc('"', s->error);
+        char *escaped_err = flecs_astresc('"',
+            s && s->error ? s->error : "failed to update script");
         ecs_strbuf_append(&reply->body, 
             "\"error\": \"%s\"", escaped_err);
         ecs_os_free(escaped_err);
@@ -71615,6 +71616,10 @@ int flecs_script_update(
     {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
+        if (!s->error) {
+            /* A failed evaluation must never go unreported. */
+            s->error = ecs_os_strdup("failed to evaluate script");
+        }
         if (runtime->error_name && runtime->include_depth) {
             ecs_log_(-3, NULL, 0, "%s: %s: %s",
                 name ? name : "script", runtime->error_name, s->error);
@@ -110419,6 +110424,8 @@ static int flecs_script_dep_node(
         if (!ctx->template ||
             ctx->member >= ecs_vec_count(&ctx->template->members))
         {
+            flecs_script_eval_error(ctx->v, node,
+                "variable '%s' is not a template member", n->name);
             return -1;
         }
         ecs_script_template_member_t *member = ecs_vec_get_t(
@@ -110702,6 +110709,8 @@ static int flecs_script_dep_template(
     ecs_entity_t entity = flecs_script_symbol_entity(ctx->v, node->symbol);
     const EcsScript *script = ecs_get(ctx->v->world, entity, EcsScript);
     if (!script || !script->template_) {
+        flecs_script_eval_error(ctx->v, node,
+            "'%s' is not a template", node->name);
         return -1;
     }
     ecs_script_template_t *template = script->template_;
