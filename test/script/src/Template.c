@@ -4647,3 +4647,172 @@ void Template_singleton_scope_w_template(void) {
 
     ecs_fini(world);
 }
+
+void Template_annotation_in_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  @brief A description"
+    LINE "  child {"
+    LINE "    Position: {1, 2}"
+    LINE "  }"
+    LINE "  sibling {"
+    LINE "    Position: {3, 4}"
+    LINE "  }"
+    LINE "}"
+    LINE "Foo inst_a()"
+    LINE "Foo inst_b()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t inst_a = ecs_lookup(world, "inst_a");
+    test_assert(inst_a != 0);
+    ecs_entity_t inst_b = ecs_lookup(world, "inst_b");
+    test_assert(inst_b != 0);
+
+    ecs_entity_t child_a = ecs_lookup(world, "inst_a.child");
+    test_assert(child_a != 0);
+    ecs_entity_t sibling_a = ecs_lookup(world, "inst_a.sibling");
+    test_assert(sibling_a != 0);
+    ecs_entity_t child_b = ecs_lookup(world, "inst_b.child");
+    test_assert(child_b != 0);
+    ecs_entity_t sibling_b = ecs_lookup(world, "inst_b.sibling");
+    test_assert(sibling_b != 0);
+
+    test_str(ecs_doc_get_brief(world, child_a), "A description");
+    test_str(ecs_doc_get_brief(world, child_b), "A description");
+    test_str(ecs_doc_get_brief(world, sibling_a), NULL);
+    test_str(ecs_doc_get_brief(world, sibling_b), NULL);
+    test_str(ecs_doc_get_brief(world, inst_a), NULL);
+    test_str(ecs_doc_get_brief(world, inst_b), NULL);
+
+    const Position *p = ecs_get(world, child_a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    p = ecs_get(world, sibling_a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Template_annotation_in_for_in_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  for i in 0..2 {"
+    LINE "    @brief A description"
+    LINE "    \"child_{i}\" {"
+    LINE "      Position: {i, 2}"
+    LINE "    }"
+    LINE "    \"sibling_{i}\" {"
+    LINE "      Position: {i, 3}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE "Foo inst()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child_0 = ecs_lookup(world, "inst.child_0");
+    test_assert(child_0 != 0);
+    ecs_entity_t child_1 = ecs_lookup(world, "inst.child_1");
+    test_assert(child_1 != 0);
+    ecs_entity_t sibling_0 = ecs_lookup(world, "inst.sibling_0");
+    test_assert(sibling_0 != 0);
+    ecs_entity_t sibling_1 = ecs_lookup(world, "inst.sibling_1");
+    test_assert(sibling_1 != 0);
+
+    test_str(ecs_doc_get_brief(world, child_0), "A description");
+    test_str(ecs_doc_get_brief(world, child_1), "A description");
+    test_str(ecs_doc_get_brief(world, sibling_0), NULL);
+    test_str(ecs_doc_get_brief(world, sibling_1), NULL);
+
+    const Position *p = ecs_get(world, child_0, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+    test_int(p->y, 2);
+
+    p = ecs_get(world, child_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Template_annotation_in_if_in_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop v: bool = true"
+    LINE "  if v {"
+    LINE "    @brief A description"
+    LINE "    child {"
+    LINE "      Position: {1, 2}"
+    LINE "    }"
+    LINE "    sibling {"
+    LINE "      Position: {3, 4}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE "Foo inst()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child = ecs_lookup(world, "inst.child");
+    test_assert(child != 0);
+    ecs_entity_t sibling = ecs_lookup(world, "inst.sibling");
+    test_assert(sibling != 0);
+
+    test_str(ecs_doc_get_brief(world, child), "A description");
+    test_str(ecs_doc_get_brief(world, sibling), NULL);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    p = ecs_get(world, sibling, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}

@@ -98325,7 +98325,14 @@ static int flecs_script_type_annot(
             "annotation must be applied to an entity or template");
         return -1;
     }
-    return flecs_script_eval_node(&v->base, (ecs_script_node_t*)node);
+    /* Recording an annotation is safe while a template is being preprocessed,
+     * as it does not evaluate anything in the world. Clear the template so the
+     * evaluation entrypoint doesn't reject the node. */
+    ecs_script_template_t *template = v->template;
+    v->template = NULL;
+    int result = flecs_script_eval_node(&v->base, (ecs_script_node_t*)node);
+    v->template = template;
+    return result;
 }
 
 static int flecs_script_type_const(
