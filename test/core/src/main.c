@@ -1720,6 +1720,11 @@ void ComponentLifecycle_on_validate_blocks_modified(void);
 void ComponentLifecycle_on_validate_per_entity_in_bulk(void);
 void ComponentLifecycle_on_validate_false_blocks_on_set_deferred(void);
 void ComponentLifecycle_on_validate_true_invokes_on_set_deferred(void);
+void ComponentLifecycle_fini_w_cached_query_in_component(void);
+void ComponentLifecycle_fini_w_cached_query_in_component_on_entity(void);
+void ComponentLifecycle_fini_w_cached_query_in_component_on_remove_observer(void);
+void ComponentLifecycle_fini_w_uncached_query_in_component(void);
+void ComponentLifecycle_delete_component_w_cached_query_in_component(void);
 
 // Testsuite 'Pairs'
 void Pairs_disable_toggle_component_and_toggle_pair(void);
@@ -10079,6 +10084,26 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_validate_true_invokes_on_set_deferred",
         ComponentLifecycle_on_validate_true_invokes_on_set_deferred
+    },
+    {
+        "fini_w_cached_query_in_component",
+        ComponentLifecycle_fini_w_cached_query_in_component
+    },
+    {
+        "fini_w_cached_query_in_component_on_entity",
+        ComponentLifecycle_fini_w_cached_query_in_component_on_entity
+    },
+    {
+        "fini_w_cached_query_in_component_on_remove_observer",
+        ComponentLifecycle_fini_w_cached_query_in_component_on_remove_observer
+    },
+    {
+        "fini_w_uncached_query_in_component",
+        ComponentLifecycle_fini_w_uncached_query_in_component
+    },
+    {
+        "delete_component_w_cached_query_in_component",
+        ComponentLifecycle_delete_component_w_cached_query_in_component
     }
 };
 
@@ -16816,7 +16841,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        166,
+        171,
         ComponentLifecycle_testcases
     },
     {
