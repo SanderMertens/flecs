@@ -401,7 +401,7 @@ static ecs_entity_t flecs_script_eval_name_expr(
     return result;
 }
 
-static bool flecs_script_is_builtin(
+bool flecs_script_is_builtin(
     const ecs_world_t *world,
     ecs_entity_t e)
 {

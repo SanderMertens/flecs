@@ -50271,6 +50271,10 @@ void flecs_script_eval_error_(
 #define flecs_script_eval_error(v, node, ...)\
     flecs_script_eval_error_(v, (ecs_script_node_t*)node, __VA_ARGS__)
 
+bool flecs_script_is_builtin(
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
 ecs_entity_t flecs_script_create_entity(
     ecs_script_eval_visitor_t *v,
     const char *name);
@@ -94465,7 +94469,7 @@ static ecs_entity_t flecs_script_eval_name_expr(
     return result;
 }
 
-static bool flecs_script_is_builtin(
+bool flecs_script_is_builtin(
     const ecs_world_t *world,
     ecs_entity_t e)
 {
@@ -98038,7 +98042,7 @@ static int flecs_script_type_ensure_node(
     if (!current) {
         return -1;
     }
-    if (t->v->script_tag) {
+    if (t->v->script_tag && !flecs_script_is_builtin(t->v->world, current)) {
         ecs_add_id(t->v->world, current, t->v->script_tag);
     }
     node->eval = current;

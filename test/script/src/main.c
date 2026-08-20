@@ -1003,6 +1003,7 @@ void Template_template_w_prop_w_value_name(void);
 void Template_template_w_var_w_value_name(void);
 void Template_eval_twice_w_failed_method_call_in_body(void);
 void Template_eval_twice_w_failed_method_call_in_prop_default(void);
+void Template_singleton_scope_w_template(void);
 void Template_template_w_module_qualified_entity_ref(void);
 
 // Testsuite 'Mut'
@@ -6446,6 +6447,10 @@ bake_test_case Template_testcases[] = {
     {
         "eval_twice_w_failed_method_call_in_prop_default",
         Template_eval_twice_w_failed_method_call_in_prop_default
+    },
+    {
+        "singleton_scope_w_template",
+        Template_singleton_scope_w_template
     },
     {
         "template_w_module_qualified_entity_ref",
@@ -12395,7 +12400,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        105,
+        106,
         Template_testcases
     },
     {
