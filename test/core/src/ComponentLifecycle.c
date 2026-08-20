@@ -5474,3 +5474,188 @@ void ComponentLifecycle_on_validate_true_invokes_on_set_deferred(void) {
 
     ecs_fini(world);
 }
+
+typedef struct QueryHolder {
+    ecs_query_t *query;
+} QueryHolder;
+
+static int query_holder_dtor_invoked = 0;
+
+static void QueryHolderDtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    (void)ti;
+    QueryHolder *ptr_arr = ptr;
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        if (ptr_arr[i].query) {
+            query_holder_dtor_invoked ++;
+            ecs_query_fini(ptr_arr[i].query);
+            ptr_arr[i].query = NULL;
+        }
+    }
+}
+
+static void QueryHolderOnRemove(ecs_iter_t *it) {
+    QueryHolder *holder = ecs_field(it, QueryHolder, 0);
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        if (holder[i].query) {
+            query_holder_dtor_invoked ++;
+            ecs_query_fini(holder[i].query);
+            holder[i].query = NULL;
+        }
+    }
+}
+
+void ComponentLifecycle_fini_w_cached_query_in_component(void) {
+    test_quarantine("20 Aug 2026");
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, QueryHolder);
+
+    ecs_set_hooks(world, QueryHolder, {
+        .ctor = flecs_default_ctor,
+        .dtor = QueryHolderDtor
+    });
+
+    query_holder_dtor_invoked = 0;
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_singleton_set(world, QueryHolder, { q });
+
+    ecs_fini(world);
+
+    test_int(query_holder_dtor_invoked, 1);
+}
+
+void ComponentLifecycle_fini_w_cached_query_in_component_on_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, QueryHolder);
+
+    ecs_set_hooks(world, QueryHolder, {
+        .ctor = flecs_default_ctor,
+        .dtor = QueryHolderDtor
+    });
+
+    query_holder_dtor_invoked = 0;
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_set(world, e, QueryHolder, { q });
+
+    ecs_fini(world);
+
+    test_int(query_holder_dtor_invoked, 1);
+}
+
+void ComponentLifecycle_fini_w_cached_query_in_component_on_remove_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, QueryHolder);
+
+    ecs_set_hooks(world, QueryHolder, {
+        .ctor = flecs_default_ctor
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(QueryHolder) }},
+        .events = { EcsOnRemove },
+        .callback = QueryHolderOnRemove
+    });
+
+    query_holder_dtor_invoked = 0;
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_singleton_set(world, QueryHolder, { q });
+
+    ecs_fini(world);
+
+    test_int(query_holder_dtor_invoked, 1);
+}
+
+void ComponentLifecycle_fini_w_uncached_query_in_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, QueryHolder);
+
+    ecs_set_hooks(world, QueryHolder, {
+        .ctor = flecs_default_ctor,
+        .dtor = QueryHolderDtor
+    });
+
+    query_holder_dtor_invoked = 0;
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }},
+        .cache_kind = EcsQueryCacheNone
+    });
+    test_assert(q != NULL);
+    test_uint(ecs_get_entity(q), 0);
+
+    ecs_singleton_set(world, QueryHolder, { q });
+
+    ecs_fini(world);
+
+    test_int(query_holder_dtor_invoked, 1);
+}
+
+void ComponentLifecycle_delete_component_w_cached_query_in_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, QueryHolder);
+
+    ecs_set_hooks(world, QueryHolder, {
+        .ctor = flecs_default_ctor,
+        .dtor = QueryHolderDtor
+    });
+
+    query_holder_dtor_invoked = 0;
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t query_entity = ecs_get_entity(q);
+    test_assert(query_entity != 0);
+
+    ecs_set(world, e, QueryHolder, { q });
+
+    ecs_delete(world, e);
+
+    test_int(query_holder_dtor_invoked, 1);
+    test_assert(!ecs_is_alive(world, query_entity));
+
+    ecs_fini(world);
+
+    test_int(query_holder_dtor_invoked, 1);
+}

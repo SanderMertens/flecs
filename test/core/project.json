@@ -1778,7 +1778,12 @@
                 "on_validate_blocks_modified",
                 "on_validate_per_entity_in_bulk",
                 "on_validate_false_blocks_on_set_deferred",
-                "on_validate_true_invokes_on_set_deferred"
+                "on_validate_true_invokes_on_set_deferred",
+                "fini_w_cached_query_in_component",
+                "fini_w_cached_query_in_component_on_entity",
+                "fini_w_cached_query_in_component_on_remove_observer",
+                "fini_w_uncached_query_in_component",
+                "delete_component_w_cached_query_in_component"
             ]
         }, {
             "id": "Pairs",
