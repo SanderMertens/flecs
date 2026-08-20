@@ -2457,6 +2457,19 @@ void Reactivity_new_entity_survives_skipped_statement_in_component_expr(void);
 void Reactivity_new_entity_survives_skipped_statement_in_template_prop(void);
 void Reactivity_new_entity_survives_skipped_statement_in_entity_name(void);
 void Reactivity_new_entity_survives_skipped_statement_in_if_condition(void);
+void Reactivity_for_preserves_unchanged_entities(void);
+void Reactivity_for_keyed_entity_survives_collection_change(void);
+void Reactivity_for_keyed_external_component_survives(void);
+void Reactivity_for_keyed_removed_key_is_deleted(void);
+void Reactivity_for_keyed_new_key_is_added(void);
+void Reactivity_for_keyed_reorder_preserves_identity(void);
+void Reactivity_for_keyed_unkeyed_entity_is_recreated(void);
+void Reactivity_for_keyed_mixed_external_components(void);
+void Reactivity_for_keyed_multiple_keys_per_iteration(void);
+void Reactivity_for_keyed_multiple_keys_removed_together(void);
+void Reactivity_for_unkeyed_only_entities_are_recreated(void);
+void Reactivity_for_keyed_outer_condition_toggles_rows(void);
+void Reactivity_for_keyed_per_item_condition_toggles_row(void);
 void Reactivity_interpolated_name_w_indexed_expr(void);
 void Reactivity_interpolated_name_w_indexed_expr_in_for(void);
 
@@ -12205,6 +12218,58 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_new_entity_survives_skipped_statement_in_if_condition
     },
     {
+        "for_preserves_unchanged_entities",
+        Reactivity_for_preserves_unchanged_entities
+    },
+    {
+        "for_keyed_entity_survives_collection_change",
+        Reactivity_for_keyed_entity_survives_collection_change
+    },
+    {
+        "for_keyed_external_component_survives",
+        Reactivity_for_keyed_external_component_survives
+    },
+    {
+        "for_keyed_removed_key_is_deleted",
+        Reactivity_for_keyed_removed_key_is_deleted
+    },
+    {
+        "for_keyed_new_key_is_added",
+        Reactivity_for_keyed_new_key_is_added
+    },
+    {
+        "for_keyed_reorder_preserves_identity",
+        Reactivity_for_keyed_reorder_preserves_identity
+    },
+    {
+        "for_keyed_unkeyed_entity_is_recreated",
+        Reactivity_for_keyed_unkeyed_entity_is_recreated
+    },
+    {
+        "for_keyed_mixed_external_components",
+        Reactivity_for_keyed_mixed_external_components
+    },
+    {
+        "for_keyed_multiple_keys_per_iteration",
+        Reactivity_for_keyed_multiple_keys_per_iteration
+    },
+    {
+        "for_keyed_multiple_keys_removed_together",
+        Reactivity_for_keyed_multiple_keys_removed_together
+    },
+    {
+        "for_unkeyed_only_entities_are_recreated",
+        Reactivity_for_unkeyed_only_entities_are_recreated
+    },
+    {
+        "for_keyed_outer_condition_toggles_rows",
+        Reactivity_for_keyed_outer_condition_toggles_rows
+    },
+    {
+        "for_keyed_per_item_condition_toggles_row",
+        Reactivity_for_keyed_per_item_condition_toggles_row
+    },
+    {
         "interpolated_name_w_indexed_expr",
         Reactivity_interpolated_name_w_indexed_expr
     },
@@ -12530,7 +12595,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        61,
+        74,
         Reactivity_testcases
     },
     {
