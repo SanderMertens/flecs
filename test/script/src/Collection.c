@@ -2909,3 +2909,61 @@ void Collection_vector_literal_entity_mut(void) {
 
     ecs_fini(world);
 }
+
+void Collection_for_inline_array_member_of_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[3];
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 3}
+        }
+    });
+
+    test_assert(ids != 0);
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20, 30}});
+
+    const char *expr =
+    HEAD "for elem in source[Ids].values {"
+    LINE "  \"e_{elem}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e_10") != 0);
+    test_assert(ecs_lookup(world, "e_20") != 0);
+    test_assert(ecs_lookup(world, "e_30") != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_for_inline_array_member_of_const_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 3}
+        }
+    });
+
+    const char *expr =
+    HEAD "const ids: Ids = {values: [10, 20, 30]}"
+    LINE "for elem in ids.values {"
+    LINE "  \"e_{elem}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e_10") != 0);
+    test_assert(ecs_lookup(world, "e_20") != 0);
+    test_assert(ecs_lookup(world, "e_30") != 0);
+
+    ecs_fini(world);
+}

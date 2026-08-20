@@ -705,6 +705,8 @@ void Collection_vector_literal_int(void);
 void Collection_vector_literal_string(void);
 void Collection_vector_literal_entity(void);
 void Collection_vector_literal_entity_mut(void);
+void Collection_for_inline_array_member_of_component(void);
+void Collection_for_inline_array_member_of_const_var(void);
 void Collection_vector_literal_int_float(void);
 void Collection_vector_literal_float_int(void);
 void Collection_vector_literal_mixed_int(void);
@@ -5280,6 +5282,14 @@ bake_test_case Collection_testcases[] = {
     {
         "vector_literal_entity_mut",
         Collection_vector_literal_entity_mut
+    },
+    {
+        "for_inline_array_member_of_component",
+        Collection_for_inline_array_member_of_component
+    },
+    {
+        "for_inline_array_member_of_const_var",
+        Collection_for_inline_array_member_of_const_var
     },
     {
         "vector_literal_int_float",
@@ -12397,7 +12407,7 @@ static bake_test_suite suites[] = {
         "Collection",
         NULL,
         NULL,
-        98,
+        100,
         Collection_testcases
     },
     {
