@@ -549,6 +549,7 @@
                 "script_error_new_script_deferred",
                 "script_update",
                 "script_update_w_body",
+                "script_update_new_script",
                 "import_rest_after_mini",
                 "get_pipeline_stats_after_delete_system",
                 "request_world_summary_before_monitor_sys_run",

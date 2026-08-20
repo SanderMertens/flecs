@@ -543,7 +543,16 @@ static bool flecs_rest_script(
 #ifdef FLECS_SCRIPT
     ecs_entity_t script = flecs_rest_entity_from_path(world, reply, path);
     if (!script) {
-        script = ecs_entity(world, { .name = path });
+        /* Entity does not exist yet, create it. Reset the reply that was
+         * populated by the failed lookup, as the request itself is valid. */
+        ecs_strbuf_reset(&reply->body);
+        reply->code = 200;
+        script = ecs_entity(world, { .name = path, .sep = "/" });
+        if (!script) {
+            flecs_reply_error(reply, "invalid script name '%s'", path);
+            reply->code = 400;
+            return true;
+        }
     }
 
     /* If true, check if file changed */
