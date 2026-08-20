@@ -4602,3 +4602,48 @@ void Template_eval_twice_w_failed_method_call_in_prop_default(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Template_singleton_scope_w_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "$ {"
+            LINE "  Position: {1, 2}"
+            LINE "}"
+            LINE "template Foo {"
+            LINE "  Position: {3, 4}"
+            LINE "}"
+            LINE "Foo inst()"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    const Position *p = ecs_get(world, ecs_id(Position), Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_entity_t inst = ecs_lookup(world, "inst");
+    test_assert(inst != 0);
+    p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
