@@ -19,6 +19,7 @@ typedef struct ecs_script_type_entity_t {
     int32_t table;
     int32_t child_table;
     int32_t slot;
+    bool in_template;
 } ecs_script_type_entity_t;
 
 typedef struct ecs_script_type_visitor_t {

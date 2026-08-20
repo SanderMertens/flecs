@@ -50397,6 +50397,7 @@ typedef struct ecs_script_type_entity_t {
     int32_t table;
     int32_t child_table;
     int32_t slot;
+    bool in_template;
 } ecs_script_type_entity_t;
 
 typedef struct ecs_script_type_visitor_t {
@@ -97663,6 +97664,7 @@ static ecs_script_type_entity_t* flecs_script_type_declare(
     entity->table = t->table;
     entity->child_table = -1;
     entity->slot = flecs_script_type_slot_new(t, *slot);
+    entity->in_template = t->template_scope;
     *slot = entity->slot;
     if (has_scope) {
         entity->child_table = flecs_script_type_table_new(
@@ -98012,6 +98014,11 @@ static int flecs_script_type_ensure_entities(
     for (i = 0; i < count; i ++) {
         ecs_script_type_entity_t *entries = ecs_vec_first(&t->entities);
         ecs_script_entity_t *node = entries[i].node;
+        if (entries[i].in_template && !t->template_scope) {
+            /* Entities declared in a template body are created when the
+             * template is instantiated, not in the scope of the script. */
+            continue;
+        }
         if (node && flecs_script_type_ensure_node(t, node)) {
             return -1;
         }

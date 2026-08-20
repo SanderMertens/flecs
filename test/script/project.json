@@ -1021,6 +1021,7 @@
                 "annotation_in_template",
                 "annotation_in_for_in_template",
                 "annotation_in_if_in_template",
+                "multiple_templates_dont_leak_child_names",
                 "template_w_module_qualified_entity_ref"
             ]
         }, {

@@ -1007,6 +1007,7 @@ void Template_singleton_scope_w_template(void);
 void Template_annotation_in_template(void);
 void Template_annotation_in_for_in_template(void);
 void Template_annotation_in_if_in_template(void);
+void Template_multiple_templates_dont_leak_child_names(void);
 void Template_template_w_module_qualified_entity_ref(void);
 
 // Testsuite 'Mut'
@@ -6466,6 +6467,10 @@ bake_test_case Template_testcases[] = {
     {
         "annotation_in_if_in_template",
         Template_annotation_in_if_in_template
+    },
+    {
+        "multiple_templates_dont_leak_child_names",
+        Template_multiple_templates_dont_leak_child_names
     },
     {
         "template_w_module_qualified_entity_ref",
@@ -12415,7 +12420,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        109,
+        110,
         Template_testcases
     },
     {
