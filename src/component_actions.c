@@ -139,7 +139,7 @@ static void flecs_on_unparent(
             world, other_table, table, row, count);
     }
 
-    if (diff_flags & EcsTableHasOrderedChildren) {
+    if (table->flags & EcsTableHasOrderedChildren) {
         flecs_ordered_children_unparent(world, table, row, count);
     }
 }
@@ -404,17 +404,27 @@ static void flecs_actions_on_remove_intern_w_reparent(
     }
 
     ecs_flags32_t diff_flags = diff->removed_flags;
-    if (!diff_flags) {
+
+    /* The OrderedChildren flag can be set on a table after the edges for the
+     * table were created, which means the cached edge diff can be out of date.
+     * The table flag is kept up to date, so use that instead. */
+    ecs_flags32_t ordered_children = table->flags & EcsTableHasOrderedChildren;
+
+    if (!(diff_flags|ordered_children)) {
         return;
     }
 
-    if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
+    if ((diff_flags & EcsTableEdgeReparent) || ordered_children) {
         if (table != other_table &&
             (!other_table || !(other_table->flags & EcsTableHasChildOf)))
         {
             flecs_on_unparent(
                 world, table, other_table, row, count, diff_flags);
         }
+    }
+
+    if (!diff_flags) {
+        return;
     }
 
     flecs_actions_on_remove_intern(
