@@ -3885,3 +3885,66 @@ void Format_boundary_width_max_literal_value(void) {
 
     ecs_fini(world);
 }
+
+void Format_component_member_expression_value_precision(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set_id(world, e, mass, sizeof(Mass), &(Mass){7.5});
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{e[Mass].value * 1.0:.1}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "7.5");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
+void Format_component_member_ratio_value_precision(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_f32_t hp;
+        ecs_f32_t max;
+    } Health;
+
+    ecs_entity_t health = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Health" }),
+        .members = {
+            {"hp", ecs_id(ecs_f32_t)},
+            {"max", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set_id(world, e, health, sizeof(Health), &(Health){30, 40});
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world,
+        "\"{e[Health].hp / e[Health].max * 100:.0}%\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "75%");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}

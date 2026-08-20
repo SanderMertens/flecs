@@ -1401,6 +1401,8 @@ void Format_boundary_width_negative_literal_value(void);
 void Format_boundary_width_large_literal_value(void);
 void Format_boundary_precision_max_literal_value(void);
 void Format_boundary_width_max_literal_value(void);
+void Format_component_member_expression_value_precision(void);
+void Format_component_member_ratio_value_precision(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -8000,6 +8002,14 @@ bake_test_case Format_testcases[] = {
     {
         "boundary_width_max_literal_value",
         Format_boundary_width_max_literal_value
+    },
+    {
+        "component_member_expression_value_precision",
+        Format_component_member_expression_value_precision
+    },
+    {
+        "component_member_ratio_value_precision",
+        Format_component_member_ratio_value_precision
     }
 };
 
@@ -12301,7 +12311,7 @@ static bake_test_suite suites[] = {
         "Format",
         NULL,
         NULL,
-        134,
+        136,
         Format_testcases,
         1,
         Format_params
