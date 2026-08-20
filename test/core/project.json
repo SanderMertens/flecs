@@ -975,7 +975,14 @@
                 "prefab_get_target_after_delete_instance_child",
                 "defer_remove_add_batched_w_sibling_in_table",
                 "instantiate_tree_after_rename_child",
-                "fini_w_instantiated_prefab_non_fragmenting_child"
+                "fini_w_instantiated_prefab_non_fragmenting_child",
+                "convert_childof_to_parent",
+                "convert_childof_to_parent_3_children",
+                "convert_childof_to_parent_3_children_remove_childof_first",
+                "convert_childof_to_parent_3_children_w_ordered_children",
+                "convert_childof_to_parent_nested",
+                "convert_childof_to_parent_w_named_children",
+                "remove_childof_after_convert_sibling"
             ]
         }, {
             "id": "Hierarchies",
