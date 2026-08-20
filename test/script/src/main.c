@@ -1403,6 +1403,16 @@ void Format_boundary_precision_max_literal_value(void);
 void Format_boundary_width_max_literal_value(void);
 void Format_component_member_expression_value_precision(void);
 void Format_component_member_ratio_value_precision(void);
+void Format_leading_zeros_i32_variable(void);
+void Format_min_width_i32_variable(void);
+void Format_min_width_i64_variable(void);
+void Format_min_width_u32_variable(void);
+void Format_align_left_string_variable(void);
+void Format_align_left_string_member(void);
+void Format_min_width_i32_component_member(void);
+void Format_precision_i32_variable_fails(void);
+void Format_scientific_i32_variable_fails(void);
+void Format_always_sign_i32_variable(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -8010,6 +8020,46 @@ bake_test_case Format_testcases[] = {
     {
         "component_member_ratio_value_precision",
         Format_component_member_ratio_value_precision
+    },
+    {
+        "leading_zeros_i32_variable",
+        Format_leading_zeros_i32_variable
+    },
+    {
+        "min_width_i32_variable",
+        Format_min_width_i32_variable
+    },
+    {
+        "min_width_i64_variable",
+        Format_min_width_i64_variable
+    },
+    {
+        "min_width_u32_variable",
+        Format_min_width_u32_variable
+    },
+    {
+        "align_left_string_variable",
+        Format_align_left_string_variable
+    },
+    {
+        "align_left_string_member",
+        Format_align_left_string_member
+    },
+    {
+        "min_width_i32_component_member",
+        Format_min_width_i32_component_member
+    },
+    {
+        "precision_i32_variable_fails",
+        Format_precision_i32_variable_fails
+    },
+    {
+        "scientific_i32_variable_fails",
+        Format_scientific_i32_variable_fails
+    },
+    {
+        "always_sign_i32_variable",
+        Format_always_sign_i32_variable
     }
 };
 
@@ -12311,7 +12361,7 @@ static bake_test_suite suites[] = {
         "Format",
         NULL,
         NULL,
-        136,
+        146,
         Format_testcases,
         1,
         Format_params

@@ -72,6 +72,44 @@ bool flecs_expr_is_type_number(
     else return false;
 }
 
+bool flecs_expr_is_type_signed_integer(
+    ecs_entity_t type)
+{
+         if (type == ecs_id(ecs_i8_t))     return true;
+    else if (type == ecs_id(ecs_i16_t))    return true;
+    else if (type == ecs_id(ecs_i32_t))    return true;
+    else if (type == ecs_id(ecs_i64_t))    return true;
+    else if (type == ecs_id(ecs_iptr_t))   return true;
+    else if (type == ecs_id(ecs_bool_t))   return true;
+    else if (type == ecs_id(ecs_char_t))   return true;
+    else return false;
+}
+
+bool flecs_expr_is_type_unsigned_integer(
+    ecs_entity_t type)
+{
+         if (type == ecs_id(ecs_u8_t))     return true;
+    else if (type == ecs_id(ecs_u16_t))    return true;
+    else if (type == ecs_id(ecs_u32_t))    return true;
+    else if (type == ecs_id(ecs_u64_t))    return true;
+    else if (type == ecs_id(ecs_uptr_t))   return true;
+    else return false;
+}
+
+bool flecs_expr_is_type_float(
+    ecs_entity_t type)
+{
+         if (type == ecs_id(ecs_f32_t))    return true;
+    else if (type == ecs_id(ecs_f64_t))    return true;
+    else return false;
+}
+
+bool flecs_expr_is_type_string(
+    ecs_entity_t type)
+{
+    return type == ecs_id(ecs_string_t);
+}
+
 /* Returns how expressive a type is. This is used to determine whether an 
  * implicit cast is allowed, where only casts from less to more expressive types
  * are valid. */
@@ -837,11 +875,29 @@ static int flecs_expr_interpolated_string_visit_type(
             }
 
             if (format.is_present) {
-                if (result->type != ecs_id(ecs_f32_t) &&
-                    result->type != ecs_id(ecs_f64_t))
-                {
-                    flecs_expr_visit_error(script, result,
-                        "format specifiers require an f32 or f64 value");
+                ecs_entity_t value_type = result->type;
+                bool is_float = flecs_expr_is_type_float(value_type);
+                bool is_integer =
+                    flecs_expr_is_type_signed_integer(value_type) ||
+                    flecs_expr_is_type_unsigned_integer(value_type);
+                bool is_string = flecs_expr_is_type_string(value_type);
+
+                const char *format_error = NULL;
+                if (!is_float && !is_integer && !is_string) {
+                    format_error = "format specifiers require a number or "
+                        "string value";
+                } else if (!is_float && format.precision) {
+                    format_error = "precision is only supported for f32 and "
+                        "f64 values";
+                } else if (!is_float && format.notation) {
+                    format_error = "scientific notation is only supported for "
+                        "f32 and f64 values";
+                } else if (is_string && format.sign) {
+                    format_error = "sign is not supported for string values";
+                }
+
+                if (format_error) {
+                    flecs_expr_visit_error(script, result, "%s", format_error);
                     flecs_expr_visit_free(script, result);
                     flecs_expr_format_fini(script, &format);
                     goto error;

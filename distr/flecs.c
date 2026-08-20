@@ -49850,6 +49850,18 @@ bool flecs_expr_is_type_integer(
 bool flecs_expr_is_type_number(
     ecs_entity_t type);
 
+bool flecs_expr_is_type_signed_integer(
+    ecs_entity_t type);
+
+bool flecs_expr_is_type_unsigned_integer(
+    ecs_entity_t type);
+
+bool flecs_expr_is_type_float(
+    ecs_entity_t type);
+
+bool flecs_expr_is_type_string(
+    ecs_entity_t type);
+
 ecs_size_t flecs_expr_storage_size(
     ecs_entity_t type);
 
@@ -99854,39 +99866,83 @@ int flecs_expr_format_value(
         return -1;
     }
 
-    double number;
-    if (value->type == ecs_id(ecs_f32_t)) {
-        number = (double)*(ecs_f32_t*)value->ptr;
-    } else if (value->type == ecs_id(ecs_f64_t)) {
-        number = *(ecs_f64_t*)value->ptr;
-    } else {
-        flecs_expr_visit_error(script, node,
-            "format specifiers require an f32 or f64 value");
-        return -1;
-    }
+    ecs_entity_t type = value->type;
+    char *str = NULL;
 
-    char printf_fmt[8];
-    char *fmt_ptr = printf_fmt;
-    fmt_ptr[0] = '%';
-    fmt_ptr ++;
-    if (format->sign) {
-        fmt_ptr[0] = '+';
+    if (flecs_expr_is_type_float(type)) {
+        double number;
+        if (type == ecs_id(ecs_f32_t)) {
+            number = (double)*(ecs_f32_t*)value->ptr;
+        } else {
+            number = *(ecs_f64_t*)value->ptr;
+        }
+
+        char printf_fmt[8];
+        char *fmt_ptr = printf_fmt;
+        fmt_ptr[0] = '%';
         fmt_ptr ++;
-    }
-    if (precision >= 0) {
-        fmt_ptr[0] = '.';
-        fmt_ptr[1] = '*';
-        fmt_ptr += 2;
-    }
-    fmt_ptr[0] = format->notation ? format->notation : 'f';
-    fmt_ptr[1] = '\0';
+        if (format->sign) {
+            fmt_ptr[0] = '+';
+            fmt_ptr ++;
+        }
+        if (precision >= 0) {
+            fmt_ptr[0] = '.';
+            fmt_ptr[1] = '*';
+            fmt_ptr += 2;
+        }
+        fmt_ptr[0] = format->notation ? format->notation : 'f';
+        fmt_ptr[1] = '\0';
 
-    char *str;
-    if (precision >= 0) {
-        str = flecs_asprintf(printf_fmt, precision, number);
+        if (precision >= 0) {
+            str = flecs_asprintf(printf_fmt, precision, number);
+        } else {
+            str = flecs_asprintf(printf_fmt, number);
+        }
+    } else if (flecs_expr_is_type_string(type)) {
+        if (format->precision) {
+            flecs_expr_visit_error(script, node,
+                "precision is only supported for f32 and f64 values");
+            return -1;
+        }
+        if (format->notation) {
+            flecs_expr_visit_error(script, node,
+                "scientific notation is only supported for f32 and f64 values");
+            return -1;
+        }
+        char *value_str = *(char**)value->ptr;
+        str = ecs_os_strdup(value_str ? value_str : "null");
     } else {
-        str = flecs_asprintf(printf_fmt, number);
+        if (format->precision) {
+            flecs_expr_visit_error(script, node,
+                "precision is only supported for f32 and f64 values");
+            return -1;
+        }
+        if (format->notation) {
+            flecs_expr_visit_error(script, node,
+                "scientific notation is only supported for f32 and f64 values");
+            return -1;
+        }
+
+        bool is_signed = flecs_expr_is_type_signed_integer(type);
+
+        if (!is_signed && !flecs_expr_is_type_unsigned_integer(type)) {
+            flecs_expr_visit_error(script, node,
+                "format specifiers require a number or string value");
+            return -1;
+        }
+
+        ecs_meta_cursor_t cur = ecs_meta_cursor(
+            script->world, type, value->ptr);
+
+        if (is_signed) {
+            str = flecs_asprintf(format->sign ? "%+lld" : "%lld",
+                (long long)ecs_meta_get_int(&cur));
+        } else {
+            str = flecs_asprintf(format->sign ? "+%llu" : "%llu",
+                (unsigned long long)ecs_meta_get_uint(&cur));
+        }
     }
+
     if (!str) {
         return -1;
     }
@@ -105225,6 +105281,44 @@ bool flecs_expr_is_type_number(
     else return false;
 }
 
+bool flecs_expr_is_type_signed_integer(
+    ecs_entity_t type)
+{
+         if (type == ecs_id(ecs_i8_t))     return true;
+    else if (type == ecs_id(ecs_i16_t))    return true;
+    else if (type == ecs_id(ecs_i32_t))    return true;
+    else if (type == ecs_id(ecs_i64_t))    return true;
+    else if (type == ecs_id(ecs_iptr_t))   return true;
+    else if (type == ecs_id(ecs_bool_t))   return true;
+    else if (type == ecs_id(ecs_char_t))   return true;
+    else return false;
+}
+
+bool flecs_expr_is_type_unsigned_integer(
+    ecs_entity_t type)
+{
+         if (type == ecs_id(ecs_u8_t))     return true;
+    else if (type == ecs_id(ecs_u16_t))    return true;
+    else if (type == ecs_id(ecs_u32_t))    return true;
+    else if (type == ecs_id(ecs_u64_t))    return true;
+    else if (type == ecs_id(ecs_uptr_t))   return true;
+    else return false;
+}
+
+bool flecs_expr_is_type_float(
+    ecs_entity_t type)
+{
+         if (type == ecs_id(ecs_f32_t))    return true;
+    else if (type == ecs_id(ecs_f64_t))    return true;
+    else return false;
+}
+
+bool flecs_expr_is_type_string(
+    ecs_entity_t type)
+{
+    return type == ecs_id(ecs_string_t);
+}
+
 /* Returns how expressive a type is. This is used to determine whether an 
  * implicit cast is allowed, where only casts from less to more expressive types
  * are valid. */
@@ -105990,11 +106084,29 @@ static int flecs_expr_interpolated_string_visit_type(
             }
 
             if (format.is_present) {
-                if (result->type != ecs_id(ecs_f32_t) &&
-                    result->type != ecs_id(ecs_f64_t))
-                {
-                    flecs_expr_visit_error(script, result,
-                        "format specifiers require an f32 or f64 value");
+                ecs_entity_t value_type = result->type;
+                bool is_float = flecs_expr_is_type_float(value_type);
+                bool is_integer =
+                    flecs_expr_is_type_signed_integer(value_type) ||
+                    flecs_expr_is_type_unsigned_integer(value_type);
+                bool is_string = flecs_expr_is_type_string(value_type);
+
+                const char *format_error = NULL;
+                if (!is_float && !is_integer && !is_string) {
+                    format_error = "format specifiers require a number or "
+                        "string value";
+                } else if (!is_float && format.precision) {
+                    format_error = "precision is only supported for f32 and "
+                        "f64 values";
+                } else if (!is_float && format.notation) {
+                    format_error = "scientific notation is only supported for "
+                        "f32 and f64 values";
+                } else if (is_string && format.sign) {
+                    format_error = "sign is not supported for string values";
+                }
+
+                if (format_error) {
+                    flecs_expr_visit_error(script, result, "%s", format_error);
                     flecs_expr_visit_free(script, result);
                     flecs_expr_format_fini(script, &format);
                     goto error;
