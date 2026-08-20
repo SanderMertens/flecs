@@ -1018,6 +1018,9 @@
                 "eval_twice_w_failed_method_call_in_body",
                 "eval_twice_w_failed_method_call_in_prop_default",
                 "singleton_scope_w_template",
+                "annotation_in_template",
+                "annotation_in_for_in_template",
+                "annotation_in_if_in_template",
                 "template_w_module_qualified_entity_ref"
             ]
         }, {

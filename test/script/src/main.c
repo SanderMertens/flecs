@@ -1004,6 +1004,9 @@ void Template_template_w_var_w_value_name(void);
 void Template_eval_twice_w_failed_method_call_in_body(void);
 void Template_eval_twice_w_failed_method_call_in_prop_default(void);
 void Template_singleton_scope_w_template(void);
+void Template_annotation_in_template(void);
+void Template_annotation_in_for_in_template(void);
+void Template_annotation_in_if_in_template(void);
 void Template_template_w_module_qualified_entity_ref(void);
 
 // Testsuite 'Mut'
@@ -6451,6 +6454,18 @@ bake_test_case Template_testcases[] = {
     {
         "singleton_scope_w_template",
         Template_singleton_scope_w_template
+    },
+    {
+        "annotation_in_template",
+        Template_annotation_in_template
+    },
+    {
+        "annotation_in_for_in_template",
+        Template_annotation_in_for_in_template
+    },
+    {
+        "annotation_in_if_in_template",
+        Template_annotation_in_if_in_template
     },
     {
         "template_w_module_qualified_entity_ref",
@@ -12400,7 +12415,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        106,
+        109,
         Template_testcases
     },
     {
