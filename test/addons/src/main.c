@@ -499,6 +499,7 @@ void Rest_script_error(void);
 void Rest_script_error_new_script_deferred(void);
 void Rest_script_update(void);
 void Rest_script_update_w_body(void);
+void Rest_script_update_new_script(void);
 void Rest_import_rest_after_mini(void);
 void Rest_get_pipeline_stats_after_delete_system(void);
 void Rest_request_world_summary_before_monitor_sys_run(void);
@@ -2432,6 +2433,10 @@ bake_test_case Rest_testcases[] = {
         Rest_script_update_w_body
     },
     {
+        "script_update_new_script",
+        Rest_script_update_new_script
+    },
+    {
         "import_rest_after_mini",
         Rest_import_rest_after_mini
     },
@@ -2958,7 +2963,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        44,
+        45,
         Rest_testcases
     },
     {
