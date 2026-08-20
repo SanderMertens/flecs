@@ -3294,3 +3294,73 @@ void Reactivity_new_entity_survives_skipped_statement_in_if_condition(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_interpolated_name_w_indexed_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[3];
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 3}
+        }
+    });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20, 30}});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "\"row_{source[Ids].values[1]}\" {}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    test_assert(ecs_lookup(world, "row_20") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_interpolated_name_w_indexed_expr_in_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[3];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 3},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20, 30}, 2});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "for i in 0..source[Ids].count {"
+            LINE "  \"row_{source[Ids].values[i]}\" {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    test_assert(ecs_lookup(world, "row_10") != 0);
+    test_assert(ecs_lookup(world, "row_20") != 0);
+    test_uint(ecs_lookup(world, "row_30"), 0);
+
+    ecs_fini(world);
+}
