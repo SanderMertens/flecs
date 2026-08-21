@@ -2506,6 +2506,10 @@ void Reactivity_template_for_keyed_outer_condition_toggles_rows(void);
 void Reactivity_template_for_keyed_per_item_condition_toggles_row(void);
 void Reactivity_template_conditional_component_on_keyed_for_entity(void);
 void Reactivity_component_ref_via_loop_var_entity_is_reactive(void);
+void Reactivity_component_ref_via_var_entity_is_reactive(void);
+void Reactivity_component_ref_via_for_elem_var_entity_is_reactive(void);
+void Reactivity_component_presence_via_var_entity_is_reactive(void);
+void Reactivity_component_ref_via_var_entity_in_if_is_reactive(void);
 void Reactivity_for_keyed_does_not_reorder_children(void);
 void Reactivity_base_component_w_conditional_override(void);
 
@@ -12446,6 +12450,22 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_component_ref_via_loop_var_entity_is_reactive
     },
     {
+        "component_ref_via_var_entity_is_reactive",
+        Reactivity_component_ref_via_var_entity_is_reactive
+    },
+    {
+        "component_ref_via_for_elem_var_entity_is_reactive",
+        Reactivity_component_ref_via_for_elem_var_entity_is_reactive
+    },
+    {
+        "component_presence_via_var_entity_is_reactive",
+        Reactivity_component_presence_via_var_entity_is_reactive
+    },
+    {
+        "component_ref_via_var_entity_in_if_is_reactive",
+        Reactivity_component_ref_via_var_entity_in_if_is_reactive
+    },
+    {
         "for_keyed_does_not_reorder_children",
         Reactivity_for_keyed_does_not_reorder_children
     },
@@ -12771,7 +12791,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        95,
+        99,
         Reactivity_testcases
     },
     {

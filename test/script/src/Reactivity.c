@@ -5553,3 +5553,253 @@ void Reactivity_base_component_w_conditional_override(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_component_ref_via_var_entity_is_reactive(void) {
+    typedef struct {
+        ecs_entity_t items[2];
+        ecs_i32_t count;
+    } Items;
+
+    typedef struct {
+        ecs_i32_t v;
+    } Icon;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t icon = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Icon" }),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t items = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Items" }),
+        .members = {
+            {"items", ecs_id(ecs_entity_t), .count = 2},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t text = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"text", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t it0 = ecs_entity(world, { .name = "it0" });
+    ecs_entity_t it1 = ecs_entity(world, { .name = "it1" });
+    ecs_set_id(world, it0, icon, sizeof(Icon), &(Icon){10});
+    ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){11});
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, items, sizeof(Items),
+        &(Items){{it0, it1}, 2});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const it = source[Items].items[0]"
+            LINE "row { Text: {text: \"icon {it[Icon].v}\"} }"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t row = ecs_lookup(world, "row");
+    test_assert(row != 0);
+    const void *t = ecs_get_id(world, row, text);
+    test_assert(t != NULL);
+    test_str(*(char**)t, "icon 10");
+
+    ecs_set_id(world, it0, icon, sizeof(Icon), &(Icon){99});
+
+    row = ecs_lookup(world, "row");
+    test_assert(row != 0);
+    t = ecs_get_id(world, row, text);
+    test_assert(t != NULL);
+    test_str(*(char**)t, "icon 99");
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_ref_via_for_elem_var_entity_is_reactive(void) {
+    typedef struct {
+        ecs_entity_t items[2];
+        ecs_i32_t count;
+    } Items;
+
+    typedef struct {
+        ecs_i32_t v;
+    } Icon;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t icon = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Icon" }),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t items = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Items" }),
+        .members = {
+            {"items", ecs_id(ecs_entity_t), .count = 2},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t text = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"text", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t it0 = ecs_entity(world, { .name = "it0" });
+    ecs_entity_t it1 = ecs_entity(world, { .name = "it1" });
+    ecs_set_id(world, it0, icon, sizeof(Icon), &(Icon){10});
+    ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){11});
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, items, sizeof(Items),
+        &(Items){{it0, it1}, 2});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "list {"
+            LINE "  for (i, it) in source[Items].items {"
+            LINE "    \"r{i}\" { Text: {text: \"icon {it[Icon].v}\"} }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t r1 = ecs_lookup(world, "list.r1");
+    test_assert(r1 != 0);
+    const void *t = ecs_get_id(world, r1, text);
+    test_assert(t != NULL);
+    test_str(*(char**)t, "icon 11");
+
+    ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){99});
+
+    r1 = ecs_lookup(world, "list.r1");
+    test_assert(r1 != 0);
+    t = ecs_get_id(world, r1, text);
+    test_assert(t != NULL);
+    test_str(*(char**)t, "icon 99");
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_presence_via_var_entity_is_reactive(void) {
+    typedef struct {
+        ecs_entity_t items[2];
+        ecs_i32_t count;
+    } Items;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t items = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Items" }),
+        .members = {
+            {"items", ecs_id(ecs_entity_t), .count = 2},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t flag = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Flag" }),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ECS_TAG(world, Marker);
+
+    ecs_entity_t it0 = ecs_entity(world, { .name = "it0" });
+    ecs_entity_t it1 = ecs_entity(world, { .name = "it1" });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, items, sizeof(Items),
+        &(Items){{it0, it1}, 2});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const it = source[Items].items[0]"
+            LINE "row { Flag: {it?[Marker]} }"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t row = ecs_lookup(world, "row");
+    test_assert(row != 0);
+    const bool *f = ecs_get_id(world, row, flag);
+    test_assert(f != NULL);
+    test_bool(*f, false);
+
+    ecs_add_id(world, it0, Marker);
+
+    row = ecs_lookup(world, "row");
+    test_assert(row != 0);
+    f = ecs_get_id(world, row, flag);
+    test_assert(f != NULL);
+    test_bool(*f, true);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_ref_via_var_entity_in_if_is_reactive(void) {
+    typedef struct {
+        ecs_entity_t items[2];
+        ecs_i32_t count;
+    } Items;
+
+    typedef struct {
+        ecs_i32_t v;
+    } Icon;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t icon = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Icon" }),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t items = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Items" }),
+        .members = {
+            {"items", ecs_id(ecs_entity_t), .count = 2},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"text", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t it0 = ecs_entity(world, { .name = "it0" });
+    ecs_entity_t it1 = ecs_entity(world, { .name = "it1" });
+    ecs_set_id(world, it0, icon, sizeof(Icon), &(Icon){0});
+    ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){11});
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, items, sizeof(Items),
+        &(Items){{it0, it1}, 2});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const it = source[Items].items[0]"
+            LINE "if it[Icon].v > 0 {"
+            LINE "  row { Text: {text: \"on\"} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    test_assert(ecs_lookup(world, "row") == 0);
+
+    ecs_set_id(world, it0, icon, sizeof(Icon), &(Icon){5});
+
+    test_assert(ecs_lookup(world, "row") != 0);
+
+    ecs_fini(world);
+}
