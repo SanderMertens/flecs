@@ -21,12 +21,7 @@ static void flecs_script_template_root_fini(
     ecs_vec_fini_t(NULL, &root->component_slots,
         ecs_script_component_slot_t);
     ecs_vec_fini_t(NULL, &root->scope_slots, int32_t);
-    ecs_vec_t *for_slots = ecs_vec_first(&root->for_slots);
-    int32_t i, count = ecs_vec_count(&root->for_slots);
-    for (i = 0; i < count; i ++) {
-        ecs_vec_fini_t(NULL, &for_slots[i], ecs_entity_t);
-    }
-    ecs_vec_fini_t(NULL, &root->for_slots, ecs_vec_t);
+    flecs_script_for_slots_fini(&root->for_slots);
 }
 
 static ECS_CTOR(EcsScriptTemplateRoot, ptr, {
@@ -35,7 +30,7 @@ static ECS_CTOR(EcsScriptTemplateRoot, ptr, {
     ecs_vec_init_t(NULL, &ptr->component_slots,
         ecs_script_component_slot_t, 0);
     ecs_vec_init_t(NULL, &ptr->scope_slots, int32_t, 0);
-    ecs_vec_init_t(NULL, &ptr->for_slots, ecs_vec_t, 0);
+    ecs_vec_init_t(NULL, &ptr->for_slots, ecs_script_for_slot_t, 0);
     ptr->changed = 0;
     ptr->visit = 0;
     ptr->initialized = false;
@@ -49,7 +44,7 @@ static ECS_MOVE(EcsScriptTemplateRoot, dst, src, {
     ecs_vec_init_t(NULL, &src->component_slots,
         ecs_script_component_slot_t, 0);
     ecs_vec_init_t(NULL, &src->scope_slots, int32_t, 0);
-    ecs_vec_init_t(NULL, &src->for_slots, ecs_vec_t, 0);
+    ecs_vec_init_t(NULL, &src->for_slots, ecs_script_for_slot_t, 0);
     src->changed = 0;
     src->visit = 0;
     src->initialized = false;
@@ -112,13 +107,7 @@ static void flecs_script_template_root_init(
         ecs_os_memset(ecs_vec_first(&root->scope_slots), 0,
             template->scope_count * ECS_SIZEOF(int32_t));
     }
-    ecs_vec_set_count_t(NULL, &root->for_slots,
-        ecs_vec_t, template->for_count);
-    ecs_vec_t *for_slots = ecs_vec_first(&root->for_slots);
-    int32_t i;
-    for (i = 0; i < template->for_count; i ++) {
-        ecs_vec_init_t(NULL, &for_slots[i], ecs_entity_t, 0);
-    }
+    flecs_script_for_slots_init(&root->for_slots, template->for_count);
 }
 
 static void flecs_script_template_root_clear(
@@ -132,17 +121,10 @@ static void flecs_script_template_root_clear(
     ecs_vec_t scope_slots = root->scope_slots;
     ecs_vec_t for_slots = root->for_slots;
 
-    ecs_vec_t *for_slot_array = ecs_vec_first(&for_slots);
+    ecs_script_for_slot_t *for_slot_array = ecs_vec_first(&for_slots);
     int32_t i, count = ecs_vec_count(&for_slots);
     for (i = 0; i < count; i ++) {
-        ecs_entity_t *entities = ecs_vec_first(&for_slot_array[i]);
-        int32_t e, entity_count = ecs_vec_count(&for_slot_array[i]);
-        for (e = 0; e < entity_count; e ++) {
-            if (ecs_is_alive(world, entities[e])) {
-                ecs_delete(world, entities[e]);
-            }
-        }
-        ecs_vec_clear(&for_slot_array[i]);
+        flecs_script_for_slot_clear(world, &for_slot_array[i], true);
     }
 
     int32_t root_symbol = template->root_symbol - template->symbol_offset;
