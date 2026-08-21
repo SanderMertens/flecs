@@ -312,23 +312,31 @@ int flecs_expr_format_value(
             return -1;
         }
 
-        bool is_signed = flecs_expr_is_type_signed_integer(type);
-
-        if (!is_signed && !flecs_expr_is_type_unsigned_integer(type)) {
-            flecs_expr_visit_error(script, node,
-                "format specifiers require a number or string value");
-            return -1;
-        }
-
-        ecs_meta_cursor_t cur = ecs_meta_cursor(
-            script->world, type, value->ptr);
-
-        if (is_signed) {
-            str = flecs_asprintf(format->sign ? "%+lld" : "%lld",
-                (long long)ecs_meta_get_int(&cur));
+        if (type == ecs_id(ecs_bool_t)) {
+            str = ecs_os_strdup(
+                *(ecs_bool_t*)value->ptr ? "true" : "false");
+        } else if (type == ecs_id(ecs_char_t)) {
+            char ch[2] = { *(ecs_char_t*)value->ptr, '\0' };
+            str = ecs_os_strdup(ch);
         } else {
-            str = flecs_asprintf(format->sign ? "+%llu" : "%llu",
-                (unsigned long long)ecs_meta_get_uint(&cur));
+            bool is_signed = flecs_expr_is_type_signed_integer(type);
+
+            if (!is_signed && !flecs_expr_is_type_unsigned_integer(type)) {
+                flecs_expr_visit_error(script, node,
+                    "format specifiers require a number or string value");
+                return -1;
+            }
+
+            ecs_meta_cursor_t cur = ecs_meta_cursor(
+                script->world, type, value->ptr);
+
+            if (is_signed) {
+                str = flecs_asprintf(format->sign ? "%+lld" : "%lld",
+                    (long long)ecs_meta_get_int(&cur));
+            } else {
+                str = flecs_asprintf(format->sign ? "+%llu" : "%llu",
+                    (unsigned long long)ecs_meta_get_uint(&cur));
+            }
         }
     }
 
