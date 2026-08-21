@@ -19517,3 +19517,47 @@ void Eval_has_expr_in_if(void) {
     ecs_fini(world);
 }
 
+
+void Eval_const_bool_from_optional_component(void) {
+    typedef struct {
+        ecs_f32_t watts;
+    } Draw;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t draw = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Draw" }),
+        .members = {
+            {"watts", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"text", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t drill = ecs_entity(world, { .name = "Drill" });
+    ecs_set_id(world, drill, draw, sizeof(Draw), &(Draw){75});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const has = Drill?[Draw]"
+            LINE "d { Text: {text: \"{has}\"} }"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t d = ecs_lookup(world, "d");
+    test_assert(d != 0);
+    const void *text = ecs_get_id(world, d, ecs_lookup(world, "Text"));
+    test_assert(text != NULL);
+    test_str(*(char**)text, "true");
+
+    ecs_fini(world);
+}

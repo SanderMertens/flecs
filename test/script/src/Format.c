@@ -1,5 +1,20 @@
 #include <script.h>
 
+static bool disable_folding = false;
+
+void Format_setup(void) {
+    const char *folding_param = test_param("folding");
+    if (folding_param) {
+        if (!strcmp(folding_param, "disabled")) {
+            disable_folding = true;
+        } else if (!strcmp(folding_param, "enabled")) {
+            // already set to default
+        } else {
+            printf("unexpected value for folding '%s'\n", folding_param);
+        }
+    }
+}
+
 void Format_precision_f32_literal(void) {
     ecs_world_t *world = ecs_init();
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -9,11 +24,9 @@ void Format_precision_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -40,11 +53,9 @@ void Format_precision_f32_variable(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -77,11 +88,9 @@ void Format_precision_f32_expression(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -103,11 +112,9 @@ void Format_precision_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -134,11 +141,9 @@ void Format_precision_f64_variable(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -171,11 +176,9 @@ void Format_precision_f64_expression(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -197,11 +200,9 @@ void Format_min_width_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -228,11 +229,9 @@ void Format_min_width_f32_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -265,11 +264,9 @@ void Format_min_width_f32_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -291,11 +288,9 @@ void Format_min_width_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -322,11 +317,9 @@ void Format_min_width_f64_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -359,11 +352,9 @@ void Format_min_width_f64_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -385,11 +376,9 @@ void Format_align_left_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -416,11 +405,9 @@ void Format_align_left_f32_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -453,11 +440,9 @@ void Format_align_left_f32_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -479,11 +464,9 @@ void Format_align_left_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -510,11 +493,9 @@ void Format_align_left_f64_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -547,11 +528,9 @@ void Format_align_left_f64_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -573,11 +552,9 @@ void Format_align_center_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -604,11 +581,9 @@ void Format_align_center_f32_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -641,11 +616,9 @@ void Format_align_center_f32_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -667,11 +640,9 @@ void Format_align_center_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -698,11 +669,9 @@ void Format_align_center_f64_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -735,11 +704,9 @@ void Format_align_center_f64_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -761,11 +728,9 @@ void Format_align_right_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -792,11 +757,9 @@ void Format_align_right_f32_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -829,11 +792,9 @@ void Format_align_right_f32_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -855,11 +816,9 @@ void Format_align_right_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -886,11 +845,9 @@ void Format_align_right_f64_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -923,11 +880,9 @@ void Format_align_right_f64_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -949,11 +904,9 @@ void Format_fill_left_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -980,11 +933,9 @@ void Format_fill_left_f32_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1017,11 +968,9 @@ void Format_fill_left_f32_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1043,11 +992,9 @@ void Format_fill_left_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1074,11 +1021,9 @@ void Format_fill_left_f64_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1111,11 +1056,9 @@ void Format_fill_left_f64_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1137,11 +1080,9 @@ void Format_fill_center_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1168,11 +1109,9 @@ void Format_fill_center_f32_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1205,11 +1144,9 @@ void Format_fill_center_f32_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1231,11 +1168,9 @@ void Format_fill_center_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1262,11 +1197,9 @@ void Format_fill_center_f64_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1299,11 +1232,9 @@ void Format_fill_center_f64_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1325,11 +1256,9 @@ void Format_fill_right_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1356,11 +1285,9 @@ void Format_fill_right_f32_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1393,11 +1320,9 @@ void Format_fill_right_f32_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1419,11 +1344,9 @@ void Format_fill_right_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1450,11 +1373,9 @@ void Format_fill_right_f64_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1487,11 +1408,9 @@ void Format_fill_right_f64_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1513,11 +1432,9 @@ void Format_leading_zeros_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1544,11 +1461,9 @@ void Format_leading_zeros_f32_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1581,11 +1496,9 @@ void Format_leading_zeros_f32_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1607,11 +1520,9 @@ void Format_leading_zeros_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1638,11 +1549,9 @@ void Format_leading_zeros_f64_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1675,11 +1584,9 @@ void Format_leading_zeros_f64_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1701,11 +1608,9 @@ void Format_always_sign_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1732,11 +1637,9 @@ void Format_always_sign_f32_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1769,11 +1672,9 @@ void Format_always_sign_f32_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1795,11 +1696,9 @@ void Format_always_sign_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1826,11 +1725,9 @@ void Format_always_sign_f64_variable(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1863,11 +1760,9 @@ void Format_always_sign_f64_expression(void) {
     test_assert(width != NULL);
     *(ecs_i32_t*)width->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1889,11 +1784,9 @@ void Format_scientific_lower_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1920,11 +1813,9 @@ void Format_scientific_lower_f32_variable(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1957,11 +1848,9 @@ void Format_scientific_lower_f32_expression(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -1983,11 +1872,9 @@ void Format_scientific_lower_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2014,11 +1901,9 @@ void Format_scientific_lower_f64_variable(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2051,11 +1936,9 @@ void Format_scientific_lower_f64_expression(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2077,11 +1960,9 @@ void Format_scientific_upper_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.5f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2108,11 +1989,9 @@ void Format_scientific_upper_f32_variable(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2145,11 +2024,9 @@ void Format_scientific_upper_f32_expression(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2171,11 +2048,9 @@ void Format_scientific_upper_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.5;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2202,11 +2077,9 @@ void Format_scientific_upper_f64_variable(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2239,11 +2112,9 @@ void Format_scientific_upper_f64_expression(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2259,10 +2130,8 @@ void Format_scientific_upper_f64_expression(void) {
 void Format_literal_value_precision(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2277,10 +2146,8 @@ void Format_literal_value_precision(void) {
 void Format_literal_value_min_width(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2295,10 +2162,8 @@ void Format_literal_value_min_width(void) {
 void Format_literal_value_align_left(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2313,10 +2178,8 @@ void Format_literal_value_align_left(void) {
 void Format_literal_value_align_center(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2331,10 +2194,8 @@ void Format_literal_value_align_center(void) {
 void Format_literal_value_align_right(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2349,10 +2210,8 @@ void Format_literal_value_align_right(void) {
 void Format_literal_value_fill_left(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2367,10 +2226,8 @@ void Format_literal_value_fill_left(void) {
 void Format_literal_value_fill_center(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2385,10 +2242,8 @@ void Format_literal_value_fill_center(void) {
 void Format_literal_value_fill_right(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2403,10 +2258,8 @@ void Format_literal_value_fill_right(void) {
 void Format_literal_value_leading_zeros(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2421,10 +2274,8 @@ void Format_literal_value_leading_zeros(void) {
 void Format_literal_value_always_sign(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2439,10 +2290,8 @@ void Format_literal_value_always_sign(void) {
 void Format_literal_value_scientific_lower(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2457,10 +2306,8 @@ void Format_literal_value_scientific_lower(void) {
 void Format_literal_value_scientific_upper(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2475,10 +2322,8 @@ void Format_literal_value_scientific_upper(void) {
 void Format_literal_value_combined_width_precision(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2493,9 +2338,6 @@ void Format_literal_value_combined_width_precision(void) {
 void Format_fold_literal(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
-    bool disable_folding = !strcmp(folding, "disabled");
     ecs_expr_eval_desc_t desc = {
         .disable_folding = disable_folding
     };
@@ -2538,9 +2380,6 @@ void Format_fold_const_expression(void) {
     *(ecs_i32_t*)precision->value.ptr = 2;
     precision->is_const = true;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
-    bool disable_folding = !strcmp(folding, "disabled");
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
         .disable_folding = disable_folding
@@ -2584,11 +2423,9 @@ void Format_dont_fold_dynamic_expression(void) {
     test_assert(precision != NULL);
     *(ecs_i32_t*)precision->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     ecs_script_t *expr = ecs_expr_parse(
@@ -2625,11 +2462,9 @@ void Format_reproducer_precision_variable_ending_in_e(void) {
     test_assert(size != NULL);
     *(ecs_i32_t*)size->value.ptr = 2;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2655,11 +2490,9 @@ void Format_reproducer_width_variable_named_e(void) {
     test_assert(e != NULL);
     *(ecs_i32_t*)e->value.ptr = 13;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2681,11 +2514,9 @@ void Format_boundary_precision_zero_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.25f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2712,11 +2543,9 @@ void Format_boundary_precision_zero_f32_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 0;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2749,11 +2578,9 @@ void Format_boundary_precision_zero_f32_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 0;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2775,11 +2602,9 @@ void Format_boundary_precision_zero_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.25;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2806,11 +2631,9 @@ void Format_boundary_precision_zero_f64_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 0;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2843,11 +2666,9 @@ void Format_boundary_precision_zero_f64_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 0;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2869,11 +2690,9 @@ void Format_boundary_precision_negative_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.25f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2899,11 +2718,9 @@ void Format_boundary_precision_negative_f32_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = -1;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2931,11 +2748,9 @@ void Format_boundary_precision_negative_f32_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = -1;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2956,11 +2771,9 @@ void Format_boundary_precision_negative_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.25;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -2986,11 +2799,9 @@ void Format_boundary_precision_negative_f64_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = -1;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3018,11 +2829,9 @@ void Format_boundary_precision_negative_f64_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = -1;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3043,11 +2852,9 @@ void Format_boundary_precision_large_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.25f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3073,11 +2880,9 @@ void Format_boundary_precision_large_f32_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 1025;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3105,11 +2910,9 @@ void Format_boundary_precision_large_f32_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 1025;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3130,11 +2933,9 @@ void Format_boundary_precision_large_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.25;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3160,11 +2961,9 @@ void Format_boundary_precision_large_f64_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 1025;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3192,11 +2991,9 @@ void Format_boundary_precision_large_f64_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 1025;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3217,11 +3014,9 @@ void Format_boundary_width_zero_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.25f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3248,11 +3043,9 @@ void Format_boundary_width_zero_f32_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 0;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3285,11 +3078,9 @@ void Format_boundary_width_zero_f32_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 0;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3311,11 +3102,9 @@ void Format_boundary_width_zero_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.25;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3342,11 +3131,9 @@ void Format_boundary_width_zero_f64_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 0;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3379,11 +3166,9 @@ void Format_boundary_width_zero_f64_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 0;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3405,11 +3190,9 @@ void Format_boundary_width_negative_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.25f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3435,11 +3218,9 @@ void Format_boundary_width_negative_f32_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = -1;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3467,11 +3248,9 @@ void Format_boundary_width_negative_f32_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = -1;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3492,11 +3271,9 @@ void Format_boundary_width_negative_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.25;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3522,11 +3299,9 @@ void Format_boundary_width_negative_f64_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = -1;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3554,11 +3329,9 @@ void Format_boundary_width_negative_f64_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = -1;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3579,11 +3352,9 @@ void Format_boundary_width_large_f32_literal(void) {
     test_assert(value != NULL);
     *(ecs_f32_t*)value->value.ptr = 12.25f;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3609,11 +3380,9 @@ void Format_boundary_width_large_f32_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 1025;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3641,11 +3410,9 @@ void Format_boundary_width_large_f32_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 1025;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3666,11 +3433,9 @@ void Format_boundary_width_large_f64_literal(void) {
     test_assert(value != NULL);
     *(ecs_f64_t*)value->value.ptr = 12.25;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3696,11 +3461,9 @@ void Format_boundary_width_large_f64_variable(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 1025;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3728,11 +3491,9 @@ void Format_boundary_width_large_f64_expression(void) {
     test_assert(boundary != NULL);
     *(ecs_i32_t*)boundary->value.ptr = 1025;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3747,10 +3508,8 @@ void Format_boundary_width_large_f64_expression(void) {
 void Format_boundary_precision_zero_literal_value(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3765,10 +3524,8 @@ void Format_boundary_precision_zero_literal_value(void) {
 void Format_boundary_precision_negative_literal_value(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3782,10 +3539,8 @@ void Format_boundary_precision_negative_literal_value(void) {
 void Format_boundary_precision_large_literal_value(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3799,10 +3554,8 @@ void Format_boundary_precision_large_literal_value(void) {
 void Format_boundary_width_zero_literal_value(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3817,10 +3570,8 @@ void Format_boundary_width_zero_literal_value(void) {
 void Format_boundary_width_negative_literal_value(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3834,10 +3585,8 @@ void Format_boundary_width_negative_literal_value(void) {
 void Format_boundary_width_large_literal_value(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3851,10 +3600,8 @@ void Format_boundary_width_large_literal_value(void) {
 void Format_boundary_precision_max_literal_value(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3870,10 +3617,8 @@ void Format_boundary_precision_max_literal_value(void) {
 void Format_boundary_width_max_literal_value(void) {
     ecs_world_t *world = ecs_init();
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3899,10 +3644,8 @@ void Format_component_member_expression_value_precision(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set_id(world, e, mass, sizeof(Mass), &(Mass){7.5});
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3933,10 +3676,8 @@ void Format_component_member_ratio_value_precision(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set_id(world, e, health, sizeof(Health), &(Health){30, 40});
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3958,11 +3699,9 @@ void Format_leading_zeros_i32_variable(void) {
     test_assert(value != NULL);
     *(ecs_i32_t*)value->value.ptr = 42;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -3984,11 +3723,9 @@ void Format_min_width_i32_variable(void) {
     test_assert(value != NULL);
     *(ecs_i32_t*)value->value.ptr = 42;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -4010,11 +3747,9 @@ void Format_min_width_i64_variable(void) {
     test_assert(value != NULL);
     *(ecs_i64_t*)value->value.ptr = 42;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -4036,11 +3771,9 @@ void Format_min_width_u32_variable(void) {
     test_assert(value != NULL);
     *(ecs_u32_t*)value->value.ptr = 42;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -4062,11 +3795,9 @@ void Format_align_left_string_variable(void) {
     test_assert(value != NULL);
     *(char**)value->value.ptr = "abc";
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -4097,10 +3828,8 @@ void Format_align_left_string_member(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set_id(world, e, label, sizeof(Label), &(Label){"abc"});
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -4132,10 +3861,8 @@ void Format_min_width_i32_component_member(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set_id(world, e, count, sizeof(Count), &(Count){42});
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -4156,11 +3883,9 @@ void Format_precision_i32_variable_fails(void) {
     test_assert(value != NULL);
     *(ecs_i32_t*)value->value.ptr = 42;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -4181,11 +3906,9 @@ void Format_scientific_i32_variable_fails(void) {
     test_assert(value != NULL);
     *(ecs_i32_t*)value->value.ptr = 42;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
@@ -4206,17 +3929,63 @@ void Format_always_sign_i32_variable(void) {
     test_assert(value != NULL);
     *(ecs_i32_t*)value->value.ptr = 42;
 
-    const char *folding = test_param("folding");
-    test_assert(folding != NULL);
     ecs_expr_eval_desc_t desc = {
         .vars = vars,
-        .disable_folding = !strcmp(folding, "disabled")
+        .disable_folding = disable_folding
     };
 
     char *result = NULL;
     test_assert(ecs_expr_run(world, "\"{value:+}\"",
         &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
     test_str(result, "+42");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_min_width_bool_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_bool_t);
+    test_assert(value != NULL);
+    *(ecs_bool_t*)value->value.ptr = true;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:>5}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, " true");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_min_width_char_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_char_t);
+    test_assert(value != NULL);
+    *(ecs_char_t*)value->value.ptr = 'x';
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:>5}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "    x");
     ecs_os_free(result);
 
     ecs_script_vars_fini(vars);
