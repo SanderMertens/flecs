@@ -4518,3 +4518,843 @@ void Reactivity_interpolated_name_w_indexed_expr_in_for(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_template_for_keyed_entity_survives_collection_change(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    \"row_{id}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20}, 2});
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "instance.row_20");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{5, 10, 20}, 3});
+
+    test_assert(ecs_is_alive(world, row_10));
+    test_assert(ecs_is_alive(world, row_20));
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    test_uint(ecs_lookup(world, "instance.row_20"), row_20);
+
+    ecs_entity_t row_5 = ecs_lookup(world, "instance.row_5");
+    test_assert(row_5 != 0);
+    test_assert(row_5 != row_10);
+    test_assert(row_5 != row_20);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_keyed_external_component_survives(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    \"row_{id}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20}, 2});
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    test_assert(row_10 != 0);
+    ecs_set_id(world, row_10, mass, sizeof(Mass), &(Mass){42});
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{5, 10, 20}, 3});
+
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    const Mass *m = ecs_get_id(world, row_10, mass);
+    test_assert(m != NULL);
+    test_int(m->value, 42);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_keyed_removed_key_is_deleted(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    \"row_{id}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20, 30}, 3});
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "instance.row_20");
+    ecs_entity_t row_30 = ecs_lookup(world, "instance.row_30");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+    test_assert(row_30 != 0);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 30}, 2});
+
+    test_assert(!ecs_is_alive(world, row_20));
+    test_uint(ecs_lookup(world, "instance.row_20"), 0);
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    test_uint(ecs_lookup(world, "instance.row_30"), row_30);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_keyed_new_key_is_added(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    \"row_{id}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20}, 2});
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "instance.row_20");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20, 30}, 3});
+
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    test_uint(ecs_lookup(world, "instance.row_20"), row_20);
+
+    ecs_entity_t row_30 = ecs_lookup(world, "instance.row_30");
+    test_assert(row_30 != 0);
+    test_assert(row_30 != row_10);
+    test_assert(row_30 != row_20);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_keyed_reorder_preserves_identity(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    \"row_{id}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20, 30}, 3});
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "instance.row_20");
+    ecs_entity_t row_30 = ecs_lookup(world, "instance.row_30");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+    test_assert(row_30 != 0);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{30, 20, 10}, 3});
+
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    test_uint(ecs_lookup(world, "instance.row_20"), row_20);
+    test_uint(ecs_lookup(world, "instance.row_30"), row_30);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_keyed_unkeyed_entity_is_recreated(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    \"row_{id}\" {}"
+            LINE "    _ { Velocity: {1, 0} }"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20}, 2});
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "instance.row_20");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+
+    ecs_entity_t unkeyed[2] = {0};
+    int32_t unkeyed_count = 0;
+    ecs_iter_t it = ecs_each_id(world, velocity);
+    while (ecs_each_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(unkeyed_count < 2);
+            unkeyed[unkeyed_count ++] = it.entities[i];
+        }
+    }
+    test_int(unkeyed_count, 2);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20, 30}, 3});
+
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    test_uint(ecs_lookup(world, "instance.row_20"), row_20);
+
+    test_assert(!ecs_is_alive(world, unkeyed[0]));
+    test_assert(!ecs_is_alive(world, unkeyed[1]));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_keyed_mixed_external_components(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    \"row_{id}\" {}"
+            LINE "    _ { Velocity: {1, 0} }"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20}, 2});
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "instance.row_20");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+    ecs_set_id(world, row_10, mass, sizeof(Mass), &(Mass){42});
+
+    ecs_entity_t unkeyed[2] = {0};
+    int32_t unkeyed_count = 0;
+    ecs_iter_t it = ecs_each_id(world, velocity);
+    while (ecs_each_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(unkeyed_count < 2);
+            unkeyed[unkeyed_count ++] = it.entities[i];
+        }
+    }
+    test_int(unkeyed_count, 2);
+    ecs_set_id(world, unkeyed[0], mass, sizeof(Mass), &(Mass){7});
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{5, 10, 20}, 3});
+
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    test_uint(ecs_lookup(world, "instance.row_20"), row_20);
+    const Mass *m = ecs_get_id(world, row_10, mass);
+    test_assert(m != NULL);
+    test_int(m->value, 42);
+
+    test_assert(!ecs_is_alive(world, unkeyed[0]));
+    test_assert(!ecs_is_alive(world, unkeyed[1]));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_keyed_multiple_keys_per_iteration(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    \"row_{id}\" {}"
+            LINE "    \"label_{id}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20}, 2});
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "instance.row_20");
+    ecs_entity_t label_10 = ecs_lookup(world, "instance.label_10");
+    ecs_entity_t label_20 = ecs_lookup(world, "instance.label_20");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+    test_assert(label_10 != 0);
+    test_assert(label_20 != 0);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{5, 10, 20}, 3});
+
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    test_uint(ecs_lookup(world, "instance.row_20"), row_20);
+    test_uint(ecs_lookup(world, "instance.label_10"), label_10);
+    test_uint(ecs_lookup(world, "instance.label_20"), label_20);
+    test_assert(ecs_lookup(world, "instance.row_5") != 0);
+    test_assert(ecs_lookup(world, "instance.label_5") != 0);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{20, 10, 5}, 3});
+
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    test_uint(ecs_lookup(world, "instance.row_20"), row_20);
+    test_uint(ecs_lookup(world, "instance.label_10"), label_10);
+    test_uint(ecs_lookup(world, "instance.label_20"), label_20);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_keyed_multiple_keys_removed_together(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    \"row_{id}\" {}"
+            LINE "    \"label_{id}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20, 30}, 3});
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "instance.row_20");
+    ecs_entity_t row_30 = ecs_lookup(world, "instance.row_30");
+    ecs_entity_t label_20 = ecs_lookup(world, "instance.label_20");
+    ecs_entity_t label_30 = ecs_lookup(world, "instance.label_30");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+    test_assert(row_30 != 0);
+    test_assert(label_20 != 0);
+    test_assert(label_30 != 0);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 30}, 2});
+
+    test_assert(!ecs_is_alive(world, row_20));
+    test_assert(!ecs_is_alive(world, label_20));
+    test_uint(ecs_lookup(world, "instance.row_20"), 0);
+    test_uint(ecs_lookup(world, "instance.label_20"), 0);
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    test_uint(ecs_lookup(world, "instance.row_30"), row_30);
+    test_uint(ecs_lookup(world, "instance.label_30"), label_30);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_unkeyed_only_entities_are_recreated(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    _ { Velocity: {id, 0} }"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20}, 2});
+
+    ecs_entity_t old[2] = {0};
+    int32_t old_count = 0;
+    ecs_iter_t it = ecs_each_id(world, velocity);
+    while (ecs_each_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(old_count < 2);
+            old[old_count ++] = it.entities[i];
+        }
+    }
+    test_int(old_count, 2);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{5, 10, 20}, 3});
+
+    test_assert(!ecs_is_alive(world, old[0]));
+    test_assert(!ecs_is_alive(world, old[1]));
+
+    int32_t new_count = 0;
+    it = ecs_each_id(world, velocity);
+    while (ecs_each_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] != old[0]);
+            test_assert(it.entities[i] != old[1]);
+            new_count ++;
+        }
+    }
+    test_int(new_count, 3);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_keyed_outer_condition_toggles_rows(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+        ecs_i32_t show;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)},
+            {"show", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  if ids.show > 0 {"
+            LINE "    for i in 0..ids.count {"
+            LINE "      const id = ids.values[i]"
+            LINE "      \"row_{id}\" { Position: {id, 0} }"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20}, 2, 1});
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "instance.row_20");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{5, 10, 20}, 3, 1});
+
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    test_uint(ecs_lookup(world, "instance.row_20"), row_20);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{5, 10, 20}, 3, 0});
+
+    test_assert(!ecs_is_alive(world, row_10));
+    test_assert(!ecs_is_alive(world, row_20));
+    test_uint(ecs_lookup(world, "instance.row_10"), 0);
+    test_uint(ecs_lookup(world, "instance.row_20"), 0);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{5, 10, 20}, 3, 1});
+
+    ecs_entity_t new_10 = ecs_lookup(world, "instance.row_10");
+    test_assert(new_10 != 0);
+    const Position *p = ecs_get_id(world, new_10, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_assert(ecs_lookup(world, "instance.row_5") != 0);
+    test_assert(ecs_lookup(world, "instance.row_20") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_keyed_per_item_condition_toggles_row(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t visible[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"visible", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    if ids.visible[i] > 0 {"
+            LINE "      \"row_{id}\" {}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20, 30}, {1, 1, 1}, 3});
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "instance.row_20");
+    ecs_entity_t row_30 = ecs_lookup(world, "instance.row_30");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+    test_assert(row_30 != 0);
+    ecs_set_id(world, row_20, mass, sizeof(Mass), &(Mass){42});
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20, 30}, {0, 1, 1}, 3});
+
+    test_assert(!ecs_is_alive(world, row_10));
+    test_uint(ecs_lookup(world, "instance.row_10"), 0);
+    test_uint(ecs_lookup(world, "instance.row_20"), row_20);
+    test_uint(ecs_lookup(world, "instance.row_30"), row_30);
+
+    const Mass *m = ecs_get_id(world, row_20, mass);
+    test_assert(m != NULL);
+    test_int(m->value, 42);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20, 30}, {1, 1, 1}, 3});
+
+    test_assert(ecs_lookup(world, "instance.row_10") != 0);
+    test_uint(ecs_lookup(world, "instance.row_20"), row_20);
+    test_uint(ecs_lookup(world, "instance.row_30"), row_30);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_conditional_component_on_keyed_for_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t active[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"active", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Rows {"
+            LINE "  prop ids: Ids = {}"
+            LINE "  for i in 0..ids.count {"
+            LINE "    const id = ids.values[i]"
+            LINE "    \"row_{id}\" {"
+            LINE "      Position: {id, 0}"
+            LINE "      if ids.active[i] > 0 {"
+            LINE "        Velocity: {3, 4}"
+            LINE "      }"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Rows instance()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t rows = ecs_lookup(world, "Rows");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(rows != 0);
+    test_assert(instance != 0);
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20}, {1, 1}, 2});
+
+    ecs_entity_t row_10 = ecs_lookup(world, "instance.row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "instance.row_20");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+    test_assert(ecs_has_id(world, row_10, velocity));
+    test_assert(ecs_has_id(world, row_20, velocity));
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20}, {0, 1}, 2});
+
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    test_uint(ecs_lookup(world, "instance.row_20"), row_20);
+    test_assert(!ecs_has_id(world, row_10, velocity));
+    test_assert(ecs_has_id(world, row_20, velocity));
+
+    const Position *p = ecs_get_id(world, row_10, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+
+    ecs_set_id(world, instance, rows, sizeof(Ids), &(Ids){{10, 20}, {1, 1}, 2});
+
+    test_uint(ecs_lookup(world, "instance.row_10"), row_10);
+    const Velocity *v = ecs_get_id(world, row_10, velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 3);
+    test_int(v->y, 4);
+
+    ecs_fini(world);
+}

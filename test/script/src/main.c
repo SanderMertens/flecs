@@ -2477,6 +2477,19 @@ void Reactivity_two_conditional_components_toggle_independently(void);
 void Reactivity_conditional_component_on_child_entity(void);
 void Reactivity_interpolated_name_w_indexed_expr(void);
 void Reactivity_interpolated_name_w_indexed_expr_in_for(void);
+void Reactivity_template_for_keyed_entity_survives_collection_change(void);
+void Reactivity_template_for_keyed_external_component_survives(void);
+void Reactivity_template_for_keyed_removed_key_is_deleted(void);
+void Reactivity_template_for_keyed_new_key_is_added(void);
+void Reactivity_template_for_keyed_reorder_preserves_identity(void);
+void Reactivity_template_for_keyed_unkeyed_entity_is_recreated(void);
+void Reactivity_template_for_keyed_mixed_external_components(void);
+void Reactivity_template_for_keyed_multiple_keys_per_iteration(void);
+void Reactivity_template_for_keyed_multiple_keys_removed_together(void);
+void Reactivity_template_for_unkeyed_only_entities_are_recreated(void);
+void Reactivity_template_for_keyed_outer_condition_toggles_rows(void);
+void Reactivity_template_for_keyed_per_item_condition_toggles_row(void);
+void Reactivity_template_conditional_component_on_keyed_for_entity(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -12301,6 +12314,58 @@ bake_test_case Reactivity_testcases[] = {
     {
         "interpolated_name_w_indexed_expr_in_for",
         Reactivity_interpolated_name_w_indexed_expr_in_for
+    },
+    {
+        "template_for_keyed_entity_survives_collection_change",
+        Reactivity_template_for_keyed_entity_survives_collection_change
+    },
+    {
+        "template_for_keyed_external_component_survives",
+        Reactivity_template_for_keyed_external_component_survives
+    },
+    {
+        "template_for_keyed_removed_key_is_deleted",
+        Reactivity_template_for_keyed_removed_key_is_deleted
+    },
+    {
+        "template_for_keyed_new_key_is_added",
+        Reactivity_template_for_keyed_new_key_is_added
+    },
+    {
+        "template_for_keyed_reorder_preserves_identity",
+        Reactivity_template_for_keyed_reorder_preserves_identity
+    },
+    {
+        "template_for_keyed_unkeyed_entity_is_recreated",
+        Reactivity_template_for_keyed_unkeyed_entity_is_recreated
+    },
+    {
+        "template_for_keyed_mixed_external_components",
+        Reactivity_template_for_keyed_mixed_external_components
+    },
+    {
+        "template_for_keyed_multiple_keys_per_iteration",
+        Reactivity_template_for_keyed_multiple_keys_per_iteration
+    },
+    {
+        "template_for_keyed_multiple_keys_removed_together",
+        Reactivity_template_for_keyed_multiple_keys_removed_together
+    },
+    {
+        "template_for_unkeyed_only_entities_are_recreated",
+        Reactivity_template_for_unkeyed_only_entities_are_recreated
+    },
+    {
+        "template_for_keyed_outer_condition_toggles_rows",
+        Reactivity_template_for_keyed_outer_condition_toggles_rows
+    },
+    {
+        "template_for_keyed_per_item_condition_toggles_row",
+        Reactivity_template_for_keyed_per_item_condition_toggles_row
+    },
+    {
+        "template_conditional_component_on_keyed_for_entity",
+        Reactivity_template_conditional_component_on_keyed_for_entity
     }
 };
 
@@ -12620,7 +12685,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        79,
+        92,
         Reactivity_testcases
     },
     {

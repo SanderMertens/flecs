@@ -1078,17 +1078,7 @@ int flecs_script_analyze_dependencies(
                 ctx.component_count *
                     ECS_SIZEOF(ecs_script_component_slot_t));
         }
-        ecs_vec_t *for_slots = ecs_vec_first(&impl->for_slots);
-        int32_t i, count = ecs_vec_count(&impl->for_slots);
-        for (i = 0; i < count; i ++) {
-            ecs_vec_fini_t(NULL, &for_slots[i], ecs_entity_t);
-        }
-        ecs_vec_set_count_t(NULL, &impl->for_slots,
-            ecs_vec_t, ctx.for_count);
-        for_slots = ecs_vec_first(&impl->for_slots);
-        for (i = 0; i < ctx.for_count; i ++) {
-            ecs_vec_init_t(NULL, &for_slots[i], ecs_entity_t, 0);
-        }
+        flecs_script_for_slots_init(&impl->for_slots, ctx.for_count);
     }
     ecs_vec_fini_t(NULL, &ctx.vars, uint64_t);
     ecs_vec_fini_t(NULL, &ctx.component_owners,

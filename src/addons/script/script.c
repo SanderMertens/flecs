@@ -16,17 +16,6 @@ ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
 ECS_DECLARE(EcsScriptVectorType);
 
-static void flecs_script_for_slots_fini(
-    ecs_vec_t *for_slots)
-{
-    int32_t i, count = ecs_vec_count(for_slots);
-    ecs_vec_t *slots = ecs_vec_first(for_slots);
-    for (i = 0; i < count; i ++) {
-        ecs_vec_fini_t(NULL, &slots[i], ecs_entity_t);
-    }
-    ecs_vec_fini_t(NULL, for_slots, ecs_vec_t);
-}
-
 static ECS_MOVE(EcsScript, dst, src, {
     if (dst->script && (dst->script != src->script)) {
         if (dst->template_ && (dst->template_ != src->template_)) {
@@ -93,7 +82,7 @@ ecs_script_t* flecs_script_new(
     ecs_vec_init_t(NULL, &result->component_slots,
         ecs_script_component_slot_t, 0);
     ecs_vec_init_t(NULL, &result->scope_slots, int32_t, 0);
-    ecs_vec_init_t(NULL, &result->for_slots, ecs_vec_t, 0);
+    ecs_vec_init_t(NULL, &result->for_slots, ecs_script_for_slot_t, 0);
     ecs_vec_init_t(NULL, &result->unresolved_refs,
         ecs_script_unresolved_ref_t, 0);
     ecs_vec_init_t(NULL, &result->unresolved_component_refs,

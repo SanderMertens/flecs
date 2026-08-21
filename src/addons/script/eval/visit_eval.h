@@ -71,6 +71,7 @@ struct flecs_script_entity_state_t {
     bool prev_force;
     bool prev_is_with_scope;
     int32_t symbol;
+    int32_t for_slot;
 };
 
 int flecs_script_eval_entity_enter(

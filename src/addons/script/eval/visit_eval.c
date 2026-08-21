@@ -735,6 +735,7 @@ int flecs_script_eval_entity_enter(
     state->prev_template_entity = v->template_entity;
     state->prev_force = v->force;
     state->symbol = -1;
+    state->for_slot = -1;
 
     if (v->entity && v->entity->eval_kind && !node->kind &&
         !ecs_vec_count(&node->scope->stmts) && ecs_has(
@@ -810,17 +811,12 @@ int flecs_script_eval_entity_enter(
         v->for_slots && v->for_slot >= 0 &&
         v->for_slot < ecs_vec_count(v->for_slots))
     {
-        ecs_vec_t *entities = ecs_vec_get_t(
-            v->for_slots, ecs_vec_t, v->for_slot);
-        ecs_entity_t *array = ecs_vec_first(entities);
-        int32_t i, count = ecs_vec_count(entities);
-        for (i = 0; i < count; i ++) {
-            if (array[i] == state->eval) {
-                break;
-            }
-        }
-        if (i == count) {
-            ecs_vec_append_t(NULL, entities, ecs_entity_t)[0] = state->eval;
+        bool named = false;
+        flecs_script_for_slot_track(v->world, ecs_vec_get_t(
+            v->for_slots, ecs_script_for_slot_t, v->for_slot),
+            state->eval, v->visit, &named);
+        if (named) {
+            state->for_slot = v->for_slot;
         }
     }
 
@@ -916,6 +912,15 @@ static void flecs_script_track_component(
     int32_t component_slot,
     ecs_id_t component)
 {
+    if (v->entity && v->entity->for_slot >= 0 && v->for_slots &&
+        v->entity->for_slot < ecs_vec_count(v->for_slots))
+    {
+        flecs_script_for_slot_track_component(v->world, ecs_vec_get_t(
+            v->for_slots, ecs_script_for_slot_t, v->entity->for_slot),
+            v->entity->eval, component, v->visit);
+        return;
+    }
+
     if (!v->component_slots || !v->entity || v->entity->symbol < 0 ||
         component_slot < 0 ||
         component_slot >= ecs_vec_count(v->component_slots))
@@ -2457,20 +2462,16 @@ static void flecs_script_cleanup_for_node(
     }
     case EcsAstFor: {
         ecs_script_for_t *n = (ecs_script_for_t*)node;
-        if (!flecs_script_scope_visited(v, n->scope->scope_slot) &&
-            v->for_slots && n->for_slot >= 0 &&
+        if (v->for_slots && n->for_slot >= 0 &&
             n->for_slot < ecs_vec_count(v->for_slots))
         {
-            ecs_vec_t *entities = ecs_vec_get_t(
-                v->for_slots, ecs_vec_t, n->for_slot);
-            ecs_entity_t *array = ecs_vec_first(entities);
-            int32_t i, count = ecs_vec_count(entities);
-            for (i = 0; i < count; i ++) {
-                if (ecs_is_alive(v->world, array[i])) {
-                    ecs_delete(v->world, array[i]);
-                }
+            ecs_script_for_slot_t *slot = ecs_vec_get_t(
+                v->for_slots, ecs_script_for_slot_t, n->for_slot);
+            if (!flecs_script_scope_visited(v, n->scope->scope_slot)) {
+                flecs_script_for_slot_clear(v->world, slot, true);
+            } else {
+                flecs_script_for_slot_purge(v->world, slot, v->visit);
             }
-            ecs_vec_clear(entities);
         }
         flecs_script_cleanup_for_scope(v, n->scope);
         break;
