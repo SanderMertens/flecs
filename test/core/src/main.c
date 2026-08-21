@@ -700,6 +700,8 @@ void NonFragmentingChildOf_reparent_2_children(void);
 void NonFragmentingChildOf_delete_parent(void);
 void NonFragmentingChildOf_delete_parent_2_children(void);
 void NonFragmentingChildOf_mixed_childof(void);
+void NonFragmentingChildOf_convert_childof_to_parent_keeps_order(void);
+void NonFragmentingChildOf_set_same_parent_twice_keeps_order(void);
 void NonFragmentingChildOf_delete_parent_w_mixed_childof(void);
 void NonFragmentingChildOf_delete_nested_parent(void);
 void NonFragmentingChildOf_delete_nested_mixed_parent(void);
@@ -6093,6 +6095,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "mixed_childof",
         NonFragmentingChildOf_mixed_childof
+    },
+    {
+        "convert_childof_to_parent_keeps_order",
+        NonFragmentingChildOf_convert_childof_to_parent_keeps_order
+    },
+    {
+        "set_same_parent_twice_keeps_order",
+        NonFragmentingChildOf_set_same_parent_twice_keeps_order
     },
     {
         "delete_parent_w_mixed_childof",
@@ -16750,7 +16760,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        269,
+        271,
         NonFragmentingChildOf_testcases
     },
     {

@@ -732,6 +732,8 @@
                 "delete_parent",
                 "delete_parent_2_children",
                 "mixed_childof",
+                "convert_childof_to_parent_keeps_order",
+                "set_same_parent_twice_keeps_order",
                 "delete_parent_w_mixed_childof",
                 "delete_nested_parent",
                 "delete_nested_mixed_parent",
