@@ -66,6 +66,7 @@
                 "map_api",
                 "get_const_var",
                 "get_const_var_struct",
+                "get_const_var_string",
                 "get_const_var_as_f32",
                 "get_const_var_as_i32",
                 "get_const_var_as_u32",
