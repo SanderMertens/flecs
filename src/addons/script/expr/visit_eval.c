@@ -1321,6 +1321,15 @@ static int flecs_expr_component_visit_eval(
     ecs_entity_t component = ((ecs_expr_value_node_t*)index)->storage.entity;
 
     ecs_assert(out->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
+
+    if (!entity || !ecs_is_alive(ctx->world, entity)) {
+        char *cstr = ecs_get_path(ctx->world, component);
+        flecs_expr_visit_error(ctx->script, node,
+            "cannot read component '%s' from invalid entity", cstr);
+        ecs_os_free(cstr);
+        goto error;
+    }
+
     out->value.ptr = ECS_CONST_CAST(void*, 
         ecs_get_id(ctx->world, entity, component));
     out->owned = false;
