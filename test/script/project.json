@@ -2553,6 +2553,10 @@
                 "template_for_keyed_per_item_condition_toggles_row",
                 "template_conditional_component_on_keyed_for_entity",
                 "component_ref_via_loop_var_entity_is_reactive",
+                "component_ref_via_var_entity_is_reactive",
+                "component_ref_via_for_elem_var_entity_is_reactive",
+                "component_presence_via_var_entity_is_reactive",
+                "component_ref_via_var_entity_in_if_is_reactive",
                 "for_keyed_does_not_reorder_children",
                 "base_component_w_conditional_override"
             ]
