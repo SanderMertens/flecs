@@ -4497,3 +4497,91 @@ void Error_script_declares_entity_named_after_script_w_child(void) {
 
     ecs_fini(world);
 }
+
+void Error_component_ref_via_var_entity_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Icon" }),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t holder = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Holder" }),
+        .members = {
+            {"target", ecs_id(ecs_entity_t)}
+        }
+    });
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"text", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t h = ecs_entity(world, { .name = "h" });
+    ecs_set_id(world, h, holder, sizeof(ecs_entity_t), &(ecs_entity_t){0});
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const t = h[Holder].target"
+            LINE "row { Text: {text: \"{t[Icon].v}\"} }"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+    test_assert(ecs_lookup(world, "row") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_ref_via_var_entity_deleted(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Icon" }),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t holder = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Holder" }),
+        .members = {
+            {"target", ecs_id(ecs_entity_t)}
+        }
+    });
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"text", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t target = ecs_entity(world, { .name = "target" });
+    ecs_entity_t h = ecs_entity(world, { .name = "h" });
+    ecs_set_id(world, h, holder, sizeof(ecs_entity_t), &target);
+    ecs_delete(world, target);
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const t = h[Holder].target"
+            LINE "row { Text: {text: \"{t[Icon].v}\"} }"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+    test_assert(ecs_lookup(world, "row") == 0);
+
+    ecs_fini(world);
+}

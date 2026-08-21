@@ -1281,6 +1281,8 @@ void Error_if_component_presence_check_on_non_singleton(void);
 void Error_this_at_plain_scope_kills_file(void);
 void Error_doc_detail_not_readable_from_script(void);
 void Error_script_declares_entity_named_after_script_w_child(void);
+void Error_component_ref_via_var_entity_zero(void);
+void Error_component_ref_via_var_entity_deleted(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -7604,6 +7606,14 @@ bake_test_case Error_testcases[] = {
     {
         "script_declares_entity_named_after_script_w_child",
         Error_script_declares_entity_named_after_script_w_child
+    },
+    {
+        "component_ref_via_var_entity_zero",
+        Error_component_ref_via_var_entity_zero
+    },
+    {
+        "component_ref_via_var_entity_deleted",
+        Error_component_ref_via_var_entity_deleted
     }
 };
 
@@ -12685,7 +12695,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        188,
+        190,
         Error_testcases
     },
     {
