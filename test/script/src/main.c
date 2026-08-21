@@ -630,6 +630,7 @@ void Eval_pair_scope_target_shadowed_by_root_entity(void);
 void Eval_pair_scope_predeclared_entity_export_const(void);
 void Eval_has_expr_pair_w_enum_constant(void);
 void Eval_has_expr_in_if(void);
+void Eval_const_bool_from_optional_component(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -899,6 +900,7 @@ void Function_arrow_split_dash_gt(void);
 void Function_nested_runtime_error(void);
 void Function_const_runtime_error(void);
 void Function_fn_w_hoisted_var(void);
+void Function_memoized_against_args_ignores_hidden_state(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1011,6 +1013,7 @@ void Template_annotation_in_for_in_template(void);
 void Template_annotation_in_if_in_template(void);
 void Template_multiple_templates_dont_leak_child_names(void);
 void Template_template_w_module_qualified_entity_ref(void);
+void Template_injected_child_order_w_ordered_children(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -1274,8 +1277,13 @@ void Error_has_pair_missing_paren_close(void);
 void Error_has_pair_missing_second(void);
 void Error_script_update_failure_is_reported(void);
 void Error_script_declares_entity_named_after_script(void);
+void Error_if_component_presence_check_on_non_singleton(void);
+void Error_this_at_plain_scope_kills_file(void);
+void Error_doc_detail_not_readable_from_script(void);
+void Error_script_declares_entity_named_after_script_w_child(void);
 
 // Testsuite 'Format'
+void Format_setup(void);
 void Format_precision_f32_literal(void);
 void Format_precision_f32_variable(void);
 void Format_precision_f32_expression(void);
@@ -1422,6 +1430,8 @@ void Format_min_width_i32_component_member(void);
 void Format_precision_i32_variable_fails(void);
 void Format_scientific_i32_variable_fails(void);
 void Format_always_sign_i32_variable(void);
+void Format_min_width_bool_variable(void);
+void Format_min_width_char_variable(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -2119,6 +2129,9 @@ void Include_include_using_not_visible_in_parent(void);
 void Include_include_managed_using_not_visible_in_parent(void);
 void Include_include_managed_keeps_implicit_meta_in_parent(void);
 void Include_include_keeps_implicit_meta_in_parent(void);
+void Include_include_forward_ref_to_later_include_is_retried(void);
+void Include_const_does_not_cross_include(void);
+void Include_export_const_in_scope_crosses_include(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
@@ -2490,6 +2503,9 @@ void Reactivity_template_for_unkeyed_only_entities_are_recreated(void);
 void Reactivity_template_for_keyed_outer_condition_toggles_rows(void);
 void Reactivity_template_for_keyed_per_item_condition_toggles_row(void);
 void Reactivity_template_conditional_component_on_keyed_for_entity(void);
+void Reactivity_component_ref_via_loop_var_entity_is_reactive(void);
+void Reactivity_for_keyed_does_not_reorder_children(void);
+void Reactivity_base_component_w_conditional_override(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -5019,6 +5035,10 @@ bake_test_case Eval_testcases[] = {
     {
         "has_expr_in_if",
         Eval_has_expr_in_if
+    },
+    {
+        "const_bool_from_optional_component",
+        Eval_const_bool_from_optional_component
     }
 };
 
@@ -6075,6 +6095,10 @@ bake_test_case Function_testcases[] = {
     {
         "fn_w_hoisted_var",
         Function_fn_w_hoisted_var
+    },
+    {
+        "memoized_against_args_ignores_hidden_state",
+        Function_memoized_against_args_ignores_hidden_state
     }
 };
 
@@ -6518,6 +6542,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_module_qualified_entity_ref",
         Template_template_w_module_qualified_entity_ref
+    },
+    {
+        "injected_child_order_w_ordered_children",
+        Template_injected_child_order_w_ordered_children
     }
 };
 
@@ -7560,6 +7588,22 @@ bake_test_case Error_testcases[] = {
     {
         "script_declares_entity_named_after_script",
         Error_script_declares_entity_named_after_script
+    },
+    {
+        "if_component_presence_check_on_non_singleton",
+        Error_if_component_presence_check_on_non_singleton
+    },
+    {
+        "this_at_plain_scope_kills_file",
+        Error_this_at_plain_scope_kills_file
+    },
+    {
+        "doc_detail_not_readable_from_script",
+        Error_doc_detail_not_readable_from_script
+    },
+    {
+        "script_declares_entity_named_after_script_w_child",
+        Error_script_declares_entity_named_after_script_w_child
     }
 };
 
@@ -8147,6 +8191,14 @@ bake_test_case Format_testcases[] = {
     {
         "always_sign_i32_variable",
         Format_always_sign_i32_variable
+    },
+    {
+        "min_width_bool_variable",
+        Format_min_width_bool_variable
+    },
+    {
+        "min_width_char_variable",
+        Format_min_width_char_variable
     }
 };
 
@@ -10897,6 +10949,18 @@ bake_test_case Include_testcases[] = {
     {
         "include_keeps_implicit_meta_in_parent",
         Include_include_keeps_implicit_meta_in_parent
+    },
+    {
+        "include_forward_ref_to_later_include_is_retried",
+        Include_include_forward_ref_to_later_include_is_retried
+    },
+    {
+        "const_does_not_cross_include",
+        Include_const_does_not_cross_include
+    },
+    {
+        "export_const_in_scope_crosses_include",
+        Include_export_const_in_scope_crosses_include
     }
 };
 
@@ -12366,6 +12430,18 @@ bake_test_case Reactivity_testcases[] = {
     {
         "template_conditional_component_on_keyed_for_entity",
         Reactivity_template_conditional_component_on_keyed_for_entity
+    },
+    {
+        "component_ref_via_loop_var_entity_is_reactive",
+        Reactivity_component_ref_via_loop_var_entity_is_reactive
+    },
+    {
+        "for_keyed_does_not_reorder_children",
+        Reactivity_for_keyed_does_not_reorder_children
+    },
+    {
+        "base_component_w_conditional_override",
+        Reactivity_base_component_w_conditional_override
     }
 };
 
@@ -12560,7 +12636,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        621,
+        622,
         Eval_testcases
     },
     {
@@ -12588,14 +12664,14 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        78,
+        79,
         Function_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        110,
+        111,
         Template_testcases
     },
     {
@@ -12609,14 +12685,14 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        184,
+        188,
         Error_testcases
     },
     {
         "Format",
+        Format_setup,
         NULL,
-        NULL,
-        146,
+        148,
         Format_testcases,
         1,
         Format_params
@@ -12664,7 +12740,7 @@ static bake_test_suite suites[] = {
         "Include",
         NULL,
         NULL,
-        30,
+        33,
         Include_testcases
     },
     {
@@ -12685,7 +12761,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        92,
+        95,
         Reactivity_testcases
     },
     {

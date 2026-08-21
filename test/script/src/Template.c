@@ -4840,3 +4840,47 @@ void Template_multiple_templates_dont_leak_child_names(void) {
 
     ecs_fini(world);
 }
+
+void Template_injected_child_order_w_ordered_children(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Cap {"
+    LINE "  Position: {0, 0}"
+    LINE "  chrome { Position: {1, 1} }"
+    LINE "}"
+    LINE "row {"
+    LINE "  flecs.core.OrderedChildren"
+    LINE "  Cap: {}"
+    LINE "  a { Position: {0, 0} }"
+    LINE "  b { Position: {0, 0} }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t row = ecs_lookup(world, "row");
+    test_assert(row != 0);
+
+    ecs_entity_t chrome = ecs_lookup(world, "row.chrome");
+    ecs_entity_t a = ecs_lookup(world, "row.a");
+    ecs_entity_t b = ecs_lookup(world, "row.b");
+    test_assert(chrome != 0);
+    test_assert(a != 0);
+    test_assert(b != 0);
+
+    ecs_entities_t children = ecs_get_ordered_children(world, row);
+    test_int(children.count, 3);
+    test_uint(children.ids[0], chrome);
+    test_uint(children.ids[1], a);
+    test_uint(children.ids[2], b);
+
+    ecs_fini(world);
+}

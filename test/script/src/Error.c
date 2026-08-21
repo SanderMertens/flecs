@@ -4333,3 +4333,167 @@ void Error_script_declares_entity_named_after_script(void) {
 
     ecs_fini(world);
 }
+
+void Error_if_component_presence_check_on_non_singleton(void) {
+    typedef struct {
+        ecs_f32_t watts;
+    } Draw;
+
+    typedef struct {
+        ecs_entity_t hover_item;
+    } Ui;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t draw = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Draw" }),
+        .members = {
+            {"watts", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"hover_item", ecs_id(ecs_entity_t)}
+        }
+    });
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"text", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t drill = ecs_entity(world, { .name = "Drill" });
+    ecs_set_id(world, drill, draw, sizeof(Draw), &(Draw){75});
+
+    ecs_entity_t game = ecs_entity(world, { .name = "game" });
+    ecs_set_id(world, game, ui, sizeof(Ui), &(Ui){drill});
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "n {"
+            LINE "  const item = game[Ui].hover_item"
+            LINE "  Text: {text: \"Ready to place\"}"
+            LINE "  if item[Draw] {"
+            LINE "    lit { Text: {text: \" - {item[Draw].watts:.0} W\"} }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+
+    ecs_fini(world);
+}
+
+void Error_this_at_plain_scope_kills_file(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "btn {"
+            LINE "  Ui: {1}"
+            LINE "  if $this[Ui].i > 0 {"
+            LINE "    Ui: {2}"
+            LINE "  }"
+            LINE "}"
+            LINE "after { Ui: {3} }"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+    test_assert(strstr(s->error, "unresolved reference 'this'") != NULL);
+
+    test_assert(ecs_lookup(world, "btn") == 0);
+    test_assert(ecs_lookup(world, "after") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_doc_detail_not_readable_from_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"text", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t drill = ecs_entity(world, { .name = "Drill" });
+    ecs_doc_set_detail(world, drill, "Mines the deposit under it.");
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "m1" }),
+        .code =
+            HEAD "d { Text: {text: \"{Drill[flecs.doc.Description].value}\"} }"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+    test_assert(ecs_lookup(world, "d") == 0);
+
+    ecs_entity_t script_2 = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "m2" }),
+        .code =
+            HEAD "e { Text: {text: \"{Drill[(flecs.doc.Description,"
+                 "flecs.doc.Detail)].value}\"} }"
+    });
+    test_assert(script_2 != 0);
+
+    const EcsScript *s2 = ecs_get(world, script_2, EcsScript);
+    test_assert(s2 != NULL);
+    test_assert(s2->error != NULL);
+    test_assert(ecs_lookup(world, "e") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_script_declares_entity_named_after_script_w_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "hud" }),
+        .code =
+            HEAD "hud {"
+            LINE "  Ui: {1}"
+            LINE "  child { Ui: {2} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "hud") != script);
+
+    ecs_fini(world);
+}

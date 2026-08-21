@@ -633,7 +633,8 @@
                 "pair_scope_target_shadowed_by_root_entity",
                 "pair_scope_predeclared_entity_export_const",
                 "has_expr_pair_w_enum_constant",
-                "has_expr_in_if"
+                "has_expr_in_if",
+                "const_bool_from_optional_component"
             ]
         }, {
             "id": "Collection",
@@ -910,7 +911,8 @@
                 "arrow_split_dash_gt",
                 "nested_runtime_error",
                 "const_runtime_error",
-                "fn_w_hoisted_var"
+                "fn_w_hoisted_var",
+                "memoized_against_args_ignores_hidden_state"
             ]
         }, {
             "id": "Template",
@@ -1024,7 +1026,8 @@
                 "annotation_in_for_in_template",
                 "annotation_in_if_in_template",
                 "multiple_templates_dont_leak_child_names",
-                "template_w_module_qualified_entity_ref"
+                "template_w_module_qualified_entity_ref",
+                "injected_child_order_w_ordered_children"
             ]
         }, {
             "id": "Mut",
@@ -1291,13 +1294,18 @@
                 "has_pair_missing_paren_close",
                 "has_pair_missing_second",
                 "script_update_failure_is_reported",
-                "script_declares_entity_named_after_script"
+                "script_declares_entity_named_after_script",
+                "if_component_presence_check_on_non_singleton",
+                "this_at_plain_scope_kills_file",
+                "doc_detail_not_readable_from_script",
+                "script_declares_entity_named_after_script_w_child"
             ]
         }, {
             "id": "Format",
             "params": {
                 "folding": ["enabled", "disabled"]
             },
+            "setup": true,
             "testcases": [
                 "precision_f32_literal",
                 "precision_f32_variable",
@@ -1444,7 +1452,9 @@
                 "min_width_i32_component_member",
                 "precision_i32_variable_fails",
                 "scientific_i32_variable_fails",
-                "always_sign_i32_variable"
+                "always_sign_i32_variable",
+                "min_width_bool_variable",
+                "min_width_char_variable"
             ]
         }, {
             "id": "Expr",
@@ -2159,7 +2169,10 @@
                 "include_using_not_visible_in_parent",
                 "include_managed_using_not_visible_in_parent",
                 "include_managed_keeps_implicit_meta_in_parent",
-                "include_keeps_implicit_meta_in_parent"
+                "include_keeps_implicit_meta_in_parent",
+                "include_forward_ref_to_later_include_is_retried",
+                "const_does_not_cross_include",
+                "export_const_in_scope_crosses_include"
             ]
         }, {
             "id": "Fuzzing",
@@ -2536,7 +2549,10 @@
                 "template_for_unkeyed_only_entities_are_recreated",
                 "template_for_keyed_outer_condition_toggles_rows",
                 "template_for_keyed_per_item_condition_toggles_row",
-                "template_conditional_component_on_keyed_for_entity"
+                "template_conditional_component_on_keyed_for_entity",
+                "component_ref_via_loop_var_entity_is_reactive",
+                "for_keyed_does_not_reorder_children",
+                "base_component_w_conditional_override"
             ]
         }, {
             "id": "ConstVar",

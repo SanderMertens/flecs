@@ -5358,3 +5358,200 @@ void Reactivity_template_conditional_component_on_keyed_for_entity(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_component_ref_via_loop_var_entity_is_reactive(void) {
+    typedef struct {
+        ecs_entity_t items[4];
+        ecs_i32_t count;
+    } Items;
+
+    typedef struct {
+        ecs_i32_t v;
+    } Icon;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t icon = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Icon" }),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t items = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Items" }),
+        .members = {
+            {"items", ecs_id(ecs_entity_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t text = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"text", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t it0 = ecs_entity(world, { .name = "it0" });
+    ecs_entity_t it1 = ecs_entity(world, { .name = "it1" });
+    ecs_entity_t it2 = ecs_entity(world, { .name = "it2" });
+    ecs_set_id(world, it0, icon, sizeof(Icon), &(Icon){10});
+    ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){11});
+    ecs_set_id(world, it2, icon, sizeof(Icon), &(Icon){12});
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, items, sizeof(Items), 
+        &(Items){{it0, it1, it2}, 3});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "list {"
+            LINE "  for i in 0..source[Items].count {"
+            LINE "    const it = source[Items].items[i]"
+            LINE "    \"r{i}\" { Text: {text: \"icon {it[Icon].v}\"} }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t r1 = ecs_lookup(world, "list.r1");
+    test_assert(r1 != 0);
+    const void *t = ecs_get_id(world, r1, text);
+    test_assert(t != NULL);
+    test_str(*(char**)t, "icon 11");
+
+    ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){99});
+
+    r1 = ecs_lookup(world, "list.r1");
+    test_assert(r1 != 0);
+    t = ecs_get_id(world, r1, text);
+    test_assert(t != NULL);
+    test_str(*(char**)t, "icon 99");
+
+    ecs_fini(world);
+}
+
+void Reactivity_for_keyed_does_not_reorder_children(void) {
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{1, 2, 3}, 3});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "list {"
+            LINE "  flecs.core.OrderedChildren"
+            LINE "  for i in 0..source[Ids].count {"
+            LINE "    const k = source[Ids].values[i]"
+            LINE "    \"r{k}\" {}"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t list = ecs_lookup(world, "list");
+    test_assert(list != 0);
+
+    ecs_entity_t r1 = ecs_lookup(world, "list.r1");
+    ecs_entity_t r2 = ecs_lookup(world, "list.r2");
+    ecs_entity_t r3 = ecs_lookup(world, "list.r3");
+    test_assert(r1 != 0);
+    test_assert(r2 != 0);
+    test_assert(r3 != 0);
+
+    {
+        ecs_entities_t children = ecs_get_ordered_children(world, list);
+        test_int(children.count, 3);
+        test_uint(children.ids[0], r1);
+        test_uint(children.ids[1], r2);
+        test_uint(children.ids[2], r3);
+    }
+
+    ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{1, 9, 2, 3}, 4});
+
+    ecs_entity_t r9 = ecs_lookup(world, "list.r9");
+    test_assert(r9 != 0);
+
+    {
+        ecs_entities_t children = ecs_get_ordered_children(world, list);
+        test_int(children.count, 4);
+        test_uint(children.ids[0], r1);
+        test_uint(children.ids[1], r2);
+        test_uint(children.ids[2], r3);
+        test_uint(children.ids[3], r9);
+    }
+
+    ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{3, 2, 1, 9}, 4});
+
+    {
+        ecs_entities_t children = ecs_get_ordered_children(world, list);
+        test_int(children.count, 4);
+        test_uint(children.ids[0], r1);
+        test_uint(children.ids[1], r2);
+        test_uint(children.ids[2], r3);
+        test_uint(children.ids[3], r9);
+    }
+
+    ecs_fini(world);
+}
+
+void Reactivity_base_component_w_conditional_override(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Rgba" }),
+        .members = {
+            {"r", ecs_id(ecs_u8_t)},
+            {"g", ecs_id(ecs_u8_t)},
+            {"b", ecs_id(ecs_u8_t)},
+            {"a", ecs_id(ecs_u8_t)}
+        }
+    });
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "WidgetState" }),
+        .members = {
+            {"hover", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template StockSlot {"
+            LINE "  mut filled = false"
+            LINE "  mut active = false"
+            LINE "  WidgetState"
+            LINE "  Rgba: {1, 1, 1, 1}"
+            LINE "  if filled { Rgba: {2, 2, 2, 2} }"
+            LINE "  if filled && $this[WidgetState].hover { Rgba: {3, 3, 3, 3} }"
+            LINE "  if filled && active { Rgba: {4, 4, 4, 4} }"
+            LINE "}"
+            LINE "StockSlot s0()"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+    test_assert(strstr(s->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}

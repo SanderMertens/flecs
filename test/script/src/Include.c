@@ -661,3 +661,100 @@ void Include_include_keeps_implicit_meta_in_parent(void) {
 
     ecs_fini(world);
 }
+
+void Include_include_forward_ref_to_later_include_is_retried(void) {
+    test_files_install();
+    test_file_add("user.flecs",
+        "panel { Widget w() }\n"
+        "sibling { Ui: {7} }\n");
+    test_file_add("lib.flecs",
+        "template Widget {\n"
+        "  prop n: i32 = 0\n"
+        "  Ui: {n}\n"
+        "}\n");
+    test_file_add("parent.flecs",
+        "include user.flecs\n"
+        "include lib.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "Widget") != 0);
+    test_assert(ecs_lookup(world, "panel.w") != 0);
+    test_assert(ecs_lookup(world, "sibling") != 0);
+
+    ecs_fini(world);
+}
+
+void Include_const_does_not_cross_include(void) {
+    test_files_install();
+    test_file_add("palette.flecs", "const Amber: Ui = {240}\n");
+    test_file_add("parent.flecs",
+        "include palette.flecs\n"
+        "a { Ui: Amber }\n"
+        "b { Ui: {1} }\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Include_export_const_in_scope_crosses_include(void) {
+    test_files_install();
+    test_file_add("cfg.flecs",
+        "cfg {\n"
+        "  export const maxBays: i32 = 4\n"
+        "  export const rate: f32 = 1.5\n"
+        "}\n");
+    test_file_add("use.flecs",
+        "d { Text: {text: \"bays {cfg.maxBays} rate {cfg.rate:.1}\"} }\n");
+    test_file_add("parent.flecs",
+        "include cfg.flecs\n"
+        "include use.flecs\n");
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t text = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"text", ecs_id(ecs_string_t)}
+        }
+    });
+
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+
+    ecs_entity_t d = ecs_lookup(world, "d");
+    test_assert(d != 0);
+    const void *t = ecs_get_id(world, d, text);
+    test_assert(t != NULL);
+    test_str(*(char**)t, "bays 4 rate 1.5");
+
+    ecs_fini(world);
+}

@@ -2015,3 +2015,81 @@ void Function_fn_w_hoisted_var(void) {
     ecs_value_fini(world, &result);
     ecs_fini(world);
 }
+
+static int32_t function_hidden_state = 1;
+static int32_t function_scale_invoked = 0;
+
+static void function_scale_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    function_scale_invoked ++;
+    *(ecs_i32_t*)result->ptr = 
+        *(ecs_i32_t*)argv[0].ptr * function_hidden_state;
+}
+
+void Function_memoized_against_args_ignores_hidden_state(void) {
+    typedef struct {
+        ecs_i32_t i;
+    } Ui;
+
+    ecs_world_t *world = ecs_init();
+
+    function_hidden_state = 1;
+    function_scale_invoked = 0;
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_function(world, {
+        .name = "scale",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{ .name = "v", .type = ecs_id(ecs_i32_t) }},
+        .callback = function_scale_callback
+    });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, ui, sizeof(Ui), &(Ui){2});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "a { Ui: {scale(source[Ui].i)} }"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+    const Ui *v = ecs_get_id(world, a, ui);
+    test_assert(v != NULL);
+    test_int(v->i, 2);
+    test_int(function_scale_invoked, 1);
+
+    function_hidden_state = 10;
+
+    ecs_progress(world, 0);
+    ecs_progress(world, 0);
+    ecs_progress(world, 0);
+
+    v = ecs_get_id(world, a, ui);
+    test_assert(v != NULL);
+    test_int(v->i, 2);
+    test_int(function_scale_invoked, 1);
+
+    ecs_set_id(world, source, ui, sizeof(Ui), &(Ui){3});
+
+    v = ecs_get_id(world, a, ui);
+    test_assert(v != NULL);
+    test_int(v->i, 30);
+    test_int(function_scale_invoked, 2);
+
+    ecs_fini(world);
+}
