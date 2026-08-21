@@ -1991,6 +1991,18 @@ static int flecs_script_step_if(
         if (condval.type == ecs_id(ecs_bool_t)) {
             cond = *(bool*)(condval.ptr);
         } else {
+            const EcsType *type = ecs_get(v->world, condval.type, EcsType);
+            if (!type || (type->kind != EcsPrimitiveType &&
+                type->kind != EcsEnumType && type->kind != EcsBitmaskType))
+            {
+                char *type_str = ecs_get_path(v->world, condval.type);
+                flecs_script_eval_error(v, node,
+                    "value of type '%s' cannot be used as condition", type_str);
+                ecs_os_free(type_str);
+                ecs_ptr_free(v->world, condval.type, condval.ptr);
+                return -1;
+            }
+
             ecs_meta_cursor_t cur = ecs_meta_cursor(
                 v->world, condval.type, condval.ptr);
             cond = ecs_meta_get_bool(&cur);
