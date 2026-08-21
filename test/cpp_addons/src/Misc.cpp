@@ -2254,6 +2254,17 @@ void Misc_get_const_var_struct(void) {
     test_int(v.y, 20);
 }
 
+void Misc_get_const_var_string(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export const x = \"Hello World\"")
+        .run();
+
+    const char *v = world.get_const_var<const char*>("x");
+    test_str(v, "Hello World");
+}
+
 void Misc_get_const_var_as_f32(void) {
     flecs::world world;
 

@@ -64,6 +64,7 @@ void Misc_alert_w_member_range_from_var(void);
 void Misc_map_api(void);
 void Misc_get_const_var(void);
 void Misc_get_const_var_struct(void);
+void Misc_get_const_var_string(void);
 void Misc_get_const_var_as_f32(void);
 void Misc_get_const_var_as_i32(void);
 void Misc_get_const_var_as_u32(void);
@@ -307,6 +308,10 @@ bake_test_case Misc_testcases[] = {
         Misc_get_const_var_struct
     },
     {
+        "get_const_var_string",
+        Misc_get_const_var_string
+    },
+    {
         "get_const_var_as_f32",
         Misc_get_const_var_as_f32
     },
@@ -404,7 +409,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        70,
+        71,
         Misc_testcases
     },
     {
