@@ -2429,7 +2429,7 @@ void Reactivity_mutually_exclusive_component_owner_three_branches(void);
 void Reactivity_non_exclusive_component_owner_fails(void);
 void Reactivity_template_non_exclusive_component_owner_fails(void);
 void Reactivity_partial_assignment_does_not_own_component(void);
-void Reactivity_for_clears_previous_entities(void);
+void Reactivity_for_preserves_named_entities(void);
 void Reactivity_nested_for_clears_previous_entities(void);
 void Reactivity_inactive_for_cleans_up_entities(void);
 void Reactivity_new_entity_survives_reevaluation(void);
@@ -2459,7 +2459,7 @@ void Reactivity_template_const_dependency_is_transitive(void);
 void Reactivity_template_if_cleans_up_entities(void);
 void Reactivity_template_if_cleans_up_components(void);
 void Reactivity_template_owner_cleans_up_instance_state(void);
-void Reactivity_template_for_clears_previous_entities(void);
+void Reactivity_template_for_preserves_named_entities(void);
 void Reactivity_template_inactive_for_cleans_up_entities(void);
 void Reactivity_template_instances_have_private_slots(void);
 void Reactivity_template_capture_is_reactive(void);
@@ -12138,8 +12138,8 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_partial_assignment_does_not_own_component
     },
     {
-        "for_clears_previous_entities",
-        Reactivity_for_clears_previous_entities
+        "for_preserves_named_entities",
+        Reactivity_for_preserves_named_entities
     },
     {
         "nested_for_clears_previous_entities",
@@ -12258,8 +12258,8 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_template_owner_cleans_up_instance_state
     },
     {
-        "template_for_clears_previous_entities",
-        Reactivity_template_for_clears_previous_entities
+        "template_for_preserves_named_entities",
+        Reactivity_template_for_preserves_named_entities
     },
     {
         "template_inactive_for_cleans_up_entities",

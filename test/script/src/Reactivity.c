@@ -883,7 +883,7 @@ void Reactivity_partial_assignment_does_not_own_component(void) {
     ecs_fini(world);
 }
 
-void Reactivity_for_clears_previous_entities(void) {
+void Reactivity_for_preserves_named_entities(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t position_i = ecs_struct(world, {
@@ -914,16 +914,15 @@ void Reactivity_for_clears_previous_entities(void) {
     ecs_set_id(world, source, position_i,
         sizeof(PositionI), &(PositionI){3, 0});
 
-    ecs_entity_t new_0 = ecs_lookup(world, "item_0");
-    ecs_entity_t new_1 = ecs_lookup(world, "item_1");
+    test_assert(ecs_is_alive(world, old_0));
+    test_assert(ecs_is_alive(world, old_1));
+    test_uint(ecs_lookup(world, "item_0"), old_0);
+    test_uint(ecs_lookup(world, "item_1"), old_1);
+
     ecs_entity_t new_2 = ecs_lookup(world, "item_2");
-    test_assert(new_0 != 0);
-    test_assert(new_1 != 0);
     test_assert(new_2 != 0);
-    test_assert(!ecs_is_alive(world, old_0));
-    test_assert(!ecs_is_alive(world, old_1));
-    test_assert(new_0 != old_0);
-    test_assert(new_1 != old_1);
+    test_assert(new_2 != old_0);
+    test_assert(new_2 != old_1);
 
     ecs_fini(world);
 }
@@ -1557,7 +1556,7 @@ void Reactivity_template_owner_cleans_up_instance_state(void) {
     ecs_fini(world);
 }
 
-void Reactivity_template_for_clears_previous_entities(void) {
+void Reactivity_template_for_preserves_named_entities(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t script = ecs_script(world, {
@@ -1584,16 +1583,15 @@ void Reactivity_template_for_clears_previous_entities(void) {
     int32_t count = 3;
     ecs_set_id(world, instance, list, sizeof(count), &count);
 
-    ecs_entity_t new_0 = ecs_lookup(world, "instance.child_0");
-    ecs_entity_t new_1 = ecs_lookup(world, "instance.child_1");
+    test_assert(ecs_is_alive(world, old_0));
+    test_assert(ecs_is_alive(world, old_1));
+    test_uint(ecs_lookup(world, "instance.child_0"), old_0);
+    test_uint(ecs_lookup(world, "instance.child_1"), old_1);
+
     ecs_entity_t new_2 = ecs_lookup(world, "instance.child_2");
-    test_assert(new_0 != 0);
-    test_assert(new_1 != 0);
     test_assert(new_2 != 0);
-    test_assert(!ecs_is_alive(world, old_0));
-    test_assert(!ecs_is_alive(world, old_1));
-    test_assert(new_0 != old_0);
-    test_assert(new_1 != old_1);
+    test_assert(new_2 != old_0);
+    test_assert(new_2 != old_1);
 
     ecs_fini(world);
 }
