@@ -518,6 +518,75 @@ void NonFragmentingChildOf_mixed_childof(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_convert_childof_to_parent_keeps_order(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entity_t child_a = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t child_b = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t child_c = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    {
+        const ecs_entities_t children = ecs_get_ordered_children(world, parent);
+        test_int(children.count, 3);
+        test_int(children.ids[0], child_a);
+        test_int(children.ids[1], child_b);
+        test_int(children.ids[2], child_c);
+    }
+
+    ecs_set(world, child_b, EcsParent, { parent });
+
+    test_uint(ecs_get_parent(world, child_b), parent);
+
+    {
+        const ecs_entities_t children = ecs_get_ordered_children(world, parent);
+        test_int(children.count, 3);
+        test_int(children.ids[0], child_a);
+        test_int(children.ids[1], child_b);
+        test_int(children.ids[2], child_c);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_set_same_parent_twice_keeps_order(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_set(world, child_a, EcsParent, { parent });
+    ecs_entity_t child_b = ecs_new(world);
+    ecs_set(world, child_b, EcsParent, { parent });
+    ecs_entity_t child_c = ecs_new(world);
+    ecs_set(world, child_c, EcsParent, { parent });
+
+    {
+        const ecs_entities_t children = ecs_get_ordered_children(world, parent);
+        test_int(children.count, 3);
+        test_int(children.ids[0], child_a);
+        test_int(children.ids[1], child_b);
+        test_int(children.ids[2], child_c);
+    }
+
+    ecs_set(world, child_b, EcsParent, { parent });
+
+    test_uint(ecs_get_parent(world, child_b), parent);
+
+    {
+        const ecs_entities_t children = ecs_get_ordered_children(world, parent);
+        test_int(children.count, 3);
+        test_int(children.ids[0], child_a);
+        test_int(children.ids[1], child_b);
+        test_int(children.ids[2], child_c);
+    }
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_delete_parent_w_mixed_childof(void) {
     ecs_world_t *world = ecs_mini();
 
