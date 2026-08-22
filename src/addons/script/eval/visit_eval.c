@@ -1054,6 +1054,15 @@ static int flecs_script_eval_component(
 
     ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, node->id.eval);
 
+    if (src == node->id.eval) {
+        const EcsScript *tmpl = ecs_get(v->world, node->id.eval, EcsScript);
+        if (tmpl && tmpl->template_) {
+            flecs_script_eval_error(v, node,
+                "cannot instantiate template '%s' on itself", node->id.first);
+            return -1;
+        }
+    }
+
     if (node->expr) {
         const ecs_type_info_t *ti = flecs_script_get_type_info(
             v, node, node->id.eval);

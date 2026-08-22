@@ -5010,3 +5010,57 @@ void Template_template_root_component_after_component_w_mut(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_in_singleton_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop v: f32 = 1"
+    LINE "  Mass: {v}"
+    LINE "}"
+    LINE "$ { T: {v: 5} }";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 5);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Template_template_instantiated_on_itself(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop v: f32 = 1"
+    LINE "  Mass: {v}"
+    LINE "}"
+    LINE "T { T: {v: 5} }";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 5);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}

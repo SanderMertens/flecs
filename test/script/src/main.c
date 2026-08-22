@@ -1018,6 +1018,8 @@ void Template_injected_child_order_w_ordered_children(void);
 void Template_template_prop_default_from_const(void);
 void Template_template_root_component_w_string_mut(void);
 void Template_template_root_component_after_component_w_mut(void);
+void Template_template_in_singleton_scope(void);
+void Template_template_instantiated_on_itself(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -6602,6 +6604,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_root_component_after_component_w_mut",
         Template_template_root_component_after_component_w_mut
+    },
+    {
+        "template_in_singleton_scope",
+        Template_template_in_singleton_scope
+    },
+    {
+        "template_instantiated_on_itself",
+        Template_template_instantiated_on_itself
     }
 };
 
@@ -12871,7 +12881,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        114,
+        116,
         Template_testcases
     },
     {
