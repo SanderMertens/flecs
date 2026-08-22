@@ -2134,6 +2134,18 @@ void Include_include_keeps_implicit_meta_in_parent(void);
 void Include_include_forward_ref_to_later_include_is_retried(void);
 void Include_const_does_not_cross_include(void);
 void Include_export_const_in_scope_crosses_include(void);
+void Include_include_forward_ref_to_later_include_inline(void);
+void Include_include_forward_ref_to_nested_later_include(void);
+void Include_include_forward_ref_from_nested_include(void);
+void Include_include_forward_ref_chain_requires_multiple_passes(void);
+void Include_include_forward_ref_never_resolved_reports_error(void);
+void Include_include_forward_ref_never_resolved_inline_reports_error(void);
+void Include_include_diamond_evaluates_shared_once(void);
+void Include_include_diamond_forward_ref_is_retried(void);
+void Include_include_forward_ref_to_struct_in_later_include(void);
+void Include_include_forward_ref_to_const_in_later_include(void);
+void Include_include_forward_ref_to_entity_in_later_include(void);
+void Include_include_retried_script_keeps_scope_and_components(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
@@ -10975,6 +10987,54 @@ bake_test_case Include_testcases[] = {
     {
         "export_const_in_scope_crosses_include",
         Include_export_const_in_scope_crosses_include
+    },
+    {
+        "include_forward_ref_to_later_include_inline",
+        Include_include_forward_ref_to_later_include_inline
+    },
+    {
+        "include_forward_ref_to_nested_later_include",
+        Include_include_forward_ref_to_nested_later_include
+    },
+    {
+        "include_forward_ref_from_nested_include",
+        Include_include_forward_ref_from_nested_include
+    },
+    {
+        "include_forward_ref_chain_requires_multiple_passes",
+        Include_include_forward_ref_chain_requires_multiple_passes
+    },
+    {
+        "include_forward_ref_never_resolved_reports_error",
+        Include_include_forward_ref_never_resolved_reports_error
+    },
+    {
+        "include_forward_ref_never_resolved_inline_reports_error",
+        Include_include_forward_ref_never_resolved_inline_reports_error
+    },
+    {
+        "include_diamond_evaluates_shared_once",
+        Include_include_diamond_evaluates_shared_once
+    },
+    {
+        "include_diamond_forward_ref_is_retried",
+        Include_include_diamond_forward_ref_is_retried
+    },
+    {
+        "include_forward_ref_to_struct_in_later_include",
+        Include_include_forward_ref_to_struct_in_later_include
+    },
+    {
+        "include_forward_ref_to_const_in_later_include",
+        Include_include_forward_ref_to_const_in_later_include
+    },
+    {
+        "include_forward_ref_to_entity_in_later_include",
+        Include_include_forward_ref_to_entity_in_later_include
+    },
+    {
+        "include_retried_script_keeps_scope_and_components",
+        Include_include_retried_script_keeps_scope_and_components
     }
 };
 
@@ -12770,7 +12830,7 @@ static bake_test_suite suites[] = {
         "Include",
         NULL,
         NULL,
-        33,
+        45,
         Include_testcases
     },
     {

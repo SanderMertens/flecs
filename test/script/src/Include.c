@@ -6,7 +6,7 @@ typedef struct test_file_t {
     size_t pos;
 } test_file_t;
 
-#define TEST_FILE_MAX (4)
+#define TEST_FILE_MAX (8)
 
 static test_file_t test_files[TEST_FILE_MAX];
 
@@ -755,6 +755,520 @@ void Include_export_const_in_scope_crosses_include(void) {
     const void *t = ecs_get_id(world, d, text);
     test_assert(t != NULL);
     test_str(*(char**)t, "bays 4 rate 1.5");
+
+    ecs_fini(world);
+}
+
+void Include_include_forward_ref_to_later_include_inline(void) {
+    test_files_install();
+    test_file_add("user.flecs",
+        "panel { Widget w() }\n"
+        "sibling { Ui: {7} }\n");
+    test_file_add("lib.flecs",
+        "template Widget {\n"
+        "  prop n: i32 = 0\n"
+        "  Ui: {n}\n"
+        "}\n");
+    test_file_add("parent.flecs",
+        "include user.flecs\n"
+        "include lib.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+
+    test_assert(ecs_lookup(world, "Widget") != 0);
+
+    ecs_entity_t w = ecs_lookup(world, "panel.w");
+    test_assert(w != 0);
+
+    ecs_entity_t sibling = ecs_lookup(world, "sibling");
+    test_assert(sibling != 0);
+    const void *ptr = ecs_get_id(world, sibling, ui);
+    test_assert(ptr != NULL);
+    test_int(*(int32_t*)ptr, 7);
+
+    ecs_fini(world);
+}
+
+void Include_include_forward_ref_to_nested_later_include(void) {
+    test_files_install();
+    test_file_add("user.flecs",
+        "panel { Widget w(n: 5) }\n");
+    test_file_add("lib.flecs",
+        "template Widget {\n"
+        "  prop n: i32 = 0\n"
+        "  Ui: {n}\n"
+        "}\n");
+    test_file_add("mid.flecs",
+        "include lib.flecs\n");
+    test_file_add("parent.flecs",
+        "include user.flecs\n"
+        "include mid.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    test_assert(ecs_lookup(world, "Widget") != 0);
+
+    ecs_entity_t w = ecs_lookup(world, "panel.w");
+    test_assert(w != 0);
+    const void *ptr = ecs_get_id(world, w, ui);
+    test_assert(ptr != NULL);
+    test_int(*(int32_t*)ptr, 5);
+
+    ecs_fini(world);
+}
+
+void Include_include_forward_ref_from_nested_include(void) {
+    test_files_install();
+    test_file_add("user.flecs",
+        "panel { Widget w(n: 5) }\n");
+    test_file_add("mid.flecs",
+        "include user.flecs\n");
+    test_file_add("lib.flecs",
+        "template Widget {\n"
+        "  prop n: i32 = 0\n"
+        "  Ui: {n}\n"
+        "}\n");
+    test_file_add("parent.flecs",
+        "include mid.flecs\n"
+        "include lib.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    test_assert(ecs_lookup(world, "Widget") != 0);
+
+    ecs_entity_t w = ecs_lookup(world, "panel.w");
+    test_assert(w != 0);
+    const void *ptr = ecs_get_id(world, w, ui);
+    test_assert(ptr != NULL);
+    test_int(*(int32_t*)ptr, 5);
+
+    ecs_fini(world);
+}
+
+void Include_include_forward_ref_chain_requires_multiple_passes(void) {
+    test_files_install();
+    test_file_add("a.flecs",
+        "pa { B_t x() }\n");
+    test_file_add("b.flecs",
+        "template B_t {\n"
+        "  Ui: {1}\n"
+        "}\n"
+        "pb { C_t y() }\n");
+    test_file_add("c.flecs",
+        "template C_t {\n"
+        "  Ui: {2}\n"
+        "}\n");
+    test_file_add("parent.flecs",
+        "include a.flecs\n"
+        "include b.flecs\n"
+        "include c.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t x = ecs_lookup(world, "pa.x");
+    test_assert(x != 0);
+    const void *ptr = ecs_get_id(world, x, ui);
+    test_assert(ptr != NULL);
+    test_int(*(int32_t*)ptr, 1);
+
+    ecs_entity_t y = ecs_lookup(world, "pb.y");
+    test_assert(y != 0);
+    ptr = ecs_get_id(world, y, ui);
+    test_assert(ptr != NULL);
+    test_int(*(int32_t*)ptr, 2);
+
+    ecs_fini(world);
+}
+
+void Include_include_forward_ref_never_resolved_reports_error(void) {
+    test_files_install();
+    test_file_add("user.flecs",
+        "panel { Widget w() }\n");
+    test_file_add("other.flecs",
+        "other_e {}\n");
+    test_file_add("parent.flecs",
+        "include user.flecs\n"
+        "include other.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+
+    ecs_entity_t user_script = ecs_lookup_path_w_sep(
+        world, 0, "user.flecs", "/", NULL, false);
+    test_assert(user_script != 0);
+
+    const EcsScript *us = ecs_get(world, user_script, EcsScript);
+    test_assert(us != NULL);
+    test_assert(us->error != NULL);
+
+    test_assert(ecs_lookup(world, "other_e") != 0);
+    test_assert(ecs_lookup(world, "Widget") == 0);
+
+    ecs_fini(world);
+}
+
+void Include_include_forward_ref_never_resolved_inline_reports_error(void) {
+    test_files_install();
+    test_file_add("user.flecs",
+        "panel { Widget w() }\n");
+    test_file_add("other.flecs",
+        "other_e {}\n");
+    test_file_add("parent.flecs",
+        "include user.flecs\n"
+        "include other.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+
+    test_assert(ecs_lookup(world, "other_e") != 0);
+    test_assert(ecs_lookup(world, "Widget") == 0);
+
+    ecs_fini(world);
+}
+
+void Include_include_diamond_evaluates_shared_once(void) {
+    test_files_install();
+    test_file_add("shared.flecs",
+        "_ { Ui: {3} }\n");
+    test_file_add("a.flecs",
+        "include shared.flecs\n");
+    test_file_add("b.flecs",
+        "include shared.flecs\n");
+    test_file_add("parent.flecs",
+        "include a.flecs\n"
+        "include b.flecs\n");
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    test_int(ecs_count_id(world, ui), 1);
+
+    ecs_fini(world);
+}
+
+void Include_include_diamond_forward_ref_is_retried(void) {
+    test_files_install();
+    test_file_add("shared.flecs",
+        "_ { Widget w(n: 4) }\n");
+    test_file_add("a.flecs",
+        "include shared.flecs\n");
+    test_file_add("b.flecs",
+        "include shared.flecs\n");
+    test_file_add("lib.flecs",
+        "template Widget {\n"
+        "  prop n: i32 = 0\n"
+        "  Ui: {n}\n"
+        "}\n");
+    test_file_add("parent.flecs",
+        "include a.flecs\n"
+        "include b.flecs\n"
+        "include lib.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    test_assert(ecs_lookup(world, "Widget") != 0);
+    test_int(ecs_count_id(world, ui), 1);
+
+    ecs_fini(world);
+}
+
+void Include_include_forward_ref_to_struct_in_later_include(void) {
+    test_files_install();
+    test_file_add("use.flecs",
+        "e { Position: {x: 10, y: 20} }\n");
+    test_file_add("types.flecs",
+        "struct Position(x: f32, y: f32)\n");
+    test_file_add("parent.flecs",
+        "include use.flecs\n"
+        "include types.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const float *ptr = ecs_get_id(world, e, pos);
+    test_assert(ptr != NULL);
+    test_int(ptr[0], 10);
+    test_int(ptr[1], 20);
+
+    ecs_fini(world);
+}
+
+void Include_include_forward_ref_to_const_in_later_include(void) {
+    test_files_install();
+    test_file_add("use.flecs",
+        "d { Text: {text: \"bays {cfg.maxBays}\"} }\n");
+    test_file_add("cfg.flecs",
+        "cfg {\n"
+        "  export const maxBays: i32 = 4\n"
+        "}\n");
+    test_file_add("parent.flecs",
+        "include use.flecs\n"
+        "include cfg.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t text = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"text", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t d = ecs_lookup(world, "d");
+    test_assert(d != 0);
+
+    const void *t = ecs_get_id(world, d, text);
+    test_assert(t != NULL);
+    test_str(*(char**)t, "bays 4");
+
+    ecs_fini(world);
+}
+
+void Include_include_forward_ref_to_entity_in_later_include(void) {
+    test_files_install();
+    test_file_add("use.flecs",
+        "e { (Likes, Bob) }\n");
+    test_file_add("defs.flecs",
+        "Likes {}\n"
+        "Bob {}\n");
+    test_file_add("parent.flecs",
+        "include use.flecs\n"
+        "include defs.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t likes = ecs_lookup(world, "Likes");
+    test_assert(likes != 0);
+
+    ecs_entity_t bob = ecs_lookup(world, "Bob");
+    test_assert(bob != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, likes, bob));
+
+    ecs_fini(world);
+}
+
+void Include_include_retried_script_keeps_scope_and_components(void) {
+    test_files_install();
+    test_file_add("user.flecs",
+        "parent_e {\n"
+        "  Tag\n"
+        "  child_e { Widget w(n: 5) }\n"
+        "}\n"
+        "sibling_e { Ui: {7} }\n");
+    test_file_add("lib.flecs",
+        "template Widget {\n"
+        "  prop n: i32 = 0\n"
+        "  Ui: {n}\n"
+        "}\n");
+    test_file_add("parent.flecs",
+        "include user.flecs\n"
+        "include lib.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Tag" });
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t parent_e = ecs_lookup(world, "parent_e");
+    test_assert(parent_e != 0);
+    test_assert(ecs_has_id(world, parent_e, tag));
+
+    ecs_entity_t child_e = ecs_lookup(world, "parent_e.child_e");
+    test_assert(child_e != 0);
+    test_assert(ecs_has_pair(world, child_e, EcsChildOf, parent_e));
+
+    ecs_entity_t w = ecs_lookup(world, "parent_e.child_e.w");
+    test_assert(w != 0);
+    test_assert(ecs_has_pair(world, w, EcsChildOf, child_e));
+
+    const void *ptr = ecs_get_id(world, w, ui);
+    test_assert(ptr != NULL);
+    test_int(*(int32_t*)ptr, 5);
+
+    ecs_entity_t sibling_e = ecs_lookup(world, "sibling_e");
+    test_assert(sibling_e != 0);
+    ptr = ecs_get_id(world, sibling_e, ui);
+    test_assert(ptr != NULL);
+    test_int(*(int32_t*)ptr, 7);
 
     ecs_fini(world);
 }

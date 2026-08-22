@@ -64,6 +64,9 @@ void flecs_script_ref_observers_clear(
 void flecs_script_ref_on_set(
     ecs_iter_t *it);
 
+void flecs_script_run_pending_resolves(
+    ecs_world_t *world);
+
 void flecs_script_refs_import(
     ecs_world_t *world);
 

@@ -119,7 +119,11 @@ static int flecs_script_include_node(
         ecs_entity_t existing = ecs_lookup_path_w_sep(
             v->world, 0, resolved, "/", NULL, false);
         if (existing && ecs_has(v->world, existing, EcsScript)) {
-            goto done;
+            const EcsScript *existing_script = ecs_get(
+                v->world, existing, EcsScript);
+            if (!existing_script->error) {
+                goto done;
+            }
         }
 
         ecs_entity_t prev_scope = ecs_set_scope(v->world, 0);
@@ -130,6 +134,10 @@ static int flecs_script_include_node(
         });
         runtime->include_depth --;
         ecs_set_scope(v->world, prev_scope);
+
+        if (!runtime->include_depth) {
+            flecs_script_run_pending_resolves(v->world);
+        }
 
         if (!e) {
             flecs_script_eval_error(v, node,
@@ -199,17 +207,70 @@ int flecs_script_visit_include(
 {
     ecs_script_node_t **nodes = ecs_vec_first(&scope->stmts);
     int32_t i, count = ecs_vec_count(&scope->stmts);
+
+    ecs_vec_t pending;
+    ecs_vec_init_t(NULL, &pending, ecs_script_include_t*, 0);
+
     for (i = 0; i < count; i ++) {
         if (nodes[i]->kind != EcsAstInclude) {
             continue;
         }
 
-        if (flecs_script_include_node(v, (ecs_script_include_t*)nodes[i])) {
-            return -1;
-        }
+        ecs_vec_append_t(NULL, &pending, ecs_script_include_t*)[0] =
+            (ecs_script_include_t*)nodes[i];
     }
 
-    return 0;
+    count = ecs_vec_count(&pending);
+    if (!count) {
+        ecs_vec_fini_t(NULL, &pending, ecs_script_include_t*);
+        return 0;
+    }
+
+    if (count == 1) {
+        int result = flecs_script_include_node(
+            v, ecs_vec_first_t(&pending, ecs_script_include_t*)[0]);
+        ecs_vec_fini_t(NULL, &pending, ecs_script_include_t*);
+        return result;
+    }
+
+    char *error = NULL;
+    bool progress = true;
+
+    while (progress && ecs_vec_count(&pending)) {
+        ecs_os_free(error);
+        error = NULL;
+        progress = false;
+
+        flecs_log_capture_push(true);
+
+        ecs_script_include_t **elems = ecs_vec_first(&pending);
+        int32_t remaining = 0;
+        count = ecs_vec_count(&pending);
+        for (i = 0; i < count; i ++) {
+            if (flecs_script_include_node(v, elems[i])) {
+                elems[remaining ++] = elems[i];
+            } else {
+                progress = true;
+            }
+        }
+
+        ecs_vec_set_count_t(NULL, &pending, ecs_script_include_t*, remaining);
+
+        error = flecs_log_capture_pop();
+    }
+
+    int result = 0;
+    if (ecs_vec_count(&pending)) {
+        if (error) {
+            ecs_err("%s", error);
+        }
+        result = -1;
+    }
+
+    ecs_os_free(error);
+    ecs_vec_fini_t(NULL, &pending, ecs_script_include_t*);
+
+    return result;
 }
 
 #endif

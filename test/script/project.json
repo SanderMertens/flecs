@@ -2174,7 +2174,19 @@
                 "include_keeps_implicit_meta_in_parent",
                 "include_forward_ref_to_later_include_is_retried",
                 "const_does_not_cross_include",
-                "export_const_in_scope_crosses_include"
+                "export_const_in_scope_crosses_include",
+                "include_forward_ref_to_later_include_inline",
+                "include_forward_ref_to_nested_later_include",
+                "include_forward_ref_from_nested_include",
+                "include_forward_ref_chain_requires_multiple_passes",
+                "include_forward_ref_never_resolved_reports_error",
+                "include_forward_ref_never_resolved_inline_reports_error",
+                "include_diamond_evaluates_shared_once",
+                "include_diamond_forward_ref_is_retried",
+                "include_forward_ref_to_struct_in_later_include",
+                "include_forward_ref_to_const_in_later_include",
+                "include_forward_ref_to_entity_in_later_include",
+                "include_retried_script_keeps_scope_and_components"
             ]
         }, {
             "id": "Fuzzing",
