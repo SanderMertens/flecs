@@ -830,6 +830,123 @@ void Reactivity_template_non_exclusive_component_owner_fails(void) {
     ecs_fini(world);
 }
 
+void Reactivity_component_in_static_and_interpolated_named_children(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Panel {"
+            LINE "  pad {"
+            LINE "    Position: {10, 20}"
+            LINE "  }"
+            LINE "  for k in 0..2 {"
+            LINE "    \"shelf_{k}\" {"
+            LINE "      Position: {30, 40}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Panel instance()"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    test_assert(ecs_lookup(world, "instance.pad") != 0);
+    test_assert(ecs_lookup(world, "instance.shelf_0") != 0);
+    test_assert(ecs_lookup(world, "instance.shelf_1") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_two_interpolated_named_children(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Panel {"
+            LINE "  for k in 0..2 {"
+            LINE "    \"shelf_{k}\" {"
+            LINE "      Position: {10, 20}"
+            LINE "    }"
+            LINE "  }"
+            LINE "  for i in 0..2 {"
+            LINE "    \"chunk_{i}\" {"
+            LINE "      Position: {30, 40}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Panel instance()"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    test_assert(ecs_lookup(world, "instance.shelf_0") != 0);
+    test_assert(ecs_lookup(world, "instance.chunk_0") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_matching_interpolated_named_children_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Panel {"
+            LINE "  for k in 0..2 {"
+            LINE "    \"slot_{k}\" {"
+            LINE "      Position: {10, 20}"
+            LINE "    }"
+            LINE "  }"
+            LINE "  for i in 0..2 {"
+            LINE "    \"slot_{i}\" {"
+            LINE "      Position: {30, 40}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Panel instance()"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error != NULL);
+    test_assert(strstr(script_data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
 void Reactivity_partial_assignment_does_not_own_component(void) {
     ecs_world_t *world = ecs_init();
 

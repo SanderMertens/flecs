@@ -2441,6 +2441,9 @@ void Reactivity_mutually_exclusive_component_owner(void);
 void Reactivity_mutually_exclusive_component_owner_three_branches(void);
 void Reactivity_non_exclusive_component_owner_fails(void);
 void Reactivity_template_non_exclusive_component_owner_fails(void);
+void Reactivity_component_in_static_and_interpolated_named_children(void);
+void Reactivity_component_in_two_interpolated_named_children(void);
+void Reactivity_component_in_matching_interpolated_named_children_fails(void);
 void Reactivity_partial_assignment_does_not_own_component(void);
 void Reactivity_for_preserves_named_entities(void);
 void Reactivity_nested_for_clears_previous_entities(void);
@@ -12215,6 +12218,18 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_template_non_exclusive_component_owner_fails
     },
     {
+        "component_in_static_and_interpolated_named_children",
+        Reactivity_component_in_static_and_interpolated_named_children
+    },
+    {
+        "component_in_two_interpolated_named_children",
+        Reactivity_component_in_two_interpolated_named_children
+    },
+    {
+        "component_in_matching_interpolated_named_children_fails",
+        Reactivity_component_in_matching_interpolated_named_children_fails
+    },
+    {
         "partial_assignment_does_not_own_component",
         Reactivity_partial_assignment_does_not_own_component
     },
@@ -12916,7 +12931,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        111,
+        114,
         Reactivity_testcases
     },
     {
