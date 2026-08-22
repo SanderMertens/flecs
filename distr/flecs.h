@@ -16810,6 +16810,7 @@ typedef struct EcsScript {
     ecs_script_t *script;               /**< Parsed script object. */
     ecs_script_template_t *template_;   /**< Only set for template scripts. */
     ecs_vec_t observers;                /**< Observers for referenced components. */
+    ecs_vec_t dyn_observers;            /**< Observers for refs resolved at runtime. */
 } EcsScript;
 
 /** Script function context. */
