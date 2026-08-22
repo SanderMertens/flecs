@@ -2155,6 +2155,7 @@ void Include_include_forward_ref_to_struct_in_later_include(void);
 void Include_include_forward_ref_to_const_in_later_include(void);
 void Include_include_forward_ref_to_entity_in_later_include(void);
 void Include_include_retried_script_keeps_scope_and_components(void);
+void Include_include_error_reports_failing_file(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
@@ -2552,6 +2553,7 @@ void Reactivity_template_prop_change_keeps_for_entities(void);
 void Reactivity_template_i32_prop_change_keeps_for_entities(void);
 void Reactivity_template_prop_change_keeps_for_entities_in_child_scope(void);
 void Reactivity_template_for_range_change_keeps_named_recreates_anonymous(void);
+void Reactivity_for_keyed_template_instance_survives_collection_change(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -11099,6 +11101,10 @@ bake_test_case Include_testcases[] = {
     {
         "include_retried_script_keeps_scope_and_components",
         Include_include_retried_script_keeps_scope_and_components
+    },
+    {
+        "include_error_reports_failing_file",
+        Include_include_error_reports_failing_file
     }
 };
 
@@ -12672,6 +12678,10 @@ bake_test_case Reactivity_testcases[] = {
     {
         "template_for_range_change_keeps_named_recreates_anonymous",
         Reactivity_template_for_range_change_keeps_named_recreates_anonymous
+    },
+    {
+        "for_keyed_template_instance_survives_collection_change",
+        Reactivity_for_keyed_template_instance_survives_collection_change
     }
 };
 
@@ -12970,7 +12980,7 @@ static bake_test_suite suites[] = {
         "Include",
         NULL,
         NULL,
-        45,
+        46,
         Include_testcases
     },
     {
@@ -12991,7 +13001,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        118,
+        119,
         Reactivity_testcases
     },
     {
