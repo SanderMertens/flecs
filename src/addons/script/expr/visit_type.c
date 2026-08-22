@@ -1258,10 +1258,12 @@ error:
 
 static int flecs_expr_initializer_visit_type(
     ecs_script_t *script,
-    ecs_expr_initializer_t *node,
+    ecs_expr_node_t **node_ptr,
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
+    ecs_expr_initializer_t *node = (ecs_expr_initializer_t*)node_ptr[0];
+
     if (!cur || !cur->valid) {
         if (node->is_collection) {
             return flecs_expr_anonymous_collection_visit_type(
@@ -1384,6 +1386,19 @@ static int flecs_expr_initializer_visit_type(
         }
 
         if (elem->value->type != elem_type) {
+            if (count == 1 && !node->is_collection && !elem->member &&
+                !elem->key && !elem->operator && elem->value->type == type)
+            {
+                ecs_expr_node_t *value = elem->value;
+                elem->value = NULL;
+                if (ecs_meta_pop(cur)) {
+                    goto error;
+                }
+                flecs_expr_visit_free(script, (ecs_expr_node_t*)node);
+                *node_ptr = value;
+                return 0;
+            }
+
             ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
                 script, elem->value, elem_type);
             if (!cast) {
@@ -3128,9 +3143,7 @@ static int flecs_expr_visit_type_ex(
         }
         break;
     case EcsExprInitializer:
-        if (flecs_expr_initializer_visit_type(
-            script, (ecs_expr_initializer_t*)node, cur, desc))
-        {
+        if (flecs_expr_initializer_visit_type(script, node_ptr, cur, desc)) {
             goto error;
         }
         break;

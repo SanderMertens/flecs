@@ -5581,6 +5581,36 @@ void Eval_assign_var_to_typed_const_w_composite_type(void) {
     ecs_fini(world);
 }
 
+void Eval_assign_typed_var_to_typed_const_w_composite_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_pos_a: Position = {10, 20}"
+    LINE "const var_pos_b: Position = var_pos_a"
+    LINE "a { Position: {var_pos_b} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+
+    const Position *p = ecs_get(world, a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
 void Eval_assign_match_to_typed_const_w_composite_type(void) {
     ecs_world_t *world = ecs_init();
 
