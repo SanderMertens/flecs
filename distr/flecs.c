@@ -95243,6 +95243,15 @@ static int flecs_script_eval_component(
 
     ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, node->id.eval);
 
+    if (src == node->id.eval) {
+        const EcsScript *tmpl = ecs_get(v->world, node->id.eval, EcsScript);
+        if (tmpl && tmpl->template_) {
+            flecs_script_eval_error(v, node,
+                "cannot instantiate template '%s' on itself", node->id.first);
+            return -1;
+        }
+    }
+
     if (node->expr) {
         const ecs_type_info_t *ti = flecs_script_get_type_info(
             v, node, node->id.eval);
@@ -112604,6 +112613,12 @@ static int flecs_script_template_instantiate(
                 data = ECS_OFFSET(data, ti->size);
             }
             continue;
+        }
+        if (v->parent == template_entity) {
+            ecs_err("cannot instantiate template '%s' on itself",
+                ecs_get_name(world, template_entity));
+            result = -1;
+            break;
         }
 
         EcsScriptTemplateRoot *root = ecs_ensure_pair(

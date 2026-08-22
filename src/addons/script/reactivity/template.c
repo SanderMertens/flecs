@@ -538,6 +538,12 @@ static int flecs_script_template_instantiate(
             }
             continue;
         }
+        if (v->parent == template_entity) {
+            ecs_err("cannot instantiate template '%s' on itself",
+                ecs_get_name(world, template_entity));
+            result = -1;
+            break;
+        }
 
         EcsScriptTemplateRoot *root = ecs_ensure_pair(
             world, entities[i], EcsScriptTemplateRoot, template_entity);

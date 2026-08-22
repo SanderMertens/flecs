@@ -1031,7 +1031,9 @@
                 "injected_child_order_w_ordered_children",
                 "template_prop_default_from_const",
                 "template_root_component_w_string_mut",
-                "template_root_component_after_component_w_mut"
+                "template_root_component_after_component_w_mut",
+                "template_in_singleton_scope",
+                "template_instantiated_on_itself"
             ]
         }, {
             "id": "Mut",
