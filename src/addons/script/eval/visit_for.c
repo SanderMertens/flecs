@@ -155,6 +155,28 @@ void flecs_script_for_slot_purge(
     flecs_script_for_slot_delete_named(world, slot, false, visit);
 }
 
+void flecs_script_for_slot_mark(
+    ecs_script_for_slot_t *slot,
+    int32_t visit)
+{
+    ecs_map_iter_t it = ecs_map_iter(&slot->names.impl);
+    while (ecs_map_next(&it)) {
+        ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
+        ecs_script_for_entry_t *entries = ecs_vec_first(&bucket->values);
+        int32_t i, count = ecs_vec_count(&bucket->values);
+        for (i = 0; i < count; i ++) {
+            ecs_script_for_entry_t *entry = &entries[i];
+            entry->visit = visit;
+            ecs_script_for_component_t *components =
+                ecs_vec_first(&entry->components);
+            int32_t c, component_count = ecs_vec_count(&entry->components);
+            for (c = 0; c < component_count; c ++) {
+                components[c].visit = visit;
+            }
+        }
+    }
+}
+
 static ecs_script_for_entry_t* flecs_script_for_slot_find(
     ecs_world_t *world,
     ecs_script_for_slot_t *slot,

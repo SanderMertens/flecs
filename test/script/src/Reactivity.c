@@ -6913,3 +6913,235 @@ void Reactivity_dyn_ref_recovers_after_invalid_entity(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_template_prop_change_keeps_for_entities(void) {
+    typedef struct {
+        ecs_bool_t ok;
+        ecs_i32_t count;
+    } Props;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template List {"
+            LINE "  prop ok: bool = false"
+            LINE "  prop count: i32 = 2"
+            LINE "  for i in 0..count {"
+            LINE "    \"child_$i\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "List instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t list = ecs_lookup(world, "List");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t old_0 = ecs_lookup(world, "instance.child_0");
+    ecs_entity_t old_1 = ecs_lookup(world, "instance.child_1");
+    test_assert(list != 0);
+    test_assert(instance != 0);
+    test_assert(old_0 != 0);
+    test_assert(old_1 != 0);
+
+    const Props *ptr = ecs_get_id(world, instance, list);
+    test_assert(ptr != NULL);
+    test_bool(ptr->ok, false);
+    test_int(ptr->count, 2);
+
+    Props props = *ptr;
+    props.ok = true;
+    ecs_set_id(world, instance, list, sizeof(Props), &props);
+
+    test_assert(ecs_is_alive(world, old_0));
+    test_assert(ecs_is_alive(world, old_1));
+    test_uint(ecs_lookup(world, "instance.child_0"), old_0);
+    test_uint(ecs_lookup(world, "instance.child_1"), old_1);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_i32_prop_change_keeps_for_entities(void) {
+    typedef struct {
+        ecs_i32_t scale;
+        ecs_i32_t count;
+    } Props;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template List {"
+            LINE "  prop scale: i32 = 1"
+            LINE "  prop count: i32 = 2"
+            LINE "  for i in 0..count {"
+            LINE "    \"child_$i\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "List instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t list = ecs_lookup(world, "List");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t old_0 = ecs_lookup(world, "instance.child_0");
+    ecs_entity_t old_1 = ecs_lookup(world, "instance.child_1");
+    test_assert(list != 0);
+    test_assert(instance != 0);
+    test_assert(old_0 != 0);
+    test_assert(old_1 != 0);
+
+    const Props *ptr = ecs_get_id(world, instance, list);
+    test_assert(ptr != NULL);
+
+    Props props = *ptr;
+    props.scale = 5;
+    ecs_set_id(world, instance, list, sizeof(Props), &props);
+
+    test_assert(ecs_is_alive(world, old_0));
+    test_assert(ecs_is_alive(world, old_1));
+    test_uint(ecs_lookup(world, "instance.child_0"), old_0);
+    test_uint(ecs_lookup(world, "instance.child_1"), old_1);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_prop_change_keeps_for_entities_in_child_scope(void) {
+    typedef struct {
+        ecs_bool_t ok;
+        ecs_i32_t count;
+    } Props;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template List {"
+            LINE "  prop ok: bool = false"
+            LINE "  prop count: i32 = 2"
+            LINE "  holder {"
+            LINE "    for i in 0..count {"
+            LINE "      \"child_$i\" {}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "List instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t list = ecs_lookup(world, "List");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t holder = ecs_lookup(world, "instance.holder");
+    ecs_entity_t old_0 = ecs_lookup(world, "instance.holder.child_0");
+    ecs_entity_t old_1 = ecs_lookup(world, "instance.holder.child_1");
+    test_assert(list != 0);
+    test_assert(instance != 0);
+    test_assert(holder != 0);
+    test_assert(old_0 != 0);
+    test_assert(old_1 != 0);
+
+    const Props *ptr = ecs_get_id(world, instance, list);
+    test_assert(ptr != NULL);
+
+    Props props = *ptr;
+    props.ok = true;
+    ecs_set_id(world, instance, list, sizeof(Props), &props);
+
+    test_assert(ecs_is_alive(world, old_0));
+    test_assert(ecs_is_alive(world, old_1));
+    test_uint(ecs_lookup(world, "instance.holder.child_0"), old_0);
+    test_uint(ecs_lookup(world, "instance.holder.child_1"), old_1);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_for_range_change_keeps_named_recreates_anonymous(void) {
+    typedef struct {
+        ecs_bool_t ok;
+        ecs_i32_t count;
+    } Props;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template List {"
+            LINE "  prop ok: bool = false"
+            LINE "  prop count: i32 = 2"
+            LINE "  for i in 0..count {"
+            LINE "    _ { Position: {i, 0} }"
+            LINE "    \"named_$i\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "List instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t list = ecs_lookup(world, "List");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t named_0 = ecs_lookup(world, "instance.named_0");
+    ecs_entity_t named_1 = ecs_lookup(world, "instance.named_1");
+    test_assert(list != 0);
+    test_assert(instance != 0);
+    test_assert(named_0 != 0);
+    test_assert(named_1 != 0);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = position },
+            { .id = ecs_childof(instance) }
+        }
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t anon = 0;
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            if (!count) {
+                anon = it.entities[i];
+            }
+            count ++;
+        }
+    }
+    test_int(count, 2);
+    test_assert(anon != 0);
+
+    const Props *ptr = ecs_get_id(world, instance, list);
+    test_assert(ptr != NULL);
+
+    Props props = *ptr;
+    props.count = 3;
+    ecs_set_id(world, instance, list, sizeof(Props), &props);
+
+    test_uint(ecs_lookup(world, "instance.named_0"), named_0);
+    test_uint(ecs_lookup(world, "instance.named_1"), named_1);
+    test_assert(ecs_lookup(world, "instance.named_2") != 0);
+
+    test_assert(!ecs_is_alive(world, anon));
+
+    count = 0;
+    it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        count += it.count;
+    }
+    test_int(count, 3);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

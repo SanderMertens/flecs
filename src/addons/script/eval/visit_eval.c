@@ -1787,9 +1787,17 @@ static void flecs_script_mark_node(
         flecs_script_mark_scope(v, n->if_false);
         break;
     }
-    case EcsAstFor:
-        flecs_script_mark_scope(v, ((ecs_script_for_t*)node)->scope);
+    case EcsAstFor: {
+        ecs_script_for_t *n = (ecs_script_for_t*)node;
+        if (v->for_slots && n->for_slot >= 0 &&
+            n->for_slot < ecs_vec_count(v->for_slots))
+        {
+            flecs_script_for_slot_mark(ecs_vec_get_t(
+                v->for_slots, ecs_script_for_slot_t, n->for_slot), v->visit);
+        }
+        flecs_script_mark_scope(v, n->scope);
         break;
+    }
     case EcsAstTry: {
         ecs_script_try_t *n = (ecs_script_try_t*)node;
         flecs_script_mark_scope(v, n->try_scope);
