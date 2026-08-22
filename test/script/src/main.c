@@ -1813,6 +1813,7 @@ void Expr_has_question_space_bracket_not_has(void);
 void Expr_has_pair_w_enum_constant_target(void);
 void Expr_has_w_entity_var(void);
 void Expr_has_in_binary_expr(void);
+void Expr_member_of_large_struct_var_no_leak(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_binary_f32_var_add_f32_var(void);
@@ -9744,6 +9745,10 @@ bake_test_case Expr_testcases[] = {
     {
         "has_in_binary_expr",
         Expr_has_in_binary_expr
+    },
+    {
+        "member_of_large_struct_var_no_leak",
+        Expr_member_of_large_struct_var_no_leak
     }
 };
 
@@ -12851,7 +12856,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        376,
+        377,
         Expr_testcases,
         1,
         Expr_params
