@@ -11846,3 +11846,50 @@ void Expr_has_in_binary_expr(void) {
 
     ecs_fini(world);
 }
+
+void Expr_member_of_large_struct_var_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t large = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Large" }),
+        .members = {
+            { .name = "x", .type = ecs_id(ecs_i32_t) },
+            { .name = "pad", .type = ecs_id(ecs_i32_t), .count = 1024 }
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define_id(vars, "big", large);
+    ((int32_t*)var->value.ptr)[0] = 10;
+
+    ecs_expr_eval_desc_t desc = { 
+        .vars = vars, .disable_folding = disable_folding };
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "big.x", &v, &desc) != NULL);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 10);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    int64_t balance_before = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    int32_t i;
+    for (i = 0; i < 100; i ++) {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "big.x", &v, &desc) != NULL);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 10);
+        ecs_ptr_free(world, v.type, v.ptr);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}

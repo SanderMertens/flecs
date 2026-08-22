@@ -1840,7 +1840,8 @@
                 "has_question_space_bracket_not_has",
                 "has_pair_w_enum_constant_target",
                 "has_w_entity_var",
-                "has_in_binary_expr"
+                "has_in_binary_expr",
+                "member_of_large_struct_var_no_leak"
             ]
         }, {
             "id": "ExprAst",
