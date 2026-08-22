@@ -18,6 +18,7 @@ ecs_script_runtime_t* ecs_script_runtime_new(void)
     ecs_vec_init_t(&r->allocator, &r->with, ecs_value_t, 0);
     ecs_vec_init_t(&r->allocator, &r->with_type_info, ecs_type_info_t*, 0);
     ecs_vec_init_t(&r->allocator, &r->annot, ecs_script_annot_t*, 0);
+    ecs_vec_init_t(&r->allocator, &r->pending_resolves, ecs_entity_t, 0);
     return r;
 }
 
@@ -25,6 +26,7 @@ void ecs_script_runtime_free(
     ecs_script_runtime_t *r)
 {
     flecs_expr_stack_fini(&r->expr_stack);
+    ecs_vec_fini_t(&r->allocator, &r->pending_resolves, ecs_entity_t);
     ecs_vec_fini_t(&r->allocator, &r->annot, ecs_script_annot_t*);
     ecs_vec_fini_t(&r->allocator, &r->with, ecs_value_t);
     ecs_vec_fini_t(&r->allocator, &r->with_type_info, ecs_type_info_t*);

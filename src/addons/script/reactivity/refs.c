@@ -99,6 +99,77 @@ void flecs_script_ref_on_set(
     flecs_script_ref_eval(world, script, ctx->input);
 }
 
+static void flecs_script_resolve_run(
+    ecs_world_t *world,
+    ecs_entity_t script)
+{
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    if (!s || !s->code) {
+        return;
+    }
+
+    if (s->script && flecs_script_impl(s->script)->evaluating) {
+        return;
+    }
+
+    char *code = ecs_os_strdup(s->code);
+    ecs_script_runtime_t *runtime = ecs_script_runtime_new();
+    ecs_entity_t prev_scope = ecs_set_scope(world, 0);
+    flecs_script_update(world, script, 0, code, runtime);
+    ecs_set_scope(world, prev_scope);
+    ecs_script_runtime_free(runtime);
+    ecs_os_free(code);
+}
+
+static bool flecs_script_defer_resolve(
+    ecs_world_t *world,
+    ecs_entity_t script)
+{
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    if (!runtime->include_depth && !runtime->resolving) {
+        return false;
+    }
+
+    ecs_vec_t *pending = &runtime->pending_resolves;
+    ecs_entity_t *elems = ecs_vec_first(pending);
+    int32_t i, count = ecs_vec_count(pending);
+    for (i = 0; i < count; i ++) {
+        if (elems[i] == script) {
+            return true;
+        }
+    }
+
+    ecs_vec_append_t(&runtime->allocator, pending, ecs_entity_t)[0] = script;
+
+    return true;
+}
+
+void flecs_script_run_pending_resolves(
+    ecs_world_t *world)
+{
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    if (runtime->resolving) {
+        return;
+    }
+
+    runtime->resolving = true;
+
+    ecs_vec_t *pending = &runtime->pending_resolves;
+
+    while (ecs_vec_count(pending)) {
+        ecs_entity_t script = ecs_vec_first_t(pending, ecs_entity_t)[0];
+        ecs_vec_remove_t(pending, ecs_entity_t, 0);
+
+        if (!ecs_is_alive(world, script)) {
+            continue;
+        }
+
+        flecs_script_resolve_run(world, script);
+    }
+
+    runtime->resolving = false;
+}
+
 static void flecs_script_resolve_on_set(
     ecs_iter_t *it)
 {
@@ -132,6 +203,10 @@ static void flecs_script_resolve_on_set(
         return;
     }
 
+    if (flecs_script_defer_resolve(world, script)) {
+        return;
+    }
+
     if (ecs_is_deferred(it->world)) {
         EcsScriptUpdateEvent evt = { .script = script };
         ecs_enqueue(it->world, &(ecs_event_desc_t){
@@ -142,13 +217,7 @@ static void flecs_script_resolve_on_set(
         return;
     }
 
-    char *code = ecs_os_strdup(s->code);
-    ecs_script_runtime_t *runtime = ecs_script_runtime_new();
-    ecs_entity_t prev_scope = ecs_set_scope(world, 0);
-    flecs_script_update(world, script, 0, code, runtime);
-    ecs_set_scope(world, prev_scope);
-    ecs_script_runtime_free(runtime);
-    ecs_os_free(code);
+    flecs_script_resolve_run(world, script);
 }
 
 static void flecs_script_on_update_event(

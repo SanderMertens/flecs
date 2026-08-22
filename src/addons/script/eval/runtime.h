@@ -14,6 +14,7 @@ struct ecs_script_runtime_t {
     ecs_vec_t with;
     ecs_vec_t with_type_info;
     ecs_vec_t annot;
+    ecs_vec_t pending_resolves;
 
     /* Tag added to entities created by the currently evaluating managed
      * script. Carried on the world runtime so evaluation triggered from hooks
@@ -23,6 +24,7 @@ struct ecs_script_runtime_t {
     char *error_name;
     char *unresolved_errors;
     int32_t include_depth;
+    bool resolving;
     bool error;
 };
 
