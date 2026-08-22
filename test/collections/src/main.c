@@ -113,6 +113,11 @@ void Strbuf_append_flt_2_pow_63(void);
 void Allocator_setup(void);
 void Allocator_init_fini_empty(void);
 
+// Testsuite 'Vec'
+void Vec_setup(void);
+void Vec_set_size_large_elem_count(void);
+void Vec_set_size_elem_count_out_of_range(void);
+
 bake_test_case Map_testcases[] = {
     {
         "count",
@@ -497,6 +502,17 @@ bake_test_case Allocator_testcases[] = {
     }
 };
 
+bake_test_case Vec_testcases[] = {
+    {
+        "set_size_large_elem_count",
+        Vec_set_size_large_elem_count
+    },
+    {
+        "set_size_elem_count_out_of_range",
+        Vec_set_size_elem_count_out_of_range
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Map",
@@ -525,9 +541,16 @@ static bake_test_suite suites[] = {
         NULL,
         1,
         Allocator_testcases
+    },
+    {
+        "Vec",
+        Vec_setup,
+        NULL,
+        2,
+        Vec_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("collections", argc, argv, suites, 4);
+    return bake_test_run("collections", argc, argv, suites, 5);
 }

@@ -124,6 +124,13 @@
             "testcases": [
                 "init_fini_empty"
             ]
+        }, {
+            "id": "Vec",
+            "setup": true,
+            "testcases": [
+                "set_size_large_elem_count",
+                "set_size_elem_count_out_of_range"
+            ]
         }]
     }
 }

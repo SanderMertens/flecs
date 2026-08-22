@@ -34258,10 +34258,21 @@ void ecs_vec_set_size(
             elem_count = v->count;
         }
 
-        elem_count = flecs_next_pow_of_2(elem_count);
-        if (elem_count < 2) {
-            elem_count = 2;
+        int32_t max_count = size ? (INT32_MAX / size) : INT32_MAX;
+        ecs_assert(elem_count >= 0 && elem_count <= max_count,
+            ECS_OUT_OF_RANGE,
+            "vector with element size %d cannot hold %d elements",
+            size, elem_count);
+
+        int32_t new_count = flecs_next_pow_of_2(elem_count);
+        if (new_count < 2) {
+            new_count = 2;
         }
+        if (new_count < elem_count || new_count > max_count) {
+            new_count = max_count;
+        }
+        elem_count = new_count;
+
         if (elem_count != v->size) {
             if (allocator) {
 #ifdef FLECS_SANITIZE
