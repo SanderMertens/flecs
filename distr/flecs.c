@@ -100764,6 +100764,14 @@ static const char* flecs_script_parse_match_elems(
                 goto error;
             }
 
+            {
+                LookAhead_1('}', {
+                    pos = lookahead - 1;
+                    parser->significant_newline = old_significant_newline;
+                    EndOfRule;
+                })
+            }
+
             Parse(
                 case ';':
                 case '\n': {

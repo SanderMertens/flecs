@@ -11893,3 +11893,70 @@ void Expr_member_of_large_struct_var_no_leak(void) {
 
     ecs_fini(world);
 }
+
+void Expr_match_i32_1_i_case_one_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding };
+
+    const char *expr =
+    HEAD "match i { 1: 10 }";
+
+    ecs_script_t *s = ecs_expr_parse(world, expr, &desc);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 1;
+        ecs_value_t result = {0};
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(ecs_i64_t));
+        test_int(*(int64_t*)result.ptr, 10);
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Expr_match_i32_2_i_cases_one_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding };
+
+    const char *expr =
+    HEAD "match i { 1: 10; 2: 20 }";
+
+    ecs_script_t *s = ecs_expr_parse(world, expr, &desc);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 1;
+        ecs_value_t result = {0};
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(ecs_i64_t));
+        test_int(*(int64_t*)result.ptr, 10);
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+    {
+        *(int32_t*)var->value.ptr = 2;
+        ecs_value_t result = {0};
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(ecs_i64_t));
+        test_int(*(int64_t*)result.ptr, 20);
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
