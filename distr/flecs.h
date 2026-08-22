@@ -2585,6 +2585,15 @@ typedef struct ecs_stack_page_t {
     uint32_t id; /**< Page identifier. */
 } ecs_stack_page_t;
 
+/** Allocation that is too large for a page, owned by the stack allocator. */
+typedef struct ecs_stack_block_t {
+    struct ecs_stack_block_t *next; /**< Next block in the list. */
+    struct ecs_stack_block_t *prev; /**< Previous block in the list. */
+    struct ecs_stack_t *owner; /**< Stack allocator that owns this block. */
+    struct ecs_stack_page_t *page; /**< Page the stack was on when allocated. */
+    int16_t sp; /**< Stack pointer in that page when allocated. */
+} ecs_stack_block_t;
+
 /** Cursor that marks a position in the stack allocator for later restoration. */
 typedef struct ecs_stack_cursor_t {
     struct ecs_stack_cursor_t *prev; /**< Previous cursor in the stack. */
@@ -2601,6 +2610,7 @@ typedef struct ecs_stack_t {
     ecs_stack_page_t *first; /**< First page in the stack. */
     ecs_stack_page_t *tail_page; /**< Current tail page. */
     ecs_stack_cursor_t *tail_cursor; /**< Current tail cursor. */
+    ecs_stack_block_t *blocks; /**< Allocations too large for a page. */
 #ifdef FLECS_DEBUG
     int32_t cursor_count; /**< Number of active cursors (debug only). */
 #endif
@@ -2611,6 +2621,9 @@ typedef struct ecs_stack_t {
 
 /** Size of usable data within a stack page. */
 #define FLECS_STACK_PAGE_SIZE (1024 - FLECS_STACK_PAGE_OFFSET)
+
+/** Offset of usable data within an oversized block (aligned to 16 bytes). */
+#define FLECS_STACK_BLOCK_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_block_t), 16)
 
 /** Initialize a stack allocator.
  *
