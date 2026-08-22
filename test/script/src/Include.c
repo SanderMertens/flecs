@@ -1272,3 +1272,33 @@ void Include_include_retried_script_keeps_scope_and_components(void) {
 
     ecs_fini(world);
 }
+
+void Include_include_error_reports_failing_file(void) {
+    test_files_install();
+    test_file_add("good.flecs", "GoodEntity {}\n");
+    test_file_add("bad.flecs", "BadEntity {\n  ~~~\n}\n");
+    test_file_add("parent.flecs",
+        "include good.flecs\n"
+        "include bad.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    test_assert(ecs_lookup(world, "GoodEntity") != 0);
+    test_assert(ecs_lookup(world, "BadEntity") == 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+    test_assert(strstr(s->error, "bad.flecs") != NULL);
+    test_assert(strstr(s->error, "2:") != NULL);
+
+    ecs_fini(world);
+}

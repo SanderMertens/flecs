@@ -2195,7 +2195,8 @@
                 "include_forward_ref_to_struct_in_later_include",
                 "include_forward_ref_to_const_in_later_include",
                 "include_forward_ref_to_entity_in_later_include",
-                "include_retried_script_keeps_scope_and_components"
+                "include_retried_script_keeps_scope_and_components",
+                "include_error_reports_failing_file"
             ]
         }, {
             "id": "Fuzzing",
@@ -2598,7 +2599,8 @@
                 "template_prop_change_keeps_for_entities",
                 "template_i32_prop_change_keeps_for_entities",
                 "template_prop_change_keeps_for_entities_in_child_scope",
-                "template_for_range_change_keeps_named_recreates_anonymous"
+                "template_for_range_change_keeps_named_recreates_anonymous",
+                "for_keyed_template_instance_survives_collection_change"
             ]
         }, {
             "id": "ConstVar",

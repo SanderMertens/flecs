@@ -7145,3 +7145,68 @@ void Reactivity_template_for_range_change_keeps_named_recreates_anonymous(void) 
 
     ecs_fini(world);
 }
+
+void Reactivity_for_keyed_template_instance_survives_collection_change(void) {
+    typedef struct {
+        ecs_i32_t values[4];
+        ecs_i32_t count;
+    } Ids;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ids = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ids" }),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 4},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20}, 2});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Row {"
+            LINE "  prop v: i32 = 0"
+            LINE "  label { Position: {v, 0} }"
+            LINE "}"
+            LINE "for i in 0..source[Ids].count {"
+            LINE "  const id = source[Ids].values[i]"
+            LINE "  Row \"row_{id}\"(v: id)"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t row_10 = ecs_lookup(world, "row_10");
+    ecs_entity_t row_20 = ecs_lookup(world, "row_20");
+    ecs_entity_t label_10 = ecs_lookup(world, "row_10.label");
+    test_assert(row_10 != 0);
+    test_assert(row_20 != 0);
+    test_assert(label_10 != 0);
+
+    ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{5, 10, 20}, 3});
+
+    test_assert(ecs_is_alive(world, row_10));
+    test_assert(ecs_is_alive(world, row_20));
+    test_uint(ecs_lookup(world, "row_10"), row_10);
+    test_uint(ecs_lookup(world, "row_20"), row_20);
+    test_uint(ecs_lookup(world, "row_10.label"), label_10);
+
+    ecs_entity_t row_5 = ecs_lookup(world, "row_5");
+    test_assert(row_5 != 0);
+    test_assert(row_5 != row_10);
+    test_assert(row_5 != row_20);
+    test_assert(ecs_lookup(world, "row_5.label") != 0);
+
+    ecs_fini(world);
+}
