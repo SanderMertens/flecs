@@ -4929,3 +4929,84 @@ void Template_template_prop_default_from_const(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_root_component_w_string_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t text = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  mut label: string = \"a\""
+    LINE "  Text: {\"{label}\"}"
+    LINE "}"
+    LINE "Foo e()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, foo, "mut");
+    test_assert(mut != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_string_t *value = ecs_get_id(world, e, text);
+    test_assert(value != NULL);
+    test_str(*value, "a");
+
+    ecs_string_t label = "hello";
+    ecs_set_id(world, e, mut, sizeof(ecs_string_t), &label);
+
+    value = ecs_get_id(world, e, text);
+    test_assert(value != NULL);
+    test_str(*value, "hello");
+
+    ecs_fini(world);
+}
+
+void Template_template_root_component_after_component_w_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t text = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t text_2 = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text2" }),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  mut label: string = \"a\""
+    LINE "  Text: {\"x\"}"
+    LINE "  Text2: {label}"
+    LINE "}"
+    LINE "Foo e()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_string_t *value = ecs_get_id(world, e, text);
+    test_assert(value != NULL);
+    test_str(*value, "x");
+
+    value = ecs_get_id(world, e, text_2);
+    test_assert(value != NULL);
+    test_str(*value, "a");
+
+    ecs_fini(world);
+}
