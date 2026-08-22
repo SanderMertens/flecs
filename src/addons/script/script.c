@@ -31,6 +31,7 @@ static ECS_MOVE(EcsScript, dst, src, {
     dst->script = src->script;
     dst->template_ = src->template_;
     dst->observers = src->observers;
+    dst->dyn_observers = src->dyn_observers;
 
     src->filename = NULL;
     src->code = NULL;
@@ -38,6 +39,7 @@ static ECS_MOVE(EcsScript, dst, src, {
     src->script = NULL;
     src->template_ = NULL;
     ecs_os_zeromem(&src->observers);
+    ecs_os_zeromem(&src->dyn_observers);
 })
 
 static ECS_DTOR(EcsScript, ptr, {
@@ -51,6 +53,7 @@ static ECS_DTOR(EcsScript, ptr, {
     }
 
     flecs_script_ref_observers_fini(&ptr->observers);
+    flecs_script_ref_observers_fini(&ptr->dyn_observers);
 
     ecs_os_free(ptr->filename);
     ecs_os_free(ptr->code);
@@ -78,6 +81,7 @@ ecs_script_t* flecs_script_new(
     result->pub.world = world;
     result->refcount = 1;
     ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_t, 0);
+    ecs_vec_init_t(NULL, &result->run_refs, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &result->symbol_slots, ecs_script_symbol_slot_t, 0);
     ecs_vec_init_t(NULL, &result->component_slots,
         ecs_script_component_slot_t, 0);
@@ -204,6 +208,7 @@ void ecs_script_free(
         flecs_script_visit_free(script);
         flecs_expr_visit_free(script, impl->expr);
         ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_t);
+        ecs_vec_fini_t(NULL, &impl->run_refs, ecs_script_ref_t);
         ecs_vec_fini_t(NULL, &impl->symbol_slots, ecs_script_symbol_slot_t);
         ecs_vec_fini_t(NULL, &impl->component_slots,
             ecs_script_component_slot_t);
@@ -283,6 +288,7 @@ int flecs_script_update(
         ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
         if (!instance) {
             flecs_script_ref_observers_clear(world, &s->observers);
+            flecs_script_ref_observers_clear(world, &s->dyn_observers);
         }
         result = -1;
         goto done;
@@ -322,6 +328,9 @@ int flecs_script_update(
         if (!instance) {
             flecs_script_update_resolve_observers(world, e,
                 flecs_script_impl(parsed), &s->observers);
+            s = ecs_ensure(world, e, EcsScript);
+            flecs_script_ref_observers_clear(world, &s->dyn_observers);
+            s = ecs_ensure(world, e, EcsScript);
         }
         ecs_script_free(parsed);
         s->script = NULL;
@@ -345,6 +354,10 @@ int flecs_script_update(
             flecs_script_update_ref_observers(world, e, 0,
                 script_refs, &s->observers, flecs_script_ref_on_set);
             ecs_vec_clear(script_refs);
+            s = ecs_ensure(world, e, EcsScript);
+            flecs_script_update_dyn_observers(world, e,
+                flecs_script_impl(parsed), &s->dyn_observers, UINT64_MAX);
+            ecs_vec_clear(&flecs_script_impl(parsed)->run_refs);
         }
     }
 

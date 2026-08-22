@@ -1330,6 +1330,11 @@ static int flecs_expr_component_visit_eval(
         goto error;
     }
 
+    if (node->dyn_input && v && v->script_entity && !v->instance_template) {
+        flecs_script_record_dyn_ref(v->base.script, entity, component,
+            node->dyn_input, false);
+    }
+
     out->value.ptr = ECS_CONST_CAST(void*, 
         ecs_get_id(ctx->world, entity, component));
     out->owned = false;
@@ -1376,6 +1381,12 @@ static int flecs_expr_has_visit_eval(
     ecs_entity_t entity = *(ecs_entity_t*)left->value.ptr;
 
     if (entity && ecs_is_alive(ctx->world, entity)) {
+        if (node->dyn_input && v && v->script_entity &&
+            !v->instance_template)
+        {
+            flecs_script_record_dyn_ref(v->base.script, entity, node->id,
+                node->dyn_input, true);
+        }
         *(bool*)out->value.ptr = ecs_has_id(ctx->world, entity, node->id);
     } else {
         *(bool*)out->value.ptr = false;

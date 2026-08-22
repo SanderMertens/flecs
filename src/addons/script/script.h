@@ -161,6 +161,7 @@ struct ecs_script_impl_t {
     int32_t token_buffer_size;
     int32_t refcount;
     ecs_vec_t refs;
+    ecs_vec_t run_refs;
     ecs_vec_t symbol_slots;
     ecs_vec_t component_slots;
     ecs_vec_t scope_slots;

@@ -404,7 +404,7 @@ static int flecs_script_type_check_expr(
         function_refs = &v->base.script->refs;
     }
     if (refs && flecs_expr_visit_refs(
-        script, *expr_ptr, refs, dynamic_refs,
+        script, *expr_ptr, refs, dynamic_refs, NULL,
         function_refs ? function_refs : refs))
     {
         return -1;

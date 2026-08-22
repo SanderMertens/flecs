@@ -148,6 +148,7 @@ typedef struct ecs_expr_element_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *left;
     ecs_expr_node_t *index;
+    uint64_t dyn_input;
     ecs_size_t elem_size;
     int32_t elem_count;
 } ecs_expr_element_t;
@@ -164,6 +165,7 @@ typedef struct ecs_expr_has_t {
     ecs_expr_node_t *first;
     ecs_expr_node_t *second;
     ecs_id_t id;
+    uint64_t dyn_input;
 } ecs_expr_has_t;
 
 typedef struct ecs_expr_cast_t {

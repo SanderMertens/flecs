@@ -2570,7 +2570,19 @@
                 "component_presence_via_var_entity_is_reactive",
                 "component_ref_via_var_entity_in_if_is_reactive",
                 "for_keyed_does_not_reorder_children",
-                "base_component_w_conditional_override"
+                "base_component_w_conditional_override",
+                "two_dyn_refs_alternating_updates",
+                "three_dyn_refs_alternating_updates",
+                "static_ref_and_dyn_ref_in_same_script",
+                "dyn_ref_in_nested_scope_is_independent",
+                "dyn_ref_var_retargeting",
+                "dyn_ref_in_if_condition_flips_both_ways",
+                "dyn_ref_guarded_by_static_if",
+                "dyn_ref_in_for_rows_are_independent",
+                "dyn_ref_in_nested_for",
+                "dyn_ref_in_template_instance_and_script",
+                "dyn_ref_presence_two_independent_refs",
+                "dyn_ref_recovers_after_invalid_entity"
             ]
         }, {
             "id": "ConstVar",

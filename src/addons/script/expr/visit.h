@@ -40,6 +40,7 @@ int flecs_expr_visit_refs(
     ecs_expr_node_t *node,
     ecs_vec_t *refs,
     ecs_vec_t *dynamic_refs,
+    ecs_vec_t *dyn_nodes,
     ecs_vec_t *fn_refs);
 
 #endif
