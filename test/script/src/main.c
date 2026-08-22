@@ -1016,6 +1016,8 @@ void Template_multiple_templates_dont_leak_child_names(void);
 void Template_template_w_module_qualified_entity_ref(void);
 void Template_injected_child_order_w_ordered_children(void);
 void Template_template_prop_default_from_const(void);
+void Template_template_root_component_w_string_mut(void);
+void Template_template_root_component_after_component_w_mut(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -6592,6 +6594,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_prop_default_from_const",
         Template_template_prop_default_from_const
+    },
+    {
+        "template_root_component_w_string_mut",
+        Template_template_root_component_w_string_mut
+    },
+    {
+        "template_root_component_after_component_w_mut",
+        Template_template_root_component_after_component_w_mut
     }
 };
 
@@ -12861,7 +12871,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        112,
+        114,
         Template_testcases
     },
     {

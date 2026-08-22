@@ -1029,7 +1029,9 @@
                 "multiple_templates_dont_leak_child_names",
                 "template_w_module_qualified_entity_ref",
                 "injected_child_order_w_ordered_children",
-                "template_prop_default_from_const"
+                "template_prop_default_from_const",
+                "template_root_component_w_string_mut",
+                "template_root_component_after_component_w_mut"
             ]
         }, {
             "id": "Mut",

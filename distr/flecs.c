@@ -112465,6 +112465,20 @@ static void flecs_script_template_update_instance_observers(
     ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
 }
 
+static void* flecs_script_template_copy_data(
+    ecs_script_eval_visitor_t *v,
+    const ecs_type_info_t *ti,
+    void *data)
+{
+    if (!data || !ti || !ti->size) {
+        return data;
+    }
+
+    void *result = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
+    ecs_os_memcpy(result, data, ti->size);
+    return result;
+}
+
 static void flecs_script_template_instantiate_vars(
     ecs_script_vars_t *vars,
     const ecs_script_template_t *template,
@@ -112527,6 +112541,9 @@ static int flecs_script_template_instantiate(
     const EcsStruct *props_st = ecs_record_get(world, r, EcsStruct);
     const EcsStruct *muts_st = template->muts.type
         ? ecs_get(world, template->muts.type, EcsStruct)
+        : NULL;
+    const ecs_type_info_t *muts_ti = template->muts.type
+        ? ecs_get_type_info(world, template->muts.type)
         : NULL;
 
     ecs_script_runner_t runner;
@@ -112672,6 +112689,12 @@ static int flecs_script_template_instantiate(
                 ? ECS_CONST_CAST(void*,
                     ecs_get_id(world, instance, template->muts.type))
                 : NULL);
+
+        props_data = flecs_script_template_copy_data(
+            v, template->type_info, props_data);
+        muts_data = flecs_script_template_copy_data(
+            v, muts_ti, muts_data);
+
         flecs_script_template_instantiate_vars(vars, template,
             props_st, props_data, muts_st, muts_data);
 
