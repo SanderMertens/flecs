@@ -1816,6 +1816,8 @@ void Expr_has_pair_w_enum_constant_target(void);
 void Expr_has_w_entity_var(void);
 void Expr_has_in_binary_expr(void);
 void Expr_member_of_large_struct_var_no_leak(void);
+void Expr_match_i32_1_i_case_one_line(void);
+void Expr_match_i32_2_i_cases_one_line(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_binary_f32_var_add_f32_var(void);
@@ -9762,6 +9764,14 @@ bake_test_case Expr_testcases[] = {
     {
         "member_of_large_struct_var_no_leak",
         Expr_member_of_large_struct_var_no_leak
+    },
+    {
+        "match_i32_1_i_case_one_line",
+        Expr_match_i32_1_i_case_one_line
+    },
+    {
+        "match_i32_2_i_cases_one_line",
+        Expr_match_i32_2_i_cases_one_line
     }
 };
 
@@ -12881,7 +12891,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        377,
+        379,
         Expr_testcases,
         1,
         Expr_params

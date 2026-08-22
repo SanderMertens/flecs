@@ -483,6 +483,12 @@ e {
 }
 ```
 
+A case is terminated by a newline, a `;`, or the closing `}` of the match expression. This makes it possible to write a match expression on a single line, as long as every case that is not the last one is terminated with a `;`:
+
+```cpp
+const y = match x { 1: 10; 2: 20; 3: 30 }
+```
+
 The type of a match expression is derived from the case values. When the case statements in a match contain values of multiple types, the most expressive type is selected. The algorithm for determining the most expressive type is the same as the one used to determine the type for binary expressions. When a match expression contains values with conflicting types, script execution will fail.
 
 ### New expressions
