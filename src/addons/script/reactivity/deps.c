@@ -144,6 +144,19 @@ static ecs_script_entity_t* flecs_script_dep_entity_parent(
     return NULL;
 }
 
+static bool flecs_script_dep_names_may_match(
+    const char *first,
+    const char *second)
+{
+    while (*first && *second && *first == *second &&
+        *first != '{' && *second != '{')
+    {
+        first ++;
+        second ++;
+    }
+    return *first == '{' || *second == '{';
+}
+
 static bool flecs_script_dep_entity_may_match(
     const flecs_script_dep_ctx_t *ctx,
     ecs_script_entity_t *first,
@@ -161,8 +174,8 @@ static bool flecs_script_dep_entity_may_match(
     if (!first->name || !second->name) {
         return false;
     }
-    if (!first->name_expr && !second->name_expr &&
-        ecs_os_strcmp(first->name, second->name))
+    if (ecs_os_strcmp(first->name, second->name) &&
+        !flecs_script_dep_names_may_match(first->name, second->name))
     {
         return false;
     }
