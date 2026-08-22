@@ -1585,7 +1585,7 @@ int flecs_script_eval_function(
         ecs_assert(var->expr != NULL && var->expr->type_info != NULL,
             ECS_INTERNAL_ERROR, NULL);
         if (flecs_expr_visit_refs(&v->base.script->pub,
-            var->expr, &fn_refs, NULL, &fn_refs))
+            var->expr, &fn_refs, NULL, NULL, &fn_refs))
         {
             ecs_vec_fini_t(NULL, &fn_refs, ecs_script_ref_t);
             return -1;
@@ -1593,7 +1593,7 @@ int flecs_script_eval_function(
     }
     if (node->return_expr && flecs_expr_visit_refs(
         &v->base.script->pub, node->return_expr,
-        &fn_refs, NULL, &fn_refs))
+        &fn_refs, NULL, NULL, &fn_refs))
     {
         ecs_vec_fini_t(NULL, &fn_refs, ecs_script_ref_t);
         return -1;

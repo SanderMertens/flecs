@@ -2524,6 +2524,18 @@ void Reactivity_component_presence_via_var_entity_is_reactive(void);
 void Reactivity_component_ref_via_var_entity_in_if_is_reactive(void);
 void Reactivity_for_keyed_does_not_reorder_children(void);
 void Reactivity_base_component_w_conditional_override(void);
+void Reactivity_two_dyn_refs_alternating_updates(void);
+void Reactivity_three_dyn_refs_alternating_updates(void);
+void Reactivity_static_ref_and_dyn_ref_in_same_script(void);
+void Reactivity_dyn_ref_in_nested_scope_is_independent(void);
+void Reactivity_dyn_ref_var_retargeting(void);
+void Reactivity_dyn_ref_in_if_condition_flips_both_ways(void);
+void Reactivity_dyn_ref_guarded_by_static_if(void);
+void Reactivity_dyn_ref_in_for_rows_are_independent(void);
+void Reactivity_dyn_ref_in_nested_for(void);
+void Reactivity_dyn_ref_in_template_instance_and_script(void);
+void Reactivity_dyn_ref_presence_two_independent_refs(void);
+void Reactivity_dyn_ref_recovers_after_invalid_entity(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -12532,6 +12544,54 @@ bake_test_case Reactivity_testcases[] = {
     {
         "base_component_w_conditional_override",
         Reactivity_base_component_w_conditional_override
+    },
+    {
+        "two_dyn_refs_alternating_updates",
+        Reactivity_two_dyn_refs_alternating_updates
+    },
+    {
+        "three_dyn_refs_alternating_updates",
+        Reactivity_three_dyn_refs_alternating_updates
+    },
+    {
+        "static_ref_and_dyn_ref_in_same_script",
+        Reactivity_static_ref_and_dyn_ref_in_same_script
+    },
+    {
+        "dyn_ref_in_nested_scope_is_independent",
+        Reactivity_dyn_ref_in_nested_scope_is_independent
+    },
+    {
+        "dyn_ref_var_retargeting",
+        Reactivity_dyn_ref_var_retargeting
+    },
+    {
+        "dyn_ref_in_if_condition_flips_both_ways",
+        Reactivity_dyn_ref_in_if_condition_flips_both_ways
+    },
+    {
+        "dyn_ref_guarded_by_static_if",
+        Reactivity_dyn_ref_guarded_by_static_if
+    },
+    {
+        "dyn_ref_in_for_rows_are_independent",
+        Reactivity_dyn_ref_in_for_rows_are_independent
+    },
+    {
+        "dyn_ref_in_nested_for",
+        Reactivity_dyn_ref_in_nested_for
+    },
+    {
+        "dyn_ref_in_template_instance_and_script",
+        Reactivity_dyn_ref_in_template_instance_and_script
+    },
+    {
+        "dyn_ref_presence_two_independent_refs",
+        Reactivity_dyn_ref_presence_two_independent_refs
+    },
+    {
+        "dyn_ref_recovers_after_invalid_entity",
+        Reactivity_dyn_ref_recovers_after_invalid_entity
     }
 };
 
@@ -12851,7 +12911,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        99,
+        111,
         Reactivity_testcases
     },
     {

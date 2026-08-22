@@ -537,19 +537,29 @@ static int flecs_script_dep_expr(
         return 0;
     }
 
+    bool track_dyn_nodes = ctx->v->script_entity && !ctx->template;
+
     ecs_vec_t refs = {0};
     ecs_vec_t dynamic_refs = {0};
+    ecs_vec_t dyn_nodes = {0};
     ecs_vec_init_t(NULL, &refs, ecs_script_ref_t, 0);
     if (ctx->dynamic_refs) {
         ecs_vec_init_t(NULL, &dynamic_refs, ecs_script_ref_t, 0);
     }
+    if (track_dyn_nodes) {
+        ecs_vec_init_t(NULL, &dyn_nodes, ecs_expr_node_t*, 0);
+    }
 
     if (flecs_expr_visit_refs(&ctx->v->base.script->pub, node,
-        &refs, ctx->dynamic_refs ? &dynamic_refs : NULL, &refs))
+        &refs, ctx->dynamic_refs ? &dynamic_refs : NULL,
+        track_dyn_nodes ? &dyn_nodes : NULL, &refs))
     {
         ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
         if (ctx->dynamic_refs) {
             ecs_vec_fini_t(NULL, &dynamic_refs, ecs_script_ref_t);
+        }
+        if (track_dyn_nodes) {
+            ecs_vec_fini_t(NULL, &dyn_nodes, ecs_expr_node_t*);
         }
         return -1;
     }
@@ -560,11 +570,7 @@ static int flecs_script_dep_expr(
         if (flecs_script_dep_ref_input(
             ctx, ctx->refs, &array[i], input))
         {
-            ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
-            if (ctx->dynamic_refs) {
-                ecs_vec_fini_t(NULL, &dynamic_refs, ecs_script_ref_t);
-            }
-            return -1;
+            goto error;
         }
     }
 
@@ -574,17 +580,42 @@ static int flecs_script_dep_expr(
         if (flecs_script_dep_ref_input(
             ctx, ctx->dynamic_refs, &array[i], input))
         {
-            ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
-            ecs_vec_fini_t(NULL, &dynamic_refs, ecs_script_ref_t);
-            return -1;
+            goto error;
         }
+    }
+
+    ecs_expr_node_t **nodes = ecs_vec_first(&dyn_nodes);
+    count = ecs_vec_count(&dyn_nodes);
+    for (i = 0; i < count; i ++) {
+        uint64_t dyn_input = 0;
+        if (flecs_script_dep_input_new(ctx, &dyn_input)) {
+            goto error;
+        }
+        if (nodes[i]->kind == EcsExprHas) {
+            ((ecs_expr_has_t*)nodes[i])->dyn_input = dyn_input;
+        } else {
+            ((ecs_expr_element_t*)nodes[i])->dyn_input = dyn_input;
+        }
+        *input |= dyn_input;
     }
 
     ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
     if (ctx->dynamic_refs) {
         ecs_vec_fini_t(NULL, &dynamic_refs, ecs_script_ref_t);
     }
+    if (track_dyn_nodes) {
+        ecs_vec_fini_t(NULL, &dyn_nodes, ecs_expr_node_t*);
+    }
     return flecs_script_dep_expr_vars(ctx, node, input);
+error:
+    ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
+    if (ctx->dynamic_refs) {
+        ecs_vec_fini_t(NULL, &dynamic_refs, ecs_script_ref_t);
+    }
+    if (track_dyn_nodes) {
+        ecs_vec_fini_t(NULL, &dyn_nodes, ecs_expr_node_t*);
+    }
+    return -1;
 }
 
 static int flecs_script_dep_id(

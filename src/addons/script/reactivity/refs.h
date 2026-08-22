@@ -48,6 +48,20 @@ void flecs_script_update_ref_observers(
     ecs_vec_t *observers,
     ecs_iter_action_t callback);
 
+void flecs_script_record_dyn_ref(
+    ecs_script_impl_t *impl,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    uint64_t input,
+    bool is_has);
+
+void flecs_script_update_dyn_observers(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_script_impl_t *impl,
+    ecs_vec_t *observers,
+    uint64_t input);
+
 void flecs_script_update_resolve_observers(
     ecs_world_t *world,
     ecs_entity_t script,
