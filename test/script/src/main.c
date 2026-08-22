@@ -2548,6 +2548,10 @@ void Reactivity_dyn_ref_in_nested_for(void);
 void Reactivity_dyn_ref_in_template_instance_and_script(void);
 void Reactivity_dyn_ref_presence_two_independent_refs(void);
 void Reactivity_dyn_ref_recovers_after_invalid_entity(void);
+void Reactivity_template_prop_change_keeps_for_entities(void);
+void Reactivity_template_i32_prop_change_keeps_for_entities(void);
+void Reactivity_template_prop_change_keeps_for_entities_in_child_scope(void);
+void Reactivity_template_for_range_change_keeps_named_recreates_anonymous(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -12652,6 +12656,22 @@ bake_test_case Reactivity_testcases[] = {
     {
         "dyn_ref_recovers_after_invalid_entity",
         Reactivity_dyn_ref_recovers_after_invalid_entity
+    },
+    {
+        "template_prop_change_keeps_for_entities",
+        Reactivity_template_prop_change_keeps_for_entities
+    },
+    {
+        "template_i32_prop_change_keeps_for_entities",
+        Reactivity_template_i32_prop_change_keeps_for_entities
+    },
+    {
+        "template_prop_change_keeps_for_entities_in_child_scope",
+        Reactivity_template_prop_change_keeps_for_entities_in_child_scope
+    },
+    {
+        "template_for_range_change_keeps_named_recreates_anonymous",
+        Reactivity_template_for_range_change_keeps_named_recreates_anonymous
     }
 };
 
@@ -12971,7 +12991,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        114,
+        118,
         Reactivity_testcases
     },
     {

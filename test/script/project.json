@@ -2594,7 +2594,11 @@
                 "dyn_ref_in_nested_for",
                 "dyn_ref_in_template_instance_and_script",
                 "dyn_ref_presence_two_independent_refs",
-                "dyn_ref_recovers_after_invalid_entity"
+                "dyn_ref_recovers_after_invalid_entity",
+                "template_prop_change_keeps_for_entities",
+                "template_i32_prop_change_keeps_for_entities",
+                "template_prop_change_keeps_for_entities_in_child_scope",
+                "template_for_range_change_keeps_named_recreates_anonymous"
             ]
         }, {
             "id": "ConstVar",

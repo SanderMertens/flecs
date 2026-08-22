@@ -135,6 +135,10 @@ void flecs_script_for_slot_purge(
     ecs_script_for_slot_t *slot,
     int32_t visit);
 
+void flecs_script_for_slot_mark(
+    ecs_script_for_slot_t *slot,
+    int32_t visit);
+
 void flecs_script_for_slot_track(
     ecs_world_t *world,
     ecs_script_for_slot_t *slot,

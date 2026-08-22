@@ -49139,6 +49139,10 @@ void flecs_script_for_slot_purge(
     ecs_script_for_slot_t *slot,
     int32_t visit);
 
+void flecs_script_for_slot_mark(
+    ecs_script_for_slot_t *slot,
+    int32_t visit);
+
 void flecs_script_for_slot_track(
     ecs_world_t *world,
     ecs_script_for_slot_t *slot,
@@ -95976,9 +95980,17 @@ static void flecs_script_mark_node(
         flecs_script_mark_scope(v, n->if_false);
         break;
     }
-    case EcsAstFor:
-        flecs_script_mark_scope(v, ((ecs_script_for_t*)node)->scope);
+    case EcsAstFor: {
+        ecs_script_for_t *n = (ecs_script_for_t*)node;
+        if (v->for_slots && n->for_slot >= 0 &&
+            n->for_slot < ecs_vec_count(v->for_slots))
+        {
+            flecs_script_for_slot_mark(ecs_vec_get_t(
+                v->for_slots, ecs_script_for_slot_t, n->for_slot), v->visit);
+        }
+        flecs_script_mark_scope(v, n->scope);
         break;
+    }
     case EcsAstTry: {
         ecs_script_try_t *n = (ecs_script_try_t*)node;
         flecs_script_mark_scope(v, n->try_scope);
@@ -97073,6 +97085,28 @@ void flecs_script_for_slot_purge(
     int32_t visit)
 {
     flecs_script_for_slot_delete_named(world, slot, false, visit);
+}
+
+void flecs_script_for_slot_mark(
+    ecs_script_for_slot_t *slot,
+    int32_t visit)
+{
+    ecs_map_iter_t it = ecs_map_iter(&slot->names.impl);
+    while (ecs_map_next(&it)) {
+        ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
+        ecs_script_for_entry_t *entries = ecs_vec_first(&bucket->values);
+        int32_t i, count = ecs_vec_count(&bucket->values);
+        for (i = 0; i < count; i ++) {
+            ecs_script_for_entry_t *entry = &entries[i];
+            entry->visit = visit;
+            ecs_script_for_component_t *components =
+                ecs_vec_first(&entry->components);
+            int32_t c, component_count = ecs_vec_count(&entry->components);
+            for (c = 0; c < component_count; c ++) {
+                components[c].visit = visit;
+            }
+        }
+    }
 }
 
 static ecs_script_for_entry_t* flecs_script_for_slot_find(
