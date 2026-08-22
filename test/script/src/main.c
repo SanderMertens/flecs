@@ -207,6 +207,7 @@ void Eval_const_w_type(void);
 void Eval_assign_narrowing_f64_expr_to_typed_const_w_i32(void);
 void Eval_typed_const_w_composite_type(void);
 void Eval_assign_var_to_typed_const_w_composite_type(void);
+void Eval_assign_typed_var_to_typed_const_w_composite_type(void);
 void Eval_assign_match_to_typed_const_w_composite_type(void);
 void Eval_assign_match_w_var_cases_to_typed_const_w_composite_type(void);
 void Eval_assign_match_to_typed_const_w_bool(void);
@@ -1014,6 +1015,7 @@ void Template_annotation_in_if_in_template(void);
 void Template_multiple_templates_dont_leak_child_names(void);
 void Template_template_w_module_qualified_entity_ref(void);
 void Template_injected_child_order_w_ordered_children(void);
+void Template_template_prop_default_from_const(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -3377,6 +3379,10 @@ bake_test_case Eval_testcases[] = {
     {
         "assign_var_to_typed_const_w_composite_type",
         Eval_assign_var_to_typed_const_w_composite_type
+    },
+    {
+        "assign_typed_var_to_typed_const_w_composite_type",
+        Eval_assign_typed_var_to_typed_const_w_composite_type
     },
     {
         "assign_match_to_typed_const_w_composite_type",
@@ -6580,6 +6586,10 @@ bake_test_case Template_testcases[] = {
     {
         "injected_child_order_w_ordered_children",
         Template_injected_child_order_w_ordered_children
+    },
+    {
+        "template_prop_default_from_const",
+        Template_template_prop_default_from_const
     }
 };
 
@@ -12806,7 +12816,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        622,
+        623,
         Eval_testcases
     },
     {
@@ -12841,7 +12851,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        111,
+        112,
         Template_testcases
     },
     {

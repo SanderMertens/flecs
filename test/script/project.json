@@ -211,6 +211,7 @@
                 "assign_narrowing_f64_expr_to_typed_const_w_i32",
                 "typed_const_w_composite_type",
                 "assign_var_to_typed_const_w_composite_type",
+                "assign_typed_var_to_typed_const_w_composite_type",
                 "assign_match_to_typed_const_w_composite_type",
                 "assign_match_w_var_cases_to_typed_const_w_composite_type",
                 "assign_match_to_typed_const_w_bool",
@@ -1027,7 +1028,8 @@
                 "annotation_in_if_in_template",
                 "multiple_templates_dont_leak_child_names",
                 "template_w_module_qualified_entity_ref",
-                "injected_child_order_w_ordered_children"
+                "injected_child_order_w_ordered_children",
+                "template_prop_default_from_const"
             ]
         }, {
             "id": "Mut",

@@ -4884,3 +4884,48 @@ void Template_injected_child_order_w_ordered_children(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_prop_default_from_const(void) {
+    typedef struct {
+        ecs_u8_t r;
+        ecs_u8_t g;
+        ecs_u8_t b;
+        ecs_u8_t a;
+    } Rgba;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Rgba" }),
+        .members = {
+            {"r", ecs_id(ecs_u8_t)},
+            {"g", ecs_id(ecs_u8_t)},
+            {"b", ecs_id(ecs_u8_t)},
+            {"a", ecs_id(ecs_u8_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const White: Rgba = {255, 255, 255, 255}"
+    LINE "template Panel {"
+    LINE "  prop color: Rgba = White"
+    LINE "}"
+    LINE "Panel inst()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "Panel");
+    test_assert(panel != 0);
+
+    ecs_entity_t inst = ecs_lookup(world, "inst");
+    test_assert(inst != 0);
+
+    const Rgba *color = ecs_get_id(world, inst, panel);
+    test_assert(color != NULL);
+    test_int(color->r, 255);
+    test_int(color->g, 255);
+    test_int(color->b, 255);
+    test_int(color->a, 255);
+
+    ecs_fini(world);
+}
