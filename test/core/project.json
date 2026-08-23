@@ -985,7 +985,9 @@
                 "convert_childof_to_parent_nested",
                 "convert_childof_to_parent_w_named_children",
                 "remove_childof_after_convert_sibling",
-                "up_not_observer_defer_remove_add_batched"
+                "up_not_observer_defer_remove_add_batched",
+                "multi_term_up_observer_visits_all_siblings",
+                "multi_term_up_observer_propagates_to_subtree"
             ]
         }, {
             "id": "Hierarchies",

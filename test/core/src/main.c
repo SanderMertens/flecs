@@ -954,6 +954,8 @@ void NonFragmentingChildOf_convert_childof_to_parent_nested(void);
 void NonFragmentingChildOf_convert_childof_to_parent_w_named_children(void);
 void NonFragmentingChildOf_remove_childof_after_convert_sibling(void);
 void NonFragmentingChildOf_up_not_observer_defer_remove_add_batched(void);
+void NonFragmentingChildOf_multi_term_up_observer_visits_all_siblings(void);
+void NonFragmentingChildOf_multi_term_up_observer_propagates_to_subtree(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -7112,6 +7114,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "up_not_observer_defer_remove_add_batched",
         NonFragmentingChildOf_up_not_observer_defer_remove_add_batched
+    },
+    {
+        "multi_term_up_observer_visits_all_siblings",
+        NonFragmentingChildOf_multi_term_up_observer_visits_all_siblings
+    },
+    {
+        "multi_term_up_observer_propagates_to_subtree",
+        NonFragmentingChildOf_multi_term_up_observer_propagates_to_subtree
     }
 };
 
@@ -16765,7 +16775,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        272,
+        274,
         NonFragmentingChildOf_testcases
     },
     {

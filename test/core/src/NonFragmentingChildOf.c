@@ -7330,3 +7330,120 @@ void NonFragmentingChildOf_up_not_observer_defer_remove_add_batched(void) {
 
     ecs_fini(world);
 }
+
+typedef struct MultiTermUpCtx {
+    int32_t count;
+    ecs_entity_t entities[16];
+} MultiTermUpCtx;
+
+static MultiTermUpCtx multi_term_up_ctx;
+
+static void MultiTermUpObserver(ecs_iter_t *it) {
+    for (int32_t i = 0; i < it->count; i ++) {
+        if (multi_term_up_ctx.count < 16) {
+            multi_term_up_ctx.entities[multi_term_up_ctx.count] =
+                it->entities[i];
+        }
+        multi_term_up_ctx.count ++;
+    }
+}
+
+static bool multi_term_up_visited(ecs_entity_t e) {
+    for (int32_t i = 0; i < multi_term_up_ctx.count && i < 16; i ++) {
+        if (multi_term_up_ctx.entities[i] == e) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void NonFragmentingChildOf_multi_term_up_observer_visits_all_siblings(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Foo);
+
+    ecs_os_zeromem(&multi_term_up_ctx);
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = Tag, .src.id = EcsUp, .trav = EcsChildOf },
+            { .id = Foo }
+        },
+        .events = { EcsOnAdd },
+        .callback = MultiTermUpObserver
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child_1 = ecs_insert(world, ecs_value(EcsParent, {parent}));
+    ecs_entity_t child_2 = ecs_insert(world, ecs_value(EcsParent, {parent}));
+    ecs_entity_t child_3 = ecs_insert(world, ecs_value(EcsParent, {parent}));
+    ecs_add(world, child_1, Foo);
+    ecs_add(world, child_2, Foo);
+    ecs_add(world, child_3, Foo);
+
+    ecs_add(world, parent, Tag);
+
+    test_int(multi_term_up_ctx.count, 3);
+    test_assert(multi_term_up_visited(child_1));
+    test_assert(multi_term_up_visited(child_2));
+    test_assert(multi_term_up_visited(child_3));
+
+    ecs_fini(world);
+}
+
+static void MultiTermUpPropagateObserver(ecs_iter_t *it) {
+    ecs_id_t tag = *(ecs_id_t*)it->ctx;
+
+    for (int32_t i = 0; i < it->count; i ++) {
+        if (!ecs_has_id(it->world, it->entities[i], tag)) {
+            ecs_add_id(it->world, it->entities[i], tag);
+        }
+    }
+}
+
+void NonFragmentingChildOf_multi_term_up_observer_propagates_to_subtree(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Foo);
+
+    ecs_id_t tag = Tag;
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = Tag, .src.id = EcsUp, .trav = EcsChildOf },
+            { .id = Tag, .oper = EcsNot }
+        },
+        .events = { EcsOnAdd },
+        .callback = MultiTermUpPropagateObserver,
+        .ctx = &tag
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t children[3], grandchildren[6];
+
+    for (int32_t c = 0; c < 3; c ++) {
+        children[c] = ecs_insert(world, ecs_value(EcsParent, {parent}));
+        ecs_add(world, children[c], Foo);
+
+        for (int32_t g = 0; g < 2; g ++) {
+            ecs_entity_t grandchild = ecs_insert(
+                world, ecs_value(EcsParent, {children[c]}));
+            ecs_add(world, grandchild, Foo);
+            grandchildren[c * 2 + g] = grandchild;
+        }
+    }
+
+    ecs_add(world, parent, Tag);
+
+    for (int32_t c = 0; c < 3; c ++) {
+        test_assert(ecs_has(world, children[c], Tag));
+
+        for (int32_t g = 0; g < 2; g ++) {
+            test_assert(ecs_has(world, grandchildren[c * 2 + g], Tag));
+        }
+    }
+
+    ecs_fini(world);
+}
