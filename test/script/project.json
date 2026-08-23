@@ -679,6 +679,7 @@
                 "map_elem",
                 "map_key_elem",
                 "map_key_index_elem",
+                "map_key_index_elem_w_var_in_body",
                 "map_single_entry",
                 "map_entity_key",
                 "map_u8_key",

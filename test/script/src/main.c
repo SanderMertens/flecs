@@ -673,6 +673,7 @@ void Collection_vector_too_many_vars(void);
 void Collection_map_elem(void);
 void Collection_map_key_elem(void);
 void Collection_map_key_index_elem(void);
+void Collection_map_key_index_elem_w_var_in_body(void);
 void Collection_map_single_entry(void);
 void Collection_map_entity_key(void);
 void Collection_map_u8_key(void);
@@ -5254,6 +5255,10 @@ bake_test_case Collection_testcases[] = {
     {
         "map_key_index_elem",
         Collection_map_key_index_elem
+    },
+    {
+        "map_key_index_elem_w_var_in_body",
+        Collection_map_key_index_elem_w_var_in_body
     },
     {
         "map_single_entry",
@@ -12903,7 +12908,7 @@ static bake_test_suite suites[] = {
         "Collection",
         NULL,
         NULL,
-        100,
+        101,
         Collection_testcases
     },
     {
