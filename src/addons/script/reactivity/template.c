@@ -436,6 +436,7 @@ static void flecs_script_template_instantiate_vars(
         ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
         var->value.type = member->type;
         var->value.ptr = ECS_OFFSET(data, member->offset);
+        var->owned = false;
     }
 }
 
@@ -617,6 +618,7 @@ static int flecs_script_template_instantiate(
             vars, "this");
         this_var->value.type = ecs_id(ecs_entity_t);
         this_var->value.ptr = &instance;
+        this_var->owned = false;
 
         void *props_data = component == template->props.type
             ? data
@@ -1086,6 +1088,7 @@ int flecs_script_template_eval_var(
     var->value.ptr = flecs_stack_calloc(
         &v->r->stack, ti->size, ti->alignment);
     var->type_info = ti;
+    var->owned = true;
     node->sp = var->sp;
     flecs_type_info_ctor(var->value.ptr, 1, ti);
 
@@ -1099,6 +1102,7 @@ int flecs_script_template_eval_var(
         &v->base.script->allocator, ti->size, ti->name);
     value->value.type = type;
     value->type_info = ti;
+    value->owned = false; /* Not stack storage, freed with the template */
     ecs_ptr_copy_w_type_info(
         v->world, ti, value->value.ptr, var->value.ptr);
 

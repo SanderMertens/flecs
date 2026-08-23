@@ -72526,15 +72526,17 @@ ecs_script_vars_t* ecs_script_vars_pop(
         ecs_script_var_t *var_array = ecs_vec_first(&vars->vars);
         for (i = 0; i < count; i ++) {
             ecs_script_var_t *var = &var_array[i];
-            if (!var->value.ptr) {
+            if (!var->value.ptr || !var->owned) {
                 continue;
             }
 
-            if (!var->type_info || !var->type_info->hooks.dtor) {
-                continue;
+            ecs_assert(var->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            if (var->type_info->hooks.dtor) {
+                flecs_type_info_dtor(var->value.ptr, 1, var->type_info);
             }
 
-            flecs_type_info_dtor(var->value.ptr, 1, var->type_info);
+            flecs_stack_free(var->value.ptr, var->type_info->size);
         }
 
         flecs_name_index_fini(&vars->var_index);
@@ -72567,6 +72569,7 @@ ecs_script_var_t* ecs_script_vars_declare(
     var->type_info = NULL;
     var->sp = ecs_vec_count(&vars->vars) + vars->sp - 1;
     var->is_const = false;
+    var->owned = false;
 
     if (name) {
         flecs_name_index_ensure(&vars->var_index,
@@ -72607,6 +72610,7 @@ ecs_script_var_t* ecs_script_vars_define_id(
     result->value.type = type;
     result->value.ptr = flecs_stack_alloc(vars->stack, ti->size, ti->alignment);
     result->type_info = ti;
+    result->owned = true;
 
     flecs_type_info_ctor(result->value.ptr, 1, ti);
 
@@ -72709,6 +72713,7 @@ void ecs_script_vars_from_iter(
 
         /* Safe, variable value will never be written */
         var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, &it->entities[offset]);
+        var->owned = false;
     }
 
     /* Set variables for fields */
@@ -72739,6 +72744,7 @@ void ecs_script_vars_from_iter(
                     ECS_INVALID_PARAMETER, NULL);
             }
             var->value.ptr = ptr;
+            var->owned = false;
         }
     }
 
@@ -72777,6 +72783,7 @@ void ecs_script_vars_from_iter(
 
                 /* Safe, variable value will never be written */
                 var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, e_ptr);
+                var->owned = false;
             }
         }
     }
@@ -93456,6 +93463,7 @@ static int flecs_script_await_assign_const(
     var->value.ptr = flecs_stack_alloc(&v->r->stack,
         ti->size, ti->alignment);
     var->type_info = ti;
+    var->owned = true;
     flecs_type_info_ctor(var->value.ptr, 1, ti);
     ecs_ptr_copy(v->world, value->type, var->value.ptr, value->ptr);
     return 0;
@@ -93686,6 +93694,7 @@ ecs_script_task_t* ecs_script_task_new(
         *(ecs_entity_t*)var->value.ptr = result->entity;
         var->type_info = ecs_get_type_info(
             result->script->world, ecs_id(ecs_entity_t));
+        var->owned = true;
         result->has_owner_vars = true;
     }
     ecs_script_impl_t *impl = flecs_script_impl(result->script);
@@ -95510,6 +95519,10 @@ int flecs_script_eval_const(
         flecs_script_eval_error(v, node,
             "failed to evaluate expression for %s variable '%s'",
                 kind_str, node->name);
+        if (ti->hooks.dtor) {
+            flecs_type_info_dtor(result.ptr, 1, ti);
+        }
+        flecs_stack_free(result.ptr, ti->size);
         return -1;
     }
 
@@ -95517,6 +95530,7 @@ int flecs_script_eval_const(
         var->is_const = true;
         var->type_info = ti;
         var->value = result;
+        var->owned = true;
     } else {
         ecs_entity_t const_var;
         if (node->node.kind == EcsAstExportMut) {
@@ -95727,8 +95741,10 @@ void flecs_script_user_function_callback(
             flecs_type_info_ctor(var->value.ptr, 1, ti);
             ecs_ptr_copy_w_type_info(
                 real_world, ti, var->value.ptr, argv[i].ptr);
+            var->owned = true;
         } else {
             var->value.ptr = argv[i].ptr;
+            var->owned = false;
         }
     }
 
@@ -97319,6 +97335,8 @@ ecs_script_var_t* flecs_script_for_declare_var(
         }
         var->value.ptr = flecs_stack_calloc(
             &v->r->stack, ti->size, ti->alignment);
+        var->type_info = ti;
+        var->owned = true;
     }
 
     return var;
@@ -97472,6 +97490,7 @@ static bool flecs_script_for_next(
         }
         state->elem_var->value.ptr = ECS_OFFSET(
             state->elems, state->elem_size * i);
+        state->elem_var->owned = false;
         break;
     case FlecsScriptForMap:
         if (!ecs_map_next(&state->map_it)) {
@@ -97486,6 +97505,7 @@ static bool flecs_script_for_next(
         } else {
             state->elem_var->value.ptr = &state->map_it.res[1];
         }
+        state->elem_var->owned = false;
         break;
     }
 
@@ -99001,6 +99021,7 @@ static int flecs_script_type_const(
         ecs_ptr_copy_w_type_info(
             t->v->world, ti, var->value.ptr, value->ptr);
         var->is_const = true;
+        var->owned = true;
     }
     return 0;
 }
@@ -101771,9 +101792,10 @@ static void flecs_expr_value_free(
         return; /* Runtime doesn't own value, don't destruct */
     }
 
-    if (ti && ti->hooks.dtor) {
-        ecs_assert(v->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        flecs_type_info_dtor(v->value.ptr, 1, ti);
+    if (ti) {
+        if (ti->hooks.dtor) {
+            flecs_type_info_dtor(v->value.ptr, 1, ti);
+        }
         flecs_stack_free(v->value.ptr, ti->size);
     }
 
@@ -112614,6 +112636,7 @@ static void flecs_script_template_instantiate_vars(
         ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
         var->value.type = member->type;
         var->value.ptr = ECS_OFFSET(data, member->offset);
+        var->owned = false;
     }
 }
 
@@ -112795,6 +112818,7 @@ static int flecs_script_template_instantiate(
             vars, "this");
         this_var->value.type = ecs_id(ecs_entity_t);
         this_var->value.ptr = &instance;
+        this_var->owned = false;
 
         void *props_data = component == template->props.type
             ? data
@@ -113264,6 +113288,7 @@ int flecs_script_template_eval_var(
     var->value.ptr = flecs_stack_calloc(
         &v->r->stack, ti->size, ti->alignment);
     var->type_info = ti;
+    var->owned = true;
     node->sp = var->sp;
     flecs_type_info_ctor(var->value.ptr, 1, ti);
 
@@ -113277,6 +113302,7 @@ int flecs_script_template_eval_var(
         &v->base.script->allocator, ti->size, ti->name);
     value->value.type = type;
     value->type_info = ti;
+    value->owned = false; /* Not stack storage, freed with the template */
     ecs_ptr_copy_w_type_info(
         v->world, ti, value->value.ptr, var->value.ptr);
 

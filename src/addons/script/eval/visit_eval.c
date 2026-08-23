@@ -1291,6 +1291,10 @@ int flecs_script_eval_const(
         flecs_script_eval_error(v, node,
             "failed to evaluate expression for %s variable '%s'",
                 kind_str, node->name);
+        if (ti->hooks.dtor) {
+            flecs_type_info_dtor(result.ptr, 1, ti);
+        }
+        flecs_stack_free(result.ptr, ti->size);
         return -1;
     }
 
@@ -1298,6 +1302,7 @@ int flecs_script_eval_const(
         var->is_const = true;
         var->type_info = ti;
         var->value = result;
+        var->owned = true;
     } else {
         ecs_entity_t const_var;
         if (node->node.kind == EcsAstExportMut) {
@@ -1508,8 +1513,10 @@ void flecs_script_user_function_callback(
             flecs_type_info_ctor(var->value.ptr, 1, ti);
             ecs_ptr_copy_w_type_info(
                 real_world, ti, var->value.ptr, argv[i].ptr);
+            var->owned = true;
         } else {
             var->value.ptr = argv[i].ptr;
+            var->owned = false;
         }
     }
 

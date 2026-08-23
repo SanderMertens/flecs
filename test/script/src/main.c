@@ -639,6 +639,7 @@ void Eval_enum_constant_w_function_that_moves_constant(void);
 void Eval_script_update_w_on_remove_observer_that_moves_script_entity(void);
 void Eval_struct_member_w_forward_declared_type(void);
 void Eval_enum_constant_w_forward_declared_value(void);
+void Eval_const_var_large_struct_no_leak(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -910,6 +911,7 @@ void Function_nested_runtime_error(void);
 void Function_const_runtime_error(void);
 void Function_fn_w_hoisted_var(void);
 void Function_memoized_against_args_ignores_hidden_state(void);
+void Function_fn_w_large_struct_param_no_leak(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1031,6 +1033,7 @@ void Template_template_root_component_w_string_mut_in_match_in_if(void);
 void Template_template_props_set_on_multiple_entities_w_bulk_init(void);
 void Template_template_in_singleton_scope(void);
 void Template_template_instantiated_on_itself(void);
+void Template_template_prop_large_struct_no_leak(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -1862,6 +1865,7 @@ void Vars_nested_struct_expr_w_struct_var(void);
 void Vars_redeclare_in_scope(void);
 void Vars_init_fini_vars(void);
 void Vars_from_iter_17_fields(void);
+void Vars_define_large_type_no_leak(void);
 
 // Testsuite 'Serialize'
 void Serialize_bool(void);
@@ -5131,6 +5135,10 @@ bake_test_case Eval_testcases[] = {
     {
         "enum_constant_w_forward_declared_value",
         Eval_enum_constant_w_forward_declared_value
+    },
+    {
+        "const_var_large_struct_no_leak",
+        Eval_const_var_large_struct_no_leak
     }
 };
 
@@ -6195,6 +6203,10 @@ bake_test_case Function_testcases[] = {
     {
         "memoized_against_args_ignores_hidden_state",
         Function_memoized_against_args_ignores_hidden_state
+    },
+    {
+        "fn_w_large_struct_param_no_leak",
+        Function_fn_w_large_struct_param_no_leak
     }
 };
 
@@ -6674,6 +6686,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_instantiated_on_itself",
         Template_template_instantiated_on_itself
+    },
+    {
+        "template_prop_large_struct_no_leak",
+        Template_template_prop_large_struct_no_leak
     }
 };
 
@@ -9960,6 +9976,10 @@ bake_test_case Vars_testcases[] = {
     {
         "from_iter_17_fields",
         Vars_from_iter_17_fields
+    },
+    {
+        "define_large_type_no_leak",
+        Vars_define_large_type_no_leak
     }
 };
 
@@ -12936,7 +12956,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        630,
+        631,
         Eval_testcases
     },
     {
@@ -12964,14 +12984,14 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        79,
+        80,
         Function_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        119,
+        120,
         Template_testcases
     },
     {
@@ -13017,7 +13037,7 @@ static bake_test_suite suites[] = {
         "Vars",
         NULL,
         NULL,
-        15,
+        16,
         Vars_testcases
     },
     {

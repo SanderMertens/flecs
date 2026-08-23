@@ -5268,3 +5268,49 @@ void Template_template_props_set_on_multiple_entities_w_bulk_init(void) {
 
     ecs_fini(world);
 }
+
+static
+void template_prop_large_struct_run(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t large = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Large" }),
+        .members = {
+            { .name = "x", .type = ecs_id(ecs_i32_t) },
+            { .name = "pad", .type = ecs_id(ecs_i32_t), .count = 1024 }
+        }
+    });
+    test_assert(large != 0);
+
+    const char *expr =
+    HEAD "template Hud {"
+    LINE "  prop v: Large = {x: 10}"
+    LINE "  Large: {x: $v.x}"
+    LINE "}"
+    LINE "inst { Hud: {} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t inst = ecs_lookup(world, "inst");
+    test_assert(inst != 0);
+    test_assert(ecs_get_id(world, inst, large) != NULL);
+    test_int(*(int32_t*)ecs_get_id(world, inst, large), 10);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_large_struct_no_leak(void) {
+    template_prop_large_struct_run();
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    int32_t i;
+    for (i = 0; i < 20; i ++) {
+        template_prop_large_struct_run();
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+}
