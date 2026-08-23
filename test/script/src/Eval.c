@@ -19610,6 +19610,18 @@ static void func_on_replace(ecs_iter_t *it) {
     (void)it;
 }
 
+static void func_add_tag_i32(
+    const ecs_function_ctx_t *ctx,
+    int argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)argc;
+    ecs_entity_t e = *(ecs_entity_t*)argv[0].ptr;
+    ecs_add_id(ctx->world, e, func_add_tag_id);
+    *(ecs_i32_t*)result->ptr = 2;
+}
+
 void Eval_component_initializer_w_function_that_moves_entity(void) {
     typedef struct {
         ecs_f32_t y;
@@ -19704,6 +19716,68 @@ void Eval_component_initializer_w_function_that_moves_entity_w_on_replace(void) 
     test_int(ptr->y, 7);
     test_str(ptr->s, "hello");
     test_int(ptr->x, 42);
+
+    ecs_fini(world);
+}
+
+void Eval_struct_member_initializer_w_function_that_moves_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    func_add_tag_id = ecs_entity(world, { .name = "Tag" });
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t x = ecs_entity(world, { .name = "x", .parent = foo });
+
+    ecs_function(world, {
+        .name = "add_tag",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{ "e", ecs_id(ecs_entity_t) }},
+        .callback = func_add_tag_i32
+    });
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "struct Foo(x: {type: f32, count: add_tag(Foo.x)})";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_has_id(world, x, func_add_tag_id));
+
+    const EcsMember *m = ecs_get(world, x, EcsMember);
+    test_assert(m != NULL);
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->count, 2);
+
+    ecs_fini(world);
+}
+
+void Eval_enum_constant_w_function_that_moves_constant(void) {
+    ecs_world_t *world = ecs_init();
+
+    func_add_tag_id = ecs_entity(world, { .name = "Tag" });
+
+    ecs_entity_t color = ecs_entity(world, { .name = "Color" });
+    ecs_entity_t red = ecs_entity(world, { .name = "Red", .parent = color });
+
+    ecs_function(world, {
+        .name = "add_tag",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{ "e", ecs_id(ecs_entity_t) }},
+        .callback = func_add_tag_i32
+    });
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "enum Color(Red: add_tag(Color.Red), Green: 5)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_has_id(world, red, func_add_tag_id));
+
+    const int32_t *v = ecs_get_id(world, red,
+        ecs_pair(EcsConstant, ecs_id(ecs_i32_t)));
+    test_assert(v != NULL);
+    test_int(*v, 2);
 
     ecs_fini(world);
 }
