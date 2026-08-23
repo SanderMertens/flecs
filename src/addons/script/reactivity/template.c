@@ -398,18 +398,32 @@ static void flecs_script_template_update_instance_observers(
     ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
 }
 
+/* Returns a stack allocated copy of the instance data, or NULL if no copy was
+ * made. A copy must be released with flecs_script_template_free_data. */
 static void* flecs_script_template_copy_data(
     ecs_script_eval_visitor_t *v,
     const ecs_type_info_t *ti,
     void *data)
 {
     if (!data || !ti || !ti->size) {
-        return data;
+        return NULL;
     }
 
     void *result = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
     ecs_os_memcpy(result, data, ti->size);
     return result;
+}
+
+static void flecs_script_template_free_data(
+    const ecs_type_info_t *ti,
+    void *data)
+{
+    if (!data) {
+        return;
+    }
+
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    flecs_stack_free(data, ti->size);
 }
 
 static void flecs_script_template_instantiate_vars(
@@ -631,10 +645,17 @@ static int flecs_script_template_instantiate(
                     ecs_get_id(world, instance, template->muts.type))
                 : NULL);
 
-        props_data = flecs_script_template_copy_data(
+        void *props_copy = flecs_script_template_copy_data(
             v, template->type_info, props_data);
-        muts_data = flecs_script_template_copy_data(
+        if (props_copy) {
+            props_data = props_copy;
+        }
+
+        void *muts_copy = flecs_script_template_copy_data(
             v, muts_ti, muts_data);
+        if (muts_copy) {
+            muts_data = muts_copy;
+        }
 
         flecs_script_template_instantiate_vars(vars, template,
             props_st, props_data, muts_st, muts_data);
@@ -646,6 +667,8 @@ static int flecs_script_template_instantiate(
             FlecsScriptRunDone)
         {
             result = -1;
+            flecs_script_template_free_data(template->type_info, props_copy);
+            flecs_script_template_free_data(muts_ti, muts_copy);
             ecs_script_vars_pop(vars);
             break;
         }
@@ -660,6 +683,9 @@ static int flecs_script_template_instantiate(
             flecs_script_template_update_instance_observers(
                 world, template, template_entity, instance, vars);
         }
+
+        flecs_script_template_free_data(template->type_info, props_copy);
+        flecs_script_template_free_data(muts_ti, muts_copy);
 
         /* Pop variable scope */
         ecs_script_vars_pop(vars);
