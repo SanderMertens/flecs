@@ -277,6 +277,7 @@ void Iter_page_iter_w_fini(void);
 void Iter_worker_iter_w_fini(void);
 void Iter_rule_page_iter_w_fini(void);
 void Iter_rule_worker_iter_w_fini(void);
+void Iter_uncached_query_w_many_vars_no_leak(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -4460,6 +4461,10 @@ bake_test_case Iter_testcases[] = {
     {
         "rule_worker_iter_w_fini",
         Iter_rule_worker_iter_w_fini
+    },
+    {
+        "uncached_query_w_many_vars_no_leak",
+        Iter_uncached_query_w_many_vars_no_leak
     }
 };
 
@@ -16715,7 +16720,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        60,
+        61,
         Iter_testcases
     },
     {

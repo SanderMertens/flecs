@@ -3157,3 +3157,49 @@ void Iter_rule_worker_iter_w_fini(void) {
 
     ecs_fini(world);
 }
+
+void Iter_uncached_query_w_many_vars_no_leak(void) {
+    ecs_world_t *world = ecs_mini();
+
+    char expr[1024];
+    expr[0] = '\0';
+
+    int32_t i;
+    for (i = 0; i < 28; i ++) {
+        char name[16];
+        sprintf(name, "C%d", i);
+
+        ecs_entity_t c = ecs_entity(world, { .name = name });
+        ecs_set(world, c, EcsComponent, { .size = 4, .alignment = 4 });
+
+        char term[32];
+        sprintf(term, "%sC%d($x%d)", i ? ", " : "", i, i);
+        ecs_os_strcat(expr, term);
+    }
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = expr,
+        .cache_kind = EcsQueryCacheNone
+    });
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) { }
+    }
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    for (i = 0; i < 100; i ++) {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) { }
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}

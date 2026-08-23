@@ -689,14 +689,10 @@ ecs_iter_t flecs_query_iter(
 #ifdef FLECS_QUERY_PLANS
     int32_t i, var_count = impl->var_count;
     int32_t op_count = impl->op_count ? impl->op_count : 1;
-    ecs_size_t vars_size = var_count * ECS_SIZEOF(ecs_var_t);
-    ecs_size_t written_size = op_count * ECS_SIZEOF(ecs_write_flags_t);
-    char *scratch = flecs_iter_calloc(
-        &it, vars_size + written_size, ECS_ALIGNOF(ecs_var_t));
     if (var_count) {
-        qit->vars = (ecs_var_t*)(void*)scratch;
+        qit->vars = flecs_iter_calloc_n(&it, ecs_var_t, var_count);
     }
-    qit->written = (ecs_write_flags_t*)(void*)(scratch + vars_size);
+    qit->written = flecs_iter_calloc_n(&it, ecs_write_flags_t, op_count);
 
     if (impl->ops || !impl->cache) {
         qit->op_ctx = flecs_iter_calloc_n(&it, ecs_query_op_ctx_t, op_count);
