@@ -97394,6 +97394,11 @@ static int flecs_script_for_enter(
 
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
 
+    /* Reserve space for the loop variables, so that declaring them does not
+     * resize the variable vector and invalidate the variables that were
+     * declared before it. */
+    ecs_script_vars_set_size(v->vars, node->loop_var_count);
+
     int32_t var_i = 0;
 
     if (state->kind == FlecsScriptForMap && node->loop_var_count >= 2) {

@@ -2967,3 +2967,64 @@ void Collection_for_inline_array_member_of_const_var(void) {
 
     ecs_fini(world);
 }
+
+void Collection_map_key_index_elem_w_var_in_body(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const m: Map = [1: 10, 2: 20, 3: 30]"
+    LINE "for (key, index, elem) in m {"
+    LINE "  const scale = 2"
+    LINE "  \"e_{key}\" {"
+    LINE "    PositionI: {index, elem * scale}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    ecs_entity_t e_2 = ecs_lookup(world, "e_2");
+    ecs_entity_t e_3 = ecs_lookup(world, "e_3");
+
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 != 0);
+
+    const PositionI *p1 = ecs_get(world, e_1, PositionI);
+    const PositionI *p2 = ecs_get(world, e_2, PositionI);
+    const PositionI *p3 = ecs_get(world, e_3, PositionI);
+
+    test_assert(p1 != NULL);
+    test_assert(p2 != NULL);
+    test_assert(p3 != NULL);
+
+    test_int(p1->y, 20);
+    test_int(p2->y, 40);
+    test_int(p3->y, 60);
+
+    test_assert(p1->x >= 0 && p1->x < 3);
+    test_assert(p2->x >= 0 && p2->x < 3);
+    test_assert(p3->x >= 0 && p3->x < 3);
+    test_assert(p1->x != p2->x);
+    test_assert(p1->x != p3->x);
+    test_assert(p2->x != p3->x);
+    test_int(p1->x + p2->x + p3->x, 3);
+
+    ecs_fini(world);
+}
