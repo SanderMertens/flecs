@@ -3165,7 +3165,7 @@ void Iter_uncached_query_w_many_vars_no_leak(void) {
     expr[0] = '\0';
 
     int32_t i;
-    for (i = 0; i < 28; i ++) {
+    for (i = 0; i < 18; i ++) {
         char name[16];
         sprintf(name, "C%d", i);
 

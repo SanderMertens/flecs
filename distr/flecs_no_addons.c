@@ -22195,68 +22195,21 @@ static ecs_stack_page_t* flecs_stack_page_new(uint32_t page_id) {
     return result;
 }
 
-static void* flecs_stack_block_new(
-    ecs_stack_t *stack,
-    ecs_size_t size)
-{
-    ecs_stack_block_t *block = ecs_os_malloc(
-        FLECS_STACK_BLOCK_OFFSET + size);
-    block->owner = stack;
-    block->page = stack->tail_page;
-    block->sp = stack->tail_page ? stack->tail_page->sp : 0;
-    block->prev = NULL;
-    block->next = stack->blocks;
-    if (block->next) {
-        block->next->prev = block;
-    }
-    stack->blocks = block;
-    return ECS_OFFSET(block, FLECS_STACK_BLOCK_OFFSET);
-}
+#define FLECS_STACK_OVERSIZED_MSG \
+    "an allocation that exceeds FLECS_STACK_PAGE_SIZE was not freed: callers " \
+    "must pair flecs_stack_alloc with flecs_stack_free"
 
-static void flecs_stack_block_free(
-    ecs_stack_block_t *block)
-{
-    if (block->prev) {
-        block->prev->next = block->next;
-    } else {
-        block->owner->blocks = block->next;
-    }
-    if (block->next) {
-        block->next->prev = block->prev;
-    }
-    ecs_os_free(block);
-}
+#ifdef FLECS_DEBUG
+/* Allocations that are too large for a page are prefixed with the stack that
+ * allocated them, so that flecs_stack_free can account for them and the
+ * allocator can assert that callers honor the pairing contract. */
+typedef struct ecs_stack_oversized_t {
+    ecs_stack_t *owner;
+} ecs_stack_oversized_t;
 
-static void flecs_stack_blocks_restore(
-    ecs_stack_t *stack,
-    ecs_stack_page_t *page,
-    int16_t sp)
-{
-    ecs_stack_block_t *block = stack->blocks;
-    while (block) {
-        if (!block->page || block->page->id < page->id) {
-            break;
-        }
-        if (block->page->id == page->id && block->sp <= sp) {
-            break;
-        }
-        ecs_stack_block_t *next = block->next;
-        flecs_stack_block_free(block);
-        block = next;
-    }
-}
-
-static void flecs_stack_blocks_free(
-    ecs_stack_t *stack)
-{
-    ecs_stack_block_t *next, *block = stack->blocks;
-    while (block) {
-        next = block->next;
-        ecs_os_free(block);
-        block = next;
-    }
-    stack->blocks = NULL;
-}
+#define FLECS_STACK_OVERSIZED_OFFSET \
+    ECS_ALIGN(ECS_SIZEOF(ecs_stack_oversized_t), 16)
+#endif
 
 void* flecs_stack_alloc(
     ecs_stack_t *stack, 
@@ -22267,7 +22220,16 @@ void* flecs_stack_alloc(
     void *result = NULL;
 
     if (size > FLECS_STACK_PAGE_SIZE) {
-        result = flecs_stack_block_new(stack, size); /* Too large for page */
+        /* Too large for page */
+#ifdef FLECS_DEBUG
+        ecs_stack_oversized_t *hdr = ecs_os_malloc(
+            FLECS_STACK_OVERSIZED_OFFSET + size);
+        hdr->owner = stack;
+        ++ stack->oversized_count;
+        result = ECS_OFFSET(hdr, FLECS_STACK_OVERSIZED_OFFSET);
+#else
+        result = ecs_os_malloc(size);
+#endif
         goto done;
     }
 
@@ -22317,7 +22279,16 @@ void flecs_stack_free(
     ecs_size_t size)
 {
     if (size > FLECS_STACK_PAGE_SIZE) {
-        flecs_stack_block_free(ECS_OFFSET(ptr, -FLECS_STACK_BLOCK_OFFSET));
+#ifdef FLECS_DEBUG
+        ecs_stack_oversized_t *hdr = ECS_OFFSET(
+            ptr, -FLECS_STACK_OVERSIZED_OFFSET);
+        ecs_dbg_assert(hdr->owner->oversized_count > 0, ECS_DOUBLE_FREE,
+            "double free detected in stack allocator");
+        -- hdr->owner->oversized_count;
+        ecs_os_free(hdr);
+#else
+        ecs_os_free(ptr);
+#endif
     }
 }
 
@@ -22391,13 +22362,18 @@ void flecs_stack_restore_cursor(
     stack->tail_page = cursor->page;
     stack->tail_page->sp = cursor->sp;
 
-    flecs_stack_blocks_restore(stack, cursor->page, cursor->sp);
-
     /* If the cursor count is zero, the stack should be empty.
      * If the cursor count is non-zero, the stack should not be empty. */
     ecs_dbg_assert((stack->cursor_count == 0) == 
         (stack->tail_page == stack->first && stack->tail_page->sp == 0), 
             ECS_LEAK_DETECTED, FLECS_STACK_LEAK_MSG);
+
+#ifdef FLECS_DEBUG
+    if (!stack->cursor_count) {
+        ecs_dbg_assert(stack->oversized_count == 0, ECS_LEAK_DETECTED,
+            FLECS_STACK_OVERSIZED_MSG);
+    }
+#endif
 }
 
 void flecs_stack_reset(
@@ -22405,12 +22381,13 @@ void flecs_stack_reset(
 {
     ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, 
         FLECS_STACK_LEAK_MSG);
+    ecs_dbg_assert(stack->oversized_count == 0, ECS_LEAK_DETECTED,
+        FLECS_STACK_OVERSIZED_MSG);
     stack->tail_page = stack->first;
     if (stack->first) {
         stack->first->sp = 0;
     }
     stack->tail_cursor = NULL;
-    flecs_stack_blocks_free(stack);
 }
 
 void flecs_stack_init(
@@ -22431,8 +22408,8 @@ void flecs_stack_fini(
         FLECS_STACK_LEAK_MSG);
     ecs_assert(!stack->tail_page || stack->tail_page->sp == 0, ECS_LEAK_DETECTED, 
         FLECS_STACK_LEAK_MSG);
-
-    flecs_stack_blocks_free(stack);
+    ecs_dbg_assert(stack->oversized_count == 0, ECS_LEAK_DETECTED,
+        FLECS_STACK_OVERSIZED_MSG);
 
     if (cur) {
         do {
