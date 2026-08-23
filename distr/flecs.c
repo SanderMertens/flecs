@@ -49578,6 +49578,10 @@ ecs_expr_value_t* flecs_expr_stack_result(
     ecs_expr_stack_t *stack,
     ecs_expr_node_t *node);
 
+void flecs_expr_stack_storage(
+    ecs_expr_stack_t *stack,
+    ecs_expr_value_t *v);
+
 void flecs_expr_stack_push(
     ecs_expr_stack_t *stack);
 
@@ -101756,6 +101760,11 @@ static void flecs_expr_value_alloc(
     v->value.type = ti->component;
     v->value.ptr = flecs_stack_alloc(&stack->stack, ti->size, ti->alignment);
 
+    /* The runtime allocated and constructed the buffer, so it owns it until an
+     * evaluated node says otherwise. Without this the flag would be whatever
+     * the previous occupant of this stack slot left behind. */
+    v->owned = true;
+
     flecs_type_info_ctor(v->value.ptr, 1, ti);
 }
 
@@ -101793,17 +101802,23 @@ void flecs_expr_stack_fini(
     flecs_stack_fini(&stack->stack);
 }
 
-/* Nodes that always replace the result pointer with storage the runtime does
- * not own. Allocating and constructing a buffer for these results is wasted
- * work, which for a member of a large component is a stack allocation plus a
- * constructor over the entire component per evaluation. */
+/* Nodes that replace the result pointer with storage the runtime does not own.
+ * Allocating and constructing a buffer for these results is wasted work, and
+ * because the pointer is replaced the buffer is never reachable again: for a
+ * large component that is a stack allocation plus a constructor over the whole
+ * component per evaluation, and an allocation that is never freed. A node in
+ * this list that does need storage on some path must obtain it with
+ * flecs_expr_stack_storage. */
 static bool flecs_expr_node_borrows_result(
     const ecs_expr_node_t *node)
 {
     switch(node->kind) {
+    case EcsExprValue:
     case EcsExprVariable:
     case EcsExprGlobalVariable:
     case EcsExprMember:
+    case EcsExprElement:
+    case EcsExprComponent:
         return true;
     default:
         return false;
@@ -101845,6 +101860,21 @@ ecs_expr_value_t* flecs_expr_stack_alloc(
     }
 
     return v;
+}
+
+void flecs_expr_stack_storage(
+    ecs_expr_stack_t *stack,
+    ecs_expr_value_t *v)
+{
+    if (v->value.ptr) {
+        return; /* Value already has storage */
+    }
+
+    ecs_assert(v->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    v->value.ptr = flecs_stack_alloc(
+        &stack->stack, v->type_info->size, v->type_info->alignment);
+    v->owned = true;
+    flecs_type_info_ctor(v->value.ptr, 1, v->type_info);
 }
 
 void flecs_expr_stack_push(
@@ -103656,7 +103686,7 @@ static int flecs_expr_component_visit_eval(
     if (v && v->template) {
         ecs_assert(out->value.type == node->node.type,
             ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        flecs_expr_stack_storage(ctx->stack, out);
         out->owned = true;
         return 0;
     }

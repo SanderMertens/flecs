@@ -643,7 +643,10 @@
                 "script_update_w_on_remove_observer_that_moves_script_entity",
                 "struct_member_w_forward_declared_type",
                 "enum_constant_w_forward_declared_value",
-                "const_var_large_struct_no_leak"
+                "const_var_large_struct_no_leak",
+                "const_var_from_large_component_no_leak",
+                "const_var_from_large_component_member_no_leak",
+                "const_var_from_large_array_element_no_leak"
             ]
         }, {
             "id": "Collection",

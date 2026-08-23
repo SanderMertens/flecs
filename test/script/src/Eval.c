@@ -19912,3 +19912,145 @@ void Eval_const_var_large_struct_no_leak(void) {
 
     ecs_fini(world);
 }
+
+void Eval_const_var_from_large_component_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t pad[1024];
+    } Large;
+
+    ecs_entity_t large = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Large" }),
+        .members = {
+            { .name = "x", .type = ecs_id(ecs_i32_t) },
+            { .name = "pad", .type = ecs_id(ecs_i32_t), .count = 1024 }
+        }
+    });
+    test_assert(large != 0);
+
+    Large value = {0};
+    value.x = 10;
+
+    ecs_entity_t arr = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "LargeArray" }),
+        .type = large,
+        .count = 2
+    });
+    test_assert(arr != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set_id(world, e, large, sizeof(Large), &value);
+
+    const char *expr =
+    HEAD "const v: LargeArray = [e[Large], e[Large]]"
+    LINE "f { }";
+
+    int32_t i;
+    for (i = 0; i < 3; i ++) {
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    }
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    for (i = 0; i < 100; i ++) {
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}
+
+void Eval_const_var_from_large_component_member_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t pad[1024];
+    } Large;
+
+    ecs_entity_t large = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Large" }),
+        .members = {
+            { .name = "x", .type = ecs_id(ecs_i32_t) },
+            { .name = "pad", .type = ecs_id(ecs_i32_t), .count = 1024 }
+        }
+    });
+    test_assert(large != 0);
+
+    Large value = {0};
+    value.x = 10;
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set_id(world, e, large, sizeof(Large), &value);
+
+    const char *expr =
+    HEAD "const v = e[Large].x"
+    LINE "f { }";
+
+    int32_t i;
+    for (i = 0; i < 3; i ++) {
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    }
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    for (i = 0; i < 100; i ++) {
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}
+
+void Eval_const_var_from_large_array_element_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t large = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Large" }),
+        .members = {
+            { .name = "x", .type = ecs_id(ecs_i32_t) },
+            { .name = "pad", .type = ecs_id(ecs_i32_t), .count = 1024 }
+        }
+    });
+    test_assert(large != 0);
+
+    ecs_entity_t arr = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "LargeArray" }),
+        .type = large,
+        .count = 2
+    });
+    test_assert(arr != 0);
+
+    const char *expr =
+    HEAD "const a: LargeArray = [{x: 10}, {x: 20}]"
+    LINE "const v = a[0].x"
+    LINE "f { }";
+
+    int32_t i;
+    for (i = 0; i < 3; i ++) {
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    }
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    for (i = 0; i < 100; i ++) {
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}
