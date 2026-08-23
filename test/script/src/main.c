@@ -1026,6 +1026,9 @@ void Template_injected_child_order_w_ordered_children(void);
 void Template_template_prop_default_from_const(void);
 void Template_template_root_component_w_string_mut(void);
 void Template_template_root_component_after_component_w_mut(void);
+void Template_template_root_component_w_string_mut_in_nested_if(void);
+void Template_template_root_component_w_string_mut_in_match_in_if(void);
+void Template_template_props_set_on_multiple_entities_w_bulk_init(void);
 void Template_template_in_singleton_scope(void);
 void Template_template_instantiated_on_itself(void);
 
@@ -6650,6 +6653,18 @@ bake_test_case Template_testcases[] = {
     {
         "template_root_component_after_component_w_mut",
         Template_template_root_component_after_component_w_mut
+    },
+    {
+        "template_root_component_w_string_mut_in_nested_if",
+        Template_template_root_component_w_string_mut_in_nested_if
+    },
+    {
+        "template_root_component_w_string_mut_in_match_in_if",
+        Template_template_root_component_w_string_mut_in_match_in_if
+    },
+    {
+        "template_props_set_on_multiple_entities_w_bulk_init",
+        Template_template_props_set_on_multiple_entities_w_bulk_init
     },
     {
         "template_in_singleton_scope",
@@ -12951,7 +12966,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        116,
+        119,
         Template_testcases
     },
     {

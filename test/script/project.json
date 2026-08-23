@@ -1040,6 +1040,9 @@
                 "template_prop_default_from_const",
                 "template_root_component_w_string_mut",
                 "template_root_component_after_component_w_mut",
+                "template_root_component_w_string_mut_in_nested_if",
+                "template_root_component_w_string_mut_in_match_in_if",
+                "template_props_set_on_multiple_entities_w_bulk_init",
                 "template_in_singleton_scope",
                 "template_instantiated_on_itself"
             ]
