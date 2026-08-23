@@ -354,7 +354,8 @@
                 "enqueue_event_not_deferred_to_async",
                 "enqueue_custom_implicit_any",
                 "enqueue_custom_after_large_cmd",
-                "enqueue_on_readonly_world"
+                "enqueue_on_readonly_world",
+                "enqueue_event_w_large_payload_no_leak"
             ]
         }, {
             "id": "New",

@@ -6140,9 +6140,13 @@ static void flecs_free_cmd_event(
         ecs_type_t);
 
     if (desc->param) {
-        flecs_dtor_value(world, desc->event, 
-            /* Safe const cast, command makes copy of value */
-            ECS_CONST_CAST(void*, desc->param));
+        const ecs_type_info_t *ti = ecs_get_type_info(world, desc->event);
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* Safe const cast, command makes copy of value */
+        void *param = ECS_CONST_CAST(void*, desc->param);
+        flecs_type_info_dtor(param, 1, ti);
+        flecs_stack_free(param, ti->size);
     }
 }
 
