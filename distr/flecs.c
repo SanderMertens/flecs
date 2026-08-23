@@ -94208,9 +94208,11 @@ static int flecs_script_constants_visit(
                 return -1;
             }
 
+            /* Evaluate into temporary storage. Evaluating the expression can
+             * move the constant entity, which would invalidate a pointer into
+             * the component storage. */
             ecs_value_t value = {
-                .ptr = ecs_ensure_id(world, c, ecs_pair(EcsConstant, underlying),
-                    flecs_ito(size_t, ti->size)),
+                .ptr = ecs_os_alloca(ti->size),
                 .type = underlying
             };
 
@@ -94219,6 +94221,11 @@ static int flecs_script_constants_visit(
             if (flecs_script_eval_expr(v, &elem->value, &value)) {
                 return -1;
             }
+
+            void *dst = ecs_ensure_id(world, c,
+                ecs_pair(EcsConstant, underlying),
+                    flecs_ito(size_t, ti->size));
+            ecs_os_memcpy(dst, value.ptr, ti->size);
 
             ecs_modified_id(world, c, ecs_pair(EcsConstant, underlying));
         } else {
@@ -97927,9 +97934,11 @@ int flecs_script_struct_visit(
         if (elem->value->kind == EcsExprInitializer ||
             elem->value->kind == EcsExprEmptyInitializer)
         {
+            /* Evaluate into temporary storage. Evaluating the expression can
+             * move the member entity, which would invalidate a pointer into
+             * the component storage. */
             ecs_value_t value = {
-                .ptr = ecs_ensure_id(world, m, ecs_id(EcsMember),
-                    flecs_ito(size_t, ti->size)),
+                .ptr = ecs_os_alloca(ti->size),
                 .type = ecs_id(EcsMember)
             };
 
@@ -97938,6 +97947,10 @@ int flecs_script_struct_visit(
             if (flecs_script_eval_expr(v, &elem->value, &value)) {
                 return -1;
             }
+
+            void *dst = ecs_ensure_id(world, m, ecs_id(EcsMember),
+                flecs_ito(size_t, ti->size));
+            ecs_os_memcpy(dst, value.ptr, ti->size);
 
             ecs_modified(world, m, EcsMember);
         } else {

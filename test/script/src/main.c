@@ -634,6 +634,8 @@ void Eval_has_expr_in_if(void);
 void Eval_const_bool_from_optional_component(void);
 void Eval_component_initializer_w_function_that_moves_entity(void);
 void Eval_component_initializer_w_function_that_moves_entity_w_on_replace(void);
+void Eval_struct_member_initializer_w_function_that_moves_member(void);
+void Eval_enum_constant_w_function_that_moves_constant(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -5101,6 +5103,14 @@ bake_test_case Eval_testcases[] = {
     {
         "component_initializer_w_function_that_moves_entity_w_on_replace",
         Eval_component_initializer_w_function_that_moves_entity_w_on_replace
+    },
+    {
+        "struct_member_initializer_w_function_that_moves_member",
+        Eval_struct_member_initializer_w_function_that_moves_member
+    },
+    {
+        "enum_constant_w_function_that_moves_constant",
+        Eval_enum_constant_w_function_that_moves_constant
     }
 };
 
@@ -12886,7 +12896,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        625,
+        627,
         Eval_testcases
     },
     {
