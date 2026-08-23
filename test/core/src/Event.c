@@ -1689,3 +1689,63 @@ void Event_enqueue_on_readonly_world(void) {
 
     ecs_fini(world);
 }
+
+void Event_enqueue_event_w_large_payload_no_leak(void) {
+    typedef struct {
+        int32_t x;
+        int32_t pad[1024];
+    } LargeEvent;
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, LargeEvent);
+
+    ecs_entity_t id = ecs_new(world);
+    ecs_entity_t e = ecs_new_w_id(world, id);
+
+    Probe ctx = {0};
+
+    test_assert(0 != ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms[0].id = id,
+        .events = { ecs_id(LargeEvent) },
+        .callback = system_callback,
+        .ctx = &ctx
+    }));
+
+    LargeEvent payload = {0};
+    payload.x = 10;
+
+    ecs_defer_begin(world);
+    ecs_enqueue(world, &(ecs_event_desc_t){
+        .event = ecs_id(LargeEvent),
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
+        .entity = e,
+        .const_param = &payload
+    });
+    ecs_defer_end(world);
+
+    test_int(ctx.invoked, 1);
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    int32_t i;
+    for (i = 0; i < 100; i ++) {
+        ecs_defer_begin(world);
+        ecs_enqueue(world, &(ecs_event_desc_t){
+            .event = ecs_id(LargeEvent),
+            .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
+            .entity = e,
+            .const_param = &payload
+        });
+        ecs_defer_end(world);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    test_int(ctx.invoked, 101);
+
+    ecs_fini(world);
+}

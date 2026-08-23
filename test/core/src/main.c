@@ -340,6 +340,7 @@ void Event_enqueue_event_not_deferred_to_async(void);
 void Event_enqueue_custom_implicit_any(void);
 void Event_enqueue_custom_after_large_cmd(void);
 void Event_enqueue_on_readonly_world(void);
+void Event_enqueue_event_w_large_payload_no_leak(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -4703,6 +4704,10 @@ bake_test_case Event_testcases[] = {
     {
         "enqueue_on_readonly_world",
         Event_enqueue_on_readonly_world
+    },
+    {
+        "enqueue_event_w_large_payload_no_leak",
+        Event_enqueue_event_w_large_payload_no_leak
     }
 };
 
@@ -16734,7 +16739,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        39,
+        40,
         Event_testcases
     },
     {
