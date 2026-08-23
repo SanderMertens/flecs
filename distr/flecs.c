@@ -71734,6 +71734,10 @@ int flecs_script_update(
     }
 #endif
 
+    /* Clearing the script can move the script entity, which invalidates the
+     * component pointer. */
+    s = ecs_ensure(world, e, EcsScript);
+
     ecs_script_t *parsed = s->script;
     flecs_script_impl(parsed)->evaluating = true;
     ecs_script_eval_desc_t eval_desc = { .runtime = eval_runtime };
