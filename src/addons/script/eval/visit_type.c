@@ -1533,6 +1533,8 @@ static int flecs_script_type_entity(
     if (!node->is_type) {
         ecs_vec_clear(&t->v->r->annot);
     }
+    int32_t prev_unresolved = ecs_vec_count(
+        &t->v->base.script->unresolved_refs);
     int result = flecs_script_type_scope(
         t, node->scope, child_table, true, true);
     t->v->entity = old_entity;
@@ -1542,6 +1544,16 @@ static int flecs_script_type_entity(
     }
 
     if (node->is_type) {
+        if (ecs_vec_count(&t->v->base.script->unresolved_refs) >
+            prev_unresolved)
+        {
+            /* The definition references a symbol that isn't resolved yet. Skip
+             * evaluating it, so the definition is either retried once a later
+             * include resolves the symbol, or reported as an unresolved
+             * reference when the type visitor is done. */
+            return 0;
+        }
+
         if (flecs_script_type_ensure_node(t, node)) {
             return -1;
         }

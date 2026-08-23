@@ -637,6 +637,8 @@ void Eval_component_initializer_w_function_that_moves_entity_w_on_replace(void);
 void Eval_struct_member_initializer_w_function_that_moves_member(void);
 void Eval_enum_constant_w_function_that_moves_constant(void);
 void Eval_script_update_w_on_remove_observer_that_moves_script_entity(void);
+void Eval_struct_member_w_forward_declared_type(void);
+void Eval_enum_constant_w_forward_declared_value(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -5117,6 +5119,14 @@ bake_test_case Eval_testcases[] = {
     {
         "script_update_w_on_remove_observer_that_moves_script_entity",
         Eval_script_update_w_on_remove_observer_that_moves_script_entity
+    },
+    {
+        "struct_member_w_forward_declared_type",
+        Eval_struct_member_w_forward_declared_type
+    },
+    {
+        "enum_constant_w_forward_declared_value",
+        Eval_enum_constant_w_forward_declared_value
     }
 };
 
@@ -12906,7 +12916,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        628,
+        630,
         Eval_testcases
     },
     {

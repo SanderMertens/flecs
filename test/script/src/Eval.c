@@ -19841,3 +19841,39 @@ void Eval_script_update_w_on_remove_observer_that_moves_script_entity(void) {
 
     ecs_fini(world);
 }
+
+void Eval_struct_member_w_forward_declared_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "struct Foo(x: Bar)"
+    LINE "struct Bar(y: f32)";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 2);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Eval_enum_constant_w_forward_declared_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "enum Color(Red: Later, Green: 5)"
+    LINE "const Later = 3";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 2);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
