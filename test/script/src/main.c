@@ -640,6 +640,9 @@ void Eval_script_update_w_on_remove_observer_that_moves_script_entity(void);
 void Eval_struct_member_w_forward_declared_type(void);
 void Eval_enum_constant_w_forward_declared_value(void);
 void Eval_const_var_large_struct_no_leak(void);
+void Eval_const_var_from_large_component_no_leak(void);
+void Eval_const_var_from_large_component_member_no_leak(void);
+void Eval_const_var_from_large_array_element_no_leak(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -5139,6 +5142,18 @@ bake_test_case Eval_testcases[] = {
     {
         "const_var_large_struct_no_leak",
         Eval_const_var_large_struct_no_leak
+    },
+    {
+        "const_var_from_large_component_no_leak",
+        Eval_const_var_from_large_component_no_leak
+    },
+    {
+        "const_var_from_large_component_member_no_leak",
+        Eval_const_var_from_large_component_member_no_leak
+    },
+    {
+        "const_var_from_large_array_element_no_leak",
+        Eval_const_var_from_large_array_element_no_leak
     }
 };
 
@@ -12956,7 +12971,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        631,
+        634,
         Eval_testcases
     },
     {

@@ -1295,7 +1295,7 @@ static int flecs_expr_component_visit_eval(
     if (v && v->template) {
         ecs_assert(out->value.type == node->node.type,
             ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        flecs_expr_stack_storage(ctx->stack, out);
         out->owned = true;
         return 0;
     }

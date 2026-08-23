@@ -63,6 +63,10 @@ ecs_expr_value_t* flecs_expr_stack_result(
     ecs_expr_stack_t *stack,
     ecs_expr_node_t *node);
 
+void flecs_expr_stack_storage(
+    ecs_expr_stack_t *stack,
+    ecs_expr_value_t *v);
+
 void flecs_expr_stack_push(
     ecs_expr_stack_t *stack);
 
