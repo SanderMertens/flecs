@@ -411,3 +411,41 @@ void Vars_from_iter_17_fields(void) {
 
     ecs_fini(world);
 }
+
+void Vars_define_large_type_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t large = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Large" }),
+        .members = {
+            { .name = "x", .type = ecs_id(ecs_i32_t) },
+            { .name = "pad", .type = ecs_id(ecs_i32_t), .count = 1024 }
+        }
+    });
+    test_assert(large != 0);
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *var = ecs_script_vars_define_id(vars, "big", large);
+        test_assert(var != NULL);
+        ecs_script_vars_fini(vars);
+    }
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    int32_t i;
+    for (i = 0; i < 100; i ++) {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *var = ecs_script_vars_define_id(vars, "big", large);
+        test_assert(var != NULL);
+        ((int32_t*)var->value.ptr)[0] = 10;
+        ecs_script_vars_fini(vars);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}

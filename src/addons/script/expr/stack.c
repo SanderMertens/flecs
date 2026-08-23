@@ -37,9 +37,10 @@ static void flecs_expr_value_free(
         return; /* Runtime doesn't own value, don't destruct */
     }
 
-    if (ti && ti->hooks.dtor) {
-        ecs_assert(v->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        flecs_type_info_dtor(v->value.ptr, 1, ti);
+    if (ti) {
+        if (ti->hooks.dtor) {
+            flecs_type_info_dtor(v->value.ptr, 1, ti);
+        }
         flecs_stack_free(v->value.ptr, ti->size);
     }
 

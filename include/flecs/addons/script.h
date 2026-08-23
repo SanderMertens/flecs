@@ -70,6 +70,7 @@ typedef struct ecs_script_var_t {
     const ecs_type_info_t *type_info;    /**< Type information. */
     int32_t sp;                          /**< Stack pointer. */
     bool is_const;                       /**< Whether the variable is constant. */
+    bool owned;                          /**< Whether the scope owns the value storage. */
 } ecs_script_var_t;
 
 /** Script variable scope. */

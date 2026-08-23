@@ -404,6 +404,7 @@ static int flecs_script_await_assign_const(
     var->value.ptr = flecs_stack_alloc(&v->r->stack,
         ti->size, ti->alignment);
     var->type_info = ti;
+    var->owned = true;
     flecs_type_info_ctor(var->value.ptr, 1, ti);
     ecs_ptr_copy(v->world, value->type, var->value.ptr, value->ptr);
     return 0;
@@ -634,6 +635,7 @@ ecs_script_task_t* ecs_script_task_new(
         *(ecs_entity_t*)var->value.ptr = result->entity;
         var->type_info = ecs_get_type_info(
             result->script->world, ecs_id(ecs_entity_t));
+        var->owned = true;
         result->has_owner_vars = true;
     }
     ecs_script_impl_t *impl = flecs_script_impl(result->script);

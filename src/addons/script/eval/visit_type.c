@@ -1057,6 +1057,7 @@ static int flecs_script_type_const(
         ecs_ptr_copy_w_type_info(
             t->v->world, ti, var->value.ptr, value->ptr);
         var->is_const = true;
+        var->owned = true;
     }
     return 0;
 }

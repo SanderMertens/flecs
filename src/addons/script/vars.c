@@ -93,15 +93,17 @@ ecs_script_vars_t* ecs_script_vars_pop(
         ecs_script_var_t *var_array = ecs_vec_first(&vars->vars);
         for (i = 0; i < count; i ++) {
             ecs_script_var_t *var = &var_array[i];
-            if (!var->value.ptr) {
+            if (!var->value.ptr || !var->owned) {
                 continue;
             }
 
-            if (!var->type_info || !var->type_info->hooks.dtor) {
-                continue;
+            ecs_assert(var->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            if (var->type_info->hooks.dtor) {
+                flecs_type_info_dtor(var->value.ptr, 1, var->type_info);
             }
 
-            flecs_type_info_dtor(var->value.ptr, 1, var->type_info);
+            flecs_stack_free(var->value.ptr, var->type_info->size);
         }
 
         flecs_name_index_fini(&vars->var_index);
@@ -134,6 +136,7 @@ ecs_script_var_t* ecs_script_vars_declare(
     var->type_info = NULL;
     var->sp = ecs_vec_count(&vars->vars) + vars->sp - 1;
     var->is_const = false;
+    var->owned = false;
 
     if (name) {
         flecs_name_index_ensure(&vars->var_index,
@@ -174,6 +177,7 @@ ecs_script_var_t* ecs_script_vars_define_id(
     result->value.type = type;
     result->value.ptr = flecs_stack_alloc(vars->stack, ti->size, ti->alignment);
     result->type_info = ti;
+    result->owned = true;
 
     flecs_type_info_ctor(result->value.ptr, 1, ti);
 
@@ -276,6 +280,7 @@ void ecs_script_vars_from_iter(
 
         /* Safe, variable value will never be written */
         var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, &it->entities[offset]);
+        var->owned = false;
     }
 
     /* Set variables for fields */
@@ -306,6 +311,7 @@ void ecs_script_vars_from_iter(
                     ECS_INVALID_PARAMETER, NULL);
             }
             var->value.ptr = ptr;
+            var->owned = false;
         }
     }
 
@@ -344,6 +350,7 @@ void ecs_script_vars_from_iter(
 
                 /* Safe, variable value will never be written */
                 var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, e_ptr);
+                var->owned = false;
             }
         }
     }

@@ -369,6 +369,8 @@ ecs_script_var_t* flecs_script_for_declare_var(
         }
         var->value.ptr = flecs_stack_calloc(
             &v->r->stack, ti->size, ti->alignment);
+        var->type_info = ti;
+        var->owned = true;
     }
 
     return var;
@@ -522,6 +524,7 @@ static bool flecs_script_for_next(
         }
         state->elem_var->value.ptr = ECS_OFFSET(
             state->elems, state->elem_size * i);
+        state->elem_var->owned = false;
         break;
     case FlecsScriptForMap:
         if (!ecs_map_next(&state->map_it)) {
@@ -536,6 +539,7 @@ static bool flecs_script_for_next(
         } else {
             state->elem_var->value.ptr = &state->map_it.res[1];
         }
+        state->elem_var->owned = false;
         break;
     }
 

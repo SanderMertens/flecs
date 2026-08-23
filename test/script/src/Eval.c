@@ -19877,3 +19877,38 @@ void Eval_enum_constant_w_forward_declared_value(void) {
 
     ecs_fini(world);
 }
+
+void Eval_const_var_large_struct_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t large = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Large" }),
+        .members = {
+            { .name = "x", .type = ecs_id(ecs_i32_t) },
+            { .name = "pad", .type = ecs_id(ecs_i32_t), .count = 1024 }
+        }
+    });
+    test_assert(large != 0);
+
+    const char *expr =
+    HEAD "const v: Large = {x: 10}"
+    LINE "e { }";
+
+    int32_t i;
+    for (i = 0; i < 3; i ++) {
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    }
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    for (i = 0; i < 100; i ++) {
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}

@@ -2093,3 +2093,55 @@ void Function_memoized_against_args_ignores_hidden_state(void) {
 
     ecs_fini(world);
 }
+
+void Function_fn_w_large_struct_param_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t large = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Large" }),
+        .members = {
+            { .name = "x", .type = ecs_id(ecs_i32_t) },
+            { .name = "pad", .type = ecs_id(ecs_i32_t), .count = 1024 }
+        }
+    });
+    test_assert(large != 0);
+
+    const char *expr =
+    HEAD "fn get_x(v: Large) -> i32 { v.x }";
+
+    test_int(ecs_script_run(world, NULL, expr, NULL), 0);
+
+    ecs_entity_t function = ecs_lookup(world, "get_x");
+    test_assert(function != 0);
+
+    int32_t *arg = ecs_os_calloc(ECS_SIZEOF(int32_t) * 1025);
+    arg[0] = 10;
+    ecs_value_t argv[1] = {{ .type = large, .ptr = arg }};
+
+    {
+        ecs_value_t result = {0};
+        test_int(ecs_function_call(world, function, 1, argv, &result), 0);
+        test_assert(result.ptr != NULL);
+        test_int(*(int32_t*)result.ptr, 10);
+        ecs_value_fini(world, &result);
+    }
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    int32_t i;
+    for (i = 0; i < 100; i ++) {
+        ecs_value_t result = {0};
+        test_int(ecs_function_call(world, function, 1, argv, &result), 0);
+        test_assert(result.ptr != NULL);
+        test_int(*(int32_t*)result.ptr, 10);
+        ecs_value_fini(world, &result);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_os_free(arg);
+    ecs_fini(world);
+}

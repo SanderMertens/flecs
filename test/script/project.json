@@ -642,7 +642,8 @@
                 "enum_constant_w_function_that_moves_constant",
                 "script_update_w_on_remove_observer_that_moves_script_entity",
                 "struct_member_w_forward_declared_type",
-                "enum_constant_w_forward_declared_value"
+                "enum_constant_w_forward_declared_value",
+                "const_var_large_struct_no_leak"
             ]
         }, {
             "id": "Collection",
@@ -921,7 +922,8 @@
                 "nested_runtime_error",
                 "const_runtime_error",
                 "fn_w_hoisted_var",
-                "memoized_against_args_ignores_hidden_state"
+                "memoized_against_args_ignores_hidden_state",
+                "fn_w_large_struct_param_no_leak"
             ]
         }, {
             "id": "Template",
@@ -1044,7 +1046,8 @@
                 "template_root_component_w_string_mut_in_match_in_if",
                 "template_props_set_on_multiple_entities_w_bulk_init",
                 "template_in_singleton_scope",
-                "template_instantiated_on_itself"
+                "template_instantiated_on_itself",
+                "template_prop_large_struct_no_leak"
             ]
         }, {
             "id": "Mut",
@@ -1893,7 +1896,8 @@
                 "nested_struct_expr_w_struct_var",
                 "redeclare_in_scope",
                 "init_fini_vars",
-                "from_iter_17_fields"
+                "from_iter_17_fields",
+                "define_large_type_no_leak"
             ]
         }, {
             "id": "Serialize",
