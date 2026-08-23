@@ -317,7 +317,7 @@ static void flecs_emit_propagate_id_for_range(
     int32_t e;
     it->table = table;
     it->other_table = NULL;
-    it->offset = 0;
+    it->offset = offset;
     it->count = count;
     it->up_fields = 1;
     ECS_CONST_CAST(int16_t*, it->columns)[0] = -1;
