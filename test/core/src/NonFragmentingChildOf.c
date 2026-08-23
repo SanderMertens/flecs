@@ -7289,3 +7289,44 @@ void NonFragmentingChildOf_remove_childof_after_convert_sibling(void) {
 
     ecs_fini(world);
 }
+
+static int up_not_observer_invoked = 0;
+
+static void UpNotObserver(ecs_iter_t *it) {
+    up_not_observer_invoked += it->count;
+}
+
+void NonFragmentingChildOf_up_not_observer_defer_remove_add_batched(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, TagA);
+
+    up_not_observer_invoked = 0;
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = Tag, .src.id = EcsUp, .trav = EcsChildOf },
+            { .id = TagA, .oper = EcsNot }
+        },
+        .events = { EcsOnAdd },
+        .callback = UpNotObserver
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent}));
+    ecs_add_id(world, child, TagA);
+
+    ecs_defer_begin(world);
+    ecs_remove_id(world, child, TagA);
+    ecs_add_id(world, child, Tag);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_id(world, child, Tag));
+    test_assert(!ecs_has_id(world, child, TagA));
+    test_uint(ecs_get_parent(world, child), parent);
+
+    test_int(up_not_observer_invoked, 0);
+
+    ecs_fini(world);
+}

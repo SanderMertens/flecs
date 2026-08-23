@@ -7902,12 +7902,16 @@ static void flecs_move_entity(
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(record->table == src_table, ECS_INTERNAL_ERROR, NULL);
 
-    /* Append new row to destination table */
-    int32_t dst_row = ecs_table_count(dst_table);
-    flecs_table_append(world, dst_table, entity, false, false);
-
     /* Invoke remove actions for removed components */
     flecs_actions_move_remove(world, src_table, dst_table, src_row, 1, diff);
+
+    /* Append new row to destination table. This has to happen after the remove
+     * actions, as the components of the new row are only initialized by the
+     * move below. Appending before the remove actions would expose a row with
+     * uninitialized component values to observers that evaluate a query
+     * against the destination table, such as observers with a Not term. */
+    int32_t dst_row = ecs_table_count(dst_table);
+    flecs_table_append(world, dst_table, entity, false, false);
 
     /* Copy entity & components from src_table to dst_table */
     flecs_table_move(world, entity, entity, dst_table, dst_row,
