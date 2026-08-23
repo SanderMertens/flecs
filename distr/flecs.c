@@ -95286,11 +95286,11 @@ static int flecs_script_eval_component(
             existing = ecs_get_id(v->world, src, node->id.eval);
         }
 
+        /* Evaluate into temporary storage. Evaluating the expression can move
+         * the entity, which would invalidate a pointer into the component
+         * storage while members are still being assigned. */
         ecs_value_t value = {
-            .ptr = needs_set
-                ? ecs_os_alloca(ti->size)
-                : ecs_ensure_id(v->world, src, node->id.eval,
-                    flecs_ito(size_t, ti->size)),
+            .ptr = ecs_os_alloca(ti->size),
             .type = ti->component
         };
 
@@ -95298,25 +95298,14 @@ static int flecs_script_eval_component(
          * by expression. This prevents uninitialized or unexpected values. For
          * partial assignments, members not set by the expression keep the
          * existing component value. */
-        if (needs_set) {
-            if (!ti->hooks.ctor) {
-                ecs_os_memset(value.ptr, 0, ti->size);
-            } else {
-                flecs_type_info_ctor(value.ptr, 1, ti);
-            }
+        if (!ti->hooks.ctor) {
+            ecs_os_memset(value.ptr, 0, ti->size);
+        } else {
+            flecs_type_info_ctor(value.ptr, 1, ti);
+        }
 
-            if (existing) {
-                ecs_ptr_copy_w_type_info(v->world, ti, value.ptr, existing);
-            }
-        } else if (!existing) {
-            if (!ti->hooks.ctor) {
-                ecs_os_memset(value.ptr, 0, ti->size);
-            } else {
-                if (ti->hooks.dtor) {
-                    flecs_type_info_dtor(value.ptr, 1, ti);
-                }
-                flecs_type_info_ctor(value.ptr, 1, ti);
-            }
+        if (existing) {
+            ecs_ptr_copy_w_type_info(v->world, ti, value.ptr, existing);
         }
 
         if (flecs_script_eval_expr(v, &node->expr, &value)) {
@@ -95324,9 +95313,12 @@ static int flecs_script_eval_component(
         }
 
         if (needs_set) {
-            ecs_set_id(v->world, src, node->id.eval, 
+            ecs_set_id(v->world, src, node->id.eval,
                 flecs_itosize(ti->size), value.ptr);
         } else {
+            void *dst = ecs_ensure_id(v->world, src, node->id.eval,
+                flecs_ito(size_t, ti->size));
+            flecs_type_info_move_dtor(dst, value.ptr, 1, ti);
             ecs_modified_id(v->world, src, node->id.eval);
         }
     } else {

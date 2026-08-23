@@ -10305,7 +10305,7 @@ ECS_MOVE(Strings, dst, src, {
     dst->a = src->a;
     dst->b = src->b;
     src->a = NULL;
-    dst->a = NULL;
+    src->b = NULL;
 })
 
 ECS_COPY(Strings, dst, src, {
@@ -19588,6 +19588,122 @@ void Eval_const_bool_from_optional_component(void) {
     const void *text = ecs_get_id(world, d, ecs_lookup(world, "Text"));
     test_assert(text != NULL);
     test_str(*(char**)text, "true");
+
+    ecs_fini(world);
+}
+
+static ecs_entity_t func_add_tag_id = 0;
+
+static void func_add_tag(
+    const ecs_function_ctx_t *ctx,
+    int argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)argc;
+    ecs_entity_t e = *(ecs_entity_t*)argv[0].ptr;
+    ecs_add_id(ctx->world, e, func_add_tag_id);
+    *(ecs_f32_t*)result->ptr = 7;
+}
+
+static void func_on_replace(ecs_iter_t *it) {
+    (void)it;
+}
+
+void Eval_component_initializer_w_function_that_moves_entity(void) {
+    typedef struct {
+        ecs_f32_t y;
+        char *s;
+        ecs_f32_t x;
+    } Probe;
+
+    ecs_world_t *world = ecs_init();
+
+    func_add_tag_id = ecs_entity(world, { .name = "Tag" });
+
+    ecs_entity_t probe = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Probe" }),
+        .members = {
+            {"y", ecs_id(ecs_f32_t)},
+            {"s", ecs_id(ecs_string_t)},
+            {"x", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_function(world, {
+        .name = "add_tag",
+        .return_type = ecs_id(ecs_f32_t),
+        .params = {{ "e", ecs_id(ecs_entity_t) }},
+        .callback = func_add_tag
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Probe: {y: add_tag(e), s: \"hello\", x: 42}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, func_add_tag_id));
+
+    const Probe *ptr = ecs_get_id(world, e, probe);
+    test_assert(ptr != NULL);
+    test_int(ptr->y, 7);
+    test_str(ptr->s, "hello");
+    test_int(ptr->x, 42);
+
+    ecs_fini(world);
+}
+
+void Eval_component_initializer_w_function_that_moves_entity_w_on_replace(void) {
+    typedef struct {
+        ecs_f32_t y;
+        char *s;
+        ecs_f32_t x;
+    } Probe;
+
+    ecs_world_t *world = ecs_init();
+
+    func_add_tag_id = ecs_entity(world, { .name = "Tag" });
+
+    ecs_entity_t probe = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Probe" }),
+        .members = {
+            {"y", ecs_id(ecs_f32_t)},
+            {"s", ecs_id(ecs_string_t)},
+            {"x", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_set_hooks_id(world, probe, &(ecs_type_hooks_t){
+        .on_replace = func_on_replace
+    });
+
+    ecs_function(world, {
+        .name = "add_tag",
+        .return_type = ecs_id(ecs_f32_t),
+        .params = {{ "e", ecs_id(ecs_entity_t) }},
+        .callback = func_add_tag
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Probe: {y: add_tag(e), s: \"hello\", x: 42}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, func_add_tag_id));
+
+    const Probe *ptr = ecs_get_id(world, e, probe);
+    test_assert(ptr != NULL);
+    test_int(ptr->y, 7);
+    test_str(ptr->s, "hello");
+    test_int(ptr->x, 42);
 
     ecs_fini(world);
 }

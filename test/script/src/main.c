@@ -632,6 +632,8 @@ void Eval_pair_scope_predeclared_entity_export_const(void);
 void Eval_has_expr_pair_w_enum_constant(void);
 void Eval_has_expr_in_if(void);
 void Eval_const_bool_from_optional_component(void);
+void Eval_component_initializer_w_function_that_moves_entity(void);
+void Eval_component_initializer_w_function_that_moves_entity_w_on_replace(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -5091,6 +5093,14 @@ bake_test_case Eval_testcases[] = {
     {
         "const_bool_from_optional_component",
         Eval_const_bool_from_optional_component
+    },
+    {
+        "component_initializer_w_function_that_moves_entity",
+        Eval_component_initializer_w_function_that_moves_entity
+    },
+    {
+        "component_initializer_w_function_that_moves_entity_w_on_replace",
+        Eval_component_initializer_w_function_that_moves_entity_w_on_replace
     }
 };
 
@@ -12876,7 +12886,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        623,
+        625,
         Eval_testcases
     },
     {
