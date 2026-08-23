@@ -1533,6 +1533,7 @@ void Expr_add_to_var(void);
 void Expr_add_var_to(void);
 void Expr_var_member(void);
 void Expr_var_member_member(void);
+void Expr_var_member_w_dtor_member(void);
 void Expr_var_element(void);
 void Expr_var_element_out_of_range(void);
 void Expr_var_element_w_var_index(void);
@@ -8655,6 +8656,10 @@ bake_test_case Expr_testcases[] = {
         Expr_var_member_member
     },
     {
+        "var_member_w_dtor_member",
+        Expr_var_member_w_dtor_member
+    },
+    {
         "var_element",
         Expr_var_element
     },
@@ -12996,7 +13001,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        379,
+        380,
         Expr_testcases,
         1,
         Expr_params
