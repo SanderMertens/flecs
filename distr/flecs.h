@@ -2585,15 +2585,6 @@ typedef struct ecs_stack_page_t {
     uint32_t id; /**< Page identifier. */
 } ecs_stack_page_t;
 
-/** Allocation that is too large for a page, owned by the stack allocator. */
-typedef struct ecs_stack_block_t {
-    struct ecs_stack_block_t *next; /**< Next block in the list. */
-    struct ecs_stack_block_t *prev; /**< Previous block in the list. */
-    struct ecs_stack_t *owner; /**< Stack allocator that owns this block. */
-    struct ecs_stack_page_t *page; /**< Page the stack was on when allocated. */
-    int16_t sp; /**< Stack pointer in that page when allocated. */
-} ecs_stack_block_t;
-
 /** Cursor that marks a position in the stack allocator for later restoration. */
 typedef struct ecs_stack_cursor_t {
     struct ecs_stack_cursor_t *prev; /**< Previous cursor in the stack. */
@@ -2610,9 +2601,10 @@ typedef struct ecs_stack_t {
     ecs_stack_page_t *first; /**< First page in the stack. */
     ecs_stack_page_t *tail_page; /**< Current tail page. */
     ecs_stack_cursor_t *tail_cursor; /**< Current tail cursor. */
-    ecs_stack_block_t *blocks; /**< Allocations too large for a page. */
 #ifdef FLECS_DEBUG
     int32_t cursor_count; /**< Number of active cursors (debug only). */
+    int32_t oversized_count; /**< Number of outstanding allocations that are
+                              *   too large for a page (debug only). */
 #endif
 } ecs_stack_t;
 
@@ -2621,9 +2613,6 @@ typedef struct ecs_stack_t {
 
 /** Size of usable data within a stack page. */
 #define FLECS_STACK_PAGE_SIZE (1024 - FLECS_STACK_PAGE_OFFSET)
-
-/** Offset of usable data within an oversized block (aligned to 16 bytes). */
-#define FLECS_STACK_BLOCK_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_block_t), 16)
 
 /** Initialize a stack allocator.
  *
@@ -2642,6 +2631,9 @@ void flecs_stack_fini(
     ecs_stack_t *stack);
 
 /** Allocate memory from the stack.
+ *
+ * An allocation that may exceed FLECS_STACK_PAGE_SIZE must be paired with a
+ * call to flecs_stack_free. Restoring a cursor does not reclaim it.
  *
  * @param stack The stack allocator.
  * @param size The allocation size.
@@ -2684,6 +2676,9 @@ void* flecs_stack_calloc(
     flecs_stack_calloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
 
 /** Free memory allocated from the stack.
+ *
+ * This is a no-op for allocations that do not exceed FLECS_STACK_PAGE_SIZE, so
+ * it is always safe to call.
  *
  * @param ptr The pointer to free.
  * @param size The size of the allocation.
