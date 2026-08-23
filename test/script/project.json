@@ -635,7 +635,9 @@
                 "pair_scope_predeclared_entity_export_const",
                 "has_expr_pair_w_enum_constant",
                 "has_expr_in_if",
-                "const_bool_from_optional_component"
+                "const_bool_from_optional_component",
+                "component_initializer_w_function_that_moves_entity",
+                "component_initializer_w_function_that_moves_entity_w_on_replace"
             ]
         }, {
             "id": "Collection",
