@@ -1496,6 +1496,60 @@ void Expr_var_member(void) {
     ecs_fini(world);
 }
 
+void Expr_var_member_w_dtor_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        char *name;
+        int32_t count;
+    } Label;
+
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .members = {
+            {"name", ecs_id(ecs_string_t)},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "foo", Label);
+    Label *label = var->value.ptr;
+    label->name = ecs_os_strdup("hello");
+    label->count = 42;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding };
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        {
+            ecs_value_t v = {0};
+            const char *ptr = ecs_expr_run(world, "foo.count", &v, &desc);
+            test_assert(ptr != NULL);
+            test_assert(!ptr[0]);
+            test_uint(v.type, ecs_id(ecs_i32_t));
+            test_int(*(ecs_i32_t*)v.ptr, 42);
+            ecs_ptr_free(world, v.type, v.ptr);
+        }
+        {
+            ecs_value_t v = {0};
+            const char *ptr = ecs_expr_run(world, "foo.name", &v, &desc);
+            test_assert(ptr != NULL);
+            test_assert(!ptr[0]);
+            test_uint(v.type, ecs_id(ecs_string_t));
+            test_str(*(char**)v.ptr, "hello");
+            test_assert(*(char**)v.ptr != label->name);
+            ecs_ptr_free(world, v.type, v.ptr);
+        }
+        test_str(label->name, "hello");
+        test_int(label->count, 42);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
 void Expr_var_member_member(void) {
     ecs_world_t *world = ecs_init();
 

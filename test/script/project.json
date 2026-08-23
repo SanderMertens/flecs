@@ -1561,6 +1561,7 @@
                 "add_var_to",
                 "var_member",
                 "var_member_member",
+                "var_member_w_dtor_member",
                 "var_element",
                 "var_element_out_of_range",
                 "var_element_w_var_index",
