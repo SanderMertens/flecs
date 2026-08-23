@@ -19781,3 +19781,63 @@ void Eval_enum_constant_w_function_that_moves_constant(void) {
 
     ecs_fini(world);
 }
+
+static ecs_entity_t script_entity_under_update = 0;
+static ecs_entity_t script_update_marker = 0;
+static int script_update_on_remove_invoked = 0;
+
+static void script_update_on_remove(ecs_iter_t *it) {
+    script_update_on_remove_invoked += it->count;
+
+    if (script_entity_under_update &&
+        ecs_is_alive(it->world, script_entity_under_update))
+    {
+        ecs_add_id(it->world,
+            script_entity_under_update, script_update_marker);
+    }
+}
+
+void Eval_script_update_w_on_remove_observer_that_moves_script_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    script_entity_under_update = 0;
+    script_update_on_remove_invoked = 0;
+    script_update_marker = ecs_entity(world, { .name = "Marker" });
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = Tag }},
+        .events = { EcsOnRemove },
+        .callback = script_update_on_remove
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = "e { Tag }\n"
+    });
+    test_assert(s != 0);
+    test_assert(ecs_lookup(world, "e") != 0);
+
+    script_entity_under_update = s;
+
+    test_assert(ecs_script_update(world, s, 0, "e { Tag }\nf { Tag }\n") == 0);
+
+    test_assert(script_update_on_remove_invoked > 0);
+    test_assert(ecs_has_id(world, s, script_update_marker));
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t f = ecs_lookup(world, "f");
+    test_assert(e != 0);
+    test_assert(f != 0);
+    test_assert(ecs_has_id(world, e, Tag));
+    test_assert(ecs_has_id(world, f, Tag));
+
+    const EcsScript *ptr = ecs_get(world, s, EcsScript);
+    test_assert(ptr != NULL);
+    test_assert(ptr->error == NULL);
+
+    script_entity_under_update = 0;
+
+    ecs_fini(world);
+}
