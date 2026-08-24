@@ -256,8 +256,15 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->performance.merge_time, t, world->info.merge_time_total);
     ECS_COUNTER_RECORD(&s->performance.rematch_time, t, world->info.rematch_time_total);
     ECS_GAUGE_RECORD(&s->performance.delta_time, t, delta_world_time);
-    if (ECS_NEQZERO(delta_world_time) && ECS_NEQZERO(delta_frame_count)) {
-        ECS_GAUGE_RECORD(&s->performance.fps, t, (double)1 / (delta_world_time / (double)delta_frame_count));
+    double avg_frame_time = 0;
+    if (ECS_NEQZERO(delta_frame_count)) {
+        avg_frame_time = delta_world_time / delta_frame_count;
+    }
+
+    /* Frames whose clock did not advance report the minimum delta, which is
+     * not a measurable frame rate. Report 0, like the world summary. */
+    if (avg_frame_time > (double)ECS_FRAME_MIN_DELTA_TIME) {
+        ECS_GAUGE_RECORD(&s->performance.fps, t, (double)1 / avg_frame_time);
     } else {
         ECS_GAUGE_RECORD(&s->performance.fps, t, 0);
     }
