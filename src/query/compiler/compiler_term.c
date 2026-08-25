@@ -1285,6 +1285,9 @@ int flecs_query_compile_term(
 
     op.field_index = flecs_ito(int8_t, term->field_index);
     op.term_index = flecs_ito(int8_t, term - q->terms);
+    if (ECS_IS_VALUE_PAIR(term->id)) {
+        op.flags |= EcsQueryIsValuePair;
+    }
 
     flecs_query_set_op_kind(query, &op, term, src_is_var);
 

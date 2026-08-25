@@ -120,6 +120,7 @@ typedef enum {
 #define EcsQueryIsEntity  (1 << 0)
 #define EcsQueryIsVar     (1 << 1)
 #define EcsQueryIsSelf    (1 << 6)
+#define EcsQueryIsValuePair (1 << 7)
 
 /* Op flags used to shift EcsQueryIsEntity and EcsQueryIsVar */
 #define EcsQuerySrc     0
