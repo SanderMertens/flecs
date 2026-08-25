@@ -366,7 +366,7 @@ static int flecs_term_populate_from_id(
             return -1;
         }
         if (!second) {
-            if (first != EcsChildOf) {
+            if (first != EcsChildOf && !ECS_IS_VALUE_PAIR(term->id)) {
                 flecs_query_validator_error(ctx, "missing second element in term.id");
                 return -1;
             } else {
@@ -543,7 +543,7 @@ static int flecs_term_verify(
         flecs_query_validator_error(ctx, "expected PAIR flag for term with pair");
         return -1;
     } else if (!ecs_term_ref_is_set(second) && ECS_HAS_ID_FLAG(flags, PAIR)) {
-        if (first_id != EcsChildOf) {
+        if (first_id != EcsChildOf && !ECS_IS_VALUE_PAIR(id)) {
             flecs_query_validator_error(ctx, "unexpected PAIR flag for term without pair");
             return -1;
         } else {
@@ -567,7 +567,9 @@ static int flecs_term_verify(
             flecs_query_validator_error(ctx, "invalid 0 for first element in pair id");
             return -1;
         }
-        if ((ECS_PAIR_FIRST(id) != EcsChildOf) && !ECS_PAIR_SECOND(id)) {
+        if ((ECS_PAIR_FIRST(id) != EcsChildOf) && !ECS_IS_VALUE_PAIR(id) && 
+            !ECS_PAIR_SECOND(id)) 
+        {
             flecs_query_validator_error(ctx, "invalid 0 for second element in pair id");
             return -1;
         }
@@ -713,6 +715,10 @@ int flecs_term_finalize(
             "second.name (%s) and second.id have competing values", 
                 second->name);
         return -1;
+    }
+
+    if (ECS_IS_VALUE_PAIR(term->id) && !ecs_term_ref_is_set(second)) {
+        second->id |= EcsIsEntity;
     }
 
     if (term->id & ~ECS_ID_FLAGS_MASK) {

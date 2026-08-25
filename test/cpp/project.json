@@ -1090,7 +1090,8 @@
                 "query_w_this_second",
                 "pred_eq",
                 "pred_eq_name",
-                "pred_match"
+                "pred_match",
+                "value_pair_w_0_value"
             ]
         }, {
             "id": "SystemBuilder",

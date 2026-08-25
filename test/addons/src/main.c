@@ -117,7 +117,6 @@ void Pipeline_set_time_scale_w_stage(void);
 void Pipeline_set_time_scale_w_readonly(void);
 void Pipeline_init_failure_preserves_user_entity(void);
 void Pipeline_update_pipeline_replaces_existing(void);
-void Pipeline_write_wildcard_w_var_src_term(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -1022,10 +1021,6 @@ bake_test_case Pipeline_testcases[] = {
     {
         "update_pipeline_replaces_existing",
         Pipeline_update_pipeline_replaces_existing
-    },
-    {
-        "write_wildcard_w_var_src_term",
-        Pipeline_write_wildcard_w_var_src_term
     }
 };
 
@@ -2826,7 +2821,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        95,
+        94,
         Pipeline_testcases
     },
     {

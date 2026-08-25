@@ -5837,3 +5837,60 @@ void QueryBuilder_pred_match(void) {
 
     test_int(count, 1);
 }
+
+union UnionT {
+    enum struct Type {
+        Type1,
+        Type2
+    };
+    uint32_t type1;
+    float    type2;
+};
+
+void QueryBuilder_value_pair_w_0_value(void) {
+    flecs::world world;
+
+    world.component<UnionT>()
+        .add(flecs::Relationship)
+        .add(flecs::Exclusive);
+
+    auto q1 = world.query_builder<const UnionT>()
+        .second(uint64_t(UnionT::Type::Type1)).id_flags(ECS_VALUE_PAIR)
+        .cache_kind(cache_kind)
+        .build();
+
+    auto q2 = world.query_builder<const UnionT>()
+        .second(uint64_t(UnionT::Type::Type2)).id_flags(ECS_VALUE_PAIR)
+        .cache_kind(cache_kind)
+        .build();
+
+    UnionT val1; val1.type1 = 3;
+    UnionT val2; val2.type2 = 2.5f;
+
+    flecs::entity e1 = world.entity();
+    flecs::entity e2 = world.entity();
+
+    ecs_set_id(world, e1, 
+        ecs_value_pair(world.component<UnionT>(), UnionT::Type::Type1), 
+        sizeof(UnionT), &val1);
+    ecs_set_id(world, e2, 
+        ecs_value_pair(world.component<UnionT>(), UnionT::Type::Type2), 
+        sizeof(UnionT), &val2);
+
+    int32_t count1 = 0, count2 = 0;
+
+    q1.each([&](flecs::entity e, const UnionT& data) {
+        test_assert(e == e1);
+        test_uint(data.type1, 3);
+        count1 ++;
+    });
+
+    q2.each([&](flecs::entity e, const UnionT& data) {
+        test_assert(e == e2);
+        test_flt(data.type2, 2.5f);
+        count2 ++;
+    });
+
+    test_int(count1, 1);
+    test_int(count2, 1);
+}

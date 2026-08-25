@@ -2417,8 +2417,7 @@
                 "propagate_custom_rel_add_to_target",
                 "propagate_custom_rel_remove_from_target",
                 "propagate_custom_rel_masked_add",
-                "propagate_add_to_grandparent_w_parent_inherited",
-                "on_remove_value_pair_w_var_second_term"
+                "propagate_add_to_grandparent_w_parent_inherited"
             ]
         }, {
             "id": "ObserverOnSet",

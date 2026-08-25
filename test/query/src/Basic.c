@@ -11769,3 +11769,49 @@ void Basic_update_query_replaces_existing(void) {
 
     ecs_fini(world);
 }
+
+void Basic_this_value_pair_w_0_value(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Rel = ecs_new(world);
+    ecs_add_id(world, Rel, EcsRelationship);
+    ecs_add_id(world, Rel, EcsExclusive);
+
+    ecs_query_t *q0 = ecs_query(world, {
+        .terms = {{ .id = ecs_value_pair(Rel, 0), .inout = EcsIn }},
+        .cache_kind = cache_kind
+    });
+    test_assert(q0 != NULL);
+
+    ecs_query_t *q1 = ecs_query(world, {
+        .terms = {{ .id = ecs_value_pair(Rel, 1), .inout = EcsIn }},
+        .cache_kind = cache_kind
+    });
+    test_assert(q1 != NULL);
+
+    ecs_entity_t e0 = ecs_new_w_id(world, ecs_value_pair(Rel, 0));
+    ecs_entity_t e1 = ecs_new_w_id(world, ecs_value_pair(Rel, 1));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q0);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e0, it.entities[0]);
+        test_uint(ecs_value_pair(Rel, 0), ecs_field_id(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(ecs_value_pair(Rel, 1), ecs_field_id(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q0);
+    ecs_query_fini(q1);
+
+    ecs_fini(world);
+}
