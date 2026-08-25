@@ -72,6 +72,22 @@ static ecs_entity_range_t* flecs_entity_index_find_range(
     return NULL;
 }
 
+void flecs_entity_ranges_on_ensure(
+    ecs_entity_index_t *index,
+    uint32_t id)
+{
+    ecs_entity_range_t *active = index->active_range;
+    if (!active || (id >= active->min && (!active->max || id <= active->max))) {
+        index->max_id = id > index->max_id ? id : index->max_id;
+        return;
+    }
+
+    ecs_entity_range_t *range = flecs_entity_index_find_range(index, id);
+    if (range) {
+        range->cur = id > range->cur ? id : range->cur;
+    }
+}
+
 void flecs_entity_ranges_on_delete(
     ecs_entity_index_t *index,
     uint64_t entity,

@@ -2697,6 +2697,7 @@ void World_range_exhausted(void);
 void World_range_delete_recycled_to_correct_range(void);
 void World_range_create_small_range_from_1(void);
 void World_range_create_large_range_from_1(void);
+void World_range_prefab_spawn_deferred_after_range_switch(void);
 void World_phases(void);
 void World_phases_w_merging(void);
 void World_phases_match_in_create(void);
@@ -13911,6 +13912,10 @@ bake_test_case World_testcases[] = {
         World_range_create_large_range_from_1
     },
     {
+        "range_prefab_spawn_deferred_after_range_switch",
+        World_range_prefab_spawn_deferred_after_range_switch
+    },
+    {
         "phases",
         World_phases
     },
@@ -16806,7 +16811,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        176,
+        177,
         World_testcases
     },
     {

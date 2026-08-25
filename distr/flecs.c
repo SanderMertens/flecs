@@ -334,6 +334,10 @@ void flecs_entity_ranges_init(
 void flecs_entity_ranges_fini(
     ecs_entity_index_t *index);
 
+void flecs_entity_ranges_on_ensure(
+    ecs_entity_index_t *index,
+    uint32_t id);
+
 /* Move a recycled entity to the range it belongs to. */
 void flecs_entity_ranges_on_delete(
     ecs_entity_index_t *index,
@@ -23416,6 +23420,22 @@ static ecs_entity_range_t* flecs_entity_index_find_range(
     return NULL;
 }
 
+void flecs_entity_ranges_on_ensure(
+    ecs_entity_index_t *index,
+    uint32_t id)
+{
+    ecs_entity_range_t *active = index->active_range;
+    if (!active || (id >= active->min && (!active->max || id <= active->max))) {
+        index->max_id = id > index->max_id ? id : index->max_id;
+        return;
+    }
+
+    ecs_entity_range_t *range = flecs_entity_index_find_range(index, id);
+    if (range) {
+        range->cur = id > range->cur ? id : range->cur;
+    }
+}
+
 void flecs_entity_ranges_on_delete(
     ecs_entity_index_t *index,
     uint64_t entity,
@@ -39452,7 +39472,11 @@ ecs_record_t* flecs_entity_index_ensure(
         /* Entity doesn't have a dense index yet */
         ecs_vec_append_t(index->allocator, &index->dense, uint64_t)[0] = entity;
         r->dense = dense = ecs_vec_count(&index->dense) - 1;
+#ifdef FLECS_ENTITY_RANGES
+        flecs_entity_ranges_on_ensure(index, id);
+#else
         index->max_id = id > index->max_id ? id : index->max_id;
+#endif
     }
 
     ecs_assert(dense != 0, ECS_INTERNAL_ERROR, NULL);
