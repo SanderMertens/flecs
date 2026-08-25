@@ -643,6 +643,8 @@ void Eval_const_var_large_struct_no_leak(void);
 void Eval_const_var_from_large_component_no_leak(void);
 void Eval_const_var_from_large_component_member_no_leak(void);
 void Eval_const_var_from_large_array_element_no_leak(void);
+void Eval_update_script_that_declares_script_entity(void);
+void Eval_update_script_that_declares_parent_of_script_entity(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -2431,6 +2433,8 @@ void Refs_reeval_instantiates_template_w_global_mut_var_ref(void);
 void Refs_global_mut_var_modified_twice(void);
 void Refs_global_const_var_and_mut_var_in_same_expr(void);
 void Refs_global_mut_var_declared_in_same_script_modified(void);
+void Refs_global_mut_var_declared_in_same_script_reacts(void);
+void Refs_two_global_mut_vars_declared_in_same_script(void);
 void Refs_reeval_during_script_preserves_using(void);
 void Refs_has_component_ref(void);
 void Refs_has_tag_ref(void);
@@ -5154,6 +5158,14 @@ bake_test_case Eval_testcases[] = {
     {
         "const_var_from_large_array_element_no_leak",
         Eval_const_var_from_large_array_element_no_leak
+    },
+    {
+        "update_script_that_declares_script_entity",
+        Eval_update_script_that_declares_script_entity
+    },
+    {
+        "update_script_that_declares_parent_of_script_entity",
+        Eval_update_script_that_declares_parent_of_script_entity
     }
 };
 
@@ -12216,6 +12228,14 @@ bake_test_case Refs_testcases[] = {
         Refs_global_mut_var_declared_in_same_script_modified
     },
     {
+        "global_mut_var_declared_in_same_script_reacts",
+        Refs_global_mut_var_declared_in_same_script_reacts
+    },
+    {
+        "two_global_mut_vars_declared_in_same_script",
+        Refs_two_global_mut_vars_declared_in_same_script
+    },
+    {
         "reeval_during_script_preserves_using",
         Refs_reeval_during_script_preserves_using
     },
@@ -12971,7 +12991,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        634,
+        636,
         Eval_testcases
     },
     {
@@ -13089,7 +13109,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        127,
+        129,
         Refs_testcases
     },
     {

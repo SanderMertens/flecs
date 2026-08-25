@@ -20054,3 +20054,54 @@ void Eval_const_var_from_large_array_element_no_leak(void) {
 
     ecs_fini(world);
 }
+
+void Eval_update_script_that_declares_script_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_entity(world, { .name = "foo" });
+
+    test_assert(ecs_script_update(world, s, 0,
+        HEAD "foo {"
+        LINE "  child {}"
+        LINE "}") == 0);
+
+    test_assert(ecs_is_alive(world, s));
+    test_assert(ecs_lookup(world, "foo.child") != 0);
+
+    test_assert(ecs_script_update(world, s, 0,
+        HEAD "foo {"
+        LINE "  child {}"
+        LINE "}") == 0);
+
+    test_assert(ecs_is_alive(world, s));
+    test_assert(ecs_lookup(world, "foo.child") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_update_script_that_declares_parent_of_script_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t s = ecs_entity(world, { .name = "parent.foo" });
+
+    test_assert(ecs_script_update(world, s, 0,
+        HEAD "parent {"
+        LINE "  child {}"
+        LINE "}") == 0);
+
+    test_assert(ecs_is_alive(world, s));
+    test_assert(ecs_lookup(world, "parent.child") != 0);
+
+    test_assert(ecs_script_update(world, s, 0,
+        HEAD "parent {"
+        LINE "  child {}"
+        LINE "}") == 0);
+
+    test_assert(ecs_is_alive(world, s));
+    test_assert(ecs_lookup(world, "parent.child") != 0);
+
+    ecs_fini(world);
+}

@@ -5556,7 +5556,7 @@ void Refs_global_mut_var_declared_in_same_script(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10); // intentional: we don't do partial script updates on an external change
+        test_int(p->x, 20);
     }
 
     ecs_fini(world);
@@ -5604,7 +5604,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn(void) {
         test_assert(foo != 0);
         const Position *p = ecs_get(world, foo, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10);
+        test_int(p->x, 20);
     }
 
     ecs_fini(world);
@@ -6222,7 +6222,121 @@ void Refs_global_mut_var_declared_in_same_script_modified(void) {
     {
         const Position *p = ecs_get(world, ecs_lookup(world, "foo"), Position);
         test_assert(p != NULL);
+        test_int(p->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_global_mut_var_declared_in_same_script_reacts(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "export mut v: f32 = 10"
+            LINE "foo {"
+            LINE "  Position: {v, 0}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    {
+        const Position *p = ecs_get(world, ecs_lookup(world, "foo"), Position);
+        test_assert(p != NULL);
         test_int(p->x, 10);
+    }
+
+    ecs_value_t value = ecs_mut_var_get(world, v);
+    test_assert(value.ptr != NULL);
+    *(ecs_f32_t*)value.ptr = 20;
+    ecs_mut_var_modified(world, v);
+
+    {
+        const Position *p = ecs_get(world, ecs_lookup(world, "foo"), Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+    }
+
+    test_int(*(ecs_f32_t*)ecs_mut_var_get(world, v).ptr, 20);
+
+    ecs_fini(world);
+}
+
+void Refs_two_global_mut_vars_declared_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "export mut a: f32 = 10"
+            LINE "export mut b: f32 = 20"
+            LINE "foo {"
+            LINE "  Position: {a, b}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+    ecs_entity_t b = ecs_lookup(world, "b");
+    test_assert(b != 0);
+
+    {
+        const Position *p = ecs_get(world, ecs_lookup(world, "foo"), Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    {
+        ecs_value_t value = ecs_mut_var_get(world, b);
+        test_assert(value.ptr != NULL);
+        *(ecs_f32_t*)value.ptr = 30;
+        ecs_mut_var_modified(world, b);
+    }
+
+    {
+        const Position *p = ecs_get(world, ecs_lookup(world, "foo"), Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 30);
+    }
+
+    {
+        ecs_value_t value = ecs_mut_var_get(world, a);
+        test_assert(value.ptr != NULL);
+        *(ecs_f32_t*)value.ptr = 15;
+        ecs_mut_var_modified(world, a);
+    }
+
+    test_int(*(ecs_f32_t*)ecs_mut_var_get(world, a).ptr, 15);
+    test_int(*(ecs_f32_t*)ecs_mut_var_get(world, b).ptr, 30);
+
+    {
+        const Position *p = ecs_get(world, ecs_lookup(world, "foo"), Position);
+        test_assert(p != NULL);
+        test_int(p->x, 15);
+        test_int(p->y, 30);
     }
 
     ecs_fini(world);

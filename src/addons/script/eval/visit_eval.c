@@ -408,6 +408,20 @@ bool flecs_script_is_builtin(
     return ecs_has_pair(world, e, EcsChildOf, EcsFlecsCore);
 }
 
+bool flecs_script_is_script_scope(
+    const ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t e)
+{
+    while (script) {
+        if (script == e) {
+            return true;
+        }
+        script = ecs_get_target(world, script, EcsChildOf, 0);
+    }
+    return false;
+}
+
 static void flecs_script_apply_with(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity)
@@ -448,7 +462,9 @@ ecs_entity_t flecs_script_create_entity(
     }
 
     ecs_entity_t result = ecs_entity_init(v->world, &desc);
-    if (result && v->script_tag && !flecs_script_is_builtin(v->world, result)) {
+    if (result && v->script_tag && !flecs_script_is_builtin(v->world, result) &&
+        !flecs_script_is_script_scope(v->world, v->script_entity, result))
+    {
         ecs_add_id(v->world, result, v->script_tag);
     }
     if (result) {

@@ -4310,13 +4310,9 @@ void Error_script_update_failure_is_reported(void) {
 }
 
 void Error_script_declares_entity_named_after_script(void) {
-    test_quarantine("20 Aug 2026");
-
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Foo);
-
-    ecs_log_set_level(-4);
 
     ecs_entity_t script = ecs_entity(world, { .name = "main" });
 
@@ -4325,11 +4321,19 @@ void Error_script_declares_entity_named_after_script(void) {
     LINE "  Foo"
     LINE "}";
 
-    test_assert(ecs_script_update(world, script, 0, expr) != 0);
+    test_assert(ecs_script_update(world, script, 0, expr) == 0);
 
     const EcsScript *s = ecs_get(world, script, EcsScript);
     test_assert(s != NULL);
-    test_assert(s->error != NULL);
+    test_assert(s->error == NULL);
+
+    test_assert(ecs_lookup(world, "main") == script);
+    test_assert(ecs_has(world, script, Foo));
+
+    test_assert(ecs_script_update(world, script, 0, expr) == 0);
+
+    test_assert(ecs_lookup(world, "main") == script);
+    test_assert(ecs_has(world, script, Foo));
 
     ecs_fini(world);
 }
@@ -4474,14 +4478,12 @@ void Error_doc_detail_not_readable_from_script(void) {
 void Error_script_declares_entity_named_after_script_w_child(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_struct(world, {
+    ecs_entity_t ui = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Ui" }),
         .members = {
             {"i", ecs_id(ecs_i32_t)}
         }
     });
-
-    ecs_log_set_level(-4);
 
     ecs_entity_t script = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "hud" }),
@@ -4493,7 +4495,16 @@ void Error_script_declares_entity_named_after_script_w_child(void) {
     });
     test_assert(script != 0);
 
-    test_assert(ecs_lookup(world, "hud") != script);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    test_assert(ecs_lookup(world, "hud") == script);
+    test_int(*(ecs_i32_t*)ecs_get_id(world, script, ui), 1);
+
+    ecs_entity_t child = ecs_lookup(world, "hud.child");
+    test_assert(child != 0);
+    test_int(*(ecs_i32_t*)ecs_get_id(world, child, ui), 2);
 
     ecs_fini(world);
 }

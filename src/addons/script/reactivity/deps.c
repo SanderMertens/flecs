@@ -29,6 +29,7 @@ typedef struct flecs_script_dep_ctx_t {
     int32_t for_count;
     int32_t member;
     int32_t entity_symbol;
+    bool no_deps;
     ecs_script_entity_t *entity;
     ecs_script_scope_t *scope;
 } flecs_script_dep_ctx_t;
@@ -550,6 +551,13 @@ static int flecs_script_dep_expr(
         return 0;
     }
 
+    /* Statements that must never be reevaluated by a reactive event don't
+     * register refs, so nothing can trigger them. */
+    if (ctx->no_deps) {
+        uint64_t discard = 0;
+        return flecs_script_dep_expr_vars(ctx, node, &discard);
+    }
+
     bool track_dyn_nodes = ctx->v->script_entity && !ctx->template;
 
     ecs_vec_t refs = {0};
@@ -799,7 +807,12 @@ static int flecs_script_dep_node(
     case EcsAstExportConst:
     case EcsAstExportMut: {
         ecs_script_var_node_t *n = (ecs_script_var_node_t*)node;
-        if (flecs_script_dep_expr(ctx, n->expr, &node->direct_input)) {
+        bool no_deps = ctx->no_deps;
+        ctx->no_deps = no_deps || node->kind == EcsAstExportMut;
+        int dep_result = flecs_script_dep_expr(
+            ctx, n->expr, &node->direct_input);
+        ctx->no_deps = no_deps;
+        if (dep_result) {
             return -1;
         }
         if (node->kind == EcsAstConst) {

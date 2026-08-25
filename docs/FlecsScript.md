@@ -1565,8 +1565,21 @@ ecs_value_t v = ecs_mut_var_get(world, difficulty);
 ecs_mut_var_modified(world, difficulty);
 ```
 
-Note that a script is not reevaluated by a change to a mut variable that the
-script declares itself.
+A script is also reevaluated by a change to a mut variable that it declares
+itself:
+
+```cpp
+export mut difficulty: f32 = 1.0
+
+enemy {
+  Health: {100 * difficulty}
+}
+```
+
+An `export mut` statement never has data dependencies, not even when its
+expression uses another mut variable. This means the statement is never
+reevaluated by a reactive event, and the variable keeps the value it was
+assigned after the script ran.
 
 ## Component values
 A script can use the value of a component that is looked up on a specific entity. The following example fetches the `width` and `depth` members from the `Level` component, that is fetched from the `Game` entity:

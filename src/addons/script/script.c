@@ -348,6 +348,9 @@ int flecs_script_update(
             ecs_script_ref_t *refs = ecs_vec_first(script_refs);
             int32_t i;
             for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
+                if (refs[i].component == ecs_id(EcsScriptMutVar)) {
+                    continue;
+                }
                 if (refs[i].entity && ecs_has_pair(
                     world, refs[i].entity, ecs_id(EcsScript), e))
                 {

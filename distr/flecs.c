@@ -50374,6 +50374,11 @@ bool flecs_script_is_builtin(
     const ecs_world_t *world,
     ecs_entity_t e);
 
+bool flecs_script_is_script_scope(
+    const ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t e);
+
 ecs_entity_t flecs_script_create_entity(
     ecs_script_eval_visitor_t *v,
     const char *name);
@@ -71768,6 +71773,9 @@ int flecs_script_update(
             ecs_script_ref_t *refs = ecs_vec_first(script_refs);
             int32_t i;
             for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
+                if (refs[i].component == ecs_id(EcsScriptMutVar)) {
+                    continue;
+                }
                 if (refs[i].entity && ecs_has_pair(
                     world, refs[i].entity, ecs_id(EcsScript), e))
                 {
@@ -94617,6 +94625,20 @@ bool flecs_script_is_builtin(
     return ecs_has_pair(world, e, EcsChildOf, EcsFlecsCore);
 }
 
+bool flecs_script_is_script_scope(
+    const ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t e)
+{
+    while (script) {
+        if (script == e) {
+            return true;
+        }
+        script = ecs_get_target(world, script, EcsChildOf, 0);
+    }
+    return false;
+}
+
 static void flecs_script_apply_with(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity)
@@ -94657,7 +94679,9 @@ ecs_entity_t flecs_script_create_entity(
     }
 
     ecs_entity_t result = ecs_entity_init(v->world, &desc);
-    if (result && v->script_tag && !flecs_script_is_builtin(v->world, result)) {
+    if (result && v->script_tag && !flecs_script_is_builtin(v->world, result) &&
+        !flecs_script_is_script_scope(v->world, v->script_entity, result))
+    {
         ecs_add_id(v->world, result, v->script_tag);
     }
     if (result) {
@@ -98543,7 +98567,9 @@ static int flecs_script_type_ensure_node(
     if (!current) {
         return -1;
     }
-    if (t->v->script_tag && !flecs_script_is_builtin(t->v->world, current)) {
+    if (t->v->script_tag && !flecs_script_is_builtin(t->v->world, current) &&
+        !flecs_script_is_script_scope(t->v->world, t->v->script_entity, current))
+    {
         ecs_add_id(t->v->world, current, t->v->script_tag);
     }
     node->eval = current;
@@ -110441,6 +110467,7 @@ typedef struct flecs_script_dep_ctx_t {
     int32_t for_count;
     int32_t member;
     int32_t entity_symbol;
+    bool no_deps;
     ecs_script_entity_t *entity;
     ecs_script_scope_t *scope;
 } flecs_script_dep_ctx_t;
@@ -110962,6 +110989,13 @@ static int flecs_script_dep_expr(
         return 0;
     }
 
+    /* Statements that must never be reevaluated by a reactive event don't
+     * register refs, so nothing can trigger them. */
+    if (ctx->no_deps) {
+        uint64_t discard = 0;
+        return flecs_script_dep_expr_vars(ctx, node, &discard);
+    }
+
     bool track_dyn_nodes = ctx->v->script_entity && !ctx->template;
 
     ecs_vec_t refs = {0};
@@ -111211,7 +111245,12 @@ static int flecs_script_dep_node(
     case EcsAstExportConst:
     case EcsAstExportMut: {
         ecs_script_var_node_t *n = (ecs_script_var_node_t*)node;
-        if (flecs_script_dep_expr(ctx, n->expr, &node->direct_input)) {
+        bool no_deps = ctx->no_deps;
+        ctx->no_deps = no_deps || node->kind == EcsAstExportMut;
+        int dep_result = flecs_script_dep_expr(
+            ctx, n->expr, &node->direct_input);
+        ctx->no_deps = no_deps;
+        if (dep_result) {
             return -1;
         }
         if (node->kind == EcsAstConst) {
@@ -112057,8 +112096,8 @@ void flecs_script_update_dyn_observers(
         if (!ecs_is_alive(world, new_refs[i].entity)) {
             continue;
         }
-        if (ecs_has_pair(world, new_refs[i].entity, ecs_id(EcsScript),
-            script))
+        if (new_refs[i].component != ecs_id(EcsScriptMutVar) &&
+            ecs_has_pair(world, new_refs[i].entity, ecs_id(EcsScript), script))
         {
             continue;
         }
