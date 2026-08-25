@@ -15645,8 +15645,10 @@ static bool flecs_observer_query_has_range(
             ecs_iter_fini(it);
             return false;
         }
-        ecs_iter_set_var(it, ecs_query_find_var(query, term->second.name),
-            ECS_PAIR_SECOND(event_id));
+        if (!ECS_IS_VALUE_PAIR(event_id)) {
+            ecs_iter_set_var(it, ecs_query_find_var(query, term->second.name),
+                ECS_PAIR_SECOND(event_id));
+        }
     }
 
     return ecs_query_next(it);
