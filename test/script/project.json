@@ -1870,7 +1870,8 @@
                 "has_in_binary_expr",
                 "member_of_large_struct_var_no_leak",
                 "match_i32_1_i_case_one_line",
-                "match_i32_2_i_cases_one_line"
+                "match_i32_2_i_cases_one_line",
+                "platform_consts"
             ]
         }, {
             "id": "ExprAst",
