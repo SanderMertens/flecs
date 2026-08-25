@@ -3395,6 +3395,13 @@ void flecs_observers_invoke_up_notify(
     ecs_table_t *table,
     ecs_entity_t trav);
 
+void flecs_observers_invoke_skip_up_notify(
+    ecs_world_t *world,
+    ecs_map_t *observers,
+    ecs_iter_t *it,
+    ecs_table_t *table,
+    ecs_entity_t trav);
+
 /* Invalidate reachable cache. */
 void flecs_emit_propagate_invalidate(
     ecs_world_t *world,
@@ -14244,11 +14251,13 @@ static void flecs_emit_forward_id(
 
     for (ider_i = 0; ider_i < ider_count; ider_i ++) {
         ecs_event_id_record_t *ider = iders[ider_i];
-        flecs_observers_invoke(world, &ider->up, it, table, trav);
+        flecs_observers_invoke_skip_up_notify(
+            world, &ider->up, it, table, trav);
 
         /* Owned takes precedence */
         if (!owned) {
-            flecs_observers_invoke(world, &ider->self_up, it, table, trav);
+            flecs_observers_invoke_skip_up_notify(
+                world, &ider->self_up, it, table, trav);
         }
     }
 
@@ -15833,13 +15842,19 @@ static void flecs_uni_observer_invoke(
     world->info.observers_ran_total ++;
 }
 
+typedef enum flecs_observers_invoke_mode_t {
+    FlecsObserversInvokeAll,
+    FlecsObserversInvokeUpNotifyOnly,
+    FlecsObserversInvokeSkipUpNotify
+} flecs_observers_invoke_mode_t;
+
 static void flecs_observers_invoke_intern(
     ecs_world_t *world,
     ecs_map_t *observers,
     ecs_iter_t *it,
     ecs_table_t *table,
     ecs_entity_t trav,
-    bool up_notify_only)
+    flecs_observers_invoke_mode_t mode)
 {
     if (ecs_map_is_init(observers)) {
         ECS_TABLE_LOCK(it->world, table);
@@ -15847,9 +15862,12 @@ static void flecs_observers_invoke_intern(
         ecs_map_iter_t oit = ecs_map_iter(observers);
         while (ecs_map_next(&oit)) {
             ecs_observer_t *o = ecs_map_ptr(&oit);
-            if (up_notify_only &&
-                !(flecs_observer_impl(o)->flags & EcsObserverIsUpNotify))
-            {
+            bool up_notify = (flecs_observer_impl(o)->flags & 
+                EcsObserverIsUpNotify) != 0;
+            if (mode == FlecsObserversInvokeUpNotifyOnly && !up_notify) {
+                continue;
+            }
+            if (mode == FlecsObserversInvokeSkipUpNotify && up_notify) {
                 continue;
             }
 
@@ -15872,7 +15890,8 @@ void flecs_observers_invoke(
     ecs_table_t *table,
     ecs_entity_t trav)
 {
-    flecs_observers_invoke_intern(world, observers, it, table, trav, false);
+    flecs_observers_invoke_intern(world, observers, it, table, trav,
+        FlecsObserversInvokeAll);
 }
 
 void flecs_observers_invoke_up_notify(
@@ -15882,7 +15901,19 @@ void flecs_observers_invoke_up_notify(
     ecs_table_t *table,
     ecs_entity_t trav)
 {
-    flecs_observers_invoke_intern(world, observers, it, table, trav, true);
+    flecs_observers_invoke_intern(world, observers, it, table, trav,
+        FlecsObserversInvokeUpNotifyOnly);
+}
+
+void flecs_observers_invoke_skip_up_notify(
+    ecs_world_t *world,
+    ecs_map_t *observers,
+    ecs_iter_t *it,
+    ecs_table_t *table,
+    ecs_entity_t trav)
+{
+    flecs_observers_invoke_intern(world, observers, it, table, trav,
+        FlecsObserversInvokeSkipUpNotify);
 }
 
 static void flecs_multi_observer_invoke(

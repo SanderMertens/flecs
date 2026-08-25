@@ -1948,7 +1948,10 @@
                 "match_after_defer_add_to_parent",
                 "unmatch_after_defer_remove_from_parent",
                 "unmatch_after_delete_traversable_target",
-                "unmatch_after_delete_traversable_target_parent"
+                "unmatch_after_delete_traversable_target_parent",
+                "no_rematch_on_instantiate",
+                "no_rematch_on_instantiate_multi_up",
+                "no_rematch_on_instantiate_child"
             ]
         }, {
             "id": "ChangeDetection",

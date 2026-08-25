@@ -658,11 +658,13 @@ static void flecs_emit_forward_id(
 
     for (ider_i = 0; ider_i < ider_count; ider_i ++) {
         ecs_event_id_record_t *ider = iders[ider_i];
-        flecs_observers_invoke(world, &ider->up, it, table, trav);
+        flecs_observers_invoke_skip_up_notify(
+            world, &ider->up, it, table, trav);
 
         /* Owned takes precedence */
         if (!owned) {
-            flecs_observers_invoke(world, &ider->self_up, it, table, trav);
+            flecs_observers_invoke_skip_up_notify(
+                world, &ider->self_up, it, table, trav);
         }
     }
 

@@ -1890,6 +1890,9 @@ void Cached_match_after_defer_add_to_parent(void);
 void Cached_unmatch_after_defer_remove_from_parent(void);
 void Cached_unmatch_after_delete_traversable_target(void);
 void Cached_unmatch_after_delete_traversable_target_parent(void);
+void Cached_no_rematch_on_instantiate(void);
+void Cached_no_rematch_on_instantiate_multi_up(void);
+void Cached_no_rematch_on_instantiate_child(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -10318,6 +10321,18 @@ bake_test_case Cached_testcases[] = {
     {
         "unmatch_after_delete_traversable_target_parent",
         Cached_unmatch_after_delete_traversable_target_parent
+    },
+    {
+        "no_rematch_on_instantiate",
+        Cached_no_rematch_on_instantiate
+    },
+    {
+        "no_rematch_on_instantiate_multi_up",
+        Cached_no_rematch_on_instantiate_multi_up
+    },
+    {
+        "no_rematch_on_instantiate_child",
+        Cached_no_rematch_on_instantiate_child
     }
 };
 
@@ -14454,7 +14469,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        161,
+        164,
         Cached_testcases
     },
     {
