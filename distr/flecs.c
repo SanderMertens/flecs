@@ -89950,8 +89950,8 @@ static void flecs_query_sparse_init_range(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_sparse_ctx_t *op_ctx)
 {
-    ecs_table_range_t range = flecs_query_get_range(
-        op, &op->src, EcsQuerySrc, ctx);
+    ecs_table_range_t range = flecs_get_ref_range(
+        &op->src, flecs_query_ref_flags(op->flags, EcsQuerySrc), ctx);
     if (!range.count) {
         range.count = ecs_table_count(range.table);
     }
