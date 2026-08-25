@@ -94,7 +94,29 @@ inline flecs::entity world::module(const char *name) const {
             // Module was reparented, clean up old parent(s).
             flecs::entity cur = prev_parent, next;
             while (cur) {
+                // Stop if the old parent is an ancestor of the new parent.
+                flecs::entity p = parent;
+                while (p && p != cur) {
+                    p = p.parent();
+                }
+                if (p == cur) {
+                    break;
+                }
+
                 next = cur.parent();
+
+                // Move entities that were created in the old parent to the
+                // renamed module.
+                ecs_defer_begin(world_);
+                ecs_iter_t it = ecs_children(world_, cur);
+                while (ecs_children_next(&it)) {
+                    for (int32_t i = 0; i < it.count; i ++) {
+                        ecs_add_pair(world_, it.entities[i], EcsChildOf, 
+                            result);
+                    }
+                }
+                ecs_defer_end(world_);
+
                 cur.destruct();
                 this->set_version(cur);
                 cur = next;

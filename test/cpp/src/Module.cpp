@@ -75,6 +75,24 @@ public:
     }
 };
 
+namespace rename_ns {
+    struct RenamedModule {
+        RenamedModule(flecs::world& world) {
+            world.module<RenamedModule>("::renamed_module");
+        }
+    };
+}
+
+namespace rename_ns_outer {
+    namespace rename_ns_inner {
+        struct RenamedModule {
+            RenamedModule(flecs::world& world) {
+                world.module<RenamedModule>("::rename_ns_outer::renamed_module");
+            }
+        };
+    }
+}
+
 namespace RenamedRootModule {
     struct Module {
         Module(flecs::world& world) {
@@ -623,4 +641,42 @@ void Module_module_has_singleton(void) {
     auto e = world.import<SingletonTest>();
 
     test_assert(e.has(flecs::Singleton));
+}
+
+void Module_rename_w_existing_entity_in_old_parent(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity("::rename_ns::e");
+    test_assert(e.is_alive());
+
+    flecs::entity m = ecs.import<rename_ns::RenamedModule>();
+    test_str(m.path(), "::renamed_module");
+
+    test_assert(e.is_alive());
+    test_str(e.path(), "::renamed_module::e");
+    test_assert(e.parent() == m);
+    test_assert(ecs.lookup("::rename_ns") == 0);
+    test_assert(ecs.lookup("::renamed_module::e") == e);
+}
+
+void Module_rename_to_ancestor_w_existing_entity_in_old_parent(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity("::rename_ns_outer::rename_ns_inner::e");
+    flecs::entity o = ecs.entity("::rename_ns_outer::o");
+    test_assert(e.is_alive());
+    test_assert(o.is_alive());
+
+    flecs::entity m = ecs.import<
+        rename_ns_outer::rename_ns_inner::RenamedModule>();
+    test_str(m.path(), "::rename_ns_outer::renamed_module");
+    test_assert(m.is_alive());
+
+    test_assert(e.is_alive());
+    test_str(e.path(), "::rename_ns_outer::renamed_module::e");
+    test_assert(e.parent() == m);
+    test_assert(o.is_alive());
+    test_str(o.path(), "::rename_ns_outer::o");
+    test_assert(ecs.lookup("::rename_ns_outer::rename_ns_inner") == 0);
+    test_assert(ecs.lookup("::rename_ns_outer") == m.parent());
 }

@@ -1375,7 +1375,9 @@
                 "component_name_w_module_name",
                 "delete_module_w_implicit_component_and_system",
                 "delete_module_w_explicit_component_and_system",
-                "module_has_singleton"
+                "module_has_singleton",
+                "rename_w_existing_entity_in_old_parent",
+                "rename_to_ancestor_w_existing_entity_in_old_parent"
             ]
         }, {
             "id": "ImplicitComponents",
