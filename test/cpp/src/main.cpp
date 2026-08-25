@@ -1335,6 +1335,8 @@ void Module_component_name_w_module_name(void);
 void Module_delete_module_w_implicit_component_and_system(void);
 void Module_delete_module_w_explicit_component_and_system(void);
 void Module_module_has_singleton(void);
+void Module_rename_w_existing_entity_in_old_parent(void);
+void Module_rename_to_ancestor_w_existing_entity_in_old_parent(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -6935,6 +6937,14 @@ bake_test_case Module_testcases[] = {
     {
         "module_has_singleton",
         Module_module_has_singleton
+    },
+    {
+        "rename_w_existing_entity_in_old_parent",
+        Module_rename_w_existing_entity_in_old_parent
+    },
+    {
+        "rename_to_ancestor_w_existing_entity_in_old_parent",
+        Module_rename_to_ancestor_w_existing_entity_in_old_parent
     }
 };
 
@@ -8543,7 +8553,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        27,
+        29,
         Module_testcases
     },
     {
