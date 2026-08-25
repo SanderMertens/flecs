@@ -228,6 +228,11 @@ bool flecs_script_is_builtin(
     const ecs_world_t *world,
     ecs_entity_t e);
 
+bool flecs_script_is_script_scope(
+    const ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t e);
+
 ecs_entity_t flecs_script_create_entity(
     ecs_script_eval_visitor_t *v,
     const char *name);

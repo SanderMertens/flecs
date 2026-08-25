@@ -598,7 +598,9 @@ static int flecs_script_type_ensure_node(
     if (!current) {
         return -1;
     }
-    if (t->v->script_tag && !flecs_script_is_builtin(t->v->world, current)) {
+    if (t->v->script_tag && !flecs_script_is_builtin(t->v->world, current) &&
+        !flecs_script_is_script_scope(t->v->world, t->v->script_entity, current))
+    {
         ecs_add_id(t->v->world, current, t->v->script_tag);
     }
     node->eval = current;

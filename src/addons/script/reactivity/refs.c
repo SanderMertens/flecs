@@ -517,8 +517,8 @@ void flecs_script_update_dyn_observers(
         if (!ecs_is_alive(world, new_refs[i].entity)) {
             continue;
         }
-        if (ecs_has_pair(world, new_refs[i].entity, ecs_id(EcsScript),
-            script))
+        if (new_refs[i].component != ecs_id(EcsScriptMutVar) &&
+            ecs_has_pair(world, new_refs[i].entity, ecs_id(EcsScript), script))
         {
             continue;
         }
