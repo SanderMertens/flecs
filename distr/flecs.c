@@ -15650,10 +15650,8 @@ static bool flecs_observer_query_has_range(
             ecs_iter_fini(it);
             return false;
         }
-        if (!ECS_IS_VALUE_PAIR(event_id)) {
-            ecs_iter_set_var(it, ecs_query_find_var(query, term->second.name),
-                ECS_PAIR_SECOND(event_id));
-        }
+        ecs_iter_set_var(it, ecs_query_find_var(query, term->second.name),
+            ECS_PAIR_SECOND(event_id));
     }
 
     return ecs_query_next(it);
@@ -36300,7 +36298,7 @@ static int flecs_term_populate_from_id(
             return -1;
         }
         if (!second) {
-            if (first != EcsChildOf) {
+            if (first != EcsChildOf && !ECS_IS_VALUE_PAIR(term->id)) {
                 flecs_query_validator_error(ctx, "missing second element in term.id");
                 return -1;
             } else {
@@ -36477,7 +36475,7 @@ static int flecs_term_verify(
         flecs_query_validator_error(ctx, "expected PAIR flag for term with pair");
         return -1;
     } else if (!ecs_term_ref_is_set(second) && ECS_HAS_ID_FLAG(flags, PAIR)) {
-        if (first_id != EcsChildOf) {
+        if (first_id != EcsChildOf && !ECS_IS_VALUE_PAIR(id)) {
             flecs_query_validator_error(ctx, "unexpected PAIR flag for term without pair");
             return -1;
         } else {
@@ -36501,7 +36499,9 @@ static int flecs_term_verify(
             flecs_query_validator_error(ctx, "invalid 0 for first element in pair id");
             return -1;
         }
-        if ((ECS_PAIR_FIRST(id) != EcsChildOf) && !ECS_PAIR_SECOND(id)) {
+        if ((ECS_PAIR_FIRST(id) != EcsChildOf) && !ECS_IS_VALUE_PAIR(id) && 
+            !ECS_PAIR_SECOND(id)) 
+        {
             flecs_query_validator_error(ctx, "invalid 0 for second element in pair id");
             return -1;
         }
@@ -36647,6 +36647,10 @@ int flecs_term_finalize(
             "second.name (%s) and second.id have competing values", 
                 second->name);
         return -1;
+    }
+
+    if (ECS_IS_VALUE_PAIR(term->id) && !ecs_term_ref_is_set(second)) {
+        second->id |= EcsIsEntity;
     }
 
     if (term->id & ~ECS_ID_FLAGS_MASK) {
@@ -64283,56 +64287,26 @@ static void flecs_pipeline_reset_write_state(
     write_state->write_barrier = false;
 }
 
-static int16_t flecs_pipeline_term_inout(
-    ecs_term_t *term,
-    bool *from_any_out)
-{
-    ecs_term_ref_t *src = &term->src;
-    int16_t inout = term->inout;
-    bool from_any = ecs_term_match_0(term);
-    bool from_this = ecs_term_match_this(term);
-    bool is_shared = !from_any && (!from_this || !(src->id & EcsSelf));
-
-    if (inout == EcsInOutDefault) {
-        if (from_any) {
-            /* If no inout kind is specified for terms without a source, this is
-             * not interpreted as a read/write annotation but just a (component)
-             * id that's passed to a system. */
-            inout = EcsInOutDefault;
-        } else if (is_shared) {
-            inout = EcsIn;
-        } else {
-            /* Default for owned terms is InOut */
-            inout = EcsInOut;
-        }
-    }
-
-    if (term->oper == EcsNot && inout == EcsOut) {
-        /* If a Not term is combined with Out, it signals that the system 
-         * intends to add a component that the entity doesn't yet have */
-        from_any = true;
-    }
-
-    *from_any_out = from_any;
-    return inout;
-}
-
 static bool flecs_pipeline_check_term(
     ecs_world_t *world,
     ecs_term_t *term,
+    bool is_active,
     ecs_write_state_t *write_state)    
 {
     (void)world;
 
+    ecs_term_ref_t *src = &term->src;
     if (term->inout == EcsInOutFilter) {
         return false;
     }
 
     ecs_id_t id = term->id;
-    bool from_any;
+    int16_t oper = term->oper;
+    int16_t inout = term->inout;
+    bool from_any = ecs_term_match_0(term);
     bool from_this = ecs_term_match_this(term);
-    bool is_fixed_src = !ecs_term_match_0(term) && !from_this;
-    int16_t inout = flecs_pipeline_term_inout(term, &from_any);
+    bool is_shared = !from_any && (!from_this || !(src->id & EcsSelf));
+    bool is_fixed_src = !from_any && !from_this;
 
     ecs_write_kind_t ws = flecs_pipeline_get_write_state(write_state, id);
 
@@ -64345,10 +64319,41 @@ static bool flecs_pipeline_check_term(
     }
 
     if (inout == EcsInOutDefault) {
-        return false;
+        if (from_any) {
+            /* If no inout kind is specified for terms without a source, this is
+             * not interpreted as a read/write annotation but just a (component)
+             * id that's passed to a system. */
+            return false;
+        } else if (is_shared) {
+            inout = EcsIn;
+        } else {
+            /* Default for owned terms is InOut */
+            inout = EcsInOut;
+        }
+    }
+
+    if (oper == EcsNot && inout == EcsOut) {
+        /* If a Not term is combined with Out, it signals that the system 
+         * intends to add a component that the entity doesn't yet have */
+        from_any = true;
     }
 
     if (from_any || is_fixed_src) {
+        switch(inout) {
+        case EcsOut:
+        case EcsInOut:
+            if (is_active) {
+                /* Only flag component as written if system is active */
+                flecs_pipeline_set_write_state(write_state, id);
+            }
+            break;
+        case EcsInOutDefault:
+        case EcsInOutNone:
+        case EcsInOutFilter:
+        case EcsIn:
+            break;
+        }
+
         switch(inout) {
         case EcsIn:
         case EcsInOut:
@@ -64357,7 +64362,7 @@ static bool flecs_pipeline_check_term(
                  * the main store so it must be merged first */
                 return true;
             }
-            break;
+            /* fall through */
         case EcsInOutDefault:
         case EcsInOutNone:
         case EcsInOutFilter:
@@ -64367,38 +64372,6 @@ static bool flecs_pipeline_check_term(
     }
 
     return false;
-}
-
-static void flecs_pipeline_mark_term_write(
-    ecs_term_t *term,
-    ecs_write_state_t *write_state)
-{
-    if (term->inout == EcsInOutFilter) {
-        return;
-    }
-
-    bool from_any;
-    bool from_this = ecs_term_match_this(term);
-    bool is_fixed_src = !ecs_term_match_0(term) && !from_this;
-    int16_t inout = flecs_pipeline_term_inout(term, &from_any);
-
-    if (inout == EcsInOutDefault) {
-        return;
-    }
-
-    if (from_any || is_fixed_src) {
-        switch(inout) {
-        case EcsOut:
-        case EcsInOut:
-            flecs_pipeline_set_write_state(write_state, term->id);
-            break;
-        case EcsInOutDefault:
-        case EcsInOutNone:
-        case EcsInOutFilter:
-        case EcsIn:
-            break;
-        }
-    }
 }
 
 static bool flecs_pipeline_check_terms(
@@ -64411,16 +64384,20 @@ static bool flecs_pipeline_check_terms(
     ecs_term_t *terms = query->terms;
     int32_t t, term_count = query->term_count;
 
-    /* First check all terms against writes from previous systems. A system 
-     * can't require a merge because of its own writes. */
+    /* Check This terms first. This way if a term indicating writing to a stage
+     * was added before a This term, it won't cause merging. */
     for (t = 0; t < term_count; t ++) {
-        needs_merge |= flecs_pipeline_check_term(world, &terms[t], ws);
+        ecs_term_t *term = &terms[t];
+        if (ecs_term_match_this(term)) {
+            needs_merge |= flecs_pipeline_check_term(world, term, is_active, ws);
+        }
     }
 
-    /* Only flag components as written if system is active */
-    if (is_active) {
-        for (t = 0; t < term_count; t ++) {
-            flecs_pipeline_mark_term_write(&terms[t], ws);
+    /* Now check non-$this terms */
+    for (t = 0; t < term_count; t ++) {
+        ecs_term_t *term = &terms[t];
+        if (!ecs_term_match_this(term)) {
+            needs_merge |= flecs_pipeline_check_term(world, term, is_active, ws);
         }
     }
 

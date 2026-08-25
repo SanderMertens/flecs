@@ -741,6 +741,7 @@ void Basic_query_has_and_optional_and(void);
 void Basic_recycled_pair(void);
 void Basic_recycled_component_id(void);
 void Basic_update_query_replaces_existing(void);
+void Basic_this_value_pair_w_0_value(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -5801,6 +5802,10 @@ bake_test_case Basic_testcases[] = {
     {
         "update_query_replaces_existing",
         Basic_update_query_replaces_existing
+    },
+    {
+        "this_value_pair_w_0_value",
+        Basic_this_value_pair_w_0_value
     }
 };
 
@@ -14363,7 +14368,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        240,
+        241,
         Basic_testcases,
         1,
         Basic_params

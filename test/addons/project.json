@@ -122,8 +122,7 @@
                 "set_time_scale_w_stage",
                 "set_time_scale_w_readonly",
                 "init_failure_preserves_user_entity",
-                "update_pipeline_replaces_existing",
-                "write_wildcard_w_var_src_term"
+                "update_pipeline_replaces_existing"
             ]
         }, {
             "id": "SystemMisc",
