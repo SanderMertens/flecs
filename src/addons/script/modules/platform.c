@@ -8,6 +8,41 @@
 #ifdef FLECS_SCRIPT_PLATFORM
 #include "../script.h"
 
+#ifdef ECS_TARGET_EM
+#include <emscripten.h>
+
+EM_JS(int, flecs_script_platform_mobile, (void), {
+    if (typeof navigator === "undefined") {
+        return 0;
+    }
+    if (navigator.userAgentData && navigator.userAgentData.mobile) {
+        return 1;
+    }
+    var ua = navigator.userAgent || "";
+    if (/Android|iPhone|iPad|iPod|Mobile|Silk|Tablet/i.test(ua)) {
+        return 1;
+    }
+    if (/Mac/.test(ua) && navigator.maxTouchPoints > 1) {
+        return 1;
+    }
+    if (typeof window !== "undefined" && window.matchMedia &&
+        window.matchMedia("(pointer: coarse)").matches &&
+        navigator.maxTouchPoints > 0)
+    {
+        return 1;
+    }
+    return 0;
+});
+
+static bool flecs_script_platform_is_mobile(void) {
+    return flecs_script_platform_mobile() != 0;
+}
+#else
+static bool flecs_script_platform_is_mobile(void) {
+    return false;
+}
+#endif
+
 #if defined(ECS_TARGET_WINDOWS)
 #define FLECS_SCRIPT_PLATFORM_OS "windows"
 #elif defined(ECS_TARGET_ANDROID)
@@ -124,6 +159,14 @@ void FlecsScriptPlatformImport(
         .parent = ecs_id(FlecsScriptPlatform),
         .type = ecs_id(ecs_string_t),
         .value = &os
+    });
+
+    bool mobile = flecs_script_platform_is_mobile();
+    ecs_const_var(world, {
+        .name = "mobile",
+        .parent = ecs_id(FlecsScriptPlatform),
+        .type = ecs_id(ecs_bool_t),
+        .value = &mobile
     });
 }
 

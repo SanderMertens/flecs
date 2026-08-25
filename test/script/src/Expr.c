@@ -12014,3 +12014,35 @@ void Expr_match_i32_2_i_cases_one_line(void) {
 
     ecs_fini(world);
 }
+
+void Expr_platform_consts(void) {
+#ifdef FLECS_SCRIPT_PLATFORM
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsScriptPlatform);
+
+    ecs_value_t os = ecs_const_var_get(world, "flecs.script.platform.os");
+    test_assert(os.type == ecs_id(ecs_string_t));
+    test_assert(os.ptr != NULL);
+    test_assert(*(char**)os.ptr != NULL);
+
+    ecs_value_t mobile = ecs_const_var_get(
+        world, "flecs.script.platform.mobile");
+    test_assert(mobile.type == ecs_id(ecs_bool_t));
+    test_assert(mobile.ptr != NULL);
+    test_bool(*(bool*)mobile.ptr, false);
+
+    const char *expr =
+    HEAD "using flecs.script"
+    LINE "const tier: i32 = match platform.mobile {"
+    LINE "  true: 1"
+    LINE "  _: 2"
+    LINE "}";
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_int(ecs_const_var_get_t(world, "tier", ecs_i32_t), 2);
+
+    ecs_fini(world);
+#else
+    test_assert(true);
+#endif
+}
