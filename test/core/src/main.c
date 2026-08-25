@@ -704,6 +704,11 @@ void NonFragmentingChildOf_delete_parent_2_children(void);
 void NonFragmentingChildOf_mixed_childof(void);
 void NonFragmentingChildOf_convert_childof_to_parent_keeps_order(void);
 void NonFragmentingChildOf_set_same_parent_twice_keeps_order(void);
+void NonFragmentingChildOf_add_childof_to_parent_component_keeps_order(void);
+void NonFragmentingChildOf_deferred_set_same_parent_keeps_order(void);
+void NonFragmentingChildOf_deferred_convert_childof_to_parent_keeps_order(void);
+void NonFragmentingChildOf_remove_parent_then_add_childof_appends_last(void);
+void NonFragmentingChildOf_reparent_to_other_parent_appends_last(void);
 void NonFragmentingChildOf_delete_parent_w_mixed_childof(void);
 void NonFragmentingChildOf_delete_nested_parent(void);
 void NonFragmentingChildOf_delete_nested_mixed_parent(void);
@@ -6116,6 +6121,26 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "set_same_parent_twice_keeps_order",
         NonFragmentingChildOf_set_same_parent_twice_keeps_order
+    },
+    {
+        "add_childof_to_parent_component_keeps_order",
+        NonFragmentingChildOf_add_childof_to_parent_component_keeps_order
+    },
+    {
+        "deferred_set_same_parent_keeps_order",
+        NonFragmentingChildOf_deferred_set_same_parent_keeps_order
+    },
+    {
+        "deferred_convert_childof_to_parent_keeps_order",
+        NonFragmentingChildOf_deferred_convert_childof_to_parent_keeps_order
+    },
+    {
+        "remove_parent_then_add_childof_appends_last",
+        NonFragmentingChildOf_remove_parent_then_add_childof_appends_last
+    },
+    {
+        "reparent_to_other_parent_appends_last",
+        NonFragmentingChildOf_reparent_to_other_parent_appends_last
     },
     {
         "delete_parent_w_mixed_childof",
@@ -16785,7 +16810,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        274,
+        279,
         NonFragmentingChildOf_testcases
     },
     {
