@@ -587,6 +587,175 @@ void NonFragmentingChildOf_set_same_parent_twice_keeps_order(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_add_childof_to_parent_component_keeps_order(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_set(world, child_a, EcsParent, { parent });
+    ecs_entity_t child_b = ecs_new(world);
+    ecs_set(world, child_b, EcsParent, { parent });
+    ecs_entity_t child_c = ecs_new(world);
+    ecs_set(world, child_c, EcsParent, { parent });
+
+    {
+        const ecs_entities_t children = ecs_get_ordered_children(world, parent);
+        test_int(children.count, 3);
+        test_int(children.ids[0], child_a);
+        test_int(children.ids[1], child_b);
+        test_int(children.ids[2], child_c);
+    }
+
+    ecs_add_pair(world, child_b, EcsChildOf, parent);
+
+    test_uint(ecs_get_parent(world, child_b), parent);
+
+    {
+        const ecs_entities_t children = ecs_get_ordered_children(world, parent);
+        test_int(children.count, 3);
+        test_int(children.ids[0], child_a);
+        test_int(children.ids[1], child_b);
+        test_int(children.ids[2], child_c);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_deferred_set_same_parent_keeps_order(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_set(world, child_a, EcsParent, { parent });
+    ecs_entity_t child_b = ecs_new(world);
+    ecs_set(world, child_b, EcsParent, { parent });
+    ecs_entity_t child_c = ecs_new(world);
+    ecs_set(world, child_c, EcsParent, { parent });
+
+    ecs_defer_begin(world);
+    ecs_set(world, child_b, EcsParent, { parent });
+    ecs_defer_end(world);
+
+    test_uint(ecs_get_parent(world, child_b), parent);
+
+    {
+        const ecs_entities_t children = ecs_get_ordered_children(world, parent);
+        test_int(children.count, 3);
+        test_int(children.ids[0], child_a);
+        test_int(children.ids[1], child_b);
+        test_int(children.ids[2], child_c);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_deferred_convert_childof_to_parent_keeps_order(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entity_t child_a = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t child_b = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t child_c = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_defer_begin(world);
+    ecs_set(world, child_b, EcsParent, { parent });
+    ecs_defer_end(world);
+
+    test_uint(ecs_get_parent(world, child_b), parent);
+
+    {
+        const ecs_entities_t children = ecs_get_ordered_children(world, parent);
+        test_int(children.count, 3);
+        test_int(children.ids[0], child_a);
+        test_int(children.ids[1], child_b);
+        test_int(children.ids[2], child_c);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_remove_parent_then_add_childof_appends_last(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_set(world, child_a, EcsParent, { parent });
+    ecs_entity_t child_b = ecs_new(world);
+    ecs_set(world, child_b, EcsParent, { parent });
+    ecs_entity_t child_c = ecs_new(world);
+    ecs_set(world, child_c, EcsParent, { parent });
+
+    /* Removing Parent unparents the entity, so adding it back to the same
+     * parent is a new parent assignment that appends to the back. */
+    ecs_remove(world, child_b, EcsParent);
+    ecs_add_pair(world, child_b, EcsChildOf, parent);
+
+    test_uint(ecs_get_parent(world, child_b), parent);
+
+    {
+        const ecs_entities_t children = ecs_get_ordered_children(world, parent);
+        test_int(children.count, 3);
+        test_int(children.ids[0], child_a);
+        test_int(children.ids[1], child_c);
+        test_int(children.ids[2], child_b);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_reparent_to_other_parent_appends_last(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_add_id(world, parent_a, EcsOrderedChildren);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_add_id(world, parent_b, EcsOrderedChildren);
+
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_set(world, child_a, EcsParent, { parent_a });
+    ecs_entity_t child_b = ecs_new(world);
+    ecs_set(world, child_b, EcsParent, { parent_a });
+    ecs_entity_t existing = ecs_new(world);
+    ecs_set(world, existing, EcsParent, { parent_b });
+
+    ecs_set(world, child_a, EcsParent, { parent_b });
+
+    {
+        const ecs_entities_t children =
+            ecs_get_ordered_children(world, parent_a);
+        test_int(children.count, 1);
+        test_int(children.ids[0], child_b);
+    }
+
+    {
+        const ecs_entities_t children =
+            ecs_get_ordered_children(world, parent_b);
+        test_int(children.count, 2);
+        test_int(children.ids[0], existing);
+        test_int(children.ids[1], child_a);
+    }
+
+    ecs_set(world, child_a, EcsParent, { parent_a });
+
+    {
+        const ecs_entities_t children =
+            ecs_get_ordered_children(world, parent_a);
+        test_int(children.count, 2);
+        test_int(children.ids[0], child_b);
+        test_int(children.ids[1], child_a);
+    }
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_delete_parent_w_mixed_childof(void) {
     ecs_world_t *world = ecs_mini();
 

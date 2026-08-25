@@ -223,6 +223,13 @@ static void flecs_on_replace_parent(ecs_iter_t *it) {
         }
     #endif
 
+        /* Setting the parent a child already has is a no-op. Without this
+         * check the child would be removed from and appended to the ordered
+         * children vector, which would move it to the back. */
+        if (old_parent == new_parent) {
+            continue;
+        }
+
         flecs_journal_begin(world, EcsJournalSetParent, e, &(ecs_type_t){
             .count = 1, .array = &new_parent
         }, NULL);
@@ -326,7 +333,15 @@ void flecs_on_non_fragmenting_child_move_remove(
                 flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
             }
         } else {
-            flecs_ordered_entities_remove(world, cr, e);
+            int32_t index = flecs_ordered_entities_remove(world, cr, e);
+
+            /* When the child moves to a table with a ChildOf pair for the same
+             * parent it switched representation without being reparented, and
+             * has to keep its position in the ordered children vector. */
+            flecs_ordered_entities_keep_position(cr, e, 
+                (dst && ecs_table_has_id(world, 
+                    ECS_CONST_CAST(ecs_table_t*, dst), ecs_childof(p)))
+                        ? index : -1);
 
             flecs_tree_spawner_assert_not_instantiated(world, p);
 

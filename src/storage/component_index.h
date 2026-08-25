@@ -49,6 +49,13 @@ typedef struct ecs_pair_record_t {
     /* Hierarchy depth (set for ChildOf pair) */
     int32_t depth;
 
+    /* A child that switches between the ChildOf pair and Parent component
+     * representations is removed from ordered_children by the table move and
+     * added back by the hooks of the new representation. When the parent didn't
+     * change the child must keep its old position, so remember where it was. */
+    ecs_entity_t ordered_pending_entity;
+    int32_t ordered_pending_index;
+
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
     ecs_id_record_elem_t first;   /* (R, *) */
