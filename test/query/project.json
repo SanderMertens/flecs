@@ -1738,7 +1738,8 @@
                 "this_or_w_self_up_childof_w_tag",
                 "this_written_or_w_self_up_childof",
                 "up_w_isa_component_recycled",
-                "up_after_pair_target_delete"
+                "up_after_pair_target_delete",
+                "this_up_isa_inherited_value_pair"
             ]
         }, {
             "id": "Cascade",

@@ -316,7 +316,9 @@ ecs_id_t flecs_query_op_get_id_w_written(
         }
     }
 
-    if (flags_2nd & (EcsQueryIsVar | EcsQueryIsEntity)) {
+    if (op->flags & EcsQueryIsValuePair) {
+        return ecs_value_pair(first, second);
+    } else if (flags_2nd & (EcsQueryIsVar | EcsQueryIsEntity)) {
         return ecs_pair(first, second);
     } else {
         return flecs_entities_get_alive(ctx->world, first);

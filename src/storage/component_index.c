@@ -307,7 +307,7 @@ static ecs_flags32_t flecs_component_get_flags_intern(
     ecs_flags32_t result = 0;
 
     if (id & ECS_ID_FLAGS_MASK) {
-        if ((id & ECS_ID_FLAGS_MASK) != ECS_PAIR) {
+        if (!ECS_IS_PAIR(id)) {
             return 0;
         }
     }
@@ -332,7 +332,7 @@ static ecs_flags32_t flecs_component_get_flags_intern(
                 result |= EcsIdDontFragment;
             }
         }
-    } else {
+    } else if (!ECS_IS_VALUE_PAIR(id)) {
         /* Disable flags that only apply to pairs */
         result &= ~(EcsIdExclusive|EcsIdTraversable|EcsIdPairIsTag|EcsIdIsTransitive);
     }
@@ -356,8 +356,10 @@ ecs_flags32_t flecs_component_get_flags(
         rel = ECS_PAIR_FIRST(id);
         rel = flecs_entities_get_alive(world, rel);
 
-        tgt = ECS_PAIR_SECOND(id);
-        tgt = flecs_entities_get_alive(world, tgt);
+        if (!ECS_IS_VALUE_PAIR(id)) {
+            tgt = ECS_PAIR_SECOND(id);
+            tgt = flecs_entities_get_alive(world, tgt);
+        }
     } else {
         rel = id & ECS_COMPONENT_MASK;
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);

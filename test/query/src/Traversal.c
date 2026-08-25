@@ -14126,3 +14126,37 @@ void Traversal_up_after_pair_target_delete(void) {
 
     ecs_fini(world);
 }
+
+void Traversal_this_up_isa_inherited_value_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new(world);
+    ecs_entity_t rel = ecs_new_w_pair(world, EcsOnInstantiate, EcsInherit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = tag },
+            { .id = ecs_value_pair(rel, 1) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t prefab = ecs_new_w_id(world, ecs_value_pair(rel, 1));
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, prefab);
+    ecs_add_id(world, e1, tag);
+
+    test_assert(ecs_has_id(world, e1, ecs_value_pair(rel, 1)));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(prefab, ecs_field_src(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
