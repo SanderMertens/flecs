@@ -29,8 +29,10 @@ inline flecs::entity id::first() const {
 }
 
 inline flecs::entity id::second() const {
+    ecs_assert(is_pair(), ECS_INVALID_OPERATION, nullptr);
+
     flecs::entity_t e = ECS_PAIR_SECOND(id_);
-    if (world_) {
+    if (world_ && !is_value_pair()) {
         return flecs::entity(world_, ecs_get_alive(world_, e));
     } else {
         return flecs::entity(e);

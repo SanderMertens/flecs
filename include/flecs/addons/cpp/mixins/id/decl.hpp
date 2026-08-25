@@ -55,7 +55,12 @@ struct id {
 
     /** Test if ID is a pair (has first, second). */
     bool is_pair() const {
-        return (id_ & ECS_ID_FLAGS_MASK) == flecs::PAIR;
+        return ecs_id_is_pair(id_);
+    }
+
+    /** Test if ID is a value pair (has first, value). */
+    bool is_value_pair() const {
+        return (id_ & ECS_ID_FLAGS_MASK) == flecs::VALUE_PAIR;
     }
 
     /** Test if ID is a wildcard. */
