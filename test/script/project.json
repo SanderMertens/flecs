@@ -648,7 +648,8 @@
                 "const_var_from_large_component_member_no_leak",
                 "const_var_from_large_array_element_no_leak",
                 "update_script_that_declares_script_entity",
-                "update_script_that_declares_parent_of_script_entity"
+                "update_script_that_declares_parent_of_script_entity",
+                "script_refers_to_script_entity"
             ]
         }, {
             "id": "Collection",
@@ -2480,6 +2481,9 @@
                 "global_mut_var_declared_in_same_script_modified",
                 "global_mut_var_declared_in_same_script_reacts",
                 "two_global_mut_vars_declared_in_same_script",
+                "global_mut_var_declared_in_same_script_modified_deferred",
+                "global_mut_var_declared_in_same_script_modified_in_system",
+                "global_mut_var_modified_in_system_other_script",
                 "reeval_during_script_preserves_using",
                 "has_component_ref",
                 "has_tag_ref",
