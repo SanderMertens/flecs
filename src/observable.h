@@ -123,6 +123,13 @@ void flecs_observers_invoke_up_notify(
     ecs_table_t *table,
     ecs_entity_t trav);
 
+void flecs_observers_invoke_skip_up_notify(
+    ecs_world_t *world,
+    ecs_map_t *observers,
+    ecs_iter_t *it,
+    ecs_table_t *table,
+    ecs_entity_t trav);
+
 /* Invalidate reachable cache. */
 void flecs_emit_propagate_invalidate(
     ecs_world_t *world,
