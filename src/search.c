@@ -81,8 +81,17 @@ bool flecs_type_can_inherit_id(
             ecs_entity_t er = ECS_PAIR_FIRST(id);
             ecs_component_record_t *cr_wc = flecs_components_get(
                 world, ecs_pair(er, EcsWildcard));
-            if (cr_wc && flecs_component_get_table(cr_wc, table)) {
-                return false;
+            if (cr_wc) {
+                const ecs_table_record_t *tr = 
+                    flecs_component_get_table(cr_wc, table);
+                if (tr) {
+                    if (ECS_PAIR_SECOND(id) == EcsWildcard) {
+                        return false;
+                    }
+                    if (table->type.array[tr->index] != id) {
+                        return false;
+                    }
+                }
             }
         }
     }
