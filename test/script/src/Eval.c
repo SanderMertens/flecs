@@ -20105,3 +20105,73 @@ void Eval_update_script_that_declares_parent_of_script_entity(void) {
 
     ecs_fini(world);
 }
+
+void Eval_script_refers_to_script_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t s = ecs_entity(world, { .name = "main" });
+
+    const char *expr =
+    HEAD "main {"
+    LINE "  Mass: {10}"
+    LINE "}"
+    LINE "const self = main"
+    LINE "e {"
+    LINE "  Mass: {main[Mass].value}"
+    LINE "  (Rel, main)"
+    LINE "  (Rel, $self)"
+    LINE "}";
+
+    test_assert(ecs_script_update(world, s, 0, expr) == 0);
+
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->error == NULL);
+
+    test_assert(ecs_is_alive(world, s));
+    test_assert(ecs_lookup(world, "main") == s);
+
+    const Mass *m = ecs_get(world, s, Mass);
+    test_assert(m != NULL);
+    test_int(m->value, 10);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Rel, s));
+
+    m = ecs_get(world, e, Mass);
+    test_assert(m != NULL);
+    test_int(m->value, 10);
+
+    test_assert(ecs_script_update(world, s, 0, expr) == 0);
+
+    script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->error == NULL);
+
+    test_assert(ecs_is_alive(world, s));
+    test_assert(ecs_lookup(world, "main") == s);
+
+    m = ecs_get(world, s, Mass);
+    test_assert(m != NULL);
+    test_int(m->value, 10);
+
+    e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Rel, s));
+
+    m = ecs_get(world, e, Mass);
+    test_assert(m != NULL);
+    test_int(m->value, 10);
+
+    ecs_fini(world);
+}
