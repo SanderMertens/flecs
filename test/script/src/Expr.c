@@ -12021,13 +12021,17 @@ void Expr_platform_consts(void) {
 
     ECS_IMPORT(world, FlecsScriptPlatform);
 
-    ecs_value_t os = ecs_const_var_get(world, "flecs.script.platform.os");
+    ecs_entity_t os_var = ecs_lookup(world, "flecs.script.platform.os");
+    test_assert(os_var != 0);
+    ecs_value_t os = ecs_const_var_get(world, os_var);
     test_assert(os.type == ecs_id(ecs_string_t));
     test_assert(os.ptr != NULL);
     test_assert(*(char**)os.ptr != NULL);
 
-    ecs_value_t mobile = ecs_const_var_get(
+    ecs_entity_t mobile_var = ecs_lookup(
         world, "flecs.script.platform.mobile");
+    test_assert(mobile_var != 0);
+    ecs_value_t mobile = ecs_const_var_get(world, mobile_var);
     test_assert(mobile.type == ecs_id(ecs_bool_t));
     test_assert(mobile.ptr != NULL);
     test_bool(*(bool*)mobile.ptr, false);
@@ -12045,4 +12049,64 @@ void Expr_platform_consts(void) {
 #else
     test_assert(true);
 #endif
+}
+
+void Expr_match_bool_enum_const_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "enum Quality(Low, Medium, High)"
+    LINE "const flag: bool = false"
+    LINE "export const q: Quality = match flag {"
+    LINE "  true: Low"
+    LINE "  _: High"
+    LINE "}";
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_entity_t q_var = ecs_lookup(world, "q");
+    test_assert(q_var != 0);
+    ecs_value_t q = ecs_const_var_get(world, q_var);
+    test_assert(q.ptr != NULL);
+    test_int(*(int32_t*)q.ptr, 2);
+
+    ecs_fini(world);
+}
+
+void Expr_match_bool_enum_const_var_to_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "enum Quality(Low, Medium, High)"
+    LINE "const flag: bool = false"
+    LINE "const q: Quality = match flag {"
+    LINE "  true: Low"
+    LINE "  _: High"
+    LINE "}"
+    LINE "export mut r: Quality = q";
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t r = ecs_lookup(world, "r");
+    test_assert(r != 0);
+    ecs_value_t rv = ecs_mut_var_get(world, r);
+    test_assert(rv.ptr != NULL);
+    test_int(*(int32_t*)rv.ptr, 2);
+
+    ecs_fini(world);
+}
+
+void Expr_enum_const_var_to_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "enum Quality(Low, Medium, High)"
+    LINE "const q: Quality = High"
+    LINE "export mut r: Quality = q";
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t r = ecs_lookup(world, "r");
+    test_assert(r != 0);
+    ecs_value_t rv = ecs_mut_var_get(world, r);
+    test_assert(rv.ptr != NULL);
+    test_int(*(int32_t*)rv.ptr, 2);
+
+    ecs_fini(world);
 }

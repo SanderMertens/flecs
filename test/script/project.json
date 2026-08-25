@@ -1871,7 +1871,10 @@
                 "member_of_large_struct_var_no_leak",
                 "match_i32_1_i_case_one_line",
                 "match_i32_2_i_cases_one_line",
-                "platform_consts"
+                "platform_consts",
+                "match_bool_enum_const_var",
+                "match_bool_enum_const_var_to_mut_var",
+                "enum_const_var_to_mut_var"
             ]
         }, {
             "id": "ExprAst",

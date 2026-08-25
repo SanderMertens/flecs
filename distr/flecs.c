@@ -103135,6 +103135,12 @@ static int flecs_expr_variable_visit_eval(
         goto error;
     }
 
+    if (!var->value.ptr) {
+        flecs_expr_visit_error(ctx->script, node, 
+            "variable '%s' is not a compile time constant", node->name);
+        goto error;
+    }
+
     /* Should've been populated by type visitor */
     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(var->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
@@ -104867,6 +104873,66 @@ static int flecs_expr_match_visit_fold(
         }
     }
 
+    if (node->any.expr) {
+        if (flecs_expr_visit_fold(script, &node->any.expr, desc)) {
+            goto error;
+        }
+    }
+
+    if (node->expr->kind != EcsExprValue) {
+        return 0;
+    }
+
+    ecs_expr_value_node_t *input = (ecs_expr_value_node_t*)node->expr;
+    ecs_value_t input_value = {
+        .type = input->node.type,
+        .ptr = input->ptr
+    };
+
+    ecs_expr_node_t **selected = NULL;
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_match_element_t *elem = &elems[i];
+        if (elem->compare->kind != EcsExprValue) {
+            return 0;
+        }
+
+        ecs_expr_value_node_t *compare = 
+            (ecs_expr_value_node_t*)elem->compare;
+        ecs_value_t compare_value = {
+            .type = compare->node.type,
+            .ptr = compare->ptr
+        };
+
+        bool equal = false;
+        ecs_value_t result = { .type = ecs_id(ecs_bool_t), .ptr = &equal };
+        if (flecs_value_binary(script, &node->node, &input_value, 
+            &compare_value, &result, EcsTokEq))
+        {
+            goto error;
+        }
+
+        if (equal) {
+            selected = &elem->expr;
+            break;
+        }
+    }
+
+    if (!selected) {
+        if (!node->any.expr) {
+            return 0;
+        }
+        selected = &node->any.expr;
+    }
+
+    if ((*selected)->kind != EcsExprValue) {
+        return 0;
+    }
+
+    ecs_expr_node_t *value = *selected;
+    *selected = NULL;
+    flecs_visit_fold_replace(script, node_ptr, value);
+
     return 0;
 error:
     return -1;
@@ -105093,7 +105159,9 @@ static void flecs_expr_match_visit_free(
     for (i = 0; i < count; i ++) {
         ecs_expr_match_element_t *elem = &elems[i];
         flecs_expr_visit_free(script, elem->compare);
-        flecs_expr_visit_free(script, elem->expr);
+        if (elem->expr) {
+            flecs_expr_visit_free(script, elem->expr);
+        }
     }
 
     if (node->any.compare) {

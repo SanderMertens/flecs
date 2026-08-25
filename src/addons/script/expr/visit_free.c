@@ -118,7 +118,9 @@ static void flecs_expr_match_visit_free(
     for (i = 0; i < count; i ++) {
         ecs_expr_match_element_t *elem = &elems[i];
         flecs_expr_visit_free(script, elem->compare);
-        flecs_expr_visit_free(script, elem->expr);
+        if (elem->expr) {
+            flecs_expr_visit_free(script, elem->expr);
+        }
     }
 
     if (node->any.compare) {
