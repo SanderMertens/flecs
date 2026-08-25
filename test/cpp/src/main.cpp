@@ -254,6 +254,9 @@ void Entity_owns_wildcard_id(void);
 void Entity_owns_wildcard_pair(void);
 void Entity_id_from_world(void);
 void Entity_id_pair_from_world(void);
+void Entity_id_value_pair_is_pair(void);
+void Entity_id_value_pair_is_pair_no_world(void);
+void Entity_id_value_pair_from_world(void);
 void Entity_id_default_from_world(void);
 void Entity_is_a(void);
 void Entity_is_a_w_type(void);
@@ -2687,6 +2690,18 @@ bake_test_case Entity_testcases[] = {
     {
         "id_pair_from_world",
         Entity_id_pair_from_world
+    },
+    {
+        "id_value_pair_is_pair",
+        Entity_id_value_pair_is_pair
+    },
+    {
+        "id_value_pair_is_pair_no_world",
+        Entity_id_value_pair_is_pair_no_world
+    },
+    {
+        "id_value_pair_from_world",
+        Entity_id_value_pair_from_world
     },
     {
         "id_default_from_world",
@@ -8421,7 +8436,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        396,
+        399,
         Entity_testcases
     },
     {

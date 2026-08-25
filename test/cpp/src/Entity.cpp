@@ -4227,6 +4227,50 @@ void Entity_id_pair_from_world(void) {
     test_bool(id_2.is_wildcard(), true);
 }
 
+void Entity_id_value_pair_is_pair(void) {
+    flecs::world ecs;
+
+    flecs::id_t val = 10376293567231426561ULL;
+    flecs::id id(ecs, val);
+    test_bool(ecs_id_is_pair(val), true);
+    test_bool(id.is_pair(), ecs_id_is_pair(val));
+    test_bool(id.is_entity(), false);
+    test_bool(id.is_wildcard(), false);
+}
+
+void Entity_id_value_pair_is_pair_no_world(void) {
+    flecs::id_t val = 10376293567231426561ULL;
+    flecs::id id(val);
+    test_bool(ecs_id_is_pair(val), true);
+    test_bool(id.is_pair(), ecs_id_is_pair(val));
+    test_bool(id.is_entity(), false);
+    test_assert(id.first() == 6);
+    test_assert(id.second() == 1);
+}
+
+void Entity_id_value_pair_from_world(void) {
+    flecs::world ecs;
+
+    auto rel = ecs.entity();
+    test_assert(rel != 0);
+
+    flecs::id id_1 = ecs.id(ecs_value_pair(rel, 10));
+    test_assert(id_1 != 0);
+    test_assert(id_1.world() == ecs);
+    test_bool(id_1.is_pair(), true);
+    test_bool(id_1.is_pair(), ecs_id_is_pair(id_1));
+    test_bool(id_1.is_wildcard(), false);
+    test_bool(id_1.has_relation(rel), true);
+    test_assert(id_1.first() == rel);
+    test_assert(id_1.second() == 10);
+
+    flecs::id id_2 = ecs.id(ecs_value_pair(flecs::Wildcard, 10));
+    test_bool(id_2.is_pair(), true);
+    test_bool(id_2.is_wildcard(), true);
+    test_assert(id_2.first() == flecs::Wildcard);
+    test_assert(id_2.second() == 10);
+}
+
 void Entity_id_default_from_world(void) {
     flecs::world ecs;
 

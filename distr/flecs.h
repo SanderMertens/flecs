@@ -20394,6 +20394,7 @@ enum query_cache_kind_t {
 static const flecs::entity_t PAIR = ECS_PAIR;                   /**< Pair flag. */
 static const flecs::entity_t AUTO_OVERRIDE = ECS_AUTO_OVERRIDE; /**< Auto override flag. */
 static const flecs::entity_t TOGGLE = ECS_TOGGLE;               /**< Toggle flag. */
+static const flecs::entity_t VALUE_PAIR = ECS_VALUE_PAIR;       /**< Value pair flag. */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Built-in components and tags
@@ -22125,7 +22126,12 @@ struct id {
 
     /** Test if ID is a pair (has first, second). */
     bool is_pair() const {
-        return (id_ & ECS_ID_FLAGS_MASK) == flecs::PAIR;
+        return ecs_id_is_pair(id_);
+    }
+
+    /** Test if ID is a value pair (has first, value). */
+    bool is_value_pair() const {
+        return (id_ & ECS_ID_FLAGS_MASK) == flecs::VALUE_PAIR;
     }
 
     /** Test if ID is a wildcard. */
@@ -34445,8 +34451,10 @@ inline flecs::entity id::first() const {
 }
 
 inline flecs::entity id::second() const {
+    ecs_assert(is_pair(), ECS_INVALID_OPERATION, nullptr);
+
     flecs::entity_t e = ECS_PAIR_SECOND(id_);
-    if (world_) {
+    if (world_ && !is_value_pair()) {
         return flecs::entity(world_, ecs_get_alive(world_, e));
     } else {
         return flecs::entity(e);

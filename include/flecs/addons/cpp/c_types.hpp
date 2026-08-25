@@ -70,6 +70,7 @@ enum query_cache_kind_t {
 static const flecs::entity_t PAIR = ECS_PAIR;                   /**< Pair flag. */
 static const flecs::entity_t AUTO_OVERRIDE = ECS_AUTO_OVERRIDE; /**< Auto override flag. */
 static const flecs::entity_t TOGGLE = ECS_TOGGLE;               /**< Toggle flag. */
+static const flecs::entity_t VALUE_PAIR = ECS_VALUE_PAIR;       /**< Value pair flag. */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Built-in components and tags
