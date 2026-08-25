@@ -606,6 +606,12 @@ static int flecs_expr_variable_visit_eval(
         goto error;
     }
 
+    if (!var->value.ptr) {
+        flecs_expr_visit_error(ctx->script, node, 
+            "variable '%s' is not a compile time constant", node->name);
+        goto error;
+    }
+
     /* Should've been populated by type visitor */
     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(var->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);

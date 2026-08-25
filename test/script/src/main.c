@@ -1844,6 +1844,9 @@ void Expr_member_of_large_struct_var_no_leak(void);
 void Expr_match_i32_1_i_case_one_line(void);
 void Expr_match_i32_2_i_cases_one_line(void);
 void Expr_platform_consts(void);
+void Expr_match_bool_enum_const_var(void);
+void Expr_match_bool_enum_const_var_to_mut_var(void);
+void Expr_enum_const_var_to_mut_var(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_binary_f32_var_add_f32_var(void);
@@ -9914,6 +9917,18 @@ bake_test_case Expr_testcases[] = {
     {
         "platform_consts",
         Expr_platform_consts
+    },
+    {
+        "match_bool_enum_const_var",
+        Expr_match_bool_enum_const_var
+    },
+    {
+        "match_bool_enum_const_var_to_mut_var",
+        Expr_match_bool_enum_const_var_to_mut_var
+    },
+    {
+        "enum_const_var_to_mut_var",
+        Expr_enum_const_var_to_mut_var
     }
 };
 
@@ -13081,7 +13096,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        381,
+        384,
         Expr_testcases,
         1,
         Expr_params
