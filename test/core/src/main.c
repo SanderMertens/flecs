@@ -2353,6 +2353,7 @@ void Observer_propagate_custom_rel_add_to_target(void);
 void Observer_propagate_custom_rel_remove_from_target(void);
 void Observer_propagate_custom_rel_masked_add(void);
 void Observer_propagate_add_to_grandparent_w_parent_inherited(void);
+void Observer_on_remove_value_pair_w_var_second_term(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -12578,6 +12579,10 @@ bake_test_case Observer_testcases[] = {
     {
         "propagate_add_to_grandparent_w_parent_inherited",
         Observer_propagate_add_to_grandparent_w_parent_inherited
+    },
+    {
+        "on_remove_value_pair_w_var_second_term",
+        Observer_on_remove_value_pair_w_var_second_term
     }
 };
 
@@ -16747,7 +16752,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        385,
+        386,
         Observer_testcases
     },
     {
