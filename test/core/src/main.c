@@ -2659,6 +2659,7 @@ void Prefab_delete_component_used_by_prefab(void);
 void Prefab_prefab_child_auto_override_pair_low_rel_id(void);
 void Prefab_reparent_to_prefab_is_prefab(void);
 void Prefab_add_same_childof_to_prefab_parent_w_name(void);
+void Prefab_override_exclusive_pair_w_value(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -13765,6 +13766,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "add_same_childof_to_prefab_parent_w_name",
         Prefab_add_same_childof_to_prefab_parent_w_name
+    },
+    {
+        "override_exclusive_pair_w_value",
+        Prefab_override_exclusive_pair_w_value
     }
 };
 
@@ -16794,7 +16799,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        190,
+        191,
         Prefab_testcases
     },
     {

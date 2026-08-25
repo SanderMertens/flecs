@@ -6482,3 +6482,25 @@ void Prefab_add_same_childof_to_prefab_parent_w_name(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_override_exclusive_pair_w_value(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsExclusive);
+
+    ecs_entity_t tgt = ecs_new(world);
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_set_pair(world, prefab, Position, tgt, {10, 20});
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, prefab);
+    test_assert(ecs_has_pair(world, e1, ecs_id(Position), tgt));
+
+    const Position *p = ecs_get_pair(world, e1, Position, tgt);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
