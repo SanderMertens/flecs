@@ -145,7 +145,11 @@ ecs_record_t* flecs_entity_index_ensure(
         /* Entity doesn't have a dense index yet */
         ecs_vec_append_t(index->allocator, &index->dense, uint64_t)[0] = entity;
         r->dense = dense = ecs_vec_count(&index->dense) - 1;
+#ifdef FLECS_ENTITY_RANGES
+        flecs_entity_ranges_on_ensure(index, id);
+#else
         index->max_id = id > index->max_id ? id : index->max_id;
+#endif
     }
 
     ecs_assert(dense != 0, ECS_INTERNAL_ERROR, NULL);

@@ -140,6 +140,10 @@ void flecs_entity_ranges_init(
 void flecs_entity_ranges_fini(
     ecs_entity_index_t *index);
 
+void flecs_entity_ranges_on_ensure(
+    ecs_entity_index_t *index,
+    uint32_t id);
+
 /* Move a recycled entity to the range it belongs to. */
 void flecs_entity_ranges_on_delete(
     ecs_entity_index_t *index,

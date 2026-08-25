@@ -2774,6 +2774,7 @@
                 "range_delete_recycled_to_correct_range",
                 "range_create_small_range_from_1",
                 "range_create_large_range_from_1",
+                "range_prefab_spawn_deferred_after_range_switch",
                 "phases",
                 "phases_w_merging",
                 "phases_match_in_create",

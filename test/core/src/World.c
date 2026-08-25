@@ -813,6 +813,42 @@ void World_range_create_large_range_from_1(void) {
     ecs_fini(world);
 }
 
+void World_range_prefab_spawn_deferred_after_range_switch(void) {
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_entity_range_t *r1 = ecs_entity_range_new(world, 1, 10000 - 1);
+    const ecs_entity_range_t *r2 = ecs_entity_range_new(world, 10000, 100000);
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t child = ecs_entity(world, {
+        .name = "PrefabChild",
+        .parent = prefab
+    });
+    ecs_add_id(world, child, EcsPrefab);
+
+    ecs_defer_begin(world);
+    ecs_entity_range_set(world, r2);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+    ecs_entity_range_set(world, r1);
+    ecs_defer_end(world);
+
+    test_assert(ecs_is_alive(world, inst));
+    test_uint((uint32_t)inst, 10000);
+    ecs_entity_t inst_child = ecs_lookup_child(world, inst, "PrefabChild");
+    test_assert(inst_child != 0);
+    test_uint((uint32_t)inst_child, 10001);
+    test_assert(r1 == ecs_entity_range_get(world));
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert((uint32_t)e < 10000);
+
+    ecs_entity_range_set(world, r2);
+    ecs_entity_t e2 = ecs_new(world);
+    test_uint((uint32_t)e2, 10002);
+
+    ecs_fini(world);
+}
+
 void World_get_tick(void) {
     ecs_world_t *world = ecs_init();
 
