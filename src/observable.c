@@ -469,6 +469,18 @@ static void flecs_emit_propagate(
     ecs_log_pop_3();
 }
 
+static ecs_component_record_t* flecs_traversable_target_cr(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    if (!r || !(r->row & EcsEntityIsTraversable)) {
+        return NULL;
+    }
+
+    return flecs_components_get(world, ecs_pair(EcsWildcard, entity));
+}
+
 void flecs_emit_propagate_invalidate_tables(
     ecs_world_t *world,
     ecs_component_record_t *tgt_cr)
@@ -497,8 +509,8 @@ void flecs_emit_propagate_invalidate_tables(
             ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
 
             for (i = 0; i < count; i ++) {
-                ecs_component_record_t *cr_t = flecs_components_get(
-                    world, ecs_pair(EcsWildcard, children[i]));
+                ecs_component_record_t *cr_t = flecs_traversable_target_cr(
+                    world, children[i]);
                 if (cr_t) {
                     flecs_emit_propagate_invalidate_tables(world, cr_t);
                 }
@@ -522,8 +534,8 @@ void flecs_emit_propagate_invalidate_tables(
             const ecs_entity_t *entities = ecs_table_entities(table);
 
             for (e = 0; e < entity_count; e ++) {
-                ecs_component_record_t *cr_t = flecs_components_get(
-                    world, ecs_pair(EcsWildcard, entities[e]));
+                ecs_component_record_t *cr_t = flecs_traversable_target_cr(
+                    world, entities[e]);
                 if (cr_t) {
                     flecs_emit_propagate_invalidate_tables(world, cr_t);
                 }
@@ -541,8 +553,8 @@ void flecs_emit_propagate_invalidate(
     const ecs_entity_t *entities = &ecs_table_entities(table)[offset];
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_component_record_t *cr_t = flecs_components_get(
-            world, ecs_pair(EcsWildcard, entities[i]));
+        ecs_component_record_t *cr_t = flecs_traversable_target_cr(
+            world, entities[i]);
         if (cr_t) {
             /* Entity is used as target in traversable relationship, propagate */
             flecs_emit_propagate_invalidate_tables(world, cr_t);
@@ -573,8 +585,8 @@ static void flecs_propagate_entities(
 
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_component_record_t *cr_t = flecs_components_get(
-            world, ecs_pair(EcsWildcard, entities[i]));
+        ecs_component_record_t *cr_t = flecs_traversable_target_cr(
+            world, entities[i]);
         if (cr_t) {
             /* Entity is used as target in traversable pairs, propagate */
             ecs_entity_t e = src ? src : entities[i];
