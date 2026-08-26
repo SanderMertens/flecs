@@ -7210,3 +7210,78 @@ void Reactivity_for_keyed_template_instance_survives_collection_change(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_same_entity_in_two_non_exclusive_scopes(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const a: bool = true"
+            LINE "const b: bool = true"
+            LINE "if a {"
+            LINE "  item { Foo }"
+            LINE "}"
+            LINE "if b {"
+            LINE "  item { Bar }"
+            LINE "}"
+    });
+
+    test_assert(script != 0);
+    test_assert(!ecs_has_id(world, script, EcsScriptError));
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t item = ecs_lookup(world, "item");
+    test_assert(item != 0);
+    test_assert(ecs_has(world, item, Foo));
+    test_assert(ecs_has(world, item, Bar));
+
+    ecs_fini(world);
+}
+
+void Reactivity_partial_component_in_two_non_exclusive_scopes(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const a: bool = true"
+            LINE "const b: bool = true"
+            LINE "item {"
+            LINE "  Position: {1, 2}"
+            LINE "}"
+            LINE "if a {"
+            LINE "  item { Position: {x: 10} }"
+            LINE "}"
+            LINE "if b {"
+            LINE "  item { Position: {y: 20} }"
+            LINE "}"
+    });
+
+    test_assert(script != 0);
+    test_assert(!ecs_has_id(world, script, EcsScriptError));
+
+    ecs_entity_t item = ecs_lookup(world, "item");
+    test_assert(item != 0);
+
+    const Position *p = ecs_get_id(world, item, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}

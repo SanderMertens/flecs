@@ -278,7 +278,8 @@ static int flecs_script_dep_component_owner(
         }
         flecs_script_eval_error(ctx->v, node,
             "component can only be created in one scope or "
-            "mutually exclusive scopes");
+            "mutually exclusive scopes (use if/else branches, or assign "
+            "individual members)");
         return -1;
     }
     flecs_script_component_owner_t *owner = ecs_vec_append_t(

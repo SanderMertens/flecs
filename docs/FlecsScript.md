@@ -1955,3 +1955,38 @@ if (ecs_script_update(world, s, 0, new_code)) {
 Just like `ecs_script`, a failed `ecs_script_update` keeps the script entity, adds the `EcsScriptError` tag to it, stores the error message in `EcsScript::error` and deletes the entities that were created by the script.
 
 When a script contains templates, script resources will not get cleaned up until the entities associated with the templates are deleted.
+
+Because a managed script keeps track of which statement created which component, a component may only be created for an entity from a single scope, or from scopes that are mutually exclusive. The following script is valid, as the two scopes are branches of the same `if` statement:
+
+```cpp
+if a {
+  item { Position: {10, 20} }
+} else {
+  item { Position: {30, 40} }
+}
+```
+
+The following script is not valid, as both scopes can be evaluated in the same run:
+
+```cpp
+if a {
+  item { Position: {10, 20} }
+}
+if b {
+  item { Position: {30, 40} }
+}
+```
+
+This only applies to statements that create a component. Declaring the same entity from two scopes is always valid, and so is assigning individual members of a component, which does not create the component:
+
+```cpp
+item {
+  Position: {1, 2}
+}
+if a {
+  item { Position: {x: 10} }
+}
+if b {
+  item { Position: {y: 20} }
+}
+```
