@@ -1335,6 +1335,7 @@ void Error_failing_script_does_not_delete_shared_module(void);
 void Error_failing_script_update_does_not_delete_shared_module(void);
 void Error_deleted_script_does_not_delete_shared_module(void);
 void Error_failing_script_does_not_delete_shared_scope(void);
+void Error_parse_error_in_large_script_reports_position(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -2214,6 +2215,15 @@ void Include_include_forward_ref_to_const_in_later_include(void);
 void Include_include_forward_ref_to_entity_in_later_include(void);
 void Include_include_retried_script_keeps_scope_and_components(void);
 void Include_include_error_reports_failing_file(void);
+void Include_include_parse_error_sets_error_on_parent(void);
+void Include_include_parse_error_logs_error(void);
+void Include_include_eval_error_sets_error_on_parent(void);
+void Include_include_nested_parse_error_sets_error_on_parent(void);
+void Include_include_parse_error_run_file_fails(void);
+void Include_include_nested_index_parse_error_sets_error_on_parent(void);
+void Include_include_nested_error_reports_position(void);
+void Include_include_error_in_large_file_reports_position(void);
+void Include_include_missing_file_managed_sets_error_on_parent(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
@@ -7933,6 +7943,10 @@ bake_test_case Error_testcases[] = {
     {
         "failing_script_does_not_delete_shared_scope",
         Error_failing_script_does_not_delete_shared_scope
+    },
+    {
+        "parse_error_in_large_script_reports_position",
+        Error_parse_error_in_large_script_reports_position
     }
 };
 
@@ -11402,6 +11416,42 @@ bake_test_case Include_testcases[] = {
     {
         "include_error_reports_failing_file",
         Include_include_error_reports_failing_file
+    },
+    {
+        "include_parse_error_sets_error_on_parent",
+        Include_include_parse_error_sets_error_on_parent
+    },
+    {
+        "include_parse_error_logs_error",
+        Include_include_parse_error_logs_error
+    },
+    {
+        "include_eval_error_sets_error_on_parent",
+        Include_include_eval_error_sets_error_on_parent
+    },
+    {
+        "include_nested_parse_error_sets_error_on_parent",
+        Include_include_nested_parse_error_sets_error_on_parent
+    },
+    {
+        "include_parse_error_run_file_fails",
+        Include_include_parse_error_run_file_fails
+    },
+    {
+        "include_nested_index_parse_error_sets_error_on_parent",
+        Include_include_nested_index_parse_error_sets_error_on_parent
+    },
+    {
+        "include_nested_error_reports_position",
+        Include_include_nested_error_reports_position
+    },
+    {
+        "include_error_in_large_file_reports_position",
+        Include_include_error_in_large_file_reports_position
+    },
+    {
+        "include_missing_file_managed_sets_error_on_parent",
+        Include_include_missing_file_managed_sets_error_on_parent
     }
 };
 
@@ -13250,7 +13300,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        199,
+        200,
         Error_testcases
     },
     {
@@ -13305,7 +13355,7 @@ static bake_test_suite suites[] = {
         "Include",
         NULL,
         NULL,
-        46,
+        55,
         Include_testcases
     },
     {

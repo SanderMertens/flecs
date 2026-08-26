@@ -25259,7 +25259,11 @@ static void flecs_parser_errorv(
     va_list args,
     bool is_warning)
 {
-    if (column_arg > 65536) {
+    if (expr) {
+        if (column_arg > ecs_os_strlen(expr)) {
+            column_arg = 0;
+        }
+    } else if (column_arg > 65536) {
         /* Limit column size, which prevents the code from throwing up when the
          * function is called with (expr - ptr), and expr is NULL. */
         column_arg = 0;
