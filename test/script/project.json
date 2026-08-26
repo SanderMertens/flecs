@@ -1070,7 +1070,20 @@
                 "template_instantiated_on_itself",
                 "template_prop_large_struct_no_leak",
                 "many_templates_w_props_in_script",
-                "tree_parent_prefab_before_template"
+                "tree_parent_prefab_before_template",
+                "template_prop_struct_assign_whole_component",
+                "template_prop_struct_assign_whole_component_no_dollar",
+                "template_prop_struct_assign_whole_component_default",
+                "template_prop_struct_in_nested_struct_literal",
+                "template_prop_struct_in_nested_struct_literal_default",
+                "template_prop_struct_in_nested_struct_literal_partial_args",
+                "template_prop_struct_f32_members_in_nested_struct_literal",
+                "template_prop_struct_in_struct_literal_same_scope",
+                "template_prop_struct_in_deeply_nested_child",
+                "template_prop_struct_forwarded_to_nested_template",
+                "template_prop_struct_no_default",
+                "template_prop_struct_in_nested_struct_literal_w_using",
+                "template_prop_struct_member_expr_in_struct_literal"
             ]
         }, {
             "id": "Mut",
