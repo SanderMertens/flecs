@@ -1161,7 +1161,10 @@ static
 bool flecs_term_is_self_trivial(
     const ecs_term_t *term)
 {
-    if (term->oper != EcsAnd) {
+    /* A Not term is answered by the table just as well as an And term: the
+     * table either has the id or it doesn't. Optional terms are not, because
+     * they decide per field whether it is set. */
+    if (term->oper != EcsAnd && term->oper != EcsNot) {
         return false;
     }
 
@@ -1203,9 +1206,8 @@ void flecs_query_set_self_trivial(
 {
     int32_t i, term_count = q->term_count;
     bool self_trivial = term_count != 0 && !q->row_fields &&
-        !(q->flags & (EcsQueryHasPred|EcsQueryMatchDisabled|
-            EcsQueryMatchPrefab|EcsQueryHasScopes|EcsQueryHasCondSet|
-            EcsQueryHasRefs|EcsQueryMatchNothing|EcsQueryMatchWildcards));
+        !(q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryHasRefs|
+            EcsQueryMatchNothing|EcsQueryMatchWildcards));
 
     for (i = 0; self_trivial && (i < term_count); i ++) {
         self_trivial = flecs_term_is_self_trivial(&q->terms[i]);

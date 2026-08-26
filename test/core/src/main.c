@@ -2004,6 +2004,8 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void);
 
 // Testsuite 'Observer'
 void Observer_multi_term_inheritable_component_owned(void);
+void Observer_multi_term_inheritable_component_w_not_term(void);
+void Observer_multi_term_inheritable_component_w_prefab_term(void);
 void Observer_multi_term_inheritable_component_from_base(void);
 void Observer_multi_term_inheritable_component_not_matched(void);
 void Observer_on_add_before_edge(void);
@@ -11222,6 +11224,14 @@ bake_test_case Observer_testcases[] = {
         Observer_multi_term_inheritable_component_owned
     },
     {
+        "multi_term_inheritable_component_w_not_term",
+        Observer_multi_term_inheritable_component_w_not_term
+    },
+    {
+        "multi_term_inheritable_component_w_prefab_term",
+        Observer_multi_term_inheritable_component_w_prefab_term
+    },
+    {
         "multi_term_inheritable_component_from_base",
         Observer_multi_term_inheritable_component_from_base
     },
@@ -16937,7 +16947,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        388,
+        390,
         Observer_testcases
     },
     {

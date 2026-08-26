@@ -25218,7 +25218,10 @@ static
 bool flecs_term_is_self_trivial(
     const ecs_term_t *term)
 {
-    if (term->oper != EcsAnd) {
+    /* A Not term is answered by the table just as well as an And term: the
+     * table either has the id or it doesn't. Optional terms are not, because
+     * they decide per field whether it is set. */
+    if (term->oper != EcsAnd && term->oper != EcsNot) {
         return false;
     }
 
@@ -25260,9 +25263,8 @@ void flecs_query_set_self_trivial(
 {
     int32_t i, term_count = q->term_count;
     bool self_trivial = term_count != 0 && !q->row_fields &&
-        !(q->flags & (EcsQueryHasPred|EcsQueryMatchDisabled|
-            EcsQueryMatchPrefab|EcsQueryHasScopes|EcsQueryHasCondSet|
-            EcsQueryHasRefs|EcsQueryMatchNothing|EcsQueryMatchWildcards));
+        !(q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryHasRefs|
+            EcsQueryMatchNothing|EcsQueryMatchWildcards));
 
     for (i = 0; self_trivial && (i < term_count); i ++) {
         self_trivial = flecs_term_is_self_trivial(&q->terms[i]);
@@ -34757,35 +34759,32 @@ int flecs_query_trivial_has_range(
          * base entity when the term traverses IsA, in which case the query
          * engine has to do the work. */
         bool up = (terms[t].src.id & EcsUp) != 0;
+        bool is_not = terms[t].oper == EcsNot;
+        const ecs_table_record_t *tr = NULL;
 
         if (term_id < FLECS_HI_COMPONENT_ID) {
             int16_t res = component_map[term_id];
-            if (!res) {
-                if (up) {
-                    goto not_trivial;
-                }
-                return 0;
+            if (res) {
+                int32_t type_index = res > 0 ?
+                    column_map[type_count + (res - 1)] : (-res - 1);
+                tr = &table_records[type_index];
             }
-
-            int32_t type_index = res > 0 ?
-                column_map[type_count + (res - 1)] : (-res - 1);
-            term_trs[t] = &table_records[type_index];
-            continue;
+        } else {
+            ecs_component_record_t *cr = flecs_components_get(
+                real_world, term_id);
+            if (cr) {
+                tr = flecs_component_get_table(cr, table);
+            }
         }
 
-        ecs_component_record_t *cr = flecs_components_get(real_world, term_id);
-        if (!cr) {
-            if (up) {
-                goto not_trivial;
-            }
-            return 0;
-        }
-
-        const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
         if (!tr) {
             if (up) {
                 goto not_trivial;
             }
+            if (!is_not) {
+                return 0;
+            }
+        } else if (is_not) {
             return 0;
         }
 
@@ -34813,6 +34812,9 @@ int flecs_query_trivial_has_range(
     int16_t *columns = ECS_CONST_CAST(int16_t*, lit.columns);
     for (t = 0; t < term_count; t ++) {
         int8_t field_index = terms[t].field_index;
+        if (!term_trs[t]) {
+            continue;
+        }
         lit.trs[field_index] = term_trs[t];
         columns[field_index] = term_trs[t]->column;
     }
