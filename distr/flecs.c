@@ -35130,6 +35130,39 @@ error:
     return false;
 }
 
+static bool flecs_query_table_has_self_ids(
+    const ecs_query_t *q,
+    const ecs_table_t *table)
+{
+    if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+        return false;
+    }
+
+    const ecs_term_t *terms = q->terms;
+    int32_t i, count = q->term_count;
+    for (i = 0; i < count; i ++) {
+        const ecs_term_t *term = &terms[i];
+
+        if (!(term->flags_ & EcsTermIsTrivial)) {
+            continue;
+        }
+
+        if ((term->src.id & EcsTraverseFlags) != EcsSelf) {
+            continue;
+        }
+
+        if (ecs_id_is_wildcard(term->id)) {
+            continue;
+        }
+
+        if (ecs_table_get_type_index(q->real_world, table, term->id) == -1) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool ecs_query_has_table(
     const ecs_query_t *q,
     ecs_table_t *table,
@@ -35138,7 +35171,7 @@ bool ecs_query_has_table(
     flecs_poly_assert(q, ecs_query_t);
     ecs_check(q->flags & EcsQueryMatchThis, ECS_INVALID_PARAMETER, NULL);
 
-    if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+    if (!flecs_query_table_has_self_ids(q, table)) {
         /* Safe, only used for statistics */
         ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;
         return false;
@@ -35169,7 +35202,7 @@ bool ecs_query_has_range(
         }
     }
 
-    if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+    if (!flecs_query_table_has_self_ids(q, table)) {
         /* Safe, only used for statistics */
         ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;
         return false;
