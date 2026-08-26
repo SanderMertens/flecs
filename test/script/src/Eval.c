@@ -20175,3 +20175,59 @@ void Eval_script_refers_to_script_entity(void) {
 
     ecs_fini(world);
 }
+
+void Eval_module_scope_takes_precedence_over_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *assets =
+    HEAD "module a.b"
+    LINE "prefab X {}";
+
+    test_assert(ecs_script_run(world, NULL, assets, NULL) == 0);
+
+    ecs_entity_t a_x = ecs_entity(world, { .name = "a.X" });
+    ecs_entity_t a_b_x = ecs_lookup(world, "a.b.X");
+    test_assert(a_x != 0);
+    test_assert(a_b_x != 0);
+    test_assert(a_x != a_b_x);
+
+    const char *expr =
+    HEAD "module a.b"
+    LINE "using a"
+    LINE "e : X {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "a.b.e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, EcsIsA, a_b_x));
+    test_assert(!ecs_has_pair(world, e, EcsIsA, a_x));
+
+    ecs_fini(world);
+}
+
+void Eval_module_scope_takes_precedence_over_using_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a_x = ecs_entity(world, { .name = "a.X" });
+    test_assert(a_x != 0);
+
+    const char *expr =
+    HEAD "module a.b"
+    LINE "using a"
+    LINE "prefab X {}"
+    LINE "e : X {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t a_b_x = ecs_lookup(world, "a.b.X");
+    test_assert(a_b_x != 0);
+    test_assert(a_b_x != a_x);
+
+    ecs_entity_t e = ecs_lookup(world, "a.b.e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, EcsIsA, a_b_x));
+    test_assert(!ecs_has_pair(world, e, EcsIsA, a_x));
+
+    ecs_fini(world);
+}

@@ -94712,6 +94712,11 @@ int flecs_script_symbol_lookup(
             world, FlecsMeta, name, NULL, NULL, false);
 
         if (!result && v) {
+            result = ecs_lookup_path_w_sep(
+                world, v->parent, name, NULL, NULL, true);
+        }
+
+        if (!result && v) {
             int32_t i, using_count = ecs_vec_count(&v->r->using);
             ecs_entity_t *using = ecs_vec_first(&v->r->using);
             for (i = using_count - 1; i >= 0; i --) {
@@ -94721,11 +94726,6 @@ int flecs_script_symbol_lookup(
                     break;
                 }
             }
-        }
-
-        if (!result && v) {
-            result = ecs_lookup_path_w_sep(
-                world, v->parent, name, NULL, NULL, true);
         }
 
         if (!result && desc && desc->lookup_action) {

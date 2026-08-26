@@ -234,6 +234,8 @@ void Eval_assign_match_to_typed_const_w_array(void);
 void Eval_assign_match_to_typed_const_w_vector(void);
 void Eval_assign_match_to_typed_const_w_map(void);
 void Eval_using_wildcard(void);
+void Eval_module_scope_takes_precedence_over_using(void);
+void Eval_module_scope_takes_precedence_over_using_same_script(void);
 void Eval_single_line_comment_in_value(void);
 void Eval_single_line_comment_in_value_after_scope(void);
 void Eval_multi_line_comment_in_value(void);
@@ -3542,6 +3544,14 @@ bake_test_case Eval_testcases[] = {
     {
         "using_wildcard",
         Eval_using_wildcard
+    },
+    {
+        "module_scope_takes_precedence_over_using",
+        Eval_module_scope_takes_precedence_over_using
+    },
+    {
+        "module_scope_takes_precedence_over_using_same_script",
+        Eval_module_scope_takes_precedence_over_using_same_script
     },
     {
         "single_line_comment_in_value",
@@ -13091,7 +13101,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        637,
+        639,
         Eval_testcases
     },
     {
