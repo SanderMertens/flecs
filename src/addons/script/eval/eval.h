@@ -17,6 +17,10 @@ int flecs_script_apply_annot(
     ecs_entity_t entity,
     ecs_script_annot_t *annot);
 
+void flecs_script_apply_tree_annot(
+    ecs_script_annot_t *annot,
+    ecs_script_entity_t *node);
+
 /* Include visitor (runs before script evaluation, see visit_include.c) */
 
 int flecs_script_visit_include(

@@ -1054,7 +1054,8 @@
                 "template_in_singleton_scope",
                 "template_instantiated_on_itself",
                 "template_prop_large_struct_no_leak",
-                "many_templates_w_props_in_script"
+                "many_templates_w_props_in_script",
+                "tree_parent_prefab_before_template"
             ]
         }, {
             "id": "Mut",
