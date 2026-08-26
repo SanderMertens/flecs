@@ -124,6 +124,8 @@ static void flecs_script_for_slot_delete_named(
             }
             flecs_script_for_entry_fini(&keys[i], entry);
             flecs_hm_bucket_remove(&slot->names, bucket, ecs_map_key(&it), i);
+            slot->cache_entity = 0;
+            slot->cache_entry = NULL;
         }
     }
 }
@@ -205,6 +207,10 @@ static ecs_script_for_entry_t* flecs_script_for_slot_find(
         stored->name = ecs_os_strdup(name);
         ecs_vec_init_t(NULL, &entry->components,
             ecs_script_for_component_t, 0);
+
+        /* Inserting an entry can move existing entries in the hashmap. */
+        slot->cache_entity = 0;
+        slot->cache_entry = NULL;
     }
 
     return entry;
@@ -225,6 +231,8 @@ void flecs_script_for_slot_track(
         }
         entry->entity = entity;
         entry->visit = visit;
+        slot->cache_entity = entity;
+        slot->cache_entry = entry;
         *named = true;
         return;
     }
@@ -247,10 +255,16 @@ void flecs_script_for_slot_track_component(
     ecs_id_t component,
     int32_t visit)
 {
-    ecs_script_for_entry_t *entry = flecs_script_for_slot_find(
-        world, slot, entity, false);
-    if (!entry || entry->entity != entity) {
-        return;
+    ecs_script_for_entry_t *entry;
+    if (slot->cache_entity == entity) {
+        entry = slot->cache_entry;
+    } else {
+        entry = flecs_script_for_slot_find(world, slot, entity, false);
+        if (!entry || entry->entity != entity) {
+            return;
+        }
+        slot->cache_entity = entity;
+        slot->cache_entry = entry;
     }
 
     ecs_script_for_component_t *components = ecs_vec_first(&entry->components);
