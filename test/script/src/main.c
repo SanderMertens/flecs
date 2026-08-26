@@ -1703,6 +1703,8 @@ void Expr_vector_add_struct_struct(void);
 void Expr_vector_add_struct_incompatible_struct(void);
 void Expr_interpolate_string_w_i32_var(void);
 void Expr_interpolate_string_w_string_var(void);
+void Expr_interpolate_string_w_null_string_var(void);
+void Expr_interpolate_string_w_null_string_member(void);
 void Expr_interpolate_string_w_entity_var(void);
 void Expr_interpolate_string_w_id_var(void);
 void Expr_interpolate_string_w_var_not_found(void);
@@ -1808,6 +1810,10 @@ void Expr_match_w_any_not_last(void);
 void Expr_match_w_any_first(void);
 void Expr_match_w_any_mismatching_type(void);
 void Expr_match_i_w_any_f(void);
+void Expr_match_f64_i_cases(void);
+void Expr_match_f32_i_cases(void);
+void Expr_match_f64_i_cases_no_match(void);
+void Expr_match_f64_literal_i_cases(void);
 void Expr_identifier_as_var(void);
 void Expr_member_w_identifier_as_var(void);
 void Expr_member_w_identifier_as_var_and_entity(void);
@@ -9355,6 +9361,14 @@ bake_test_case Expr_testcases[] = {
         Expr_interpolate_string_w_string_var
     },
     {
+        "interpolate_string_w_null_string_var",
+        Expr_interpolate_string_w_null_string_var
+    },
+    {
+        "interpolate_string_w_null_string_member",
+        Expr_interpolate_string_w_null_string_member
+    },
+    {
         "interpolate_string_w_entity_var",
         Expr_interpolate_string_w_entity_var
     },
@@ -9773,6 +9787,22 @@ bake_test_case Expr_testcases[] = {
     {
         "match_i_w_any_f",
         Expr_match_i_w_any_f
+    },
+    {
+        "match_f64_i_cases",
+        Expr_match_f64_i_cases
+    },
+    {
+        "match_f32_i_cases",
+        Expr_match_f32_i_cases
+    },
+    {
+        "match_f64_i_cases_no_match",
+        Expr_match_f64_i_cases_no_match
+    },
+    {
+        "match_f64_literal_i_cases",
+        Expr_match_f64_literal_i_cases
     },
     {
         "identifier_as_var",
@@ -13096,7 +13126,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        384,
+        390,
         Expr_testcases,
         1,
         Expr_params
