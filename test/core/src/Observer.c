@@ -14935,3 +14935,99 @@ void Observer_propagate_add_to_grandparent_w_parent_inherited(void) {
 
     ecs_fini(world);
 }
+
+void Observer_multi_term_inheritable_component_owned(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity), .inout = EcsInOutNone }
+        },
+        .events = {EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.s[0][0], 0);
+    test_uint(ctx.s[0][1], 0);
+    test_uint(ctx.c[0][0], ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void Observer_multi_term_inheritable_component_from_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Velocity, {1, 2});
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity), .inout = EcsInOutNone }
+        },
+        .events = {EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.s[0][0], 0);
+    test_uint(ctx.s[0][1], base);
+
+    ecs_fini(world);
+}
+
+void Observer_multi_term_inheritable_component_not_matched(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity), .inout = EcsInOutNone }
+        },
+        .events = {EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
