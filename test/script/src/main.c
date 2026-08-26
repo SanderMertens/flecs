@@ -300,6 +300,11 @@ void Eval_if_true_in_scope(void);
 void Eval_if_false_in_scope(void);
 void Eval_if_lt(void);
 void Eval_if_lt_const(void);
+void Eval_if_f64_eq_f64(void);
+void Eval_if_f64_eq_flt_literal(void);
+void Eval_if_f32_eq_flt_literal(void);
+void Eval_if_f32_eq_inexact_flt_literal(void);
+void Eval_if_flt_literal_eq_flt_literal_fails(void);
 void Eval_if_enum_eq_and_var(void);
 void Eval_if_enum_eq_or_var(void);
 void Eval_if_enum_eq_and_member(void);
@@ -3808,6 +3813,26 @@ bake_test_case Eval_testcases[] = {
     {
         "if_lt_const",
         Eval_if_lt_const
+    },
+    {
+        "if_f64_eq_f64",
+        Eval_if_f64_eq_f64
+    },
+    {
+        "if_f64_eq_flt_literal",
+        Eval_if_f64_eq_flt_literal
+    },
+    {
+        "if_f32_eq_flt_literal",
+        Eval_if_f32_eq_flt_literal
+    },
+    {
+        "if_f32_eq_inexact_flt_literal",
+        Eval_if_f32_eq_inexact_flt_literal
+    },
+    {
+        "if_flt_literal_eq_flt_literal_fails",
+        Eval_if_flt_literal_eq_flt_literal_fails
     },
     {
         "if_enum_eq_and_var",
@@ -13101,7 +13126,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        639,
+        644,
         Eval_testcases
     },
     {

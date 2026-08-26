@@ -20231,3 +20231,105 @@ void Eval_module_scope_takes_precedence_over_using_same_script(void) {
 
     ecs_fini(world);
 }
+
+void Eval_if_f64_eq_f64(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: f64 = 1.5"
+    LINE "const w: f64 = 1.5"
+    LINE "const x: f64 = 2.5"
+    LINE "if v == w {"
+    LINE "  a{}"
+    LINE "}"
+    LINE "if v == x {"
+    LINE "  b{}"
+    LINE "}"
+    LINE "if v != x {"
+    LINE "  c{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_assert(ecs_lookup(world, "c") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_f64_eq_flt_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: f64 = 1.5"
+    LINE "if v == 1.5 {"
+    LINE "  a{}"
+    LINE "}"
+    LINE "if v == 2.5 {"
+    LINE "  b{}"
+    LINE "}"
+    LINE "if 1.5 == v {"
+    LINE "  c{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_assert(ecs_lookup(world, "c") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_f32_eq_flt_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: f32 = 1.5"
+    LINE "if v == 1.5 {"
+    LINE "  a{}"
+    LINE "}"
+    LINE "if v == 2.5 {"
+    LINE "  b{}"
+    LINE "}"
+    LINE "if v != 2.5 {"
+    LINE "  c{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_assert(ecs_lookup(world, "c") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_f32_eq_inexact_flt_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: f32 = 0.1"
+    LINE "if v == 0.1 {"
+    LINE "  a{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_flt_literal_eq_flt_literal_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if 1.5 == 1.5 {"
+    LINE "  a{}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+    test_assert(ecs_lookup(world, "a") == 0);
+
+    ecs_fini(world);
+}
