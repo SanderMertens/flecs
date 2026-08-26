@@ -2422,6 +2422,9 @@ void DontFragment_1_sparse_written_up_w_non_fragmenting_childof(void);
 void DontFragment_1_sparse_written_self_up_w_non_fragmenting_childof(void);
 void DontFragment_src_var_w_trait_on_dont_fragment_tag(void);
 void DontFragment_src_var_w_trait_on_dont_fragment_tag_anonymous(void);
+void DontFragment_pair_tgt_var_src_w_dont_fragment_tag(void);
+void DontFragment_pair_tgt_var_src_w_dont_fragment_component(void);
+void DontFragment_pair_tgt_var_src_w_not_dont_fragment_tag(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
@@ -12401,6 +12404,18 @@ bake_test_case DontFragment_testcases[] = {
     {
         "src_var_w_trait_on_dont_fragment_tag_anonymous",
         DontFragment_src_var_w_trait_on_dont_fragment_tag_anonymous
+    },
+    {
+        "pair_tgt_var_src_w_dont_fragment_tag",
+        DontFragment_pair_tgt_var_src_w_dont_fragment_tag
+    },
+    {
+        "pair_tgt_var_src_w_dont_fragment_component",
+        DontFragment_pair_tgt_var_src_w_dont_fragment_component
+    },
+    {
+        "pair_tgt_var_src_w_not_dont_fragment_tag",
+        DontFragment_pair_tgt_var_src_w_not_dont_fragment_tag
     }
 };
 
@@ -14507,7 +14522,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        141,
+        144,
         DontFragment_testcases,
         1,
         DontFragment_params
