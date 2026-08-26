@@ -2779,6 +2779,16 @@ void flecs_notify_on_set(
     bool invoke_hook,
     void *ptr);
 
+/* Same as flecs_notify_on_set, but with a known component record. */
+void flecs_notify_on_set_w_cr(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    ecs_id_t id,
+    ecs_component_record_t *cr,
+    bool invoke_hook,
+    void *ptr);
+
 /* Same as flecs_notify_on_set but for multiple component ids. */
 void flecs_notify_on_set_ids(
     ecs_world_t *world,
@@ -7531,12 +7541,24 @@ void flecs_notify_on_set(
     bool invoke_hook,
     void *ptr)
 {
+    flecs_notify_on_set_w_cr(world, table, row, id,
+        flecs_components_get(world, id), invoke_hook, ptr);
+}
+
+void flecs_notify_on_set_w_cr(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    ecs_id_t id,
+    ecs_component_record_t *cr,
+    bool invoke_hook,
+    void *ptr)
+{
     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
     const ecs_entity_t *entities = &ecs_table_entities(table)[row];
     ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row <= ecs_table_count(table), ECS_INTERNAL_ERROR, NULL);
 
-    ecs_component_record_t *cr = flecs_components_get(world, id);
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
     bool dont_fragment = (cr->flags & EcsIdDontFragment) != 0;
@@ -66556,8 +66578,8 @@ void flecs_instantiate_sparse(
                 flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
             }
 
-            flecs_notify_on_set(
-                world, instance_table, row_offset + j, id, true, dst_ptr);
+            flecs_notify_on_set_w_cr(
+                world, instance_table, row_offset + j, id, cr, true, dst_ptr);
         }
     }
 }

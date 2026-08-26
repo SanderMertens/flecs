@@ -101,6 +101,16 @@ void flecs_notify_on_set(
     bool invoke_hook,
     void *ptr);
 
+/* Same as flecs_notify_on_set, but with a known component record. */
+void flecs_notify_on_set_w_cr(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    ecs_id_t id,
+    ecs_component_record_t *cr,
+    bool invoke_hook,
+    void *ptr);
+
 /* Same as flecs_notify_on_set but for multiple component ids. */
 void flecs_notify_on_set_ids(
     ecs_world_t *world,
