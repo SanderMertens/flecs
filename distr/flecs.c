@@ -107075,8 +107075,9 @@ static int flecs_expr_type_for_operator(
     /* If left and right types are the same, do nothing */
     if (left_type == right->type) {
         if (operator == EcsTokEq || operator == EcsTokNeq) {
-            if (left_type == ecs_id(ecs_f32_t) ||
-                left_type == ecs_id(ecs_f64_t))
+            if ((left_type == ecs_id(ecs_f32_t) ||
+                 left_type == ecs_id(ecs_f64_t)) &&
+                left->kind == EcsExprValue && right->kind == EcsExprValue)
             {
                 flecs_expr_visit_error(script, node,
                     "floating point value is invalid in equality comparison");
@@ -107117,17 +107118,27 @@ static int flecs_expr_type_for_operator(
             goto done;
         }
 
-        /* Equality comparisons between floating point types are invalid */
-        if (ltype == ecs_id(ecs_f32_t) || ltype == ecs_id(ecs_f64_t)) {
-            flecs_expr_visit_error(script, node,
-                "floating point value is invalid in equality comparison");
-            goto error;
-        }
+        bool ltype_is_flt =
+            ltype == ecs_id(ecs_f32_t) || ltype == ecs_id(ecs_f64_t);
+        bool rtype_is_flt =
+            rtype == ecs_id(ecs_f32_t) || rtype == ecs_id(ecs_f64_t);
 
-        if (rtype == ecs_id(ecs_f32_t) || rtype == ecs_id(ecs_f64_t)) {
-            flecs_expr_visit_error(script, node,
-                "floating point value is invalid in equality comparison");
-            goto error;
+        if (ltype_is_flt || rtype_is_flt) {
+            if (left->kind == EcsExprValue && right->kind == EcsExprValue) {
+                flecs_expr_visit_error(script, node,
+                    "floating point value is invalid in equality comparison");
+                goto error;
+            }
+
+            if (ltype_is_flt && right->kind == EcsExprValue) {
+                *operand_type = ltype;
+                goto done;
+            }
+
+            if (rtype_is_flt && left->kind == EcsExprValue) {
+                *operand_type = rtype;
+                goto done;
+            }
         }
     }
 

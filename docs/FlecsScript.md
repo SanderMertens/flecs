@@ -730,7 +730,8 @@ For the operators where the expression type is listed as "other" the type is der
 
 For equality expressions (using the `==` or `!=` operators), additional rules are used:
  - If one of the operands is a bool, cast the other operand to a bool as well. This ensures that expressions such as `2 == true` evaluate to true.
- - Equality expressions between floating point numbers are invalid
+ - If one of the operands is a floating point value and the other operand is a literal, the literal is cast to the floating point type of the other operand. This ensures that expressions such as `f32_value == 0.1` evaluate to true.
+ - Equality expressions where both operands are floating point literals are invalid, as comparing two floating point literals for equality is usually a mistake.
 
 Type expressiveness is determined by the kind of type and its storage size. The following tables show the expressiveness and storage scores:
 
