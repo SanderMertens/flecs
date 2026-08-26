@@ -1841,7 +1841,7 @@ bool flecs_query_finalize_simple(
             term->second.id = second | EcsIsEntity | EcsSelf;
         }
 
-        bool is_self = term->src.id == EcsSelf;
+        bool is_self = (term->src.id & EcsSelf) != 0;
 #ifdef FLECS_CONSTRAINT_TRAITS
         bool default_src = term->src.id == 0;
 #endif

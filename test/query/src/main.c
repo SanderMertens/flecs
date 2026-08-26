@@ -1899,6 +1899,7 @@ void Cached_unmatch_after_delete_traversable_target_parent(void);
 void Cached_no_rematch_on_instantiate(void);
 void Cached_no_rematch_on_instantiate_multi_up(void);
 void Cached_no_rematch_on_instantiate_child(void);
+void Cached_self_term_w_inheritable_component(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -10363,6 +10364,10 @@ bake_test_case Cached_testcases[] = {
     {
         "no_rematch_on_instantiate_child",
         Cached_no_rematch_on_instantiate_child
+    },
+    {
+        "self_term_w_inheritable_component",
+        Cached_self_term_w_inheritable_component
     }
 };
 
@@ -14499,7 +14504,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        164,
+        165,
         Cached_testcases
     },
     {

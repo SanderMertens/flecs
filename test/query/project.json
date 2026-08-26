@@ -1957,7 +1957,8 @@
                 "unmatch_after_delete_traversable_target_parent",
                 "no_rematch_on_instantiate",
                 "no_rematch_on_instantiate_multi_up",
-                "no_rematch_on_instantiate_child"
+                "no_rematch_on_instantiate_child",
+            "self_term_w_inheritable_component"
             ]
         }, {
             "id": "ChangeDetection",
