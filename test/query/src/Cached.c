@@ -8467,3 +8467,57 @@ void Cached_no_rematch_on_instantiate_child(void) {
 
     ecs_fini(world);
 }
+
+void Cached_self_term_w_inheritable_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t cfg = ecs_new(world);
+    ecs_set(world, cfg, Mass, {1.0});
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base, Velocity, {1, 2});
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, e, Position, {10, 20});
+
+    /* The fixed source term is not cacheable, which makes the query partially
+     * cached. The cache is then created from terms that were already
+     * finalized, which must not lose the explicit self modifier. */
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .src.id = EcsSelf },
+            { .id = ecs_id(Velocity), .src.id = EcsSelf },
+            { .id = ecs_id(Mass), .src.id = cfg, .inout = EcsIn }
+        },
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, e, Velocity, {3, 4});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_bool(true, ecs_field_is_self(&it, 0));
+        test_bool(true, ecs_field_is_self(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
