@@ -5314,3 +5314,79 @@ void Template_template_prop_large_struct_no_leak(void) {
         ecs_os_api_calloc_count) - ecs_os_api_free_count;
     test_int(0, balance_after - balance_before);
 }
+
+void Template_many_templates_w_props_in_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t t, template_count = 12;
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_strbuf_appendlit(&buf, "struct Value(x: f32, y: f32)\n");
+    ecs_strbuf_appendlit(&buf, "Prefab Base {}\n");
+
+    for (t = 0; t < template_count; t ++) {
+        ecs_strbuf_append(&buf, "template T%d {\n", t);
+        ecs_strbuf_appendlit(&buf, "  prop w: f32 = 2\n");
+        ecs_strbuf_appendlit(&buf, "  prop d: f32 = 3\n");
+        ecs_strbuf_appendlit(&buf, "  prop h: f32 = 4\n");
+        ecs_strbuf_appendlit(&buf, "  prop n: i32 = 2\n");
+        ecs_strbuf_appendlit(&buf, "  prop kind: i32 = 0\n");
+        ecs_strbuf_appendlit(&buf, "  prop lit: f32 = 1\n");
+        ecs_strbuf_appendlit(&buf, "  const scale = w * d * h * lit\n");
+        ecs_strbuf_appendlit(&buf, "  const sign = match kind {\n");
+        ecs_strbuf_appendlit(&buf, "    0: 1\n");
+        ecs_strbuf_appendlit(&buf, "    _: -1\n");
+        ecs_strbuf_appendlit(&buf, "  }\n");
+        ecs_strbuf_appendlit(&buf, "  for i in 0..n {\n");
+        ecs_strbuf_appendlit(&buf, "    \"c_{i}\" : Base {\n");
+        ecs_strbuf_appendlit(&buf, "      Value: {scale * i, sign}\n");
+        ecs_strbuf_appendlit(&buf, "    }\n");
+        ecs_strbuf_appendlit(&buf, "  }\n");
+        if (t) {
+            ecs_strbuf_append(&buf, "  prev { T%d: {w: w, n: n} }\n", t - 1);
+        }
+        ecs_strbuf_appendlit(&buf, "}\n");
+    }
+
+    ecs_strbuf_append(&buf, "inst { T%d: {w: 2, n: 3, kind: 1} }\n",
+        template_count - 1);
+
+    char *expr = ecs_strbuf_get(&buf);
+    int result = ecs_script_run(world, NULL, expr, NULL);
+    ecs_os_free(expr);
+    test_int(result, 0);
+
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    test_assert(base != 0);
+
+    ecs_entity_t value = ecs_lookup(world, "Value");
+    test_assert(value != 0);
+
+    ecs_entity_t inst = ecs_lookup(world, "inst");
+    test_assert(inst != 0);
+
+    ecs_entity_t parent = inst;
+    for (t = template_count - 1; t >= 0; t --) {
+        char name[8];
+        int32_t i;
+        for (i = 0; i < 3; i ++) {
+            ecs_os_snprintf(name, 8, "c_%d", i);
+            ecs_entity_t child = ecs_lookup_child(world, parent, name);
+            test_assert(child != 0);
+            test_assert(ecs_has_pair(world, child, EcsIsA, base));
+
+            const void *ptr = ecs_get_id(world, child, value);
+            test_assert(ptr != NULL);
+            test_int(((const ecs_f32_t*)ptr)[0], 24 * i);
+            test_int(((const ecs_f32_t*)ptr)[1],
+                t == (template_count - 1) ? -1 : 1);
+        }
+
+        if (t) {
+            parent = ecs_lookup_child(world, parent, "prev");
+            test_assert(parent != 0);
+        }
+    }
+
+    ecs_fini(world);
+}

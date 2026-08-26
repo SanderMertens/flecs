@@ -1316,6 +1316,8 @@ static ecs_script_template_t* flecs_script_template_init(
     ecs_vec_init_t(NULL, &result->observers, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &result->dynamic_refs, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &result->capture_sp, int32_t, 0);
+    ecs_vec_init_t(NULL, &result->capture_input,
+        ecs_script_template_capture_t, 0);
     result->symbol_offset = 0;
     result->symbol_count = 0;
     result->root_symbol = -1;
@@ -1363,6 +1365,8 @@ void flecs_script_template_fini(
     ecs_vec_fini_t(NULL, &template->observers, ecs_script_ref_t);
     ecs_vec_fini_t(NULL, &template->dynamic_refs, ecs_script_ref_t);
     ecs_vec_fini_t(NULL, &template->capture_sp, int32_t);
+    ecs_vec_fini_t(NULL, &template->capture_input,
+        ecs_script_template_capture_t);
     ecs_script_vars_fini(template->vars);
     flecs_free_t(a, ecs_script_template_t, template);
 }
@@ -1509,6 +1513,22 @@ int flecs_script_template_update_vars(
             dst[i].value.ptr, src->value.ptr);
     }
 
+    /* The inputs of a template are numbered independently from the inputs of
+     * the script that declares it. Translate the inputs of the enclosing scope
+     * to the inputs the template body uses for its captured variables. */
+    uint64_t input = UINT64_MAX;
+    if (!v->force) {
+        input = 0;
+        ecs_script_template_capture_t *captures = ecs_vec_first(
+            &template->capture_input);
+        int32_t capture_count = ecs_vec_count(&template->capture_input);
+        for (int32_t i = 0; i < capture_count; i ++) {
+            if (captures[i].outer_input & v->input) {
+                input |= captures[i].input;
+            }
+        }
+    }
+
     ecs_vec_t instances;
     ecs_vec_init_t(NULL, &instances, ecs_entity_t, 0);
     ecs_iter_t it = ecs_each_id(v->world, entity);
@@ -1527,7 +1547,7 @@ int flecs_script_template_update_vars(
             ecs_get_id(v->world, array[i], entity));
         if (data && flecs_script_template_instantiate(
             v->world, entity, entity, &array[i], data, 1,
-            v->input, false))
+            input, false))
         {
             ecs_vec_fini_t(NULL, &instances, ecs_entity_t);
             return -1;

@@ -1040,6 +1040,7 @@ void Template_template_props_set_on_multiple_entities_w_bulk_init(void);
 void Template_template_in_singleton_scope(void);
 void Template_template_instantiated_on_itself(void);
 void Template_template_prop_large_struct_no_leak(void);
+void Template_many_templates_w_props_in_script(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -6735,6 +6736,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_prop_large_struct_no_leak",
         Template_template_prop_large_struct_no_leak
+    },
+    {
+        "many_templates_w_props_in_script",
+        Template_many_templates_w_props_in_script
     }
 };
 
@@ -13096,7 +13101,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        120,
+        121,
         Template_testcases
     },
     {

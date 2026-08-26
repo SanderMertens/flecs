@@ -25728,7 +25728,7 @@ bool flecs_query_finalize_simple(
             term->second.id = second | EcsIsEntity | EcsSelf;
         }
 
-        bool is_self = term->src.id == EcsSelf;
+        bool is_self = (term->src.id & EcsSelf) != 0;
 
         term->field_index = i;
         term->first.id = first | EcsIsEntity | EcsSelf;
