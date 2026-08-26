@@ -5415,3 +5415,547 @@ void Template_tree_parent_prefab_before_template(void) {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    ecs_u8_t r, g, b, a;
+} Rgba;
+
+typedef struct {
+    ecs_f32_t strength;
+    Rgba color;
+} Emissive;
+
+typedef struct {
+    ecs_f32_t r, g, b, a;
+} RgbaF;
+
+typedef struct {
+    ecs_f32_t strength;
+    RgbaF color;
+} EmissiveF;
+
+static
+void register_rgba_types(ecs_world_t *world, ecs_entity_t *rgba_out,
+    ecs_entity_t *emissive_out)
+{
+    ecs_entity_t rgba = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Rgba" }),
+        .members = {
+            {"r", ecs_id(ecs_u8_t)},
+            {"g", ecs_id(ecs_u8_t)},
+            {"b", ecs_id(ecs_u8_t)},
+            {"a", ecs_id(ecs_u8_t)}
+        }
+    });
+
+    ecs_entity_t emissive = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Emissive" }),
+        .members = {
+            {"strength", ecs_id(ecs_f32_t)},
+            {"color", rgba}
+        }
+    });
+
+    if (rgba_out) *rgba_out = rgba;
+    if (emissive_out) *emissive_out = emissive;
+}
+
+static
+void register_rgba_f_types(ecs_world_t *world, ecs_entity_t *rgba_out,
+    ecs_entity_t *emissive_out)
+{
+    ecs_entity_t rgba = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "RgbaF" }),
+        .members = {
+            {"r", ecs_id(ecs_f32_t)},
+            {"g", ecs_id(ecs_f32_t)},
+            {"b", ecs_id(ecs_f32_t)},
+            {"a", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t emissive = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "EmissiveF" }),
+        .members = {
+            {"strength", ecs_id(ecs_f32_t)},
+            {"color", rgba}
+        }
+    });
+
+    if (rgba_out) *rgba_out = rgba;
+    if (emissive_out) *emissive_out = emissive;
+}
+
+void Template_template_prop_struct_assign_whole_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0;
+    register_rgba_types(world, &rgba, NULL);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  panel {"
+    LINE "    Rgba: $color"
+    LINE "  }"
+    LINE "}"
+    LINE "Sign s(color: {60, 220, 255, 255})"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "s.panel");
+    test_assert(panel != 0);
+
+    const Rgba *c = ecs_get_id(world, panel, rgba);
+    test_assert(c != NULL);
+    test_int(c->r, 60);
+    test_int(c->g, 220);
+    test_int(c->b, 255);
+    test_int(c->a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_assign_whole_component_no_dollar(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0;
+    register_rgba_types(world, &rgba, NULL);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  panel {"
+    LINE "    Rgba: color"
+    LINE "  }"
+    LINE "}"
+    LINE "Sign s(color: {60, 220, 255, 255})"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "s.panel");
+    test_assert(panel != 0);
+
+    const Rgba *c = ecs_get_id(world, panel, rgba);
+    test_assert(c != NULL);
+    test_int(c->r, 60);
+    test_int(c->g, 220);
+    test_int(c->b, 255);
+    test_int(c->a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_assign_whole_component_default(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0;
+    register_rgba_types(world, &rgba, NULL);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  panel {"
+    LINE "    Rgba: $color"
+    LINE "  }"
+    LINE "}"
+    LINE "Sign s()"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "s.panel");
+    test_assert(panel != 0);
+
+    const Rgba *c = ecs_get_id(world, panel, rgba);
+    test_assert(c != NULL);
+    test_int(c->r, 255);
+    test_int(c->g, 0);
+    test_int(c->b, 0);
+    test_int(c->a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_in_nested_struct_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0, emissive = 0;
+    register_rgba_types(world, &rgba, &emissive);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  prop strength: f32 = 2"
+    LINE "  panel {"
+    LINE "    Rgba: $color"
+    LINE "    Emissive: {strength: $strength, color: $color}"
+    LINE "  }"
+    LINE "}"
+    LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "s.panel");
+    test_assert(panel != 0);
+
+    const Rgba *c = ecs_get_id(world, panel, rgba);
+    test_assert(c != NULL);
+    test_int(c->r, 60);
+    test_int(c->g, 220);
+    test_int(c->b, 255);
+    test_int(c->a, 255);
+
+    const Emissive *e = ecs_get_id(world, panel, emissive);
+    test_assert(e != NULL);
+    test_int(e->strength, 6);
+    test_int(e->color.r, 60);
+    test_int(e->color.g, 220);
+    test_int(e->color.b, 255);
+    test_int(e->color.a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_in_nested_struct_literal_default(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0, emissive = 0;
+    register_rgba_types(world, &rgba, &emissive);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  prop strength: f32 = 2"
+    LINE "  panel {"
+    LINE "    Rgba: $color"
+    LINE "    Emissive: {strength: $strength, color: $color}"
+    LINE "  }"
+    LINE "}"
+    LINE "Sign s()"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "s.panel");
+    test_assert(panel != 0);
+
+    const Emissive *e = ecs_get_id(world, panel, emissive);
+    test_assert(e != NULL);
+    test_int(e->strength, 2);
+    test_int(e->color.r, 255);
+    test_int(e->color.g, 0);
+    test_int(e->color.b, 0);
+    test_int(e->color.a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_in_nested_struct_literal_partial_args(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0, emissive = 0;
+    register_rgba_types(world, &rgba, &emissive);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  prop strength: f32 = 2"
+    LINE "  panel {"
+    LINE "    Rgba: $color"
+    LINE "    Emissive: {strength: $strength, color: $color}"
+    LINE "  }"
+    LINE "}"
+    LINE "Sign s(strength: 6)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "s.panel");
+    test_assert(panel != 0);
+
+    const Emissive *e = ecs_get_id(world, panel, emissive);
+    test_assert(e != NULL);
+    test_int(e->strength, 6);
+    test_int(e->color.r, 255);
+    test_int(e->color.g, 0);
+    test_int(e->color.b, 0);
+    test_int(e->color.a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_f32_members_in_nested_struct_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0, emissive = 0;
+    register_rgba_f_types(world, &rgba, &emissive);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop color: RgbaF = {1, 0, 0, 1}"
+    LINE "  prop strength: f32 = 2"
+    LINE "  panel {"
+    LINE "    RgbaF: $color"
+    LINE "    EmissiveF: {strength: $strength, color: $color}"
+    LINE "  }"
+    LINE "}"
+    LINE "Sign s(color: {0.25, 0.5, 1, 1}, strength: 6)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "s.panel");
+    test_assert(panel != 0);
+
+    const RgbaF *c = ecs_get_id(world, panel, rgba);
+    test_assert(c != NULL);
+    test_flt(c->r, 0.25);
+    test_flt(c->g, 0.5);
+    test_flt(c->b, 1);
+    test_flt(c->a, 1);
+
+    const EmissiveF *e = ecs_get_id(world, panel, emissive);
+    test_assert(e != NULL);
+    test_flt(e->strength, 6);
+    test_flt(e->color.r, 0.25);
+    test_flt(e->color.g, 0.5);
+    test_flt(e->color.b, 1);
+    test_flt(e->color.a, 1);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_in_struct_literal_same_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0, emissive = 0;
+    register_rgba_types(world, &rgba, &emissive);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  prop strength: f32 = 2"
+    LINE "  Rgba: $color"
+    LINE "  Emissive: {strength: $strength, color: $color}"
+    LINE "}"
+    LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t s = ecs_lookup(world, "s");
+    test_assert(s != 0);
+
+    const Rgba *c = ecs_get_id(world, s, rgba);
+    test_assert(c != NULL);
+    test_int(c->r, 60);
+    test_int(c->g, 220);
+    test_int(c->b, 255);
+    test_int(c->a, 255);
+
+    const Emissive *e = ecs_get_id(world, s, emissive);
+    test_assert(e != NULL);
+    test_int(e->strength, 6);
+    test_int(e->color.r, 60);
+    test_int(e->color.g, 220);
+    test_int(e->color.b, 255);
+    test_int(e->color.a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_in_deeply_nested_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0, emissive = 0;
+    register_rgba_types(world, &rgba, &emissive);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  prop strength: f32 = 2"
+    LINE "  panel {"
+    LINE "    inner {"
+    LINE "      Rgba: $color"
+    LINE "      Emissive: {strength: $strength, color: $color}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t inner = ecs_lookup(world, "s.panel.inner");
+    test_assert(inner != 0);
+
+    const Rgba *c = ecs_get_id(world, inner, rgba);
+    test_assert(c != NULL);
+    test_int(c->r, 60);
+    test_int(c->g, 220);
+    test_int(c->b, 255);
+    test_int(c->a, 255);
+
+    const Emissive *e = ecs_get_id(world, inner, emissive);
+    test_assert(e != NULL);
+    test_int(e->strength, 6);
+    test_int(e->color.r, 60);
+    test_int(e->color.g, 220);
+    test_int(e->color.b, 255);
+    test_int(e->color.a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_forwarded_to_nested_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0, emissive = 0;
+    register_rgba_types(world, &rgba, &emissive);
+
+    const char *expr =
+    HEAD "template Panel {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  prop strength: f32 = 2"
+    LINE "  Rgba: $color"
+    LINE "  Emissive: {strength: $strength, color: $color}"
+    LINE "}"
+    LINE "template Sign {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  prop strength: f32 = 2"
+    LINE "  Panel panel(color: $color, strength: $strength)"
+    LINE "}"
+    LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "s.panel");
+    test_assert(panel != 0);
+
+    const Rgba *c = ecs_get_id(world, panel, rgba);
+    test_assert(c != NULL);
+    test_int(c->r, 60);
+    test_int(c->g, 220);
+    test_int(c->b, 255);
+    test_int(c->a, 255);
+
+    const Emissive *e = ecs_get_id(world, panel, emissive);
+    test_assert(e != NULL);
+    test_int(e->strength, 6);
+    test_int(e->color.r, 60);
+    test_int(e->color.g, 220);
+    test_int(e->color.b, 255);
+    test_int(e->color.a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_no_default(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0, emissive = 0;
+    register_rgba_types(world, &rgba, &emissive);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop color: Rgba"
+    LINE "  prop strength: f32"
+    LINE "  panel {"
+    LINE "    Rgba: $color"
+    LINE "    Emissive: {strength: $strength, color: $color}"
+    LINE "  }"
+    LINE "}"
+    LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "s.panel");
+    test_assert(panel != 0);
+
+    const Emissive *e = ecs_get_id(world, panel, emissive);
+    test_assert(e != NULL);
+    test_int(e->strength, 6);
+    test_int(e->color.r, 60);
+    test_int(e->color.g, 220);
+    test_int(e->color.b, 255);
+    test_int(e->color.a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_in_nested_struct_literal_w_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0, emissive = 0;
+    ecs_entity_t scope = ecs_entity(world, { .name = "engine" });
+    ecs_entity_t prev = ecs_set_scope(world, scope);
+    register_rgba_types(world, &rgba, &emissive);
+    ecs_set_scope(world, prev);
+
+    const char *expr =
+    HEAD "using engine"
+    LINE "template Sign {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  prop strength: f32 = 2"
+    LINE "  panel {"
+    LINE "    Rgba: $color"
+    LINE "    Emissive: {strength: $strength, color: $color}"
+    LINE "  }"
+    LINE "}"
+    LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "s.panel");
+    test_assert(panel != 0);
+
+    const Emissive *e = ecs_get_id(world, panel, emissive);
+    test_assert(e != NULL);
+    test_int(e->strength, 6);
+    test_int(e->color.r, 60);
+    test_int(e->color.g, 220);
+    test_int(e->color.b, 255);
+    test_int(e->color.a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_struct_member_expr_in_struct_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rgba = 0, emissive = 0;
+    register_rgba_types(world, &rgba, &emissive);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop color: Rgba = {255, 0, 0, 255}"
+    LINE "  prop strength: f32 = 2"
+    LINE "  panel {"
+    LINE "    Emissive: {strength: $strength, color: {$color.r, $color.g, $color.b, $color.a}}"
+    LINE "  }"
+    LINE "}"
+    LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "s.panel");
+    test_assert(panel != 0);
+
+    const Emissive *e = ecs_get_id(world, panel, emissive);
+    test_assert(e != NULL);
+    test_int(e->strength, 6);
+    test_int(e->color.r, 60);
+    test_int(e->color.g, 220);
+    test_int(e->color.b, 255);
+    test_int(e->color.a, 255);
+
+    ecs_fini(world);
+}

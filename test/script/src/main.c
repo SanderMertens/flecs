@@ -1057,6 +1057,19 @@ void Template_template_instantiated_on_itself(void);
 void Template_template_prop_large_struct_no_leak(void);
 void Template_many_templates_w_props_in_script(void);
 void Template_tree_parent_prefab_before_template(void);
+void Template_template_prop_struct_assign_whole_component(void);
+void Template_template_prop_struct_assign_whole_component_no_dollar(void);
+void Template_template_prop_struct_assign_whole_component_default(void);
+void Template_template_prop_struct_in_nested_struct_literal(void);
+void Template_template_prop_struct_in_nested_struct_literal_default(void);
+void Template_template_prop_struct_in_nested_struct_literal_partial_args(void);
+void Template_template_prop_struct_f32_members_in_nested_struct_literal(void);
+void Template_template_prop_struct_in_struct_literal_same_scope(void);
+void Template_template_prop_struct_in_deeply_nested_child(void);
+void Template_template_prop_struct_forwarded_to_nested_template(void);
+void Template_template_prop_struct_no_default(void);
+void Template_template_prop_struct_in_nested_struct_literal_w_using(void);
+void Template_template_prop_struct_member_expr_in_struct_literal(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -6841,6 +6854,58 @@ bake_test_case Template_testcases[] = {
     {
         "tree_parent_prefab_before_template",
         Template_tree_parent_prefab_before_template
+    },
+    {
+        "template_prop_struct_assign_whole_component",
+        Template_template_prop_struct_assign_whole_component
+    },
+    {
+        "template_prop_struct_assign_whole_component_no_dollar",
+        Template_template_prop_struct_assign_whole_component_no_dollar
+    },
+    {
+        "template_prop_struct_assign_whole_component_default",
+        Template_template_prop_struct_assign_whole_component_default
+    },
+    {
+        "template_prop_struct_in_nested_struct_literal",
+        Template_template_prop_struct_in_nested_struct_literal
+    },
+    {
+        "template_prop_struct_in_nested_struct_literal_default",
+        Template_template_prop_struct_in_nested_struct_literal_default
+    },
+    {
+        "template_prop_struct_in_nested_struct_literal_partial_args",
+        Template_template_prop_struct_in_nested_struct_literal_partial_args
+    },
+    {
+        "template_prop_struct_f32_members_in_nested_struct_literal",
+        Template_template_prop_struct_f32_members_in_nested_struct_literal
+    },
+    {
+        "template_prop_struct_in_struct_literal_same_scope",
+        Template_template_prop_struct_in_struct_literal_same_scope
+    },
+    {
+        "template_prop_struct_in_deeply_nested_child",
+        Template_template_prop_struct_in_deeply_nested_child
+    },
+    {
+        "template_prop_struct_forwarded_to_nested_template",
+        Template_template_prop_struct_forwarded_to_nested_template
+    },
+    {
+        "template_prop_struct_no_default",
+        Template_template_prop_struct_no_default
+    },
+    {
+        "template_prop_struct_in_nested_struct_literal_w_using",
+        Template_template_prop_struct_in_nested_struct_literal_w_using
+    },
+    {
+        "template_prop_struct_member_expr_in_struct_literal",
+        Template_template_prop_struct_member_expr_in_struct_literal
     }
 };
 
@@ -13286,7 +13351,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        122,
+        135,
         Template_testcases
     },
     {

@@ -11979,7 +11979,7 @@ static void flecs_emit_propagate_id_for_range(
                 /* Owned takes precedence */
                 flecs_observers_invoke(world, &ider->self_up, it, table, trav);
             }
-        } else {
+        } else if (ider->up_notify_count) {
             flecs_observers_invoke_up_notify(world, &ider->up, it, table, trav);
 
             if (!owned) {
@@ -12312,6 +12312,13 @@ static void flecs_emit_forward_id(
 
     for (ider_i = 0; ider_i < ider_count; ider_i ++) {
         ecs_event_id_record_t *ider = iders[ider_i];
+
+        /* This path skips up notify observers, so when the id has nothing but
+         * up notify observers there is nothing to walk the maps for. */
+        if (ider->observer_count == ider->up_notify_count) {
+            continue;
+        }
+
         flecs_observers_invoke_skip_up_notify(
             world, &ider->up, it, table, trav);
 
