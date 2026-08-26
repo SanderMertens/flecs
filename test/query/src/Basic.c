@@ -8795,6 +8795,249 @@ void Basic_3_trivial_w_disabled(void) {
     ecs_fini(world);
 }
 
+void Basic_1_component_w_match_prefab_flag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_id(Position), .src.id = EcsSelf }},
+        .flags = EcsQueryMatchPrefab,
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    bool matched_p = false, matched_e = false;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            if (it.entities[i] == p) matched_p = true;
+            if (it.entities[i] == e) matched_e = true;
+            count ++;
+        }
+    }
+
+    test_int(count, 2);
+    test_bool(matched_p, true);
+    test_bool(matched_e, true);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_1_tag_w_match_prefab_flag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, p, TagA);
+
+    ecs_entity_t e = ecs_new_w(world, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ TagA }},
+        .flags = EcsQueryMatchPrefab,
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    bool matched_p = false, matched_e = false;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            if (it.entities[i] == p) matched_p = true;
+            if (it.entities[i] == e) matched_e = true;
+            count ++;
+        }
+    }
+
+    test_int(count, 2);
+    test_bool(matched_p, true);
+    test_bool(matched_e, true);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_1_tag_w_match_prefab_flag_uncached(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, p, TagA);
+
+    ecs_entity_t e = ecs_new_w(world, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ TagA }},
+        .flags = EcsQueryMatchPrefab,
+        .cache_kind = EcsQueryCacheNone
+    });
+
+    test_assert(q != NULL);
+
+    bool matched_p = false, matched_e = false;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            if (it.entities[i] == p) matched_p = true;
+            if (it.entities[i] == e) matched_e = true;
+            count ++;
+        }
+    }
+
+    test_int(count, 2);
+    test_bool(matched_p, true);
+    test_bool(matched_e, true);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_1_tag_w_match_prefab_flag_cached(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, p, TagA);
+
+    ecs_entity_t e = ecs_new_w(world, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ TagA }},
+        .flags = EcsQueryMatchPrefab,
+        .cache_kind = EcsQueryCacheAll
+    });
+
+    test_assert(q != NULL);
+
+    bool matched_p = false, matched_e = false;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            if (it.entities[i] == p) matched_p = true;
+            if (it.entities[i] == e) matched_e = true;
+            count ++;
+        }
+    }
+
+    test_int(count, 2);
+    test_bool(matched_p, true);
+    test_bool(matched_e, true);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_1_tag_w_match_disabled_flag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t d = ecs_new_w(world, TagA);
+    ecs_add_id(world, d, EcsDisabled);
+
+    ecs_entity_t e = ecs_new_w(world, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ TagA }},
+        .flags = EcsQueryMatchDisabled,
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    bool matched_d = false, matched_e = false;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            if (it.entities[i] == d) matched_d = true;
+            if (it.entities[i] == e) matched_e = true;
+            count ++;
+        }
+    }
+
+    test_int(count, 2);
+    test_bool(matched_d, true);
+    test_bool(matched_e, true);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_2_terms_w_match_prefab_flag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, p, TagA);
+    ecs_add(world, p, TagB);
+
+    ecs_entity_t e = ecs_new_w(world, TagA);
+    ecs_add(world, e, TagB);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ TagA }, { TagB }},
+        .flags = EcsQueryMatchPrefab,
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    bool matched_p = false, matched_e = false;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            if (it.entities[i] == p) matched_p = true;
+            if (it.entities[i] == e) matched_e = true;
+            count ++;
+        }
+    }
+
+    test_int(count, 2);
+    test_bool(matched_p, true);
+    test_bool(matched_e, true);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Basic_2_this_w_fixed_src(void) {
     ecs_world_t *world = ecs_mini();
 
