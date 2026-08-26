@@ -10295,6 +10295,13 @@ ecs_entity_t ecs_new_w_parent(
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (name) {
+        ecs_table_diff_t name_diff = ECS_TABLE_DIFF_INIT;
+        ecs_id_t name_id = ecs_pair_t(EcsIdentifier, EcsName);
+        table = flecs_table_traverse_add(world, table, &name_id, &name_diff);
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
     entity = flecs_new_id(world);
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
@@ -10309,7 +10316,9 @@ ecs_entity_t ecs_new_w_parent(
     r->table = table;
     r->row = (uint32_t)row;
 
-    EcsParent *parent_ptr = table->data.columns[0].data;
+    int32_t parent_column = table->component_map[ecs_id(EcsParent)];
+    ecs_assert(parent_column > 0, ECS_INTERNAL_ERROR, NULL);
+    EcsParent *parent_ptr = table->data.columns[parent_column - 1].data;
     parent_ptr = &parent_ptr[row];
     parent_ptr->value = parent;
 
@@ -50525,6 +50534,11 @@ bool flecs_script_is_builtin(
     ecs_entity_t e);
 
 bool flecs_script_is_script_scope(
+    const ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t e);
+
+bool flecs_script_can_own_entity(
     const ecs_world_t *world,
     ecs_entity_t script,
     ecs_entity_t e);
@@ -94818,6 +94832,35 @@ bool flecs_script_is_script_scope(
     return false;
 }
 
+bool flecs_script_can_own_entity(
+    const ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t e)
+{
+    if (flecs_script_is_builtin(world, e)) {
+        return false;
+    }
+
+    if (flecs_script_is_script_scope(world, script, e)) {
+        return false;
+    }
+
+    if (!script) {
+        return true;
+    }
+
+    if (ecs_has_id(world, e, EcsModule)) {
+        return false;
+    }
+
+    ecs_entity_t owner = ecs_get_target(world, e, ecs_id(EcsScript), 0);
+    if (owner && (owner != script)) {
+        return false;
+    }
+
+    return true;
+}
+
 static void flecs_script_apply_with(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity)
@@ -94858,8 +94901,8 @@ ecs_entity_t flecs_script_create_entity(
     }
 
     ecs_entity_t result = ecs_entity_init(v->world, &desc);
-    if (result && v->script_tag && !flecs_script_is_builtin(v->world, result) &&
-        !flecs_script_is_script_scope(v->world, v->script_entity, result))
+    if (result && v->script_tag && flecs_script_can_own_entity(
+        v->world, v->script_entity, result))
     {
         ecs_add_id(v->world, result, v->script_tag);
     }
@@ -98778,8 +98821,8 @@ static int flecs_script_type_ensure_node(
     if (!current) {
         return -1;
     }
-    if (t->v->script_tag && !flecs_script_is_builtin(t->v->world, current) &&
-        !flecs_script_is_script_scope(t->v->world, t->v->script_entity, current))
+    if (t->v->script_tag && flecs_script_can_own_entity(
+        t->v->world, t->v->script_entity, current))
     {
         ecs_add_id(t->v->world, current, t->v->script_tag);
     }
@@ -99806,8 +99849,11 @@ static int flecs_script_type_module(
         t, node->name, NULL, &node->symbol, false);
     ecs_entity_t old_parent = t->v->parent;
     ecs_entity_t old_scope = ecs_set_scope(t->v->world, 0);
+    ecs_id_t old_script_tag = t->v->script_tag;
     t->v->parent = 0;
+    t->v->script_tag = 0;
     node->eval = flecs_script_create_entity(t->v, node->name);
+    t->v->script_tag = old_script_tag;
     ecs_set_scope(t->v->world, old_scope);
     if (!node->eval) {
         t->v->parent = old_parent;

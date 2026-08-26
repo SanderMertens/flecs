@@ -8619,6 +8619,13 @@ ecs_entity_t ecs_new_w_parent(
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (name) {
+        ecs_table_diff_t name_diff = ECS_TABLE_DIFF_INIT;
+        ecs_id_t name_id = ecs_pair_t(EcsIdentifier, EcsName);
+        table = flecs_table_traverse_add(world, table, &name_id, &name_diff);
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
     entity = flecs_new_id(world);
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
@@ -8633,7 +8640,9 @@ ecs_entity_t ecs_new_w_parent(
     r->table = table;
     r->row = (uint32_t)row;
 
-    EcsParent *parent_ptr = table->data.columns[0].data;
+    int32_t parent_column = table->component_map[ecs_id(EcsParent)];
+    ecs_assert(parent_column > 0, ECS_INTERNAL_ERROR, NULL);
+    EcsParent *parent_ptr = table->data.columns[parent_column - 1].data;
     parent_ptr = &parent_ptr[row];
     parent_ptr->value = parent;
 
