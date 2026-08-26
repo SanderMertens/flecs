@@ -126,8 +126,8 @@ void flecs_instantiate_sparse(
                 flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
             }
 
-            flecs_notify_on_set(
-                world, instance_table, row_offset + j, id, true, dst_ptr);
+            flecs_notify_on_set_w_cr(
+                world, instance_table, row_offset + j, id, cr, true, dst_ptr);
         }
     }
 }
