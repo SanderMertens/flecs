@@ -1053,7 +1053,8 @@
                 "template_props_set_on_multiple_entities_w_bulk_init",
                 "template_in_singleton_scope",
                 "template_instantiated_on_itself",
-                "template_prop_large_struct_no_leak"
+                "template_prop_large_struct_no_leak",
+                "many_templates_w_props_in_script"
             ]
         }, {
             "id": "Mut",

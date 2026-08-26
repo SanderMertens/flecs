@@ -21,6 +21,11 @@ typedef struct {
     ecs_vec_t defaults;
 } ecs_script_template_vars_t;
 
+typedef struct ecs_script_template_capture_t {
+    uint64_t outer_input;
+    uint64_t input;
+} ecs_script_template_capture_t;
+
 struct ecs_script_template_t {
     ecs_script_template_vars_t props;
     ecs_script_template_vars_t muts;
@@ -34,6 +39,7 @@ struct ecs_script_template_t {
     /* Hoisted variables */
     ecs_script_vars_t *vars;
     ecs_vec_t capture_sp;
+    ecs_vec_t capture_input;
 
     /* Prop and mut members in variable declaration order */
     ecs_vec_t members;

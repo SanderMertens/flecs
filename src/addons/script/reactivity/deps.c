@@ -991,12 +991,8 @@ static int flecs_script_dep_template_init(
     ecs_script_template_t *template,
     flecs_script_dep_ctx_t *outer)
 {
-    if (outer) {
-        ctx->input_count = outer->input_count;
-    } else {
-        template->input_count = 0;
-        ctx->input_count = &template->input_count;
-    }
+    template->input_count = 0;
+    ctx->input_count = &template->input_count;
     ecs_script_template_member_t *members = ecs_vec_first(&template->members);
     int32_t i, count = ecs_vec_count(&template->members);
     for (i = 0; i < count; i ++) {
@@ -1010,16 +1006,25 @@ static int flecs_script_dep_template_init(
     {
         return -1;
     }
-    if (outer) {
-        int32_t *capture_sp = ecs_vec_first(&template->capture_sp);
-        count = ecs_vec_count(&template->capture_sp);
-        for (i = 0; i < count; i ++) {
-            flecs_script_dep_var_set(ctx, i,
-                flecs_script_dep_var_get(outer, capture_sp[i]));
+    int32_t *capture_sp = ecs_vec_first(&template->capture_sp);
+    count = ecs_vec_count(&template->capture_sp);
+    ecs_vec_set_count_t(NULL, &template->capture_input,
+        ecs_script_template_capture_t, count);
+    ecs_script_template_capture_t *captures = ecs_vec_first(
+        &template->capture_input);
+    for (i = 0; i < count; i ++) {
+        uint64_t outer_input = outer
+            ? flecs_script_dep_var_get(outer, capture_sp[i])
+            : 0;
+        uint64_t input = 0;
+        if (outer_input && flecs_script_dep_input_new(ctx, &input)) {
+            return -1;
         }
+        captures[i].outer_input = outer_input;
+        captures[i].input = input;
+        flecs_script_dep_var_set(ctx, i, input);
     }
-    flecs_script_dep_var_set(ctx,
-        ecs_vec_count(&template->capture_sp), 0);
+    flecs_script_dep_var_set(ctx, count, 0);
     return 0;
 }
 
