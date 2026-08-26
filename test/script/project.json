@@ -238,6 +238,8 @@
                 "assign_match_to_typed_const_w_vector",
                 "assign_match_to_typed_const_w_map",
                 "using_wildcard",
+                "module_scope_takes_precedence_over_using",
+                "module_scope_takes_precedence_over_using_same_script",
                 "single_line_comment_in_value",
                 "single_line_comment_in_value_after_scope",
                 "multi_line_comment_in_value",
