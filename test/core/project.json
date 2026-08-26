@@ -2069,6 +2069,8 @@
             "id": "Observer",
             "testcases": [
                 "multi_term_inheritable_component_owned",
+                "multi_term_inheritable_component_w_not_term",
+                "multi_term_inheritable_component_w_prefab_term",
                 "multi_term_inheritable_component_from_base",
                 "multi_term_inheritable_component_not_matched",
                 "on_add_before_edge",

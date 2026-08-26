@@ -15031,3 +15031,66 @@ void Observer_multi_term_inheritable_component_not_matched(void) {
 
     ecs_fini(world);
 }
+
+void Observer_multi_term_inheritable_component_w_not_term(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsSelf },
+            { TagA, .oper = EcsNot }
+        },
+        .events = {EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_uint(ctx.e[0], e1);
+
+    ctx = (Probe){0};
+
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
+    ecs_set(world, e2, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_multi_term_inheritable_component_w_prefab_term(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsSelf },
+            { EcsPrefab, .src.id = EcsSelf }
+        },
+        .events = {EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base, Position, {1, 2});
+    test_int(ctx.invoked, 1);
+    test_uint(ctx.e[0], base);
+
+    ecs_fini(world);
+}
