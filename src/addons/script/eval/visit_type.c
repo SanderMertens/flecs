@@ -1775,6 +1775,13 @@ static int flecs_script_type_node(
     }
     case EcsAstTry:
         return flecs_script_type_try(t, (ecs_script_try_t*)node);
+    case EcsAstContinue:
+        if (!t->for_depth) {
+            flecs_script_eval_error(t->v, node,
+                "continue is only allowed inside a for loop");
+            return -1;
+        }
+        return 0;
     }
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
 }

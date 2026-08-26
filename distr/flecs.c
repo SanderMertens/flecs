@@ -49157,6 +49157,7 @@ typedef enum ecs_token_kind_t {
     EcsTokKeywordTry = 144,
     EcsTokKeywordCatch = 145,
     EcsTokHasBracketOpen = 146,
+    EcsTokKeywordContinue = 147,
     EcsTokAddAssign = 136,
     EcsTokMulAssign = 137,
 } ecs_token_kind_t;
@@ -49424,7 +49425,8 @@ typedef enum ecs_script_node_kind_t {
     EcsAstInclude,
     EcsAstFunction,
     EcsAstAwait,
-    EcsAstTry
+    EcsAstTry,
+    EcsAstContinue
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -49570,6 +49572,10 @@ typedef struct ecs_script_await_t {
     ecs_expr_node_t *expr;
 } ecs_script_await_t;
 
+typedef struct ecs_script_continue_t {
+    ecs_script_node_t node;
+} ecs_script_continue_t;
+
 typedef struct ecs_script_catch_t {
     const char *error; /* Error entity to catch. NULL for catch-all clause. */
     ecs_script_scope_t *scope;
@@ -49680,6 +49686,9 @@ ecs_script_var_node_t* flecs_script_insert_var(
     const char *name);
 
 ecs_script_await_t* flecs_script_insert_await(
+    ecs_parser_t *parser);
+
+ecs_script_continue_t* flecs_script_insert_continue(
     ecs_parser_t *parser);
 
 ecs_script_try_t* flecs_script_insert_try(
@@ -64447,6 +64456,7 @@ const char* flecs_token_kind_str(
     case EcsTokKeywordAwait:
     case EcsTokKeywordTry:
     case EcsTokKeywordCatch:
+    case EcsTokKeywordContinue:
     case EcsTokKeywordScript:
         return "keyword ";
     case EcsTokArrow:
@@ -64531,6 +64541,7 @@ const char* flecs_token_str(
     case EcsTokKeywordAwait: return "await";
     case EcsTokKeywordTry: return "try";
     case EcsTokKeywordCatch: return "catch";
+    case EcsTokKeywordContinue: return "continue";
     case EcsTokKeywordScript: return "script";
     case EcsTokArrow: return "->";
     case EcsTokIdentifier: return "identifier";
@@ -65217,6 +65228,7 @@ const char* flecs_token(
     Keyword           ("await",    EcsTokKeywordAwait)
     Keyword           ("try",      EcsTokKeywordTry)
     Keyword           ("catch",    EcsTokKeywordCatch)
+    Keyword           ("continue", EcsTokKeywordContinue)
     Keyword           ("script",   EcsTokKeywordScript)
 
     } else if (pos[0] == '\'') {
@@ -68874,6 +68886,18 @@ ecs_script_await_t* flecs_script_insert_await(
     return result;
 }
 
+ecs_script_continue_t* flecs_script_insert_continue(
+    ecs_parser_t *parser)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_continue_t *result = flecs_ast_new(
+        parser, ecs_script_continue_t, EcsAstContinue);
+    flecs_ast_append(parser, scope->stmts, ecs_script_continue_t, result);
+    return result;
+}
+
 ecs_script_try_t* flecs_script_insert_try(
     ecs_parser_t *parser)
 {
@@ -70759,6 +70783,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordFn:         goto fn_stmt;
         case EcsTokKeywordAwait:      goto await_stmt;
         case EcsTokKeywordTry:        goto try_stmt;
+        case EcsTokKeywordContinue:   goto continue_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
 
@@ -71027,6 +71052,19 @@ fn_stmt: {
             })
         )
     })
+}
+
+continue_stmt: {
+    flecs_script_insert_continue(parser);
+
+    LookAhead_1('}',
+        EndOfRule;
+    )
+
+    Parse(
+        EcsTokEndOfStatement:
+            EndOfRule;
+    )
 }
 
 await_stmt: {
@@ -73323,6 +73361,9 @@ static int flecs_script_stmt_free(
     case EcsAstUsing:
         flecs_free_t(a, ecs_script_using_t, node);
         break;
+    case EcsAstContinue:
+        flecs_free_t(a, ecs_script_continue_t, node);
+        break;
     case EcsAstModule:
         flecs_free_t(a, ecs_script_module_t, node);
         break;
@@ -73538,6 +73579,7 @@ static const char* flecs_script_node_to_str(
     case EcsAstFunction:           return "fn";
     case EcsAstAwait:              return "await";
     case EcsAstTry:                return "try";
+    case EcsAstContinue:           return "continue";
     }
     return "???";
 }
@@ -73836,6 +73878,10 @@ static int flecs_script_stmt_to_str(
         flecs_scriptbuf_appendstr(v, "\n");
         break;
     }
+    case EcsAstContinue:
+        flecs_scriptbuf_node(v, node);
+        flecs_scriptbuf_appendstr(v, "\n");
+        break;
     case EcsAstTry: {
         ecs_script_try_t *try_stmt = (ecs_script_try_t*)node;
         flecs_scriptbuf_node(v, node);
@@ -95177,6 +95223,7 @@ static void flecs_script_apply_non_fragmenting_childof_to_scope(
         case EcsAstInclude:
         case EcsAstFunction:
         case EcsAstAwait:
+        case EcsAstContinue:
             break;
         }
     }
@@ -96219,6 +96266,7 @@ int flecs_script_eval_node(
     case EcsAstIf:
     case EcsAstFor:
     case EcsAstTry:
+    case EcsAstContinue:
         /* Compound statements are evaluated by the script runner */
         flecs_script_eval_error(v, node,
             "invalid context for compound statement");
@@ -96355,6 +96403,7 @@ static void flecs_script_mark_node(
     case EcsAstInclude:
     case EcsAstFunction:
     case EcsAstAwait:
+    case EcsAstContinue:
         break;
     }
 }
@@ -96427,6 +96476,11 @@ static int flecs_script_step_scope(
             flecs_script_mark_node(v, stmt);
             frame->pc ++;
             continue;
+        }
+
+        if (stmt->kind == EcsAstContinue) {
+            v->base.nodes[v->base.depth] = stmt;
+            return 2;
         }
 
         if (stmt->kind == EcsAstAwait ||
@@ -96679,6 +96733,32 @@ void flecs_script_runner_abandon(
     }
 }
 
+/* Pop frames until the for loop that contains the continue statement is
+ * reached. Returns false if the statement isn't inside a for loop. */
+static bool flecs_script_runner_continue(
+    ecs_script_runner_t *r)
+{
+    int32_t frame = r->frame_count;
+    while (frame > 0) {
+        if (r->frames[frame - 1].node->kind == EcsAstFor) {
+            break;
+        }
+        frame --;
+    }
+
+    if (!frame) {
+        return false;
+    }
+
+    while (r->frame_count > frame) {
+        flecs_script_frame_leave(r, &r->frames[r->frame_count - 1]);
+        r->v.base.depth --;
+        r->frame_count --;
+    }
+
+    return true;
+}
+
 /* Pop frames after an error until a try frame catches it. Returns true if a
  * catch clause was entered, false when the error propagates out of the
  * script. */
@@ -96764,6 +96844,14 @@ static flecs_script_run_status_t flecs_script_runner_exec(
             }
         } else if (res == 1) {
             return FlecsScriptRunSuspended;
+        } else if (res == 2) {
+            if (!flecs_script_runner_continue(r)) {
+                flecs_script_eval_error(&r->v, frame->node,
+                    "continue is only allowed inside a for loop");
+                if (!flecs_script_runner_unwind(r)) {
+                    return FlecsScriptRunError;
+                }
+            }
         }
     }
 
@@ -97062,6 +97150,7 @@ static void flecs_script_cleanup_for_node(
     case EcsAstInclude:
     case EcsAstFunction:
     case EcsAstAwait:
+    case EcsAstContinue:
         break;
     }
 }
@@ -100057,6 +100146,13 @@ static int flecs_script_type_node(
     }
     case EcsAstTry:
         return flecs_script_type_try(t, (ecs_script_try_t*)node);
+    case EcsAstContinue:
+        if (!t->for_depth) {
+            flecs_script_eval_error(t->v, node,
+                "continue is only allowed inside a for loop");
+            return -1;
+        }
+        return 0;
     }
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
 }
@@ -111660,6 +111756,7 @@ static int flecs_script_dep_node(
     case EcsAstUsing:
     case EcsAstAnnotation:
     case EcsAstInclude:
+    case EcsAstContinue:
         break;
     case EcsAstModule: {
         ecs_script_module_t *n = (ecs_script_module_t*)node;
@@ -113878,6 +113975,8 @@ static int flecs_script_visit_type_template(
 
     int32_t old_table = t->table;
     bool old_template_scope = t->template_scope;
+    int32_t old_for_depth = t->for_depth;
+    t->for_depth = 0;
     flecs_script_entity_state_t *old_entity = v->entity;
     ecs_script_entity_t instance_node = {
         .node = {
@@ -113924,6 +114023,7 @@ static int flecs_script_visit_type_template(
     ecs_script_vars_pop(v->vars);
     v->vars = outer_vars;
     t->template_scope = old_template_scope;
+    t->for_depth = old_for_depth;
     t->table = old_table;
     v->entity = old_entity;
     if (tnode->symbol_count == -1) {

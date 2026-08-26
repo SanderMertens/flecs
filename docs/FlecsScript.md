@@ -1739,6 +1739,24 @@ for (key, index, elem) in mapExpr {
 
 Note that the iteration order of maps is undefined.
 
+### Continue statement
+The `continue` statement skips the remaining statements of the current iteration and moves the loop to the next iteration:
+
+```cpp
+for i in 0..5 {
+  if i == 2 {
+    continue
+  }
+
+  // creates entities e_0, e_1, e_3 and e_4
+  "e_{i}" {}
+}
+```
+
+Entities and components that are not created because an iteration was skipped are deleted from the entities of a managed script, just like entities that are no longer created after a script is updated.
+
+A `continue` statement must appear inside the scope of a for loop. It is not allowed in the root scope of a script, in a template that is declared inside a for loop, or in a function body.
+
 ## Type definitions
 Scripts can define component types by using the type entities from the `flecs.meta` module (`struct`, `enum`, `bitmask`) as entity kind, followed by an initializer list that describes the type.
 

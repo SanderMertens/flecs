@@ -122,6 +122,7 @@ static const char* flecs_script_node_to_str(
     case EcsAstFunction:           return "fn";
     case EcsAstAwait:              return "await";
     case EcsAstTry:                return "try";
+    case EcsAstContinue:           return "continue";
     }
     return "???";
 }
@@ -420,6 +421,10 @@ static int flecs_script_stmt_to_str(
         flecs_scriptbuf_appendstr(v, "\n");
         break;
     }
+    case EcsAstContinue:
+        flecs_scriptbuf_node(v, node);
+        flecs_scriptbuf_appendstr(v, "\n");
+        break;
     case EcsAstTry: {
         ecs_script_try_t *try_stmt = (ecs_script_try_t*)node;
         flecs_scriptbuf_node(v, node);

@@ -20333,3 +20333,191 @@ void Eval_if_flt_literal_eq_flt_literal_fails(void) {
 
     ecs_fini(world);
 }
+
+void Eval_for_continue(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "for i in 0..5 {"
+    LINE "  if i == 2 {"
+    LINE "    continue"
+    LINE "  }"
+    LINE "  \"e_{i}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e_0") != 0);
+    test_assert(ecs_lookup(world, "e_1") != 0);
+    test_assert(ecs_lookup(world, "e_2") == 0);
+    test_assert(ecs_lookup(world, "e_3") != 0);
+    test_assert(ecs_lookup(world, "e_4") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_for_continue_same_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "for i in 0..3 { if i == 1 { continue } \"e_{i}\" {} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e_0") != 0);
+    test_assert(ecs_lookup(world, "e_1") == 0);
+    test_assert(ecs_lookup(world, "e_2") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_for_continue_nested_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  for i in 0..3 {"
+    LINE "    \"a_{i}\" {"
+    LINE "      if i == 1 {"
+    LINE "        continue"
+    LINE "      }"
+    LINE "      child {}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "parent.a_0") != 0);
+    test_assert(ecs_lookup(world, "parent.a_1") != 0);
+    test_assert(ecs_lookup(world, "parent.a_2") != 0);
+    test_assert(ecs_lookup(world, "parent.a_0.child") != 0);
+    test_assert(ecs_lookup(world, "parent.a_1.child") == 0);
+    test_assert(ecs_lookup(world, "parent.a_2.child") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_for_continue_nested_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "for i in 0..2 {"
+    LINE "  for j in 0..3 {"
+    LINE "    if j == 1 {"
+    LINE "      continue"
+    LINE "    }"
+    LINE "    \"e_{i}_{j}\" {}"
+    LINE "  }"
+    LINE "  \"done_{i}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e_0_0") != 0);
+    test_assert(ecs_lookup(world, "e_0_1") == 0);
+    test_assert(ecs_lookup(world, "e_0_2") != 0);
+    test_assert(ecs_lookup(world, "e_1_0") != 0);
+    test_assert(ecs_lookup(world, "e_1_1") == 0);
+    test_assert(ecs_lookup(world, "e_1_2") != 0);
+    test_assert(ecs_lookup(world, "done_0") != 0);
+    test_assert(ecs_lookup(world, "done_1") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_for_continue_in_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  for i in 0..3 {"
+    LINE "    if i == 1 {"
+    LINE "      continue"
+    LINE "    }"
+    LINE "    \"e_{i}\" {}"
+    LINE "  }"
+    LINE "}"
+    LINE "inst { T: {} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "inst.e_0") != 0);
+    test_assert(ecs_lookup(world, "inst.e_1") == 0);
+    test_assert(ecs_lookup(world, "inst.e_2") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_for_continue_updates_managed_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr_1 =
+    HEAD "for i in 0..4 {"
+    LINE "  if i == 1 {"
+    LINE "    continue"
+    LINE "  }"
+    LINE "  \"e_{i}\" {}"
+    LINE "}";
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr_1
+    });
+
+    test_assert(script != 0);
+    test_assert(!ecs_has_id(world, script, EcsScriptError));
+
+    test_assert(ecs_lookup(world, "e_0") != 0);
+    test_assert(ecs_lookup(world, "e_1") == 0);
+    test_assert(ecs_lookup(world, "e_2") != 0);
+    test_assert(ecs_lookup(world, "e_3") != 0);
+
+    const char *expr_2 =
+    HEAD "for i in 0..4 {"
+    LINE "  if i == 2 {"
+    LINE "    continue"
+    LINE "  }"
+    LINE "  \"e_{i}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_update(world, script, 0, expr_2) == 0);
+
+    test_assert(ecs_lookup(world, "e_0") != 0);
+    test_assert(ecs_lookup(world, "e_1") != 0);
+    test_assert(ecs_lookup(world, "e_2") == 0);
+    test_assert(ecs_lookup(world, "e_3") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_for_continue_outside_for_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {}"
+    LINE "continue";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void Eval_for_continue_in_template_in_for_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "for i in 0..2 {"
+    LINE "  template T {"
+    LINE "    continue"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}

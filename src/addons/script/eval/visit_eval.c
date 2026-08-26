@@ -705,6 +705,7 @@ static void flecs_script_apply_non_fragmenting_childof_to_scope(
         case EcsAstInclude:
         case EcsAstFunction:
         case EcsAstAwait:
+        case EcsAstContinue:
             break;
         }
     }
@@ -1747,6 +1748,7 @@ int flecs_script_eval_node(
     case EcsAstIf:
     case EcsAstFor:
     case EcsAstTry:
+    case EcsAstContinue:
         /* Compound statements are evaluated by the script runner */
         flecs_script_eval_error(v, node,
             "invalid context for compound statement");
@@ -1883,6 +1885,7 @@ static void flecs_script_mark_node(
     case EcsAstInclude:
     case EcsAstFunction:
     case EcsAstAwait:
+    case EcsAstContinue:
         break;
     }
 }
@@ -1955,6 +1958,11 @@ static int flecs_script_step_scope(
             flecs_script_mark_node(v, stmt);
             frame->pc ++;
             continue;
+        }
+
+        if (stmt->kind == EcsAstContinue) {
+            v->base.nodes[v->base.depth] = stmt;
+            return 2;
         }
 
         if (stmt->kind == EcsAstAwait ||
@@ -2207,6 +2215,32 @@ void flecs_script_runner_abandon(
     }
 }
 
+/* Pop frames until the for loop that contains the continue statement is
+ * reached. Returns false if the statement isn't inside a for loop. */
+static bool flecs_script_runner_continue(
+    ecs_script_runner_t *r)
+{
+    int32_t frame = r->frame_count;
+    while (frame > 0) {
+        if (r->frames[frame - 1].node->kind == EcsAstFor) {
+            break;
+        }
+        frame --;
+    }
+
+    if (!frame) {
+        return false;
+    }
+
+    while (r->frame_count > frame) {
+        flecs_script_frame_leave(r, &r->frames[r->frame_count - 1]);
+        r->v.base.depth --;
+        r->frame_count --;
+    }
+
+    return true;
+}
+
 /* Pop frames after an error until a try frame catches it. Returns true if a
  * catch clause was entered, false when the error propagates out of the
  * script. */
@@ -2292,6 +2326,14 @@ static flecs_script_run_status_t flecs_script_runner_exec(
             }
         } else if (res == 1) {
             return FlecsScriptRunSuspended;
+        } else if (res == 2) {
+            if (!flecs_script_runner_continue(r)) {
+                flecs_script_eval_error(&r->v, frame->node,
+                    "continue is only allowed inside a for loop");
+                if (!flecs_script_runner_unwind(r)) {
+                    return FlecsScriptRunError;
+                }
+            }
         }
     }
 
@@ -2590,6 +2632,7 @@ static void flecs_script_cleanup_for_node(
     case EcsAstInclude:
     case EcsAstFunction:
     case EcsAstAwait:
+    case EcsAstContinue:
         break;
     }
 }
