@@ -4797,3 +4797,103 @@ void Error_failing_script_does_not_delete_shared_scope(void) {
 
     ecs_fini(world);
 }
+
+void Error_script_init_eval_error_adds_error_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .code = "e { NoSuchTag }"
+    });
+
+    test_assert(script != 0);
+    test_assert(ecs_has_id(world, script, EcsScriptError));
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+
+    ecs_fini(world);
+}
+
+void Error_script_init_parse_error_adds_error_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .code = "e {"
+    });
+
+    test_assert(script != 0);
+    test_assert(ecs_has_id(world, script, EcsScriptError));
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+
+    ecs_fini(world);
+}
+
+void Error_script_init_from_missing_file_returns_0(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "no_such_script_file.flecs"
+    });
+
+    test_assert(script == 0);
+
+    ecs_fini(world);
+}
+
+void Error_script_update_clears_error_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = "e { NoSuchTag }"
+    });
+
+    test_assert(script != 0);
+    test_assert(ecs_has_id(world, script, EcsScriptError));
+
+    ecs_log_set_level(-1);
+
+    test_assert(ecs_script_update(world, script, 0, "e {}") == 0);
+    test_assert(!ecs_has_id(world, script, EcsScriptError));
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_update(world, script, 0, "e { NoSuchTag }") != 0);
+    test_assert(ecs_has_id(world, script, EcsScriptError));
+
+    ecs_fini(world);
+}
+
+void Error_script_init_success_has_no_error_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, {
+        .code = "e {}"
+    });
+
+    test_assert(script != 0);
+    test_assert(!ecs_has_id(world, script, EcsScriptError));
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_fini(world);
+}

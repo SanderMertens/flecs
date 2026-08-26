@@ -1900,7 +1900,29 @@ ecs_entity_t s = ecs_script(world, {
 });
 
 if (!s) {
+  // the script entity could not be created, for example because the file
+  // provided in the filename member could not be opened
+}
+```
+
+The `ecs_script` function only returns `0` when no script entity could be created at all. When the script code itself fails to parse or evaluate, the script entity is still returned, just like the script entity is kept when `ecs_script_update` fails. To find out whether the script code was evaluated successfully, test for the `EcsScriptError` tag, which is added to the script entity when parsing or evaluation failed and removed when the script evaluates successfully:
+
+```cpp
+ecs_entity_t s = ecs_script(world, {
+  .filename = "my_script.flecs"
+});
+
+if (!s || ecs_has_id(world, s, EcsScriptError)) {
   // error
+}
+```
+
+The error message is stored in the `error` member of the `EcsScript` component:
+
+```cpp
+const EcsScript *script = ecs_get(world, s, EcsScript);
+if (script->error) {
+  printf("script failed: %s\n", script->error);
 }
 ```
 
@@ -1911,5 +1933,7 @@ if (ecs_script_update(world, s, 0, new_code)) {
   // error
 }
 ```
+
+Just like `ecs_script`, a failed `ecs_script_update` keeps the script entity, adds the `EcsScriptError` tag to it, stores the error message in `EcsScript::error` and deletes the entities that were created by the script.
 
 When a script contains templates, script resources will not get cleaned up until the entities associated with the templates are deleted.
