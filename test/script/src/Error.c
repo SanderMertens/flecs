@@ -4897,3 +4897,34 @@ void Error_script_init_success_has_no_error_tag(void) {
 
     ecs_fini(world);
 }
+
+void Error_parse_error_in_large_script_reports_position(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    int32_t i;
+    for (i = 0; i < 2000; i ++) {
+        ecs_strbuf_appendlit(&buf, "// filler line to grow the script file\n");
+    }
+    ecs_strbuf_appendlit(&buf, "BadEntity {\n  ~~~\n}\n");
+    char *code = ecs_strbuf_get(&buf);
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .code = code
+    });
+
+    test_assert(script != 0);
+    test_assert(ecs_has_id(world, script, EcsScriptError));
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+    test_assert(strstr(s->error, "2002:") != NULL);
+    test_assert(strstr(s->error, "~~~") != NULL);
+
+    ecs_fini(world);
+
+    ecs_os_free(code);
+}

@@ -1352,7 +1352,8 @@
                 "failing_script_does_not_delete_shared_module",
                 "failing_script_update_does_not_delete_shared_module",
                 "deleted_script_does_not_delete_shared_module",
-                "failing_script_does_not_delete_shared_scope"
+                "failing_script_does_not_delete_shared_scope",
+                "parse_error_in_large_script_reports_position"
             ]
         }, {
             "id": "Format",
@@ -2254,7 +2255,16 @@
                 "include_forward_ref_to_const_in_later_include",
                 "include_forward_ref_to_entity_in_later_include",
                 "include_retried_script_keeps_scope_and_components",
-                "include_error_reports_failing_file"
+                "include_error_reports_failing_file",
+                "include_parse_error_sets_error_on_parent",
+                "include_parse_error_logs_error",
+                "include_eval_error_sets_error_on_parent",
+                "include_nested_parse_error_sets_error_on_parent",
+                "include_parse_error_run_file_fails",
+                "include_nested_index_parse_error_sets_error_on_parent",
+                "include_nested_error_reports_position",
+                "include_error_in_large_file_reports_position",
+                "include_missing_file_managed_sets_error_on_parent"
             ]
         }, {
             "id": "Fuzzing",

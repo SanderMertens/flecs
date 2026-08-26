@@ -1302,3 +1302,253 @@ void Include_include_error_reports_failing_file(void) {
 
     ecs_fini(world);
 }
+
+void Include_include_parse_error_sets_error_on_parent(void) {
+    test_files_install();
+    test_file_add("bad.flecs", "BadEntity {\n  ~~~\n}\n");
+    test_file_add("parent.flecs", "include bad.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+
+    if (script) {
+        test_assert(ecs_has_id(world, script, EcsScriptError));
+
+        const EcsScript *s = ecs_get(world, script, EcsScript);
+        test_assert(s != NULL);
+        test_assert(s->error != NULL);
+        test_assert(strstr(s->error, "bad.flecs") != NULL);
+    }
+
+    test_assert(ecs_lookup(world, "BadEntity") == 0);
+
+    ecs_fini(world);
+}
+
+void Include_include_parse_error_logs_error(void) {
+    test_files_install_ex(false, include_log_error_callback);
+    test_file_add("bad.flecs", "BadEntity {\n  ~~~\n}\n");
+    test_file_add("parent.flecs", "include bad.flecs\n");
+
+    ecs_log_set_level(-2);
+
+    include_log_error_count = 0;
+    include_log_error_level = 0;
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+
+    test_assert(include_log_error_count > 0);
+    test_int(include_log_error_level, -3);
+
+    ecs_fini(world);
+}
+
+void Include_include_eval_error_sets_error_on_parent(void) {
+    test_files_install();
+    test_file_add("child.flecs", "e {\n Foo: {}\n}\n");
+    test_file_add("parent.flecs", "include child.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+
+    if (script) {
+        test_assert(ecs_has_id(world, script, EcsScriptError));
+
+        const EcsScript *s = ecs_get(world, script, EcsScript);
+        test_assert(s != NULL);
+        test_assert(s->error != NULL);
+        test_assert(strstr(s->error, "child.flecs") != NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Include_include_nested_parse_error_sets_error_on_parent(void) {
+    test_files_install();
+    test_file_add("c.flecs", "BadEntity {\n  ~~~\n}\n");
+    test_file_add("b.flecs", "include c.flecs\n");
+    test_file_add("a.flecs", "include b.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "a.flecs"
+    });
+
+    if (script) {
+        test_assert(ecs_has_id(world, script, EcsScriptError));
+
+        const EcsScript *s = ecs_get(world, script, EcsScript);
+        test_assert(s != NULL);
+        test_assert(s->error != NULL);
+        test_assert(strstr(s->error, "c.flecs") != NULL);
+    }
+
+    test_assert(ecs_lookup(world, "BadEntity") == 0);
+
+    ecs_fini(world);
+}
+
+void Include_include_parse_error_run_file_fails(void) {
+    test_files_install();
+    test_file_add("bad.flecs", "BadEntity {\n  ~~~\n}\n");
+    test_file_add("parent.flecs", "include bad.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_lookup(world, "BadEntity") == 0);
+
+    ecs_fini(world);
+}
+
+void Include_include_nested_index_parse_error_sets_error_on_parent(void) {
+    test_files_install();
+    test_file_add("good1.flecs", "GoodOne {}\n");
+    test_file_add("bad.flecs", "BadEntity {\n  ~~~\n}\n");
+    test_file_add("good2.flecs", "GoodTwo {}\n");
+    test_file_add("index.flecs",
+        "include good1.flecs\n"
+        "include bad.flecs\n"
+        "include good2.flecs\n");
+    test_file_add("parent.flecs", "include index.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+
+    if (script) {
+        test_assert(ecs_has_id(world, script, EcsScriptError));
+
+        const EcsScript *s = ecs_get(world, script, EcsScript);
+        test_assert(s != NULL);
+        test_assert(s->error != NULL);
+        test_assert(strstr(s->error, "bad.flecs") != NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Include_include_nested_error_reports_position(void) {
+    test_files_install();
+    test_file_add("bad.flecs",
+        "GoodOne {}\n"
+        "GoodTwo {}\n"
+        "BadEntity {\n"
+        "  ~~~\n"
+        "}\n");
+    test_file_add("other.flecs", "OtherEntity {}\n");
+    test_file_add("index.flecs",
+        "include other.flecs\n"
+        "include bad.flecs\n");
+    test_file_add("parent.flecs", "include index.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+    test_assert(strstr(s->error, "bad.flecs") != NULL);
+    test_assert(strstr(s->error, "4:") != NULL);
+
+    ecs_fini(world);
+}
+
+static char* include_make_large_script(int32_t lines, const char *last) {
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    int32_t i;
+    for (i = 0; i < lines; i ++) {
+        ecs_strbuf_appendlit(&buf, "// filler line to grow the script file\n");
+    }
+    ecs_strbuf_appendstr(&buf, last);
+    return ecs_strbuf_get(&buf);
+}
+
+void Include_include_error_in_large_file_reports_position(void) {
+    test_files_install();
+
+    char *bad = include_make_large_script(2000, "BadEntity {\n  ~~~\n}\n");
+    test_file_add("bad.flecs", bad);
+    test_file_add("parent.flecs", "include bad.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+    test_assert(strstr(s->error, "bad.flecs") != NULL);
+    test_assert(strstr(s->error, "2002:") != NULL);
+    test_assert(strstr(s->error, "~~~") != NULL);
+
+    ecs_fini(world);
+
+    ecs_os_free(bad);
+}
+
+void Include_include_missing_file_managed_sets_error_on_parent(void) {
+    test_files_install();
+    test_file_add("parent.flecs", "include does_not_exist.flecs\n");
+
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "parent.flecs"
+    });
+
+    if (script) {
+        test_assert(ecs_has_id(world, script, EcsScriptError));
+
+        const EcsScript *s = ecs_get(world, script, EcsScript);
+        test_assert(s != NULL);
+        test_assert(s->error != NULL);
+        test_assert(strstr(s->error, "does_not_exist.flecs") != NULL);
+    }
+
+    ecs_fini(world);
+}
