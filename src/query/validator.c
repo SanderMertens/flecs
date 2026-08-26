@@ -1601,6 +1601,28 @@ static int flecs_query_finalize_terms(
 
     ECS_BIT_COND(q->flags, EcsQueryHasCondSet, cond_set);
 
+    /* A trivial term with a Self source matches an id that the table of the
+     * $this variable must have, which makes it usable for the bloom filter
+     * that quickly discards tables that cannot match the query. */
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *term = &terms[i];
+
+        if (!(term->flags_ & EcsTermIsTrivial)) {
+            continue;
+        }
+
+        if ((term->src.id & EcsTraverseFlags) != EcsSelf) {
+            continue;
+        }
+
+        if (ecs_id_is_wildcard(term->id)) {
+            continue;
+        }
+
+        q->bloom_filter = flecs_table_bloom_filter_add(
+            q->bloom_filter, term->id);
+    }
+
     /* Check if this is a trivial query */
     if ((q->flags & EcsQueryMatchOnlyThis)) {
         if (!(q->flags & 
@@ -1628,14 +1650,6 @@ static int flecs_query_finalize_terms(
                 if (!(term->flags_ & EcsTermIsTrivial)) {
                     is_trivial = false;
                     continue;
-                }
-
-                if ((term->src.id & EcsTraverseFlags) == EcsSelf) {
-                    if (!ecs_id_is_wildcard(term->id)) {
-                        
-                        q->bloom_filter = flecs_table_bloom_filter_add(
-                            q->bloom_filter, term->id);
-                    }
                 }
             }
 
