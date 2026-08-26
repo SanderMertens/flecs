@@ -2068,6 +2068,9 @@
         }, {
             "id": "Observer",
             "testcases": [
+                "multi_term_inheritable_component_owned",
+                "multi_term_inheritable_component_from_base",
+                "multi_term_inheritable_component_not_matched",
                 "on_add_before_edge",
                 "on_add_after_edge",
                 "on_add_wildcard_before_edge",

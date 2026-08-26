@@ -1152,6 +1152,68 @@ static void flecs_normalize_term_name(
 }
 #endif
 
+/* A term is self-trivial when it resolves like a trivial term for any table
+ * that owns its id. That is a weaker property than EcsTermIsTrivial, which
+ * also requires the id to never be inheritable: an inherited id costs a walk
+ * of the IsA chain only when the table does not own it. Observers, which are
+ * handed one table to test, hit the owned case almost always. */
+static
+bool flecs_term_is_self_trivial(
+    const ecs_term_t *term)
+{
+    if (term->oper != EcsAnd) {
+        return false;
+    }
+
+    if (term->flags_ & (EcsTermIsOr|EcsTermIsToggle|EcsTermDontFragment|
+        EcsTermIsSparse|EcsTermTransitive|EcsTermReflexive|EcsTermIsMember|
+        EcsTermIsScope|EcsTermMatchAny|EcsTermMatchAnySrc))
+    {
+        return false;
+    }
+
+    if (!ecs_term_match_this(term)) {
+        return false;
+    }
+
+    if (!(term->src.id & EcsSelf)) {
+        return false;
+    }
+
+    if (term->trav && term->trav != EcsIsA) {
+        return false;
+    }
+
+    if (ecs_id_is_wildcard(term->id)) {
+        return false;
+    }
+
+    if (ECS_IS_PAIR(term->id) && (ECS_PAIR_FIRST(term->id) == EcsChildOf) &&
+        ECS_PAIR_SECOND(term->id))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+static
+void flecs_query_set_self_trivial(
+    ecs_query_t *q)
+{
+    int32_t i, term_count = q->term_count;
+    bool self_trivial = term_count != 0 && !q->row_fields &&
+        !(q->flags & (EcsQueryHasPred|EcsQueryMatchDisabled|
+            EcsQueryMatchPrefab|EcsQueryHasScopes|EcsQueryHasCondSet|
+            EcsQueryHasRefs|EcsQueryMatchNothing|EcsQueryMatchWildcards));
+
+    for (i = 0; self_trivial && (i < term_count); i ++) {
+        self_trivial = flecs_term_is_self_trivial(&q->terms[i]);
+    }
+
+    ECS_BIT_COND(q->flags, EcsQuerySelfTrivial, self_trivial);
+}
+
 static int flecs_query_finalize_terms(
     ecs_world_t *world,
     ecs_query_t *q,
@@ -1676,6 +1738,8 @@ static int flecs_query_finalize_terms(
     /* If none of the terms match a source, the query matches nothing */
     ECS_BIT_COND(q->flags, EcsQueryMatchNothing, match_nothing);
 
+    flecs_query_set_self_trivial(q);
+
 #ifdef FLECS_QUERY_PLANS
     for (i = 0; i < q->term_count; i ++) {
         ecs_term_t *term = &q->terms[i];
@@ -2009,6 +2073,8 @@ bool flecs_query_finalize_simple(
     if (!up_count) {
         q->flags |= EcsQueryMatchOnlySelf;
     }
+
+    flecs_query_set_self_trivial(q);
 
     return true;
 }

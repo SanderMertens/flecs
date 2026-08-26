@@ -725,11 +725,18 @@ int flecs_query_trivial_has_range(
     ecs_flags32_t flags = q->flags;
     ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
 
+    /* A query whose only non-trivial property is that one of its ids can be
+     * inherited still resolves like a trivial query for tables that own all
+     * of its ids. That is the common case for observers, which are handed a
+     * single table to test: try the table first and only fall back to the
+     * query engine when an id is missing and could still be found on a base
+     * entity. */
     if (
 #ifdef FLECS_CACHED_QUERIES
         flecs_query_impl(q)->cache ||
 #endif
-        ((flags & trivial_flags) != trivial_flags) ||
+        (((flags & trivial_flags) != trivial_flags) &&
+            !(flags & EcsQuerySelfTrivial)) ||
         (flags & EcsQueryMatchWildcards) ||
         q->row_fields)
     {
@@ -758,9 +765,17 @@ int flecs_query_trivial_has_range(
     for (t = 0; t < term_count; t ++) {
         ecs_id_t term_id = terms[t].id;
 
+        /* An id that is not owned by the table can still be matched on a
+         * base entity when the term traverses IsA, in which case the query
+         * engine has to do the work. */
+        bool up = (terms[t].src.id & EcsUp) != 0;
+
         if (term_id < FLECS_HI_COMPONENT_ID) {
             int16_t res = component_map[term_id];
             if (!res) {
+                if (up) {
+                    goto not_trivial;
+                }
                 return 0;
             }
 
@@ -772,11 +787,17 @@ int flecs_query_trivial_has_range(
 
         ecs_component_record_t *cr = flecs_components_get(real_world, term_id);
         if (!cr) {
+            if (up) {
+                goto not_trivial;
+            }
             return 0;
         }
 
         const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
         if (!tr) {
+            if (up) {
+                goto not_trivial;
+            }
             return 0;
         }
 
@@ -815,6 +836,10 @@ int flecs_query_trivial_has_range(
 
     *it = lit;
     return 1;
+
+not_trivial:
+    ECS_CONST_CAST(ecs_query_t*, q)->eval_count --;
+    return -1;
 }
 
 ecs_iter_t ecs_query_iter(
