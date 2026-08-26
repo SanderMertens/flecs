@@ -116,6 +116,8 @@ typedef struct ecs_script_for_entry_t {
 typedef struct ecs_script_for_slot_t {
     ecs_vec_t entities; /* vec<ecs_entity_t>, anonymous entities */
     ecs_hashmap_t names; /* ecs_script_for_key_t -> ecs_script_for_entry_t */
+    ecs_entity_t cache_entity;
+    ecs_script_for_entry_t *cache_entry;
 } ecs_script_for_slot_t;
 
 void flecs_script_for_slots_init(
