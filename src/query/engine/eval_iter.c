@@ -746,9 +746,46 @@ int flecs_query_trivial_has_range(
         return 0;
     }
 
+    const ecs_world_t *real_world = q->real_world;
+    const ecs_term_t *terms = q->terms;
+    const ecs_table_record_t *term_trs[FLECS_TERM_COUNT_MAX];
+    int32_t t, term_count = q->term_count;
+    const ecs_table_record_t *table_records = table->_->records;
+    int32_t type_count = table->type.count;
+    const int16_t *component_map = table->component_map;
+    const int16_t *column_map = table->column_map;
+
+    for (t = 0; t < term_count; t ++) {
+        ecs_id_t term_id = terms[t].id;
+
+        if (term_id < FLECS_HI_COMPONENT_ID) {
+            int16_t res = component_map[term_id];
+            if (!res) {
+                return 0;
+            }
+
+            int32_t type_index = res > 0 ?
+                column_map[type_count + (res - 1)] : (-res - 1);
+            term_trs[t] = &table_records[type_index];
+            continue;
+        }
+
+        ecs_component_record_t *cr = flecs_components_get(real_world, term_id);
+        if (!cr) {
+            return 0;
+        }
+
+        const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
+        if (!tr) {
+            return 0;
+        }
+
+        term_trs[t] = tr;
+    }
+
     ecs_iter_t lit = {0};
     lit.world = ECS_CONST_CAST(ecs_world_t*, world);
-    lit.real_world = q->real_world;
+    lit.real_world = ECS_CONST_CAST(ecs_world_t*, real_world);
     lit.query = q;
     lit.system = q->entity;
     lit.field_count = q->field_count;
@@ -764,24 +801,11 @@ int flecs_query_trivial_has_range(
     ecs_os_memcpy_n(ECS_CONST_CAST(ecs_id_t*, lit.ids), q->ids,
         ecs_id_t, q->field_count);
 
-    const ecs_term_t *terms = q->terms;
     int16_t *columns = ECS_CONST_CAST(int16_t*, lit.columns);
-    int32_t t, term_count = q->term_count;
     for (t = 0; t < term_count; t ++) {
-        const ecs_term_t *term = &terms[t];
-        ecs_component_record_t *cr = flecs_components_get(
-            lit.real_world, term->id);
-        if (!cr) {
-            goto no_match;
-        }
-
-        const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
-        if (!tr) {
-            goto no_match;
-        }
-
-        lit.trs[term->field_index] = tr;
-        columns[term->field_index] = tr->column;
+        int8_t field_index = terms[t].field_index;
+        lit.trs[field_index] = term_trs[t];
+        columns[field_index] = term_trs[t]->column;
     }
 
     const ecs_entity_t *entities = ecs_table_entities(table);
@@ -791,11 +815,6 @@ int flecs_query_trivial_has_range(
 
     *it = lit;
     return 1;
-
-no_match:
-    lit.flags |= EcsIterSkip;
-    ecs_iter_fini(&lit);
-    return 0;
 }
 
 ecs_iter_t ecs_query_iter(
