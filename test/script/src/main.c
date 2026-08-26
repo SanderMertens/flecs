@@ -1041,6 +1041,7 @@ void Template_template_in_singleton_scope(void);
 void Template_template_instantiated_on_itself(void);
 void Template_template_prop_large_struct_no_leak(void);
 void Template_many_templates_w_props_in_script(void);
+void Template_tree_parent_prefab_before_template(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -6740,6 +6741,10 @@ bake_test_case Template_testcases[] = {
     {
         "many_templates_w_props_in_script",
         Template_many_templates_w_props_in_script
+    },
+    {
+        "tree_parent_prefab_before_template",
+        Template_tree_parent_prefab_before_template
     }
 };
 
@@ -13101,7 +13106,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        121,
+        122,
         Template_testcases
     },
     {

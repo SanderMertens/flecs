@@ -50728,6 +50728,10 @@ int flecs_script_apply_annot(
     ecs_entity_t entity,
     ecs_script_annot_t *annot);
 
+void flecs_script_apply_tree_annot(
+    ecs_script_annot_t *annot,
+    ecs_script_entity_t *node);
+
 /* Include visitor (runs before script evaluation, see visit_include.c) */
 
 int flecs_script_visit_include(
@@ -95029,6 +95033,21 @@ static void flecs_script_apply_non_fragmenting_childof(
         world, node->scope, enabled);
 }
 
+void flecs_script_apply_tree_annot(
+    ecs_script_annot_t *annot,
+    ecs_script_entity_t *node)
+{
+    if (ecs_os_strcmp(annot->name, "tree")) {
+        return;
+    }
+
+    if (!ecs_os_strcmp(annot->expr, "Parent")) {
+        flecs_script_apply_non_fragmenting_childof(NULL, node, true);
+    } else if (!ecs_os_strcmp(annot->expr, "ChildOf")) {
+        flecs_script_apply_non_fragmenting_childof(NULL, node, false);
+    }
+}
+
 int flecs_script_apply_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
@@ -98676,10 +98695,13 @@ static int flecs_script_type_ensure_node(
         name = *(char**)value.ptr;
     }
 
-    ecs_entity_desc_t desc = {
-        .parent = parent,
-        .name = name
-    };
+    ecs_entity_desc_t desc = {0};
+    if (entry && entry->parent_node && entry->parent_node->non_fragmenting_parent) {
+        desc.id = ecs_new_w_parent(t->v->world, parent, name);
+    } else {
+        desc.parent = parent;
+        desc.name = name;
+    }
     current = ecs_entity_init(t->v->world, &desc);
     if (value.ptr) {
         ecs_ptr_free(t->v->world, value.type, value.ptr);
@@ -99024,6 +99046,15 @@ static int flecs_script_type_annot(
             "annotation must be applied to an entity or template");
         return -1;
     }
+    /* Apply the tree annotation to the ast while typing. Entities can be
+     * created before the annotation is evaluated (see
+     * flecs_script_type_ensure_node) which means the hierarchy storage has to
+     * be known before evaluation starts. */
+    if (kind == EcsAstEntity) {
+        flecs_script_apply_tree_annot(
+            node, (ecs_script_entity_t*)v->base.next);
+    }
+
     /* Recording an annotation is safe while a template is being preprocessed,
      * as it does not evaluate anything in the world. Clear the template so the
      * evaluation entrypoint doesn't reject the node. */

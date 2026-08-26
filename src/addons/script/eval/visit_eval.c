@@ -692,6 +692,21 @@ static void flecs_script_apply_non_fragmenting_childof(
         world, node->scope, enabled);
 }
 
+void flecs_script_apply_tree_annot(
+    ecs_script_annot_t *annot,
+    ecs_script_entity_t *node)
+{
+    if (ecs_os_strcmp(annot->name, "tree")) {
+        return;
+    }
+
+    if (!ecs_os_strcmp(annot->expr, "Parent")) {
+        flecs_script_apply_non_fragmenting_childof(NULL, node, true);
+    } else if (!ecs_os_strcmp(annot->expr, "ChildOf")) {
+        flecs_script_apply_non_fragmenting_childof(NULL, node, false);
+    }
+}
+
 int flecs_script_apply_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,

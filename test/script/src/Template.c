@@ -5390,3 +5390,28 @@ void Template_many_templates_w_props_in_script(void) {
 
     ecs_fini(world);
 }
+
+void Template_tree_parent_prefab_before_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "@tree Parent"
+    LINE "prefab Base {"
+    LINE "  child { }"
+    LINE "}"
+    LINE ""
+    LINE "template Tpl {"
+    LINE "  prop x: f32 = 0"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    test_assert(base != 0);
+    ecs_entity_t child = ecs_lookup_child(world, base, "child");
+    test_assert(child != 0);
+    test_assert(ecs_has(world, child, EcsParent));
+
+    ecs_fini(world);
+}
