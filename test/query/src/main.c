@@ -661,6 +661,12 @@ void Basic_2_trivial_w_prefab(void);
 void Basic_3_trivial_w_prefab(void);
 void Basic_2_trivial_w_disabled(void);
 void Basic_3_trivial_w_disabled(void);
+void Basic_1_component_w_match_prefab_flag(void);
+void Basic_1_tag_w_match_prefab_flag(void);
+void Basic_1_tag_w_match_prefab_flag_uncached(void);
+void Basic_1_tag_w_match_prefab_flag_cached(void);
+void Basic_1_tag_w_match_disabled_flag(void);
+void Basic_2_terms_w_match_prefab_flag(void);
 void Basic_2_this_w_fixed_src(void);
 void Basic_2_fixed_src_w_this(void);
 void Basic_2_this_w_fixed_src_no_match_fixed(void);
@@ -5484,6 +5490,30 @@ bake_test_case Basic_testcases[] = {
     {
         "3_trivial_w_disabled",
         Basic_3_trivial_w_disabled
+    },
+    {
+        "1_component_w_match_prefab_flag",
+        Basic_1_component_w_match_prefab_flag
+    },
+    {
+        "1_tag_w_match_prefab_flag",
+        Basic_1_tag_w_match_prefab_flag
+    },
+    {
+        "1_tag_w_match_prefab_flag_uncached",
+        Basic_1_tag_w_match_prefab_flag_uncached
+    },
+    {
+        "1_tag_w_match_prefab_flag_cached",
+        Basic_1_tag_w_match_prefab_flag_cached
+    },
+    {
+        "1_tag_w_match_disabled_flag",
+        Basic_1_tag_w_match_disabled_flag
+    },
+    {
+        "2_terms_w_match_prefab_flag",
+        Basic_2_terms_w_match_prefab_flag
     },
     {
         "2_this_w_fixed_src",
@@ -14378,7 +14408,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        240,
+        246,
         Basic_testcases,
         1,
         Basic_params

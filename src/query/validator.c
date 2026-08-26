@@ -2104,8 +2104,10 @@ int flecs_query_finalize_query(
      * slow path. This in combination with the test suite ensures that the
      * result of the fast & slow code is the same. */
     #ifndef FLECS_SANITIZE
-    if (flecs_query_finalize_simple(world, q, desc)) {
-        goto done;
+    if (!(q->flags & (EcsQueryMatchPrefab|EcsQueryMatchDisabled))) {
+        if (flecs_query_finalize_simple(world, q, desc)) {
+            goto done;
+        }
     }
     #endif
 

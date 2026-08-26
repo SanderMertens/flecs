@@ -25969,8 +25969,10 @@ int flecs_query_finalize_query(
      * logic if it's not needed. When running in sanitized mode, always take the 
      * slow path. This in combination with the test suite ensures that the
      * result of the fast & slow code is the same. */
-    if (flecs_query_finalize_simple(world, q, desc)) {
-        goto done;
+    if (!(q->flags & (EcsQueryMatchPrefab|EcsQueryMatchDisabled))) {
+        if (flecs_query_finalize_simple(world, q, desc)) {
+            goto done;
+        }
     }
 
     /* Populate term array from desc terms & DSL expression */
