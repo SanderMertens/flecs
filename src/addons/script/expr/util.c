@@ -200,7 +200,7 @@ int flecs_value_unary(
     }
 
 #define ECS_BINARY_COND_EQ_OP(left, right, result, op)\
-    ECS_BINARY_INT_OPS(left, right, result, op, ECS_BOP_COND)\
+    ECS_BINARY_NUMBER_OPS(left, right, result, op, ECS_BOP_COND)\
       else if ((right)->type == ecs_id(ecs_char_t)) { \
         ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_char_t);\
     } else if ((right)->type == ecs_id(ecs_u8_t)) { \

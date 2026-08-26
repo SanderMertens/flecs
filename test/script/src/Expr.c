@@ -6593,6 +6593,48 @@ void Expr_interpolate_string_w_string_var(void) {
     ecs_fini(world);
 }
 
+void Expr_interpolate_string_w_null_string_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", ecs_string_t);
+    test_assert(v != NULL);
+    *(ecs_string_t*)v->value.ptr = NULL;
+
+    char *result = ecs_script_string_interpolate(world, "a{$foo}b", vars);
+    test_assert(result != NULL);
+    test_str(result, "ab");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_string_w_null_string_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Label" }),
+        .members = {
+            { .name = "text", .type = ecs_id(ecs_string_t) }
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_string_t *label = ecs_ensure_id(world, e, ecs_id(Position), sizeof(char*));
+    *label = NULL;
+
+    char *result = ecs_script_string_interpolate(world, "[{e[Label].text}]", NULL);
+    test_assert(result != NULL);
+    test_str(result, "[]");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
 void Expr_interpolate_string_w_entity_var(void) {
     ecs_world_t *world = ecs_init();
 
@@ -10468,6 +10510,165 @@ void Expr_match_i_w_any_f(void) {
 
     ecs_script_vars_fini(vars);
     ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Expr_match_f64_i_cases(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "f", ecs_f64_t);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding };
+
+    const char *expr = 
+    HEAD "match f {"
+    LINE "  0: 10"
+    LINE "  1: 20"
+    LINE "  _: 30"
+    LINE "}";
+
+    ecs_script_t *s = ecs_expr_parse(world, expr, &desc);
+    test_assert(s != NULL);
+
+    {
+        *(ecs_f64_t*)var->value.ptr = 0.0;
+        ecs_value_t result = {0};
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(ecs_i64_t));
+        test_int(*(int64_t*)result.ptr, 10);
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+    {
+        *(ecs_f64_t*)var->value.ptr = 1.0;
+        ecs_value_t result = {0};
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(ecs_i64_t));
+        test_int(*(int64_t*)result.ptr, 20);
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+    {
+        *(ecs_f64_t*)var->value.ptr = 2.0;
+        ecs_value_t result = {0};
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(ecs_i64_t));
+        test_int(*(int64_t*)result.ptr, 30);
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Expr_match_f32_i_cases(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "f", ecs_f32_t);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding };
+
+    const char *expr = 
+    HEAD "match f {"
+    LINE "  0: 10"
+    LINE "  1: 20"
+    LINE "  _: 30"
+    LINE "}";
+
+    ecs_script_t *s = ecs_expr_parse(world, expr, &desc);
+    test_assert(s != NULL);
+
+    {
+        *(ecs_f32_t*)var->value.ptr = 0.0f;
+        ecs_value_t result = {0};
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(ecs_i64_t));
+        test_int(*(int64_t*)result.ptr, 10);
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+    {
+        *(ecs_f32_t*)var->value.ptr = 1.0f;
+        ecs_value_t result = {0};
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(ecs_i64_t));
+        test_int(*(int64_t*)result.ptr, 20);
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+    {
+        *(ecs_f32_t*)var->value.ptr = 5.0f;
+        ecs_value_t result = {0};
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(ecs_i64_t));
+        test_int(*(int64_t*)result.ptr, 30);
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Expr_match_f64_i_cases_no_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "f", ecs_f64_t);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding };
+
+    const char *expr = 
+    HEAD "match f {"
+    LINE "  0: 10"
+    LINE "  1: 20"
+    LINE "  _: 30"
+    LINE "}";
+
+    ecs_script_t *s = ecs_expr_parse(world, expr, &desc);
+    test_assert(s != NULL);
+
+    {
+        *(ecs_f64_t*)var->value.ptr = 1.5;
+        ecs_value_t result = {0};
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(ecs_i64_t));
+        test_int(*(int64_t*)result.ptr, 30);
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+    {
+        *(ecs_f64_t*)var->value.ptr = 0.5;
+        ecs_value_t result = {0};
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(ecs_i64_t));
+        test_int(*(int64_t*)result.ptr, 30);
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Expr_match_f64_literal_i_cases(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, 
+        "match 1.0 { 0: 10\n 1: 20\n _: 30\n }", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_int(*(int64_t*)v.ptr, 20);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
