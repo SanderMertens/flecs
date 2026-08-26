@@ -714,6 +714,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordFn:         goto fn_stmt;
         case EcsTokKeywordAwait:      goto await_stmt;
         case EcsTokKeywordTry:        goto try_stmt;
+        case EcsTokKeywordContinue:   goto continue_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
 
@@ -982,6 +983,19 @@ fn_stmt: {
             })
         )
     })
+}
+
+continue_stmt: {
+    flecs_script_insert_continue(parser);
+
+    LookAhead_1('}',
+        EndOfRule;
+    )
+
+    Parse(
+        EcsTokEndOfStatement:
+            EndOfRule;
+    )
 }
 
 await_stmt: {

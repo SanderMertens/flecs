@@ -152,6 +152,9 @@ static int flecs_script_stmt_free(
     case EcsAstUsing:
         flecs_free_t(a, ecs_script_using_t, node);
         break;
+    case EcsAstContinue:
+        flecs_free_t(a, ecs_script_continue_t, node);
+        break;
     case EcsAstModule:
         flecs_free_t(a, ecs_script_module_t, node);
         break;

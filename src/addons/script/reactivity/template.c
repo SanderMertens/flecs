@@ -1173,6 +1173,8 @@ static int flecs_script_visit_type_template(
 
     int32_t old_table = t->table;
     bool old_template_scope = t->template_scope;
+    int32_t old_for_depth = t->for_depth;
+    t->for_depth = 0;
     flecs_script_entity_state_t *old_entity = v->entity;
     ecs_script_entity_t instance_node = {
         .node = {
@@ -1219,6 +1221,7 @@ static int flecs_script_visit_type_template(
     ecs_script_vars_pop(v->vars);
     v->vars = outer_vars;
     t->template_scope = old_template_scope;
+    t->for_depth = old_for_depth;
     t->table = old_table;
     v->entity = old_entity;
     if (tnode->symbol_count == -1) {

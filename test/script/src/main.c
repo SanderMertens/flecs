@@ -423,6 +423,14 @@ void Eval_for_range_vars_no_dollar(void);
 void Eval_for_range_1_4(void);
 void Eval_for_range_min_1_2(void);
 void Eval_for_range_newline_before_scope(void);
+void Eval_for_continue(void);
+void Eval_for_continue_same_line(void);
+void Eval_for_continue_nested_scope(void);
+void Eval_for_continue_nested_for(void);
+void Eval_for_continue_in_template(void);
+void Eval_for_continue_updates_managed_script(void);
+void Eval_for_continue_outside_for_fails(void);
+void Eval_for_continue_in_template_in_for_fails(void);
 void Eval_variable_assign_self(void);
 void Eval_func_w_entity_arg(void);
 void Eval_func_w_entity_arg_w_using(void);
@@ -4310,6 +4318,38 @@ bake_test_case Eval_testcases[] = {
     {
         "for_range_newline_before_scope",
         Eval_for_range_newline_before_scope
+    },
+    {
+        "for_continue",
+        Eval_for_continue
+    },
+    {
+        "for_continue_same_line",
+        Eval_for_continue_same_line
+    },
+    {
+        "for_continue_nested_scope",
+        Eval_for_continue_nested_scope
+    },
+    {
+        "for_continue_nested_for",
+        Eval_for_continue_nested_for
+    },
+    {
+        "for_continue_in_template",
+        Eval_for_continue_in_template
+    },
+    {
+        "for_continue_updates_managed_script",
+        Eval_for_continue_updates_managed_script
+    },
+    {
+        "for_continue_outside_for_fails",
+        Eval_for_continue_outside_for_fails
+    },
+    {
+        "for_continue_in_template_in_for_fails",
+        Eval_for_continue_in_template_in_for_fails
     },
     {
         "variable_assign_self",
@@ -13151,7 +13191,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        644,
+        652,
         Eval_testcases
     },
     {

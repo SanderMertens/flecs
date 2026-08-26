@@ -768,6 +768,7 @@ static int flecs_script_dep_node(
     case EcsAstUsing:
     case EcsAstAnnotation:
     case EcsAstInclude:
+    case EcsAstContinue:
         break;
     case EcsAstModule: {
         ecs_script_module_t *n = (ecs_script_module_t*)node;

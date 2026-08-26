@@ -150,6 +150,7 @@ const char* flecs_token_kind_str(
     case EcsTokKeywordAwait:
     case EcsTokKeywordTry:
     case EcsTokKeywordCatch:
+    case EcsTokKeywordContinue:
     case EcsTokKeywordScript:
         return "keyword ";
     case EcsTokArrow:
@@ -234,6 +235,7 @@ const char* flecs_token_str(
     case EcsTokKeywordAwait: return "await";
     case EcsTokKeywordTry: return "try";
     case EcsTokKeywordCatch: return "catch";
+    case EcsTokKeywordContinue: return "continue";
     case EcsTokKeywordScript: return "script";
     case EcsTokArrow: return "->";
     case EcsTokIdentifier: return "identifier";
@@ -920,6 +922,7 @@ const char* flecs_token(
     Keyword           ("await",    EcsTokKeywordAwait)
     Keyword           ("try",      EcsTokKeywordTry)
     Keyword           ("catch",    EcsTokKeywordCatch)
+    Keyword           ("continue", EcsTokKeywordContinue)
     Keyword           ("script",   EcsTokKeywordScript)
 
     } else if (pos[0] == '\'') {

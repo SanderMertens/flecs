@@ -29,7 +29,8 @@ typedef enum ecs_script_node_kind_t {
     EcsAstInclude,
     EcsAstFunction,
     EcsAstAwait,
-    EcsAstTry
+    EcsAstTry,
+    EcsAstContinue
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -175,6 +176,10 @@ typedef struct ecs_script_await_t {
     ecs_expr_node_t *expr;
 } ecs_script_await_t;
 
+typedef struct ecs_script_continue_t {
+    ecs_script_node_t node;
+} ecs_script_continue_t;
+
 typedef struct ecs_script_catch_t {
     const char *error; /* Error entity to catch. NULL for catch-all clause. */
     ecs_script_scope_t *scope;
@@ -285,6 +290,9 @@ ecs_script_var_node_t* flecs_script_insert_var(
     const char *name);
 
 ecs_script_await_t* flecs_script_insert_await(
+    ecs_parser_t *parser);
+
+ecs_script_continue_t* flecs_script_insert_continue(
     ecs_parser_t *parser);
 
 ecs_script_try_t* flecs_script_insert_try(

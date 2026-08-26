@@ -383,6 +383,18 @@ ecs_script_await_t* flecs_script_insert_await(
     return result;
 }
 
+ecs_script_continue_t* flecs_script_insert_continue(
+    ecs_parser_t *parser)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_continue_t *result = flecs_ast_new(
+        parser, ecs_script_continue_t, EcsAstContinue);
+    flecs_ast_append(parser, scope->stmts, ecs_script_continue_t, result);
+    return result;
+}
+
 ecs_script_try_t* flecs_script_insert_try(
     ecs_parser_t *parser)
 {
