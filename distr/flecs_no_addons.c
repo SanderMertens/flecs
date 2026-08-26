@@ -23922,12 +23922,14 @@ ecs_query_count_t ecs_query_count(
     flecs_poly_assert(q, ecs_query_t);
     ecs_query_count_t result = {0};
 
-    ecs_iter_t it = flecs_query_iter(q->world, q);
-    it.flags |= EcsIterNoData;
+    {
+        ecs_iter_t it = flecs_query_iter(q->world, q);
+        it.flags |= EcsIterNoData;
 
-    while (ecs_query_next(&it)) {
-        result.results ++;
-        result.entities += it.count;
+        while (ecs_query_next(&it)) {
+            result.results ++;
+            result.entities += it.count;
+        }
     }
 
     if ((q->flags & EcsQueryMatchOnlySelf) && 
