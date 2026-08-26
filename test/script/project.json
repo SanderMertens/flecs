@@ -2564,6 +2564,8 @@
                 "component_in_two_interpolated_named_children",
                 "component_in_matching_interpolated_named_children_fails",
                 "partial_assignment_does_not_own_component",
+                "same_entity_in_two_non_exclusive_scopes",
+                "partial_component_in_two_non_exclusive_scopes",
                 "for_preserves_named_entities",
                 "nested_for_clears_previous_entities",
                 "inactive_for_cleans_up_entities",

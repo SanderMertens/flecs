@@ -2517,6 +2517,8 @@ void Reactivity_component_in_static_and_interpolated_named_children(void);
 void Reactivity_component_in_two_interpolated_named_children(void);
 void Reactivity_component_in_matching_interpolated_named_children_fails(void);
 void Reactivity_partial_assignment_does_not_own_component(void);
+void Reactivity_same_entity_in_two_non_exclusive_scopes(void);
+void Reactivity_partial_component_in_two_non_exclusive_scopes(void);
 void Reactivity_for_preserves_named_entities(void);
 void Reactivity_nested_for_clears_previous_entities(void);
 void Reactivity_inactive_for_cleans_up_entities(void);
@@ -12599,6 +12601,14 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_partial_assignment_does_not_own_component
     },
     {
+        "same_entity_in_two_non_exclusive_scopes",
+        Reactivity_same_entity_in_two_non_exclusive_scopes
+    },
+    {
+        "partial_component_in_two_non_exclusive_scopes",
+        Reactivity_partial_component_in_two_non_exclusive_scopes
+    },
+    {
         "for_preserves_named_entities",
         Reactivity_for_preserves_named_entities
     },
@@ -13316,7 +13326,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        119,
+        121,
         Reactivity_testcases
     },
     {
