@@ -4596,3 +4596,204 @@ void Error_component_ref_via_var_entity_deleted(void) {
 
     ecs_fini(world);
 }
+
+void Error_failing_script_does_not_delete_shared_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "script_a" }),
+        .code =
+            HEAD "module m"
+            LINE "A {}"
+    });
+    test_assert(a != 0);
+
+    ecs_entity_t m = ecs_lookup(world, "m");
+    test_assert(m != 0);
+    test_assert(ecs_lookup(world, "m.A") != 0);
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t b = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "script_b" }),
+        .code =
+            HEAD "module m"
+            LINE "B {}"
+            LINE "C { Foo: {} }"
+    });
+    test_assert(b != 0);
+
+    ecs_log_set_level(-1);
+
+    const EcsScript *bs = ecs_get(world, b, EcsScript);
+    test_assert(bs != NULL);
+    test_assert(bs->error != NULL);
+
+    test_assert(ecs_is_alive(world, m));
+    test_assert(ecs_lookup(world, "m") == m);
+    test_assert(ecs_lookup(world, "m.A") != 0);
+    test_assert(ecs_lookup(world, "m.B") == 0);
+    test_assert(ecs_lookup(world, "m.C") == 0);
+
+    test_assert(0 == ecs_script_update(world, b, 0,
+        HEAD "module m"
+        LINE "B {}"
+    ));
+
+    test_assert(ecs_lookup(world, "m") == m);
+    test_assert(ecs_lookup(world, "m.A") != 0);
+    test_assert(ecs_lookup(world, "m.B") != 0);
+
+    ecs_fini(world);
+}
+
+void Error_failing_script_update_does_not_delete_shared_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "script_a" }),
+        .code =
+            HEAD "module m"
+            LINE "A {}"
+    });
+    test_assert(a != 0);
+
+    ecs_entity_t b = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "script_b" }),
+        .code =
+            HEAD "module m"
+            LINE "B {}"
+    });
+    test_assert(b != 0);
+
+    ecs_entity_t m = ecs_lookup(world, "m");
+    test_assert(m != 0);
+    test_assert(ecs_lookup(world, "m.A") != 0);
+    test_assert(ecs_lookup(world, "m.B") != 0);
+
+    ecs_log_set_level(-4);
+    test_assert(0 != ecs_script_update(world, b, 0,
+        HEAD "module m"
+        LINE "B {}"
+        LINE "C { Foo: {} }"
+    ));
+    ecs_log_set_level(-1);
+
+    test_assert(ecs_is_alive(world, m));
+    test_assert(ecs_lookup(world, "m") == m);
+    test_assert(ecs_lookup(world, "m.A") != 0);
+    test_assert(ecs_lookup(world, "m.B") == 0);
+    test_assert(ecs_lookup(world, "m.C") == 0);
+
+    test_assert(0 == ecs_script_update(world, b, 0,
+        HEAD "module m"
+        LINE "B {}"
+    ));
+
+    test_assert(ecs_lookup(world, "m") == m);
+    test_assert(ecs_lookup(world, "m.A") != 0);
+    test_assert(ecs_lookup(world, "m.B") != 0);
+
+    ecs_fini(world);
+}
+
+void Error_deleted_script_does_not_delete_shared_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "script_a" }),
+        .code =
+            HEAD "module m"
+            LINE "A {}"
+    });
+    test_assert(a != 0);
+
+    ecs_entity_t b = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "script_b" }),
+        .code =
+            HEAD "module m"
+            LINE "B {}"
+    });
+    test_assert(b != 0);
+
+    ecs_entity_t m = ecs_lookup(world, "m");
+    test_assert(m != 0);
+
+    ecs_script_clear(world, b, 0);
+
+    test_assert(ecs_is_alive(world, m));
+    test_assert(ecs_lookup(world, "m") == m);
+    test_assert(ecs_lookup(world, "m.A") != 0);
+    test_assert(ecs_lookup(world, "m.B") == 0);
+
+    ecs_delete(world, b);
+
+    test_assert(ecs_is_alive(world, m));
+    test_assert(ecs_lookup(world, "m") == m);
+    test_assert(ecs_lookup(world, "m.A") != 0);
+
+    ecs_script_clear(world, a, 0);
+
+    test_assert(ecs_is_alive(world, m));
+    test_assert(ecs_lookup(world, "m.A") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_failing_script_does_not_delete_shared_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "script_a" }),
+        .code =
+            HEAD "p {"
+            LINE "  A {}"
+            LINE "}"
+    });
+    test_assert(a != 0);
+
+    ecs_entity_t p = ecs_lookup(world, "p");
+    test_assert(p != 0);
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t b = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "script_b" }),
+        .code =
+            HEAD "p {"
+            LINE "  B {}"
+            LINE "  C { Foo: {} }"
+            LINE "}"
+    });
+    test_assert(b != 0);
+
+    ecs_log_set_level(-1);
+
+    const EcsScript *bs = ecs_get(world, b, EcsScript);
+    test_assert(bs != NULL);
+    test_assert(bs->error != NULL);
+
+    test_assert(ecs_is_alive(world, p));
+    test_assert(ecs_lookup(world, "p") == p);
+    test_assert(ecs_lookup(world, "p.A") != 0);
+    test_assert(ecs_lookup(world, "p.B") == 0);
+
+    test_assert(0 == ecs_script_update(world, b, 0,
+        HEAD "p {"
+        LINE "  B {}"
+        LINE "}"
+    ));
+
+    test_assert(ecs_lookup(world, "p") == p);
+    test_assert(ecs_lookup(world, "p.A") != 0);
+    test_assert(ecs_lookup(world, "p.B") != 0);
+
+    ecs_script_clear(world, b, 0);
+
+    test_assert(ecs_is_alive(world, p));
+    test_assert(ecs_lookup(world, "p") == p);
+    test_assert(ecs_lookup(world, "p.A") != 0);
+    test_assert(ecs_lookup(world, "p.B") == 0);
+
+    ecs_fini(world);
+}

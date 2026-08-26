@@ -1328,7 +1328,11 @@
                 "doc_detail_not_readable_from_script",
                 "script_declares_entity_named_after_script_w_child",
                 "component_ref_via_var_entity_zero",
-                "component_ref_via_var_entity_deleted"
+                "component_ref_via_var_entity_deleted",
+                "failing_script_does_not_delete_shared_module",
+                "failing_script_update_does_not_delete_shared_module",
+                "deleted_script_does_not_delete_shared_module",
+                "failing_script_does_not_delete_shared_scope"
             ]
         }, {
             "id": "Format",

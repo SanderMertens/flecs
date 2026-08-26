@@ -601,8 +601,8 @@ static int flecs_script_type_ensure_node(
     if (!current) {
         return -1;
     }
-    if (t->v->script_tag && !flecs_script_is_builtin(t->v->world, current) &&
-        !flecs_script_is_script_scope(t->v->world, t->v->script_entity, current))
+    if (t->v->script_tag && flecs_script_can_own_entity(
+        t->v->world, t->v->script_entity, current))
     {
         ecs_add_id(t->v->world, current, t->v->script_tag);
     }
@@ -1629,8 +1629,11 @@ static int flecs_script_type_module(
         t, node->name, NULL, &node->symbol, false);
     ecs_entity_t old_parent = t->v->parent;
     ecs_entity_t old_scope = ecs_set_scope(t->v->world, 0);
+    ecs_id_t old_script_tag = t->v->script_tag;
     t->v->parent = 0;
+    t->v->script_tag = 0;
     node->eval = flecs_script_create_entity(t->v, node->name);
+    t->v->script_tag = old_script_tag;
     ecs_set_scope(t->v->world, old_scope);
     if (!node->eval) {
         t->v->parent = old_parent;

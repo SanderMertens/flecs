@@ -422,6 +422,35 @@ bool flecs_script_is_script_scope(
     return false;
 }
 
+bool flecs_script_can_own_entity(
+    const ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t e)
+{
+    if (flecs_script_is_builtin(world, e)) {
+        return false;
+    }
+
+    if (flecs_script_is_script_scope(world, script, e)) {
+        return false;
+    }
+
+    if (!script) {
+        return true;
+    }
+
+    if (ecs_has_id(world, e, EcsModule)) {
+        return false;
+    }
+
+    ecs_entity_t owner = ecs_get_target(world, e, ecs_id(EcsScript), 0);
+    if (owner && (owner != script)) {
+        return false;
+    }
+
+    return true;
+}
+
 static void flecs_script_apply_with(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity)
@@ -462,8 +491,8 @@ ecs_entity_t flecs_script_create_entity(
     }
 
     ecs_entity_t result = ecs_entity_init(v->world, &desc);
-    if (result && v->script_tag && !flecs_script_is_builtin(v->world, result) &&
-        !flecs_script_is_script_scope(v->world, v->script_entity, result))
+    if (result && v->script_tag && flecs_script_can_own_entity(
+        v->world, v->script_entity, result))
     {
         ecs_add_id(v->world, result, v->script_tag);
     }
