@@ -1311,6 +1311,11 @@ void Error_has_unterminated(void);
 void Error_has_pair_missing_paren_close(void);
 void Error_has_pair_missing_second(void);
 void Error_script_update_failure_is_reported(void);
+void Error_script_init_eval_error_adds_error_tag(void);
+void Error_script_init_parse_error_adds_error_tag(void);
+void Error_script_init_from_missing_file_returns_0(void);
+void Error_script_update_clears_error_tag(void);
+void Error_script_init_success_has_no_error_tag(void);
 void Error_script_declares_entity_named_after_script(void);
 void Error_if_component_presence_check_on_non_singleton(void);
 void Error_this_at_plain_scope_kills_file(void);
@@ -7824,6 +7829,26 @@ bake_test_case Error_testcases[] = {
         Error_script_update_failure_is_reported
     },
     {
+        "script_init_eval_error_adds_error_tag",
+        Error_script_init_eval_error_adds_error_tag
+    },
+    {
+        "script_init_parse_error_adds_error_tag",
+        Error_script_init_parse_error_adds_error_tag
+    },
+    {
+        "script_init_from_missing_file_returns_0",
+        Error_script_init_from_missing_file_returns_0
+    },
+    {
+        "script_update_clears_error_tag",
+        Error_script_update_clears_error_tag
+    },
+    {
+        "script_init_success_has_no_error_tag",
+        Error_script_init_success_has_no_error_tag
+    },
+    {
         "script_declares_entity_named_after_script",
         Error_script_declares_entity_named_after_script
     },
@@ -13175,7 +13200,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        194,
+        199,
         Error_testcases
     },
     {

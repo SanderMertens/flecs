@@ -71703,6 +71703,7 @@ ECS_COMPONENT_DECLARE(EcsScriptMutVar);
 ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
 ECS_DECLARE(EcsScriptVectorType);
+ECS_DECLARE(EcsScriptError);
 
 static ECS_MOVE(EcsScript, dst, src, {
     if (dst->script && (dst->script != src->script)) {
@@ -71944,6 +71945,11 @@ int flecs_script_update(
         ecs_err("cannot update scripts for individual templates, "
             "update parent script instead (tried to update '%s')",
                 template_name);
+        ecs_os_free(s->error);
+        s->error = flecs_asprintf(
+            "cannot update scripts for individual templates, "
+            "update parent script instead (tried to update '%s')",
+                template_name);
         ecs_os_free(template_name);
         result = -1;
         goto done;
@@ -72057,6 +72063,12 @@ int flecs_script_update(
     }
 
 done:
+    if (result) {
+        ecs_add_id(world, e, EcsScriptError);
+    } else {
+        ecs_remove_id(world, e, EcsScriptError);
+    }
+
     if (is_defer) {
         flecs_resume_readonly(real_world, &srs);
     }
@@ -72159,6 +72171,9 @@ void FlecsScriptImport(
     ECS_COMPONENT_DEFINE(world, EcsScript);
     ECS_COMPONENT_DEFINE(world, EcsScriptVisitor);
     ECS_TAG_DEFINE(world, EcsScriptVectorType);
+    ECS_TAG_DEFINE(world, EcsScriptError);
+
+    ecs_add_pair(world, EcsScriptError, EcsOnInstantiate, EcsDontInherit);
 
     ecs_add_pair(world, ecs_id(EcsScriptVisitor), EcsOnInstantiate,
         EcsDontInherit);
