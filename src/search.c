@@ -104,9 +104,6 @@ static int32_t flecs_table_search_relation_for_tgt(
     ecs_record_t *r = flecs_entities_get_any(world, tgt);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_table_t *tgt_table = r->table;
-    ecs_assert(tgt_table != NULL, ECS_INTERNAL_ERROR, NULL);
-
     int32_t result = -1;
 
     if (cr->flags & EcsIdDontFragment) {
@@ -116,6 +113,11 @@ static int32_t flecs_table_search_relation_for_tgt(
             goto found;
         }
     } else {
+        ecs_table_t *tgt_table = r->table;
+        if (!tgt_table) {
+            return -1;
+        }
+
         result = flecs_table_search_relation(world, r, tgt_table, 0, id, cr, 
             rel, cr_r, true, tgt_out, id_out, tr_out);
         if (result != -1) {
