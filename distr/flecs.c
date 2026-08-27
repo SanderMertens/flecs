@@ -44527,6 +44527,9 @@ void ecs_table_cache_insert(
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!ecs_map_is_init(&cache->index) ||
+        ecs_map_count(&cache->index) == ecs_vec_count(&cache->records),
+        ECS_INTERNAL_ERROR, NULL);
 
     result->cr = (ecs_component_record_t*)cache;
     result->table = ECS_CONST_CAST(ecs_table_t*, table);
@@ -44618,6 +44621,9 @@ void* ecs_table_cache_remove(
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(elem->cr == (ecs_component_record_t*)cache,
         ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!ecs_map_is_init(&cache->index) ||
+        ecs_map_count(&cache->index) == ecs_vec_count(&cache->records),
+        ECS_INTERNAL_ERROR, NULL);
 
     int32_t last = ecs_vec_count(&cache->records) - 1;
     ecs_table_cache_elem_t *records = ecs_vec_first_t(
@@ -44625,6 +44631,8 @@ void* ecs_table_cache_remove(
 
     int32_t index;
     if (ecs_map_is_init(&cache->index)) {
+        ecs_assert(ecs_map_get(&cache->index, table_id) != NULL,
+            ECS_INTERNAL_ERROR, NULL);
         ecs_map_val_t v = ecs_map_remove(&cache->index, table_id);
         index = flecs_uto(int32_t, v);
     } else {
