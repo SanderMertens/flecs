@@ -64,7 +64,7 @@ struct query_builder_i : term_builder_i<Base> {
     template<typename T>
     Base& with() {
         this->term();
-        *this->term_ = flecs::term(_::type<T>::id(this->world_v()));
+        this->set_term_id(_::type<T>::id(this->world_v()));
         this->term_->inout = static_cast<ecs_inout_kind_t>(
             _::type_to_inout<T>());
         return *this;
@@ -73,42 +73,53 @@ struct query_builder_i : term_builder_i<Base> {
     /** Add a term for the specified component ID. */
     Base& with(id_t component_id) {
         this->term();
-        *this->term_ = flecs::term(component_id);
+        this->set_term_id(component_id);
         return *this;
     }
 
     /** Add a term for the specified component name. */
     Base& with(const char *component_name) {
         this->term();
-        *this->term_ = flecs::term().first(component_name);
+        this->set_term_id(0);
+        this->first(component_name);
+        this->src();
         return *this;
     }
 
     /** Add a term for a pair specified by name. */
     Base& with(const char *first, const char *second) {
         this->term();
-        *this->term_ = flecs::term().first(first).second(second);
+        this->set_term_id(0);
+        this->first(first).second(second);
+        this->src();
         return *this;
     }
 
     /** Add a term for a pair specified by entity IDs. */
     Base& with(entity_t first, entity_t second) {
         this->term();
-        *this->term_ = flecs::term(first, second);
+        this->set_term_id(0);
+        this->term_->first.id = first;
+        this->term_->second.id = second;
         return *this;
     }
 
     /** Add a term for a pair with an entity ID first and a name second. */
     Base& with(entity_t first, const char *second) {
         this->term();
-        *this->term_ = flecs::term(first).second(second);
+        this->set_term_id(first);
+        this->second(second);
+        this->src();
         return *this;
     }
 
     /** Add a term for a pair with a name first and an entity ID second. */
     Base& with(const char *first, entity_t second) {
         this->term();
-        *this->term_ = flecs::term().first(first).second(second);
+        this->set_term_id(0);
+        this->first(first);
+        this->second(second);
+        this->src();
         return *this;
     }
 
@@ -433,6 +444,19 @@ protected:
 private:
     operator Base&() {
         return *static_cast<Base*>(this);
+    }
+
+    /* Reset the current term and set its component/pair id. Writing the term
+     * directly avoids a temporary flecs::term, which stores pointers to its
+     * own stack memory and gets flagged by static analyzers when assigned to
+     * the descriptor (clang-analyzer core.StackAddressEscape). */
+    void set_term_id(id_t component_id) {
+        *this->term_ = {};
+        if (component_id & ECS_ID_FLAGS_MASK) {
+            this->term_->id = component_id;
+        } else if (component_id) {
+            this->term_->first.id = component_id;
+        }
     }
 
     ecs_query_desc_t *desc_;
