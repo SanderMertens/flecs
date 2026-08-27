@@ -10287,6 +10287,16 @@ ecs_entity_t ecs_new_w_parent(
         }
     }
 
+    if (world->flags & EcsWorldReadonly) {
+        ecs_world_t *stage_world = (ecs_world_t*)stage;
+        entity = ecs_new(stage_world);
+        ecs_set(stage_world, entity, EcsParent, { parent });
+        if (name) {
+            ecs_set_name(stage_world, entity, name);
+        }
+        return entity;
+    }
+
     ecs_id_t type_ids[] = {
         ecs_id(EcsParent), ecs_value_pair(EcsParentDepth, pr->depth)};
 

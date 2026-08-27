@@ -874,6 +874,8 @@ void NonFragmentingChildOf_defer_new_w_parent_w_name(void);
 void NonFragmentingChildOf_defer_new_w_parent_w_same_name_twice(void);
 void NonFragmentingChildOf_new_w_parent_from_stage(void);
 void NonFragmentingChildOf_new_w_parent_w_name_from_stage(void);
+void NonFragmentingChildOf_new_w_parent_readonly_new_table(void);
+void NonFragmentingChildOf_new_w_parent_w_name_readonly_new_table(void);
 void NonFragmentingChildOf_prefab_instance_w_dont_fragment_tag(void);
 void NonFragmentingChildOf_prefab_instance_w_dont_fragment_component(void);
 void NonFragmentingChildOf_prefab_instance_w_inherit_dont_fragment_component(void);
@@ -6807,6 +6809,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "new_w_parent_w_name_from_stage",
         NonFragmentingChildOf_new_w_parent_w_name_from_stage
+    },
+    {
+        "new_w_parent_readonly_new_table",
+        NonFragmentingChildOf_new_w_parent_readonly_new_table
+    },
+    {
+        "new_w_parent_w_name_readonly_new_table",
+        NonFragmentingChildOf_new_w_parent_w_name_readonly_new_table
     },
     {
         "prefab_instance_w_dont_fragment_tag",
@@ -16840,7 +16850,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        280,
+        282,
         NonFragmentingChildOf_testcases
     },
     {
