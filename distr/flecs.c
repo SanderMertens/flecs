@@ -70679,59 +70679,75 @@ static const char* flecs_script_parse_var(
             }
 
             case ':': {
-                // const color : Color =
-                LookAhead_2(EcsTokIdentifier, '=',
+                LookAhead_1(EcsTokIdentifier,
                     pos = lookahead;
 
                     var->type = Token(3 + token_offset);
 
-                    {
-                        LookAhead_1(EcsTokKeywordAwait,
-                            Error("'%s %s: %s = await ...' is invalid, "
-                                "await variables derive their type from the "
-                                "awaited expression, use '%s %s = await ...' "
-                                "instead",
-                                kind_str, var->name, var->type,
-                                kind_str, var->name);
-                        )
-                    }
-
-                    {
-                        // const color : Color = {
-                        LookAhead_1('{',
+                    LookAhead(
+                        case '=': {
                             pos = lookahead;
-                            Expr('}', {
-                                var->expr = EXPR;
-                                EndOfRule;
-                            })
-                        )
-                    }
 
-                    {
-                        // const color : Color = [
-                        LookAhead_1('[',
-                            pos = lookahead;
-                            Expr(']', {
-                                var->expr = EXPR;
-                                EndOfRule;
-                            })
-                        )
-                    }
+                            {
+                                LookAhead_1(EcsTokKeywordAwait,
+                                    Error("'%s %s: %s = await ...' is invalid, "
+                                        "await variables derive their type from the "
+                                        "awaited expression, use '%s %s = await ...' "
+                                        "instead",
+                                        kind_str, var->name, var->type,
+                                        kind_str, var->name);
+                                )
+                            }
 
-                    {
-                        // const color : Color = match
-                        LookAhead_1(EcsTokKeywordMatch,
-                            Expr('\n',
-                                var->expr = EXPR;
+                            {
+                                LookAhead_1('{',
+                                    pos = lookahead;
+                                    Expr('}', {
+                                        var->expr = EXPR;
+                                        EndOfRule;
+                                    })
+                                )
+                            }
+
+                            {
+                                LookAhead_1('[',
+                                    pos = lookahead;
+                                    Expr(']', {
+                                        var->expr = EXPR;
+                                        EndOfRule;
+                                    })
+                                )
+                            }
+
+                            {
+                                LookAhead_1(EcsTokKeywordMatch,
+                                    Expr('\n',
+                                        var->expr = EXPR;
+                                        EndOfRule;
+                                    )
+                                )
+                            }
+
+                            Initializer('\n',
+                                var->expr = INITIALIZER;
                                 EndOfRule;
                             )
-                        )
-                    }
+                        }
 
-                    // const color : Color = expr\n
-                    Initializer('\n',
-                        var->expr = INITIALIZER;
-                        EndOfRule;
+                        EcsTokEndOfStatement: {
+                            if (is_prop) {
+                                pos = lookahead;
+                                EndOfRule;
+                            }
+                            break;
+                        }
+
+                        case EcsTokScopeClose: {
+                            if (is_prop) {
+                                EndOfRule;
+                            }
+                            break;
+                        }
                     )
                 )
 
@@ -99635,7 +99651,7 @@ static int flecs_script_type_template_var(
     ecs_script_var_node_t *node,
     bool mut)
 {
-    if (!node->expr) {
+    if (!node->expr && (mut || !node->type)) {
         flecs_script_eval_error(t->v, node,
             "%s variable '%s' is missing initializer",
             mut ? "mut" : "prop", node->name);
@@ -99648,15 +99664,17 @@ static int flecs_script_type_template_var(
     {
         flecs_script_type_unresolved_ref(t, node, node->type,
             FlecsScriptUnresolvedComponent);
-        if (node->expr->kind == EcsExprInitializer ||
+        if (!node->expr || node->expr->kind == EcsExprInitializer ||
             node->expr->kind == EcsExprEmptyInitializer)
         {
             return -1;
         }
     }
-    int result = flecs_script_type_check_expr(t, &node->expr, &type);
-    if (result) {
-        return result == 1 ? 0 : -1;
+    if (node->expr) {
+        int result = flecs_script_type_check_expr(t, &node->expr, &type);
+        if (result) {
+            return result == 1 ? 0 : -1;
+        }
     }
     node->eval_type = type;
     return flecs_script_template_eval_var(t->v, node, mut);
@@ -114104,7 +114122,7 @@ int flecs_script_template_eval_var(
     node->sp = var->sp;
     flecs_type_info_ctor(var->value.ptr, 1, ti);
 
-    if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
+    if (node->expr && flecs_script_eval_expr(v, &node->expr, &var->value)) {
         return -1;
     }
 

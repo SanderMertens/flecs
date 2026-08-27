@@ -1118,7 +1118,7 @@ int flecs_script_template_eval_var(
     node->sp = var->sp;
     flecs_type_info_ctor(var->value.ptr, 1, ti);
 
-    if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
+    if (node->expr && flecs_script_eval_expr(v, &node->expr, &var->value)) {
         return -1;
     }
 

@@ -5434,6 +5434,15 @@ typedef struct {
     RgbaF color;
 } EmissiveF;
 
+typedef struct {
+    ecs_i32_t x, y;
+} TemplatePropDefault;
+
+ECS_CTOR(TemplatePropDefault, ptr, {
+    ptr->x = 10;
+    ptr->y = 20;
+})
+
 static
 void register_rgba_types(ecs_world_t *world, ecs_entity_t *rgba_out,
     ecs_entity_t *emissive_out)
@@ -5484,6 +5493,26 @@ void register_rgba_f_types(ecs_world_t *world, ecs_entity_t *rgba_out,
 
     if (rgba_out) *rgba_out = rgba;
     if (emissive_out) *emissive_out = emissive;
+}
+
+static
+ecs_entity_t register_template_prop_default(ecs_world_t *world)
+{
+    ECS_COMPONENT(world, TemplatePropDefault);
+
+    ecs_set_hooks(world, TemplatePropDefault, {
+        .ctor = ecs_ctor(TemplatePropDefault)
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(TemplatePropDefault),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    return ecs_id(TemplatePropDefault);
 }
 
 void Template_template_prop_struct_assign_whole_component(void) {
@@ -5885,6 +5914,77 @@ void Template_template_prop_struct_no_default(void) {
     test_int(e->color.g, 220);
     test_int(e->color.b, 255);
     test_int(e->color.a, 255);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_typed_no_default_ctor(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t value_type = register_template_prop_default(world);
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop value: TemplatePropDefault"
+    LINE "  child {"
+    LINE "    TemplatePropDefault: $value"
+    LINE "  }"
+    LINE "}"
+    LINE "T e()"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+
+    const TemplatePropDefault *value = ecs_get_id(world, child, value_type);
+    test_assert(value != NULL);
+    test_int(value->x, 10);
+    test_int(value->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_typed_no_default_override(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t value_type = register_template_prop_default(world);
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop value: TemplatePropDefault"
+    LINE "  child {"
+    LINE "    TemplatePropDefault: $value"
+    LINE "  }"
+    LINE "}"
+    LINE "T e(value: {30, 40})"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+
+    const TemplatePropDefault *value = ecs_get_id(world, child, value_type);
+    test_assert(value != NULL);
+    test_int(value->x, 30);
+    test_int(value->y, 40);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_no_default_missing_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop value:"
+    LINE "}"
+    LINE "";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }

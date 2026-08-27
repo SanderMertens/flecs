@@ -452,59 +452,75 @@ static const char* flecs_script_parse_var(
             }
 
             case ':': {
-                // const color : Color =
-                LookAhead_2(EcsTokIdentifier, '=',
+                LookAhead_1(EcsTokIdentifier,
                     pos = lookahead;
 
                     var->type = Token(3 + token_offset);
 
-                    {
-                        LookAhead_1(EcsTokKeywordAwait,
-                            Error("'%s %s: %s = await ...' is invalid, "
-                                "await variables derive their type from the "
-                                "awaited expression, use '%s %s = await ...' "
-                                "instead",
-                                kind_str, var->name, var->type,
-                                kind_str, var->name);
-                        )
-                    }
-
-                    {
-                        // const color : Color = {
-                        LookAhead_1('{',
+                    LookAhead(
+                        case '=': {
                             pos = lookahead;
-                            Expr('}', {
-                                var->expr = EXPR;
-                                EndOfRule;
-                            })
-                        )
-                    }
 
-                    {
-                        // const color : Color = [
-                        LookAhead_1('[',
-                            pos = lookahead;
-                            Expr(']', {
-                                var->expr = EXPR;
-                                EndOfRule;
-                            })
-                        )
-                    }
+                            {
+                                LookAhead_1(EcsTokKeywordAwait,
+                                    Error("'%s %s: %s = await ...' is invalid, "
+                                        "await variables derive their type from the "
+                                        "awaited expression, use '%s %s = await ...' "
+                                        "instead",
+                                        kind_str, var->name, var->type,
+                                        kind_str, var->name);
+                                )
+                            }
 
-                    {
-                        // const color : Color = match
-                        LookAhead_1(EcsTokKeywordMatch,
-                            Expr('\n',
-                                var->expr = EXPR;
+                            {
+                                LookAhead_1('{',
+                                    pos = lookahead;
+                                    Expr('}', {
+                                        var->expr = EXPR;
+                                        EndOfRule;
+                                    })
+                                )
+                            }
+
+                            {
+                                LookAhead_1('[',
+                                    pos = lookahead;
+                                    Expr(']', {
+                                        var->expr = EXPR;
+                                        EndOfRule;
+                                    })
+                                )
+                            }
+
+                            {
+                                LookAhead_1(EcsTokKeywordMatch,
+                                    Expr('\n',
+                                        var->expr = EXPR;
+                                        EndOfRule;
+                                    )
+                                )
+                            }
+
+                            Initializer('\n',
+                                var->expr = INITIALIZER;
                                 EndOfRule;
                             )
-                        )
-                    }
+                        }
 
-                    // const color : Color = expr\n
-                    Initializer('\n',
-                        var->expr = INITIALIZER;
-                        EndOfRule;
+                        EcsTokEndOfStatement: {
+                            if (is_prop) {
+                                pos = lookahead;
+                                EndOfRule;
+                            }
+                            break;
+                        }
+
+                        case EcsTokScopeClose: {
+                            if (is_prop) {
+                                EndOfRule;
+                            }
+                            break;
+                        }
                     )
                 )
 
