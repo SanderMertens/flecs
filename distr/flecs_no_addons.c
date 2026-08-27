@@ -8636,7 +8636,7 @@ ecs_entity_t ecs_new_w_parent(
     };
 
     int32_t row = ecs_table_count(table);
-    flecs_table_append(world, table, entity, false, false);
+    flecs_table_append(world, table, entity, true, false);
     r->table = table;
     r->row = (uint32_t)row;
 
