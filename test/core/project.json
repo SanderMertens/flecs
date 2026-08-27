@@ -711,7 +711,14 @@
                 "fini_w_dont_fragment_pair_prefab_exclusive_delete_with",
                 "remove_childof_pair_w_dont_fragment_component",
                 "remove_zeroes_storage",
-                "instantiate_prefab_w_tag_on_add_observer"
+                "instantiate_prefab_w_tag_on_add_observer",
+                "fini_w_dont_fragment_component_on_prefab_child",
+                "fini_w_dont_fragment_inherit_component_on_prefab_child",
+                "delete_instance_w_dont_fragment_component_on_prefab_child",
+                "fini_w_dont_fragment_component_on_prefab_child_w_up_query",
+                "fini_w_dont_fragment_component_w_isa_in_module",
+                "fini_w_dont_fragment_inherit_component_w_isa_in_module",
+                "fini_w_dont_fragment_component_w_isa_prefab_in_module"
             ]
         }, {
             "id": "NonFragmentingChildOf",
