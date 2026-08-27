@@ -7639,3 +7639,47 @@ void NonFragmentingChildOf_multi_term_up_observer_propagates_to_subtree(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_new_w_parent_readonly_new_table(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_readonly_begin(world, false);
+    ecs_world_t *s = ecs_get_stage(world, 0);
+    ecs_entity_t child = ecs_new_w_parent(s, parent, NULL);
+    test_assert(child != 0);
+    ecs_readonly_end(world);
+
+    test_assert(ecs_is_alive(world, child));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_new_w_parent_w_name_readonly_new_table(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "p" });
+
+    ecs_readonly_begin(world, false);
+    ecs_world_t *s = ecs_get_stage(world, 0);
+    ecs_entity_t child = ecs_new_w_parent(s, parent, "c");
+    test_assert(child != 0);
+    ecs_readonly_end(world);
+
+    test_assert(ecs_is_alive(world, child));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_str(ecs_get_name(world, child), "c");
+    test_uint(ecs_lookup(world, "p.c"), child);
+
+    ecs_readonly_begin(world, false);
+    ecs_entity_t again = ecs_new_w_parent(s, parent, "c");
+    ecs_readonly_end(world);
+    test_uint(again, child);
+
+    ecs_fini(world);
+}
