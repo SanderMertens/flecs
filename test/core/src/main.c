@@ -868,6 +868,7 @@ void NonFragmentingChildOf_add_childof_to_parent_child(void);
 void NonFragmentingChildOf_add_parent_to_childof_child_same_parent(void);
 void NonFragmentingChildOf_add_childof_to_parent_child_same_parent(void);
 void NonFragmentingChildOf_new_w_parent_w_same_name_twice(void);
+void NonFragmentingChildOf_new_w_parent_named_after_delete(void);
 void NonFragmentingChildOf_defer_new_w_parent(void);
 void NonFragmentingChildOf_defer_new_w_parent_w_name(void);
 void NonFragmentingChildOf_defer_new_w_parent_w_same_name_twice(void);
@@ -6782,6 +6783,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "new_w_parent_w_same_name_twice",
         NonFragmentingChildOf_new_w_parent_w_same_name_twice
+    },
+    {
+        "new_w_parent_named_after_delete",
+        NonFragmentingChildOf_new_w_parent_named_after_delete
     },
     {
         "defer_new_w_parent",
@@ -16835,7 +16840,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        279,
+        280,
         NonFragmentingChildOf_testcases
     },
     {

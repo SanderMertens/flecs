@@ -5133,6 +5133,29 @@ void NonFragmentingChildOf_new_w_parent_w_same_name_twice(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_new_w_parent_named_after_delete(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_entity_t child = ecs_new_w_parent(world, parent,
+        "a_name_that_is_long_enough_to_land_in_its_own_allocation_class");
+    test_assert(child != 0);
+    ecs_delete(world, child);
+
+    ecs_entity_t other = ecs_new_w_parent(world, parent, "bar");
+    test_assert(other != 0);
+    test_assert(other != child);
+    test_str(ecs_get_name(world, other), "bar");
+    test_assert(ecs_lookup_child(world, parent, "bar") == other);
+
+    const EcsParent *p = ecs_get(world, other, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_new_w_parent_from_stage(void) {
     ecs_world_t* world = ecs_mini();
 

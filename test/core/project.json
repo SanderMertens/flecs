@@ -900,6 +900,7 @@
                 "add_parent_to_childof_child_same_parent",
                 "add_childof_to_parent_child_same_parent",
                 "new_w_parent_w_same_name_twice",
+                "new_w_parent_named_after_delete",
                 "defer_new_w_parent",
                 "defer_new_w_parent_w_name",
                 "defer_new_w_parent_w_same_name_twice",
