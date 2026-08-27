@@ -31454,7 +31454,11 @@ void* flecs_balloc_w_dbg_info(
 #else
 
     if (ba->chunks_per_block <= FLECS_MIN_CHUNKS_PER_BLOCK) {
-        return ecs_os_malloc(ba->data_size);
+        result = ecs_os_malloc(ba->data_size);
+#ifdef FLECS_MEMSET_UNINITIALIZED
+        ecs_os_memset(result, 0xAB, ba->data_size);
+#endif
+        return result;
     }
 
     if (!ba->head) {
@@ -31478,7 +31482,7 @@ void* flecs_balloc_w_dbg_info(
 #endif
 
 #ifdef FLECS_MEMSET_UNINITIALIZED
-    ecs_os_memset(result, 0xAA, ba->data_size);
+    ecs_os_memset(result, 0xAB, ba->data_size);
 #endif
 
     return result;
@@ -31609,10 +31613,10 @@ void* flecs_brealloc_w_dbg_info(
 #endif
 #ifdef FLECS_MEMSET_UNINITIALIZED
     if (dst && src && (dst->data_size > src->data_size)) {
-        ecs_os_memset(ECS_OFFSET(result, src->data_size), 0xAA, 
+        ecs_os_memset(ECS_OFFSET(result, src->data_size), 0xAB,
             dst->data_size - src->data_size);
     } else if (dst && !src) {
-        ecs_os_memset(result, 0xAA, dst->data_size);
+        ecs_os_memset(result, 0xAB, dst->data_size);
     }
 #endif
 
