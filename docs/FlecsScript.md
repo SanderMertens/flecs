@@ -1209,6 +1209,8 @@ Square my_entity(size: 20, color: {38, 25, 13})
 
 Just like `const` variables, `prop` variables can explicitly specify a type or implicitly derive their type from the assigned (default) value.
 
+An explicitly typed property can omit its default value, as in `prop color: Color`. The property is then initialized with the type's default constructor. This is only supported for properties; `const` and `mut` variables require an initializer.
+
 In addition to property variables, templates can also contain mutables. Mutables that are exposed as component members on a `TemplateComponent::mut` component. To create a mutable, use the `mut` keyword. For example the `hover` mutable variable ends up on a `Button::mut` component:
 
 ```cpp

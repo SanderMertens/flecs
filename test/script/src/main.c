@@ -1068,6 +1068,9 @@ void Template_template_prop_struct_in_struct_literal_same_scope(void);
 void Template_template_prop_struct_in_deeply_nested_child(void);
 void Template_template_prop_struct_forwarded_to_nested_template(void);
 void Template_template_prop_struct_no_default(void);
+void Template_template_prop_typed_no_default_ctor(void);
+void Template_template_prop_typed_no_default_override(void);
+void Template_template_prop_no_default_missing_type(void);
 void Template_template_prop_struct_in_nested_struct_literal_w_using(void);
 void Template_template_prop_struct_member_expr_in_struct_literal(void);
 
@@ -6898,6 +6901,18 @@ bake_test_case Template_testcases[] = {
     {
         "template_prop_struct_no_default",
         Template_template_prop_struct_no_default
+    },
+    {
+        "template_prop_typed_no_default_ctor",
+        Template_template_prop_typed_no_default_ctor
+    },
+    {
+        "template_prop_typed_no_default_override",
+        Template_template_prop_typed_no_default_override
+    },
+    {
+        "template_prop_no_default_missing_type",
+        Template_template_prop_no_default_missing_type
     },
     {
         "template_prop_struct_in_nested_struct_literal_w_using",
@@ -13351,7 +13366,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        135,
+        138,
         Template_testcases
     },
     {

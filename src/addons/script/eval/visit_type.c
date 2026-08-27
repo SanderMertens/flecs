@@ -1081,7 +1081,7 @@ static int flecs_script_type_template_var(
     ecs_script_var_node_t *node,
     bool mut)
 {
-    if (!node->expr) {
+    if (!node->expr && (mut || !node->type)) {
         flecs_script_eval_error(t->v, node,
             "%s variable '%s' is missing initializer",
             mut ? "mut" : "prop", node->name);
@@ -1094,15 +1094,17 @@ static int flecs_script_type_template_var(
     {
         flecs_script_type_unresolved_ref(t, node, node->type,
             FlecsScriptUnresolvedComponent);
-        if (node->expr->kind == EcsExprInitializer ||
+        if (!node->expr || node->expr->kind == EcsExprInitializer ||
             node->expr->kind == EcsExprEmptyInitializer)
         {
             return -1;
         }
     }
-    int result = flecs_script_type_check_expr(t, &node->expr, &type);
-    if (result) {
-        return result == 1 ? 0 : -1;
+    if (node->expr) {
+        int result = flecs_script_type_check_expr(t, &node->expr, &type);
+        if (result) {
+            return result == 1 ? 0 : -1;
+        }
     }
     node->eval_type = type;
     return flecs_script_template_eval_var(t->v, node, mut);
