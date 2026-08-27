@@ -682,6 +682,13 @@ void Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with(void);
 void Sparse_remove_childof_pair_w_dont_fragment_component(void);
 void Sparse_remove_zeroes_storage(void);
 void Sparse_instantiate_prefab_w_tag_on_add_observer(void);
+void Sparse_fini_w_dont_fragment_component_on_prefab_child(void);
+void Sparse_fini_w_dont_fragment_inherit_component_on_prefab_child(void);
+void Sparse_delete_instance_w_dont_fragment_component_on_prefab_child(void);
+void Sparse_fini_w_dont_fragment_component_on_prefab_child_w_up_query(void);
+void Sparse_fini_w_dont_fragment_component_w_isa_in_module(void);
+void Sparse_fini_w_dont_fragment_inherit_component_w_isa_in_module(void);
+void Sparse_fini_w_dont_fragment_component_w_isa_prefab_in_module(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
@@ -6046,6 +6053,34 @@ bake_test_case Sparse_testcases[] = {
     {
         "instantiate_prefab_w_tag_on_add_observer",
         Sparse_instantiate_prefab_w_tag_on_add_observer
+    },
+    {
+        "fini_w_dont_fragment_component_on_prefab_child",
+        Sparse_fini_w_dont_fragment_component_on_prefab_child
+    },
+    {
+        "fini_w_dont_fragment_inherit_component_on_prefab_child",
+        Sparse_fini_w_dont_fragment_inherit_component_on_prefab_child
+    },
+    {
+        "delete_instance_w_dont_fragment_component_on_prefab_child",
+        Sparse_delete_instance_w_dont_fragment_component_on_prefab_child
+    },
+    {
+        "fini_w_dont_fragment_component_on_prefab_child_w_up_query",
+        Sparse_fini_w_dont_fragment_component_on_prefab_child_w_up_query
+    },
+    {
+        "fini_w_dont_fragment_component_w_isa_in_module",
+        Sparse_fini_w_dont_fragment_component_w_isa_in_module
+    },
+    {
+        "fini_w_dont_fragment_inherit_component_w_isa_in_module",
+        Sparse_fini_w_dont_fragment_inherit_component_w_isa_in_module
+    },
+    {
+        "fini_w_dont_fragment_component_w_isa_prefab_in_module",
+        Sparse_fini_w_dont_fragment_component_w_isa_prefab_in_module
     }
 };
 
@@ -16841,7 +16876,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        232,
+        239,
         Sparse_testcases,
         1,
         Sparse_params
