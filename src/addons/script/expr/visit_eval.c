@@ -286,7 +286,9 @@ static int flecs_expr_initializer_eval_dynamic(
         ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (i) {
-            ecs_meta_next(cur);
+            if (ecs_meta_next(cur)) {
+                goto error;
+            }
         }
 
         if (elem->key) {
@@ -306,7 +308,7 @@ static int flecs_expr_initializer_eval_dynamic(
         }
 
         if (elem->value->kind == EcsExprInitializer) {
-            if (flecs_expr_initializer_eval(ctx,
+            if (flecs_expr_initializer_eval_dynamic(ctx,
                 (ecs_expr_initializer_t*)elem->value, value, cur, value_size))
             {
                 goto error;

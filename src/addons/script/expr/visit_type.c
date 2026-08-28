@@ -1095,12 +1095,12 @@ static int flecs_expr_empty_initializer_visit_type(
 
     node->node.type = ecs_meta_get_type(cur);
     if (!node->node.type) {
-        flecs_expr_visit_error(script, node, 
+        flecs_expr_visit_error(script, node,
             "unknown type for initializer");
         goto error;
     }
 
-    node->is_dynamic = flecs_expr_initializer_is_dynamic(
+    node->is_dynamic = node->is_dynamic || flecs_expr_initializer_is_dynamic(
         script->world, node->node.type);
 
     if (ecs_meta_push(cur)) {
@@ -1289,7 +1289,8 @@ static int flecs_expr_initializer_visit_type(
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Opaque types do not have deterministic offsets */
-    bool is_dynamic = flecs_expr_initializer_is_dynamic(script->world, type);
+    bool is_dynamic = node->is_dynamic ||
+        flecs_expr_initializer_is_dynamic(script->world, type);
     node->is_dynamic = is_dynamic;
 
     if (ecs_meta_push(cur)) {
@@ -1403,6 +1404,10 @@ static int flecs_expr_initializer_visit_type(
         }
 
         bool swizzle_expand_allowed = !elem->operator && !is_dynamic;
+
+        if (is_dynamic && elem->value->kind == EcsExprInitializer) {
+            ((ecs_expr_initializer_t*)elem->value)->is_dynamic = true;
+        }
 
         ecs_entity_t elem_type = ecs_meta_get_type(cur);
         ecs_meta_cursor_t elem_cur = *cur;
