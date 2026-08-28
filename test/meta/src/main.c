@@ -164,6 +164,9 @@ void RuntimeTypes_map_lifecycle(void);
 void RuntimeTypes_map_lifecycle_trivial_type(void);
 void RuntimeTypes_map_lifecycle_alloc_values(void);
 void RuntimeTypes_map_cmp_illegal(void);
+void RuntimeTypes_existing_struct_w_vector_member_no_hooks(void);
+void RuntimeTypes_existing_struct_w_vector_member_shallow_copy(void);
+void RuntimeTypes_existing_struct_w_vector_member_not_freed(void);
 
 // Testsuite 'StructTypes'
 void StructTypes_i32(void);
@@ -2056,6 +2059,18 @@ bake_test_case RuntimeTypes_testcases[] = {
     {
         "map_cmp_illegal",
         RuntimeTypes_map_cmp_illegal
+    },
+    {
+        "existing_struct_w_vector_member_no_hooks",
+        RuntimeTypes_existing_struct_w_vector_member_no_hooks
+    },
+    {
+        "existing_struct_w_vector_member_shallow_copy",
+        RuntimeTypes_existing_struct_w_vector_member_shallow_copy
+    },
+    {
+        "existing_struct_w_vector_member_not_freed",
+        RuntimeTypes_existing_struct_w_vector_member_not_freed
     }
 };
 
@@ -7124,7 +7139,7 @@ static bake_test_suite suites[] = {
         "RuntimeTypes",
         NULL,
         NULL,
-        55,
+        58,
         RuntimeTypes_testcases
     },
     {

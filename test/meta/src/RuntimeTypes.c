@@ -3679,3 +3679,109 @@ void RuntimeTypes_map_cmp_illegal(void) {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    ecs_vec_t values;
+} VecMember;
+
+static ecs_entity_t define_vec_member_component(
+    ecs_world_t *world,
+    ecs_entity_t *vector_type_out)
+{
+    ecs_entity_t vector_type = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "I32Vector" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t component = ecs_component(world, {
+        .entity = ecs_entity(world, { .name = "VecMember" }),
+        .type = {
+            .size = ECS_SIZEOF(VecMember),
+            .alignment = ECS_ALIGNOF(VecMember)
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = component,
+        .members = {
+            { .name = "values", .type = vector_type }
+        }
+    });
+
+    vector_type_out[0] = vector_type;
+
+    return component;
+}
+
+void RuntimeTypes_existing_struct_w_vector_member_no_hooks(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vector_type = 0;
+    ecs_entity_t component = define_vec_member_component(world, &vector_type);
+
+    const ecs_type_info_t *vector_ti = ecs_get_type_info(world, vector_type);
+    test_assert(vector_ti != NULL);
+    test_assert(vector_ti->hooks.ctor != NULL);
+    test_assert(vector_ti->hooks.dtor != NULL);
+    test_assert(vector_ti->hooks.copy != NULL);
+    test_assert(vector_ti->hooks.move != NULL);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, component);
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.dtor == NULL);
+    test_assert(ti->hooks.copy == NULL);
+    test_assert(ti->hooks.move == NULL);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_existing_struct_w_vector_member_shallow_copy(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vector_type = 0;
+    ecs_entity_t component = define_vec_member_component(world, &vector_type);
+
+    VecMember src = {{0}};
+    ecs_vec_init_t(NULL, &src.values, ecs_i32_t, 2);
+    ecs_vec_append_t(NULL, &src.values, ecs_i32_t)[0] = 10;
+    ecs_vec_append_t(NULL, &src.values, ecs_i32_t)[0] = 20;
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_id(world, e, component, sizeof(VecMember), &src);
+
+    const VecMember *dst = ecs_get_id(world, e, component);
+    test_assert(dst != NULL);
+    test_assert(dst->values.array == src.values.array);
+    test_int(dst->values.count, 2);
+
+    ecs_fini(world);
+
+    ecs_vec_fini_t(NULL, &src.values, ecs_i32_t);
+}
+
+void RuntimeTypes_existing_struct_w_vector_member_not_freed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vector_type = 0;
+    ecs_entity_t component = define_vec_member_component(world, &vector_type);
+
+    ecs_entity_t e = ecs_new(world);
+    VecMember *v = ecs_ensure_id(world, e, component, sizeof(VecMember));
+    test_assert(v != NULL);
+    ecs_vec_init_t(NULL, &v->values, ecs_i32_t, 2);
+    ecs_vec_append_t(NULL, &v->values, ecs_i32_t)[0] = 10;
+    ecs_vec_append_t(NULL, &v->values, ecs_i32_t)[0] = 20;
+
+    ecs_vec_t owned = v->values;
+
+    ecs_remove_id(world, e, component);
+    test_assert(!ecs_has_id(world, e, component));
+
+    test_int(owned.count, 2);
+    test_int(ecs_vec_get_t(&owned, ecs_i32_t, 0)[0], 10);
+    test_int(ecs_vec_get_t(&owned, ecs_i32_t, 1)[0], 20);
+
+    ecs_fini(world);
+
+    ecs_vec_fini_t(NULL, &owned, ecs_i32_t);
+}

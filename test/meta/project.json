@@ -174,7 +174,10 @@
                 "map_lifecycle",
                 "map_lifecycle_trivial_type",
                 "map_lifecycle_alloc_values",
-                "map_cmp_illegal"
+                "map_cmp_illegal",
+                "existing_struct_w_vector_member_no_hooks",
+                "existing_struct_w_vector_member_shallow_copy",
+                "existing_struct_w_vector_member_not_freed"
             ]
         }, {
             "id": "StructTypes",
