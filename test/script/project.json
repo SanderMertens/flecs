@@ -2764,7 +2764,15 @@
                 "eval_desc",
                 "managed_script_desc",
                 "managed_script_strict_errors",
-                "unknown_with_tag"
+                "unknown_with_tag",
+                "template_w_unknown_prop_type_w_default",
+                "template_w_unknown_prop_type_no_default",
+                "template_w_unknown_prop_type_in_for",
+                "template_w_unknown_prop_type_in_expr",
+                "template_w_unknown_prop_type_set_at_instantiate",
+                "template_w_unknown_const_type",
+                "const_w_unresolved_function_initializer",
+                "strict_unknown_prop_type_errors"
             ]
         }]
     }
