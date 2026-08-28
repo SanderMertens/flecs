@@ -7285,3 +7285,181 @@ void Reactivity_partial_component_in_two_non_exclusive_scopes(void) {
 
     ecs_fini(world);
 }
+
+static ecs_entity_t reactivity_sys_target = 0;
+static ecs_entity_t reactivity_sys_component = 0;
+static bool reactivity_sys_done = false;
+
+static void ReactivitySetFromSystem(ecs_iter_t *it) {
+    if (reactivity_sys_done) {
+        return;
+    }
+    reactivity_sys_done = true;
+    ecs_f32_t *ptr = ecs_ensure_id(it->world, reactivity_sys_target,
+        reactivity_sys_component, sizeof(ecs_f32_t));
+    ptr[0] = 30;
+    ecs_modified_id(it->world, reactivity_sys_target,
+        reactivity_sys_component);
+}
+
+static void ReactivitySetValueFromSystem(ecs_iter_t *it) {
+    if (reactivity_sys_done) {
+        return;
+    }
+    reactivity_sys_done = true;
+    ecs_f32_t value = 30;
+    ecs_set_id(it->world, reactivity_sys_target, reactivity_sys_component,
+        sizeof(ecs_f32_t), &value);
+}
+
+void Reactivity_component_ref_set_from_system_reevaluates(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "child { Position: {source[Mass].value, 0} }"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t child = ecs_lookup(world, "child");
+    test_assert(child != 0);
+    const Position *p = ecs_get_id(world, child, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+
+    reactivity_sys_target = source;
+    reactivity_sys_component = mass;
+    reactivity_sys_done = false;
+    ECS_SYSTEM(world, ReactivitySetFromSystem, EcsOnUpdate, 0);
+
+    ecs_progress(world, 0);
+    ecs_progress(world, 0);
+
+    p = ecs_get_id(world, child, position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_prop_ensure_modified_from_system_reevaluates(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Panel {"
+            LINE "  prop width: f32 = 10"
+            LINE "  child { Position: {width, 0} }"
+            LINE "}"
+            LINE "Panel instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "Panel");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t child = ecs_lookup(world, "instance.child");
+    test_assert(panel != 0);
+    test_assert(instance != 0);
+    test_assert(child != 0);
+
+    const Position *p = ecs_get_id(world, child, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+
+    reactivity_sys_target = instance;
+    reactivity_sys_component = panel;
+    reactivity_sys_done = false;
+    ECS_SYSTEM(world, ReactivitySetFromSystem, EcsOnUpdate, 0);
+
+    ecs_progress(world, 0);
+    ecs_progress(world, 0);
+
+    const ecs_f32_t *props = ecs_get_id(world, instance, panel);
+    test_assert(props != NULL);
+    test_int(props[0], 30);
+
+    p = ecs_get_id(world, child, position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_prop_set_from_system_reevaluates(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Panel {"
+            LINE "  prop width: f32 = 10"
+            LINE "  child { Position: {width, 0} }"
+            LINE "}"
+            LINE "Panel instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t panel = ecs_lookup(world, "Panel");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t child = ecs_lookup(world, "instance.child");
+    test_assert(panel != 0);
+    test_assert(instance != 0);
+    test_assert(child != 0);
+
+    const Position *p = ecs_get_id(world, child, position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+
+    reactivity_sys_target = instance;
+    reactivity_sys_component = panel;
+    reactivity_sys_done = false;
+    ECS_SYSTEM(world, ReactivitySetValueFromSystem, EcsOnUpdate, 0);
+
+    ecs_progress(world, 0);
+    ecs_progress(world, 0);
+
+    const ecs_f32_t *props = ecs_get_id(world, instance, panel);
+    test_assert(props != NULL);
+    test_int(props[0], 30);
+
+    p = ecs_get_id(world, child, position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+
+    ecs_fini(world);
+}
