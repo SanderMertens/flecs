@@ -2714,6 +2714,14 @@ void Lenient_eval_desc(void);
 void Lenient_managed_script_desc(void);
 void Lenient_managed_script_strict_errors(void);
 void Lenient_unknown_with_tag(void);
+void Lenient_template_w_unknown_prop_type_w_default(void);
+void Lenient_template_w_unknown_prop_type_no_default(void);
+void Lenient_template_w_unknown_prop_type_in_for(void);
+void Lenient_template_w_unknown_prop_type_in_expr(void);
+void Lenient_template_w_unknown_prop_type_set_at_instantiate(void);
+void Lenient_template_w_unknown_const_type(void);
+void Lenient_const_w_unresolved_function_initializer(void);
+void Lenient_strict_unknown_prop_type_errors(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -13428,6 +13436,38 @@ bake_test_case Lenient_testcases[] = {
     {
         "unknown_with_tag",
         Lenient_unknown_with_tag
+    },
+    {
+        "template_w_unknown_prop_type_w_default",
+        Lenient_template_w_unknown_prop_type_w_default
+    },
+    {
+        "template_w_unknown_prop_type_no_default",
+        Lenient_template_w_unknown_prop_type_no_default
+    },
+    {
+        "template_w_unknown_prop_type_in_for",
+        Lenient_template_w_unknown_prop_type_in_for
+    },
+    {
+        "template_w_unknown_prop_type_in_expr",
+        Lenient_template_w_unknown_prop_type_in_expr
+    },
+    {
+        "template_w_unknown_prop_type_set_at_instantiate",
+        Lenient_template_w_unknown_prop_type_set_at_instantiate
+    },
+    {
+        "template_w_unknown_const_type",
+        Lenient_template_w_unknown_const_type
+    },
+    {
+        "const_w_unresolved_function_initializer",
+        Lenient_const_w_unresolved_function_initializer
+    },
+    {
+        "strict_unknown_prop_type_errors",
+        Lenient_strict_unknown_prop_type_errors
     }
 };
 
@@ -13590,7 +13630,7 @@ static bake_test_suite suites[] = {
         "Lenient",
         NULL,
         NULL,
-        23,
+        31,
         Lenient_testcases
     }
 };

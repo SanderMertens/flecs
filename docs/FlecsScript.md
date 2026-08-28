@@ -2029,6 +2029,7 @@ In lenient mode the following applies:
 - A value assigned to an unresolved component, or to a component without reflection data, is parsed and discarded, including nested `{}` and `[]` blocks.
 - An unknown member in the value of a known component is parsed and discarded. The members that are known are still assigned.
 - An expression that uses an unresolved function, method, identifier or variable is discarded. When the expression belongs to a statement (such as the collection of a `for` statement) the statement is skipped, which means a `for` over an unresolvable collection iterates zero times.
+- A `prop`, `mut` or `const` declaration with an unresolved type is discarded, with or without a default value. The variable is not declared, which means later uses of it inside the template are treated as unresolved identifiers and are skipped like any other unresolved expression. A template `prop` that is dropped is not a member of the template, so assigning it when the template is instantiated is skipped as an unknown member.
 - References that are structural still cause an error. This includes `IsA` (inheritance) references, so `my_entity : MyPrefab {}` still fails when `MyPrefab` cannot be resolved.
 
 Every name that is skipped is reported once per script with `ecs_warn`, no matter how many times it occurs in the script.

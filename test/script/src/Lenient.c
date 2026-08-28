@@ -630,3 +630,314 @@ void Lenient_unknown_with_tag(void) {
 
     ecs_fini(world);
 }
+
+void Lenient_template_w_unknown_prop_type_w_default(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template CityWall {"
+    LINE "  prop gates: WallGates = []"
+    LINE "  prop height: f32 = 5"
+    LINE "  Position: {x: 1, y: $height}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  CityWall: {height: 7}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "WallGates") == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 7);
+
+    ecs_fini(world);
+}
+
+void Lenient_template_w_unknown_prop_type_no_default(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template CityWall {"
+    LINE "  prop gates: WallGates"
+    LINE "  prop height: f32 = 5"
+    LINE "  Position: {x: 1, y: $height}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  CityWall: {height: 7}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "WallGates") == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 7);
+
+    ecs_fini(world);
+}
+
+void Lenient_template_w_unknown_prop_type_in_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template CityWall {"
+    LINE "  prop gates: WallGates = []"
+    LINE "  prop height: f32 = 5"
+    LINE "  for g in gates {"
+    LINE "    gate {"
+    LINE "      Position: {x: g.x, y: g.y}"
+    LINE "    }"
+    LINE "  }"
+    LINE "  Position: {x: 1, y: $height}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  CityWall: {height: 7}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "WallGates") == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_lookup_child(world, e, "gate") == 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 7);
+
+    ecs_fini(world);
+}
+
+void Lenient_template_w_unknown_prop_type_in_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template CityWall {"
+    LINE "  prop gates: WallGates = []"
+    LINE "  prop height: f32 = 5"
+    LINE "  child {"
+    LINE "    Position: {x: $gates.count, y: 2}"
+    LINE "  }"
+    LINE "  Position: {x: 1, y: $height}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  CityWall: {height: 7}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "WallGates") == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_child(world, e, "child");
+    test_assert(child != 0);
+
+    const Position *cp = ecs_get(world, child, Position);
+    if (cp) {
+        test_int(cp->x, 0);
+        test_int(cp->y, 0);
+    }
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 7);
+
+    ecs_fini(world);
+}
+
+void Lenient_template_w_unknown_prop_type_set_at_instantiate(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template CityWall {"
+    LINE "  prop gates: WallGates = []"
+    LINE "  prop height: f32 = 5"
+    LINE "  Position: {x: 1, y: $height}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  CityWall: {gates: [{x: 1}], height: 7}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "WallGates") == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 7);
+
+    ecs_fini(world);
+}
+
+void Lenient_template_w_unknown_const_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template CityWall {"
+    LINE "  prop height: f32 = 5"
+    LINE "  const gates: WallGates = []"
+    LINE "  Position: {x: 1, y: $height}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  CityWall: {height: 7}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "WallGates") == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 7);
+
+    ecs_fini(world);
+}
+
+void Lenient_const_w_unresolved_function_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const gates = wayfinding.points(4)"
+    LINE "e {"
+    LINE "  Position: {x: 1, y: 2}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Lenient_strict_unknown_prop_type_errors(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template CityWall {"
+    LINE "  prop gates: WallGates = []"
+    LINE "  prop height: f32 = 5"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  CityWall: {height: 7}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}

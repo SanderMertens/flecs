@@ -788,6 +788,9 @@ static int flecs_script_dep_node(
     case EcsAstProp:
     case EcsAstMut: {
         ecs_script_var_node_t *n = (ecs_script_var_node_t*)node;
+        if (node->skip) {
+            break;
+        }
         if (!ctx->template ||
             ctx->member >= ecs_vec_count(&ctx->template->members))
         {
@@ -809,6 +812,9 @@ static int flecs_script_dep_node(
     case EcsAstExportConst:
     case EcsAstExportMut: {
         ecs_script_var_node_t *n = (ecs_script_var_node_t*)node;
+        if (node->skip) {
+            break;
+        }
         bool no_deps = ctx->no_deps;
         ctx->no_deps = no_deps || node->kind == EcsAstExportMut;
         int dep_result = flecs_script_dep_expr(
