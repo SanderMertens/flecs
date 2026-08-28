@@ -495,7 +495,9 @@ void* flecs_defer_ensure(
     ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
         "bad size for component in ensure");
 
-    if (!ptr.ptr) {
+    bool use_cmd_storage = !ptr.ptr || ti->hooks.on_replace != NULL;
+
+    if (use_cmd_storage) {
         void *existing = flecs_defer_find_cmd_value(stage, entity, id);
         if (existing) {
             return existing;
@@ -507,27 +509,33 @@ void* flecs_defer_ensure(
     cmd->id = id;
 
     ecs_table_t *table = r->table;
-    if (!ptr.ptr) {
+    if (use_cmd_storage) {
         ecs_stack_t *stack = &stage->cmd->stack;
+        void *value = flecs_stack_alloc(stack, size, ti->alignment);
         cmd->kind = EcsCmdEnsure;
         cmd->is._1.size = size;
-        cmd->is._1.value = ptr.ptr = 
-            flecs_stack_alloc(stack, size, ti->alignment);
+        cmd->is._1.value = value;
 
-        /* Check if entity inherits component */
-        void *base = NULL;
-        if (table && (table->flags & EcsTableHasIsA)) {
-            ecs_component_record_t *cr = flecs_components_get(world, id);
-            base = flecs_get_base_component(world, table, id, cr, 0);
-        }
-
-        if (!base) {
-            /* Normal ctor */
-            flecs_type_info_ctor(ptr.ptr, 1, ti);
+        if (ptr.ptr) {
+            flecs_type_info_copy_ctor(value, ptr.ptr, 1, ti);
         } else {
-            /* Override */
-            flecs_type_info_copy_ctor(ptr.ptr, base, 1, ti);
+            /* Check if entity inherits component */
+            void *base = NULL;
+            if (table && (table->flags & EcsTableHasIsA)) {
+                ecs_component_record_t *cr = flecs_components_get(world, id);
+                base = flecs_get_base_component(world, table, id, cr, 0);
+            }
+
+            if (!base) {
+                /* Normal ctor */
+                flecs_type_info_ctor(value, 1, ti);
+            } else {
+                /* Override */
+                flecs_type_info_copy_ctor(value, base, 1, ti);
+            }
         }
+
+        ptr.ptr = value;
     } else {
         cmd->kind = EcsCmdAdd;
     }

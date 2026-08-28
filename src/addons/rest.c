@@ -421,21 +421,34 @@ static bool flecs_rest_put_component(
         return true;
     }
 
-    void *ptr = ecs_ensure_id(world, e, id, flecs_ito(size_t, ti->size));
+    void *ptr = ecs_os_malloc(ti->size);
     if (!ptr) {
         flecs_reply_error(reply, "failed to create component '%s'", component);
         reply->code = 500;
         return true;
     }
 
-    ecs_entity_t type = ti->component;
-    if (!ecs_ptr_from_json(world, type, ptr, data, NULL)) {
-        flecs_reply_error(reply, "invalid value for component '%s'", component);
-        reply->code = 400;
-        return true;
+    const void *cur = ecs_get_id(world, e, id);
+    if (cur) {
+        flecs_type_info_copy_ctor(ptr, cur, 1, ti);
+    } else {
+        ecs_os_memset(ptr, 0, ti->size);
+        flecs_type_info_ctor(ptr, 1, ti);
     }
 
-    ecs_modified_id(world, e, id);
+    ecs_entity_t type = ti->component;
+    bool valid = ecs_ptr_from_json(world, type, ptr, data, NULL) != NULL;
+    if (valid) {
+        ecs_set_id(world, e, id, flecs_ito(size_t, ti->size), ptr);
+    }
+
+    flecs_type_info_dtor(ptr, 1, ti);
+    ecs_os_free(ptr);
+
+    if (!valid) {
+        flecs_reply_error(reply, "invalid value for component '%s'", component);
+        reply->code = 400;
+    }
 
     return true;
 }
