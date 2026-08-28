@@ -1310,12 +1310,14 @@ static int flecs_expr_initializer_visit_type(
 
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     int32_t i, count = ecs_vec_count(&node->elements);
+    bool prev_removed = false;
     for (i = 0; i < count; i ++) {
-        if (i) {
+        if (i && !prev_removed) {
             if (ecs_meta_next(cur)) { /* , */
                 goto error;
             }
         }
+        prev_removed = false;
 
         ecs_expr_initializer_element_t *elem = &elems[i];
         if (!elem->value) {
@@ -1358,9 +1360,32 @@ static int flecs_expr_initializer_visit_type(
         }
 
         if (elem->member) {
-            if (ecs_meta_dotmember(cur, elem->member)) { /* x: */
-                flecs_expr_visit_error(script, node, "cannot resolve member");
-                goto error;
+            bool lenient = flecs_script_is_lenient(script);
+            ecs_meta_cursor_t member_cur = *cur;
+            int prev_log = lenient ? ecs_log_set_level(-4) : 0;
+            int dotmember_result = ecs_meta_dotmember(cur, elem->member);
+            if (lenient) {
+                ecs_log_set_level(prev_log);
+            }
+            if (dotmember_result) { /* x: */
+                if (!lenient) {
+                    flecs_expr_visit_error(script, node,
+                        "cannot resolve member");
+                    goto error;
+                }
+
+                *cur = member_cur;
+                flecs_script_lenient_warn(script, elem->member,
+                    "skipped value for unresolved member");
+                flecs_expr_visit_free(script, elem->key);
+                flecs_expr_visit_free(script, elem->value);
+                ecs_vec_remove_ordered_t(&node->elements,
+                    ecs_expr_initializer_element_t, i);
+                elems = ecs_vec_first(&node->elements);
+                count --;
+                i --;
+                prev_removed = true;
+                continue;
             }
         }
 
@@ -2259,9 +2284,17 @@ static int flecs_expr_function_visit_type(
                 goto try_function;
             }
 
+            if (flecs_script_is_lenient(script) &&
+                flecs_expr_unresolved_ref(script, desc,
+                    (ecs_expr_node_t*)node, node->function_name,
+                    FlecsScriptUnresolvedEntity))
+            {
+                goto error;
+            }
+
             char *type_str = ecs_get_path(world, node->left->type);
-            flecs_expr_visit_error(script, node, 
-                "unresolved method identifier '%s' for type '%s'", 
+            flecs_expr_visit_error(script, node,
+                "unresolved method identifier '%s' for type '%s'",
                 node->function_name, type_str);
             ecs_os_free(type_str);
             goto error;
@@ -2295,9 +2328,15 @@ try_function:
             node->function_name, FlecsScriptLookupEntity, &symbol) ||
             !symbol.entity)
         {
-            flecs_expr_visit_error(script, node,
-                "unresolved function identifier '%s'",
-                node->function_name);
+            if (!flecs_script_is_lenient(script) ||
+                !flecs_expr_unresolved_ref(script, desc,
+                    (ecs_expr_node_t*)node, node->function_name,
+                    FlecsScriptUnresolvedEntity))
+            {
+                flecs_expr_visit_error(script, node,
+                    "unresolved function identifier '%s'",
+                    node->function_name);
+            }
             goto error;
         }
         ecs_entity_t func = symbol.entity;

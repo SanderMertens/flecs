@@ -174,11 +174,21 @@ struct ecs_script_impl_t {
     ecs_vec_t for_slots;
     ecs_vec_t unresolved_refs;
     ecs_vec_t unresolved_component_refs;
+    ecs_vec_t lenient_warned; /* vec<const char*> */
     int32_t input_count;
     int32_t visit;
     bool evaluating;
     bool compiled;
+    bool lenient;
 };
+
+#define flecs_script_is_lenient(script)\
+    (flecs_script_impl(script)->lenient)
+
+void flecs_script_lenient_warn(
+    ecs_script_t *script,
+    const char *name,
+    const char *msg);
 
 typedef struct ecs_function_calldata_t {
     ecs_entity_t function;

@@ -38,6 +38,8 @@ typedef struct ecs_script_node_t {
     const char *pos;
     uint64_t input;
     uint64_t direct_input;
+
+    bool skip;
 } ecs_script_node_t;
 
 struct ecs_script_scope_t {

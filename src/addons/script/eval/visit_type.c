@@ -344,6 +344,26 @@ static int flecs_script_type_resolve_type(
     return 0;
 }
 
+static void flecs_script_lenient_skip_refs(
+    ecs_script_type_visitor_t *t,
+    int32_t prev_unresolved)
+{
+    ecs_script_impl_t *impl = t->v->base.script;
+    int32_t i, count = ecs_vec_count(&impl->unresolved_refs);
+    ecs_script_unresolved_ref_t *refs = ecs_vec_first(&impl->unresolved_refs);
+    for (i = prev_unresolved; i < count; i ++) {
+        flecs_script_lenient_warn(&impl->pub, refs[i].name,
+            "skipped expression with unresolved reference");
+    }
+
+    ecs_vec_set_count_t(NULL, &impl->unresolved_refs,
+        ecs_script_unresolved_ref_t, prev_unresolved);
+
+    if (t->stmt_node) {
+        t->stmt_node->skip = true;
+    }
+}
+
 static int flecs_script_type_check_expr(
     ecs_script_type_visitor_t *t,
     ecs_expr_node_t **expr_ptr,
@@ -369,6 +389,9 @@ static int flecs_script_type_check_expr(
             if (ecs_vec_count(&v->base.script->unresolved_refs) >
                 prev_unresolved)
             {
+                if (v->base.script->lenient) {
+                    flecs_script_lenient_skip_refs(t, prev_unresolved);
+                }
                 return 1;
             }
             return -1;
@@ -416,6 +439,21 @@ static int flecs_script_type_check_expr(
     return 0;
 }
 
+static bool flecs_script_lenient_can_skip(
+    ecs_script_node_kind_t kind)
+{
+    return kind == EcsAstTag || kind == EcsAstComponent ||
+        kind == EcsAstWithTag || kind == EcsAstWithComponent;
+}
+
+static void flecs_script_lenient_drop_expr(
+    ecs_script_type_visitor_t *t,
+    ecs_expr_node_t **expr)
+{
+    flecs_expr_visit_free(&t->v->base.script->pub, *expr);
+    *expr = NULL;
+}
+
 static int flecs_script_type_id_elem(
     ecs_script_type_visitor_t *t,
     ecs_script_id_t *id,
@@ -445,9 +483,19 @@ static int flecs_script_type_id_elem(
             ecs_os_free(parent_str);
             return -1;
         }
+        ecs_script_node_kind_t node_kind = ((ecs_script_node_t*)node)->kind;
+        if (flecs_script_is_lenient(&t->v->base.script->pub) &&
+            flecs_script_lenient_can_skip(node_kind) &&
+            first != EcsIsA && id->first_eval != EcsIsA)
+        {
+            flecs_script_lenient_warn(&t->v->base.script->pub, name,
+                "skipped statement with unresolved component");
+            ((ecs_script_node_t*)node)->skip = true;
+            return 1;
+        }
+
         flecs_script_unresolved_kind_t ref_kind = FlecsScriptUnresolvedEntity;
         if (!id->second) {
-            ecs_script_node_kind_t node_kind = ((ecs_script_node_t*)node)->kind;
             if (node_kind == EcsAstComponent ||
                 node_kind == EcsAstWithComponent)
             {
@@ -878,8 +926,16 @@ static int flecs_script_type_component(
         return result == 1 ? 0 : result;
     }
 
+    bool lenient = t->v->base.script->lenient;
+
     ecs_entity_t component_type = flecs_script_type_component_type(t, node);
     if (!component_type) {
+        if (lenient) {
+            flecs_script_lenient_warn(&t->v->base.script->pub, node->id.first,
+                "skipped value for component without reflection data");
+            flecs_script_lenient_drop_expr(t, &node->expr);
+            return 0;
+        }
         flecs_script_eval_error(t->v, node,
             "unresolved component type '%s'", node->id.first);
         return -1;
@@ -887,6 +943,12 @@ static int flecs_script_type_component(
     const ecs_type_info_t *ti = ecs_get_type_info(
         t->v->world, component_type);
     if (!ti) {
+        if (lenient) {
+            flecs_script_lenient_warn(&t->v->base.script->pub, node->id.first,
+                "skipped value for component without reflection data");
+            flecs_script_lenient_drop_expr(t, &node->expr);
+            return 0;
+        }
         flecs_script_eval_error(t->v, node,
             "cannot set value of '%s': not a component", node->id.first);
         return -1;
@@ -1825,7 +1887,11 @@ int flecs_script_type_scope(
         ecs_assert(v->base.depth < ECS_SCRIPT_VISIT_MAX_DEPTH,
             ECS_INTERNAL_ERROR, NULL);
         v->base.nodes[v->base.depth ++] = stmts[i];
+        ecs_script_node_t *old_stmt = t->stmt_node;
+        t->stmt_node = stmts[i];
+        stmts[i]->skip = false;
         result = flecs_script_type_node(t, stmts[i], allow_type);
+        t->stmt_node = old_stmt;
         v->base.depth --;
         if (result) {
             break;

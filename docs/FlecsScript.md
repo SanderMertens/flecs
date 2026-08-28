@@ -1992,3 +1992,54 @@ if b {
   item { Position: {y: 20} }
 }
 ```
+
+### Lenient loading
+By default a script fails when it uses a component, tag, member or function that is not registered in the world. This makes it hard for generic tooling (asset browsers, editors, viewers) to load the scripts of an application without also loading the application code that registers its components.
+
+Lenient loading relaxes this. It can be enabled for a world with `ecs_script_set_lenient`:
+
+```cpp
+ecs_script_set_lenient(world, true);
+
+if (ecs_script_run_file(world, "my_script.flecs")) {
+  // error
+}
+```
+
+It can also be enabled for a single script with the `lenient` member of `ecs_script_eval_desc_t`:
+
+```cpp
+ecs_script_eval_desc_t desc = { .lenient = true };
+ecs_script_t *script = ecs_script_parse(
+  world, "my_script_name", code, &desc, NULL);
+```
+
+and for a managed script with the `lenient` member of `ecs_script_desc_t`:
+
+```cpp
+ecs_entity_t s = ecs_script(world, {
+  .filename = "my_script.flecs",
+  .lenient = true
+});
+```
+
+In lenient mode the following applies:
+
+- A statement that adds an unresolved component or tag to an entity is parsed and discarded. Nothing is created in the world for the unknown name, so a later registration of the real component is unaffected.
+- A value assigned to an unresolved component, or to a component without reflection data, is parsed and discarded, including nested `{}` and `[]` blocks.
+- An unknown member in the value of a known component is parsed and discarded. The members that are known are still assigned.
+- An expression that uses an unresolved function, method, identifier or variable is discarded. When the expression belongs to a statement (such as the collection of a `for` statement) the statement is skipped, which means a `for` over an unresolvable collection iterates zero times.
+- References that are structural still cause an error. This includes `IsA` (inheritance) references, so `my_entity : MyPrefab {}` still fails when `MyPrefab` cannot be resolved.
+
+Every name that is skipped is reported once per script with `ecs_warn`, no matter how many times it occurs in the script.
+
+The entities in a script are still created in lenient mode, which means that hierarchies, template instances and the values of components that _are_ registered are loaded as usual:
+
+```c
+// Loaded without the game module, with lenient loading enabled
+my_lamppost {
+  Position: {x: 10, y: 20} // registered, assigned
+  Nightlight: {intensity: 3} // not registered, skipped
+  HoloCycle // not registered, skipped
+}
+```

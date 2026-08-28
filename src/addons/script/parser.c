@@ -1591,8 +1591,6 @@ ecs_script_t* ecs_script_parse(
     const ecs_script_eval_desc_t *desc,
     ecs_script_eval_result_t *result)
 {
-    (void)desc;
-
     if (result) {
         flecs_log_capture_push(true);
     }
@@ -1601,6 +1599,10 @@ ecs_script_t* ecs_script_parse(
     ecs_script_t *script = flecs_script_parse_init(
         world, name, code, &parser);
     ecs_script_impl_t *impl = flecs_script_impl(script);
+
+    if (desc && desc->lenient) {
+        impl->lenient = true;
+    }
 
     /* Start parsing code */
     const char *pos = script->code;
