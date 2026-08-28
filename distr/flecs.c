@@ -5847,7 +5847,9 @@ void* flecs_defer_ensure(
     ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
         "bad size for component in ensure");
 
-    if (!ptr.ptr) {
+    bool use_cmd_storage = !ptr.ptr || ti->hooks.on_replace != NULL;
+
+    if (use_cmd_storage) {
         void *existing = flecs_defer_find_cmd_value(stage, entity, id);
         if (existing) {
             return existing;
@@ -5859,27 +5861,33 @@ void* flecs_defer_ensure(
     cmd->id = id;
 
     ecs_table_t *table = r->table;
-    if (!ptr.ptr) {
+    if (use_cmd_storage) {
         ecs_stack_t *stack = &stage->cmd->stack;
+        void *value = flecs_stack_alloc(stack, size, ti->alignment);
         cmd->kind = EcsCmdEnsure;
         cmd->is._1.size = size;
-        cmd->is._1.value = ptr.ptr = 
-            flecs_stack_alloc(stack, size, ti->alignment);
+        cmd->is._1.value = value;
 
-        /* Check if entity inherits component */
-        void *base = NULL;
-        if (table && (table->flags & EcsTableHasIsA)) {
-            ecs_component_record_t *cr = flecs_components_get(world, id);
-            base = flecs_get_base_component(world, table, id, cr, 0);
-        }
-
-        if (!base) {
-            /* Normal ctor */
-            flecs_type_info_ctor(ptr.ptr, 1, ti);
+        if (ptr.ptr) {
+            flecs_type_info_copy_ctor(value, ptr.ptr, 1, ti);
         } else {
-            /* Override */
-            flecs_type_info_copy_ctor(ptr.ptr, base, 1, ti);
+            /* Check if entity inherits component */
+            void *base = NULL;
+            if (table && (table->flags & EcsTableHasIsA)) {
+                ecs_component_record_t *cr = flecs_components_get(world, id);
+                base = flecs_get_base_component(world, table, id, cr, 0);
+            }
+
+            if (!base) {
+                /* Normal ctor */
+                flecs_type_info_ctor(value, 1, ti);
+            } else {
+                /* Override */
+                flecs_type_info_copy_ctor(value, base, 1, ti);
+            }
         }
+
+        ptr.ptr = value;
     } else {
         cmd->kind = EcsCmdAdd;
     }
@@ -9518,17 +9526,18 @@ void* ecs_ensure_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "ensure");
     flecs_assert_component_valid(world, entity, component, "ensure");
-    ecs_dbg_assert(!flecs_component_has_on_replace(world, component, "ensure"),
-        ECS_INVALID_PARAMETER,
-        "cannot call ensure() for component '%s' which has an on_replace hook "
-        "(use set()/assign())",
-            flecs_errstr(ecs_id_str(world, component)));
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_cmd(stage)) {
         return flecs_defer_ensure(
             world, stage, entity, component, flecs_uto(int32_t, size));
     }
+
+    ecs_dbg_assert(!flecs_component_has_on_replace(world, component, "ensure"),
+        ECS_INVALID_PARAMETER,
+        "cannot call ensure() for component '%s' which has an on_replace hook "
+        "(use set()/assign())",
+            flecs_errstr(ecs_id_str(world, component)));
 
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -27692,21 +27701,34 @@ static bool flecs_rest_put_component(
         return true;
     }
 
-    void *ptr = ecs_ensure_id(world, e, id, flecs_ito(size_t, ti->size));
+    void *ptr = ecs_os_malloc(ti->size);
     if (!ptr) {
         flecs_reply_error(reply, "failed to create component '%s'", component);
         reply->code = 500;
         return true;
     }
 
-    ecs_entity_t type = ti->component;
-    if (!ecs_ptr_from_json(world, type, ptr, data, NULL)) {
-        flecs_reply_error(reply, "invalid value for component '%s'", component);
-        reply->code = 400;
-        return true;
+    const void *cur = ecs_get_id(world, e, id);
+    if (cur) {
+        flecs_type_info_copy_ctor(ptr, cur, 1, ti);
+    } else {
+        ecs_os_memset(ptr, 0, ti->size);
+        flecs_type_info_ctor(ptr, 1, ti);
     }
 
-    ecs_modified_id(world, e, id);
+    ecs_entity_t type = ti->component;
+    bool valid = ecs_ptr_from_json(world, type, ptr, data, NULL) != NULL;
+    if (valid) {
+        ecs_set_id(world, e, id, flecs_ito(size_t, ti->size), ptr);
+    }
+
+    flecs_type_info_dtor(ptr, 1, ti);
+    ecs_os_free(ptr);
+
+    if (!valid) {
+        flecs_reply_error(reply, "invalid value for component '%s'", component);
+        reply->code = 400;
+    }
 
     return true;
 }

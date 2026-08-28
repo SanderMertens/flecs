@@ -1704,17 +1704,18 @@ void* ecs_ensure_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "ensure");
     flecs_assert_component_valid(world, entity, component, "ensure");
-    ecs_dbg_assert(!flecs_component_has_on_replace(world, component, "ensure"),
-        ECS_INVALID_PARAMETER,
-        "cannot call ensure() for component '%s' which has an on_replace hook "
-        "(use set()/assign())",
-            flecs_errstr(ecs_id_str(world, component)));
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_cmd(stage)) {
         return flecs_defer_ensure(
             world, stage, entity, component, flecs_uto(int32_t, size));
     }
+
+    ecs_dbg_assert(!flecs_component_has_on_replace(world, component, "ensure"),
+        ECS_INVALID_PARAMETER,
+        "cannot call ensure() for component '%s' which has an on_replace hook "
+        "(use set()/assign())",
+            flecs_errstr(ecs_id_str(world, component)));
 
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
