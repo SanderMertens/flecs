@@ -1138,12 +1138,16 @@ int flecs_script_template_eval_var(
         });
     }
 
-    ecs_entity_t mbr = ecs_entity(v->world, {
+    if (ecs_struct_add_member(v->world, vars->type, &(ecs_member_t){
         .name = node->name,
-        .parent = vars->type
-    });
-
-    ecs_set(v->world, mbr, EcsMember, { .type = var->value.type });
+        .type = var->value.type
+    }))
+    {
+        flecs_script_eval_error(v, node,
+            "failed to add %s '%s' to template type",
+            mut ? "mut" : "prop", node->name);
+        return -1;
+    }
 
     ecs_script_template_member_t *member = ecs_vec_append_t(
         &v->base.script->allocator, &template->members,

@@ -941,6 +941,7 @@ void Template_template_no_props(void);
 void Template_template_newline_before_scope(void);
 void Template_template_prop(void);
 void Template_template_prop_space_colon(void);
+void Template_template_props_no_member_entities(void);
 void Template_template_2_props(void);
 void Template_template_w_using(void);
 void Template_template_instance_w_default_values(void);
@@ -2646,6 +2647,9 @@ void Reactivity_template_i32_prop_change_keeps_for_entities(void);
 void Reactivity_template_prop_change_keeps_for_entities_in_child_scope(void);
 void Reactivity_template_for_range_change_keeps_named_recreates_anonymous(void);
 void Reactivity_for_keyed_template_instance_survives_collection_change(void);
+void Reactivity_component_ref_set_from_system_reevaluates(void);
+void Reactivity_template_prop_ensure_modified_from_system_reevaluates(void);
+void Reactivity_template_prop_set_from_system_reevaluates(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -6427,6 +6431,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_prop_space_colon",
         Template_template_prop_space_colon
+    },
+    {
+        "template_props_no_member_entities",
+        Template_template_props_no_member_entities
     },
     {
         "template_2_props",
@@ -13175,6 +13183,18 @@ bake_test_case Reactivity_testcases[] = {
     {
         "for_keyed_template_instance_survives_collection_change",
         Reactivity_for_keyed_template_instance_survives_collection_change
+    },
+    {
+        "component_ref_set_from_system_reevaluates",
+        Reactivity_component_ref_set_from_system_reevaluates
+    },
+    {
+        "template_prop_ensure_modified_from_system_reevaluates",
+        Reactivity_template_prop_ensure_modified_from_system_reevaluates
+    },
+    {
+        "template_prop_set_from_system_reevaluates",
+        Reactivity_template_prop_set_from_system_reevaluates
     }
 };
 
@@ -13531,7 +13551,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        138,
+        139,
         Template_testcases
     },
     {
@@ -13621,7 +13641,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        121,
+        124,
         Reactivity_testcases
     },
     {

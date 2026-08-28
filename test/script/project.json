@@ -955,6 +955,7 @@
                 "template_newline_before_scope",
                 "template_prop",
                 "template_prop_space_colon",
+                "template_props_no_member_entities",
                 "template_2_props",
                 "template_w_using",
                 "template_instance_w_default_values",
