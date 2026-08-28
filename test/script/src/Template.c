@@ -6059,3 +6059,73 @@ void Template_template_prop_struct_member_expr_in_struct_literal(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_props_no_member_entities(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop width: i32 = 10"
+    LINE "  mut height: f32 = 20"
+    LINE "}"
+    LINE "Tree ent(width: 30)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 1);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_i32_t));
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->member, 0);
+
+    ecs_entity_t muts = ecs_lookup_child(world, tree, "mut");
+    test_assert(muts != 0);
+
+    const EcsStruct *muts_st = ecs_get(world, muts, EcsStruct);
+    test_assert(muts_st != NULL);
+    test_int(muts_st->members.count, 1);
+    test_str(ecs_vec_get_t(&muts_st->members, ecs_member_t, 0)->name, "height");
+    test_uint(ecs_vec_get_t(&muts_st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_uint(ecs_vec_get_t(&muts_st->members, ecs_member_t, 0)->member, 0);
+
+    test_assert(ecs_lookup_child(world, tree, "width") == 0);
+    test_assert(ecs_lookup_child(world, muts, "height") == 0);
+
+    ecs_iter_t it = ecs_children(world, tree);
+    while (ecs_children_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(!ecs_has(world, it.entities[i], EcsMember));
+        }
+    }
+
+    it = ecs_children(world, muts);
+    while (ecs_children_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(!ecs_has(world, it.entities[i], EcsMember));
+        }
+    }
+
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    test_assert(ent != 0);
+
+    const void *ptr = ecs_get_id(world, ent, tree);
+    test_assert(ptr != NULL);
+
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_str(str, "{width: 30}");
+    ecs_os_free(str);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, tree, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "width"), 0);
+    test_int(ecs_meta_get_int(&cur), 30);
+    test_int(ecs_meta_pop(&cur), 0);
+
+    ecs_fini(world);
+}
