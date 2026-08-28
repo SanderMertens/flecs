@@ -92,7 +92,55 @@ ecs_script_t* flecs_script_new(
         ecs_script_unresolved_ref_t, 0);
     ecs_vec_init_t(NULL, &result->unresolved_component_refs,
         ecs_script_unresolved_component_ref_t, 0);
+    ecs_vec_init_t(NULL, &result->lenient_warned, char*, 0);
+    result->lenient = ecs_script_get_lenient(world);
     return &result->pub;
+}
+
+void ecs_script_set_lenient(
+    ecs_world_t *world,
+    bool lenient)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_world_t *w = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
+    if (lenient) {
+        w->flags |= EcsWorldScriptLenient;
+    } else {
+        w->flags &= ~(ecs_flags32_t)EcsWorldScriptLenient;
+    }
+error:
+    return;
+}
+
+bool ecs_script_get_lenient(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_world_t *w = ecs_get_world(world);
+    return (w->flags & EcsWorldScriptLenient) != 0;
+error:
+    return false;
+}
+
+void flecs_script_lenient_warn(
+    ecs_script_t *script,
+    const char *name,
+    const char *msg)
+{
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    char **names = ecs_vec_first(&impl->lenient_warned);
+    int32_t i, count = ecs_vec_count(&impl->lenient_warned);
+    for (i = 0; i < count; i ++) {
+        if (!ecs_os_strcmp(names[i], name)) {
+            return;
+        }
+    }
+
+    ecs_vec_append_t(NULL, &impl->lenient_warned, char*)[0] =
+        ecs_os_strdup(name);
+
+    ecs_warn("%s: %s '%s'", impl->pub.name ? impl->pub.name : "script",
+        msg, name);
 }
 
 void flecs_script_pos_to_line_col(
@@ -219,6 +267,14 @@ void ecs_script_free(
             ecs_script_unresolved_ref_t);
         ecs_vec_fini_t(NULL, &impl->unresolved_component_refs,
             ecs_script_unresolved_component_ref_t);
+        {
+            char **warned = ecs_vec_first(&impl->lenient_warned);
+            int32_t wi, wcount = ecs_vec_count(&impl->lenient_warned);
+            for (wi = 0; wi < wcount; wi ++) {
+                ecs_os_free(warned[wi]);
+            }
+            ecs_vec_fini_t(NULL, &impl->lenient_warned, char*);
+        }
         flecs_free(&impl->allocator,
             impl->token_buffer_size, impl->token_buffer);
         flecs_allocator_fini(&impl->allocator);
@@ -286,7 +342,8 @@ int flecs_script_update(
     ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
     flecs_script_runtime_error_reset(runtime);
 
-    s->script = ecs_script_parse(world, name, code, NULL, &eval_result);
+    ecs_script_eval_desc_t parse_desc = { .lenient = s->lenient };
+    s->script = ecs_script_parse(world, name, code, &parse_desc, &eval_result);
     if (s->script != NULL) {
         flecs_script_impl(s->script)->entity = e;
     } else {
@@ -413,6 +470,11 @@ ecs_entity_t ecs_script_init(
         } else {
             e = ecs_new(world);
         }
+    }
+
+    if (desc->lenient) {
+        EcsScript *comp = ecs_ensure(world, e, EcsScript);
+        comp->lenient = true;
     }
 
     script = desc->code;

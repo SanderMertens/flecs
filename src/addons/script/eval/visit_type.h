@@ -26,6 +26,8 @@ typedef struct ecs_script_type_visitor_t {
     ecs_script_eval_visitor_t *v;
     ecs_vec_t tables;
     ecs_vec_t entities;
+
+    ecs_script_node_t *stmt_node;
     int32_t table;
     int32_t control_depth;
     int32_t for_depth;

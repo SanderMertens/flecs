@@ -1695,6 +1695,10 @@ int flecs_script_eval_node(
     ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(v->template == NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (node->skip) {
+        return 0;
+    }
+
     switch(node->kind) {
     case EcsAstTag:
         return flecs_script_eval_tag(
@@ -1919,6 +1923,9 @@ static bool flecs_script_stmt_run(
     ecs_script_eval_visitor_t *v,
     ecs_script_node_t *node)
 {
+    if (node->skip) {
+        return false;
+    }
     return v->force || flecs_script_stmt_support(node) ||
         ((node->input & v->input) != 0);
 }

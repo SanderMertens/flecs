@@ -472,6 +472,7 @@ extern "C" {
 #define EcsWorldMeasureSystemTime     (1u << 6)
 #define EcsWorldMultiThreaded         (1u << 7)
 #define EcsWorldFrameInProgress       (1u << 8)
+#define EcsWorldScriptLenient         (1u << 9)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// OS API flags

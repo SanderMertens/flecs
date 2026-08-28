@@ -2739,6 +2739,33 @@
                 "get_from_stage",
                 "get_struct_from_stage"
             ]
+        }, {
+            "id": "Lenient",
+            "testcases": [
+                "unknown_tag",
+                "unknown_component_w_value",
+                "unknown_component_w_nested_value",
+                "unknown_component_in_scope",
+                "unknown_pair",
+                "unknown_member_on_known_component",
+                "unknown_nested_member_on_known_component",
+                "unknown_function_in_expr",
+                "unknown_vector_in_for",
+                "unknown_function_in_for",
+                "warn_once_per_name",
+                "warn_per_distinct_name",
+                "strict_unknown_tag_errors",
+                "strict_unknown_member_errors",
+                "lenient_disabled_after_enable",
+                "no_placeholder_then_strict_load",
+                "template_w_unknown_component",
+                "template_child_w_unknown_component",
+                "isa_unresolved_errors",
+                "eval_desc",
+                "managed_script_desc",
+                "managed_script_strict_errors",
+                "unknown_with_tag"
+            ]
         }]
     }
 }

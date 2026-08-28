@@ -114,6 +114,7 @@ typedef struct EcsScript {
     ecs_script_template_t *template_;   /**< Only set for template scripts. */
     ecs_vec_t observers;                /**< Observers for referenced components. */
     ecs_vec_t dyn_observers;            /**< Observers for refs resolved at runtime. */
+    bool lenient;                       /**< Load script in lenient mode. */
 } EcsScript;
 
 /** Script function context. */
@@ -148,6 +149,11 @@ typedef struct ecs_script_parameter_t {
 /** Used with ecs_script_parse() and ecs_script_eval(). */
 typedef struct ecs_script_eval_desc_t {
     ecs_script_runtime_t *runtime; /**< Reusable runtime (optional). */
+
+    /** Load script in lenient mode. Unknown components, members and functions
+     * are tolerated instead of failing the script. See
+     * ecs_script_set_lenient(). */
+    bool lenient;
 } ecs_script_eval_desc_t;
 
 /** Used to capture error output from script evaluation. */
@@ -299,6 +305,45 @@ int ecs_script_run_file(
     ecs_world_t *world,
     const char *filename);
 
+/** Enable or disable lenient script loading for a world.
+ * When lenient loading is enabled, scripts that reference unknown components,
+ * component members or functions will still load. This makes it possible to
+ * load scripts for an application without having to load the application code
+ * that registers the components used by the script.
+ *
+ * In lenient mode:
+ * - An unresolved identifier that is used as a component or tag creates a
+ *   placeholder tag entity with that (scoped) name.
+ * - A value assigned to a placeholder, to a component without reflection data,
+ *   or to an unknown member is parsed and discarded.
+ * - An expression that uses an unresolved function or identifier is discarded.
+ *   When the expression is the condition or collection of a statement (such as
+ *   `for`), the statement is skipped.
+ * - Unresolved references in `IsA` expressions and template instantiations are
+ *   still errors, as those are structural.
+ *
+ * Every skipped name is reported once with ecs_warn().
+ *
+ * Lenient mode can also be enabled per script with
+ * ecs_script_eval_desc_t::lenient and ecs_script_desc_t::lenient.
+ *
+ * @param world The world.
+ * @param lenient Whether to enable lenient script loading.
+ */
+FLECS_API
+void ecs_script_set_lenient(
+    ecs_world_t *world,
+    bool lenient);
+
+/** Return whether lenient script loading is enabled for a world.
+ *
+ * @param world The world.
+ * @return Whether lenient script loading is enabled.
+ */
+FLECS_API
+bool ecs_script_get_lenient(
+    const ecs_world_t *world);
+
 /** Create runtime for script.
  * A script runtime is a container for any data created during script 
  * evaluation. By default, calling ecs_script_run() or ecs_script_eval() will
@@ -360,6 +405,7 @@ typedef struct ecs_script_desc_t {
     ecs_entity_t entity;   /**< Set to customize entity handle associated with script. */
     const char *filename;  /**< Set to load script from file. */
     const char *code;      /**< Set to parse script from string. */
+    bool lenient;          /**< Load script in lenient mode (see ecs_script_set_lenient()). */
 } ecs_script_desc_t;
 
 /** Load managed script.

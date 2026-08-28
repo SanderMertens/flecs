@@ -2690,6 +2690,31 @@ void ConstVar_nested_const_shadows_export_const(void);
 void ConstVar_get_from_stage(void);
 void ConstVar_get_struct_from_stage(void);
 
+// Testsuite 'Lenient'
+void Lenient_unknown_tag(void);
+void Lenient_unknown_component_w_value(void);
+void Lenient_unknown_component_w_nested_value(void);
+void Lenient_unknown_component_in_scope(void);
+void Lenient_unknown_pair(void);
+void Lenient_unknown_member_on_known_component(void);
+void Lenient_unknown_nested_member_on_known_component(void);
+void Lenient_unknown_function_in_expr(void);
+void Lenient_unknown_vector_in_for(void);
+void Lenient_unknown_function_in_for(void);
+void Lenient_warn_once_per_name(void);
+void Lenient_warn_per_distinct_name(void);
+void Lenient_strict_unknown_tag_errors(void);
+void Lenient_strict_unknown_member_errors(void);
+void Lenient_lenient_disabled_after_enable(void);
+void Lenient_no_placeholder_then_strict_load(void);
+void Lenient_template_w_unknown_component(void);
+void Lenient_template_child_w_unknown_component(void);
+void Lenient_isa_unresolved_errors(void);
+void Lenient_eval_desc(void);
+void Lenient_managed_script_desc(void);
+void Lenient_managed_script_strict_errors(void);
+void Lenient_unknown_with_tag(void);
+
 bake_test_case Eval_testcases[] = {
     {
         "null",
@@ -13311,6 +13336,101 @@ bake_test_case ConstVar_testcases[] = {
     }
 };
 
+bake_test_case Lenient_testcases[] = {
+    {
+        "unknown_tag",
+        Lenient_unknown_tag
+    },
+    {
+        "unknown_component_w_value",
+        Lenient_unknown_component_w_value
+    },
+    {
+        "unknown_component_w_nested_value",
+        Lenient_unknown_component_w_nested_value
+    },
+    {
+        "unknown_component_in_scope",
+        Lenient_unknown_component_in_scope
+    },
+    {
+        "unknown_pair",
+        Lenient_unknown_pair
+    },
+    {
+        "unknown_member_on_known_component",
+        Lenient_unknown_member_on_known_component
+    },
+    {
+        "unknown_nested_member_on_known_component",
+        Lenient_unknown_nested_member_on_known_component
+    },
+    {
+        "unknown_function_in_expr",
+        Lenient_unknown_function_in_expr
+    },
+    {
+        "unknown_vector_in_for",
+        Lenient_unknown_vector_in_for
+    },
+    {
+        "unknown_function_in_for",
+        Lenient_unknown_function_in_for
+    },
+    {
+        "warn_once_per_name",
+        Lenient_warn_once_per_name
+    },
+    {
+        "warn_per_distinct_name",
+        Lenient_warn_per_distinct_name
+    },
+    {
+        "strict_unknown_tag_errors",
+        Lenient_strict_unknown_tag_errors
+    },
+    {
+        "strict_unknown_member_errors",
+        Lenient_strict_unknown_member_errors
+    },
+    {
+        "lenient_disabled_after_enable",
+        Lenient_lenient_disabled_after_enable
+    },
+    {
+        "no_placeholder_then_strict_load",
+        Lenient_no_placeholder_then_strict_load
+    },
+    {
+        "template_w_unknown_component",
+        Lenient_template_w_unknown_component
+    },
+    {
+        "template_child_w_unknown_component",
+        Lenient_template_child_w_unknown_component
+    },
+    {
+        "isa_unresolved_errors",
+        Lenient_isa_unresolved_errors
+    },
+    {
+        "eval_desc",
+        Lenient_eval_desc
+    },
+    {
+        "managed_script_desc",
+        Lenient_managed_script_desc
+    },
+    {
+        "managed_script_strict_errors",
+        Lenient_managed_script_strict_errors
+    },
+    {
+        "unknown_with_tag",
+        Lenient_unknown_with_tag
+    }
+};
+
 const char* Format_folding_param[] = {"enabled", "disabled"};
 bake_test_param Format_params[] = {
     {"folding", (char**)Format_folding_param, 2}
@@ -13465,9 +13585,16 @@ static bake_test_suite suites[] = {
         NULL,
         42,
         ConstVar_testcases
+    },
+    {
+        "Lenient",
+        NULL,
+        NULL,
+        23,
+        Lenient_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 19);
+    return bake_test_run("script", argc, argv, suites, 20);
 }
