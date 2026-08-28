@@ -661,6 +661,7 @@ void Eval_const_var_from_large_array_element_no_leak(void);
 void Eval_update_script_that_declares_script_entity(void);
 void Eval_update_script_that_declares_parent_of_script_entity(void);
 void Eval_script_refers_to_script_entity(void);
+void Eval_vector_of_struct_w_array_member(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -5331,6 +5332,10 @@ bake_test_case Eval_testcases[] = {
     {
         "script_refers_to_script_entity",
         Eval_script_refers_to_script_entity
+    },
+    {
+        "vector_of_struct_w_array_member",
+        Eval_vector_of_struct_w_array_member
     }
 };
 
@@ -13491,7 +13496,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        652,
+        653,
         Eval_testcases
     },
     {

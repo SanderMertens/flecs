@@ -14295,6 +14295,51 @@ void Eval_vector_struct_component(void) {
     ecs_fini(world);
 }
 
+void Eval_vector_of_struct_w_array_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_f32_t x;
+        ecs_u8_t color[4];
+    } Rec;
+
+    ecs_entity_t ecs_id(Rec) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Rec" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"color", ecs_id(ecs_u8_t), 4}
+        }
+    });
+
+    ecs_entity_t v = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "RecVec" }),
+        .type = ecs_id(Rec)
+    });
+
+    /* The same array member initializes fine on a plain struct component;
+     * inside a vector element it reports "writes past end of target value". */
+    const char *expr =
+    HEAD "e {"
+    LINE " RecVec: [{x: 1, color: [1, 2, 3, 4]}]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_vec_t *ptr = ecs_get_id(world, e, v);
+    test_assert(ptr != NULL);
+    test_int(ecs_vec_count(ptr), 1);
+    test_int(ecs_vec_get_t(ptr, Rec, 0)->x, 1);
+    test_int(ecs_vec_get_t(ptr, Rec, 0)->color[0], 1);
+    test_int(ecs_vec_get_t(ptr, Rec, 0)->color[1], 2);
+    test_int(ecs_vec_get_t(ptr, Rec, 0)->color[2], 3);
+    test_int(ecs_vec_get_t(ptr, Rec, 0)->color[3], 4);
+
+    ecs_fini(world);
+}
+
 void Eval_vector_struct_field_in_struct_component(void) {
     ecs_world_t *world = ecs_init();
 

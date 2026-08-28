@@ -664,7 +664,8 @@
                 "const_var_from_large_array_element_no_leak",
                 "update_script_that_declares_script_entity",
                 "update_script_that_declares_parent_of_script_entity",
-                "script_refers_to_script_entity"
+                "script_refers_to_script_entity",
+                "vector_of_struct_w_array_member"
             ]
         }, {
             "id": "Collection",
