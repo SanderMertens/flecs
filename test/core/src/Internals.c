@@ -1164,3 +1164,36 @@ void Internals_component_record_for_value_pair(void) {
 
     ecs_fini(world);
 }
+
+void Internals_os_memset_n_w_expression_count(void) {
+    int32_t buffer[8];
+    int32_t i;
+    for (i = 0; i < 8; i ++) {
+        buffer[i] = -1;
+    }
+
+    int32_t base = 1;
+    ecs_os_memset_n(buffer, 0, int32_t, base + 2);
+
+    test_int(buffer[0], 0);
+    test_int(buffer[1], 0);
+    test_int(buffer[2], 0);
+    test_int(buffer[3], -1);
+    test_int(buffer[4], -1);
+    test_int(buffer[5], -1);
+    test_int(buffer[6], -1);
+    test_int(buffer[7], -1);
+
+    int32_t src[8];
+    for (i = 0; i < 8; i ++) {
+        src[i] = 100 + i;
+        buffer[i] = -1;
+    }
+
+    ecs_os_memcpy_n(buffer, src, int32_t, base + 1);
+
+    test_int(buffer[0], 100);
+    test_int(buffer[1], 101);
+    test_int(buffer[2], -1);
+    test_int(buffer[3], -1);
+}
