@@ -53,6 +53,98 @@
       DoxygenAwesomeTabs.init()
       FlecsSnippetTabs.init()
   </script>
+
+<!-- === highlight.js (keep Doxygen Awesome styling) === -->
+<link rel="stylesheet" href="$relpath^github-dark.min.css">
+<script src="$relpath^highlight.min.js"></script>
+<script src="$relpath^c.min.js"></script>
+<script src="$relpath^clojure.min.js"></script>
+<script src="$relpath^cmake.min.js"></script>
+<script src="$relpath^cpp.min.js"></script>
+<script src="$relpath^csharp.min.js"></script>
+<script src="$relpath^diff.min.js"></script>
+<script src="$relpath^go.min.js"></script>
+<script src="$relpath^javascript.min.js"></script>
+<script src="$relpath^json.min.js"></script>
+<script src="$relpath^lua.min.js"></script>
+<script src="$relpath^makefile.min.js"></script>
+<script src="$relpath^prolog.min.js"></script>
+<script src="$relpath^python.min.js"></script>
+<script src="$relpath^rust.min.js"></script>
+<script src="$relpath^swift.min.js"></script>
+<script src="$relpath^typescript.min.js"></script>
+<script src="$relpath^wasm.min.js"></script>
+<style>
+  .fragment pre { margin: 0; }
+  .fragment pre code.hljs { display:block; background:transparent; color:inherit; }
+</style>
+<script>
+(function () {
+  function resolveLanguage(frag) {
+    const tabTitle = frag.closest('li')?.querySelector('.tab-title');
+    if (!tabTitle) return null;
+    const raw = tabTitle.textContent.trim().toLowerCase();
+  const map = {
+    'c': 'c',
+    'c#': 'csharp',
+    'c++': 'cpp',
+    'clojure': 'clojure',
+    'cmake': 'cmake',
+    'cpp': 'cpp',
+    'cs': 'csharp',
+    'csharp': 'csharp',
+    'diff': 'diff',
+    'go': 'go',
+    'javascript': 'javascript',
+    'js': 'javascript',
+    'json': 'json',
+    'lua': 'lua',
+    'makefile': 'makefile',
+    'prolog': 'prolog',
+    'python': 'python',
+    'rust': 'rust',
+    'swift': 'swift',
+    'ts': 'typescript',
+    'typescript': 'typescript',
+    'wasm': 'wasm'
+  };
+    return map[raw] || (raw.match(/^[a-z0-9_+-]+$/) ? raw : null);
+  }
+
+  function enhance(root=document) {
+    root.querySelectorAll('div.fragment').forEach(frag => {
+      if (frag.dataset.hljsDone === '1') return;
+      const lines = frag.querySelectorAll(':scope .line');
+      if (!lines.length) return;
+
+      const codeText = Array.from(lines).map(n => n.textContent.replace(/\u00A0/g,' ')).join('\n');
+      const pre = document.createElement('pre');
+      const code = document.createElement('code');
+      const lang = resolveLanguage(frag);
+      code.classList.add('hljs');
+      if (lang) {
+        code.classList.add(`language-${lang}`);
+      }
+      code.textContent = codeText;
+      pre.appendChild(code);
+      frag.insertBefore(pre, frag.firstChild);
+
+      if (window.hljs?.highlightElement) hljs.highlightElement(code);
+      lines.forEach(n => n.style.display = 'none');
+      frag.dataset.hljsDone = '1';
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', enhance);
+  } else {
+    enhance();
+  }
+  new MutationObserver(muts => {
+    for (const m of muts) for (const n of m.addedNodes) if (n.nodeType===1) enhance(n);
+  }).observe(document.documentElement, { childList:true, subtree:true });
+})();
+</script>
+<!-- === /highlight.js === -->
 </head>
 <body>
 
