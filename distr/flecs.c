@@ -2669,7 +2669,8 @@ int flecs_query_trivial_has_range(
     const ecs_world_t *world,
     ecs_table_t *table,
     int32_t offset,
-    int32_t count);
+    int32_t count,
+    bool *type_mismatch);
 
 /* Internal function for initializing an iterator after vars are constrained */
 void flecs_query_iter_constrain(
@@ -3318,6 +3319,11 @@ typedef struct ecs_observer_impl_t {
 
     ecs_query_t *not_query;     /**< Query used to populate observer data when a
                                      term with a not operator triggers. */
+
+    ecs_table_t *nomatch_table; /**< Last table that could not match the query
+                                     because of its type. */
+    uint64_t nomatch_table_id;  /**< Id of that table. */
+    uint64_t nomatch_epoch;     /**< Table delete count when it was recorded. */
 
     /* Mixins */
     flecs_poly_dtor_t dtor;
@@ -14205,6 +14211,21 @@ void flecs_emit_propagate_invalidate(
     }
 }
 
+static bool flecs_propagate_observers_exist(
+    ecs_event_id_record_t **iders,
+    int32_t ider_count)
+{
+    int32_t i;
+    for (i = 0; i < ider_count; i ++) {
+        ecs_event_id_record_t *ider = iders[i];
+        if (ecs_map_count(&ider->up) || ecs_map_count(&ider->self_up)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static void flecs_propagate_entities(
     ecs_world_t *world,
     ecs_iter_t *it,
@@ -14216,6 +14237,10 @@ static void flecs_propagate_entities(
     int32_t ider_count)
 {
     if (!count) {
+        return;
+    }
+
+    if (!flecs_propagate_observers_exist(iders, ider_count)) {
         return;
     }
 
@@ -16020,6 +16045,14 @@ static void flecs_multi_observer_invoke(
     table = table ? table : &world->store.root;
     prev_table = prev_table ? prev_table : &world->store.root;
 
+    bool memoizable = !is_not && !(impl->flags & EcsObserverIsMonitor);
+    uint64_t epoch = world->info.table_delete_total;
+    if (memoizable && impl->nomatch_table == table &&
+        impl->nomatch_table_id == table->id && impl->nomatch_epoch == epoch)
+    {
+        return;
+    }
+
     ecs_iter_t user_it;
 
     bool match;
@@ -16043,13 +16076,19 @@ static void flecs_multi_observer_invoke(
         }
     } else {
         int trivial = -1;
+        bool type_mismatch = false;
         if (!(impl->flags & EcsObserverIsMonitor)) {
             trivial = flecs_query_trivial_has_range(o->query, &user_it,
-                it->world, table, it->offset, it->count);
+                it->world, table, it->offset, it->count, &type_mismatch);
         }
 
         if (trivial >= 0) {
             match = trivial != 0;
+            if (type_mismatch && memoizable) {
+                impl->nomatch_table = table;
+                impl->nomatch_table_id = table->id;
+                impl->nomatch_epoch = epoch;
+            }
         } else {
             ecs_table_range_t range = {
                 .table = table,
@@ -37446,20 +37485,82 @@ bool flecs_term_is_self_trivial(
     return true;
 }
 
+/* A term is IsA-trivial when whether it matches a table is decided by the
+ * table's own type plus, at most, a search of the table's IsA chain. Such a
+ * term can be answered without the query engine when the answer is "no", which
+ * is the common case for an observer that is handed one table to test. Unlike
+ * a self-trivial term the answer is not a pure function of the table type - a
+ * base can gain or lose the id - so it must never be cached. */
+static
+bool flecs_term_is_isa_trivial(
+    const ecs_term_t *term)
+{
+    if (term->oper != EcsAnd && term->oper != EcsNot) {
+        return false;
+    }
+
+    if (term->flags_ & (EcsTermIsOr|EcsTermIsToggle|EcsTermDontFragment|
+        EcsTermIsSparse|EcsTermTransitive|EcsTermReflexive|EcsTermIsMember|
+        EcsTermIsScope|EcsTermMatchAny|EcsTermMatchAnySrc))
+    {
+        return false;
+    }
+
+    if (!ecs_term_match_this(term)) {
+        return false;
+    }
+
+    if (term->src.id & (EcsCascade|EcsDesc)) {
+        return false;
+    }
+
+    if (!(term->src.id & (EcsSelf|EcsUp))) {
+        return false;
+    }
+
+    if ((term->src.id & EcsUp) && term->trav != EcsIsA) {
+        return false;
+    }
+
+    if (!(term->src.id & EcsUp) && term->trav && term->trav != EcsIsA) {
+        return false;
+    }
+
+    if (ecs_id_is_wildcard(term->id)) {
+        return false;
+    }
+
+    if (ECS_IS_PAIR(term->id) && (ECS_PAIR_FIRST(term->id) == EcsChildOf) &&
+        ECS_PAIR_SECOND(term->id))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 static
 void flecs_query_set_self_trivial(
     ecs_query_t *q)
 {
     int32_t i, term_count = q->term_count;
-    bool self_trivial = term_count != 0 && !q->row_fields &&
+    bool base = term_count != 0 && !q->row_fields &&
         !(q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryHasRefs|
             EcsQueryMatchNothing|EcsQueryMatchWildcards));
+    bool self_trivial = base;
+    bool isa_trivial = base;
 
-    for (i = 0; self_trivial && (i < term_count); i ++) {
-        self_trivial = flecs_term_is_self_trivial(&q->terms[i]);
+    for (i = 0; (self_trivial || isa_trivial) && (i < term_count); i ++) {
+        if (self_trivial) {
+            self_trivial = flecs_term_is_self_trivial(&q->terms[i]);
+        }
+        if (isa_trivial) {
+            isa_trivial = flecs_term_is_isa_trivial(&q->terms[i]);
+        }
     }
 
     ECS_BIT_COND(q->flags, EcsQuerySelfTrivial, self_trivial);
+    ECS_BIT_COND(q->flags, EcsQueryIsaTrivial, isa_trivial);
 }
 
 static int flecs_query_finalize_terms(
@@ -86118,7 +86219,8 @@ int flecs_query_trivial_has_range(
     const ecs_world_t *world,
     ecs_table_t *table,
     int32_t offset,
-    int32_t count)
+    int32_t count,
+    bool *type_mismatch)
 {
     ecs_flags32_t flags = q->flags;
     ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
@@ -86129,12 +86231,16 @@ int flecs_query_trivial_has_range(
      * single table to test: try the table first and only fall back to the
      * query engine when an id is missing and could still be found on a base
      * entity. */
+    bool self_ok =
+        (((flags & trivial_flags) == trivial_flags) ||
+            (flags & EcsQuerySelfTrivial)) != 0;
+    bool isa_ok = (flags & EcsQueryIsaTrivial) != 0;
+
     if (
 #ifdef FLECS_CACHED_QUERIES
         flecs_query_impl(q)->cache ||
 #endif
-        (((flags & trivial_flags) != trivial_flags) &&
-            !(flags & EcsQuerySelfTrivial)) ||
+        (!self_ok && !isa_ok) ||
         (flags & EcsQueryMatchWildcards) ||
         q->row_fields)
     {
@@ -86148,6 +86254,9 @@ int flecs_query_trivial_has_range(
     }
 
     if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+        if (type_mismatch) {
+            *type_mismatch = true;
+        }
         return 0;
     }
 
@@ -86185,18 +86294,45 @@ int flecs_query_trivial_has_range(
             }
         }
 
-        if (!tr) {
-            if (up) {
-                goto not_trivial;
+        bool self_src = (terms[t].src.id & EcsSelf) != 0;
+        bool owned = self_src && (tr != NULL);
+        bool present = owned;
+        bool from_base = false;
+
+        if (!present && up) {
+            if (ecs_search_relation(real_world, table, 0, term_id, EcsIsA,
+                EcsUp, NULL, NULL, NULL) != -1)
+            {
+                present = true;
+                from_base = true;
             }
-            if (!is_not) {
+        }
+
+        if (is_not) {
+            if (present) {
+                if (type_mismatch && !from_base) {
+                    *type_mismatch = true;
+                }
                 return 0;
             }
-        } else if (is_not) {
-            return 0;
+            tr = NULL;
+        } else {
+            if (!present) {
+                if (type_mismatch && !up) {
+                    *type_mismatch = true;
+                }
+                return 0;
+            }
+            if (!owned) {
+                goto not_trivial;
+            }
         }
 
         term_trs[t] = tr;
+    }
+
+    if (!self_ok) {
+        goto not_trivial;
     }
 
     ecs_iter_t lit = {0};

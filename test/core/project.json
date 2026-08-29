@@ -3465,6 +3465,7 @@
             "id": "Internals",
             "setup": true,
             "testcases": [
+                "os_memset_n_w_expression_count",
                 "deactivate_table",
                 "activate_table",
                 "activate_deactivate_table",
