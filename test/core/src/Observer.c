@@ -15309,7 +15309,210 @@ static void PropagateGateUpObserver(ecs_iter_t *it) {
     propagate_gate_up_count += it->count;
 }
 
+void Observer_on_set_no_propagate_w_self_only_observer_on_child(void) {
+    ecs_world_t *world = ecs_mini();
 
+    ECS_COMPONENT(world, Position);
 
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t grandchild = ecs_new_w_pair(world, EcsChildOf, child);
 
+    propagate_gate_self_count = 0;
 
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position), .src.id = EcsSelf }},
+        .events = { EcsOnSet },
+        .callback = PropagateGateSelfObserver
+    });
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    int64_t ran_before = info->observers_ran_total;
+
+    ecs_set(world, parent, Position, {10, 20});
+
+    test_int(propagate_gate_self_count, 1);
+    test_int(info->observers_ran_total - ran_before, 1);
+
+    test_assert(ecs_get(world, child, Position) == NULL);
+    test_assert(ecs_get(world, grandchild, Position) == NULL);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_propagate_w_up_observer_on_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t grandchild = ecs_new_w_pair(world, EcsChildOf, child);
+
+    propagate_gate_self_count = 0;
+    propagate_gate_up_count = 0;
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position), .src.id = EcsSelf }},
+        .events = { EcsOnSet },
+        .callback = PropagateGateSelfObserver
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ 
+            .id = ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf 
+        }},
+        .events = { EcsOnSet },
+        .callback = PropagateGateUpObserver
+    });
+
+    ecs_set(world, parent, Position, {10, 20});
+
+    test_int(propagate_gate_self_count, 1);
+    test_int(propagate_gate_up_count, 2);
+
+    test_assert(child != 0);
+    test_assert(grandchild != 0);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_propagate_isa_w_up_observer_on_instance(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    propagate_gate_self_count = 0;
+    propagate_gate_up_count = 0;
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position), .src.id = EcsSelf }},
+        .events = { EcsOnSet },
+        .callback = PropagateGateSelfObserver
+    });
+
+    ecs_set(world, base, Position, {10, 20});
+
+    test_int(propagate_gate_self_count, 0);
+    test_int(propagate_gate_up_count, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ 
+            .id = ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA 
+        }},
+        .events = { EcsOnSet },
+        .callback = PropagateGateUpObserver
+    });
+
+    propagate_gate_self_count = 0;
+    propagate_gate_up_count = 0;
+
+    ecs_set(world, base, Position, {30, 40});
+
+    test_int(propagate_gate_self_count, 0);
+    test_int(propagate_gate_up_count, 1);
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_propagate_w_up_observer_created_after_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    propagate_gate_self_count = 0;
+    propagate_gate_up_count = 0;
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position), .src.id = EcsSelf }},
+        .events = { EcsOnSet },
+        .callback = PropagateGateSelfObserver
+    });
+
+    ecs_set(world, parent, Position, {10, 20});
+
+    test_int(propagate_gate_self_count, 1);
+    test_int(propagate_gate_up_count, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ 
+            .id = ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf 
+        }},
+        .events = { EcsOnSet },
+        .callback = PropagateGateUpObserver
+    });
+
+    propagate_gate_self_count = 0;
+    propagate_gate_up_count = 0;
+
+    ecs_set(world, parent, Position, {30, 40});
+
+    test_int(propagate_gate_self_count, 1);
+    test_int(propagate_gate_up_count, 1);
+
+    test_assert(child != 0);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_no_propagate_after_up_observer_deleted(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    propagate_gate_self_count = 0;
+    propagate_gate_up_count = 0;
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position), .src.id = EcsSelf }},
+        .events = { EcsOnSet },
+        .callback = PropagateGateSelfObserver
+    });
+
+    ecs_entity_t up_observer = ecs_observer(world, {
+        .query.terms = {{ 
+            .id = ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf 
+        }},
+        .events = { EcsOnSet },
+        .callback = PropagateGateUpObserver
+    });
+
+    ecs_set(world, parent, Position, {10, 20});
+
+    test_int(propagate_gate_self_count, 1);
+    test_int(propagate_gate_up_count, 1);
+
+    ecs_delete(world, up_observer);
+
+    propagate_gate_self_count = 0;
+    propagate_gate_up_count = 0;
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    int64_t ran_before = info->observers_ran_total;
+
+    ecs_set(world, parent, Position, {30, 40});
+
+    test_int(propagate_gate_self_count, 1);
+    test_int(propagate_gate_up_count, 0);
+    test_int(info->observers_ran_total - ran_before, 1);
+
+    test_assert(child != 0);
+
+    ecs_fini(world);
+}
