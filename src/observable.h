@@ -37,6 +37,11 @@ typedef struct ecs_observer_impl_t {
     ecs_query_t *not_query;     /**< Query used to populate observer data when a
                                      term with a not operator triggers. */
 
+    ecs_table_t *nomatch_table; /**< Last table that could not match the query
+                                     because of its type. */
+    uint64_t nomatch_table_id;  /**< Id of that table. */
+    uint64_t nomatch_epoch;     /**< Table delete count when it was recorded. */
+
     /* Mixins */
     flecs_poly_dtor_t dtor;
 } ecs_observer_impl_t;
