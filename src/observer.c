@@ -669,6 +669,14 @@ static void flecs_multi_observer_invoke(
     table = table ? table : &world->store.root;
     prev_table = prev_table ? prev_table : &world->store.root;
 
+    bool memoizable = !is_not && !(impl->flags & EcsObserverIsMonitor);
+    uint64_t epoch = world->info.table_delete_total;
+    if (memoizable && impl->nomatch_table == table &&
+        impl->nomatch_table_id == table->id && impl->nomatch_epoch == epoch)
+    {
+        return;
+    }
+
     ecs_iter_t user_it;
 
     bool match;
@@ -692,13 +700,19 @@ static void flecs_multi_observer_invoke(
         }
     } else {
         int trivial = -1;
+        bool type_mismatch = false;
         if (!(impl->flags & EcsObserverIsMonitor)) {
             trivial = flecs_query_trivial_has_range(o->query, &user_it,
-                it->world, table, it->offset, it->count);
+                it->world, table, it->offset, it->count, &type_mismatch);
         }
 
         if (trivial >= 0) {
             match = trivial != 0;
+            if (type_mismatch && memoizable) {
+                impl->nomatch_table = table;
+                impl->nomatch_table_id = table->id;
+                impl->nomatch_epoch = epoch;
+            }
         } else {
             ecs_table_range_t range = {
                 .table = table,

@@ -720,7 +720,8 @@ int flecs_query_trivial_has_range(
     const ecs_world_t *world,
     ecs_table_t *table,
     int32_t offset,
-    int32_t count)
+    int32_t count,
+    bool *type_mismatch)
 {
     ecs_flags32_t flags = q->flags;
     ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
@@ -731,12 +732,16 @@ int flecs_query_trivial_has_range(
      * single table to test: try the table first and only fall back to the
      * query engine when an id is missing and could still be found on a base
      * entity. */
+    bool self_ok =
+        (((flags & trivial_flags) == trivial_flags) ||
+            (flags & EcsQuerySelfTrivial)) != 0;
+    bool isa_ok = (flags & EcsQueryIsaTrivial) != 0;
+
     if (
 #ifdef FLECS_CACHED_QUERIES
         flecs_query_impl(q)->cache ||
 #endif
-        (((flags & trivial_flags) != trivial_flags) &&
-            !(flags & EcsQuerySelfTrivial)) ||
+        (!self_ok && !isa_ok) ||
         (flags & EcsQueryMatchWildcards) ||
         q->row_fields)
     {
@@ -750,6 +755,9 @@ int flecs_query_trivial_has_range(
     }
 
     if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+        if (type_mismatch) {
+            *type_mismatch = true;
+        }
         return 0;
     }
 
@@ -787,18 +795,45 @@ int flecs_query_trivial_has_range(
             }
         }
 
-        if (!tr) {
-            if (up) {
-                goto not_trivial;
+        bool self_src = (terms[t].src.id & EcsSelf) != 0;
+        bool owned = self_src && (tr != NULL);
+        bool present = owned;
+        bool from_base = false;
+
+        if (!present && up) {
+            if (ecs_search_relation(real_world, table, 0, term_id, EcsIsA,
+                EcsUp, NULL, NULL, NULL) != -1)
+            {
+                present = true;
+                from_base = true;
             }
-            if (!is_not) {
+        }
+
+        if (is_not) {
+            if (present) {
+                if (type_mismatch && !from_base) {
+                    *type_mismatch = true;
+                }
                 return 0;
             }
-        } else if (is_not) {
-            return 0;
+            tr = NULL;
+        } else {
+            if (!present) {
+                if (type_mismatch && !up) {
+                    *type_mismatch = true;
+                }
+                return 0;
+            }
+            if (!owned) {
+                goto not_trivial;
+            }
         }
 
         term_trs[t] = tr;
+    }
+
+    if (!self_ok) {
+        goto not_trivial;
     }
 
     ecs_iter_t lit = {0};

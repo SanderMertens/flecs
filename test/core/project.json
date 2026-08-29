@@ -2078,6 +2078,11 @@
         }, {
             "id": "Observer",
             "testcases": [
+                "nomatch_table_memo_alternating_tables",
+                "up_isa_term_no_match_then_base_gains_component",
+                "up_isa_term_alternating_match_and_no_match",
+                "up_isa_not_term_base_gains_component",
+                "nomatch_table_memo_after_table_delete",
                 "multi_term_inheritable_component_owned",
                 "multi_term_inheritable_component_w_not_term",
                 "multi_term_inheritable_component_w_prefab_term",

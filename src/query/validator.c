@@ -1200,20 +1200,82 @@ bool flecs_term_is_self_trivial(
     return true;
 }
 
+/* A term is IsA-trivial when whether it matches a table is decided by the
+ * table's own type plus, at most, a search of the table's IsA chain. Such a
+ * term can be answered without the query engine when the answer is "no", which
+ * is the common case for an observer that is handed one table to test. Unlike
+ * a self-trivial term the answer is not a pure function of the table type - a
+ * base can gain or lose the id - so it must never be cached. */
+static
+bool flecs_term_is_isa_trivial(
+    const ecs_term_t *term)
+{
+    if (term->oper != EcsAnd && term->oper != EcsNot) {
+        return false;
+    }
+
+    if (term->flags_ & (EcsTermIsOr|EcsTermIsToggle|EcsTermDontFragment|
+        EcsTermIsSparse|EcsTermTransitive|EcsTermReflexive|EcsTermIsMember|
+        EcsTermIsScope|EcsTermMatchAny|EcsTermMatchAnySrc))
+    {
+        return false;
+    }
+
+    if (!ecs_term_match_this(term)) {
+        return false;
+    }
+
+    if (term->src.id & (EcsCascade|EcsDesc)) {
+        return false;
+    }
+
+    if (!(term->src.id & (EcsSelf|EcsUp))) {
+        return false;
+    }
+
+    if ((term->src.id & EcsUp) && term->trav != EcsIsA) {
+        return false;
+    }
+
+    if (!(term->src.id & EcsUp) && term->trav && term->trav != EcsIsA) {
+        return false;
+    }
+
+    if (ecs_id_is_wildcard(term->id)) {
+        return false;
+    }
+
+    if (ECS_IS_PAIR(term->id) && (ECS_PAIR_FIRST(term->id) == EcsChildOf) &&
+        ECS_PAIR_SECOND(term->id))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 static
 void flecs_query_set_self_trivial(
     ecs_query_t *q)
 {
     int32_t i, term_count = q->term_count;
-    bool self_trivial = term_count != 0 && !q->row_fields &&
+    bool base = term_count != 0 && !q->row_fields &&
         !(q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryHasRefs|
             EcsQueryMatchNothing|EcsQueryMatchWildcards));
+    bool self_trivial = base;
+    bool isa_trivial = base;
 
-    for (i = 0; self_trivial && (i < term_count); i ++) {
-        self_trivial = flecs_term_is_self_trivial(&q->terms[i]);
+    for (i = 0; (self_trivial || isa_trivial) && (i < term_count); i ++) {
+        if (self_trivial) {
+            self_trivial = flecs_term_is_self_trivial(&q->terms[i]);
+        }
+        if (isa_trivial) {
+            isa_trivial = flecs_term_is_isa_trivial(&q->terms[i]);
+        }
     }
 
     ECS_BIT_COND(q->flags, EcsQuerySelfTrivial, self_trivial);
+    ECS_BIT_COND(q->flags, EcsQueryIsaTrivial, isa_trivial);
 }
 
 static int flecs_query_finalize_terms(
