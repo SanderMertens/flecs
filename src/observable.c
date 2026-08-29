@@ -562,6 +562,21 @@ void flecs_emit_propagate_invalidate(
     }
 }
 
+static bool flecs_propagate_observers_exist(
+    ecs_event_id_record_t **iders,
+    int32_t ider_count)
+{
+    int32_t i;
+    for (i = 0; i < ider_count; i ++) {
+        ecs_event_id_record_t *ider = iders[i];
+        if (ecs_map_count(&ider->up) || ecs_map_count(&ider->self_up)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static void flecs_propagate_entities(
     ecs_world_t *world,
     ecs_iter_t *it,
@@ -573,6 +588,10 @@ static void flecs_propagate_entities(
     int32_t ider_count)
 {
     if (!count) {
+        return;
+    }
+
+    if (!flecs_propagate_observers_exist(iders, ider_count)) {
         return;
     }
 

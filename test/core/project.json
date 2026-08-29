@@ -2078,6 +2078,11 @@
         }, {
             "id": "Observer",
             "testcases": [
+                "on_set_no_propagate_w_self_only_observer_on_child",
+                "on_set_propagate_w_up_observer_on_child",
+                "on_set_propagate_isa_w_up_observer_on_instance",
+                "on_set_propagate_w_up_observer_created_after_entities",
+                "on_set_no_propagate_after_up_observer_deleted",
                 "nomatch_table_memo_alternating_tables",
                 "up_isa_term_no_match_then_base_gains_component",
                 "up_isa_term_alternating_match_and_no_match",
