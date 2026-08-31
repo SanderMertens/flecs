@@ -6255,3 +6255,185 @@ void Template_template_prop_w_inline_array_member_in_use(void) {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    ecs_f32_t offset;
+} TemplateLane;
+
+typedef struct {
+    ecs_i32_t lanes;
+    TemplateLane lane[4];
+} TemplateLight;
+
+static
+void template_light_types(ecs_world_t *world) {
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, TemplateLane);
+    ECS_COMPONENT(world, TemplateLight);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(TemplateLane),
+        .members = {
+            {"offset", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(TemplateLight),
+        .members = {
+            {"lanes", ecs_id(ecs_i32_t)},
+            {"lane", ecs_id(TemplateLane), .count = 4}
+        }
+    });
+}
+
+void Template_template_base_w_inline_array_member_elem_in_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    template_light_types(world);
+
+    const char *expr =
+    HEAD "template Light : TemplateLight {"
+    LINE "  if lane[0].offset > 0 {"
+    LINE "    positive {}"
+    LINE "  }"
+    LINE "}"
+    LINE "Light a(lanes: 1, lane: [{10}, {20}, {30}, {40}])"
+    LINE "Light b(lanes: 1, lane: [{0}, {20}, {30}, {40}])";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+    test_assert(ecs_lookup(world, "a.positive") != 0);
+    test_assert(ecs_lookup(world, "b.positive") == 0);
+
+    ecs_fini(world);
+}
+
+void Template_template_base_w_inline_array_member_elem_in_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    template_light_types(world);
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "template Light : TemplateLight {"
+    LINE "  for i in 0..lanes {"
+    LINE "    \"c_{i}\" { Position: {lane[i].offset, i} }"
+    LINE "  }"
+    LINE "}"
+    LINE "Light a(lanes: 3, lane: [{10}, {20}, {30}, {40}])";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t c0 = ecs_lookup(world, "a.c_0");
+    ecs_entity_t c1 = ecs_lookup(world, "a.c_1");
+    ecs_entity_t c2 = ecs_lookup(world, "a.c_2");
+    test_assert(c0 != 0);
+    test_assert(c1 != 0);
+    test_assert(c2 != 0);
+    test_assert(ecs_lookup(world, "a.c_3") == 0);
+
+    const Position *p = ecs_get(world, c0, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 0);
+
+    p = ecs_get(world, c1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 1);
+
+    p = ecs_get(world, c2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Template_template_base_w_inline_array_member_reassign(void) {
+    ecs_world_t *world = ecs_init();
+
+    template_light_types(world);
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "template Light : TemplateLight {"
+    LINE "  child { Position: {lane[1].offset, lanes} }"
+    LINE "}"
+    LINE "Light a(lanes: 2, lane: [{10}, {20}, {30}, {40}])";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child = ecs_lookup(world, "a.child");
+    test_assert(child != 0);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 2);
+
+    const char *update =
+    HEAD "Light a(lanes: 3, lane: [{10}, {50}, {30}, {40}])";
+
+    test_assert(ecs_script_run(world, NULL, update, NULL) == 0);
+
+    child = ecs_lookup(world, "a.child");
+    test_assert(child != 0);
+
+    p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 50);
+    test_int(p->y, 3);
+
+    ecs_fini(world);
+}
+
+void Template_template_base_w_inline_array_member_reassign_no_index(void) {
+    ecs_world_t *world = ecs_init();
+
+    template_light_types(world);
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "template Light : TemplateLight {"
+    LINE "  child { Position: {lanes, 0} }"
+    LINE "}"
+    LINE "Light a(lanes: 1, lane: [{10}, {20}, {30}, {40}])";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child = ecs_lookup(world, "a.child");
+    test_assert(child != 0);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+
+    const char *update =
+    HEAD "Light a(lanes: 4, lane: [{50}, {20}, {30}, {40}])";
+
+    test_assert(ecs_script_run(world, NULL, update, NULL) == 0);
+
+    child = ecs_lookup(world, "a.child");
+    test_assert(child != 0);
+
+    p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 4);
+
+    ecs_fini(world);
+}

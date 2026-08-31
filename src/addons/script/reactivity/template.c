@@ -427,7 +427,19 @@ static void flecs_script_template_free_data(
     flecs_stack_free(data, ti->size);
 }
 
+static ecs_entity_t flecs_script_template_member_type(
+    ecs_world_t *world,
+    const ecs_member_t *member)
+{
+    if (member->count > 1) {
+        return flecs_script_array_type(world, member->type, member->count);
+    }
+
+    return member->type;
+}
+
 static void flecs_script_template_instantiate_vars(
+    ecs_world_t *world,
     ecs_script_vars_t *vars,
     const ecs_script_template_t *template,
     const EcsStruct *props_st,
@@ -449,7 +461,7 @@ static void flecs_script_template_instantiate_vars(
             &st->members, ecs_member_t, template_member->index);
         ecs_script_var_t *var = ecs_script_vars_declare(vars, member->name);
         ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
-        var->value.type = member->type;
+        var->value.type = flecs_script_template_member_type(world, member);
         var->value.ptr = ECS_OFFSET(data, member->offset);
         var->owned = false;
     }
@@ -658,7 +670,7 @@ static int flecs_script_template_instantiate(
             muts_data = muts_copy;
         }
 
-        flecs_script_template_instantiate_vars(vars, template,
+        flecs_script_template_instantiate_vars(world, vars, template,
             props_st, props_data, muts_st, muts_data);
 
         v->vars = vars;
@@ -982,11 +994,24 @@ static void flecs_script_template_on_replace(
             const ecs_type_info_t *member_ti = ecs_get_type_info(
                 world, member->type);
             ecs_assert(member_ti != NULL, ECS_INTERNAL_ERROR, NULL);
-            if (!flecs_type_info_equals(
-                ECS_OFFSET(old_ptr, member->offset),
-                ECS_OFFSET(new_ptr, member->offset), member_ti))
+
+            if (!member_ti->hooks.equals ||
+                (member_ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL))
             {
                 root->changed |= template_member->input;
+                continue;
+            }
+
+            int32_t e, elem_count = member->count ? member->count : 1;
+            for (e = 0; e < elem_count; e ++) {
+                ecs_size_t offset = member->offset + member_ti->size * e;
+                if (!flecs_type_info_equals(
+                    ECS_OFFSET(old_ptr, offset),
+                    ECS_OFFSET(new_ptr, offset), member_ti))
+                {
+                    root->changed |= template_member->input;
+                    break;
+                }
             }
         }
     }
@@ -1193,7 +1218,8 @@ static void flecs_script_template_declare_inherited_vars(
         ecs_script_var_t *var = ecs_script_vars_declare(
             v->vars, members[i].name);
         ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
-        var->value.type = members[i].type;
+        var->value.type = flecs_script_template_member_type(
+            v->world, &members[i]);
         var->value.ptr = defaults[i].value.ptr;
         var->type_info = defaults[i].type_info;
         var->owned = false;
@@ -1305,15 +1331,19 @@ static int flecs_script_template_inherit(
 
     const ecs_member_t *members = ecs_vec_first_t(&st->members, ecs_member_t);
     for (i = 0; i < count; i ++) {
-        const ecs_type_info_t *ti = ecs_get_type_info(world, members[i].type);
+        ecs_entity_t member_type = flecs_script_template_member_type(
+            world, &members[i]);
+        const ecs_type_info_t *ti = ecs_get_type_info(world, member_type);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_set_rtt_equals(world, member_type);
 
         ecs_script_var_t *value = ecs_vec_append_t(
             a, &template->props.defaults, ecs_script_var_t);
         ecs_os_zeromem(value);
         value->name = members[i].name;
         value->value.ptr = flecs_calloc_w_dbg_info(a, ti->size, ti->name);
-        value->value.type = members[i].type;
+        value->value.type = member_type;
         value->type_info = ti;
         value->owned = false;
         if (base_defaults) {
