@@ -71,7 +71,7 @@ static void query_flags_to_str(uint64_t value) {
 }
 
 #define test_query_flags(expect, value)\
-    if ((EcsQueryValid|expect) != ((value) & ~(ecs_flags32_t)EcsQuerySelfTrivial)) {\
+    if ((EcsQueryValid|expect) != ((value) & ~(ecs_flags32_t)(EcsQuerySelfTrivial|EcsQueryIsaTrivial))) {\
         printf("expected: ");\
         query_flags_to_str(expect);\
         printf("got:      ");\
