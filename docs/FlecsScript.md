@@ -1267,6 +1267,101 @@ template Forest {
 Forest my_forest
 ```
 
+### Template inheritance
+Templates are structs, where each property is a struct member. This means that a template can inherit from a struct or from another template by specifying a base type after the template name:
+
+```cpp
+template Shape {
+  prop color: Color = {255, 0, 0}
+}
+
+template Square : Shape {
+  prop size = 10
+
+  Color: $color
+  Rectangle: {width: size, height: size}
+}
+
+Square my_square(color: {0, 255, 0}, size: 20)
+```
+
+A derived template inherits the properties of its base, including their default values. Inherited properties can be used in the template body just like the template's own properties. Only the properties are inherited: the script contents of the base template are not evaluated when the derived template is instantiated.
+
+The base must be defined before the derived template, and a derived template cannot redefine an inherited property.
+
+### Template properties
+A property can be declared with the type of another template by using the `template` keyword. This makes it possible to configure a template with the properties of another template:
+
+```cpp
+template Leaf {
+  prop color: Color = {51, 76, 38}
+  prop size = 1
+
+  Color: $color
+  Rectangle: {width: size, height: size}
+}
+
+template Tree {
+  prop leaf : template Leaf
+
+  Leaf1 { leaf }
+  Leaf2 { leaf: {size: 2} }
+}
+
+Tree my_tree(leaf: {color: {255, 0, 0}, size: 3})
+```
+
+Inside the template body the property can be used as if it is the template component itself, with or without the `$` prefix. When the property is used without an initializer, the component is set to the value of the property. When the property is used with an initializer, members that are not specified in the initializer keep the value of the property. In the above example `Leaf2` gets a red leaf of size 2.
+
+A template property can also be used in `with` statements:
+
+```cpp
+template Tree {
+  prop leaf : template Leaf
+
+  with leaf {
+    Leaf1 {}
+    Leaf2 {}
+  }
+
+  with leaf(size: 2) {
+    Leaf3 {}
+  }
+}
+```
+
+A template property without a default value is initialized with the default values of the properties of its template. Like other properties, template properties are exposed as struct members, which means they can be accessed in expressions (`$leaf.size`) and can be set when the template is instantiated.
+
+
+### Interface-typed template properties
+A template property can also be declared with the type of a struct instead of a template. Such a property holds a *template*: any template that derives from the struct can be passed in, and using the property as a component instantiates the template that was passed:
+
+```cpp
+struct StreetLight {
+  on_off: bool
+}
+
+template MyStreetLight : StreetLight {
+  prop color: Rgba = {100, 100, 100, 255}
+  if $on_off {
+    Emissive: {strength: 1, color: $color}
+  }
+}
+
+template Road {
+  prop street_light : template StreetLight
+
+  lamp {
+    street_light: {on_off: true}
+    Position3: {0, 6, 1.5}
+  }
+}
+
+Road my_road(street_light: MyStreetLight)
+```
+
+Here `my_road.lamp` gets a `MyStreetLight` component with `on_off` set to `true` and `color` at its default, and MyStreetLight's body runs for it. The struct acts as the interface between the template that uses the property and the template that fills it in: the initializer may only set members of the struct, and the value passed must be a template that derives from it - passing an unrelated template, a plain struct or no value at all is an error. In the template's component the property is stored as an entity, so it can be set from C with the template's id. A property of this kind can have a default (`prop street_light : template StreetLight = MyStreetLight`) and can be used as a tag (`lamp { street_light }`), which instantiates the template with its default values.
+
 ## Module statement
 The `module` statement puts all contents of a script in a module. Example:
 
@@ -1801,6 +1896,39 @@ struct Position {
   y { member: {type: f32} }
 }
 ```
+
+#### Struct inheritance
+A struct can inherit the members of another struct by specifying a base struct after the struct name. The derived struct has all members of the base struct, followed by its own members:
+
+```cpp
+struct Point(x: f32, y: f32)
+struct Point3D : Point(z: f32)
+
+// Same as
+struct Point3D(x: f32, y: f32, z: f32)
+```
+
+Inheritance also works with the scope-based syntax:
+
+```cpp
+struct Point3D : Point {
+  z { member: {type: f32} }
+}
+```
+
+Under the hood inheritance adds an `(IsA, Point)` pair to the `Point3D` entity, which is picked up by the reflection framework. The members of the derived struct are laid out after the base struct, which matches the memory layout of a C struct that embeds the base struct as its first member.
+
+The base struct must be defined before the derived struct, a struct can only have one base struct, and a derived struct cannot redefine a member of its base.
+
+A value of a derived struct can be assigned to a variable, property, mutable or (nested) component member of the base struct type. The assignment copies the members of the base struct:
+
+```cpp
+const p: Point3D = {1, 2, 3}
+const q: Point = $p // {1, 2}
+
+my_entity { Point: $p }
+```
+
 
 ### Enums
 An enum is defined by listing its constants in the initializer list:

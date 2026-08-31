@@ -12,8 +12,11 @@ extern ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 
 typedef struct ecs_script_template_member_t {
     int32_t index;
+    int32_t sp;
     uint64_t input;
     bool is_mut;
+    bool is_template;
+    ecs_entity_t interface;
 } ecs_script_template_member_t;
 
 typedef struct {
@@ -65,6 +68,7 @@ struct ecs_script_template_t {
     int32_t scope_count;
     int32_t component_count;
     int32_t for_count;
+    int32_t inherited_count;
 
     int32_t refcount;
 
@@ -115,6 +119,14 @@ int flecs_script_template_eval_var(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node,
     bool mut);
+
+ecs_entity_t flecs_script_template_member_interface(
+    const ecs_script_template_t *template,
+    int32_t sp);
+
+bool flecs_script_template_member_is_template(
+    const ecs_script_template_t *template,
+    int32_t sp);
 
 int flecs_script_template_update_vars(
     ecs_script_eval_visitor_t *v,

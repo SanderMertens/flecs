@@ -65,8 +65,13 @@ typedef struct ecs_script_id_t {
      * stack pointers so we don't have to lookup variables by name. */
     int32_t first_sp; 
     int32_t second_sp;
+    int32_t value_sp;
     int32_t first_symbol;
     int32_t second_symbol;
+
+    /* If first is a template prop typed by an interface struct, this is the
+     * struct the resolved template must derive from. */
+    ecs_entity_t interface;
 
     /* In case first/second are specified as interpolated strings. */
     ecs_expr_node_t *first_expr;
@@ -155,6 +160,8 @@ typedef struct ecs_script_annot_t {
 typedef struct ecs_script_template_node_t {
     ecs_script_node_t node;
     const char *name;
+    const char *base;
+    ecs_entity_t eval_base;
     ecs_script_scope_t* scope;
     int32_t symbol;
     int32_t symbol_offset;
@@ -166,8 +173,10 @@ typedef struct ecs_script_var_node_t {
     ecs_script_node_t node;
     const char *name;
     const char *type;
+    bool type_is_template;
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
+    ecs_entity_t eval_interface;
     int32_t sp;
     int32_t symbol;
     bool is_await;

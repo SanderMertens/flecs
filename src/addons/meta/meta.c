@@ -291,6 +291,8 @@ void FlecsMetaImport(
     ecs_set_name_prefix(world, "Ecs");
 
     flecs_bootstrap_component(world, EcsTypeSerializer);
+    ecs_add_pair(world, ecs_id(EcsTypeSerializer), EcsOnInstantiate,
+        EcsDontInherit);
 
     ecs_entity_t type_component = ecs_entity(world, { .id = ecs_id(EcsType),
         .name = "type", .symbol = "EcsType" });

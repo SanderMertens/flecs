@@ -34895,6 +34895,8 @@ int flecs_query_trivial_has_range(
     const ecs_world_t *real_world = q->real_world;
     const ecs_term_t *terms = q->terms;
     const ecs_table_record_t *term_trs[FLECS_TERM_COUNT_MAX];
+    ecs_entity_t term_srcs[FLECS_TERM_COUNT_MAX] = {0};
+    bool any_from_base = false;
     int32_t t, term_count = q->term_count;
     const ecs_table_record_t *table_records = table->_->records;
     int32_t type_count = table->type.count;
@@ -34905,8 +34907,10 @@ int flecs_query_trivial_has_range(
         ecs_id_t term_id = terms[t].id;
 
         /* An id that is not owned by the table can still be matched on a
-         * base entity when the term traverses IsA, in which case the query
-         * engine has to do the work. */
+         * base entity when the term traverses IsA. The base search returns the
+         * table record the id was found on, which is everything the iterator
+         * needs, so an IsA-trivial query can answer such a term itself instead
+         * of handing the table to the query engine. */
         bool up = (terms[t].src.id & EcsUp) != 0;
         bool is_not = terms[t].oper == EcsNot;
         const ecs_table_record_t *tr = NULL;
@@ -34931,9 +34935,11 @@ int flecs_query_trivial_has_range(
         bool present = owned;
         bool from_base = false;
 
+        ecs_entity_t base_src = 0;
+        ecs_table_record_t *base_tr = NULL;
         if (!present && up) {
             if (ecs_search_relation(real_world, table, 0, term_id, EcsIsA,
-                EcsUp, NULL, NULL, NULL) != -1)
+                EcsUp, &base_src, NULL, &base_tr) != -1)
             {
                 present = true;
                 from_base = true;
@@ -34956,14 +34962,20 @@ int flecs_query_trivial_has_range(
                 return 0;
             }
             if (!owned) {
-                goto not_trivial;
+                if (!isa_ok || !base_src || !base_tr) {
+                    goto not_trivial;
+                }
+                term_trs[t] = base_tr;
+                term_srcs[t] = base_src;
+                any_from_base = true;
+                continue;
             }
         }
 
         term_trs[t] = tr;
     }
 
-    if (!self_ok) {
+    if (any_from_base ? !isa_ok : !self_ok) {
         goto not_trivial;
     }
 
@@ -34992,7 +35004,13 @@ int flecs_query_trivial_has_range(
             continue;
         }
         lit.trs[field_index] = term_trs[t];
-        columns[field_index] = term_trs[t]->column;
+        if (term_srcs[t]) {
+            lit.sources[field_index] = term_srcs[t];
+            columns[field_index] = -1;
+            lit.up_fields |= (ecs_termset_t)1 << field_index;
+        } else {
+            columns[field_index] = term_trs[t]->column;
+        }
     }
 
     const ecs_entity_t *entities = ecs_table_entities(table);

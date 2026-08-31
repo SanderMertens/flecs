@@ -112,6 +112,16 @@ int flecs_meta_value_type_str(
 void flecs_meta_import_definitions(
     ecs_world_t *world);
 
+int32_t flecs_struct_inherited_count(
+    ecs_world_t *world,
+    ecs_entity_t struct_type,
+    const EcsStruct *s);
+
+bool flecs_struct_is_derived_from(
+    const ecs_world_t *world,
+    ecs_entity_t derived,
+    ecs_entity_t base);
+
 #endif
 
 #endif

@@ -652,6 +652,7 @@ static int flecs_script_dep_id(
     }
     *input |= flecs_script_dep_var_get(ctx, id->first_sp);
     *input |= flecs_script_dep_var_get(ctx, id->second_sp);
+    *input |= flecs_script_dep_var_get(ctx, id->value_sp);
     return 0;
 }
 
@@ -1033,6 +1034,12 @@ static int flecs_script_dep_template_init(
         flecs_script_dep_var_set(ctx, i, input);
     }
     flecs_script_dep_var_set(ctx, count, 0);
+
+    members = ecs_vec_first(&template->members);
+    for (i = 0; i < template->inherited_count; i ++) {
+        flecs_script_dep_var_set(ctx, count + 1 + i, members[i].input);
+    }
+    ctx->member = template->inherited_count;
     return 0;
 }
 

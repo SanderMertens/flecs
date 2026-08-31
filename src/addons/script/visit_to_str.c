@@ -211,6 +211,9 @@ static void flecs_script_template_to_str(
 {
     flecs_scriptbuf_node(v, &node->node);
     flecs_scriptbuf_append(v, "%s ", node->name);
+    if (node->base) {
+        flecs_scriptbuf_append(v, ": %s ", node->base);
+    }
     flecs_script_scope_to_str(v, node->scope);
 }
 
@@ -220,8 +223,9 @@ static void flecs_script_var_node_to_str(
 {
     flecs_scriptbuf_node(v, &node->node);
     if (node->type) {
-        flecs_scriptbuf_append(v, "%s : %s = ", 
+        flecs_scriptbuf_append(v, "%s : %s%s = ", 
             node->name,
+            node->type_is_template ? "template " : "",
             node->type);
     } else {
         flecs_scriptbuf_append(v, "%s = ", 

@@ -207,6 +207,8 @@ void StructTypes_direct_cycle(void);
 void StructTypes_indirect_cycle(void);
 void StructTypes_use_before_registering_reflection(void);
 void StructTypes_use_before_registering_reflection_w_hooks(void);
+void StructTypes_redefine_same_members_in_use(void);
+void StructTypes_redefine_member_after_nested_type_changed(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -1341,6 +1343,57 @@ void OpaqueTypes_anonymous_opaque_as_type_parent(void);
 void OpaqueTypes_named_opaque_as_type_parent(void);
 void OpaqueTypes_parented_opaque_as_type_parent(void);
 
+// Testsuite 'StructInheritance'
+void StructInheritance_base_1_derived_1(void);
+void StructInheritance_base_2_derived_1(void);
+void StructInheritance_base_1_derived_2(void);
+void StructInheritance_derived_no_members(void);
+void StructInheritance_isa_after_empty_struct_init(void);
+void StructInheritance_isa_after_empty_struct_init_add_member(void);
+void StructInheritance_add_member_to_derived(void);
+void StructInheritance_base_w_padding(void);
+void StructInheritance_derived_alignment_larger_than_base(void);
+void StructInheritance_chain(void);
+void StructInheritance_chain_no_own_members(void);
+void StructInheritance_two_derived_from_same_base(void);
+void StructInheritance_duplicate_member_add_member(void);
+void StructInheritance_duplicate_member_struct_init(void);
+void StructInheritance_isa_after_members_error(void);
+void StructInheritance_non_struct_base(void);
+void StructInheritance_non_struct_base_no_members(void);
+void StructInheritance_isa_non_struct_does_not_add_struct(void);
+void StructInheritance_multiple_isa_one_struct(void);
+void StructInheritance_get_member_inherited(void);
+void StructInheritance_get_nth_member(void);
+void StructInheritance_inherited_member_entities(void);
+void StructInheritance_derived_member_entities(void);
+void StructInheritance_derived_member_entities_duplicate(void);
+void StructInheritance_ptr_to_expr(void);
+void StructInheritance_ptr_from_expr(void);
+void StructInheritance_ptr_from_expr_member_names(void);
+void StructInheritance_cursor(void);
+void StructInheritance_cursor_next(void);
+void StructInheritance_entity_to_json(void);
+void StructInheritance_entity_from_json(void);
+void StructInheritance_type_info(void);
+void StructInheritance_use_as_component(void);
+void StructInheritance_base_string_member(void);
+void StructInheritance_base_array_member(void);
+void StructInheritance_base_unit_member(void);
+void StructInheritance_base_member_ranges(void);
+void StructInheritance_base_existing_c_type(void);
+void StructInheritance_derived_existing_c_type(void);
+void StructInheritance_derived_existing_c_type_w_padding(void);
+void StructInheritance_nested_derived_as_member(void);
+void StructInheritance_derived_from_stage(void);
+void StructInheritance_deferred_isa(void);
+void StructInheritance_serializer_ops(void);
+void StructInheritance_derived_equals(void);
+void StructInheritance_cursor_set_value_derived(void);
+void StructInheritance_cursor_set_value_derived_member(void);
+void StructInheritance_cursor_set_value_base_to_derived_fails(void);
+void StructInheritance_cursor_set_value_unrelated_fails(void);
+
 // Testsuite 'Misc'
 void Misc_primitive_from_stage(void);
 void Misc_enum_from_stage(void);
@@ -2226,6 +2279,14 @@ bake_test_case StructTypes_testcases[] = {
     {
         "use_before_registering_reflection_w_hooks",
         StructTypes_use_before_registering_reflection_w_hooks
+    },
+    {
+        "redefine_same_members_in_use",
+        StructTypes_redefine_same_members_in_use
+    },
+    {
+        "redefine_member_after_nested_type_changed",
+        StructTypes_redefine_member_after_nested_type_changed
     }
 };
 
@@ -6681,6 +6742,205 @@ bake_test_case OpaqueTypes_testcases[] = {
     }
 };
 
+bake_test_case StructInheritance_testcases[] = {
+    {
+        "base_1_derived_1",
+        StructInheritance_base_1_derived_1
+    },
+    {
+        "base_2_derived_1",
+        StructInheritance_base_2_derived_1
+    },
+    {
+        "base_1_derived_2",
+        StructInheritance_base_1_derived_2
+    },
+    {
+        "derived_no_members",
+        StructInheritance_derived_no_members
+    },
+    {
+        "isa_after_empty_struct_init",
+        StructInheritance_isa_after_empty_struct_init
+    },
+    {
+        "isa_after_empty_struct_init_add_member",
+        StructInheritance_isa_after_empty_struct_init_add_member
+    },
+    {
+        "add_member_to_derived",
+        StructInheritance_add_member_to_derived
+    },
+    {
+        "base_w_padding",
+        StructInheritance_base_w_padding
+    },
+    {
+        "derived_alignment_larger_than_base",
+        StructInheritance_derived_alignment_larger_than_base
+    },
+    {
+        "chain",
+        StructInheritance_chain
+    },
+    {
+        "chain_no_own_members",
+        StructInheritance_chain_no_own_members
+    },
+    {
+        "two_derived_from_same_base",
+        StructInheritance_two_derived_from_same_base
+    },
+    {
+        "duplicate_member_add_member",
+        StructInheritance_duplicate_member_add_member
+    },
+    {
+        "duplicate_member_struct_init",
+        StructInheritance_duplicate_member_struct_init
+    },
+    {
+        "isa_after_members_error",
+        StructInheritance_isa_after_members_error
+    },
+    {
+        "non_struct_base",
+        StructInheritance_non_struct_base
+    },
+    {
+        "non_struct_base_no_members",
+        StructInheritance_non_struct_base_no_members
+    },
+    {
+        "isa_non_struct_does_not_add_struct",
+        StructInheritance_isa_non_struct_does_not_add_struct
+    },
+    {
+        "multiple_isa_one_struct",
+        StructInheritance_multiple_isa_one_struct
+    },
+    {
+        "get_member_inherited",
+        StructInheritance_get_member_inherited
+    },
+    {
+        "get_nth_member",
+        StructInheritance_get_nth_member
+    },
+    {
+        "inherited_member_entities",
+        StructInheritance_inherited_member_entities
+    },
+    {
+        "derived_member_entities",
+        StructInheritance_derived_member_entities
+    },
+    {
+        "derived_member_entities_duplicate",
+        StructInheritance_derived_member_entities_duplicate
+    },
+    {
+        "ptr_to_expr",
+        StructInheritance_ptr_to_expr
+    },
+    {
+        "ptr_from_expr",
+        StructInheritance_ptr_from_expr
+    },
+    {
+        "ptr_from_expr_member_names",
+        StructInheritance_ptr_from_expr_member_names
+    },
+    {
+        "cursor",
+        StructInheritance_cursor
+    },
+    {
+        "cursor_next",
+        StructInheritance_cursor_next
+    },
+    {
+        "entity_to_json",
+        StructInheritance_entity_to_json
+    },
+    {
+        "entity_from_json",
+        StructInheritance_entity_from_json
+    },
+    {
+        "type_info",
+        StructInheritance_type_info
+    },
+    {
+        "use_as_component",
+        StructInheritance_use_as_component
+    },
+    {
+        "base_string_member",
+        StructInheritance_base_string_member
+    },
+    {
+        "base_array_member",
+        StructInheritance_base_array_member
+    },
+    {
+        "base_unit_member",
+        StructInheritance_base_unit_member
+    },
+    {
+        "base_member_ranges",
+        StructInheritance_base_member_ranges
+    },
+    {
+        "base_existing_c_type",
+        StructInheritance_base_existing_c_type
+    },
+    {
+        "derived_existing_c_type",
+        StructInheritance_derived_existing_c_type
+    },
+    {
+        "derived_existing_c_type_w_padding",
+        StructInheritance_derived_existing_c_type_w_padding
+    },
+    {
+        "nested_derived_as_member",
+        StructInheritance_nested_derived_as_member
+    },
+    {
+        "derived_from_stage",
+        StructInheritance_derived_from_stage
+    },
+    {
+        "deferred_isa",
+        StructInheritance_deferred_isa
+    },
+    {
+        "serializer_ops",
+        StructInheritance_serializer_ops
+    },
+    {
+        "derived_equals",
+        StructInheritance_derived_equals
+    },
+    {
+        "cursor_set_value_derived",
+        StructInheritance_cursor_set_value_derived
+    },
+    {
+        "cursor_set_value_derived_member",
+        StructInheritance_cursor_set_value_derived_member
+    },
+    {
+        "cursor_set_value_base_to_derived_fails",
+        StructInheritance_cursor_set_value_base_to_derived_fails
+    },
+    {
+        "cursor_set_value_unrelated_fails",
+        StructInheritance_cursor_set_value_unrelated_fails
+    }
+};
+
 bake_test_case Misc_testcases[] = {
     {
         "primitive_from_stage",
@@ -7146,7 +7406,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        38,
+        40,
         StructTypes_testcases
     },
     {
@@ -7262,6 +7522,13 @@ static bake_test_suite suites[] = {
         OpaqueTypes_testcases
     },
     {
+        "StructInheritance",
+        NULL,
+        NULL,
+        49,
+        StructInheritance_testcases
+    },
+    {
         "Misc",
         NULL,
         NULL,
@@ -7292,5 +7559,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 25);
+    return bake_test_run("meta", argc, argv, suites, 26);
 }

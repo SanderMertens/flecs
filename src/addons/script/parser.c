@@ -452,76 +452,30 @@ static const char* flecs_script_parse_var(
             }
 
             case ':': {
+                {
+                    LookAhead_1(EcsTokKeywordTemplate,
+                        if (!is_prop) {
+                            Error("'%s %s: template ...' is invalid, template "
+                                "types are only allowed for prop variables",
+                                kind_str, var->name);
+                        }
+
+                        pos = lookahead;
+
+                        Parse_1(EcsTokIdentifier,
+                            var->type = Token(4 + token_offset);
+                            var->type_is_template = true;
+                            goto var_type;
+                        )
+                    )
+                }
+
                 LookAhead_1(EcsTokIdentifier,
                     pos = lookahead;
 
                     var->type = Token(3 + token_offset);
 
-                    LookAhead(
-                        case '=': {
-                            pos = lookahead;
-
-                            {
-                                LookAhead_1(EcsTokKeywordAwait,
-                                    Error("'%s %s: %s = await ...' is invalid, "
-                                        "await variables derive their type from the "
-                                        "awaited expression, use '%s %s = await ...' "
-                                        "instead",
-                                        kind_str, var->name, var->type,
-                                        kind_str, var->name);
-                                )
-                            }
-
-                            {
-                                LookAhead_1('{',
-                                    pos = lookahead;
-                                    Expr('}', {
-                                        var->expr = EXPR;
-                                        EndOfRule;
-                                    })
-                                )
-                            }
-
-                            {
-                                LookAhead_1('[',
-                                    pos = lookahead;
-                                    Expr(']', {
-                                        var->expr = EXPR;
-                                        EndOfRule;
-                                    })
-                                )
-                            }
-
-                            {
-                                LookAhead_1(EcsTokKeywordMatch,
-                                    Expr('\n',
-                                        var->expr = EXPR;
-                                        EndOfRule;
-                                    )
-                                )
-                            }
-
-                            Initializer('\n',
-                                var->expr = INITIALIZER;
-                                EndOfRule;
-                            )
-                        }
-
-                        EcsTokEndOfStatement: {
-                            if (is_prop) {
-                                pos = lookahead;
-                                EndOfRule;
-                            }
-                            break;
-                        }
-
-                        case EcsTokScopeClose: {
-                            if (is_prop) {
-                                EndOfRule;
-                            }
-                            break;
-                        }
-                    )
+                    goto var_type;
                 )
 
                 Error("expected type name followed by '=', did you mean "
@@ -529,6 +483,78 @@ static const char* flecs_script_parse_var(
                     kind_str, var->name, kind_str, var->name);
             }
         )
+
+    var_type: {
+        LookAhead(
+            case '=': {
+                pos = lookahead;
+
+                {
+                    LookAhead_1(EcsTokKeywordAwait,
+                        Error("'%s %s: %s = await ...' is invalid, "
+                            "await variables derive their type from the "
+                            "awaited expression, use '%s %s = await ...' "
+                            "instead",
+                            kind_str, var->name, var->type,
+                            kind_str, var->name);
+                    )
+                }
+
+                {
+                    LookAhead_1('{',
+                        pos = lookahead;
+                        Expr('}', {
+                            var->expr = EXPR;
+                            EndOfRule;
+                        })
+                    )
+                }
+
+                {
+                    LookAhead_1('[',
+                        pos = lookahead;
+                        Expr(']', {
+                            var->expr = EXPR;
+                            EndOfRule;
+                        })
+                    )
+                }
+
+                {
+                    LookAhead_1(EcsTokKeywordMatch,
+                        Expr('\n',
+                            var->expr = EXPR;
+                            EndOfRule;
+                        )
+                    )
+                }
+
+                Initializer('\n',
+                    var->expr = INITIALIZER;
+                    EndOfRule;
+                )
+            }
+
+            EcsTokEndOfStatement: {
+                if (is_prop) {
+                    pos = lookahead;
+                    EndOfRule;
+                }
+                break;
+            }
+
+            case EcsTokScopeClose: {
+                if (is_prop) {
+                    EndOfRule;
+                }
+                break;
+            }
+        )
+
+        Error("expected type name followed by '=', did you mean "
+            "'%s %s = ...' or '%s %s: type = ...' instead?",
+            kind_str, var->name, kind_str, var->name);
+    }
     )
 
 error:
@@ -876,6 +902,17 @@ template_stmt: {
         ecs_script_template_node_t *template = flecs_script_insert_template(
             parser, Token(1));
 
+        {
+            LookAhead_1(':',
+                pos = lookahead;
+                Parse_1(EcsTokIdentifier,
+                    template->base = Token(3);
+                    goto template_scope;
+                )
+            )
+        }
+
+    template_scope:
         pos = flecs_script_skip_newlines(parser, pos);
 
         // template SpaceShip {

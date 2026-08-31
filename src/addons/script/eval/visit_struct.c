@@ -7,6 +7,28 @@
 
 #ifdef FLECS_SCRIPT
 #include "../script.h"
+#include "../../meta/meta.h"
+
+bool flecs_script_struct_member_is_inherited(
+    ecs_world_t *world,
+    ecs_entity_t struct_type,
+    const char *name)
+{
+    const EcsStruct *st = ecs_get(world, struct_type, EcsStruct);
+    if (!st) {
+        return false;
+    }
+
+    int32_t i, inherited = flecs_struct_inherited_count(world, struct_type, st);
+    const ecs_member_t *members = ecs_vec_first_t(&st->members, ecs_member_t);
+    for (i = 0; i < inherited; i ++) {
+        if (!ecs_os_strcmp(members[i].name, name)) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 int flecs_script_struct_visit(
     const ecs_script_visitor_ctx_t *ctx)
@@ -19,6 +41,11 @@ int flecs_script_struct_visit(
     if (!node || node->node.kind == EcsExprEmptyInitializer ||
         !ecs_vec_count(&node->elements))
     {
+        const EcsStruct *st = ecs_get(world, ctx->entity, EcsStruct);
+        if (st && flecs_struct_inherited_count(world, ctx->entity, st) > 0) {
+            return 0;
+        }
+
         flecs_script_eval_error(v, NULL,
             "struct '%s' must have at least one member "
             "('struct %s(name: type)')",
@@ -51,6 +78,15 @@ int flecs_script_struct_visit(
         if (!elem->value) {
             flecs_expr_visit_error(script, NULL,
                 "missing type for struct member '%s'", elem->member);
+            return -1;
+        }
+
+        if (flecs_script_struct_member_is_inherited(
+            world, ctx->entity, elem->member))
+        {
+            flecs_expr_visit_error(script, elem->value,
+                "member '%s' of struct '%s' is already defined by base type",
+                elem->member, ecs_get_name(world, ctx->entity));
             return -1;
         }
 
