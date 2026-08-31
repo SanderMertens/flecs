@@ -1560,7 +1560,11 @@
                 "compare_idempotent",
                 "value_compare",
                 "value_equals",
-                "value_different_types"
+                "value_different_types",
+                "compare_struct_in_use",
+                "equals_struct_in_use",
+                "compare_array_of_struct_in_use",
+                "equals_struct_w_inline_array_in_use"
             ]
         }]
     }

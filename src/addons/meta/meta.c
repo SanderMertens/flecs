@@ -213,6 +213,7 @@ int flecs_init_type(
         if (meta_type->existing) {
             if(!ti->hooks.ctor) {
                 ti->hooks.ctor = flecs_default_ctor;
+                ti->hooks.flags |= ECS_TYPE_HOOK_CTOR;
             }
 
             if(kind == EcsEnumType) {
