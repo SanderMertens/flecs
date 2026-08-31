@@ -6129,3 +6129,129 @@ void Template_template_props_no_member_entities(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_prop_w_component_type_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t existing = ecs_new(world);
+    ecs_set(world, existing, Position, {1, 2});
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop pos: Position = {10, 20}"
+    LINE "  Position: {$pos.x, $pos.y}"
+    LINE "}"
+    LINE "Tree ent(pos: {30, 40})";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    test_assert(ent != 0);
+
+    const Position *p = ecs_get(world, ent, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void Template_template_prop_w_array_of_component_type_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "Positions" }),
+        .type = ecs_id(Position),
+        .count = 3
+    });
+
+    ecs_entity_t existing = ecs_new(world);
+    ecs_set(world, existing, Position, {1, 2});
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop points: Positions = [{1, 2}, {3, 4}, {5, 6}]"
+    LINE "  Position: {$points[1].x, $points[1].y}"
+    LINE "}"
+    LINE "Tree ent(points: [{10, 20}, {30, 40}, {50, 60}])";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    test_assert(ent != 0);
+
+    const Position *p = ecs_get(world, ent, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+typedef struct {
+    ecs_f32_t values[3];
+} TemplateValues;
+
+void Template_template_prop_w_inline_array_member_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, TemplateValues);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(TemplateValues),
+        .members = {
+            {"values", ecs_id(ecs_f32_t), .count = 3}
+        }
+    });
+
+    ecs_entity_t existing = ecs_new(world);
+    ecs_set(world, existing, TemplateValues, {{1, 2, 3}});
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop v: TemplateValues = {values: [1, 2, 3]}"
+    LINE "  Position: {$v.values[0], $v.values[2]}"
+    LINE "}"
+    LINE "Tree ent(v: {values: [10, 20, 30]})";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    test_assert(ent != 0);
+
+    const Position *p = ecs_get(world, ent, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}

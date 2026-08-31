@@ -463,3 +463,116 @@ void SetRttHooks_value_different_types(void) {
 
     ecs_fini(world);
 }
+
+void SetRttHooks_compare_struct_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = define_struct_with_ints(world);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_id(world, e, t, sizeof(StructWithInts), &(StructWithInts){10, 20});
+
+    test_int(ecs_set_rtt_compare(world, t), 0);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, t);
+    test_assert(ti->hooks.cmp != NULL);
+    test_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+
+    StructWithInts a = {10, 20};
+    StructWithInts b = {10, 25};
+    StructWithInts c = {10, 20};
+
+    test_assert(value_cmp(world, t, &a, &b) < 0);
+    test_int(value_cmp(world, t, &a, &c), 0);
+
+    ecs_fini(world);
+}
+
+void SetRttHooks_equals_struct_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = define_struct_with_ints(world);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_id(world, e, t, sizeof(StructWithInts), &(StructWithInts){10, 20});
+
+    test_int(ecs_set_rtt_equals(world, t), 0);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, t);
+    test_assert(ti->hooks.equals != NULL);
+    test_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    StructWithInts a = {10, 20};
+    StructWithInts b = {10, 25};
+    StructWithInts c = {10, 20};
+
+    test_bool(value_eq(world, t, &a, &b), false);
+    test_bool(value_eq(world, t, &a, &c), true);
+
+    ecs_fini(world);
+}
+
+void SetRttHooks_compare_array_of_struct_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t elem = define_struct_without_hooks(world);
+
+    ecs_entity_t t = ecs_array(world, {
+        .type = elem,
+        .count = 3
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_id(world, e, elem, sizeof(StructWithInts), 
+        &(StructWithInts){10, 20});
+
+    test_int(ecs_set_rtt_compare(world, t), 0);
+
+    const ecs_type_info_t *elem_ti = ecs_get_type_info(world, elem);
+    test_assert(elem_ti->hooks.cmp != NULL);
+    test_assert(!(elem_ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+
+    StructWithInts a[3] = {{1, 1}, {2, 2}, {3, 3}};
+    StructWithInts b[3] = {{1, 1}, {2, 2}, {3, 3}};
+    StructWithInts c[3] = {{1, 1}, {2, 2}, {3, 4}};
+
+    test_int(value_cmp(world, t, a, b), 0);
+    test_assert(value_cmp(world, t, a, c) < 0);
+    test_bool(value_eq(world, t, a, b), true);
+    test_bool(value_eq(world, t, a, c), false);
+
+    ecs_fini(world);
+}
+
+void SetRttHooks_equals_struct_w_inline_array_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t values[3];
+    } StructWithInlineArray;
+
+    ECS_COMPONENT(world, StructWithInlineArray);
+
+    ecs_struct(world, {
+        .entity = ecs_id(StructWithInlineArray),
+        .members = {
+            {"values", ecs_id(ecs_i32_t), .count = 3}
+        }
+    });
+
+    ecs_entity_t t = ecs_id(StructWithInlineArray);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, StructWithInlineArray, {{10, 20, 30}});
+
+    test_int(ecs_set_rtt_equals(world, t), 0);
+
+    StructWithInlineArray a = {{10, 20, 30}};
+    StructWithInlineArray b = {{10, 20, 30}};
+    StructWithInlineArray c = {{10, 20, 40}};
+
+    test_bool(value_eq(world, t, &a, &b), true);
+    test_bool(value_eq(world, t, &a, &c), false);
+
+    ecs_fini(world);
+}

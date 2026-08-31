@@ -1075,6 +1075,9 @@ void Template_template_prop_typed_no_default_override(void);
 void Template_template_prop_no_default_missing_type(void);
 void Template_template_prop_struct_in_nested_struct_literal_w_using(void);
 void Template_template_prop_struct_member_expr_in_struct_literal(void);
+void Template_template_prop_w_component_type_in_use(void);
+void Template_template_prop_w_array_of_component_type_in_use(void);
+void Template_template_prop_w_inline_array_member_in_use(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -7149,6 +7152,18 @@ bake_test_case Template_testcases[] = {
     {
         "template_prop_struct_member_expr_in_struct_literal",
         Template_template_prop_struct_member_expr_in_struct_literal
+    },
+    {
+        "template_prop_w_component_type_in_use",
+        Template_template_prop_w_component_type_in_use
+    },
+    {
+        "template_prop_w_array_of_component_type_in_use",
+        Template_template_prop_w_array_of_component_type_in_use
+    },
+    {
+        "template_prop_w_inline_array_member_in_use",
+        Template_template_prop_w_inline_array_member_in_use
     }
 };
 
@@ -14446,7 +14461,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        139,
+        142,
         Template_testcases
     },
     {

@@ -1506,6 +1506,10 @@ void SetRttHooks_compare_idempotent(void);
 void SetRttHooks_value_compare(void);
 void SetRttHooks_value_equals(void);
 void SetRttHooks_value_different_types(void);
+void SetRttHooks_compare_struct_in_use(void);
+void SetRttHooks_equals_struct_in_use(void);
+void SetRttHooks_compare_array_of_struct_in_use(void);
+void SetRttHooks_equals_struct_w_inline_array_in_use(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -7370,6 +7374,22 @@ bake_test_case SetRttHooks_testcases[] = {
     {
         "value_different_types",
         SetRttHooks_value_different_types
+    },
+    {
+        "compare_struct_in_use",
+        SetRttHooks_compare_struct_in_use
+    },
+    {
+        "equals_struct_in_use",
+        SetRttHooks_equals_struct_in_use
+    },
+    {
+        "compare_array_of_struct_in_use",
+        SetRttHooks_compare_array_of_struct_in_use
+    },
+    {
+        "equals_struct_w_inline_array_in_use",
+        SetRttHooks_equals_struct_w_inline_array_in_use
     }
 };
 
@@ -7553,7 +7573,7 @@ static bake_test_suite suites[] = {
         "SetRttHooks",
         NULL,
         NULL,
-        15,
+        19,
         SetRttHooks_testcases
     }
 };

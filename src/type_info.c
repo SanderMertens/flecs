@@ -347,7 +347,9 @@ static bool flecs_type_hooks_storage_equal(
     const ecs_type_hooks_t *a,
     const ecs_type_hooks_t *b)
 {
-    ecs_flags32_t flags = ECS_TYPE_HOOKS|ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_flags32_t flags = (ECS_TYPE_HOOKS|ECS_TYPE_HOOKS_ILLEGAL) &
+        ~(ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS|
+          ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL);
     if ((a->flags & flags) != (b->flags & flags)) {
         return false;
     }

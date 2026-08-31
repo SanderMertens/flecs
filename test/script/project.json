@@ -1088,7 +1088,10 @@
                 "template_prop_typed_no_default_override",
                 "template_prop_no_default_missing_type",
                 "template_prop_struct_in_nested_struct_literal_w_using",
-                "template_prop_struct_member_expr_in_struct_literal"
+                "template_prop_struct_member_expr_in_struct_literal",
+                "template_prop_w_component_type_in_use",
+                "template_prop_w_array_of_component_type_in_use",
+                "template_prop_w_inline_array_member_in_use"
             ]
         }, {
             "id": "Mut",
