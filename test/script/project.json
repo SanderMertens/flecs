@@ -1091,7 +1091,11 @@
                 "template_prop_struct_member_expr_in_struct_literal",
                 "template_prop_w_component_type_in_use",
                 "template_prop_w_array_of_component_type_in_use",
-                "template_prop_w_inline_array_member_in_use"
+                "template_prop_w_inline_array_member_in_use",
+                "template_base_w_inline_array_member_elem_in_if",
+                "template_base_w_inline_array_member_elem_in_for",
+                "template_base_w_inline_array_member_reassign",
+                "template_base_w_inline_array_member_reassign_no_index"
             ]
         }, {
             "id": "Mut",

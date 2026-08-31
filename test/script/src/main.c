@@ -1078,6 +1078,10 @@ void Template_template_prop_struct_member_expr_in_struct_literal(void);
 void Template_template_prop_w_component_type_in_use(void);
 void Template_template_prop_w_array_of_component_type_in_use(void);
 void Template_template_prop_w_inline_array_member_in_use(void);
+void Template_template_base_w_inline_array_member_elem_in_if(void);
+void Template_template_base_w_inline_array_member_elem_in_for(void);
+void Template_template_base_w_inline_array_member_reassign(void);
+void Template_template_base_w_inline_array_member_reassign_no_index(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -7164,6 +7168,22 @@ bake_test_case Template_testcases[] = {
     {
         "template_prop_w_inline_array_member_in_use",
         Template_template_prop_w_inline_array_member_in_use
+    },
+    {
+        "template_base_w_inline_array_member_elem_in_if",
+        Template_template_base_w_inline_array_member_elem_in_if
+    },
+    {
+        "template_base_w_inline_array_member_elem_in_for",
+        Template_template_base_w_inline_array_member_elem_in_for
+    },
+    {
+        "template_base_w_inline_array_member_reassign",
+        Template_template_base_w_inline_array_member_reassign
+    },
+    {
+        "template_base_w_inline_array_member_reassign_no_index",
+        Template_template_base_w_inline_array_member_reassign_no_index
     }
 };
 
@@ -14461,7 +14481,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        142,
+        146,
         Template_testcases
     },
     {
