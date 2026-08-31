@@ -1188,3 +1188,95 @@ void StructTypes_struct_w_use_offset_zero_w_member_entities(void) {
 
     ecs_fini(world);
 }
+
+void StructTypes_redefine_same_members_in_use(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+    test_assert(t != 0);
+
+    ecs_entity_t e = ecs_new(world);
+    T *ptr = ecs_ensure_id(world, e, t, sizeof(T));
+    ptr->x = 10;
+    ptr->y = 20;
+    ecs_modified_id(world, e, t);
+
+    test_int(ecs_struct_add_member(world, t, &(ecs_member_t){
+        .name = "x", .type = ecs_id(ecs_i32_t)
+    }), 0);
+    test_int(ecs_struct_add_member(world, t, &(ecs_member_t){
+        .name = "y", .type = ecs_id(ecs_i32_t)
+    }), 0);
+
+    meta_test_struct(world, t, T);
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 0);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 0);
+
+    const EcsStruct *st = ecs_get(world, t, EcsStruct);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const T *cptr = ecs_get_id(world, e, t);
+    test_int(cptr->x, 10);
+    test_int(cptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void StructTypes_redefine_member_after_nested_type_changed(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t z;
+    } Inner;
+
+    typedef struct {
+        Inner inner;
+        ecs_i32_t y;
+    } Outer;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t inner = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Inner"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+    test_assert(inner != 0);
+
+    ecs_entity_t outer = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Outer"}),
+        .members = {
+            {"inner", inner},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+    test_assert(outer != 0);
+
+    const EcsComponent *c = ecs_get(world, outer, EcsComponent);
+    test_int(c->size, 8);
+
+    test_int(ecs_struct_add_member(world, inner, &(ecs_member_t){
+        .name = "z", .type = ecs_id(ecs_i32_t)
+    }), 0);
+
+    test_int(ecs_struct_add_member(world, outer, &(ecs_member_t){
+        .name = "inner", .type = inner
+    }), 0);
+
+    meta_test_struct(world, outer, Outer);
+    meta_test_member(world, outer, Outer, inner, inner, 0);
+    meta_test_member(world, outer, Outer, y, ecs_id(ecs_i32_t), 0);
+
+    ecs_fini(world);
+}

@@ -174,6 +174,7 @@ static int flecs_script_set_id(
     id->second = second;
     id->first_sp = -1;
     id->second_sp = -1;
+    id->value_sp = -1;
     id->first_symbol = -1;
     id->second_symbol = -1;
 
@@ -348,6 +349,8 @@ ecs_script_template_node_t* flecs_script_insert_template(
     result->symbol_count = -1;
     result->root_symbol = -1;
     result->name = name;
+    result->base = NULL;
+    result->eval_base = 0;
     result->scope = flecs_script_scope_new(parser);
 
     flecs_ast_append(parser, scope->stmts, ecs_script_template_node_t, result);

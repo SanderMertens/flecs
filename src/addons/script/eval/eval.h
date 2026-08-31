@@ -36,6 +36,11 @@ int flecs_script_eval_include(
 int flecs_script_struct_visit(
     const ecs_script_visitor_ctx_t *ctx);
 
+bool flecs_script_struct_member_is_inherited(
+    ecs_world_t *world,
+    ecs_entity_t struct_type,
+    const char *name);
+
 int flecs_script_enum_visit(
     const ecs_script_visitor_ctx_t *ctx);
 

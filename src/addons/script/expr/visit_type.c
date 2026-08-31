@@ -1427,10 +1427,21 @@ static int flecs_expr_initializer_visit_type(
         }
 
         if (elem->value->type != elem_type) {
+            bool derived = elem->value->type != type &&
+                flecs_struct_is_derived_from(
+                    script->world, elem->value->type, type);
             if (count == 1 && !node->is_collection && !elem->member &&
-                !elem->key && !elem->operator && elem->value->type == type)
+                !elem->key && !elem->operator &&
+                (elem->value->type == type || derived))
             {
                 ecs_expr_node_t *value = elem->value;
+                if (derived) {
+                    value = (ecs_expr_node_t*)flecs_expr_cast(
+                        script, value, type);
+                    if (!value) {
+                        goto error;
+                    }
+                }
                 elem->value = NULL;
                 if (ecs_meta_pop(cur)) {
                     goto error;
@@ -1438,6 +1449,21 @@ static int flecs_expr_initializer_visit_type(
                 flecs_expr_visit_free(script, (ecs_expr_node_t*)node);
                 *node_ptr = value;
                 return 0;
+            }
+
+            if (count == 1 && !node->is_collection && !elem->member &&
+                !elem->key && !elem->operator &&
+                ecs_has(script->world, elem->value->type, EcsStruct) &&
+                !flecs_expr_explicit_cast_allowed(
+                    script->world, elem->value->type, elem_type))
+            {
+                char *from = ecs_get_path(script->world, elem->value->type);
+                char *to = ecs_get_path(script->world, type);
+                flecs_expr_visit_error(script, elem->value,
+                    "cannot assign value of type %s to %s", from, to);
+                ecs_os_free(from);
+                ecs_os_free(to);
+                goto error;
             }
 
             ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(

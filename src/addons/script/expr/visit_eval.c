@@ -1597,8 +1597,16 @@ int flecs_expr_visit_eval(
     flecs_expr_stack_push(stack);
 
     ecs_expr_value_t val_tmp;
+    /* An initializer typed by a base struct can be evaluated straight into a
+     * value of a derived struct: the base members are a prefix of the derived
+     * layout, so member offsets are the same. */
+    bool derived_target = out->type && out->ptr && out->type != node->type &&
+        (node->kind == EcsExprInitializer ||
+         node->kind == EcsExprEmptyInitializer) &&
+        flecs_struct_is_derived_from(script->world, out->type, node->type);
+
     ecs_expr_value_t *val;
-    if (out->type && (out->type == node->type) && out->ptr) {
+    if (out->type && (out->type == node->type || derived_target) && out->ptr) {
         val_tmp = (ecs_expr_value_t){
             .value = *out,
             .owned = false,

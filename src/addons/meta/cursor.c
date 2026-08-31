@@ -1961,6 +1961,11 @@ int ecs_meta_set_value(
     } else {
         void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
         if (op->type != value->type) {
+            if (flecs_struct_is_derived_from(
+                cursor->world, value->type, op->type))
+            {
+                return ecs_ptr_copy(cursor->world, op->type, ptr, value->ptr);
+            }
             char *type_str = ecs_get_path(cursor->world, value->type);
             flecs_meta_conversion_error(cursor, op, type_str);
             ecs_os_free(type_str);

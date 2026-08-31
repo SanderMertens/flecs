@@ -7,6 +7,7 @@
 
 #ifdef FLECS_SCRIPT
 #include "../script.h"
+#include "../../meta/meta.h"
 
 #define flecs_expr_ast_new(parser, T, kind)\
     (T*)flecs_expr_ast_new_(parser, ECS_SIZEOF(T), kind)
@@ -360,6 +361,12 @@ bool flecs_expr_explicit_cast_allowed(
                 /* Can cast integers to enums/bitmasks */
                 return true;
             }
+        }
+
+        if (from_type->kind == EcsStructType &&
+            to_type->kind == EcsStructType)
+        {
+            return flecs_struct_is_derived_from(world, from, to);
         }
 
         /* Cannot cast complex types that are not the same */
