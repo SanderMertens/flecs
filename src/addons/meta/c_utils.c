@@ -10,13 +10,16 @@
 #define ECS_META_IDENTIFIER_LENGTH (256)
 
 #define ecs_meta_error(ctx, ptr, ...)\
-    ecs_parser_error((ctx)->name, (ctx)->desc, ptr - (ctx)->desc, __VA_ARGS__);
+    ((ctx)->error = true,\
+        ecs_parser_error((ctx)->name, (ctx)->desc, ptr - (ctx)->desc, \
+            __VA_ARGS__))
 
 typedef char ecs_meta_token_t[ECS_META_IDENTIFIER_LENGTH];
 
 typedef struct flecs_meta_utils_parse_ctx_t {
     const char *name;
     const char *desc;
+    bool error;
 } flecs_meta_utils_parse_ctx_t;
 
 typedef struct flecs_meta_utils_type_t {
@@ -346,7 +349,30 @@ static const char* flecs_meta_utils_parse_member(
             goto error;
         }
 
-        token->count = atoi(array_start + 1);
+        const char *count_ptr = array_start + 1;
+        const char *count_end = array_end;
+        while (count_ptr < count_end && isspace(count_ptr[0])) {
+            count_ptr ++;
+        }
+        while (count_end > count_ptr && isspace(count_end[-1])) {
+            count_end --;
+        }
+
+        const char *c = count_ptr;
+        int32_t count = 0;
+        while (c < count_end && isdigit(c[0])) {
+            count = count * 10 + (c[0] - '0');
+            c ++;
+        }
+
+        if (c != count_end || count <= 0) {
+            ecs_meta_error(ctx, ptr, "invalid array size '%.*s' (array size "
+                "must be a number)",
+                    (int)(array_end - array_start - 1), array_start + 1);
+            goto error;
+        }
+
+        token->count = count;
 
         if (array_start == ptr) {
             /* If [ was found after name, continue parsing after ] */
@@ -760,6 +786,10 @@ static int flecs_meta_utils_parse_struct(
         member ++;
     }
 
+    if (ctx.error) {
+        goto error;
+    }
+
     if (!ecs_struct_init(world, &struct_desc)) {
         goto error;
     }
@@ -841,6 +871,10 @@ static int flecs_meta_utils_parse_constants(
     }
 
     ecs_set_scope(world, old_scope);
+
+    if (ctx.error) {
+        return -1;
+    }
 
     return 0;
 error:

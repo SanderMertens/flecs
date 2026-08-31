@@ -1309,6 +1309,9 @@ void MetaUtils_fwd_decl(void);
 void MetaUtils_struct_w_vec(void);
 void MetaUtils_struct_w_map(void);
 void MetaUtils_struct_w_value(void);
+void MetaUtils_struct_w_non_numeric_array_size(void);
+void MetaUtils_struct_w_zero_array_size(void);
+void MetaUtils_struct_w_numeric_array_size(void);
 
 // Testsuite 'OpaqueTypes'
 void OpaqueTypes_ser_i32_type_to_json(void);
@@ -6616,6 +6619,18 @@ bake_test_case MetaUtils_testcases[] = {
     {
         "struct_w_value",
         MetaUtils_struct_w_value
+    },
+    {
+        "struct_w_non_numeric_array_size",
+        MetaUtils_struct_w_non_numeric_array_size
+    },
+    {
+        "struct_w_zero_array_size",
+        MetaUtils_struct_w_zero_array_size
+    },
+    {
+        "struct_w_numeric_array_size",
+        MetaUtils_struct_w_numeric_array_size
     }
 };
 
@@ -7531,7 +7546,7 @@ static bake_test_suite suites[] = {
         "MetaUtils",
         NULL,
         NULL,
-        28,
+        31,
         MetaUtils_testcases
     },
     {
