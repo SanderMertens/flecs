@@ -3153,6 +3153,34 @@ void Error_on_set_error_logged(void) {
 }
 
 
+void Error_struct_member_negative_count(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL,
+        "struct CN(v: {type: f32, count: -1})", &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "invalid count") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_struct_member_huge_count(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL,
+        "struct CH(v: {type: f32, count: 1073741824})", &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "0 size") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
 void Error_struct_wo_members(void) {
     ecs_world_t *world = ecs_init();
 
