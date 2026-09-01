@@ -193,6 +193,23 @@ static void Await_reset(void)
     ecs_os_zeromem(await_i32_args);
 }
 
+void Await_task_new_w_deleted_entity(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(
+        world, NULL, "await fetch()", NULL, NULL);
+    test_assert(script != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+
+    test_expect_abort();
+    ecs_script_task_new(script, &(ecs_script_task_desc_t){ .entity = e });
+}
+
 void Await_parse_await_const(void) {
     ecs_world_t *world = ecs_init();
 

@@ -777,6 +777,7 @@
         }, {
             "id": "Await",
             "testcases": [
+                "task_new_w_deleted_entity",
                 "parse_await_const",
                 "parse_await_stmt",
                 "register_async",
