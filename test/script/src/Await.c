@@ -250,6 +250,64 @@ void Await_delete_scope_parent_while_suspended(void) {
     ecs_script_task_resume(task, NULL);
 }
 
+void Await_fini_w_alive_task(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "const v = await fetch()", NULL, NULL);
+    test_assert(script != NULL);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_script_task_t *task = ecs_script_task_new(script,
+        &(ecs_script_task_desc_t){ .entity = e });
+    test_assert(task != NULL);
+
+    test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskPending);
+    test_int(await_future_count, 1);
+    ecs_script_future_release(await_futures[0]);
+
+    test_expect_abort();
+    ecs_fini(world);
+}
+
+void Await_free_script_w_alive_task(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "const v = await fetch()", NULL, NULL);
+    test_assert(script != NULL);
+
+    ecs_script_task_t *task = ecs_script_task_new(script, NULL);
+    test_assert(task != NULL);
+
+    test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskPending);
+    test_int(await_future_count, 1);
+    ecs_script_future_release(await_futures[0]);
+
+    test_expect_abort();
+    ecs_script_free(script);
+}
+
 void Await_parse_await_const(void) {
     ecs_world_t *world = ecs_init();
 
@@ -330,11 +388,9 @@ void Await_await_const_suspend_resume(void) {
         "Foo { Position: {value, 20} }", NULL, NULL);
     test_assert(script != NULL);
 
-    ecs_script_task_t *task = ecs_script_task_new(
-        script, NULL);
+    ecs_script_task_t *task = ecs_script_task_new(script, NULL);
     test_assert(task != NULL);
-    test_int(ecs_script_task_resume(task, NULL),
-        EcsScriptTaskPending);
+    test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskPending);
     test_int(await_future_count, 1);
     test_assert(ecs_lookup(world, "Foo") == 0);
 
@@ -343,8 +399,7 @@ void Await_await_const_suspend_resume(void) {
     ecs_script_future_release(await_futures[0]);
     test_bool(ecs_script_task_is_ready(task), true);
 
-    test_int(ecs_script_task_resume(task, NULL),
-        EcsScriptTaskDone);
+    test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskDone);
     test_int(await_future_count, 1);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");

@@ -612,7 +612,7 @@ ecs_script_task_t* ecs_script_task_new(
     ecs_script_task_t *result = ecs_os_calloc_t(
         ecs_script_task_t);
     result->script = ECS_CONST_CAST(ecs_script_t*, script);
-    flecs_script_impl(result->script)->refcount ++;
+    flecs_script_impl(result->script)->task_refcount ++;
     ecs_script_runtime_t *runtime = ecs_script_runtime_new();
     result->eval_desc.runtime = runtime;
     if (desc) {
@@ -664,7 +664,7 @@ task_error:
     if (result->ctx_free) {
         result->ctx_free(result->ctx);
     }
-    ecs_script_free(result->script);
+    flecs_script_impl(result->script)->task_refcount --;
     ecs_os_free(result);
 error:
     return NULL;
@@ -774,7 +774,9 @@ void ecs_script_task_free(
     if (task->ctx_free) {
         task->ctx_free(task->ctx);
     }
-    ecs_script_free(task->script);
+    ecs_assert(flecs_script_impl(task->script)->task_refcount > 0,
+        ECS_INTERNAL_ERROR, NULL);
+    flecs_script_impl(task->script)->task_refcount --;
     ecs_os_free(task);
 }
 
@@ -787,6 +789,12 @@ static ECS_MOVE(EcsScriptTask, dst, src, {
 static ECS_DTOR(EcsScriptTask, ptr, {
     int32_t t, task_count = ecs_vec_count(&ptr->tasks);
     ecs_script_task_t **tasks = ecs_vec_first(&ptr->tasks);
+    if (task_count) {
+        ecs_assert(!(ecs_get_world(tasks[0]->script->world)->flags &
+            (EcsWorldFini|EcsWorldQuit)),
+            ECS_INVALID_OPERATION,
+            "script still has alive tasks, free tasks before ecs_fini");
+    }
     for (t = 0; t < task_count; t ++) {
         /* Component doesn't own tasks; cancel so the application observes a
          * cancelled status on the next resume and frees them. */

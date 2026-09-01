@@ -166,6 +166,7 @@ struct ecs_script_impl_t {
     const char *next_token; /* First character after expression */
     int32_t token_buffer_size;
     int32_t refcount;
+    int32_t task_refcount;
     ecs_vec_t refs;
     ecs_vec_t run_refs;
     ecs_vec_t symbol_slots;
