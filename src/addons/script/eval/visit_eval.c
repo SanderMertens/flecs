@@ -1280,6 +1280,7 @@ static int flecs_script_eval_component(
             const ecs_script_var_t *var = flecs_script_template_prop_var(
                 v, node, node->id.value_sp, node->id.eval);
             if (!var) {
+                flecs_type_info_dtor(value.ptr, 1, ti);
                 return -1;
             }
             ecs_ptr_copy_w_type_info(v->world, ti, value.ptr, var->value.ptr);
@@ -1288,12 +1289,14 @@ static int flecs_script_eval_component(
         }
 
         if (flecs_script_eval_expr(v, &node->expr, &value)) {
+            flecs_type_info_dtor(value.ptr, 1, ti);
             return -1;
         }
 
         if (needs_set) {
             ecs_set_id(v->world, src, node->id.eval,
                 flecs_itosize(ti->size), value.ptr);
+            flecs_type_info_dtor(value.ptr, 1, ti);
         } else {
             void *dst = ecs_ensure_id(v->world, src, node->id.eval,
                 flecs_ito(size_t, ti->size));

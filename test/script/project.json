@@ -956,6 +956,7 @@
         }, {
             "id": "Template",
             "testcases": [
+                "instantiate_w_string_prop_no_leak",
                 "template_no_scope",
                 "template_no_props",
                 "template_newline_before_scope",
