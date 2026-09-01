@@ -361,6 +361,10 @@ static const char* flecs_meta_utils_parse_member(
         const char *c = count_ptr;
         int32_t count = 0;
         while (c < count_end && isdigit(c[0])) {
+            if (count > ((INT32_MAX - (c[0] - '0')) / 10)) {
+                count = -1;
+                break;
+            }
             count = count * 10 + (c[0] - '0');
             c ++;
         }
@@ -804,7 +808,8 @@ done:
 
     return result;
 error:
-    return -1;
+    result = -1;
+    goto done;
 }
 
 static int flecs_meta_utils_parse_constants(

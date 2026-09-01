@@ -715,6 +715,49 @@ void MetaUtils_struct_w_zero_array_size(void) {
     ecs_fini(world);
 }
 
+void MetaUtils_struct_w_overflow_array_size(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Struct_w_array_size_expr);
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_meta_from_desc(world, ecs_id(Struct_w_array_size_expr),
+        EcsStructType, "{int32_t x;\nint32_t values[4294967297];}") != 0);
+
+    test_assert(ecs_meta_from_desc(world, ecs_id(Struct_w_array_size_expr),
+        EcsStructType, "{int32_t x;\nint32_t values[10000000001];}") != 0);
+
+    ecs_fini(world);
+}
+
+void MetaUtils_struct_w_array_size_error_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Struct_w_array_size_expr);
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_meta_from_desc(world, ecs_id(Struct_w_array_size_expr),
+        EcsStructType, "{int32_t x;\nint32_t y;\nint32_t values[0];}") != 0);
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    int32_t i;
+    for (i = 0; i < 10; i ++) {
+        test_assert(ecs_meta_from_desc(world, 
+            ecs_id(Struct_w_array_size_expr), EcsStructType, 
+            "{int32_t x;\nint32_t y;\nint32_t values[0];}") != 0);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}
+
 void MetaUtils_struct_w_numeric_array_size(void) {
     ecs_world_t *world = ecs_init();
 

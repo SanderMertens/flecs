@@ -1353,6 +1353,8 @@
                 "struct_w_map",
                 "struct_w_value",
                 "struct_w_non_numeric_array_size",
+                "struct_w_overflow_array_size",
+                "struct_w_array_size_error_no_leak",
                 "struct_w_zero_array_size",
                 "struct_w_numeric_array_size"
             ]
