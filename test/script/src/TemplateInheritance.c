@@ -753,6 +753,77 @@ void TemplateInheritance_mut_shadows_base_prop(void) {
     ecs_fini(world);
 }
 
+void TemplateInheritance_base_w_anonymous_array_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t elem = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t light = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Light" }),
+        .members = {
+            {"lanes", ecs_id(ecs_i32_t)},
+            {"lane", elem, .count = 4}
+        }
+    });
+    test_assert(light != 0);
+
+    const char *expr =
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "template L : Light {"
+    LINE "  child { Position: {lane[0].x, lanes} }"
+    LINE "}"
+    LINE "L a(lanes: 1, lane: [{1}, {2}, {3}, {4}])";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t tc = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(tc != 0);
+    ecs_iter_t it = ecs_children(world, tc);
+    int32_t count_before = 0;
+    while (ecs_children_next(&it)) {
+        count_before += it.count;
+    }
+
+    test_assert(ecs_script_run(world, NULL,
+        "L b(lanes: 2, lane: [{5}, {6}, {7}, {8}])", NULL) == 0);
+    test_assert(ecs_script_run(world, NULL,
+        "L c(lanes: 3, lane: [{9}, {10}, {11}, {12}])", NULL) == 0);
+
+    it = ecs_children(world, tc);
+    int32_t count_after = 0;
+    while (ecs_children_next(&it)) {
+        count_after += it.count;
+    }
+    test_int(count_before, count_after);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    ecs_entity_t a_child = ecs_lookup(world, "a.child");
+    ecs_entity_t b_child = ecs_lookup(world, "b.child");
+    ecs_entity_t c_child = ecs_lookup(world, "c.child");
+    test_assert(a_child != 0);
+    test_assert(b_child != 0);
+    test_assert(c_child != 0);
+
+    const float *pv = ecs_get_id(world, a_child, position);
+    test_assert(pv != NULL);
+    test_flt(pv[0], 1);
+    test_flt(pv[1], 1);
+    pv = ecs_get_id(world, b_child, position);
+    test_assert(pv != NULL);
+    test_flt(pv[0], 5);
+    test_flt(pv[1], 2);
+    pv = ecs_get_id(world, c_child, position);
+    test_assert(pv != NULL);
+    test_flt(pv[0], 9);
+    test_flt(pv[1], 3);
+
+    ecs_fini(world);
+}
+
 void TemplateInheritance_base_not_a_struct(void) {
     ecs_world_t *world = ecs_init();
 
