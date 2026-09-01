@@ -2604,6 +2604,7 @@
                 "const_dependency_is_transitive",
                 "if_inherits_branch_dependencies",
                 "if_cleans_up_entities",
+                "if_branch_flip_same_entity",
                 "if_cleans_up_components",
                 "if_cleans_up_singleton_component",
                 "mutually_exclusive_component_owner",
