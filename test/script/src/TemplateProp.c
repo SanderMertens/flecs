@@ -230,6 +230,75 @@ void TemplateProp_interface_prop_self_template(void) {
     ecs_fini(world);
 }
 
+void TemplateProp_interface_prop_invalid_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct StreetLight(on_off: bool)"
+    LINE "template Road {"
+    LINE "  prop light : template StreetLight"
+    LINE "  lamp { light }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL,
+        "Road r(light: flecs)", NULL) != 0);
+    ecs_log_set_level(-1);
+
+    test_assert(ecs_lookup(world, "r.lamp") == 0);
+
+    ecs_fini(world);
+}
+
+void TemplateProp_interface_prop_unrelated_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct StreetLight(on_off: bool)"
+    LINE "struct Other(x: f32)"
+    LINE "template OtherT : Other {"
+    LINE "  Bulb {}"
+    LINE "}"
+    LINE "template Road {"
+    LINE "  prop light : template StreetLight"
+    LINE "  lamp { light }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL,
+        "Road r(light: OtherT)", NULL) != 0);
+    ecs_log_set_level(-1);
+
+    test_assert(ecs_lookup(world, "r.lamp") == 0);
+
+    ecs_fini(world);
+}
+
+void TemplateProp_interface_prop_missing_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct StreetLight(on_off: bool)"
+    LINE "template Road {"
+    LINE "  prop light : template StreetLight"
+    LINE "  lamp { light }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, "Road r()", NULL) != 0);
+    ecs_log_set_level(-1);
+
+    test_assert(ecs_lookup(world, "r.lamp") == 0);
+
+    ecs_fini(world);
+}
+
 void TemplateProp_interface_prop_instantiates_passed_template(void) {
     ecs_world_t *world = ecs_init();
 

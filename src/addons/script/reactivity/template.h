@@ -74,6 +74,9 @@ struct ecs_script_template_t {
 
     /* Use non-fragmenting hierarchy */
     bool non_fragmenting_parent;
+
+    /* Template has interface-typed members that need input validation */
+    bool has_interface_members;
 };
 
 #define ECS_TEMPLATE_SMALL_SIZE (36)
