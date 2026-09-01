@@ -456,6 +456,44 @@ void Reactivity_if_inherits_branch_dependencies(void) {
     ecs_fini(world);
 }
 
+void Reactivity_cross_referencing_templates_resolve(void) {
+    test_quarantine("1 Sep 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s1 = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "s1" }),
+        .code =
+            HEAD "ATag {}"
+            LINE "template A_t { ATag }"
+            LINE "pa { B_t xa() }"
+    });
+    test_assert(s1 != 0);
+
+    ecs_entity_t s2 = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "s2" }),
+        .code =
+            HEAD "BTag {}"
+            LINE "template B_t { BTag }"
+            LINE "pb { A_t xb() }"
+    });
+    test_assert(s2 != 0);
+
+    ecs_entity_t a_tag = ecs_lookup(world, "ATag");
+    ecs_entity_t b_tag = ecs_lookup(world, "BTag");
+    test_assert(a_tag != 0);
+    test_assert(b_tag != 0);
+
+    ecs_entity_t xa = ecs_lookup(world, "pa.xa");
+    ecs_entity_t xb = ecs_lookup(world, "pb.xb");
+    test_assert(xa != 0);
+    test_assert(xb != 0);
+    test_assert(ecs_has_id(world, xa, b_tag));
+    test_assert(ecs_has_id(world, xb, a_tag));
+
+    ecs_fini(world);
+}
+
 void Reactivity_mutual_component_refs_converge(void) {
     test_quarantine("1 Sep 2026");
 
