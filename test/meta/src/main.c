@@ -380,6 +380,15 @@ void Serialized_ops_struct_w_map(void);
 // Testsuite 'Cursor'
 void Cursor_set_value_enum_u8_underlying(void);
 void Cursor_get_char(void);
+void Cursor_set_value_derived_to_base(void);
+void Cursor_set_value_base_to_derived_fails(void);
+void Cursor_set_value_grandparent_to_derived_fails(void);
+void Cursor_set_value_derived_to_grandparent(void);
+void Cursor_set_value_base_to_derived_w_string_fails(void);
+void Cursor_set_value_derived_to_base_w_string(void);
+void Cursor_set_value_unrelated_struct_fails(void);
+void Cursor_set_value_base_to_derived_member_fails(void);
+void Cursor_set_value_derived_to_base_member(void);
 void Cursor_set_bool(void);
 void Cursor_set_byte(void);
 void Cursor_set_char(void);
@@ -2948,6 +2957,42 @@ bake_test_case Cursor_testcases[] = {
     {
         "get_char",
         Cursor_get_char
+    },
+    {
+        "set_value_derived_to_base",
+        Cursor_set_value_derived_to_base
+    },
+    {
+        "set_value_base_to_derived_fails",
+        Cursor_set_value_base_to_derived_fails
+    },
+    {
+        "set_value_grandparent_to_derived_fails",
+        Cursor_set_value_grandparent_to_derived_fails
+    },
+    {
+        "set_value_derived_to_grandparent",
+        Cursor_set_value_derived_to_grandparent
+    },
+    {
+        "set_value_base_to_derived_w_string_fails",
+        Cursor_set_value_base_to_derived_w_string_fails
+    },
+    {
+        "set_value_derived_to_base_w_string",
+        Cursor_set_value_derived_to_base_w_string
+    },
+    {
+        "set_value_unrelated_struct_fails",
+        Cursor_set_value_unrelated_struct_fails
+    },
+    {
+        "set_value_base_to_derived_member_fails",
+        Cursor_set_value_base_to_derived_member_fails
+    },
+    {
+        "set_value_derived_to_base_member",
+        Cursor_set_value_derived_to_base_member
     },
     {
         "set_bool",
@@ -7515,7 +7560,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        272,
+        281,
         Cursor_testcases
     },
     {

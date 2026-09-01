@@ -230,6 +230,80 @@ void TemplateProp_interface_prop_self_template(void) {
     ecs_fini(world);
 }
 
+void TemplateProp_interface_prop_empty_initializer_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Iface(on: bool)"
+    LINE "template Light : Iface {"
+    LINE "  Bulb {}"
+    LINE "}"
+    LINE "template Road {"
+    LINE "  prop light : template Iface"
+    LINE "  lamp { light: {} }"
+    LINE "}"
+    LINE "Road r(light: Light)";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void TemplateProp_interface_prop_in_with_w_initializer_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Iface(on: bool)"
+    LINE "template Light : Iface {"
+    LINE "  Bulb {}"
+    LINE "}"
+    LINE "template Road {"
+    LINE "  prop light : template Iface"
+    LINE "  with light(on: true) {"
+    LINE "    lamp {}"
+    LINE "  }"
+    LINE "}"
+    LINE "Road r(light: Light)";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void TemplateProp_interface_prop_dollar_initializer(void) {
+    test_quarantine("1 Sep 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Iface(on: bool)"
+    LINE "template Light : Iface {"
+    LINE "  Bulb {}"
+    LINE "}"
+    LINE "template Road {"
+    LINE "  prop light : template Iface"
+    LINE "  lamp { $light: {on: true} }"
+    LINE "}"
+    LINE "Road r(light: Light)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "r.lamp");
+    test_assert(lamp != 0);
+    test_assert(ecs_lookup(world, "r.lamp.Bulb") != 0);
+
+    ecs_entity_t light = ecs_lookup(world, "Light");
+    const bool *v = ecs_get_id(world, lamp, light);
+    test_assert(v != NULL);
+    test_bool(v[0], true);
+
+    ecs_fini(world);
+}
+
 void TemplateProp_interface_prop_invalid_value(void) {
     ecs_world_t *world = ecs_init();
 
