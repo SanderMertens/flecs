@@ -779,6 +779,8 @@
             "testcases": [
                 "task_new_w_deleted_entity",
                 "delete_scope_parent_while_suspended",
+                "fini_w_alive_task",
+                "free_script_w_alive_task",
                 "parse_await_const",
                 "parse_await_stmt",
                 "register_async",

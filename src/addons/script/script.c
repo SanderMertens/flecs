@@ -266,6 +266,8 @@ void ecs_script_free(
     ecs_script_impl_t *impl = flecs_script_impl(script);
     ecs_check(impl->refcount > 0, ECS_INVALID_OPERATION, NULL);
     if (!--impl->refcount) {
+        ecs_assert(impl->task_refcount == 0, ECS_INVALID_OPERATION,
+            "script freed while tasks are still alive");
         flecs_script_visit_free(script);
         flecs_expr_visit_free(script, impl->expr);
         ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_t);
