@@ -19923,6 +19923,33 @@ void Eval_enum_constant_w_forward_declared_value(void) {
     ecs_fini(world);
 }
 
+void Eval_assign_inline_array_member_from_array_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct F4(lanes: i32, lane: {type: f32, count: 4})"
+    LINE "src { F4: {lanes: 1, lane: [1, 2, 3, 4]} }"
+    LINE "dst { F4: {lanes: 2, lane: src[F4].lane} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t f4 = ecs_lookup(world, "F4");
+    ecs_entity_t dst = ecs_lookup(world, "dst");
+    test_assert(f4 != 0);
+    test_assert(dst != 0);
+
+    const void *ptr = ecs_get_id(world, dst, f4);
+    test_assert(ptr != NULL);
+    test_int(*(const int32_t*)ptr, 2);
+    const float *lane = ECS_OFFSET(ptr, 4);
+    test_flt(lane[0], 1);
+    test_flt(lane[1], 2);
+    test_flt(lane[2], 3);
+    test_flt(lane[3], 4);
+
+    ecs_fini(world);
+}
+
 void Eval_component_expr_w_type_from_same_script(void) {
     ecs_world_t *world = ecs_init();
 
