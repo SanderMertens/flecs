@@ -778,6 +778,7 @@
             "id": "Await",
             "testcases": [
                 "task_new_w_deleted_entity",
+                "delete_scope_parent_while_suspended",
                 "parse_await_const",
                 "parse_await_stmt",
                 "register_async",
