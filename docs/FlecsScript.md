@@ -1337,9 +1337,7 @@ A template property without a default value is initialized with the default valu
 A template property can also be declared with the type of a struct instead of a template. Such a property holds a *template*: any template that derives from the struct can be passed in, and using the property as a component instantiates the template that was passed:
 
 ```cpp
-struct StreetLight {
-  on_off: bool
-}
+struct StreetLight(on_off: bool)
 
 template MyStreetLight : StreetLight {
   prop color: Rgba = {100, 100, 100, 255}
