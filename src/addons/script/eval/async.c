@@ -605,6 +605,9 @@ ecs_script_task_t* ecs_script_task_new(
     ecs_check(!desc || desc->loop != EcsScriptTaskLoopCount ||
         desc->iterations > 0,
         ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!desc || !desc->entity ||
+        ecs_is_alive(script->world, desc->entity),
+        ECS_INVALID_PARAMETER, "task entity is not alive");
 
     ecs_script_task_t *result = ecs_os_calloc_t(
         ecs_script_task_t);
