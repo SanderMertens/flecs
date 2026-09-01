@@ -2877,6 +2877,7 @@
                 "derived_prop_same_name_as_base",
                 "base_not_a_struct",
                 "delete_base_template",
+                "mut_shadows_base_prop",
                 "base_is_prefab",
                 "base_is_enum",
                 "base_unresolved",
