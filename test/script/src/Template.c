@@ -1,5 +1,42 @@
 #include <script.h>
 
+void Template_instantiate_w_string_prop_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop name: string = \"d\""
+    LINE "}"
+    LINE "T a(name: \"hello\")";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run(world, NULL,
+        "T b(name: \"world\")", NULL) == 0);
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    int32_t i;
+    for (i = 0; i < 10; i ++) {
+        ecs_entity_t e = ecs_lookup(world, "b");
+        ecs_delete(world, e);
+        test_assert(ecs_script_run(world, NULL,
+            "T b(name: \"world\")", NULL) == 0);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_entity_t a = ecs_lookup(world, "a");
+    const char **name = ecs_get_id(world, a, t);
+    test_assert(name != NULL);
+    test_str(name[0], "hello");
+
+    ecs_fini(world);
+}
+
 void Template_template_no_scope(void) {
     ecs_world_t *world = ecs_init();
 
