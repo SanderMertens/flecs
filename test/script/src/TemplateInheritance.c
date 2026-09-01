@@ -753,6 +753,32 @@ void TemplateInheritance_mut_shadows_base_prop(void) {
     ecs_fini(world);
 }
 
+void TemplateInheritance_base_w_count_one_array_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct OneArr(v: {type: f32, count: 1})"
+    LINE "template T : OneArr {"
+    LINE "  child { Position: {v[0], 0} }"
+    LINE "}"
+    LINE "T a(v: [7])";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    ecs_entity_t child = ecs_lookup(world, "a.child");
+    test_assert(position != 0);
+    test_assert(child != 0);
+
+    const float *p = ecs_get_id(world, child, position);
+    test_assert(p != NULL);
+    test_flt(p[0], 7);
+    test_flt(p[1], 0);
+
+    ecs_fini(world);
+}
+
 void TemplateInheritance_base_w_anonymous_array_member(void) {
     ecs_world_t *world = ecs_init();
 

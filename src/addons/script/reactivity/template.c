@@ -431,7 +431,7 @@ static ecs_entity_t flecs_script_template_member_type(
     ecs_world_t *world,
     const ecs_member_t *member)
 {
-    if (member->count > 1) {
+    if (member->count >= 1) {
         return flecs_script_array_type(world, member->type, member->count);
     }
 

@@ -1453,6 +1453,31 @@ static int flecs_expr_initializer_visit_type(
         }
 
         if (elem->value->type != elem_type) {
+            bool array_assign = false;
+            if (!elem->operator) {
+                const EcsArray *val_arr = ecs_get(
+                    script->world, elem->value->type, EcsArray);
+                if (val_arr && val_arr->type == elem_type) {
+                    ecs_meta_cursor_t arr_cur = *cur;
+                    int32_t arr_count = 0;
+                    int arr_log = ecs_log_set_level(-4);
+                    if (!ecs_meta_push(&arr_cur) &&
+                        ecs_meta_is_collection(&arr_cur))
+                    {
+                        arr_count =
+                            arr_cur.scope[arr_cur.depth - 1].elem_count;
+                    }
+                    ecs_log_set_level(arr_log);
+                    if (arr_count == val_arr->count) {
+                        array_assign = true;
+                    }
+                }
+            }
+
+            if (array_assign) {
+                goto elem_next;
+            }
+
             bool derived = elem->value->type != type &&
                 flecs_struct_is_derived_from(
                     script->world, elem->value->type, type);
@@ -1500,6 +1525,7 @@ static int flecs_expr_initializer_visit_type(
             elem->value = cast;
         }
 
+elem_next:
         if (elem->operator) {
             if (!flecs_expr_oper_valid_for_type(
                 script->world, elem_type, elem->operator))
