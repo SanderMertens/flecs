@@ -2990,6 +2990,7 @@
                 "pass_derived_to_child_template_base_two_levels",
                 "pass_base_to_child_template_derived_fails",
                 "pass_unrelated_to_child_template_fails",
+                "interface_prop_self_template",
                 "interface_prop_instantiates_passed_template",
                 "interface_prop_paren_syntax",
                 "interface_prop_false_branch",
