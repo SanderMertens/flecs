@@ -210,6 +210,46 @@ void Await_task_new_w_deleted_entity(void) {
     ecs_script_task_new(script, &(ecs_script_task_desc_t){ .entity = e });
 }
 
+void Await_delete_scope_parent_while_suspended(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ecs_async_function(world, {
+        .name = "step",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "Parent {\n"
+        "  await step()\n"
+        "  Child {}\n"
+        "}", NULL, NULL);
+    test_assert(script != NULL);
+
+    ecs_script_task_t *task = ecs_script_task_new(
+        script, NULL);
+    test_assert(task != NULL);
+    test_int(ecs_script_task_resume(task, NULL),
+        EcsScriptTaskPending);
+    test_int(await_future_count, 1);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    test_assert(parent != 0);
+    ecs_delete(world, parent);
+    test_assert(!ecs_is_alive(world, parent));
+
+    ecs_value_t value = ecs_value(ecs_i32_t, {0});
+    test_int(ecs_script_future_resolve(await_futures[0], &value), 0);
+    ecs_script_future_release(await_futures[0]);
+
+    test_expect_abort();
+    ecs_script_task_resume(task, NULL);
+}
+
 void Await_parse_await_const(void) {
     ecs_world_t *world = ecs_init();
 
