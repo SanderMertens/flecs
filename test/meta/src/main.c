@@ -1494,6 +1494,9 @@ void RttCompare_map_of_strings(void);
 void RttCompare_map_of_struct_with_strings(void);
 
 // Testsuite 'SetRttHooks'
+void SetRttHooks_set_cmp_on_in_use_w_copy_illegal(void);
+void SetRttHooks_set_hooks_again_keeps_cmp(void);
+void SetRttHooks_set_cmp_then_equals_in_use(void);
 void SetRttHooks_compare_struct_with_ints(void);
 void SetRttHooks_equals_struct_with_ints(void);
 void SetRttHooks_compare_generates_equals(void);
@@ -7331,6 +7334,18 @@ bake_test_case RttCompare_testcases[] = {
 
 bake_test_case SetRttHooks_testcases[] = {
     {
+        "set_cmp_on_in_use_w_copy_illegal",
+        SetRttHooks_set_cmp_on_in_use_w_copy_illegal
+    },
+    {
+        "set_hooks_again_keeps_cmp",
+        SetRttHooks_set_hooks_again_keeps_cmp
+    },
+    {
+        "set_cmp_then_equals_in_use",
+        SetRttHooks_set_cmp_then_equals_in_use
+    },
+    {
         "compare_struct_with_ints",
         SetRttHooks_compare_struct_with_ints
     },
@@ -7588,7 +7603,7 @@ static bake_test_suite suites[] = {
         "SetRttHooks",
         NULL,
         NULL,
-        19,
+        22,
         SetRttHooks_testcases
     }
 };

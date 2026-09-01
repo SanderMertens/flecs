@@ -1549,6 +1549,9 @@
         },{
             "id": "SetRttHooks",
             "testcases": [
+                "set_cmp_on_in_use_w_copy_illegal",
+                "set_hooks_again_keeps_cmp",
+                "set_cmp_then_equals_in_use",
                 "compare_struct_with_ints",
                 "equals_struct_with_ints",
                 "compare_generates_equals",

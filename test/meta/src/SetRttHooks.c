@@ -48,6 +48,102 @@ static ecs_entity_t define_struct_with_ints(ecs_world_t *world) {
     return ecs_id(StructWithInts);
 }
 
+static int dummy_cmp(const void *a, const void *b, 
+    const ecs_type_info_t *ti) 
+{
+    (void)ti;
+    return *(const ecs_i32_t*)a - *(const ecs_i32_t*)b;
+}
+
+static bool dummy_equals(const void *a, const void *b, 
+    const ecs_type_info_t *ti) 
+{
+    (void)ti;
+    return *(const ecs_i32_t*)a == *(const ecs_i32_t*)b;
+}
+
+static void dummy_ctor(void *ptr, int32_t count, const ecs_type_info_t *ti) {
+    (void)ti;
+    ecs_os_memset(ptr, 0, count * ti->size);
+}
+
+void SetRttHooks_set_cmp_on_in_use_w_copy_illegal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, StructWithInts);
+
+    ecs_set_hooks(world, StructWithInts, {
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, StructWithInts);
+
+    ecs_set_hooks(world, StructWithInts, {
+        .cmp = dummy_cmp
+    });
+
+    const ecs_type_info_t *ti = 
+        ecs_get_type_info(world, ecs_id(StructWithInts));
+    test_assert(ti->hooks.cmp == dummy_cmp);
+    test_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert((ti->hooks.flags & ECS_TYPE_HOOK_COPY_ILLEGAL) != 0);
+
+    ecs_fini(world);
+}
+
+void SetRttHooks_set_hooks_again_keeps_cmp(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, StructWithInts);
+
+    ecs_set_hooks(world, StructWithInts, {
+        .ctor = dummy_ctor,
+        .cmp = dummy_cmp
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, StructWithInts, {10, 20});
+
+    ecs_set_hooks(world, StructWithInts, {
+        .ctor = dummy_ctor
+    });
+
+    const ecs_type_info_t *ti = 
+        ecs_get_type_info(world, ecs_id(StructWithInts));
+    test_assert(ti->hooks.cmp == dummy_cmp);
+    test_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert((ti->hooks.flags & ECS_TYPE_HOOK_CMP) != 0);
+
+    ecs_fini(world);
+}
+
+void SetRttHooks_set_cmp_then_equals_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, StructWithInts);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, StructWithInts, {10, 20});
+
+    ecs_set_hooks(world, StructWithInts, {
+        .cmp = dummy_cmp
+    });
+
+    ecs_set_hooks(world, StructWithInts, {
+        .equals = dummy_equals
+    });
+
+    const ecs_type_info_t *ti = 
+        ecs_get_type_info(world, ecs_id(StructWithInts));
+    test_assert(ti->hooks.cmp == dummy_cmp);
+    test_assert(ti->hooks.equals == dummy_equals);
+    test_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    ecs_fini(world);
+}
+
 void SetRttHooks_compare_struct_with_ints(void) {
     ecs_world_t *world = ecs_init();
 
