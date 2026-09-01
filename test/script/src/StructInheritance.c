@@ -222,6 +222,40 @@ void StructInheritance_chain(void) {
     ecs_fini(world);
 }
 
+void StructInheritance_chain_w_padding(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct A(a: i64, b: i8)"
+    LINE "struct B : A(c: i8)"
+    LINE "struct C : B(d: i8)"
+    LINE "e { C: {a: 1, b: 2, c: 3, d: 4} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t c = ecs_lookup(world, "C");
+    test_struct(world, b, 3, 24, 8);
+    test_member(world, b, 0, "a", ecs_id(ecs_i64_t), 0);
+    test_member(world, b, 1, "b", ecs_id(ecs_i8_t), 8);
+    test_member(world, b, 2, "c", ecs_id(ecs_i8_t), 16);
+    test_struct(world, c, 4, 32, 8);
+    test_member(world, c, 0, "a", ecs_id(ecs_i64_t), 0);
+    test_member(world, c, 1, "b", ecs_id(ecs_i8_t), 8);
+    test_member(world, c, 2, "c", ecs_id(ecs_i8_t), 16);
+    test_member(world, c, 3, "d", ecs_id(ecs_i8_t), 24);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    const char *ptr = ecs_get_id(world, e, c);
+    test_assert(ptr != NULL);
+    test_int(*(int64_t*)ptr, 1);
+    test_int(ptr[8], 2);
+    test_int(ptr[16], 3);
+    test_int(ptr[24], 4);
+
+    ecs_fini(world);
+}
+
 void StructInheritance_two_derived(void) {
     ecs_world_t *world = ecs_init();
 
@@ -653,6 +687,40 @@ void StructInheritance_base_not_a_struct(void) {
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
     ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void StructInheritance_self_inherit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct A : A(x: f32)";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void StructInheritance_inheritance_cycle(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct S1(x: f32)"
+    LINE "struct S2 : S1(y: f32)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, "struct S1 : S2(z: f32)", NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_entity_t s1 = ecs_lookup(world, "S1");
+    ecs_entity_t s2 = ecs_lookup(world, "S2");
+    test_assert(!ecs_has_pair(world, s1, EcsIsA, s2));
+    test_assert(ecs_has_pair(world, s2, EcsIsA, s1));
 
     ecs_fini(world);
 }
