@@ -390,7 +390,14 @@ static int flecs_struct_layout(
             }
 
             member_size *= elem->count ? elem->count : 1;
-            size = ECS_ALIGN(size, member_alignment);
+            if (i < inherited) {
+                ecs_assert(base_st != NULL, ECS_INTERNAL_ERROR, NULL);
+                const ecs_member_t *base_members = ecs_vec_first_t(
+                    &base_st->members, ecs_member_t);
+                size = base_members[i].offset;
+            } else {
+                size = ECS_ALIGN(size, member_alignment);
+            }
             if (elem->size != member_size || elem->offset != size) {
                 layout_changed = true;
             }

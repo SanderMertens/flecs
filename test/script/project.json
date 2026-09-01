@@ -2797,6 +2797,7 @@
                 "no_own_members",
                 "no_own_members_newline_before_scope",
                 "chain",
+                "chain_w_padding",
                 "two_derived",
                 "base_w_padding",
                 "set_component",
