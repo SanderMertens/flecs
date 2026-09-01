@@ -109,6 +109,22 @@ static void test_file_add(const char *name, const char *content) {
     test_assert(false);
 }
 
+void Include_include_cycle(void) {
+    test_quarantine("1 Sep 2026");
+
+    test_files_install();
+    test_file_add("a.flecs", "include b.flecs\nFoo{}\n");
+    test_file_add("b.flecs", "include a.flecs\nBar{}\n");
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_file(world, "a.flecs") != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
 void Include_include_simple(void) {
     test_files_install();
     test_file_add("child.flecs", "Foo{}\n");

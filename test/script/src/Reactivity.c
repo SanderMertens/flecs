@@ -456,6 +456,47 @@ void Reactivity_if_inherits_branch_dependencies(void) {
     ecs_fini(world);
 }
 
+void Reactivity_mutual_component_refs_converge(void) {
+    test_quarantine("1 Sep 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t pa = ecs_entity(world, { .name = "pa" });
+    ecs_entity_t pb = ecs_entity(world, { .name = "pb" });
+    ecs_set_id(world, pa, mass, sizeof(Mass), &(Mass){1});
+    ecs_set_id(world, pb, mass, sizeof(Mass), &(Mass){1});
+
+    ecs_entity_t s1 = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "ping" }),
+        .code = "pa { Mass: {pb[Mass].value} }"
+    });
+    test_assert(s1 != 0);
+
+    ecs_entity_t s2 = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "pong" }),
+        .code = "pb { Mass: {pa[Mass].value} }"
+    });
+    test_assert(s2 != 0);
+
+    ecs_set_id(world, pa, mass, sizeof(Mass), &(Mass){100});
+
+    const Mass *ma = ecs_get_id(world, pa, mass);
+    const Mass *mb = ecs_get_id(world, pb, mass);
+    test_assert(ma != NULL);
+    test_assert(mb != NULL);
+    test_flt(ma->value, 100);
+    test_flt(mb->value, 100);
+
+    ecs_fini(world);
+}
+
 void Reactivity_if_branch_flip_same_entity(void) {
     ecs_world_t *world = ecs_init();
 
