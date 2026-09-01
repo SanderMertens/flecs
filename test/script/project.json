@@ -2828,6 +2828,7 @@
                 "set_base_and_derived",
                 "entity_to_json",
                 "expr_run",
+                "add_member_to_base_w_derived",
                 "base_defined_in_c",
                 "derived_defined_in_c",
                 "base_in_module",

@@ -167,6 +167,25 @@ static ecs_size_t flecs_struct_base_size(
     return size;
 }
 
+#ifndef FLECS_NDEBUG
+static bool flecs_struct_has_derived(
+    ecs_world_t *world,
+    ecs_entity_t struct_type)
+{
+    ecs_iter_t it = ecs_each_id(world, ecs_pair(EcsIsA, struct_type));
+    while (ecs_each_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            if (ecs_has(world, it.entities[i], EcsStruct)) {
+                ecs_iter_fini(&it);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+#endif
+
 static int32_t flecs_struct_inherit(
     ecs_world_t *world,
     ecs_entity_t struct_type,
@@ -326,6 +345,9 @@ static int flecs_add_member_to_struct(
 
     /* If member wasn't added yet, add a new element to vector */
     if (!has_member) {
+        ecs_assert(!flecs_struct_has_derived(world, struct_type),
+            ECS_ALREADY_IN_USE, "cannot add member '%s' to struct that is "
+            "the base of other structs", name);
         ecs_vec_init_if_t(&s->members, ecs_member_t);
         ecs_member_t *elem = ecs_vec_append_t(NULL, &s->members, ecs_member_t);
         elem->name = NULL;

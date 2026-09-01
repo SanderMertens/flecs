@@ -444,6 +444,27 @@ void StructInheritance_expr_run(void) {
     ecs_fini(world);
 }
 
+void StructInheritance_add_member_to_base_w_derived(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Base(x: f32, y: f32)"
+    LINE "struct Derived : Base(z: f32)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    test_assert(base != 0);
+
+    test_expect_abort();
+    ecs_struct_add_member(world, base, &(ecs_member_t){
+        .name = "x2",
+        .type = ecs_id(ecs_f32_t)
+    });
+}
+
 void StructInheritance_base_defined_in_c(void) {
     ecs_world_t *world = ecs_init();
 
