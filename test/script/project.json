@@ -1271,6 +1271,8 @@
                 "unterminated_multiline_string_capture_error",
                 "invalid_char_literal_two_chars",
                 "const_w_old_typed_syntax",
+                "struct_member_negative_count",
+                "struct_member_huge_count",
                 "struct_wo_members",
                 "struct_member_wo_name",
                 "enum_constant_w_invalid_expr",

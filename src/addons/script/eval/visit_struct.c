@@ -112,6 +112,15 @@ int flecs_script_struct_visit(
                 return -1;
             }
 
+            const EcsMember *mval = value.ptr;
+            if (mval->count < 0) {
+                flecs_expr_visit_error(script, elem->value,
+                    "invalid count %d for member '%s' of struct '%s'",
+                    mval->count, elem->member,
+                    ecs_get_name(world, ctx->entity));
+                return -1;
+            }
+
             void *dst = ecs_ensure_id(world, m, ecs_id(EcsMember),
                 flecs_ito(size_t, ti->size));
             ecs_os_memcpy(dst, value.ptr, ti->size);
@@ -136,6 +145,14 @@ int flecs_script_struct_visit(
 
             ecs_set(world, m, EcsMember, { .type = type });
         }
+    }
+
+    const EcsComponent *comp = ecs_get(world, ctx->entity, EcsComponent);
+    if (!comp || comp->size <= 0) {
+        flecs_script_eval_error(v, NULL,
+            "invalid layout for struct '%s'",
+            ecs_get_name(world, ctx->entity));
+        return -1;
     }
 
     return 0;
