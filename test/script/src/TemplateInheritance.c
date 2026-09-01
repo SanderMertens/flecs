@@ -734,6 +734,25 @@ void TemplateInheritance_delete_base_template(void) {
     ecs_fini(world);
 }
 
+void TemplateInheritance_mut_shadows_base_prop(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template A {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template B : A {"
+    LINE "  mut x: f32 = 2"
+    LINE "}"
+    LINE "e { B: {} }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
 void TemplateInheritance_base_not_a_struct(void) {
     ecs_world_t *world = ecs_init();
 

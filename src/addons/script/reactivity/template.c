@@ -1122,12 +1122,13 @@ int flecs_script_template_eval_var(
         return -1;
     }
 
-    if (!mut && flecs_script_struct_member_is_inherited(
-        v->world, vars->type, node->name))
+    if (flecs_script_struct_member_is_inherited(
+        v->world, template->props.type, node->name))
     {
         flecs_script_eval_error(v, node,
-            "prop '%s' of template '%s' is already defined by base type",
-            node->name, ecs_get_name(v->world, template->props.type));
+            "%s '%s' of template '%s' is already defined by base type",
+            mut ? "mut" : "prop", node->name,
+            ecs_get_name(v->world, template->props.type));
         return -1;
     }
 
