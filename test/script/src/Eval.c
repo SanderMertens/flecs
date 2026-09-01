@@ -19923,6 +19923,44 @@ void Eval_enum_constant_w_forward_declared_value(void) {
     ecs_fini(world);
 }
 
+void Eval_stmt_after_comment_w_comment_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL,
+        "a1 {}\n/* /* */ b1 {}", NULL) == 0);
+    test_assert(ecs_lookup(world, "a1") != 0);
+    test_assert(ecs_lookup(world, "b1") != 0);
+
+    test_assert(ecs_script_run(world, NULL,
+        "a2{}\n/*/* */ b2{}", NULL) == 0);
+    test_assert(ecs_lookup(world, "b2") != 0);
+
+    test_assert(ecs_script_run(world, NULL,
+        "a3 {}\n/* y */ /* /* */ b3 {}", NULL) == 0);
+    test_assert(ecs_lookup(world, "b3") != 0);
+
+    test_assert(ecs_script_run(world, NULL,
+        "a4 {}\n/* /* /* */ b4 {}", NULL) == 0);
+    test_assert(ecs_lookup(world, "b4") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_stmt_after_newline_w_vertical_tab(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL,
+        "e1 {}\n\vf1 {}", NULL) == 0);
+    test_assert(ecs_lookup(world, "e1") != 0);
+    test_assert(ecs_lookup(world, "f1") != 0);
+
+    test_assert(ecs_script_run(world, NULL,
+        "e2 {}\n\ff2 {}", NULL) == 0);
+    test_assert(ecs_lookup(world, "f2") != 0);
+
+    ecs_fini(world);
+}
+
 void Eval_assign_inline_array_member_from_array_expr(void) {
     ecs_world_t *world = ecs_init();
 
