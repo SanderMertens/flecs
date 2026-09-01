@@ -1070,6 +1070,20 @@ static int flecs_script_eval_tag(
             return -1;
         }
 
+        if (base == v->entity->eval) {
+            flecs_script_eval_error(v, node,
+                "struct '%s' cannot inherit from itself",
+                v->entity->node->name);
+            return -1;
+        }
+
+        if (flecs_struct_is_derived_from(v->world, base, v->entity->eval)) {
+            flecs_script_eval_error(v, node,
+                "inheritance cycle between struct '%s' and base '%s'",
+                v->entity->node->name, node->id.second);
+            return -1;
+        }
+
         int32_t i = 0;
         ecs_entity_t existing;
         while ((existing = ecs_get_target(
