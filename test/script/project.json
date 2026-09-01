@@ -1935,7 +1935,19 @@
                 "platform_consts",
                 "match_bool_enum_const_var",
                 "match_bool_enum_const_var_to_mut_var",
-                "enum_const_var_to_mut_var"
+                "enum_const_var_to_mut_var",
+                "bool_mul_flt",
+                "flt_mul_bool",
+                "bool_add_flt",
+                "bool_sub_flt",
+                "bool_div_flt",
+                "flt_div_bool",
+                "bool_mul_int",
+                "bool_mul_bool",
+                "bool_var_mul_flt",
+                "bool_var_mul_flt_lvalue",
+                "iptr_var_mul_flt",
+                "uptr_var_mul_flt"
             ]
         }, {
             "id": "ExprAst",
@@ -2982,7 +2994,10 @@
                 "interface_prop_not_derived_fails",
                 "interface_prop_not_template_fails",
                 "interface_prop_unset_fails",
-                "interface_prop_unknown_member_fails"
+                "interface_prop_unknown_member_fails",
+                "bool_prop_mul_flt_member",
+                "bool_prop_in_flt_member_initializer",
+                "bool_prop_mul_flt_member_const"
             ]
         }]
     }

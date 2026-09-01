@@ -1905,6 +1905,18 @@ void Expr_platform_consts(void);
 void Expr_match_bool_enum_const_var(void);
 void Expr_match_bool_enum_const_var_to_mut_var(void);
 void Expr_enum_const_var_to_mut_var(void);
+void Expr_bool_mul_flt(void);
+void Expr_flt_mul_bool(void);
+void Expr_bool_add_flt(void);
+void Expr_bool_sub_flt(void);
+void Expr_bool_div_flt(void);
+void Expr_flt_div_bool(void);
+void Expr_bool_mul_int(void);
+void Expr_bool_mul_bool(void);
+void Expr_bool_var_mul_flt(void);
+void Expr_bool_var_mul_flt_lvalue(void);
+void Expr_iptr_var_mul_flt(void);
+void Expr_uptr_var_mul_flt(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_binary_f32_var_add_f32_var(void);
@@ -2916,6 +2928,9 @@ void TemplateProp_interface_prop_not_derived_fails(void);
 void TemplateProp_interface_prop_not_template_fails(void);
 void TemplateProp_interface_prop_unset_fails(void);
 void TemplateProp_interface_prop_unknown_member_fails(void);
+void TemplateProp_bool_prop_mul_flt_member(void);
+void TemplateProp_bool_prop_in_flt_member_initializer(void);
+void TemplateProp_bool_prop_mul_flt_member_const(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -10448,6 +10463,54 @@ bake_test_case Expr_testcases[] = {
     {
         "enum_const_var_to_mut_var",
         Expr_enum_const_var_to_mut_var
+    },
+    {
+        "bool_mul_flt",
+        Expr_bool_mul_flt
+    },
+    {
+        "flt_mul_bool",
+        Expr_flt_mul_bool
+    },
+    {
+        "bool_add_flt",
+        Expr_bool_add_flt
+    },
+    {
+        "bool_sub_flt",
+        Expr_bool_sub_flt
+    },
+    {
+        "bool_div_flt",
+        Expr_bool_div_flt
+    },
+    {
+        "flt_div_bool",
+        Expr_flt_div_bool
+    },
+    {
+        "bool_mul_int",
+        Expr_bool_mul_int
+    },
+    {
+        "bool_mul_bool",
+        Expr_bool_mul_bool
+    },
+    {
+        "bool_var_mul_flt",
+        Expr_bool_var_mul_flt
+    },
+    {
+        "bool_var_mul_flt_lvalue",
+        Expr_bool_var_mul_flt_lvalue
+    },
+    {
+        "iptr_var_mul_flt",
+        Expr_iptr_var_mul_flt
+    },
+    {
+        "uptr_var_mul_flt",
+        Expr_uptr_var_mul_flt
     }
 };
 
@@ -14423,6 +14486,18 @@ bake_test_case TemplateProp_testcases[] = {
     {
         "interface_prop_unknown_member_fails",
         TemplateProp_interface_prop_unknown_member_fails
+    },
+    {
+        "bool_prop_mul_flt_member",
+        TemplateProp_bool_prop_mul_flt_member
+    },
+    {
+        "bool_prop_in_flt_member_initializer",
+        TemplateProp_bool_prop_in_flt_member_initializer
+    },
+    {
+        "bool_prop_mul_flt_member_const",
+        TemplateProp_bool_prop_mul_flt_member_const
     }
 };
 
@@ -14511,7 +14586,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        390,
+        402,
         Expr_testcases,
         1,
         Expr_params
@@ -14606,7 +14681,7 @@ static bake_test_suite suites[] = {
         "TemplateProp",
         NULL,
         NULL,
-        80,
+        83,
         TemplateProp_testcases
     }
 };

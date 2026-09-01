@@ -1511,6 +1511,7 @@ int ecs_meta_set_bool(
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
+    cases_T_float(ptr, value);
     case EcsOpString: {
         char *result;
         if (value) {
@@ -1543,8 +1544,6 @@ int ecs_meta_set_bool(
     case EcsOpForward:
     case EcsOpScope:
     case EcsOpPrimitive:
-    case EcsOpF32:
-    case EcsOpF64:
         flecs_meta_conversion_error(cursor, op, "bool");
         return -1;
     default:

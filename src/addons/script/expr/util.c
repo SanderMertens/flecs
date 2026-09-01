@@ -443,7 +443,9 @@ bool flecs_value_is_0(
 {
     ecs_entity_t type = value->type;
     void *ptr = value->ptr;
-           if (type == ecs_id(ecs_i8_t)) {
+           if (type == ecs_id(ecs_bool_t)) {
+        return *(ecs_bool_t*)ptr == 0;
+    } else if (type == ecs_id(ecs_i8_t)) {
         return *(ecs_i8_t*)ptr == 0;
     } else if (type == ecs_id(ecs_i16_t)) {
         return *(ecs_i16_t*)ptr == 0;
