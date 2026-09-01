@@ -19923,6 +19923,29 @@ void Eval_enum_constant_w_forward_declared_value(void) {
     ecs_fini(world);
 }
 
+void Eval_component_expr_w_type_from_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct W(a: f32)"
+    LINE "e { W: {1} }"
+    LINE "const x = e[W].a"
+    LINE "f { W: {$x + 1} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t w = ecs_lookup(world, "W");
+    ecs_entity_t f = ecs_lookup(world, "f");
+    test_assert(w != 0);
+    test_assert(f != 0);
+
+    const float *v = ecs_get_id(world, f, w);
+    test_assert(v != NULL);
+    test_flt(v[0], 2);
+
+    ecs_fini(world);
+}
+
 void Eval_delete_managed_script_shared_table_no_leak(void) {
     ecs_world_t *world = ecs_init();
 

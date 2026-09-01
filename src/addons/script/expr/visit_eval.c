@@ -1326,10 +1326,14 @@ static int flecs_expr_component_visit_eval(
         index = ((ecs_expr_identifier_t*)index)->expr;
     }
 
-    ecs_assert(index->kind == EcsExprValue, ECS_INTERNAL_ERROR, NULL);
-
     ecs_entity_t entity = *(ecs_entity_t*)left->value.ptr;
-    ecs_entity_t component = ((ecs_expr_value_node_t*)index)->storage.entity;
+    ecs_entity_t component;
+    if (index) {
+        ecs_assert(index->kind == EcsExprValue, ECS_INTERNAL_ERROR, NULL);
+        component = ((ecs_expr_value_node_t*)index)->storage.entity;
+    } else {
+        component = node->node.type;
+    }
 
     ecs_assert(out->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
 
