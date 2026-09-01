@@ -2897,6 +2897,7 @@
                 "base_not_a_struct",
                 "delete_base_template",
                 "mut_shadows_base_prop",
+                "base_w_anonymous_array_member",
                 "base_is_prefab",
                 "base_is_enum",
                 "base_unresolved",
