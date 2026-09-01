@@ -2837,12 +2837,19 @@ void flecs_script_eval_cleanup(
             ecs_entity_t src = flecs_script_component_slot_src(v, slot);
             bool active = false;
             for (j = 0; j < count; j ++) {
-                if (i == j || slots[j].component != slot->component ||
-                    slots[j].entity_slot != slot->entity_slot)
-                {
+                if (i == j || slots[j].component != slot->component) {
                     continue;
                 }
-                if (flecs_script_scope_visited(v, slots[j].scope_slot)) {
+                if (!flecs_script_scope_visited(v, slots[j].scope_slot)) {
+                    continue;
+                }
+                if (slots[j].entity_slot == slot->entity_slot) {
+                    active = true;
+                    break;
+                }
+                if (src && flecs_script_component_slot_src(
+                    v, &slots[j]) == src)
+                {
                     active = true;
                     break;
                 }
@@ -2858,7 +2865,7 @@ void flecs_script_eval_cleanup(
         ? v->symbol_slots
         : &v->base.script->symbol_slots;
     ecs_script_symbol_slot_t *symbols = ecs_vec_first(symbol_slots);
-    int32_t i, count = ecs_vec_count(symbol_slots);
+    int32_t i, j, count = ecs_vec_count(symbol_slots);
     for (i = 0; i < count; i ++) {
         ecs_script_symbol_slot_t *slot = &symbols[i];
         if (!slot->entity || flecs_script_scope_visited(v, slot->scope_slot)) {
@@ -2869,7 +2876,17 @@ void flecs_script_eval_cleanup(
         {
             continue;
         }
-        if (ecs_is_alive(v->world, slot->entity)) {
+        bool active = false;
+        for (j = 0; j < count; j ++) {
+            if (i == j || symbols[j].entity != slot->entity) {
+                continue;
+            }
+            if (flecs_script_scope_visited(v, symbols[j].scope_slot)) {
+                active = true;
+                break;
+            }
+        }
+        if (!active && ecs_is_alive(v->world, slot->entity)) {
             ecs_delete(v->world, slot->entity);
         }
         ecs_os_zeromem(slot);

@@ -456,6 +456,55 @@ void Reactivity_if_inherits_branch_dependencies(void) {
     ecs_fini(world);
 }
 
+void Reactivity_if_branch_flip_same_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){-1});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "if condition[Mass].value > 0 {"
+            LINE "  e { Mass: {2} }"
+            LINE "} else {"
+            LINE "  e { Mass: {1} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const Mass *m = ecs_get_id(world, e, mass);
+    test_assert(m != NULL);
+    test_flt(m->value, 1);
+
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
+
+    e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    m = ecs_get_id(world, e, mass);
+    test_assert(m != NULL);
+    test_flt(m->value, 2);
+
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){-1});
+
+    e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    m = ecs_get_id(world, e, mass);
+    test_assert(m != NULL);
+    test_flt(m->value, 1);
+
+    ecs_fini(world);
+}
+
 void Reactivity_if_cleans_up_entities(void) {
     ecs_world_t *world = ecs_init();
 
