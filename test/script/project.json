@@ -2254,6 +2254,7 @@
             "id": "Include",
             "testcases": [
                 "include_simple",
+                "include_cycle",
                 "include_subdir",
                 "include_missing_file",
                 "include_parent_dir_not_allowed",
@@ -2608,6 +2609,7 @@
                 "if_inherits_branch_dependencies",
                 "if_cleans_up_entities",
                 "if_branch_flip_same_entity",
+                "mutual_component_refs_converge",
                 "if_cleans_up_components",
                 "if_cleans_up_singleton_component",
                 "mutually_exclusive_component_owner",
