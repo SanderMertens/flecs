@@ -210,6 +210,26 @@ static void test_light(
     }
 }
 
+void TemplateProp_interface_prop_self_template(void) {
+    test_quarantine("1 Sep 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Iface(on: bool)"
+    LINE "template Light : Iface {"
+    LINE "  prop inner : template Iface = Light"
+    LINE "  child { inner: {on: true} }"
+    LINE "}"
+    LINE "e { Light: {} }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
 void TemplateProp_interface_prop_instantiates_passed_template(void) {
     ecs_world_t *world = ecs_init();
 
