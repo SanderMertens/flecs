@@ -660,6 +660,8 @@
                 "enum_constant_w_forward_declared_value",
                 "const_var_large_struct_no_leak",
                 "delete_managed_script_shared_table_no_leak",
+                "stmt_after_comment_w_comment_open",
+                "stmt_after_newline_w_vertical_tab",
                 "assign_inline_array_member_from_array_expr",
                 "component_expr_w_type_from_same_script",
                 "const_var_from_large_component_no_leak",
