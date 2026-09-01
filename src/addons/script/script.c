@@ -18,13 +18,25 @@ ECS_DECLARE(EcsScriptVectorType);
 ECS_DECLARE(EcsScriptError);
 
 static ECS_MOVE(EcsScript, dst, src, {
-    if (dst->script && (dst->script != src->script)) {
+    if (dst->script) {
         if (dst->template_ && (dst->template_ != src->template_)) {
             flecs_script_template_fini(
                 flecs_script_impl(dst->script), dst->template_);
         }
         ecs_script_free(dst->script);
     }
+
+    if (dst->filename != src->filename) {
+        ecs_os_free(dst->filename);
+    }
+    if (dst->code != src->code) {
+        ecs_os_free(dst->code);
+    }
+    if (dst->error != src->error) {
+        ecs_os_free(dst->error);
+    }
+    flecs_script_ref_observers_fini(&dst->observers);
+    flecs_script_ref_observers_fini(&dst->dyn_observers);
 
     dst->filename = src->filename;
     dst->code = src->code;

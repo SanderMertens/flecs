@@ -19923,6 +19923,36 @@ void Eval_enum_constant_w_forward_declared_value(void) {
     ecs_fini(world);
 }
 
+void Eval_delete_managed_script_shared_table_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s1 = ecs_script(world, { .code = "e1 {}" });
+    ecs_entity_t s2 = ecs_script(world, { .code = "e2 {}" });
+    test_assert(s1 != 0);
+    test_assert(s2 != 0);
+    ecs_delete(world, s1);
+    ecs_delete(world, s2);
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    int32_t i;
+    for (i = 0; i < 10; i ++) {
+        s1 = ecs_script(world, { .code = "e1 {}" });
+        s2 = ecs_script(world, { .code = "e2 {}" });
+        test_assert(s1 != 0);
+        test_assert(s2 != 0);
+        ecs_delete(world, s1);
+        ecs_delete(world, s2);
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}
+
 void Eval_const_var_large_struct_no_leak(void) {
     ecs_world_t *world = ecs_init();
 

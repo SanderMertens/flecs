@@ -709,6 +709,31 @@ void TemplateInheritance_derived_prop_same_name_as_base(void) {
     ecs_fini(world);
 }
 
+void TemplateInheritance_delete_base_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Base {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template Derived : Base {"
+    LINE "  prop z: f32 = 3"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    ecs_entity_t derived = ecs_lookup(world, "Derived");
+    test_assert(base != 0);
+    test_assert(derived != 0);
+
+    ecs_delete(world, base);
+    test_assert(!ecs_is_alive(world, base));
+    test_assert(ecs_is_alive(world, derived));
+
+    ecs_fini(world);
+}
+
 void TemplateInheritance_base_not_a_struct(void) {
     ecs_world_t *world = ecs_init();
 
