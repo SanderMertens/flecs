@@ -300,6 +300,25 @@ static ecs_entity_t flecs_expr_narrow_type(
     }
 }
 
+static bool flecs_expr_oper_is_arithmetic(
+    ecs_token_kind_t op)
+{
+    switch(op) {
+    case EcsTokAdd:
+    case EcsTokSub:
+    case EcsTokMul:
+    case EcsTokDiv:
+    case EcsTokMod:
+    case EcsTokShiftLeft:
+    case EcsTokShiftRight:
+    case EcsTokBitwiseAnd:
+    case EcsTokBitwiseOr:
+        return true;
+    default:
+        return false;
+    }
+}
+
 static bool flecs_expr_oper_valid_for_type(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -748,6 +767,13 @@ done:
     if (operator == EcsTokSub && *operand_type == ecs_id(ecs_u64_t)) {
         /* Result of subtracting two unsigned ints can be negative */
         *operand_type = ecs_id(ecs_i64_t);
+    }
+
+    if (*operand_type == ecs_id(ecs_bool_t) &&
+        flecs_expr_oper_is_arithmetic(operator) &&
+        (!vector_elem_count || !*vector_elem_count))
+    {
+        *operand_type = ecs_id(ecs_i32_t);
     }
 
     if (!*result_type) {

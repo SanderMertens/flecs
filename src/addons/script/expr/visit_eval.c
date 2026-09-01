@@ -691,6 +691,9 @@ static bool flecs_expr_get_signed(
     } else if (type == ecs_id(ecs_i64_t)) {
         *out = *(int64_t*)ptr;
         return true;
+    } else if (type == ecs_id(ecs_iptr_t)) {
+        *out = *(ecs_iptr_t*)ptr;
+        return true;
     }
 
     return false;
@@ -714,6 +717,9 @@ static bool flecs_expr_get_unsigned(
         return true;
     } else if (type == ecs_id(ecs_u64_t)) {
         *out = *(uint64_t*)ptr;
+        return true;
+    } else if (type == ecs_id(ecs_uptr_t)) {
+        *out = *(ecs_uptr_t*)ptr;
         return true;
     }
 
@@ -801,6 +807,9 @@ static int flecs_expr_cast_number_visit_eval(
         flecs_expr_set_unsigned(&out->value, unsigned_);
     } else if (flecs_expr_get_float(&expr->value, &float_)) {
         flecs_expr_set_float(&out->value, float_);
+    } else {
+        flecs_expr_visit_error(ctx->script, node, "failed to cast value");
+        goto error;
     }
 
     flecs_expr_stack_pop(ctx->stack);

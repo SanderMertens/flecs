@@ -1857,3 +1857,104 @@ void TemplateProp_pass_unrelated_to_child_template_fails(void) {
 
     ecs_fini(world);
 }
+
+void TemplateProp_bool_prop_mul_flt_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "template Light {"
+    LINE "  prop on_off: bool = true"
+    LINE "  Position: {6 * $on_off, 1}"
+    LINE "}"
+    LINE "on { Light: {on_off: true} }"
+    LINE "off { Light: {on_off: false} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    ecs_entity_t on = ecs_lookup(world, "on");
+    test_assert(on != 0);
+    const PointValue *on_pos = ecs_get_id(world, on, position);
+    test_assert(on_pos != NULL);
+    test_flt(on_pos->x, 6);
+    test_flt(on_pos->y, 1);
+
+    ecs_entity_t off = ecs_lookup(world, "off");
+    test_assert(off != 0);
+    const PointValue *off_pos = ecs_get_id(world, off, position);
+    test_assert(off_pos != NULL);
+    test_flt(off_pos->x, 0);
+    test_flt(off_pos->y, 1);
+
+    ecs_fini(world);
+}
+
+void TemplateProp_bool_prop_in_flt_member_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "template Light {"
+    LINE "  prop on_off: bool = true"
+    LINE "  Position: {1, $on_off}"
+    LINE "}"
+    LINE "on { Light: {on_off: true} }"
+    LINE "off { Light: {on_off: false} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    ecs_entity_t on = ecs_lookup(world, "on");
+    test_assert(on != 0);
+    const PointValue *on_pos = ecs_get_id(world, on, position);
+    test_assert(on_pos != NULL);
+    test_flt(on_pos->x, 1);
+    test_flt(on_pos->y, 1);
+
+    ecs_entity_t off = ecs_lookup(world, "off");
+    test_assert(off != 0);
+    const PointValue *off_pos = ecs_get_id(world, off, position);
+    test_assert(off_pos != NULL);
+    test_flt(off_pos->x, 1);
+    test_flt(off_pos->y, 0);
+
+    ecs_fini(world);
+}
+
+void TemplateProp_bool_prop_mul_flt_member_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "template Light {"
+    LINE "  prop on_off: bool = true"
+    LINE "  const strength = 6 * $on_off"
+    LINE "  Position: {$strength, 1}"
+    LINE "}"
+    LINE "on { Light: {on_off: true} }"
+    LINE "off { Light: {on_off: false} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    ecs_entity_t on = ecs_lookup(world, "on");
+    test_assert(on != 0);
+    const PointValue *on_pos = ecs_get_id(world, on, position);
+    test_assert(on_pos != NULL);
+    test_flt(on_pos->x, 6);
+
+    ecs_entity_t off = ecs_lookup(world, "off");
+    test_assert(off != 0);
+    const PointValue *off_pos = ecs_get_id(world, off, position);
+    test_assert(off_pos != NULL);
+    test_flt(off_pos->x, 0);
+
+    ecs_fini(world);
+}
