@@ -16,6 +16,10 @@
 bool flecs_meta_valid_digit(
     const char *str);
 
+bool flecs_meta_type_is_integer(
+    const ecs_world_t *world,
+    ecs_entity_t type);
+
 void flecs_meta_type_serializer_init(
     ecs_iter_t *it);
 

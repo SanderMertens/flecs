@@ -8,6 +8,7 @@
 
 #ifdef FLECS_SCRIPT
 #include "../script.h"
+#include "../../meta/meta.h"
 
 static int flecs_script_constants_visit(
     const ecs_script_visitor_ctx_t *ctx,
@@ -85,6 +86,15 @@ static int flecs_script_constants_visit(
                 flecs_expr_visit_error(script, elem->value,
                     "invalid underlying_type for enum '%s'",
                         ecs_get_name(world, ctx->entity));
+                return -1;
+            }
+
+            if (!flecs_meta_type_is_integer(world, underlying)) {
+                char *type_str = ecs_get_path(world, underlying);
+                flecs_expr_visit_error(script, elem->value,
+                    "underlying_type '%s' for enum '%s' is not an integer type",
+                        type_str, ecs_get_name(world, ctx->entity));
+                ecs_os_free(type_str);
                 return -1;
             }
 

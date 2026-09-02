@@ -258,6 +258,41 @@ bool flecs_meta_valid_digit(
     return str[0] == '-' || isdigit(str[0]);
 }
 
+bool flecs_meta_type_is_integer(
+    const ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsPrimitive *prim = ecs_get(world, type, EcsPrimitive);
+    if (!prim) {
+        return false;
+    }
+
+    switch(prim->kind) {
+    case EcsU8:
+    case EcsU16:
+    case EcsU32:
+    case EcsU64:
+    case EcsUPtr:
+    case EcsI8:
+    case EcsI16:
+    case EcsI32:
+    case EcsI64:
+    case EcsIPtr:
+        return true;
+    case EcsBool:
+    case EcsChar:
+    case EcsByte:
+    case EcsF32:
+    case EcsF64:
+    case EcsString:
+    case EcsEntity:
+    case EcsId:
+        return false;
+    }
+
+    return false;
+}
+
 int flecs_value_blit_u64(
     const ecs_world_t *world,
     const ecs_value_t *value,
