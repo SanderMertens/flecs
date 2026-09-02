@@ -1033,13 +1033,14 @@ error:
 static int flecs_expr_initializer_collection_check(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
-    ecs_meta_cursor_t *cur)
+    ecs_meta_cursor_t *cur,
+    ecs_entity_t init_type)
 {
     if (cur) {
         bool is_collection = ecs_meta_is_collection(cur) ||
             ecs_meta_is_map(cur);
         if (is_collection != node->is_collection) {
-            char *type_str = ecs_get_path(script->world, node->node.type);
+            char *type_str = ecs_get_path(script->world, init_type);
             if (node->is_collection) {
                 flecs_expr_visit_error(script, node, 
                     "invalid collection literal for non-collection type '%s'", 
@@ -1135,7 +1136,9 @@ static int flecs_expr_empty_initializer_visit_type(
         goto error;
     }
 
-    if (flecs_expr_initializer_collection_check(script, node, cur)) {
+    if (flecs_expr_initializer_collection_check(
+        script, node, cur, node->node.type))
+    {
         goto error;
     }
 
@@ -1325,7 +1328,7 @@ static int flecs_expr_initializer_visit_type(
         goto error;
     }
 
-    if (flecs_expr_initializer_collection_check(script, node, cur)) {
+    if (flecs_expr_initializer_collection_check(script, node, cur, type)) {
         goto error;
     }
 
@@ -3446,7 +3449,7 @@ int flecs_expr_visit_type(
                 script->world, node->type);
 
             if (flecs_expr_initializer_collection_check(
-                script, init_node, NULL))
+                script, init_node, NULL, node->type))
             {
                 return -1;
             }

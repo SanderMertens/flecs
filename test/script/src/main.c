@@ -1409,6 +1409,7 @@ void Error_interpolated_string_w_struct_value(void);
 void Error_function_w_too_many_params(void);
 void Error_struct_member_count_size_overflow(void);
 void Error_member_of_tag_component_in_function(void);
+void Error_collection_literal_for_struct_type_reports_type_name(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -8584,6 +8585,10 @@ bake_test_case Error_testcases[] = {
     {
         "member_of_tag_component_in_function",
         Error_member_of_tag_component_in_function
+    },
+    {
+        "collection_literal_for_struct_type_reports_type_name",
+        Error_collection_literal_for_struct_type_reports_type_name
     }
 };
 
@@ -15005,7 +15010,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        212,
+        213,
         Error_testcases
     },
     {
