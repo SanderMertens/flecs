@@ -57,9 +57,11 @@
 
 /* Push/pop token frame (allows token stack reuse in recursive functions) */
 #define TokenFramePush() \
+    int32_t _token_frame = tokenizer->stack.count;\
     tokenizer->tokens = &tokenizer->stack.tokens[tokenizer->stack.count];
 
 #define TokenFramePop() \
+    tokenizer->stack.count = _token_frame;\
     tokenizer->tokens = tokenizer->stack.tokens;
 
 /* Error */
