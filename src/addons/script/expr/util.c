@@ -32,6 +32,25 @@ void flecs_expr_visit_error_(
     ecs_os_free(msg);
 }
 
+static bool flecs_value_bool_to_number(
+    ecs_value_t *dst,
+    bool value)
+{
+    ecs_entity_t type = dst->type;
+    void *ptr = dst->ptr;
+    if (type == ecs_id(ecs_f32_t)) { *(float*)ptr = value ? 1.0f : 0.0f; return true; }
+    if (type == ecs_id(ecs_f64_t)) { *(double*)ptr = value ? 1.0 : 0.0; return true; }
+    if (type == ecs_id(ecs_i32_t)) { *(int32_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_i64_t)) { *(int64_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_u32_t)) { *(uint32_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_u64_t)) { *(uint64_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_i8_t))  { *(int8_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_i16_t)) { *(int16_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_u8_t))  { *(uint8_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_u16_t)) { *(uint16_t*)ptr = value; return true; }
+    return false;
+}
+
 int flecs_value_copy_to(
     ecs_world_t *world,
     ecs_value_t *dst,
@@ -45,6 +64,10 @@ int flecs_value_copy_to(
         ecs_assert(src->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_ptr_copy_w_type_info(
             world, src->type_info, dst->ptr, src->value.ptr);
+    } else if (src->value.type == ecs_id(ecs_bool_t) &&
+        flecs_value_bool_to_number(dst, *(const bool*)src->value.ptr))
+    {
+        return 0;
     } else {
         /* Cast value to desired output type */
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);

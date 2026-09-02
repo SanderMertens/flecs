@@ -904,6 +904,17 @@ static int flecs_irc_compile_expr(
         if (flecs_irc_compile_expr(c, n->expr, src, false)) {
             return -1;
         }
+        int32_t rsize = 0;
+        ecs_script_ir_num_class_t rclass = flecs_irc_num_class(
+            node->type, &rsize);
+        if (n->expr->type == ecs_id(ecs_bool_t) && rclass != EcsIrNumNone) {
+            int32_t op = flecs_irc_emit(c, EcsIrCastNumber, dst, src, 0, node);
+            flecs_irc_op(c, op)->flags = place;
+            flecs_irc_op(c, op)->imm.u64 = (uint64_t)EcsIrNumUnsigned |
+                ((uint64_t)1 << 8) | ((uint64_t)rclass << 16) |
+                ((uint64_t)rsize << 24);
+            return 0;
+        }
         int32_t op = flecs_irc_emit(c, EcsIrCast, dst, src, 0, node);
         flecs_irc_op(c, op)->flags = place;
         return 0;
