@@ -109822,6 +109822,16 @@ static int flecs_expr_binary_visit_type(
         node->vector_type = 0;
         node->vector_count = 0;
     } else {
+        if (!flecs_expr_oper_valid_for_type(
+            script->world, operand_type, node->operator))
+        {
+            char *type_str = ecs_get_path(script->world, operand_type);
+            flecs_expr_visit_error(script, node, "invalid operator %s for type '%s'",
+                flecs_token_str(node->operator), type_str);
+            ecs_os_free(type_str);
+            goto error;
+        }
+
         node->vector_type = operand_type;
         node->vector_count = vector_elem_count;
     }
