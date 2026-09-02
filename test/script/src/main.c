@@ -1775,6 +1775,7 @@ void Expr_vector_add_struct_i64(void);
 void Expr_vector_add_struct_f32(void);
 void Expr_vector_add_struct_f64(void);
 void Expr_vector_add_struct_struct(void);
+void Expr_vector_add_struct_struct_const_vars(void);
 void Expr_vector_add_struct_incompatible_struct(void);
 void Expr_interpolate_string_w_i32_var(void);
 void Expr_interpolate_string_w_string_var(void);
@@ -9997,6 +9998,10 @@ bake_test_case Expr_testcases[] = {
         Expr_vector_add_struct_struct
     },
     {
+        "vector_add_struct_struct_const_vars",
+        Expr_vector_add_struct_struct_const_vars
+    },
+    {
         "vector_add_struct_incompatible_struct",
         Expr_vector_add_struct_incompatible_struct
     },
@@ -14846,7 +14851,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        406,
+        407,
         Expr_testcases,
         1,
         Expr_params
