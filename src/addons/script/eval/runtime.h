@@ -24,6 +24,11 @@ struct ecs_script_runtime_t {
     char *error_name;
     char *unresolved_errors;
     int32_t include_depth;
+
+    /* Nesting level of template instantiations. Guards against templates that
+     * (indirectly) instantiate themselves. */
+    int32_t template_depth;
+
     bool resolving;
     bool error;
 };
