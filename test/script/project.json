@@ -1710,6 +1710,7 @@
                 "cond_lteq_flt",
                 "cond_lteq_enum",
                 "cond_lteq_enum_literal",
+                "cond_gt_entity",
                 "min_lparen_int_rparen",
                 "min_lparen_int_add_int_rparen",
                 "min_number_hex",

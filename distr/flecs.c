@@ -104118,6 +104118,8 @@ int flecs_value_unary(
         ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_u8_t);\
     } else if ((right)->type == ecs_id(ecs_bool_t)) { \
         ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
+    } else if ((right)->type == ecs_id(ecs_entity_t)) { \
+        ECS_BOP_COND(left, right, result, op, ecs_entity_t, ecs_entity_t);\
     } else {\
         ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
     }

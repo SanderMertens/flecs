@@ -3836,6 +3836,38 @@ void Expr_cond_lteq_enum_literal(void) {
     ecs_fini(world);
 }
 
+void Expr_cond_gt_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    test_assert(a < b);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    test_assert(ecs_expr_run(world, "b > a", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+
+    test_assert(ecs_expr_run(world, "a > b", &v, &desc) != NULL);
+    test_bool(*(bool*)v.ptr, false);
+
+    test_assert(ecs_expr_run(world, "a < b", &v, &desc) != NULL);
+    test_bool(*(bool*)v.ptr, true);
+
+    test_assert(ecs_expr_run(world, "a >= a", &v, &desc) != NULL);
+    test_bool(*(bool*)v.ptr, true);
+
+    test_assert(ecs_expr_run(world, "b <= a", &v, &desc) != NULL);
+    test_bool(*(bool*)v.ptr, false);
+
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
 void Expr_min_lparen_int_rparen(void) {
     ecs_world_t *world = ecs_init();
 
