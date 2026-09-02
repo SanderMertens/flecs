@@ -2677,6 +2677,7 @@
                 "template_if_cleans_up_entities",
                 "template_if_cleans_up_components",
                 "template_owner_cleans_up_instance_state",
+                "template_entity_delete_cleans_up_instance_state",
                 "template_for_preserves_named_entities",
                 "template_inactive_for_cleans_up_entities",
                 "template_instances_have_private_slots",

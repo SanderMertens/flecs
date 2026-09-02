@@ -1801,6 +1801,49 @@ void Reactivity_template_owner_cleans_up_instance_state(void) {
     ecs_fini(world);
 }
 
+void Reactivity_template_entity_delete_cleans_up_instance_state(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Content {"
+            LINE "  prop v: f32 = 1"
+            LINE "  Position: {v, 20}"
+            LINE "  child {}"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t content = ecs_lookup(world, "Content");
+    test_assert(content != 0);
+
+    ecs_entity_t instance = ecs_entity(world, { .name = "instance" });
+    ecs_set_id(world, instance, content,
+        sizeof(ecs_f32_t), &(ecs_f32_t){10});
+
+    ecs_entity_t child = ecs_lookup(world, "instance.child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, instance, position));
+
+    ecs_delete(world, content);
+
+    test_assert(ecs_is_alive(world, instance));
+    test_assert(!ecs_has_id(world, instance, position));
+    test_assert(!ecs_is_alive(world, child));
+    test_uint(ecs_lookup(world, "instance.child"), 0);
+
+    ecs_fini(world);
+}
+
 void Reactivity_template_for_preserves_named_entities(void) {
     ecs_world_t *world = ecs_init();
 

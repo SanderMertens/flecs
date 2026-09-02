@@ -2630,6 +2630,7 @@ void Reactivity_template_const_dependency_is_transitive(void);
 void Reactivity_template_if_cleans_up_entities(void);
 void Reactivity_template_if_cleans_up_components(void);
 void Reactivity_template_owner_cleans_up_instance_state(void);
+void Reactivity_template_entity_delete_cleans_up_instance_state(void);
 void Reactivity_template_for_preserves_named_entities(void);
 void Reactivity_template_inactive_for_cleans_up_entities(void);
 void Reactivity_template_instances_have_private_slots(void);
@@ -13380,6 +13381,10 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_template_owner_cleans_up_instance_state
     },
     {
+        "template_entity_delete_cleans_up_instance_state",
+        Reactivity_template_entity_delete_cleans_up_instance_state
+    },
+    {
         "template_for_preserves_named_entities",
         Reactivity_template_for_preserves_named_entities
     },
@@ -14942,6 +14947,7 @@ static bake_test_suite suites[] = {
         NULL,
         NULL,
         135,
+        128,
         Reactivity_testcases
     },
     {
