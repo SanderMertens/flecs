@@ -33,5 +33,22 @@ int main(int argc, char *argv[]) {
         &ecs_value_ptr(ecs_i32_t, &v), NULL) != NULL);
     assert(v == 2);
 
+    assert(ecs_script_run(world, NULL,
+        "using flecs.script.math\n"
+        "const rng: Rng = {seed: 42}\n"
+        "const x = $rng.f(10.0)\n", NULL) == 0);
+
+    ecs_log_set_level(-4);
+    assert(ecs_script_run(world, NULL,
+        "using flecs.script.math\n"
+        "const rng: Rng = {seed: 42}\n"
+        "const x = $rng.f(0)\n", NULL) != 0);
+
+    assert(ecs_script_run(world, NULL,
+        "using flecs.script.math\n"
+        "const rng: Rng = {seed: 42}\n"
+        "const x = $rng.u(0)\n", NULL) != 0);
+    ecs_log_set_level(-1);
+
     return ecs_fini(world);
 }
