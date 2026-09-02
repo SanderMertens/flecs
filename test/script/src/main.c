@@ -669,6 +669,7 @@ void Eval_update_script_that_declares_script_entity(void);
 void Eval_update_script_that_declares_parent_of_script_entity(void);
 void Eval_script_refers_to_script_entity(void);
 void Eval_vector_of_struct_w_array_member(void);
+void Eval_rerun_script_w_enum_type_w_underlying_type_in_use(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -1099,6 +1100,7 @@ void Template_template_base_w_inline_array_member_elem_in_if(void);
 void Template_template_base_w_inline_array_member_elem_in_for(void);
 void Template_template_base_w_inline_array_member_reassign(void);
 void Template_template_base_w_inline_array_member_reassign_no_index(void);
+void Template_template_instantiates_itself(void);
 
 // Testsuite 'Mut'
 void Mut_declaration(void);
@@ -5633,6 +5635,10 @@ bake_test_case Eval_testcases[] = {
     {
         "vector_of_struct_w_array_member",
         Eval_vector_of_struct_w_array_member
+    },
+    {
+        "rerun_script_w_enum_type_w_underlying_type_in_use",
+        Eval_rerun_script_w_enum_type_w_underlying_type_in_use
     }
 };
 
@@ -7328,6 +7334,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_base_w_inline_array_member_reassign_no_index",
         Template_template_base_w_inline_array_member_reassign_no_index
+    },
+    {
+        "template_instantiates_itself",
+        Template_template_instantiates_itself
     }
 };
 
@@ -14826,7 +14836,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        660,
+        661,
         Eval_testcases
     },
     {
@@ -14861,7 +14871,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        147,
+        148,
         Template_testcases
     },
     {
