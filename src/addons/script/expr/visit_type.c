@@ -1813,6 +1813,7 @@ static int flecs_expr_identifier_variable_member_visit_type(
 
     ecs_expr_variable_t *var_node = flecs_expr_variable_from(
         script, (ecs_expr_node_t*)node, var_name);
+    var_node->owns_name = true;
     ecs_expr_member_t *member_node = flecs_expr_member_from(
         script, (ecs_expr_node_t*)var_node, &member_sep[1]);
 
