@@ -1712,6 +1712,7 @@
                 "cond_lteq_enum_literal",
                 "cond_gt_entity",
                 "cond_gt_string",
+                "cond_gt_large_uint_bool",
                 "min_lparen_int_rparen",
                 "min_lparen_int_add_int_rparen",
                 "min_number_hex",
