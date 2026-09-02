@@ -2448,6 +2448,16 @@ static flecs_script_run_status_t flecs_script_runner_exec(
     ecs_script_runner_t *r)
 {
     while (r->frame_count) {
+        /* Code that runs while the script is evaluated (like a component hook)
+         * can delete the script entity. Stop evaluating when that happens, as
+         * the remaining statements would create entities for a script that no
+         * longer exists. */
+        if (r->v.script_entity &&
+            !ecs_is_alive(r->v.world, r->v.script_entity))
+        {
+            return FlecsScriptRunError;
+        }
+
         flecs_script_frame_t *frame = &r->frames[r->frame_count - 1];
         int res;
         switch(frame->node->kind) {

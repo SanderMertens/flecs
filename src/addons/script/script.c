@@ -385,11 +385,31 @@ int flecs_script_update(
     s = ecs_ensure(world, e, EcsScript);
 
     ecs_script_t *parsed = s->script;
-    flecs_script_impl(parsed)->evaluating = true;
+    ecs_script_impl_t *parsed_impl = flecs_script_impl(parsed);
+    parsed_impl->evaluating = true;
+
+    /* Keep the parsed script alive for the duration of the evaluation, so that
+     * code that runs while the script is evaluated (such as a component hook)
+     * can't free the AST that is being evaluated by deleting the script. */
+    parsed_impl->refcount ++;
+
     ecs_script_eval_desc_t eval_desc = { .runtime = eval_runtime };
-    if (flecs_script_eval(parsed, &eval_desc,
-        flecs_script_tag(e, instance), UINT64_MAX, &eval_result))
-    {
+    int eval_result_code = flecs_script_eval(parsed, &eval_desc,
+        flecs_script_tag(e, instance), UINT64_MAX, &eval_result);
+
+    if (!ecs_is_alive(world, e)) {
+        /* Script entity was deleted while it was being evaluated. */
+        parsed_impl->evaluating = false;
+        flecs_script_runtime_error_reset(runtime);
+        ecs_os_free(eval_result.error);
+        ecs_script_free(parsed);
+        if (is_defer) {
+            flecs_resume_readonly(real_world, &srs);
+        }
+        return -1;
+    }
+
+    if (eval_result_code) {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
         if (!s->error) {
@@ -444,6 +464,8 @@ int flecs_script_update(
             ecs_vec_clear(&flecs_script_impl(parsed)->run_refs);
         }
     }
+
+    ecs_script_free(parsed);
 
 done:
     if (result) {
