@@ -23,6 +23,13 @@ typedef struct ecs_script_template_member_t {
     bool is_mut;
     bool is_template;
     ecs_entity_t interface;
+
+    /* Cached member layout for diffing new against old prop values */
+    const ecs_type_info_t *diff_ti;
+    int32_t diff_offset;
+    int32_t diff_size;
+    int32_t diff_count;
+    bool diff_pod;
 } ecs_script_template_member_t;
 
 typedef struct {
