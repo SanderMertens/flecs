@@ -8,6 +8,38 @@
 
 #ifdef FLECS_SCRIPT_ASYNC
 
+typedef enum flecs_script_future_state_t {
+    FlecsScriptFuturePending,
+    FlecsScriptFutureResolved,
+    FlecsScriptFutureRejected,
+    FlecsScriptFutureCancelled
+} flecs_script_future_state_t;
+
+struct ecs_script_future_t {
+    ecs_entity_t type;
+    ecs_value_t value;
+    char *error;
+    ecs_entity_t error_id;
+    void *ctx;
+    ecs_ctx_free_t ctx_free;
+    ecs_async_function_cancel_t cancel;
+    ecs_function_ctx_t function_ctx;
+    ecs_os_mutex_t mutex;
+    int32_t refs;
+    flecs_script_future_state_t state;
+};
+
+ecs_script_future_t* flecs_script_future_start(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t type,
+    ecs_function_calldata_t *calldata,
+    int32_t argc,
+    ecs_value_t *argv);
+
+flecs_script_future_state_t flecs_script_future_poll(
+    const ecs_script_future_t *future);
+
 /* Async statement evaluation, invoked by the script runner */
 
 int flecs_script_step_await(

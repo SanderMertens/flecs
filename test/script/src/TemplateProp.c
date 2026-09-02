@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void TemplateProp_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 typedef struct {
     float x;
     float y;
@@ -48,7 +57,7 @@ void TemplateProp_prop_template_type(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t point = ecs_lookup(world, "Point");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -86,7 +95,7 @@ void TemplateProp_prop_template_type_default(void) {
     LINE "}"
     LINE "e { Foo: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -109,7 +118,7 @@ void TemplateProp_prop_template_type_default_initializer(void) {
     LINE "e { Foo: {} }"
     LINE "f { Foo: {point: {y: 20}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -137,7 +146,7 @@ void TemplateProp_prop_template_type_partial_default_initializer(void) {
     LINE "}"
     LINE "e { Foo: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -160,7 +169,7 @@ void TemplateProp_use_as_tag(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 5, 6);
 
     ecs_fini(world);
@@ -224,7 +233,7 @@ void TemplateProp_interface_prop_self_template(void) {
     LINE "e { Light: {} }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -245,7 +254,7 @@ void TemplateProp_interface_prop_empty_initializer_fails(void) {
     LINE "Road r(light: Light)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -268,7 +277,7 @@ void TemplateProp_interface_prop_in_with_w_initializer_fails(void) {
     LINE "Road r(light: Light)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -290,7 +299,7 @@ void TemplateProp_interface_prop_dollar_initializer(void) {
     LINE "}"
     LINE "Road r(light: Light)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t lamp = ecs_lookup(world, "r.lamp");
     test_assert(lamp != 0);
@@ -314,11 +323,11 @@ void TemplateProp_interface_prop_invalid_value(void) {
     LINE "  lamp { light }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL,
-        "Road r(light: flecs)", NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "Road r(light: flecs)", &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     test_assert(ecs_lookup(world, "r.lamp") == 0);
@@ -340,11 +349,11 @@ void TemplateProp_interface_prop_unrelated_template(void) {
     LINE "  lamp { light }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL,
-        "Road r(light: OtherT)", NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "Road r(light: OtherT)", &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     test_assert(ecs_lookup(world, "r.lamp") == 0);
@@ -362,10 +371,10 @@ void TemplateProp_interface_prop_missing_value(void) {
     LINE "  lamp { light }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, "Road r()", NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "Road r()", &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     test_assert(ecs_lookup(world, "r.lamp") == 0);
@@ -384,7 +393,7 @@ void TemplateProp_interface_prop_instantiates_passed_template(void) {
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_light(world, "e.lamp", true, 2);
 
     ecs_entity_t road = ecs_lookup(world, "Road");
@@ -407,7 +416,7 @@ void TemplateProp_interface_prop_paren_syntax(void) {
     LINE "}"
     LINE "Road r(street_light: MyStreetLight)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_light(world, "r.lamp", true, 2);
 
     ecs_fini(world);
@@ -424,7 +433,7 @@ void TemplateProp_interface_prop_false_branch(void) {
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_light(world, "e.lamp", false, 2);
 
     ecs_fini(world);
@@ -442,7 +451,7 @@ void TemplateProp_interface_prop_with_other_components(void) {
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_light(world, "e.lamp", true, 2);
 
     ecs_entity_t velocity = ecs_lookup(world, "Velocity");
@@ -465,7 +474,7 @@ void TemplateProp_interface_prop_default_template(void) {
     LINE "}"
     LINE "e { Road: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_light(world, "e.lamp", true, 2);
 
     ecs_fini(world);
@@ -482,7 +491,7 @@ void TemplateProp_interface_prop_as_tag(void) {
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_light(world, "e.lamp", false, 2);
 
     ecs_fini(world);
@@ -498,7 +507,7 @@ void TemplateProp_interface_prop_from_c(void) {
     LINE "  lamp { street_light: {on_off: true} }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t road = ecs_lookup(world, "Road");
     ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
@@ -527,11 +536,11 @@ void TemplateProp_interface_prop_change_template(void) {
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_light(world, "e.lamp", true, 2);
 
-    test_assert(ecs_script_run(world, NULL,
-        "e { Road: {street_light: OtherStreetLight} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e { Road: {street_light: OtherStreetLight} }", &ir_desc, NULL) == 0);
 
     ecs_entity_t lamp = ecs_lookup(world, "e.lamp");
     ecs_entity_t other = ecs_lookup(world, "OtherStreetLight");
@@ -563,7 +572,7 @@ void TemplateProp_interface_prop_not_derived_fails(void) {
     LINE "e { Road: {street_light: Unrelated} }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -582,7 +591,7 @@ void TemplateProp_interface_prop_not_template_fails(void) {
     LINE "e { Road: {street_light: DerivedStruct} }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -600,7 +609,7 @@ void TemplateProp_interface_prop_unset_fails(void) {
     LINE "e { Road: {} }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -618,7 +627,7 @@ void TemplateProp_interface_prop_unknown_member_fails(void) {
     LINE "e { Road: {street_light: MyStreetLight} }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -635,7 +644,7 @@ void TemplateProp_use_as_tag_dollar(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 5, 6);
 
     ecs_fini(world);
@@ -652,7 +661,7 @@ void TemplateProp_use_as_tag_default(void) {
     LINE "}"
     LINE "e { Foo: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 1, 2);
 
     ecs_fini(world);
@@ -669,7 +678,7 @@ void TemplateProp_use_as_tag_on_instance(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e", 5, 6);
 
     ecs_fini(world);
@@ -686,7 +695,7 @@ void TemplateProp_use_w_initializer_partial(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 10, 6);
 
     ecs_fini(world);
@@ -703,7 +712,7 @@ void TemplateProp_use_w_initializer_partial_dollar(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 5, 20);
 
     ecs_fini(world);
@@ -720,7 +729,7 @@ void TemplateProp_use_w_initializer_full(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 10, 20);
 
     ecs_fini(world);
@@ -738,7 +747,7 @@ void TemplateProp_use_w_initializer_positional(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 10, 20);
     test_point(world, "e.child2", 10, 6);
 
@@ -757,7 +766,7 @@ void TemplateProp_use_w_initializer_expr(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 105, 6);
 
     ecs_fini(world);
@@ -774,7 +783,7 @@ void TemplateProp_use_w_empty_initializer(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 5, 6);
 
     ecs_fini(world);
@@ -794,7 +803,7 @@ void TemplateProp_use_in_with(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 5, 6);
     test_point(world, "e.child2", 5, 6);
 
@@ -814,7 +823,7 @@ void TemplateProp_use_in_with_dollar(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 5, 6);
 
     ecs_fini(world);
@@ -836,7 +845,7 @@ void TemplateProp_use_in_with_w_initializer(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 42, 6);
     test_point(world, "e.child2", 5, 43);
 
@@ -856,7 +865,7 @@ void TemplateProp_use_in_with_w_positional_initializer(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 42, 6);
 
     ecs_fini(world);
@@ -874,7 +883,7 @@ void TemplateProp_member_access_in_expr(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     ecs_entity_t point = ecs_lookup(world, "Point");
@@ -902,15 +911,15 @@ void TemplateProp_prop_change_updates_children(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 10, 6);
     test_point(world, "e.child2", 5, 6);
 
     ecs_entity_t child = ecs_lookup(world, "e.child");
     ecs_entity_t child2 = ecs_lookup(world, "e.child2");
 
-    test_assert(ecs_script_run(world, NULL,
-        "e { Foo: {point: {x: 7, y: 8}} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e { Foo: {point: {x: 7, y: 8}} }", &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "e.child") == child);
     test_assert(ecs_lookup(world, "e.child2") == child2);
@@ -931,7 +940,7 @@ void TemplateProp_prop_change_from_c_updates_children(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 5, 6);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -957,7 +966,7 @@ void TemplateProp_multiple_template_props(void) {
     LINE "}"
     LINE "e { Foo: {a: {x: 1, y: 2}, b: {x: 3, y: 4}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     const EcsComponent *c = ecs_get(world, foo, EcsComponent);
@@ -982,7 +991,7 @@ void TemplateProp_template_prop_w_other_props(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 1, y: 2}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1012,7 +1021,7 @@ void TemplateProp_template_prop_w_string_member(void) {
     LINE "e { Foo: {named: {name: \"hello\"}} }"
     LINE "f { Foo: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t label = ecs_lookup(world, "Label");
     ecs_entity_t named = ecs_lookup(world, "Named");
@@ -1057,7 +1066,7 @@ void TemplateProp_inherited_template_prop(void) {
     LINE "}"
     LINE "e { Bar: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 5, 3);
     test_point(world, "e.child2", 5, 6);
 
@@ -1079,7 +1088,7 @@ void TemplateProp_inherited_template_prop_dollar(void) {
     LINE "}"
     LINE "e { Bar: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 5, 3);
     test_point(world, "e.child2", 5, 6);
 
@@ -1102,7 +1111,7 @@ void TemplateProp_inherited_template_prop_chain(void) {
     LINE "}"
     LINE "e { Baz: {point: {x: 5, y: 6}, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 30, 6);
 
     ecs_fini(world);
@@ -1122,7 +1131,7 @@ void TemplateProp_prop_of_derived_template_type(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t point3d = ecs_lookup(world, "Point3D");
     ecs_entity_t point = ecs_lookup(world, "Point");
@@ -1154,7 +1163,7 @@ void TemplateProp_nested_template_instantiation(void) {
     LINE "}"
     LINE "e { Bar: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.foo.child", 7, 8);
 
     ecs_fini(world);
@@ -1173,7 +1182,7 @@ void TemplateProp_template_prop_in_for_loop(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child_0", 0, 6);
     test_point(world, "e.child_1", 1, 6);
     test_point(world, "e.child_2", 2, 6);
@@ -1198,7 +1207,7 @@ void TemplateProp_template_prop_in_if(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }"
     LINE "f { Foo: {point: {x: 5, y: 6}, flag: false} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 5, 6);
     test_point(world, "f.child", 100, 6);
 
@@ -1216,7 +1225,7 @@ void TemplateProp_use_wo_template_keyword(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1233,7 +1242,7 @@ void TemplateProp_prop_wo_template_keyword_as_value(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     ecs_entity_t child = ecs_lookup(world, "e.child");
@@ -1256,7 +1265,7 @@ void TemplateProp_type_not_a_template(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1271,7 +1280,7 @@ void TemplateProp_type_is_primitive(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1286,7 +1295,7 @@ void TemplateProp_type_unresolved(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1301,7 +1310,7 @@ void TemplateProp_type_is_self(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1317,7 +1326,7 @@ void TemplateProp_mut_template_type(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1331,7 +1340,7 @@ void TemplateProp_const_template_type(void) {
     LINE "const point : template Point = {}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1347,7 +1356,7 @@ void TemplateProp_missing_type_name(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1364,7 +1373,7 @@ void TemplateProp_use_as_pair_first(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1381,7 +1390,7 @@ void TemplateProp_use_as_pair_second(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1398,7 +1407,7 @@ void TemplateProp_use_as_pair_first_dollar(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1415,7 +1424,7 @@ void TemplateProp_use_as_entity_kind(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1432,7 +1441,7 @@ void TemplateProp_use_w_wrong_member(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1449,7 +1458,7 @@ void TemplateProp_prop_template_type_wo_default_required(void) {
     LINE "}"
     LINE "e { Foo: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.child", 1, 2);
 
     ecs_fini(world);
@@ -1465,11 +1474,11 @@ void TemplateProp_run_script_twice(void) {
     LINE "  child { point: {x: 10} }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_assert(ecs_script_run(world, NULL,
-        "e { Foo: {point: {x: 5, y: 6}} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e { Foo: {point: {x: 5, y: 6}} }", &ir_desc, NULL) == 0);
     test_point(world, "e.child", 10, 6);
 
     ecs_fini(world);
@@ -1486,7 +1495,7 @@ void TemplateProp_managed_script_update(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     });
@@ -1520,7 +1529,7 @@ void TemplateProp_ast_to_str(void) {
     LINE "  child { point: {x: 10} }"
     LINE "}";
 
-    ecs_script_t *s = ecs_script_parse(world, NULL, expr, NULL, NULL);
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
     test_assert(s != NULL);
 
     char *str = ecs_script_ast_to_str(s, false);
@@ -1543,7 +1552,7 @@ void TemplateProp_instance_to_json(void) {
     LINE "}"
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     char *json = ecs_entity_to_json(world, e, &(ecs_entity_to_json_desc_t){
@@ -1581,7 +1590,7 @@ void TemplateProp_pass_to_child_template_same_type(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t inner = ecs_lookup(world, "Inner");
     ecs_entity_t e_inner = ecs_lookup(world, "e.inner");
@@ -1612,7 +1621,7 @@ void TemplateProp_pass_to_child_template_same_type_dollar(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.inner.leaf", 5, 6);
 
     ecs_fini(world);
@@ -1630,7 +1639,7 @@ void TemplateProp_pass_to_child_template_positional(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.inner.leaf", 5, 6);
     test_point(world, "e.inner.leaf2", 100, 6);
 
@@ -1649,7 +1658,7 @@ void TemplateProp_pass_to_child_template_w_expr(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.inner.leaf", 6, 12);
     test_point(world, "e.inner.leaf2", 100, 12);
 
@@ -1670,7 +1679,7 @@ void TemplateProp_pass_to_child_template_w_with(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.inner.leaf", 5, 6);
     test_point(world, "e.inner.leaf2", 100, 6);
 
@@ -1689,7 +1698,7 @@ void TemplateProp_pass_to_child_template_default(void) {
     LINE "}"
     LINE "e { Outer: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.inner.leaf", 1, 2);
     test_point(world, "e.inner.leaf2", 100, 2);
 
@@ -1708,14 +1717,14 @@ void TemplateProp_pass_to_child_template_update(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.inner.leaf", 5, 6);
 
     ecs_entity_t inner = ecs_lookup(world, "e.inner");
     ecs_entity_t leaf = ecs_lookup(world, "e.inner.leaf");
 
-    test_assert(ecs_script_run(world, NULL,
-        "e { Outer: {point: {x: 7, y: 8}} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e { Outer: {point: {x: 7, y: 8}} }", &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "e.inner") == inner);
     test_assert(ecs_lookup(world, "e.inner.leaf") == leaf);
@@ -1736,7 +1745,7 @@ void TemplateProp_pass_to_child_template_from_c(void) {
     LINE "  inner { Inner: {point: $point} }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t outer = ecs_lookup(world, "Outer");
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
@@ -1772,7 +1781,7 @@ void TemplateProp_pass_to_child_template_two_levels(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.middle.inner.leaf", 5, 6);
     test_point(world, "e.middle.inner.leaf2", 100, 6);
 
@@ -1792,7 +1801,7 @@ void TemplateProp_pass_to_child_template_and_use_in_outer(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e", 5, 50);
     test_point(world, "e.inner.leaf", 5, 6);
 
@@ -1812,7 +1821,7 @@ void TemplateProp_pass_derived_to_child_template_base(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6, z: 7}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t inner = ecs_lookup(world, "Inner");
     ecs_entity_t point3d = ecs_lookup(world, "Point3D");
@@ -1852,7 +1861,7 @@ void TemplateProp_pass_derived_to_child_template_base_positional(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6, z: 7}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.inner.leaf", 5, 6);
     test_point(world, "e.inner.leaf2", 100, 6);
 
@@ -1874,7 +1883,7 @@ void TemplateProp_pass_derived_to_child_template_base_w_with(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6, z: 7}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.inner.leaf", 5, 6);
     test_point(world, "e.inner.leaf2", 100, 6);
 
@@ -1895,7 +1904,7 @@ void TemplateProp_pass_derived_to_child_template_base_update(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6, z: 7}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t point3d = ecs_lookup(world, "Point3D");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1908,8 +1917,8 @@ void TemplateProp_pass_derived_to_child_template_base_update(void) {
 
     ecs_entity_t leaf = ecs_lookup(world, "e.inner.leaf");
 
-    test_assert(ecs_script_run(world, NULL,
-        "e { Outer: {point: {x: 8, y: 9, z: 10}} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e { Outer: {point: {x: 8, y: 9, z: 10}} }", &ir_desc, NULL) == 0);
 
     v = ecs_get_id(world, e, point3d);
     test_flt(v[0], 8);
@@ -1938,7 +1947,7 @@ void TemplateProp_pass_derived_to_child_template_derived(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6, z: 7}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t point3d = ecs_lookup(world, "Point3D");
     ecs_entity_t leaf = ecs_lookup(world, "e.inner.leaf");
@@ -1970,7 +1979,7 @@ void TemplateProp_pass_derived_to_child_template_base_two_levels(void) {
     LINE "}"
     LINE "e { Outer: {point: {x: 5, y: 6, z: 7}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_point(world, "e.middle.inner.leaf", 5, 6);
     test_point(world, "e.middle.inner.leaf2", 100, 6);
 
@@ -1993,7 +2002,7 @@ void TemplateProp_pass_base_to_child_template_derived_fails(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -2015,7 +2024,7 @@ void TemplateProp_pass_unrelated_to_child_template_fails(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -2033,7 +2042,7 @@ void TemplateProp_bool_prop_mul_flt_member(void) {
     LINE "on { Light: {on_off: true} }"
     LINE "off { Light: {on_off: false} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     test_assert(position != 0);
@@ -2067,7 +2076,7 @@ void TemplateProp_bool_prop_in_flt_member_initializer(void) {
     LINE "on { Light: {on_off: true} }"
     LINE "off { Light: {on_off: false} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     test_assert(position != 0);
@@ -2102,7 +2111,7 @@ void TemplateProp_bool_prop_mul_flt_member_const(void) {
     LINE "on { Light: {on_off: true} }"
     LINE "off { Light: {on_off: false} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     test_assert(position != 0);

@@ -565,7 +565,7 @@ static bool flecs_script_for_next(
     return true;
 }
 
-static void flecs_script_for_merge_slots(
+void flecs_script_for_merge_slots(
     ecs_script_eval_visitor_t *v,
     int32_t dst_slot,
     int32_t src_slot)

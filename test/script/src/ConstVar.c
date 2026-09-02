@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void ConstVar_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 void ConstVar_get_bool(void) {
     ecs_world_t *world = ecs_init();
 
@@ -423,7 +432,7 @@ void ConstVar_get_from_script(void) {
     const char *expr =
     HEAD "export const x: i32 = 10";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_int(ecs_const_var_get_t(world, "x", ecs_i32_t), 10);
 
@@ -732,7 +741,7 @@ void ConstVar_nested_const_shadows_export_const(void) {
     LINE "  child { Position: {speed, speed} }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t child = ecs_lookup(world, "parent.child");
     test_assert(child != 0);

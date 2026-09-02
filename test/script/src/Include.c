@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void Include_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 typedef struct test_file_t {
     const char *name;
     const char *content;
@@ -117,7 +126,7 @@ void Include_include_cycle(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run_file(world, "a.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "a.flecs", &ir_desc) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -130,7 +139,7 @@ void Include_include_simple(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
 
     test_assert(ecs_lookup(world, "Foo") != 0);
 
@@ -144,7 +153,7 @@ void Include_include_subdir(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
     test_assert(ecs_lookup(world, "Bar") != 0);
 
     ecs_fini(world);
@@ -156,7 +165,7 @@ void Include_include_missing_file(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     ecs_fini(world);
 }
@@ -167,7 +176,7 @@ void Include_include_parent_dir_not_allowed(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     ecs_fini(world);
 }
@@ -180,7 +189,7 @@ void Include_include_relative_to_current_script(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
     test_assert(ecs_lookup(world, "B_entity") != 0);
 
     ecs_fini(world);
@@ -194,7 +203,7 @@ void Include_include_nested(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "a.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "a.flecs", &ir_desc) == 0);
     test_assert(ecs_lookup(world, "A_entity") != 0);
     test_assert(ecs_lookup(world, "B_entity") != 0);
     test_assert(ecs_lookup(world, "C_entity") != 0);
@@ -210,7 +219,7 @@ void Include_include_managed_creates_script_entity(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -233,7 +242,7 @@ void Include_include_managed_skips_existing(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -258,7 +267,7 @@ void Include_include_managed_nested(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "a.flecs"
     });
     test_assert(script != 0);
@@ -279,7 +288,7 @@ void Include_include_inline_does_not_create_script_entity(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
 
     test_assert(ecs_lookup(world, "ChildInline") != 0);
 
@@ -298,7 +307,7 @@ void Include_include_rejects_absolute_unix_path(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     ecs_fini(world);
 }
@@ -309,7 +318,7 @@ void Include_include_rejects_windows_drive_letter(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     ecs_fini(world);
 }
@@ -321,7 +330,7 @@ void Include_include_with_line_comment(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
     test_assert(ecs_lookup(world, "LineCommentEntity") != 0);
 
     ecs_fini(world);
@@ -334,7 +343,7 @@ void Include_include_with_block_comment(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
     test_assert(ecs_lookup(world, "BlockCommentEntity") != 0);
 
     ecs_fini(world);
@@ -351,7 +360,7 @@ void Include_include_not_allowed_in_template(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     ecs_fini(world);
 }
@@ -366,7 +375,7 @@ void Include_include_not_allowed_in_entity_scope(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     ecs_fini(world);
 }
@@ -382,7 +391,7 @@ void Include_include_not_allowed_in_with_scope(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     ecs_fini(world);
 }
@@ -397,7 +406,7 @@ void Include_include_not_allowed_in_if_scope(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     ecs_fini(world);
 }
@@ -412,7 +421,7 @@ void Include_include_not_allowed_in_for_scope(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     ecs_fini(world);
 }
@@ -424,7 +433,7 @@ void Include_include_auto_appends_extension(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
     test_assert(ecs_lookup(world, "AutoExtEntity") != 0);
 
     ecs_fini(world);
@@ -437,7 +446,7 @@ void Include_include_auto_appends_extension_subdir(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
     test_assert(ecs_lookup(world, "SubAutoExt") != 0);
 
     ecs_fini(world);
@@ -450,7 +459,7 @@ void Include_include_keeps_explicit_extension(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
     test_assert(ecs_lookup(world, "ExplicitExtEntity") != 0);
 
     ecs_fini(world);
@@ -464,7 +473,7 @@ void Include_include_auto_appends_extension_managed(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -487,7 +496,7 @@ void Include_fopen_override_remaps_filename(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "requested.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "requested.flecs", &ir_desc) == 0);
     test_assert(ecs_lookup(world, "RemappedEntity") != 0);
 
     ecs_fini(world);
@@ -524,7 +533,7 @@ void Include_include_managed_eval_error_logged(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -545,7 +554,7 @@ void Include_include_managed_eval_error_set_on_script(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -577,7 +586,7 @@ void Include_include_using_not_visible_in_parent(void) {
     ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = foo });
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     ecs_entity_t child_e = ecs_lookup(world, "child_e");
     test_assert(child_e != 0);
@@ -605,7 +614,7 @@ void Include_include_managed_using_not_visible_in_parent(void) {
     ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = foo });
 
     ecs_log_set_level(-4);
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -635,7 +644,7 @@ void Include_include_managed_keeps_implicit_meta_in_parent(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -664,7 +673,7 @@ void Include_include_keeps_implicit_meta_in_parent(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
 
     ecs_entity_t pos = ecs_lookup(world, "Position");
     test_assert(pos != 0);
@@ -701,7 +710,7 @@ void Include_include_forward_ref_to_later_include_is_retried(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -732,7 +741,7 @@ void Include_const_does_not_cross_include(void) {
         }
     });
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     test_assert(ecs_lookup(world, "a") == 0);
     test_assert(ecs_lookup(world, "b") == 0);
@@ -762,7 +771,7 @@ void Include_export_const_in_scope_crosses_include(void) {
         }
     });
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
 
     ecs_entity_t d = ecs_lookup(world, "d");
     test_assert(d != 0);
@@ -798,7 +807,7 @@ void Include_include_forward_ref_to_later_include_inline(void) {
         }
     });
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
 
     test_assert(ecs_lookup(world, "Widget") != 0);
 
@@ -841,7 +850,7 @@ void Include_include_forward_ref_to_nested_later_include(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -888,7 +897,7 @@ void Include_include_forward_ref_from_nested_include(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -938,7 +947,7 @@ void Include_include_forward_ref_chain_requires_multiple_passes(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -977,7 +986,7 @@ void Include_include_forward_ref_never_resolved_reports_error(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -1014,7 +1023,7 @@ void Include_include_forward_ref_never_resolved_inline_reports_error(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
 
     test_assert(ecs_lookup(world, "other_e") != 0);
     test_assert(ecs_lookup(world, "Widget") == 0);
@@ -1044,7 +1053,7 @@ void Include_include_diamond_evaluates_shared_once(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -1088,7 +1097,7 @@ void Include_include_diamond_forward_ref_is_retried(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -1118,7 +1127,7 @@ void Include_include_forward_ref_to_struct_in_later_include(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -1165,7 +1174,7 @@ void Include_include_forward_ref_to_const_in_later_include(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -1200,7 +1209,7 @@ void Include_include_forward_ref_to_entity_in_later_include(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -1253,7 +1262,7 @@ void Include_include_retried_script_keeps_scope_and_components(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -1300,7 +1309,7 @@ void Include_include_error_reports_failing_file(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -1327,7 +1336,7 @@ void Include_include_parse_error_sets_error_on_parent(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
 
@@ -1358,7 +1367,7 @@ void Include_include_parse_error_logs_error(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_script(world, {
+    ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
 
@@ -1378,7 +1387,7 @@ void Include_include_eval_error_sets_error_on_parent(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
 
@@ -1405,7 +1414,7 @@ void Include_include_nested_parse_error_sets_error_on_parent(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "a.flecs"
     });
 
@@ -1432,7 +1441,7 @@ void Include_include_parse_error_run_file_fails(void) {
 
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) != 0);
     test_assert(ecs_lookup(world, "BadEntity") == 0);
 
     ecs_fini(world);
@@ -1454,7 +1463,7 @@ void Include_include_nested_index_parse_error_sets_error_on_parent(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
 
@@ -1489,7 +1498,7 @@ void Include_include_nested_error_reports_position(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -1525,7 +1534,7 @@ void Include_include_error_in_large_file_reports_position(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
     test_assert(script != 0);
@@ -1551,7 +1560,7 @@ void Include_include_missing_file_managed_sets_error_on_parent(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "parent.flecs"
     });
 

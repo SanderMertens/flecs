@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void StructInheritance_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 typedef struct {
     float x;
     float y;
@@ -65,7 +74,7 @@ void StructInheritance_block_syntax(void) {
     HEAD "struct Base(x: f32, y: f32)"
     LINE "struct Derived : Base(z: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -89,7 +98,7 @@ void StructInheritance_paren_syntax(void) {
     HEAD "struct Base(x: f32, y: f32)"
     LINE "struct Derived : Base(z: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -113,7 +122,7 @@ void StructInheritance_paren_syntax_space_before_paren(void) {
     HEAD "struct Base(x: f32, y: f32)"
     LINE "struct Derived : Base (z: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
@@ -130,7 +139,7 @@ void StructInheritance_mixed_syntax(void) {
     HEAD "struct Base(x: f32, y: f32)"
     LINE "struct Derived : Base(z: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
@@ -149,7 +158,7 @@ void StructInheritance_mixed_syntax_block_base(void) {
     HEAD "struct Base(x: f32, y: f32)"
     LINE "struct Derived : Base(z: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
@@ -168,7 +177,7 @@ void StructInheritance_no_own_members(void) {
     HEAD "struct Base(x: f32, y: f32)"
     LINE "struct Derived : Base()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
@@ -186,7 +195,7 @@ void StructInheritance_no_own_members_newline_before_scope(void) {
     HEAD "struct Base(x: f32, y: f32)"
     LINE "struct Derived : Base()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
@@ -203,7 +212,7 @@ void StructInheritance_chain(void) {
     LINE "struct B : A(y: f32)"
     LINE "struct C : B(z: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t a = ecs_lookup(world, "A");
     ecs_entity_t b = ecs_lookup(world, "B");
@@ -231,7 +240,7 @@ void StructInheritance_chain_w_padding(void) {
     LINE "struct C : B(d: i8)"
     LINE "e { C: {a: 1, b: 2, c: 3, d: 4} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t b = ecs_lookup(world, "B");
     ecs_entity_t c = ecs_lookup(world, "C");
@@ -264,7 +273,7 @@ void StructInheritance_two_derived(void) {
     LINE "struct D1 : Base(y: f32)"
     LINE "struct D2 : Base(z: i32, w: i32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t d1 = ecs_lookup(world, "D1");
@@ -287,7 +296,7 @@ void StructInheritance_base_w_padding(void) {
     HEAD "struct Base(x: i32, y: i8)"
     LINE "struct Derived : Base(z: i8)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -309,7 +318,7 @@ void StructInheritance_set_component(void) {
     LINE "struct Derived : Base(z: f32)"
     LINE "e { Derived: {x: 10, y: 20, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -333,7 +342,7 @@ void StructInheritance_set_component_partial(void) {
     LINE "struct Derived : Base(z: f32)"
     LINE "e { Derived: {y: 20} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -355,7 +364,7 @@ void StructInheritance_set_component_positional(void) {
     LINE "struct Derived : Base(z: f32)"
     LINE "e { Derived: {10, 20, 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -380,7 +389,7 @@ void StructInheritance_set_base_and_derived(void) {
     LINE "  Derived: {10, 20, 30}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -408,7 +417,7 @@ void StructInheritance_entity_to_json(void) {
     LINE "struct Derived : Base(z: f32)"
     LINE "e { Derived: {x: 10, y: 20, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     char *json = ecs_entity_to_json(world, e, &(ecs_entity_to_json_desc_t){
@@ -427,7 +436,7 @@ void StructInheritance_expr_run(void) {
     HEAD "struct Base(x: f32, y: f32)"
     LINE "struct Derived : Base(z: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     Position3D value = {0};
@@ -453,7 +462,7 @@ void StructInheritance_add_member_to_base_w_derived(void) {
     HEAD "struct Base(x: f32, y: f32)"
     LINE "struct Derived : Base(z: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     test_assert(base != 0);
@@ -482,7 +491,7 @@ void StructInheritance_base_defined_in_c(void) {
     HEAD "struct Derived : PositionBase(z: f32)"
     LINE "e { Derived: {x: 10, y: 20, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
@@ -507,7 +516,7 @@ void StructInheritance_derived_defined_in_c(void) {
     const char *expr =
     HEAD "struct Base(x: f32, y: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     test_assert(base != 0);
@@ -525,8 +534,8 @@ void StructInheritance_derived_defined_in_c(void) {
     test_bool(t->existing, true);
     test_bool(t->partial, false);
 
-    test_assert(ecs_script_run(world, NULL,
-        "e { Position3D: {x: 10, y: 20, z: 30} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e { Position3D: {x: 10, y: 20, z: 30} }", &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const Position3D *p = ecs_get(world, e, Position3D);
@@ -545,12 +554,12 @@ void StructInheritance_base_in_module(void) {
     HEAD "module shapes"
     LINE "struct Base(x: f32, y: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     expr =
     HEAD "struct Derived : shapes.Base(z: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "shapes.Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -569,13 +578,13 @@ void StructInheritance_base_w_using(void) {
     HEAD "module shapes"
     LINE "struct Base(x: f32, y: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     expr =
     HEAD "using shapes"
     LINE "struct Derived : Base(z: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "shapes.Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -596,7 +605,7 @@ void StructInheritance_derived_as_member(void) {
     LINE "struct Outer(d: Derived, w: f32)"
     LINE "e { Outer: {d: {x: 1, y: 2, z: 3}, w: 4} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t outer = ecs_lookup(world, "Outer");
     test_assert(outer != 0);
@@ -621,7 +630,7 @@ void StructInheritance_base_w_string_member(void) {
     LINE "struct Derived : Base(value: i32)"
     LINE "e { Derived: {name: \"hello\", value: 10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -645,7 +654,7 @@ void StructInheritance_base_w_array_member(void) {
     LINE "struct Derived : Base(w: f32)"
     LINE "e { Derived: {arr: [1, 2, 3], w: 4} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_struct(world, derived, 2, 16, 4);
@@ -671,7 +680,7 @@ void StructInheritance_duplicate_member_paren(void) {
     LINE "struct Derived : Base(x: f32)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -685,7 +694,7 @@ void StructInheritance_duplicate_member_block(void) {
     LINE "struct Derived : Base(x: f32)";
 
     ecs_log_set_level(-4);
-    ecs_script_run(world, NULL, expr, NULL);
+    ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL);
     ecs_log_set_level(-1);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -706,7 +715,7 @@ void StructInheritance_base_not_a_struct(void) {
     HEAD "struct Derived : Base(x: f32)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -719,7 +728,7 @@ void StructInheritance_self_inherit(void) {
     HEAD "struct A : A(x: f32)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -732,10 +741,10 @@ void StructInheritance_inheritance_cycle(void) {
     HEAD "struct S1(x: f32)"
     LINE "struct S2 : S1(y: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, "struct S1 : S2(z: f32)", NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "struct S1 : S2(z: f32)", &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_entity_t s1 = ecs_lookup(world, "S1");
@@ -754,7 +763,7 @@ void StructInheritance_base_is_prefab(void) {
     LINE "struct Derived : Base(x: f32)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -768,7 +777,7 @@ void StructInheritance_base_is_enum(void) {
     LINE "struct Derived : Color(x: f32)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -781,7 +790,7 @@ void StructInheritance_base_is_primitive(void) {
     HEAD "struct Derived : f32(x: f32)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -794,7 +803,7 @@ void StructInheritance_base_unresolved(void) {
     HEAD "struct Derived : Base(x: f32)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     test_assert(ecs_lookup(world, "Derived") == 0);
@@ -810,7 +819,7 @@ void StructInheritance_base_declared_after_derived(void) {
     LINE "struct Base(x: f32, y: f32)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -824,10 +833,10 @@ void StructInheritance_run_script_twice(void) {
     LINE "struct Derived : Base(z: f32)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    test_assert(ecs_script_run(world, NULL,
-        "e { Derived: {x: 10, y: 20, z: 30} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e { Derived: {x: 10, y: 20, z: 30} }", &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -855,7 +864,7 @@ void StructInheritance_managed_script_update(void) {
     LINE "struct Derived : Base(z: f32)"
     LINE "e { Derived: {x: 10, y: 20, z: 30} }";
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     });
@@ -892,7 +901,7 @@ void StructInheritance_managed_script_update_add_member(void) {
     LINE "struct Derived : Base(z: f32)"
     LINE "";
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     });
@@ -930,7 +939,7 @@ void StructInheritance_query_derived(void) {
     LINE "e1 { Derived: {1, 2, 3} }"
     LINE "e2 { Derived: {4, 5, 6} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_query_t *q = ecs_query(world, { .expr = "Derived" });
@@ -964,7 +973,7 @@ void StructInheritance_derived_in_nested_scope(void) {
     LINE "}"
     LINE "e { shapes.Derived: {1, 2, 3} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "shapes.Base");
     ecs_entity_t derived = ecs_lookup(world, "shapes.Derived");
@@ -992,7 +1001,7 @@ void StructInheritance_derived_member_access_in_expr(void) {
     LINE "const sum = $v.x + $v.y + $v.z"
     LINE "e { Base: {x: $sum, y: $v.z} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1013,7 +1022,7 @@ void StructInheritance_multiple_bases(void) {
     LINE "struct Derived : A, B(z: f32)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1029,7 +1038,7 @@ void StructInheritance_assign_derived_to_base_const(void) {
     LINE "const b: Base = $d"
     LINE "e { Base: $b }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1051,7 +1060,7 @@ void StructInheritance_assign_derived_to_base_const_member_access(void) {
     LINE "const b: Base = $d"
     LINE "e { Base: {$b.x + $d.z, $b.y * 10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1076,7 +1085,7 @@ void StructInheritance_assign_derived_to_base_const_chain(void) {
     LINE "e { Base: $b }"
     LINE "f { Derived: $d1 }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -1108,7 +1117,7 @@ void StructInheritance_assign_derived_to_base_const_w_string(void) {
     LINE "e { Base: $b }"
     LINE "f { Base: $d }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1141,7 +1150,7 @@ void StructInheritance_assign_derived_to_base_prop(void) {
     LINE "e { Foo: {} }"
     LINE "f { Foo: {b: {10, 20}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     const EcsStruct *st = ecs_get(world, foo, EcsStruct);
@@ -1180,7 +1189,7 @@ void StructInheritance_assign_derived_to_base_prop_at_instantiate(void) {
     LINE "const d: Derived = {1, 2, 3}"
     LINE "e { Foo: {b: $d} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1205,7 +1214,7 @@ void StructInheritance_assign_derived_to_base_mut(void) {
     LINE "}"
     LINE "e { Foo: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t foo_mut = ecs_lookup(world, "Foo.mut");
@@ -1234,7 +1243,7 @@ void StructInheritance_assign_derived_to_base_component(void) {
     LINE "const d: Derived = {1, 2, 3}"
     LINE "e { Base: $d }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -1262,7 +1271,7 @@ void StructInheritance_assign_derived_to_base_component_in_template(void) {
     LINE "}"
     LINE "e { Foo: {d: {4, 5, 6}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1292,7 +1301,7 @@ void StructInheritance_assign_derived_to_base_nested_member(void) {
     LINE "e { Outer: {b: $d, w: 4} }"
     LINE "f { Outer: {$d, 5} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t outer = ecs_lookup(world, "Outer");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1324,7 +1333,7 @@ void StructInheritance_assign_derived_to_base_nested_member_const(void) {
     LINE "const o: Outer = {b: $d, w: 4}"
     LINE "e { Outer: $o }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t outer = ecs_lookup(world, "Outer");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1348,7 +1357,7 @@ void StructInheritance_assign_derived_to_base_with(void) {
     LINE "  e {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1367,7 +1376,7 @@ void StructInheritance_assign_derived_to_base_expr_run(void) {
     HEAD "struct Base(x: f32, y: f32)"
     LINE "struct Derived : Base(z: f32)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -1401,7 +1410,7 @@ void StructInheritance_assign_base_to_derived_fails(void) {
     LINE "const d: Derived = $b";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1417,7 +1426,7 @@ void StructInheritance_assign_base_to_derived_component_fails(void) {
     LINE "e { Derived: $b }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1433,7 +1442,7 @@ void StructInheritance_assign_unrelated_struct_fails(void) {
     LINE "const b: Base = $o";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1451,7 +1460,7 @@ void StructInheritance_assign_unrelated_struct_prop_fails(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);

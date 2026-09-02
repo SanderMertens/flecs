@@ -1,6 +1,15 @@
 #include <script.h>
 #include "../../../src/addons/script/script.h"
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void Await_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 static void Await_callback(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -199,7 +208,7 @@ void Await_task_new_w_deleted_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "await fetch()", NULL, NULL);
+        world, NULL, "await fetch()", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_entity_t e = ecs_new(world);
@@ -227,7 +236,7 @@ void Await_delete_scope_parent_while_suspended(void) {
         "Parent {\n"
         "  await step()\n"
         "  Child {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
@@ -264,7 +273,7 @@ void Await_fini_w_alive_task(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()", NULL, NULL);
+        "const v = await fetch()", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
@@ -294,7 +303,7 @@ void Await_free_script_w_alive_task(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()", NULL, NULL);
+        "const v = await fetch()", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -312,7 +321,7 @@ void Await_parse_await_const(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "const value = await fetch()", NULL, NULL);
+        world, NULL, "const value = await fetch()", &ir_desc, NULL);
     test_assert(script != NULL);
 
     char *str = ecs_script_ast_to_str(script, false);
@@ -331,7 +340,7 @@ void Await_parse_await_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "await fetch()", NULL, NULL);
+        world, NULL, "await fetch()", &ir_desc, NULL);
     test_assert(script != NULL);
 
     char *str = ecs_script_ast_to_str(script, false);
@@ -385,7 +394,7 @@ void Await_await_const_suspend_resume(void) {
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "const value = await fetch()\n"
-        "Foo { Position: {value, 20} }", NULL, NULL);
+        "Foo { Position: {value, 20} }", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -428,7 +437,7 @@ void Await_await_stmt_sequence(void) {
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "await step()\n"
         "await step()\n"
-        "await step()", NULL, NULL);
+        "await step()", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
@@ -468,7 +477,7 @@ void Await_reject(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "await fetch()", NULL, NULL);
+        world, NULL, "await fetch()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -504,7 +513,7 @@ void Await_cancel(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "await fetch()", NULL, NULL);
+        world, NULL, "await fetch()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -550,7 +559,7 @@ void Await_preserve_const_and_using(void) {
         "const value = 10\n"
         "await step()\n"
         "Foo { Tag }\n"
-        "await use(value)", NULL, NULL);
+        "await use(value)", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -596,7 +605,7 @@ void Await_await_in_if(void) {
         "if true {\n"
         "  await step()\n"
         "  Foo {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -631,7 +640,7 @@ void Await_await_in_for(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "for i in 0..3 { await use(i) }", NULL, NULL);
+        "for i in 0..3 { await use(i) }", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -671,7 +680,7 @@ void Await_await_in_with(void) {
         "with Tag {\n"
         "  await step()\n"
         "  Foo {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -709,7 +718,7 @@ void Await_await_in_entity(void) {
         "Parent {\n"
         "  await step()\n"
         "  Child {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -749,7 +758,7 @@ void Await_await_in_pair_scope(void) {
         "(Rel, Tgt) {\n"
         "  await step()\n"
         "  Foo {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -795,7 +804,7 @@ void Await_preserve_string_const(void) {
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "const value = \"hello\"\n"
         "await step()\n"
-        "await use(value)", NULL, NULL);
+        "await use(value)", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -845,7 +854,7 @@ void Await_owner_context(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "await moveTo(this[AwaitDrone].home)", NULL, NULL);
+        "await moveTo(this[AwaitDrone].home)", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){ .entity = drone });
@@ -880,7 +889,7 @@ void Await_qualified_call(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const job = await logistics.acceptJob()", NULL, NULL);
+        "const job = await logistics.acceptJob()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -1069,7 +1078,7 @@ void Await_haul_single(void) {
     AwaitJob job = {resource, 20, src, dst};
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, Await_haul_code, NULL, NULL);
+        world, NULL, Await_haul_code, &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){ .entity = owner });
@@ -1133,7 +1142,7 @@ void Await_haul_loop_3(void) {
         "  await land()\n"
         "}";
 
-    ecs_script_t *script = ecs_script_parse(world, NULL, code, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, NULL, code, &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){ .entity = owner });
@@ -1184,7 +1193,7 @@ void Await_haul_loop_count(void) {
     };
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, Await_haul_code, NULL, NULL);
+        world, NULL, Await_haul_code, &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){
@@ -1246,7 +1255,7 @@ void Await_haul_loop_forever(void) {
     };
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, Await_haul_code, NULL, NULL);
+        world, NULL, Await_haul_code, &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){
@@ -1313,7 +1322,7 @@ void Await_haul_multiple_owners(void) {
     };
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, Await_haul_code, NULL, NULL);
+        world, NULL, Await_haul_code, &ir_desc, NULL);
 
     ecs_script_task_t *tasks[2] = {
         ecs_script_task_new(script, &(
@@ -1376,7 +1385,7 @@ void Await_loop_once(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "await fetch()", NULL, NULL);
+        world, NULL, "await fetch()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){ .loop = EcsScriptTaskLoopOnce });
@@ -1413,7 +1422,7 @@ void Await_loop_count_multiple_owners(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "await step()", NULL, NULL);
+        world, NULL, "await step()", &ir_desc, NULL);
 
     ecs_script_task_t *tasks[2] = {
         ecs_script_task_new(script, &(ecs_script_task_desc_t){
@@ -1479,7 +1488,7 @@ void Await_loop_count_resets_state(void) {
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "using ns\n"
         "const value = \"hello\"\n"
-        "await use(value)", NULL, NULL);
+        "await use(value)", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){
@@ -1518,7 +1527,7 @@ void Await_loop_count_invalid(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "Foo {}", NULL, NULL);
+        world, NULL, "Foo {}", &ir_desc, NULL);
 
     test_expect_abort();
     ecs_script_task_new(script, &(
@@ -1539,7 +1548,7 @@ void Await_loop_error_is_terminal(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "await step()", NULL, NULL);
+        world, NULL, "await step()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){ .loop = EcsScriptTaskLoopForever });
@@ -1582,7 +1591,7 @@ void Await_loop_sync_yields(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "await fetch()", NULL, NULL);
+        world, NULL, "await fetch()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){ .loop = EcsScriptTaskLoopForever });
@@ -1609,7 +1618,7 @@ void Await_entity_enter_error_restores_state(void) {
     Await_reset();
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "@bogus ann\nEntity {}", NULL, NULL);
+        world, NULL, "@bogus ann\nEntity {}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_impl_t *impl = flecs_script_impl(script);
@@ -1617,7 +1626,7 @@ void Await_entity_enter_error_restores_state(void) {
     ecs_script_node_t *annot = stmts[0];
     ecs_script_entity_t *node = (ecs_script_entity_t*)stmts[1];
     ecs_script_runtime_t *runtime = ecs_script_runtime_new();
-    ecs_script_eval_desc_t desc = { .runtime = runtime };
+    ecs_script_eval_desc_t desc = { .ir = ir_enabled, .runtime = runtime };
     ecs_script_eval_visitor_t visitor;
 
     flecs_script_eval_visit_init(impl, &visitor, &desc);
@@ -1665,7 +1674,7 @@ void Await_with_enter_error_restores_state(void) {
     ecs_entity(world, { .name = "src" });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "with AwaitTracked(src[AwaitSource].value) { Foo {} }", NULL, NULL);
+        "with AwaitTracked(src[AwaitSource].value) { Foo {} }", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
@@ -1711,7 +1720,7 @@ static ecs_script_task_t* Await_nested_task(
         "      }\n"
         "    }\n"
         "  }\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     *script_out = script;
@@ -1784,7 +1793,7 @@ void Await_cancel_is_terminal(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "await step()", NULL, NULL);
+        world, NULL, "await step()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -1818,7 +1827,7 @@ void Await_immediate_resolve(void) {
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "const value = await fetch()\n"
-        "Foo {}", NULL, NULL);
+        "Foo {}", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -1845,7 +1854,7 @@ void Await_await_export_const(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "export const value = await fetch()", NULL, NULL);
+        "export const value = await fetch()", &ir_desc, NULL);
     test_assert(script != NULL);
 
     int32_t log_level = ecs_log_get_level();
@@ -1880,7 +1889,7 @@ void Await_await_method_receiver(void) {
     ecs_modified(world, method, EcsScriptMethod);
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "await (10).addAsync(20)", NULL, NULL);
+        "await (10).addAsync(20)", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -1915,7 +1924,7 @@ void Await_task_component_added_on_task_new(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
@@ -1950,7 +1959,7 @@ void Await_task_component_not_added_without_entity(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     int32_t count_before = ecs_count(world, EcsScriptTask);
@@ -1976,7 +1985,7 @@ void Await_task_component_two_tasks(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
@@ -2016,7 +2025,7 @@ void Await_task_component_entity_delete_cancels_task(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
@@ -2052,7 +2061,7 @@ void Await_task_component_serialize(void) {
 
     ecs_script_t *script = ecs_script_parse(world, "task_script",
         "const speed = 0.5\n"
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_entity_t script_e = ecs_entity(world, { .name = "task_script" });
@@ -2108,7 +2117,7 @@ void Await_task_component_deferred_one_task(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
@@ -2155,7 +2164,7 @@ void Await_task_component_deferred_three_tasks(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
@@ -2213,7 +2222,7 @@ void Await_task_component_deferred_w_existing_task(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
@@ -2257,7 +2266,7 @@ void Await_await_export_mut(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "export mut value = await fetch()", NULL, NULL);
+        "export mut value = await fetch()", &ir_desc, NULL);
     test_assert(script != NULL);
 
     int32_t log_level = ecs_log_get_level();
@@ -2291,12 +2300,12 @@ void Await_interleaved_tasks(void) {
             "EntityA {\n"
             "  await step()\n"
             "  Tag\n"
-            "}", NULL, NULL),
+            "}", &ir_desc, NULL),
         ecs_script_parse(world, NULL,
             "EntityB {\n"
             "  await step()\n"
             "  Tag\n"
-            "}", NULL, NULL)
+            "}", &ir_desc, NULL)
     };
     test_assert(scripts[0] != NULL);
     test_assert(scripts[1] != NULL);
@@ -2352,7 +2361,7 @@ void Await_second_task_same_script_while_suspended(void) {
         "Tag {}\n"
         "e {}\n"
         "const v = await fetch()\n"
-        "e { Tag }", NULL, NULL);
+        "e { Tag }", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task_a = ecs_script_task_new(script, NULL);
@@ -2396,7 +2405,7 @@ void Await_loop_forever_recreate_deleted_entity(void) {
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "e {}\n"
-        "const v = await fetch()", NULL, NULL);
+        "const v = await fetch()", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
@@ -2450,7 +2459,7 @@ void Await_task_component_deferred_new_then_free(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
@@ -2481,7 +2490,7 @@ void Await_loop_forever_counts_iterations(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, "task_script",
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_entity_t script_e = ecs_entity(world, { .name = "task_script" });
@@ -2556,7 +2565,7 @@ void Await_cancel_task_from_async_callback(void) {
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "const v = await fetch()\n"
-        "Foo {}", NULL, NULL);
+        "Foo {}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -2615,7 +2624,7 @@ void Await_resume_from_async_callback(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     await_reentrant_task = ecs_script_task_new(script, NULL);
@@ -2658,7 +2667,7 @@ void Await_free_task_from_async_callback(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "const v = await fetch()\n", NULL, NULL);
+        "const v = await fetch()\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     await_free_task = ecs_script_task_new(script, NULL);
@@ -2684,7 +2693,7 @@ void Await_await_in_template_body_fails_task(void) {
         "  prop v: f32 = 1\n"
         "  await fetch()\n"
         "}\n"
-        "e { T: {v: 5} }\n", NULL, NULL);
+        "e { T: {v: 5} }\n", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);

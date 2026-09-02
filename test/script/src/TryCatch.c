@@ -1,6 +1,15 @@
 #include <script.h>
 #include "../../../src/addons/script/script.h"
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void TryCatch_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 typedef struct TCDrone {
     ecs_entity_t home;
 } TCDrone;
@@ -57,7 +66,7 @@ void TryCatch_parse_try_catch_all(void) {
         "  await fail()\n"
         "} catch {\n"
         "  Handled {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     char *str = ecs_script_ast_to_str(script, false);
@@ -78,7 +87,7 @@ void TryCatch_parse_try_catch_typed(void) {
         "  await fail()\n"
         "} catch(DestinationGone) {\n"
         "  Handled {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     char *str = ecs_script_ast_to_str(script, false);
@@ -102,7 +111,7 @@ void TryCatch_parse_try_multiple_catch(void) {
         "  B {}\n"
         "} catch {\n"
         "  C {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     char *str = ecs_script_ast_to_str(script, false);
@@ -121,7 +130,7 @@ void TryCatch_parse_try_missing_catch(void) {
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
         "  await fail()\n"
-        "}\n", NULL, NULL);
+        "}\n", &ir_desc, NULL);
     test_assert(script == NULL);
 
     ecs_fini(world);
@@ -132,7 +141,7 @@ void TryCatch_parse_try_missing_scope(void) {
 
     ecs_log_set_level(-4);
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "try await fail()\n", NULL, NULL);
+        "try await fail()\n", &ir_desc, NULL);
     test_assert(script == NULL);
 
     ecs_fini(world);
@@ -145,7 +154,7 @@ void TryCatch_parse_catch_missing_scope(void) {
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "try {\n"
         "  await fail()\n"
-        "} catch\n", NULL, NULL);
+        "} catch\n", &ir_desc, NULL);
     test_assert(script == NULL);
 
     ecs_fini(world);
@@ -159,7 +168,7 @@ void TryCatch_parse_catch_unclosed_paren(void) {
         "try {\n"
         "  await fail()\n"
         "} catch(DestinationGone {\n"
-        "}\n", NULL, NULL);
+        "}\n", &ir_desc, NULL);
     test_assert(script == NULL);
 
     ecs_fini(world);
@@ -173,7 +182,7 @@ void TryCatch_parse_catch_var_error(void) {
         "try {\n"
         "  await fail()\n"
         "} catch($err) {\n"
-        "}\n", NULL, NULL);
+        "}\n", &ir_desc, NULL);
     test_assert(script == NULL);
 
     ecs_fini(world);
@@ -189,11 +198,11 @@ void TryCatch_try_in_plain_eval(void) {
         "try {\n"
         "  Foo {}\n"
         "} catch {\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_eval(script, NULL, NULL) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) != 0);
 
     ecs_script_free(script);
     ecs_fini(world);
@@ -212,7 +221,7 @@ void TryCatch_catch_all_reject(void) {
         "} catch {\n"
         "  Handled {}\n"
         "}\n"
-        "After {}", NULL, NULL);
+        "After {}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -252,7 +261,7 @@ void TryCatch_catch_typed_match(void) {
         "  Typed {}\n"
         "} catch {\n"
         "  All {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -290,7 +299,7 @@ void TryCatch_catch_typed_no_match_propagates(void) {
         "  await fail()\n"
         "} catch(DestinationGone) {\n"
         "  Typed {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -333,7 +342,7 @@ void TryCatch_catch_typed_falls_through_to_catch_all(void) {
         "  Typed {}\n"
         "} catch {\n"
         "  All {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -370,7 +379,7 @@ void TryCatch_catch_first_match_wins(void) {
         "  All {}\n"
         "} catch(DestinationGone) {\n"
         "  Typed {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -406,7 +415,7 @@ void TryCatch_plain_reject_not_caught_by_typed(void) {
         "  await fail()\n"
         "} catch(DestinationGone) {\n"
         "  Typed {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -448,7 +457,7 @@ void TryCatch_runtime_error_not_caught(void) {
         "  await fail()\n"
         "} catch {\n"
         "  Handled {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -486,7 +495,7 @@ void TryCatch_runtime_error_is_terminal(void) {
         "  const x = src[Payload]\n"
         "} catch {\n"
         "  Handled {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -519,7 +528,7 @@ void TryCatch_await_in_catch(void) {
         "} catch {\n"
         "  await fail()\n"
         "  Handled {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -561,7 +570,7 @@ void TryCatch_reject_in_catch_propagates(void) {
         "} catch {\n"
         "  await fail()\n"
         "  Handled {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -607,7 +616,7 @@ void TryCatch_nested_try_inner_catches(void) {
         "  }\n"
         "} catch {\n"
         "  Outer {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -647,7 +656,7 @@ void TryCatch_nested_try_outer_catches(void) {
         "  }\n"
         "} catch {\n"
         "  Outer {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -686,7 +695,7 @@ void TryCatch_try_in_entity_scope(void) {
         "    Handled {}\n"
         "  }\n"
         "  After {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -727,7 +736,7 @@ void TryCatch_error_in_with_scope_unwinds(void) {
         "  }\n"
         "} catch {\n"
         "  Handled {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -764,7 +773,7 @@ void TryCatch_error_in_for_unwinds(void) {
         "  }\n"
         "} catch {\n"
         "  Handled {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -803,7 +812,7 @@ void TryCatch_loop_forever_catch_resets(void) {
         "try {\n"
         "  await fail()\n"
         "} catch {\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script,
@@ -839,7 +848,7 @@ void TryCatch_loop_count_catch(void) {
         "try {\n"
         "  await fail()\n"
         "} catch {\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script,
@@ -887,7 +896,7 @@ void TryCatch_loop_uncaught_error_is_terminal(void) {
         "try {\n"
         "  await fail()\n"
         "} catch(DestinationGone) {\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script,
@@ -926,7 +935,7 @@ void TryCatch_cancel_not_caught(void) {
         "  await fail()\n"
         "} catch {\n"
         "  Handled {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -959,7 +968,7 @@ void TryCatch_resolve_skips_catch(void) {
         "  Ok {}\n"
         "} catch {\n"
         "  Handled {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -997,7 +1006,7 @@ void TryCatch_catch_error_from_using_scope(void) {
         "  await fail()\n"
         "} catch(DestinationGone) {\n"
         "  Handled {}\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -1025,7 +1034,7 @@ void TryCatch_reject_id_twice_fails(void) {
     ecs_entity_t err = ecs_entity(world, { .name = "DestinationGone" });
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "await fail()", NULL, NULL);
+        world, NULL, "await fail()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
     test_int(ecs_script_task_resume(task, NULL),
@@ -1060,7 +1069,7 @@ void TryCatch_reject_id_null_msg(void) {
     ecs_entity_t err = ecs_entity(world, { .name = "DestinationGone" });
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, "await fail()", NULL, NULL);
+        world, NULL, "await fail()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
     test_int(ecs_script_task_resume(task, NULL),
@@ -1103,7 +1112,7 @@ void TryCatch_vars_preserved_across_catch(void) {
         "} catch {\n"
         "  Handled { Position: {a, 1} }\n"
         "}\n"
-        "After { Position: {a, 2} }", NULL, NULL);
+        "After { Position: {a, 2} }", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -1152,7 +1161,7 @@ void TryCatch_free_while_pending_in_try(void) {
         "    }\n"
         "  } catch {\n"
         "  }\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -1180,7 +1189,7 @@ void TryCatch_free_while_pending_in_catch(void) {
         "  await fail()\n"
         "} catch {\n"
         "  await fail()\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -1230,7 +1239,7 @@ void TryCatch_this_var_in_catch(void) {
         "  await fail()\n"
         "} catch {\n"
         "  await moveTo(this[TCDrone].home)\n"
-        "}", NULL, NULL);
+        "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script,

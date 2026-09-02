@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void Fuzzing_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 static void fuzz(const char *expr) {
     ecs_world_t *world = ecs_init();
 
@@ -7,7 +16,7 @@ static void fuzz(const char *expr) {
     ECS_IMPORT(world, FlecsScriptMath);
 #endif
     ecs_log_set_level(-5);
-    ecs_script_run(world, "test", expr, NULL);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
     test_assert(true);
     ecs_fini(world);
 }

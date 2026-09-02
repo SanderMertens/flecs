@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void Mut_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 void Mut_declaration(void) {
     ecs_world_t *world = ecs_init();
 
@@ -8,7 +17,7 @@ void Mut_declaration(void) {
     LINE "  mut value: i32 = 10"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -38,7 +47,7 @@ void Mut_two_members(void) {
     LINE "  mut y: f32 = 20"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -67,7 +76,7 @@ void Mut_implicit_type(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -98,7 +107,7 @@ void Mut_instance_w_default(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -129,7 +138,7 @@ void Mut_instance_w_props_and_mut(void) {
     LINE "}"
     LINE "Foo e(40, 50)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -185,7 +194,7 @@ void Mut_value_in_template_body(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -218,7 +227,7 @@ void Mut_value_w_prop_in_template_body(void) {
     LINE "}"
     LINE "Foo e(3)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -249,7 +258,7 @@ void Mut_modified_reinstantiates(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -288,7 +297,7 @@ void Mut_set_reinstantiates(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -328,7 +337,7 @@ void Mut_modified_reinstantiates_only_instance(void) {
     LINE "Foo e1()"
     LINE "Foo e2()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -371,7 +380,7 @@ void Mut_deferred_modified_reinstantiates(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -401,7 +410,7 @@ void Mut_bulk_create(void) {
     LINE "  mut value: i32 = 10"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -445,7 +454,7 @@ void Mut_prop_update_preserves_mut(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -488,7 +497,7 @@ void Mut_mut_component_without_template(void) {
     LINE "  Position: {value, 0}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -514,7 +523,7 @@ void Mut_string_default(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -541,7 +550,7 @@ void Mut_const_from_mut(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -572,7 +581,7 @@ void Mut_script_update_reinstantiates(void) {
     LINE "Foo e()"
     LINE "e { Foo.mut: {20} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -593,7 +602,7 @@ void Mut_not_exposed_as_prop(void) {
     LINE "Foo e(20)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -605,7 +614,7 @@ void Mut_outside_template(void) {
     LINE "mut value: i32 = 10";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -620,7 +629,7 @@ void Mut_after_const(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -635,7 +644,7 @@ void Mut_redeclare_prop_as_mut(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -650,7 +659,7 @@ void Mut_redeclare_mut_as_prop(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -666,7 +675,7 @@ void Mut_using(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -701,7 +710,7 @@ void Mut_type_without_using_meta(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -734,7 +743,7 @@ void Mut_composite(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -775,7 +784,7 @@ void Mut_entity_pair(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -807,7 +816,7 @@ void Mut_entity_pair_scope(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
@@ -835,7 +844,7 @@ void Mut_pair_component_entity_target(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -866,7 +875,7 @@ void Mut_anonymous_instance(void) {
     LINE "}"
     LINE "Foo()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -905,11 +914,11 @@ void Mut_managed_script_twice(void) {
     LINE "Foo e()";
 
     ecs_entity_t script = ecs_entity(world, { .name = "main" });
-    test_assert(ecs_script(world, {
+    test_assert(ecs_script(world, { .ir = ir_enabled,
         .entity = script,
         .code = expr
     }) != 0);
-    test_assert(ecs_script(world, {
+    test_assert(ecs_script(world, { .ir = ir_enabled,
         .entity = script,
         .code = expr
     }) != 0);
@@ -944,9 +953,9 @@ void Mut_module(void) {
     LINE "  mut value: i32 = 10"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    test_assert(ecs_script_run(world, NULL,
-        "hello.world.Foo e()", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "hello.world.Foo e()", &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "hello.world.Foo");
     test_assert(foo != 0);
@@ -978,7 +987,7 @@ void Mut_multiple_templates(void) {
     LINE "Bar b()"
     LINE "Baz c()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1029,7 +1038,7 @@ void Mut_anonymous_children(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1083,7 +1092,7 @@ void Mut_fold_const(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1124,7 +1133,7 @@ void Mut_assign_add(void) {
     LINE "  Foo: {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -1157,7 +1166,7 @@ void Mut_assign_mul(void) {
     LINE "  Foo: {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -1181,7 +1190,7 @@ void Mut_script_component(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ECS_COMPONENT(world, Position);
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1207,7 +1216,7 @@ void Mut_script_pair_component(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ECS_COMPONENT(world, Position);
     ecs_entity_t target = ecs_lookup(world, "Target");
@@ -1243,7 +1252,7 @@ void Mut_tree_parent(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1280,7 +1289,7 @@ void Mut_child_name_from_string(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1318,7 +1327,7 @@ void Mut_value_name(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
@@ -1350,7 +1359,7 @@ void Mut_const_value_name(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
@@ -1383,7 +1392,7 @@ void Mut_hoist_var(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -1417,7 +1426,7 @@ void Mut_nested_template(void) {
     LINE "}"
     LINE "Outer e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t inner_type = ecs_lookup(world, "Inner");
     test_assert(inner_type != 0);
@@ -1446,7 +1455,7 @@ void Mut_redeclare_mut_as_mut(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1461,7 +1470,7 @@ void Mut_redeclare_mut_as_const(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1485,11 +1494,11 @@ void Mut_managed_script_twice_after_low_id_exhaustion(void) {
     LINE "Foo e()";
 
     ecs_entity_t script = ecs_entity(world, { .name = "main" });
-    test_assert(ecs_script(world, {
+    test_assert(ecs_script(world, { .ir = ir_enabled,
         .entity = script,
         .code = expr
     }) != 0);
-    test_assert(ecs_script(world, {
+    test_assert(ecs_script(world, { .ir = ir_enabled,
         .entity = script,
         .code = expr
     }) != 0);
@@ -1523,7 +1532,7 @@ void Mut_eval_error(void) {
     LINE "Foo e()";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1538,11 +1547,11 @@ void Mut_eval_error_w_runtime(void) {
     LINE "}"
     LINE "Foo e()";
 
-    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_runtime_t *runtime = ecs_script_runtime_new();
-    ecs_script_eval_desc_t desc = { .runtime = runtime };
+    ecs_script_eval_desc_t desc = { .ir = ir_enabled, .runtime = runtime };
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_eval(script, &desc, NULL) != 0);
@@ -1573,7 +1582,7 @@ void Mut_hoisted_var_from_outer_scope(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -1673,7 +1682,7 @@ void Mut_get_from_script(void) {
     const char *expr =
     HEAD "export mut x: i32 = 10";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_int(ecs_mut_var_get_t(world, "x", ecs_i32_t), 10);
 
@@ -1960,7 +1969,7 @@ void Mut_set_reevaluates_script(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"

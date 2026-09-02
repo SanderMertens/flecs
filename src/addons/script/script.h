@@ -12,6 +12,7 @@
 #ifdef FLECS_SCRIPT
 
 typedef struct ecs_script_entity_t ecs_script_entity_t;
+typedef struct ecs_script_ir_t ecs_script_ir_t;
 
 #define flecs_script_impl(script) ((ecs_script_impl_t*)script)
 
@@ -176,11 +177,13 @@ struct ecs_script_impl_t {
     ecs_vec_t unresolved_refs;
     ecs_vec_t unresolved_component_refs;
     ecs_vec_t lenient_warned; /* vec<const char*> */
+    ecs_script_ir_t *ir;
     int32_t input_count;
     int32_t visit;
     bool evaluating;
     bool compiled;
     bool lenient;
+    bool ir_enabled;
 };
 
 #define flecs_script_is_lenient(script)\
@@ -212,6 +215,7 @@ typedef struct ecs_function_calldata_t {
 #include "reactivity/refs.h"
 #include "reactivity/template.h"
 #include "reactivity/deps.h"
+#include "ir/ir.h"
 
 ecs_script_t* flecs_script_new(
     ecs_world_t *world);

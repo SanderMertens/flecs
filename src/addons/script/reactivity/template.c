@@ -478,6 +478,7 @@ static void flecs_script_template_instantiate_vars(
 {
     ecs_script_template_member_t *template_members =
         ecs_vec_first(&template->members);
+    bool named = ecs_vec_count(&template->dynamic_refs) != 0;
     int32_t m, member_count = ecs_vec_count(&template->members);
     for (m = 0; m < member_count; m ++) {
         ecs_script_template_member_t *template_member = &template_members[m];
@@ -488,7 +489,8 @@ static void flecs_script_template_instantiate_vars(
 
         const ecs_member_t *member = ecs_vec_get_t(
             &st->members, ecs_member_t, template_member->index);
-        ecs_script_var_t *var = ecs_script_vars_declare(vars, member->name);
+        ecs_script_var_t *var = ecs_script_vars_declare(
+            vars, named ? member->name : NULL);
         ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
         var->value.type = flecs_script_template_member_type(world, member);
         var->value.ptr = ECS_OFFSET(data, member->offset);
@@ -600,12 +602,24 @@ static int flecs_script_template_instantiate(
         : NULL;
 
     ecs_script_runner_t runner;
-    ecs_script_eval_visitor_t *v = &runner.v;
+    ecs_script_ir_vm_t *vm = NULL;
+    const ecs_script_ir_entry_t *entry = NULL;
+    ecs_script_eval_visitor_t *v;
     ecs_script_eval_desc_t desc = {
         .runtime = flecs_script_runtime_get(world)
     };
 
-    flecs_script_runner_init(&runner, flecs_script_impl(script->script), &desc);
+    ecs_script_impl_t *impl = flecs_script_impl(script->script);
+    if (impl->ir_enabled) {
+        vm = flecs_script_ir_vm_new(impl, &desc);
+        if (vm->ir) {
+            entry = flecs_script_ir_entry(vm->ir, template->node);
+        }
+        v = &vm->v;
+    } else {
+        flecs_script_runner_init(&runner, impl, &desc);
+        v = &runner.v;
+    }
     ecs_vec_t prev_using = v->r->using;
     ecs_vec_t prev_with = desc.runtime->with;
     ecs_vec_t prev_with_type_info = desc.runtime->with_type_info;
@@ -630,7 +644,8 @@ static int flecs_script_template_instantiate(
             .pos = template->node->node.pos
         },
         .scope = scope,
-        .symbol = template->root_symbol
+        .symbol = template->root_symbol,
+        .non_fragmenting_parent = template->non_fragmenting_parent
     };
 
     flecs_script_entity_state_t instance_state = {
@@ -735,7 +750,7 @@ static int flecs_script_template_instantiate(
         /* Populate $this variable with instance entity */
         ecs_entity_t instance = entities[i];
         ecs_script_var_t *this_var = ecs_script_vars_declare(
-            vars, "this");
+            vars, ecs_vec_count(&template->dynamic_refs) ? "this" : NULL);
         this_var->value.type = ecs_id(ecs_entity_t);
         this_var->value.ptr = &instance;
         this_var->owned = false;
@@ -780,9 +795,15 @@ static int flecs_script_template_instantiate(
         v->vars = vars;
 
         /* Run template code */
-        if (flecs_script_runner_run_scope(&runner, scope) !=
-            FlecsScriptRunDone)
-        {
+        bool run_ok;
+        if (vm) {
+            run_ok = entry && flecs_script_ir_vm_run(vm, entry) ==
+                FlecsScriptRunDone;
+        } else {
+            run_ok = flecs_script_runner_run_scope(&runner, scope) ==
+                FlecsScriptRunDone;
+        }
+        if (!run_ok) {
             result = -1;
             flecs_script_template_free_data(template->type_info, props_copy);
             flecs_script_template_free_data(muts_ti, muts_copy);
@@ -790,7 +811,11 @@ static int flecs_script_template_instantiate(
             break;
         }
 
-        flecs_script_eval_cleanup(v);
+        if (vm) {
+            flecs_script_ir_cleanup_w_vm(v, vm->ir, entry, vm->dirty);
+        } else {
+            flecs_script_eval_cleanup(v);
+        }
         root = ecs_ensure_pair(
             world, entities[i], EcsScriptTemplateRoot, template_entity);
         root->initialized = true;
@@ -827,7 +852,11 @@ static int flecs_script_template_instantiate(
     v->component_slots = &v->base.script->component_slots;
     v->scope_slots = &v->base.script->scope_slots;
     v->for_slots = &v->base.script->for_slots;
-    flecs_script_runner_fini(&runner, &desc);
+    if (vm) {
+        flecs_script_ir_vm_free(vm, &desc);
+    } else {
+        flecs_script_runner_fini(&runner, &desc);
+    }
 
     if (count && ecs_vec_count(&template->refs) &&
         !ecs_vec_count(&template->observers))
@@ -1806,8 +1835,27 @@ int flecs_script_eval_template(
     if (count) {
         ecs_script_annot_t **annots = ecs_vec_first(&v->r->annot);
         for (i = 0; i < count ; i ++) {
+            ecs_script_annot_t *annot = annots[i];
+            if (!ecs_os_strcmp(annot->name, "tree")) {
+                if (ecs_os_strcmp(annot->expr, "Parent") &&
+                    ecs_os_strcmp(annot->expr, "ChildOf"))
+                {
+                    flecs_script_eval_error(v, annot,
+                        "invalid value for tree annotation: '%s' (expected "
+                        "'Parent' or 'ChildOf')", annot->expr);
+                    goto error;
+                }
+                ecs_script_entity_t tree_node = {
+                    .node = { .kind = EcsAstEntity, .pos = node->node.pos },
+                    .scope = node->scope
+                };
+                flecs_script_apply_tree_annot(annot, &tree_node);
+                template->non_fragmenting_parent =
+                    tree_node.non_fragmenting_parent;
+                continue;
+            }
             ecs_vec_append_t(&v->base.script->allocator, 
-                &template->annot, ecs_script_annot_t*)[0] = annots[i];
+                &template->annot, ecs_script_annot_t*)[0] = annot;
         }
         ecs_vec_clear(&v->r->annot);
     }

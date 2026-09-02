@@ -1,5 +1,6 @@
 #include <script.h>
 
+
 void Vars_declare_1_var(void) {
     ecs_world_t *world = ecs_init();
 
