@@ -1195,6 +1195,7 @@ void Error_missing_separator_between_component_and_tag(void);
 void Error_missing_separator_between_component_and_pair(void);
 void Error_missing_separator_after_scope(void);
 void Error_missing_separator_between_const(void);
+void Error_long_binary_expression(void);
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
 void Error_unterminated_multi_line_comment_after_line_comment(void);
 void Error_missing_end_of_scope(void);
@@ -7715,6 +7716,10 @@ bake_test_case Error_testcases[] = {
     {
         "missing_separator_between_const",
         Error_missing_separator_between_const
+    },
+    {
+        "long_binary_expression",
+        Error_long_binary_expression
     },
     {
         "multi_line_comment_after_newline_before_newline_scope_open",
@@ -14940,7 +14945,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        207,
+        208,
         Error_testcases
     },
     {

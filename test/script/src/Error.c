@@ -5042,3 +5042,24 @@ void Error_missing_separator_between_const(void) {
 
     ecs_fini(world);
 }
+
+void Error_long_binary_expression(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_strbuf_appendlit(&buf, "const x = 1");
+
+    int i;
+    for (i = 0; i < 500; i ++) {
+        ecs_strbuf_appendlit(&buf, " + 1");
+    }
+
+    char *expr = ecs_strbuf_get(&buf);
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
