@@ -1274,11 +1274,12 @@ static int flecs_expr_anonymous_collection_visit_type(
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
         if (elem->value->type != elem_type) {
-            elem->value = (ecs_expr_node_t*)flecs_expr_cast(
+            ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
                 script, elem->value, elem_type);
-            if (!elem->value) {
+            if (!cast) {
                 goto error;
             }
+            elem->value = cast;
         }
     }
 
@@ -2171,11 +2172,12 @@ static int flecs_expr_arguments_visit_type(
         }
 
         if (elem->value->type != argtype) {
-            elem->value = (ecs_expr_node_t*)flecs_expr_cast(
+            ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
                 script, elem->value, argtype);
-            if (!elem->value) {
+            if (!cast) {
                 goto error;
             }
+            elem->value = cast;
         }
     }
 

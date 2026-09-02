@@ -5327,3 +5327,59 @@ void Error_binary_right_operand_struct_vs_entity(void) {
     ecs_fini(world);
 }
 
+void Error_collection_literal_enum_element_vs_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    ecs_entity_t ecs_id(Color) = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .constants = {
+            {"Red"},
+            {"Green"},
+            {"Blue"}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_vars_define(vars, "c", Color);
+    ecs_script_vars_define(vars, "e", ecs_entity_t);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "[10, c, e]", &v, &desc) == NULL);
+    ecs_log_set_level(-1);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+
+void Error_function_argument_struct_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "fn f(a: i32) -> i32 { a }"
+    LINE "const p: Position = {10, 20}"
+    LINE "const q = f(p)";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    ecs_log_set_level(-1);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
