@@ -99,6 +99,7 @@ static void flecs_script_rng_get_float(
 
     if (ECS_EQZERO(max)) {
         ecs_err("flecs.script.math.Rng.f(): invalid division by zero");
+        flecs_script_runtime_get(ctx->world)->error = true;
     } else {
         *r = (double)x / ((double)UINT64_MAX / max);
     }
@@ -124,6 +125,7 @@ static void flecs_script_rng_get_uint(
     uint64_t *r = result->ptr;
     if (!max) {
         ecs_err("flecs.script.math.Rng.u(): invalid division by zero");
+        flecs_script_runtime_get(ctx->world)->error = true;
     } else {
         *r = x % max;
     }
