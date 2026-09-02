@@ -2743,7 +2743,10 @@
                 "template_first_stmt_conditional_pair_on_child",
                 "template_first_stmt_conditional_tag_on_child",
                 "template_first_stmt_conditional_component_on_root",
-                "template_after_stmt_conditional_component_on_child"
+                "template_after_stmt_conditional_component_on_child",
+                "conditional_component_w_named_initializer_toggles",
+                "conditional_pair_w_named_initializer_toggles",
+                "conditional_component_w_named_initializer_on_entity"
             ]
         }, {
             "id": "ConstVar",
