@@ -5118,3 +5118,16 @@ void Error_function_w_too_many_params(void) {
 
     ecs_fini(world);
 }
+
+void Error_struct_member_count_size_overflow(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL,
+        "struct CO(v: {type: f32, count: 1073741825})", &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}

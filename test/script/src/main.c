@@ -1406,6 +1406,7 @@ void Error_deleted_script_does_not_delete_shared_module(void);
 void Error_failing_script_does_not_delete_shared_scope(void);
 void Error_parse_error_in_large_script_reports_position(void);
 void Error_function_w_too_many_params(void);
+void Error_struct_member_count_size_overflow(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -8569,6 +8570,10 @@ bake_test_case Error_testcases[] = {
     {
         "function_w_too_many_params",
         Error_function_w_too_many_params
+    },
+    {
+        "struct_member_count_size_overflow",
+        Error_struct_member_count_size_overflow
     }
 };
 
@@ -14990,7 +14995,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        210,
+        211,
         Error_testcases
     },
     {
