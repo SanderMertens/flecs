@@ -827,6 +827,7 @@ void Await_second_task_same_script_while_suspended(void);
 void Await_loop_forever_recreate_deleted_entity(void);
 void Await_task_component_deferred_new_then_free(void);
 void Await_loop_forever_counts_iterations(void);
+void Await_cancel_task_from_async_callback(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_parse_try_catch_all(void);
@@ -6250,6 +6251,10 @@ bake_test_case Await_testcases[] = {
     {
         "loop_forever_counts_iterations",
         Await_loop_forever_counts_iterations
+    },
+    {
+        "cancel_task_from_async_callback",
+        Await_cancel_task_from_async_callback
     }
 };
 
@@ -14815,7 +14820,7 @@ static bake_test_suite suites[] = {
         "Await",
         NULL,
         NULL,
-        53,
+        54,
         Await_testcases
     },
     {

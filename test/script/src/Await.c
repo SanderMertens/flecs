@@ -2524,3 +2524,57 @@ void Await_loop_forever_counts_iterations(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+
+static ecs_script_task_t *await_cancel_task;
+
+static void Await_cancel_task_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_script_future_t *future)
+{
+    (void)ctx;
+    (void)argc;
+    (void)argv;
+
+    await_futures[await_future_count ++] = future;
+    ecs_script_task_cancel(await_cancel_task);
+}
+
+void Await_cancel_task_from_async_callback(void) {
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_cancel_task_callback,
+        .cancel = Await_cancel_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "const v = await fetch()\n"
+        "Foo {}", NULL, NULL);
+    test_assert(script != NULL);
+
+    ecs_script_task_t *task = ecs_script_task_new(script, NULL);
+    test_assert(task != NULL);
+    await_cancel_task = task;
+
+    test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskCancelled);
+    test_int(await_future_count, 1);
+    test_int(await_cancel_count, 1);
+    test_bool(ecs_script_future_is_cancelled(await_futures[0]), true);
+
+    test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskCancelled);
+    test_int(await_future_count, 1);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    ecs_script_future_release(await_futures[0]);
+
+    ecs_script_task_free(task);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
