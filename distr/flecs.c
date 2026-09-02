@@ -109790,10 +109790,17 @@ static int flecs_expr_binary_visit_type(
     }
 
     if (!vector_elem_count) {
-        if (!flecs_expr_oper_valid_for_type(
-            script->world, result_type, node->operator)) 
+        ecs_entity_t check_type = result_type;
+        if (node->operator == EcsTokGt || node->operator == EcsTokGtEq ||
+            node->operator == EcsTokLt || node->operator == EcsTokLtEq)
         {
-            char *type_str = ecs_get_path(script->world, result_type);
+            check_type = operand_type;
+        }
+
+        if (!flecs_expr_oper_valid_for_type(
+            script->world, check_type, node->operator))
+        {
+            char *type_str = ecs_get_path(script->world, check_type);
             flecs_expr_visit_error(script, node, "invalid operator %s for type '%s'",
                 flecs_token_str(node->operator), type_str);
             ecs_os_free(type_str);
