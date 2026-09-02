@@ -6644,6 +6644,50 @@ void Expr_vector_add_struct_struct_const_vars(void) {
     ecs_fini(world);
 }
 
+void Expr_vector_shift_struct_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", Position);
+    test_assert(foo != NULL);
+    ((Position*)foo->value.ptr)->x = 10;
+    ((Position*)foo->value.ptr)->y = 20;
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding, .vars = vars };
+
+    ecs_log_set_level(-4);
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "foo << 1", &v, &desc) == NULL);
+    }
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "foo >> 1", &v, &desc) == NULL);
+    }
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "foo & foo", &v, &desc) == NULL);
+    }
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "foo | foo", &v, &desc) == NULL);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
 void Expr_vector_add_struct_incompatible_struct(void) {
     ecs_world_t *world = ecs_init();
 
