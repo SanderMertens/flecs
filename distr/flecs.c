@@ -72358,6 +72358,7 @@ static ECS_MOVE(EcsScript, dst, src, {
     dst->template_ = src->template_;
     dst->observers = src->observers;
     dst->dyn_observers = src->dyn_observers;
+    dst->lenient = src->lenient;
 
     src->filename = NULL;
     src->code = NULL;

@@ -2805,6 +2805,7 @@ void Lenient_template_w_unknown_prop_type_set_at_instantiate(void);
 void Lenient_template_w_unknown_const_type(void);
 void Lenient_const_w_unresolved_function_initializer(void);
 void Lenient_strict_unknown_prop_type_errors(void);
+void Lenient_managed_script_lenient_after_table_change(void);
 
 // Testsuite 'StructInheritance'
 void StructInheritance_block_syntax(void);
@@ -14085,6 +14086,10 @@ bake_test_case Lenient_testcases[] = {
     {
         "strict_unknown_prop_type_errors",
         Lenient_strict_unknown_prop_type_errors
+    },
+    {
+        "managed_script_lenient_after_table_change",
+        Lenient_managed_script_lenient_after_table_change
     }
 };
 
@@ -15043,7 +15048,7 @@ static bake_test_suite suites[] = {
         "Lenient",
         NULL,
         NULL,
-        31,
+        32,
         Lenient_testcases
     },
     {

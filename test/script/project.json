@@ -2855,7 +2855,8 @@
                 "template_w_unknown_prop_type_set_at_instantiate",
                 "template_w_unknown_const_type",
                 "const_w_unresolved_function_initializer",
-                "strict_unknown_prop_type_errors"
+                "strict_unknown_prop_type_errors",
+                "managed_script_lenient_after_table_change"
             ]
         }, {
             "id": "StructInheritance",

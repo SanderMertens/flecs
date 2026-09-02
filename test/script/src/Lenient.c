@@ -941,3 +941,35 @@ void Lenient_strict_unknown_prop_type_errors(void) {
 
     ecs_fini(world);
 }
+
+void Lenient_managed_script_lenient_after_table_change(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = "e { NsUnknownTag }",
+        .lenient = true
+    });
+    test_assert(s != 0);
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_assert(sc != NULL);
+    test_bool(sc->lenient, true);
+
+    ecs_add(world, s, Foo);
+
+    sc = ecs_get(world, s, EcsScript);
+    test_assert(sc != NULL);
+    test_bool(sc->lenient, true);
+
+    test_int(ecs_script_update(world, s, 0, "e2 { NsOtherUnknownTag }"), 0);
+
+    sc = ecs_get(world, s, EcsScript);
+    test_assert(sc != NULL);
+    test_assert(sc->error == NULL);
+
+    test_assert(ecs_lookup(world, "e2") != 0);
+
+    ecs_fini(world);
+}
