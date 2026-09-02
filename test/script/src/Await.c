@@ -2667,3 +2667,35 @@ void Await_free_task_from_async_callback(void) {
     test_expect_abort();
     ecs_script_task_resume(await_free_task, NULL);
 }
+
+void Await_await_in_template_body_fails_task(void) {
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "template T {\n"
+        "  prop v: f32 = 1\n"
+        "  await fetch()\n"
+        "}\n"
+        "e { T: {v: 5} }\n", NULL, NULL);
+    test_assert(script != NULL);
+
+    ecs_script_task_t *task = ecs_script_task_new(script, NULL);
+    test_assert(task != NULL);
+
+    ecs_script_eval_result_t result = {0};
+    test_int(ecs_script_task_resume(task, &result), EcsScriptTaskError);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_script_task_free(task);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
