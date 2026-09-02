@@ -109360,13 +109360,15 @@ static int flecs_expr_interpolated_string_visit_type(
                     }
                 }
             } else if (result->type != ecs_id(ecs_string_t)) {
-                result = (ecs_expr_node_t*)flecs_expr_cast(script, 
-                    (ecs_expr_node_t*)result, ecs_id(ecs_string_t));
-                if (!result) {
+                ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
+                    script, (ecs_expr_node_t*)result, ecs_id(ecs_string_t));
+                if (!cast) {
                     /* Cast failed */
+                    flecs_expr_visit_free(script, result);
                     flecs_expr_format_fini(script, &format);
                     goto error;
                 }
+                result = cast;
             }
 
             ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
