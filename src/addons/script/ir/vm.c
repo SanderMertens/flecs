@@ -1148,6 +1148,7 @@ static int flecs_ir_entity_enter(
     state->prev_force = v->force;
     state->symbol = -1;
     state->for_slot = -1;
+    state->created = false;
 
     if (v->entity && v->entity->eval_kind && !node->kind &&
         !ecs_vec_count(&node->scope->stmts) && ecs_has(
@@ -1206,6 +1207,7 @@ static int flecs_ir_entity_enter(
         if (!eval) {
             return -1;
         }
+        state->created = true;
         if (state->eval && state->eval != eval &&
             ecs_is_alive(v->world, state->eval))
         {
@@ -1215,6 +1217,7 @@ static int flecs_ir_entity_enter(
     } else if (!state->eval) {
         flecs_ir_prof(EcsIrProfileEntityCreate);
         state->eval = flecs_script_create_entity(v, node->name);
+        state->created = true;
     } else {
         flecs_ir_prof(EcsIrProfileEntityReuse);
     }
@@ -3087,7 +3090,9 @@ static flecs_script_run_status_t flecs_ir_exec(
                 frame->u.scope.vscratch_top = vm->vscratch_top;
                 frame->u.scope.vheap_count = vm->vheap.count;
             }
-            if (v->entity && op->c != -1) {
+            if (v->entity && op->c != -1 &&
+                (v->force || v->entity->created))
+            {
                 ecs_entity_t src = v->entity->eval;
                 if (src != EcsVariable) {
                     const ecs_id_t *ids = ecs_vec_get_t(

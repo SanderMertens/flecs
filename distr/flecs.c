@@ -50822,6 +50822,7 @@ struct flecs_script_entity_state_t {
     bool prev_is_with_scope;
     int32_t symbol;
     int32_t for_slot;
+    bool created;
 };
 
 int flecs_script_eval_entity_enter(
@@ -104977,6 +104978,25 @@ void flecs_expr_visit_error_(
     ecs_os_free(msg);
 }
 
+static bool flecs_value_bool_to_number(
+    ecs_value_t *dst,
+    bool value)
+{
+    ecs_entity_t type = dst->type;
+    void *ptr = dst->ptr;
+    if (type == ecs_id(ecs_f32_t)) { *(float*)ptr = value ? 1.0f : 0.0f; return true; }
+    if (type == ecs_id(ecs_f64_t)) { *(double*)ptr = value ? 1.0 : 0.0; return true; }
+    if (type == ecs_id(ecs_i32_t)) { *(int32_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_i64_t)) { *(int64_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_u32_t)) { *(uint32_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_u64_t)) { *(uint64_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_i8_t))  { *(int8_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_i16_t)) { *(int16_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_u8_t))  { *(uint8_t*)ptr = value; return true; }
+    if (type == ecs_id(ecs_u16_t)) { *(uint16_t*)ptr = value; return true; }
+    return false;
+}
+
 int flecs_value_copy_to(
     ecs_world_t *world,
     ecs_value_t *dst,
@@ -104990,6 +105010,10 @@ int flecs_value_copy_to(
         ecs_assert(src->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_ptr_copy_w_type_info(
             world, src->type_info, dst->ptr, src->value.ptr);
+    } else if (src->value.type == ecs_id(ecs_bool_t) &&
+        flecs_value_bool_to_number(dst, *(const bool*)src->value.ptr))
+    {
+        return 0;
     } else {
         /* Cast value to desired output type */
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
@@ -113573,6 +113597,17 @@ static int flecs_irc_compile_expr(
         if (flecs_irc_compile_expr(c, n->expr, src, false)) {
             return -1;
         }
+        int32_t rsize = 0;
+        ecs_script_ir_num_class_t rclass = flecs_irc_num_class(
+            node->type, &rsize);
+        if (n->expr->type == ecs_id(ecs_bool_t) && rclass != EcsIrNumNone) {
+            int32_t op = flecs_irc_emit(c, EcsIrCastNumber, dst, src, 0, node);
+            flecs_irc_op(c, op)->flags = place;
+            flecs_irc_op(c, op)->imm.u64 = (uint64_t)EcsIrNumUnsigned |
+                ((uint64_t)1 << 8) | ((uint64_t)rclass << 16) |
+                ((uint64_t)rsize << 24);
+            return 0;
+        }
         int32_t op = flecs_irc_emit(c, EcsIrCast, dst, src, 0, node);
         flecs_irc_op(c, op)->flags = place;
         return 0;
@@ -116241,6 +116276,7 @@ static int flecs_ir_entity_enter(
     state->prev_force = v->force;
     state->symbol = -1;
     state->for_slot = -1;
+    state->created = false;
 
     if (v->entity && v->entity->eval_kind && !node->kind &&
         !ecs_vec_count(&node->scope->stmts) && ecs_has(
@@ -116299,6 +116335,7 @@ static int flecs_ir_entity_enter(
         if (!eval) {
             return -1;
         }
+        state->created = true;
         if (state->eval && state->eval != eval &&
             ecs_is_alive(v->world, state->eval))
         {
@@ -116308,6 +116345,7 @@ static int flecs_ir_entity_enter(
     } else if (!state->eval) {
         flecs_ir_prof(EcsIrProfileEntityCreate);
         state->eval = flecs_script_create_entity(v, node->name);
+        state->created = true;
     } else {
         flecs_ir_prof(EcsIrProfileEntityReuse);
     }
@@ -118180,7 +118218,9 @@ static flecs_script_run_status_t flecs_ir_exec(
                 frame->u.scope.vscratch_top = vm->vscratch_top;
                 frame->u.scope.vheap_count = vm->vheap.count;
             }
-            if (v->entity && op->c != -1) {
+            if (v->entity && op->c != -1 &&
+                (v->force || v->entity->created))
+            {
                 ecs_entity_t src = v->entity->eval;
                 if (src != EcsVariable) {
                     const ecs_id_t *ids = ecs_vec_get_t(
