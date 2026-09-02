@@ -1901,6 +1901,7 @@ void Expr_match_w_any_not_last(void);
 void Expr_match_w_any_first(void);
 void Expr_match_w_any_mismatching_type(void);
 void Expr_match_i_w_any_f(void);
+void Expr_match_case_expr_runtime_error(void);
 void Expr_match_f64_i_cases(void);
 void Expr_match_f32_i_cases(void);
 void Expr_match_f64_i_cases_no_match(void);
@@ -10519,6 +10520,10 @@ bake_test_case Expr_testcases[] = {
         Expr_match_i_w_any_f
     },
     {
+        "match_case_expr_runtime_error",
+        Expr_match_case_expr_runtime_error
+    },
+    {
         "match_f64_i_cases",
         Expr_match_f64_i_cases
     },
@@ -14937,6 +14942,7 @@ static bake_test_suite suites[] = {
         Expr_setup,
         NULL,
         408,
+        403,
         Expr_testcases,
         1,
         Expr_params

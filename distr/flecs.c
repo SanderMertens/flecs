@@ -105793,7 +105793,7 @@ static int flecs_expr_match_visit_eval(
         ecs_expr_value_t *compare = flecs_expr_stack_result(
             ctx->stack, elem->compare);
         if (flecs_expr_visit_eval_priv(ctx, elem->compare, compare)) {
-            goto error;
+            goto error_elem;
         }
 
         bool value = false;
@@ -105803,7 +105803,7 @@ static int flecs_expr_match_visit_eval(
             ctx->script, &node->node, &expr->value, &compare->value, &result,
             EcsTokEq))
         {
-            goto error;
+            goto error_elem;
         }
 
         flecs_expr_stack_pop(ctx->stack);
@@ -105833,6 +105833,8 @@ static int flecs_expr_match_visit_eval(
 
     flecs_expr_stack_pop(ctx->stack);
     return 0;
+error_elem:
+    flecs_expr_stack_pop(ctx->stack);
 error:
     flecs_expr_stack_pop(ctx->stack);
     return -1;

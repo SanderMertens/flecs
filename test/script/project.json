@@ -1929,6 +1929,7 @@
                 "match_w_any_first",
                 "match_w_any_mismatching_type",
                 "match_i_w_any_f",
+                "match_case_expr_runtime_error",
                 "match_f64_i_cases",
                 "match_f32_i_cases",
                 "match_f64_i_cases_no_match",
