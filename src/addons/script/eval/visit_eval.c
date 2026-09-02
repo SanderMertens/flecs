@@ -989,8 +989,7 @@ static void flecs_script_track_component(
     {
         return;
     }
-    int32_t entity_slot = flecs_script_symbol_runtime_slot(
-        v, v->entity->symbol);
+    int32_t entity_slot = v->entity->symbol;
     ecs_script_component_slot_t *slot = ecs_vec_get_t(
         v->component_slots, ecs_script_component_slot_t, component_slot);
     if (slot->component &&

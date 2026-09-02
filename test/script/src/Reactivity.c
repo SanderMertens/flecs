@@ -7591,3 +7591,295 @@ void Reactivity_template_prop_set_from_system_reevaluates(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_template_first_stmt_conditional_component_on_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Lamp {"
+            LINE "  prop on: bool = false"
+            LINE "  bulb {"
+            LINE "    Position: {10, 20}"
+            LINE "    if on {"
+            LINE "      Velocity: {30, 40}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Lamp instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "Lamp");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t child = ecs_lookup(world, "instance.bulb");
+    test_assert(lamp != 0);
+    test_assert(instance != 0);
+    test_assert(child != 0);
+    test_assert(ecs_owns_id(world, child, position));
+    test_assert(!ecs_owns_id(world, child, velocity));
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        bool on = true;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(ecs_lookup(world, "instance.bulb") == child);
+        test_assert(ecs_owns_id(world, child, position));
+        test_assert(ecs_owns_id(world, child, velocity));
+        test_assert(!ecs_owns_id(world, instance, velocity));
+
+        on = false;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(ecs_lookup(world, "instance.bulb") == child);
+        test_assert(ecs_owns_id(world, child, position));
+        test_assert(!ecs_owns_id(world, child, velocity));
+    }
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_first_stmt_conditional_pair_on_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_id_t pair = ecs_pair(rel, velocity);
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Lamp {"
+            LINE "  prop on: bool = false"
+            LINE "  bulb {"
+            LINE "    Position: {10, 20}"
+            LINE "    if on {"
+            LINE "      (Rel, Velocity): {30, 40}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Lamp instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "Lamp");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t child = ecs_lookup(world, "instance.bulb");
+    test_assert(lamp != 0);
+    test_assert(instance != 0);
+    test_assert(child != 0);
+    test_assert(ecs_owns_id(world, child, position));
+    test_assert(!ecs_owns_id(world, child, pair));
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        bool on = true;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(ecs_lookup(world, "instance.bulb") == child);
+        test_assert(ecs_owns_id(world, child, pair));
+        test_assert(!ecs_owns_id(world, instance, pair));
+
+        on = false;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(ecs_lookup(world, "instance.bulb") == child);
+        test_assert(!ecs_owns_id(world, child, pair));
+    }
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_first_stmt_conditional_tag_on_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Lamp {"
+            LINE "  prop on: bool = false"
+            LINE "  bulb {"
+            LINE "    Position: {10, 20}"
+            LINE "    if on {"
+            LINE "      Foo"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Lamp instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "Lamp");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t child = ecs_lookup(world, "instance.bulb");
+    test_assert(lamp != 0);
+    test_assert(instance != 0);
+    test_assert(child != 0);
+    test_assert(ecs_owns_id(world, child, position));
+    test_assert(!ecs_owns_id(world, child, foo));
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        bool on = true;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(ecs_lookup(world, "instance.bulb") == child);
+        test_assert(ecs_owns_id(world, child, foo));
+        test_assert(!ecs_owns_id(world, instance, foo));
+
+        on = false;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(ecs_lookup(world, "instance.bulb") == child);
+        test_assert(!ecs_owns_id(world, child, foo));
+    }
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_first_stmt_conditional_component_on_root(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Lamp {"
+            LINE "  prop on: bool = false"
+            LINE "  Position: {10, 20}"
+            LINE "  if on {"
+            LINE "    Velocity: {30, 40}"
+            LINE "  }"
+            LINE "}"
+            LINE "Lamp instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "Lamp");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    test_assert(lamp != 0);
+    test_assert(instance != 0);
+    test_assert(ecs_owns_id(world, instance, position));
+    test_assert(!ecs_owns_id(world, instance, velocity));
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        bool on = true;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(ecs_owns_id(world, instance, velocity));
+
+        on = false;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(!ecs_owns_id(world, instance, velocity));
+    }
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_after_stmt_conditional_component_on_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "before {}"
+            LINE "template Lamp {"
+            LINE "  prop on: bool = false"
+            LINE "  bulb {"
+            LINE "    Position: {10, 20}"
+            LINE "    if on {"
+            LINE "      Velocity: {30, 40}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Lamp instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "Lamp");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t child = ecs_lookup(world, "instance.bulb");
+    test_assert(lamp != 0);
+    test_assert(instance != 0);
+    test_assert(child != 0);
+    test_assert(ecs_owns_id(world, child, position));
+    test_assert(!ecs_owns_id(world, child, velocity));
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        bool on = true;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(ecs_lookup(world, "instance.bulb") == child);
+        test_assert(ecs_owns_id(world, child, velocity));
+
+        on = false;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(ecs_lookup(world, "instance.bulb") == child);
+        test_assert(!ecs_owns_id(world, child, velocity));
+    }
+
+    ecs_fini(world);
+}
+
