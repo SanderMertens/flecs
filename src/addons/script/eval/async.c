@@ -48,6 +48,7 @@ struct ecs_script_task_t {
     int32_t iterations;
     int32_t completed_iterations;
     bool has_owner_vars;
+    bool running;
     ecs_script_task_loop_t loop;
     ecs_script_task_status_t status;
 };
@@ -696,6 +697,9 @@ ecs_script_task_status_t ecs_script_task_resume(
     ecs_script_eval_result_t *result)
 {
     ecs_check(task != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!task->running, ECS_INVALID_OPERATION,
+        "cannot resume a task that is already running");
+
     if (task->status == EcsScriptTaskDone ||
         task->status == EcsScriptTaskError ||
         task->status == EcsScriptTaskCancelled)
@@ -703,6 +707,7 @@ ecs_script_task_status_t ecs_script_task_resume(
         return task->status;
     }
 
+    task->running = true;
     if (result) {
         flecs_log_capture_push(true);
     }
@@ -737,6 +742,7 @@ ecs_script_task_status_t ecs_script_task_resume(
             task->status = EcsScriptTaskPending;
         }
     }
+    task->running = false;
     return task->status;
 error:
     return EcsScriptTaskError;
@@ -778,6 +784,8 @@ void ecs_script_task_free(
     if (!task) {
         return;
     }
+    ecs_check(!task->running, ECS_INVALID_OPERATION,
+        "cannot free a task that is already running");
     ecs_script_task_cancel(task);
     flecs_script_task_unregister(task);
     flecs_script_runner_abandon(&task->runner);
@@ -796,6 +804,8 @@ void ecs_script_task_free(
         ECS_INTERNAL_ERROR, NULL);
     flecs_script_impl(task->script)->task_refcount --;
     ecs_os_free(task);
+error:
+    return;
 }
 
 static ECS_MOVE(EcsScriptTask, dst, src, {

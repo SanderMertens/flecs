@@ -2578,3 +2578,92 @@ void Await_cancel_task_from_async_callback(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+static ecs_script_task_t *await_reentrant_task;
+static bool await_reentrant_done;
+
+static void Await_reentrant_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_script_future_t *future)
+{
+    (void)ctx;
+    (void)argc;
+    (void)argv;
+
+    await_futures[await_future_count ++] = future;
+
+    if (!await_reentrant_done) {
+        await_reentrant_done = true;
+        ecs_script_task_resume(await_reentrant_task, NULL);
+    }
+}
+
+void Await_resume_from_async_callback(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+    await_reentrant_done = false;
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_reentrant_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "const v = await fetch()\n", NULL, NULL);
+    test_assert(script != NULL);
+
+    await_reentrant_task = ecs_script_task_new(script, NULL);
+    test_assert(await_reentrant_task != NULL);
+
+    test_expect_abort();
+    ecs_script_task_resume(await_reentrant_task, NULL);
+}
+
+
+
+static ecs_script_task_t *await_free_task;
+
+static void Await_free_task_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_script_future_t *future)
+{
+    (void)ctx;
+    (void)argc;
+    (void)argv;
+
+    await_futures[await_future_count ++] = future;
+    ecs_script_task_free(await_free_task);
+}
+
+void Await_free_task_from_async_callback(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_free_task_callback,
+        .cancel = Await_cancel_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "const v = await fetch()\n", NULL, NULL);
+    test_assert(script != NULL);
+
+    await_free_task = ecs_script_task_new(script, NULL);
+    test_assert(await_free_task != NULL);
+
+    test_expect_abort();
+    ecs_script_task_resume(await_free_task, NULL);
+}
