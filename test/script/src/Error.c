@@ -5149,3 +5149,27 @@ void Error_member_of_tag_component_in_function(void) {
 
     ecs_fini(world);
 }
+
+void Error_collection_literal_for_struct_type_reports_type_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL,
+        "e { Position: [1, 2] }", &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "'Position'") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
