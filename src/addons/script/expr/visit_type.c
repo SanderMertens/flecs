@@ -257,7 +257,7 @@ static ecs_entity_t flecs_expr_narrow_type(
     } else if (type == ecs_id(ecs_u32_t)) {
         uval = *(ecs_u32_t*)ptr;
     } else if (type == ecs_id(ecs_u64_t)) {
-        uval = *(ecs_u32_t*)ptr;
+        uval = *(ecs_u64_t*)ptr;
     } else {
         int64_t ival;
 

@@ -3886,6 +3886,27 @@ void Expr_cond_gt_string(void) {
     ecs_fini(world);
 }
 
+void Expr_cond_gt_large_uint_bool(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    test_assert(ecs_expr_run(
+        world, "18446744069414584320 > true", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+
+    test_assert(ecs_expr_run(
+        world, "18446744069414584320 < true", &v, &desc) != NULL);
+    test_bool(*(bool*)v.ptr, false);
+
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
 void Expr_min_lparen_int_rparen(void) {
     ecs_world_t *world = ecs_init();
 
