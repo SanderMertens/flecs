@@ -1697,6 +1697,28 @@ void Expr_var_element_out_of_range(void) {
     ecs_fini(world);
 }
 
+void Expr_element_on_non_collection(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    ecs_log_set_level(-4);
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "10[0]", &v, &desc) == NULL);
+    }
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "true[0]", &v, &desc) == NULL);
+    }
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "\"foo\"[0]", &v, &desc) == NULL);
+    }
+
+    ecs_fini(world);
+}
+
 void Expr_var_element_w_var_index(void) {
     ecs_world_t *world = ecs_init();
 

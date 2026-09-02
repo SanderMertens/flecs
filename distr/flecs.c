@@ -110939,6 +110939,10 @@ static int flecs_expr_element_visit_type(
         goto error;
     }
 
+    if (!cur->valid) {
+        goto not_a_collection;
+    }
+
     if (ecs_meta_push(cur)) {
         goto not_a_collection;
     }

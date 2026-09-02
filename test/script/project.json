@@ -1644,6 +1644,7 @@
                 "var_member_w_dtor_member",
                 "var_element",
                 "var_element_out_of_range",
+                "element_on_non_collection",
                 "var_element_w_var_index",
                 "var_element_w_i64_var_index",
                 "var_member_element_w_var_member_index",
