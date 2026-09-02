@@ -351,6 +351,7 @@ static void flecs_script_template_defer_on_set(
     evt.count = it->count;
     evt.template_entity = template_entity;
     evt.component = component;
+    evt.depth = flecs_script_runtime_get(it->real_world)->template_depth;
 
     ecs_enqueue(it->world, &(ecs_event_desc_t){
         .event = ecs_id(EcsScriptTemplateSetEvent),
@@ -575,6 +576,15 @@ static int flecs_script_template_instantiate(
         return -1;
     }
 
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
+    if (rt->template_depth >= FLECS_SCRIPT_TEMPLATE_DEPTH_MAX) {
+        ecs_err("too many nested instantiations of template '%s', "
+            "is the template instantiating itself?",
+                ecs_get_name(world, template_entity));
+        rt->error = true;
+        return -1;
+    }
+
     ecs_script_template_t *template = script->template_;
     ecs_assert(template != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_info_t *ti = component
@@ -631,6 +641,7 @@ static int flecs_script_template_instantiate(
 
     int result = 0;
     int32_t i, a;
+    rt->template_depth ++;
     for (i = 0; i < count; i ++) {
         v->parent = entities[i];
         if (!ecs_is_alive(world, v->parent)) {
@@ -802,9 +813,11 @@ static int flecs_script_template_instantiate(
         }
     }
 
-    ecs_vec_fini_t(&desc.runtime->allocator, 
+    rt->template_depth --;
+
+    ecs_vec_fini_t(&desc.runtime->allocator,
         &desc.runtime->with, ecs_value_t);
-    ecs_vec_fini_t(&desc.runtime->allocator, 
+    ecs_vec_fini_t(&desc.runtime->allocator,
         &desc.runtime->with_type_info, ecs_type_info_t*);
 
     v->r->with = prev_with;
@@ -980,6 +993,10 @@ static void flecs_on_template_set_event(
 
     ecs_defer_suspend(world);
 
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
+    int32_t prev_depth = rt->template_depth;
+    rt->template_depth = evt->depth;
+
     const ecs_type_info_t *ti = ecs_get_type_info(world, evt->component);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     int32_t i;
@@ -989,6 +1006,8 @@ static void flecs_on_template_set_event(
             world, evt->template_entity, evt->component,
             &evt->entities[i], data, 1, evt->inputs[i], true);
     }
+
+    rt->template_depth = prev_depth;
 
     ecs_defer_resume(world);
 }
