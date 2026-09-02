@@ -1416,6 +1416,8 @@ void Error_template_instantiated_on_own_entity_as_bare_kind(void);
 void Error_unary_not_on_struct_value(void);
 void Error_binary_left_operand_struct_vs_entity(void);
 void Error_binary_right_operand_struct_vs_entity(void);
+void Error_collection_literal_enum_element_vs_entity(void);
+void Error_function_argument_struct_value(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -8619,6 +8621,14 @@ bake_test_case Error_testcases[] = {
     {
         "binary_right_operand_struct_vs_entity",
         Error_binary_right_operand_struct_vs_entity
+    },
+    {
+        "collection_literal_enum_element_vs_entity",
+        Error_collection_literal_enum_element_vs_entity
+    },
+    {
+        "function_argument_struct_value",
+        Error_function_argument_struct_value
     }
 };
 
@@ -15051,6 +15061,7 @@ static bake_test_suite suites[] = {
         213,
         211,
         216,
+        218,
         Error_testcases
     },
     {
