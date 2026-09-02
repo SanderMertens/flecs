@@ -1591,11 +1591,12 @@ static int flecs_expr_unary_visit_type(
     node->node.type = ecs_id(ecs_bool_t);
 
     if (node->expr->type != ecs_id(ecs_bool_t)) {
-        node->expr = (ecs_expr_node_t*)flecs_expr_cast(
+        ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
             script, node->expr, ecs_id(ecs_bool_t));
-        if (!node->expr) {
+        if (!cast) {
             goto error;
         }
+        node->expr = cast;
     }
 
     return 0;
@@ -1683,11 +1684,12 @@ static int flecs_expr_binary_visit_type(
         }
         
         if (operand_type != node->left->type) {
-            node->left = (ecs_expr_node_t*)flecs_expr_cast(
+            ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
                 script, node->left, operand_type);
-            if (!node->left) {
+            if (!cast) {
                 goto error;
             }
+            node->left = cast;
         }
 
         node->vector_type = 0;
@@ -1711,11 +1713,12 @@ static int flecs_expr_binary_visit_type(
         if (!vector_elem_count || (node->right->type != node->left->type)) {
             /* If this is a vector operation between the same types, don't try
              * to cast the right operand to the vector type. */
-            node->right = (ecs_expr_node_t*)flecs_expr_cast(
+            ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
                 script, node->right, operand_type);
-            if (!node->right) {
+            if (!cast) {
                 goto error;
             }
+            node->right = cast;
         }
     }
 
