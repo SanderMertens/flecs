@@ -20934,3 +20934,37 @@ void Eval_auto_override_pair_before_scope_close_same_line(void) {
 
     ecs_fini(world);
 }
+
+void Eval_module_stmt_w_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "module hello; Foo {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_get_scope(world) == 0);
+
+    ecs_entity_t hello = ecs_lookup(world, "hello");
+    test_assert(hello != 0);
+    test_assert(ecs_has_id(world, hello, EcsModule));
+
+    test_assert(ecs_lookup(world, "hello.Foo") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_module_stmt_at_end_of_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "module hello";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_get_scope(world) == 0);
+
+    ecs_entity_t hello = ecs_lookup(world, "hello");
+    test_assert(hello != 0);
+    test_assert(ecs_has_id(world, hello, EcsModule));
+
+    ecs_fini(world);
+}
