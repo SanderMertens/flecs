@@ -111960,6 +111960,7 @@ static void flecs_script_rng_get_float(
 
     if (ECS_EQZERO(max)) {
         ecs_err("flecs.script.math.Rng.f(): invalid division by zero");
+        flecs_script_runtime_get(ctx->world)->error = true;
     } else {
         *r = (double)x / ((double)UINT64_MAX / max);
     }
@@ -111985,6 +111986,7 @@ static void flecs_script_rng_get_uint(
     uint64_t *r = result->ptr;
     if (!max) {
         ecs_err("flecs.script.math.Rng.u(): invalid division by zero");
+        flecs_script_runtime_get(ctx->world)->error = true;
     } else {
         *r = x % max;
     }
@@ -112113,10 +112115,12 @@ FLECS_SCRIPT_CLAMP(double)
         type *a = argv[0].ptr;\
         type *b = argv[1].ptr;\
         double *r = result->ptr;\
+        double sum = 0;\
         for (int i = 0; i < elem_count; i ++) {\
             double x = (double)a[i], y = (double)b[i];\
-            *r += x * y;\
+            sum += x * y;\
         }\
+        *r = sum;\
     }
 
 FLECS_SCRIPT_DOT(int8_t)
@@ -112171,10 +112175,12 @@ FLECS_SCRIPT_LENGTH(double)
         (void)ctx; (void)argc;\
         type *v = argv[0].ptr;\
         double *r = result->ptr;\
+        double sum = 0;\
         for (int i = 0; i < elem_count; i ++) {\
             double x = (double)v[i];\
-            *r += x * x;\
+            sum += x * x;\
         }\
+        *r = sum;\
     }
 
 FLECS_SCRIPT_LENGTH_SQ(int8_t)
