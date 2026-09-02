@@ -3868,6 +3868,24 @@ void Expr_cond_gt_entity(void) {
     ecs_fini(world);
 }
 
+void Expr_cond_gt_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    ecs_log_set_level(-4);
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "\"a\" > \"b\"", &v, &desc) == NULL);
+    }
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "\"a\" <= \"b\"", &v, &desc) == NULL);
+    }
+
+    ecs_fini(world);
+}
+
 void Expr_min_lparen_int_rparen(void) {
     ecs_world_t *world = ecs_init();
 

@@ -1683,6 +1683,7 @@ void Expr_cond_lteq_flt(void);
 void Expr_cond_lteq_enum(void);
 void Expr_cond_lteq_enum_literal(void);
 void Expr_cond_gt_entity(void);
+void Expr_cond_gt_string(void);
 void Expr_min_lparen_int_rparen(void);
 void Expr_min_lparen_int_add_int_rparen(void);
 void Expr_min_number_hex(void);
@@ -9627,6 +9628,10 @@ bake_test_case Expr_testcases[] = {
         Expr_cond_gt_entity
     },
     {
+        "cond_gt_string",
+        Expr_cond_gt_string
+    },
+    {
         "min_lparen_int_rparen",
         Expr_min_lparen_int_rparen
     },
@@ -14836,7 +14841,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        404,
+        405,
         Expr_testcases,
         1,
         Expr_params
