@@ -17,6 +17,13 @@ struct ecs_script_runtime_t {
     ecs_vec_t pending_resolves;
     ecs_vec_t ir_vms;
 
+    /* Template instances with changed props whose re-evaluation is deferred
+     * until the command queue is flushed. One marker event is enqueued per
+     * flush instead of one event per instance. */
+    ecs_vec_t template_pending;
+    bool template_pending_marker;
+    bool template_pending_active;
+
     /* Tag added to entities created by the currently evaluating managed
      * script. Carried on the world runtime so evaluation triggered from hooks
      * (such as template instantiation) inherits it. */

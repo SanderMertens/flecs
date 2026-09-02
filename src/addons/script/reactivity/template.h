@@ -95,6 +95,22 @@ struct ecs_script_template_t {
 
 #define ECS_TEMPLATE_SMALL_SIZE (36)
 
+/* Deferred template instance update, queued by the template on_set hook */
+typedef struct ecs_script_template_pending_t {
+    ecs_entity_t entity;
+    ecs_entity_t template_entity;
+    ecs_entity_t component;
+    uint64_t input;
+    int32_t depth;
+    void *data;
+    bool inline_data;
+    int64_t _align;
+    char data_storage[ECS_TEMPLATE_SMALL_SIZE];
+} ecs_script_template_pending_t;
+
+void flecs_script_template_pending_fini(
+    ecs_vec_t *pending);
+
 typedef struct EcsScriptTemplateRoot {
     ecs_vec_t observers;
     ecs_vec_t symbol_slots;

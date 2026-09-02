@@ -6846,3 +6846,141 @@ void Template_computed_const_instance_deleted(void) {
 
     ecs_fini(world);
 }
+
+void Template_deferred_updates_batched(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    reaction_world_setup(world, ecs_id(Position));
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop a: f32 = 0"
+    LINE "  prop b: f32 = 0"
+    LINE "  x { Position: {a, b} }"
+    LINE "}"
+    LINE "e { T: {a: 1, b: 1} }"
+    LINE "f { T: {a: 2, b: 2} }"
+    LINE "g { T: {a: 3, b: 3} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(on_position_count, 3);
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t f = ecs_lookup(world, "f");
+    ecs_entity_t g = ecs_lookup(world, "g");
+    ecs_entity_t ex = ecs_lookup(world, "e.x");
+    ecs_entity_t fx = ecs_lookup(world, "f.x");
+    test_assert(t && e && f && g && ex && fx);
+
+    ecs_defer_begin(world);
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){10, 1});
+    ecs_set_id(world, f, t, sizeof(ReactionAB), &(ReactionAB){20, 2});
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){11, 1});
+    ecs_delete(world, g);
+    ecs_set_id(world, g, t, sizeof(ReactionAB), &(ReactionAB){30, 3});
+    test_int(on_position_count, 3);
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, g));
+    test_uint(ecs_lookup(world, "e.x"), ex);
+    test_uint(ecs_lookup(world, "f.x"), fx);
+    {
+        const Position *p = ecs_get(world, ex, Position);
+        test_flt(p->x, 11);
+        p = ecs_get(world, fx, Position);
+        test_flt(p->x, 20);
+    }
+
+    ecs_defer_begin(world);
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){12, 1});
+    ecs_defer_end(world);
+    {
+        const Position *p = ecs_get(world, ex, Position);
+        test_flt(p->x, 12);
+    }
+
+    ecs_fini(world);
+}
+
+void Template_deferred_update_nested_template(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    reaction_world_setup(world, ecs_id(Position));
+
+    const char *expr =
+    HEAD "template Inner {"
+    LINE "  prop v: f32 = 0"
+    LINE "  leaf { Position: {v, 0} }"
+    LINE "}"
+    LINE "template Outer {"
+    LINE "  prop a: f32 = 0"
+    LINE "  prop b: f32 = 0"
+    LINE "  child { Inner: {a} }"
+    LINE "}"
+    LINE "e { Outer: {a: 1, b: 1} }"
+    LINE "f { Outer: {a: 2, b: 2} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    ecs_entity_t t = ecs_lookup(world, "Outer");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t f = ecs_lookup(world, "f");
+    ecs_entity_t eleaf = ecs_lookup(world, "e.child.leaf");
+    ecs_entity_t fleaf = ecs_lookup(world, "f.child.leaf");
+    test_assert(t && e && f && eleaf && fleaf);
+
+    ecs_defer_begin(world);
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){10, 1});
+    ecs_set_id(world, f, t, sizeof(ReactionAB), &(ReactionAB){20, 2});
+    ecs_defer_end(world);
+
+    test_uint(ecs_lookup(world, "e.child.leaf"), eleaf);
+    test_uint(ecs_lookup(world, "f.child.leaf"), fleaf);
+    {
+        const Position *p = ecs_get(world, eleaf, Position);
+        test_flt(p->x, 10);
+        p = ecs_get(world, fleaf, Position);
+        test_flt(p->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Template_deferred_update_from_system(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    reaction_world_setup(world, ecs_id(Position));
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop a: f32 = 0"
+    LINE "  prop b: f32 = 0"
+    LINE "  x { Position: {a, b} }"
+    LINE "}"
+    LINE "e { T: {a: 1, b: 1} }"
+    LINE "f { T: {a: 2, b: 2} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t f = ecs_lookup(world, "f");
+    test_assert(t && e && f);
+
+    ecs_defer_begin(world);
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){5, 1});
+    ecs_defer_begin(world);
+    ecs_set_id(world, f, t, sizeof(ReactionAB), &(ReactionAB){6, 2});
+    ecs_defer_end(world);
+    {
+        const Position *p = ecs_get(world, ecs_lookup(world, "e.x"), Position);
+        test_flt(p->x, 1);
+    }
+    ecs_defer_end(world);
+    {
+        const Position *p = ecs_get(world, ecs_lookup(world, "e.x"), Position);
+        test_flt(p->x, 5);
+        p = ecs_get(world, ecs_lookup(world, "f.x"), Position);
+        test_flt(p->x, 6);
+    }
+
+    ecs_fini(world);
+}
