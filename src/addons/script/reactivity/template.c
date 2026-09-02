@@ -340,12 +340,19 @@ static void flecs_script_template_defer_on_set(
     }
 
     int32_t i;
+    bool any = false;
     for (i = 0; i < it->count; i ++) {
         const EcsScriptTemplateRoot *root = ecs_get_pair(it->real_world,
             it->entities[i], EcsScriptTemplateRoot, template_entity);
         evt.inputs[i] = root && root->initialized
             ? root->changed
             : UINT64_MAX;
+        any |= evt.inputs[i] != 0;
+    }
+
+    if (!any) {
+        flecs_template_set_event_free(&evt);
+        return;
     }
 
     evt.count = it->count;
@@ -1086,6 +1093,9 @@ static void flecs_script_template_on_set(
         uint64_t input = root && root->initialized
             ? root->changed
             : UINT64_MAX;
+        if (!input) {
+            continue;
+        }
         flecs_script_template_instantiate(
             world, template_entity, component,
             &it->entities[i], ECS_OFFSET(data, ti->size * i), 1,
@@ -1117,24 +1127,49 @@ static void flecs_script_template_on_replace(
     ecs_script_template_member_t *members = ecs_vec_first(&template->members);
     int32_t i, m, member_count = ecs_vec_count(&template->members);
     for (i = 0; i < it->count; i ++) {
+        void *old_ptr = ECS_OFFSET(old_data, ti->size * i);
+        void *new_ptr = ECS_OFFSET(new_data, ti->size * i);
+        if (!ecs_os_memcmp(old_ptr, new_ptr, ti->size)) {
+            continue;
+        }
         EcsScriptTemplateRoot *root = ECS_CONST_CAST(EcsScriptTemplateRoot*,
             ecs_get_pair(world, it->entities[i],
                 EcsScriptTemplateRoot, template_entity));
         if (!root || !root->initialized) {
             continue;
         }
-        void *old_ptr = ECS_OFFSET(old_data, ti->size * i);
-        void *new_ptr = ECS_OFFSET(new_data, ti->size * i);
         for (m = 0; m < member_count; m ++) {
             ecs_script_template_member_t *template_member = &members[m];
             if (template_member->is_mut != mut) {
                 continue;
             }
-            const ecs_member_t *member = ecs_vec_get_t(
-                &st->members, ecs_member_t, template_member->index);
-            const ecs_type_info_t *member_ti = ecs_get_type_info(
-                world, member->type);
-            ecs_assert(member_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (!template_member->diff_ti) {
+                const ecs_member_t *member = ecs_vec_get_t(
+                    &st->members, ecs_member_t, template_member->index);
+                const ecs_type_info_t *member_ti = ecs_get_type_info(
+                    world, member->type);
+                ecs_assert(member_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+                template_member->diff_ti = member_ti;
+                template_member->diff_offset = member->offset;
+                template_member->diff_size = member_ti->size;
+                template_member->diff_count = member->count ? member->count : 1;
+                template_member->diff_pod = !member_ti->hooks.ctor &&
+                    !member_ti->hooks.copy && !member_ti->hooks.move &&
+                    !member_ti->hooks.dtor;
+            }
+            const ecs_type_info_t *member_ti = template_member->diff_ti;
+            ecs_size_t offset = template_member->diff_offset;
+            ecs_size_t size = template_member->diff_size;
+            int32_t e, elem_count = template_member->diff_count;
+
+            if (template_member->diff_pod) {
+                if (ecs_os_memcmp(ECS_OFFSET(old_ptr, offset),
+                    ECS_OFFSET(new_ptr, offset), size * elem_count))
+                {
+                    root->changed |= template_member->input;
+                }
+                continue;
+            }
 
             if (!member_ti->hooks.equals ||
                 (member_ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL))
@@ -1143,12 +1178,11 @@ static void flecs_script_template_on_replace(
                 continue;
             }
 
-            int32_t e, elem_count = member->count ? member->count : 1;
             for (e = 0; e < elem_count; e ++) {
-                ecs_size_t offset = member->offset + member_ti->size * e;
+                ecs_size_t elem_offset = offset + size * e;
                 if (!flecs_type_info_equals(
-                    ECS_OFFSET(old_ptr, offset),
-                    ECS_OFFSET(new_ptr, offset), member_ti))
+                    ECS_OFFSET(old_ptr, elem_offset),
+                    ECS_OFFSET(new_ptr, elem_offset), member_ti))
                 {
                     root->changed |= template_member->input;
                     break;
@@ -1335,6 +1369,7 @@ int flecs_script_template_eval_var(
     member->is_mut = mut;
     member->is_template = node->type_is_template && !node->eval_interface;
     member->interface = node->eval_interface;
+    member->diff_ti = NULL;
     if (member->interface) {
         template->has_interface_members = true;
     }
