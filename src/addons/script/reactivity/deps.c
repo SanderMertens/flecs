@@ -910,7 +910,6 @@ static int flecs_script_dep_node(
         if (node->kind == EcsAstConst) {
             bool computed = ctx->template && !ctx->conditional &&
                 !ctx->no_computed && !n->is_await &&
-                (node->direct_input || node->direct_internal) &&
                 ctx->template->computed_count < 64;
             if (computed) {
                 int32_t slot = ctx->template->computed_count ++;
