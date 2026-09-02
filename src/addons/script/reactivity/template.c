@@ -151,6 +151,34 @@ static void flecs_script_template_root_clear(
     flecs_script_eval_cleanup(&v);
 }
 
+static void flecs_script_template_root_remove(
+    ecs_iter_t *it)
+{
+    ecs_world_t *world = it->world;
+    ecs_entity_t template_entity = ecs_pair_second(
+        it->real_world, ecs_field_id(it, 0));
+
+    if (!template_entity || !ecs_is_alive(world, template_entity)) {
+        return;
+    }
+
+    const EcsScript *script = ecs_get(world, template_entity, EcsScript);
+    if (!script || !script->template_) {
+        return;
+    }
+
+    ecs_script_template_t *template = script->template_;
+    ecs_script_impl_t *impl = flecs_script_impl(script->script);
+
+    EcsScriptTemplateRoot *roots = ecs_field_w_size(
+        it, sizeof(EcsScriptTemplateRoot), 0);
+
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        flecs_script_template_root_clear(world, template, impl, &roots[i]);
+    }
+}
+
 static void flecs_template_set_event_free(EcsScriptTemplateSetEvent *ptr) {
     if (ptr->entities != &ptr->entity_storage) {
         ecs_os_free(ptr->entities);
@@ -1915,6 +1943,15 @@ void flecs_script_template_import(
 
     ecs_add_pair(world, ecs_id(EcsScriptTemplateRoot),
         EcsOnInstantiate, EcsDontInherit);
+
+    ecs_observer(world, {
+        .entity = ecs_entity(world, { .name = "TemplateRootRemoveObserver" }),
+        .query.terms = {{
+            .id = ecs_pair(ecs_id(EcsScriptTemplateRoot), EcsWildcard)
+        }},
+        .events = { EcsOnRemove },
+        .callback = flecs_script_template_root_remove
+    });
 
     ecs_observer(world, {
         .entity = ecs_entity(world, { .name = "TemplateSetObserver" }),
