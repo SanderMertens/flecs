@@ -95071,6 +95071,19 @@ error:
     return NULL;
 }
 
+static void flecs_script_task_cancel_future(
+    ecs_script_task_t *task)
+{
+    ecs_script_future_t *future = task->runner.future;
+    task->runner.future = NULL;
+    if (!future) {
+        return;
+    }
+
+    flecs_script_future_cancel(future);
+    ecs_script_future_release(future);
+}
+
 ecs_script_task_status_t ecs_script_task_resume(
     ecs_script_task_t *task,
     ecs_script_eval_result_t *result)
@@ -95088,7 +95101,9 @@ ecs_script_task_status_t ecs_script_task_resume(
     }
     flecs_script_run_status_t status = flecs_script_runner_run_scope(
         &task->runner, flecs_script_impl(task->script)->root);
-    if (status == FlecsScriptRunDone) {
+    if (task->status == EcsScriptTaskCancelled) {
+        flecs_script_task_cancel_future(task);
+    } else if (status == FlecsScriptRunDone) {
         task->status = EcsScriptTaskDone;
     } else if (status == FlecsScriptRunError) {
         task->status = EcsScriptTaskError;
@@ -95145,14 +95160,7 @@ void ecs_script_task_cancel(
     }
 
     task->status = EcsScriptTaskCancelled;
-    ecs_script_future_t *future = task->runner.future;
-    task->runner.future = NULL;
-    if (!future) {
-        return;
-    }
-
-    flecs_script_future_cancel(future);
-    ecs_script_future_release(future);
+    flecs_script_task_cancel_future(task);
 error:
     return;
 }

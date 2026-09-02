@@ -834,7 +834,8 @@
                 "second_task_same_script_while_suspended",
                 "loop_forever_recreate_deleted_entity",
                 "task_component_deferred_new_then_free",
-                "loop_forever_counts_iterations"
+                "loop_forever_counts_iterations",
+                "cancel_task_from_async_callback"
             ]
         }, {
             "id": "TryCatch",
