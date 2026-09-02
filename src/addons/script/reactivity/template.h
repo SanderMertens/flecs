@@ -6,6 +6,12 @@
 #ifndef FLECS_SCRIPT_TEMPLATE_H
 #define FLECS_SCRIPT_TEMPLATE_H
 
+/* Maximum number of template instantiations that can be nested. Guards against
+ * templates that (indirectly) instantiate themselves. */
+#ifndef FLECS_SCRIPT_TEMPLATE_DEPTH_MAX
+#define FLECS_SCRIPT_TEMPLATE_DEPTH_MAX (32)
+#endif
+
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateInstanceUpdateEvent);
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
@@ -100,6 +106,9 @@ typedef struct EcsScriptTemplateSetEvent {
     uint64_t *inputs;
     void *data;
     int32_t count;
+
+    /* Instantiation depth at the time the event was enqueued */
+    int32_t depth;
 
     /* Storage for small template types */
     int64_t _align; /* Align data storage to 8 bytes */

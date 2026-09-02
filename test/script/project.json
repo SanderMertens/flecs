@@ -1114,7 +1114,8 @@
                 "template_base_w_inline_array_member_elem_in_for",
                 "template_base_w_inline_array_member_reassign",
                 "template_base_w_inline_array_member_reassign_no_index",
-                "template_instantiates_itself"
+                "template_instantiates_itself",
+                "template_instantiates_itself_w_stop_condition"
             ]
         }, {
             "id": "Mut",

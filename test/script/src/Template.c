@@ -6474,3 +6474,42 @@ void Template_template_base_w_inline_array_member_reassign_no_index(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_instantiates_itself(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop x: f32 = 10"
+    LINE "  Foo child(1)"
+    LINE "}"
+    LINE "Foo e()";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void Template_template_instantiates_itself_w_stop_condition(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop x: i32 = 0"
+    LINE "  if $x > 0 {"
+    LINE "    Foo child($x - 1)"
+    LINE "  }"
+    LINE "}"
+    LINE "Foo e(3)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e.child") != 0);
+    test_assert(ecs_lookup(world, "e.child.child") != 0);
+    test_assert(ecs_lookup(world, "e.child.child.child") != 0);
+    test_assert(ecs_lookup(world, "e.child.child.child.child") == 0);
+
+    ecs_fini(world);
+}
