@@ -50253,6 +50253,7 @@ typedef struct ecs_expr_variable_t {
     ecs_id_t global_component; /* Component that stores the global value. Is
                                 * EcsScriptConstVar or EcsScriptMutVar. */
     int32_t sp; /* For fast variable lookups */
+    bool owns_name; /* Whether name is allocated with script allocator */
 } ecs_expr_variable_t;
 
 typedef struct ecs_expr_identifier_t {
@@ -107335,9 +107336,14 @@ void flecs_expr_visit_free(
         flecs_free_t(a, ecs_expr_identifier_t, node);
         break;
     case EcsExprVariable:
-    case EcsExprGlobalVariable:
+    case EcsExprGlobalVariable: {
+        ecs_expr_variable_t *var = (ecs_expr_variable_t*)node;
+        if (var->owns_name) {
+            flecs_strfree(a, ECS_CONST_CAST(char*, var->name));
+        }
         flecs_free_t(a, ecs_expr_variable_t, node);
         break;
+    }
     case EcsExprFunction:
     case EcsExprMethod:
         flecs_expr_function_visit_free(
@@ -110149,6 +110155,7 @@ static int flecs_expr_identifier_variable_member_visit_type(
 
     ecs_expr_variable_t *var_node = flecs_expr_variable_from(
         script, (ecs_expr_node_t*)node, var_name);
+    var_node->owns_name = true;
     ecs_expr_member_t *member_node = flecs_expr_member_from(
         script, (ecs_expr_node_t*)var_node, &member_sep[1]);
 

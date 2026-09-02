@@ -92,6 +92,7 @@ typedef struct ecs_expr_variable_t {
     ecs_id_t global_component; /* Component that stores the global value. Is
                                 * EcsScriptConstVar or EcsScriptMutVar. */
     int32_t sp; /* For fast variable lookups */
+    bool owns_name; /* Whether name is allocated with script allocator */
 } ecs_expr_variable_t;
 
 typedef struct ecs_expr_identifier_t {
