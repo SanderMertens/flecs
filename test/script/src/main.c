@@ -2095,6 +2095,8 @@ void Serialize_value_entity(void);
 void Serialize_value_struct(void);
 void Serialize_struct_w_value(void);
 void Serialize_value_roundtrip(void);
+void Serialize_string_w_interpolation_not_escaped(void);
+void Serialize_string_w_curly_brace_not_escaped(void);
 
 // Testsuite 'Deserialize'
 void Deserialize_setup(void);
@@ -11296,6 +11298,14 @@ bake_test_case Serialize_testcases[] = {
     {
         "value_roundtrip",
         Serialize_value_roundtrip
+    },
+    {
+        "string_w_interpolation_not_escaped",
+        Serialize_string_w_interpolation_not_escaped
+    },
+    {
+        "string_w_curly_brace_not_escaped",
+        Serialize_string_w_curly_brace_not_escaped
     }
 };
 
@@ -15049,7 +15059,7 @@ static bake_test_suite suites[] = {
         "Serialize",
         NULL,
         NULL,
-        91,
+        93,
         Serialize_testcases
     },
     {
