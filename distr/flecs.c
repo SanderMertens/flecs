@@ -70382,7 +70382,9 @@ static void flecs_meta_entity_lookup(
     (void)ctx;
     ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
     const char *path = *(char**)argv[1].ptr;
-    if (entity) {
+    if (!path) {
+        *(ecs_entity_t*)result->ptr = 0;
+    } else if (entity) {
         *(ecs_entity_t*)result->ptr = ecs_lookup_child(ctx->world, entity, path);
     } else {
         *(ecs_entity_t*)result->ptr = ecs_lookup(ctx->world, path);

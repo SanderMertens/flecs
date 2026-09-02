@@ -2145,3 +2145,27 @@ void Function_fn_w_large_struct_param_no_leak(void) {
     ecs_os_free(arg);
     ecs_fini(world);
 }
+
+void Function_entity_lookup_w_null_path(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    test_assert(foo != 0);
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "p", ecs_string_t);
+    test_assert(var != NULL);
+    test_assert(*(char**)var->value.ptr == NULL);
+
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+
+    ecs_value_t result = {0};
+    test_assert(ecs_expr_run(world, "Foo.lookup($p)", &result, &desc) != NULL);
+    test_assert(result.type == ecs_id(ecs_entity_t));
+    test_uint(0, *(ecs_entity_t*)result.ptr);
+    ecs_ptr_free(world, result.type, result.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
