@@ -1137,7 +1137,8 @@ static int flecs_irc_compile_const(
     if (flecs_irc_compile_expr(c, node->expr, value, false)) {
         return -1;
     }
-    int32_t op = flecs_irc_emit(c, EcsIrConstEnd, value, 0, 0, node);
+    int32_t op = flecs_irc_emit(c, EcsIrConstEnd, value,
+        node->computed - 1, 0, node);
     flecs_irc_op(c, op)->imm.ptr = node->eval_type
         ? ECS_CONST_CAST(void*, ecs_get_type_info(c->world, node->eval_type))
         : NULL;
@@ -1458,7 +1459,8 @@ error:
 static bool flecs_irc_stmt_always(
     ecs_script_node_t *node)
 {
-    return node->kind == EcsAstConst ||
+    return (node->kind == EcsAstConst &&
+            !((ecs_script_var_node_t*)node)->computed) ||
         node->kind == EcsAstUsing ||
         node->kind == EcsAstModule;
 }
@@ -1543,13 +1545,23 @@ static int flecs_irc_compile_stmt(
     case EcsAstMut:
         flecs_irc_emit(c, EcsIrMutCheck, 0, 0, 0, node);
         break;
-    case EcsAstConst:
-        if (((ecs_script_var_node_t*)node)->is_await) {
+    case EcsAstConst: {
+        ecs_script_var_node_t *n = (ecs_script_var_node_t*)node;
+        if (n->is_await) {
             result = flecs_irc_compile_await(c, node);
         } else {
-            result = flecs_irc_compile_const(c, (ecs_script_var_node_t*)node);
+            result = flecs_irc_compile_const(c, n);
+            if (!result && n->computed && stmt != -1) {
+                int32_t jump = flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
+                flecs_irc_op(c, stmt)->b = flecs_irc_pc(c);
+                flecs_irc_emit(c, EcsIrConstCached,
+                    n->computed - 1, stmt + 1, 0, node);
+                flecs_irc_op(c, jump)->a = flecs_irc_pc(c);
+                stmt = -1;
+            }
         }
         break;
+    }
     case EcsAstExportConst:
     case EcsAstExportMut:
         if (((ecs_script_var_node_t*)node)->is_await) {

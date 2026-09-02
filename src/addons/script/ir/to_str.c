@@ -52,6 +52,7 @@ const char* flecs_script_ir_op_name(
     case EcsIrMutCheck: return "MutCheck";
     case EcsIrConstBegin: return "ConstBegin";
     case EcsIrConstEnd: return "ConstEnd";
+    case EcsIrConstCached: return "ConstCached";
     case EcsIrConstError: return "ConstError";
     case EcsIrExprBegin: return "ExprBegin";
     case EcsIrExprEnd: return "ExprEnd";
@@ -196,6 +197,9 @@ void flecs_script_ir_to_buf(
         switch((ecs_script_ir_op_kind_t)op->kind) {
         case EcsIrJump:
             ecs_strbuf_append(buf, "-> %d", op->a);
+            break;
+        case EcsIrConstCached:
+            ecs_strbuf_append(buf, "slot=%d else-> %d", op->a, op->b);
             break;
         case EcsIrStmt:
             ecs_strbuf_append(buf, "input=0x%llx skip-> %d",

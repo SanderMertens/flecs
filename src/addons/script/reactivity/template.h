@@ -78,6 +78,7 @@ struct ecs_script_template_t {
     int32_t symbol_count;
     int32_t root_symbol;
     int32_t input_count;
+    int32_t computed_count;
     int32_t scope_count;
     int32_t component_count;
     int32_t for_count;
@@ -100,6 +101,7 @@ typedef struct EcsScriptTemplateRoot {
     ecs_vec_t component_slots;
     ecs_vec_t scope_slots;
     ecs_vec_t for_slots;
+    ecs_vec_t computed;
     uint64_t changed;
     int32_t visit;
     bool initialized;

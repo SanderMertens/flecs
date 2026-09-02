@@ -1082,6 +1082,12 @@ void Template_pair_component_w_entity_prop_target(void);
 void Template_child_name_from_string_prop(void);
 void Template_template_w_new_expr_in_const(void);
 void Template_template_w_existing_observer(void);
+void Template_computed_const_skips_dependents_when_unchanged(void);
+void Template_computed_const_prop_change(void);
+void Template_computed_const_in_entity_scope(void);
+void Template_computed_const_not_cached_in_branch(void);
+void Template_computed_const_string(void);
+void Template_computed_const_instance_deleted(void);
 void Template_template_w_prop_w_value_name(void);
 void Template_template_w_var_w_value_name(void);
 void Template_eval_twice_w_failed_method_call_in_body(void);
@@ -7317,6 +7323,30 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_existing_observer",
         Template_template_w_existing_observer
+    },
+    {
+        "computed_const_skips_dependents_when_unchanged",
+        Template_computed_const_skips_dependents_when_unchanged
+    },
+    {
+        "computed_const_prop_change",
+        Template_computed_const_prop_change
+    },
+    {
+        "computed_const_in_entity_scope",
+        Template_computed_const_in_entity_scope
+    },
+    {
+        "computed_const_not_cached_in_branch",
+        Template_computed_const_not_cached_in_branch
+    },
+    {
+        "computed_const_string",
+        Template_computed_const_string
+    },
+    {
+        "computed_const_instance_deleted",
+        Template_computed_const_instance_deleted
     },
     {
         "template_w_prop_w_value_name",
@@ -15292,7 +15322,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        149,
+        155,
         Template_testcases,
         1,
         Template_params
