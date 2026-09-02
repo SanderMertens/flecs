@@ -2623,6 +2623,7 @@ void Reactivity_method_expr_is_reactive(void);
 void Reactivity_interpolated_string_width_is_reactive(void);
 void Reactivity_interpolated_string_precision_is_reactive(void);
 void Reactivity_parse_failure_clears_observers(void);
+void Reactivity_script_deleted_while_evaluating(void);
 void Reactivity_template_props_are_isolated(void);
 void Reactivity_template_same_prop_value_skips(void);
 void Reactivity_template_muts_are_isolated(void);
@@ -13353,6 +13354,10 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_parse_failure_clears_observers
     },
     {
+        "script_deleted_while_evaluating",
+        Reactivity_script_deleted_while_evaluating
+    },
+    {
         "template_props_are_isolated",
         Reactivity_template_props_are_isolated
     },
@@ -14948,6 +14953,7 @@ static bake_test_suite suites[] = {
         NULL,
         135,
         128,
+        129,
         Reactivity_testcases
     },
     {

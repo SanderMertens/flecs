@@ -3009,6 +3009,54 @@ void Reactivity_interpolated_string_precision_is_reactive(void) {
     ecs_fini(world);
 }
 
+static ecs_entity_t reactivity_delete_script_target = 0;
+
+static void reactivity_delete_script(ecs_iter_t *it) {
+    ecs_entity_t script = reactivity_delete_script_target;
+    if (!script) {
+        return;
+    }
+    reactivity_delete_script_target = 0;
+    ecs_delete(it->world, script);
+}
+
+void Reactivity_script_deleted_while_evaluating(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    reactivity_delete_script_target = 0;
+    ecs_set_hooks_id(world, position, &(ecs_type_hooks_t){
+        .on_set = reactivity_delete_script
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "a { Position: {1, 0} }"
+    });
+    test_assert(script != 0);
+
+    reactivity_delete_script_target = script;
+
+    ecs_log_set_level(-4);
+    ecs_script_update(world, script, 0,
+        HEAD "a { Position: {2, 0} }"
+        LINE "b { Position: {3, 0} }"
+        LINE "c { Position: {4, 0} }");
+    ecs_log_set_level(-1);
+
+    test_assert(!ecs_is_alive(world, script));
+
+    ecs_fini(world);
+}
+
 void Reactivity_parse_failure_clears_observers(void) {
     ecs_world_t *world = ecs_init();
 

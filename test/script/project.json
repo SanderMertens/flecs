@@ -2670,6 +2670,7 @@
                 "interpolated_string_width_is_reactive",
                 "interpolated_string_precision_is_reactive",
                 "parse_failure_clears_observers",
+                "script_deleted_while_evaluating",
                 "template_props_are_isolated",
                 "template_same_prop_value_skips",
                 "template_muts_are_isolated",
