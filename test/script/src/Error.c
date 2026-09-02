@@ -5088,3 +5088,31 @@ void Error_deeply_chained_else_if(void) {
 
     ecs_fini(world);
 }
+
+void Error_interpolated_string_w_struct_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_vars_define(vars, "p", Position);
+
+    char *result = NULL;
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"$p\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+    ecs_log_set_level(-1);
+    test_assert(result == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
