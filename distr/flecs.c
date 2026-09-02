@@ -71816,6 +71816,13 @@ identifier_flag: {
                     parser, Token(3), Token(5));
                 tag->id.flag = flag;
 
+                {
+                    // auto_override | (Rel, Tgt) } (end of scope)
+                    LookAhead_1('}',
+                        EndOfRule;
+                    )
+                }
+
                 Parse(
                     // auto_override | (Rel, Tgt)\n
                     EcsTokEndOfStatement: {
@@ -71843,6 +71850,13 @@ identifier_flag: {
             ecs_script_tag_t *tag = flecs_script_insert_tag(
                 parser, Token(2));
             tag->id.flag = flag;
+
+            {
+                // auto_override | Position } (end of scope)
+                LookAhead_1('}',
+                    EndOfRule;
+                )
+            }
 
             Parse(
                 // auto_override | Position\n
@@ -71973,6 +71987,13 @@ identifier_identifier: {
     )
 
 identifier_identifier_x:
+    {
+        // Spaceship enterprise } (end of scope)
+        LookAhead_1('}',
+            EndOfRule;
+        )
+    }
+
     Parse(
         // Spaceship enterprise\n
         EcsTokEndOfStatement: {

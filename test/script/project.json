@@ -679,7 +679,11 @@
                 "struct_w_member_of_own_type",
                 "struct_w_inline_array_member_of_own_type",
                 "enum_w_duplicate_constant_values",
-                "bitmask_w_duplicate_constant_values"
+                "bitmask_w_duplicate_constant_values",
+                "kind_entity_before_scope_close_same_line",
+                "kind_entity_w_base_before_scope_close_same_line",
+                "auto_override_before_scope_close_same_line",
+                "auto_override_pair_before_scope_close_same_line"
             ]
         }, {
             "id": "Collection",

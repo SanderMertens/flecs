@@ -20859,3 +20859,78 @@ void Eval_bitmask_w_duplicate_constant_values(void) {
 
     ecs_fini(world);
 }
+
+void Eval_kind_entity_before_scope_close_same_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Spaceship);
+
+    const char *expr =
+    HEAD "parent { Spaceship enterprise }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "parent.enterprise");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, Spaceship));
+
+    ecs_fini(world);
+}
+
+void Eval_auto_override_before_scope_close_same_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    const char *expr =
+    HEAD "Prefab Foo { auto_override | Tag }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | Tag));
+
+    ecs_fini(world);
+}
+
+void Eval_kind_entity_w_base_before_scope_close_same_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Spaceship);
+    ECS_TAG(world, Base);
+
+    const char *expr =
+    HEAD "parent { Spaceship enterprise : Base }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "parent.enterprise");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, Spaceship));
+    test_assert(ecs_has_pair(world, e, EcsIsA, Base));
+
+    ecs_fini(world);
+}
+
+void Eval_auto_override_pair_before_scope_close_same_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "Prefab Foo { auto_override | (Rel, Tgt) }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has_id(world, foo,
+        ECS_AUTO_OVERRIDE | ecs_pair(Rel, Tgt)));
+
+    ecs_fini(world);
+}
