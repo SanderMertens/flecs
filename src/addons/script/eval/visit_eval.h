@@ -353,6 +353,11 @@ void flecs_script_eval_for_leave(
     ecs_script_eval_visitor_t *v,
     flecs_script_for_state_t *state);
 
+void flecs_script_for_merge_slots(
+    ecs_script_eval_visitor_t *v,
+    int32_t dst_slot,
+    int32_t src_slot);
+
 int flecs_script_for_collection_kind(
     ecs_script_eval_visitor_t *v,
     ecs_script_for_t *node,
@@ -376,6 +381,56 @@ ecs_script_var_t* flecs_script_for_declare_var(
     const char *name,
     ecs_entity_t type,
     bool alloc);
+
+/* Runtime bookkeeping helpers shared with the IR runtime */
+
+ecs_value_t* flecs_script_with_append(
+    ecs_allocator_t *a,
+    ecs_script_eval_visitor_t *v,
+    const ecs_type_info_t *ti);
+
+void flecs_script_with_set_count(
+    ecs_allocator_t *a,
+    ecs_script_eval_visitor_t *v,
+    int32_t count);
+
+int32_t flecs_script_with_count(
+    ecs_script_eval_visitor_t *v);
+
+int32_t flecs_script_symbol_runtime_slot(
+    const ecs_script_eval_visitor_t *v,
+    int32_t slot);
+
+void flecs_script_apply_with(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity);
+
+ecs_entity_t flecs_script_get_src(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+bool flecs_script_can_default_ctor(
+    ecs_world_t *world,
+    ecs_id_t component);
+
+void flecs_script_track_component(
+    ecs_script_eval_visitor_t *v,
+    int32_t component_slot,
+    ecs_id_t component);
+
+const ecs_script_var_t* flecs_script_template_prop_var(
+    ecs_script_eval_visitor_t *v,
+    void *node,
+    int32_t sp,
+    ecs_id_t id);
+
+bool flecs_script_scope_visited(
+    ecs_script_eval_visitor_t *v,
+    int32_t slot);
+
+void flecs_script_cleanup_slots(
+    ecs_script_eval_visitor_t *v);
 
 /* Functions shared between type and eval visitor */
 

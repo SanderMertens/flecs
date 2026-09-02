@@ -1,6 +1,7 @@
 #include <script.h>
 #include <math.h>
 
+
 void Serialize_bool(void) {
     ecs_world_t *world = ecs_init();
 

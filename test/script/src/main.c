@@ -9,6 +9,7 @@
 #include <script.h>
 
 // Testsuite 'Eval'
+void Eval_setup(void);
 void Eval_2_components_same_line_w_semicolon(void);
 void Eval_2_entities_same_line_w_semicolon(void);
 void Eval_null(void);
@@ -682,8 +683,14 @@ void Eval_auto_override_before_scope_close_same_line(void);
 void Eval_auto_override_pair_before_scope_close_same_line(void);
 void Eval_module_stmt_w_semicolon(void);
 void Eval_module_stmt_at_end_of_script(void);
+void Eval_ir_managed_script_desc(void);
+void Eval_ir_eval_desc(void);
+void Eval_ir_to_str(void);
+void Eval_ir_managed_script_update_keeps_runtime(void);
+void Eval_string_interpolation_of_scalar_types(void);
 
 // Testsuite 'Collection'
+void Collection_setup(void);
 void Collection_range_bracketed(void);
 void Collection_range_bare(void);
 void Collection_range_bracketed_index_value(void);
@@ -787,6 +794,7 @@ void Collection_range_literal_typed_float_vector(void);
 void Collection_range_literal_non_vector_type(void);
 
 // Testsuite 'Await'
+void Await_setup(void);
 void Await_task_new_w_deleted_entity(void);
 void Await_delete_scope_parent_while_suspended(void);
 void Await_fini_w_alive_task(void);
@@ -846,6 +854,7 @@ void Await_free_task_from_async_callback(void);
 void Await_await_in_template_body_fails_task(void);
 
 // Testsuite 'TryCatch'
+void TryCatch_setup(void);
 void TryCatch_parse_try_catch_all(void);
 void TryCatch_parse_try_catch_typed(void);
 void TryCatch_parse_try_multiple_catch(void);
@@ -884,6 +893,7 @@ void TryCatch_free_while_pending_in_catch(void);
 void TryCatch_this_var_in_catch(void);
 
 // Testsuite 'Function'
+void Function_setup(void);
 void Function_simple(void);
 void Function_newline_before_scope(void);
 void Function_newline_before_return_type_operator(void);
@@ -969,6 +979,7 @@ void Function_redeclare_function_no_leak(void);
 void Function_redeclare_method_no_leak(void);
 
 // Testsuite 'Template'
+void Template_setup(void);
 void Template_instantiate_w_string_prop_no_leak(void);
 void Template_template_no_scope(void);
 void Template_template_no_props(void);
@@ -1120,6 +1131,7 @@ void Template_template_instantiates_itself(void);
 void Template_template_instantiates_itself_w_stop_condition(void);
 
 // Testsuite 'Mut'
+void Mut_setup(void);
 void Mut_declaration(void);
 void Mut_two_members(void);
 void Mut_implicit_type(void);
@@ -1197,6 +1209,7 @@ void Mut_set_struct_from_stage(void);
 void Mut_modified_from_stage(void);
 
 // Testsuite 'Error'
+void Error_setup(void);
 void Error_missing_separator_between_components(void);
 void Error_missing_separator_between_component_and_tag(void);
 void Error_missing_separator_between_component_and_pair(void);
@@ -1987,6 +2000,7 @@ void Expr_iptr_var_mul_flt(void);
 void Expr_uptr_var_mul_flt(void);
 
 // Testsuite 'ExprAst'
+void ExprAst_setup(void);
 void ExprAst_binary_f32_var_add_f32_var(void);
 void ExprAst_binary_f32_var_add_int(void);
 void ExprAst_binary_f32_var_div_int(void);
@@ -2276,6 +2290,7 @@ void Deserialize_struct_w_value_string(void);
 void Deserialize_value_unknown_type(void);
 
 // Testsuite 'Include'
+void Include_setup(void);
 void Include_include_simple(void);
 void Include_include_cycle(void);
 void Include_include_subdir(void);
@@ -2334,6 +2349,7 @@ void Include_include_error_in_large_file_reports_position(void);
 void Include_include_missing_file_managed_sets_error_on_parent(void);
 
 // Testsuite 'Fuzzing'
+void Fuzzing_setup(void);
 void Fuzzing_1(void);
 void Fuzzing_2(void);
 void Fuzzing_3(void);
@@ -2482,6 +2498,7 @@ void Fuzzing_149(void);
 void Fuzzing_150(void);
 
 // Testsuite 'Refs'
+void Refs_setup(void);
 void Refs_ref_in_component_initializer(void);
 void Refs_ref_in_const_var(void);
 void Refs_ref_in_with_initializer(void);
@@ -2616,6 +2633,7 @@ void Refs_wait_for_has_unresolved_entity(void);
 void Refs_has_ref_resolve_observer_on_add(void);
 
 // Testsuite 'Reactivity'
+void Reactivity_setup(void);
 void Reactivity_external_inputs_are_isolated(void);
 void Reactivity_script_update_recreates_observers(void);
 void Reactivity_annotation_follows_dependent_statement(void);
@@ -2755,6 +2773,7 @@ void Reactivity_conditional_pair_w_named_initializer_toggles(void);
 void Reactivity_conditional_component_w_named_initializer_on_entity(void);
 
 // Testsuite 'ConstVar'
+void ConstVar_setup(void);
 void ConstVar_get_bool(void);
 void ConstVar_get_char(void);
 void ConstVar_get_byte(void);
@@ -2799,6 +2818,7 @@ void ConstVar_get_from_stage(void);
 void ConstVar_get_struct_from_stage(void);
 
 // Testsuite 'Lenient'
+void Lenient_setup(void);
 void Lenient_unknown_tag(void);
 void Lenient_unknown_component_w_value(void);
 void Lenient_unknown_component_w_nested_value(void);
@@ -2833,6 +2853,7 @@ void Lenient_strict_unknown_prop_type_errors(void);
 void Lenient_managed_script_lenient_after_table_change(void);
 
 // Testsuite 'StructInheritance'
+void StructInheritance_setup(void);
 void StructInheritance_block_syntax(void);
 void StructInheritance_paren_syntax(void);
 void StructInheritance_paren_syntax_space_before_paren(void);
@@ -2894,6 +2915,7 @@ void StructInheritance_assign_unrelated_struct_fails(void);
 void StructInheritance_assign_unrelated_struct_prop_fails(void);
 
 // Testsuite 'TemplateInheritance'
+void TemplateInheritance_setup(void);
 void TemplateInheritance_base_template_prop(void);
 void TemplateInheritance_base_template_two_props(void);
 void TemplateInheritance_base_template_no_own_props(void);
@@ -2943,6 +2965,7 @@ void TemplateInheritance_const_after_prop_in_derived(void);
 void TemplateInheritance_derived_from_template_w_captured_const(void);
 
 // Testsuite 'TemplateProp'
+void TemplateProp_setup(void);
 void TemplateProp_prop_template_type(void);
 void TemplateProp_prop_template_type_default(void);
 void TemplateProp_prop_template_type_default_initializer(void);
@@ -3033,6 +3056,21 @@ void TemplateProp_interface_prop_unknown_member_fails(void);
 void TemplateProp_bool_prop_mul_flt_member(void);
 void TemplateProp_bool_prop_in_flt_member_initializer(void);
 void TemplateProp_bool_prop_mul_flt_member_const(void);
+
+// Testsuite 'Scenario'
+void Scenario_setup(void);
+void Scenario_rocket_instantiate(void);
+void Scenario_rocket_partial_loaded(void);
+void Scenario_rocket_partial_fuel(void);
+void Scenario_rocket_partial_engines(void);
+void Scenario_rocket_partial_valid_toggle_twice(void);
+void Scenario_rocket_many_instances_independent(void);
+void Scenario_bunny_partial_value(void);
+void Scenario_bunny_partial_branch(void);
+void Scenario_gauge_partial_text_and_frac(void);
+void Scenario_nested_template_reeval_keeps_children(void);
+void Scenario_template_tree_annotation_applies_to_instances(void);
+void Scenario_ir_and_ast_instances_coexist(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -5726,6 +5764,26 @@ bake_test_case Eval_testcases[] = {
     {
         "module_stmt_at_end_of_script",
         Eval_module_stmt_at_end_of_script
+    },
+    {
+        "ir_managed_script_desc",
+        Eval_ir_managed_script_desc
+    },
+    {
+        "ir_eval_desc",
+        Eval_ir_eval_desc
+    },
+    {
+        "ir_to_str",
+        Eval_ir_to_str
+    },
+    {
+        "ir_managed_script_update_keeps_runtime",
+        Eval_ir_managed_script_update_keeps_runtime
+    },
+    {
+        "string_interpolation_of_scalar_types",
+        Eval_string_interpolation_of_scalar_types
     }
 };
 
@@ -15011,14 +15069,112 @@ bake_test_case TemplateProp_testcases[] = {
     }
 };
 
+bake_test_case Scenario_testcases[] = {
+    {
+        "rocket_instantiate",
+        Scenario_rocket_instantiate
+    },
+    {
+        "rocket_partial_loaded",
+        Scenario_rocket_partial_loaded
+    },
+    {
+        "rocket_partial_fuel",
+        Scenario_rocket_partial_fuel
+    },
+    {
+        "rocket_partial_engines",
+        Scenario_rocket_partial_engines
+    },
+    {
+        "rocket_partial_valid_toggle_twice",
+        Scenario_rocket_partial_valid_toggle_twice
+    },
+    {
+        "rocket_many_instances_independent",
+        Scenario_rocket_many_instances_independent
+    },
+    {
+        "bunny_partial_value",
+        Scenario_bunny_partial_value
+    },
+    {
+        "bunny_partial_branch",
+        Scenario_bunny_partial_branch
+    },
+    {
+        "gauge_partial_text_and_frac",
+        Scenario_gauge_partial_text_and_frac
+    },
+    {
+        "nested_template_reeval_keeps_children",
+        Scenario_nested_template_reeval_keeps_children
+    },
+    {
+        "template_tree_annotation_applies_to_instances",
+        Scenario_template_tree_annotation_applies_to_instances
+    },
+    {
+        "ir_and_ast_instances_coexist",
+        Scenario_ir_and_ast_instances_coexist
+    }
+};
+
+const char* Eval_ir_param[] = {"disabled", "enabled"};
+bake_test_param Eval_params[] = {
+    {"ir", (char**)Eval_ir_param, 2}
+};
+
+const char* Collection_ir_param[] = {"disabled", "enabled"};
+bake_test_param Collection_params[] = {
+    {"ir", (char**)Collection_ir_param, 2}
+};
+
+const char* Await_ir_param[] = {"disabled", "enabled"};
+bake_test_param Await_params[] = {
+    {"ir", (char**)Await_ir_param, 2}
+};
+
+const char* TryCatch_ir_param[] = {"disabled", "enabled"};
+bake_test_param TryCatch_params[] = {
+    {"ir", (char**)TryCatch_ir_param, 2}
+};
+
+const char* Function_ir_param[] = {"disabled", "enabled"};
+bake_test_param Function_params[] = {
+    {"ir", (char**)Function_ir_param, 2}
+};
+
+const char* Template_ir_param[] = {"disabled", "enabled"};
+bake_test_param Template_params[] = {
+    {"ir", (char**)Template_ir_param, 2}
+};
+
+const char* Mut_ir_param[] = {"disabled", "enabled"};
+bake_test_param Mut_params[] = {
+    {"ir", (char**)Mut_ir_param, 2}
+};
+
+const char* Error_ir_param[] = {"disabled", "enabled"};
+bake_test_param Error_params[] = {
+    {"ir", (char**)Error_ir_param, 2}
+};
+
 const char* Format_folding_param[] = {"enabled", "disabled"};
 bake_test_param Format_params[] = {
     {"folding", (char**)Format_folding_param, 2}
 };
 
 const char* Expr_folding_param[] = {"enabled", "disabled"};
+const char* Expr_ir_param[] = {"disabled", "enabled"};
 bake_test_param Expr_params[] = {
-    {"folding", (char**)Expr_folding_param, 2}
+    {"folding", (char**)Expr_folding_param, 2},
+    {"ir", (char**)Expr_ir_param, 2}
+};
+
+const char* ExprAst_ir_param[] = {"disabled", "enabled"};
+bake_test_param ExprAst_params[] = {
+    {"ir", (char**)ExprAst_ir_param, 2}
 };
 
 const char* Deserialize_folding_param[] = {"enabled", "disabled"};
@@ -15026,62 +15182,128 @@ bake_test_param Deserialize_params[] = {
     {"folding", (char**)Deserialize_folding_param, 2}
 };
 
+const char* Include_ir_param[] = {"disabled", "enabled"};
+bake_test_param Include_params[] = {
+    {"ir", (char**)Include_ir_param, 2}
+};
+
+const char* Fuzzing_ir_param[] = {"disabled", "enabled"};
+bake_test_param Fuzzing_params[] = {
+    {"ir", (char**)Fuzzing_ir_param, 2}
+};
+
+const char* Refs_ir_param[] = {"disabled", "enabled"};
+bake_test_param Refs_params[] = {
+    {"ir", (char**)Refs_ir_param, 2}
+};
+
+const char* Reactivity_ir_param[] = {"disabled", "enabled"};
+bake_test_param Reactivity_params[] = {
+    {"ir", (char**)Reactivity_ir_param, 2}
+};
+
+const char* ConstVar_ir_param[] = {"disabled", "enabled"};
+bake_test_param ConstVar_params[] = {
+    {"ir", (char**)ConstVar_ir_param, 2}
+};
+
+const char* Lenient_ir_param[] = {"disabled", "enabled"};
+bake_test_param Lenient_params[] = {
+    {"ir", (char**)Lenient_ir_param, 2}
+};
+
+const char* StructInheritance_ir_param[] = {"disabled", "enabled"};
+bake_test_param StructInheritance_params[] = {
+    {"ir", (char**)StructInheritance_ir_param, 2}
+};
+
+const char* TemplateInheritance_ir_param[] = {"disabled", "enabled"};
+bake_test_param TemplateInheritance_params[] = {
+    {"ir", (char**)TemplateInheritance_ir_param, 2}
+};
+
+const char* TemplateProp_ir_param[] = {"disabled", "enabled"};
+bake_test_param TemplateProp_params[] = {
+    {"ir", (char**)TemplateProp_ir_param, 2}
+};
+
+const char* Scenario_ir_param[] = {"disabled", "enabled"};
+bake_test_param Scenario_params[] = {
+    {"ir", (char**)Scenario_ir_param, 2}
+};
+
 static bake_test_suite suites[] = {
     {
         "Eval",
+        Eval_setup,
         NULL,
-        NULL,
-        673,
-        Eval_testcases
+        678,
+        Eval_testcases,
+        1,
+        Eval_params
     },
     {
         "Collection",
-        NULL,
+        Collection_setup,
         NULL,
         101,
-        Collection_testcases
+        Collection_testcases,
+        1,
+        Collection_params
     },
     {
         "Await",
-        NULL,
+        Await_setup,
         NULL,
         57,
-        Await_testcases
+        Await_testcases,
+        1,
+        Await_params
     },
     {
         "TryCatch",
-        NULL,
+        TryCatch_setup,
         NULL,
         36,
-        TryCatch_testcases
+        TryCatch_testcases,
+        1,
+        TryCatch_params
     },
     {
         "Function",
-        NULL,
+        Function_setup,
         NULL,
         83,
-        Function_testcases
+        Function_testcases,
+        1,
+        Function_params
     },
     {
         "Template",
-        NULL,
+        Template_setup,
         NULL,
         149,
-        Template_testcases
+        Template_testcases,
+        1,
+        Template_params
     },
     {
         "Mut",
-        NULL,
+        Mut_setup,
         NULL,
         75,
-        Mut_testcases
+        Mut_testcases,
+        1,
+        Mut_params
     },
     {
         "Error",
+        Error_setup,
         NULL,
-        NULL,
-        224,
-        Error_testcases
+        225,
+        Error_testcases,
+        1,
+        Error_params
     },
     {
         "Format",
@@ -15098,15 +15320,17 @@ static bake_test_suite suites[] = {
         NULL,
         409,
         Expr_testcases,
-        1,
+        2,
         Expr_params
     },
     {
         "ExprAst",
-        NULL,
+        ExprAst_setup,
         NULL,
         9,
-        ExprAst_testcases
+        ExprAst_testcases,
+        1,
+        ExprAst_params
     },
     {
         "Vars",
@@ -15133,69 +15357,96 @@ static bake_test_suite suites[] = {
     },
     {
         "Include",
-        NULL,
+        Include_setup,
         NULL,
         56,
-        Include_testcases
+        Include_testcases,
+        1,
+        Include_params
     },
     {
         "Fuzzing",
-        NULL,
+        Fuzzing_setup,
         NULL,
         146,
-        Fuzzing_testcases
+        Fuzzing_testcases,
+        1,
+        Fuzzing_params
     },
     {
         "Refs",
-        NULL,
+        Refs_setup,
         NULL,
         132,
-        Refs_testcases
+        Refs_testcases,
+        1,
+        Refs_params
     },
     {
         "Reactivity",
-        NULL,
+        Reactivity_setup,
         NULL,
         137,
-        Reactivity_testcases
+        Reactivity_testcases,
+        1,
+        Reactivity_params
     },
     {
         "ConstVar",
-        NULL,
+        ConstVar_setup,
         NULL,
         42,
-        ConstVar_testcases
+        ConstVar_testcases,
+        1,
+        ConstVar_params
     },
     {
         "Lenient",
-        NULL,
+        Lenient_setup,
         NULL,
         32,
-        Lenient_testcases
+        Lenient_testcases,
+        1,
+        Lenient_params
     },
     {
         "StructInheritance",
-        NULL,
+        StructInheritance_setup,
         NULL,
         59,
-        StructInheritance_testcases
+        StructInheritance_testcases,
+        1,
+        StructInheritance_params
     },
     {
         "TemplateInheritance",
-        NULL,
+        TemplateInheritance_setup,
         NULL,
         47,
-        TemplateInheritance_testcases
+        TemplateInheritance_testcases,
+        1,
+        TemplateInheritance_params
     },
     {
         "TemplateProp",
-        NULL,
+        TemplateProp_setup,
         NULL,
         90,
-        TemplateProp_testcases
+        TemplateProp_testcases,
+        1,
+        TemplateProp_params
+    },
+    {
+        "Scenario",
+        Scenario_setup,
+        NULL,
+        12,
+        Scenario_testcases,
+        1,
+        Scenario_params
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 23);
+    return bake_test_run("script", argc, argv, suites, 24);
 }

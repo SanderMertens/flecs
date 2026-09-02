@@ -8,3 +8,4 @@ void install_test_abort(void) {
     ecs_os_set_api(&os_api);
     ecs_log_set_level(-5);
 }
+

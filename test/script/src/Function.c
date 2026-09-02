@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void Function_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 void Function_simple(void) {
     ecs_world_t *world = ecs_init();
 
@@ -15,7 +24,7 @@ void Function_simple(void) {
     HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
     LINE "Foo { Position: {add(2, 3), add(10, 20)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -45,7 +54,7 @@ void Function_newline_before_scope(void) {
     LINE "}"
     LINE "Foo { Position: {add(2, 3), add(10, 20)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -73,7 +82,7 @@ void Function_newline_before_return_type_operator(void) {
     LINE "  -> i32 { a + b }"
     LINE "Foo { Position: {add(2, 3), add(10, 20)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -101,7 +110,7 @@ void Function_newline_after_return_type_operator(void) {
     LINE "  i32 { a + b }"
     LINE "Foo { Position: {add(2, 3), add(10, 20)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -128,7 +137,7 @@ void Function_no_args(void) {
     HEAD "fn five() -> i32 { 5 }"
     LINE "Foo { Position: {five(), five()} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -159,7 +168,7 @@ void Function_with_locals(void) {
     LINE "}"
     LINE "Foo { Position: {poly(3), poly(2)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -186,7 +195,7 @@ void Function_called_multiple_times(void) {
     HEAD "fn dbl(a: i32) -> i32 { a + a }"
     LINE "Foo { Position: {dbl(3), dbl(7)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -205,7 +214,7 @@ void Function_missing_return_expr(void) {
     HEAD "fn bad(a: i32) -> i32 { const x: i32 = a }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -226,7 +235,7 @@ void Function_nested(void) {
     LINE "fn add3(a: i32, b: i32, c: i32) -> i32 { add(add(a, b), c) }"
     LINE "Foo { Position: {add3(1, 2, 3), add3(10, 20, 30)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -259,7 +268,7 @@ void Function_string_arg(void) {
     LINE "}"
     LINE "Foo { Position: {len(\"a\"), len(\"abc\")} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -331,7 +340,7 @@ void Function_string_return(void) {
     LINE "}"
     LINE "Foo { FnStrings: {pick(0), pick(1)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -367,7 +376,7 @@ void Function_string_arg_and_return(void) {
     HEAD "fn echo(s: string) -> string { s }"
     LINE "Foo { FnStrings: {echo(\"hello\"), echo(\"world\")} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -395,7 +404,7 @@ void Function_struct_arg(void) {
     LINE "const a: Position = {3, 4}"
     LINE "Foo { Position: {sum(a), sum(a) * 2} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -423,7 +432,7 @@ void Function_struct_return(void) {
     LINE "const r = make(10, 20)"
     LINE "Foo { Position: {r.x, r.y} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -455,7 +464,7 @@ void Function_struct_arg_and_return(void) {
     LINE "const r = add_pos(a, b)"
     LINE "Foo { Position: {r.x, r.y} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -487,7 +496,7 @@ void Function_recursion(void) {
     LINE "}"
     LINE "Foo { Position: {factorial(5), factorial(6)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -506,7 +515,7 @@ void Function_undefined_var_in_body(void) {
     HEAD "fn bad(a: i32) -> i32 { a + nope }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -523,7 +532,7 @@ void Function_runtime_error_propagation(void) {
     LINE "const r = pick(2)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -549,7 +558,7 @@ void Function_match_expr(void) {
     LINE "}"
     LINE "Foo { Position: {classify(0), classify(2)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -568,7 +577,7 @@ void Function_missing_arrow(void) {
     HEAD "fn add(a: i32, b: i32) i32 { a + b }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -580,7 +589,7 @@ void Function_missing_return_type(void) {
     HEAD "fn add(a: i32, b: i32) -> { a + b }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -592,7 +601,7 @@ void Function_missing_colon_in_param(void) {
     HEAD "fn add(a i32, b: i32) -> i32 { a + b }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -604,7 +613,7 @@ void Function_missing_close_paren(void) {
     HEAD "fn add(a: i32, b: i32 -> i32 { a + b }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -624,7 +633,7 @@ void Function_trailing_comma_in_params(void) {
     HEAD "fn add(a: i32, b: i32,) -> i32 { a + b }"
     LINE "Foo { Position: {add(1, 2), add(3, 4)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -643,7 +652,7 @@ void Function_unclosed_body(void) {
     HEAD "fn add(a: i32) -> i32 { a";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -655,7 +664,7 @@ void Function_empty_body(void) {
     HEAD "fn add(a: i32) -> i32 { }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -670,7 +679,7 @@ void Function_non_const_stmt_in_body(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -683,7 +692,7 @@ void Function_fn_as_identifier(void) {
     LINE "myfn {}"
     LINE "fn_var {}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "fnord") != 0);
     test_assert(ecs_lookup(world, "myfn") != 0);
@@ -710,7 +719,7 @@ void Function_fn_in_entity_scope(void) {
     LINE "}"
     LINE "OutScope { Position: {Foo.add(5, 6), Foo.add(7, 8)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t inscope = ecs_lookup(world, "Foo.InScope");
     test_assert(inscope != 0);
@@ -738,7 +747,7 @@ void Function_fn_in_template(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -750,7 +759,7 @@ void Function_unresolved_param_type(void) {
     HEAD "fn f(a: NoSuchType) -> i32 { 1 }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -762,7 +771,7 @@ void Function_unresolved_return_type(void) {
     HEAD "fn f(a: i32) -> NoSuchType { 1 }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -774,7 +783,7 @@ void Function_duplicate_param(void) {
     HEAD "fn f(a: i32, a: i32) -> i32 { a }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -789,7 +798,7 @@ void Function_const_missing_initializer(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -804,7 +813,7 @@ void Function_const_unresolved_type(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -820,7 +829,7 @@ void Function_const_redeclared(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -838,7 +847,7 @@ void Function_too_many_params(void) {
     LINE ") -> i32 { a0 }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -851,7 +860,7 @@ void Function_too_few_args(void) {
     LINE "const r = add(1)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -864,7 +873,7 @@ void Function_too_many_args(void) {
     LINE "const r = add(1, 2, 3)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -877,7 +886,7 @@ void Function_wrong_arg_type(void) {
     LINE "const r = echo(Foo)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -889,7 +898,7 @@ void Function_undefined_fn(void) {
     HEAD "const r = nofn(1, 2)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -902,7 +911,7 @@ void Function_forward_reference(void) {
     LINE "fn g(a: i32) -> i32 { a + 1 }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -922,7 +931,7 @@ void Function_fn_in_module(void) {
     HEAD "module M"
     LINE "fn add(a: i32, b: i32) -> i32 { a + b }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t add = ecs_lookup(world, "M.add");
     test_assert(add != 0);
@@ -947,12 +956,12 @@ void Function_fn_in_module_qualified_call(void) {
     HEAD "module M"
     LINE "fn add(a: i32, b: i32) -> i32 { a + b }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     const char *call =
     HEAD "Foo { Position: {M.add(1, 2), M.add(10, 20)} }";
 
-    test_assert(ecs_script_run(world, NULL, call, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, call, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -979,13 +988,13 @@ void Function_fn_in_module_w_using(void) {
     HEAD "module M"
     LINE "fn add(a: i32, b: i32) -> i32 { a + b }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     const char *call =
     HEAD "using M"
     LINE "Foo { Position: {add(1, 2), add(10, 20)} }";
 
-    test_assert(ecs_script_run(world, NULL, call, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, call, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1012,14 +1021,14 @@ void Function_fn_in_namespace_called_from_fn_w_using(void) {
     HEAD "module foo"
     LINE "fn sum(a: i32, b: i32) -> i32 { a + b }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     const char *call =
     HEAD "using foo"
     LINE "fn test(a: i32, b: i32) -> i32 { sum(a, b) }"
     LINE "Foo { Position: {test(1, 2), test(10, 20)} }";
 
-    test_assert(ecs_script_run(world, NULL, call, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, call, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1046,14 +1055,14 @@ void Function_fn_in_nested_namespace_called_from_fn_w_using(void) {
     HEAD "module foo.bar"
     LINE "fn sum(a: i32, b: i32) -> i32 { a + b }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     const char *call =
     HEAD "using foo"
     LINE "fn test(a: i32, b: i32) -> i32 { bar.sum(a, b) }"
     LINE "Foo { Position: {test(1, 2), test(10, 20)} }";
 
-    test_assert(ecs_script_run(world, NULL, call, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, call, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1080,7 +1089,7 @@ void Function_f32_arg_and_return(void) {
     HEAD "fn half(a: f32) -> f32 { a / 2 }"
     LINE "Foo { Position: {half(10), half(3)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1108,7 +1117,7 @@ void Function_f64_arg_and_return(void) {
     HEAD "fn dbl(a: f64) -> f64 { a + a }"
     LINE "Foo { PositionD: {dbl(1.5), dbl(2.25)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1136,7 +1145,7 @@ void Function_bool_arg_and_return(void) {
     HEAD "fn is_zero(i: i32) -> bool { i == 0 }"
     LINE "Foo { BoolPair: {is_zero(0), is_zero(1)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1166,7 +1175,7 @@ void Function_entity_arg_and_return(void) {
     LINE "fn identity(e: entity) -> entity { e }"
     LINE "Foo { EntPair: {identity(Alpha), identity(Beta)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t alpha = ecs_lookup(world, "Alpha");
     ecs_entity_t beta = ecs_lookup(world, "Beta");
@@ -1212,7 +1221,7 @@ void Function_enum_arg_and_return(void) {
     LINE "}"
     LINE "Foo { Position: {to_int(Red), to_int(Blue)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1246,7 +1255,7 @@ void Function_bitmask_arg_and_return(void) {
     HEAD "fn to_int(t: Toppings) -> i32 { t + 0 }"
     LINE "Foo { Position: {to_int(Lettuce|Bacon), to_int(Tomato)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1273,7 +1282,7 @@ void Function_mixed_int_arg_float_return(void) {
     HEAD "fn to_f32(a: i32) -> f32 { a + 0.5 }"
     LINE "Foo { Position: {to_f32(1), to_f32(4)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1310,7 +1319,7 @@ void Function_nested_struct_arg(void) {
     LINE "const r = pass(v)"
     LINE "Foo { Line: {start: {r.start.x, r.start.y}, stop: {r.stop.x, r.stop.y}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1340,7 +1349,7 @@ void Function_array_arg(void) {
     LINE "const r = ident(v)"
     LINE "Foo { Vec3F: r }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1378,7 +1387,7 @@ void Function_struct_with_string_return(void) {
     LINE "const r = make()"
     LINE "Foo { FnStrings: {r.a, r.b} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1405,7 +1414,7 @@ void Function_call_in_arithmetic(void) {
     HEAD "fn five() -> i32 { 5 }"
     LINE "Foo { Position: {five() + 1, five() * 2} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1438,7 +1447,7 @@ void Function_call_in_match_value(void) {
     LINE "}"
     LINE "Foo { Position: {pick(0), pick(1)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1467,7 +1476,7 @@ void Function_call_in_if_condition(void) {
     LINE "    Foo { Position: {1, 2} }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1496,7 +1505,7 @@ void Function_call_in_for_body(void) {
     LINE "    \"e_{i}\" { Position: {val(i), val(i) + 1} }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e0 = ecs_lookup(world, "e_0");
     ecs_entity_t e1 = ecs_lookup(world, "e_1");
@@ -1530,7 +1539,7 @@ void Function_call_in_const_rhs(void) {
     LINE "const y = add(10, 20)"
     LINE "Foo { Position: {x, y} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1548,7 +1557,7 @@ void Function_call_via_expr_run(void) {
     const char *expr =
     HEAD "fn add(a: i32, b: i32) -> i32 { a + b }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_value_t v = {0};
     ecs_expr_eval_desc_t desc = {0};
@@ -1563,8 +1572,8 @@ void Function_call_via_expr_run(void) {
 void Function_call(void) {
     ecs_world_t *world = ecs_init();
 
-    test_int(ecs_script_run(world, NULL,
-        "fn add(a: i32, b: i32) -> i32 { a + b }", NULL), 0);
+    test_int(ecs_script_run_w_desc(world, NULL,
+        "fn add(a: i32, b: i32) -> i32 { a + b }", &ir_desc, NULL), 0);
 
     ecs_entity_t function = ecs_lookup(world, "add");
     test_assert(function != 0);
@@ -1608,7 +1617,7 @@ void Function_call_w_using(void) {
     LINE "    new { logistics.Carrier: { home: parent } }"
     LINE "}";
 
-    test_int(ecs_script_run(world, NULL, expr, NULL), 0);
+    test_int(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL), 0);
 
     ecs_entity_t function = ecs_lookup(world, "create");
     test_assert(function != 0);
@@ -1654,7 +1663,7 @@ void Function_call_w_using_nested(void) {
     LINE "    new { Carrier: { home: parent } }"
     LINE "}";
 
-    test_int(ecs_script_run(world, NULL, expr, NULL), 0);
+    test_int(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL), 0);
 
     ecs_entity_t function = ecs_lookup(world, "create");
     test_assert(function != 0);
@@ -1700,7 +1709,7 @@ void Function_call_w_using_wildcard(void) {
     LINE "    new { Carrier: { home: parent } }"
     LINE "}";
 
-    test_int(ecs_script_run(world, NULL, expr, NULL), 0);
+    test_int(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL), 0);
 
     ecs_entity_t function = ecs_lookup(world, "create");
     test_assert(function != 0);
@@ -1727,8 +1736,8 @@ void Function_call_w_using_wildcard(void) {
 void Function_call_from_stage(void) {
     ecs_world_t *world = ecs_init();
 
-    test_int(ecs_script_run(world, NULL,
-        "fn add(a: i32, b: i32) -> i32 { a + b }", NULL), 0);
+    test_int(ecs_script_run_w_desc(world, NULL,
+        "fn add(a: i32, b: i32) -> i32 { a + b }", &ir_desc, NULL), 0);
 
     ecs_entity_t function = ecs_lookup(world, "add");
     test_assert(function != 0);
@@ -1760,10 +1769,10 @@ void Function_call_w_new_w_different_args(void) {
         .members = {{"value", ecs_id(ecs_entity_t)}}
     });
 
-    test_int(ecs_script_run(world, NULL,
+    test_int(ecs_script_run_w_desc(world, NULL,
         "fn create(parent: entity) -> entity {\n"
         "    new _ { EntityRef: {value: parent} }\n"
-        "}", NULL), 0);
+        "}", &ir_desc, NULL), 0);
 
     ecs_entity_t function = ecs_lookup(world, "create");
     test_assert(function != 0);
@@ -1795,8 +1804,8 @@ void Function_call_w_new_w_different_args(void) {
 void Function_call_w_result(void) {
     ecs_world_t *world = ecs_init();
 
-    test_int(ecs_script_run(world, NULL,
-        "fn add(a: i32, b: i32) -> i32 { a + b }", NULL), 0);
+    test_int(ecs_script_run_w_desc(world, NULL,
+        "fn add(a: i32, b: i32) -> i32 { a + b }", &ir_desc, NULL), 0);
 
     ecs_entity_t function = ecs_lookup(world, "add");
     test_assert(function != 0);
@@ -1898,7 +1907,7 @@ void Function_to_str_roundtrip(void) {
     const char *src =
     "fn add(a: i32, b: i32) -> i32 { a + b }";
 
-    ecs_script_t *script = ecs_script_parse(world, NULL, src, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, NULL, src, &ir_desc, NULL);
     test_assert(script != NULL);
 
     char *str = ecs_script_ast_to_str(script, false);
@@ -1929,7 +1938,7 @@ void Function_arrow_no_spaces(void) {
     HEAD "fn add(a: i32, b: i32)->i32 { a + b }"
     LINE "Foo { Position: {add(1, 2), add(3, 4)} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1948,7 +1957,7 @@ void Function_arrow_split_dash_gt(void) {
     HEAD "fn add(a: i32, b: i32) - > i32 { a + b }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1966,7 +1975,7 @@ void Function_nested_runtime_error(void) {
     LINE "const r = outer(2)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1987,7 +1996,7 @@ void Function_const_runtime_error(void) {
     LINE "const r = caller(2)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -2001,7 +2010,7 @@ void Function_fn_w_hoisted_var(void) {
     HEAD "const x = 10"
     LINE "fn get_x() -> i64 { x }";
 
-    test_int(ecs_script_run(world, NULL, expr, NULL), 0);
+    test_int(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL), 0);
 
     ecs_entity_t function = ecs_lookup(world, "get_x");
     test_assert(function != 0);
@@ -2059,7 +2068,7 @@ void Function_memoized_against_args_ignores_hidden_state(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ui, sizeof(Ui), &(Ui){2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "a { Ui: {scale(source[Ui].i)} }"
@@ -2109,7 +2118,7 @@ void Function_fn_w_large_struct_param_no_leak(void) {
     const char *expr =
     HEAD "fn get_x(v: Large) -> i32 { v.x }";
 
-    test_int(ecs_script_run(world, NULL, expr, NULL), 0);
+    test_int(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL), 0);
 
     ecs_entity_t function = ecs_lookup(world, "get_x");
     test_assert(function != 0);

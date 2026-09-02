@@ -17,6 +17,10 @@ static ecs_entity_t flecs_script_component_slot_src(
     ecs_script_eval_visitor_t *v,
     const ecs_script_component_slot_t *slot);
 
+static void flecs_script_cleanup_for_scope(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_scope_t *scope);
+
 static bool flecs_script_valid_lookup_path(
     const char *path)
 {
@@ -64,7 +68,7 @@ void flecs_script_eval_error_(
     ecs_os_free(msg);
 }
 
-static ecs_value_t* flecs_script_with_append(
+ecs_value_t* flecs_script_with_append(
     ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
     const ecs_type_info_t *ti)
@@ -85,7 +89,7 @@ static ecs_value_t* flecs_script_with_append(
     return ecs_vec_get_t(&v->r->with, ecs_value_t, ecs_vec_count(&v->r->with) - 2);
 }
 
-static void flecs_script_with_set_count(
+void flecs_script_with_set_count(
     ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
     int32_t count)
@@ -114,7 +118,7 @@ static void flecs_script_with_set_count(
     ecs_vec_set_count_t(a, &v->r->with_type_info, ecs_type_info_t*, count);
 }
 
-static int32_t flecs_script_with_count(
+int32_t flecs_script_with_count(
     ecs_script_eval_visitor_t *v)
 {
     if (ecs_vec_count(&v->r->with)) {
@@ -152,7 +156,7 @@ error:
     return NULL;
 }
 
-static int32_t flecs_script_symbol_runtime_slot(
+int32_t flecs_script_symbol_runtime_slot(
     const ecs_script_eval_visitor_t *v,
     int32_t slot)
 {
@@ -452,7 +456,7 @@ bool flecs_script_can_own_entity(
     return true;
 }
 
-static void flecs_script_apply_with(
+void flecs_script_apply_with(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity)
 {
@@ -947,7 +951,7 @@ void flecs_script_eval_entity_leave(
     v->entity = state->prev_entity;
 }
 
-static ecs_entity_t flecs_script_get_src(
+ecs_entity_t flecs_script_get_src(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -962,7 +966,7 @@ static ecs_entity_t flecs_script_get_src(
     return entity;
 }
 
-static bool flecs_script_can_default_ctor(
+bool flecs_script_can_default_ctor(
     ecs_world_t *world,
     ecs_id_t component)
 {
@@ -979,7 +983,7 @@ static bool flecs_script_can_default_ctor(
     return true;
 }
 
-static void flecs_script_track_component(
+void flecs_script_track_component(
     ecs_script_eval_visitor_t *v,
     int32_t component_slot,
     ecs_id_t component)
@@ -1016,7 +1020,7 @@ static void flecs_script_track_component(
     slot->scope_slot = v->scope_slot;
 }
 
-static const ecs_script_var_t* flecs_script_template_prop_var(
+const ecs_script_var_t* flecs_script_template_prop_var(
     ecs_script_eval_visitor_t *v,
     void *node,
     int32_t sp,
@@ -1720,6 +1724,11 @@ void flecs_script_user_function_callback(
     ecs_script_user_function_t *uf = fcomp->binding_ctx;
     ecs_script_function_node_t *node = uf->node;
     ecs_script_impl_t *impl = flecs_script_impl(uf->script);
+
+    if (impl->ir_enabled) {
+        flecs_script_ir_call_function(ctx, uf, argc, argv, result);
+        return;
+    }
 
     ecs_script_eval_visitor_t v;
     ecs_script_eval_desc_t desc = {0};
@@ -2728,7 +2737,7 @@ static ecs_script_symbol_slot_t* flecs_script_runtime_symbol_slot(
     return ecs_vec_get_t(slots, ecs_script_symbol_slot_t, slot);
 }
 
-static bool flecs_script_scope_visited(
+bool flecs_script_scope_visited(
     ecs_script_eval_visitor_t *v,
     int32_t slot)
 {
@@ -2751,10 +2760,6 @@ static ecs_entity_t flecs_script_component_slot_src(
     }
     return flecs_script_get_src(v, symbol->entity, slot->component);
 }
-
-static void flecs_script_cleanup_for_scope(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_scope_t *scope);
 
 static void flecs_script_cleanup_for_node(
     ecs_script_eval_visitor_t *v,
@@ -2842,18 +2847,26 @@ static void flecs_script_cleanup_for_scope(
     }
 }
 
-void flecs_script_eval_cleanup(
+void flecs_script_cleanup_slots(
     ecs_script_eval_visitor_t *v)
 {
+    const int32_t *visited = v->scope_slots
+        ? ecs_vec_first(v->scope_slots) : NULL;
+    int32_t visited_count = v->scope_slots
+        ? ecs_vec_count(v->scope_slots) : 0;
+    int32_t visit = v->visit;
+
+#define flecs_scope_visited(slot)\
+    (!visited || (slot) < 0 || (slot) >= visited_count ||\
+        visited[slot] == visit)
+
     if (v->component_slots) {
         ecs_script_component_slot_t *slots = ecs_vec_first(
             v->component_slots);
         int32_t i, j, count = ecs_vec_count(v->component_slots);
         for (i = 0; i < count; i ++) {
             ecs_script_component_slot_t *slot = &slots[i];
-            if (!slot->component ||
-                flecs_script_scope_visited(v, slot->scope_slot))
-            {
+            if (!slot->component || flecs_scope_visited(slot->scope_slot)) {
                 continue;
             }
             ecs_entity_t src = flecs_script_component_slot_src(v, slot);
@@ -2862,7 +2875,7 @@ void flecs_script_eval_cleanup(
                 if (i == j || slots[j].component != slot->component) {
                     continue;
                 }
-                if (!flecs_script_scope_visited(v, slots[j].scope_slot)) {
+                if (!flecs_scope_visited(slots[j].scope_slot)) {
                     continue;
                 }
                 if (slots[j].entity_slot == slot->entity_slot) {
@@ -2890,7 +2903,7 @@ void flecs_script_eval_cleanup(
     int32_t i, j, count = ecs_vec_count(symbol_slots);
     for (i = 0; i < count; i ++) {
         ecs_script_symbol_slot_t *slot = &symbols[i];
-        if (!slot->entity || flecs_script_scope_visited(v, slot->scope_slot)) {
+        if (!slot->entity || flecs_scope_visited(slot->scope_slot)) {
             continue;
         }
         if (ecs_is_alive(v->world, slot->entity) &&
@@ -2903,7 +2916,7 @@ void flecs_script_eval_cleanup(
             if (i == j || symbols[j].entity != slot->entity) {
                 continue;
             }
-            if (flecs_script_scope_visited(v, symbols[j].scope_slot)) {
+            if (flecs_scope_visited(symbols[j].scope_slot)) {
                 active = true;
                 break;
             }
@@ -2913,6 +2926,13 @@ void flecs_script_eval_cleanup(
         }
         ecs_os_zeromem(slot);
     }
+#undef flecs_scope_visited
+}
+
+void flecs_script_eval_cleanup(
+    ecs_script_eval_visitor_t *v)
+{
+    flecs_script_cleanup_slots(v);
 
     ecs_script_scope_t *scope = v->instance_template
         ? v->instance_template->node->scope
@@ -2969,6 +2989,11 @@ int flecs_script_eval(
     ecs_id_t prev_tag = runtime->current_tag;
     runtime->current_tag = tag;
 
+    bool use_ir = priv_desc.ir || impl->ir_enabled;
+    if (use_ir) {
+        impl->ir_enabled = true;
+    }
+
     flecs_script_runner_init(&runner, impl, &priv_desc);
     int r = 0;
     if (!impl->compiled) {
@@ -2995,7 +3020,11 @@ int flecs_script_eval(
             impl->visit ++;
         }
         flecs_script_eval_begin(&runner.v, input, impl->visit);
-        if (flecs_script_runner_run_scope(&runner, impl->root) !=
+        if (use_ir) {
+            if (flecs_script_ir_eval_root(&runner.v, impl)) {
+                r = -1;
+            }
+        } else if (flecs_script_runner_run_scope(&runner, impl->root) !=
             FlecsScriptRunDone)
         {
             r = -1;

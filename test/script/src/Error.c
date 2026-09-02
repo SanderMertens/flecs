@@ -1,6 +1,15 @@
 #include <script.h>
 #include "../../../src/addons/script/script.h"
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void Error_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 static char *os_stub_log_message = NULL;
 
 static void os_stub_log_callback(
@@ -91,7 +100,7 @@ void Error_multi_line_comment_after_newline_before_newline_scope_open(void) {
 
     ecs_log_set_level(-4); /* Newline after multiline comment is not ignored */
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -112,7 +121,7 @@ void Error_unterminated_multi_line_comment_after_line_comment(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -129,7 +138,7 @@ void Error_missing_end_of_scope(void) {
     LINE " Child {}";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -163,7 +172,7 @@ void Error_with_n_tags_2_levels_invalid_tag(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 5);
     ecs_os_free(result.error);
@@ -179,7 +188,7 @@ void Error_assignment_to_non_component(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -197,7 +206,7 @@ void Error_struct_w_member_w_assignment_to_nothing(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -215,7 +224,7 @@ void Error_struct_w_member_w_assignment_to_empty_scope(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -232,7 +241,7 @@ void Error_invalid_nested_assignment(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -248,7 +257,7 @@ void Error_invalid_partial_pair_assignment(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -264,7 +273,7 @@ void Error_empty_assignment(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -280,7 +289,7 @@ void Error_empty_assignment_before_end_of_scope(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -302,7 +311,7 @@ void Error_invalid_oneof(void) {
     LINE "e { (Color, Foo) }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 6);
     ecs_os_free(result.error);
@@ -337,7 +346,7 @@ void Error_unterminated_multiline_string(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -352,7 +361,7 @@ void Error_unterminated_string_ending_with_backslash(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -375,7 +384,7 @@ void Error_invalid_assign_multiline_string(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -392,7 +401,7 @@ void Error_const_var_redeclare(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -418,7 +427,7 @@ void Error_typed_const_w_composite_type_invalid_assignment(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -448,7 +457,7 @@ void Error_unterminated_multi_line_comment_in_value(void) {
     LINE "}}";
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 6);
     ecs_os_free(result.error);
@@ -471,7 +480,7 @@ void Error_pair_w_rel_var_invalid_type(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 6);
     ecs_os_free(result.error);
@@ -494,7 +503,7 @@ void Error_pair_w_tgt_var_invalid_type(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 6);
     ecs_os_free(result.error);
@@ -513,7 +522,7 @@ void Error_with_value_not_a_component(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -542,7 +551,7 @@ void Error_tag_in_with_scope(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 4);
     ecs_os_free(result.error);
@@ -567,7 +576,7 @@ void Error_tag_in_with_scope_2(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 5);
     ecs_os_free(result.error);
@@ -593,7 +602,7 @@ void Error_pair_tag_in_with_scope_2(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -622,7 +631,7 @@ void Error_component_in_with_scope(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 4);
     ecs_os_free(result.error);
@@ -670,7 +679,7 @@ void Error_component_in_with_scope_2(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 5);
     ecs_os_free(result.error);
@@ -703,7 +712,7 @@ void Error_component_in_with_scope_3(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 6);
     ecs_os_free(result.error);
@@ -738,7 +747,7 @@ void Error_component_in_with_scope_4(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 8);
     ecs_os_free(result.error);
@@ -774,7 +783,7 @@ void Error_component_in_with_scope_5(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 9);
     ecs_os_free(result.error);
@@ -811,7 +820,7 @@ void Error_component_in_with_in_template(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 5);
     ecs_os_free(result.error);
@@ -851,7 +860,7 @@ void Error_component_in_with_scope_nested(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 6);
     ecs_os_free(result.error);
@@ -881,7 +890,7 @@ void Error_component_in_with_scope_after_entity(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -920,7 +929,7 @@ void Error_assign_after_with_in_scope(void) {
     LINE "}\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -959,7 +968,7 @@ void Error_not_an_array_component(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -983,7 +992,7 @@ void Error_array_component_w_curly_brackets(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -1003,7 +1012,7 @@ void Error_unknown_identifier(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 5);
     ecs_os_free(result.error);
@@ -1023,7 +1032,7 @@ void Error_unknown_identifier_for_int_field(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 5);
     ecs_os_free(result.error);
@@ -1041,7 +1050,7 @@ void Error_tag_not_found(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -1059,7 +1068,7 @@ void Error_component_not_found(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -1079,7 +1088,7 @@ void Error_pair_first_not_found(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -1099,7 +1108,7 @@ void Error_pair_second_not_found(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -1117,7 +1126,7 @@ void Error_kind_not_found(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -1135,7 +1144,7 @@ void Error_base_not_found(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -1152,7 +1161,7 @@ void Error_entity_w_anonymous_tag(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     });
@@ -1180,7 +1189,7 @@ void Error_member_expr_without_value_end_of_scope(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, "Position(x:)", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "Position(x:)", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -1203,7 +1212,7 @@ void Error_member_expr_without_value_comma(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, "Position(x:,0)", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "Position(x:,0)", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -1226,7 +1235,7 @@ void Error_member_expr_without_value_newline(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, "Position(x:\n)", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "Position(x:\n)", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -1249,7 +1258,7 @@ void Error_2_member_expr_without_value(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, "Position(x:y:)", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "Position(x:y:)", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -1272,7 +1281,7 @@ void Error_expr_junk_after_number(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, "Position(0abc)", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "Position(0abc)", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -1295,7 +1304,7 @@ void Error_expr_junk_after_unary_minus(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, "Position(-abc)", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "Position(-abc)", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -1318,7 +1327,7 @@ void Error_expr_comma_after_nothing(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, "Position(,)", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "Position(,)", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -1341,7 +1350,7 @@ void Error_expr_digit_with_two_dots(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, "Position(10.10.10)", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "Position(10.10.10)", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -1357,7 +1366,7 @@ void Error_template_empty(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -1376,7 +1385,7 @@ void Error_template_unresolved_tag(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -1397,7 +1406,7 @@ void Error_template_unresolved_component(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -1417,7 +1426,7 @@ void Error_template_unresolved_pair_relationship(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -1437,7 +1446,7 @@ void Error_template_unresolved_pair_target(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -1457,7 +1466,7 @@ void Error_template_unresolved_with_tag(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -1481,7 +1490,7 @@ void Error_template_unresolved_with_component(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 5);
     ecs_os_free(result.error);
@@ -1502,7 +1511,7 @@ void Error_template_unresolved_with_pair_relationship(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -1523,7 +1532,7 @@ void Error_template_unresolved_with_pair_target(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -1544,7 +1553,7 @@ void Error_template_unresolved_tag_in_child(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -1572,7 +1581,7 @@ void Error_template_prop_no_type(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -1603,7 +1612,7 @@ void Error_template_w_composite_prop_invalid_assignment(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -1625,7 +1634,7 @@ void Error_template_redeclare_prop_as_const(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 8);
     ecs_os_free(result.error);
@@ -1647,7 +1656,7 @@ void Error_template_redeclare_prop_as_prop(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 8);
     ecs_os_free(result.error);
@@ -1669,7 +1678,7 @@ void Error_template_redeclare_const_as_const(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 8);
     ecs_os_free(result.error);
@@ -1692,7 +1701,7 @@ void Error_run_template_after_error(void) {
     LINE "  Fo"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     {
         ecs_entity_t tree = ecs_lookup(world, "Tree");
@@ -1703,7 +1712,7 @@ void Error_run_template_after_error(void) {
     }
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr_err, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_err, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     /* Because script is not managed, entiites created by script aren't deleted */
@@ -1716,7 +1725,7 @@ void Error_run_template_after_error(void) {
         test_assert(foo != 0);
     }
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     {
         ecs_entity_t tree = ecs_lookup(world, "Tree");
@@ -1744,7 +1753,7 @@ void Error_update_template_after_error(void) {
     LINE "  Fo"
     LINE "}";
 
-    ecs_entity_t s = ecs_script(world, { .code = expr });
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code = expr });
     test_assert(s != 0);
 
     {
@@ -1791,7 +1800,7 @@ void Error_template_in_template(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -1815,7 +1824,7 @@ void Error_unterminated_binary(void) {
 void Error_reload_script_w_component_w_error(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code =
             "struct Position(x: f32, y: f32)\n"
             "\n"
@@ -1844,7 +1853,7 @@ void Error_reload_script_w_component_w_error(void) {
 void Error_reload_script_w_component_w_error_again(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code =
             "struct Position(x: f32, y: f32)\n"
             "\n"
@@ -1901,7 +1910,7 @@ void Error_template_w_invalid_var_in_expr(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 4);
     ecs_os_free(result.error);
@@ -1954,7 +1963,7 @@ void Error_script_initializer_w_int_to_struct(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -1970,7 +1979,7 @@ void Error_capture_error(void) {
     LINE " Child {}";
 
     ecs_script_eval_result_t result = {0};
-    ecs_script_t *script = ecs_script_parse(world, "foo", expr, NULL, &result);
+    ecs_script_t *script = ecs_script_parse(world, "foo", expr, &ir_desc, &result);
     test_assert(script == NULL);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
@@ -1990,7 +1999,7 @@ void Error_unresolved_component_error_w_script_run(void) {
     ecs_log_set_level(-4);
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -2008,7 +2017,7 @@ void Error_unresolved_component_error_w_script_init(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code = expr
     });
 
@@ -2033,13 +2042,13 @@ void Error_unresolved_component_error_w_script_init_existing(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code = ""
     });
 
     test_assert(s != 0);
 
-    ecs_entity_t r = ecs_script(world, {
+    ecs_entity_t r = ecs_script(world, { .ir = ir_enabled,
         .entity = s,
         .code = expr
     });
@@ -2066,12 +2075,12 @@ void Error_unresolved_component_error_w_script_eval(void) {
     LINE "}";
 
     ecs_script_eval_result_t result = {0};
-    ecs_script_t *script = ecs_script_parse(world, "foo", expr, NULL, &result);
+    ecs_script_t *script = ecs_script_parse(world, "foo", expr, &ir_desc, &result);
 
     test_assert(script != NULL);
     test_assert(result.error == NULL);
 
-    int r = ecs_script_eval(script, NULL, &result);
+    int r = ecs_script_eval(script, &ir_desc, &result);
     test_assert(r != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
@@ -2091,18 +2100,18 @@ void Error_unresolved_component_error_w_script_eval_multiple_times(void) {
     LINE "}";
 
     ecs_script_eval_result_t result = {0};
-    ecs_script_t *script = ecs_script_parse(world, "foo", expr, NULL, &result);
+    ecs_script_t *script = ecs_script_parse(world, "foo", expr, &ir_desc, &result);
     test_assert(script != NULL);
     test_assert(result.error == NULL);
 
-    int r = ecs_script_eval(script, NULL, &result);
+    int r = ecs_script_eval(script, &ir_desc, &result);
     test_assert(r != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
 
     ecs_os_free(result.error);
 
-    r = ecs_script_eval(script, NULL, &result);
+    r = ecs_script_eval(script, &ir_desc, &result);
     test_assert(r != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
@@ -2122,7 +2131,7 @@ void Error_annotation_without_newline(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, "foo", expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, "foo", expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -2140,7 +2149,7 @@ void Error_annotation_without_entity(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, "foo", expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, "foo", expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -2159,7 +2168,7 @@ void Error_annotation_to_unresolved_identifier(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, "foo", expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, "foo", expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -2176,7 +2185,7 @@ void Error_annotation_to_unresolved_identifier_managed_parse_twice(void) {
     ;
 
     ecs_log_set_level(-4);
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code = expr
     });
     test_assert(s != 0);
@@ -2202,13 +2211,13 @@ void Error_annotation_to_unresolved_identifier_managed_parse_twice_2(void) {
     ecs_entity_t s = ecs_new(world);
 
     ecs_log_set_level(-4);
-    ecs_script(world, {
+    ecs_script(world, { .ir = ir_enabled,
         .entity = s,
         .code = expr
     });
     test_assert(s != 0);
 
-    ecs_script(world, {
+    ecs_script(world, { .ir = ir_enabled,
         .entity = s,
         .code = expr
     });
@@ -2233,7 +2242,7 @@ void Error_annotation_to_tag(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, "foo", expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, "foo", expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -2249,7 +2258,7 @@ void Error_invalid_hex_number_prefix(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -2265,7 +2274,7 @@ void Error_invalid_binary_number_prefix(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -2280,7 +2289,7 @@ void Error_unterminated_multiline_string_capture_error(void) {
     HEAD "const v = `unterminated";
 
     ecs_script_eval_result_t result = {0};
-    ecs_script_t *script = ecs_script_parse(world, "foo", expr, NULL, &result);
+    ecs_script_t *script = ecs_script_parse(world, "foo", expr, &ir_desc, &result);
 
     test_assert(script == NULL);
     test_assert(result.error != NULL);
@@ -2300,7 +2309,7 @@ void Error_invalid_char_literal_two_chars(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     ecs_os_free(result.error);
@@ -2326,7 +2335,7 @@ void Error_const_w_old_typed_syntax(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error,
         "did you mean 'const x: Position = ...' instead") != NULL);
@@ -2343,7 +2352,7 @@ void Error_const_w_old_untyped_syntax(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error,
         "did you mean 'const x = ...' or 'const x: type = ...' instead")
@@ -2371,7 +2380,7 @@ void Error_assign_component_to_entity_syntax(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     ecs_os_free(result.error);
 
@@ -2386,7 +2395,7 @@ void Error_typed_const_w_await(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error,
         "use 'const x = await ...' instead") != NULL);
@@ -2402,7 +2411,7 @@ void Error_match_operator_without_equals_capture_error(void) {
     HEAD "B~";
 
     ecs_script_eval_result_t result = {0};
-    ecs_script_t *script = ecs_script_parse(world, "foo", expr, NULL, &result);
+    ecs_script_t *script = ecs_script_parse(world, "foo", expr, &ir_desc, &result);
 
     test_assert(script == NULL);
     test_assert(result.error != NULL);
@@ -2422,13 +2431,13 @@ void Error_eval_root_var_component_capture_error(void) {
 
     ecs_script_eval_result_t parse_result = {0};
     ecs_script_t *script = ecs_script_parse(
-        world, "foo", expr, NULL, &parse_result);
+        world, "foo", expr, &ir_desc, &parse_result);
 
     test_assert(script != NULL);
     test_assert(parse_result.error == NULL);
 
     ecs_script_eval_result_t eval_result = {0};
-    int rc = ecs_script_eval(script, NULL, &eval_result);
+    int rc = ecs_script_eval(script, &ir_desc, &eval_result);
     test_assert(rc != 0);
     test_assert(eval_result.error != NULL);
     test_int(eval_result.line, 1);
@@ -2449,13 +2458,13 @@ void Error_string_tag_with_gt_capture_error(void) {
 
     ecs_script_eval_result_t parse_result = {0};
     ecs_script_t *script = ecs_script_parse(
-        world, "foo", expr, NULL, &parse_result);
+        world, "foo", expr, &ir_desc, &parse_result);
 
     test_assert(script != NULL);
     test_assert(parse_result.error == NULL);
 
     ecs_script_eval_result_t eval_result = {0};
-    int rc = ecs_script_eval(script, NULL, &eval_result);
+    int rc = ecs_script_eval(script, &ir_desc, &eval_result);
     test_assert(rc != 0);
     test_assert(eval_result.error != NULL);
     test_int(eval_result.line, 1);
@@ -2502,7 +2511,7 @@ void Error_parse_error_logged(void) {
     HEAD "Parent {"
     LINE " Child {";
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code = expr
     });
     test_assert(s != 0);
@@ -2534,7 +2543,7 @@ void Error_eval_error_logged(void) {
     LINE " Foo: {}"
     LINE "}";
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code = expr
     });
     test_assert(s != 0);
@@ -2560,7 +2569,7 @@ void Error_template_unresolved_var_in_entity_name(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -2577,7 +2586,7 @@ void Error_parse_error_line_column(void) {
     LINE "Hello [ }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     test_int(result.column, 7);
@@ -2593,7 +2602,7 @@ void Error_parse_error_first_line_column(void) {
     HEAD "Foo { Position: }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 1);
     test_int(result.column, 17);
@@ -2611,7 +2620,7 @@ void Error_eval_error_line_column(void) {
     LINE "Hello { UnresolvedComponent: {x: 10} }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     test_int(result.column, 9);
@@ -2632,7 +2641,7 @@ void Error_eval_error_line_column_after_blank_lines(void) {
     LINE "UnresolvedTag";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 6);
     test_int(result.column, 1);
@@ -2652,7 +2661,7 @@ void Error_eval_error_line_column_after_multiline_string(void) {
     LINE "UnresolvedTag";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 5);
     test_int(result.column, 1);
@@ -2670,7 +2679,7 @@ void Error_interpolated_expr_error_line_column(void) {
     LINE "Bar {}";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     test_int(result.column, 11);
@@ -2688,7 +2697,7 @@ void Error_interpolated_var_error_line_column(void) {
     LINE "Bar {}";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     test_int(result.column, 11);
@@ -2706,7 +2715,7 @@ void Error_interpolated_parse_error_line_column(void) {
     LINE "Bar {}";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     test_int(result.column, 11);
@@ -2725,7 +2734,7 @@ void Error_template_eval_error_line_column(void) {
     LINE "e { Tmpl: {} }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     test_int(result.column, 11);
@@ -2742,7 +2751,7 @@ void Error_expr_error_line_column(void) {
     LINE "const x = 10 + \"abc\"";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     test_int(result.column, 11);
@@ -2763,7 +2772,7 @@ void Error_division_by_zero_error_line(void) {
     LINE "e { Tmpl: {max: 0} }";
 
     ecs_log_set_level(-4);
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "widgets.flecs",
         .code = expr
     });
@@ -2793,7 +2802,7 @@ void Error_division_by_zero_error_in_template_from_other_script(void) {
     LINE "  const result = value / max"
     LINE "}";
 
-    ecs_entity_t widgets_script = ecs_script(world, {
+    ecs_entity_t widgets_script = ecs_script(world, { .ir = ir_enabled,
         .filename = "widgets.flecs",
         .code = widgets
     });
@@ -2804,7 +2813,7 @@ void Error_division_by_zero_error_in_template_from_other_script(void) {
     test_assert(widgets_data != NULL);
     test_assert(widgets_data->error == NULL);
 
-    ecs_entity_t hud_script = ecs_script(world, {
+    ecs_entity_t hud_script = ecs_script(world, { .ir = ir_enabled,
         .filename = "hud.flecs",
         .code = "e { Gauge: {max: 0} }"
     });
@@ -2859,7 +2868,7 @@ void Error_division_by_zero_error_in_nested_include(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "biome.flecs"
     });
     test_assert(script != 0);
@@ -2891,7 +2900,7 @@ void Error_const_redeclaration_error_line(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, "function.flecs", expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, "function.flecs", expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -2910,7 +2919,7 @@ void Error_function_unresolved_const_type_error_line(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, "function.flecs", expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, "function.flecs", expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -2929,7 +2938,7 @@ void Error_function_duplicate_param_error_line(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, "function.flecs", expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, "function.flecs", expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -2947,7 +2956,7 @@ void Error_function_unresolved_param_type_error_line(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, "function.flecs", expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, "function.flecs", expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     ecs_os_free(result.error);
@@ -2965,7 +2974,7 @@ void Error_function_unresolved_return_type_error_line(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, "function.flecs", expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, "function.flecs", expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 3);
     ecs_os_free(result.error);
@@ -2985,10 +2994,10 @@ void Error_multiple_unresolved_refs(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, &ir_desc, NULL);
     test_assert(script != NULL);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     char *first = strstr(result.error, "unresolved reference 'MissingTag'");
     test_assert(first != NULL);
@@ -3026,10 +3035,10 @@ void Error_multiple_unresolved_refs_w_unresolved_const_type(void) {
     LINE "const x: MissingType = 1";
 
     ecs_log_set_level(-4);
-    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, &ir_desc, NULL);
     test_assert(script != NULL);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error,
         "unresolved reference 'MissingTag'") != NULL);
@@ -3062,7 +3071,7 @@ void Error_no_error_line_column(void) {
     HEAD "Foo {}";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) == 0);
     test_assert(result.error == NULL);
     test_int(result.line, 0);
     test_int(result.column, 0);
@@ -3078,7 +3087,7 @@ void Error_script_parse_line_column(void) {
     LINE "Bar [ }";
 
     ecs_script_eval_result_t result = {0};
-    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &result);
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, &result);
     test_assert(script == NULL);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
@@ -3096,11 +3105,11 @@ void Error_script_eval_line_column(void) {
     LINE "Bar { UnresolvedComponent: {x: 10} }";
 
     ecs_script_eval_result_t result = {0};
-    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &result);
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, &result);
     test_assert(script != NULL);
     test_assert(result.error == NULL);
 
-    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 2);
     test_int(result.column, 7);
@@ -3140,7 +3149,7 @@ void Error_on_set_error_logged(void) {
         .on_set = error_on_set
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .code = "e { Position: {10, 20} }"
     });
     test_assert(script != 0);
@@ -3158,8 +3167,8 @@ void Error_struct_member_negative_count(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL,
-        "struct CN(v: {type: f32, count: -1})", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "struct CN(v: {type: f32, count: -1})", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "invalid count") != NULL);
     ecs_os_free(result.error);
@@ -3172,8 +3181,8 @@ void Error_struct_member_huge_count(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL,
-        "struct CH(v: {type: f32, count: 1073741824})", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "struct CH(v: {type: f32, count: 1073741824})", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "0 size") != NULL);
     ecs_os_free(result.error);
@@ -3190,7 +3199,7 @@ void Error_struct_wo_members(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "at least one member") != NULL);
     ecs_os_free(result.error);
@@ -3207,7 +3216,7 @@ void Error_struct_member_wo_name(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "missing name for struct member") != NULL);
     ecs_os_free(result.error);
@@ -3224,7 +3233,7 @@ void Error_enum_constant_w_invalid_expr(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "invalid constant") != NULL);
     ecs_os_free(result.error);
@@ -3245,7 +3254,7 @@ void Error_using_in_scope(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "MyParent") == 0);
 
     ecs_fini(world);
@@ -3263,7 +3272,7 @@ void Error_using_after_other_stmt(void) {
     LINE "Bar Child {}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Hello") == 0);
 
     ecs_fini(world);
@@ -3282,7 +3291,7 @@ void Error_using_script_defined_entity(void) {
     LINE "Bar Child {}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Foo") == 0);
 
     ecs_fini(world);
@@ -3299,7 +3308,7 @@ void Error_using_wildcard_script_defined_entity(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Foo") == 0);
 
     ecs_fini(world);
@@ -3313,7 +3322,7 @@ void Error_module_after_other_stmt(void) {
     LINE "module hello";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Foo") == 0);
 
     ecs_fini(world);
@@ -3328,7 +3337,7 @@ void Error_module_in_scope(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Foo") == 0);
 
     ecs_fini(world);
@@ -3342,7 +3351,7 @@ void Error_module_after_using(void) {
     LINE "module hello";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "hello") == 0);
 
     ecs_fini(world);
@@ -3356,7 +3365,7 @@ void Error_include_after_using(void) {
     LINE "include foo.flecs";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -3369,7 +3378,7 @@ void Error_include_after_other_stmt(void) {
     LINE "include foo.flecs";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Foo") == 0);
 
     ecs_fini(world);
@@ -3385,7 +3394,7 @@ void Error_using_unresolved_path(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     ecs_os_free(result.error);
 
@@ -3402,7 +3411,7 @@ void Error_entity_path_w_scope(void) {
     HEAD "Hello.World {}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Hello.World") == 0);
 
@@ -3418,7 +3427,7 @@ void Error_entity_path_w_kind_w_scope(void) {
     HEAD "Foo Hello.World {}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Hello.World") == 0);
 
@@ -3433,7 +3442,7 @@ void Error_entity_path_w_scope_on_newline(void) {
     LINE "{}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Hello.World") == 0);
 
@@ -3449,7 +3458,7 @@ void Error_entity_path_w_inherit_w_scope(void) {
     HEAD "Hello.World : Foo {}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Hello.World") == 0);
 
@@ -3465,7 +3474,7 @@ void Error_entity_path_w_kind(void) {
     HEAD "Foo Hello.World";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Hello.World") == 0);
 
@@ -3482,7 +3491,7 @@ void Error_entity_path_w_inherit(void) {
     HEAD "Hello.World : Foo, Bar";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Hello.World") == 0);
 
@@ -3496,7 +3505,7 @@ void Error_entity_path_w_comma(void) {
     HEAD "Hello.World, Foo";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Foo") == 0);
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Hello.World") == 0);
@@ -3511,7 +3520,7 @@ void Error_entity_path_after_comma(void) {
     HEAD "Foo, Hello.World";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Foo") == 0);
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Hello.World") == 0);
@@ -3528,7 +3537,7 @@ void Error_entity_path_w_string_name(void) {
     HEAD "Foo \"Hello.World\"";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Hello.World") == 0);
 
@@ -3542,7 +3551,7 @@ void Error_entity_comma_list(void) {
     HEAD "Foo, Bar, Zoo";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Foo") == 0);
     test_assert(ecs_lookup(world, "Bar") == 0);
     test_assert(ecs_lookup(world, "Zoo") == 0);
@@ -3559,7 +3568,7 @@ void Error_entity_comma_list_in_scope(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Zoo") == 0);
     test_assert(ecs_lookup(world, "Zoo.Foo") == 0);
     test_assert(ecs_lookup(world, "Zoo.Bar") == 0);
@@ -3574,7 +3583,7 @@ void Error_entity_comma_list_w_trailing_comma(void) {
     HEAD "Foo, Bar,";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     test_assert(ecs_lookup(world, "Foo") == 0);
     test_assert(ecs_lookup(world, "Bar") == 0);
 
@@ -3596,7 +3605,7 @@ void Error_oneof_pair_target_shadowed_by_script_entity(void) {
     LINE "e { (Rel, X) }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "not found in parent") != NULL);
     ecs_os_free(result.error);
@@ -3619,7 +3628,7 @@ void Error_any_as_pair_first(void) {
     LINE "e { (_, Likes) }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "wildcard") != NULL);
     ecs_os_free(result.error);
@@ -3637,7 +3646,7 @@ void Error_any_as_pair_second(void) {
     LINE "e { (Likes, _) }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "wildcard") != NULL);
     ecs_os_free(result.error);
@@ -3659,10 +3668,10 @@ void Error_any_as_pair_first_from_template_prop(void) {
     LINE "}"
     LINE "T ok()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, "T bad(_)", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "T bad(_)", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "anonymous") != NULL);
     ecs_os_free(result.error);
@@ -3683,10 +3692,10 @@ void Error_any_as_tag_from_template_prop(void) {
     LINE "}"
     LINE "T ok()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, "T bad(_)", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "T bad(_)", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "anonymous") != NULL);
     ecs_os_free(result.error);
@@ -3709,10 +3718,10 @@ void Error_any_as_with_tag_from_template_prop(void) {
     LINE "}"
     LINE "T ok()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, "T bad(_)", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "T bad(_)", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "anonymous") != NULL);
     ecs_os_free(result.error);
@@ -3731,7 +3740,7 @@ void Error_any_from_interpolated_pair_first(void) {
     LINE "e { (\"{n}\", Likes) }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     ecs_os_free(result.error);
 
@@ -3750,7 +3759,7 @@ void Error_zero_entity_var_as_pair_second(void) {
     LINE "e { (Likes, $p) }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "unresolved") != NULL);
     ecs_os_free(result.error);
@@ -3773,14 +3782,14 @@ void Error_zero_entity_var_as_pair_first_from_template_prop(void) {
     LINE "}"
     LINE "T ok()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     const char *expr_bad =
     HEAD "const z = Root.parent()"
     LINE "T bad($z)";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr_bad, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_bad, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "unresolved") != NULL);
     ecs_os_free(result.error);
@@ -3804,14 +3813,14 @@ void Error_zero_entity_var_as_with_tag_from_template_prop(void) {
     LINE "}"
     LINE "T ok()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     const char *expr_bad =
     HEAD "const z = Root.parent()"
     LINE "T bad($z)";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr_bad, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_bad, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "unresolved") != NULL);
     ecs_os_free(result.error);
@@ -3830,7 +3839,7 @@ void Error_unresolved_interpolated_pair_first(void) {
     LINE "e { (\"{n}\", Likes) }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "unresolved") != NULL);
     ecs_os_free(result.error);
@@ -3857,7 +3866,7 @@ void Error_any_from_interpolated_pair_component(void) {
     LINE "e { (\"{n}\", Position): {10, 20} }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "wildcard") != NULL);
     ecs_os_free(result.error);
@@ -3880,14 +3889,14 @@ void Error_runtime_any_as_with_tag_from_template_prop(void) {
     LINE "}"
     LINE "T ok()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     const char *expr_bad =
     HEAD "const w = #0.lookup(\"_\")"
     LINE "T bad($w)";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr_bad, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_bad, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "wildcard") != NULL);
     ecs_os_free(result.error);
@@ -3918,14 +3927,14 @@ void Error_runtime_any_as_with_component_from_template_prop(void) {
     LINE "}"
     LINE "T ok()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     const char *expr_bad =
     HEAD "const w = #0.lookup(\"_\")"
     LINE "T bad($w)";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr_bad, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_bad, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "wildcard") != NULL);
     ecs_os_free(result.error);
@@ -3946,7 +3955,7 @@ void Error_runtime_any_as_pair_scope_target(void) {
     LINE "}";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "wildcard") != NULL);
     ecs_os_free(result.error);
@@ -3970,8 +3979,8 @@ void Error_has_question_space_bracket(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL,
-        "const b = e ? [Position]", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "const b = e ? [Position]", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     ecs_os_free(result.error);
 
@@ -4101,10 +4110,10 @@ void Error_unresolved_component_ref(void) {
     LINE "const p = e[Position]";
 
     ecs_log_set_level(-4);
-    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, &ir_desc, NULL);
     test_assert(script != NULL);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error,
         "entity 'e' does not have component 'Position'") != NULL);
@@ -4143,10 +4152,10 @@ void Error_no_unresolved_component_ref_when_component_exists(void) {
     const char *expr =
     HEAD "const p = e[Position]";
 
-    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, &ir_desc, NULL);
     test_assert(script != NULL);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_eval(script, NULL, &result) == 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result) == 0);
     test_assert(result.error == NULL);
 
     ecs_script_impl_t *impl = flecs_script_impl(script);
@@ -4184,10 +4193,10 @@ void Error_multiple_unresolved_component_refs(void) {
     LINE "const v = e2[Velocity]";
 
     ecs_log_set_level(-4);
-    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, &ir_desc, NULL);
     test_assert(script != NULL);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error,
         "entity 'e1' does not have component 'Position'") != NULL);
@@ -4221,10 +4230,10 @@ void Error_unresolved_component_ref_w_unresolved_component(void) {
     HEAD "const p = e[NoSuchComponent]";
 
     ecs_log_set_level(-4);
-    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, &ir_desc, NULL);
     test_assert(script != NULL);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error,
         "unresolved reference 'NoSuchComponent'") != NULL);
@@ -4259,10 +4268,10 @@ void Error_unresolved_component_ref_w_unresolved_entity(void) {
     HEAD "const p = nosuchentity[Position]";
 
     ecs_log_set_level(-4);
-    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, &ir_desc, NULL);
     test_assert(script != NULL);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error,
         "unresolved reference 'nosuchentity'") != NULL);
@@ -4289,10 +4298,10 @@ void Error_unresolved_component_ref_w_unresolved_entity_and_component(void) {
     HEAD "const p = nosuchentity[NoSuchComponent]";
 
     ecs_log_set_level(-4);
-    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, "test.flecs", expr, &ir_desc, NULL);
     test_assert(script != NULL);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_eval(script, NULL, &result) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error,
         "unresolved reference 'nosuchentity'") != NULL);
@@ -4404,7 +4413,7 @@ void Error_if_component_presence_check_on_non_singleton(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "n {"
@@ -4436,7 +4445,7 @@ void Error_this_at_plain_scope_kills_file(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "btn {"
@@ -4475,7 +4484,7 @@ void Error_doc_detail_not_readable_from_script(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "m1" }),
         .code =
             HEAD "d { Text: {text: \"{Drill[flecs.doc.Description].value}\"} }"
@@ -4487,7 +4496,7 @@ void Error_doc_detail_not_readable_from_script(void) {
     test_assert(s->error != NULL);
     test_assert(ecs_lookup(world, "d") == 0);
 
-    ecs_entity_t script_2 = ecs_script(world, {
+    ecs_entity_t script_2 = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "m2" }),
         .code =
             HEAD "e { Text: {text: \"{Drill[(flecs.doc.Description,"
@@ -4513,7 +4522,7 @@ void Error_script_declares_entity_named_after_script_w_child(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "hud" }),
         .code =
             HEAD "hud {"
@@ -4564,7 +4573,7 @@ void Error_component_ref_via_var_entity_zero(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const t = h[Holder].target"
@@ -4609,7 +4618,7 @@ void Error_component_ref_via_var_entity_deleted(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const t = h[Holder].target"
@@ -4628,7 +4637,7 @@ void Error_component_ref_via_var_entity_deleted(void) {
 void Error_failing_script_does_not_delete_shared_module(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t a = ecs_script(world, {
+    ecs_entity_t a = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "script_a" }),
         .code =
             HEAD "module m"
@@ -4642,7 +4651,7 @@ void Error_failing_script_does_not_delete_shared_module(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t b = ecs_script(world, {
+    ecs_entity_t b = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "script_b" }),
         .code =
             HEAD "module m"
@@ -4678,7 +4687,7 @@ void Error_failing_script_does_not_delete_shared_module(void) {
 void Error_failing_script_update_does_not_delete_shared_module(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t a = ecs_script(world, {
+    ecs_entity_t a = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "script_a" }),
         .code =
             HEAD "module m"
@@ -4686,7 +4695,7 @@ void Error_failing_script_update_does_not_delete_shared_module(void) {
     });
     test_assert(a != 0);
 
-    ecs_entity_t b = ecs_script(world, {
+    ecs_entity_t b = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "script_b" }),
         .code =
             HEAD "module m"
@@ -4728,7 +4737,7 @@ void Error_failing_script_update_does_not_delete_shared_module(void) {
 void Error_deleted_script_does_not_delete_shared_module(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t a = ecs_script(world, {
+    ecs_entity_t a = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "script_a" }),
         .code =
             HEAD "module m"
@@ -4736,7 +4745,7 @@ void Error_deleted_script_does_not_delete_shared_module(void) {
     });
     test_assert(a != 0);
 
-    ecs_entity_t b = ecs_script(world, {
+    ecs_entity_t b = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "script_b" }),
         .code =
             HEAD "module m"
@@ -4771,7 +4780,7 @@ void Error_deleted_script_does_not_delete_shared_module(void) {
 void Error_failing_script_does_not_delete_shared_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t a = ecs_script(world, {
+    ecs_entity_t a = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "script_a" }),
         .code =
             HEAD "p {"
@@ -4785,7 +4794,7 @@ void Error_failing_script_does_not_delete_shared_scope(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t b = ecs_script(world, {
+    ecs_entity_t b = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "script_b" }),
         .code =
             HEAD "p {"
@@ -4831,7 +4840,7 @@ void Error_script_init_eval_error_adds_error_tag(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .code = "e { NoSuchTag }"
     });
 
@@ -4850,7 +4859,7 @@ void Error_script_init_parse_error_adds_error_tag(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .code = "e {"
     });
 
@@ -4870,7 +4879,7 @@ void Error_script_init_from_missing_file_returns_0(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .filename = "no_such_script_file.flecs"
     });
 
@@ -4884,7 +4893,7 @@ void Error_script_update_clears_error_tag(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = "e { NoSuchTag }"
     });
@@ -4912,7 +4921,7 @@ void Error_script_update_clears_error_tag(void) {
 void Error_script_init_success_has_no_error_tag(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .code = "e {}"
     });
 
@@ -4939,7 +4948,7 @@ void Error_parse_error_in_large_script_reports_position(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .code = code
     });
 
@@ -4965,7 +4974,7 @@ void Error_missing_separator_between_components(void) {
     HEAD "e { Position: {10, 20} Velocity: {1, 2} }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "missing ; or newline") != NULL);
     test_int(result.line, 1);
@@ -4982,7 +4991,7 @@ void Error_missing_separator_between_component_and_tag(void) {
     HEAD "e { Position: {10, 20} Foo }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "missing ; or newline") != NULL);
     test_int(result.line, 1);
@@ -4999,7 +5008,7 @@ void Error_missing_separator_between_component_and_pair(void) {
     HEAD "e { Position: {10, 20} (Likes, Apples) }";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "missing ; or newline") != NULL);
     test_int(result.line, 1);
@@ -5017,7 +5026,7 @@ void Error_missing_separator_after_scope(void) {
     LINE "bar {} baz {}";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "missing ; or newline") != NULL);
     test_int(result.line, 2);
@@ -5034,7 +5043,7 @@ void Error_missing_separator_between_const(void) {
     HEAD "const x = 10 const y = 20";
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "missing ; or newline") != NULL);
     test_int(result.line, 1);
@@ -5057,7 +5066,7 @@ void Error_long_binary_expression(void) {
 
     char *expr = ecs_strbuf_get(&buf);
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_os_free(expr);
 
@@ -5080,7 +5089,7 @@ void Error_deeply_chained_else_if(void) {
     char *expr = ecs_strbuf_get(&buf);
 
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     ecs_os_free(result.error);
 
@@ -5137,7 +5146,7 @@ void Error_function_w_too_many_params(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "too many parameters") != NULL);
     ecs_os_free(result.error);
@@ -5152,8 +5161,8 @@ void Error_struct_member_count_size_overflow(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL,
-        "struct CO(v: {type: f32, count: 1073741825})", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "struct CO(v: {type: f32, count: 1073741825})", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     ecs_os_free(result.error);
 
@@ -5171,7 +5180,7 @@ void Error_member_of_tag_component_in_function(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     ecs_os_free(result.error);
 
@@ -5193,8 +5202,8 @@ void Error_collection_literal_for_struct_type_reports_type_name(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL,
-        "e { Position: [1, 2] }", &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e { Position: [1, 2] }", &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_assert(strstr(result.error, "'Position'") != NULL);
     ecs_os_free(result.error);
@@ -5237,7 +5246,7 @@ void Error_template_instantiated_on_own_entity_as_kind(void) {
     LINE "}"
     LINE "T T(1)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     test_int(log_self_template_error_count, 1);
     test_assert(strstr(log_self_template_error,
@@ -5264,7 +5273,7 @@ void Error_template_instantiated_on_own_entity_as_bare_kind(void) {
     LINE "}"
     LINE "T T";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     test_int(log_self_template_error_count, 1);
     test_assert(strstr(log_self_template_error,
@@ -5404,7 +5413,7 @@ void Error_function_argument_struct_value(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     ecs_log_set_level(-1);
     test_assert(result.error != NULL);
     ecs_os_free(result.error);

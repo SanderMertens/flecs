@@ -35279,3 +35279,50 @@ bool flecs_query_trivial_test(
     }
 }
 
+#ifdef FLECS_SCRIPT_IR_PROFILE
+void ecs_script_ir_profile_reset(void)
+{
+    ecs_os_memset_n(flecs_ir_profile_ops, 0, int64_t, EcsIrOpKindLast);
+    ecs_os_memset_n(flecs_ir_profile_stats, 0, int64_t, EcsIrProfileLast);
+}
+
+static const char* flecs_ir_profile_stat_name(int32_t i) {
+    switch(i) {
+    case EcsIrProfileRun: return "vm runs";
+    case EcsIrProfileStmtRun: return "statements run";
+    case EcsIrProfileStmtSkipped: return "statements skipped";
+    case EcsIrProfileBatchAdd: return "batch adds executed";
+    case EcsIrProfileBatchSkip: return "batch adds skipped";
+    case EcsIrProfileEntityCreate: return "entities created";
+    case EcsIrProfileEntityReuse: return "entities reused";
+    case EcsIrProfileComponentSet: return "components set";
+    case EcsIrProfileTagAdd: return "tags added";
+    default: return "?";
+    }
+}
+
+char* ecs_script_ir_profile_str(void)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    int32_t i;
+    int64_t total = 0;
+    for (i = 0; i < EcsIrOpKindLast; i ++) {
+        total += flecs_ir_profile_ops[i];
+    }
+    ecs_strbuf_append(&buf, "instructions: %lld\n", (long long)total);
+    for (i = 0; i < EcsIrOpKindLast; i ++) {
+        if (flecs_ir_profile_ops[i]) {
+            ecs_strbuf_append(&buf, "  %-20s %10lld  %5.1f%%\n",
+                flecs_script_ir_op_name((ecs_script_ir_op_kind_t)i),
+                (long long)flecs_ir_profile_ops[i],
+                100.0 * (double)flecs_ir_profile_ops[i] / (double)total);
+        }
+    }
+    for (i = 0; i < EcsIrProfileLast; i ++) {
+        ecs_strbuf_append(&buf, "%-22s %10lld\n", flecs_ir_profile_stat_name(i),
+            (long long)flecs_ir_profile_stats[i]);
+    }
+    return ecs_strbuf_get(&buf);
+}
+#endif
+

@@ -12,6 +12,10 @@
     "test": {
         "testsuites": [{
             "id": "Eval",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "2_components_same_line_w_semicolon",
                 "2_entities_same_line_w_semicolon",
@@ -685,10 +689,19 @@
                 "auto_override_before_scope_close_same_line",
                 "auto_override_pair_before_scope_close_same_line",
                 "module_stmt_w_semicolon",
-                "module_stmt_at_end_of_script"
+                "module_stmt_at_end_of_script",
+                "ir_managed_script_desc",
+                "ir_eval_desc",
+                "ir_to_str",
+                "ir_managed_script_update_keeps_runtime",
+                "string_interpolation_of_scalar_types"
             ]
         }, {
             "id": "Collection",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "range_bracketed",
                 "range_bare",
@@ -794,6 +807,10 @@
             ]
         }, {
             "id": "Await",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "task_new_w_deleted_entity",
                 "delete_scope_parent_while_suspended",
@@ -855,6 +872,10 @@
             ]
         }, {
             "id": "TryCatch",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "parse_try_catch_all",
                 "parse_try_catch_typed",
@@ -895,6 +916,10 @@
             ]
         }, {
             "id": "Function",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "simple",
                 "newline_before_scope",
@@ -982,6 +1007,10 @@
             ]
         }, {
             "id": "Template",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "instantiate_w_string_prop_no_leak",
                 "template_no_scope",
@@ -1135,6 +1164,10 @@
             ]
         }, {
             "id": "Mut",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "declaration",
                 "two_members",
@@ -1214,6 +1247,10 @@
             ]
         }, {
             "id": "Error",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "missing_separator_between_components",
                 "missing_separator_between_component_and_tag",
@@ -1600,7 +1637,8 @@
         }, {
             "id": "Expr",
             "params": {
-                "folding": ["enabled", "disabled"]
+                "folding": ["enabled", "disabled"],
+                "ir": ["disabled", "enabled"]
             },
             "setup": true,
             "testcases": [
@@ -2016,6 +2054,10 @@
             ]
         }, {
             "id": "ExprAst",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "binary_f32_var_add_f32_var",
                 "binary_f32_var_add_int",
@@ -2316,6 +2358,10 @@
             ]
         }, {
             "id": "Include",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "include_simple",
                 "include_cycle",
@@ -2376,6 +2422,10 @@
             ]
         }, {
             "id": "Fuzzing",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "1",
                 "2",
@@ -2526,6 +2576,10 @@
             ]
         }, {
             "id": "Refs",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "ref_in_component_initializer",
                 "ref_in_const_var",
@@ -2662,6 +2716,10 @@
             ]
         }, {
             "id": "Reactivity",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "external_inputs_are_isolated",
                 "script_update_recreates_observers",
@@ -2803,6 +2861,10 @@
             ]
         }, {
             "id": "ConstVar",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "get_bool",
                 "get_char",
@@ -2849,6 +2911,10 @@
             ]
         }, {
             "id": "Lenient",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "unknown_tag",
                 "unknown_component_w_value",
@@ -2885,6 +2951,10 @@
             ]
         }, {
             "id": "StructInheritance",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "block_syntax",
                 "paren_syntax",
@@ -2948,6 +3018,10 @@
             ]
         }, {
             "id": "TemplateInheritance",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "base_template_prop",
                 "base_template_two_props",
@@ -2999,6 +3073,10 @@
             ]
         }, {
             "id": "TemplateProp",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
             "testcases": [
                 "prop_template_type",
                 "prop_template_type_default",
@@ -3090,6 +3168,26 @@
                 "bool_prop_mul_flt_member",
                 "bool_prop_in_flt_member_initializer",
                 "bool_prop_mul_flt_member_const"
+            ]
+        }, {
+            "id": "Scenario",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
+            "testcases": [
+                "rocket_instantiate",
+                "rocket_partial_loaded",
+                "rocket_partial_fuel",
+                "rocket_partial_engines",
+                "rocket_partial_valid_toggle_twice",
+                "rocket_many_instances_independent",
+                "bunny_partial_value",
+                "bunny_partial_branch",
+                "gauge_partial_text_and_frac",
+                "nested_template_reeval_keeps_children",
+                "template_tree_annotation_applies_to_instances",
+                "ir_and_ast_instances_coexist"
             ]
         }]
     }

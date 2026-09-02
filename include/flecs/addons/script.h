@@ -115,6 +115,7 @@ typedef struct EcsScript {
     ecs_vec_t observers;                /**< Observers for referenced components. */
     ecs_vec_t dyn_observers;            /**< Observers for refs resolved at runtime. */
     bool lenient;                       /**< Load script in lenient mode. */
+    bool ir;                            /**< Evaluate script with IR runtime. */
 } EcsScript;
 
 /** Script function context. */
@@ -154,6 +155,9 @@ typedef struct ecs_script_eval_desc_t {
      * are tolerated instead of failing the script. See
      * ecs_script_set_lenient(). */
     bool lenient;
+
+    /** Evaluate script with the IR runtime instead of the AST interpreter. */
+    bool ir;
 } ecs_script_eval_desc_t;
 
 /** Used to capture error output from script evaluation. */
@@ -291,6 +295,25 @@ int ecs_script_run(
     const char *code,
     ecs_script_eval_result_t *result);
 
+/** Parse script and evaluate with options.
+ * Same as ecs_script_run(), but accepts a descriptor that configures parsing
+ * and evaluation, such as lenient mode or the runtime (AST or IR) to use.
+ *
+ * @param world The world.
+ * @param name The script name (typically the file).
+ * @param code The script.
+ * @param desc Parse and evaluation options (optional).
+ * @param result Output of script evaluation (optional).
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_run_w_desc(
+    ecs_world_t *world,
+    const char *name,
+    const char *code,
+    const ecs_script_eval_desc_t *desc,
+    ecs_script_eval_result_t *result);
+
 /** Parse script file.
  * This parses a script file and instantiates the entities in the world. This
  * operation is equivalent to loading the file contents and passing it to
@@ -304,6 +327,21 @@ FLECS_API
 int ecs_script_run_file(
     ecs_world_t *world,
     const char *filename);
+
+/** Parse script file and evaluate with options.
+ * Same as ecs_script_run_file(), but accepts a descriptor that configures
+ * parsing and evaluation.
+ *
+ * @param world The world.
+ * @param filename The script file name.
+ * @param desc Parse and evaluation options (optional).
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_run_file_w_desc(
+    ecs_world_t *world,
+    const char *filename,
+    const ecs_script_eval_desc_t *desc);
 
 /** Enable or disable lenient script loading for a world.
  * When lenient loading is enabled, scripts that reference unknown components,
@@ -343,6 +381,29 @@ void ecs_script_set_lenient(
 FLECS_API
 bool ecs_script_get_lenient(
     const ecs_world_t *world);
+
+/** Convert script IR to string.
+ * Compiles the script to IR if it hasn't been compiled yet, and returns a
+ * human readable listing of the instructions.
+ *
+ * @param script The script.
+ * @return The IR listing. Must be freed with ecs_os_free.
+ */
+FLECS_API
+char* ecs_script_ir_to_str(
+    const ecs_script_t *script);
+
+#ifdef FLECS_SCRIPT_IR_PROFILE
+/** Reset IR runtime profiling counters (only available when compiled with
+ * FLECS_SCRIPT_IR_PROFILE). */
+FLECS_API
+void ecs_script_ir_profile_reset(void);
+
+/** Get IR runtime profiling counters as string (only available when compiled
+ * with FLECS_SCRIPT_IR_PROFILE). Must be freed with ecs_os_free. */
+FLECS_API
+char* ecs_script_ir_profile_str(void);
+#endif
 
 /** Create runtime for script.
  * A script runtime is a container for any data created during script 
@@ -406,6 +467,7 @@ typedef struct ecs_script_desc_t {
     const char *filename;  /**< Set to load script from file. */
     const char *code;      /**< Set to parse script from string. */
     bool lenient;          /**< Load script in lenient mode (see ecs_script_set_lenient()). */
+    bool ir;               /**< Evaluate script with IR runtime. */
 } ecs_script_desc_t;
 
 /** Load managed script.

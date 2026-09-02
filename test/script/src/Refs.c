@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void Refs_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 static void times_two(
     const ecs_function_ctx_t *ctx,
     int argc,
@@ -31,7 +40,7 @@ void Refs_ref_in_component_initializer(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -81,7 +90,7 @@ void Refs_ref_in_const_var(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const m = e[Mass]"
@@ -132,7 +141,7 @@ void Refs_ref_in_with_initializer(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "with Position(e[Mass].value, 0) {"
@@ -183,7 +192,7 @@ void Refs_ref_in_match_expr(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {1, 0});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -231,7 +240,7 @@ void Refs_ref_in_if_expr(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {1, 0});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "if e[PositionI].x > 0 {"
@@ -278,7 +287,7 @@ void Refs_non_managed_script_no_update(void) {
         LINE "  Position: {e[Mass].value, 0}"
         LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     {
         ecs_entity_t foo = ecs_lookup(world, "foo");
@@ -321,7 +330,7 @@ void Refs_set_after_managed_script_deleted(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -383,7 +392,7 @@ void Refs_ref_in_for_expr(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {2, 0});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..e[PositionI].x {"
@@ -431,7 +440,7 @@ void Refs_global_const_var_non_managed_script_no_update(void) {
         LINE "  Position: {v, 0}"
         LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     {
         ecs_entity_t foo = ecs_lookup(world, "foo");
@@ -483,7 +492,7 @@ void Refs_ref_in_function(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -533,7 +542,7 @@ void Refs_ref_in_new_expr(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -598,7 +607,7 @@ void Refs_ref_in_function_in_new_expr(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -656,7 +665,7 @@ void Refs_ref_in_script_function_body(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "fn get_mass() -> f32 { e[Mass].value }"
@@ -701,7 +710,7 @@ void Refs_ref_assigned_to_component(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -764,7 +773,7 @@ void Refs_reeval_hierarchy(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "gp {"
@@ -817,7 +826,7 @@ void Refs_reeval_prefab_in_branch(void) {
     });
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t assets = ecs_script(world, {
+    ecs_entity_t assets = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "assets" }),
         .code =
             HEAD "Prefab base_prefab {"
@@ -830,7 +839,7 @@ void Refs_reeval_prefab_in_branch(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "if e[Mass].value < 15 {"
@@ -884,7 +893,7 @@ void Refs_progress_reeval_prefab_w_isa_observer(void) {
         .callback = RefDummyObserver
     });
 
-    ecs_entity_t assets = ecs_script(world, {
+    ecs_entity_t assets = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "assets" }),
         .code =
             HEAD "Prefab base_prefab {"
@@ -897,7 +906,7 @@ void Refs_progress_reeval_prefab_w_isa_observer(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "@tree Parent"
@@ -955,7 +964,7 @@ void Refs_reeval_prefab_w_isa_observer(void) {
         .callback = RefDummyObserver
     });
 
-    ecs_entity_t assets = ecs_script(world, {
+    ecs_entity_t assets = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "assets" }),
         .code =
             HEAD "Prefab base_prefab {"
@@ -968,7 +977,7 @@ void Refs_reeval_prefab_w_isa_observer(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "@tree Parent"
@@ -1015,7 +1024,7 @@ void Refs_reeval_prefab_delete_with_inherited_component(void) {
         .callback = RefDummyObserver
     });
 
-    ecs_entity_t assets = ecs_script(world, {
+    ecs_entity_t assets = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "assets" }),
         .code =
             HEAD "Prefab base_prefab {"
@@ -1028,7 +1037,7 @@ void Refs_reeval_prefab_delete_with_inherited_component(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "@tree Parent"
@@ -1069,7 +1078,7 @@ void Refs_ref_in_template_not_instantiated(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -1122,7 +1131,7 @@ void Refs_ref_in_template_component_initializer(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -1189,7 +1198,7 @@ void Refs_multiple_refs_in_template_const_dont_reeval_others(void) {
 
     ecs_set(world, ecs_id(Mass), Mass, {10});
 
-    ecs_entity_t hud = ecs_script(world, {
+    ecs_entity_t hud = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "hud_script" }),
         .code =
             HEAD "template Reactive {"
@@ -1275,7 +1284,7 @@ void Refs_multiple_refs_in_template_initializer_dont_reeval_others(void) {
 
     ecs_set(world, ecs_id(Mass), Mass, {10});
 
-    ecs_entity_t hud = ecs_script(world, {
+    ecs_entity_t hud = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "hud_script" }),
         .code =
             HEAD "template Reactive {"
@@ -1360,7 +1369,7 @@ void Refs_multiple_refs_in_template_const_dont_reeval_others_deferred(void) {
 
     ecs_set(world, ecs_id(Mass), Mass, {10});
 
-    ecs_entity_t hud = ecs_script(world, {
+    ecs_entity_t hud = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "hud_script" }),
         .code =
             HEAD "template Reactive {"
@@ -1447,7 +1456,7 @@ void Refs_global_const_var_in_template_component_initializer(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -1517,7 +1526,7 @@ void Refs_ref_in_template_with_initializer(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -1573,7 +1582,7 @@ void Refs_ref_in_template_match_expr(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {1, 0});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -1624,7 +1633,7 @@ void Refs_ref_in_template_if_expr(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {1, 0});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -1673,7 +1682,7 @@ void Refs_ref_in_template_for_expr(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {2, 0});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -1730,7 +1739,7 @@ void Refs_ref_in_template_function(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -1783,7 +1792,7 @@ void Refs_ref_in_template_new_expr(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -1851,7 +1860,7 @@ void Refs_ref_in_template_function_in_new_expr(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -1912,7 +1921,7 @@ void Refs_ref_in_template_script_function_body(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "fn get_mass() -> f32 { e[Mass].value }"
@@ -1960,7 +1969,7 @@ void Refs_ref_in_template_assigned_to_component(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2011,7 +2020,7 @@ void Refs_global_const_var_in_template_with_initializer(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2066,7 +2075,7 @@ void Refs_global_const_var_in_template_match_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2115,7 +2124,7 @@ void Refs_global_const_var_in_template_if_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2160,7 +2169,7 @@ void Refs_global_const_var_in_template_for_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2215,7 +2224,7 @@ void Refs_global_const_var_in_template_function(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2268,7 +2277,7 @@ void Refs_global_const_var_in_template_new_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2336,7 +2345,7 @@ void Refs_global_const_var_in_template_function_in_new_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2397,7 +2406,7 @@ void Refs_global_const_var_in_template_assigned_to_component(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2454,7 +2463,7 @@ void Refs_template_ref_observer_lifecycle(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2503,7 +2512,7 @@ void Refs_template_ref_observer_lifecycle(void) {
 
     ecs_set(world, e, Mass, {30});
 
-    test_assert(ecs_script_run(world, "reinstantiate", "Bar inst2()", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, "reinstantiate", "Bar inst2()", &ir_desc, NULL) == 0);
     ecs_entity_t inst2 = ecs_lookup(world, "inst2");
     test_assert(inst2 != 0);
     test_assert(ecs_get(world, inst2, Position) != NULL);
@@ -2544,7 +2553,7 @@ void Refs_this_ref_in_template_component_initializer(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2601,7 +2610,7 @@ void Refs_this_ref_in_template_with_initializer(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2651,7 +2660,7 @@ void Refs_this_ref_in_template_match_expr(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2701,7 +2710,7 @@ void Refs_this_ref_in_template_if_expr(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2742,7 +2751,7 @@ void Refs_this_ref_in_template_for_expr(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2794,7 +2803,7 @@ void Refs_this_ref_in_template_function(void) {
         .callback = times_two
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2846,7 +2855,7 @@ void Refs_this_ref_in_template_new_expr(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2911,7 +2920,7 @@ void Refs_this_ref_in_template_function_in_new_expr(void) {
         .callback = times_two
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -2963,7 +2972,7 @@ void Refs_this_ref_in_template_assigned_to_component(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3017,7 +3026,7 @@ void Refs_prop_ref_in_template_component_initializer(void) {
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Mass, {20});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3084,7 +3093,7 @@ void Refs_prop_ref_in_template_with_initializer(void) {
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Mass, {20});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3140,7 +3149,7 @@ void Refs_prop_ref_in_template_match_expr(void) {
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, PositionI, {2, 0});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3196,7 +3205,7 @@ void Refs_prop_ref_in_template_if_expr(void) {
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, PositionI, {0, 0});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3243,7 +3252,7 @@ void Refs_prop_ref_in_template_for_expr(void) {
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, PositionI, {1, 0});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3301,7 +3310,7 @@ void Refs_prop_ref_in_template_function(void) {
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Mass, {20});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3359,7 +3368,7 @@ void Refs_prop_ref_in_template_new_expr(void) {
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Mass, {20});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3430,7 +3439,7 @@ void Refs_prop_ref_in_template_function_in_new_expr(void) {
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Mass, {20});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3488,7 +3497,7 @@ void Refs_prop_ref_in_template_assigned_to_component(void) {
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Position, {30, 40});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3543,7 +3552,7 @@ void Refs_template_prop_ref_observer_lifecycle(void) {
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Mass, {20});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3576,8 +3585,8 @@ void Refs_template_prop_ref_observer_lifecycle(void) {
     }
     test_int(observer_count, 1);
 
-    test_assert(ecs_script_run(world, "instantiate2",
-        "inst2 { Bar: {target: e2} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, "instantiate2",
+        "inst2 { Bar: {target: e2} }", &ir_desc, NULL) == 0);
     ecs_entity_t inst2 = ecs_lookup(world, "inst2");
     test_assert(inst2 != 0);
     test_int(ecs_get(world, inst2, Position)->x, 20);
@@ -3652,7 +3661,7 @@ void Refs_template_prop_ref_retarget(void) {
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Mass, {20});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3711,7 +3720,7 @@ void Refs_template_this_ref_observer_lifecycle(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -3743,8 +3752,8 @@ void Refs_template_this_ref_observer_lifecycle(void) {
     }
     test_int(observer_count, 1);
 
-    test_assert(ecs_script_run(world, "instantiate2",
-        "inst2 { Mass: {30}; Bar: {} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, "instantiate2",
+        "inst2 { Mass: {30}; Bar: {} }", &ir_desc, NULL) == 0);
     ecs_entity_t inst2 = ecs_lookup(world, "inst2");
     test_assert(inst2 != 0);
     test_int(ecs_get(world, inst2, Position)->x, 30);
@@ -3808,7 +3817,7 @@ void Refs_global_const_var_declared_in_same_script(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export const v: f32 = 10"
@@ -3855,7 +3864,7 @@ void Refs_global_const_var_declared_in_same_script_w_fn(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export const v: f32 = 10"
@@ -3909,7 +3918,7 @@ void Refs_ref_declared_in_same_script(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "e {"
@@ -3964,7 +3973,7 @@ void Refs_ref_declared_in_same_script_w_fn(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "e {"
@@ -4020,7 +4029,7 @@ void Refs_ref_declared_in_same_script_w_fn_other_script(void) {
         }
     });
 
-    ecs_entity_t f = ecs_script(world, {
+    ecs_entity_t f = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "func" }),
         .code =
             HEAD "e {"
@@ -4031,7 +4040,7 @@ void Refs_ref_declared_in_same_script_w_fn_other_script(void) {
     });
     test_assert(f != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4087,7 +4096,7 @@ void Refs_ref_declared_in_same_script_w_fn_other_scripts(void) {
         }
     });
 
-    ecs_entity_t ent = ecs_script(world, {
+    ecs_entity_t ent = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "ent" }),
         .code =
             HEAD "e {"
@@ -4097,7 +4106,7 @@ void Refs_ref_declared_in_same_script_w_fn_other_scripts(void) {
     });
     test_assert(ent != 0);
 
-    ecs_entity_t f = ecs_script(world, {
+    ecs_entity_t f = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "func" }),
         .code =
             HEAD "fn get_mass() -> f32 { e[Mass].value }"
@@ -4105,7 +4114,7 @@ void Refs_ref_declared_in_same_script_w_fn_other_scripts(void) {
     });
     test_assert(f != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4159,7 +4168,7 @@ void Refs_global_const_var_declared_in_same_script_w_template(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export const v: f32 = 10"
@@ -4241,7 +4250,7 @@ void Refs_reeval_during_script_preserves_using(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4258,7 +4267,7 @@ void Refs_reeval_during_script_preserves_using(void) {
     LINE "e { Mass: {30} }"
     LINE "e1 { Bar }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e1 = ecs_lookup(world, "e1");
     test_assert(e1 != 0);
@@ -4291,7 +4300,7 @@ void Refs_global_mut_var_in_component_initializer(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4341,7 +4350,7 @@ void Refs_global_mut_var_in_with_initializer(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "with Position(v, 0) {"
@@ -4391,7 +4400,7 @@ void Refs_global_mut_var_in_match_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4437,7 +4446,7 @@ void Refs_global_mut_var_in_if_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "if v > 0 {"
@@ -4479,7 +4488,7 @@ void Refs_global_mut_var_in_for_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..v {"
@@ -4529,7 +4538,7 @@ void Refs_global_mut_var_non_managed_script_no_update(void) {
         LINE "  Position: {v, 0}"
         LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     {
         ecs_entity_t foo = ecs_lookup(world, "foo");
@@ -4572,7 +4581,7 @@ void Refs_global_mut_var_set_after_managed_script_deleted(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4635,7 +4644,7 @@ void Refs_global_mut_var_modified(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4693,7 +4702,7 @@ void Refs_global_mut_var_in_function(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4743,7 +4752,7 @@ void Refs_global_mut_var_in_new_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4808,7 +4817,7 @@ void Refs_global_mut_var_in_function_in_new_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4866,7 +4875,7 @@ void Refs_global_mut_var_in_script_function_body(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "fn get_v() -> f32 { v }"
@@ -4917,7 +4926,7 @@ void Refs_global_mut_var_assigned_to_component(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4970,7 +4979,7 @@ void Refs_global_mut_var_in_template_component_initializer(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -5038,7 +5047,7 @@ void Refs_global_mut_var_in_template_with_initializer(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -5093,7 +5102,7 @@ void Refs_global_mut_var_in_template_match_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -5142,7 +5151,7 @@ void Refs_global_mut_var_in_template_if_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -5187,7 +5196,7 @@ void Refs_global_mut_var_in_template_for_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -5243,7 +5252,7 @@ void Refs_global_mut_var_in_template_function(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -5296,7 +5305,7 @@ void Refs_global_mut_var_in_template_new_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -5364,7 +5373,7 @@ void Refs_global_mut_var_in_template_function_in_new_expr(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -5425,7 +5434,7 @@ void Refs_global_mut_var_in_template_script_function_body(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "fn get_v() -> f32 { v }"
@@ -5479,7 +5488,7 @@ void Refs_global_mut_var_in_template_assigned_to_component(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -5526,7 +5535,7 @@ void Refs_global_mut_var_declared_in_same_script(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export mut v: f32 = 10"
@@ -5573,7 +5582,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export mut v: f32 = 10"
@@ -5621,7 +5630,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn_other_script(void) {
         }
     });
 
-    ecs_entity_t f = ecs_script(world, {
+    ecs_entity_t f = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "func" }),
         .code =
             HEAD "export mut v: f32 = 10"
@@ -5630,7 +5639,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn_other_script(void) {
     });
     test_assert(f != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -5681,7 +5690,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn_other_script_w_implicit_va
         }
     });
 
-    ecs_entity_t f = ecs_script(world, {
+    ecs_entity_t f = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "func" }),
         .code =
             HEAD "export mut v: f32 = 10"
@@ -5690,7 +5699,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn_other_script_w_implicit_va
     });
     test_assert(f != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -5741,7 +5750,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts(void) {
         }
     });
 
-    ecs_entity_t var = ecs_script(world, {
+    ecs_entity_t var = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "var" }),
         .code =
             HEAD "export mut v: f32 = 10"
@@ -5749,7 +5758,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts(void) {
     });
     test_assert(var != 0);
 
-    ecs_entity_t f = ecs_script(world, {
+    ecs_entity_t f = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "func" }),
         .code =
             HEAD "fn get_v() -> f32 { $v }"
@@ -5757,7 +5766,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts(void) {
     });
     test_assert(f != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -5812,7 +5821,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts_w_implicit_v
         }
     });
 
-    ecs_entity_t var = ecs_script(world, {
+    ecs_entity_t var = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "var" }),
         .code =
             HEAD "export mut v: f32 = 10"
@@ -5820,7 +5829,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts_w_implicit_v
     });
     test_assert(var != 0);
 
-    ecs_entity_t f = ecs_script(world, {
+    ecs_entity_t f = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "func" }),
         .code =
             HEAD "fn get_v() -> f32 { v }"
@@ -5828,7 +5837,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts_w_implicit_v
     });
     test_assert(f != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -5875,7 +5884,7 @@ void Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts_w_implicit_v
 void Refs_global_mut_var_in_scoped_function_other_script(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t player_script = ecs_script(world, {
+    ecs_entity_t player_script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "player_script" }),
         .code =
             HEAD "player {"
@@ -5887,7 +5896,7 @@ void Refs_global_mut_var_in_scoped_function_other_script(void) {
     });
     test_assert(player_script != 0);
 
-    ecs_entity_t hud_script = ecs_script(world, {
+    ecs_entity_t hud_script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "hud_script" }),
         .code =
             HEAD "hud {"
@@ -5929,7 +5938,7 @@ void Refs_global_mut_var_declared_in_same_script_w_template(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export mut v: f32 = 10"
@@ -6015,7 +6024,7 @@ void Refs_reeval_instantiates_template_w_global_mut_var_ref(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -6077,7 +6086,7 @@ void Refs_global_mut_var_modified_twice(void) {
     });
     test_assert(v != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -6142,7 +6151,7 @@ void Refs_global_const_var_and_mut_var_in_same_expr(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -6195,7 +6204,7 @@ void Refs_global_mut_var_declared_in_same_script_modified(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export mut v: f32 = 10"
@@ -6239,7 +6248,7 @@ void Refs_global_mut_var_declared_in_same_script_reacts(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export mut v: f32 = 10"
@@ -6285,7 +6294,7 @@ void Refs_two_global_mut_vars_declared_in_same_script(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export mut a: f32 = 10"
@@ -6353,7 +6362,7 @@ void Refs_global_mut_var_declared_in_same_script_modified_deferred(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export mut v: f32 = 10"
@@ -6409,7 +6418,7 @@ void Refs_global_mut_var_declared_in_same_script_modified_in_system(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export mut v: f32 = 10"
@@ -6458,14 +6467,14 @@ void Refs_global_mut_var_modified_in_system_other_script(void) {
         }
     });
 
-    ecs_entity_t decl = ecs_script(world, {
+    ecs_entity_t decl = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "decl" }),
         .code =
             HEAD "export mut v: f32 = 10"
     });
     test_assert(decl != 0);
 
-    ecs_entity_t use = ecs_script(world, {
+    ecs_entity_t use = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "use" }),
         .code =
             HEAD "foo {"
@@ -6522,7 +6531,7 @@ void Refs_has_component_ref(void) {
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -6576,7 +6585,7 @@ void Refs_has_tag_ref(void) {
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -6631,7 +6640,7 @@ void Refs_has_pair_ref(void) {
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -6689,7 +6698,7 @@ void Refs_has_singleton_ref(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -6742,7 +6751,7 @@ void Refs_has_singleton_pair_ref(void) {
         }
     });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -6802,7 +6811,7 @@ void Refs_has_ref_in_const_var(void) {
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const b = e?[Position]"
@@ -6864,7 +6873,7 @@ void Refs_has_ref_in_template_component_initializer(void) {
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
@@ -6946,7 +6955,7 @@ void Refs_has_ref_and_value_ref_same_component(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -6988,7 +6997,7 @@ void Refs_wait_for_unresolved_tag(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "e1 {"
@@ -7023,7 +7032,7 @@ void Refs_wait_for_unresolved_component(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "e1 {"
@@ -7079,7 +7088,7 @@ void Refs_wait_for_component_on_entity(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -7133,7 +7142,7 @@ void Refs_wait_for_unresolved_entity_then_component(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -7181,7 +7190,7 @@ void Refs_wait_for_unresolved_entity_w_component_set_before_name(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -7223,7 +7232,7 @@ void Refs_wait_for_unresolved_const_type(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const val: Mass = {10}"
@@ -7259,7 +7268,7 @@ void Refs_wait_for_multiple_unresolved_refs(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "e1 {"
@@ -7298,7 +7307,7 @@ void Refs_wait_for_unresolved_component_entity_named_first(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "e1 {"
@@ -7338,7 +7347,7 @@ void Refs_delete_script_while_waiting(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "e1 {"
@@ -7372,7 +7381,7 @@ void Refs_wait_for_has_unresolved_component(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -7429,7 +7438,7 @@ void Refs_wait_for_has_unresolved_entity(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -7497,7 +7506,7 @@ void Refs_has_ref_resolve_observer_on_add(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"

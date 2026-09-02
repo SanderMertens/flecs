@@ -2,7 +2,13 @@
 
 static ecs_query_cache_kind_t disable_folding = false;
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
 void Expr_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
     const char *folding_param = test_param("folding");
     if (folding_param) {
         if (!strcmp(folding_param, "disabled")) {
@@ -12462,7 +12468,7 @@ void Expr_platform_consts(void) {
     LINE "  true: 1"
     LINE "  _: 2"
     LINE "}";
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_int(ecs_const_var_get_t(world, "tier", ecs_i32_t), 2);
 
     ecs_fini(world);
@@ -12481,7 +12487,7 @@ void Expr_match_bool_enum_const_var(void) {
     LINE "  true: Low"
     LINE "  _: High"
     LINE "}";
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     ecs_entity_t q_var = ecs_lookup(world, "q");
     test_assert(q_var != 0);
     ecs_value_t q = ecs_const_var_get(world, q_var);
@@ -12502,7 +12508,7 @@ void Expr_match_bool_enum_const_var_to_mut_var(void) {
     LINE "  _: High"
     LINE "}"
     LINE "export mut r: Quality = q";
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t r = ecs_lookup(world, "r");
     test_assert(r != 0);
@@ -12520,7 +12526,7 @@ void Expr_enum_const_var_to_mut_var(void) {
     HEAD "enum Quality(Low, Medium, High)"
     LINE "const q: Quality = High"
     LINE "export mut r: Quality = q";
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t r = ecs_lookup(world, "r");
     test_assert(r != 0);

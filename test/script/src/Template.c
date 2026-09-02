@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void Template_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 void Template_instantiate_w_string_prop_no_leak(void) {
     ecs_world_t *world = ecs_init();
 
@@ -9,9 +18,9 @@ void Template_instantiate_w_string_prop_no_leak(void) {
     LINE "}"
     LINE "T a(name: \"hello\")";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    test_assert(ecs_script_run(world, NULL,
-        "T b(name: \"world\")", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "T b(name: \"world\")", &ir_desc, NULL) == 0);
 
     int64_t balance_before = (ecs_os_api_malloc_count +
         ecs_os_api_calloc_count) - ecs_os_api_free_count;
@@ -20,8 +29,8 @@ void Template_instantiate_w_string_prop_no_leak(void) {
     for (i = 0; i < 10; i ++) {
         ecs_entity_t e = ecs_lookup(world, "b");
         ecs_delete(world, e);
-        test_assert(ecs_script_run(world, NULL,
-            "T b(name: \"world\")", NULL) == 0);
+        test_assert(ecs_script_run_w_desc(world, NULL,
+            "T b(name: \"world\")", &ir_desc, NULL) == 0);
     }
 
     int64_t balance_after = (ecs_os_api_malloc_count +
@@ -44,7 +53,7 @@ void Template_template_no_scope(void) {
     LINE "template Tree";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -61,7 +70,7 @@ void Template_template_no_props(void) {
     LINE "}"
     LINE "Tree ent()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -87,7 +96,7 @@ void Template_template_newline_before_scope(void) {
     LINE "}"
     LINE "Tree ent()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -117,7 +126,7 @@ void Template_template_prop(void) {
     LINE "  prop height: f32 = 0"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -149,7 +158,7 @@ void Template_template_prop_space_colon(void) {
     LINE "  prop height: f32 = 0"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -182,7 +191,7 @@ void Template_template_2_props(void) {
     LINE "  prop height: f32 = 0"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -221,7 +230,7 @@ void Template_template_w_using(void) {
     LINE "}"
     LINE "Tree ent()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -275,7 +284,7 @@ void Template_template_instance_w_default_values(void) {
     LINE "e { Tree }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -324,7 +333,7 @@ void Template_template_instance_w_assign_default_values(void) {
     LINE "e { Tree: {} }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -373,7 +382,7 @@ void Template_template_instance_w_overridden_values(void) {
     LINE "e { Tree: {width: 30, height: 40} }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -422,7 +431,7 @@ void Template_template_w_prop_implicit_type(void) {
     LINE "e { Tree }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -472,7 +481,7 @@ void Template_template_w_child(void) {
     LINE "e { Tree: {width: 1, height: 2} }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -533,7 +542,7 @@ void Template_template_w_child_parse_script(void) {
     LINE "e { Tree: {width: 1, height: 2} }"
     LINE "";
 
-    test_assert(ecs_script(world, {
+    test_assert(ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     }) != 0);
@@ -594,12 +603,12 @@ void Template_template_w_child_parse_script_twice(void) {
     LINE "e { Tree: {width: 1, height: 2} }"
     LINE "";
 
-    test_assert(ecs_script(world, {
+    test_assert(ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     }) != 0);
 
-    test_assert(ecs_script(world, {
+    test_assert(ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     }) != 0);
@@ -660,7 +669,7 @@ void Template_template_w_child_update_after_parse(void) {
     LINE "e { Tree: {width: 1, height: 2} }"
     LINE "";
 
-    test_assert(ecs_script(world, {
+    test_assert(ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     }) != 0);
@@ -682,7 +691,7 @@ void Template_template_w_child_update_after_parse(void) {
     LINE "e { Tree: {width: 3, height: 4} }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr_update, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_update, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -743,7 +752,7 @@ void Template_template_w_nested_child(void) {
     LINE "e { Tree: {width: 1, height: 2} }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -827,7 +836,7 @@ void Template_template_w_prefab(void) {
     LINE "e { Tree: {width: 1, height: 2} }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -923,7 +932,7 @@ void Template_template_w_prefab_tree(void) {
     LINE "e { Tree: {width: 1, height: 2} }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -1020,7 +1029,7 @@ void Template_template_w_nested_template(void) {
     LINE "}"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -1057,7 +1066,7 @@ void Template_template_w_nested_template(void) {
     const char *expr_instance =
     LINE "f { Forest: {10, 20} }"
     LINE "";
-    test_assert(ecs_script_run(world, NULL, expr_instance, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_instance, &ir_desc, NULL) == 0);
 
     ecs_entity_t f = ecs_lookup(world, "f");
     test_assert(f != 0);
@@ -1131,7 +1140,7 @@ void Template_instantiate_prefab_w_template(void) {
     LINE "Prefab p { Tree: {width: 10, height: 20} }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -1143,7 +1152,7 @@ void Template_instantiate_prefab_w_template(void) {
     const char *expr_instance =
     LINE "e : p {}"
     LINE "";
-    test_assert(ecs_script_run(world, NULL, expr_instance, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_instance, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -1199,7 +1208,7 @@ void Template_template_w_prefab_w_template(void) {
     LINE "}"
     LINE "f { Forest: {10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -1259,7 +1268,7 @@ void Template_3_templates(void) {
     LINE "Park c()"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -1347,7 +1356,7 @@ void Template_template_nested_w_default_var(void) {
     LINE "}"
     LINE "f { Forest: {10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -1424,7 +1433,7 @@ void Template_template_w_anonymous(void) {
     LINE ""
     LINE "t { Tree: {10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -1468,7 +1477,7 @@ void Template_template_w_anonymous_parse_again(void) {
     LINE "}"
     LINE ""
     LINE "t { Tree: {10} }";
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     {
         ecs_entity_t tree = ecs_lookup(world, "Tree");
@@ -1498,7 +1507,7 @@ void Template_template_w_anonymous_parse_again(void) {
 
     const char *expr_again =
     LINE "t { Tree: {10} }";
-    test_assert(ecs_script_run(world, NULL, expr_again, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_again, &ir_desc, NULL) == 0);
 
     {
         ecs_entity_t tree = ecs_lookup(world, "Tree");
@@ -1549,7 +1558,7 @@ void Template_template_w_composite_prop(void) {
     LINE "}"
     LINE "t { Tree: {pos: {20, 30}} }"
     LINE "";
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -1599,7 +1608,7 @@ void Template_template_with_with(void) {
     LINE "}"
     LINE "t { Tree: {count: 10} }"
     LINE "";
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -1648,11 +1657,11 @@ void Template_module_w_template(void) {
     LINE "  child { Position: {count, count * 2} }\n"
     LINE "}\n"
     LINE "";
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     const char *expr_inst =
     LINE "t { hello.world.Tree: {10} }\n";
-    test_assert(ecs_script_run(world, NULL, expr_inst, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_inst, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "hello.world.Tree");
     test_assert(tree != 0);
@@ -1705,11 +1714,11 @@ void Template_module_w_nested_template(void) {
     LINE "  t { Tree: {count:$} }"
     LINE "}"
     LINE "";
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     const char *expr_inst =
     LINE "f { hello.world.Forest: {10} }\n";
-    test_assert(ecs_script_run(world, NULL, expr_inst, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_inst, &ir_desc, NULL) == 0);
 
     ecs_entity_t forest = ecs_lookup(world, "hello.world.Forest");
     test_assert(forest != 0);
@@ -1761,7 +1770,7 @@ void Template_template_w_pair_w_this_var(void) {
     LINE "ent { Foo: {} }\n"
     LINE "\n";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ent = ecs_lookup(world, "ent");
@@ -1785,7 +1794,7 @@ void Template_template_w_pair_w_prop_var(void) {
     LINE "ent { Foo: {flecs.core} }\n"
     LINE "\n";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ent = ecs_lookup(world, "ent");
@@ -1809,7 +1818,7 @@ void Template_template_w_pair_w_const_var(void) {
     LINE "ent { Foo: {} }\n"
     LINE "\n";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ent = ecs_lookup(world, "ent");
@@ -1835,7 +1844,7 @@ void Template_template_w_pair_scope_w_this_var(void) {
     LINE "ent { Foo: {} }\n"
     LINE "\n";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ent = ecs_lookup(world, "ent");
@@ -1866,7 +1875,7 @@ void Template_template_w_pair_scope_w_prop_var(void) {
     LINE "ent { Foo: {flecs.core} }\n"
     LINE "\n";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ent = ecs_lookup(world, "ent");
@@ -1897,7 +1906,7 @@ void Template_template_w_pair_scope_w_const_var(void) {
     LINE "ent { Foo: {} }\n"
     LINE "\n";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ent = ecs_lookup(world, "ent");
@@ -1933,7 +1942,7 @@ void Template_template_w_this_var_assigned_to_entity_field(void) {
     LINE "}"
     LINE "Foo ent()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -1980,7 +1989,7 @@ void Template_template_w_this_var_in_component_expr(void) {
     LINE "  Foo: {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2009,7 +2018,7 @@ void Template_template_w_pair_w_this_kw(void) {
     LINE "ent { Foo: {} }\n"
     LINE "\n";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ent = ecs_lookup(world, "ent");
@@ -2035,7 +2044,7 @@ void Template_template_w_pair_scope_w_this_kw(void) {
     LINE "ent { Foo: {} }\n"
     LINE "\n";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ent = ecs_lookup(world, "ent");
@@ -2071,7 +2080,7 @@ void Template_template_w_this_kw_assigned_to_entity_field(void) {
     LINE "}"
     LINE "Foo ent()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2118,7 +2127,7 @@ void Template_template_w_this_kw_in_component_expr(void) {
     LINE "  Foo: {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2167,7 +2176,7 @@ void Template_template_w_const_w_this_kw_in_component_expr(void) {
     LINE "  Foo: {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2198,7 +2207,7 @@ void Template_template_w_pair_w_unresolved_var_first(void) {
 
     ecs_log_set_level(-4);
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -2217,7 +2226,7 @@ void Template_template_w_pair_w_unresolved_var_second(void) {
 
     ecs_log_set_level(-4);
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -2238,7 +2247,7 @@ void Template_template_w_pair_scope_w_unresolved_var_first(void) {
 
     ecs_log_set_level(-4);
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -2259,7 +2268,7 @@ void Template_template_w_pair_scope_w_unresolved_var_second(void) {
 
     ecs_log_set_level(-4);
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -2272,7 +2281,7 @@ void Template_prop_without_using_meta(void) {
     LINE "  prop height: f32 = 0"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -2308,7 +2317,7 @@ void Template_hoist_var(void) {
     LINE "}"
     LINE "Tree foo(height: 20)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -2346,7 +2355,7 @@ void Template_hoist_non_folded_var(void) {
     LINE "}"
     LINE "Tree foo(height: 20)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -2381,7 +2390,7 @@ void Template_hoist_component_var(void) {
     LINE "}"
     LINE "Tree foo(height: 30)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -2417,7 +2426,7 @@ void Template_hoist_vars_nested(void) {
     LINE "}"
     LINE "parent.Tree foo()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "parent.Tree");
     test_assert(tree != 0);
@@ -2457,7 +2466,7 @@ void Template_hoist_vars_nested_w_masked(void) {
     LINE "}"
     LINE "parent.Tree foo()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "parent.Tree");
     test_assert(tree != 0);
@@ -2492,7 +2501,7 @@ void Template_anonymous_template_instance(void) {
     LINE "}"
     LINE "Tree() {}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -2530,7 +2539,7 @@ void Template_anonymous_template_instance_no_scope(void) {
     LINE "}"
     LINE "Tree()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -2569,7 +2578,7 @@ void Template_anonymous_template_instance_w_prop(void) {
     LINE "}"
     LINE "Tree() {}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -2608,7 +2617,7 @@ void Template_anonymous_template_instance_w_prop_no_scope(void) {
     LINE "}"
     LINE "Tree()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -2639,7 +2648,7 @@ void Template_with_after_template(void) {
     LINE "}"
     LINE "withoutBar {}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t withBar = ecs_lookup(world, "withBar");
     test_assert(withBar != 0);
@@ -2667,7 +2676,7 @@ void Template_with_in_scope_after_template(void) {
     LINE "}"
     LINE "defWithoutBar {}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t withBar = ecs_lookup(world, "parent.withBar");
     test_assert(withBar != 0);
@@ -2701,7 +2710,7 @@ void Template_prefab_w_template(void) {
     LINE ""
     LINE "e : Base {}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     ecs_entity_t base = ecs_lookup(world, "Base");
@@ -2732,7 +2741,7 @@ void Template_template_in_scope(void) {
     LINE "}"
     LINE "parent.Foo ent";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Foo") == 0);
     ecs_entity_t foo = ecs_lookup(world, "parent.Foo");
@@ -2774,7 +2783,7 @@ void Template_nested_templates_in_prefab(void) {
     ;
 
     // ecs_log_set_level(0);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t frame = ecs_lookup(world, "Frame");
     test_assert(frame != 0);
@@ -2827,7 +2836,7 @@ void Template_entity_w_2_template_instances(void) {
     ;
 
     // ecs_log_set_level(0);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2865,7 +2874,7 @@ void Template_template_w_prefab_and_instance(void) {
     LINE "e { Foo: {} }"
     ;
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2912,7 +2921,7 @@ void Template_template_w_child_w_var(void) {
     LINE "e { Foo: {} }"
     ;
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2956,7 +2965,7 @@ void Template_template_w_child_w_prop(void) {
     LINE "e { Foo: {{10, 20}} }"
     ;
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3002,7 +3011,7 @@ void Template_fold_const(void) {
     LINE "Foo e3(16)"
     ;
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3070,7 +3079,7 @@ void Template_bulk_create_template(void) {
     LINE "  Velocity: {x + 5, y + 5}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     Position p[] = {
         {10, 20},
@@ -3126,7 +3135,7 @@ void Template_template_w_expr_w_self_ref(void) {
     LINE "}"
     LINE "Foo ent()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Foo");
     test_assert(tree != 0);
@@ -3173,7 +3182,7 @@ void Template_entity_w_assign_with_nested_template(void) {
     LINE "  e { Position: {10, 20} }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3228,7 +3237,7 @@ void Template_template_w_for(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3285,7 +3294,7 @@ void Template_template_w_component_w_undefined_identifier(void) {
 
     ecs_log_set_level(-4);
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -3313,7 +3322,7 @@ void Template_template_w_child_component_w_undefined_identifier(void) {
 
     ecs_log_set_level(-4);
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -3341,7 +3350,7 @@ void Template_template_w_anonymous_child_component_w_undefined_identifier(void) 
 
     ecs_log_set_level(-4);
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -3378,7 +3387,7 @@ void Template_clear_script_w_template_w_on_remove_observer(void) {
     LINE "  template Bar { }"
     LINE "}";
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code = expr
     });
 
@@ -3431,7 +3440,7 @@ void Template_clear_script_w_template_w_on_remove_observer_added_after(void) {
     LINE "  template Bar { }"
     LINE "}";
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code = expr
     });
 
@@ -3482,10 +3491,10 @@ void Template_component_w_assign_add(void) {
     LINE "}"
     ;
 
-    ecs_script_t *s = ecs_script_parse(world, NULL, expr, NULL, NULL);
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
     test_assert(s != NULL);
 
-    test_assert(ecs_script_eval(s, NULL, NULL) == 0);
+    test_assert(ecs_script_eval(s, &ir_desc, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     const Position *ptr = ecs_get(world, foo, Position);
@@ -3521,10 +3530,10 @@ void Template_component_w_assign_mul(void) {
     LINE "}"
     ;
 
-    ecs_script_t *s = ecs_script_parse(world, NULL, expr, NULL, NULL);
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
     test_assert(s != NULL);
 
-    test_assert(ecs_script_eval(s, NULL, NULL) == 0);
+    test_assert(ecs_script_eval(s, &ir_desc, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     const Position *ptr = ecs_get(world, foo, Position);
@@ -3559,7 +3568,7 @@ void Template_prop_after_const(void) {
     LINE "Tree e(30)";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -3577,7 +3586,7 @@ void Template_const_from_prop(void) {
     LINE "}"
     LINE "Tree e(30)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -3610,7 +3619,7 @@ void Template_redefine_nested_template_w_prefab(void) {
     LINE "e { Bar: { } }"
     LINE "e { Bar: { } }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3654,7 +3663,7 @@ void Template_redefine_nested_template_w_prefab_2(void) {
     LINE "e { Bar: { } }"
     LINE "e { Bar: { } }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3699,7 +3708,7 @@ void Template_redefine_nested_template_w_prefab_3(void) {
     LINE "e { Bar: { } }"
     LINE "e { Bar: { } }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3738,7 +3747,7 @@ void Template_template_w_script_component(void) {
     LINE "}"
     LINE "Foo e(10, 20)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ECS_COMPONENT(world, Position);
 
@@ -3771,7 +3780,7 @@ void Template_template_w_script_pair_component(void) {
     LINE "}"
     LINE "Foo e(10, 20)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tgt);
@@ -3817,7 +3826,7 @@ void Template_template_w_prop_and_pair(void) {
     LINE "Foo e(10)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_fini(world);
 }
@@ -3837,7 +3846,7 @@ void Template_template_w_name_annotation(void) {
     LINE "Bar f {}"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t Bar = ecs_lookup(world, "Bar");
     test_assert(Bar != 0);
@@ -3875,7 +3884,7 @@ void Template_template_w_name_annotation_update_script(void) {
     LINE "Bar e {}"
     LINE "";
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .code = expr
     });
 
@@ -3941,7 +3950,7 @@ void Template_template_w_tree_parent(void) {
     LINE "Bar f {}"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t Bar = ecs_lookup(world, "Bar");
     test_assert(Bar != 0);
@@ -4006,7 +4015,7 @@ void Template_template_w_tree_parent_change_value(void) {
     LINE "Bar e(10)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t Bar = ecs_lookup(world, "Bar");
     test_assert(Bar != 0);
@@ -4085,7 +4094,7 @@ void Template_template_w_nested_template_w_with(void) {
     LINE "Cross city()"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t Cross = ecs_lookup(world, "Cross");
     test_assert(Cross != 0);
@@ -4123,7 +4132,7 @@ void Template_template_w_nested_template_w_with_kind_value(void) {
     LINE "Cross city()"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t CityBlock = ecs_lookup(world, "CityBlock");
     test_assert(CityBlock != 0);
@@ -4165,7 +4174,7 @@ void Template_pair_component_w_entity_prop_target(void) {
     LINE "ent { Foo: {flecs.core} }\n"
     LINE "\n";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ent = ecs_lookup(world, "ent");
@@ -4195,7 +4204,7 @@ void Template_child_name_from_string_prop(void) {
     LINE "ent { Foo: {suffix: \"hello\"} }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t ent = ecs_lookup(world, "ent");
     test_assert(ent != 0);
@@ -4222,7 +4231,7 @@ void Template_template_w_new_expr_in_const(void) {
     LINE "Tree e1()"
     LINE "Tree e2()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t rel = ecs_lookup(world, "Rel");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -4280,7 +4289,7 @@ void Template_template_w_existing_observer(void) {
     LINE "Position e(10, 20)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_int(on_position_count, 1);
     test_int(on_position.x, 10);
@@ -4313,7 +4322,7 @@ void Template_template_w_prop_w_value_name(void) {
     LINE "Foo e(10)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e.e");
     test_assert(e != 0);
@@ -4351,7 +4360,7 @@ void Template_template_w_var_w_value_name(void) {
     LINE "Foo e(10)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
@@ -4381,7 +4390,7 @@ void Template_template_w_module_qualified_entity_ref(void) {
     LINE "foo.Tree inst()"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t a = ecs_lookup(world, "foo.suburban.a");
     test_assert(a != 0);
@@ -4415,7 +4424,7 @@ void Template_hoisted_var_from_outer_scope(void) {
     LINE "}"
     LINE "Tree foo(height: 20)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -4451,7 +4460,7 @@ void Template_hoisted_var_from_outer_scopes(void) {
     LINE "}"
     LINE "parent.Tree foo()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -4488,7 +4497,7 @@ void Template_hoisted_masked_var_from_outer_scope(void) {
     LINE "}"
     LINE "parent.Tree foo()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -4520,12 +4529,12 @@ void Template_hoisted_var_instantiate_after_run(void) {
     LINE "  Position: {v, 20}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr_1, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_1, &ir_desc, NULL) == 0);
 
     const char *expr_2 =
     HEAD "Tree foo()";
 
-    test_assert(ecs_script_run(world, NULL, expr_2, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr_2, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -4552,7 +4561,7 @@ void Template_hoisted_var_w_script_entity(void) {
     LINE "}"
     LINE "Tree foo()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     ecs_entity_t tgt = ecs_lookup(world, "tgt");
@@ -4582,18 +4591,18 @@ void Template_eval_twice_w_failed_method_call_in_body(void) {
     ecs_log_set_level(-4);
 
     ecs_script_eval_result_t parse_result = {0};
-    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, &parse_result);
     test_assert(script != NULL);
     test_assert(parse_result.error == NULL);
 
     ecs_script_eval_result_t result_1 = {0};
-    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result_1) != 0);
     test_assert(result_1.error != NULL);
     test_assert(strstr(result_1.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
-    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result_2) != 0);
     test_assert(result_2.error != NULL);
     test_assert(strstr(result_2.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_2.error);
@@ -4620,18 +4629,18 @@ void Template_eval_twice_w_failed_method_call_in_prop_default(void) {
     ecs_log_set_level(-4);
 
     ecs_script_eval_result_t parse_result = {0};
-    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, &parse_result);
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, &parse_result);
     test_assert(script != NULL);
     test_assert(parse_result.error == NULL);
 
     ecs_script_eval_result_t result_1 = {0};
-    test_assert(ecs_script_eval(script, NULL, &result_1) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result_1) != 0);
     test_assert(result_1.error != NULL);
     test_assert(strstr(result_1.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_1.error);
 
     ecs_script_eval_result_t result_2 = {0};
-    test_assert(ecs_script_eval(script, NULL, &result_2) != 0);
+    test_assert(ecs_script_eval(script, &ir_desc, &result_2) != 0);
     test_assert(result_2.error != NULL);
     test_assert(strstr(result_2.error, "unresolved reference 'pair'") != NULL);
     ecs_os_free(result_2.error);
@@ -4653,7 +4662,7 @@ void Template_singleton_scope_w_template(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "$ {"
@@ -4711,7 +4720,7 @@ void Template_annotation_in_template(void) {
     LINE "Foo inst_a()"
     LINE "Foo inst_b()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t inst_a = ecs_lookup(world, "inst_a");
     test_assert(inst_a != 0);
@@ -4774,7 +4783,7 @@ void Template_annotation_in_for_in_template(void) {
     LINE "}"
     LINE "Foo inst()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t child_0 = ecs_lookup(world, "inst.child_0");
     test_assert(child_0 != 0);
@@ -4831,7 +4840,7 @@ void Template_annotation_in_if_in_template(void) {
     LINE "}"
     LINE "Foo inst()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t child = ecs_lookup(world, "inst.child");
     test_assert(child != 0);
@@ -4866,7 +4875,7 @@ void Template_multiple_templates_dont_leak_child_names(void) {
     LINE "  bulb {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "m.A") != 0);
     test_assert(ecs_lookup(world, "m.B") != 0);
@@ -4901,7 +4910,7 @@ void Template_injected_child_order_w_ordered_children(void) {
     LINE "  b { Position: {0, 0} }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t row = ecs_lookup(world, "row");
     test_assert(row != 0);
@@ -4949,7 +4958,7 @@ void Template_template_prop_default_from_const(void) {
     LINE "}"
     LINE "Panel inst()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "Panel");
     test_assert(panel != 0);
@@ -4984,7 +4993,7 @@ void Template_template_root_component_w_string_mut(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -5032,7 +5041,7 @@ void Template_template_root_component_after_component_w_mut(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -5067,7 +5076,7 @@ void Template_template_in_singleton_scope(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 5);
     ecs_os_free(result.error);
@@ -5094,7 +5103,7 @@ void Template_template_instantiated_on_itself(void) {
 
     ecs_log_set_level(-4);
     ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
     test_assert(result.error != NULL);
     test_int(result.line, 5);
     ecs_os_free(result.error);
@@ -5140,7 +5149,7 @@ void Template_template_root_component_w_string_mut_in_nested_if(void) {
     LINE "}"
     LINE "Foo e(cond: true)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -5214,7 +5223,7 @@ void Template_template_root_component_w_string_mut_in_match_in_if(void) {
     LINE "}"
     LINE "Foo e(kind: 1)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -5269,7 +5278,7 @@ void Template_template_props_set_on_multiple_entities_w_bulk_init(void) {
     LINE "  Text: {\"v_{label}\"}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -5326,7 +5335,7 @@ void template_prop_large_struct_run(void) {
     LINE "}"
     LINE "inst { Hud: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t inst = ecs_lookup(world, "inst");
     test_assert(inst != 0);
@@ -5389,7 +5398,7 @@ void Template_many_templates_w_props_in_script(void) {
         template_count - 1);
 
     char *expr = ecs_strbuf_get(&buf);
-    int result = ecs_script_run(world, NULL, expr, NULL);
+    int result = ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL);
     ecs_os_free(expr);
     test_int(result, 0);
 
@@ -5442,7 +5451,7 @@ void Template_tree_parent_prefab_before_template(void) {
     LINE "}"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     test_assert(base != 0);
@@ -5568,7 +5577,7 @@ void Template_template_prop_struct_assign_whole_component(void) {
     LINE "Sign s(color: {60, 220, 255, 255})"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "s.panel");
     test_assert(panel != 0);
@@ -5599,7 +5608,7 @@ void Template_template_prop_struct_assign_whole_component_no_dollar(void) {
     LINE "Sign s(color: {60, 220, 255, 255})"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "s.panel");
     test_assert(panel != 0);
@@ -5630,7 +5639,7 @@ void Template_template_prop_struct_assign_whole_component_default(void) {
     LINE "Sign s()"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "s.panel");
     test_assert(panel != 0);
@@ -5663,7 +5672,7 @@ void Template_template_prop_struct_in_nested_struct_literal(void) {
     LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "s.panel");
     test_assert(panel != 0);
@@ -5704,7 +5713,7 @@ void Template_template_prop_struct_in_nested_struct_literal_default(void) {
     LINE "Sign s()"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "s.panel");
     test_assert(panel != 0);
@@ -5738,7 +5747,7 @@ void Template_template_prop_struct_in_nested_struct_literal_partial_args(void) {
     LINE "Sign s(strength: 6)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "s.panel");
     test_assert(panel != 0);
@@ -5772,7 +5781,7 @@ void Template_template_prop_struct_f32_members_in_nested_struct_literal(void) {
     LINE "Sign s(color: {0.25, 0.5, 1, 1}, strength: 6)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "s.panel");
     test_assert(panel != 0);
@@ -5811,7 +5820,7 @@ void Template_template_prop_struct_in_struct_literal_same_scope(void) {
     LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t s = ecs_lookup(world, "s");
     test_assert(s != 0);
@@ -5854,7 +5863,7 @@ void Template_template_prop_struct_in_deeply_nested_child(void) {
     LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t inner = ecs_lookup(world, "s.panel.inner");
     test_assert(inner != 0);
@@ -5898,7 +5907,7 @@ void Template_template_prop_struct_forwarded_to_nested_template(void) {
     LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "s.panel");
     test_assert(panel != 0);
@@ -5939,7 +5948,7 @@ void Template_template_prop_struct_no_default(void) {
     LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "s.panel");
     test_assert(panel != 0);
@@ -5970,7 +5979,7 @@ void Template_template_prop_typed_no_default_ctor(void) {
     LINE "T e()"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
@@ -5998,7 +6007,7 @@ void Template_template_prop_typed_no_default_override(void) {
     LINE "T e(value: {30, 40})"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
@@ -6021,7 +6030,7 @@ void Template_template_prop_no_default_missing_type(void) {
     LINE "";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -6048,7 +6057,7 @@ void Template_template_prop_struct_in_nested_struct_literal_w_using(void) {
     LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "s.panel");
     test_assert(panel != 0);
@@ -6081,7 +6090,7 @@ void Template_template_prop_struct_member_expr_in_struct_literal(void) {
     LINE "Sign s(color: {60, 220, 255, 255}, strength: 6)"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t panel = ecs_lookup(world, "s.panel");
     test_assert(panel != 0);
@@ -6107,7 +6116,7 @@ void Template_template_props_no_member_entities(void) {
     LINE "}"
     LINE "Tree ent(width: 30)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -6190,7 +6199,7 @@ void Template_template_prop_w_component_type_in_use(void) {
     LINE "}"
     LINE "Tree ent(pos: {30, 40})";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t ent = ecs_lookup(world, "ent");
     test_assert(ent != 0);
@@ -6232,7 +6241,7 @@ void Template_template_prop_w_array_of_component_type_in_use(void) {
     LINE "}"
     LINE "Tree ent(points: [{10, 20}, {30, 40}, {50, 60}])";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t ent = ecs_lookup(world, "ent");
     test_assert(ent != 0);
@@ -6280,7 +6289,7 @@ void Template_template_prop_w_inline_array_member_in_use(void) {
     LINE "}"
     LINE "Tree ent(v: {values: [10, 20, 30]})";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t ent = ecs_lookup(world, "ent");
     test_assert(ent != 0);
@@ -6346,7 +6355,7 @@ void Template_template_base_w_inline_array_member_elem_in_if(void) {
     LINE "Light a(lanes: 1, lane: [{10}, {20}, {30}, {40}])"
     LINE "Light b(lanes: 1, lane: [{0}, {20}, {30}, {40}])";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "a") != 0);
     test_assert(ecs_lookup(world, "b") != 0);
@@ -6371,7 +6380,7 @@ void Template_template_base_w_inline_array_member_elem_in_for(void) {
     LINE "}"
     LINE "Light a(lanes: 3, lane: [{10}, {20}, {30}, {40}])";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t c0 = ecs_lookup(world, "a.c_0");
     ecs_entity_t c1 = ecs_lookup(world, "a.c_1");
@@ -6412,7 +6421,7 @@ void Template_template_base_w_inline_array_member_reassign(void) {
     LINE "}"
     LINE "Light a(lanes: 2, lane: [{10}, {20}, {30}, {40}])";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t child = ecs_lookup(world, "a.child");
     test_assert(child != 0);
@@ -6425,7 +6434,7 @@ void Template_template_base_w_inline_array_member_reassign(void) {
     const char *update =
     HEAD "Light a(lanes: 3, lane: [{10}, {50}, {30}, {40}])";
 
-    test_assert(ecs_script_run(world, NULL, update, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, update, &ir_desc, NULL) == 0);
 
     child = ecs_lookup(world, "a.child");
     test_assert(child != 0);
@@ -6451,7 +6460,7 @@ void Template_template_base_w_inline_array_member_reassign_no_index(void) {
     LINE "}"
     LINE "Light a(lanes: 1, lane: [{10}, {20}, {30}, {40}])";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t child = ecs_lookup(world, "a.child");
     test_assert(child != 0);
@@ -6463,7 +6472,7 @@ void Template_template_base_w_inline_array_member_reassign_no_index(void) {
     const char *update =
     HEAD "Light a(lanes: 4, lane: [{50}, {20}, {30}, {40}])";
 
-    test_assert(ecs_script_run(world, NULL, update, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, update, &ir_desc, NULL) == 0);
 
     child = ecs_lookup(world, "a.child");
     test_assert(child != 0);
@@ -6486,7 +6495,7 @@ void Template_template_instantiates_itself(void) {
     LINE "Foo e()";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -6504,7 +6513,7 @@ void Template_template_instantiates_itself_w_stop_condition(void) {
     LINE "}"
     LINE "Foo e(3)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "e.child") != 0);
     test_assert(ecs_lookup(world, "e.child.child") != 0);

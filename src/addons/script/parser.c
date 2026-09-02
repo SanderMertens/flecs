@@ -1766,6 +1766,9 @@ ecs_script_t* ecs_script_parse(
     if (desc && desc->lenient) {
         impl->lenient = true;
     }
+    if (desc && desc->ir) {
+        impl->ir_enabled = true;
+    }
 
     /* Start parsing code */
     const char *pos = script->code;

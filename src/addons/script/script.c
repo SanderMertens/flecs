@@ -46,6 +46,7 @@ static ECS_MOVE(EcsScript, dst, src, {
     dst->observers = src->observers;
     dst->dyn_observers = src->dyn_observers;
     dst->lenient = src->lenient;
+    dst->ir = src->ir;
 
     src->filename = NULL;
     src->code = NULL;
@@ -108,6 +109,23 @@ ecs_script_t* flecs_script_new(
     ecs_vec_init_t(NULL, &result->lenient_warned, char*, 0);
     result->lenient = ecs_script_get_lenient(world);
     return &result->pub;
+}
+
+char* ecs_script_ir_to_str(
+    const ecs_script_t *script)
+{
+    ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_script_impl_t *impl = flecs_script_impl(
+        ECS_CONST_CAST(ecs_script_t*, script));
+    ecs_script_ir_t *ir = flecs_script_ir_ensure(impl);
+    if (!ir) {
+        goto error;
+    }
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    flecs_script_ir_to_buf(impl, ir, &buf);
+    return ecs_strbuf_get(&buf);
+error:
+    return NULL;
 }
 
 void ecs_script_set_lenient(
@@ -223,18 +241,19 @@ void ecs_script_clear(
     }
 }
 
-int ecs_script_run(
+int ecs_script_run_w_desc(
     ecs_world_t *world,
     const char *name,
     const char *code,
+    const ecs_script_eval_desc_t *desc,
     ecs_script_eval_result_t *result)
 {
-    ecs_script_t *script = ecs_script_parse(world, name, code, NULL, result);
+    ecs_script_t *script = ecs_script_parse(world, name, code, desc, result);
     if (!script) {
         goto error;
     }
 
-    if (ecs_script_eval(script, NULL, result)) {
+    if (ecs_script_eval(script, desc, result)) {
         goto error_free;
     }
 
@@ -246,18 +265,35 @@ error:
     return -1;
 }
 
-int ecs_script_run_file(
+int ecs_script_run(
     ecs_world_t *world,
-    const char *filename) 
+    const char *name,
+    const char *code,
+    ecs_script_eval_result_t *result)
+{
+    return ecs_script_run_w_desc(world, name, code, NULL, result);
+}
+
+int ecs_script_run_file_w_desc(
+    ecs_world_t *world,
+    const char *filename,
+    const ecs_script_eval_desc_t *desc)
 {
     char *script = flecs_load_from_file(filename);
     if (!script) {
         return -1;
     }
 
-    int result = ecs_script_run(world, filename, script, NULL);
+    int result = ecs_script_run_w_desc(world, filename, script, desc, NULL);
     ecs_os_free(script);
     return result;
+}
+
+int ecs_script_run_file(
+    ecs_world_t *world,
+    const char *filename) 
+{
+    return ecs_script_run_file_w_desc(world, filename, NULL);
 }
 
 void ecs_script_free(
@@ -269,6 +305,8 @@ void ecs_script_free(
     if (!--impl->refcount) {
         ecs_assert(impl->task_refcount == 0, ECS_INVALID_OPERATION,
             "script freed while tasks are still alive");
+        flecs_script_ir_free(impl->ir);
+        impl->ir = NULL;
         flecs_script_visit_free(script);
         flecs_expr_visit_free(script, impl->expr);
         ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_t);
@@ -357,7 +395,7 @@ int flecs_script_update(
     ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
     flecs_script_runtime_error_reset(runtime);
 
-    ecs_script_eval_desc_t parse_desc = { .lenient = s->lenient };
+    ecs_script_eval_desc_t parse_desc = { .lenient = s->lenient, .ir = s->ir };
     s->script = ecs_script_parse(world, name, code, &parse_desc, &eval_result);
     if (s->script != NULL) {
         flecs_script_impl(s->script)->entity = e;
@@ -394,7 +432,7 @@ int flecs_script_update(
      * can't free the AST that is being evaluated by deleting the script. */
     parsed_impl->refcount ++;
 
-    ecs_script_eval_desc_t eval_desc = { .runtime = eval_runtime };
+    ecs_script_eval_desc_t eval_desc = { .runtime = eval_runtime, .ir = s->ir };
     int eval_result_code = flecs_script_eval(parsed, &eval_desc,
         flecs_script_tag(e, instance), UINT64_MAX, &eval_result);
 
@@ -509,9 +547,10 @@ ecs_entity_t ecs_script_init(
         }
     }
 
-    if (desc->lenient) {
+    if (desc->lenient || desc->ir) {
         EcsScript *comp = ecs_ensure(world, e, EcsScript);
-        comp->lenient = true;
+        comp->lenient = desc->lenient;
+        comp->ir = desc->ir;
     }
 
     script = desc->code;

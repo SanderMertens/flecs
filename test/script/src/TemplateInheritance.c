@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void TemplateInheritance_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 typedef struct {
     float x;
     float y;
@@ -55,7 +64,7 @@ void TemplateInheritance_base_template_prop(void) {
     LINE "}"
     LINE "e { Derived: {x: 10, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -95,7 +104,7 @@ void TemplateInheritance_base_template_two_props(void) {
     LINE "}"
     LINE "e { Derived: {x: 10, y: 20, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
@@ -128,7 +137,7 @@ void TemplateInheritance_base_template_no_own_props(void) {
     LINE "}"
     LINE "e { Derived: {x: 10, y: 20} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t position = ecs_lookup(world, "Position");
@@ -160,7 +169,7 @@ void TemplateInheritance_base_template_prop_default(void) {
     LINE "e { Derived: {z: 30} }"
     LINE "f { Derived: {y: 20} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -196,7 +205,7 @@ void TemplateInheritance_base_template_prop_default_in_body(void) {
     LINE "}"
     LINE "e { Derived: {z: 10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     ecs_entity_t child = ecs_lookup(world, "e.child");
@@ -225,7 +234,7 @@ void TemplateInheritance_base_template_prop_set_at_instantiate(void) {
     LINE "}"
     LINE "e { Derived: {x: 10, y: 20, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     ecs_entity_t child = ecs_lookup(world, "e.child");
@@ -252,7 +261,7 @@ void TemplateInheritance_base_template_prop_w_expr_default(void) {
     LINE "}"
     LINE "e { Derived: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -281,7 +290,7 @@ void TemplateInheritance_base_template_body_not_inherited(void) {
     LINE "e { Derived: {x: 10} }"
     LINE "f { Base: {x: 10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tag = ecs_lookup(world, "Tag");
     ecs_entity_t position = ecs_lookup(world, "Position");
@@ -315,7 +324,7 @@ void TemplateInheritance_base_template_string_prop(void) {
     LINE "e { Derived: {z: 1} }"
     LINE "f { Derived: {name: \"world\"} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_struct(world, derived, 2, 16);
@@ -352,7 +361,7 @@ void TemplateInheritance_base_template_entity_prop(void) {
     LINE "e { Derived: {} }"
     LINE "f { Derived: {target: Bar} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -379,7 +388,7 @@ void TemplateInheritance_base_struct(void) {
     LINE "e { Derived: {x: 10, y: 20} }"
     LINE "f { Derived: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -428,7 +437,7 @@ void TemplateInheritance_base_component_defined_in_c(void) {
     LINE "}"
     LINE "e { Derived: {x: 10, y: 20, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
@@ -461,7 +470,7 @@ void TemplateInheritance_chain(void) {
     LINE "e { C: {} }"
     LINE "f { C: {x: 10, y: 20, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t a = ecs_lookup(world, "A");
     ecs_entity_t b = ecs_lookup(world, "B");
@@ -510,7 +519,7 @@ void TemplateInheritance_chain_props_in_body(void) {
     LINE "}"
     LINE "e { C: {x: 10, y: 20, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     ecs_entity_t child = ecs_lookup(world, "e.child");
@@ -541,7 +550,7 @@ void TemplateInheritance_chain_partial_defaults(void) {
     LINE "f { C: {x: 10, z: 30} }"
     LINE "g { C: {z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t c = ecs_lookup(world, "C");
 
@@ -587,7 +596,7 @@ void TemplateInheritance_chain_defaults_in_body(void) {
     LINE "e { C: {} }"
     LINE "f { C: {y: 20} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
 
@@ -624,7 +633,7 @@ void TemplateInheritance_two_derived(void) {
     LINE "e { D1: {} }"
     LINE "f { D2: {x: 10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t d1 = ecs_lookup(world, "D1");
@@ -662,7 +671,7 @@ void TemplateInheritance_base_prop_change_updates_instance(void) {
     LINE "}"
     LINE "e { Derived: {x: 10, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -674,8 +683,8 @@ void TemplateInheritance_base_prop_change_updates_instance(void) {
     test_flt(p->x, 10);
     test_flt(p->y, 30);
 
-    test_assert(ecs_script_run(world, NULL,
-        "e { Derived: {x: 20, z: 30} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "e { Derived: {x: 20, z: 30} }", &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "e.child") == child);
     p = ecs_get_id(world, child, position);
@@ -704,7 +713,7 @@ void TemplateInheritance_base_prop_used_by_derived_prop_default(void) {
     LINE "}"
     LINE "e { Derived: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -728,7 +737,7 @@ void TemplateInheritance_base_w_mut(void) {
     LINE "}"
     LINE "e { Derived: {x: 10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base_mut = ecs_lookup(world, "Base.mut");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -757,7 +766,7 @@ void TemplateInheritance_derived_w_mut(void) {
     LINE "}"
     LINE "e { Derived: {x: 10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived_mut = ecs_lookup(world, "Derived.mut");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -787,7 +796,7 @@ void TemplateInheritance_derived_prop_same_name_as_base(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -804,7 +813,7 @@ void TemplateInheritance_delete_base_template(void) {
     LINE "  prop z: f32 = 3"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -831,7 +840,7 @@ void TemplateInheritance_mut_shadows_base_prop(void) {
     LINE "e { B: {} }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -848,7 +857,7 @@ void TemplateInheritance_base_w_count_one_array_member(void) {
     LINE "}"
     LINE "T a(v: [7])";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     ecs_entity_t child = ecs_lookup(world, "a.child");
@@ -888,7 +897,7 @@ void TemplateInheritance_base_w_anonymous_array_member(void) {
     LINE "}"
     LINE "L a(lanes: 1, lane: [{1}, {2}, {3}, {4}])";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t tc = ecs_lookup(world, "flecs.script.typecache");
     test_assert(tc != 0);
@@ -898,10 +907,10 @@ void TemplateInheritance_base_w_anonymous_array_member(void) {
         count_before += it.count;
     }
 
-    test_assert(ecs_script_run(world, NULL,
-        "L b(lanes: 2, lane: [{5}, {6}, {7}, {8}])", NULL) == 0);
-    test_assert(ecs_script_run(world, NULL,
-        "L c(lanes: 3, lane: [{9}, {10}, {11}, {12}])", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "L b(lanes: 2, lane: [{5}, {6}, {7}, {8}])", &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "L c(lanes: 3, lane: [{9}, {10}, {11}, {12}])", &ir_desc, NULL) == 0);
 
     it = ecs_children(world, tc);
     int32_t count_after = 0;
@@ -944,7 +953,7 @@ void TemplateInheritance_base_not_a_struct(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -960,7 +969,7 @@ void TemplateInheritance_base_is_prefab(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -976,7 +985,7 @@ void TemplateInheritance_base_is_enum(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -991,7 +1000,7 @@ void TemplateInheritance_base_unresolved(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1009,7 +1018,7 @@ void TemplateInheritance_base_declared_after_derived(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1024,7 +1033,7 @@ void TemplateInheritance_self_inherit(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1039,7 +1048,7 @@ void TemplateInheritance_missing_base_name(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1058,7 +1067,7 @@ void TemplateInheritance_newline_before_scope(void) {
     LINE "}"
     LINE "e { Derived: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_struct(world, derived, 2, 8);
@@ -1083,7 +1092,7 @@ void TemplateInheritance_no_space_around_colon(void) {
     LINE "}"
     LINE "e { Derived: {} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -1102,7 +1111,7 @@ void TemplateInheritance_base_in_module(void) {
     LINE "  prop x: f32 = 1"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     expr =
     HEAD "using shapes"
@@ -1111,7 +1120,7 @@ void TemplateInheritance_base_in_module(void) {
     LINE "}"
     LINE "e { Derived: {x: 10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "shapes.Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -1137,7 +1146,7 @@ void TemplateInheritance_base_in_module_path(void) {
     LINE "  prop x: f32 = 1"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     expr =
     HEAD "template Derived : shapes.Base {"
@@ -1145,7 +1154,7 @@ void TemplateInheritance_base_in_module_path(void) {
     LINE "}"
     LINE "e { Derived: {x: 10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "shapes.Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
@@ -1168,7 +1177,7 @@ void TemplateInheritance_base_in_separate_script(void) {
     LINE "  prop y: f32 = 2"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     expr =
     HEAD "template Derived : Base {"
@@ -1176,7 +1185,7 @@ void TemplateInheritance_base_in_separate_script(void) {
     LINE "}"
     LINE "e { Derived: {y: 20} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_struct(world, derived, 3, 12);
@@ -1201,15 +1210,15 @@ void TemplateInheritance_run_script_twice(void) {
     LINE "  prop z: f32 = 3"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
     test_struct(world, derived, 2, 8);
 
-    test_assert(ecs_script_run(world, NULL, "e { Derived: {} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "e { Derived: {} }", &ir_desc, NULL) == 0);
     ecs_entity_t e = ecs_lookup(world, "e");
     const float *v = ecs_get_id(world, e, derived);
     test_flt(v[0], 1);
@@ -1230,7 +1239,7 @@ void TemplateInheritance_managed_script_update(void) {
     LINE "}"
     LINE "e { Derived: {x: 10} }";
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     });
@@ -1266,7 +1275,7 @@ void TemplateInheritance_managed_script_update_base_default(void) {
     LINE "  prop z: f32 = 3"
     LINE "}";
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     });
@@ -1282,7 +1291,7 @@ void TemplateInheritance_managed_script_update_base_default(void) {
 
     test_assert(ecs_script_update(world, s, 0, expr) == 0);
 
-    test_assert(ecs_script_run(world, NULL, "e { Derived: {} }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "e { Derived: {} }", &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1305,7 +1314,7 @@ void TemplateInheritance_ast_to_str(void) {
     LINE "  prop z: f32 = 3"
     LINE "}";
 
-    ecs_script_t *s = ecs_script_parse(world, NULL, expr, NULL, NULL);
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
     test_assert(s != NULL);
 
     char *str = ecs_script_ast_to_str(s, false);
@@ -1330,7 +1339,7 @@ void TemplateInheritance_derived_instance_json(void) {
     LINE "}"
     LINE "e { Derived: {x: 10} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     char *json = ecs_entity_to_json(world, e, &(ecs_entity_to_json_desc_t){
@@ -1357,7 +1366,7 @@ void TemplateInheritance_derived_instance_set_from_c(void) {
     LINE "  child { Position: {$x + $y, $z} }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t position = ecs_lookup(world, "Position");
@@ -1404,7 +1413,7 @@ void TemplateInheritance_const_before_prop_in_derived(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -1425,7 +1434,7 @@ void TemplateInheritance_const_after_prop_in_derived(void) {
     LINE "}"
     LINE "e { Derived: {x: 10, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1452,7 +1461,7 @@ void TemplateInheritance_derived_from_template_w_captured_const(void) {
     LINE "}"
     LINE "e { Derived: {x: 10, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t position = ecs_lookup(world, "Position");
     ecs_entity_t e = ecs_lookup(world, "e");

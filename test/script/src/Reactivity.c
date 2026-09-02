@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void Reactivity_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 static void reactivity_reentrant_set(ecs_iter_t *it) {
     ecs_entity_t *ctx = it->ctx;
     ecs_set_id(it->world, ctx[0], ctx[1],
@@ -28,7 +37,7 @@ void Reactivity_external_inputs_are_isolated(void) {
     ecs_set_id(world, source_a, mass, sizeof(Mass), &(Mass){10});
     ecs_set_id(world, source_b, mass, sizeof(Mass), &(Mass){20});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "a { Position: {source_a[Mass].value, 0} }"
@@ -79,7 +88,7 @@ void Reactivity_script_update_recreates_observers(void) {
     ecs_set_id(world, source_a, mass, sizeof(Mass), &(Mass){10});
     ecs_set_id(world, source_b, mass, sizeof(Mass), &(Mass){20});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "a { Position: {source_a[Mass].value, 0} }"
@@ -167,7 +176,7 @@ void Reactivity_annotation_follows_dependent_statement(void) {
     ecs_set_id(world, source_a, mass, sizeof(Mass), &(Mass){10});
     ecs_set_id(world, source_b, mass, sizeof(Mass), &(Mass){20});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "@brief Only A"
@@ -212,7 +221,7 @@ void Reactivity_reentrant_input_change_is_reevaluated(void) {
     ecs_set_id(world, source_a, mass, sizeof(Mass), &(Mass){10});
     ecs_set_id(world, source_b, mass, sizeof(Mass), &(Mass){20});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "a { Position: {source_a[Mass].value, 0} }"
@@ -264,7 +273,7 @@ void Reactivity_failed_update_is_atomic(void) {
     ecs_set_id(world, source, position_i,
         sizeof(PositionI), &(PositionI){1, 0});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "first { PositionI: {source[PositionI].x, 0} }"
@@ -327,7 +336,7 @@ void Reactivity_extern_variables_are_isolated(void) {
     test_assert(first != 0);
     test_assert(second != 0);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "first_output { Position: {first, 0} }"
@@ -393,7 +402,7 @@ void Reactivity_const_dependency_is_transitive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const value = source[Mass].value"
@@ -435,7 +444,7 @@ void Reactivity_if_inherits_branch_dependencies(void) {
     ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
     ecs_set_id(world, payload, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "if condition[Mass].value > 0 {"
@@ -461,7 +470,7 @@ void Reactivity_cross_referencing_templates_resolve(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t s1 = ecs_script(world, {
+    ecs_entity_t s1 = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "s1" }),
         .code =
             HEAD "ATag {}"
@@ -470,7 +479,7 @@ void Reactivity_cross_referencing_templates_resolve(void) {
     });
     test_assert(s1 != 0);
 
-    ecs_entity_t s2 = ecs_script(world, {
+    ecs_entity_t s2 = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "s2" }),
         .code =
             HEAD "BTag {}"
@@ -511,13 +520,13 @@ void Reactivity_mutual_component_refs_converge(void) {
     ecs_set_id(world, pa, mass, sizeof(Mass), &(Mass){1});
     ecs_set_id(world, pb, mass, sizeof(Mass), &(Mass){1});
 
-    ecs_entity_t s1 = ecs_script(world, {
+    ecs_entity_t s1 = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "ping" }),
         .code = "pa { Mass: {pb[Mass].value} }"
     });
     test_assert(s1 != 0);
 
-    ecs_entity_t s2 = ecs_script(world, {
+    ecs_entity_t s2 = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "pong" }),
         .code = "pb { Mass: {pa[Mass].value} }"
     });
@@ -548,7 +557,7 @@ void Reactivity_if_branch_flip_same_entity(void) {
     ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
     ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){-1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "if condition[Mass].value > 0 {"
@@ -597,7 +606,7 @@ void Reactivity_if_cleans_up_entities(void) {
     ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
     ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "if condition[Mass].value > 0 {"
@@ -654,7 +663,7 @@ void Reactivity_if_cleans_up_components(void) {
     ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
     ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "item {"
@@ -706,7 +715,7 @@ void Reactivity_if_cleans_up_singleton_component(void) {
     ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
     ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "if condition[Mass].value > 0 {"
@@ -744,7 +753,7 @@ void Reactivity_mutually_exclusive_component_owner(void) {
     ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
     ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "item {"
@@ -805,7 +814,7 @@ void Reactivity_mutually_exclusive_component_owner_three_branches(void) {
     ecs_set_id(world, selector, position_i,
         sizeof(PositionI), &(PositionI){0, 0});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "item {"
@@ -899,7 +908,7 @@ void Reactivity_non_exclusive_component_owner_fails(void) {
         sizeof(PositionI), &(PositionI){0, 0});
 
     ecs_log_set_level(-4);
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "if selector[PositionI].x == 0 {"
@@ -932,7 +941,7 @@ void Reactivity_template_non_exclusive_component_owner_fails(void) {
     });
 
     ecs_log_set_level(-4);
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Panel {"
@@ -969,7 +978,7 @@ void Reactivity_component_in_static_and_interpolated_named_children(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Panel {"
@@ -1007,7 +1016,7 @@ void Reactivity_component_in_two_interpolated_named_children(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Panel {"
@@ -1047,7 +1056,7 @@ void Reactivity_component_in_matching_interpolated_named_children_fails(void) {
     });
 
     ecs_log_set_level(-4);
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Panel {"
@@ -1097,7 +1106,7 @@ void Reactivity_partial_assignment_does_not_own_component(void) {
     ecs_set_id(world, owner, mass, sizeof(Mass), &(Mass){1});
     ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "item {"
@@ -1143,7 +1152,7 @@ void Reactivity_for_preserves_named_entities(void) {
     ecs_set_id(world, source, position_i,
         sizeof(PositionI), &(PositionI){2, 0});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[PositionI].x {"
@@ -1187,7 +1196,7 @@ void Reactivity_nested_for_clears_previous_entities(void) {
     ecs_set_id(world, source, position_i,
         sizeof(PositionI), &(PositionI){2, 0});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[PositionI].x {"
@@ -1244,7 +1253,7 @@ void Reactivity_inactive_for_cleans_up_entities(void) {
     ecs_set_id(world, source, position_i,
         sizeof(PositionI), &(PositionI){1, 0});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "if source[PositionI].x > 0 {"
@@ -1296,7 +1305,7 @@ void Reactivity_new_entity_survives_reevaluation(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "holder {"
@@ -1345,7 +1354,7 @@ void Reactivity_new_entity_not_duplicated_on_reevaluation(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "holder {"
@@ -1419,7 +1428,7 @@ void Reactivity_new_entity_child_reclaimed_on_reevaluation(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "holder {"
@@ -1471,7 +1480,7 @@ void Reactivity_template_props_are_isolated(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Panel {"
@@ -1524,7 +1533,7 @@ void Reactivity_template_same_prop_value_skips(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Panel {"
@@ -1566,7 +1575,7 @@ void Reactivity_template_muts_are_isolated(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Panel {"
@@ -1621,7 +1630,7 @@ void Reactivity_template_const_dependency_is_transitive(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Panel {"
@@ -1653,7 +1662,7 @@ void Reactivity_template_const_dependency_is_transitive(void) {
 void Reactivity_template_if_cleans_up_entities(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Switch {"
@@ -1711,7 +1720,7 @@ void Reactivity_template_if_cleans_up_components(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Switch {"
@@ -1767,7 +1776,7 @@ void Reactivity_template_owner_cleans_up_instance_state(void) {
     ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
     ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Content {"
@@ -1812,7 +1821,7 @@ void Reactivity_template_entity_delete_cleans_up_instance_state(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Content {"
@@ -1847,7 +1856,7 @@ void Reactivity_template_entity_delete_cleans_up_instance_state(void) {
 void Reactivity_template_for_preserves_named_entities(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template List {"
@@ -1887,7 +1896,7 @@ void Reactivity_template_for_preserves_named_entities(void) {
 void Reactivity_template_inactive_for_cleans_up_entities(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template List {"
@@ -1945,7 +1954,7 @@ void Reactivity_template_instances_have_private_slots(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Switch {"
@@ -2002,7 +2011,7 @@ void Reactivity_template_capture_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const captured = source[Mass].value"
@@ -2055,7 +2064,7 @@ void Reactivity_sixty_four_inputs(void) {
     }
     char *expr = ecs_strbuf_get(&code);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     });
@@ -2099,7 +2108,7 @@ void Reactivity_sixty_five_inputs_fail(void) {
     char *expr = ecs_strbuf_get(&code);
 
     ecs_log_set_level(-4);
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     });
@@ -2134,7 +2143,7 @@ void Reactivity_new_entity_survives_skipped_statement(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "reactive { Position: {source[Mass].value, 0} }"
@@ -2196,7 +2205,7 @@ void Reactivity_with_scope_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "with Tag {"
@@ -2252,7 +2261,7 @@ void Reactivity_with_expression_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "with Position(source[Mass].value, 0) {"
@@ -2313,7 +2322,7 @@ void Reactivity_pair_scope_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "(Rel, Tgt) {"
@@ -2369,7 +2378,7 @@ void Reactivity_nested_template_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Inner {"
@@ -2427,7 +2436,7 @@ void Reactivity_template_with_scope_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template T {"
@@ -2490,7 +2499,7 @@ void Reactivity_try_in_managed_script_fails(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "try {"
@@ -2548,7 +2557,7 @@ void Reactivity_try_catch_scope_dependencies(void) {
         LINE "  not_reached { Position: {1, 0} }"
         LINE "} catch {"
         LINE "  in_catch { Position: {source[Mass].value * 2, 0} }"
-        LINE "}", NULL, NULL);
+        LINE "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -2614,7 +2623,7 @@ void Reactivity_await_expression_dependencies(void) {
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         HEAD "const value = await fetch(source[Mass].value)"
-        LINE "item { Position: {value, 0} }", NULL, NULL);
+        LINE "item { Position: {value, 0} }", &ir_desc, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);
@@ -2676,7 +2685,7 @@ void Reactivity_element_expr_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, index, sizeof(int32_t), &(int32_t){0});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const a: Arr = [10, 20, 30]"
@@ -2725,7 +2734,7 @@ void Reactivity_range_expr_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, index, sizeof(int32_t), &(int32_t){2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const n = source[Index].value"
@@ -2772,7 +2781,7 @@ void Reactivity_swizzle_expr_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const p: Position = {source[Mass].value, 7}"
@@ -2823,7 +2832,7 @@ void Reactivity_has_expr_is_reactive(void) {
     ecs_entity_t with = ecs_entity(world, { .name = "with_pos" });
     ecs_set_id(world, with, position, sizeof(Position), &(Position){1, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template T {"
@@ -2885,7 +2894,7 @@ void Reactivity_method_expr_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const v = source[Mass].value"
@@ -2932,7 +2941,7 @@ void Reactivity_interpolated_string_width_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, index, sizeof(int32_t), &(int32_t){12});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const w = source[Index].value"
@@ -2980,7 +2989,7 @@ void Reactivity_interpolated_string_precision_is_reactive(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, index, sizeof(int32_t), &(int32_t){1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const p = source[Index].value"
@@ -3036,7 +3045,7 @@ void Reactivity_script_deleted_while_evaluating(void) {
         .on_set = reactivity_delete_script
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "a { Position: {1, 0} }"
@@ -3077,7 +3086,7 @@ void Reactivity_parse_failure_clears_observers(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "item { Position: {source[Mass].value, 0} }"
@@ -3161,7 +3170,7 @@ void Reactivity_for_preserves_unchanged_entities(void) {
     ecs_set_id(world, source, position_i,
         sizeof(PositionI), &(PositionI){2, 0});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[PositionI].x {"
@@ -3225,7 +3234,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_nested_initializer(void
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "reactive { Position: {source[Mass].value, 0} }"
@@ -3292,7 +3301,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_function_arg(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "fn ident(e: entity) -> entity { e }"
@@ -3372,7 +3381,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_interpolated_string(voi
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "reactive { Position: {source[Mass].value, 0} }"
@@ -3436,7 +3445,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_component_expr(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "reactive { Position: {source[Mass].value, 0} }"
@@ -3506,7 +3515,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_template_prop(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "reactive { Position: {source[Mass].value, 0} }"
@@ -3574,7 +3583,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_entity_name(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "reactive { Position: {source[Mass].value, 0} }"
@@ -3636,7 +3645,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_if_condition(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "reactive { Position: {source[Mass].value, 0} }"
@@ -3700,7 +3709,7 @@ void Reactivity_for_keyed_entity_survives_collection_change(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -3754,7 +3763,7 @@ void Reactivity_for_keyed_external_component_survives(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -3796,7 +3805,7 @@ void Reactivity_for_keyed_removed_key_is_deleted(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20, 30}, 3});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -3841,7 +3850,7 @@ void Reactivity_for_keyed_new_key_is_added(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -3887,7 +3896,7 @@ void Reactivity_for_keyed_reorder_preserves_identity(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20, 30}, 3});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -3938,7 +3947,7 @@ void Reactivity_for_keyed_unkeyed_entity_is_recreated(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -4008,7 +4017,7 @@ void Reactivity_for_keyed_mixed_external_components(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -4070,7 +4079,7 @@ void Reactivity_for_keyed_multiple_keys_per_iteration(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -4127,7 +4136,7 @@ void Reactivity_for_keyed_multiple_keys_removed_together(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20, 30}, 3});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -4187,7 +4196,7 @@ void Reactivity_for_unkeyed_only_entities_are_recreated(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -4257,7 +4266,7 @@ void Reactivity_for_keyed_outer_condition_toggles_rows(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20}, 2, 1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "if source[Ids].show > 0 {"
@@ -4326,7 +4335,7 @@ void Reactivity_for_keyed_per_item_condition_toggles_row(void) {
     ecs_set_id(world, source, ids, sizeof(Ids),
         &(Ids){{10, 20, 30}, {1, 1, 1}, 3});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -4401,7 +4410,7 @@ void Reactivity_conditional_component_on_named_entity(void) {
     ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
     ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4487,7 +4496,7 @@ void Reactivity_conditional_component_on_keyed_for_entity(void) {
     ecs_set_id(world, source, ids, sizeof(Ids),
         &(Ids){{10, 20}, {1, 1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -4558,7 +4567,7 @@ void Reactivity_conditional_component_on_template_instance(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Panel {"
@@ -4646,7 +4655,7 @@ void Reactivity_two_conditional_components_toggle_independently(void) {
     ecs_set_id(world, cond_a, mass, sizeof(Mass), &(Mass){1});
     ecs_set_id(world, cond_b, mass, sizeof(Mass), &(Mass){1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
@@ -4727,7 +4736,7 @@ void Reactivity_conditional_component_on_child_entity(void) {
     ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
     ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "parent {"
@@ -4800,7 +4809,7 @@ void Reactivity_interpolated_name_w_indexed_expr(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20, 30}});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "\"row_{source[Ids].values[1]}\" {}"
@@ -4834,7 +4843,7 @@ void Reactivity_interpolated_name_w_indexed_expr_in_for(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20, 30}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..source[Ids].count {"
@@ -4869,7 +4878,7 @@ void Reactivity_template_for_keyed_entity_survives_collection_change(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -4929,7 +4938,7 @@ void Reactivity_template_for_keyed_external_component_survives(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -4977,7 +4986,7 @@ void Reactivity_template_for_keyed_removed_key_is_deleted(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -5028,7 +5037,7 @@ void Reactivity_template_for_keyed_new_key_is_added(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -5080,7 +5089,7 @@ void Reactivity_template_for_keyed_reorder_preserves_identity(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -5137,7 +5146,7 @@ void Reactivity_template_for_keyed_unkeyed_entity_is_recreated(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -5213,7 +5222,7 @@ void Reactivity_template_for_keyed_mixed_external_components(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -5281,7 +5290,7 @@ void Reactivity_template_for_keyed_multiple_keys_per_iteration(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -5344,7 +5353,7 @@ void Reactivity_template_for_keyed_multiple_keys_removed_together(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -5410,7 +5419,7 @@ void Reactivity_template_for_unkeyed_only_entities_are_recreated(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -5486,7 +5495,7 @@ void Reactivity_template_for_keyed_outer_condition_toggles_rows(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -5560,7 +5569,7 @@ void Reactivity_template_for_keyed_per_item_condition_toggles_row(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -5640,7 +5649,7 @@ void Reactivity_template_conditional_component_on_keyed_for_entity(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Rows {"
@@ -5736,7 +5745,7 @@ void Reactivity_component_ref_via_loop_var_entity_is_reactive(void) {
     ecs_set_id(world, source, items, sizeof(Items), 
         &(Items){{it0, it1, it2}, 3});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "list {"
@@ -5784,7 +5793,7 @@ void Reactivity_for_keyed_does_not_reorder_children(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{1, 2, 3}, 3});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "list {"
@@ -5864,7 +5873,7 @@ void Reactivity_base_component_w_conditional_override(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template StockSlot {"
@@ -5931,7 +5940,7 @@ void Reactivity_component_ref_via_var_entity_is_reactive(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const it = source[Items].items[0]"
@@ -5997,7 +6006,7 @@ void Reactivity_component_ref_via_for_elem_var_entity_is_reactive(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "list {"
@@ -6056,7 +6065,7 @@ void Reactivity_component_presence_via_var_entity_is_reactive(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const it = source[Items].items[0]"
@@ -6122,7 +6131,7 @@ void Reactivity_component_ref_via_var_entity_in_if_is_reactive(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const it = source[Items].items[0]"
@@ -6194,7 +6203,7 @@ void Reactivity_two_dyn_refs_alternating_updates(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const a = source[Items].items[0]"
@@ -6283,7 +6292,7 @@ void Reactivity_three_dyn_refs_alternating_updates(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1, it2}, 3});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const a = source[Items].items[0]"
@@ -6377,7 +6386,7 @@ void Reactivity_static_ref_and_dyn_ref_in_same_script(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const a = source[Items].items[0]"
@@ -6451,7 +6460,7 @@ void Reactivity_dyn_ref_in_nested_scope_is_independent(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const a = source[Items].items[0]"
@@ -6530,7 +6539,7 @@ void Reactivity_dyn_ref_var_retargeting(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const it = source[Items].items[0]"
@@ -6608,7 +6617,7 @@ void Reactivity_dyn_ref_in_if_condition_flips_both_ways(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const it = source[Items].items[0]"
@@ -6677,7 +6686,7 @@ void Reactivity_dyn_ref_guarded_by_static_if(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const it = source[Items].items[0]"
@@ -6758,7 +6767,7 @@ void Reactivity_dyn_ref_in_for_rows_are_independent(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1, it2}, 3});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "list {"
@@ -6849,7 +6858,7 @@ void Reactivity_dyn_ref_in_nested_for(void) {
     ecs_set_id(world, outer, items, sizeof(Items), &(Items){{a0, a1}, 2});
     ecs_set_id(world, inner, items, sizeof(Items), &(Items){{b0, b1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "list {"
@@ -6946,7 +6955,7 @@ void Reactivity_dyn_ref_in_template_instance_and_script(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Card {"
@@ -7022,7 +7031,7 @@ void Reactivity_dyn_ref_presence_two_independent_refs(void) {
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it0, it1}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const a = source[Items].items[0]"
@@ -7092,7 +7101,7 @@ void Reactivity_dyn_ref_recovers_after_invalid_entity(void) {
     ecs_entity_t h = ecs_entity(world, { .name = "h" });
     ecs_set_id(world, h, holder, sizeof(ecs_entity_t), &tgt);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const t = h[Holder].target"
@@ -7141,7 +7150,7 @@ void Reactivity_template_prop_change_keeps_for_entities(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template List {"
@@ -7189,7 +7198,7 @@ void Reactivity_template_i32_prop_change_keeps_for_entities(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template List {"
@@ -7235,7 +7244,7 @@ void Reactivity_template_prop_change_keeps_for_entities_in_child_scope(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template List {"
@@ -7293,7 +7302,7 @@ void Reactivity_template_for_range_change_keeps_named_recreates_anonymous(void) 
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template List {"
@@ -7392,7 +7401,7 @@ void Reactivity_for_keyed_template_instance_survives_collection_change(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, ids, sizeof(Ids), &(Ids){{10, 20}, 2});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Row {"
@@ -7436,7 +7445,7 @@ void Reactivity_same_entity_in_two_non_exclusive_scopes(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const a: bool = true"
@@ -7475,7 +7484,7 @@ void Reactivity_partial_component_in_two_non_exclusive_scopes(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "const a: bool = true"
@@ -7551,7 +7560,7 @@ void Reactivity_component_ref_set_from_system_reevaluates(void) {
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){10});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "child { Position: {source[Mass].value, 0} }"
@@ -7590,7 +7599,7 @@ void Reactivity_template_prop_ensure_modified_from_system_reevaluates(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Panel {"
@@ -7642,7 +7651,7 @@ void Reactivity_template_prop_set_from_system_reevaluates(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Panel {"
@@ -7701,7 +7710,7 @@ void Reactivity_template_first_stmt_conditional_component_on_child(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Lamp {"
@@ -7765,7 +7774,7 @@ void Reactivity_template_first_stmt_conditional_pair_on_child(void) {
     ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
     ecs_id_t pair = ecs_pair(rel, velocity);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Lamp {"
@@ -7819,7 +7828,7 @@ void Reactivity_template_first_stmt_conditional_tag_on_child(void) {
     });
     ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Lamp {"
@@ -7879,7 +7888,7 @@ void Reactivity_template_first_stmt_conditional_component_on_root(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Lamp {"
@@ -7932,7 +7941,7 @@ void Reactivity_template_after_stmt_conditional_component_on_child(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "before {}"
@@ -7992,7 +8001,7 @@ void Reactivity_conditional_component_w_named_initializer_toggles(void) {
         }
     });
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "before {}"
@@ -8049,7 +8058,7 @@ void Reactivity_conditional_pair_w_named_initializer_toggles(void) {
     ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
     ecs_id_t pair = ecs_pair(rel, velocity);
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "before {}"
@@ -8107,7 +8116,7 @@ void Reactivity_conditional_component_w_named_initializer_on_entity(void) {
     ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
     ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
 
-    ecs_entity_t script = ecs_script(world, {
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "e {"

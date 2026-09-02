@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void ExprAst_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 void ExprAst_binary_f32_var_add_f32_var(void) {
     ecs_world_t *world = ecs_init();
 
@@ -291,7 +300,7 @@ void ExprAst_template_w_foldable_const(void) {
     LINE "  entity: Bar e "
     LINE "}\n";
 
-    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, NULL);
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
     test_assert(script != NULL);
     {
         char *ast = ecs_script_ast_to_str(script, false);
@@ -299,7 +308,7 @@ void ExprAst_template_w_foldable_const(void) {
         ecs_os_free(ast);
     }
 
-    test_assert(ecs_script_eval(script, NULL, NULL) == 0);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
     {
         char *ast = ecs_script_ast_to_str(script, false);
         test_str(ast, result_after);

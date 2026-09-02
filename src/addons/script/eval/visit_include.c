@@ -145,7 +145,8 @@ static int flecs_script_include_node(
         ecs_script_runtime_t *runtime = flecs_script_runtime_get(v->world);
         runtime->include_depth ++;
         ecs_entity_t e = ecs_script_init(v->world, &(ecs_script_desc_t){
-            .filename = resolved
+            .filename = resolved,
+            .ir = v->base.script->ir_enabled
         });
         runtime->include_depth --;
         ecs_set_scope(v->world, prev_scope);
@@ -177,8 +178,11 @@ static int flecs_script_include_node(
             goto done;
         }
 
+        ecs_script_eval_desc_t parse_desc = {
+            .ir = v->base.script->ir_enabled
+        };
         ecs_script_t *included = ecs_script_parse(
-            v->world, resolved, code, NULL, NULL);
+            v->world, resolved, code, &parse_desc, NULL);
         ecs_os_free(code);
         if (!included) {
             result = -1;
@@ -186,7 +190,8 @@ static int flecs_script_include_node(
         }
 
         ecs_script_eval_desc_t desc = {
-            .runtime = ecs_script_runtime_new()
+            .runtime = ecs_script_runtime_new(),
+            .ir = v->base.script->ir_enabled
         };
 
         if (ecs_script_eval(included, &desc, NULL)) {

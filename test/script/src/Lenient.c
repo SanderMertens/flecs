@@ -1,5 +1,14 @@
 #include <script.h>
 
+static bool ir_enabled = false;
+static ecs_script_eval_desc_t ir_desc = {0};
+
+void Lenient_setup(void) {
+    const char *ir_param = test_param("ir");
+    ir_enabled = ir_param && !strcmp(ir_param, "enabled");
+    ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
+}
+
 static int lenient_warn_count = 0;
 
 static void lenient_warn_callback(
@@ -41,7 +50,7 @@ void Lenient_unknown_tag(void) {
     LINE "  NsUnknownTag"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -64,7 +73,7 @@ void Lenient_unknown_component_w_value(void) {
     LINE "  NsUnknownComp: {x: 10, y: 20}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -86,7 +95,7 @@ void Lenient_unknown_component_w_nested_value(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -115,7 +124,7 @@ void Lenient_unknown_component_in_scope(void) {
     LINE "  Position: {x: 10, y: 20}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -140,7 +149,7 @@ void Lenient_unknown_pair(void) {
     LINE "  (NsUnknownRel, NsUnknownTgt)"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -169,7 +178,7 @@ void Lenient_unknown_member_on_known_component(void) {
     LINE "  Position: {x: 10, unknown_member: 5, y: 20}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -201,7 +210,7 @@ void Lenient_unknown_nested_member_on_known_component(void) {
     LINE "  Position: {x: 10, unknown_member: {a: 1, b: {c: 2}}, y: 20}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -236,7 +245,7 @@ void Lenient_unknown_function_in_expr(void) {
     LINE "  Position: {x: 1, y: 2}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t a = ecs_lookup(world, "a");
     test_assert(a != 0);
@@ -263,7 +272,7 @@ void Lenient_unknown_vector_in_for(void) {
     LINE "}"
     LINE "after {}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "e") == 0);
     test_assert(ecs_lookup(world, "after") != 0);
@@ -282,7 +291,7 @@ void Lenient_unknown_function_in_for(void) {
     LINE "}"
     LINE "after {}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "e") == 0);
     test_assert(ecs_lookup(world, "after") != 0);
@@ -302,7 +311,7 @@ void Lenient_warn_once_per_name(void) {
     LINE "b { NsUnknownTag }"
     LINE "c { NsUnknownTag }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_int(lenient_warn_count, 1);
 
     ecs_fini(world);
@@ -323,7 +332,7 @@ void Lenient_warn_per_distinct_name(void) {
     LINE "c { NsUnknownTagA }"
     LINE "d { NsUnknownTagB }";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
     test_int(lenient_warn_count, 2);
 
     ecs_fini(world);
@@ -342,7 +351,7 @@ void Lenient_strict_unknown_tag_errors(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -366,7 +375,7 @@ void Lenient_strict_unknown_member_errors(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -376,13 +385,13 @@ void Lenient_lenient_disabled_after_enable(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_set_lenient(world, true);
-    test_assert(ecs_script_run(world, NULL, "a { NsUnknownTag }", NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "a { NsUnknownTag }", &ir_desc, NULL) == 0);
 
     ecs_script_set_lenient(world, false);
     test_bool(ecs_script_get_lenient(world), false);
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, "b { NsUnknownTag }", NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, "b { NsUnknownTag }", &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -398,7 +407,7 @@ void Lenient_no_placeholder_then_strict_load(void) {
     LINE "  Position: {x: 10, y: 20}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Position") == 0);
 
@@ -413,7 +422,7 @@ void Lenient_no_placeholder_then_strict_load(void) {
 
     ecs_script_set_lenient(world, false);
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -451,7 +460,7 @@ void Lenient_template_w_unknown_component(void) {
     LINE "  Lamppost: {height: 7}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Nightlight") == 0);
     test_assert(ecs_lookup(world, "HoloCycle") == 0);
@@ -495,7 +504,7 @@ void Lenient_template_child_w_unknown_component(void) {
     LINE "  Lamppost: {height: 7}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -521,7 +530,7 @@ void Lenient_isa_unresolved_errors(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -535,7 +544,7 @@ void Lenient_eval_desc(void) {
     LINE "  NsUnknownTag"
     LINE "}";
 
-    ecs_script_eval_desc_t desc = { .lenient = true };
+    ecs_script_eval_desc_t desc = { .ir = ir_enabled, .lenient = true };
     ecs_script_t *script = ecs_script_parse(world, NULL, expr, &desc, NULL);
     test_assert(script != NULL);
     test_assert(ecs_script_eval(script, &desc, NULL) == 0);
@@ -565,7 +574,7 @@ void Lenient_managed_script_desc(void) {
     LINE "  Position: {x: 10, y: 20}"
     LINE "}";
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code = expr,
         .lenient = true
     });
@@ -596,7 +605,7 @@ void Lenient_managed_script_strict_errors(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code = expr
     });
     ecs_log_set_level(-1);
@@ -621,7 +630,7 @@ void Lenient_unknown_with_tag(void) {
     LINE "  e {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -656,7 +665,7 @@ void Lenient_template_w_unknown_prop_type_w_default(void) {
     LINE "  CityWall: {height: 7}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "WallGates") == 0);
 
@@ -696,7 +705,7 @@ void Lenient_template_w_unknown_prop_type_no_default(void) {
     LINE "  CityWall: {height: 7}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "WallGates") == 0);
 
@@ -741,7 +750,7 @@ void Lenient_template_w_unknown_prop_type_in_for(void) {
     LINE "  CityWall: {height: 7}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "WallGates") == 0);
 
@@ -785,7 +794,7 @@ void Lenient_template_w_unknown_prop_type_in_expr(void) {
     LINE "  CityWall: {height: 7}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "WallGates") == 0);
 
@@ -834,7 +843,7 @@ void Lenient_template_w_unknown_prop_type_set_at_instantiate(void) {
     LINE "  CityWall: {gates: [{x: 1}], height: 7}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "WallGates") == 0);
 
@@ -874,7 +883,7 @@ void Lenient_template_w_unknown_const_type(void) {
     LINE "  CityWall: {height: 7}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     test_assert(ecs_lookup(world, "WallGates") == 0);
 
@@ -909,7 +918,7 @@ void Lenient_const_w_unresolved_function_initializer(void) {
     LINE "  Position: {x: 1, y: 2}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -936,7 +945,7 @@ void Lenient_strict_unknown_prop_type_errors(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
     ecs_log_set_level(-1);
 
     ecs_fini(world);
@@ -947,7 +956,7 @@ void Lenient_managed_script_lenient_after_table_change(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t s = ecs_script(world, {
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .code = "e { NsUnknownTag }",
         .lenient = true
     });
