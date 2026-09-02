@@ -676,6 +676,10 @@ void Eval_struct_w_member_of_own_type(void);
 void Eval_struct_w_inline_array_member_of_own_type(void);
 void Eval_enum_w_duplicate_constant_values(void);
 void Eval_bitmask_w_duplicate_constant_values(void);
+void Eval_kind_entity_before_scope_close_same_line(void);
+void Eval_kind_entity_w_base_before_scope_close_same_line(void);
+void Eval_auto_override_before_scope_close_same_line(void);
+void Eval_auto_override_pair_before_scope_close_same_line(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -5677,6 +5681,20 @@ bake_test_case Eval_testcases[] = {
     {
         "bitmask_w_duplicate_constant_values",
         Eval_bitmask_w_duplicate_constant_values
+        "kind_entity_before_scope_close_same_line",
+        Eval_kind_entity_before_scope_close_same_line
+    },
+    {
+        "kind_entity_w_base_before_scope_close_same_line",
+        Eval_kind_entity_w_base_before_scope_close_same_line
+    },
+    {
+        "auto_override_before_scope_close_same_line",
+        Eval_auto_override_before_scope_close_same_line
+    },
+    {
+        "auto_override_pair_before_scope_close_same_line",
+        Eval_auto_override_pair_before_scope_close_same_line
     }
 };
 
@@ -14907,6 +14925,7 @@ static bake_test_suite suites[] = {
         NULL,
         NULL,
         667,
+        664,
         Eval_testcases
     },
     {
