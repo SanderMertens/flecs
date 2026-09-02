@@ -578,7 +578,14 @@ static void flecs_script_task_unregister(
 
     EcsScriptTask *t = ecs_get_mut(world, entity, EcsScriptTask);
     if (!t) {
-        return;
+        if (!ecs_is_deferred(world)) {
+            return;
+        }
+
+        t = ecs_ensure(world, entity, EcsScriptTask);
+        if (!t) {
+            return;
+        }
     }
 
     int32_t i, count = ecs_vec_count(&t->tasks);
