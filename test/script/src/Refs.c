@@ -2550,9 +2550,9 @@ void Refs_this_ref_in_template_component_initializer(void) {
             HEAD "template Bar {"
             LINE "  Position: {this[Mass].value, 0}"
             LINE "}"
-            LINE "inst1 { Mass: {10} Bar: {} }"
-            LINE "inst2 { Mass: {20} Bar: {} }"
-            LINE "inst3 { Mass: {30} Bar: {} }"
+            LINE "inst1 { Mass: {10}; Bar: {} }"
+            LINE "inst2 { Mass: {20}; Bar: {} }"
+            LINE "inst3 { Mass: {30}; Bar: {} }"
     });
     test_assert(s != 0);
 
@@ -2609,8 +2609,8 @@ void Refs_this_ref_in_template_with_initializer(void) {
             LINE "    foo {}"
             LINE "  }"
             LINE "}"
-            LINE "inst1 { Mass: {10} Bar: {} }"
-            LINE "inst2 { Mass: {20} Bar: {} }"
+            LINE "inst1 { Mass: {10}; Bar: {} }"
+            LINE "inst2 { Mass: {20}; Bar: {} }"
     });
     test_assert(s != 0);
 
@@ -2661,8 +2661,8 @@ void Refs_this_ref_in_template_match_expr(void) {
             LINE "    _: {0, 0}"
             LINE "  }"
             LINE "}"
-            LINE "inst1 { PositionI: {1, 0} Bar: {} }"
-            LINE "inst2 { PositionI: {2, 0} Bar: {} }"
+            LINE "inst1 { PositionI: {1, 0}; Bar: {} }"
+            LINE "inst2 { PositionI: {2, 0}; Bar: {} }"
     });
     test_assert(s != 0);
 
@@ -2711,8 +2711,8 @@ void Refs_this_ref_in_template_if_expr(void) {
             LINE "    bar {}"
             LINE "  }"
             LINE "}"
-            LINE "inst1 { PositionI: {1, 0} Bar: {} }"
-            LINE "inst2 { PositionI: {0, 0} Bar: {} }"
+            LINE "inst1 { PositionI: {1, 0}; Bar: {} }"
+            LINE "inst2 { PositionI: {0, 0}; Bar: {} }"
     });
     test_assert(s != 0);
 
@@ -2750,8 +2750,8 @@ void Refs_this_ref_in_template_for_expr(void) {
             LINE "    \"e_{i}\" {}"
             LINE "  }"
             LINE "}"
-            LINE "inst1 { PositionI: {2, 0} Bar: {} }"
-            LINE "inst2 { PositionI: {1, 0} Bar: {} }"
+            LINE "inst1 { PositionI: {2, 0}; Bar: {} }"
+            LINE "inst2 { PositionI: {1, 0}; Bar: {} }"
     });
     test_assert(s != 0);
 
@@ -2800,8 +2800,8 @@ void Refs_this_ref_in_template_function(void) {
             HEAD "template Bar {"
             LINE "  Position: {times_two(this[Mass].value), 0}"
             LINE "}"
-            LINE "inst1 { Mass: {10} Bar: {} }"
-            LINE "inst2 { Mass: {20} Bar: {} }"
+            LINE "inst1 { Mass: {10}; Bar: {} }"
+            LINE "inst2 { Mass: {20}; Bar: {} }"
     });
     test_assert(s != 0);
 
@@ -2852,8 +2852,8 @@ void Refs_this_ref_in_template_new_expr(void) {
             HEAD "template Bar {"
             LINE "  entity: { new { Position: {this[Mass].value, 0} } }"
             LINE "}"
-            LINE "inst1 { Mass: {10} Bar: {} }"
-            LINE "inst2 { Mass: {20} Bar: {} }"
+            LINE "inst1 { Mass: {10}; Bar: {} }"
+            LINE "inst2 { Mass: {20}; Bar: {} }"
     });
     test_assert(s != 0);
 
@@ -2917,8 +2917,8 @@ void Refs_this_ref_in_template_function_in_new_expr(void) {
             HEAD "template Bar {"
             LINE "  entity: { new { Position: {times_two(this[Mass].value), 0} } }"
             LINE "}"
-            LINE "inst1 { Mass: {10} Bar: {} }"
-            LINE "inst2 { Mass: {20} Bar: {} }"
+            LINE "inst1 { Mass: {10}; Bar: {} }"
+            LINE "inst2 { Mass: {20}; Bar: {} }"
     });
     test_assert(s != 0);
 
@@ -2969,8 +2969,8 @@ void Refs_this_ref_in_template_assigned_to_component(void) {
             HEAD "template Bar {"
             LINE "  foo { Position: this[Position] }"
             LINE "}"
-            LINE "inst1 { Position: {10, 20} Bar: {} }"
-            LINE "inst2 { Position: {30, 40} Bar: {} }"
+            LINE "inst1 { Position: {10, 20}; Bar: {} }"
+            LINE "inst2 { Position: {30, 40}; Bar: {} }"
     });
     test_assert(s != 0);
 
@@ -3717,7 +3717,7 @@ void Refs_template_this_ref_observer_lifecycle(void) {
             HEAD "template Bar {"
             LINE "  Position: {this[Mass].value, 0}"
             LINE "}"
-            LINE "inst1 { Mass: {10} Bar: {} }"
+            LINE "inst1 { Mass: {10}; Bar: {} }"
     });
     test_assert(s != 0);
 
@@ -3744,7 +3744,7 @@ void Refs_template_this_ref_observer_lifecycle(void) {
     test_int(observer_count, 1);
 
     test_assert(ecs_script_run(world, "instantiate2",
-        "inst2 { Mass: {30} Bar: {} }", NULL) == 0);
+        "inst2 { Mass: {30}; Bar: {} }", NULL) == 0);
     ecs_entity_t inst2 = ecs_lookup(world, "inst2");
     test_assert(inst2 != 0);
     test_int(ecs_get(world, inst2, Position)->x, 30);

@@ -18180,6 +18180,27 @@ void ecs_set_hooks_id(
 
     ecs_type_hooks_t prev_hooks = ti->hooks;
 
+    ecs_flags32_t prev_illegal = prev_hooks.flags & ECS_TYPE_HOOKS_ILLEGAL;
+    if (h->ctor) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_CTOR_ILLEGAL;
+    if (h->dtor) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_DTOR_ILLEGAL;
+    if (h->copy) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_COPY_ILLEGAL;
+    if (h->move) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_MOVE_ILLEGAL;
+    if (h->copy_ctor) {
+        prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL;
+    }
+    if (h->move_ctor) {
+        prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
+    }
+    if (h->ctor_move_dtor) {
+        prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
+    }
+    if (h->move_dtor) {
+        prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
+    }
+    if (h->cmp) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_CMP_ILLEGAL;
+    if (h->equals) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    flags |= prev_illegal;
+
     if (!ti->size) {
         const EcsComponent *component_ptr = ecs_get(
             world, component, EcsComponent);
@@ -18303,11 +18324,11 @@ void ecs_set_hooks_id(
         }
     }
 
-    if(!h->cmp) {
+    if (!ti->hooks.cmp || ti->hooks.cmp == flecs_comp_illegal) {
         flags |= ECS_TYPE_HOOK_CMP_ILLEGAL;
     }
 
-    if (!h->equals || h->equals == flecs_equals_illegal) {
+    if (!ti->hooks.equals || ti->hooks.equals == flecs_equals_illegal) {
         if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
             flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
         } else {
@@ -18352,6 +18373,37 @@ void ecs_set_hooks_id(
 
     if(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL) {
         ti->hooks.move_dtor = flecs_move_ctor_illegal;
+    }
+
+    if (flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) {
+        ti->hooks.flags |= ECS_TYPE_HOOK_CTOR;
+    }
+    if (flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) {
+        ti->hooks.flags |= ECS_TYPE_HOOK_DTOR;
+    }
+    if (flags & ECS_TYPE_HOOK_COPY_ILLEGAL) {
+        ti->hooks.flags |= ECS_TYPE_HOOK_COPY;
+    }
+    if (flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) {
+        ti->hooks.flags |= ECS_TYPE_HOOK_MOVE;
+    }
+    if (flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL) {
+        ti->hooks.flags |= ECS_TYPE_HOOK_COPY_CTOR;
+    }
+    if (ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL) {
+        ti->hooks.flags |= ECS_TYPE_HOOK_MOVE_CTOR;
+    }
+    if (ti->hooks.flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL) {
+        ti->hooks.flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR;
+    }
+    if (ti->hooks.flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL) {
+        ti->hooks.flags |= ECS_TYPE_HOOK_MOVE_DTOR;
+    }
+    if (flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
+        ti->hooks.flags |= ECS_TYPE_HOOK_CMP;
+    }
+    if (flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
+        ti->hooks.flags |= ECS_TYPE_HOOK_EQUALS;
     }
 
     if (in_use && !flecs_type_hooks_storage_equal(&ti->hooks, &prev_hooks)) {

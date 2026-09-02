@@ -13,6 +13,8 @@
         "testsuites": [{
             "id": "Eval",
             "testcases": [
+                "2_components_same_line_w_semicolon",
+                "2_entities_same_line_w_semicolon",
                 "null",
                 "empty",
                 "space",
@@ -1189,6 +1191,11 @@
         }, {
             "id": "Error",
             "testcases": [
+                "missing_separator_between_components",
+                "missing_separator_between_component_and_tag",
+                "missing_separator_between_component_and_pair",
+                "missing_separator_after_scope",
+                "missing_separator_between_const",
                 "multi_line_comment_after_newline_before_newline_scope_open",
                 "unterminated_multi_line_comment_after_line_comment",
                 "missing_end_of_scope",

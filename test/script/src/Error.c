@@ -4956,3 +4956,89 @@ void Error_parse_error_in_large_script_reports_position(void) {
 
     ecs_os_free(code);
 }
+
+void Error_missing_separator_between_components(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e { Position: {10, 20} Velocity: {1, 2} }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing ; or newline") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_missing_separator_between_component_and_tag(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e { Position: {10, 20} Foo }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing ; or newline") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_missing_separator_between_component_and_pair(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e { Position: {10, 20} (Likes, Apples) }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing ; or newline") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_missing_separator_after_scope(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE "bar {} baz {}";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing ; or newline") != NULL);
+    test_int(result.line, 2);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_missing_separator_between_const(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const x = 10 const y = 20";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing ; or newline") != NULL);
+    test_int(result.line, 1);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}

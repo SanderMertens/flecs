@@ -9,6 +9,8 @@
 #include <script.h>
 
 // Testsuite 'Eval'
+void Eval_2_components_same_line_w_semicolon(void);
+void Eval_2_entities_same_line_w_semicolon(void);
 void Eval_null(void);
 void Eval_empty(void);
 void Eval_space(void);
@@ -655,6 +657,11 @@ void Eval_script_update_w_on_remove_observer_that_moves_script_entity(void);
 void Eval_struct_member_w_forward_declared_type(void);
 void Eval_enum_constant_w_forward_declared_value(void);
 void Eval_const_var_large_struct_no_leak(void);
+void Eval_delete_managed_script_shared_table_no_leak(void);
+void Eval_stmt_after_comment_w_comment_open(void);
+void Eval_stmt_after_newline_w_vertical_tab(void);
+void Eval_assign_inline_array_member_from_array_expr(void);
+void Eval_component_expr_w_type_from_same_script(void);
 void Eval_const_var_from_large_component_no_leak(void);
 void Eval_const_var_from_large_component_member_no_leak(void);
 void Eval_const_var_from_large_array_element_no_leak(void);
@@ -767,6 +774,10 @@ void Collection_range_literal_typed_float_vector(void);
 void Collection_range_literal_non_vector_type(void);
 
 // Testsuite 'Await'
+void Await_task_new_w_deleted_entity(void);
+void Await_delete_scope_parent_while_suspended(void);
+void Await_fini_w_alive_task(void);
+void Await_free_script_w_alive_task(void);
 void Await_parse_await_const(void);
 void Await_parse_await_stmt(void);
 void Await_register_async(void);
@@ -936,6 +947,7 @@ void Function_memoized_against_args_ignores_hidden_state(void);
 void Function_fn_w_large_struct_param_no_leak(void);
 
 // Testsuite 'Template'
+void Template_instantiate_w_string_prop_no_leak(void);
 void Template_template_no_scope(void);
 void Template_template_no_props(void);
 void Template_template_newline_before_scope(void);
@@ -1161,6 +1173,11 @@ void Mut_set_struct_from_stage(void);
 void Mut_modified_from_stage(void);
 
 // Testsuite 'Error'
+void Error_missing_separator_between_components(void);
+void Error_missing_separator_between_component_and_tag(void);
+void Error_missing_separator_between_component_and_pair(void);
+void Error_missing_separator_after_scope(void);
+void Error_missing_separator_between_const(void);
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
 void Error_unterminated_multi_line_comment_after_line_comment(void);
 void Error_missing_end_of_scope(void);
@@ -1245,6 +1262,8 @@ void Error_invalid_binary_number_prefix(void);
 void Error_unterminated_multiline_string_capture_error(void);
 void Error_invalid_char_literal_two_chars(void);
 void Error_const_w_old_typed_syntax(void);
+void Error_struct_member_negative_count(void);
+void Error_struct_member_huge_count(void);
 void Error_struct_wo_members(void);
 void Error_struct_member_wo_name(void);
 void Error_enum_constant_w_invalid_expr(void);
@@ -2207,6 +2226,7 @@ void Deserialize_value_unknown_type(void);
 
 // Testsuite 'Include'
 void Include_include_simple(void);
+void Include_include_cycle(void);
 void Include_include_subdir(void);
 void Include_include_missing_file(void);
 void Include_include_parent_dir_not_allowed(void);
@@ -2554,6 +2574,9 @@ void Reactivity_extern_variables_are_isolated(void);
 void Reactivity_const_dependency_is_transitive(void);
 void Reactivity_if_inherits_branch_dependencies(void);
 void Reactivity_if_cleans_up_entities(void);
+void Reactivity_if_branch_flip_same_entity(void);
+void Reactivity_mutual_component_refs_converge(void);
+void Reactivity_cross_referencing_templates_resolve(void);
 void Reactivity_if_cleans_up_components(void);
 void Reactivity_if_cleans_up_singleton_component(void);
 void Reactivity_mutually_exclusive_component_owner(void);
@@ -2756,6 +2779,7 @@ void StructInheritance_mixed_syntax_block_base(void);
 void StructInheritance_no_own_members(void);
 void StructInheritance_no_own_members_newline_before_scope(void);
 void StructInheritance_chain(void);
+void StructInheritance_chain_w_padding(void);
 void StructInheritance_two_derived(void);
 void StructInheritance_base_w_padding(void);
 void StructInheritance_set_component(void);
@@ -2764,6 +2788,7 @@ void StructInheritance_set_component_positional(void);
 void StructInheritance_set_base_and_derived(void);
 void StructInheritance_entity_to_json(void);
 void StructInheritance_expr_run(void);
+void StructInheritance_add_member_to_base_w_derived(void);
 void StructInheritance_base_defined_in_c(void);
 void StructInheritance_derived_defined_in_c(void);
 void StructInheritance_base_in_module(void);
@@ -2774,6 +2799,8 @@ void StructInheritance_base_w_array_member(void);
 void StructInheritance_duplicate_member_paren(void);
 void StructInheritance_duplicate_member_block(void);
 void StructInheritance_base_not_a_struct(void);
+void StructInheritance_self_inherit(void);
+void StructInheritance_inheritance_cycle(void);
 void StructInheritance_base_is_prefab(void);
 void StructInheritance_base_is_enum(void);
 void StructInheritance_base_is_primitive(void);
@@ -2819,6 +2846,8 @@ void TemplateInheritance_base_struct(void);
 void TemplateInheritance_base_component_defined_in_c(void);
 void TemplateInheritance_chain(void);
 void TemplateInheritance_chain_props_in_body(void);
+void TemplateInheritance_chain_partial_defaults(void);
+void TemplateInheritance_chain_defaults_in_body(void);
 void TemplateInheritance_two_derived(void);
 void TemplateInheritance_base_prop_change_updates_instance(void);
 void TemplateInheritance_base_prop_used_by_derived_prop_default(void);
@@ -2826,6 +2855,10 @@ void TemplateInheritance_base_w_mut(void);
 void TemplateInheritance_derived_w_mut(void);
 void TemplateInheritance_derived_prop_same_name_as_base(void);
 void TemplateInheritance_base_not_a_struct(void);
+void TemplateInheritance_delete_base_template(void);
+void TemplateInheritance_mut_shadows_base_prop(void);
+void TemplateInheritance_base_w_anonymous_array_member(void);
+void TemplateInheritance_base_w_count_one_array_member(void);
 void TemplateInheritance_base_is_prefab(void);
 void TemplateInheritance_base_is_enum(void);
 void TemplateInheritance_base_unresolved(void);
@@ -2916,6 +2949,13 @@ void TemplateProp_pass_derived_to_child_template_derived(void);
 void TemplateProp_pass_derived_to_child_template_base_two_levels(void);
 void TemplateProp_pass_base_to_child_template_derived_fails(void);
 void TemplateProp_pass_unrelated_to_child_template_fails(void);
+void TemplateProp_interface_prop_invalid_value(void);
+void TemplateProp_interface_prop_unrelated_template(void);
+void TemplateProp_interface_prop_missing_value(void);
+void TemplateProp_interface_prop_empty_initializer_fails(void);
+void TemplateProp_interface_prop_in_with_w_initializer_fails(void);
+void TemplateProp_interface_prop_dollar_initializer(void);
+void TemplateProp_interface_prop_self_template(void);
 void TemplateProp_interface_prop_instantiates_passed_template(void);
 void TemplateProp_interface_prop_paren_syntax(void);
 void TemplateProp_interface_prop_false_branch(void);
@@ -2933,6 +2973,14 @@ void TemplateProp_bool_prop_in_flt_member_initializer(void);
 void TemplateProp_bool_prop_mul_flt_member_const(void);
 
 bake_test_case Eval_testcases[] = {
+    {
+        "2_components_same_line_w_semicolon",
+        Eval_2_components_same_line_w_semicolon
+    },
+    {
+        "2_entities_same_line_w_semicolon",
+        Eval_2_entities_same_line_w_semicolon
+    },
     {
         "null",
         Eval_null
@@ -5518,6 +5566,26 @@ bake_test_case Eval_testcases[] = {
         Eval_const_var_large_struct_no_leak
     },
     {
+        "delete_managed_script_shared_table_no_leak",
+        Eval_delete_managed_script_shared_table_no_leak
+    },
+    {
+        "stmt_after_comment_w_comment_open",
+        Eval_stmt_after_comment_w_comment_open
+    },
+    {
+        "stmt_after_newline_w_vertical_tab",
+        Eval_stmt_after_newline_w_vertical_tab
+    },
+    {
+        "assign_inline_array_member_from_array_expr",
+        Eval_assign_inline_array_member_from_array_expr
+    },
+    {
+        "component_expr_w_type_from_same_script",
+        Eval_component_expr_w_type_from_same_script
+    },
+    {
         "const_var_from_large_component_no_leak",
         Eval_const_var_from_large_component_no_leak
     },
@@ -5955,6 +6023,22 @@ bake_test_case Collection_testcases[] = {
 };
 
 bake_test_case Await_testcases[] = {
+    {
+        "task_new_w_deleted_entity",
+        Await_task_new_w_deleted_entity
+    },
+    {
+        "delete_scope_parent_while_suspended",
+        Await_delete_scope_parent_while_suspended
+    },
+    {
+        "fini_w_alive_task",
+        Await_fini_w_alive_task
+    },
+    {
+        "free_script_w_alive_task",
+        Await_free_script_w_alive_task
+    },
     {
         "parse_await_const",
         Await_parse_await_const
@@ -6616,6 +6700,10 @@ bake_test_case Function_testcases[] = {
 };
 
 bake_test_case Template_testcases[] = {
+    {
+        "instantiate_w_string_prop_no_leak",
+        Template_instantiate_w_string_prop_no_leak
+    },
     {
         "template_no_scope",
         Template_template_no_scope
@@ -7507,6 +7595,26 @@ bake_test_case Mut_testcases[] = {
 
 bake_test_case Error_testcases[] = {
     {
+        "missing_separator_between_components",
+        Error_missing_separator_between_components
+    },
+    {
+        "missing_separator_between_component_and_tag",
+        Error_missing_separator_between_component_and_tag
+    },
+    {
+        "missing_separator_between_component_and_pair",
+        Error_missing_separator_between_component_and_pair
+    },
+    {
+        "missing_separator_after_scope",
+        Error_missing_separator_after_scope
+    },
+    {
+        "missing_separator_between_const",
+        Error_missing_separator_between_const
+    },
+    {
         "multi_line_comment_after_newline_before_newline_scope_open",
         Error_multi_line_comment_after_newline_before_newline_scope_open
     },
@@ -7841,6 +7949,14 @@ bake_test_case Error_testcases[] = {
     {
         "const_w_old_typed_syntax",
         Error_const_w_old_typed_syntax
+    },
+    {
+        "struct_member_negative_count",
+        Error_struct_member_negative_count
+    },
+    {
+        "struct_member_huge_count",
+        Error_struct_member_huge_count
     },
     {
         "struct_wo_members",
@@ -11644,6 +11760,10 @@ bake_test_case Include_testcases[] = {
         Include_include_simple
     },
     {
+        "include_cycle",
+        Include_include_cycle
+    },
+    {
         "include_subdir",
         Include_include_subdir
     },
@@ -13017,6 +13137,18 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_if_cleans_up_entities
     },
     {
+        "if_branch_flip_same_entity",
+        Reactivity_if_branch_flip_same_entity
+    },
+    {
+        "mutual_component_refs_converge",
+        Reactivity_mutual_component_refs_converge
+    },
+    {
+        "cross_referencing_templates_resolve",
+        Reactivity_cross_referencing_templates_resolve
+    },
+    {
         "if_cleans_up_components",
         Reactivity_if_cleans_up_components
     },
@@ -13810,6 +13942,10 @@ bake_test_case StructInheritance_testcases[] = {
         StructInheritance_chain
     },
     {
+        "chain_w_padding",
+        StructInheritance_chain_w_padding
+    },
+    {
         "two_derived",
         StructInheritance_two_derived
     },
@@ -13840,6 +13976,10 @@ bake_test_case StructInheritance_testcases[] = {
     {
         "expr_run",
         StructInheritance_expr_run
+    },
+    {
+        "add_member_to_base_w_derived",
+        StructInheritance_add_member_to_base_w_derived
     },
     {
         "base_defined_in_c",
@@ -13880,6 +14020,14 @@ bake_test_case StructInheritance_testcases[] = {
     {
         "base_not_a_struct",
         StructInheritance_base_not_a_struct
+    },
+    {
+        "self_inherit",
+        StructInheritance_self_inherit
+    },
+    {
+        "inheritance_cycle",
+        StructInheritance_inheritance_cycle
     },
     {
         "base_is_prefab",
@@ -14057,6 +14205,14 @@ bake_test_case TemplateInheritance_testcases[] = {
         TemplateInheritance_chain_props_in_body
     },
     {
+        "chain_partial_defaults",
+        TemplateInheritance_chain_partial_defaults
+    },
+    {
+        "chain_defaults_in_body",
+        TemplateInheritance_chain_defaults_in_body
+    },
+    {
         "two_derived",
         TemplateInheritance_two_derived
     },
@@ -14083,6 +14239,22 @@ bake_test_case TemplateInheritance_testcases[] = {
     {
         "base_not_a_struct",
         TemplateInheritance_base_not_a_struct
+    },
+    {
+        "delete_base_template",
+        TemplateInheritance_delete_base_template
+    },
+    {
+        "mut_shadows_base_prop",
+        TemplateInheritance_mut_shadows_base_prop
+    },
+    {
+        "base_w_anonymous_array_member",
+        TemplateInheritance_base_w_anonymous_array_member
+    },
+    {
+        "base_w_count_one_array_member",
+        TemplateInheritance_base_w_count_one_array_member
     },
     {
         "base_is_prefab",
@@ -14440,6 +14612,34 @@ bake_test_case TemplateProp_testcases[] = {
         TemplateProp_pass_unrelated_to_child_template_fails
     },
     {
+        "interface_prop_invalid_value",
+        TemplateProp_interface_prop_invalid_value
+    },
+    {
+        "interface_prop_unrelated_template",
+        TemplateProp_interface_prop_unrelated_template
+    },
+    {
+        "interface_prop_missing_value",
+        TemplateProp_interface_prop_missing_value
+    },
+    {
+        "interface_prop_empty_initializer_fails",
+        TemplateProp_interface_prop_empty_initializer_fails
+    },
+    {
+        "interface_prop_in_with_w_initializer_fails",
+        TemplateProp_interface_prop_in_with_w_initializer_fails
+    },
+    {
+        "interface_prop_dollar_initializer",
+        TemplateProp_interface_prop_dollar_initializer
+    },
+    {
+        "interface_prop_self_template",
+        TemplateProp_interface_prop_self_template
+    },
+    {
         "interface_prop_instantiates_passed_template",
         TemplateProp_interface_prop_instantiates_passed_template
     },
@@ -14521,7 +14721,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        653,
+        660,
         Eval_testcases
     },
     {
@@ -14535,7 +14735,7 @@ static bake_test_suite suites[] = {
         "Await",
         NULL,
         NULL,
-        47,
+        51,
         Await_testcases
     },
     {
@@ -14556,7 +14756,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        146,
+        147,
         Template_testcases
     },
     {
@@ -14570,7 +14770,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        200,
+        207,
         Error_testcases
     },
     {
@@ -14625,7 +14825,7 @@ static bake_test_suite suites[] = {
         "Include",
         NULL,
         NULL,
-        55,
+        56,
         Include_testcases
     },
     {
@@ -14646,7 +14846,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        124,
+        127,
         Reactivity_testcases
     },
     {
@@ -14667,21 +14867,21 @@ static bake_test_suite suites[] = {
         "StructInheritance",
         NULL,
         NULL,
-        55,
+        59,
         StructInheritance_testcases
     },
     {
         "TemplateInheritance",
         NULL,
         NULL,
-        41,
+        47,
         TemplateInheritance_testcases
     },
     {
         "TemplateProp",
         NULL,
         NULL,
-        83,
+        90,
         TemplateProp_testcases
     }
 };

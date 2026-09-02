@@ -81,7 +81,7 @@ static const char* flecs_script_scope(
                 goto error;
         )
 
-        pos = flecs_script_stmt(parser, pos);
+        pos = flecs_script_stmt_w_separator(parser, pos);
         if (!pos) {
             goto error;
         }
@@ -1533,6 +1533,99 @@ component_expr_value: {
     ParserEnd;
 }
 
+/* Test if the statement that ended at pos already consumed its separator. The
+ * tokenizer skips whitespace and comments that trail a token, so scan back over
+ * them to find the last significant character. */
+static bool flecs_script_stmt_is_terminated(
+    const char *start,
+    const char *pos)
+{
+    while (pos > start) {
+        char c = pos[-1];
+
+        if (c == '\n' || c == ';') {
+            return true;
+        }
+
+        if (c == ' ' || c == '\t' || c == '\r' || c == '\v' || c == '\f') {
+            pos --;
+            continue;
+        }
+
+        if (c == '*' && (pos - 2) >= start && pos[-2] == '/') {
+            pos -= 2;
+            continue;
+        }
+
+        if (c == '/' && (pos - 3) >= start && pos[-2] == '*') {
+            const char *p = pos - 3;
+            while (p > start) {
+                if (p[-1] == '/' && p[0] == '*') {
+                    break;
+                }
+                p --;
+            }
+
+            if (p == start) {
+                break;
+            }
+
+            pos = p - 1;
+            continue;
+        }
+
+        break;
+    }
+
+    return false;
+}
+
+/* Parse a single statement, and verify that it is followed by a statement
+ * separator (';', newline, end of scope or end of script). */
+const char* flecs_script_stmt_w_separator(
+    ecs_parser_t *parser,
+    const char *pos)
+{
+    const char *start = pos;
+
+    pos = flecs_script_stmt(parser, pos);
+    if (!pos) {
+        return NULL;
+    }
+
+    if (flecs_script_stmt_is_terminated(start, pos)) {
+        return pos;
+    }
+
+    ecs_token_t token;
+    const char *old_token_cur = parser->token_cur;
+    const char *lookahead = flecs_token(parser, pos, &token, true);
+
+    if (old_token_cur > parser->token_keep) {
+        parser->token_cur = ECS_CONST_CAST(char*, old_token_cur);
+    } else {
+        parser->token_cur = parser->token_keep;
+    }
+
+    if (!lookahead) {
+        flecs_token(parser, pos, &token, false);
+        return NULL;
+    }
+
+    switch(token.kind) {
+    EcsTokEndOfStatement:
+    case EcsTokScopeClose:
+        return pos;
+    default:
+        break;
+    }
+
+    ecs_parser_error(parser->name, parser->code,
+        flecs_parser_errpos(parser, lookahead - 1), "missing ; or newline");
+
+    return NULL;
+}
+
 static ecs_script_t* flecs_script_parse_init(
     ecs_world_t *world,
     const char *name,
@@ -1598,7 +1691,7 @@ ecs_script_t* flecs_script_parse_nested(
     const char *open = &script->code[open_offset];
     const char *pos = script->code;
     while (pos < open) {
-        pos = flecs_script_stmt(&parser, pos);
+        pos = flecs_script_stmt_w_separator(&parser, pos);
         if (!pos) {
             goto error;
         }
@@ -1645,7 +1738,7 @@ ecs_script_t* ecs_script_parse(
     const char *pos = script->code;
 
     do {
-        pos = flecs_script_stmt(&parser, pos);
+        pos = flecs_script_stmt_w_separator(&parser, pos);
         if (!pos) {
             /* NULL means error */
             goto error;

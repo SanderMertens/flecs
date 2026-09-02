@@ -438,7 +438,7 @@ void TemplateProp_interface_prop_with_other_components(void) {
     LINE "struct Velocity(x: f32, y: f32)"
     LINE "template Road {"
     LINE "  prop street_light : template StreetLight"
-    LINE "  lamp { street_light: {on_off: true} Velocity: {10, 20} }"
+    LINE "  lamp { street_light: {on_off: true}; Velocity: {10, 20} }"
     LINE "}"
     LINE "e { Road: {street_light: MyStreetLight} }";
 
