@@ -2793,6 +2793,15 @@ static int flecs_expr_element_visit_type(
                 goto error;
             }
 
+            if (!ecs_get_type_info(world, node->node.type)) {
+                char *type_str = ecs_get_path(world, node->node.type);
+                flecs_expr_visit_error(script, node,
+                    "cannot use [] with component '%s' "
+                        "(missing reflection data)", type_str);
+                ecs_os_free(type_str);
+                goto error;
+            }
+
             node->node.kind = EcsExprComponent;
 
             ecs_script_eval_visitor_t *v = desc->script_visitor;

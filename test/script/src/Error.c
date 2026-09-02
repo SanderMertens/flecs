@@ -5131,3 +5131,21 @@ void Error_struct_member_count_size_overflow(void) {
 
     ecs_fini(world);
 }
+
+void Error_member_of_tag_component_in_function(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Tag {}"
+    LINE "fn get_x(e: entity) -> f32 {"
+    LINE "  e[Tag].x"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
