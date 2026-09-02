@@ -113,6 +113,13 @@ int flecs_script_struct_visit(
             }
 
             const EcsMember *mval = value.ptr;
+            if (mval->type == ctx->entity) {
+                flecs_expr_visit_error(script, elem->value,
+                    "member '%s' of struct '%s' cannot be of its own type",
+                    elem->member, ecs_get_name(world, ctx->entity));
+                return -1;
+            }
+
             if (mval->count < 0) {
                 flecs_expr_visit_error(script, elem->value,
                     "invalid count %d for member '%s' of struct '%s'",
@@ -140,6 +147,13 @@ int flecs_script_struct_visit(
             if (!type) {
                 flecs_expr_visit_error(script, elem->value,
                     "invalid type for struct member '%s'", elem->member);
+                return -1;
+            }
+
+            if (type == ctx->entity) {
+                flecs_expr_visit_error(script, elem->value,
+                    "member '%s' of struct '%s' cannot be of its own type",
+                    elem->member, ecs_get_name(world, ctx->entity));
                 return -1;
             }
 

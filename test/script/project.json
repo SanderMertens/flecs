@@ -675,7 +675,9 @@
                 "vector_of_struct_w_array_member",
                 "rerun_script_w_enum_type_w_underlying_type_in_use",
                 "enum_w_float_underlying_type",
-                "enum_w_struct_underlying_type"
+                "enum_w_struct_underlying_type",
+                "struct_w_member_of_own_type",
+                "struct_w_inline_array_member_of_own_type"
             ]
         }, {
             "id": "Collection",
