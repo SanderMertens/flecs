@@ -672,6 +672,8 @@ void Eval_vector_of_struct_w_array_member(void);
 void Eval_rerun_script_w_enum_type_w_underlying_type_in_use(void);
 void Eval_enum_w_float_underlying_type(void);
 void Eval_enum_w_struct_underlying_type(void);
+void Eval_struct_w_member_of_own_type(void);
+void Eval_struct_w_inline_array_member_of_own_type(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -5650,6 +5652,14 @@ bake_test_case Eval_testcases[] = {
     {
         "enum_w_struct_underlying_type",
         Eval_enum_w_struct_underlying_type
+    },
+    {
+        "struct_w_member_of_own_type",
+        Eval_struct_w_member_of_own_type
+    },
+    {
+        "struct_w_inline_array_member_of_own_type",
+        Eval_struct_w_inline_array_member_of_own_type
     }
 };
 
@@ -14851,7 +14861,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        663,
+        665,
         Eval_testcases
     },
     {
