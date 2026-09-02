@@ -2467,3 +2467,60 @@ void Await_task_component_deferred_new_then_free(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Await_loop_forever_counts_iterations(void) {
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback,
+        .cancel = Await_cancel_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, "task_script",
+        "const v = await fetch()\n", NULL, NULL);
+    test_assert(script != NULL);
+
+    ecs_entity_t script_e = ecs_entity(world, { .name = "task_script" });
+    flecs_script_impl(script)->entity = script_e;
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_script_task_t *task = ecs_script_task_new(script,
+        &(ecs_script_task_desc_t){
+            .entity = e, .loop = EcsScriptTaskLoopForever });
+
+    const EcsScriptTask *t = ecs_get(world, e, EcsScriptTask);
+    test_assert(t != NULL);
+
+    int32_t i;
+    for (i = 0; i < 3; i ++) {
+        test_int(ecs_script_task_resume(task, NULL),
+            EcsScriptTaskPending);
+        test_int(await_future_count, i + 1);
+
+        int32_t v = 10;
+        test_int(0, ecs_script_future_resolve(await_futures[i],
+            &(ecs_value_t){ .type = ecs_id(ecs_i32_t), .ptr = &v }));
+        ecs_script_future_release(await_futures[i]);
+
+        test_int(ecs_script_task_resume(task, NULL),
+            EcsScriptTaskPending);
+
+        char *json = ecs_ptr_to_json(world, ecs_id(EcsScriptTask), t);
+        test_assert(json != NULL);
+        char expect[256];
+        ecs_os_snprintf(expect, sizeof(expect),
+            "[{\"script\":\"task_script\", \"status\":\"Pending\", "
+            "\"line\":0, \"column\":0, "
+            "\"awaiting\":\"#0\", \"iteration\":%d}]", i + 1);
+        test_str(json, expect);
+        ecs_os_free(json);
+    }
+
+    ecs_script_task_free(task);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
