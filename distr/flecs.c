@@ -116283,6 +116283,8 @@ static ecs_script_template_t* flecs_script_template_init(
     result->for_count = 0;
     result->inherited_count = 0;
     result->refcount = 0;
+    result->non_fragmenting_parent = false;
+    result->has_interface_members = false;
 
     result->vars = ecs_script_vars_init(script->pub.world);
     return result;
