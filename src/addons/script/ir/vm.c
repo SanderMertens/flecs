@@ -1221,7 +1221,7 @@ static int flecs_ir_entity_enter(
     } else {
         flecs_ir_prof(EcsIrProfileEntityReuse);
     }
-    if (apply_with && op->a == -1) {
+    if (apply_with && op->a == -1 && v->force) {
         flecs_script_apply_with(v, state->eval);
     }
     if (node->symbol != -1) {
@@ -1241,14 +1241,17 @@ static int flecs_ir_entity_enter(
         }
     }
 
-    if (v->template_entity) {
+    if (v->template_entity && (state->created || v->force)) {
         ecs_add_pair(
             v->world, state->eval, EcsScriptTemplate, v->template_entity);
     }
 
     v->entity = state;
 
-    if (state->eval_kind) {
+    if (state->eval_kind && (state->created || v->force ||
+        (node->node.direct_input & v->input) ||
+        (node->node.direct_internal & v->internal)))
+    {
         if (state->eval_kind == state->eval) {
             const EcsScript *tmpl = ecs_get(
                 v->world, state->eval_kind, EcsScript);
