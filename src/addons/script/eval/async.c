@@ -552,6 +552,7 @@ static void flecs_script_task_register(
     }
 
     EcsScriptTask *t = ecs_ensure(world, task->entity, EcsScriptTask);
+    ecs_vec_init_if_t(&t->tasks, ecs_script_task_t*);
     ecs_script_task_t **elem = ecs_vec_append_t(
         NULL, &t->tasks, ecs_script_task_t*);
     *elem = task;
