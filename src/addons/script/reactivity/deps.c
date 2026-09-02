@@ -247,6 +247,47 @@ static bool flecs_script_dep_component_already_owned(
     return first_scope == second_scope;
 }
 
+static bool flecs_script_dep_initializer_is_complete(
+    const ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_expr_initializer_t *initializer)
+{
+    if (!component) {
+        return false;
+    }
+
+    ecs_entity_t type = ecs_get_typeid(world, component);
+    if (!type) {
+        return false;
+    }
+
+    const EcsStruct *st = ecs_get(world, type, EcsStruct);
+    if (!st) {
+        return false;
+    }
+
+    const ecs_expr_initializer_element_t *elements = ecs_vec_first(
+        &initializer->elements);
+    int32_t i, count = ecs_vec_count(&initializer->elements);
+    if (count != ecs_vec_count(&st->members)) {
+        return false;
+    }
+
+    for (i = 0; i < count; i ++) {
+        if (!elements[i].member) {
+            return false;
+        }
+        const ecs_expr_node_t *value = elements[i].value;
+        if (value && value->kind == EcsExprInitializer &&
+            ((const ecs_expr_initializer_t*)value)->is_partial)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 static int flecs_script_dep_component_owner(
     flecs_script_dep_ctx_t *ctx,
     ecs_script_node_t *node,
@@ -738,6 +779,11 @@ static int flecs_script_dep_node(
                             break;
                         }
                     }
+                }
+                if (partial && flecs_script_dep_initializer_is_complete(
+                    ctx->v->world, n->id.eval, initializer))
+                {
+                    partial = false;
                 }
             }
             bool already_owned = false;

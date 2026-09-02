@@ -7883,3 +7883,162 @@ void Reactivity_template_after_stmt_conditional_component_on_child(void) {
     ecs_fini(world);
 }
 
+void Reactivity_conditional_component_w_named_initializer_toggles(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "before {}"
+            LINE "template Lamp {"
+            LINE "  prop on: bool = false"
+            LINE "  bulb {"
+            LINE "    Position: {10, 20}"
+            LINE "    if on {"
+            LINE "      Velocity: {x: 30, y: 40}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Lamp instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "Lamp");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t child = ecs_lookup(world, "instance.bulb");
+    test_assert(lamp != 0);
+    test_assert(instance != 0);
+    test_assert(child != 0);
+    test_assert(ecs_owns_id(world, child, position));
+    test_assert(!ecs_owns_id(world, child, velocity));
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        bool on = true;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(ecs_owns_id(world, child, velocity));
+        const Velocity *vptr = ecs_get_id(world, child, velocity);
+        test_assert(vptr != NULL);
+        test_flt(vptr->x, 30);
+        test_flt(vptr->y, 40);
+
+        on = false;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(!ecs_owns_id(world, child, velocity));
+    }
+
+    ecs_fini(world);
+}
+
+void Reactivity_conditional_pair_w_named_initializer_toggles(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_id_t pair = ecs_pair(rel, velocity);
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "before {}"
+            LINE "template Lamp {"
+            LINE "  prop on: bool = false"
+            LINE "  bulb {"
+            LINE "    if on {"
+            LINE "      (Rel, Velocity): {x: 30, y: 40}"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "Lamp instance()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "Lamp");
+    ecs_entity_t instance = ecs_lookup(world, "instance");
+    ecs_entity_t child = ecs_lookup(world, "instance.bulb");
+    test_assert(lamp != 0);
+    test_assert(instance != 0);
+    test_assert(child != 0);
+    test_assert(!ecs_owns_id(world, child, pair));
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        bool on = true;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(ecs_owns_id(world, child, pair));
+
+        on = false;
+        ecs_set_id(world, instance, lamp, sizeof(on), &on);
+        test_assert(!ecs_owns_id(world, child, pair));
+    }
+
+    ecs_fini(world);
+}
+
+void Reactivity_conditional_component_w_named_initializer_on_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t velocity = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "e {"
+            LINE "  if condition[Mass].value > 0 {"
+            LINE "    Velocity: {x: 30, y: 40}"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_owns_id(world, e, velocity));
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){0});
+        test_assert(!ecs_owns_id(world, e, velocity));
+
+        ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
+        test_assert(ecs_owns_id(world, e, velocity));
+    }
+
+    ecs_fini(world);
+}

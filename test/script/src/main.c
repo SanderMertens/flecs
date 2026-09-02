@@ -2697,6 +2697,9 @@ void Reactivity_template_first_stmt_conditional_pair_on_child(void);
 void Reactivity_template_first_stmt_conditional_tag_on_child(void);
 void Reactivity_template_first_stmt_conditional_component_on_root(void);
 void Reactivity_template_after_stmt_conditional_component_on_child(void);
+void Reactivity_conditional_component_w_named_initializer_toggles(void);
+void Reactivity_conditional_pair_w_named_initializer_toggles(void);
+void Reactivity_conditional_component_w_named_initializer_on_entity(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -13632,6 +13635,18 @@ bake_test_case Reactivity_testcases[] = {
     {
         "template_after_stmt_conditional_component_on_child",
         Reactivity_template_after_stmt_conditional_component_on_child
+    },
+    {
+        "conditional_component_w_named_initializer_toggles",
+        Reactivity_conditional_component_w_named_initializer_toggles
+    },
+    {
+        "conditional_pair_w_named_initializer_toggles",
+        Reactivity_conditional_pair_w_named_initializer_toggles
+    },
+    {
+        "conditional_component_w_named_initializer_on_entity",
+        Reactivity_conditional_component_w_named_initializer_on_entity
     }
 };
 
@@ -14871,7 +14886,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        132,
+        135,
         Reactivity_testcases
     },
     {
