@@ -2823,3 +2823,47 @@ void Serialize_value_roundtrip(void) {
 
     ecs_fini(world);
 }
+
+void Serialize_string_w_interpolation_roundtrip(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("$(x)");
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_string_t), &value);
+    test_assert(expr != NULL);
+
+    char *result = NULL;
+    const char *ptr = ecs_expr_run(world, expr,
+        &ecs_value_ptr(ecs_string_t, &result), NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_assert(result != NULL);
+    test_str(result, "$(x)");
+
+    ecs_os_free(result);
+    ecs_os_free(expr);
+    ecs_os_free(value);
+
+    ecs_fini(world);
+}
+
+void Serialize_string_w_curly_brace_roundtrip(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("{x}");
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_string_t), &value);
+    test_assert(expr != NULL);
+
+    char *result = NULL;
+    const char *ptr = ecs_expr_run(world, expr,
+        &ecs_value_ptr(ecs_string_t, &result), NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_assert(result != NULL);
+    test_str(result, "{x}");
+
+    ecs_os_free(result);
+    ecs_os_free(expr);
+    ecs_os_free(value);
+
+    ecs_fini(world);
+}

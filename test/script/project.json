@@ -2127,7 +2127,9 @@
                 "value_entity",
                 "value_struct",
                 "struct_w_value",
-                "value_roundtrip"
+                "value_roundtrip",
+                "string_w_interpolation_roundtrip",
+                "string_w_curly_brace_roundtrip"
             ]
         }, {
             "id": "Deserialize",

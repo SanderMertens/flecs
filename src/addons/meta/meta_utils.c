@@ -82,18 +82,28 @@ static int flecs_meta_ser_scalar(
                 ecs_strbuf_appendstr(str, value);
             } else {
                 ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
-                if (length == ecs_os_strlen(value)) {
+                if (length == ecs_os_strlen(value) &&
+                    !strchr(value, '$') && !strchr(value, '{'))
+                {
                     ecs_strbuf_appendch(str, '"');
                     ecs_strbuf_appendstrn(str, value, length);
                     ecs_strbuf_appendch(str, '"');
                 } else {
-                    char *out = ecs_os_malloc(length + 3);
-                    flecs_stresc(out + 1, length, '"', value);
-                    out[0] = '"';
-                    out[length + 1] = '"';
-                    out[length + 2] = '\0';
-                    ecs_strbuf_appendstr(str, out);
-                    ecs_os_free(out);
+                    char buf[3], ch;
+                    const char *cur = value;
+                    ecs_strbuf_appendch(str, '"');
+                    while ((ch = cur[0])) {
+                        if (ch == '$') {
+                            ecs_strbuf_appendlit(str, "\\$");
+                        } else if (ch == '{') {
+                            ecs_strbuf_appendlit(str, "\\{");
+                        } else {
+                            flecs_chresc(buf, ch, '"');
+                            ecs_strbuf_appendstr(str, buf);
+                        }
+                        cur ++;
+                    }
+                    ecs_strbuf_appendch(str, '"');
                 }
             }
         } else {
