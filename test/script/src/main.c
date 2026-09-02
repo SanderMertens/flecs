@@ -2692,6 +2692,11 @@ void Reactivity_for_keyed_template_instance_survives_collection_change(void);
 void Reactivity_component_ref_set_from_system_reevaluates(void);
 void Reactivity_template_prop_ensure_modified_from_system_reevaluates(void);
 void Reactivity_template_prop_set_from_system_reevaluates(void);
+void Reactivity_template_first_stmt_conditional_component_on_child(void);
+void Reactivity_template_first_stmt_conditional_pair_on_child(void);
+void Reactivity_template_first_stmt_conditional_tag_on_child(void);
+void Reactivity_template_first_stmt_conditional_component_on_root(void);
+void Reactivity_template_after_stmt_conditional_component_on_child(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -13607,6 +13612,26 @@ bake_test_case Reactivity_testcases[] = {
     {
         "template_prop_set_from_system_reevaluates",
         Reactivity_template_prop_set_from_system_reevaluates
+    },
+    {
+        "template_first_stmt_conditional_component_on_child",
+        Reactivity_template_first_stmt_conditional_component_on_child
+    },
+    {
+        "template_first_stmt_conditional_pair_on_child",
+        Reactivity_template_first_stmt_conditional_pair_on_child
+    },
+    {
+        "template_first_stmt_conditional_tag_on_child",
+        Reactivity_template_first_stmt_conditional_tag_on_child
+    },
+    {
+        "template_first_stmt_conditional_component_on_root",
+        Reactivity_template_first_stmt_conditional_component_on_root
+    },
+    {
+        "template_after_stmt_conditional_component_on_child",
+        Reactivity_template_after_stmt_conditional_component_on_child
     }
 };
 
@@ -14846,7 +14871,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        127,
+        132,
         Reactivity_testcases
     },
     {
