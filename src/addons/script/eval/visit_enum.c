@@ -44,6 +44,29 @@ static bool flecs_script_is_integer_type(
     return false;
 }
 
+static bool flecs_script_constant_registered(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_entity_t constant)
+{
+    const EcsConstants *ptr = ecs_get(world, type, EcsConstants);
+    if (!ptr) {
+        return false;
+    }
+
+    ecs_vec_t *ordered = ECS_CONST_CAST(ecs_vec_t*, &ptr->ordered_constants);
+    const ecs_enum_constant_t *constants = ecs_vec_first_t(
+        ordered, ecs_enum_constant_t);
+    int32_t i, count = ecs_vec_count(ordered);
+    for (i = 0; i < count; i ++) {
+        if (constants[i].constant == constant) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static int flecs_script_constants_visit(
     const ecs_script_visitor_ctx_t *ctx,
     bool is_bitmask)
@@ -194,6 +217,15 @@ static int flecs_script_constants_visit(
             ecs_os_memcpy(dst, value.ptr, ti->size);
 
             ecs_modified_id(world, c, ecs_pair(EcsConstant, underlying));
+
+            if (!ecs_is_deferred(world) && !flecs_script_constant_registered(
+                world, ctx->entity, c))
+            {
+                flecs_expr_visit_error(script, elem->value,
+                    "failed to add constant '%s' to %s '%s'", elem->member,
+                        kind_str, ecs_get_name(world, ctx->entity));
+                return -1;
+            }
         } else {
             if (!elem->value || elem->value->kind != EcsExprIdentifier) {
                 flecs_expr_visit_error(script, elem->value,
@@ -210,6 +242,15 @@ static int flecs_script_constants_visit(
             }
 
             ecs_add_id(world, c, EcsConstant);
+
+            if (!ecs_is_deferred(world) && !flecs_script_constant_registered(
+                world, ctx->entity, c))
+            {
+                flecs_expr_visit_error(script, elem->value,
+                    "failed to add constant '%s' to %s '%s'", name,
+                        kind_str, ecs_get_name(world, ctx->entity));
+                return -1;
+            }
         }
     }
 

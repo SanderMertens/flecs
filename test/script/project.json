@@ -677,7 +677,9 @@
                 "enum_w_float_underlying_type",
                 "enum_w_struct_underlying_type",
                 "struct_w_member_of_own_type",
-                "struct_w_inline_array_member_of_own_type"
+                "struct_w_inline_array_member_of_own_type",
+                "enum_w_duplicate_constant_values",
+                "bitmask_w_duplicate_constant_values"
             ]
         }, {
             "id": "Collection",
