@@ -99782,6 +99782,69 @@ bool flecs_script_struct_member_is_inherited(
     return false;
 }
 
+static bool flecs_script_struct_type_reaches(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_entity_t target,
+    ecs_vec_t *visited)
+{
+    if (!type) {
+        return false;
+    }
+
+    if (type == target) {
+        return true;
+    }
+
+    ecs_entity_t *visited_types = ecs_vec_first_t(visited, ecs_entity_t);
+    int32_t i, count = ecs_vec_count(visited);
+    for (i = 0; i < count; i ++) {
+        if (visited_types[i] == type) {
+            return false;
+        }
+    }
+
+    ecs_vec_append_t(NULL, visited, ecs_entity_t)[0] = type;
+
+    const EcsStruct *st = ecs_get(world, type, EcsStruct);
+    if (st) {
+        const ecs_member_t *members = ecs_vec_first_t(
+            &st->members, ecs_member_t);
+        count = ecs_vec_count(&st->members);
+        for (i = 0; i < count; i ++) {
+            if (flecs_script_struct_type_reaches(
+                world, members[i].type, target, visited))
+            {
+                return true;
+            }
+        }
+    }
+
+    const EcsArray *arr = ecs_get(world, type, EcsArray);
+    if (arr) {
+        if (flecs_script_struct_type_reaches(
+            world, arr->type, target, visited))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool flecs_script_struct_member_is_cyclic(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_entity_t target)
+{
+    ecs_vec_t visited;
+    ecs_vec_init_t(NULL, &visited, ecs_entity_t, 0);
+    bool result = flecs_script_struct_type_reaches(
+        world, type, target, &visited);
+    ecs_vec_fini_t(NULL, &visited, ecs_entity_t);
+    return result;
+}
+
 int flecs_script_struct_visit(
     const ecs_script_visitor_ctx_t *ctx)
 {
@@ -99872,6 +99935,16 @@ int flecs_script_struct_visit(
                 return -1;
             }
 
+            if (flecs_script_struct_member_is_cyclic(
+                world, mval->type, ctx->entity))
+            {
+                flecs_expr_visit_error(script, elem->value,
+                    "member '%s' of struct '%s' creates a cyclic type "
+                    "definition", elem->member,
+                    ecs_get_name(world, ctx->entity));
+                return -1;
+            }
+
             if (mval->count < 0) {
                 flecs_expr_visit_error(script, elem->value,
                     "invalid count %d for member '%s' of struct '%s'",
@@ -99906,6 +99979,16 @@ int flecs_script_struct_visit(
                 flecs_expr_visit_error(script, elem->value,
                     "member '%s' of struct '%s' cannot be of its own type",
                     elem->member, ecs_get_name(world, ctx->entity));
+                return -1;
+            }
+
+            if (flecs_script_struct_member_is_cyclic(
+                world, type, ctx->entity))
+            {
+                flecs_expr_visit_error(script, elem->value,
+                    "member '%s' of struct '%s' creates a cyclic type "
+                    "definition", elem->member,
+                    ecs_get_name(world, ctx->entity));
                 return -1;
             }
 

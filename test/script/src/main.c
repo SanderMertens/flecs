@@ -674,6 +674,8 @@ void Eval_enum_w_float_underlying_type(void);
 void Eval_enum_w_struct_underlying_type(void);
 void Eval_struct_w_member_of_own_type(void);
 void Eval_struct_w_inline_array_member_of_own_type(void);
+void Eval_struct_w_indirect_member_cycle(void);
+void Eval_struct_w_indirect_inline_array_member_cycle(void);
 void Eval_enum_w_duplicate_constant_values(void);
 void Eval_bitmask_w_duplicate_constant_values(void);
 void Eval_kind_entity_before_scope_close_same_line(void);
@@ -5681,6 +5683,14 @@ bake_test_case Eval_testcases[] = {
     {
         "struct_w_inline_array_member_of_own_type",
         Eval_struct_w_inline_array_member_of_own_type
+    },
+    {
+        "struct_w_indirect_member_cycle",
+        Eval_struct_w_indirect_member_cycle
+    },
+    {
+        "struct_w_indirect_inline_array_member_cycle",
+        Eval_struct_w_indirect_inline_array_member_cycle
     },
     {
         "enum_w_duplicate_constant_values",
@@ -14966,7 +14976,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        673,
+        675,
         Eval_testcases
     },
     {
