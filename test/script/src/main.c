@@ -1408,6 +1408,7 @@ void Error_parse_error_in_large_script_reports_position(void);
 void Error_interpolated_string_w_struct_value(void);
 void Error_function_w_too_many_params(void);
 void Error_struct_member_count_size_overflow(void);
+void Error_member_of_tag_component_in_function(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -8579,6 +8580,10 @@ bake_test_case Error_testcases[] = {
     {
         "struct_member_count_size_overflow",
         Error_struct_member_count_size_overflow
+    },
+    {
+        "member_of_tag_component_in_function",
+        Error_member_of_tag_component_in_function
     }
 };
 
