@@ -50760,6 +50760,13 @@ struct ecs_script_runtime_t {
     ecs_vec_t pending_resolves;
     ecs_vec_t ir_vms;
 
+    /* Template instances with changed props whose re-evaluation is deferred
+     * until the command queue is flushed. One marker event is enqueued per
+     * flush instead of one event per instance. */
+    ecs_vec_t template_pending;
+    bool template_pending_marker;
+    bool template_pending_active;
+
     /* Tag added to entities created by the currently evaluating managed
      * script. Carried on the world runtime so evaluation triggered from hooks
      * (such as template instantiation) inherits it. */
@@ -51598,6 +51605,22 @@ struct ecs_script_template_t {
 };
 
 #define ECS_TEMPLATE_SMALL_SIZE (36)
+
+/* Deferred template instance update, queued by the template on_set hook */
+typedef struct ecs_script_template_pending_t {
+    ecs_entity_t entity;
+    ecs_entity_t template_entity;
+    ecs_entity_t component;
+    uint64_t input;
+    int32_t depth;
+    void *data;
+    bool inline_data;
+    int64_t _align;
+    char data_storage[ECS_TEMPLATE_SMALL_SIZE];
+} ecs_script_template_pending_t;
+
+void flecs_script_template_pending_fini(
+    ecs_vec_t *pending);
 
 typedef struct EcsScriptTemplateRoot {
     ecs_vec_t observers;
@@ -96174,6 +96197,8 @@ ecs_script_runtime_t* ecs_script_runtime_new(void)
     ecs_vec_init_t(&r->allocator, &r->annot, ecs_script_annot_t*, 0);
     ecs_vec_init_t(&r->allocator, &r->pending_resolves, ecs_entity_t, 0);
     ecs_vec_init_t(NULL, &r->ir_vms, ecs_script_ir_vm_t*, 0);
+    ecs_vec_init_t(NULL, &r->template_pending,
+        ecs_script_template_pending_t, 0);
     return r;
 }
 
@@ -96182,6 +96207,7 @@ void ecs_script_runtime_free(
 {
     flecs_expr_stack_fini(&r->expr_stack);
     flecs_script_ir_vm_pool_fini(r);
+    flecs_script_template_pending_fini(&r->template_pending);
     ecs_vec_fini_t(&r->allocator, &r->pending_resolves, ecs_entity_t);
     ecs_vec_fini_t(&r->allocator, &r->annot, ecs_script_annot_t*);
     ecs_vec_fini_t(&r->allocator, &r->with, ecs_value_t);
@@ -122505,6 +122531,7 @@ void flecs_script_refs_import(
 #ifdef FLECS_SCRIPT
 
 ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
+static ECS_TAG_DECLARE(EcsScriptTemplateFlushEvent);
 ECS_COMPONENT_DECLARE(EcsScriptTemplateInstanceUpdateEvent);
 ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 ECS_DECLARE(EcsScriptTemplate);
@@ -122841,6 +122868,19 @@ static void flecs_script_template_muts_ctor(
 }
 
 /* Defer template instantiation if we're in deferred mode. */
+void flecs_script_template_pending_fini(
+    ecs_vec_t *pending)
+{
+    ecs_script_template_pending_t *array = ecs_vec_first(pending);
+    int32_t i, count = ecs_vec_count(pending);
+    for (i = 0; i < count; i ++) {
+        if (!array[i].inline_data) {
+            ecs_os_free(array[i].data);
+        }
+    }
+    ecs_vec_fini_t(NULL, pending, ecs_script_template_pending_t);
+}
+
 static void flecs_script_template_defer_on_set(
     ecs_iter_t *it,
     ecs_entity_t template_entity,
@@ -122848,50 +122888,45 @@ static void flecs_script_template_defer_on_set(
     const ecs_type_info_t *ti,
     void *data)
 {
-    EcsScriptTemplateSetEvent evt;
-
-    if ((it->count == 1) && ti->size <= ECS_TEMPLATE_SMALL_SIZE && !ti->hooks.dtor) {
-        /* This should be true for the vast majority of templates */
-        evt.entities = &evt.entity_storage;
-        evt.data = evt.data_storage;
-        evt.entity_storage = it->entities[0];
-        ecs_os_memcpy(evt.data, data, ti->size);
-    } else {
-        evt.entities = ecs_os_memdup_n(it->entities, ecs_entity_t, it->count);
-        evt.data = ecs_os_memdup(data, ti->size * it->count);
-    }
-
-    if (it->count == 1) {
-        evt.inputs = &evt.input_storage;
-    } else {
-        evt.inputs = ecs_os_malloc_n(uint64_t, it->count);
-    }
-
-    int32_t i;
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(it->real_world);
     bool any = false;
+    int32_t i;
     for (i = 0; i < it->count; i ++) {
         const EcsScriptTemplateRoot *root = ecs_get_pair(it->real_world,
             it->entities[i], EcsScriptTemplateRoot, template_entity);
-        evt.inputs[i] = root && root->initialized
+        uint64_t input = root && root->initialized
             ? root->changed
             : UINT64_MAX;
-        any |= evt.inputs[i] != 0;
+        if (!input) {
+            continue;
+        }
+        ecs_script_template_pending_t *p = ecs_vec_append_t(NULL,
+            &rt->template_pending, ecs_script_template_pending_t);
+        p->entity = it->entities[i];
+        p->template_entity = template_entity;
+        p->component = component;
+        p->input = input;
+        p->depth = rt->template_depth;
+        void *src = ECS_OFFSET(data, ti->size * i);
+        if (ti->size <= ECS_TEMPLATE_SMALL_SIZE) {
+            p->inline_data = true;
+            p->data = NULL;
+            ecs_os_memcpy(p->data_storage, src, ti->size);
+        } else {
+            p->inline_data = false;
+            p->data = ecs_os_memdup(src, ti->size);
+        }
+        any = true;
     }
 
-    if (!any) {
-        flecs_template_set_event_free(&evt);
+    if (!any || rt->template_pending_marker) {
         return;
     }
 
-    evt.count = it->count;
-    evt.template_entity = template_entity;
-    evt.component = component;
-    evt.depth = flecs_script_runtime_get(it->real_world)->template_depth;
-
+    rt->template_pending_marker = true;
     ecs_enqueue(it->world, &(ecs_event_desc_t){
-        .event = ecs_id(EcsScriptTemplateSetEvent),
-        .entity = EcsAny,
-        .param = &evt
+        .event = EcsScriptTemplateFlushEvent,
+        .entity = EcsAny
     });
 }
 
@@ -123563,11 +123598,11 @@ static void flecs_on_template_set_event(
 
     ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
     int32_t prev_depth = rt->template_depth;
+    int32_t i;
     rt->template_depth = evt->depth;
 
     const ecs_type_info_t *ti = ecs_get_type_info(world, evt->component);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t i;
     for (i = 0; i < evt->count; i ++) {
         void *data = ECS_OFFSET(evt->data, ti->size * i);
         flecs_script_template_instantiate(
@@ -123577,6 +123612,41 @@ static void flecs_on_template_set_event(
 
     rt->template_depth = prev_depth;
 
+    ecs_defer_resume(world);
+}
+
+static void flecs_on_template_flush_event(
+    ecs_iter_t *it)
+{
+    ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
+    ecs_world_t *world = it->real_world;
+    ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
+    rt->template_pending_marker = false;
+    if (rt->template_pending_active) {
+        return;
+    }
+
+    ecs_defer_suspend(world);
+    int32_t prev_depth = rt->template_depth;
+    rt->template_pending_active = true;
+    int32_t i;
+    for (i = 0; i < ecs_vec_count(&rt->template_pending); i ++) {
+        ecs_script_template_pending_t p = ecs_vec_get_t(
+            &rt->template_pending, ecs_script_template_pending_t, i)[0];
+        rt->template_depth = p.depth;
+        void *data = p.inline_data ? p.data_storage : p.data;
+        flecs_script_template_instantiate(
+            world, p.template_entity, p.component,
+            &p.entity, data, 1, p.input, true);
+        if (!p.inline_data) {
+            ecs_os_free(p.data);
+        }
+    }
+    ecs_vec_clear(&rt->template_pending);
+    rt->template_pending_active = false;
+    rt->template_depth = prev_depth;
     ecs_defer_resume(world);
 }
 
@@ -124553,6 +124623,7 @@ void flecs_script_template_import(
     ecs_world_t *world)
 {
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateSetEvent);
+    ECS_TAG_DEFINE(world, EcsScriptTemplateFlushEvent);
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateInstanceUpdateEvent);
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateRoot);
     ECS_TAG_DEFINE(world, EcsScriptTemplate);
@@ -124594,6 +124665,13 @@ void flecs_script_template_import(
         .query.terms = {{ .id = EcsAny }},
         .events = { ecs_id(EcsScriptTemplateSetEvent) },
         .callback = flecs_on_template_set_event
+    });
+
+    ecs_observer(world, {
+        .entity = ecs_entity(world, { .name = "TemplateFlushObserver" }),
+        .query.terms = {{ .id = EcsAny }},
+        .events = { EcsScriptTemplateFlushEvent },
+        .callback = flecs_on_template_flush_event
     });
 
     ecs_observer(world, {
