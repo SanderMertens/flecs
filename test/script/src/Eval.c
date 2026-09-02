@@ -20828,3 +20828,34 @@ void Eval_struct_w_inline_array_member_of_own_type(void) {
 
     ecs_fini(world);
 }
+
+void Eval_enum_w_duplicate_constant_values(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "enum Color(Red: 1, Green: 1)"
+    LINE "e { Color: Green }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void Eval_bitmask_w_duplicate_constant_values(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "bitmask Toppings(Bacon: 2, Lettuce: 2)";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}

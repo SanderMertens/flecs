@@ -674,6 +674,8 @@ void Eval_enum_w_float_underlying_type(void);
 void Eval_enum_w_struct_underlying_type(void);
 void Eval_struct_w_member_of_own_type(void);
 void Eval_struct_w_inline_array_member_of_own_type(void);
+void Eval_enum_w_duplicate_constant_values(void);
+void Eval_bitmask_w_duplicate_constant_values(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -5660,6 +5662,14 @@ bake_test_case Eval_testcases[] = {
     {
         "struct_w_inline_array_member_of_own_type",
         Eval_struct_w_inline_array_member_of_own_type
+    },
+    {
+        "enum_w_duplicate_constant_values",
+        Eval_enum_w_duplicate_constant_values
+    },
+    {
+        "bitmask_w_duplicate_constant_values",
+        Eval_bitmask_w_duplicate_constant_values
     }
 };
 
@@ -14861,7 +14871,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        665,
+        667,
         Eval_testcases
     },
     {
