@@ -845,6 +845,7 @@ void Await_loop_forever_counts_iterations(void);
 void Await_cancel_task_from_async_callback(void);
 void Await_resume_from_async_callback(void);
 void Await_free_task_from_async_callback(void);
+void Await_await_in_template_body_fails_task(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_parse_try_catch_all(void);
@@ -6359,6 +6360,10 @@ bake_test_case Await_testcases[] = {
     {
         "free_task_from_async_callback",
         Await_free_task_from_async_callback
+    },
+    {
+        "await_in_template_body_fails_task",
+        Await_await_in_template_body_fails_task
     }
 };
 
@@ -14998,7 +15003,7 @@ static bake_test_suite suites[] = {
         "Await",
         NULL,
         NULL,
-        56,
+        57,
         Await_testcases
     },
     {

@@ -852,7 +852,8 @@
                 "loop_forever_counts_iterations",
                 "cancel_task_from_async_callback",
                 "resume_from_async_callback",
-                "free_task_from_async_callback"
+                "free_task_from_async_callback",
+                "await_in_template_body_fails_task"
             ]
         }, {
             "id": "TryCatch",

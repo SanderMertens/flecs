@@ -95205,14 +95205,20 @@ ecs_script_task_status_t ecs_script_task_resume(
     if (result) {
         flecs_log_capture_push(true);
     }
+    ecs_script_runtime_t *world_rt = flecs_script_runtime_get(
+        task->runner.v.world);
+    bool prev_error = world_rt->error;
+    world_rt->error = false;
     flecs_script_run_status_t status = flecs_script_runner_run_scope(
         &task->runner, flecs_script_impl(task->script)->root);
+    bool nested_error = world_rt->error;
+    world_rt->error = prev_error;
     if (task->status == EcsScriptTaskCancelled) {
         flecs_script_task_cancel_future(task);
+    } else if (status == FlecsScriptRunError || nested_error) {
+        task->status = EcsScriptTaskError;
     } else if (status == FlecsScriptRunDone) {
         task->status = EcsScriptTaskDone;
-    } else if (status == FlecsScriptRunError) {
-        task->status = EcsScriptTaskError;
     } else {
         task->status = EcsScriptTaskPending;
     }
