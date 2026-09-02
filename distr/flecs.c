@@ -97261,6 +97261,7 @@ int flecs_script_eval_entity_enter(
     state->prev_force = v->force;
     state->symbol = -1;
     state->for_slot = -1;
+    state->created = false;
 
     if (v->entity && v->entity->eval_kind && !node->kind &&
         !ecs_vec_count(&node->scope->stmts) && ecs_has(
@@ -97322,10 +97323,12 @@ int flecs_script_eval_entity_enter(
             ecs_delete(v->world, state->eval);
         }
         state->eval = eval;
+        state->created = true;
     } else if (!state->eval) {
         state->eval = flecs_script_create_entity(v, node->name);
+        state->created = true;
     }
-    if (apply_with && !node->name_expr) {
+    if (apply_with && !node->name_expr && v->force) {
         flecs_script_apply_with(v, state->eval);
     }
     if (node->symbol != -1) {
@@ -97345,14 +97348,17 @@ int flecs_script_eval_entity_enter(
         }
     }
 
-    if (v->template_entity) {
+    if (v->template_entity && (state->created || v->force)) {
         ecs_add_pair(
             v->world, state->eval, EcsScriptTemplate, v->template_entity);
     }
 
     v->entity = state;
 
-    if (state->eval_kind) {
+    if (state->eval_kind && (state->created || v->force ||
+        (node->node.direct_input & v->input) ||
+        (node->node.direct_internal & v->internal)))
+    {
         if (state->eval_kind == state->eval) {
             const EcsScript *tmpl = ecs_get(
                 v->world, state->eval_kind, EcsScript);
@@ -116396,7 +116402,7 @@ static int flecs_ir_entity_enter(
     } else {
         flecs_ir_prof(EcsIrProfileEntityReuse);
     }
-    if (apply_with && op->a == -1) {
+    if (apply_with && op->a == -1 && v->force) {
         flecs_script_apply_with(v, state->eval);
     }
     if (node->symbol != -1) {
@@ -116416,14 +116422,17 @@ static int flecs_ir_entity_enter(
         }
     }
 
-    if (v->template_entity) {
+    if (v->template_entity && (state->created || v->force)) {
         ecs_add_pair(
             v->world, state->eval, EcsScriptTemplate, v->template_entity);
     }
 
     v->entity = state;
 
-    if (state->eval_kind) {
+    if (state->eval_kind && (state->created || v->force ||
+        (node->node.direct_input & v->input) ||
+        (node->node.direct_internal & v->internal)))
+    {
         if (state->eval_kind == state->eval) {
             const EcsScript *tmpl = ecs_get(
                 v->world, state->eval_kind, EcsScript);
