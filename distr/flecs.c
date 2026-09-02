@@ -111635,11 +111635,12 @@ static int flecs_expr_match_visit_type(
     for (i = 0; i < count; i ++) {
         ecs_expr_match_element_t *elem = &elems[i];
         if (elem->expr->type != node->node.type) {
-            elem->expr = (ecs_expr_node_t*)
+            ecs_expr_node_t *cast = (ecs_expr_node_t*)
                 flecs_expr_cast(script, elem->expr, node->node.type);
-            if (!elem->expr) {
+            if (!cast) {
                 goto error;
             }
+            elem->expr = cast;
         }
     }
 
@@ -111689,11 +111690,12 @@ static int flecs_expr_match_visit_type(
 
             ecs_expr_node_t *compare = elem->compare;
             if (compare->type != node->expr->type) {
-                elem->compare = (ecs_expr_node_t*)
+                ecs_expr_node_t *cast = (ecs_expr_node_t*)
                     flecs_expr_cast(script, compare, node->expr->type);
-                if (!elem->compare) {
+                if (!cast) {
                     goto error;
                 }
+                elem->compare = cast;
             }
         }
     }
@@ -111722,19 +111724,21 @@ static int flecs_expr_range_visit_type(
     }
 
     if (node->from->type != ecs_id(ecs_i32_t)) {
-        node->from = (ecs_expr_node_t*)flecs_expr_cast(
+        ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
             script, node->from, ecs_id(ecs_i32_t));
-        if (!node->from) {
+        if (!cast) {
             goto error;
         }
+        node->from = cast;
     }
 
     if (node->to->type != ecs_id(ecs_i32_t)) {
-        node->to = (ecs_expr_node_t*)flecs_expr_cast(
+        ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
             script, node->to, ecs_id(ecs_i32_t));
-        if (!node->to) {
+        if (!cast) {
             goto error;
         }
+        node->to = cast;
     }
 
     ecs_entity_t type = 0;

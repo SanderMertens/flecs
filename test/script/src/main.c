@@ -1419,6 +1419,10 @@ void Error_binary_left_operand_struct_vs_entity(void);
 void Error_binary_right_operand_struct_vs_entity(void);
 void Error_collection_literal_enum_element_vs_entity(void);
 void Error_function_argument_struct_value(void);
+void Error_match_case_enum_vs_entity(void);
+void Error_match_case_value_struct_vs_entity(void);
+void Error_range_from_struct_value(void);
+void Error_range_to_struct_value(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -8608,6 +8612,8 @@ bake_test_case Error_testcases[] = {
     {
         "collection_literal_for_struct_type_reports_type_name",
         Error_collection_literal_for_struct_type_reports_type_name
+    },
+    {
         "template_instantiated_on_own_entity_as_kind",
         Error_template_instantiated_on_own_entity_as_kind
     },
@@ -8634,6 +8640,22 @@ bake_test_case Error_testcases[] = {
     {
         "function_argument_struct_value",
         Error_function_argument_struct_value
+    },
+    {
+        "match_case_enum_vs_entity",
+        Error_match_case_enum_vs_entity
+    },
+    {
+        "match_case_value_struct_vs_entity",
+        Error_match_case_value_struct_vs_entity
+    },
+    {
+        "range_from_struct_value",
+        Error_range_from_struct_value
+    },
+    {
+        "range_to_struct_value",
+        Error_range_to_struct_value
     }
 };
 
@@ -15063,10 +15085,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        213,
-        211,
-        216,
-        218,
+        224,
         Error_testcases
     },
     {

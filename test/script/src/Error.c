@@ -5383,3 +5383,129 @@ void Error_function_argument_struct_value(void) {
 
     ecs_fini(world);
 }
+
+void Error_match_case_enum_vs_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    ecs_entity_t ecs_id(Color) = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .constants = {
+            {"Red"},
+            {"Green"},
+            {"Blue"}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_vars_define(vars, "i", ecs_i32_t);
+    ecs_script_vars_define(vars, "c", Color);
+    ecs_script_vars_define(vars, "e", ecs_entity_t);
+
+    const char *expr =
+    HEAD "match i {"
+    LINE "  1: 10"
+    LINE "  2: c"
+    LINE "  3: e"
+    LINE "}";
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, expr, &v, &desc) == NULL);
+    ecs_log_set_level(-1);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+
+void Error_match_case_value_struct_vs_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_vars_define(vars, "e", ecs_entity_t);
+    ecs_script_vars_define(vars, "p", Position);
+
+    const char *expr =
+    HEAD "match e {"
+    LINE "  p: 10"
+    LINE "}";
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, expr, &v, &desc) == NULL);
+    ecs_log_set_level(-1);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+
+void Error_range_from_struct_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_vars_define(vars, "p", Position);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "[p..10]", &v, &desc) == NULL);
+    ecs_log_set_level(-1);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+
+void Error_range_to_struct_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_vars_define(vars, "p", Position);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "[0..p]", &v, &desc) == NULL);
+    ecs_log_set_level(-1);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+

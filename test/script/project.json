@@ -1436,7 +1436,11 @@
                 "binary_left_operand_struct_vs_entity",
                 "binary_right_operand_struct_vs_entity",
                 "collection_literal_enum_element_vs_entity",
-                "function_argument_struct_value"
+                "function_argument_struct_value",
+                "match_case_enum_vs_entity",
+                "match_case_value_struct_vs_entity",
+                "range_from_struct_value",
+                "range_to_struct_value"
             ]
         }, {
             "id": "Format",
