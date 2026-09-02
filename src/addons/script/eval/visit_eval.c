@@ -890,6 +890,16 @@ int flecs_script_eval_entity_enter(
     v->entity = state;
 
     if (state->eval_kind) {
+        if (state->eval_kind == state->eval) {
+            const EcsScript *tmpl = ecs_get(
+                v->world, state->eval_kind, EcsScript);
+            if (tmpl && tmpl->template_) {
+                flecs_script_eval_error(v, node,
+                    "cannot instantiate template '%s' on itself", node->kind);
+                goto error;
+            }
+        }
+
         ecs_add_id(v->world, state->eval, state->eval_kind);
     }
 
