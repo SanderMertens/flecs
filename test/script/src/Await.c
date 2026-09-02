@@ -2436,3 +2436,34 @@ void Await_loop_forever_recreate_deleted_entity(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Await_task_component_deferred_new_then_free(void) {
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback,
+        .cancel = Await_cancel_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "const v = await fetch()\n", NULL, NULL);
+    test_assert(script != NULL);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_defer_begin(world);
+    ecs_script_task_t *task = ecs_script_task_new(script,
+        &(ecs_script_task_desc_t){ .entity = e });
+    test_assert(task != NULL);
+    ecs_script_task_free(task);
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, EcsScriptTask));
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}

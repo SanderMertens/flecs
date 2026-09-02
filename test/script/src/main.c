@@ -825,6 +825,7 @@ void Await_task_component_deferred_three_tasks(void);
 void Await_task_component_deferred_w_existing_task(void);
 void Await_second_task_same_script_while_suspended(void);
 void Await_loop_forever_recreate_deleted_entity(void);
+void Await_task_component_deferred_new_then_free(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_parse_try_catch_all(void);
@@ -6240,6 +6241,10 @@ bake_test_case Await_testcases[] = {
     {
         "loop_forever_recreate_deleted_entity",
         Await_loop_forever_recreate_deleted_entity
+    },
+    {
+        "task_component_deferred_new_then_free",
+        Await_task_component_deferred_new_then_free
     }
 };
 
@@ -14805,7 +14810,7 @@ static bake_test_suite suites[] = {
         "Await",
         NULL,
         NULL,
-        51,
+        52,
         Await_testcases
     },
     {
