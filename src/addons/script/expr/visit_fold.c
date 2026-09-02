@@ -107,6 +107,10 @@ static int flecs_expr_binary_visit_fold(
         return 0;
     }
 
+    if (node->vector_count) {
+        return 0;
+    }
+
     ecs_expr_value_node_t *left = (ecs_expr_value_node_t*)node->left;
     ecs_expr_value_node_t *right = (ecs_expr_value_node_t*)node->right;
 
