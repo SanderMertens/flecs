@@ -93601,8 +93601,14 @@ static int flecs_struct_layout(
                 return -1;
             }
 
-            ecs_size_t member_size = mbr_comp->size;
             ecs_size_t member_alignment = mbr_comp->alignment;
+            int64_t total_size = (int64_t)mbr_comp->size *
+                (elem->count ? elem->count : 1);
+            if (total_size > INT32_MAX) {
+                total_size = 0;
+            }
+
+            ecs_size_t member_size = (ecs_size_t)total_size;
 
             if (!member_size || !member_alignment) {
                 char *path = ecs_get_path(world, elem->type);
@@ -93615,7 +93621,6 @@ static int flecs_struct_layout(
                 size = flecs_struct_base_size(world, base, size);
             }
 
-            member_size *= elem->count ? elem->count : 1;
             if (i < inherited) {
                 ecs_assert(base_st != NULL, ECS_INTERNAL_ERROR, NULL);
                 const ecs_member_t *base_members = ecs_vec_first_t(
@@ -93670,8 +93675,14 @@ static int flecs_struct_layout(
             return -1;
         }
 
-        ecs_size_t member_size = mbr_comp->size;
         ecs_size_t member_alignment = mbr_comp->alignment;
+        int64_t total_size = (int64_t)mbr_comp->size *
+            (elem->count ? elem->count : 1);
+        if (total_size > INT32_MAX) {
+            total_size = 0;
+        }
+
+        ecs_size_t member_size = (ecs_size_t)total_size;
 
         if (!member_size || !member_alignment) {
             char *path = ecs_get_path(world, elem->type);
@@ -93680,7 +93691,6 @@ static int flecs_struct_layout(
             return -1;
         }
 
-        member_size *= elem->count ? elem->count : 1;
         if (elem->size != member_size) {
             layout_changed = true;
         }
