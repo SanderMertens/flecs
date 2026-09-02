@@ -1214,6 +1214,7 @@
                 "missing_separator_after_scope",
                 "missing_separator_between_const",
                 "long_binary_expression",
+                "deeply_chained_else_if",
                 "multi_line_comment_after_newline_before_newline_scope_open",
                 "unterminated_multi_line_comment_after_line_comment",
                 "missing_end_of_scope",
