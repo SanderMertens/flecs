@@ -39,6 +39,10 @@ typedef struct ecs_script_node_t {
     uint64_t input;
     uint64_t direct_input;
 
+    /* Dependencies on computed template consts (secondary bitset) */
+    uint64_t internal;
+    uint64_t direct_internal;
+
     bool skip;
 } ecs_script_node_t;
 
@@ -179,6 +183,8 @@ typedef struct ecs_script_var_node_t {
     ecs_entity_t eval_interface;
     int32_t sp;
     int32_t symbol;
+    /* 0 if not cached, otherwise computed slot index + 1 */
+    int32_t computed;
     bool is_await;
 } ecs_script_var_node_t;
 

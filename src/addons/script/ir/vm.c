@@ -1272,7 +1272,8 @@ static int flecs_ir_entity_enter(
     v->is_with_scope = false;
     v->template_entity = 0;
     v->force = state->prev_force ||
-        ((node->node.direct_input & v->input) != 0);
+        ((node->node.direct_input & v->input) != 0) ||
+        ((node->node.direct_internal & v->internal) != 0);
     return 0;
 error:
     v->entity = state->prev_entity;
@@ -1345,7 +1346,8 @@ static int flecs_ir_pair_scope_enter(
     }
 
     v->force = state->force ||
-        ((node->node.direct_input & v->input) != 0);
+        ((node->node.direct_input & v->input) != 0) ||
+        ((node->node.direct_internal & v->internal) != 0);
     return 0;
 }
 
@@ -1562,9 +1564,36 @@ static int flecs_ir_const_end(
 
     ecs_script_var_t *var = flecs_ir_var_declare(vm);
     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_script_ir_reg_t *reg = flecs_ir_reg(vm, op->a);
+
+    if (op->b >= 0 && v->computed && op->b < v->computed_count) {
+        ecs_script_computed_t *slot = &v->computed[op->b];
+        const void *src = reg->value.ptr;
+        void *tmp = NULL;
+        if (reg->value.type != type) {
+            tmp = flecs_ir_var_alloc(vm, ti);
+            if (flecs_ir_value_to(vm, reg, type, tmp, ti)) {
+                frame->state = 0;
+                flecs_ir_expr_error(vm, node->expr,
+                    "failed to write to output");
+                return -1;
+            }
+            src = tmp;
+        }
+        flecs_script_computed_store(v, slot, op->b, ti, src);
+        if (tmp && ti->hooks.dtor) {
+            flecs_type_info_dtor(tmp, 1, ti);
+        }
+        frame->state = 0;
+        var->is_const = true;
+        var->type_info = ti;
+        var->value.type = type;
+        var->value.ptr = slot->ptr;
+        var->owned = false;
+        return 0;
+    }
 
     void *ptr = flecs_ir_var_alloc(vm, ti);
-    ecs_script_ir_reg_t *reg = flecs_ir_reg(vm, op->a);
     if (reg->value.type == type && !ti->hooks.copy && !ti->hooks.move) {
         if (ti->size == 8) {
             *(uint64_t*)ptr = *(uint64_t*)reg->value.ptr;
@@ -3021,7 +3050,9 @@ static flecs_script_run_status_t flecs_ir_exec(
                 return FlecsScriptRunError;
             }
             bool run = !(op->flags & EcsIrStmtSkip) && (v->force ||
-                (op->flags & EcsIrStmtAlways) || (op->imm.u64 & v->input));
+                (op->flags & EcsIrStmtAlways) || (op->imm.u64 & v->input) ||
+                (v->internal && (v->internal &
+                    ((const ecs_script_node_t*)op->node)->internal)));
             if (!run) {
                 flecs_ir_prof(EcsIrProfileStmtSkipped);
                 if (op->c != -1) {
@@ -3125,7 +3156,8 @@ static flecs_script_run_status_t flecs_ir_exec(
             const ecs_script_node_t *node = op->node;
             v->is_with_scope = true;
             v->force = frame->u.with.force ||
-                ((node->direct_input & v->input) != 0);
+                ((node->direct_input & v->input) != 0) ||
+                ((node->direct_internal & v->internal) != 0);
             break;
         }
         case EcsIrWithLeave: {
@@ -3172,7 +3204,8 @@ static flecs_script_run_status_t flecs_ir_exec(
             const ecs_script_node_t *node = op->node;
             frame->u.if_.force = v->force;
             v->force = frame->u.if_.force ||
-                ((node->direct_input & v->input) != 0);
+                ((node->direct_input & v->input) != 0) ||
+                ((node->direct_internal & v->internal) != 0);
             if (!vm->cond) {
                 vm->pc = op->b;
             }
@@ -3349,6 +3382,22 @@ static flecs_script_run_status_t flecs_ir_exec(
         case EcsIrConstEnd:
             res = flecs_ir_const_end(vm, op);
             break;
+        case EcsIrConstCached: {
+            ecs_script_computed_t *slot = v->computed &&
+                op->a < v->computed_count ? &v->computed[op->a] : NULL;
+            if (!slot || !slot->valid) {
+                vm->pc = op->b;
+                break;
+            }
+            const ecs_script_var_node_t *node = op->node;
+            ecs_script_var_t *var = flecs_ir_var_declare(vm);
+            var->is_const = true;
+            var->type_info = slot->ti;
+            var->value.type = node->eval_type;
+            var->value.ptr = slot->ptr;
+            var->owned = false;
+            break;
+        }
         case EcsIrExprBegin:
             flecs_ir_expr_begin(vm, op, pc);
             break;

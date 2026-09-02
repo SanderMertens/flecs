@@ -921,7 +921,8 @@ int flecs_script_eval_entity_enter(
     v->is_with_scope = false;
     v->template_entity = 0;
     v->force = state->prev_force ||
-        ((node->node.direct_input & v->input) != 0);
+        ((node->node.direct_input & v->input) != 0) ||
+        ((node->node.direct_internal & v->internal) != 0);
 
     return 0;
 error:
@@ -1438,7 +1439,8 @@ int flecs_script_eval_with_enter(
 
     v->is_with_scope = true;
     v->force = state->force ||
-        ((node->node.direct_input & v->input) != 0);
+        ((node->node.direct_input & v->input) != 0) ||
+        ((node->node.direct_internal & v->internal) != 0);
 
     return 0;
 }
@@ -1490,6 +1492,93 @@ static int flecs_script_eval_module(
     return 0;
 }
 
+ecs_script_computed_t* flecs_script_computed_get(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_var_node_t *node)
+{
+    if (!v->computed || !node->computed) {
+        return NULL;
+    }
+    int32_t index = node->computed - 1;
+    if (index >= v->computed_count) {
+        return NULL;
+    }
+    return &v->computed[index];
+}
+
+static bool flecs_script_computed_equals(
+    const ecs_type_info_t *ti,
+    const void *a,
+    const void *b)
+{
+    if (ti->hooks.equals && !(ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL)) {
+        return flecs_type_info_equals(a, b, ti);
+    }
+    if (!ti->hooks.ctor && !ti->hooks.copy && !ti->hooks.move &&
+        !ti->hooks.dtor)
+    {
+        return !ecs_os_memcmp(a, b, ti->size);
+    }
+    return false;
+}
+
+bool flecs_script_computed_store(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_computed_t *slot,
+    int32_t index,
+    const ecs_type_info_t *ti,
+    const void *value)
+{
+    bool changed = true;
+    if (!slot->ptr) {
+        slot->ptr = ecs_os_malloc(ti->size);
+        flecs_type_info_ctor(slot->ptr, 1, ti);
+        slot->ti = ti;
+    } else if (slot->ti != ti) {
+        if (slot->ti && slot->ti->hooks.dtor) {
+            flecs_type_info_dtor(slot->ptr, 1, slot->ti);
+        }
+        ecs_os_free(slot->ptr);
+        slot->ptr = ecs_os_malloc(ti->size);
+        flecs_type_info_ctor(slot->ptr, 1, ti);
+        slot->ti = ti;
+        slot->valid = false;
+    } else if (slot->valid) {
+        changed = !flecs_script_computed_equals(ti, slot->ptr, value);
+    }
+    if (changed) {
+        if (ti->hooks.copy) {
+            ti->hooks.copy(slot->ptr, value, 1, ti);
+        } else {
+            ecs_os_memcpy(slot->ptr, value, ti->size);
+        }
+        v->internal |= (uint64_t)1 << index;
+    }
+    slot->valid = true;
+    return changed;
+}
+
+int flecs_script_eval_const_cached(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_var_node_t *node)
+{
+    ecs_script_computed_t *slot = flecs_script_computed_get(v, node);
+    ecs_assert(slot != NULL && slot->valid, ECS_INTERNAL_ERROR, NULL);
+    ecs_script_var_t *var = ecs_script_vars_declare(v->vars,
+        v->template_entity ? NULL : node->name);
+    if (!var) {
+        flecs_script_eval_error(v, node,
+            "variable '%s' redeclared", node->name);
+        return -1;
+    }
+    var->is_const = true;
+    var->type_info = slot->ti;
+    var->value.type = node->eval_type;
+    var->value.ptr = slot->ptr;
+    var->owned = false;
+    return 0;
+}
+
 int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node,
@@ -1538,6 +1627,24 @@ int flecs_script_eval_const(
         }
         flecs_stack_free(result.ptr, ti->size);
         return -1;
+    }
+
+    ecs_script_computed_t *slot = !export
+        ? flecs_script_computed_get(v, node)
+        : NULL;
+    if (slot) {
+        flecs_script_computed_store(v, slot, node->computed - 1, ti,
+            result.ptr);
+        if (ti->hooks.dtor) {
+            flecs_type_info_dtor(result.ptr, 1, ti);
+        }
+        flecs_stack_free(result.ptr, ti->size);
+        var->is_const = true;
+        var->type_info = ti;
+        var->value.type = type;
+        var->value.ptr = slot->ptr;
+        var->owned = false;
+        return 0;
     }
 
     if (!export) {
@@ -1653,7 +1760,8 @@ int flecs_script_eval_pair_scope_enter(
     }
 
     v->force = state->force ||
-        ((node->node.direct_input & v->input) != 0);
+        ((node->node.direct_input & v->input) != 0) ||
+        ((node->node.direct_internal & v->internal) != 0);
     return 0;
 }
 
@@ -2100,7 +2208,8 @@ static void flecs_script_mark_scope(
 static bool flecs_script_stmt_support(
     ecs_script_node_t *node)
 {
-    return node->kind == EcsAstConst ||
+    return (node->kind == EcsAstConst &&
+            !((ecs_script_var_node_t*)node)->computed) ||
         node->kind == EcsAstUsing ||
         node->kind == EcsAstModule;
 }
@@ -2113,7 +2222,8 @@ static bool flecs_script_stmt_run(
         return false;
     }
     return v->force || flecs_script_stmt_support(node) ||
-        ((node->input & v->input) != 0);
+        ((node->input & v->input) != 0) ||
+        ((node->internal & v->internal) != 0);
 }
 
 static int flecs_script_step_scope(
@@ -2148,9 +2258,21 @@ static int flecs_script_step_scope(
         }
 
         if (!flecs_script_stmt_run(v, stmt)) {
-            flecs_script_mark_node(v, stmt);
-            frame->pc ++;
-            continue;
+            ecs_script_computed_t *slot = stmt->kind == EcsAstConst
+                ? flecs_script_computed_get(v, (ecs_script_var_node_t*)stmt)
+                : NULL;
+            if (!slot || slot->valid) {
+                if (slot) {
+                    if (flecs_script_eval_const_cached(
+                        v, (ecs_script_var_node_t*)stmt))
+                    {
+                        return -1;
+                    }
+                }
+                flecs_script_mark_node(v, stmt);
+                frame->pc ++;
+                continue;
+            }
         }
 
         if (stmt->kind == EcsAstContinue) {
@@ -2289,7 +2411,8 @@ static int flecs_script_step_if(
 
         frame->pc = 1;
         v->force = frame->state.if_.force ||
-            ((node->node.direct_input & v->input) != 0);
+            ((node->node.direct_input & v->input) != 0) ||
+        ((node->node.direct_internal & v->internal) != 0);
         flecs_script_scope_push(r, cond ? node->if_true : node->if_false);
         return 0;
     }
@@ -2718,6 +2841,7 @@ void flecs_script_eval_begin(
     int32_t visit)
 {
     v->input = input;
+    v->internal = 0;
     v->visit = visit;
     v->scope_slot = -1;
     v->for_slot = -1;

@@ -47,6 +47,7 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrMutCheck,
     EcsIrConstBegin,
     EcsIrConstEnd,
+    EcsIrConstCached,
     EcsIrConstError,
     EcsIrExprBegin,
     EcsIrExprEnd,

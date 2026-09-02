@@ -14,9 +14,29 @@ ECS_COMPONENT_DECLARE(EcsScriptTemplateInstanceUpdateEvent);
 ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 ECS_DECLARE(EcsScriptTemplate);
 
+static void flecs_script_template_computed_free(
+    EcsScriptTemplateRoot *root)
+{
+    ecs_script_computed_t *slots = ecs_vec_first(&root->computed);
+    int32_t i, count = ecs_vec_count(&root->computed);
+    for (i = 0; i < count; i ++) {
+        if (slots[i].ptr) {
+            if (slots[i].ti && slots[i].ti->hooks.dtor) {
+                flecs_type_info_dtor(slots[i].ptr, 1, slots[i].ti);
+            }
+            ecs_os_free(slots[i].ptr);
+        }
+        slots[i].ptr = NULL;
+        slots[i].ti = NULL;
+        slots[i].valid = false;
+    }
+}
+
 static void flecs_script_template_root_fini(
     EcsScriptTemplateRoot *root)
 {
+    flecs_script_template_computed_free(root);
+    ecs_vec_fini_t(NULL, &root->computed, ecs_script_computed_t);
     ecs_vec_fini_t(NULL, &root->observers, ecs_script_ref_t);
     ecs_vec_fini_t(NULL, &root->symbol_slots, ecs_script_symbol_slot_t);
     ecs_vec_fini_t(NULL, &root->component_slots,
@@ -32,6 +52,7 @@ static ECS_CTOR(EcsScriptTemplateRoot, ptr, {
         ecs_script_component_slot_t, 0);
     ecs_vec_init_t(NULL, &ptr->scope_slots, int32_t, 0);
     ecs_vec_init_t(NULL, &ptr->for_slots, ecs_script_for_slot_t, 0);
+    ecs_vec_init_t(NULL, &ptr->computed, ecs_script_computed_t, 0);
     ptr->changed = 0;
     ptr->visit = 0;
     ptr->initialized = false;
@@ -40,6 +61,7 @@ static ECS_CTOR(EcsScriptTemplateRoot, ptr, {
 static ECS_MOVE(EcsScriptTemplateRoot, dst, src, {
     flecs_script_template_root_fini(dst);
     *dst = *src;
+    ecs_vec_init_t(NULL, &src->computed, ecs_script_computed_t, 0);
     ecs_vec_init_t(NULL, &src->observers, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &src->symbol_slots, ecs_script_symbol_slot_t, 0);
     ecs_vec_init_t(NULL, &src->component_slots,
@@ -80,6 +102,15 @@ static void flecs_script_template_root_init(
     ecs_script_template_t *template,
     ecs_script_impl_t *impl)
 {
+    if (ecs_vec_count(&root->computed) != template->computed_count) {
+        flecs_script_template_computed_free(root);
+        ecs_vec_set_count_t(NULL, &root->computed,
+            ecs_script_computed_t, template->computed_count);
+        if (template->computed_count) {
+            ecs_os_memset(ecs_vec_first(&root->computed), 0,
+                template->computed_count * ECS_SIZEOF(ecs_script_computed_t));
+        }
+    }
     if (ecs_vec_count(&root->symbol_slots) == template->symbol_count) {
         return;
     }
@@ -121,6 +152,8 @@ static void flecs_script_template_root_clear(
     ecs_vec_t component_slots = root->component_slots;
     ecs_vec_t scope_slots = root->scope_slots;
     ecs_vec_t for_slots = root->for_slots;
+
+    flecs_script_template_computed_free(root);
 
     ecs_script_for_slot_t *for_slot_array = ecs_vec_first(&for_slots);
     int32_t i, count = ecs_vec_count(&for_slots);
@@ -696,6 +729,8 @@ static int flecs_script_template_instantiate(
         component_slots = root->component_slots;
         scope_slots = root->scope_slots;
         for_slots = root->for_slots;
+        v->computed = ecs_vec_first(&root->computed);
+        v->computed_count = ecs_vec_count(&root->computed);
         v->symbol_slots = &symbol_slots;
         v->component_slots = &component_slots;
         v->scope_slots = &scope_slots;
@@ -856,6 +891,8 @@ static int flecs_script_template_instantiate(
     v->r->with_type_info = prev_with_type_info;
     v->r->using = prev_using;
     v->symbol_slots = NULL;
+    v->computed = NULL;
+    v->computed_count = 0;
     v->component_slots = &v->base.script->component_slots;
     v->scope_slots = &v->base.script->scope_slots;
     v->for_slots = &v->base.script->for_slots;
@@ -1756,6 +1793,7 @@ static ecs_script_template_t* flecs_script_template_init(
     result->symbol_count = 0;
     result->root_symbol = -1;
     result->input_count = 0;
+    result->computed_count = 0;
     result->scope_count = 0;
     result->component_count = 0;
     result->for_count = 0;

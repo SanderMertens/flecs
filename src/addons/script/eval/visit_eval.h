@@ -30,6 +30,9 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_vec_t *scope_slots;
     ecs_vec_t *for_slots;
     uint64_t input;
+    uint64_t internal;
+    ecs_script_computed_t *computed;
+    int32_t computed_count;
     int32_t symbol_offset;
     int32_t visit;
     int32_t scope_slot;
@@ -433,6 +436,21 @@ void flecs_script_cleanup_slots(
     ecs_script_eval_visitor_t *v);
 
 /* Functions shared between type and eval visitor */
+
+ecs_script_computed_t* flecs_script_computed_get(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_var_node_t *node);
+
+bool flecs_script_computed_store(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_computed_t *slot,
+    int32_t index,
+    const ecs_type_info_t *ti,
+    const void *value);
+
+int flecs_script_eval_const_cached(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_var_node_t *node);
 
 int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,

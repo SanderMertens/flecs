@@ -6522,3 +6522,327 @@ void Template_template_instantiates_itself_w_stop_condition(void) {
 
     ecs_fini(world);
 }
+
+static void reaction_world_setup(ecs_world_t *world, ecs_entity_t position) {
+    ecs_struct(world, {
+        .entity = position,
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    on_position_count = 0;
+    ecs_observer(world, {
+        .query.terms = {{ position }},
+        .events = { EcsOnSet },
+        .callback = OnPosition
+    });
+}
+
+typedef struct { float a; float b; } ReactionAB;
+
+void Template_computed_const_skips_dependents_when_unchanged(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+    on_position_count = 0;
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = OnPosition
+    });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){1});
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop dusk: f32 = 0.25"
+    LINE "  const on = source[Mass].value < dusk"
+    LINE "  const lit = on * 2"
+    LINE "  lens { Position: {lit, 1} }"
+    LINE "}"
+    LINE "e { T: {} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(on_position_count, 1);
+    ecs_entity_t lens = ecs_lookup(world, "e.lens");
+    test_assert(lens != 0);
+    {
+        const Position *p = ecs_get(world, lens, Position);
+        test_flt(p->x, 0);
+    }
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.9});
+    test_int(on_position_count, 1);
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.8});
+    test_int(on_position_count, 1);
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
+    test_int(on_position_count, 2);
+    {
+        const Position *p = ecs_get(world, lens, Position);
+        test_flt(p->x, 2);
+    }
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.2});
+    test_int(on_position_count, 2);
+
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.9});
+    test_int(on_position_count, 3);
+    {
+        const Position *p = ecs_get(world, lens, Position);
+        test_flt(p->x, 0);
+    }
+    test_uint(ecs_lookup(world, "e.lens"), lens);
+
+    ecs_fini(world);
+}
+
+void Template_computed_const_prop_change(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    reaction_world_setup(world, ecs_id(Position));
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop a: f32 = 0"
+    LINE "  prop b: f32 = 0"
+    LINE "  const half = a / 2"
+    LINE "  const quarter = half / 2"
+    LINE "  x { Position: {quarter, 0} }"
+    LINE "  y { Position: {b, half} }"
+    LINE "}"
+    LINE "e { T: {a: 4, b: 1} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(on_position_count, 2);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_entity_t x = ecs_lookup(world, "e.x");
+    ecs_entity_t y = ecs_lookup(world, "e.y");
+    test_assert(e && t && x && y);
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){8, 1});
+    test_int(on_position_count, 4);
+    {
+        const Position *p = ecs_get(world, x, Position);
+        test_flt(p->x, 2);
+        p = ecs_get(world, y, Position);
+        test_flt(p->x, 1);
+        test_flt(p->y, 4);
+    }
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){8, 3});
+    test_int(on_position_count, 5);
+    {
+        const Position *p = ecs_get(world, y, Position);
+        test_flt(p->x, 3);
+        test_flt(p->y, 4);
+    }
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){8.5, 3});
+    test_int(on_position_count, 7);
+    {
+        const Position *p = ecs_get(world, x, Position);
+        test_flt(p->x, 2.125);
+        p = ecs_get(world, y, Position);
+        test_flt(p->y, 4.25);
+    }
+
+    ecs_fini(world);
+}
+
+void Template_computed_const_in_entity_scope(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    reaction_world_setup(world, ecs_id(Position));
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop a: f32 = 0"
+    LINE "  prop b: f32 = 0"
+    LINE "  x {"
+    LINE "    const big = a > 10"
+    LINE "    const scale = big * 2"
+    LINE "    Position: {scale, b}"
+    LINE "    inner { Position: {scale, 0} }"
+    LINE "  }"
+    LINE "}"
+    LINE "e { T: {a: 5, b: 1} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(on_position_count, 2);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_entity_t x = ecs_lookup(world, "e.x");
+    ecs_entity_t inner = ecs_lookup(world, "e.x.inner");
+    test_assert(e && t && x && inner);
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){6, 1});
+    test_int(on_position_count, 2);
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){6, 2});
+    test_int(on_position_count, 3);
+    {
+        const Position *p = ecs_get(world, x, Position);
+        test_flt(p->x, 0);
+        test_flt(p->y, 2);
+    }
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){11, 2});
+    test_int(on_position_count, 5);
+    {
+        const Position *p = ecs_get(world, x, Position);
+        test_flt(p->x, 2);
+        p = ecs_get(world, inner, Position);
+        test_flt(p->x, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Template_computed_const_not_cached_in_branch(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    reaction_world_setup(world, ecs_id(Position));
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop a: f32 = 0"
+    LINE "  prop b: f32 = 0"
+    LINE "  if b > 0 {"
+    LINE "    const big = a > 10"
+    LINE "    x { Position: {big * 2, 0} }"
+    LINE "  }"
+    LINE "}"
+    LINE "e { T: {a: 5, b: 1} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_entity_t x = ecs_lookup(world, "e.x");
+    test_assert(e && t && x);
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){5, 0});
+    test_assert(ecs_lookup(world, "e.x") == 0);
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){20, 0});
+    test_assert(ecs_lookup(world, "e.x") == 0);
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){20, 1});
+    x = ecs_lookup(world, "e.x");
+    test_assert(x != 0);
+    {
+        const Position *p = ecs_get(world, x, Position);
+        test_flt(p->x, 2);
+    }
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){3, 1});
+    test_uint(ecs_lookup(world, "e.x"), x);
+    {
+        const Position *p = ecs_get(world, x, Position);
+        test_flt(p->x, 0);
+    }
+
+    ecs_fini(world);
+}
+
+void Template_computed_const_string(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    reaction_world_setup(world, ecs_id(Position));
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Label" }),
+        .members = {{"text", ecs_id(ecs_string_t)}}
+    });
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop a: f32 = 0"
+    LINE "  prop b: f32 = 0"
+    LINE "  const kind = \"{a > 10}\""
+    LINE "  const msg = \"big {kind}\""
+    LINE "  x { Label: {msg}; Position: {b, 0} }"
+    LINE "}"
+    LINE "e { T: {a: 5, b: 1} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_entity_t x = ecs_lookup(world, "e.x");
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(e && t && x && label);
+    {
+        const char **l = ecs_get_id(world, x, label);
+        test_str(l[0], "big false");
+    }
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){6, 1});
+    {
+        const char **l = ecs_get_id(world, x, label);
+        test_str(l[0], "big false");
+    }
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){20, 1});
+    {
+        const char **l = ecs_get_id(world, x, label);
+        test_str(l[0], "big true");
+    }
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){20, 2});
+    {
+        const char **l = ecs_get_id(world, x, label);
+        test_str(l[0], "big true");
+        const Position *p = ecs_get(world, x, Position);
+        test_flt(p->x, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Template_computed_const_instance_deleted(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    reaction_world_setup(world, ecs_id(Position));
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Label" }),
+        .members = {{"text", ecs_id(ecs_string_t)}}
+    });
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop a: f32 = 0"
+    LINE "  prop b: f32 = 0"
+    LINE "  const msg = \"value {a}\""
+    LINE "  x { Label: {msg}; Position: {b, 0} }"
+    LINE "}"
+    LINE "e { T: {a: 5, b: 1} }"
+    LINE "f { T: {a: 6, b: 1} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t f = ecs_lookup(world, "f");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(e && f && t);
+
+    ecs_delete(world, e);
+    ecs_set_id(world, f, t, sizeof(ReactionAB), &(ReactionAB){7, 1});
+    ecs_entity_t fx = ecs_lookup(world, "f.x");
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    {
+        const char **l = ecs_get_id(world, fx, label);
+        test_str(l[0], "value 7.000000");
+    }
+    ecs_remove_id(world, f, t);
+    test_assert(ecs_lookup(world, "f.x") == 0);
+
+    ecs_fini(world);
+}

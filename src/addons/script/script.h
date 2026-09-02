@@ -98,6 +98,13 @@ typedef struct ecs_script_component_slot_t {
     int32_t scope_slot;
 } ecs_script_component_slot_t;
 
+/* Cached value of a computed template const, stored on the instance root */
+typedef struct ecs_script_computed_t {
+    void *ptr;
+    const ecs_type_info_t *ti;
+    bool valid;
+} ecs_script_computed_t;
+
 typedef struct ecs_script_for_key_t {
     ecs_entity_t parent;
     const char *name;
