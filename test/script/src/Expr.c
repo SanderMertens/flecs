@@ -10851,6 +10851,47 @@ void Expr_match_f64_literal_i_cases(void) {
     ecs_fini(world);
 }
 
+void Expr_match_case_expr_runtime_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+    ecs_script_var_t *zero = ecs_script_vars_define(vars, "zero", ecs_i32_t);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding };
+
+    const char *expr =
+    HEAD "match $i {"
+    LINE "  1 / $zero: 10"
+    LINE "  2: 20"
+    LINE "}";
+
+    ecs_script_t *s = ecs_expr_parse(world, expr, &desc);
+    test_assert(s != NULL);
+
+    *(int32_t*)var->value.ptr = 2;
+    *(int32_t*)zero->value.ptr = 0;
+
+    {
+        ecs_value_t result = {0};
+        ecs_log_set_level(-4);
+        test_assert(0 != ecs_expr_eval(s, &result, &desc));
+        ecs_log_set_level(-1);
+    }
+
+    {
+        ecs_value_t result = {0};
+        ecs_log_set_level(-4);
+        test_assert(0 != ecs_expr_eval(s, &result, &desc));
+        ecs_log_set_level(-1);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
 void Expr_identifier_as_var(void) {
     ecs_world_t *world = ecs_init();
 
