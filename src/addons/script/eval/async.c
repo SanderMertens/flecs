@@ -708,8 +708,10 @@ ecs_script_task_status_t ecs_script_task_resume(
     }
     if (task->status == EcsScriptTaskDone) {
         bool repeat = task->loop == EcsScriptTaskLoopForever;
-        if (task->loop == EcsScriptTaskLoopCount) {
+        if (task->loop != EcsScriptTaskLoopOnce) {
             task->completed_iterations ++;
+        }
+        if (task->loop == EcsScriptTaskLoopCount) {
             repeat = task->completed_iterations < task->iterations;
         }
         if (repeat) {
