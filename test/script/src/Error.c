@@ -5088,3 +5088,33 @@ void Error_deeply_chained_else_if(void) {
 
     ecs_fini(world);
 }
+
+void Error_function_w_too_many_params(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_strbuf_appendlit(&buf, "fn f(");
+
+    int i;
+    for (i = 0; i < 17; i ++) {
+        if (i) {
+            ecs_strbuf_appendlit(&buf, ", ");
+        }
+        ecs_strbuf_append(&buf, "p%d: i32", i);
+    }
+
+    ecs_strbuf_appendlit(&buf, ") -> i32 {\n  0\n}\n");
+
+    char *expr = ecs_strbuf_get(&buf);
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "too many parameters") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}

@@ -1422,7 +1422,8 @@
                 "failing_script_update_does_not_delete_shared_module",
                 "deleted_script_does_not_delete_shared_module",
                 "failing_script_does_not_delete_shared_scope",
-                "parse_error_in_large_script_reports_position"
+                "parse_error_in_large_script_reports_position",
+                "function_w_too_many_params"
             ]
         }, {
             "id": "Format",

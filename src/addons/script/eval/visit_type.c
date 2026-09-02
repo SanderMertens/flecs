@@ -1551,6 +1551,13 @@ static int flecs_script_type_function(
         return -1;
     }
 
+    if (ecs_vec_count(&node->params) > FLECS_SCRIPT_FUNCTION_ARGS_MAX) {
+        flecs_script_eval_error(t->v, node,
+            "too many parameters for function '%s' (max %d)",
+            node->name, FLECS_SCRIPT_FUNCTION_ARGS_MAX);
+        return -1;
+    }
+
     flecs_script_type_declare(
         t, node->name, NULL, &node->symbol, false);
     if (flecs_script_type_resolve_type(
