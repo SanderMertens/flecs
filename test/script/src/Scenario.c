@@ -761,3 +761,339 @@ void Scenario_ir_and_ast_instances_coexist(void) {
 
     ecs_fini(world);
 }
+
+#define TRAFFIC_TYPES\
+    HEAD "using flecs.script"\
+    LINE "struct Position3(x: f32, y: f32, z: f32)"\
+    LINE "struct Rotation3(x: f32, y: f32, z: f32)"\
+    LINE "struct Scale3(x: f32, y: f32, z: f32)"\
+    LINE "struct Rgba(r: u8, g: u8, b: u8, a: u8)"\
+    LINE "struct Box(x: f32, y: f32, z: f32)"\
+    LINE "struct Quad(x: f32, y: f32)"\
+    LINE "struct Cylinder(segments: i32, smooth: bool, length: f32)"\
+    LINE "struct Frustum(segments: i32, smooth: bool, length: f32, radius_bottom: f32, radius_top: f32)"\
+    LINE "struct RoundedBox(x: f32, y: f32, z: f32, radius: f32, segments: i32)"\
+    LINE "struct PbrMaterial(metallic: f32, roughness: f32)"\
+    LINE "struct Emissive(strength: f32, color: Rgba)"\
+    LINE "struct SpotLight(intensity: f32, range: f32, inner_angle: f32, outer_angle: f32)"\
+    LINE "struct VolumeGlow(edge_power: f32, axis_falloff: f32, head_fade: f32, near_fade: f32, intensity: f32)"\
+    LINE "struct MaterialAnim(emissive_fade_start: f32, emissive_fade_end: f32)"\
+    LINE "struct Blinker(interval: f32, low: f32, high: f32)"\
+    LINE "struct Vehicle(length: f32, width: f32, max_speed: f32, accel: f32, brake: f32)"\
+    LINE "struct TimeOfDay(hour: f32, daylight: f32)"\
+    LINE "struct Car(paint: Rgba, brake: f32, left: f32, right: f32)"\
+    LINE "struct StreetLight(on_off: bool)"\
+    LINE "DynamicTransform {}"\
+    LINE "RigidSubtree {}"\
+    LINE "Additive {}"\
+    LINE "NoShadow {}"
+
+#define TRAFFIC_CAR\
+    LINE "const tailRed: Rgba = {255, 0, 0, 255}"\
+    LINE "const amber: Rgba = {255, 95, 0, 255}"\
+    LINE "const beam: Rgba = {255, 244, 214, 255}"\
+    LINE "const trimDark: Rgba = {30, 30, 34, 255}"\
+    LINE "const rubber: Rgba = {26, 26, 28, 255}"\
+    LINE "prefab CarPaint { PbrMaterial: {metallic: 0.65, roughness: 1} }"\
+    LINE "prefab CarGlass { Rgba: {38, 44, 54, 255}; PbrMaterial: {metallic: 0.3, roughness: 1} }"\
+    LINE "prefab CarTrim { Rgba: trimDark; PbrMaterial: {metallic: 0.2, roughness: 1} }"\
+    LINE "prefab CarWheel {"\
+    LINE "    Cylinder: {segments: 10, smooth: true, length: 0.2}"\
+    LINE "    Rotation3: {0, 0, 1.5707963}"\
+    LINE "    Rgba: rubber"\
+    LINE "    PbrMaterial: {metallic: 0, roughness: 1}"\
+    LINE "}"\
+    LINE "prefab BrakeLamp {"\
+    LINE "    Box: {0.26, 0.14, 0.04}"\
+    LINE "    Rgba: {40, 8, 6, 255}"\
+    LINE "    PbrMaterial: {metallic: 0.1, roughness: 1}"\
+    LINE "    Emissive: {strength: 0.1, color: tailRed}"\
+    LINE "}"\
+    LINE "prefab HeadLamp {"\
+    LINE "    Box: {0.26, 0.12, 0.04}"\
+    LINE "    Rgba: {228, 224, 208, 255}"\
+    LINE "    PbrMaterial: {metallic: 0.1, roughness: 1}"\
+    LINE "    Emissive: {strength: 0.9, color: beam}"\
+    LINE "}"\
+    LINE "prefab Indicator {"\
+    LINE "    Box: {0.14, 0.12, 0.04}"\
+    LINE "    Rgba: {40, 20, 4, 255}"\
+    LINE "    PbrMaterial: {metallic: 0.1, roughness: 1}"\
+    LINE "    Emissive: {strength: 0, color: amber}"\
+    LINE "}"\
+    LINE "prefab HeadGlow {"\
+    LINE "    Rgba: {0, 0, 0, 5}"\
+    LINE "    PbrMaterial: {metallic: 0, roughness: 1}"\
+    LINE "    Emissive: {strength: 0, color: beam}"\
+    LINE "    Additive"\
+    LINE "    VolumeGlow: {edge_power: 2.4, axis_falloff: 2.6, head_fade: 0.22, near_fade: 2, intensity: 0.8}"\
+    LINE "    MaterialAnim: {emissive_fade_start: 35, emissive_fade_end: 85}"\
+    LINE "}"\
+    LINE "@tree Parent"\
+    LINE "template Sedan : Car {"\
+    LINE "    prop wheel: f32 = 0.31"\
+    LINE "    prop head: f32 = 0"\
+    LINE "    Vehicle: {length: 4.5, width: 1.8, max_speed: 33, accel: 2.6, brake: 6}"\
+    LINE "    DynamicTransform"\
+    LINE "    RigidSubtree"\
+    LINE "    with DynamicTransform {"\
+    LINE "        _ : CarWheel { Position3: {-0.82, wheel, 1.42}; Scale3: {wheel, 1, wheel} }"\
+    LINE "        _ : CarWheel { Position3: {0.82, wheel, 1.42}; Scale3: {wheel, 1, wheel} }"\
+    LINE "        _ : CarWheel { Position3: {-0.82, wheel, -1.42}; Scale3: {wheel, 1, wheel} }"\
+    LINE "        _ : CarWheel { Position3: {0.82, wheel, -1.42}; Scale3: {wheel, 1, wheel} }"\
+    LINE "        _ : CarTrim { Position3: {0, 0.51, 0}; Box: {1.62, 0.26, 4.5} }"\
+    LINE "        _ : CarPaint { Position3: {0, 0.86, 0}; Box: {1.72, 0.44, 4.42}; Rgba: paint }"\
+    LINE "        _ : CarGlass { Position3: {0, 1.26, -0.3}; Box: {1.56, 0.36, 2.1} }"\
+    LINE "        _ : CarPaint { Position3: {0, 1.47, -0.35}; Box: {1.44, 0.06, 1.7}; Rgba: paint }"\
+    LINE "        _ : BrakeLamp { Position3: {-0.55, 0.9, -2.22}; Emissive: {strength: 0.1 + 4.3 * brake, color: tailRed} }"\
+    LINE "        _ : BrakeLamp { Position3: {0.55, 0.9, -2.22}; Emissive: {strength: 0.1 + 4.3 * brake, color: tailRed} }"\
+    LINE "        _ : HeadLamp { Position3: {-0.58, 0.86, 2.22}; Emissive: {strength: 0.9 + 2.2 * head, color: beam} }"\
+    LINE "        _ : HeadLamp { Position3: {0.58, 0.86, 2.22}; Emissive: {strength: 0.9 + 2.2 * head, color: beam} }"\
+    LINE "        _ : Indicator { Position3: {-0.79, 0.9, -2.22}; (Blinker, Emissive): {0.9, 0, 3 * right} }"\
+    LINE "        _ : Indicator { Position3: {0.79, 0.9, -2.22}; (Blinker, Emissive): {0.9, 0, 3 * left} }"\
+    LINE "        _ : Indicator { Position3: {-0.8, 0.72, 2.22}; (Blinker, Emissive): {0.9, 0, 3 * right} }"\
+    LINE "        _ : Indicator { Position3: {0.8, 0.72, 2.22}; (Blinker, Emissive): {0.9, 0, 3 * left} }"\
+    LINE "        _ : HeadGlow {"\
+    LINE "            Position3: {-0.58, 0.47, 6.5}"\
+    LINE "            Rotation3: {-1.4808, 0, 0}"\
+    LINE "            Frustum: {segments: 10, smooth: true, length: 8.6, radius_bottom: 1.25, radius_top: 0.14}"\
+    LINE "            Scale3: {head, head, head}"\
+    LINE "            Emissive: {strength: 0.36 * head, color: beam}"\
+    LINE "        }"\
+    LINE "        _ : HeadGlow {"\
+    LINE "            Position3: {0.58, 0.47, 6.5}"\
+    LINE "            Rotation3: {-1.4808, 0, 0}"\
+    LINE "            Frustum: {segments: 10, smooth: true, length: 8.6, radius_bottom: 1.25, radius_top: 0.14}"\
+    LINE "            Scale3: {head, head, head}"\
+    LINE "            Emissive: {strength: 0.36 * head, color: beam}"\
+    LINE "        }"\
+    LINE "    }"\
+    LINE "}"
+
+#define TRAFFIC_LAMP\
+    LINE "const postGrey: Rgba = {88, 90, 94, 255}"\
+    LINE "const footGrey: Rgba = {126, 124, 120, 255}"\
+    LINE "const housingDark: Rgba = {40, 42, 46, 255}"\
+    LINE "const sodium: Rgba = {255, 190, 120, 255}"\
+    LINE "prefab LampFoot { Rgba: footGrey; PbrMaterial: {metallic: 0.1, roughness: 1} }"\
+    LINE "prefab LampPole { Rgba: postGrey; PbrMaterial: {metallic: 0.7, roughness: 1} }"\
+    LINE "prefab LampHousing { Rgba: housingDark; PbrMaterial: {metallic: 0.5, roughness: 1} }"\
+    LINE "prefab LampLens { Rgba: {255, 255, 255, 255}; PbrMaterial: {metallic: 0.1, roughness: 1}; NoShadow }"\
+    LINE "prefab LampGlow {"\
+    LINE "    Rgba: {0, 0, 0, 5}"\
+    LINE "    PbrMaterial: {metallic: 0, roughness: 1}"\
+    LINE "    Emissive: {strength: 0, color: {255, 255, 255, 255}}"\
+    LINE "    Additive"\
+    LINE "    VolumeGlow: {edge_power: 3.4, axis_falloff: 2.2, head_fade: 0.3, near_fade: 3, intensity: 0.8}"\
+    LINE "    MaterialAnim: {emissive_fade_start: 40, emissive_fade_end: 95}"\
+    LINE "}"\
+    LINE "prefab LampPool {"\
+    LINE "    Rgba: {0, 0, 0, 11}"\
+    LINE "    PbrMaterial: {metallic: 0, roughness: 1}"\
+    LINE "    Rotation3: {-1.5707963, 0, 0}"\
+    LINE "    Emissive: {strength: 0, color: {255, 255, 255, 255}}"\
+    LINE "    Additive"\
+    LINE "    MaterialAnim: {emissive_fade_start: 60, emissive_fade_end: 130}"\
+    LINE "}"\
+    LINE "sky {"\
+    LINE "    time_of_day {"\
+    LINE "        TimeOfDay: {hour: 12, daylight: 1}"\
+    LINE "    }"\
+    LINE "}"\
+    LINE "@tree Parent"\
+    LINE "template StreetLamp : StreetLight {"\
+    LINE "    prop tint: Rgba = sodium"\
+    LINE "    prop glow: f32 = 1"\
+    LINE "    prop beam: f32 = 1"\
+    LINE "    prop dusk: f32 = 0.25"\
+    LINE "    const on = on_off || (sky.time_of_day[TimeOfDay].daylight < dusk)"\
+    LINE "    const lit = on * glow"\
+    LINE "    const tilt = 0.09"\
+    LINE "    _ : LampFoot { Position3: {0, 0.16, 0}; Frustum: {segments: 8, smooth: true, length: 0.32, radius_bottom: 0.17, radius_top: 0.12} }"\
+    LINE "    _ : LampPole { Position3: {0, 2.72, 0}; Frustum: {segments: 10, smooth: true, length: 4.85, radius_bottom: 0.1, radius_top: 0.06} }"\
+    LINE "    _ : LampPole { Position3: {0, 5.06, 0.5}; Box: {0.07, 0.07, 1.05} }"\
+    LINE "    _ : LampHousing { Position3: {0, 5.06, 1.02}; Rotation3: {tilt, 0, 0}; RoundedBox: {x: 0.34, y: 0.14, z: 0.5, radius: 0.05, segments: 2} }"\
+    LINE "    lens : LampLens { Position3: {0, 4.97, 1.02}; Rotation3: {tilt, 0, 0}; Box: {0.28, 0.03, 0.4}; Emissive: {strength: 0.2 + 2.4 * lit, color: tint} }"\
+    LINE "    bulb { Position3: {0, 4.88, 1.02}; Rotation3: {tilt - 1.5707963, 0, 0}; SpotLight: {16 * lit, 18, 34, 68}; Rgba: tint }"\
+    LINE "    glow : LampGlow {"\
+    LINE "        Position3: {0, 2.48, 1.02}"\
+    LINE "        Frustum: {segments: 12, smooth: true, length: 4.96, radius_bottom: 2.6, radius_top: 0.24}"\
+    LINE "        Scale3: {beam * on, beam * on, beam * on}"\
+    LINE "        Emissive: {strength: 0.31 * lit, color: tint}"\
+    LINE "    }"\
+    LINE "    pool : LampPool {"\
+    LINE "        Position3: {0, 0.03, 1.02}"\
+    LINE "        Quad: {6.5, 6.5}"\
+    LINE "        Scale3: {beam * on, beam * on, beam * on}"\
+    LINE "        Emissive: {strength: 0.05 * lit, color: tint}"\
+    LINE "    }"\
+    LINE "}"
+
+typedef struct { float interval, low, high; } BlinkerValue;
+typedef struct { float intensity, range, inner_angle, outer_angle; } SpotLightValue;
+typedef struct { float hour, daylight; } TimeOfDayValue;
+
+static ecs_world_t* traffic_world(const char *code) {
+    ecs_world_t *world = ecs_init();
+    test_assert(ecs_script_run_w_desc(world, NULL, code, &ir_desc, NULL) == 0);
+    return world;
+}
+
+static int32_t traffic_blinkers(ecs_world_t *world, ecs_entity_t car,
+    float *out, int32_t max)
+{
+    ecs_entity_t blinker = ecs_lookup(world, "Blinker");
+    ecs_entity_t emissive = ecs_lookup(world, "Emissive");
+    test_assert(blinker != 0 && emissive != 0);
+    int32_t n = 0;
+    ecs_iter_t it = ecs_children(world, car);
+    while (ecs_children_next(&it)) {
+        for (int32_t i = 0; i < it.count; i ++) {
+            const BlinkerValue *b = ecs_get_id(world, it.entities[i],
+                ecs_pair(blinker, emissive));
+            if (b && n < max) {
+                out[n ++] = b->high;
+            }
+        }
+    }
+    return n;
+}
+
+static void traffic_set_car(ecs_world_t *world, ecs_entity_t car,
+    float brake, float left, float right)
+{
+    ecs_entity_t sedan = ecs_lookup(world, "Sedan");
+    const EcsComponent *c = ecs_get(world, sedan, EcsComponent);
+    void *next = ecs_os_alloca(c->size);
+    ecs_os_memcpy(next, ecs_get_id(world, car, sedan), c->size);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, sedan, next);
+    ecs_meta_push(&cur);
+    test_int(ecs_meta_member(&cur, "brake"), 0);
+    ecs_meta_set_float(&cur, brake);
+    test_int(ecs_meta_member(&cur, "left"), 0);
+    ecs_meta_set_float(&cur, left);
+    test_int(ecs_meta_member(&cur, "right"), 0);
+    ecs_meta_set_float(&cur, right);
+    ecs_meta_pop(&cur);
+    ecs_set_id(world, car, sedan, (size_t)c->size, next);
+}
+
+void Scenario_traffic_car_blinkers(void) {
+    ecs_world_t *world = traffic_world(
+        TRAFFIC_TYPES TRAFFIC_CAR
+        LINE "car { Sedan: {paint: {188, 42, 38, 255}} }");
+
+    ecs_entity_t car = ecs_lookup(world, "car");
+    test_assert(car != 0);
+    test_int(scenario_child_count(world, car), 18);
+
+    float high[8];
+    test_int(traffic_blinkers(world, car, high, 8), 4);
+    test_flt(high[0], 0); test_flt(high[1], 0);
+    test_flt(high[2], 0); test_flt(high[3], 0);
+
+    const EmissiveValue *brake = scenario_get(world, "car", "Emissive");
+    test_assert(brake == NULL);
+
+    traffic_set_car(world, car, 0, 0, 1);
+    test_int(scenario_child_count(world, car), 18);
+    test_int(traffic_blinkers(world, car, high, 8), 4);
+    test_flt(high[0], 3); test_flt(high[1], 0);
+    test_flt(high[2], 3); test_flt(high[3], 0);
+
+    traffic_set_car(world, car, 0, 1, 0);
+    test_int(traffic_blinkers(world, car, high, 8), 4);
+    test_flt(high[0], 0); test_flt(high[1], 3);
+    test_flt(high[2], 0); test_flt(high[3], 3);
+
+    traffic_set_car(world, car, 1, 0, 0);
+    test_int(traffic_blinkers(world, car, high, 8), 4);
+    test_flt(high[0], 0); test_flt(high[1], 0);
+    test_flt(high[2], 0); test_flt(high[3], 0);
+
+    ecs_entity_t emissive = ecs_lookup(world, "Emissive");
+    int32_t brake_lamps = 0;
+    ecs_iter_t it = ecs_children(world, car);
+    while (ecs_children_next(&it)) {
+        for (int32_t i = 0; i < it.count; i ++) {
+            const EmissiveValue *e = ecs_get_id(world, it.entities[i], emissive);
+            if (e && e->color.r == 255 && e->color.g == 0) {
+                test_flt(e->strength, 4.4);
+                brake_lamps ++;
+            }
+        }
+    }
+    test_int(brake_lamps, 2);
+
+    ecs_fini(world);
+}
+
+static void traffic_set_daylight(ecs_world_t *world, float daylight) {
+    ecs_entity_t tod = ecs_lookup(world, "sky.time_of_day");
+    ecs_entity_t type = ecs_lookup(world, "TimeOfDay");
+    test_assert(tod != 0 && type != 0);
+    ecs_set_id(world, tod, type, sizeof(TimeOfDayValue),
+        &(TimeOfDayValue){12, daylight});
+}
+
+static float traffic_bulb(ecs_world_t *world, const char *path) {
+    const SpotLightValue *s = scenario_get(world, path, "SpotLight");
+    test_assert(s != NULL);
+    return s->intensity;
+}
+
+void Scenario_traffic_streetlamp_daylight(void) {
+    ecs_world_t *world = traffic_world(
+        TRAFFIC_TYPES TRAFFIC_LAMP
+        LINE "lamp { StreetLamp: {} }"
+        LINE "forced { StreetLamp: {on_off: true} }");
+
+    ecs_entity_t lamp = ecs_lookup(world, "lamp");
+    ecs_entity_t forced = ecs_lookup(world, "forced");
+    test_assert(lamp != 0 && forced != 0);
+    test_int(scenario_child_count(world, lamp), 8);
+
+    ecs_entity_t lens = ecs_lookup(world, "lamp.lens");
+    ecs_entity_t glow = ecs_lookup(world, "lamp.glow");
+    test_assert(lens != 0 && glow != 0);
+
+    test_flt(traffic_bulb(world, "lamp.bulb"), 0);
+    test_flt(traffic_bulb(world, "forced.bulb"), 16);
+    {
+        const EmissiveValue *e = scenario_get(world, "lamp.lens", "Emissive");
+        test_flt(e->strength, 0.2);
+        const Vec3 *s = scenario_get(world, "lamp.glow", "Scale3");
+        test_flt(s->x, 0);
+    }
+
+    traffic_set_daylight(world, 0.1);
+    test_uint(ecs_lookup(world, "lamp.lens"), lens);
+    test_uint(ecs_lookup(world, "lamp.glow"), glow);
+    test_flt(traffic_bulb(world, "lamp.bulb"), 16);
+    test_flt(traffic_bulb(world, "forced.bulb"), 16);
+    {
+        const EmissiveValue *e = scenario_get(world, "lamp.lens", "Emissive");
+        test_flt(e->strength, 2.6);
+        test_int(e->color.r, 255); test_int(e->color.g, 190);
+        const Vec3 *s = scenario_get(world, "lamp.glow", "Scale3");
+        test_flt(s->x, 1);
+        e = scenario_get(world, "lamp.pool", "Emissive");
+        test_flt(e->strength, 0.05);
+    }
+
+    traffic_set_daylight(world, 0.2);
+    test_flt(traffic_bulb(world, "lamp.bulb"), 16);
+
+    traffic_set_daylight(world, 0.9);
+    test_flt(traffic_bulb(world, "lamp.bulb"), 0);
+    test_flt(traffic_bulb(world, "forced.bulb"), 16);
+    {
+        const EmissiveValue *e = scenario_get(world, "lamp.lens", "Emissive");
+        test_flt(e->strength, 0.2);
+        const Vec3 *s = scenario_get(world, "lamp.glow", "Scale3");
+        test_flt(s->x, 0);
+    }
+    test_int(scenario_child_count(world, lamp), 8);
+
+    ecs_fini(world);
+}

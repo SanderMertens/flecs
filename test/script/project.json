@@ -3187,7 +3187,9 @@
                 "gauge_partial_text_and_frac",
                 "nested_template_reeval_keeps_children",
                 "template_tree_annotation_applies_to_instances",
-                "ir_and_ast_instances_coexist"
+                "ir_and_ast_instances_coexist",
+                "traffic_car_blinkers",
+                "traffic_streetlamp_daylight"
             ]
         }]
     }

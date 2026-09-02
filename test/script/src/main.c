@@ -3071,6 +3071,8 @@ void Scenario_gauge_partial_text_and_frac(void);
 void Scenario_nested_template_reeval_keeps_children(void);
 void Scenario_template_tree_annotation_applies_to_instances(void);
 void Scenario_ir_and_ast_instances_coexist(void);
+void Scenario_traffic_car_blinkers(void);
+void Scenario_traffic_streetlamp_daylight(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -15117,6 +15119,14 @@ bake_test_case Scenario_testcases[] = {
     {
         "ir_and_ast_instances_coexist",
         Scenario_ir_and_ast_instances_coexist
+    },
+    {
+        "traffic_car_blinkers",
+        Scenario_traffic_car_blinkers
+    },
+    {
+        "traffic_streetlamp_daylight",
+        Scenario_traffic_streetlamp_daylight
     }
 };
 
@@ -15440,7 +15450,7 @@ static bake_test_suite suites[] = {
         "Scenario",
         Scenario_setup,
         NULL,
-        12,
+        14,
         Scenario_testcases,
         1,
         Scenario_params
