@@ -5173,3 +5173,74 @@ void Error_collection_literal_for_struct_type_reports_type_name(void) {
 
     ecs_fini(world);
 }
+
+static int log_self_template_error_count = 0;
+static char log_self_template_error[512];
+
+static void log_self_template_callback(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    (void)file;
+    (void)line;
+    if (level <= -3) {
+        log_self_template_error_count ++;
+        ecs_os_strcpy(log_self_template_error, msg);
+    }
+}
+
+void Error_template_instantiated_on_own_entity_as_kind(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = log_self_template_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+
+    log_self_template_error_count = 0;
+    log_self_template_error[0] = '\0';
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop v: f32 = 1"
+    LINE "}"
+    LINE "T T(1)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    test_int(log_self_template_error_count, 1);
+    test_assert(strstr(log_self_template_error,
+        "cannot instantiate template 'T' on itself") != NULL);
+
+    ecs_fini(world);
+}
+
+void Error_template_instantiated_on_own_entity_as_bare_kind(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = log_self_template_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+
+    log_self_template_error_count = 0;
+    log_self_template_error[0] = '\0';
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop v: f32 = 1"
+    LINE "}"
+    LINE "T T";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    test_int(log_self_template_error_count, 1);
+    test_assert(strstr(log_self_template_error,
+        "cannot instantiate template 'T' on itself") != NULL);
+
+    ecs_fini(world);
+}

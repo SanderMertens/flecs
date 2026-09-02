@@ -1411,6 +1411,8 @@ void Error_function_w_too_many_params(void);
 void Error_struct_member_count_size_overflow(void);
 void Error_member_of_tag_component_in_function(void);
 void Error_collection_literal_for_struct_type_reports_type_name(void);
+void Error_template_instantiated_on_own_entity_as_kind(void);
+void Error_template_instantiated_on_own_entity_as_bare_kind(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -8596,6 +8598,12 @@ bake_test_case Error_testcases[] = {
     {
         "collection_literal_for_struct_type_reports_type_name",
         Error_collection_literal_for_struct_type_reports_type_name
+        "template_instantiated_on_own_entity_as_kind",
+        Error_template_instantiated_on_own_entity_as_kind
+    },
+    {
+        "template_instantiated_on_own_entity_as_bare_kind",
+        Error_template_instantiated_on_own_entity_as_bare_kind
     }
 };
 
@@ -15026,6 +15034,7 @@ static bake_test_suite suites[] = {
         NULL,
         NULL,
         213,
+        211,
         Error_testcases
     },
     {

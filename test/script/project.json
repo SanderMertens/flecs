@@ -1428,7 +1428,9 @@
                 "function_w_too_many_params",
                 "struct_member_count_size_overflow",
                 "member_of_tag_component_in_function",
-                "collection_literal_for_struct_type_reports_type_name"
+                "collection_literal_for_struct_type_reports_type_name",
+                "template_instantiated_on_own_entity_as_kind",
+                "template_instantiated_on_own_entity_as_bare_kind"
             ]
         }, {
             "id": "Format",
