@@ -1405,6 +1405,7 @@ void Error_failing_script_update_does_not_delete_shared_module(void);
 void Error_deleted_script_does_not_delete_shared_module(void);
 void Error_failing_script_does_not_delete_shared_scope(void);
 void Error_parse_error_in_large_script_reports_position(void);
+void Error_interpolated_string_w_struct_value(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -5683,6 +5684,8 @@ bake_test_case Eval_testcases[] = {
     {
         "bitmask_w_duplicate_constant_values",
         Eval_bitmask_w_duplicate_constant_values
+    },
+    {
         "kind_entity_before_scope_close_same_line",
         Eval_kind_entity_before_scope_close_same_line
     },
@@ -8562,6 +8565,10 @@ bake_test_case Error_testcases[] = {
     {
         "parse_error_in_large_script_reports_position",
         Error_parse_error_in_large_script_reports_position
+    },
+    {
+        "interpolated_string_w_struct_value",
+        Error_interpolated_string_w_struct_value
     }
 };
 
@@ -14934,9 +14941,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        667,
-        664,
-        666,
+        673,
         Eval_testcases
     },
     {
@@ -14985,7 +14990,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        209,
+        210,
         Error_testcases
     },
     {
@@ -15001,8 +15006,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        408,
-        403,
+        409,
         Expr_testcases,
         1,
         Expr_params
