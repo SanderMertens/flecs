@@ -673,7 +673,9 @@
                 "update_script_that_declares_parent_of_script_entity",
                 "script_refers_to_script_entity",
                 "vector_of_struct_w_array_member",
-                "rerun_script_w_enum_type_w_underlying_type_in_use"
+                "rerun_script_w_enum_type_w_underlying_type_in_use",
+                "enum_w_float_underlying_type",
+                "enum_w_struct_underlying_type"
             ]
         }, {
             "id": "Collection",

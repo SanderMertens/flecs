@@ -20767,3 +20767,34 @@ void Eval_rerun_script_w_enum_type_w_underlying_type_in_use(void) {
 
     ecs_fini(world);
 }
+
+void Eval_enum_w_float_underlying_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "enum Color({underlying_type: f32}, Red, Green)";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void Eval_enum_w_struct_underlying_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Point(x: f32, y: f32)"
+    LINE "enum Color({underlying_type: Point}, Red, Green)";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}

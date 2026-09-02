@@ -670,6 +670,8 @@ void Eval_update_script_that_declares_parent_of_script_entity(void);
 void Eval_script_refers_to_script_entity(void);
 void Eval_vector_of_struct_w_array_member(void);
 void Eval_rerun_script_w_enum_type_w_underlying_type_in_use(void);
+void Eval_enum_w_float_underlying_type(void);
+void Eval_enum_w_struct_underlying_type(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -5640,6 +5642,14 @@ bake_test_case Eval_testcases[] = {
     {
         "rerun_script_w_enum_type_w_underlying_type_in_use",
         Eval_rerun_script_w_enum_type_w_underlying_type_in_use
+    },
+    {
+        "enum_w_float_underlying_type",
+        Eval_enum_w_float_underlying_type
+    },
+    {
+        "enum_w_struct_underlying_type",
+        Eval_enum_w_struct_underlying_type
     }
 };
 
@@ -14841,7 +14851,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        661,
+        663,
         Eval_testcases
     },
     {

@@ -9,6 +9,41 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
+static bool flecs_script_is_integer_type(
+    const ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsPrimitive *prim = ecs_get(world, type, EcsPrimitive);
+    if (!prim) {
+        return false;
+    }
+
+    switch(prim->kind) {
+    case EcsU8:
+    case EcsU16:
+    case EcsU32:
+    case EcsU64:
+    case EcsUPtr:
+    case EcsI8:
+    case EcsI16:
+    case EcsI32:
+    case EcsI64:
+    case EcsIPtr:
+        return true;
+    case EcsBool:
+    case EcsChar:
+    case EcsByte:
+    case EcsF32:
+    case EcsF64:
+    case EcsString:
+    case EcsEntity:
+    case EcsId:
+        return false;
+    }
+
+    return false;
+}
+
 static int flecs_script_constants_visit(
     const ecs_script_visitor_ctx_t *ctx,
     bool is_bitmask)
@@ -85,6 +120,15 @@ static int flecs_script_constants_visit(
                 flecs_expr_visit_error(script, elem->value,
                     "invalid underlying_type for enum '%s'",
                         ecs_get_name(world, ctx->entity));
+                return -1;
+            }
+
+            if (!flecs_script_is_integer_type(world, underlying)) {
+                char *type_str = ecs_get_path(world, underlying);
+                flecs_expr_visit_error(script, elem->value,
+                    "underlying_type '%s' for enum '%s' is not an integer type",
+                        type_str, ecs_get_name(world, ctx->entity));
+                ecs_os_free(type_str);
                 return -1;
             }
 
