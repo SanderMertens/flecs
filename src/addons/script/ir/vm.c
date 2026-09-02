@@ -1005,7 +1005,7 @@ static int flecs_ir_component_end(
         void *dst = ecs_ensure_id(v->world, src, id, flecs_itosize(ti->size));
         flecs_type_info_move_dtor(dst, value, 1, ti);
         tmp->owned = false;
-        ecs_modified_id(v->world, src, id);
+        flecs_script_modified(v->world, src, id, ti);
     }
 
     flecs_ir_track(v, desc->component_slot, id);
