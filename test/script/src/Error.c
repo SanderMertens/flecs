@@ -5063,3 +5063,28 @@ void Error_long_binary_expression(void) {
 
     ecs_fini(world);
 }
+
+void Error_deeply_chained_else_if(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    int i;
+    for (i = 0; i < 10000; i ++) {
+        ecs_strbuf_appendlit(&buf, "if false { } else ");
+    }
+
+    ecs_strbuf_appendlit(&buf, "{ }");
+
+    char *expr = ecs_strbuf_get(&buf);
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}

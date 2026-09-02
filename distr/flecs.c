@@ -70858,9 +70858,17 @@ static const char* flecs_script_if_stmt(
                     Parse(
                         // if expr { } else if
                         case EcsTokKeywordIf: {
+                            if (parser->scope_depth >=
+                                ECS_PARSER_MAX_RECURSION_DEPTH)
+                            {
+                                Error("maximum scope nesting depth exceeded");
+                            }
+
+                            parser->scope_depth ++;
                             Scope(stmt->if_false,
                                 pos = flecs_script_if_stmt(parser, pos);
                             )
+                            parser->scope_depth --;
                             if (!pos) {
                                 goto error;
                             }
