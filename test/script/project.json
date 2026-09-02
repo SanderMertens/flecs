@@ -969,7 +969,9 @@
                 "fn_w_hoisted_var",
                 "memoized_against_args_ignores_hidden_state",
                 "fn_w_large_struct_param_no_leak",
-                "entity_lookup_w_null_path"
+                "entity_lookup_w_null_path",
+                "redeclare_function_no_leak",
+                "redeclare_method_no_leak"
             ]
         }, {
             "id": "Template",

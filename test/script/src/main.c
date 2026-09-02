@@ -958,6 +958,8 @@ void Function_fn_w_hoisted_var(void);
 void Function_memoized_against_args_ignores_hidden_state(void);
 void Function_fn_w_large_struct_param_no_leak(void);
 void Function_entity_lookup_w_null_path(void);
+void Function_redeclare_function_no_leak(void);
+void Function_redeclare_method_no_leak(void);
 
 // Testsuite 'Template'
 void Template_instantiate_w_string_prop_no_leak(void);
@@ -6780,6 +6782,14 @@ bake_test_case Function_testcases[] = {
     {
         "entity_lookup_w_null_path",
         Function_entity_lookup_w_null_path
+    },
+    {
+        "redeclare_function_no_leak",
+        Function_redeclare_function_no_leak
+    },
+    {
+        "redeclare_method_no_leak",
+        Function_redeclare_method_no_leak
     }
 };
 
@@ -14909,7 +14919,7 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        81,
+        83,
         Function_testcases
     },
     {

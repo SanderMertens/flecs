@@ -2169,3 +2169,87 @@ void Function_entity_lookup_w_null_path(void) {
 
     ecs_fini(world);
 }
+
+static
+void Function_redeclare_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    *(int32_t*)result->ptr = *(int32_t*)argv[0].ptr + 1;
+}
+
+void Function_redeclare_function_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t f = ecs_function(world, {
+        .name = "inc",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            { "a", ecs_id(ecs_i32_t) }
+        },
+        .callback = Function_redeclare_callback
+    });
+    test_assert(f != 0);
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    int32_t i;
+    for (i = 0; i < 100; i ++) {
+        test_uint(f, ecs_function(world, {
+            .name = "inc",
+            .return_type = ecs_id(ecs_i32_t),
+            .params = {
+                { "a", ecs_id(ecs_i32_t) }
+            },
+            .callback = Function_redeclare_callback
+        }));
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}
+
+void Function_redeclare_method_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_method(world, {
+        .name = "inc",
+        .parent = ecs_id(ecs_i32_t),
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            { "a", ecs_id(ecs_i32_t) }
+        },
+        .callback = Function_redeclare_callback
+    });
+    test_assert(m != 0);
+
+    int64_t balance_before = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    int32_t i;
+    for (i = 0; i < 100; i ++) {
+        test_uint(m, ecs_method(world, {
+            .name = "inc",
+            .parent = ecs_id(ecs_i32_t),
+            .return_type = ecs_id(ecs_i32_t),
+            .params = {
+                { "a", ecs_id(ecs_i32_t) }
+            },
+            .callback = Function_redeclare_callback
+        }));
+    }
+
+    int64_t balance_after = (ecs_os_api_malloc_count +
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_fini(world);
+}

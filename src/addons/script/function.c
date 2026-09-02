@@ -585,6 +585,7 @@ ecs_entity_t ecs_function_init(
     }
 
     EcsScriptFunction *f = ecs_ensure(world, result, EcsScriptFunction);
+    ecs_script_params_free(&f->params);
     f->return_type = desc->return_type;
     f->callback = desc->callback;
     ecs_os_memcpy_n(f->vector_callbacks, desc->vector_callbacks, 
@@ -665,6 +666,7 @@ ecs_entity_t ecs_method_init(
     }
 
     EcsScriptMethod *f = ecs_ensure(world, result, EcsScriptMethod);
+    ecs_script_params_free(&f->params);
     f->return_type = desc->return_type;
     f->callback = desc->callback;
     ecs_os_memcpy_n(f->vector_callbacks, desc->vector_callbacks, 
