@@ -1431,7 +1431,10 @@
                 "member_of_tag_component_in_function",
                 "collection_literal_for_struct_type_reports_type_name",
                 "template_instantiated_on_own_entity_as_kind",
-                "template_instantiated_on_own_entity_as_bare_kind"
+                "template_instantiated_on_own_entity_as_bare_kind",
+                "unary_not_on_struct_value",
+                "binary_left_operand_struct_vs_entity",
+                "binary_right_operand_struct_vs_entity"
             ]
         }, {
             "id": "Format",

@@ -1414,6 +1414,9 @@ void Error_member_of_tag_component_in_function(void);
 void Error_collection_literal_for_struct_type_reports_type_name(void);
 void Error_template_instantiated_on_own_entity_as_kind(void);
 void Error_template_instantiated_on_own_entity_as_bare_kind(void);
+void Error_unary_not_on_struct_value(void);
+void Error_binary_left_operand_struct_vs_entity(void);
+void Error_binary_right_operand_struct_vs_entity(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -8609,6 +8612,18 @@ bake_test_case Error_testcases[] = {
     {
         "template_instantiated_on_own_entity_as_bare_kind",
         Error_template_instantiated_on_own_entity_as_bare_kind
+    },
+    {
+        "unary_not_on_struct_value",
+        Error_unary_not_on_struct_value
+    },
+    {
+        "binary_left_operand_struct_vs_entity",
+        Error_binary_left_operand_struct_vs_entity
+    },
+    {
+        "binary_right_operand_struct_vs_entity",
+        Error_binary_right_operand_struct_vs_entity
     }
 };
 
@@ -15040,6 +15055,7 @@ static bake_test_suite suites[] = {
         NULL,
         213,
         211,
+        216,
         Error_testcases
     },
     {
@@ -15115,9 +15131,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         NULL,
         NULL,
-        135,
-        128,
-        129,
+        137,
         Reactivity_testcases
     },
     {

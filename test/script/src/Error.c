@@ -5244,3 +5244,86 @@ void Error_template_instantiated_on_own_entity_as_bare_kind(void) {
 
     ecs_fini(world);
 }
+
+void Error_unary_not_on_struct_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_vars_define(vars, "p", Position);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "!p", &v, &desc) == NULL);
+    ecs_log_set_level(-1);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+
+void Error_binary_left_operand_struct_vs_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_vars_define(vars, "p", Position);
+    ecs_script_vars_define(vars, "e", ecs_entity_t);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "p == e", &v, &desc) == NULL);
+    ecs_log_set_level(-1);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+
+void Error_binary_right_operand_struct_vs_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_vars_define(vars, "p", Position);
+    ecs_script_vars_define(vars, "e", ecs_entity_t);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "e == p", &v, &desc) == NULL);
+    ecs_log_set_level(-1);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
