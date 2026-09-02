@@ -524,6 +524,90 @@ void TemplateInheritance_chain_props_in_body(void) {
     ecs_fini(world);
 }
 
+void TemplateInheritance_chain_partial_defaults(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template A {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template B : A {"
+    LINE "  prop y: f32 = 2"
+    LINE "}"
+    LINE "template C : B {"
+    LINE "  prop z: f32 = 3"
+    LINE "}"
+    LINE "e { C: {y: 20} }"
+    LINE "f { C: {x: 10, z: 30} }"
+    LINE "g { C: {z: 30} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t c = ecs_lookup(world, "C");
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    const Position3D *v = ecs_get_id(world, e, c);
+    test_assert(v != NULL);
+    test_flt(v->x, 1);
+    test_flt(v->y, 20);
+    test_flt(v->z, 3);
+
+    ecs_entity_t f = ecs_lookup(world, "f");
+    v = ecs_get_id(world, f, c);
+    test_assert(v != NULL);
+    test_flt(v->x, 10);
+    test_flt(v->y, 2);
+    test_flt(v->z, 30);
+
+    ecs_entity_t g = ecs_lookup(world, "g");
+    v = ecs_get_id(world, g, c);
+    test_assert(v != NULL);
+    test_flt(v->x, 1);
+    test_flt(v->y, 2);
+    test_flt(v->z, 30);
+
+    ecs_fini(world);
+}
+
+void TemplateInheritance_chain_defaults_in_body(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "template A {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template B : A {"
+    LINE "  prop y: f32 = 2"
+    LINE "}"
+    LINE "template C : B {"
+    LINE "  prop z: f32 = 3"
+    LINE "  child { Position: {$x + $y, $z} }"
+    LINE "}"
+    LINE "e { C: {} }"
+    LINE "f { C: {y: 20} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+
+    ecs_entity_t e_child = ecs_lookup(world, "e.child");
+    test_assert(e_child != 0);
+    const PositionBase *p = ecs_get_id(world, e_child, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3);
+    test_flt(p->y, 3);
+
+    ecs_entity_t f_child = ecs_lookup(world, "f.child");
+    test_assert(f_child != 0);
+    p = ecs_get_id(world, f_child, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 21);
+    test_flt(p->y, 3);
+
+    ecs_fini(world);
+}
+
 void TemplateInheritance_two_derived(void) {
     ecs_world_t *world = ecs_init();
 

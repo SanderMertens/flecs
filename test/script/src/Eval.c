@@ -1478,7 +1478,7 @@ void Eval_with_tag_2_levels(void) {
 
     const char *expr =
     HEAD "with TagA {"
-    HEAD " with TagB {"
+    LINE " with TagB {"
     LINE "  Foo {}"
     LINE " }"
     LINE "}";
@@ -1508,11 +1508,11 @@ void Eval_with_tag_2_levels_2_subtrees(void) {
 
     const char *expr =
     HEAD "with TagA {"
-    HEAD " with TagB {"
+    LINE " with TagB {"
     LINE "  Foo {}"
     LINE "  BarA {}"
     LINE " }"
-    HEAD " with TagC {"
+    LINE " with TagC {"
     LINE "  Foo {}"
     LINE "  BarB {}"
     LINE " }"
@@ -1695,7 +1695,7 @@ void Eval_with_after_scope(void) {
 
     const char *expr =
     HEAD "E1 { }"
-    HEAD "with E2 {"
+    LINE "with E2 {"
     LINE "  E3 _ { }"
     LINE "  E4 { }"
     LINE "}";
@@ -1731,7 +1731,7 @@ void Eval_with_after_with(void) {
 
     const char *expr =
     HEAD "with E1 { }"
-    HEAD "with E2 {"
+    LINE "with E2 {"
     LINE "  E3 _ { }"
     LINE "  E4 { }"
     LINE "}";
@@ -5561,7 +5561,7 @@ void Eval_assign_var_to_typed_const_w_composite_type(void) {
 
     const char *expr =
     HEAD "const var_pos_a: Position = {10, 20}"
-    HEAD "const var_pos_b = var_pos_a"
+    LINE "const var_pos_b = var_pos_a"
     LINE "a { Position: var_pos_b }"
     LINE "";
 
@@ -20523,7 +20523,7 @@ void Eval_for_continue_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "for i in 0..3 { if i == 1 { continue } \"e_{i}\" {} }";
+    HEAD "for i in 0..3 { if i == 1 { continue }; \"e_{i}\" {} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -20681,6 +20681,63 @@ void Eval_for_continue_in_template_in_for_fails(void) {
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
     ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void Eval_2_components_same_line_w_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e { Position: {10, 20}; Velocity: {1, 2} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}
+
+void Eval_2_entities_same_line_w_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}; bar {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "foo") != 0);
+    test_assert(ecs_lookup(world, "bar") != 0);
 
     ecs_fini(world);
 }

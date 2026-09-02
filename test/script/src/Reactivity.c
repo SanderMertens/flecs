@@ -1349,7 +1349,7 @@ void Reactivity_new_entity_not_duplicated_on_reevaluation(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "holder {"
-            LINE "  entity: {new { Position: {source[Mass].value, 4} Marker }}"
+            LINE "  entity: {new { Position: {source[Mass].value, 4}; Marker }}"
             LINE "}"
     });
     test_assert(script != 0);
@@ -3286,7 +3286,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_interpolated_string(voi
         .code =
             HEAD "reactive { Position: {source[Mass].value, 0} }"
             LINE "holder {"
-            LINE "  Label: {\"{new { Position: {3, 4} Marker }}\"}"
+            LINE "  Label: {\"{new { Position: {3, 4}; Marker }}\"}"
             LINE "}"
     });
     test_assert(script != 0);
@@ -3350,7 +3350,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_component_expr(void) {
         .code =
             HEAD "reactive { Position: {source[Mass].value, 0} }"
             LINE "holder {"
-            LINE "  Position: {(new { Position: {3, 4} Marker })[Position].x, 0}"
+            LINE "  Position: {(new { Position: {3, 4}; Marker })[Position].x, 0}"
             LINE "}"
     });
     test_assert(script != 0);
@@ -3422,7 +3422,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_template_prop(void) {
             LINE "template T {"
             LINE "  prop e: entity = 0"
             LINE "}"
-            LINE "T inst(new { Position: {3, 4} Marker })"
+            LINE "T inst(new { Position: {3, 4}; Marker })"
     });
     test_assert(script != 0);
 
@@ -3487,7 +3487,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_entity_name(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "reactive { Position: {source[Mass].value, 0} }"
-            LINE "\"holder_{new { Position: {3, 4} Marker }}\" {}"
+            LINE "\"holder_{new { Position: {3, 4}; Marker }}\" {}"
     });
     test_assert(script != 0);
 
@@ -3549,7 +3549,7 @@ void Reactivity_new_entity_survives_skipped_statement_in_if_condition(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "reactive { Position: {source[Mass].value, 0} }"
-            LINE "if (new { Position: {3, 4} Marker }) != 0 {"
+            LINE "if (new { Position: {3, 4}; Marker }) != 0 {"
             LINE "  holder {}"
             LINE "}"
     });

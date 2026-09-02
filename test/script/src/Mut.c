@@ -1119,7 +1119,7 @@ void Mut_assign_add(void) {
     LINE "  mut value: f32 = 6"
     LINE "  Position: {y += value / 2}"
     LINE "}"
-    HEAD "e {"
+    LINE "e {"
     LINE "  Position: {10, 20}"
     LINE "  Foo: {}"
     LINE "}";
@@ -1152,7 +1152,7 @@ void Mut_assign_mul(void) {
     LINE "  mut value: f32 = 6"
     LINE "  Position: {y *= value / 2}"
     LINE "}"
-    HEAD "e {"
+    LINE "e {"
     LINE "  Position: {10, 20}"
     LINE "  Foo: {}"
     LINE "}";

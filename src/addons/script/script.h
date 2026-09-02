@@ -271,6 +271,10 @@ const char* flecs_script_stmt(
     ecs_parser_t *parser,
     const char *pos);
 
+const char* flecs_script_stmt_w_separator(
+    ecs_parser_t *parser,
+    const char *pos);
+
 ecs_script_t* flecs_script_parse_nested(
     ecs_world_t *world,
     const char *name,
