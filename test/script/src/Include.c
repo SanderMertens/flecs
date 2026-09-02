@@ -110,8 +110,6 @@ static void test_file_add(const char *name, const char *content) {
 }
 
 void Include_include_cycle(void) {
-    test_quarantine("1 Sep 2026");
-
     test_files_install();
     test_file_add("a.flecs", "include b.flecs\nFoo{}\n");
     test_file_add("b.flecs", "include a.flecs\nBar{}\n");

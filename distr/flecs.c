@@ -50709,6 +50709,10 @@ struct ecs_script_runtime_t {
     char *unresolved_errors;
     int32_t include_depth;
 
+    /* Nesting level of include statements. Guards against scripts that
+     * (indirectly) include themselves. */
+    int32_t include_nesting;
+
     /* Nesting level of template instantiations. Guards against templates that
      * (indirectly) instantiate themselves. */
     int32_t template_depth;
@@ -99326,6 +99330,12 @@ int flecs_script_step_for(
 
 #ifdef FLECS_SCRIPT
 
+/* Maximum number of includes that can be nested. Guards against scripts that
+ * (indirectly) include themselves. */
+#ifndef FLECS_SCRIPT_INCLUDE_DEPTH_MAX
+#define FLECS_SCRIPT_INCLUDE_DEPTH_MAX (32)
+#endif
+
 static bool flecs_script_include_has_parent_dir(
     const char *path)
 {
@@ -99400,6 +99410,14 @@ static int flecs_script_include_node(
         return -1;
     }
 
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(v->world);
+    if (rt->include_nesting >= FLECS_SCRIPT_INCLUDE_DEPTH_MAX) {
+        flecs_script_eval_error(v, node,
+            "too many nested includes for '%s', is there an include cycle?",
+                node->filename);
+        return -1;
+    }
+
     bool is_managed = v->script_entity != 0;
     ecs_entity_t parent_script_entity = v->script_entity;
 
@@ -99432,6 +99450,7 @@ static int flecs_script_include_node(
     ecs_os_free(with_ext);
 
     int result = 0;
+    rt->include_nesting ++;
 
     if (is_managed) {
         ecs_entity_t existing = ecs_lookup_path_w_sep(
@@ -99501,6 +99520,7 @@ static int flecs_script_include_node(
     }
 
 done:
+    rt->include_nesting --;
     ecs_os_free(resolved);
     return result;
 }
