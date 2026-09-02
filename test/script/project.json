@@ -683,7 +683,9 @@
                 "kind_entity_before_scope_close_same_line",
                 "kind_entity_w_base_before_scope_close_same_line",
                 "auto_override_before_scope_close_same_line",
-                "auto_override_pair_before_scope_close_same_line"
+                "auto_override_pair_before_scope_close_same_line",
+                "module_stmt_w_semicolon",
+                "module_stmt_at_end_of_script"
             ]
         }, {
             "id": "Collection",

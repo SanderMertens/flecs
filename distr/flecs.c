@@ -71439,9 +71439,13 @@ module_stmt: {
     }
 
     // module flecs.meta\n
-    Parse_2(EcsTokIdentifier, '\n',
+    Parse_1(EcsTokIdentifier,
         flecs_script_insert_module(parser, Token(1));
-        EndOfRule;
+
+        Parse(
+            EcsTokEndOfStatement:
+                EndOfRule;
+        )
     )
 }
 

@@ -680,6 +680,8 @@ void Eval_kind_entity_before_scope_close_same_line(void);
 void Eval_kind_entity_w_base_before_scope_close_same_line(void);
 void Eval_auto_override_before_scope_close_same_line(void);
 void Eval_auto_override_pair_before_scope_close_same_line(void);
+void Eval_module_stmt_w_semicolon(void);
+void Eval_module_stmt_at_end_of_script(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -5695,6 +5697,14 @@ bake_test_case Eval_testcases[] = {
     {
         "auto_override_pair_before_scope_close_same_line",
         Eval_auto_override_pair_before_scope_close_same_line
+    },
+    {
+        "module_stmt_w_semicolon",
+        Eval_module_stmt_w_semicolon
+    },
+    {
+        "module_stmt_at_end_of_script",
+        Eval_module_stmt_at_end_of_script
     }
 };
 
@@ -14926,6 +14936,7 @@ static bake_test_suite suites[] = {
         NULL,
         667,
         664,
+        666,
         Eval_testcases
     },
     {
