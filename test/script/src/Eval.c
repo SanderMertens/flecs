@@ -20741,3 +20741,29 @@ void Eval_2_entities_same_line_w_semicolon(void) {
 
     ecs_fini(world);
 }
+
+void Eval_rerun_script_w_enum_type_w_underlying_type_in_use(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "enum Color({underlying_type: u8}, Red, Green, Blue)"
+    LINE "Foo { Color: Green }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t color = ecs_lookup(world, "Color");
+    test_assert(color != 0);
+
+    const EcsEnum *e = ecs_get(world, color, EcsEnum);
+    test_assert(e != NULL);
+    test_uint(e->underlying_type, ecs_id(ecs_u8_t));
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has_id(world, foo, color));
+
+    ecs_fini(world);
+}

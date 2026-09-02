@@ -88,9 +88,12 @@ static int flecs_script_constants_visit(
                 return -1;
             }
 
-            EcsEnum *ptr = ecs_ensure(world, ctx->entity, EcsEnum);
-            ptr->underlying_type = underlying;
-            ecs_modified(world, ctx->entity, EcsEnum);
+            const EcsEnum *existing = ecs_get(world, ctx->entity, EcsEnum);
+            if (!existing || existing->underlying_type != underlying) {
+                EcsEnum *ptr = ecs_ensure(world, ctx->entity, EcsEnum);
+                ptr->underlying_type = underlying;
+                ecs_modified(world, ctx->entity, EcsEnum);
+            }
         }
     }
 

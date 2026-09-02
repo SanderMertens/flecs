@@ -672,7 +672,8 @@
                 "update_script_that_declares_script_entity",
                 "update_script_that_declares_parent_of_script_entity",
                 "script_refers_to_script_entity",
-                "vector_of_struct_w_array_member"
+                "vector_of_struct_w_array_member",
+                "rerun_script_w_enum_type_w_underlying_type_in_use"
             ]
         }, {
             "id": "Collection",
@@ -1112,7 +1113,8 @@
                 "template_base_w_inline_array_member_elem_in_if",
                 "template_base_w_inline_array_member_elem_in_for",
                 "template_base_w_inline_array_member_reassign",
-                "template_base_w_inline_array_member_reassign_no_index"
+                "template_base_w_inline_array_member_reassign_no_index",
+                "template_instantiates_itself"
             ]
         }, {
             "id": "Mut",
