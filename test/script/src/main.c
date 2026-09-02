@@ -1616,6 +1616,7 @@ void Expr_var_member_member(void);
 void Expr_var_member_w_dtor_member(void);
 void Expr_var_element(void);
 void Expr_var_element_out_of_range(void);
+void Expr_element_on_non_collection(void);
 void Expr_var_element_w_var_index(void);
 void Expr_var_element_w_i64_var_index(void);
 void Expr_var_member_element_w_var_member_index(void);
@@ -9357,6 +9358,10 @@ bake_test_case Expr_testcases[] = {
         Expr_var_element_out_of_range
     },
     {
+        "element_on_non_collection",
+        Expr_element_on_non_collection
+    },
+    {
         "var_element_w_var_index",
         Expr_var_element_w_var_index
     },
@@ -14826,7 +14831,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        402,
+        403,
         Expr_testcases,
         1,
         Expr_params
