@@ -1504,7 +1504,7 @@ void flecs_script_modified(
     ecs_id_t id,
     const ecs_type_info_t *ti)
 {
-    if (ECS_IS_PAIR(id) || ti->hooks.on_set || ti->hooks.on_validate ||
+    if (ti->hooks.on_set || ti->hooks.on_validate ||
         flecs_poly_is(world, ecs_stage_t) || ecs_is_deferred(world))
     {
         ecs_modified_id(world, entity, id);
@@ -1522,11 +1522,42 @@ void flecs_script_modified(
     const ecs_event_record_t *er = flecs_event_record_get(
         &world->observable, EcsOnSet);
     if (er) {
-        ecs_event_id_record_t *any = flecs_event_id_record_get(er, EcsAny);
-        ecs_event_id_record_t *wc = flecs_event_id_record_get(er, EcsWildcard);
-        if ((any && any->observer_count) || (wc && wc->observer_count)) {
+        ecs_event_id_record_t *ider = flecs_event_id_record_get(er, EcsAny);
+        if (ider && ider->observer_count) {
             ecs_modified_id(world, entity, id);
             return;
+        }
+        ider = flecs_event_id_record_get(er, EcsWildcard);
+        if (ider && ider->observer_count) {
+            ecs_modified_id(world, entity, id);
+            return;
+        }
+        if (ECS_IS_PAIR(id)) {
+            ecs_entity_t first = ECS_PAIR_FIRST(id);
+            ecs_entity_t second = ECS_PAIR_SECOND(id);
+            ider = flecs_event_id_record_get(er, id);
+            if (ider && ider->observer_count) {
+                ecs_modified_id(world, entity, id);
+                return;
+            }
+            ider = flecs_event_id_record_get(er,
+                ecs_pair(first, EcsWildcard));
+            if (ider && ider->observer_count) {
+                ecs_modified_id(world, entity, id);
+                return;
+            }
+            ider = flecs_event_id_record_get(er,
+                ecs_pair(EcsWildcard, second));
+            if (ider && ider->observer_count) {
+                ecs_modified_id(world, entity, id);
+                return;
+            }
+            ider = flecs_event_id_record_get(er,
+                ecs_pair(EcsWildcard, EcsWildcard));
+            if (ider && ider->observer_count) {
+                ecs_modified_id(world, entity, id);
+                return;
+            }
         }
     }
 

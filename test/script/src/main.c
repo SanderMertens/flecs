@@ -1091,6 +1091,11 @@ void Template_computed_const_instance_deleted(void);
 void Template_deferred_updates_batched(void);
 void Template_deferred_update_nested_template(void);
 void Template_deferred_update_from_system(void);
+void Template_pair_on_set_observer_exact(void);
+void Template_pair_on_set_observer_rel_wildcard(void);
+void Template_pair_on_set_observer_tgt_wildcard(void);
+void Template_pair_on_set_observer_wildcard_pair(void);
+void Template_component_on_set_observer_any(void);
 void Template_template_w_prop_w_value_name(void);
 void Template_template_w_var_w_value_name(void);
 void Template_eval_twice_w_failed_method_call_in_body(void);
@@ -7362,6 +7367,26 @@ bake_test_case Template_testcases[] = {
     {
         "deferred_update_from_system",
         Template_deferred_update_from_system
+    },
+    {
+        "pair_on_set_observer_exact",
+        Template_pair_on_set_observer_exact
+    },
+    {
+        "pair_on_set_observer_rel_wildcard",
+        Template_pair_on_set_observer_rel_wildcard
+    },
+    {
+        "pair_on_set_observer_tgt_wildcard",
+        Template_pair_on_set_observer_tgt_wildcard
+    },
+    {
+        "pair_on_set_observer_wildcard_pair",
+        Template_pair_on_set_observer_wildcard_pair
+    },
+    {
+        "component_on_set_observer_any",
+        Template_component_on_set_observer_any
     },
     {
         "template_w_prop_w_value_name",
@@ -15337,7 +15362,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        158,
+        163,
         Template_testcases,
         1,
         Template_params
