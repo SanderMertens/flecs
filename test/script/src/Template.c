@@ -6984,3 +6984,106 @@ void Template_deferred_update_from_system(void) {
 
     ecs_fini(world);
 }
+
+static int on_pair_count = 0;
+static void OnPair(ecs_iter_t *it) {
+    on_pair_count += it->count;
+}
+
+static void template_pair_observer_test(ecs_id_t observer_id) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    reaction_world_setup(world, ecs_id(Position));
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    on_pair_count = 0;
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop a: f32 = 0"
+    LINE "  prop b: f32 = 0"
+    LINE "  x { (Rel, Position): {a, b} }"
+    LINE "  y { Position: {b, 0} }"
+    LINE "}"
+    LINE "e { T: {a: 1, b: 1} }";
+
+    ecs_observer(world, {
+        .query.terms = {{ observer_id == EcsWildcard
+            ? ecs_pair(EcsWildcard, EcsWildcard)
+            : observer_id == 1
+                ? ecs_pair(rel, ecs_id(Position))
+                : observer_id == 2
+                    ? ecs_pair(rel, EcsWildcard)
+                    : ecs_pair(EcsWildcard, ecs_id(Position)) }},
+        .events = { EcsOnSet },
+        .callback = OnPair
+    });
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_entity_t x = ecs_lookup(world, "e.x");
+    test_assert(e && t && x);
+    int32_t after_create = on_pair_count;
+    test_assert(after_create >= 1);
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){2, 1});
+    test_int(on_pair_count, after_create + 1);
+    {
+        const Position *p = ecs_get_id(world, x, ecs_pair(rel, ecs_id(Position)));
+        test_assert(p != NULL);
+        test_flt(p->x, 2);
+    }
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){2, 5});
+    test_int(on_pair_count, after_create + 2);
+
+    ecs_fini(world);
+}
+
+void Template_pair_on_set_observer_exact(void) {
+    template_pair_observer_test(1);
+}
+
+void Template_pair_on_set_observer_rel_wildcard(void) {
+    template_pair_observer_test(2);
+}
+
+void Template_pair_on_set_observer_tgt_wildcard(void) {
+    template_pair_observer_test(3);
+}
+
+void Template_pair_on_set_observer_wildcard_pair(void) {
+    template_pair_observer_test(EcsWildcard);
+}
+
+void Template_component_on_set_observer_any(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    reaction_world_setup(world, ecs_id(Position));
+    on_pair_count = 0;
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  prop a: f32 = 0"
+    LINE "  prop b: f32 = 0"
+    LINE "  x { Position: {a, b} }"
+    LINE "}"
+    LINE "e { T: {a: 1, b: 1} }";
+
+    ecs_observer(world, {
+        .query.terms = {{ EcsAny }},
+        .events = { EcsOnSet },
+        .callback = OnPair
+    });
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(e && t);
+    int32_t after_create = on_pair_count;
+
+    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){2, 1});
+    test_assert(on_pair_count > after_create);
+
+    ecs_fini(world);
+}
