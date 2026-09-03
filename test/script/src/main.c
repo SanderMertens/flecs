@@ -12,6 +12,10 @@
 void Eval_setup(void);
 void Eval_2_components_same_line_w_semicolon(void);
 void Eval_2_entities_same_line_w_semicolon(void);
+void Eval_semicolon_after_scope_close(void);
+void Eval_semicolon_after_scope_close_in_scope(void);
+void Eval_semicolon_after_if_scope(void);
+void Eval_semicolon_after_with_scope(void);
 void Eval_null(void);
 void Eval_empty(void);
 void Eval_space(void);
@@ -3099,6 +3103,22 @@ bake_test_case Eval_testcases[] = {
     {
         "2_entities_same_line_w_semicolon",
         Eval_2_entities_same_line_w_semicolon
+    },
+    {
+        "semicolon_after_scope_close",
+        Eval_semicolon_after_scope_close
+    },
+    {
+        "semicolon_after_scope_close_in_scope",
+        Eval_semicolon_after_scope_close_in_scope
+    },
+    {
+        "semicolon_after_if_scope",
+        Eval_semicolon_after_if_scope
+    },
+    {
+        "semicolon_after_with_scope",
+        Eval_semicolon_after_with_scope
     },
     {
         "null",
@@ -15332,7 +15352,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        678,
+        682,
         Eval_testcases,
         1,
         Eval_params
