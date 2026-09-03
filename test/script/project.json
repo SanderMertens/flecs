@@ -1494,7 +1494,12 @@
                 "match_case_enum_vs_entity",
                 "match_case_value_struct_vs_entity",
                 "range_from_struct_value",
-                "range_to_struct_value"
+                "range_to_struct_value",
+                "component_member_on_missing_entity",
+                "component_on_missing_entity",
+                "component_member_on_entity_without_component",
+                "component_member_on_var_w_missing_entity",
+                "component_member_on_missing_entity_in_template"
             ]
         }, {
             "id": "Format",

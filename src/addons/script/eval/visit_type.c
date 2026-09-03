@@ -364,6 +364,60 @@ static void flecs_script_lenient_skip_refs(
     }
 }
 
+static void flecs_script_type_skip_var(
+    ecs_script_type_visitor_t *t,
+    const char *name)
+{
+    if (!name) {
+        return;
+    }
+
+    ecs_vec_append_t(NULL, &t->skipped_vars, const char*)[0] = name;
+}
+
+static bool flecs_script_type_ref_is_skipped_var(
+    ecs_script_type_visitor_t *t,
+    const char *name)
+{
+    int32_t i, count = ecs_vec_count(&t->skipped_vars);
+    const char **vars = ecs_vec_first(&t->skipped_vars);
+    for (i = 0; i < count; i ++) {
+        ecs_size_t len = ecs_os_strlen(vars[i]);
+        if (ecs_os_strncmp(name, vars[i], len)) {
+            continue;
+        }
+        if (!name[len] || name[len] == '.') {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void flecs_script_type_prune_skipped_refs(
+    ecs_script_type_visitor_t *t,
+    int32_t prev_unresolved)
+{
+    if (!ecs_vec_count(&t->skipped_vars)) {
+        return;
+    }
+
+    ecs_script_impl_t *impl = t->v->base.script;
+    int32_t i, count = ecs_vec_count(&impl->unresolved_refs);
+    ecs_script_unresolved_ref_t *refs = ecs_vec_first(&impl->unresolved_refs);
+    int32_t dst = prev_unresolved;
+    for (i = prev_unresolved; i < count; i ++) {
+        if (refs[i].kind != FlecsScriptUnresolvedComponent &&
+            flecs_script_type_ref_is_skipped_var(t, refs[i].name))
+        {
+            continue;
+        }
+        refs[dst ++] = refs[i];
+    }
+
+    ecs_vec_set_count_t(NULL, &impl->unresolved_refs,
+        ecs_script_unresolved_ref_t, dst);
+}
+
 static int flecs_script_type_check_expr(
     ecs_script_type_visitor_t *t,
     ecs_expr_node_t **expr_ptr,
@@ -389,6 +443,7 @@ static int flecs_script_type_check_expr(
             if (ecs_vec_count(&v->base.script->unresolved_refs) >
                 prev_unresolved)
             {
+                flecs_script_type_prune_skipped_refs(t, prev_unresolved);
                 if (v->base.script->lenient) {
                     flecs_script_lenient_skip_refs(t, prev_unresolved);
                 }
@@ -1172,7 +1227,11 @@ static int flecs_script_type_const(
     ecs_entity_t type = expected_type;
     int expr_result = flecs_script_type_check_expr(t, &node->expr, &type);
     if (expr_result) {
-        return expr_result == 1 ? 0 : -1;
+        if (expr_result == 1) {
+            flecs_script_type_skip_var(t, node->name);
+            return 0;
+        }
+        return -1;
     }
     node->eval_type = type;
 
@@ -1319,7 +1378,11 @@ static int flecs_script_type_template_var(
     if (node->expr) {
         int result = flecs_script_type_check_expr(t, &node->expr, &type);
         if (result) {
-            return result == 1 ? 0 : -1;
+            if (result == 1) {
+                flecs_script_type_skip_var(t, node->name);
+                return 0;
+            }
+            return -1;
         }
     }
     node->eval_type = type;
@@ -2033,6 +2096,7 @@ int flecs_script_type_scope(
     ecs_script_eval_visitor_t *v = t->v;
     int32_t old_table = t->table;
     int32_t old_depth = v->base.depth;
+    int32_t old_skipped_vars = ecs_vec_count(&t->skipped_vars);
     t->table = table;
     if (push_vars) {
         v->vars = flecs_script_vars_push(
@@ -2098,6 +2162,7 @@ int flecs_script_type_scope(
     if (push_vars) {
         v->vars = ecs_script_vars_pop(v->vars);
     }
+    ecs_vec_set_count_t(NULL, &t->skipped_vars, const char*, old_skipped_vars);
     t->table = old_table;
     return result;
 }
@@ -2168,6 +2233,7 @@ int flecs_script_visit_type_entity_expr(
     };
     ecs_vec_init_t(NULL, &t.tables, ecs_script_type_table_t, 0);
     ecs_vec_init_t(NULL, &t.entities, ecs_script_type_entity_t, 0);
+    ecs_vec_init_t(NULL, &t.skipped_vars, const char*, 0);
     flecs_script_type_table_new(&t, -1, NULL);
     visitor.type_visitor = &t;
 
@@ -2177,6 +2243,7 @@ int flecs_script_visit_type_entity_expr(
     }
 
     visitor.type_visitor = NULL;
+    ecs_vec_fini_t(NULL, &t.skipped_vars, const char*);
     ecs_vec_fini_t(NULL, &t.entities, ecs_script_type_entity_t);
     ecs_vec_fini_t(NULL, &t.tables, ecs_script_type_table_t);
     if (desc && desc->vars) {
@@ -2207,6 +2274,7 @@ int flecs_script_visit_type(
     };
     ecs_vec_init_t(NULL, &t.tables, ecs_script_type_table_t, 0);
     ecs_vec_init_t(NULL, &t.entities, ecs_script_type_entity_t, 0);
+    ecs_vec_init_t(NULL, &t.skipped_vars, const char*, 0);
     flecs_script_type_table_new(&t, -1, NULL);
 
     v->type_visitor = &t;
@@ -2217,6 +2285,7 @@ int flecs_script_visit_type(
         result = -1;
     }
 
+    ecs_vec_fini_t(NULL, &t.skipped_vars, const char*);
     ecs_vec_fini_t(NULL, &t.entities, ecs_script_type_entity_t);
     ecs_vec_fini_t(NULL, &t.tables, ecs_script_type_table_t);
     ecs_vec_fini_t(&v->r->allocator, &v->r->using, ecs_entity_t);
