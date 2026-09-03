@@ -5546,3 +5546,123 @@ void Error_range_to_struct_value(void) {
     ecs_fini(world);
 }
 
+void Error_component_member_on_missing_entity(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Foo(x: f32)"
+    LINE "const v = missing[Foo].x"
+    LINE "const w = v * 2";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(
+        world, "test.flecs", expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 2);
+    test_assert(strstr(result.error, "missing") != NULL);
+    test_assert(strstr(result.error, "invalid operator") == NULL);
+    test_assert(strstr(result.error, "const w") == NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_component_on_missing_entity(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Foo(x: f32)"
+    LINE "const v = missing[Foo]"
+    LINE "const w = v.x";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(
+        world, "test.flecs", expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 2);
+    test_assert(strstr(result.error, "missing") != NULL);
+    test_assert(strstr(result.error, "const w") == NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_component_member_on_entity_without_component(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Foo(x: f32)"
+    LINE "existing {}"
+    LINE "const v = existing[Foo].x"
+    LINE "const w = v * 2";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(
+        world, "test.flecs", expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 3);
+    test_assert(strstr(result.error,
+        "entity 'existing' does not have component 'Foo'") != NULL);
+    test_assert(strstr(result.error, "invalid operator") == NULL);
+    test_assert(strstr(result.error, "const w") == NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_component_member_on_var_w_missing_entity(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Foo(x: f32)"
+    LINE "const e = missing"
+    LINE "const v = $e[Foo].x"
+    LINE "const w = v * 2";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(
+        world, "test.flecs", expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 2);
+    test_assert(strstr(result.error, "missing") != NULL);
+    test_assert(strstr(result.error, "invalid operator") == NULL);
+    test_assert(strstr(result.error, "const v") == NULL);
+    test_assert(strstr(result.error, "const w") == NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_component_member_on_missing_entity_in_template(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Foo(x: f32)"
+    LINE "template T {"
+    LINE "  mut v = missing[Foo].x"
+    LINE "  const w = v * 2"
+    LINE "}"
+    LINE "T t()";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(
+        world, "test.flecs", expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 3);
+    test_assert(strstr(result.error, "missing") != NULL);
+    test_assert(strstr(result.error, "invalid operator") == NULL);
+    test_assert(strstr(result.error, "const w") == NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}

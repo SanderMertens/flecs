@@ -1453,6 +1453,11 @@ void Error_match_case_enum_vs_entity(void);
 void Error_match_case_value_struct_vs_entity(void);
 void Error_range_from_struct_value(void);
 void Error_range_to_struct_value(void);
+void Error_component_member_on_missing_entity(void);
+void Error_component_on_missing_entity(void);
+void Error_component_member_on_entity_without_component(void);
+void Error_component_member_on_var_w_missing_entity(void);
+void Error_component_member_on_missing_entity_in_template(void);
 
 // Testsuite 'Format'
 void Format_setup(void);
@@ -8804,6 +8809,26 @@ bake_test_case Error_testcases[] = {
     {
         "range_to_struct_value",
         Error_range_to_struct_value
+    },
+    {
+        "component_member_on_missing_entity",
+        Error_component_member_on_missing_entity
+    },
+    {
+        "component_on_missing_entity",
+        Error_component_on_missing_entity
+    },
+    {
+        "component_member_on_entity_without_component",
+        Error_component_member_on_entity_without_component
+    },
+    {
+        "component_member_on_var_w_missing_entity",
+        Error_component_member_on_var_w_missing_entity
+    },
+    {
+        "component_member_on_missing_entity_in_template",
+        Error_component_member_on_missing_entity_in_template
     }
 };
 
@@ -15415,7 +15440,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        225,
+        230,
         Error_testcases,
         1,
         Error_params
