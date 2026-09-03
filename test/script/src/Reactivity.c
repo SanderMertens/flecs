@@ -8142,3 +8142,49 @@ void Reactivity_conditional_component_w_named_initializer_on_entity(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_branch_cleanup_deletes_entity_w_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t condition = ecs_entity(world, { .name = "condition" });
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "if condition[Mass].value > 0 {"
+            LINE "  parent {"
+            LINE "    child {}"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "parent");
+    test_assert(parent != 0);
+    ecs_entity_t child = ecs_lookup(world, "parent.child");
+    test_assert(child != 0);
+
+    ecs_entity_t sparse_child = ecs_new_w_parent(world, parent, "sparse_child");
+    test_assert(sparse_child != 0);
+
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){0});
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(!ecs_is_alive(world, sparse_child));
+    test_uint(ecs_lookup(world, "parent"), 0);
+
+    ecs_set_id(world, condition, mass, sizeof(Mass), &(Mass){1});
+
+    test_assert(ecs_lookup(world, "parent") != 0);
+
+    ecs_fini(world);
+}
