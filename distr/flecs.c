@@ -43495,7 +43495,7 @@ void flecs_table_delete(
                     ecs_column_t *column = &columns[i];
                     ecs_iter_action_t on_remove = column->ti->hooks.on_remove;
                     if (on_remove) {
-                        flecs_table_invoke_hook(world, table, on_remove, 
+                        flecs_table_invoke_hook(world, table, on_remove,
                             EcsOnRemove, column, &entity_to_delete, row, 1);
                     }
                 }
@@ -102911,9 +102911,16 @@ int flecs_script_type_scope(
         for (i = 0; i < count; i ++) {
             ecs_id_t id = 0;
             if (stmts[i]->kind == EcsAstComponent) {
-                id = ((ecs_script_component_t*)stmts[i])->id.eval;
+                ecs_script_component_t *comp =
+                    (ecs_script_component_t*)stmts[i];
+                if (!comp->id.interface) {
+                    id = comp->id.eval;
+                }
             } else if (stmts[i]->kind == EcsAstTag) {
-                id = ((ecs_script_tag_t*)stmts[i])->id.eval;
+                ecs_script_tag_t *tag = (ecs_script_tag_t*)stmts[i];
+                if (!tag->id.interface) {
+                    id = tag->id.eval;
+                }
             }
             if (id) {
                 ecs_vec_append_t(a, &scope->components, ecs_id_t)[0] = id;

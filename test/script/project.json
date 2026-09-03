@@ -3172,6 +3172,8 @@
                 "interface_prop_false_branch",
                 "interface_prop_with_other_components",
                 "interface_prop_default_template",
+                "interface_prop_default_overridden",
+                "interface_prop_default_overridden_from_c",
                 "interface_prop_as_tag",
                 "interface_prop_from_c",
                 "interface_prop_change_template",

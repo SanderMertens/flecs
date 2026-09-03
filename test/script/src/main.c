@@ -3060,6 +3060,8 @@ void TemplateProp_interface_prop_paren_syntax(void);
 void TemplateProp_interface_prop_false_branch(void);
 void TemplateProp_interface_prop_with_other_components(void);
 void TemplateProp_interface_prop_default_template(void);
+void TemplateProp_interface_prop_default_overridden(void);
+void TemplateProp_interface_prop_default_overridden_from_c(void);
 void TemplateProp_interface_prop_as_tag(void);
 void TemplateProp_interface_prop_from_c(void);
 void TemplateProp_interface_prop_change_template(void);
@@ -15100,6 +15102,14 @@ bake_test_case TemplateProp_testcases[] = {
         TemplateProp_interface_prop_default_template
     },
     {
+        "interface_prop_default_overridden",
+        TemplateProp_interface_prop_default_overridden
+    },
+    {
+        "interface_prop_default_overridden_from_c",
+        TemplateProp_interface_prop_default_overridden_from_c
+    },
+    {
         "interface_prop_as_tag",
         TemplateProp_interface_prop_as_tag
     },
@@ -15511,7 +15521,7 @@ static bake_test_suite suites[] = {
         "TemplateProp",
         TemplateProp_setup,
         NULL,
-        90,
+        92,
         TemplateProp_testcases,
         1,
         TemplateProp_params
