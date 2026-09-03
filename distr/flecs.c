@@ -119663,6 +119663,22 @@ static void flecs_script_rng_free(ecs_script_rng_t *rng) {
     }
 }
 
+static uint64_t flecs_script_rng_mix(uint64_t x) {
+    x += 0x9e3779b97f4a7c15;
+    x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9;
+    x = (x ^ (x >> 27)) * 0x94d049bb133111eb;
+    return x ^ (x >> 31);
+}
+
+static void flecs_script_rng_init(ecs_script_rng_t *rng, uint64_t seed) {
+    if (rng->initialized) {
+        return;
+    }
+    rng->x = flecs_script_rng_mix(seed);
+    rng->w = flecs_script_rng_mix(rng->x);
+    rng->initialized = true;
+}
+
 static uint64_t flecs_script_rng_next(ecs_script_rng_t *rng) {
     rng->x *= rng->x;
     rng->x += (rng->w += rng->s);
@@ -119708,10 +119724,7 @@ static void flecs_script_rng_get_float(
     EcsScriptRng *rng = argv[0].ptr;
     ecs_assert(rng->impl != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_script_rng_t *impl = rng->impl;
-    if (!impl->initialized) {
-        impl->x = rng->seed;
-        impl->initialized = true;
-    }
+    flecs_script_rng_init(impl, rng->seed);
     uint64_t x = flecs_script_rng_next(rng->impl);
     double max = *(double*)argv[1].ptr;
     double *r = result->ptr;
@@ -119735,10 +119748,7 @@ static void flecs_script_rng_get_uint(
     EcsScriptRng *rng = argv[0].ptr;
     ecs_assert(rng->impl != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_script_rng_t *impl = rng->impl;
-    if (!impl->initialized) {
-        impl->x = rng->seed;
-        impl->initialized = true;
-    }
+    flecs_script_rng_init(impl, rng->seed);
     uint64_t x = flecs_script_rng_next(rng->impl);
     uint64_t max = *(uint64_t*)argv[1].ptr;
     uint64_t *r = result->ptr;
