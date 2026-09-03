@@ -51763,6 +51763,7 @@ typedef enum ecs_script_ir_op_kind_t {
 
 #define EcsIrStmtAlways      (1u << 0)
 #define EcsIrStmtSkip        (1u << 1)
+#define EcsIrStmtCached      (1u << 2)
 #define EcsIrScopeEntity     (1u << 0)
 #define EcsIrIdDirect        (1u << 1)
 #define EcsIrInPlace         (1u << 0)
@@ -51882,6 +51883,7 @@ struct ecs_script_ir_t {
     ecs_vec_t entries;
     ecs_vec_t fors;
     ecs_vec_t components;
+    ecs_vec_t scope_stmts;
     int32_t root_entry;
 };
 
@@ -51971,6 +51973,7 @@ typedef struct ecs_script_ir_vm_t {
     int32_t frame_count;
     ecs_vec_t strbufs;
     ecs_vec_t cursors;
+    ecs_vec_t pending_marks;
     ecs_entity_t last_entity;
     bool cond;
     bool dirty;
@@ -112818,6 +112821,7 @@ typedef struct ecs_script_ir_compiler_t {
     int32_t reg_floor;
     int32_t reg_max;
     int32_t force_depth;
+    ecs_vec_t *scope_pcs;
     ecs_vec_t mark_scopes;
     ecs_vec_t mark_fors;
 } ecs_script_ir_compiler_t;
@@ -114298,6 +114302,9 @@ static int flecs_irc_compile_stmt(
         op->flags = (uint16_t)(
             (flecs_irc_stmt_always(node) ? EcsIrStmtAlways : 0) |
             (node->skip ? EcsIrStmtSkip : 0));
+        if (c->scope_pcs) {
+            ecs_vec_append_t(NULL, c->scope_pcs, int32_t)[0] = stmt;
+        }
     }
 
     if (node->skip) {
@@ -114364,6 +114371,7 @@ static int flecs_irc_compile_stmt(
             if (!result && n->computed && stmt != -1) {
                 int32_t jump = flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
                 flecs_irc_op(c, stmt)->b = flecs_irc_pc(c);
+                flecs_irc_op(c, stmt)->flags |= EcsIrStmtCached;
                 flecs_irc_emit(c, EcsIrConstCached,
                     n->computed - 1, stmt + 1, 0, node);
                 flecs_irc_op(c, jump)->a = flecs_irc_pc(c);
@@ -114469,6 +114477,10 @@ static int flecs_irc_compile_scope(
     scope->parent = c->scope;
     ecs_script_scope_t *prev = c->scope;
     c->scope = scope;
+    ecs_vec_t stmt_pcs;
+    ecs_vec_init_t(NULL, &stmt_pcs, int32_t, 0);
+    ecs_vec_t *prev_scope_pcs = c->scope_pcs;
+    c->scope_pcs = &stmt_pcs;
 
     int32_t i, count = ecs_vec_count(&scope->stmts);
     for (i = 0; i < count; i ++) {
@@ -114479,12 +114491,25 @@ static int flecs_irc_compile_scope(
         }
         if (flecs_irc_compile_stmt(c, scope, i)) {
             c->scope = prev;
+            c->scope_pcs = prev_scope_pcs;
+            ecs_vec_fini_t(NULL, &stmt_pcs, int32_t);
             return -1;
         }
     }
 
     c->scope = prev;
-    flecs_irc_emit(c, EcsIrScopeLeave, 0, 0, 0, scope);
+    c->scope_pcs = prev_scope_pcs;
+    int32_t leave = flecs_irc_emit(c, EcsIrScopeLeave, 0, 0, 0, scope);
+
+    int32_t first = ecs_vec_count(&c->ir->scope_stmts);
+    int32_t *pcs = ecs_vec_first(&stmt_pcs);
+    int32_t pc_count = ecs_vec_count(&stmt_pcs);
+    for (i = 0; i < pc_count; i ++) {
+        ecs_vec_append_t(NULL, &c->ir->scope_stmts, int32_t)[0] = pcs[i];
+        flecs_irc_op(c, pcs[i])->a = first + i;
+    }
+    ecs_vec_append_t(NULL, &c->ir->scope_stmts, int32_t)[0] = -(leave + 1);
+    ecs_vec_fini_t(NULL, &stmt_pcs, int32_t);
     return 0;
 }
 
@@ -114621,6 +114646,7 @@ static int flecs_irc_compile_entry(
     c->reg_floor = 0;
     c->reg_max = 0;
     c->scope = NULL;
+    c->scope_pcs = NULL;
     c->force_depth = 0;
 
     int result = 0;
@@ -114665,6 +114691,7 @@ static void flecs_irc_init(
     ecs_vec_init_t(NULL, &ir->entries, ecs_script_ir_entry_t, 0);
     ecs_vec_init_t(NULL, &ir->fors, ecs_script_ir_for_t, 0);
     ecs_vec_init_t(NULL, &ir->components, ecs_id_t, 0);
+    ecs_vec_init_t(NULL, &ir->scope_stmts, int32_t, 0);
     ir->root_entry = -1;
 }
 
@@ -114681,6 +114708,7 @@ void flecs_script_ir_free(
     ecs_vec_fini_t(NULL, &ir->entries, ecs_script_ir_entry_t);
     ecs_vec_fini_t(NULL, &ir->fors, ecs_script_ir_for_t);
     ecs_vec_fini_t(NULL, &ir->components, ecs_id_t);
+    ecs_vec_fini_t(NULL, &ir->scope_stmts, int32_t);
     ecs_os_free(ir);
 }
 
@@ -115641,6 +115669,51 @@ static void flecs_ir_frame_leave(
         }
         flecs_ir_expr_release(vm, frame);
         break;
+    }
+}
+
+static void flecs_ir_mark(
+    ecs_script_ir_vm_t *vm,
+    int32_t index);
+
+static void flecs_ir_set_dirty(
+    ecs_script_ir_vm_t *vm)
+{
+    if (vm->dirty) {
+        return;
+    }
+    vm->dirty = true;
+    int32_t i, count = vm->pending_marks.count;
+    const int32_t *marks = vm->pending_marks.array;
+    for (i = 0; i < count; i ++) {
+        flecs_ir_mark(vm, marks[i]);
+    }
+    vm->pending_marks.count = 0;
+}
+
+static inline bool flecs_ir_stmt_runs(
+    const ecs_script_ir_vm_t *vm,
+    const ecs_script_ir_op_t *op)
+{
+    const ecs_script_eval_visitor_t *v = &vm->v;
+    return !(op->flags & EcsIrStmtSkip) && (v->force ||
+        (op->flags & EcsIrStmtAlways) || (op->imm.u64 & v->input) ||
+        (v->internal && (v->internal &
+            ((const ecs_script_node_t*)op->node)->internal)));
+}
+
+static inline void flecs_ir_stmt_skip(
+    ecs_script_ir_vm_t *vm,
+    const ecs_script_ir_op_t *op)
+{
+    flecs_ir_prof(EcsIrProfileStmtSkipped);
+    if (op->c != -1) {
+        const int32_t *slots = ecs_vec_get_t(&vm->ir->slots, int32_t, op->c);
+        if (vm->dirty || slots[1]) {
+            flecs_ir_mark(vm, op->c);
+        } else {
+            ecs_vec_append_t(NULL, &vm->pending_marks, int32_t)[0] = op->c;
+        }
     }
 }
 
@@ -118311,18 +118384,34 @@ static flecs_script_run_status_t flecs_ir_exec(
                 flecs_ir_block_pop(vm);
                 return FlecsScriptRunError;
             }
-            bool run = !(op->flags & EcsIrStmtSkip) && (v->force ||
-                (op->flags & EcsIrStmtAlways) || (op->imm.u64 & v->input) ||
-                (v->internal && (v->internal &
-                    ((const ecs_script_node_t*)op->node)->internal)));
-            if (!run) {
-                flecs_ir_prof(EcsIrProfileStmtSkipped);
-                if (op->c != -1) {
-                    flecs_ir_mark(vm, op->c);
-                }
-                vm->pc = op->b;
-            } else {
+            if (flecs_ir_stmt_runs(vm, op)) {
                 flecs_ir_prof(EcsIrProfileStmtRun);
+                break;
+            }
+            if (op->flags & EcsIrStmtCached) {
+                vm->pc = op->b;
+                break;
+            }
+            flecs_ir_stmt_skip(vm, op);
+            const int32_t *index = ecs_vec_first(&vm->ir->scope_stmts);
+            index += op->a + 1;
+            for (;;) {
+                int32_t next = *index ++;
+                if (next < 0) {
+                    vm->pc = -next - 1;
+                    break;
+                }
+                const ecs_script_ir_op_t *next_op = &ops[next];
+                if (flecs_ir_stmt_runs(vm, next_op)) {
+                    flecs_ir_prof(EcsIrProfileStmtRun);
+                    vm->pc = next + 1;
+                    break;
+                }
+                if (next_op->flags & EcsIrStmtCached) {
+                    vm->pc = next_op->b;
+                    break;
+                }
+                flecs_ir_stmt_skip(vm, next_op);
             }
             break;
         }
@@ -118462,7 +118551,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             break;
         }
         case EcsIrIfEnter: {
-            vm->dirty = true;
+            flecs_ir_set_dirty(vm);
             ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
                 vm, EcsIrFrameIf, pc);
             const ecs_script_node_t *node = op->node;
@@ -118483,7 +118572,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             break;
         }
         case EcsIrForEnter: {
-            vm->dirty = true;
+            flecs_ir_set_dirty(vm);
             flecs_script_for_state_t state;
             int32_t var_index[3];
             int32_t var_count = v->vars->vars.count;
@@ -118989,6 +119078,7 @@ static void flecs_ir_vm_setup(
     ecs_vec_init_t(NULL, &vm->vheap, void*, 0);
     ecs_vec_init_t(NULL, &vm->strbufs, ecs_strbuf_t, 0);
     ecs_vec_init_t(NULL, &vm->cursors, ecs_meta_cursor_t, 0);
+    ecs_vec_init_t(NULL, &vm->pending_marks, int32_t, 0);
     flecs_ir_vm_reset(vm, ir);
 }
 
@@ -119002,6 +119092,7 @@ static void flecs_ir_vm_clear(
     }
     vm->strbufs.count = 0;
     vm->cursors.count = 0;
+    vm->pending_marks.count = 0;
     count = vm->heap.count;
     void **heap = vm->heap.array;
     for (i = 0; i < count; i ++) {
@@ -119030,6 +119121,7 @@ static void flecs_ir_vm_teardown(
     flecs_ir_vm_clear(vm);
     ecs_vec_fini_t(NULL, &vm->strbufs, ecs_strbuf_t);
     ecs_vec_fini_t(NULL, &vm->cursors, ecs_meta_cursor_t);
+    ecs_vec_fini_t(NULL, &vm->pending_marks, int32_t);
     ecs_vec_fini_t(NULL, &vm->heap, void*);
     ecs_vec_fini_t(NULL, &vm->owned, flecs_ir_owned_t);
     ecs_os_free(vm->scratch);
@@ -119211,6 +119303,7 @@ flecs_script_run_status_t flecs_script_ir_vm_run(
         vm->reg_base = 0;
         vm->pc = entry->pc;
         vm->last_entity = 0;
+        vm->pending_marks.count = 0;
         flecs_ir_regs_ensure(vm, entry->reg_count);
     }
     return flecs_ir_exec(vm, 0);
