@@ -43486,18 +43486,27 @@ void flecs_table_delete(
     } else {
         /* If table has component destructors, invoke */
         if ((table->flags & (EcsTableHasDtors | EcsTableHasMove))) {
+            /* Invoke on_remove hooks for all columns before moving the last
+             * row into the deleted row. A hook may read other columns of the
+             * deleted entity (the identifier hook reads EcsParent to find the
+             * name index), which must still hold the deleted entity's data. */
+            if (destruct) {
+                for (i = 0; i < column_count; i ++) {
+                    ecs_column_t *column = &columns[i];
+                    ecs_iter_action_t on_remove = column->ti->hooks.on_remove;
+                    if (on_remove) {
+                        flecs_table_invoke_hook(world, table, on_remove, 
+                            EcsOnRemove, column, &entity_to_delete, row, 1);
+                    }
+                }
+            }
+
             for (i = 0; i < column_count; i ++) {
                 ecs_column_t *column = &columns[i];
                 ecs_type_info_t *ti = column->ti;
                 ecs_size_t size = ti->size;
                 void *dst = ECS_ELEM(column->data, size, row);
                 void *src = ECS_ELEM(column->data, size, count);
-
-                ecs_iter_action_t on_remove = ti->hooks.on_remove;
-                if (destruct && on_remove) {
-                    flecs_table_invoke_hook(world, table, on_remove, 
-                        EcsOnRemove, column, &entity_to_delete, row, 1);
-                }
 
                 /* If neither move nor move_ctor are set, this indicates that 
                  * non-destructive move semantics are not supported for this 

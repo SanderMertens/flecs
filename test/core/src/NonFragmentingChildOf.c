@@ -7683,3 +7683,138 @@ void NonFragmentingChildOf_new_w_parent_w_name_readonly_new_table(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_delete_named_child_not_last_row(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2" });
+    ecs_entity_t a = ecs_new_w_parent(world, p1, "a");
+    ecs_entity_t b = ecs_new_w_parent(world, p2, "b");
+    ecs_entity_t c = ecs_new_w_parent(world, p1, "c");
+    test_assert(a && b && c);
+    test_assert(ecs_get_table(world, a) == ecs_get_table(world, b));
+    test_assert(ecs_get_table(world, b) == ecs_get_table(world, c));
+    test_uint(ecs_lookup(world, "p1.a"), a);
+    test_uint(ecs_lookup(world, "p2.b"), b);
+    test_uint(ecs_lookup(world, "p1.c"), c);
+
+    ecs_delete(world, b);
+    test_assert(!ecs_is_alive(world, b));
+    test_uint(ecs_lookup(world, "p2.b"), 0);
+    test_uint(ecs_lookup(world, "p1.a"), a);
+    test_uint(ecs_lookup(world, "p1.c"), c);
+    test_str(ecs_get_name(world, c), "c");
+
+    ecs_entity_t b2 = ecs_new_w_parent(world, p2, "b");
+    test_assert(b2 != 0);
+    test_assert(b2 != b);
+    test_assert(ecs_is_alive(world, b2));
+    test_uint(ecs_lookup(world, "p2.b"), b2);
+
+    ecs_delete(world, a);
+    test_uint(ecs_lookup(world, "p1.a"), 0);
+    test_uint(ecs_lookup(world, "p1.c"), c);
+    test_uint(ecs_lookup(world, "p2.b"), b2);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_delete_parent_w_named_children(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2" });
+    ecs_entity_t a = ecs_new_w_parent(world, p1, "a");
+    ecs_entity_t x = ecs_new_w_parent(world, p2, "x");
+    ecs_entity_t b = ecs_new_w_parent(world, p1, "b");
+    ecs_entity_t y = ecs_new_w_parent(world, p2, "y");
+    test_assert(a && x && b && y);
+
+    ecs_delete(world, p1);
+    test_assert(!ecs_is_alive(world, p1));
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+    test_assert(ecs_is_alive(world, x));
+    test_assert(ecs_is_alive(world, y));
+    test_uint(ecs_lookup(world, "p2.x"), x);
+    test_uint(ecs_lookup(world, "p2.y"), y);
+
+    ecs_entity_t x2 = ecs_new_w_parent(world, p2, "x");
+    test_uint(x2, x);
+    ecs_entity_t z = ecs_new_w_parent(world, p2, "z");
+    test_uint(ecs_lookup(world, "p2.z"), z);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_fini_w_named_children(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parents[16];
+    int32_t i, j;
+    for (i = 0; i < 16; i ++) {
+        char name[8];
+        ecs_os_snprintf(name, 8, "p%d", i);
+        parents[i] = ecs_entity(world, { .name = name });
+    }
+    for (j = 0; j < 4; j ++) {
+        char name[8];
+        ecs_os_snprintf(name, 8, "c%d", j);
+        for (i = 0; i < 16; i ++) {
+            ecs_entity_t c = ecs_new_w_parent(world, parents[i], name);
+            test_assert(c != 0);
+        }
+    }
+    test_uint(ecs_lookup(world, "p3.c2"),
+        ecs_lookup_child(world, parents[3], "c2"));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_delete_parents_w_named_children(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parents[16];
+    ecs_entity_t children[16][4];
+    int32_t i, j;
+    for (i = 0; i < 16; i ++) {
+        char name[8];
+        ecs_os_snprintf(name, 8, "p%d", i);
+        parents[i] = ecs_entity(world, { .name = name });
+    }
+    for (j = 0; j < 4; j ++) {
+        char name[8];
+        ecs_os_snprintf(name, 8, "c%d", j);
+        for (i = 0; i < 16; i ++) {
+            children[i][j] = ecs_new_w_parent(world, parents[i], name);
+            test_assert(children[i][j] != 0);
+        }
+    }
+
+    for (i = 0; i < 16; i += 2) {
+        ecs_delete(world, parents[i]);
+    }
+
+    for (i = 0; i < 16; i ++) {
+        for (j = 0; j < 4; j ++) {
+            char name[8];
+            ecs_os_snprintf(name, 8, "c%d", j);
+            if (i & 1) {
+                test_assert(ecs_is_alive(world, children[i][j]));
+                test_uint(ecs_lookup_child(world, parents[i], name),
+                    children[i][j]);
+            } else {
+                test_assert(!ecs_is_alive(world, children[i][j]));
+            }
+        }
+    }
+
+    for (i = 1; i < 16; i += 2) {
+        ecs_entity_t c = ecs_new_w_parent(world, parents[i], "c9");
+        test_uint(ecs_lookup_child(world, parents[i], "c9"), c);
+        test_uint(ecs_lookup_child(world, parents[i], "c0"), children[i][0]);
+    }
+
+    ecs_fini(world);
+}
