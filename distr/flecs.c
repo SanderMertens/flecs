@@ -124335,6 +124335,7 @@ static int flecs_script_template_inherit(
             base_template, i);
         member->interface = flecs_script_template_prop_interface(
             base_template, i);
+        member->diff_ti = NULL;
         if (member->interface) {
             template->has_interface_members = true;
         }
