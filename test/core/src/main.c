@@ -883,6 +883,10 @@ void NonFragmentingChildOf_new_w_parent_from_stage(void);
 void NonFragmentingChildOf_new_w_parent_w_name_from_stage(void);
 void NonFragmentingChildOf_new_w_parent_readonly_new_table(void);
 void NonFragmentingChildOf_new_w_parent_w_name_readonly_new_table(void);
+void NonFragmentingChildOf_delete_named_child_not_last_row(void);
+void NonFragmentingChildOf_delete_parent_w_named_children(void);
+void NonFragmentingChildOf_fini_w_named_children(void);
+void NonFragmentingChildOf_delete_parents_w_named_children(void);
 void NonFragmentingChildOf_prefab_instance_w_dont_fragment_tag(void);
 void NonFragmentingChildOf_prefab_instance_w_dont_fragment_component(void);
 void NonFragmentingChildOf_prefab_instance_w_inherit_dont_fragment_component(void);
@@ -6865,6 +6869,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "new_w_parent_w_name_readonly_new_table",
         NonFragmentingChildOf_new_w_parent_w_name_readonly_new_table
+    },
+    {
+        "delete_named_child_not_last_row",
+        NonFragmentingChildOf_delete_named_child_not_last_row
+    },
+    {
+        "delete_parent_w_named_children",
+        NonFragmentingChildOf_delete_parent_w_named_children
+    },
+    {
+        "fini_w_named_children",
+        NonFragmentingChildOf_fini_w_named_children
+    },
+    {
+        "delete_parents_w_named_children",
+        NonFragmentingChildOf_delete_parents_w_named_children
     },
     {
         "prefab_instance_w_dont_fragment_tag",
@@ -16950,7 +16970,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        282,
+        286,
         NonFragmentingChildOf_testcases
     },
     {
