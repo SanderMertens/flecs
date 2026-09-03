@@ -480,6 +480,89 @@ void TemplateProp_interface_prop_default_template(void) {
     ecs_fini(world);
 }
 
+void TemplateProp_interface_prop_default_overridden(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LIGHT_TEMPLATES
+    LINE "template OtherStreetLight : StreetLight {"
+    LINE "  prop scale: f32 = 7"
+    LINE "}"
+    LINE "template Road {"
+    LINE "  prop street_light : template StreetLight = MyStreetLight"
+    LINE "  lamp { street_light: {on_off: true} }"
+    LINE "}"
+    LINE "e { Road: {street_light: OtherStreetLight} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "e.lamp");
+    test_assert(lamp != 0);
+
+    ecs_entity_t other = ecs_lookup(world, "OtherStreetLight");
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    test_assert(other != 0 && light != 0);
+
+    const MyStreetLightValue *v = ecs_get_id(world, lamp, other);
+    test_assert(v != NULL);
+    test_bool(v->on_off, true);
+    test_flt(v->scale, 7);
+
+    test_assert(!ecs_has_id(world, lamp, light));
+
+    ecs_fini(world);
+}
+
+void TemplateProp_interface_prop_default_overridden_from_c(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LIGHT_TEMPLATES
+    LINE "template OtherStreetLight : StreetLight {"
+    LINE "  prop scale: f32 = 7"
+    LINE "}"
+    LINE "template Road {"
+    LINE "  prop street_light : template StreetLight = MyStreetLight"
+    LINE "  prop width: f32 = 3"
+    LINE "  lamp { street_light: {on_off: true} }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t road = ecs_lookup(world, "Road");
+    ecs_entity_t other = ecs_lookup(world, "OtherStreetLight");
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    test_assert(road != 0 && other != 0 && light != 0);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, road);
+    test_assert(ti != NULL);
+
+    void *value = ecs_os_calloc(ti->size);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, road, value);
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "street_light"), 0);
+    test_int(ecs_meta_set_entity(&cur, other), 0);
+    test_int(ecs_meta_member(&cur, "width"), 0);
+    test_int(ecs_meta_set_float(&cur, 5), 0);
+    test_int(ecs_meta_pop(&cur), 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set_id(world, e, road, (size_t)ti->size, value);
+    ecs_os_free(value);
+
+    ecs_entity_t lamp = ecs_lookup(world, "e.lamp");
+    test_assert(lamp != 0);
+
+    const MyStreetLightValue *v = ecs_get_id(world, lamp, other);
+    test_assert(v != NULL);
+    test_bool(v->on_off, true);
+    test_flt(v->scale, 7);
+
+    test_assert(!ecs_has_id(world, lamp, light));
+
+    ecs_fini(world);
+}
+
 void TemplateProp_interface_prop_as_tag(void) {
     ecs_world_t *world = ecs_init();
 

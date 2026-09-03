@@ -31104,7 +31104,7 @@ void flecs_table_delete(
                     ecs_column_t *column = &columns[i];
                     ecs_iter_action_t on_remove = column->ti->hooks.on_remove;
                     if (on_remove) {
-                        flecs_table_invoke_hook(world, table, on_remove, 
+                        flecs_table_invoke_hook(world, table, on_remove,
                             EcsOnRemove, column, &entity_to_delete, row, 1);
                     }
                 }
