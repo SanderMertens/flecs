@@ -104,6 +104,7 @@ typedef enum ecs_script_ir_op_kind_t {
 
 #define EcsIrStmtAlways      (1u << 0)
 #define EcsIrStmtSkip        (1u << 1)
+#define EcsIrStmtCached      (1u << 2)
 #define EcsIrScopeEntity     (1u << 0)
 #define EcsIrIdDirect        (1u << 1)
 #define EcsIrInPlace         (1u << 0)
@@ -223,6 +224,7 @@ struct ecs_script_ir_t {
     ecs_vec_t entries;
     ecs_vec_t fors;
     ecs_vec_t components;
+    ecs_vec_t scope_stmts;
     int32_t root_entry;
 };
 
@@ -312,6 +314,7 @@ typedef struct ecs_script_ir_vm_t {
     int32_t frame_count;
     ecs_vec_t strbufs;
     ecs_vec_t cursors;
+    ecs_vec_t pending_marks;
     ecs_entity_t last_entity;
     bool cond;
     bool dirty;
