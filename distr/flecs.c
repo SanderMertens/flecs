@@ -115826,6 +115826,18 @@ static int flecs_ir_id_resolve(
     return 0;
 }
 
+static inline ecs_entity_t flecs_ir_symbol_entity(
+    const ecs_script_eval_visitor_t *v,
+    int32_t slot)
+{
+    if (v->symbol_slots && slot >= v->symbol_offset) {
+        return ((ecs_script_symbol_slot_t*)v->symbol_slots->array)
+            [slot - v->symbol_offset].entity;
+    }
+    return ((ecs_script_symbol_slot_t*)v->base.script->symbol_slots.array)
+        [slot].entity;
+}
+
 static inline int flecs_ir_id_get(
     ecs_script_ir_vm_t *vm,
     const ecs_script_ir_id_t *desc,
@@ -115836,14 +115848,24 @@ static inline int flecs_ir_id_get(
         *out = desc->eval;
         return 0;
     }
-    if (desc->first_symbol != -1 && !desc->has_second &&
-        desc->first_reg == -1 && desc->first_sp == -1)
-    {
-        ecs_entity_t first = flecs_script_symbol_entity(
-            &vm->v, desc->first_symbol);
+    if (desc->first_reg == -1 && desc->first_sp == -1) {
+        ecs_entity_t first = desc->first_symbol != -1
+            ? flecs_ir_symbol_entity(&vm->v, desc->first_symbol)
+            : desc->first_eval;
         if (first && first != EcsWildcard && first != EcsAny) {
-            *out = desc->flag | first;
-            return 0;
+            if (!desc->has_second) {
+                *out = desc->flag | first;
+                return 0;
+            }
+            if (desc->second_reg == -1 && desc->second_sp == -1) {
+                ecs_entity_t second = desc->second_symbol != -1
+                    ? flecs_ir_symbol_entity(&vm->v, desc->second_symbol)
+                    : desc->second_eval;
+                if (second && second != EcsWildcard && second != EcsAny) {
+                    *out = desc->flag | ecs_pair(first, second);
+                    return 0;
+                }
+            }
         }
     }
     return flecs_ir_id_resolve(vm, desc, node, out);
