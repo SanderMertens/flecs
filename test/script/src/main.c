@@ -1147,6 +1147,10 @@ void Template_template_base_w_inline_array_member_reassign(void);
 void Template_template_base_w_inline_array_member_reassign_no_index(void);
 void Template_template_instantiates_itself(void);
 void Template_template_instantiates_itself_w_stop_condition(void);
+void Template_prop_as_isa_pair_target(void);
+void Template_prop_as_pair_target(void);
+void Template_prop_as_pair_target_update(void);
+void Template_prop_as_component(void);
 
 // Testsuite 'Mut'
 void Mut_setup(void);
@@ -7603,6 +7607,22 @@ bake_test_case Template_testcases[] = {
     {
         "template_instantiates_itself_w_stop_condition",
         Template_template_instantiates_itself_w_stop_condition
+    },
+    {
+        "prop_as_isa_pair_target",
+        Template_prop_as_isa_pair_target
+    },
+    {
+        "prop_as_pair_target",
+        Template_prop_as_pair_target
+    },
+    {
+        "prop_as_pair_target_update",
+        Template_prop_as_pair_target_update
+    },
+    {
+        "prop_as_component",
+        Template_prop_as_component
     }
 };
 
@@ -15422,7 +15442,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        163,
+        167,
         Template_testcases,
         1,
         Template_params
