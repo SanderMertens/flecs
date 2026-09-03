@@ -19,6 +19,10 @@
             "testcases": [
                 "2_components_same_line_w_semicolon",
                 "2_entities_same_line_w_semicolon",
+                "semicolon_after_scope_close",
+                "semicolon_after_scope_close_in_scope",
+                "semicolon_after_if_scope",
+                "semicolon_after_with_scope",
                 "null",
                 "empty",
                 "space",

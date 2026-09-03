@@ -21162,3 +21162,71 @@ void Eval_string_interpolation_of_scalar_types(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Eval_semicolon_after_scope_close(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {}; f {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e") != 0);
+    test_assert(ecs_lookup(world, "f") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_semicolon_after_scope_close_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "p {"
+    LINE "  e {}; f {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "p.e") != 0);
+    test_assert(ecs_lookup(world, "p.f") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_semicolon_after_if_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    const char *expr =
+    HEAD "if true { e { Tag } }; f {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Tag));
+    test_assert(ecs_lookup(world, "f") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_semicolon_after_with_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    const char *expr =
+    HEAD "with Tag { e {} }; f {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t f = ecs_lookup(world, "f");
+    test_assert(e != 0);
+    test_assert(f != 0);
+    test_assert(ecs_has(world, e, Tag));
+    test_assert(!ecs_has(world, f, Tag));
+
+    ecs_fini(world);
+}
