@@ -102983,12 +102983,12 @@ int flecs_script_type_scope(
             if (stmts[i]->kind == EcsAstComponent) {
                 ecs_script_component_t *comp =
                     (ecs_script_component_t*)stmts[i];
-                if (!comp->id.interface) {
+                if (!comp->id.interface && !comp->id.dynamic) {
                     id = comp->id.eval;
                 }
             } else if (stmts[i]->kind == EcsAstTag) {
                 ecs_script_tag_t *tag = (ecs_script_tag_t*)stmts[i];
-                if (!tag->id.interface) {
+                if (!tag->id.interface && !tag->id.dynamic) {
                     id = tag->id.eval;
                 }
             }

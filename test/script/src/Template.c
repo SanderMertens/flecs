@@ -7087,3 +7087,121 @@ void Template_component_on_set_observer_any(void) {
 
     ecs_fini(world);
 }
+
+void Template_prop_as_isa_pair_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "prefab Concrete {}"
+    LINE "prefab Brick {}"
+    LINE "template Building {"
+    LINE "  prop wall: entity = Concrete"
+    LINE "  mass { (IsA, wall) }"
+    LINE "}"
+    LINE "Building b(wall: Brick)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t concrete = ecs_lookup(world, "Concrete");
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    ecs_entity_t mass = ecs_lookup(world, "b.mass");
+    test_assert(concrete != 0);
+    test_assert(brick != 0);
+    test_assert(mass != 0);
+
+    test_assert(ecs_has_pair(world, mass, EcsIsA, brick));
+    test_assert(!ecs_has_pair(world, mass, EcsIsA, concrete));
+
+    ecs_fini(world);
+}
+
+void Template_prop_as_pair_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    HEAD "Concrete {}"
+    LINE "Brick {}"
+    LINE "template Building {"
+    LINE "  prop wall: entity = Concrete"
+    LINE "  mass { (Rel, wall) }"
+    LINE "}"
+    LINE "Building b(wall: Brick)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t concrete = ecs_lookup(world, "Concrete");
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    ecs_entity_t mass = ecs_lookup(world, "b.mass");
+    test_assert(concrete != 0);
+    test_assert(brick != 0);
+    test_assert(mass != 0);
+
+    test_assert(ecs_has_pair(world, mass, Rel, brick));
+    test_assert(!ecs_has_pair(world, mass, Rel, concrete));
+
+    ecs_fini(world);
+}
+
+void Template_prop_as_pair_target_update(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "prefab Concrete {}"
+    LINE "prefab Brick {}"
+    LINE "template Building {"
+    LINE "  prop wall: entity = Concrete"
+    LINE "  mass { (IsA, wall) }"
+    LINE "}"
+    LINE "Building b(wall: Brick)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t concrete = ecs_lookup(world, "Concrete");
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    ecs_entity_t mass = ecs_lookup(world, "b.mass");
+    test_assert(concrete != 0);
+    test_assert(brick != 0);
+    test_assert(mass != 0);
+
+    test_assert(ecs_has_pair(world, mass, EcsIsA, brick));
+    test_assert(!ecs_has_pair(world, mass, EcsIsA, concrete));
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "b { Building: {wall: Concrete} }", &ir_desc, NULL) == 0);
+
+    mass = ecs_lookup(world, "b.mass");
+    test_assert(mass != 0);
+    test_assert(ecs_has_pair(world, mass, EcsIsA, concrete));
+    test_assert(!ecs_has_pair(world, mass, EcsIsA, brick));
+
+    ecs_fini(world);
+}
+
+void Template_prop_as_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Concrete {}"
+    LINE "Brick {}"
+    LINE "template Building {"
+    LINE "  prop wall: entity = Concrete"
+    LINE "  mass { wall }"
+    LINE "}"
+    LINE "Building b(wall: Brick)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t concrete = ecs_lookup(world, "Concrete");
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    ecs_entity_t mass = ecs_lookup(world, "b.mass");
+    test_assert(concrete != 0);
+    test_assert(brick != 0);
+    test_assert(mass != 0);
+
+    test_assert(ecs_has_id(world, mass, brick));
+    test_assert(!ecs_has_id(world, mass, concrete));
+
+    ecs_fini(world);
+}

@@ -1178,7 +1178,11 @@
                 "template_base_w_inline_array_member_reassign",
                 "template_base_w_inline_array_member_reassign_no_index",
                 "template_instantiates_itself",
-                "template_instantiates_itself_w_stop_condition"
+                "template_instantiates_itself_w_stop_condition",
+                "prop_as_isa_pair_target",
+                "prop_as_pair_target",
+                "prop_as_pair_target_update",
+                "prop_as_component"
             ]
         }, {
             "id": "Mut",
