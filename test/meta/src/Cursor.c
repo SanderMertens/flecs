@@ -3440,6 +3440,215 @@ void Cursor_vector_struct_3(void) {
     ecs_fini(world);
 }
 
+typedef struct {
+    char *name;
+    int32_t value;
+} StringElem;
+
+static int string_elem_ctor_count = 0;
+static int string_elem_dtor_count = 0;
+
+static void StringElem_ctor(
+    void *ptr, int32_t count, const ecs_type_info_t *ti)
+{
+    (void)ti;
+    ecs_os_memset(ptr, 0, ECS_SIZEOF(StringElem) * count);
+    string_elem_ctor_count += count;
+}
+
+static void StringElem_dtor(
+    void *ptr, int32_t count, const ecs_type_info_t *ti)
+{
+    (void)ti;
+    StringElem *elems = ptr;
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_os_free(elems[i].name);
+        elems[i].name = NULL;
+        string_elem_dtor_count ++;
+    }
+}
+
+static ecs_entity_t define_StringElem(ecs_world_t *world) {
+    ECS_COMPONENT(world, StringElem);
+
+    ecs_struct(world, {
+        .entity = ecs_id(StringElem),
+        .members = {
+            {"name", ecs_id(ecs_string_t)},
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    return ecs_id(StringElem);
+}
+
+static ecs_entity_t define_StringElem_vector(ecs_world_t *world, ecs_entity_t elem) {
+    return ecs_vector(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .type = elem
+    });
+}
+
+static void fill_string_vector(
+    ecs_world_t *world,
+    ecs_entity_t t,
+    ecs_vec_t *value,
+    int32_t count,
+    bool set_value)
+{
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, value);
+    test_int(0, ecs_meta_push(&cur));
+
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        char name[32];
+        ecs_os_snprintf(name, sizeof(name), "elem_%d", i);
+
+        if (i) {
+            test_int(0, ecs_meta_next(&cur));
+        }
+
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_set_string(&cur, name));
+        if (set_value) {
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, i));
+        }
+        test_int(0, ecs_meta_pop(&cur));
+    }
+
+    test_int(0, ecs_meta_pop(&cur));
+}
+
+static void verify_string_vector(
+    ecs_vec_t *value, int32_t count, bool set_value)
+{
+    test_int(value->count, count);
+    test_assert(value->array != NULL);
+
+    StringElem *elems = value->array;
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        char name[32];
+        ecs_os_snprintf(name, sizeof(name), "elem_%d", i);
+        test_str(elems[i].name, name);
+        test_int(elems[i].value, set_value ? i : 0);
+    }
+}
+
+static void free_string_vector(ecs_vec_t *value) {
+    StringElem *elems = value->array;
+    int32_t i;
+    for (i = 0; i < value->count; i ++) {
+        ecs_os_free(elems[i].name);
+        elems[i].name = NULL;
+    }
+}
+
+void Cursor_vector_struct_w_string_grow(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t elem = define_StringElem(world);
+    ecs_entity_t t = define_StringElem_vector(world, elem);
+
+    ecs_vec_t value = {0};
+
+    fill_string_vector(world, t, &value, 200, false);
+    verify_string_vector(&value, 200, false);
+
+    free_string_vector(&value);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_vector_struct_w_string_grow_after_shrink(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t elem = define_StringElem(world);
+    ecs_entity_t t = define_StringElem_vector(world, elem);
+
+    ecs_vec_t value = {0};
+
+    fill_string_vector(world, t, &value, 200, true);
+    verify_string_vector(&value, 200, true);
+    free_string_vector(&value);
+
+    fill_string_vector(world, t, &value, 50, true);
+    verify_string_vector(&value, 50, true);
+    free_string_vector(&value);
+
+    fill_string_vector(world, t, &value, 300, true);
+    verify_string_vector(&value, 300, true);
+    free_string_vector(&value);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_vector_struct_w_ctor_grow(void) {
+    ecs_world_t *world = ecs_init();
+
+    string_elem_ctor_count = 0;
+
+    ecs_entity_t elem = define_StringElem(world);
+
+    ecs_set_hooks_id(world, elem, &(ecs_type_hooks_t){
+        .ctor = StringElem_ctor
+    });
+
+    ecs_entity_t t = define_StringElem_vector(world, elem);
+
+    ecs_vec_t value = {0};
+
+    fill_string_vector(world, t, &value, 200, true);
+    verify_string_vector(&value, 200, true);
+    test_int(string_elem_ctor_count, 200);
+
+    free_string_vector(&value);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_vector_struct_w_dtor_grow_shrink(void) {
+    ecs_world_t *world = ecs_init();
+
+    string_elem_ctor_count = 0;
+    string_elem_dtor_count = 0;
+
+    ecs_entity_t elem = define_StringElem(world);
+
+    ecs_set_hooks_id(world, elem, &(ecs_type_hooks_t){
+        .ctor = StringElem_ctor,
+        .dtor = StringElem_dtor
+    });
+
+    ecs_entity_t t = define_StringElem_vector(world, elem);
+
+    ecs_vec_t value = {0};
+
+    fill_string_vector(world, t, &value, 200, true);
+    verify_string_vector(&value, 200, true);
+    test_int(string_elem_ctor_count, 200);
+    test_int(string_elem_dtor_count, 0);
+
+    fill_string_vector(world, t, &value, 50, true);
+    verify_string_vector(&value, 50, true);
+    test_int(string_elem_dtor_count, 150);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, elem);
+    ti->hooks.dtor(value.array, value.count, ti);
+    test_int(string_elem_dtor_count, 200);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+
 void Cursor_vector_move_primitive(void) {
     ecs_world_t *world = ecs_init();
 
