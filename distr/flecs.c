@@ -123952,12 +123952,14 @@ static void flecs_script_template_on_replace(
             ecs_size_t size = template_member->diff_size;
             int32_t e, elem_count = template_member->diff_count;
 
+            if (!ecs_os_memcmp(ECS_OFFSET(old_ptr, offset),
+                ECS_OFFSET(new_ptr, offset), size * elem_count))
+            {
+                continue;
+            }
+
             if (template_member->diff_pod) {
-                if (ecs_os_memcmp(ECS_OFFSET(old_ptr, offset),
-                    ECS_OFFSET(new_ptr, offset), size * elem_count))
-                {
-                    root->changed |= template_member->input;
-                }
+                root->changed |= template_member->input;
                 continue;
             }
 
