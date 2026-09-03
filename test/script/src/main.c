@@ -724,6 +724,7 @@ void Collection_vector_index_elem(void);
 void Collection_vector_struct_elem(void);
 void Collection_vector_member_elem_w_member_index(void);
 void Collection_vector_string_elem(void);
+void Collection_vector_member_w_string_elems(void);
 void Collection_vector_empty(void);
 void Collection_vector_nested(void);
 void Collection_vector_too_many_vars(void);
@@ -5955,6 +5956,10 @@ bake_test_case Collection_testcases[] = {
     {
         "vector_string_elem",
         Collection_vector_string_elem
+    },
+    {
+        "vector_member_w_string_elems",
+        Collection_vector_member_w_string_elems
     },
     {
         "vector_empty",
@@ -15426,7 +15431,7 @@ static bake_test_suite suites[] = {
         "Collection",
         Collection_setup,
         NULL,
-        101,
+        102,
         Collection_testcases,
         1,
         Collection_params

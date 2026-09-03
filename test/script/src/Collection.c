@@ -3037,3 +3037,92 @@ void Collection_map_key_index_elem_w_var_in_body(void) {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    char *name;
+    ecs_i32_t value;
+} StringElem;
+
+static int string_elem_ctor_count = 0;
+
+static void StringElem_ctor(
+    void *ptr, int32_t count, const ecs_type_info_t *ti)
+{
+    (void)ti;
+    ecs_os_memset(ptr, 0, ECS_SIZEOF(StringElem) * count);
+    string_elem_ctor_count += count;
+}
+
+void Collection_vector_member_w_string_elems(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_vec_t items;
+    } Params;
+
+    string_elem_ctor_count = 0;
+
+    ECS_COMPONENT(world, StringElem);
+
+    ecs_struct(world, {
+        .entity = ecs_id(StringElem),
+        .members = {
+            {"name", ecs_id(ecs_string_t)},
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_set_hooks(world, StringElem, {
+        .ctor = StringElem_ctor
+    });
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Elems" }),
+        .type = ecs_id(StringElem)
+    });
+
+    ecs_entity_t params = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Params" }),
+        .members = {
+            {"items", vec}
+        }
+    });
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_strbuf_appendlit(&buf, "e {\n  Params: {items: [");
+
+    int32_t i;
+    for (i = 0; i < 200; i ++) {
+        if (i) {
+            ecs_strbuf_appendlit(&buf, ", ");
+        }
+        ecs_strbuf_append(&buf, "{name: \"elem_%d\", value: %d}", i, i);
+    }
+
+    ecs_strbuf_appendlit(&buf, "]}\n}\n");
+
+    char *expr = ecs_strbuf_get(&buf);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    ecs_os_free(expr);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Params *p = ecs_get_id(world, e, params);
+    test_assert(p != NULL);
+    test_int(ecs_vec_count(&p->items), 200);
+
+    const StringElem *elems = ecs_vec_first(&p->items);
+    test_assert(elems != NULL);
+
+    for (i = 0; i < 200; i ++) {
+        char name[32];
+        ecs_os_snprintf(name, sizeof(name), "elem_%d", i);
+        test_str(elems[i].name, name);
+        test_int(elems[i].value, i);
+    }
+
+    test_assert(string_elem_ctor_count >= 200);
+
+    ecs_fini(world);
+}

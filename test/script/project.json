@@ -736,6 +736,7 @@
                 "vector_struct_elem",
                 "vector_member_elem_w_member_index",
                 "vector_string_elem",
+                "vector_member_w_string_elems",
                 "vector_empty",
                 "vector_nested",
                 "vector_too_many_vars",

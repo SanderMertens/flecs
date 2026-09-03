@@ -495,6 +495,10 @@ void Cursor_vector_i32_1_next(void);
 void Cursor_vector_i32_3(void);
 void Cursor_vector_i32_empty_after_3(void);
 void Cursor_vector_struct_3(void);
+void Cursor_vector_struct_w_string_grow(void);
+void Cursor_vector_struct_w_string_grow_after_shrink(void);
+void Cursor_vector_struct_w_ctor_grow(void);
+void Cursor_vector_struct_w_dtor_grow_shrink(void);
 void Cursor_vector_move_primitive(void);
 void Cursor_vector_move_struct(void);
 void Cursor_struct_w_vector_i32_3(void);
@@ -3417,6 +3421,22 @@ bake_test_case Cursor_testcases[] = {
     {
         "vector_struct_3",
         Cursor_vector_struct_3
+    },
+    {
+        "vector_struct_w_string_grow",
+        Cursor_vector_struct_w_string_grow
+    },
+    {
+        "vector_struct_w_string_grow_after_shrink",
+        Cursor_vector_struct_w_string_grow_after_shrink
+    },
+    {
+        "vector_struct_w_ctor_grow",
+        Cursor_vector_struct_w_ctor_grow
+    },
+    {
+        "vector_struct_w_dtor_grow_shrink",
+        Cursor_vector_struct_w_dtor_grow_shrink
     },
     {
         "vector_move_primitive",
@@ -7560,7 +7580,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        281,
+        285,
         Cursor_testcases
     },
     {

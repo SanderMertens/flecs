@@ -34599,7 +34599,12 @@ void ecs_vec_set_count_w_type_info(
         return;
     }
 
-    if (!ti->hooks.ctor_move_dtor) {
+    bool has_ctor = ti->hooks.ctor != NULL &&
+        !(ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL);
+    bool has_dtor = ti->hooks.dtor != NULL &&
+        !(ti->hooks.flags & ECS_TYPE_HOOK_DTOR_ILLEGAL);
+
+    if (!ti->hooks.ctor_move_dtor && !has_ctor && !has_dtor) {
         /* Trivial type, use regular set_count */
         ecs_vec_set_count(allocator, v, size, elem_count);
         return;
