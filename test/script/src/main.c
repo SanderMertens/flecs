@@ -1151,6 +1151,10 @@ void Template_prop_as_isa_pair_target(void);
 void Template_prop_as_pair_target(void);
 void Template_prop_as_pair_target_update(void);
 void Template_prop_as_component(void);
+void Template_instance_w_props_scope_same_line(void);
+void Template_instance_w_props_scope_newline(void);
+void Template_instance_wo_props_scope_newline(void);
+void Template_anonymous_instance_w_props_scope_newline(void);
 
 // Testsuite 'Mut'
 void Mut_setup(void);
@@ -7623,6 +7627,22 @@ bake_test_case Template_testcases[] = {
     {
         "prop_as_component",
         Template_prop_as_component
+    },
+    {
+        "instance_w_props_scope_same_line",
+        Template_instance_w_props_scope_same_line
+    },
+    {
+        "instance_w_props_scope_newline",
+        Template_instance_w_props_scope_newline
+    },
+    {
+        "instance_wo_props_scope_newline",
+        Template_instance_wo_props_scope_newline
+    },
+    {
+        "anonymous_instance_w_props_scope_newline",
+        Template_anonymous_instance_w_props_scope_newline
     }
 };
 
@@ -15442,7 +15462,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        167,
+        171,
         Template_testcases,
         1,
         Template_params

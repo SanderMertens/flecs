@@ -7205,3 +7205,157 @@ void Template_prop_as_component(void) {
 
     ecs_fini(world);
 }
+
+void Template_instance_w_props_scope_same_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Building {"
+    LINE "  prop stories: i32 = 1"
+    LINE "}"
+    LINE "Building x(stories: 3) {"
+    LINE "  Position: {1, 2}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Template_instance_w_props_scope_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Building {"
+    LINE "  prop stories: i32 = 1"
+    LINE "}"
+    LINE "Building x(stories: 3)"
+    LINE "{"
+    LINE "  Position: {1, 2}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Template_instance_wo_props_scope_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Building {"
+    LINE "  prop stories: i32 = 1"
+    LINE "}"
+    LINE "Building x"
+    LINE "{"
+    LINE "  Position: {1, 2}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Template_anonymous_instance_w_props_scope_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Building {"
+    LINE "  prop stories: i32 = 1"
+    LINE "}"
+    LINE "Building(stories: 3)"
+    LINE "{"
+    LINE "  Position: {1, 2}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t building = ecs_lookup(world, "Building");
+    test_assert(building != 0);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ building }, { ecs_id(Position) }}
+    });
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        Position *p = ecs_field(&it, Position, 1);
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_int(p[i].x, 1);
+            test_int(p[i].y, 2);
+            count ++;
+        }
+    }
+
+    test_int(count, 1);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

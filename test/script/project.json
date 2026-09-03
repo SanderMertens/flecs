@@ -1182,7 +1182,11 @@
                 "prop_as_isa_pair_target",
                 "prop_as_pair_target",
                 "prop_as_pair_target_update",
-                "prop_as_component"
+                "prop_as_component",
+                "instance_w_props_scope_same_line",
+                "instance_w_props_scope_newline",
+                "instance_wo_props_scope_newline",
+                "anonymous_instance_w_props_scope_newline"
             ]
         }, {
             "id": "Mut",

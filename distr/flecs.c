@@ -71432,6 +71432,12 @@ static const char* flecs_script_paren_expr(
 
             // Position spaceship (expr)\n
             EcsTokEndOfStatement: {
+                // Position spaceship (expr)\n{
+                LookAhead_1('{',
+                    pos = lookahead;
+                    return flecs_script_entity_scope(parser, entity, pos);
+                )
+
                 EndOfRule;
             }
 
@@ -72620,6 +72626,12 @@ identifier_identifier_x:
     Parse(
         // Spaceship enterprise\n
         EcsTokEndOfStatement: {
+            // Spaceship enterprise\n{
+            LookAhead_1('{',
+                pos = lookahead;
+                return flecs_script_entity_scope(parser, entity, pos);
+            )
+
             EndOfRule;
         }
 
@@ -72655,6 +72667,12 @@ identifier_paren: {
                         flecs_script_insert_component(parser, Token(0));
                     comp->expr = INITIALIZER;
                     flecs_script_initializer_set_full(comp->expr);
+                )
+
+                // SpaceShip(expr)\n{
+                LookAhead_1('{',
+                    pos = lookahead;
+                    return flecs_script_entity_scope(parser, entity, pos);
                 )
 
                 EndOfRule;
