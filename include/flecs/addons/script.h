@@ -355,10 +355,16 @@ int ecs_script_run_file_w_desc(
  * - A value assigned to a placeholder, to a component without reflection data,
  *   or to an unknown member is parsed and discarded.
  * - An expression that uses an unresolved function or identifier is discarded.
- *   When the expression is the condition or collection of a statement (such as
- *   `for`), the statement is skipped.
- * - Unresolved references in `IsA` expressions and template instantiations are
- *   still errors, as those are structural.
+ *   This includes expressions that read an unknown component (`e[Unknown]`) or
+ *   an unknown member (`e[Position].unknown`), and expressions that use a
+ *   variable that was itself skipped, both directly and in an interpolated
+ *   string. When the expression is the condition or collection of a statement
+ *   (such as `for`), the statement is skipped.
+ * - A `using` statement with an unresolved identifier is skipped.
+ * - A function with an unresolved parameter or return type is skipped, which
+ *   makes calls to that function unresolved expressions.
+ * - Unresolved references in `IsA` expressions, template base types and
+ *   template instantiations are still errors, as those are structural.
  *
  * Every skipped name is reported once with ecs_warn().
  *

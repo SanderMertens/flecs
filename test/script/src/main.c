@@ -2884,6 +2884,27 @@ void Lenient_template_w_unknown_const_type(void);
 void Lenient_const_w_unresolved_function_initializer(void);
 void Lenient_strict_unknown_prop_type_errors(void);
 void Lenient_managed_script_lenient_after_table_change(void);
+void Lenient_unknown_using(void);
+void Lenient_strict_unknown_using_errors(void);
+void Lenient_unknown_fn_param_type(void);
+void Lenient_unknown_fn_return_type(void);
+void Lenient_strict_unknown_fn_param_type_errors(void);
+void Lenient_unknown_component_read_member_in_expr(void);
+void Lenient_unknown_component_read_member_in_interpolated_string(void);
+void Lenient_unknown_component_read_member_in_binary_expr(void);
+void Lenient_unknown_component_read_member_in_fn_arg(void);
+void Lenient_unknown_component_read_member_in_if(void);
+void Lenient_unknown_component_read_member_in_for(void);
+void Lenient_unknown_component_read_member_in_template(void);
+void Lenient_template_w_unknown_prop_type_member_in_interpolated_string(void);
+void Lenient_unknown_component_on_known_entity_member(void);
+void Lenient_unknown_component_on_known_entity_member_in_string(void);
+void Lenient_unknown_member_on_known_component_read(void);
+void Lenient_unknown_member_on_known_component_read_in_string(void);
+void Lenient_known_component_read_member_in_string(void);
+void Lenient_strict_unknown_member_on_known_component_read_errors(void);
+void Lenient_template_unresolved_base_errors(void);
+void Lenient_warn_once_for_unknown_using(void);
 
 // Testsuite 'StructInheritance'
 void StructInheritance_setup(void);
@@ -14568,6 +14589,90 @@ bake_test_case Lenient_testcases[] = {
     {
         "managed_script_lenient_after_table_change",
         Lenient_managed_script_lenient_after_table_change
+    },
+    {
+        "unknown_using",
+        Lenient_unknown_using
+    },
+    {
+        "strict_unknown_using_errors",
+        Lenient_strict_unknown_using_errors
+    },
+    {
+        "unknown_fn_param_type",
+        Lenient_unknown_fn_param_type
+    },
+    {
+        "unknown_fn_return_type",
+        Lenient_unknown_fn_return_type
+    },
+    {
+        "strict_unknown_fn_param_type_errors",
+        Lenient_strict_unknown_fn_param_type_errors
+    },
+    {
+        "unknown_component_read_member_in_expr",
+        Lenient_unknown_component_read_member_in_expr
+    },
+    {
+        "unknown_component_read_member_in_interpolated_string",
+        Lenient_unknown_component_read_member_in_interpolated_string
+    },
+    {
+        "unknown_component_read_member_in_binary_expr",
+        Lenient_unknown_component_read_member_in_binary_expr
+    },
+    {
+        "unknown_component_read_member_in_fn_arg",
+        Lenient_unknown_component_read_member_in_fn_arg
+    },
+    {
+        "unknown_component_read_member_in_if",
+        Lenient_unknown_component_read_member_in_if
+    },
+    {
+        "unknown_component_read_member_in_for",
+        Lenient_unknown_component_read_member_in_for
+    },
+    {
+        "unknown_component_read_member_in_template",
+        Lenient_unknown_component_read_member_in_template
+    },
+    {
+        "template_w_unknown_prop_type_member_in_interpolated_string",
+        Lenient_template_w_unknown_prop_type_member_in_interpolated_string
+    },
+    {
+        "unknown_component_on_known_entity_member",
+        Lenient_unknown_component_on_known_entity_member
+    },
+    {
+        "unknown_component_on_known_entity_member_in_string",
+        Lenient_unknown_component_on_known_entity_member_in_string
+    },
+    {
+        "unknown_member_on_known_component_read",
+        Lenient_unknown_member_on_known_component_read
+    },
+    {
+        "unknown_member_on_known_component_read_in_string",
+        Lenient_unknown_member_on_known_component_read_in_string
+    },
+    {
+        "known_component_read_member_in_string",
+        Lenient_known_component_read_member_in_string
+    },
+    {
+        "strict_unknown_member_on_known_component_read_errors",
+        Lenient_strict_unknown_member_on_known_component_read_errors
+    },
+    {
+        "template_unresolved_base_errors",
+        Lenient_template_unresolved_base_errors
+    },
+    {
+        "warn_once_for_unknown_using",
+        Lenient_warn_once_for_unknown_using
     }
 };
 
@@ -16211,7 +16316,7 @@ static bake_test_suite suites[] = {
         "Lenient",
         Lenient_setup,
         NULL,
-        32,
+        53,
         Lenient_testcases,
         1,
         Lenient_params

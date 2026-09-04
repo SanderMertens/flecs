@@ -375,7 +375,7 @@ static void flecs_script_type_skip_var(
     ecs_vec_append_t(NULL, &t->skipped_vars, const char*)[0] = name;
 }
 
-static bool flecs_script_type_ref_is_skipped_var(
+bool flecs_script_type_is_skipped_var(
     ecs_script_type_visitor_t *t,
     const char *name)
 {
@@ -407,7 +407,7 @@ static void flecs_script_type_prune_skipped_refs(
     int32_t dst = prev_unresolved;
     for (i = prev_unresolved; i < count; i ++) {
         if (refs[i].kind != FlecsScriptUnresolvedComponent &&
-            flecs_script_type_ref_is_skipped_var(t, refs[i].name))
+            flecs_script_type_is_skipped_var(t, refs[i].name))
         {
             continue;
         }
@@ -520,11 +520,30 @@ static bool flecs_script_lenient_drop_var(
     flecs_script_lenient_warn(&t->v->base.script->pub, node->type,
         "skipped variable with unresolved type");
 
+    flecs_script_type_skip_var(t, node->name);
+
     if (node->expr) {
         flecs_script_lenient_drop_expr(t, &node->expr);
     }
 
     node->eval_type = 0;
+    node->node.skip = true;
+
+    return true;
+}
+
+static bool flecs_script_lenient_drop_fn(
+    ecs_script_type_visitor_t *t,
+    ecs_script_function_node_t *node,
+    const char *type)
+{
+    if (!flecs_script_is_lenient(&t->v->base.script->pub)) {
+        return false;
+    }
+
+    flecs_script_lenient_warn(&t->v->base.script->pub, type,
+        "skipped function with unresolved type");
+
     node->node.skip = true;
 
     return true;
@@ -1626,6 +1645,9 @@ static int flecs_script_type_function(
     if (flecs_script_type_resolve_type(
         t, node->return_type, &node->eval_return_type))
     {
+        if (flecs_script_lenient_drop_fn(t, node, node->return_type)) {
+            return 0;
+        }
         flecs_script_type_unresolved_ref(
             t, &node->return_type_node, node->return_type,
             FlecsScriptUnresolvedComponent);
@@ -1648,9 +1670,11 @@ static int flecs_script_type_function(
         if (flecs_script_type_resolve_type(
             t, params[i].type, &params[i].eval_type))
         {
-            flecs_script_type_unresolved_ref(
-                t, &params[i].node, params[i].type,
-                FlecsScriptUnresolvedComponent);
+            if (!flecs_script_lenient_drop_fn(t, node, params[i].type)) {
+                flecs_script_type_unresolved_ref(
+                    t, &params[i].node, params[i].type,
+                    FlecsScriptUnresolvedComponent);
+            }
             t->v->vars = ecs_script_vars_pop(t->v->vars);
             t->v->vars = outer_vars;
             return 0;
@@ -1967,6 +1991,12 @@ static int flecs_script_type_using(
         flecs_strfree(a, path);
     }
     if (result || !symbol.entity) {
+        if (flecs_script_is_lenient(&t->v->base.script->pub)) {
+            flecs_script_lenient_warn(&t->v->base.script->pub, node->name,
+                "skipped using with unresolved identifier");
+            node->node.skip = true;
+            return 0;
+        }
         flecs_script_type_unresolved_ref(t, node, node->name,
             FlecsScriptUnresolvedEntity);
         return -1;

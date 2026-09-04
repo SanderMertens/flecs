@@ -982,3 +982,709 @@ void Lenient_managed_script_lenient_after_table_change(void) {
 
     ecs_fini(world);
 }
+
+typedef struct Label {
+    char *text;
+    int32_t size;
+} Label;
+
+static ecs_entity_t lenient_label_component(
+    ecs_world_t *world)
+{
+    return ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
+}
+
+void Lenient_unknown_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "using ns_unknown_module"
+    LINE "using ns_unknown_module.*"
+    LINE "e {"
+    LINE "  Position: {x: 10, y: 20}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "ns_unknown_module") == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Lenient_strict_unknown_using_errors(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using ns_unknown_module.*"
+    LINE "e {}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_fn_param_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "fn sum(v: NsUnknownVec, k: i32) -> f32 {"
+    LINE "  k"
+    LINE "}"
+    LINE "a {"
+    LINE "  Position: {x: sum(1, 2), y: 20}"
+    LINE "}"
+    LINE "b {"
+    LINE "  Position: {x: 1, y: 2}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "NsUnknownVec") == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+    test_assert(ecs_get(world, a, Position) == NULL);
+
+    ecs_entity_t b = ecs_lookup(world, "b");
+    test_assert(b != 0);
+    const Position *p = ecs_get(world, b, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_fn_return_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "fn make(k: i32) -> NsUnknownVec {"
+    LINE "  k"
+    LINE "}"
+    LINE "a {"
+    LINE "  Position: {x: 1, y: 2}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "NsUnknownVec") == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+    const Position *p = ecs_get(world, a, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Lenient_strict_unknown_fn_param_type_errors(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn sum(v: NsUnknownVec, k: i32) -> f32 {"
+    LINE "  k"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_component_read_member_in_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+
+    const char *expr =
+    HEAD "hud {"
+    LINE "  const state = NsBkHud[NsBkHud]"
+    LINE "  a {"
+    LINE "    Label: {text: \"hour\", size: state.hour}"
+    LINE "  }"
+    LINE "  b {"
+    LINE "    Label: {text: \"day\", size: 12}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "NsBkHud") == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "hud.a");
+    test_assert(a != 0);
+    test_assert(ecs_get(world, a, Label) == NULL);
+
+    ecs_entity_t b = ecs_lookup(world, "hud.b");
+    test_assert(b != 0);
+    const Label *l = ecs_get(world, b, Label);
+    test_assert(l != NULL);
+    test_str(l->text, "day");
+    test_int(l->size, 12);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_component_read_member_in_interpolated_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+
+    const char *expr =
+    HEAD "hud {"
+    LINE "  const state = NsBkHud[NsBkHud]"
+    LINE "  a {"
+    LINE "    Label: {text: \"{state.hour_text}\", size: 12}"
+    LINE "  }"
+    LINE "  b {"
+    LINE "    Label: {text: \"day\", size: 12}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "NsBkHud") == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "hud.a");
+    test_assert(a != 0);
+    test_assert(ecs_get(world, a, Label) == NULL);
+
+    ecs_entity_t b = ecs_lookup(world, "hud.b");
+    test_assert(b != 0);
+    const Label *l = ecs_get(world, b, Label);
+    test_assert(l != NULL);
+    test_str(l->text, "day");
+    test_int(l->size, 12);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_component_read_member_in_binary_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+
+    const char *expr =
+    HEAD "hud {"
+    LINE "  const state = NsBkHud[NsBkHud]"
+    LINE "  a {"
+    LINE "    Label: {text: \"hour\", size: state.hour + 1}"
+    LINE "  }"
+    LINE "  b {"
+    LINE "    Label: {text: \"day\", size: 12}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "hud.a");
+    test_assert(a != 0);
+    test_assert(ecs_get(world, a, Label) == NULL);
+
+    ecs_entity_t b = ecs_lookup(world, "hud.b");
+    test_assert(b != 0);
+    test_assert(ecs_get(world, b, Label) != NULL);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_component_read_member_in_fn_arg(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+
+    const char *expr =
+    HEAD "fn twice(k: i32) -> i32 {"
+    LINE "  k * 2"
+    LINE "}"
+    LINE "hud {"
+    LINE "  const state = NsBkHud[NsBkHud]"
+    LINE "  a {"
+    LINE "    Label: {text: \"hour\", size: twice(state.hour)}"
+    LINE "  }"
+    LINE "  b {"
+    LINE "    Label: {text: \"day\", size: twice(6)}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "hud.a");
+    test_assert(a != 0);
+    test_assert(ecs_get(world, a, Label) == NULL);
+
+    ecs_entity_t b = ecs_lookup(world, "hud.b");
+    test_assert(b != 0);
+    const Label *l = ecs_get(world, b, Label);
+    test_assert(l != NULL);
+    test_int(l->size, 12);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_component_read_member_in_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    const char *expr =
+    HEAD "hud {"
+    LINE "  const state = NsBkHud[NsBkHud]"
+    LINE "  if state.on {"
+    LINE "    a {}"
+    LINE "  }"
+    LINE "  b {}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "hud.a") == 0);
+    test_assert(ecs_lookup(world, "hud.b") != 0);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_component_read_member_in_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    const char *expr =
+    HEAD "hud {"
+    LINE "  const state = NsBkHud[NsBkHud]"
+    LINE "  for v in state.items {"
+    LINE "    a {}"
+    LINE "  }"
+    LINE "  b {}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "hud.a") == 0);
+    test_assert(ecs_lookup(world, "hud.b") != 0);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_component_read_member_in_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+
+    const char *expr =
+    HEAD "template Hud {"
+    LINE "  prop size: i32 = 12"
+    LINE "  const state = NsBkHud[NsBkHud]"
+    LINE "  a {"
+    LINE "    Label: {text: \"{state.hour_text}\", size: 12}"
+    LINE "  }"
+    LINE "  b {"
+    LINE "    Label: {text: \"day\", size: size}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  Hud: {size: 14}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t a = ecs_lookup_child(world, e, "a");
+    test_assert(a != 0);
+    const Label *al = ecs_get(world, a, Label);
+    if (al) {
+        test_assert(al->text == NULL);
+        test_int(al->size, 0);
+    }
+
+    ecs_entity_t b = ecs_lookup_child(world, e, "b");
+    test_assert(b != 0);
+    const Label *l = ecs_get(world, b, Label);
+    test_assert(l != NULL);
+    test_str(l->text, "day");
+    test_int(l->size, 14);
+
+    ecs_fini(world);
+}
+
+void Lenient_template_w_unknown_prop_type_member_in_interpolated_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+
+    const char *expr =
+    HEAD "template Sheet {"
+    LINE "  prop wall: NsRgba = {172, 170, 164, 255}"
+    LINE "  prop size: i32 = 12"
+    LINE "  const svg = \"<rect fill='rgb({wall.r},{wall.g})'/>\""
+    LINE "  a {"
+    LINE "    Label: {text: svg, size: 1}"
+    LINE "  }"
+    LINE "  b {"
+    LINE "    Label: {text: \"plain\", size: size}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  Sheet: {size: 14}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "NsRgba") == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t a = ecs_lookup_child(world, e, "a");
+    test_assert(a != 0);
+    const Label *al = ecs_get(world, a, Label);
+    if (al) {
+        test_assert(al->text == NULL);
+        test_int(al->size, 0);
+    }
+
+    ecs_entity_t b = ecs_lookup_child(world, e, "b");
+    test_assert(b != 0);
+    const Label *l = ecs_get(world, b, Label);
+    test_assert(l != NULL);
+    test_str(l->text, "plain");
+    test_int(l->size, 14);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_component_on_known_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Position: {x: 10, y: 20}"
+    LINE "}"
+    LINE "a {"
+    LINE "  Label: {text: \"hi\", size: foo[NsUnknown].bar}"
+    LINE "}"
+    LINE "b {"
+    LINE "  Label: {text: \"hi\", size: 12}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "NsUnknown") == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+    test_assert(ecs_get(world, a, Label) == NULL);
+
+    ecs_entity_t b = ecs_lookup(world, "b");
+    test_assert(b != 0);
+    test_assert(ecs_get(world, b, Label) != NULL);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_component_on_known_entity_member_in_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Position: {x: 10, y: 20}"
+    LINE "}"
+    LINE "a {"
+    LINE "  Label: {text: \"{foo[NsUnknown].bar}\", size: 12}"
+    LINE "}"
+    LINE "b {"
+    LINE "  Label: {text: \"hi\", size: 12}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "NsUnknown") == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+    test_assert(ecs_get(world, a, Label) == NULL);
+
+    ecs_entity_t b = ecs_lookup(world, "b");
+    test_assert(b != 0);
+    test_assert(ecs_get(world, b, Label) != NULL);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_member_on_known_component_read(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Position: {x: 10, y: 20}"
+    LINE "}"
+    LINE "a {"
+    LINE "  Label: {text: \"hi\", size: foo[Position].nope}"
+    LINE "}"
+    LINE "b {"
+    LINE "  Label: {text: \"hi\", size: 12}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+    test_assert(ecs_get(world, a, Label) == NULL);
+
+    ecs_entity_t b = ecs_lookup(world, "b");
+    test_assert(b != 0);
+    test_assert(ecs_get(world, b, Label) != NULL);
+
+    ecs_fini(world);
+}
+
+void Lenient_unknown_member_on_known_component_read_in_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Position: {x: 10, y: 20}"
+    LINE "}"
+    LINE "a {"
+    LINE "  Label: {text: \"{foo[Position].nope}\", size: 12}"
+    LINE "}"
+    LINE "b {"
+    LINE "  Label: {text: \"hi\", size: 12}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+    test_assert(ecs_get(world, a, Label) == NULL);
+
+    ecs_entity_t b = ecs_lookup(world, "b");
+    test_assert(b != 0);
+    test_assert(ecs_get(world, b, Label) != NULL);
+
+    ecs_fini(world);
+}
+
+void Lenient_known_component_read_member_in_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Position: {x: 10, y: 20}"
+    LINE "  Label: {text: \"foo\", size: 7}"
+    LINE "}"
+    LINE "a {"
+    LINE "  Label: {text: \"size={foo[Label].size}\", size: 12}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_assert(a != 0);
+    const Label *l = ecs_get(world, a, Label);
+    test_assert(l != NULL);
+    test_str(l->text, "size=7");
+
+    ecs_fini(world);
+}
+
+void Lenient_strict_unknown_member_on_known_component_read_errors(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Label) = lenient_label_component(world);
+    (void)ecs_id(Label);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Position: {x: 10, y: 20}"
+    LINE "}"
+    LINE "a {"
+    LINE "  Label: {text: \"hi\", size: foo[Position].nope}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void Lenient_template_unresolved_base_errors(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    const char *expr =
+    HEAD "template Panel : NsUnknownBase {"
+    LINE "  prop w: f32 = 3"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void Lenient_warn_once_for_unknown_using(void) {
+    lenient_warn_capture();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_set_lenient(world, true);
+
+    const char *expr =
+    HEAD "using ns_unknown_module.*"
+    LINE "using ns_unknown_module.*"
+    LINE "e {}"
+    LINE "f {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(lenient_warn_count, 1);
+
+    ecs_fini(world);
+
+    lenient_warn_release();
+}
