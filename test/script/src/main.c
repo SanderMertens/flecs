@@ -3155,7 +3155,7 @@ void Edit_set_nested_child(void);
 void Edit_set_anonymous_entity(void);
 void Edit_set_in_with_scope(void);
 void Edit_set_float_roundtrip(void);
-void Edit_set_template_body_entity_fails(void);
+void Edit_set_template_body_entity(void);
 void Edit_set_for_loop_entity_fails(void);
 void Edit_set_foreign_entity_fails(void);
 void Edit_set_twice_same_component(void);
@@ -3177,6 +3177,63 @@ void Edit_apply_deleted_entity_gone(void);
 void Edit_apply_no_edits(void);
 void Edit_set_in_module_script(void);
 void Edit_set_replaces_tag_stmt(void);
+void Edit_set_f32_shortest_repr(void);
+void Edit_set_f32_integral_no_fraction(void);
+void Edit_set_f32_negative_zero(void);
+void Edit_set_f32_third(void);
+void Edit_set_f32_small_exponent(void);
+void Edit_set_f32_roundtrips_in_script(void);
+void Edit_set_f64_shortest_repr(void);
+void Edit_delete_blank_line_before_and_after(void);
+void Edit_delete_blank_line_first_in_file(void);
+void Edit_delete_blank_line_last_in_file(void);
+void Edit_delete_blank_line_first_in_scope(void);
+void Edit_delete_blank_line_last_in_scope(void);
+void Edit_delete_blank_line_middle_in_scope(void);
+void Edit_delete_blank_line_only_after(void);
+void Edit_delete_blank_line_only_before(void);
+void Edit_source_two_managed_code_scripts(void);
+void Edit_edit_two_managed_code_scripts(void);
+void Edit_source_two_managed_file_scripts(void);
+void Edit_include_creates_managed_script(void);
+void Edit_include_resolves_relative_to_script_dir(void);
+void Edit_include_edit_applies_to_included_file(void);
+void Edit_include_parent_update_keeps_included_script(void);
+void Edit_include_update_included_script(void);
+void Edit_include_clear_parent_keeps_included_script(void);
+void Edit_entity_owner_plain(void);
+void Edit_entity_owner_no_script(void);
+void Edit_entity_owner_unmanaged_script(void);
+void Edit_entity_owner_for_loop_entity(void);
+
+// Testsuite 'EditTemplate'
+void EditTemplate_setup(void);
+void EditTemplate_source_body_entity(void);
+void EditTemplate_source_body_entity_no_scope(void);
+void EditTemplate_source_body_entity_nested(void);
+void EditTemplate_source_body_entity_anonymous(void);
+void EditTemplate_source_body_entity_in_with_scope(void);
+void EditTemplate_source_body_entity_in_if_scope(void);
+void EditTemplate_source_body_for_loop_entity(void);
+void EditTemplate_source_body_entity_computed_name(void);
+void EditTemplate_source_instance_stmt_has_no_template(void);
+void EditTemplate_source_body_entity_two_instances(void);
+void EditTemplate_source_nested_template_instance(void);
+void EditTemplate_source_body_entity_other_script(void);
+void EditTemplate_set_body_entity(void);
+void EditTemplate_set_body_entity_replaces_prop_expr(void);
+void EditTemplate_set_body_entity_empty_scope(void);
+void EditTemplate_set_body_entity_via_either_instance(void);
+void EditTemplate_delete_body_entity(void);
+void EditTemplate_remove_body_entity_component(void);
+void EditTemplate_edit_body_for_loop_entity_fails(void);
+void EditTemplate_apply_update_all_instances(void);
+void EditTemplate_apply_update_instance_override_wins(void);
+void EditTemplate_apply_update_delete_removes_from_all(void);
+void EditTemplate_entity_owner_body_entity(void);
+void EditTemplate_entity_owner_body_entity_unmanaged(void);
+void EditTemplate_source_template_in_included_file(void);
+void EditTemplate_edit_template_in_included_file(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -15552,8 +15609,8 @@ bake_test_case Edit_testcases[] = {
         Edit_set_float_roundtrip
     },
     {
-        "set_template_body_entity_fails",
-        Edit_set_template_body_entity_fails
+        "set_template_body_entity",
+        Edit_set_template_body_entity
     },
     {
         "set_for_loop_entity_fails",
@@ -15638,6 +15695,225 @@ bake_test_case Edit_testcases[] = {
     {
         "set_replaces_tag_stmt",
         Edit_set_replaces_tag_stmt
+    },
+    {
+        "set_f32_shortest_repr",
+        Edit_set_f32_shortest_repr
+    },
+    {
+        "set_f32_integral_no_fraction",
+        Edit_set_f32_integral_no_fraction
+    },
+    {
+        "set_f32_negative_zero",
+        Edit_set_f32_negative_zero
+    },
+    {
+        "set_f32_third",
+        Edit_set_f32_third
+    },
+    {
+        "set_f32_small_exponent",
+        Edit_set_f32_small_exponent
+    },
+    {
+        "set_f32_roundtrips_in_script",
+        Edit_set_f32_roundtrips_in_script
+    },
+    {
+        "set_f64_shortest_repr",
+        Edit_set_f64_shortest_repr
+    },
+    {
+        "delete_blank_line_before_and_after",
+        Edit_delete_blank_line_before_and_after
+    },
+    {
+        "delete_blank_line_first_in_file",
+        Edit_delete_blank_line_first_in_file
+    },
+    {
+        "delete_blank_line_last_in_file",
+        Edit_delete_blank_line_last_in_file
+    },
+    {
+        "delete_blank_line_first_in_scope",
+        Edit_delete_blank_line_first_in_scope
+    },
+    {
+        "delete_blank_line_last_in_scope",
+        Edit_delete_blank_line_last_in_scope
+    },
+    {
+        "delete_blank_line_middle_in_scope",
+        Edit_delete_blank_line_middle_in_scope
+    },
+    {
+        "delete_blank_line_only_after",
+        Edit_delete_blank_line_only_after
+    },
+    {
+        "delete_blank_line_only_before",
+        Edit_delete_blank_line_only_before
+    },
+    {
+        "source_two_managed_code_scripts",
+        Edit_source_two_managed_code_scripts
+    },
+    {
+        "edit_two_managed_code_scripts",
+        Edit_edit_two_managed_code_scripts
+    },
+    {
+        "source_two_managed_file_scripts",
+        Edit_source_two_managed_file_scripts
+    },
+    {
+        "include_creates_managed_script",
+        Edit_include_creates_managed_script
+    },
+    {
+        "include_resolves_relative_to_script_dir",
+        Edit_include_resolves_relative_to_script_dir
+    },
+    {
+        "include_edit_applies_to_included_file",
+        Edit_include_edit_applies_to_included_file
+    },
+    {
+        "include_parent_update_keeps_included_script",
+        Edit_include_parent_update_keeps_included_script
+    },
+    {
+        "include_update_included_script",
+        Edit_include_update_included_script
+    },
+    {
+        "include_clear_parent_keeps_included_script",
+        Edit_include_clear_parent_keeps_included_script
+    },
+    {
+        "entity_owner_plain",
+        Edit_entity_owner_plain
+    },
+    {
+        "entity_owner_no_script",
+        Edit_entity_owner_no_script
+    },
+    {
+        "entity_owner_unmanaged_script",
+        Edit_entity_owner_unmanaged_script
+    },
+    {
+        "entity_owner_for_loop_entity",
+        Edit_entity_owner_for_loop_entity
+    }
+};
+
+bake_test_case EditTemplate_testcases[] = {
+    {
+        "source_body_entity",
+        EditTemplate_source_body_entity
+    },
+    {
+        "source_body_entity_no_scope",
+        EditTemplate_source_body_entity_no_scope
+    },
+    {
+        "source_body_entity_nested",
+        EditTemplate_source_body_entity_nested
+    },
+    {
+        "source_body_entity_anonymous",
+        EditTemplate_source_body_entity_anonymous
+    },
+    {
+        "source_body_entity_in_with_scope",
+        EditTemplate_source_body_entity_in_with_scope
+    },
+    {
+        "source_body_entity_in_if_scope",
+        EditTemplate_source_body_entity_in_if_scope
+    },
+    {
+        "source_body_for_loop_entity",
+        EditTemplate_source_body_for_loop_entity
+    },
+    {
+        "source_body_entity_computed_name",
+        EditTemplate_source_body_entity_computed_name
+    },
+    {
+        "source_instance_stmt_has_no_template",
+        EditTemplate_source_instance_stmt_has_no_template
+    },
+    {
+        "source_body_entity_two_instances",
+        EditTemplate_source_body_entity_two_instances
+    },
+    {
+        "source_nested_template_instance",
+        EditTemplate_source_nested_template_instance
+    },
+    {
+        "source_body_entity_other_script",
+        EditTemplate_source_body_entity_other_script
+    },
+    {
+        "set_body_entity",
+        EditTemplate_set_body_entity
+    },
+    {
+        "set_body_entity_replaces_prop_expr",
+        EditTemplate_set_body_entity_replaces_prop_expr
+    },
+    {
+        "set_body_entity_empty_scope",
+        EditTemplate_set_body_entity_empty_scope
+    },
+    {
+        "set_body_entity_via_either_instance",
+        EditTemplate_set_body_entity_via_either_instance
+    },
+    {
+        "delete_body_entity",
+        EditTemplate_delete_body_entity
+    },
+    {
+        "remove_body_entity_component",
+        EditTemplate_remove_body_entity_component
+    },
+    {
+        "edit_body_for_loop_entity_fails",
+        EditTemplate_edit_body_for_loop_entity_fails
+    },
+    {
+        "apply_update_all_instances",
+        EditTemplate_apply_update_all_instances
+    },
+    {
+        "apply_update_instance_override_wins",
+        EditTemplate_apply_update_instance_override_wins
+    },
+    {
+        "apply_update_delete_removes_from_all",
+        EditTemplate_apply_update_delete_removes_from_all
+    },
+    {
+        "entity_owner_body_entity",
+        EditTemplate_entity_owner_body_entity
+    },
+    {
+        "entity_owner_body_entity_unmanaged",
+        EditTemplate_entity_owner_body_entity_unmanaged
+    },
+    {
+        "source_template_in_included_file",
+        EditTemplate_source_template_in_included_file
+    },
+    {
+        "edit_template_in_included_file",
+        EditTemplate_edit_template_in_included_file
     }
 };
 
@@ -15756,6 +16032,11 @@ bake_test_param Scenario_params[] = {
 const char* Edit_ir_param[] = {"disabled", "enabled"};
 bake_test_param Edit_params[] = {
     {"ir", (char**)Edit_ir_param, 2}
+};
+
+const char* EditTemplate_ir_param[] = {"disabled", "enabled"};
+bake_test_param EditTemplate_params[] = {
+    {"ir", (char**)EditTemplate_ir_param, 2}
 };
 
 static bake_test_suite suites[] = {
@@ -15975,13 +16256,22 @@ static bake_test_suite suites[] = {
         "Edit",
         Edit_setup,
         NULL,
-        66,
+        94,
         Edit_testcases,
         1,
         Edit_params
+    },
+    {
+        "EditTemplate",
+        EditTemplate_setup,
+        NULL,
+        26,
+        EditTemplate_testcases,
+        1,
+        EditTemplate_params
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 25);
+    return bake_test_run("script", argc, argv, suites, 26);
 }

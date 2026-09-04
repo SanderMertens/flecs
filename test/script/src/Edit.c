@@ -365,7 +365,14 @@ void Edit_source_template_body_entity(void) {
 
     ecs_entity_t child = ecs_lookup(world, "foo.child");
     test_assert(child != 0);
-    test_bool(false, ecs_script_entity_source(script, child, NULL));
+
+    ecs_script_source_t src = {0};
+    test_bool(true, ecs_script_entity_source(script, child, &src));
+    test_uint(ecs_lookup(world, "Ship"), src.template_);
+
+    char *span = edit_span(script, child);
+    test_str(span, "child {\n    Position: {10, 20}\n  }");
+    ecs_os_free(span);
 
     ecs_script_free(script);
     ecs_fini(world);
@@ -1342,7 +1349,7 @@ void Edit_set_float_roundtrip(void) {
     ecs_fini(world);
 }
 
-void Edit_set_template_body_entity_fails(void) {
+void Edit_set_template_body_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t p = edit_position(world);
@@ -1361,15 +1368,19 @@ void Edit_set_template_body_entity_fails(void) {
     ecs_entity_t child = ecs_lookup(world, "foo.child");
     test_assert(child != 0);
 
-    ecs_log_set_level(-4);
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {1, 2};
-    test_int(-1, ecs_script_edits_set(edits, child, p, &v));
-    test_int(-1, ecs_script_edits_delete(edits, child));
-    ecs_log_set_level(0);
+    test_int(0, ecs_script_edits_set(edits, child, p, &v));
 
     char *result = ecs_script_edits_apply(edits);
-    test_str(result, expr);
+    test_str(result,
+        HEAD "template Ship {"
+        LINE "  child {"
+        LINE "    Position: {1, 2}"
+        LINE "  }"
+        LINE "}"
+        LINE ""
+        LINE "Ship foo()");
 
     ecs_os_free(result);
     ecs_script_edits_free(edits);
@@ -2003,5 +2014,831 @@ void Edit_set_replaces_tag_stmt(void) {
     ecs_os_free(result);
     ecs_script_edits_free(edits);
     ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_explore(void) {
+}
+
+
+static ecs_entity_t edit_point64(ecs_world_t *world) {
+    ecs_entity_t p = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "Point64" });
+    return ecs_struct(world, {
+        .entity = p,
+        .members = {
+            {"x", ecs_id(ecs_f64_t)},
+            {"y", ecs_id(ecs_f64_t)}
+        }
+    });
+}
+
+static char* edit_set_position(
+    ecs_world_t *world,
+    const char *code,
+    float x,
+    float y)
+{
+    ecs_entity_t p = ecs_lookup(world, "Position");
+    ecs_script_t *script = edit_parse(world, code);
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    Position v = {x, y};
+    test_int(0, ecs_script_edits_set(edits, ecs_lookup(world, "foo"), p, &v));
+    char *result = ecs_script_edits_apply(edits);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    return result;
+}
+
+void Edit_set_f32_shortest_repr(void) {
+    ecs_world_t *world = ecs_init();
+
+    edit_position(world);
+
+    char *result = edit_set_position(world,
+        HEAD "foo {"
+        LINE "  Position: {0, 0}"
+        LINE "}", 1.2345f, 0.1f);
+
+    test_str(result,
+        HEAD "foo {"
+        LINE "  Position: {1.2345, 0.1}"
+        LINE "}");
+
+    ecs_os_free(result);
+    ecs_fini(world);
+}
+
+void Edit_set_f32_integral_no_fraction(void) {
+    ecs_world_t *world = ecs_init();
+
+    edit_position(world);
+
+    char *result = edit_set_position(world,
+        HEAD "foo {"
+        LINE "  Position: {0, 0}"
+        LINE "}", 1.0f, -0.5f);
+
+    test_str(result,
+        HEAD "foo {"
+        LINE "  Position: {1, -0.5}"
+        LINE "}");
+
+    ecs_os_free(result);
+    ecs_fini(world);
+}
+
+void Edit_set_f32_negative_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    edit_position(world);
+
+    char *result = edit_set_position(world,
+        HEAD "foo {"
+        LINE "  Position: {1, 1}"
+        LINE "}", -0.0f, 0.0f);
+
+    test_str(result,
+        HEAD "foo {"
+        LINE "  Position: {0, 0}"
+        LINE "}");
+
+    ecs_os_free(result);
+    ecs_fini(world);
+}
+
+void Edit_set_f32_third(void) {
+    ecs_world_t *world = ecs_init();
+
+    edit_position(world);
+
+    float value = 1.0f / 3.0f;
+
+    char *result = edit_set_position(world,
+        HEAD "foo {"
+        LINE "  Position: {0, 0}"
+        LINE "}", value, value);
+
+    test_str(result,
+        HEAD "foo {"
+        LINE "  Position: {0.33333334, 0.33333334}"
+        LINE "}");
+
+    test_assert((float)strtod("0.33333334", NULL) == value);
+
+    ecs_os_free(result);
+    ecs_fini(world);
+}
+
+void Edit_set_f32_small_exponent(void) {
+    ecs_world_t *world = ecs_init();
+
+    edit_position(world);
+
+    float value = 1e-7f;
+
+    char *result = edit_set_position(world,
+        HEAD "foo {"
+        LINE "  Position: {0, 0}"
+        LINE "}", value, 1.5f);
+
+    test_str(result,
+        HEAD "foo {"
+        LINE "  Position: {1e-07, 1.5}"
+        LINE "}");
+
+    ecs_os_free(result);
+    ecs_fini(world);
+}
+
+void Edit_set_f32_roundtrips_in_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = edit_position(world);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Position: {0, 0}"
+    LINE "}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    Position v = {3.14159f, 1e-7f};
+    test_int(0, ecs_script_edits_set(
+        edits, ecs_lookup(world, "foo"), p, &v));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_assert(result != NULL);
+    test_assert(strstr(result, "3.14159") != NULL);
+    test_assert(strstr(result, "3.1415901184") == NULL);
+
+    ecs_world_t *world2 = ecs_init();
+    ecs_entity_t p2 = edit_position(world2);
+    test_int(0, ecs_script_run_w_desc(world2, "test", result, &ir_desc, NULL));
+
+    const Position *ptr = ecs_get_id(world2, ecs_lookup(world2, "foo"), p2);
+    test_assert(ptr != NULL);
+    test_assert(ptr->x == v.x);
+    test_assert(ptr->y == v.y);
+    ecs_fini(world2);
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_set_f64_shortest_repr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = edit_point64(world);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Point64: {0, 0}"
+    LINE "}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    double v[2] = {0.1, 2.0};
+    test_int(0, ecs_script_edits_set(
+        edits, ecs_lookup(world, "foo"), p, v));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "foo {"
+        LINE "  Point64: {0.1, 2}"
+        LINE "}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_delete_blank_line_before_and_after(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE ""
+    LINE "bar {}"
+    LINE ""
+    LINE "zoo {}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "bar")));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "foo {}"
+        LINE ""
+        LINE "zoo {}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_delete_blank_line_first_in_file(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE ""
+    LINE "bar {}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "foo")));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result, "bar {}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_delete_blank_line_last_in_file(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE ""
+    LINE "bar {}"
+    LINE "";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "bar")));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result, "foo {}\n");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_delete_blank_line_first_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "a {"
+    LINE "  b {}"
+    LINE ""
+    LINE "  c {}"
+    LINE "}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "a.b")));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "a {"
+        LINE "  c {}"
+        LINE "}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_delete_blank_line_last_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "a {"
+    LINE "  b {}"
+    LINE ""
+    LINE "  c {}"
+    LINE "}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "a.c")));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "a {"
+        LINE "  b {}"
+        LINE "}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_delete_blank_line_middle_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "a {"
+    LINE "  b {}"
+    LINE ""
+    LINE "  c {}"
+    LINE ""
+    LINE "  d {}"
+    LINE "}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "a.c")));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "a {"
+        LINE "  b {}"
+        LINE ""
+        LINE "  d {}"
+        LINE "}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_delete_blank_line_only_after(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE "bar {}"
+    LINE ""
+    LINE "zoo {}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "bar")));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "foo {}"
+        LINE ""
+        LINE "zoo {}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_delete_blank_line_only_before(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE ""
+    LINE "bar {}"
+    LINE "zoo {}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "bar")));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "foo {}"
+        LINE ""
+        LINE "zoo {}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_source_two_managed_code_scripts(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "a_entity {}" });
+    ecs_entity_t b = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "b_entity {}" });
+
+    test_assert(a != 0);
+    test_assert(b != 0);
+
+    const EcsScript *asc = ecs_get(world, a, EcsScript);
+    const EcsScript *bsc = ecs_get(world, b, EcsScript);
+    test_assert(asc != NULL);
+    test_assert(bsc != NULL);
+
+    ecs_entity_t be = ecs_lookup(world, "b_entity");
+    test_assert(be != 0);
+
+    test_bool(false, ecs_script_entity_source(asc->script, be, NULL));
+    test_bool(true, ecs_script_entity_source(bsc->script, be, NULL));
+
+    ecs_entity_t ae = ecs_lookup(world, "a_entity");
+    test_bool(true, ecs_script_entity_source(asc->script, ae, NULL));
+    test_bool(false, ecs_script_entity_source(bsc->script, ae, NULL));
+
+    ecs_fini(world);
+}
+
+void Edit_edit_two_managed_code_scripts(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = edit_position(world);
+
+    ecs_entity_t a = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "a_entity {"
+        LINE "  Position: {1, 2}"
+        LINE "}" });
+    ecs_entity_t b = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "b_entity {"
+        LINE "  Position: {3, 4}"
+        LINE "}" });
+
+    const EcsScript *asc = ecs_get(world, a, EcsScript);
+    const EcsScript *bsc = ecs_get(world, b, EcsScript);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(bsc->script);
+    Position v = {10, 20};
+    test_int(0, ecs_script_edits_set(
+        edits, ecs_lookup(world, "b_entity"), p, &v));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "b_entity {"
+        LINE "  Position: {10, 20}"
+        LINE "}");
+
+    ecs_script_edits_t *a_edits = ecs_script_edits_new(asc->script);
+    char *a_result = ecs_script_edits_apply(a_edits);
+    test_str(a_result,
+        HEAD "a_entity {"
+        LINE "  Position: {1, 2}"
+        LINE "}");
+
+    ecs_log_set_level(-4);
+    test_int(-1, ecs_script_edits_set(
+        a_edits, ecs_lookup(world, "b_entity"), p, &v));
+    ecs_log_set_level(-1);
+
+    ecs_os_free(a_result);
+    ecs_os_free(result);
+    ecs_script_edits_free(a_edits);
+    ecs_script_edits_free(edits);
+    ecs_fini(world);
+}
+
+void Edit_source_two_managed_file_scripts(void) {
+    edit_files_init();
+    edit_files[0].name = "a.flecs";
+    edit_files[0].content = "a_entity {}\n";
+    edit_files[1].name = "b.flecs";
+    edit_files[1].content = "b_entity {}\n";
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_script(world, {
+        .ir = ir_enabled, .filename = "a.flecs" });
+    ecs_entity_t b = ecs_script(world, {
+        .ir = ir_enabled, .filename = "b.flecs" });
+
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_str("a.flecs", ecs_get_name(world, a));
+    test_str("b.flecs", ecs_get_name(world, b));
+
+    const EcsScript *asc = ecs_get(world, a, EcsScript);
+    const EcsScript *bsc = ecs_get(world, b, EcsScript);
+    test_str("a.flecs", asc->filename);
+    test_str("b.flecs", bsc->filename);
+
+    ecs_entity_t be = ecs_lookup(world, "b_entity");
+    test_bool(false, ecs_script_entity_source(asc->script, be, NULL));
+    test_bool(true, ecs_script_entity_source(bsc->script, be, NULL));
+
+    test_uint(b, ecs_script_entity_owner(world, be));
+    test_uint(a, ecs_script_entity_owner(world, ecs_lookup(world, "a_entity")));
+
+    ecs_fini(world);
+    edit_files_fini();
+}
+
+void Edit_include_creates_managed_script(void) {
+    edit_files_init();
+    edit_files[0].name = "scene/child.flecs";
+    edit_files[0].content = "included_entity {}\n";
+    edit_files[1].name = "scene/parent.flecs";
+    edit_files[1].content =
+        "include child.flecs\n"
+        "own_entity {}\n";
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .ir = ir_enabled, .filename = "scene/parent.flecs" });
+    test_assert(s != 0);
+
+    ecs_entity_t inc = ecs_lookup_path_w_sep(
+        world, 0, "scene/child.flecs", "/", NULL, false);
+    test_assert(inc != 0);
+    test_assert(inc != s);
+    test_str("child.flecs", ecs_get_name(world, inc));
+
+    const EcsScript *isc = ecs_get(world, inc, EcsScript);
+    test_assert(isc != NULL);
+    test_assert(isc->script != NULL);
+    test_str("scene/child.flecs", isc->filename);
+
+    ecs_entity_t ie = ecs_lookup(world, "included_entity");
+    ecs_entity_t oe = ecs_lookup(world, "own_entity");
+    test_assert(ie != 0);
+    test_assert(oe != 0);
+
+    test_assert(ecs_has_pair(world, ie, ecs_id(EcsScript), inc));
+    test_assert(!ecs_has_pair(world, ie, ecs_id(EcsScript), s));
+    test_assert(ecs_has_pair(world, oe, ecs_id(EcsScript), s));
+
+    const EcsScript *psc = ecs_get(world, s, EcsScript);
+    test_bool(false, ecs_script_entity_source(psc->script, ie, NULL));
+    test_bool(true, ecs_script_entity_source(isc->script, ie, NULL));
+
+    test_uint(inc, ecs_script_entity_owner(world, ie));
+    test_uint(s, ecs_script_entity_owner(world, oe));
+
+    ecs_fini(world);
+    edit_files_fini();
+}
+
+void Edit_include_resolves_relative_to_script_dir(void) {
+    edit_files_init();
+    edit_files[0].name = "scene/child.flecs";
+    edit_files[0].content = "included_entity {}\n";
+    edit_files[1].name = "child.flecs";
+    edit_files[1].content = "wrong_entity {}\n";
+    edit_files[2].name = "scene/parent.flecs";
+    edit_files[2].content = "include child.flecs\n";
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .ir = ir_enabled, .filename = "scene/parent.flecs" });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "included_entity") != 0);
+    test_assert(ecs_lookup(world, "wrong_entity") == 0);
+    test_assert(ecs_lookup_path_w_sep(
+        world, 0, "scene/child.flecs", "/", NULL, false) != 0);
+
+    ecs_fini(world);
+    edit_files_fini();
+}
+
+void Edit_include_edit_applies_to_included_file(void) {
+    edit_files_init();
+    edit_files[0].name = "scene/child.flecs";
+    edit_files[0].content =
+        "included_entity {\n"
+        "  Position: {1, 2}\n"
+        "}\n";
+    edit_files[1].name = "scene/parent.flecs";
+    edit_files[1].content =
+        "include child.flecs\n"
+        "own_entity {\n"
+        "  Position: {3, 4}\n"
+        "}\n";
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = edit_position(world);
+
+    ecs_entity_t s = ecs_script(world, {
+        .ir = ir_enabled, .filename = "scene/parent.flecs" });
+    test_assert(s != 0);
+
+    ecs_entity_t ie = ecs_lookup(world, "included_entity");
+    ecs_entity_t inc = ecs_script_entity_owner(world, ie);
+    test_assert(inc != 0);
+    test_assert(inc != s);
+
+    const EcsScript *isc = ecs_get(world, inc, EcsScript);
+    ecs_script_edits_t *edits = ecs_script_edits_new(isc->script);
+    Position v = {10, 20};
+    test_int(0, ecs_script_edits_set(edits, ie, p, &v));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        "included_entity {\n"
+        "  Position: {10, 20}\n"
+        "}\n");
+
+    const EcsScript *psc = ecs_get(world, s, EcsScript);
+    test_str(psc->script->code, edit_files[1].content);
+
+    test_int(0, ecs_script_update(world, inc, 0, result));
+
+    const float *ptr = ecs_get_id(
+        world, ecs_lookup(world, "included_entity"), p);
+    test_assert(ptr != NULL);
+    test_int(10, ptr[0]);
+    test_int(20, ptr[1]);
+
+    ptr = ecs_get_id(world, ecs_lookup(world, "own_entity"), p);
+    test_assert(ptr != NULL);
+    test_int(3, ptr[0]);
+    test_int(4, ptr[1]);
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_fini(world);
+    edit_files_fini();
+}
+
+void Edit_include_parent_update_keeps_included_script(void) {
+    edit_files_init();
+    edit_files[0].name = "scene/child.flecs";
+    edit_files[0].content = "included_entity {}\n";
+    edit_files[1].name = "scene/parent.flecs";
+    edit_files[1].content =
+        "include child.flecs\n"
+        "own_entity {}\n";
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .ir = ir_enabled, .filename = "scene/parent.flecs" });
+    test_assert(s != 0);
+
+    ecs_entity_t inc = ecs_lookup_path_w_sep(
+        world, 0, "scene/child.flecs", "/", NULL, false);
+    ecs_entity_t ie = ecs_lookup(world, "included_entity");
+    test_assert(inc != 0);
+    test_assert(ie != 0);
+
+    test_int(0, ecs_script_update(world, s, 0,
+        "include child.flecs\n"
+        "own_entity {}\n"
+        "new_entity {}\n"));
+
+    test_uint(inc, ecs_lookup_path_w_sep(
+        world, 0, "scene/child.flecs", "/", NULL, false));
+    test_uint(ie, ecs_lookup(world, "included_entity"));
+    test_assert(ecs_lookup(world, "new_entity") != 0);
+    test_uint(inc, ecs_script_entity_owner(world, ie));
+
+    {
+        int32_t count = 0;
+        ecs_iter_t it = ecs_each_pair_t(world, EcsScript, EcsWildcard);
+        while (ecs_each_next(&it)) {
+            int32_t i;
+            for (i = 0; i < it.count; i ++) {
+                if (!ecs_os_strcmp(
+                    ecs_get_name(world, it.entities[i]), "included_entity"))
+                {
+                    count ++;
+                }
+            }
+        }
+        test_int(1, count);
+    }
+
+    ecs_fini(world);
+    edit_files_fini();
+}
+
+void Edit_include_update_included_script(void) {
+    edit_files_init();
+    edit_files[0].name = "scene/child.flecs";
+    edit_files[0].content = "included_entity {}\n";
+    edit_files[1].name = "scene/parent.flecs";
+    edit_files[1].content =
+        "include child.flecs\n"
+        "own_entity {}\n";
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .ir = ir_enabled, .filename = "scene/parent.flecs" });
+    test_assert(s != 0);
+
+    ecs_entity_t inc = ecs_lookup_path_w_sep(
+        world, 0, "scene/child.flecs", "/", NULL, false);
+    test_assert(inc != 0);
+
+    test_int(0, ecs_script_update(world, inc, 0, "other_entity {}\n"));
+
+    test_assert(ecs_lookup(world, "included_entity") == 0);
+    test_assert(ecs_lookup(world, "other_entity") != 0);
+    test_assert(ecs_lookup(world, "own_entity") != 0);
+    test_uint(inc, ecs_script_entity_owner(
+        world, ecs_lookup(world, "other_entity")));
+
+    ecs_fini(world);
+    edit_files_fini();
+}
+
+void Edit_include_clear_parent_keeps_included_script(void) {
+    edit_files_init();
+    edit_files[0].name = "scene/child.flecs";
+    edit_files[0].content = "included_entity {}\n";
+    edit_files[1].name = "scene/parent.flecs";
+    edit_files[1].content =
+        "include child.flecs\n"
+        "own_entity {}\n";
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .ir = ir_enabled, .filename = "scene/parent.flecs" });
+    test_assert(s != 0);
+
+    ecs_entity_t inc = ecs_lookup_path_w_sep(
+        world, 0, "scene/child.flecs", "/", NULL, false);
+    test_assert(inc != 0);
+
+    ecs_script_clear(world, s, 0);
+
+    test_assert(ecs_lookup(world, "own_entity") == 0);
+    test_assert(ecs_is_alive(world, inc));
+    test_assert(ecs_lookup(world, "included_entity") != 0);
+    test_uint(inc, ecs_script_entity_owner(
+        world, ecs_lookup(world, "included_entity")));
+
+    ecs_script_clear(world, inc, 0);
+    test_assert(ecs_lookup(world, "included_entity") == 0);
+
+    ecs_delete(world, s);
+    test_assert(ecs_is_alive(world, inc));
+
+    ecs_fini(world);
+    edit_files_fini();
+}
+
+void Edit_entity_owner_plain(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "foo {"
+        LINE "  bar {}"
+        LINE "}" });
+
+    test_assert(s != 0);
+    test_uint(s, ecs_script_entity_owner(world, ecs_lookup(world, "foo")));
+    test_uint(s, ecs_script_entity_owner(world, ecs_lookup(world, "foo.bar")));
+
+    ecs_fini(world);
+}
+
+void Edit_entity_owner_no_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "foo" });
+
+    test_uint(0, ecs_script_entity_owner(world, e));
+    test_uint(0, ecs_script_entity_owner(world, 0));
+    test_uint(0, ecs_script_entity_owner(world, 100000));
+
+    ecs_fini(world);
+}
+
+void Edit_entity_owner_unmanaged_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = edit_parse(world, "foo {}");
+
+    test_uint(0, ecs_script_entity_owner(world, ecs_lookup(world, "foo")));
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_entity_owner_for_loop_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "for i in 0..3 {"
+        LINE "  \"e_{i}\" {}"
+        LINE "}" });
+
+    test_assert(s != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_1");
+    test_assert(e != 0);
+    test_uint(0, ecs_script_entity_owner(world, e));
+
     ecs_fini(world);
 }

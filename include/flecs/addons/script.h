@@ -471,12 +471,28 @@ typedef struct ecs_script_source_t {
     int32_t line;       /**< Line of the first character (1 based). */
     int32_t column;     /**< Column of the first character (1 based). */
     bool has_scope;     /**< Whether the statement is followed by a { } scope. */
+
+    /** Set when the statement is inside the body of a `template` statement.
+     * When set, this is the template entity that the body belongs to, and the
+     * statement is shared by every instance of that template: editing it
+     * changes all instances. Zero for regular entity statements. */
+    ecs_entity_t template_;
 } ecs_script_source_t;
 
 /** Find the statement that declares an entity.
  * This operation returns the source location of the entity statement that
  * declared an entity. The script must have been evaluated at least once, as
  * the mapping from entity to statement is established during evaluation.
+ *
+ * Entities that were created by instantiating a `template` declared by this
+ * script are resolved to the statement in the template body that created them.
+ * Because a template body statement is shared by all instances of the template,
+ * the same statement is returned for every instance, and
+ * ecs_script_source_t::template_ is set to the template entity. The template
+ * must be declared by this script; when a script instantiates a template that
+ * is declared by another script (for example a template from an included file),
+ * the body entities are reported by the script that declares the template, not
+ * by the script that instantiates it.
  *
  * The operation returns false when the entity was not created by an entity
  * statement of this script. This is the case for:
@@ -485,12 +501,9 @@ typedef struct ecs_script_source_t {
  * - entities created by a different script (an `include` statement evaluates
  *   the included file as a separate script object, so entities created by an
  *   included file are never reported by the including script)
- * - entities created by the body of a `template` statement (a single statement
- *   creates an entity per template instance, so the statement cannot be
- *   attributed to one entity). Note that the statement that *instantiates* a
- *   template ("SpaceShip enterprise" or "SpaceShip enterprise()") is a regular
- *   entity statement, and is returned by this operation.
- * - entities created inside a `for` loop or a function body
+ * - entities created inside a `for` loop or a function body, also when the
+ *   `for` loop is part of a template body
+ * - entities created by a template body statement with a computed name
  * - entities created by a "new" expression
  *
  * When an entity is declared by more than one statement, the location of the
@@ -508,6 +521,38 @@ bool ecs_script_entity_source(
     const ecs_script_t *script,
     ecs_entity_t entity,
     ecs_script_source_t *source);
+
+/** Find the managed script that declares an entity.
+ * This operation returns the entity of the managed script (see ecs_script())
+ * whose source code contains the statement that created the entity. The
+ * returned script entity is the one to use with ecs_script_entity_source() and
+ * ecs_script_edits_new():
+ *
+ * @code
+ * ecs_entity_t s = ecs_script_entity_owner(world, e);
+ * const EcsScript *sc = ecs_get(world, s, EcsScript);
+ * ecs_script_edits_t *edits = ecs_script_edits_new(sc->script);
+ * @endcode
+ *
+ * For entities that were created by a regular entity statement this is the
+ * script that created the entity. For entities that were created by a template
+ * body this is the script that *declares* the template, which is not
+ * necessarily the script that instantiates it.
+ *
+ * The operation returns 0 when the entity is not editable, which is the case
+ * when the entity was not created by a script, when the script that created it
+ * is not managed (see ecs_script_parse()), or when the statement that created
+ * the entity cannot be attributed to the entity (see
+ * ecs_script_entity_source()).
+ *
+ * @param world The world.
+ * @param entity The entity to find.
+ * @return The managed script entity, or 0 if the entity is not editable.
+ */
+FLECS_API
+ecs_entity_t ecs_script_entity_owner(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
 
 /** Set of pending edits for a script.
  * See ecs_script_edits_new().
@@ -552,8 +597,16 @@ void ecs_script_edits_free(
  *   expression) is replaced with the default serialized form
  *
  * All members of the component are written, in the order in which they are
- * defined by the type. Values are serialized with ecs_ptr_to_expr(), which
- * roundtrips floating point values.
+ * defined by the type. Floating point members are written as the shortest
+ * decimal string that parses back to the same value ("1.2345" for a float with
+ * value 1.2345f, "1" for a float with value 1.0f), so values roundtrip without
+ * accumulating digits.
+ *
+ * When the entity was created by a template body statement (see
+ * ecs_script_entity_source()) the statement in the template body is edited,
+ * which changes the value for every instance of the template. Any expression
+ * that the body used for the value (such as a prop or const reference) is
+ * replaced by the literal value that is passed to this operation.
  *
  * If the entity scope does not contain a statement for the component, a new
  * "Component: {...}" statement is appended to the end of the entity scope,
@@ -628,8 +681,18 @@ int ecs_script_edits_remove(
  * occupies. Comments that precede the statement are preserved. A trailing
  * comment on the last line of the statement is removed together with the line.
  *
+ * When the removed lines are surrounded by blank lines (where the start of the
+ * file, the opening brace of the enclosing scope, the closing brace of the
+ * enclosing scope and the end of the file count as blank), one of the blank
+ * lines is removed as well, so that the statements around the deleted statement
+ * stay separated by exactly one blank line.
+ *
  * Other edits that fall inside the span of a deleted entity (such as edits to
  * child entities) are absorbed by the deletion.
+ *
+ * When the entity was created by a template body statement (see
+ * ecs_script_entity_source()) the statement in the template body is deleted,
+ * which removes the entity from every instance of the template.
  *
  * @param edits The edit set.
  * @param entity The entity to delete.
