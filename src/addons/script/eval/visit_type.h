@@ -52,4 +52,8 @@ int32_t flecs_script_type_slot_new(
     ecs_script_type_visitor_t *t,
     int32_t expected);
 
+bool flecs_script_type_is_skipped_var(
+    ecs_script_type_visitor_t *t,
+    const char *name);
+
 #endif
