@@ -52163,6 +52163,20 @@ const char* flecs_script_stmt(
 void flecs_script_entity_index_fini(
     ecs_script_impl_t *impl);
 
+/* Write the shortest decimal string that parses back to the same value. */
+void flecs_script_flt_to_str(
+    char *buf,
+    int32_t size,
+    double value,
+    bool is_f32);
+
+/* Same as ecs_ptr_to_expr(), but writes floating point members with the
+ * shortest decimal string that roundtrips to the same value. */
+char* flecs_script_ptr_to_expr_precise(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr);
+
 const char* flecs_script_stmt_w_separator(
     ecs_parser_t *parser,
     const char *pos);
@@ -70331,6 +70345,194 @@ void flecs_script_entity_index_fini(
     }
 }
 
+static ecs_script_entity_t* flecs_script_edit_find_symbol_scope(
+    ecs_script_scope_t *scope,
+    int32_t symbol);
+
+static ecs_script_entity_t* flecs_script_edit_find_symbol_node(
+    ecs_script_node_t *node,
+    int32_t symbol)
+{
+    switch(node->kind) {
+    case EcsAstEntity: {
+        ecs_script_entity_t *entity = (ecs_script_entity_t*)node;
+        if (flecs_script_node_is_hoisted(node)) {
+            return NULL;
+        }
+
+        if (entity->symbol == symbol) {
+            return entity;
+        }
+
+        return flecs_script_edit_find_symbol_scope(entity->scope, symbol);
+    }
+    case EcsAstWith: {
+        ecs_script_with_t *with = (ecs_script_with_t*)node;
+        return flecs_script_edit_find_symbol_scope(with->scope, symbol);
+    }
+    case EcsAstPairScope: {
+        ecs_script_pair_scope_t *ps = (ecs_script_pair_scope_t*)node;
+        return flecs_script_edit_find_symbol_scope(ps->scope, symbol);
+    }
+    case EcsAstIf: {
+        ecs_script_if_t *stmt = (ecs_script_if_t*)node;
+        ecs_script_entity_t *result = flecs_script_edit_find_symbol_scope(
+            stmt->if_true, symbol);
+        if (!result) {
+            result = flecs_script_edit_find_symbol_scope(
+                stmt->if_false, symbol);
+        }
+        return result;
+    }
+    case EcsAstTry: {
+        ecs_script_try_t *stmt = (ecs_script_try_t*)node;
+        ecs_script_entity_t *result = flecs_script_edit_find_symbol_scope(
+            stmt->try_scope, symbol);
+        if (!result) {
+            ecs_script_catch_t *catches = ecs_vec_first(&stmt->catches);
+            int32_t i, count = ecs_vec_count(&stmt->catches);
+            for (i = 0; i < count; i ++) {
+                result = flecs_script_edit_find_symbol_scope(
+                    catches[i].scope, symbol);
+                if (result) {
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+    default:
+        break;
+    }
+
+    return NULL;
+}
+
+static ecs_script_entity_t* flecs_script_edit_find_symbol_scope(
+    ecs_script_scope_t *scope,
+    int32_t symbol)
+{
+    if (!scope) {
+        return NULL;
+    }
+
+    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+    for (i = 0; i < count; i ++) {
+        ecs_script_entity_t *result = flecs_script_edit_find_symbol_node(
+            stmts[i], symbol);
+        if (result) {
+            return result;
+        }
+    }
+
+    return NULL;
+}
+
+static ecs_script_entity_t* flecs_script_edit_find_in_template(
+    ecs_script_impl_t *impl,
+    ecs_entity_t entity,
+    ecs_entity_t *template_out)
+{
+    ecs_world_t *world = impl->pub.world;
+    if (!world || !entity || !ecs_is_alive(world, entity)) {
+        return NULL;
+    }
+
+    ecs_entity_t instance = ecs_get_target(world, entity, EcsChildOf, 0);
+    ecs_entity_t template_entity = 0;
+
+    while (instance) {
+        template_entity = ecs_get_target(
+            world, instance, ecs_id(EcsScriptTemplateRoot), 0);
+        if (template_entity) {
+            break;
+        }
+        instance = ecs_get_target(world, instance, EcsChildOf, 0);
+    }
+
+    if (!template_entity) {
+        return NULL;
+    }
+
+    const EcsScript *sc = ecs_get(world, template_entity, EcsScript);
+    if (!sc || !sc->script || !sc->template_) {
+        return NULL;
+    }
+
+    if (sc->script != &impl->pub) {
+        return NULL;
+    }
+
+    const EcsScriptTemplateRoot *root = ecs_get_pair(
+        world, instance, EcsScriptTemplateRoot, template_entity);
+    if (!root) {
+        return NULL;
+    }
+
+    ecs_script_template_t *template = sc->template_;
+    const ecs_script_symbol_slot_t *slots = ecs_vec_first(&root->symbol_slots);
+    int32_t i, count = ecs_vec_count(&root->symbol_slots);
+    int32_t slot = -1;
+
+    for (i = 0; i < count; i ++) {
+        if (slots[i].entity == entity) {
+            slot = i;
+            break;
+        }
+    }
+
+    if (slot == -1) {
+        return NULL;
+    }
+
+    int32_t symbol = template->symbol_offset + slot;
+    if (symbol == template->root_symbol) {
+        return NULL;
+    }
+
+    if (!template->node || !template->node->scope) {
+        return NULL;
+    }
+
+    ecs_script_entity_t *node = flecs_script_edit_find_symbol_scope(
+        template->node->scope, symbol);
+    if (!node) {
+        return NULL;
+    }
+
+    if (node->name_expr) {
+        return NULL;
+    }
+
+    if (!node->node.pos || !node->node.end) {
+        return NULL;
+    }
+
+    if (template_out) {
+        template_out[0] = template_entity;
+    }
+
+    return node;
+}
+
+static ecs_script_entity_t* flecs_script_edit_find_w_template(
+    ecs_script_impl_t *impl,
+    ecs_entity_t entity,
+    ecs_entity_t *template_out)
+{
+    if (template_out) {
+        template_out[0] = 0;
+    }
+
+    ecs_script_entity_t *node = flecs_script_edit_find(impl, entity);
+    if (node) {
+        return node;
+    }
+
+    return flecs_script_edit_find_in_template(impl, entity, template_out);
+}
+
 bool ecs_script_entity_source(
     const ecs_script_t *script,
     ecs_entity_t entity,
@@ -70341,7 +70543,9 @@ bool ecs_script_entity_source(
     ecs_script_impl_t *impl = flecs_script_impl(
         ECS_CONST_CAST(ecs_script_t*, script));
 
-    ecs_script_entity_t *node = flecs_script_edit_find(impl, entity);
+    ecs_entity_t template_entity = 0;
+    ecs_script_entity_t *node = flecs_script_edit_find_w_template(
+        impl, entity, &template_entity);
     if (!node) {
         return false;
     }
@@ -70354,6 +70558,7 @@ bool ecs_script_entity_source(
         source->offset = flecs_ito(int32_t, node->node.pos - script->code);
         source->length = flecs_ito(int32_t, node->node.end - node->node.pos);
         source->has_scope = node->scope != NULL && node->scope->open != NULL;
+        source->template_ = template_entity;
         flecs_script_pos_to_line_col(script->code, node->node.pos,
             &source->line, &source->column);
     }
@@ -70361,6 +70566,63 @@ bool ecs_script_entity_source(
     return true;
 error:
     return false;
+}
+
+ecs_entity_t ecs_script_entity_owner(
+    const ecs_world_t *stage,
+    ecs_entity_t entity)
+{
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
+    if (!entity || !ecs_is_alive(world, entity)) {
+        return 0;
+    }
+
+    ecs_entity_t script_entity = ecs_get_target(
+        world, entity, ecs_id(EcsScript), 0);
+    if (script_entity) {
+        const EcsScript *sc = ecs_get(world, script_entity, EcsScript);
+        if (sc && sc->script && !sc->template_ &&
+            ecs_script_entity_source(sc->script, entity, NULL))
+        {
+            return script_entity;
+        }
+    }
+
+    ecs_entity_t instance = ecs_get_target(world, entity, EcsChildOf, 0);
+    ecs_entity_t template_entity = 0;
+
+    while (instance) {
+        template_entity = ecs_get_target(
+            world, instance, ecs_id(EcsScriptTemplateRoot), 0);
+        if (template_entity) {
+            break;
+        }
+        instance = ecs_get_target(world, instance, EcsChildOf, 0);
+    }
+
+    if (!template_entity) {
+        return 0;
+    }
+
+    const EcsScript *sc = ecs_get(world, template_entity, EcsScript);
+    if (!sc || !sc->script) {
+        return 0;
+    }
+
+    ecs_entity_t owner = flecs_script_impl(sc->script)->entity;
+    if (!owner) {
+        return 0;
+    }
+
+    if (!ecs_script_entity_source(sc->script, entity, NULL)) {
+        return 0;
+    }
+
+    return owner;
+error:
+    return 0;
 }
 
 static void flecs_script_edit_using_scopes(
@@ -70619,7 +70881,7 @@ static char* flecs_script_edit_value_str(
         return NULL;
     }
 
-    char *expr = ecs_ptr_to_expr(world, type, value);
+    char *expr = flecs_script_ptr_to_expr_precise(world, type, value);
     if (!expr) {
         return NULL;
     }
@@ -70768,6 +71030,92 @@ static void flecs_script_edit_line_span(
     *length_out = flecs_ito(int32_t, finish - begin);
 }
 
+static void flecs_script_edit_collapse_blank(
+    const char *code,
+    int32_t *offset_out,
+    int32_t *length_out)
+{
+    const char *begin = &code[*offset_out];
+    const char *finish = begin + *length_out;
+
+    bool blank_before = false;
+    {
+        const char *cur = begin;
+        int32_t newlines = 0;
+
+        while (cur > code) {
+            char c = cur[-1];
+            if (c == '\n') {
+                newlines ++;
+                if (newlines >= 2) {
+                    break;
+                }
+            } else if (c != ' ' && c != '\t' && c != '\r') {
+                break;
+            }
+            cur --;
+        }
+
+        if (cur == code || newlines >= 2 || cur[-1] == '{') {
+            blank_before = true;
+        }
+    }
+
+    if (!blank_before) {
+        return;
+    }
+
+    bool blank_after = false;
+    int32_t newlines_after = 0;
+    {
+        const char *cur = finish;
+
+        while (cur[0]) {
+            char c = cur[0];
+            if (c == '\n') {
+                newlines_after ++;
+            } else if (c != ' ' && c != '\t' && c != '\r') {
+                break;
+            }
+            cur ++;
+        }
+
+        if (!cur[0] || newlines_after >= 1 || cur[0] == '}') {
+            blank_after = true;
+        }
+    }
+
+    if (!blank_after) {
+        return;
+    }
+
+    if (newlines_after >= 1) {
+        const char *cur = finish;
+        while (cur[0] == ' ' || cur[0] == '\t' || cur[0] == '\r') {
+            cur ++;
+        }
+        if (cur[0] == '\n') {
+            *length_out += flecs_ito(int32_t, (cur + 1) - finish);
+        }
+        return;
+    }
+
+    if (begin > code && begin[-1] == '\n') {
+        const char *cur = begin - 1;
+        while (cur > code &&
+            (cur[-1] == ' ' || cur[-1] == '\t' || cur[-1] == '\r'))
+        {
+            cur --;
+        }
+
+        if (cur == code || cur[-1] == '\n') {
+            int32_t delta = flecs_ito(int32_t, begin - cur);
+            *offset_out -= delta;
+            *length_out += delta;
+        }
+    }
+}
+
 ecs_script_edits_t* ecs_script_edits_new(
     ecs_script_t *script)
 {
@@ -70837,7 +71185,8 @@ static ecs_script_entity_t* flecs_script_edit_entity(
     ecs_entity_t entity)
 {
     ecs_script_impl_t *impl = flecs_script_impl(edits->script);
-    ecs_script_entity_t *node = flecs_script_edit_find(impl, entity);
+    ecs_script_entity_t *node = flecs_script_edit_find_w_template(
+        impl, entity, NULL);
     if (!node || !node->node.pos || !node->node.end) {
         char *path = ecs_get_path(edits->script->world, entity);
         ecs_err("entity '%s' is not declared by an editable statement in "
@@ -71111,6 +71460,7 @@ int ecs_script_edits_delete(
     int32_t offset, length;
     flecs_script_edit_line_span(edits->script->code, node->node.pos,
         node->node.end, &offset, &length);
+    flecs_script_edit_collapse_blank(edits->script->code, &offset, &length);
 
     flecs_script_edit_add(edits, entity, 0, FlecsScriptEditDelete,
         offset, length, ecs_os_strdup(""));
@@ -74824,7 +75174,8 @@ static int flecs_expr_ser_type(
     const ecs_vec_t *ser, 
     const void *base, 
     ecs_strbuf_t *str,
-    bool is_expr);
+    bool is_expr,
+    bool precise);
 
 static int flecs_expr_ser_type_ops(
     const ecs_world_t *world,
@@ -74832,17 +75183,49 @@ static int flecs_expr_ser_type_ops(
     int32_t op_count,
     const void *base, 
     ecs_strbuf_t *str,
-    bool is_expr);
+    bool is_expr,
+    bool precise);
 
 static int flecs_expr_ser_forward(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *base,
     ecs_strbuf_t *str,
-    bool is_expr);
+    bool is_expr,
+    bool precise);
 
 static ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_op_kind_t kind) {
     return kind - EcsOpPrimitive;
+}
+
+void flecs_script_flt_to_str(
+    char *buf,
+    int32_t size,
+    double value,
+    bool is_f32)
+{
+    if (value == 0) {
+        ecs_os_strcpy(buf, "0");
+        return;
+    }
+
+    int32_t precision = is_f32 ? 6 : 15;
+    int32_t max_precision = is_f32 ? 9 : 17;
+
+    for (; precision < max_precision; precision ++) {
+        ecs_os_snprintf(buf, size, "%.*g", precision, value);
+        if (is_f32) {
+            if ((float)strtod(buf, NULL) == (float)value) {
+                return;
+            }
+        } else {
+            if (strtod(buf, NULL) == value) {
+                return;
+            }
+        }
+    }
+
+    ecs_os_snprintf(buf, size, "%.*g", max_precision, value);
 }
 
 static int flecs_expr_ser_enum(
@@ -74870,10 +75253,11 @@ static int flecs_expr_ser_scope(
     ecs_meta_op_t *ops,
     const void *base,
     ecs_strbuf_t *str,
-    bool is_expr)
+    bool is_expr,
+    bool precise)
 {
     if (flecs_expr_ser_type_ops(
-        world, ops + 1, ops->op_count - 2, base, str, is_expr)) 
+        world, ops + 1, ops->op_count - 2, base, str, is_expr, precise)) 
     {
         return -1;
     }
@@ -74886,7 +75270,8 @@ static int flecs_expr_ser_array(
     const void *array,
     int32_t count,
     ecs_strbuf_t *str,
-    bool is_expr)
+    bool is_expr,
+    bool precise)
 {
     ecs_strbuf_list_push(str, "[", ", ");
 
@@ -74894,7 +75279,7 @@ static int flecs_expr_ser_array(
     for (i = 0; i < count; i ++) {
         ecs_strbuf_list_next(str);
         void *ptr = ECS_ELEM(array, ops->elem_size, i);
-        if (flecs_expr_ser_scope(world, ops, ptr, str, is_expr)) {
+        if (flecs_expr_ser_scope(world, ops, ptr, str, is_expr, precise)) {
             goto error;
         }
     }
@@ -74911,7 +75296,8 @@ static int flecs_expr_ser_map(
     ecs_meta_op_t *ops,
     const void *base,
     ecs_strbuf_t *str,
-    bool is_expr)
+    bool is_expr,
+    bool precise)
 {
     const ecs_map_t *map = base;
 
@@ -74936,7 +75322,7 @@ static int flecs_expr_ser_map(
             ptr = &it.res[1];
         }
 
-        if (flecs_expr_ser_scope(world, ops, ptr, str, is_expr)) {
+        if (flecs_expr_ser_scope(world, ops, ptr, str, is_expr, precise)) {
             goto error;
         }
     }
@@ -74952,7 +75338,8 @@ static int flecs_expr_ser_value(
     const ecs_world_t *world,
     const void *base,
     ecs_strbuf_t *str,
-    bool is_expr)
+    bool is_expr,
+    bool precise)
 {
     const ecs_value_t *value = base;
 
@@ -74972,7 +75359,9 @@ static int flecs_expr_ser_value(
 
     ecs_strbuf_appendlit(str, ": ");
 
-    if (flecs_expr_ser_forward(world, value->type, value->ptr, str, is_expr)) {
+    if (flecs_expr_ser_forward(
+        world, value->type, value->ptr, str, is_expr, precise))
+    {
         return -1;
     }
 
@@ -74986,11 +75375,12 @@ static int flecs_expr_ser_struct(
     ecs_meta_op_t *ops,
     const void *base,
     ecs_strbuf_t *str,
-    bool is_expr)
+    bool is_expr,
+    bool precise)
 {
     ecs_strbuf_list_push(str, "{", ", ");
 
-    if (flecs_expr_ser_scope(world, ops, base, str, is_expr)) {
+    if (flecs_expr_ser_scope(world, ops, base, str, is_expr, precise)) {
         return -1;
     }
 
@@ -75004,7 +75394,8 @@ static int flecs_expr_ser_forward(
     ecs_entity_t type,
     const void *base,
     ecs_strbuf_t *str,
-    bool is_expr)
+    bool is_expr,
+    bool precise)
 {
     const EcsTypeSerializer *ts = ecs_get(world, type, EcsTypeSerializer);
     if (!ts) {
@@ -75014,7 +75405,7 @@ static int flecs_expr_ser_forward(
     }
 
     return flecs_expr_ser_type_ops(world, ecs_vec_first(&ts->ops), 
-        ecs_vec_count(&ts->ops), base, str, is_expr);
+        ecs_vec_count(&ts->ops), base, str, is_expr, precise);
 }
 
 typedef struct flecs_expr_serializer_ctx_t {
@@ -75092,7 +75483,8 @@ static int flecs_expr_ser_type_ops(
     int32_t op_count,
     const void *base,
     ecs_strbuf_t *str,
-    bool is_expr) 
+    bool is_expr,
+    bool precise) 
 {
     for (int i = 0; i < op_count; i ++) {
         ecs_meta_op_t *op = &ops[i];
@@ -75106,14 +75498,14 @@ static int flecs_expr_ser_type_ops(
 
         switch(op->kind) {
         case EcsOpPushStruct: {
-            if (flecs_expr_ser_struct(world, op, ptr, str, is_expr)) {
+            if (flecs_expr_ser_struct(world, op, ptr, str, is_expr, precise)) {
                 goto error;
             }
             break;
         }
         case EcsOpPushArray: {
             if (flecs_expr_ser_array(world, op, ptr, 
-                ecs_meta_op_get_elem_count(op, ptr), str, is_expr))
+                ecs_meta_op_get_elem_count(op, ptr), str, is_expr, precise))
             {
                 goto error;
             }
@@ -75123,26 +75515,26 @@ static int flecs_expr_ser_type_ops(
             ecs_vec_t *vec = ECS_OFFSET(base, op->offset);
 
             if (flecs_expr_ser_array(world, op,
-                vec->array, vec->count, str, is_expr))
+                vec->array, vec->count, str, is_expr, precise))
             {
                 goto error;
             }
             break;
         }
         case EcsOpPushMap: {
-            if (flecs_expr_ser_map(world, op, ptr, str, is_expr)) {
+            if (flecs_expr_ser_map(world, op, ptr, str, is_expr, precise)) {
                 goto error;
             }
             break;
         }
         case EcsOpPushValue: {
-            if (flecs_expr_ser_value(world, ptr, str, is_expr)) {
+            if (flecs_expr_ser_value(world, ptr, str, is_expr, precise)) {
                 goto error;
             }
             break;
         }
         case EcsOpForward: {
-            if (flecs_expr_ser_forward(world, op->type, ptr, str, is_expr)) {
+            if (flecs_expr_ser_forward(world, op->type, ptr, str, is_expr, precise)) {
                 goto error;
             }
             break;
@@ -75176,14 +75568,29 @@ static int flecs_expr_ser_type_ops(
         case EcsOpI16:
         case EcsOpI32:
         case EcsOpI64:
-        case EcsOpF32:
-        case EcsOpF64:
         case EcsOpUPtr:
         case EcsOpIPtr:
         case EcsOpEntity:
         case EcsOpId:
         case EcsOpString:
-            if (flecs_meta_ser_primitive(world, 
+            if (flecs_meta_ser_primitive(world,
+                flecs_expr_op_to_primitive_kind(op->kind), ptr, str, is_expr))
+            {
+                /* Unknown operation */
+                ecs_err("unknown serializer operation kind (%d)", op->kind);
+                goto error;
+            }
+            break;
+        case EcsOpF32:
+        case EcsOpF64:
+            if (precise) {
+                char numbuf[32];
+                bool is_f32 = op->kind == EcsOpF32;
+                flecs_script_flt_to_str(numbuf, 32, is_f32
+                    ? (double)*(const float*)ptr
+                    : *(const double*)ptr, is_f32);
+                ecs_strbuf_appendstr(str, numbuf);
+            } else if (flecs_meta_ser_primitive(world,
                 flecs_expr_op_to_primitive_kind(op->kind), ptr, str, is_expr))
             {
                 /* Unknown operation */
@@ -75212,11 +75619,13 @@ static int flecs_expr_ser_type(
     const ecs_vec_t *v_ops,
     const void *base, 
     ecs_strbuf_t *str,
-    bool is_expr) 
+    bool is_expr,
+    bool precise) 
 {
     ecs_meta_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_op_t);
     int32_t count = ecs_vec_count(v_ops);
-    return flecs_expr_ser_type_ops(world, ops, count, base, str, is_expr);
+    return flecs_expr_ser_type_ops(
+        world, ops, count, base, str, is_expr, precise);
 }
 
 int ecs_ptr_to_expr_buf(
@@ -75234,13 +75643,36 @@ int ecs_ptr_to_expr_buf(
         goto error;
     }
 
-    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, true)) {
+    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, true, false)) {
         goto error;
     }
 
     return 0;
 error:
     return -1;
+}
+
+char* flecs_script_ptr_to_expr_precise(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr)
+{
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
+    if (ser == NULL) {
+        char *path = ecs_get_path(world, type);
+        ecs_err("cannot serialize value for type '%s'", path);
+        ecs_os_free(path);
+        return NULL;
+    }
+
+    ecs_strbuf_t str = ECS_STRBUF_INIT;
+    if (flecs_expr_ser_type(world, &ser->ops, ptr, &str, true, true)) {
+        ecs_strbuf_reset(&str);
+        return NULL;
+    }
+
+    return ecs_strbuf_get(&str);
 }
 
 char* ecs_ptr_to_expr(
@@ -75273,7 +75705,7 @@ int ecs_ptr_to_str_buf(
         goto error;
     }
 
-    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, false)) {
+    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, false, false)) {
         goto error;
     }
 

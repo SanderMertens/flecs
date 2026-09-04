@@ -288,6 +288,20 @@ const char* flecs_script_stmt(
 void flecs_script_entity_index_fini(
     ecs_script_impl_t *impl);
 
+/* Write the shortest decimal string that parses back to the same value. */
+void flecs_script_flt_to_str(
+    char *buf,
+    int32_t size,
+    double value,
+    bool is_f32);
+
+/* Same as ecs_ptr_to_expr(), but writes floating point members with the
+ * shortest decimal string that roundtrips to the same value. */
+char* flecs_script_ptr_to_expr_precise(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr);
+
 const char* flecs_script_stmt_w_separator(
     ecs_parser_t *parser,
     const char *pos);
