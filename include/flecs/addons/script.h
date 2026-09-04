@@ -585,6 +585,24 @@ typedef struct ecs_script_edits_t ecs_script_edits_t;
  * The script must be evaluated before edits can be added, and must outlive the
  * edit set.
  *
+ * Edits are resolved to a source code span when they are recorded, not when
+ * they are applied. The entity is only used to find the statement at that
+ * moment; afterwards the recorded edit no longer depends on it. This means an
+ * edit set can outlive the entities it was recorded for, but it also means
+ * that a delete must be recorded *before* the entity is deleted:
+ *
+ * @code
+ * ecs_script_edits_delete(edits, e);
+ * ecs_delete(world, e);
+ * @endcode
+ *
+ * Recording an edit for an entity that is no longer alive fails, as the
+ * statement can no longer be found.
+ *
+ * A recorded edit can be dropped again with ecs_script_edits_clear(), which
+ * makes it possible to use a single edit set as an undo/redo buffer for an
+ * editing session.
+ *
  * An edit set must be deleted with ecs_script_edits_free().
  *
  * @param script The script to edit.
@@ -711,6 +729,11 @@ int ecs_script_edits_remove(
  * ecs_script_entity_source()) the statement in the template body is deleted,
  * which removes the entity from every instance of the template.
  *
+ * The operation only records the source code span of the statement, it does
+ * not delete the entity. The edit must be recorded while the entity is still
+ * alive; the recorded edit remains valid after the entity is deleted with
+ * ecs_delete(). See ecs_script_edits_new().
+ *
  * @param edits The edit set.
  * @param entity The entity to delete.
  * @return Zero if success, non-zero if failed.
@@ -719,6 +742,42 @@ FLECS_API
 int ecs_script_edits_delete(
     ecs_script_edits_t *edits,
     ecs_entity_t entity);
+
+/** Remove a recorded edit from an edit set.
+ * Edits are keyed by entity and component. This operation removes the edit
+ * that was recorded for the provided key, which undoes the effect that the
+ * edit would have had on ecs_script_edits_apply().
+ *
+ * Pass 0 for the component to clear the edit recorded by
+ * ecs_script_edits_delete(). Pass a component (or pair) to clear the edit
+ * recorded by ecs_script_edits_set(), ecs_script_edits_set_expr() or
+ * ecs_script_edits_remove() for that component.
+ *
+ * The entity is only used as a key. It does not have to be alive, which means
+ * an edit that was recorded before the entity was deleted can still be
+ * cleared afterwards.
+ *
+ * @param edits The edit set.
+ * @param entity The entity the edit was recorded for.
+ * @param component The component the edit was recorded for, or 0 for a delete.
+ * @return Zero if an edit was removed, non-zero if no edit was recorded.
+ */
+FLECS_API
+int ecs_script_edits_clear(
+    ecs_script_edits_t *edits,
+    ecs_entity_t entity,
+    ecs_id_t component);
+
+/** Return the number of recorded edits in an edit set.
+ * Edits are keyed by entity and component, which means that recording an edit
+ * twice for the same key does not increase the count.
+ *
+ * @param edits The edit set.
+ * @return The number of recorded edits.
+ */
+FLECS_API
+int32_t ecs_script_edits_count(
+    const ecs_script_edits_t *edits);
 
 /** Apply an edit set.
  * This operation returns new script source code with the edits applied. The

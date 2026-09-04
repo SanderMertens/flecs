@@ -2842,3 +2842,271 @@ void Edit_entity_owner_for_loop_entity(void) {
 
     ecs_fini(world);
 }
+
+void Edit_delete_recorded_before_entity_deleted(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE "bar {}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, foo));
+
+    ecs_delete(world, foo);
+    test_assert(!ecs_is_alive(world, foo));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result, "bar {}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_clear_delete_after_entity_deleted(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE "bar {}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, foo));
+    test_int(1, ecs_script_edits_count(edits));
+
+    ecs_delete(world, foo);
+
+    test_int(0, ecs_script_edits_clear(edits, foo, 0));
+    test_int(0, ecs_script_edits_count(edits));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result, expr);
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_clear_set(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = edit_position(world);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Position: {10, 20}"
+    LINE "}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    Position v = {1, 2};
+    test_int(0, ecs_script_edits_set(edits, foo, p, &v));
+    test_int(1, ecs_script_edits_count(edits));
+
+    test_int(0, ecs_script_edits_clear(edits, foo, p));
+    test_int(0, ecs_script_edits_count(edits));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result, expr);
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_clear_unknown_edit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = edit_position(world);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Position: {10, 20}"
+    LINE "}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(-1, ecs_script_edits_clear(edits, foo, 0));
+    test_int(-1, ecs_script_edits_clear(edits, foo, p));
+
+    Position v = {1, 2};
+    test_int(0, ecs_script_edits_set(edits, foo, p, &v));
+    test_int(-1, ecs_script_edits_clear(edits, foo, 0));
+    test_int(1, ecs_script_edits_count(edits));
+
+    test_int(0, ecs_script_edits_clear(edits, foo, p));
+    test_int(-1, ecs_script_edits_clear(edits, foo, p));
+
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_set_after_clear(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = edit_position(world);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Position: {10, 20}"
+    LINE "}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    Position v1 = {1, 2};
+    test_int(0, ecs_script_edits_set(edits, foo, p, &v1));
+    test_int(0, ecs_script_edits_clear(edits, foo, p));
+
+    Position v2 = {3, 4};
+    test_int(0, ecs_script_edits_set(edits, foo, p, &v2));
+    test_int(1, ecs_script_edits_count(edits));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "foo {"
+        LINE "  Position: {3, 4}"
+        LINE "}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_count_edits(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = edit_position(world);
+    ecs_entity_t v = edit_velocity(world);
+
+    const char *expr =
+    HEAD "foo {"
+    LINE "  Position: {10, 20}"
+    LINE "  Velocity: {1, 2}"
+    LINE "}"
+    LINE "bar {}";
+
+    ecs_script_t *script = edit_parse(world, expr);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    ecs_entity_t bar = ecs_lookup(world, "bar");
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_count(edits));
+
+    Position pv = {1, 2};
+    test_int(0, ecs_script_edits_set(edits, foo, p, &pv));
+    test_int(1, ecs_script_edits_count(edits));
+
+    test_int(0, ecs_script_edits_set(edits, foo, p, &pv));
+    test_int(1, ecs_script_edits_count(edits));
+
+    test_int(0, ecs_script_edits_remove(edits, foo, v));
+    test_int(2, ecs_script_edits_count(edits));
+
+    test_int(0, ecs_script_edits_delete(edits, bar));
+    test_int(3, ecs_script_edits_count(edits));
+
+    test_int(0, ecs_script_edits_clear(edits, foo, v));
+    test_int(2, ecs_script_edits_count(edits));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "foo {"
+        LINE "  Position: {1, 2}"
+        LINE "  Velocity: {1, 2}"
+        LINE "}"
+        LINE "");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_set_for_recreated_entity_after_clear(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = edit_position(world);
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "foo {"
+        LINE "  Position: {10, 20}"
+        LINE "}" });
+
+    test_assert(s != 0);
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_assert(sc != NULL);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(sc->script);
+    test_int(0, ecs_script_edits_delete(edits, foo));
+    test_int(1, ecs_script_edits_count(edits));
+
+    ecs_delete(world, foo);
+    test_assert(!ecs_is_alive(world, foo));
+
+    test_int(0, ecs_script_edits_clear(edits, foo, 0));
+    test_int(0, ecs_script_edits_count(edits));
+
+    char *unchanged = ecs_script_edits_apply(edits);
+    test_assert(unchanged != NULL);
+    ecs_script_edits_free(edits);
+
+    test_int(0, ecs_script_update(world, s, 0, unchanged));
+    ecs_os_free(unchanged);
+
+    ecs_entity_t new_foo = ecs_lookup(world, "foo");
+    test_assert(new_foo != 0);
+    test_assert(new_foo != foo);
+
+    sc = ecs_get(world, s, EcsScript);
+    test_assert(sc != NULL);
+
+    ecs_script_edits_t *edits2 = ecs_script_edits_new(sc->script);
+    Position v = {30, 40};
+    test_int(0, ecs_script_edits_set(edits2, new_foo, p, &v));
+    test_int(1, ecs_script_edits_count(edits2));
+
+    char *result = ecs_script_edits_apply(edits2);
+    test_str(result,
+        HEAD "foo {"
+        LINE "  Position: {30, 40}"
+        LINE "}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits2);
+    ecs_fini(world);
+}
