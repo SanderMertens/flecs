@@ -185,6 +185,9 @@ struct ecs_script_impl_t {
     ecs_vec_t unresolved_component_refs;
     ecs_vec_t lenient_warned; /* vec<const char*> */
     ecs_script_ir_t *ir;
+    ecs_map_t entity_index;
+    int32_t entity_index_visit;
+    bool entity_index_valid;
     int32_t input_count;
     int32_t visit;
     bool evaluating;
@@ -281,6 +284,9 @@ ecs_entity_t flecs_script_vector_type(
 const char* flecs_script_stmt(
     ecs_parser_t *parser,
     const char *pos);
+
+void flecs_script_entity_index_fini(
+    ecs_script_impl_t *impl);
 
 const char* flecs_script_stmt_w_separator(
     ecs_parser_t *parser,

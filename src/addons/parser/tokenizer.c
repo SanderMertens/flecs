@@ -812,7 +812,7 @@ const char* flecs_tokenizer_until(
     return pos;
 }
 
-const char* flecs_token(
+static const char* flecs_token_scan(
     ecs_parser_t *parser,
     const char *pos,
     ecs_token_t *out,
@@ -944,6 +944,45 @@ const char* flecs_token(
     }
 
     return NULL;
+}
+
+const char* flecs_token(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_token_t *out,
+    bool is_lookahead)
+{
+    const char *result = flecs_token_scan(parser, pos, out, is_lookahead);
+
+    (void)is_lookahead;
+
+    if (result && out->kind != EcsTokNewline && out->kind != EcsTokEnd) {
+        parser->token_ends[parser->token_ends_i & 7] = result;
+        parser->token_ends_i ++;
+    }
+
+    return result;
+}
+
+const char* flecs_parser_stmt_end(
+    const ecs_parser_t *parser,
+    const char *pos)
+{
+    const char *end = NULL;
+    int32_t i;
+
+    for (i = 0; i < 8; i ++) {
+        const char *cur = parser->token_ends[i];
+        if (cur && cur <= pos && (!end || cur > end)) {
+            end = cur;
+        }
+    }
+
+    if (!end) {
+        end = pos;
+    }
+
+    return end;
 }
 
 #endif

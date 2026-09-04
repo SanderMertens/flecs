@@ -24,6 +24,10 @@ typedef struct ecs_parser_t {
     const char *pos;
     const char *fixed_pos;
     const char *stmt_pos;
+    const char *token_ends[8];
+    int32_t token_ends_i;
+    const char *expr_pos;
+    const char *expr_end;
     char *token_cur;
     char *token_end;
     char *token_keep;

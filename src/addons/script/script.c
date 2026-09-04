@@ -307,6 +307,7 @@ void ecs_script_free(
             "script freed while tasks are still alive");
         flecs_script_ir_free(impl->ir);
         impl->ir = NULL;
+        flecs_script_entity_index_fini(impl);
         flecs_script_visit_free(script);
         flecs_expr_visit_free(script, impl->expr);
         ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_t);

@@ -36,6 +36,7 @@ typedef enum ecs_script_node_kind_t {
 typedef struct ecs_script_node_t {
     ecs_script_node_kind_t kind;
     const char *pos;
+    const char *end;
     uint64_t input;
     uint64_t direct_input;
 
@@ -50,6 +51,7 @@ struct ecs_script_scope_t {
     ecs_script_node_t node;
     ecs_vec_t stmts;
     ecs_script_scope_t *parent;
+    const char *open;
     int32_t scope_slot;
 
     /* Array with component ids that are added in scope. Used to limit
@@ -97,6 +99,8 @@ typedef struct ecs_script_component_t {
     ecs_script_node_t node;
     ecs_script_id_t id;
     ecs_expr_node_t *expr;
+    const char *value_pos;
+    const char *value_end;
     int32_t component_slot;
     bool is_collection;
 } ecs_script_component_t;

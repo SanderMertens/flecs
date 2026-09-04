@@ -3109,6 +3109,75 @@ void Scenario_ir_and_ast_instances_coexist(void);
 void Scenario_traffic_car_blinkers(void);
 void Scenario_traffic_streetlamp_daylight(void);
 
+// Testsuite 'Edit'
+void Edit_setup(void);
+void Edit_source_entity(void);
+void Edit_source_entity_w_scope(void);
+void Edit_source_entity_w_kind(void);
+void Edit_source_entity_w_kind_scope(void);
+void Edit_source_entity_w_base(void);
+void Edit_source_entity_w_base_scope(void);
+void Edit_source_entity_w_paren(void);
+void Edit_source_entity_w_paren_scope(void);
+void Edit_source_anonymous_entity(void);
+void Edit_source_child_entity(void);
+void Edit_source_entity_w_trailing_comment(void);
+void Edit_source_entity_in_with_scope(void);
+void Edit_source_template_instance(void);
+void Edit_source_template_body_entity(void);
+void Edit_source_for_loop_entity(void);
+void Edit_source_foreign_entity(void);
+void Edit_source_unknown_entity(void);
+void Edit_source_entity_declared_twice(void);
+void Edit_source_include_entity(void);
+void Edit_source_managed_script(void);
+void Edit_source_line_column(void);
+void Edit_source_component_stmt_ends(void);
+void Edit_set_named_initializer(void);
+void Edit_set_positional_initializer(void);
+void Edit_set_empty_initializer(void);
+void Edit_set_partial_initializer(void);
+void Edit_set_multi_line_initializer(void);
+void Edit_set_value_form(void);
+void Edit_set_collection_form(void);
+void Edit_set_paren_initializer(void);
+void Edit_set_preserves_comments(void);
+void Edit_set_preserves_blank_lines_and_indent(void);
+void Edit_set_tabs_indent(void);
+void Edit_set_append_to_existing_scope(void);
+void Edit_set_append_to_empty_scope(void);
+void Edit_set_append_no_scope(void);
+void Edit_set_append_w_using(void);
+void Edit_set_append_w_module(void);
+void Edit_set_expr(void);
+void Edit_set_expr_append(void);
+void Edit_set_nested_child(void);
+void Edit_set_anonymous_entity(void);
+void Edit_set_in_with_scope(void);
+void Edit_set_float_roundtrip(void);
+void Edit_set_template_body_entity_fails(void);
+void Edit_set_for_loop_entity_fails(void);
+void Edit_set_foreign_entity_fails(void);
+void Edit_set_twice_same_component(void);
+void Edit_remove_component(void);
+void Edit_remove_component_multi_line(void);
+void Edit_remove_missing_component(void);
+void Edit_remove_tag(void);
+void Edit_delete_first(void);
+void Edit_delete_middle(void);
+void Edit_delete_last(void);
+void Edit_delete_nested_child(void);
+void Edit_delete_entity_w_edits_inside(void);
+void Edit_delete_w_trailing_comment(void);
+void Edit_delete_preserves_preceding_comment(void);
+void Edit_multiple_edits_one_apply(void);
+void Edit_apply_twice_same_result(void);
+void Edit_apply_result_runs(void);
+void Edit_apply_deleted_entity_gone(void);
+void Edit_apply_no_edits(void);
+void Edit_set_in_module_script(void);
+void Edit_set_replaces_tag_stmt(void);
+
 bake_test_case Eval_testcases[] = {
     {
         "2_components_same_line_w_semicolon",
@@ -15305,6 +15374,273 @@ bake_test_case Scenario_testcases[] = {
     }
 };
 
+bake_test_case Edit_testcases[] = {
+    {
+        "source_entity",
+        Edit_source_entity
+    },
+    {
+        "source_entity_w_scope",
+        Edit_source_entity_w_scope
+    },
+    {
+        "source_entity_w_kind",
+        Edit_source_entity_w_kind
+    },
+    {
+        "source_entity_w_kind_scope",
+        Edit_source_entity_w_kind_scope
+    },
+    {
+        "source_entity_w_base",
+        Edit_source_entity_w_base
+    },
+    {
+        "source_entity_w_base_scope",
+        Edit_source_entity_w_base_scope
+    },
+    {
+        "source_entity_w_paren",
+        Edit_source_entity_w_paren
+    },
+    {
+        "source_entity_w_paren_scope",
+        Edit_source_entity_w_paren_scope
+    },
+    {
+        "source_anonymous_entity",
+        Edit_source_anonymous_entity
+    },
+    {
+        "source_child_entity",
+        Edit_source_child_entity
+    },
+    {
+        "source_entity_w_trailing_comment",
+        Edit_source_entity_w_trailing_comment
+    },
+    {
+        "source_entity_in_with_scope",
+        Edit_source_entity_in_with_scope
+    },
+    {
+        "source_template_instance",
+        Edit_source_template_instance
+    },
+    {
+        "source_template_body_entity",
+        Edit_source_template_body_entity
+    },
+    {
+        "source_for_loop_entity",
+        Edit_source_for_loop_entity
+    },
+    {
+        "source_foreign_entity",
+        Edit_source_foreign_entity
+    },
+    {
+        "source_unknown_entity",
+        Edit_source_unknown_entity
+    },
+    {
+        "source_entity_declared_twice",
+        Edit_source_entity_declared_twice
+    },
+    {
+        "source_include_entity",
+        Edit_source_include_entity
+    },
+    {
+        "source_managed_script",
+        Edit_source_managed_script
+    },
+    {
+        "source_line_column",
+        Edit_source_line_column
+    },
+    {
+        "source_component_stmt_ends",
+        Edit_source_component_stmt_ends
+    },
+    {
+        "set_named_initializer",
+        Edit_set_named_initializer
+    },
+    {
+        "set_positional_initializer",
+        Edit_set_positional_initializer
+    },
+    {
+        "set_empty_initializer",
+        Edit_set_empty_initializer
+    },
+    {
+        "set_partial_initializer",
+        Edit_set_partial_initializer
+    },
+    {
+        "set_multi_line_initializer",
+        Edit_set_multi_line_initializer
+    },
+    {
+        "set_value_form",
+        Edit_set_value_form
+    },
+    {
+        "set_collection_form",
+        Edit_set_collection_form
+    },
+    {
+        "set_paren_initializer",
+        Edit_set_paren_initializer
+    },
+    {
+        "set_preserves_comments",
+        Edit_set_preserves_comments
+    },
+    {
+        "set_preserves_blank_lines_and_indent",
+        Edit_set_preserves_blank_lines_and_indent
+    },
+    {
+        "set_tabs_indent",
+        Edit_set_tabs_indent
+    },
+    {
+        "set_append_to_existing_scope",
+        Edit_set_append_to_existing_scope
+    },
+    {
+        "set_append_to_empty_scope",
+        Edit_set_append_to_empty_scope
+    },
+    {
+        "set_append_no_scope",
+        Edit_set_append_no_scope
+    },
+    {
+        "set_append_w_using",
+        Edit_set_append_w_using
+    },
+    {
+        "set_append_w_module",
+        Edit_set_append_w_module
+    },
+    {
+        "set_expr",
+        Edit_set_expr
+    },
+    {
+        "set_expr_append",
+        Edit_set_expr_append
+    },
+    {
+        "set_nested_child",
+        Edit_set_nested_child
+    },
+    {
+        "set_anonymous_entity",
+        Edit_set_anonymous_entity
+    },
+    {
+        "set_in_with_scope",
+        Edit_set_in_with_scope
+    },
+    {
+        "set_float_roundtrip",
+        Edit_set_float_roundtrip
+    },
+    {
+        "set_template_body_entity_fails",
+        Edit_set_template_body_entity_fails
+    },
+    {
+        "set_for_loop_entity_fails",
+        Edit_set_for_loop_entity_fails
+    },
+    {
+        "set_foreign_entity_fails",
+        Edit_set_foreign_entity_fails
+    },
+    {
+        "set_twice_same_component",
+        Edit_set_twice_same_component
+    },
+    {
+        "remove_component",
+        Edit_remove_component
+    },
+    {
+        "remove_component_multi_line",
+        Edit_remove_component_multi_line
+    },
+    {
+        "remove_missing_component",
+        Edit_remove_missing_component
+    },
+    {
+        "remove_tag",
+        Edit_remove_tag
+    },
+    {
+        "delete_first",
+        Edit_delete_first
+    },
+    {
+        "delete_middle",
+        Edit_delete_middle
+    },
+    {
+        "delete_last",
+        Edit_delete_last
+    },
+    {
+        "delete_nested_child",
+        Edit_delete_nested_child
+    },
+    {
+        "delete_entity_w_edits_inside",
+        Edit_delete_entity_w_edits_inside
+    },
+    {
+        "delete_w_trailing_comment",
+        Edit_delete_w_trailing_comment
+    },
+    {
+        "delete_preserves_preceding_comment",
+        Edit_delete_preserves_preceding_comment
+    },
+    {
+        "multiple_edits_one_apply",
+        Edit_multiple_edits_one_apply
+    },
+    {
+        "apply_twice_same_result",
+        Edit_apply_twice_same_result
+    },
+    {
+        "apply_result_runs",
+        Edit_apply_result_runs
+    },
+    {
+        "apply_deleted_entity_gone",
+        Edit_apply_deleted_entity_gone
+    },
+    {
+        "apply_no_edits",
+        Edit_apply_no_edits
+    },
+    {
+        "set_in_module_script",
+        Edit_set_in_module_script
+    },
+    {
+        "set_replaces_tag_stmt",
+        Edit_set_replaces_tag_stmt
+    }
+};
+
 const char* Eval_ir_param[] = {"disabled", "enabled"};
 bake_test_param Eval_params[] = {
     {"ir", (char**)Eval_ir_param, 2}
@@ -15415,6 +15751,11 @@ bake_test_param TemplateProp_params[] = {
 const char* Scenario_ir_param[] = {"disabled", "enabled"};
 bake_test_param Scenario_params[] = {
     {"ir", (char**)Scenario_ir_param, 2}
+};
+
+const char* Edit_ir_param[] = {"disabled", "enabled"};
+bake_test_param Edit_params[] = {
+    {"ir", (char**)Edit_ir_param, 2}
 };
 
 static bake_test_suite suites[] = {
@@ -15629,9 +15970,18 @@ static bake_test_suite suites[] = {
         Scenario_testcases,
         1,
         Scenario_params
+    },
+    {
+        "Edit",
+        Edit_setup,
+        NULL,
+        66,
+        Edit_testcases,
+        1,
+        Edit_params
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 24);
+    return bake_test_run("script", argc, argv, suites, 25);
 }

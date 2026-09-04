@@ -122,4 +122,8 @@ int64_t flecs_parser_errpos(
     const ecs_parser_t *parser,
     const char *pos);
 
+const char* flecs_parser_stmt_end(
+    const ecs_parser_t *parser,
+    const char *pos);
+
 #endif

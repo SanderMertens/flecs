@@ -68,6 +68,8 @@ static const char* flecs_script_scope(
 
     parser->scope_depth ++;
 
+    scope->open = pos - 1;
+
     ecs_script_scope_t *prev = parser->scope;
     parser->scope = scope;
 
@@ -92,6 +94,7 @@ scope_close:
     parser->scope_depth --;
 
     ecs_assert(pos[-1] == '}', ECS_INTERNAL_ERROR, NULL);
+    scope->node.end = pos;
     return pos;
 
     Error("unexpected end of rule (parser error)");
@@ -742,7 +745,7 @@ int32_t flecs_script_last_stmt_kind(
 }
 
 /* Parse a single statement */
-const char* flecs_script_stmt(
+static const char* flecs_script_stmt_parse(
     ecs_parser_t *parser,
     const char *pos)
 {
@@ -1582,6 +1585,30 @@ component_expr_value: {
 }
 
     ParserEnd;
+}
+
+const char* flecs_script_stmt(
+    ecs_parser_t *parser,
+    const char *pos)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    int32_t first = scope ? ecs_vec_count(&scope->stmts) : 0;
+
+    pos = flecs_script_stmt_parse(parser, pos);
+
+    if (pos && scope) {
+        const char *end = flecs_parser_stmt_end(parser, pos);
+        ecs_script_node_t **stmts = ecs_vec_first_t(
+            &scope->stmts, ecs_script_node_t*);
+        int32_t i, count = ecs_vec_count(&scope->stmts);
+        for (i = first; i < count; i ++) {
+            if (!stmts[i]->end) {
+                stmts[i]->end = end;
+            }
+        }
+    }
+
+    return pos;
 }
 
 /* Test if the statement that ended at pos already consumed its separator. The

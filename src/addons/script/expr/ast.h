@@ -38,6 +38,7 @@ struct ecs_expr_node_t {
     ecs_entity_t type;
     const ecs_type_info_t *type_info;
     const char *pos;
+    const char *end;
 };
 
 typedef struct ecs_expr_value_node_t {
