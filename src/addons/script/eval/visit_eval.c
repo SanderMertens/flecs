@@ -889,9 +889,9 @@ int flecs_script_eval_entity_enter(
         }
     }
 
-    if (v->template_entity && (state->created || v->force)) {
+    if (v->body_template && (state->created || v->force)) {
         ecs_add_pair(
-            v->world, state->eval, EcsScriptTemplate, v->template_entity);
+            v->world, state->eval, EcsScriptTemplate, v->body_template);
     }
 
     v->entity = state;

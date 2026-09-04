@@ -1308,9 +1308,9 @@ static int flecs_ir_entity_enter(
         }
     }
 
-    if (v->template_entity && (state->created || v->force)) {
+    if (v->body_template && (state->created || v->force)) {
         ecs_add_pair(
-            v->world, state->eval, EcsScriptTemplate, v->template_entity);
+            v->world, state->eval, EcsScriptTemplate, v->body_template);
     }
 
     v->entity = state;
@@ -3927,6 +3927,7 @@ static void flecs_ir_visit_init(
     v->template = NULL;
     v->instance_template = NULL;
     v->template_entity = 0;
+    v->body_template = 0;
     v->script_entity = 0;
     v->script_tag = 0;
     v->module = 0;

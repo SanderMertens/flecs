@@ -675,6 +675,7 @@ static int flecs_script_template_instantiate(
 
     v->r->using = template->using_;
     v->template_entity = template_entity;
+    v->body_template = template_entity;
     v->instance_template = template;
     v->symbol_offset = template->symbol_offset;
     ecs_vec_init_t(NULL, &desc.runtime->with, ecs_value_t, 0);

@@ -16757,6 +16757,13 @@ extern "C" {
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
 
+/* Relationship added to entities that are created by a template body. The
+ * target of the pair is the template that declares the statement that created
+ * the entity, which for nested templates is the innermost one. The pair is
+ * added to every entity created while instantiating a template body, at any
+ * scope depth (`if`/`else`, `with`, pair scopes, `for` loops and nested entity
+ * scopes), which makes it the way to tell entities that come from a template
+ * apart from entities that are declared by a plain script statement. */
 FLECS_API
 extern ECS_DECLARE(EcsScriptTemplate);
 
@@ -17613,6 +17620,10 @@ typedef struct ecs_script_source_t {
  *   `for` loop is part of a template body
  * - entities created by a template body statement with a computed name
  * - entities created by a "new" expression
+ *
+ * An entity that carries the (EcsScriptTemplate, *) pair is never reported as a
+ * plain (non-template) statement, also not by the script that instantiates the
+ * template.
  *
  * When an entity is declared by more than one statement, the location of the
  * first declaration is returned.

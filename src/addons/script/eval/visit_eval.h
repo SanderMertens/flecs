@@ -15,6 +15,8 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_script_template_t *template; /* Set when creating template */
     ecs_script_template_t *instance_template;
     ecs_entity_t template_entity; /* Set when creating template instance */
+    ecs_entity_t body_template; /* Template of the body being instantiated. Set
+                                 * for the entire body, at any scope depth. */
     ecs_entity_t script_entity;
     ecs_id_t script_tag; /* Added to entities created by managed scripts */
     ecs_entity_t module;
