@@ -251,6 +251,8 @@ ecs_script_component_t* flecs_script_insert_pair_component(
     ecs_script_component_t *result = flecs_ast_new(
             parser, ecs_script_component_t, EcsAstComponent);
     result->component_slot = -1;
+    result->value_pos = parser->expr_pos;
+    result->value_end = parser->expr_end;
 
     if (flecs_script_set_id(parser, &result->id, first, second)) {
         return NULL;

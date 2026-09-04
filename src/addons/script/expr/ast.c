@@ -36,6 +36,7 @@ ecs_expr_value_node_t* flecs_expr_value_from(
     result->ptr = &result->storage.u64;
     result->node.kind = EcsExprValue;
     result->node.pos = node ? node->pos : NULL;
+    result->node.end = node ? node->end : NULL;
     result->node.type = type;
     result->node.type_info = ecs_get_type_info(script->world, type);
     return result;
@@ -52,6 +53,7 @@ ecs_expr_variable_t* flecs_expr_variable_from(
     result->sp = -1;
     result->node.kind = EcsExprVariable;
     result->node.pos = node ? node->pos : NULL;
+    result->node.end = node ? node->end : NULL;
     return result;
 }
 
@@ -64,6 +66,7 @@ ecs_expr_member_t* flecs_expr_member_from(
         &flecs_script_impl(script)->allocator, ecs_expr_member_t);
     result->node.kind = EcsExprMember;
     result->node.pos = node->pos;
+    result->node.end = node->end;
     result->left = node;
     result->member_name =name;
     return result;
@@ -79,6 +82,7 @@ ecs_expr_swizzle_t* flecs_expr_swizzle_from(
         &flecs_script_impl(script)->allocator, ecs_expr_swizzle_t);
     result->node.kind = EcsExprSwizzle;
     result->node.pos = node->pos;
+    result->node.end = node->end;
     result->left = left;
     result->name = name;
     return result;
@@ -411,6 +415,7 @@ ecs_expr_cast_t* flecs_expr_cast(
     }
 
     result->node.pos = expr->pos;
+    result->node.end = expr->end;
     result->node.type = type;
     result->node.type_info = ecs_get_type_info(script->world, type);
     ecs_assert(result->node.type_info != NULL, ECS_INTERNAL_ERROR, NULL);

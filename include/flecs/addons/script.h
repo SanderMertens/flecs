@@ -459,6 +459,204 @@ char* ecs_script_ast_to_str(
     bool colors);
 
 
+/* Source preserving script edits */
+
+/** Source location of a script statement.
+ * Returned by ecs_script_entity_source(). The offset and length are byte
+ * offsets into ecs_script_t::code.
+ */
+typedef struct ecs_script_source_t {
+    int32_t offset;     /**< Offset of the first character of the statement. */
+    int32_t length;     /**< Number of bytes occupied by the statement. */
+    int32_t line;       /**< Line of the first character (1 based). */
+    int32_t column;     /**< Column of the first character (1 based). */
+    bool has_scope;     /**< Whether the statement is followed by a { } scope. */
+} ecs_script_source_t;
+
+/** Find the statement that declares an entity.
+ * This operation returns the source location of the entity statement that
+ * declared an entity. The script must have been evaluated at least once, as
+ * the mapping from entity to statement is established during evaluation.
+ *
+ * The operation returns false when the entity was not created by an entity
+ * statement of this script. This is the case for:
+ *
+ * - entities that were not created by a script
+ * - entities created by a different script (an `include` statement evaluates
+ *   the included file as a separate script object, so entities created by an
+ *   included file are never reported by the including script)
+ * - entities created by the body of a `template` statement (a single statement
+ *   creates an entity per template instance, so the statement cannot be
+ *   attributed to one entity). Note that the statement that *instantiates* a
+ *   template ("SpaceShip enterprise" or "SpaceShip enterprise()") is a regular
+ *   entity statement, and is returned by this operation.
+ * - entities created inside a `for` loop or a function body
+ * - entities created by a "new" expression
+ *
+ * When an entity is declared by more than one statement, the location of the
+ * first declaration is returned.
+ *
+ * The returned offsets stay valid until the script is freed or reparsed.
+ *
+ * @param script The script.
+ * @param entity The entity to find.
+ * @param source Out parameter with the source location (optional).
+ * @return True if the entity is declared by this script, false if not.
+ */
+FLECS_API
+bool ecs_script_entity_source(
+    const ecs_script_t *script,
+    ecs_entity_t entity,
+    ecs_script_source_t *source);
+
+/** Set of pending edits for a script.
+ * See ecs_script_edits_new().
+ */
+typedef struct ecs_script_edits_t ecs_script_edits_t;
+
+/** Create an edit set for a script.
+ * An edit set collects changes that are keyed by entity id, and turns them into
+ * new script source code with ecs_script_edits_apply(). Only the edited
+ * statements change; all other text (comments, whitespace, layout, expressions,
+ * include statements) is preserved byte for byte.
+ *
+ * The script must be evaluated before edits can be added, and must outlive the
+ * edit set.
+ *
+ * An edit set must be deleted with ecs_script_edits_free().
+ *
+ * @param script The script to edit.
+ * @return A new edit set, or NULL if the script is invalid.
+ */
+FLECS_API
+ecs_script_edits_t* ecs_script_edits_new(
+    ecs_script_t *script);
+
+/** Free an edit set.
+ *
+ * @param edits The edit set.
+ */
+FLECS_API
+void ecs_script_edits_free(
+    ecs_script_edits_t *edits);
+
+/** Set a component value on an entity.
+ * If the entity scope already contains a statement for the component, only the
+ * value expression of that statement is replaced. The style of the existing
+ * initializer is preserved:
+ *
+ * - a named initializer ("{x: 10, y: 20}") stays named
+ * - a positional initializer ("{10, 20}") stays positional
+ * - an empty initializer ("{}") becomes positional
+ * - any other value form (a plain expression, a collection initializer, a match
+ *   expression) is replaced with the default serialized form
+ *
+ * All members of the component are written, in the order in which they are
+ * defined by the type. Values are serialized with ecs_ptr_to_expr(), which
+ * roundtrips floating point values.
+ *
+ * If the entity scope does not contain a statement for the component, a new
+ * "Component: {...}" statement is appended to the end of the entity scope,
+ * using the indentation of the other statements in the scope (or the
+ * indentation of the entity statement plus four spaces when the scope is
+ * empty). When the entity statement has no scope, a scope is added.
+ *
+ * If the entity scope contains more than one statement for the component, the
+ * last statement is replaced. If the entity is declared by more than one
+ * statement, the first declaration is edited.
+ *
+ * Only statements in the scope of the entity itself are considered. A value
+ * that the entity inherits from an enclosing `with` statement is not modified;
+ * setting such a component adds a statement to the entity scope that overrides
+ * the `with` value.
+ *
+ * The component is written with the shortest name that resolves to the same
+ * component given the `using` and `module` statements of the script.
+ *
+ * @param edits The edit set.
+ * @param entity The entity to edit.
+ * @param component The component (or pair) to set.
+ * @param value Pointer to the component value.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_edits_set(
+    ecs_script_edits_t *edits,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    const void *value);
+
+/** Set a component value on an entity from an expression string.
+ * Same as ecs_script_edits_set(), but instead of serializing a value, the
+ * provided expression is written to the script verbatim. The expression is not
+ * validated.
+ *
+ * @param edits The edit set.
+ * @param entity The entity to edit.
+ * @param component The component (or pair) to set.
+ * @param expr The value expression (for example "{10, 20}").
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_edits_set_expr(
+    ecs_script_edits_t *edits,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    const char *expr);
+
+/** Remove a component from an entity.
+ * This removes the statement that adds the component (or tag) to the entity,
+ * including the line(s) the statement occupies. If the entity scope contains
+ * more than one statement for the component, the last statement is removed.
+ *
+ * The operation returns zero when the entity does not have a statement for the
+ * component, as the resulting source has the requested state.
+ *
+ * @param edits The edit set.
+ * @param entity The entity to edit.
+ * @param component The component (or pair) to remove.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_edits_remove(
+    ecs_script_edits_t *edits,
+    ecs_entity_t entity,
+    ecs_id_t component);
+
+/** Delete an entity.
+ * This removes the entity statement, its scope, and the line(s) the statement
+ * occupies. Comments that precede the statement are preserved. A trailing
+ * comment on the last line of the statement is removed together with the line.
+ *
+ * Other edits that fall inside the span of a deleted entity (such as edits to
+ * child entities) are absorbed by the deletion.
+ *
+ * @param edits The edit set.
+ * @param entity The entity to delete.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_edits_delete(
+    ecs_script_edits_t *edits,
+    ecs_entity_t entity);
+
+/** Apply an edit set.
+ * This operation returns new script source code with the edits applied. The
+ * operation does not modify the script or the edit set, which means that
+ * applying the same edit set twice returns the same text.
+ *
+ * The operation returns NULL when two edits overlap in a way that cannot be
+ * resolved.
+ *
+ * @param edits The edit set.
+ * @return The new source code, must be freed with ecs_os_free(). NULL if
+ *   failed.
+ */
+FLECS_API
+char* ecs_script_edits_apply(
+    const ecs_script_edits_t *edits);
+
+
 /* Managed scripts (script associated with entity that outlives the function) */
 
 /** Used with ecs_script_init(). */

@@ -907,6 +907,11 @@ const char* flecs_script_parse_expr(
     }
 
     parser->expr_depth --;
+
+    if (out && *out && !(*out)->end) {
+        (*out)->end = flecs_parser_stmt_end(parser, pos);
+    }
+
     return pos;
 }
 
