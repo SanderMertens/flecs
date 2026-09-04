@@ -3347,7 +3347,14 @@
                 "entity_owner_plain",
                 "entity_owner_no_script",
                 "entity_owner_unmanaged_script",
-                "entity_owner_for_loop_entity"
+                "entity_owner_for_loop_entity",
+                "delete_recorded_before_entity_deleted",
+                "clear_delete_after_entity_deleted",
+                "clear_set",
+                "clear_unknown_edit",
+                "set_after_clear",
+                "count_edits",
+                "set_for_recreated_entity_after_clear"
             ]
         }, {
             "id": "EditTemplate",
@@ -3389,7 +3396,11 @@
                 "entity_owner_nested_template_component_assignment",
                 "entity_owner_body_entity_in_for_loop_rows",
                 "source_body_entity_not_in_scene_script",
-                "apply_update_body_entity_in_if_scope"
+                "apply_update_body_entity_in_if_scope",
+                "delete_body_entity_recorded_before_delete",
+                "clear_delete_body_entity",
+                "clear_set_body_entity",
+                "apply_update_delete_body_entity_recorded_before_delete"
             ]
         }]
     }

@@ -71528,6 +71528,39 @@ error:
     return -1;
 }
 
+int ecs_script_edits_clear(
+    ecs_script_edits_t *edits,
+    ecs_entity_t entity,
+    ecs_id_t component)
+{
+    ecs_check(edits != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    flecs_script_edit_t *elems = ecs_vec_first(&edits->edits);
+    int32_t i, count = ecs_vec_count(&edits->edits);
+
+    for (i = 0; i < count; i ++) {
+        if (elems[i].entity == entity && elems[i].component == component) {
+            ecs_os_free(elems[i].text);
+            ecs_vec_remove_t(&edits->edits, flecs_script_edit_t, i);
+            return 0;
+        }
+    }
+
+    return -1;
+error:
+    return -1;
+}
+
+int32_t ecs_script_edits_count(
+    const ecs_script_edits_t *edits)
+{
+    ecs_check(edits != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    return ecs_vec_count(&edits->edits);
+error:
+    return 0;
+}
+
 static int flecs_script_edit_compare(
     const void *a_ptr,
     const void *b_ptr)

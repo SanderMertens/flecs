@@ -3226,6 +3226,13 @@ void Edit_entity_owner_plain(void);
 void Edit_entity_owner_no_script(void);
 void Edit_entity_owner_unmanaged_script(void);
 void Edit_entity_owner_for_loop_entity(void);
+void Edit_delete_recorded_before_entity_deleted(void);
+void Edit_clear_delete_after_entity_deleted(void);
+void Edit_clear_set(void);
+void Edit_clear_unknown_edit(void);
+void Edit_set_after_clear(void);
+void Edit_count_edits(void);
+void Edit_set_for_recreated_entity_after_clear(void);
 
 // Testsuite 'EditTemplate'
 void EditTemplate_setup(void);
@@ -3263,6 +3270,10 @@ void EditTemplate_entity_owner_nested_template_component_assignment(void);
 void EditTemplate_entity_owner_body_entity_in_for_loop_rows(void);
 void EditTemplate_source_body_entity_not_in_scene_script(void);
 void EditTemplate_apply_update_body_entity_in_if_scope(void);
+void EditTemplate_delete_body_entity_recorded_before_delete(void);
+void EditTemplate_clear_delete_body_entity(void);
+void EditTemplate_clear_set_body_entity(void);
+void EditTemplate_apply_update_delete_body_entity_recorded_before_delete(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -15920,6 +15931,34 @@ bake_test_case Edit_testcases[] = {
     {
         "entity_owner_for_loop_entity",
         Edit_entity_owner_for_loop_entity
+    },
+    {
+        "delete_recorded_before_entity_deleted",
+        Edit_delete_recorded_before_entity_deleted
+    },
+    {
+        "clear_delete_after_entity_deleted",
+        Edit_clear_delete_after_entity_deleted
+    },
+    {
+        "clear_set",
+        Edit_clear_set
+    },
+    {
+        "clear_unknown_edit",
+        Edit_clear_unknown_edit
+    },
+    {
+        "set_after_clear",
+        Edit_set_after_clear
+    },
+    {
+        "count_edits",
+        Edit_count_edits
+    },
+    {
+        "set_for_recreated_entity_after_clear",
+        Edit_set_for_recreated_entity_after_clear
     }
 };
 
@@ -16059,6 +16098,22 @@ bake_test_case EditTemplate_testcases[] = {
     {
         "apply_update_body_entity_in_if_scope",
         EditTemplate_apply_update_body_entity_in_if_scope
+    },
+    {
+        "delete_body_entity_recorded_before_delete",
+        EditTemplate_delete_body_entity_recorded_before_delete
+    },
+    {
+        "clear_delete_body_entity",
+        EditTemplate_clear_delete_body_entity
+    },
+    {
+        "clear_set_body_entity",
+        EditTemplate_clear_set_body_entity
+    },
+    {
+        "apply_update_delete_body_entity_recorded_before_delete",
+        EditTemplate_apply_update_delete_body_entity_recorded_before_delete
     }
 };
 
@@ -16401,7 +16456,7 @@ static bake_test_suite suites[] = {
         "Edit",
         Edit_setup,
         NULL,
-        94,
+        101,
         Edit_testcases,
         1,
         Edit_params
@@ -16410,7 +16465,7 @@ static bake_test_suite suites[] = {
         "EditTemplate",
         EditTemplate_setup,
         NULL,
-        34,
+        38,
         EditTemplate_testcases,
         1,
         EditTemplate_params

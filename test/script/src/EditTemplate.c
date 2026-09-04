@@ -1562,3 +1562,188 @@ void EditTemplate_apply_update_body_entity_in_if_scope(void) {
 
     ecs_fini(world);
 }
+
+void EditTemplate_delete_body_entity_recorded_before_delete(void) {
+    ecs_world_t *world = ecs_init();
+
+    et_position(world);
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  trunk {"
+    LINE "    Position: {0, 1}"
+    LINE "  }"
+    LINE "  leaves {"
+    LINE "    Position: {0, 2}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Tree t1()";
+
+    ecs_script_t *script = et_parse(world, expr);
+
+    ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
+    test_assert(trunk != 0);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, trunk));
+    test_int(1, ecs_script_edits_count(edits));
+
+    ecs_delete(world, trunk);
+    test_assert(!ecs_is_alive(world, trunk));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "template Tree {"
+        LINE "  leaves {"
+        LINE "    Position: {0, 2}"
+        LINE "  }"
+        LINE "}"
+        LINE ""
+        LINE "Tree t1()");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void EditTemplate_clear_delete_body_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    et_position(world);
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  trunk {"
+    LINE "    Position: {0, 1}"
+    LINE "  }"
+    LINE "  leaves {"
+    LINE "    Position: {0, 2}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Tree t1()";
+
+    ecs_script_t *script = et_parse(world, expr);
+
+    ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
+    test_assert(trunk != 0);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    test_int(0, ecs_script_edits_delete(edits, trunk));
+    test_int(1, ecs_script_edits_count(edits));
+
+    ecs_delete(world, trunk);
+
+    test_int(0, ecs_script_edits_clear(edits, trunk, 0));
+    test_int(0, ecs_script_edits_count(edits));
+    test_int(-1, ecs_script_edits_clear(edits, trunk, 0));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result, expr);
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void EditTemplate_clear_set_body_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = et_position(world);
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  trunk {"
+    LINE "    Position: {0, 1}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Tree t1()";
+
+    ecs_script_t *script = et_parse(world, expr);
+
+    ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
+    test_assert(trunk != 0);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    Position v1 = {10, 20};
+    test_int(0, ecs_script_edits_set(edits, trunk, p, &v1));
+    test_int(1, ecs_script_edits_count(edits));
+
+    test_int(0, ecs_script_edits_clear(edits, trunk, p));
+    test_int(0, ecs_script_edits_count(edits));
+
+    char *unchanged = ecs_script_edits_apply(edits);
+    test_str(unchanged, expr);
+    ecs_os_free(unchanged);
+
+    Position v2 = {30, 40};
+    test_int(0, ecs_script_edits_set(edits, trunk, p, &v2));
+    test_int(1, ecs_script_edits_count(edits));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "template Tree {"
+        LINE "  trunk {"
+        LINE "    Position: {30, 40}"
+        LINE "  }"
+        LINE "}"
+        LINE ""
+        LINE "Tree t1()");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void EditTemplate_apply_update_delete_body_entity_recorded_before_delete(void) {
+    ecs_world_t *world = ecs_init();
+
+    et_position(world);
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "template Tree {"
+        LINE "  trunk {"
+        LINE "    Position: {0, 1}"
+        LINE "  }"
+        LINE "  leaves {"
+        LINE "    Position: {0, 2}"
+        LINE "  }"
+        LINE "}"
+        LINE ""
+        LINE "Tree t1()"
+        LINE "Tree t2()"
+    });
+
+    test_assert(s != 0);
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_assert(sc != NULL);
+
+    ecs_entity_t trunk = ecs_lookup(world, "t2.trunk");
+    test_assert(trunk != 0);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(sc->script);
+    test_int(0, ecs_script_edits_delete(edits, trunk));
+
+    ecs_delete(world, trunk);
+    test_assert(!ecs_is_alive(world, trunk));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_assert(result != NULL);
+    ecs_script_edits_free(edits);
+
+    test_int(0, ecs_script_update(world, s, 0, result));
+    ecs_os_free(result);
+
+    test_assert(ecs_lookup(world, "t1.trunk") == 0);
+    test_assert(ecs_lookup(world, "t2.trunk") == 0);
+    test_assert(ecs_lookup(world, "t1.leaves") != 0);
+    test_assert(ecs_lookup(world, "t2.leaves") != 0);
+
+    ecs_fini(world);
+}
