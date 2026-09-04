@@ -3381,7 +3381,15 @@
                 "entity_owner_body_entity",
                 "entity_owner_body_entity_unmanaged",
                 "source_template_in_included_file",
-                "edit_template_in_included_file"
+                "edit_template_in_included_file",
+                "body_entity_template_pair_in_nested_scopes",
+                "source_body_entity_nested_in_if_scope",
+                "source_body_entity_in_else_scope",
+                "source_body_entity_in_with_scope_nested",
+                "entity_owner_nested_template_component_assignment",
+                "entity_owner_body_entity_in_for_loop_rows",
+                "source_body_entity_not_in_scene_script",
+                "apply_update_body_entity_in_if_scope"
             ]
         }]
     }

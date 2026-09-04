@@ -3255,6 +3255,14 @@ void EditTemplate_entity_owner_body_entity(void);
 void EditTemplate_entity_owner_body_entity_unmanaged(void);
 void EditTemplate_source_template_in_included_file(void);
 void EditTemplate_edit_template_in_included_file(void);
+void EditTemplate_body_entity_template_pair_in_nested_scopes(void);
+void EditTemplate_source_body_entity_nested_in_if_scope(void);
+void EditTemplate_source_body_entity_in_else_scope(void);
+void EditTemplate_source_body_entity_in_with_scope_nested(void);
+void EditTemplate_entity_owner_nested_template_component_assignment(void);
+void EditTemplate_entity_owner_body_entity_in_for_loop_rows(void);
+void EditTemplate_source_body_entity_not_in_scene_script(void);
+void EditTemplate_apply_update_body_entity_in_if_scope(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -16019,6 +16027,38 @@ bake_test_case EditTemplate_testcases[] = {
     {
         "edit_template_in_included_file",
         EditTemplate_edit_template_in_included_file
+    },
+    {
+        "body_entity_template_pair_in_nested_scopes",
+        EditTemplate_body_entity_template_pair_in_nested_scopes
+    },
+    {
+        "source_body_entity_nested_in_if_scope",
+        EditTemplate_source_body_entity_nested_in_if_scope
+    },
+    {
+        "source_body_entity_in_else_scope",
+        EditTemplate_source_body_entity_in_else_scope
+    },
+    {
+        "source_body_entity_in_with_scope_nested",
+        EditTemplate_source_body_entity_in_with_scope_nested
+    },
+    {
+        "entity_owner_nested_template_component_assignment",
+        EditTemplate_entity_owner_nested_template_component_assignment
+    },
+    {
+        "entity_owner_body_entity_in_for_loop_rows",
+        EditTemplate_entity_owner_body_entity_in_for_loop_rows
+    },
+    {
+        "source_body_entity_not_in_scene_script",
+        EditTemplate_source_body_entity_not_in_scene_script
+    },
+    {
+        "apply_update_body_entity_in_if_scope",
+        EditTemplate_apply_update_body_entity_in_if_scope
     }
 };
 
@@ -16370,7 +16410,7 @@ static bake_test_suite suites[] = {
         "EditTemplate",
         EditTemplate_setup,
         NULL,
-        26,
+        34,
         EditTemplate_testcases,
         1,
         EditTemplate_params

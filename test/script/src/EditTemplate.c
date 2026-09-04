@@ -1063,3 +1063,502 @@ void EditTemplate_edit_body_for_loop_entity_fails(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+static bool et_has_template(
+    ecs_world_t *world,
+    const char *path,
+    const char *template_name)
+{
+    ecs_entity_t e = ecs_lookup(world, path);
+    test_assert(e != 0);
+    ecs_entity_t t = ecs_lookup(world, template_name);
+    test_assert(t != 0);
+    return ecs_has_pair(world, e, EcsScriptTemplate, t);
+}
+
+void EditTemplate_body_entity_template_pair_in_nested_scopes(void) {
+    ecs_world_t *world = ecs_init();
+
+    et_tag(world, "Tag");
+    et_tag(world, "Rel");
+    et_tag(world, "Obj");
+    et_position(world);
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop big: bool = true"
+    LINE "  body {"
+    LINE "    Position: {0, 1}"
+    LINE "    if big {"
+    LINE "      shell {"
+    LINE "        Position: {1, 2}"
+    LINE "        base { Position: {2, 3} }"
+    LINE "        for i in 0..2 {"
+    LINE "          \"cut_$i\" { Position: {3, 4} }"
+    LINE "        }"
+    LINE "      }"
+    LINE "    }"
+    LINE "    with Tag {"
+    LINE "      trim { Position: {4, 5} }"
+    LINE "    }"
+    LINE "    (Rel, Obj) {"
+    LINE "      knob { Position: {5, 6} }"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Tree t1()";
+
+    ecs_script_t *script = et_parse(world, expr);
+
+    test_bool(true, et_has_template(world, "t1.body", "Tree"));
+    test_bool(true, et_has_template(world, "t1.body.shell", "Tree"));
+    test_bool(true, et_has_template(world, "t1.body.shell.base", "Tree"));
+    test_bool(true, et_has_template(world, "t1.body.shell.cut_0", "Tree"));
+    test_bool(true, et_has_template(world, "t1.body.shell.cut_1", "Tree"));
+    test_bool(true, et_has_template(world, "t1.body.trim", "Tree"));
+    test_bool(true, et_has_template(world, "t1.body.knob", "Tree"));
+
+    test_assert(ecs_has_id(world, ecs_lookup(world, "t1.body.trim"),
+        ecs_lookup(world, "Tag")));
+    test_assert(ecs_has_pair(world, ecs_lookup(world, "t1.body.knob"),
+        ecs_lookup(world, "Rel"), EcsWildcard));
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void EditTemplate_source_body_entity_nested_in_if_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    et_position(world);
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop big: bool = true"
+    LINE "  body {"
+    LINE "    if big {"
+    LINE "      shell {"
+    LINE "        Position: {1, 2}"
+    LINE "        base { Position: {2, 3} }"
+    LINE "        for i in 0..2 {"
+    LINE "          \"cut_$i\" { Position: {3, 4} }"
+    LINE "        }"
+    LINE "      }"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Tree t1()";
+
+    ecs_script_t *script = et_parse(world, expr);
+
+    ecs_entity_t shell = ecs_lookup(world, "t1.body.shell");
+    test_assert(shell != 0);
+
+    test_bool(true, et_has_template(world, "t1.body.shell", "Tree"));
+    test_bool(true, et_has_template(world, "t1.body.shell.base", "Tree"));
+    test_bool(true, et_has_template(world, "t1.body.shell.cut_0", "Tree"));
+
+    ecs_script_source_t src = {0};
+    test_bool(true, ecs_script_entity_source(script, shell, &src));
+    test_uint(ecs_lookup(world, "Tree"), src.template_);
+
+    char *span = et_span(script, shell);
+    test_str(span,
+        "shell {\n"
+        "        Position: {1, 2}\n"
+        "        base { Position: {2, 3} }\n"
+        "        for i in 0..2 {\n"
+        "          \"cut_$i\" { Position: {3, 4} }\n"
+        "        }\n"
+        "      }");
+    ecs_os_free(span);
+
+    ecs_entity_t base = ecs_lookup(world, "t1.body.shell.base");
+    test_assert(base != 0);
+
+    src = (ecs_script_source_t){0};
+    test_bool(true, ecs_script_entity_source(script, base, &src));
+    test_uint(ecs_lookup(world, "Tree"), src.template_);
+
+    span = et_span(script, base);
+    test_str(span, "base { Position: {2, 3} }");
+    ecs_os_free(span);
+
+    ecs_entity_t cut = ecs_lookup(world, "t1.body.shell.cut_0");
+    test_assert(cut != 0);
+    test_bool(false, ecs_script_entity_source(script, cut, NULL));
+    test_uint(0, ecs_script_entity_owner(world, cut));
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void EditTemplate_source_body_entity_in_else_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    et_position(world);
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop big: bool = true"
+    LINE "  body {"
+    LINE "    if big {"
+    LINE "      shell { Position: {1, 2} }"
+    LINE "    } else {"
+    LINE "      hollow { Position: {3, 4} }"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Tree t1(big: true)"
+    LINE "Tree t2(big: false)";
+
+    ecs_script_t *script = et_parse(world, expr);
+
+    ecs_entity_t shell = ecs_lookup(world, "t1.body.shell");
+    test_assert(shell != 0);
+    test_assert(ecs_lookup(world, "t1.body.hollow") == 0);
+
+    ecs_entity_t hollow = ecs_lookup(world, "t2.body.hollow");
+    test_assert(hollow != 0);
+    test_assert(ecs_lookup(world, "t2.body.shell") == 0);
+
+    test_bool(true, et_has_template(world, "t1.body.shell", "Tree"));
+    test_bool(true, et_has_template(world, "t2.body.hollow", "Tree"));
+
+    ecs_script_source_t src = {0};
+    test_bool(true, ecs_script_entity_source(script, shell, &src));
+    test_uint(ecs_lookup(world, "Tree"), src.template_);
+
+    char *span = et_span(script, shell);
+    test_str(span, "shell { Position: {1, 2} }");
+    ecs_os_free(span);
+
+    src = (ecs_script_source_t){0};
+    test_bool(true, ecs_script_entity_source(script, hollow, &src));
+    test_uint(ecs_lookup(world, "Tree"), src.template_);
+
+    span = et_span(script, hollow);
+    test_str(span, "hollow { Position: {3, 4} }");
+    ecs_os_free(span);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void EditTemplate_source_body_entity_in_with_scope_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    et_tag(world, "Tag");
+    et_position(world);
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  body {"
+    LINE "    with Tag {"
+    LINE "      trunk {"
+    LINE "        Position: {0, 1}"
+    LINE "        knot { Position: {2, 3} }"
+    LINE "      }"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Tree t1()";
+
+    ecs_script_t *script = et_parse(world, expr);
+
+    ecs_entity_t knot = ecs_lookup(world, "t1.body.trunk.knot");
+    test_assert(knot != 0);
+
+    test_bool(true, et_has_template(world, "t1.body.trunk", "Tree"));
+    test_bool(true, et_has_template(world, "t1.body.trunk.knot", "Tree"));
+
+    ecs_script_source_t src = {0};
+    test_bool(true, ecs_script_entity_source(script, knot, &src));
+    test_uint(ecs_lookup(world, "Tree"), src.template_);
+
+    char *span = et_span(script, knot);
+    test_str(span, "knot { Position: {2, 3} }");
+    ecs_os_free(span);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void EditTemplate_entity_owner_nested_template_component_assignment(void) {
+    ecs_world_t *world = ecs_init();
+
+    et_position(world);
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "template Roof {"
+        LINE "  prop hip: bool = false"
+        LINE "  body {"
+        LINE "    if hip {"
+        LINE "      shell {"
+        LINE "        Position: {1, 2}"
+        LINE "        base { Position: {2, 3} }"
+        LINE "      }"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE ""
+        LINE "template House {"
+        LINE "  roof {"
+        LINE "    Roof: {hip: true}"
+        LINE "  }"
+        LINE "}"
+        LINE ""
+        LINE "House h1()"
+    });
+
+    test_assert(s != 0);
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_assert(sc != NULL);
+
+    ecs_entity_t roof = ecs_lookup(world, "h1.roof");
+    ecs_entity_t body = ecs_lookup(world, "h1.roof.body");
+    ecs_entity_t shell = ecs_lookup(world, "h1.roof.body.shell");
+    ecs_entity_t base = ecs_lookup(world, "h1.roof.body.shell.base");
+    test_assert(roof != 0);
+    test_assert(body != 0);
+    test_assert(shell != 0);
+    test_assert(base != 0);
+
+    test_bool(true, et_has_template(world, "h1.roof", "House"));
+    test_bool(true, et_has_template(world, "h1.roof.body", "Roof"));
+    test_bool(true, et_has_template(world, "h1.roof.body.shell", "Roof"));
+    test_bool(true, et_has_template(world, "h1.roof.body.shell.base", "Roof"));
+
+    test_uint(s, ecs_script_entity_owner(world, roof));
+    test_uint(s, ecs_script_entity_owner(world, body));
+    test_uint(s, ecs_script_entity_owner(world, shell));
+    test_uint(s, ecs_script_entity_owner(world, base));
+
+    ecs_script_source_t src = {0};
+    test_bool(true, ecs_script_entity_source(sc->script, roof, &src));
+    test_uint(ecs_lookup(world, "House"), src.template_);
+
+    src = (ecs_script_source_t){0};
+    test_bool(true, ecs_script_entity_source(sc->script, shell, &src));
+    test_uint(ecs_lookup(world, "Roof"), src.template_);
+
+    char *span = et_span(sc->script, shell);
+    test_str(span,
+        "shell {\n"
+        "        Position: {1, 2}\n"
+        "        base { Position: {2, 3} }\n"
+        "      }");
+    ecs_os_free(span);
+
+    ecs_fini(world);
+}
+
+void EditTemplate_entity_owner_body_entity_in_for_loop_rows(void) {
+    ecs_world_t *world = ecs_init();
+
+    et_position(world);
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "template Roof {"
+        LINE "  prop hip: bool = false"
+        LINE "  body {"
+        LINE "    if hip {"
+        LINE "      shell { Position: {1, 2} }"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE ""
+        LINE "template House {"
+        LINE "  roof {"
+        LINE "    Roof: {hip: true}"
+        LINE "  }"
+        LINE "}"
+        LINE ""
+        LINE "template Row {"
+        LINE "  prop n: i32 = 2"
+        LINE "  for i in 0..n {"
+        LINE "    \"h$i\" {"
+        LINE "      House: {}"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE ""
+        LINE "Row r1()"
+    });
+
+    test_assert(s != 0);
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_assert(sc != NULL);
+
+    ecs_entity_t h0 = ecs_lookup(world, "r1.h0");
+    ecs_entity_t h1 = ecs_lookup(world, "r1.h1");
+    test_assert(h0 != 0);
+    test_assert(h1 != 0);
+
+    test_bool(true, et_has_template(world, "r1.h0", "Row"));
+    test_bool(true, et_has_template(world, "r1.h1", "Row"));
+
+    test_bool(false, ecs_script_entity_source(sc->script, h0, NULL));
+    test_uint(0, ecs_script_entity_owner(world, h0));
+
+    ecs_entity_t shell = ecs_lookup(world, "r1.h0.roof.body.shell");
+    test_assert(shell != 0);
+    test_assert(ecs_lookup(world, "r1.h1.roof.body.shell") != 0);
+
+    test_bool(true, et_has_template(world, "r1.h0.roof", "House"));
+    test_bool(true, et_has_template(world, "r1.h0.roof.body", "Roof"));
+    test_bool(true, et_has_template(world, "r1.h0.roof.body.shell", "Roof"));
+
+    test_uint(s, ecs_script_entity_owner(world, ecs_lookup(world, "r1.h0.roof")));
+    test_uint(s, ecs_script_entity_owner(world, shell));
+
+    ecs_script_source_t src = {0};
+    test_bool(true, ecs_script_entity_source(sc->script, shell, &src));
+    test_uint(ecs_lookup(world, "Roof"), src.template_);
+
+    ecs_fini(world);
+}
+
+void EditTemplate_source_body_entity_not_in_scene_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    et_position(world);
+
+    ecs_entity_t kit = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "template Roof {"
+        LINE "  prop hip: bool = false"
+        LINE "  body {"
+        LINE "    if hip {"
+        LINE "      shell {"
+        LINE "        Position: {1, 2}"
+        LINE "        base { Position: {2, 3} }"
+        LINE "      }"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE ""
+        LINE "template House {"
+        LINE "  roof {"
+        LINE "    Roof: {hip: true}"
+        LINE "  }"
+        LINE "}"
+    });
+
+    test_assert(kit != 0);
+
+    ecs_entity_t scene = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "h1 {"
+        LINE "  House: {}"
+        LINE "}"
+    });
+
+    test_assert(scene != 0);
+
+    const EcsScript *kit_sc = ecs_get(world, kit, EcsScript);
+    const EcsScript *scene_sc = ecs_get(world, scene, EcsScript);
+    test_assert(kit_sc != NULL);
+    test_assert(scene_sc != NULL);
+
+    ecs_entity_t h1 = ecs_lookup(world, "h1");
+    ecs_entity_t roof = ecs_lookup(world, "h1.roof");
+    ecs_entity_t body = ecs_lookup(world, "h1.roof.body");
+    ecs_entity_t shell = ecs_lookup(world, "h1.roof.body.shell");
+    ecs_entity_t base = ecs_lookup(world, "h1.roof.body.shell.base");
+    test_assert(h1 != 0);
+    test_assert(roof != 0);
+    test_assert(body != 0);
+    test_assert(shell != 0);
+    test_assert(base != 0);
+
+    test_uint(scene, ecs_get_target(world, shell, ecs_id(EcsScript), 0));
+
+    test_bool(true, et_has_template(world, "h1.roof", "House"));
+    test_bool(true, et_has_template(world, "h1.roof.body", "Roof"));
+    test_bool(true, et_has_template(world, "h1.roof.body.shell", "Roof"));
+    test_bool(true, et_has_template(world, "h1.roof.body.shell.base", "Roof"));
+
+    test_bool(false, ecs_script_entity_source(scene_sc->script, roof, NULL));
+    test_bool(false, ecs_script_entity_source(scene_sc->script, body, NULL));
+    test_bool(false, ecs_script_entity_source(scene_sc->script, shell, NULL));
+    test_bool(false, ecs_script_entity_source(scene_sc->script, base, NULL));
+
+    test_bool(true, ecs_script_entity_source(scene_sc->script, h1, NULL));
+    test_uint(scene, ecs_script_entity_owner(world, h1));
+
+    ecs_script_source_t src = {0};
+    test_bool(true, ecs_script_entity_source(kit_sc->script, shell, &src));
+    test_uint(ecs_lookup(world, "Roof"), src.template_);
+
+    test_uint(kit, ecs_script_entity_owner(world, roof));
+    test_uint(kit, ecs_script_entity_owner(world, body));
+    test_uint(kit, ecs_script_entity_owner(world, shell));
+    test_uint(kit, ecs_script_entity_owner(world, base));
+
+    ecs_fini(world);
+}
+
+void EditTemplate_apply_update_body_entity_in_if_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = et_position(world);
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
+        HEAD "template Tree {"
+        LINE "  prop big: bool = true"
+        LINE "  body {"
+        LINE "    if big {"
+        LINE "      shell {"
+        LINE "        Position: {0, 1}"
+        LINE "      }"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE ""
+        LINE "Tree t1()"
+        LINE "Tree t2()"
+    });
+
+    test_assert(s != 0);
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_assert(sc != NULL);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(sc->script);
+    Position v = {10, 20};
+    test_int(0, ecs_script_edits_set(
+        edits, ecs_lookup(world, "t1.body.shell"), p, &v));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_assert(result != NULL);
+    ecs_script_edits_free(edits);
+
+    test_int(0, ecs_script_update(world, s, 0, result));
+    ecs_os_free(result);
+
+    {
+        const float *ptr = ecs_get_id(
+            world, ecs_lookup(world, "t1.body.shell"), p);
+        test_assert(ptr != NULL);
+        test_int(10, ptr[0]);
+        test_int(20, ptr[1]);
+    }
+
+    {
+        const float *ptr = ecs_get_id(
+            world, ecs_lookup(world, "t2.body.shell"), p);
+        test_assert(ptr != NULL);
+        test_int(10, ptr[0]);
+        test_int(20, ptr[1]);
+    }
+
+    test_bool(true, et_has_template(world, "t1.body.shell", "Tree"));
+    test_bool(true, et_has_template(world, "t2.body.shell", "Tree"));
+
+    ecs_fini(world);
+}

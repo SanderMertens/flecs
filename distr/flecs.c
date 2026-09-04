@@ -50846,6 +50846,8 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_script_template_t *template; /* Set when creating template */
     ecs_script_template_t *instance_template;
     ecs_entity_t template_entity; /* Set when creating template instance */
+    ecs_entity_t body_template; /* Template of the body being instantiated. Set
+                                 * for the entire body, at any scope depth. */
     ecs_entity_t script_entity;
     ecs_id_t script_tag; /* Added to entities created by managed scripts */
     ecs_entity_t module;
@@ -70363,11 +70365,26 @@ static void flecs_script_edit_index_scope(
     }
 }
 
+static bool flecs_script_edit_is_template_entity(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    if (!world || !ecs_is_alive(world, entity)) {
+        return false;
+    }
+
+    return ecs_get_target(world, entity, EcsScriptTemplate, 0) != 0;
+}
+
 static ecs_script_entity_t* flecs_script_edit_find(
     ecs_script_impl_t *impl,
     ecs_entity_t entity)
 {
     if (!entity) {
+        return NULL;
+    }
+
+    if (flecs_script_edit_is_template_entity(impl->pub.world, entity)) {
         return NULL;
     }
 
@@ -70475,31 +70492,13 @@ static ecs_script_entity_t* flecs_script_edit_find_symbol_scope(
     return NULL;
 }
 
-static ecs_script_entity_t* flecs_script_edit_find_in_template(
+static ecs_script_entity_t* flecs_script_edit_find_in_instance(
     ecs_script_impl_t *impl,
     ecs_entity_t entity,
-    ecs_entity_t *template_out)
+    ecs_entity_t instance,
+    ecs_entity_t template_entity)
 {
     ecs_world_t *world = impl->pub.world;
-    if (!world || !entity || !ecs_is_alive(world, entity)) {
-        return NULL;
-    }
-
-    ecs_entity_t instance = ecs_get_target(world, entity, EcsChildOf, 0);
-    ecs_entity_t template_entity = 0;
-
-    while (instance) {
-        template_entity = ecs_get_target(
-            world, instance, ecs_id(EcsScriptTemplateRoot), 0);
-        if (template_entity) {
-            break;
-        }
-        instance = ecs_get_target(world, instance, EcsChildOf, 0);
-    }
-
-    if (!template_entity) {
-        return NULL;
-    }
 
     const EcsScript *sc = ecs_get(world, template_entity, EcsScript);
     if (!sc || !sc->script || !sc->template_) {
@@ -70555,11 +70554,42 @@ static ecs_script_entity_t* flecs_script_edit_find_in_template(
         return NULL;
     }
 
-    if (template_out) {
-        template_out[0] = template_entity;
+    return node;
+}
+
+static ecs_script_entity_t* flecs_script_edit_find_in_template(
+    ecs_script_impl_t *impl,
+    ecs_entity_t entity,
+    ecs_entity_t *template_out)
+{
+    ecs_world_t *world = impl->pub.world;
+    if (!world || !entity || !ecs_is_alive(world, entity)) {
+        return NULL;
     }
 
-    return node;
+    ecs_entity_t instance = ecs_get_target(world, entity, EcsChildOf, 0);
+
+    while (instance) {
+        int32_t i = 0;
+        ecs_entity_t template_entity;
+
+        while ((template_entity = ecs_get_target(
+            world, instance, ecs_id(EcsScriptTemplateRoot), i ++)))
+        {
+            ecs_script_entity_t *node = flecs_script_edit_find_in_instance(
+                impl, entity, instance, template_entity);
+            if (node) {
+                if (template_out) {
+                    template_out[0] = template_entity;
+                }
+                return node;
+            }
+        }
+
+        instance = ecs_get_target(world, instance, EcsChildOf, 0);
+    }
+
+    return NULL;
 }
 
 static ecs_script_entity_t* flecs_script_edit_find_w_template(
@@ -70625,6 +70655,34 @@ ecs_entity_t ecs_script_entity_owner(
         return 0;
     }
 
+    ecs_entity_t template_entity;
+    bool in_template_body = false;
+    int32_t i = 0;
+
+    while ((template_entity = ecs_get_target(
+        world, entity, EcsScriptTemplate, i ++)))
+    {
+        in_template_body = true;
+
+        const EcsScript *sc = ecs_get(world, template_entity, EcsScript);
+        if (!sc || !sc->script) {
+            continue;
+        }
+
+        ecs_entity_t owner = flecs_script_impl(sc->script)->entity;
+        if (!owner) {
+            continue;
+        }
+
+        if (ecs_script_entity_source(sc->script, entity, NULL)) {
+            return owner;
+        }
+    }
+
+    if (in_template_body) {
+        return 0;
+    }
+
     ecs_entity_t script_entity = ecs_get_target(
         world, entity, ecs_id(EcsScript), 0);
     if (script_entity) {
@@ -70637,36 +70695,32 @@ ecs_entity_t ecs_script_entity_owner(
     }
 
     ecs_entity_t instance = ecs_get_target(world, entity, EcsChildOf, 0);
-    ecs_entity_t template_entity = 0;
 
     while (instance) {
-        template_entity = ecs_get_target(
-            world, instance, ecs_id(EcsScriptTemplateRoot), 0);
-        if (template_entity) {
-            break;
+        i = 0;
+
+        while ((template_entity = ecs_get_target(
+            world, instance, ecs_id(EcsScriptTemplateRoot), i ++)))
+        {
+            const EcsScript *sc = ecs_get(world, template_entity, EcsScript);
+            if (!sc || !sc->script) {
+                continue;
+            }
+
+            ecs_entity_t owner = flecs_script_impl(sc->script)->entity;
+            if (!owner) {
+                continue;
+            }
+
+            if (ecs_script_entity_source(sc->script, entity, NULL)) {
+                return owner;
+            }
         }
+
         instance = ecs_get_target(world, instance, EcsChildOf, 0);
     }
 
-    if (!template_entity) {
-        return 0;
-    }
-
-    const EcsScript *sc = ecs_get(world, template_entity, EcsScript);
-    if (!sc || !sc->script) {
-        return 0;
-    }
-
-    ecs_entity_t owner = flecs_script_impl(sc->script)->entity;
-    if (!owner) {
-        return 0;
-    }
-
-    if (!ecs_script_entity_source(sc->script, entity, NULL)) {
-        return 0;
-    }
-
-    return owner;
+    return 0;
 error:
     return 0;
 }
@@ -99013,9 +99067,9 @@ int flecs_script_eval_entity_enter(
         }
     }
 
-    if (v->template_entity && (state->created || v->force)) {
+    if (v->body_template && (state->created || v->force)) {
         ecs_add_pair(
-            v->world, state->eval, EcsScriptTemplate, v->template_entity);
+            v->world, state->eval, EcsScriptTemplate, v->body_template);
     }
 
     v->entity = state;
@@ -118418,9 +118472,9 @@ static int flecs_ir_entity_enter(
         }
     }
 
-    if (v->template_entity && (state->created || v->force)) {
+    if (v->body_template && (state->created || v->force)) {
         ecs_add_pair(
-            v->world, state->eval, EcsScriptTemplate, v->template_entity);
+            v->world, state->eval, EcsScriptTemplate, v->body_template);
     }
 
     v->entity = state;
@@ -121037,6 +121091,7 @@ static void flecs_ir_visit_init(
     v->template = NULL;
     v->instance_template = NULL;
     v->template_entity = 0;
+    v->body_template = 0;
     v->script_entity = 0;
     v->script_tag = 0;
     v->module = 0;
@@ -125195,6 +125250,7 @@ static int flecs_script_template_instantiate(
 
     v->r->using = template->using_;
     v->template_entity = template_entity;
+    v->body_template = template_entity;
     v->instance_template = template;
     v->symbol_offset = template->symbol_offset;
     ecs_vec_init_t(NULL, &desc.runtime->with, ecs_value_t, 0);
