@@ -2145,7 +2145,7 @@ int flecs_script_eval_node(
 
 static flecs_script_frame_t* flecs_script_frame_at(
     const ecs_script_runner_t *r,
-    int32_t index)
+    uint32_t index)
 {
     return &r->frames[index / ECS_SCRIPT_FRAME_CHUNK_SIZE]
         [index % ECS_SCRIPT_FRAME_CHUNK_SIZE];
@@ -2175,7 +2175,7 @@ static flecs_script_frame_t* flecs_script_frame_push(
 
     bv->nodes[bv->depth ++] = node;
 
-    int32_t chunk = r->frame_count / ECS_SCRIPT_FRAME_CHUNK_SIZE;
+    uint32_t chunk = (uint32_t)r->frame_count / ECS_SCRIPT_FRAME_CHUNK_SIZE;
     if (!r->frames[chunk]) {
         r->frames[chunk] = ecs_os_malloc_n(
             flecs_script_frame_t, ECS_SCRIPT_FRAME_CHUNK_SIZE);

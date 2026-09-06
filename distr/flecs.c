@@ -100401,7 +100401,7 @@ int flecs_script_eval_node(
 
 static flecs_script_frame_t* flecs_script_frame_at(
     const ecs_script_runner_t *r,
-    int32_t index)
+    uint32_t index)
 {
     return &r->frames[index / ECS_SCRIPT_FRAME_CHUNK_SIZE]
         [index % ECS_SCRIPT_FRAME_CHUNK_SIZE];
@@ -100431,7 +100431,7 @@ static flecs_script_frame_t* flecs_script_frame_push(
 
     bv->nodes[bv->depth ++] = node;
 
-    int32_t chunk = r->frame_count / ECS_SCRIPT_FRAME_CHUNK_SIZE;
+    uint32_t chunk = (uint32_t)r->frame_count / ECS_SCRIPT_FRAME_CHUNK_SIZE;
     if (!r->frames[chunk]) {
         r->frames[chunk] = ecs_os_malloc_n(
             flecs_script_frame_t, ECS_SCRIPT_FRAME_CHUNK_SIZE);
@@ -117560,7 +117560,7 @@ static void flecs_ir_reg_borrow(
 
 static ecs_script_ir_frame_t* flecs_ir_frame_at(
     const ecs_script_ir_vm_t *vm,
-    int32_t index)
+    uint32_t index)
 {
     return &vm->frames[index / ECS_SCRIPT_IR_FRAME_CHUNK_SIZE]
         [index % ECS_SCRIPT_IR_FRAME_CHUNK_SIZE];
@@ -117573,7 +117573,7 @@ static ecs_script_ir_frame_t* flecs_ir_frame_push(
 {
     ecs_assert(vm->frame_count < ECS_SCRIPT_IR_MAX_FRAMES,
         ECS_INTERNAL_ERROR, NULL);
-    int32_t chunk = vm->frame_count / ECS_SCRIPT_IR_FRAME_CHUNK_SIZE;
+    uint32_t chunk = (uint32_t)vm->frame_count / ECS_SCRIPT_IR_FRAME_CHUNK_SIZE;
     if (!vm->frames[chunk]) {
         vm->frames[chunk] = ecs_os_malloc_n(
             ecs_script_ir_frame_t, ECS_SCRIPT_IR_FRAME_CHUNK_SIZE);
