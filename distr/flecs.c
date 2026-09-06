@@ -111031,6 +111031,40 @@ static bool flecs_expr_unresolved_ref(
     return true;
 }
 
+static void flecs_expr_unresolved_component_ref(
+    ecs_script_t *script,
+    const ecs_expr_eval_desc_t *desc,
+    ecs_expr_node_t *node,
+    ecs_expr_node_t *left,
+    ecs_id_t component,
+    bool is_has)
+{
+    ecs_script_eval_visitor_t *v = desc->script_visitor;
+    if (!v || !v->type_visitor) {
+        return;
+    }
+    if (left->kind == EcsExprIdentifier) {
+        left = ((ecs_expr_identifier_t*)left)->expr;
+    }
+    if (!left || left->kind != EcsExprValue ||
+        left->type != ecs_id(ecs_entity_t))
+    {
+        return;
+    }
+    ecs_entity_t src = ((ecs_expr_value_node_t*)left)->storage.entity;
+    if (src && !ecs_has_id(script->world, src, component)) {
+        ecs_script_impl_t *impl = flecs_script_impl(script);
+        ecs_script_unresolved_component_ref_t *ref = ecs_vec_append_t(
+            NULL, &impl->unresolved_component_refs,
+            ecs_script_unresolved_component_ref_t);
+        ref->entity = src;
+        ref->component = component;
+        ref->is_has = is_has;
+        flecs_script_pos_to_line_col(impl->pub.code, node->pos,
+            &ref->line, &ref->column);
+    }
+}
+
 static bool flecs_expr_lenient_unresolved_ref(
     ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
@@ -113757,31 +113791,8 @@ static int flecs_expr_element_visit_type(
 
             node->node.kind = EcsExprComponent;
 
-            ecs_script_eval_visitor_t *v = desc->script_visitor;
-            if (v && v->type_visitor) {
-                ecs_expr_node_t *left = node->left;
-                if (left->kind == EcsExprIdentifier) {
-                    left = ((ecs_expr_identifier_t*)left)->expr;
-                }
-                if (left && left->kind == EcsExprValue &&
-                    left->type == ecs_id(ecs_entity_t))
-                {
-                    ecs_entity_t src =
-                        ((ecs_expr_value_node_t*)left)->storage.entity;
-                    if (src && !ecs_has_id(world, src, node->node.type)) {
-                        ecs_script_impl_t *impl = flecs_script_impl(script);
-                        ecs_script_unresolved_component_ref_t *ref =
-                            ecs_vec_append_t(NULL,
-                                &impl->unresolved_component_refs,
-                                ecs_script_unresolved_component_ref_t);
-                        ref->entity = src;
-                        ref->component = node->node.type;
-                        ref->is_has = false;
-                        flecs_script_pos_to_line_col(impl->pub.code,
-                            node->node.pos, &ref->line, &ref->column);
-                    }
-                }
-            }
+            flecs_expr_unresolved_component_ref(script, desc, &node->node,
+                node->left, node->node.type, false);
 
             *cur = ecs_meta_cursor(script->world, node->node.type, NULL);
 
@@ -113952,30 +113963,8 @@ static int flecs_expr_has_visit_type(
         }
     }
 
-    ecs_script_eval_visitor_t *v = desc->script_visitor;
-    if (v && v->type_visitor) {
-        ecs_expr_node_t *left = node->left;
-        if (left->kind == EcsExprIdentifier) {
-            left = ((ecs_expr_identifier_t*)left)->expr;
-        }
-        if (left && left->kind == EcsExprValue &&
-            left->type == ecs_id(ecs_entity_t))
-        {
-            ecs_entity_t src = ((ecs_expr_value_node_t*)left)->storage.entity;
-            if (src && !ecs_has_id(script->world, src, node->id)) {
-                ecs_script_impl_t *impl = flecs_script_impl(script);
-                ecs_script_unresolved_component_ref_t *ref =
-                    ecs_vec_append_t(NULL,
-                        &impl->unresolved_component_refs,
-                        ecs_script_unresolved_component_ref_t);
-                ref->entity = src;
-                ref->component = node->id;
-                ref->is_has = true;
-                flecs_script_pos_to_line_col(impl->pub.code,
-                    node->node.pos, &ref->line, &ref->column);
-            }
-        }
-    }
+    flecs_expr_unresolved_component_ref(script, desc, &node->node,
+        node->left, node->id, true);
 
     node->node.type = ecs_id(ecs_bool_t);
 
