@@ -212,7 +212,6 @@ typedef struct ecs_script_ir_entry_t {
 struct ecs_script_ir_t {
     ecs_vec_t ops;
     ecs_vec_t ids;
-    ecs_vec_t slots;
     ecs_vec_t catches;
     ecs_vec_t entries;
     ecs_map_t entry_index;

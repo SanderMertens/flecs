@@ -46,6 +46,7 @@ typedef struct ecs_script_node_t {
 
     ecs_script_entity_t *hoisted;
     bool skip;
+    int32_t region;
 } ecs_script_node_t;
 
 struct ecs_script_scope_t {

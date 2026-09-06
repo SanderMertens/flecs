@@ -163,6 +163,13 @@ void flecs_script_for_slot_track_component(
     ecs_id_t component,
     int32_t visit);
 
+typedef struct ecs_script_region_t {
+    int32_t scope_first;
+    int32_t scope_count;
+    int32_t for_first;
+    int32_t for_count;
+} ecs_script_region_t;
+
 struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_entity_t entity; /* Set if script is managed (has EcsScript) */
@@ -180,6 +187,7 @@ struct ecs_script_impl_t {
     ecs_vec_t symbol_slots;
     ecs_vec_t component_slots;
     ecs_vec_t scope_slots;
+    ecs_vec_t regions;
     ecs_vec_t for_slots;
     ecs_vec_t unresolved_refs;
     ecs_vec_t unresolved_component_refs;

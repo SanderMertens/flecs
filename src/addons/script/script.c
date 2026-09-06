@@ -101,6 +101,7 @@ ecs_script_t* flecs_script_new(
     ecs_vec_init_t(NULL, &result->component_slots,
         ecs_script_component_slot_t, 0);
     ecs_vec_init_t(NULL, &result->scope_slots, int32_t, 0);
+    ecs_vec_init_t(NULL, &result->regions, ecs_script_region_t, 0);
     ecs_vec_init_t(NULL, &result->for_slots, ecs_script_for_slot_t, 0);
     ecs_vec_init_t(NULL, &result->unresolved_refs,
         ecs_script_unresolved_ref_t, 0);
@@ -316,6 +317,7 @@ void ecs_script_free(
         ecs_vec_fini_t(NULL, &impl->component_slots,
             ecs_script_component_slot_t);
         ecs_vec_fini_t(NULL, &impl->scope_slots, int32_t);
+        ecs_vec_fini_t(NULL, &impl->regions, ecs_script_region_t);
         flecs_script_for_slots_fini(&impl->for_slots);
         ecs_vec_fini_t(NULL, &impl->unresolved_refs,
             ecs_script_unresolved_ref_t);

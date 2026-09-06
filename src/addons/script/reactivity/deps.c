@@ -518,7 +518,32 @@ static int flecs_script_dep_template(
     ecs_script_template_node_t *node,
     uint64_t *input);
 
-static int flecs_script_dep_node(
+static void flecs_script_dep_region(
+    flecs_script_dep_ctx_t *ctx,
+    ecs_script_node_t *node,
+    int32_t scope_first,
+    int32_t for_first)
+{
+    node->region = 0;
+    ecs_script_region_t region = {
+        scope_first, ctx->scope_count - scope_first,
+        for_first, ctx->for_count - for_first
+    };
+    if (!region.scope_count && !region.for_count) {
+        return;
+    }
+    ecs_vec_t *regions = &ctx->v->base.script->regions;
+    int32_t count = ecs_vec_count(regions);
+    if (!count || ecs_os_memcmp(ecs_vec_last_t(regions, ecs_script_region_t),
+        &region, ECS_SIZEOF(ecs_script_region_t)))
+    {
+        ecs_vec_append_t(NULL, regions, ecs_script_region_t)[0] = region;
+        count ++;
+    }
+    node->region = count;
+}
+
+static int flecs_script_dep_node_impl(
     flecs_script_dep_ctx_t *ctx,
     ecs_script_node_t *node)
 {
@@ -821,10 +846,23 @@ static int flecs_script_dep_node(
     return 0;
 }
 
+static int flecs_script_dep_node(
+    flecs_script_dep_ctx_t *ctx,
+    ecs_script_node_t *node)
+{
+    int32_t scope_first = ctx->scope_count, for_first = ctx->for_count;
+    int result = flecs_script_dep_node_impl(ctx, node);
+    if (!result) {
+        flecs_script_dep_region(ctx, node, scope_first, for_first);
+    }
+    return result;
+}
+
 static int flecs_script_dep_scope(
     flecs_script_dep_ctx_t *ctx,
     ecs_script_scope_t *scope)
 {
+    int32_t for_first = ctx->for_count;
     ecs_script_scope_t *prev_scope = ctx->scope;
     ctx->scope = scope;
     scope->scope_slot = ctx->scope_count ++;
@@ -866,6 +904,7 @@ static int flecs_script_dep_scope(
     }
     ctx->v->base.depth --;
     ctx->scope = prev_scope;
+    flecs_script_dep_region(ctx, &scope->node, scope->scope_slot, for_first);
     return 0;
 }
 
@@ -1075,6 +1114,7 @@ int flecs_script_analyze_dependencies(
 {
     ecs_script_impl_t *impl = v->base.script;
     impl->input_count = 0;
+    ecs_vec_clear(&impl->regions);
     flecs_script_dep_ctx_t ctx = {
         .v = v,
         .refs = &impl->refs,

@@ -216,14 +216,17 @@ void flecs_script_ir_to_buf(
                 ecs_strbuf_appendstr(buf, " skipped");
             }
             if (op->c != -1) {
-                const int32_t *slots = ecs_vec_get_t(&ir->slots, int32_t, op->c);
+                const ecs_script_region_t *region = ecs_vec_get_t(
+                    &script->regions, ecs_script_region_t, op->c);
                 ecs_strbuf_append(buf, " marks=[scopes:%d fors:%d]",
-                    slots[0], slots[1]);
+                    region->scope_count, region->for_count);
             }
             break;
         case EcsIrMark: {
-            const int32_t *slots = ecs_vec_get_t(&ir->slots, int32_t, op->c);
-            ecs_strbuf_append(buf, "[scopes:%d fors:%d]", slots[0], slots[1]);
+            const ecs_script_region_t *region = ecs_vec_get_t(
+                &script->regions, ecs_script_region_t, op->c);
+            ecs_strbuf_append(buf, "[scopes:%d fors:%d]",
+                region->scope_count, region->for_count);
             break;
         }
         case EcsIrScopeEnter:

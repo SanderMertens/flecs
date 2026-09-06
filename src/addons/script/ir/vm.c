@@ -475,8 +475,9 @@ static inline void flecs_ir_stmt_skip(
 {
     flecs_ir_prof(EcsIrProfileStmtSkipped);
     if (op->c != -1) {
-        const int32_t *slots = ecs_vec_get_t(&vm->ir->slots, int32_t, op->c);
-        if (vm->dirty || slots[1]) {
+        const ecs_script_region_t *region = ecs_vec_get_t(
+            &vm->v.base.script->regions, ecs_script_region_t, op->c);
+        if (vm->dirty || region->for_count) {
             flecs_ir_mark(vm, op->c);
         } else {
             ecs_vec_append_t(NULL, &vm->pending_marks, int32_t)[0] = op->c;
@@ -502,16 +503,15 @@ static void flecs_ir_mark(
         return;
     }
     ecs_script_eval_visitor_t *v = &vm->v;
-    const int32_t *slots = ecs_vec_get_t(&vm->ir->slots, int32_t, index);
-    int32_t i, scope_count = slots[0], for_count = slots[1];
-    const int32_t *scopes = &slots[2];
-    const int32_t *fors = &slots[2 + scope_count];
+    const ecs_script_region_t *region = ecs_vec_get_t(
+        &v->base.script->regions, ecs_script_region_t, index);
+    int32_t i;
 
     if (v->scope_slots) {
         int32_t count = ecs_vec_count(v->scope_slots);
         int32_t *array = ecs_vec_first(v->scope_slots);
-        for (i = 0; i < scope_count; i ++) {
-            int32_t slot = scopes[i];
+        for (i = 0; i < region->scope_count; i ++) {
+            int32_t slot = region->scope_first + i;
             if (slot >= 0 && slot < count) {
                 array[slot] = v->visit;
             }
@@ -520,8 +520,8 @@ static void flecs_ir_mark(
 
     if (v->for_slots) {
         int32_t count = ecs_vec_count(v->for_slots);
-        for (i = 0; i < for_count; i ++) {
-            int32_t slot = fors[i];
+        for (i = 0; i < region->for_count; i ++) {
+            int32_t slot = region->for_first + i;
             if (slot >= 0 && slot < count) {
                 flecs_script_for_slot_mark(ecs_vec_get_t(
                     v->for_slots, ecs_script_for_slot_t, slot), v->visit);
