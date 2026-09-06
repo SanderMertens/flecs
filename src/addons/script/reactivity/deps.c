@@ -10,11 +10,6 @@ typedef struct flecs_script_component_owner_t {
     int32_t entity_symbol;
 } flecs_script_component_owner_t;
 
-typedef struct flecs_script_entity_parent_t {
-    ecs_script_entity_t *entity;
-    ecs_script_entity_t *parent;
-} flecs_script_entity_parent_t;
-
 typedef struct flecs_script_dep_ctx_t {
     ecs_script_eval_visitor_t *v;
     ecs_script_template_t *template;
@@ -23,7 +18,6 @@ typedef struct flecs_script_dep_ctx_t {
     ecs_vec_t vars;
     ecs_vec_t vars_internal;
     ecs_vec_t component_owners;
-    ecs_vec_t entity_parents;
     int32_t *input_count;
     int32_t scope_count;
     int32_t component_count;
@@ -62,30 +56,13 @@ static bool flecs_script_dep_scopes_exclusive(
     ecs_script_scope_t *first,
     ecs_script_scope_t *second)
 {
-    ecs_script_scope_t *scope = first;
-    while (scope) {
-        ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-        int32_t i, count = ecs_vec_count(&scope->stmts);
-        for (i = 0; i < count; i ++) {
-            if (stmts[i]->kind != EcsAstIf) {
-                continue;
-            }
-            ecs_script_if_t *if_ = (ecs_script_if_t*)stmts[i];
-            bool first_true = flecs_script_dep_scope_contains(
-                first, if_->if_true);
-            bool first_false = flecs_script_dep_scope_contains(
-                first, if_->if_false);
-            bool second_true = flecs_script_dep_scope_contains(
-                second, if_->if_true);
-            bool second_false = flecs_script_dep_scope_contains(
-                second, if_->if_false);
-            if ((first_true && second_false) ||
-                (first_false && second_true))
-            {
-                return true;
-            }
+    while (first) {
+        if (first->alternative && flecs_script_dep_scope_contains(
+            second, first->alternative))
+        {
+            return true;
         }
-        scope = scope->parent;
+        first = first->parent;
     }
     return false;
 }
@@ -133,21 +110,6 @@ static bool flecs_script_dep_ids_may_match(
     return true;
 }
 
-static ecs_script_entity_t* flecs_script_dep_entity_parent(
-    const flecs_script_dep_ctx_t *ctx,
-    ecs_script_entity_t *entity)
-{
-    flecs_script_entity_parent_t *parents = ecs_vec_first(
-        &ctx->entity_parents);
-    int32_t i, count = ecs_vec_count(&ctx->entity_parents);
-    for (i = count - 1; i >= 0; i --) {
-        if (parents[i].entity == entity) {
-            return parents[i].parent;
-        }
-    }
-    return NULL;
-}
-
 static bool flecs_script_dep_names_may_match(
     const char *first,
     const char *second)
@@ -162,7 +124,6 @@ static bool flecs_script_dep_names_may_match(
 }
 
 static bool flecs_script_dep_entity_may_match(
-    const flecs_script_dep_ctx_t *ctx,
     ecs_script_entity_t *first,
     ecs_script_entity_t *second)
 {
@@ -183,13 +144,10 @@ static bool flecs_script_dep_entity_may_match(
     {
         return false;
     }
-    return flecs_script_dep_entity_may_match(ctx,
-        flecs_script_dep_entity_parent(ctx, first),
-        flecs_script_dep_entity_parent(ctx, second));
+    return flecs_script_dep_entity_may_match(first->parent, second->parent);
 }
 
 static bool flecs_script_dep_entity_matches(
-    const flecs_script_dep_ctx_t *ctx,
     ecs_script_entity_t *first,
     ecs_script_entity_t *second)
 {
@@ -208,9 +166,7 @@ static bool flecs_script_dep_entity_matches(
     {
         return false;
     }
-    return flecs_script_dep_entity_matches(ctx,
-        flecs_script_dep_entity_parent(ctx, first),
-        flecs_script_dep_entity_parent(ctx, second));
+    return flecs_script_dep_entity_matches(first->parent, second->parent);
 }
 
 static bool flecs_script_dep_same_entity(
@@ -219,7 +175,7 @@ static bool flecs_script_dep_same_entity(
 {
     if (owner->entity || ctx->entity) {
         return flecs_script_dep_entity_may_match(
-            ctx, owner->entity, ctx->entity);
+            owner->entity, ctx->entity);
     }
     return owner->entity_symbol == ctx->entity_symbol;
 }
@@ -231,7 +187,7 @@ static bool flecs_script_dep_component_already_owned(
     ecs_script_entity_t *first_entity = owner->entity;
     ecs_script_entity_t *second_entity = ctx->entity;
     if (!flecs_script_dep_entity_matches(
-        ctx, first_entity, second_entity))
+        first_entity, second_entity))
     {
         return false;
     }
@@ -244,8 +200,8 @@ static bool flecs_script_dep_component_already_owned(
     {
         first_scope = first_scope->parent;
         second_scope = second_scope->parent;
-        first_entity = flecs_script_dep_entity_parent(ctx, first_entity);
-        second_entity = flecs_script_dep_entity_parent(ctx, second_entity);
+        first_entity = first_entity->parent;
+        second_entity = second_entity->parent;
     }
     return first_scope == second_scope;
 }
@@ -935,10 +891,7 @@ static int flecs_script_dep_node(
         node->direct_input |= flecs_script_dep_var_get(ctx, n->kind_sp);
         int32_t entity_symbol = ctx->entity_symbol;
         ecs_script_entity_t *entity = ctx->entity;
-        flecs_script_entity_parent_t *parent = ecs_vec_append_t(
-            NULL, &ctx->entity_parents, flecs_script_entity_parent_t);
-        parent->entity = n;
-        parent->parent = entity;
+        n->parent = entity;
         ctx->entity_symbol = n->symbol;
         ctx->entity = n;
         int result = flecs_script_dep_scope(ctx, n->scope);
@@ -968,6 +921,8 @@ static int flecs_script_dep_node(
     }
     case EcsAstIf: {
         ecs_script_if_t *n = (ecs_script_if_t*)node;
+        n->if_true->alternative = n->if_false;
+        n->if_false->alternative = n->if_true;
         if (flecs_script_dep_expr(ctx, n->expr, &node->direct_input,
             &node->direct_internal))
         {
@@ -1253,15 +1208,11 @@ static int flecs_script_dep_template_analyze(
     ecs_vec_init_t(NULL, &ctx.vars_internal, uint64_t, 0);
     ecs_vec_init_t(NULL, &ctx.component_owners,
         flecs_script_component_owner_t, 0);
-    ecs_vec_init_t(NULL, &ctx.entity_parents,
-        flecs_script_entity_parent_t, 0);
     if (flecs_script_dep_template_init(&ctx, template, outer)) {
         ecs_vec_fini_t(NULL, &ctx.vars, uint64_t);
         ecs_vec_fini_t(NULL, &ctx.vars_internal, uint64_t);
         ecs_vec_fini_t(NULL, &ctx.component_owners,
             flecs_script_component_owner_t);
-        ecs_vec_fini_t(NULL, &ctx.entity_parents,
-            flecs_script_entity_parent_t);
         return -1;
     }
     template->computed_count = 0;
@@ -1286,8 +1237,6 @@ static int flecs_script_dep_template_analyze(
         ecs_vec_fini_t(NULL, &ctx.vars_internal, uint64_t);
     ecs_vec_fini_t(NULL, &ctx.component_owners,
         flecs_script_component_owner_t);
-    ecs_vec_fini_t(NULL, &ctx.entity_parents,
-        flecs_script_entity_parent_t);
     return result;
 }
 
@@ -1328,15 +1277,11 @@ int flecs_script_analyze_dependencies(
     ecs_vec_init_t(NULL, &ctx.vars_internal, uint64_t, 0);
     ecs_vec_init_t(NULL, &ctx.component_owners,
         flecs_script_component_owner_t, 0);
-    ecs_vec_init_t(NULL, &ctx.entity_parents,
-        flecs_script_entity_parent_t, 0);
     if (flecs_script_dep_assign_refs(&ctx, &impl->refs)) {
         ecs_vec_fini_t(NULL, &ctx.vars, uint64_t);
         ecs_vec_fini_t(NULL, &ctx.vars_internal, uint64_t);
         ecs_vec_fini_t(NULL, &ctx.component_owners,
             flecs_script_component_owner_t);
-        ecs_vec_fini_t(NULL, &ctx.entity_parents,
-            flecs_script_entity_parent_t);
         return -1;
     }
     int32_t old_depth = v->base.depth;
@@ -1363,8 +1308,6 @@ int flecs_script_analyze_dependencies(
         ecs_vec_fini_t(NULL, &ctx.vars_internal, uint64_t);
     ecs_vec_fini_t(NULL, &ctx.component_owners,
         flecs_script_component_owner_t);
-    ecs_vec_fini_t(NULL, &ctx.entity_parents,
-        flecs_script_entity_parent_t);
     return result;
 }
 

@@ -51,6 +51,7 @@ struct ecs_script_scope_t {
     ecs_script_node_t node;
     ecs_vec_t stmts;
     ecs_script_scope_t *parent;
+    ecs_script_scope_t *alternative;
     const char *open;
     int32_t scope_slot;
 
@@ -107,6 +108,7 @@ typedef struct ecs_script_component_t {
 
 struct ecs_script_entity_t {
     ecs_script_node_t node;
+    ecs_script_entity_t *parent;
     const char *kind;
     const char *name;
     bool name_is_var;
