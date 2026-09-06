@@ -123245,6 +123245,18 @@ int flecs_script_analyze_dependencies(
 
 ECS_COMPONENT_DECLARE(EcsScriptUpdateEvent);
 
+static bool flecs_script_ref_matches(
+    const ecs_script_ref_t *first,
+    const ecs_script_ref_t *second)
+{
+    return first->entity == second->entity &&
+        first->component == second->component &&
+        first->is_has == second->is_has &&
+        ((!first->name && !second->name) ||
+         (first->name && second->name &&
+            !ecs_os_strcmp(first->name, second->name)));
+}
+
 ecs_script_ref_t* flecs_script_ref_ensure(
     ecs_vec_t *refs,
     const ecs_script_ref_t *value)
@@ -123252,16 +123264,7 @@ ecs_script_ref_t* flecs_script_ref_ensure(
     ecs_script_ref_t *array = ecs_vec_first(refs);
     int32_t i, count = ecs_vec_count(refs);
     for (i = 0; i < count; i ++) {
-        if (array[i].entity != value->entity ||
-            array[i].component != value->component ||
-            array[i].is_has != value->is_has)
-        {
-            continue;
-        }
-        if ((!array[i].name && !value->name) ||
-            (array[i].name && value->name &&
-                !ecs_os_strcmp(array[i].name, value->name)))
-        {
+        if (flecs_script_ref_matches(&array[i], value)) {
             return &array[i];
         }
     }
@@ -123624,74 +123627,55 @@ void flecs_script_update_ref_observers(
     ecs_vec_t *observers,
     ecs_iter_action_t callback)
 {
+    ecs_vec_init_if_t(observers, ecs_script_ref_t);
     ecs_script_ref_t *new_refs = ecs_vec_first(refs);
     int32_t i, new_count = ecs_vec_count(refs);
 
-    ecs_script_ref_t *old_refs = ecs_vec_first(observers);
-    int32_t j, old_count = ecs_vec_count(observers);
-
-    ecs_vec_t result;
-    ecs_vec_init_t(NULL, &result, ecs_script_ref_t, new_count);
-
     for (i = 0; i < new_count; i ++) {
-        ecs_entity_t entity = new_refs[i].entity;
-        ecs_id_t component = new_refs[i].component;
-        bool is_has = new_refs[i].is_has;
-        bool is_resolve = new_refs[i].is_resolve;
-        uint64_t input = new_refs[i].input;
-        const char *name = is_resolve ? new_refs[i].name : NULL;
-        ecs_entity_t observer = 0;
-
-        for (j = 0; j < old_count; j ++) {
-            const char *old_name = old_refs[j].name;
+        ecs_script_ref_t value = new_refs[i];
+        value.name = value.is_resolve ? value.name : NULL;
+        ecs_script_ref_t *old_refs = ecs_vec_first(observers);
+        int32_t j, old_count = ecs_vec_count(observers);
+        for (j = i; j < old_count; j ++) {
             if (old_refs[j].observer &&
-                old_refs[j].entity == entity &&
-                old_refs[j].component == component &&
-                old_refs[j].input == input &&
-                old_refs[j].is_has == is_has &&
-                old_refs[j].is_resolve == is_resolve &&
-                ((!old_name && !name) || (old_name && name &&
-                    !ecs_os_strcmp(old_name, name))))
+                old_refs[j].input == value.input &&
+                old_refs[j].is_resolve == value.is_resolve &&
+                flecs_script_ref_matches(&old_refs[j], &value))
             {
-                observer = old_refs[j].observer;
-                old_refs[j].observer = 0;
                 break;
             }
         }
 
-        if (!observer) {
-            if (is_resolve) {
-                observer = flecs_script_create_resolve_observer(
-                    world, script, instance, &new_refs[i]);
+        if (j == old_count) {
+            if (value.is_resolve) {
+                value.observer = flecs_script_create_resolve_observer(
+                    world, script, instance, &value);
             } else {
-                observer = flecs_script_create_ref_observer(
-                    world, script, instance, entity, component, input,
-                    is_has, callback);
+                value.observer = flecs_script_create_ref_observer(
+                    world, script, instance, value.entity, value.component,
+                    value.input, value.is_has, callback);
             }
+            value.name = value.name ? ecs_os_strdup(value.name) : NULL;
+            ecs_vec_append_t(NULL, observers, ecs_script_ref_t)[0] = value;
+            old_refs = ecs_vec_first(observers);
         }
 
-        ecs_script_ref_t *ref = ecs_vec_append_t(
-            NULL, &result, ecs_script_ref_t);
-        ref->entity = entity;
-        ref->name = name ? ecs_os_strdup(name) : NULL;
-        ref->component = component;
-        ref->observer = observer;
-        ref->input = input;
-        ref->is_has = is_has;
-        ref->is_resolve = is_resolve;
+        value = old_refs[i];
+        old_refs[i] = old_refs[j];
+        old_refs[j] = value;
     }
 
-    for (j = 0; j < old_count; j ++) {
-        if (old_refs[j].observer) {
-            ecs_delete(world, old_refs[j].observer);
+    ecs_script_ref_t *old_refs = ecs_vec_first(observers);
+    int32_t old_count = ecs_vec_count(observers);
+    for (i = new_count; i < old_count; i ++) {
+        if (old_refs[i].observer) {
+            ecs_delete(world, old_refs[i].observer);
         }
-        if (old_refs[j].is_resolve) {
-            ecs_os_free(ECS_CONST_CAST(char*, old_refs[j].name));
+        if (old_refs[i].is_resolve) {
+            ecs_os_free(ECS_CONST_CAST(char*, old_refs[i].name));
         }
     }
-
-    ecs_vec_fini_t(NULL, observers, ecs_script_ref_t);
-    *observers = result;
+    ecs_vec_set_count_t(NULL, observers, ecs_script_ref_t, new_count);
 }
 
 static void flecs_script_ref_observers_discard(
