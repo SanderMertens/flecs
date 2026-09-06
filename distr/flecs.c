@@ -103195,24 +103195,6 @@ static int flecs_script_type_check_expr(
         }
     }
 
-    ecs_vec_t *refs = NULL;
-    ecs_vec_t *dynamic_refs = NULL;
-    ecs_vec_t *function_refs = NULL;
-    if (v->script_entity && !t->function_scope) {
-        refs = &v->base.script->refs;
-    }
-    if (v->template) {
-        refs = &v->template->refs;
-        dynamic_refs = &v->template->dynamic_refs;
-        function_refs = &v->base.script->refs;
-    }
-    if (refs && flecs_expr_visit_refs(
-        script, *expr_ptr, refs, dynamic_refs, NULL,
-        function_refs ? function_refs : refs))
-    {
-        return -1;
-    }
-
     if (type) {
         type[0] = expr_ptr[0]->type;
     }
@@ -104874,41 +104856,32 @@ int flecs_script_type_scope(
         if (flecs_script_node_is_hoisted(stmts[i])) {
             continue;
         }
+        ecs_script_node_t *node = stmts[i];
         v->base.prev = i ? stmts[i - 1] : NULL;
         v->base.next = i + 1 < count ? stmts[i + 1] : NULL;
         ecs_assert(v->base.depth < ECS_SCRIPT_VISIT_MAX_DEPTH,
             ECS_INTERNAL_ERROR, NULL);
-        v->base.nodes[v->base.depth ++] = stmts[i];
+        v->base.nodes[v->base.depth ++] = node;
         ecs_script_node_t *old_stmt = t->stmt_node;
-        t->stmt_node = stmts[i];
-        stmts[i]->skip = false;
-        result = flecs_script_type_node(t, stmts[i], allow_type);
+        t->stmt_node = node;
+        node->skip = false;
+        result = flecs_script_type_node(t, node, allow_type);
         t->stmt_node = old_stmt;
         v->base.depth --;
         if (result) {
+            ecs_vec_clear(&scope->components);
             break;
         }
-    }
-
-    if (!result && t->template_scope) {
-        ecs_allocator_t *a = &v->base.script->allocator;
-        ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-        for (i = 0; i < count; i ++) {
-            ecs_id_t id = 0;
-            if (stmts[i]->kind == EcsAstComponent) {
-                ecs_script_component_t *comp =
-                    (ecs_script_component_t*)stmts[i];
-                if (!comp->id.interface && !comp->id.dynamic) {
-                    id = comp->id.eval;
-                }
-            } else if (stmts[i]->kind == EcsAstTag) {
-                ecs_script_tag_t *tag = (ecs_script_tag_t*)stmts[i];
-                if (!tag->id.interface && !tag->id.dynamic) {
-                    id = tag->id.eval;
-                }
+        if (t->template_scope) {
+            ecs_script_id_t *id = NULL;
+            if (node->kind == EcsAstComponent) {
+                id = &((ecs_script_component_t*)node)->id;
+            } else if (node->kind == EcsAstTag) {
+                id = &((ecs_script_tag_t*)node)->id;
             }
-            if (id) {
-                ecs_vec_append_t(a, &scope->components, ecs_id_t)[0] = id;
+            if (id && id->eval && !id->interface && !id->dynamic) {
+                ecs_vec_append_t(&v->base.script->allocator,
+                    &scope->components, ecs_id_t)[0] = id->eval;
             }
         }
     }
