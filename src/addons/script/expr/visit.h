@@ -35,6 +35,15 @@ void flecs_expr_visit_free(
     ecs_script_t *script,
     ecs_expr_node_t *node);
 
+typedef int (*flecs_expr_visit_action_t)(
+    ecs_expr_node_t *node,
+    void *ctx);
+
+int flecs_expr_visit_children(
+    ecs_expr_node_t *node,
+    flecs_expr_visit_action_t action,
+    void *ctx);
+
 int flecs_expr_visit_refs(
     const ecs_script_t *script,
     ecs_expr_node_t *node,
