@@ -49870,6 +49870,7 @@ typedef struct ecs_script_node_t {
     uint64_t internal;
     uint64_t direct_internal;
 
+    ecs_script_entity_t *hoisted;
     bool skip;
 } ecs_script_node_t;
 
@@ -49948,6 +49949,7 @@ struct ecs_script_entity_t {
      * it possible for the scope mark/cleanup logic to find them. When set, this
      * is the statement that owns the expression. */
     ecs_script_node_t *hoisted_by;
+    ecs_script_entity_t *next_hoisted;
 
     ecs_entity_t eval;
     ecs_entity_t eval_kind;
@@ -69787,6 +69789,8 @@ void flecs_script_hoist_entity(
 {
     ecs_assert(entity->hoisted_by == NULL, ECS_INTERNAL_ERROR, NULL);
     entity->hoisted_by = owner;
+    entity->next_hoisted = owner->hoisted;
+    owner->hoisted = entity;
     ecs_vec_append_t(&script->allocator, &scope->stmts,
         ecs_script_node_t*)[0] = (ecs_script_node_t*)entity;
 }
@@ -114967,7 +114971,6 @@ static void flecs_irc_marks_scope(
 
 static int32_t flecs_irc_marks(
     ecs_script_ir_compiler_t *c,
-    ecs_script_scope_t *scope,
     ecs_script_node_t *node)
 {
     ecs_vec_t scopes = c->mark_scopes, fors = c->mark_fors;
@@ -114976,14 +114979,9 @@ static int32_t flecs_irc_marks(
 
     flecs_irc_marks_node(c, node, &scopes, &fors);
 
-    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-    int32_t i, count = ecs_vec_count(&scope->stmts);
-    for (i = 0; i < count; i ++) {
-        if (flecs_script_node_is_hoisted(stmts[i]) &&
-            ((ecs_script_entity_t*)stmts[i])->hoisted_by == node)
-        {
-            flecs_irc_marks_node(c, stmts[i], &scopes, &fors);
-        }
+    ecs_script_entity_t *hoisted;
+    for (hoisted = node->hoisted; hoisted; hoisted = hoisted->next_hoisted) {
+        flecs_irc_marks_node(c, (ecs_script_node_t*)hoisted, &scopes, &fors);
     }
 
     int32_t result = -1;
@@ -114993,6 +114991,7 @@ static int32_t flecs_irc_marks(
         result = flecs_irc_slots_begin(c);
         ecs_vec_get_t(&c->ir->slots, int32_t, result)[0] = scope_count;
         ecs_vec_get_t(&c->ir->slots, int32_t, result + 1)[0] = for_count;
+        int32_t i;
         for (i = 0; i < scope_count; i ++) {
             ecs_vec_append_t(NULL, &c->ir->slots, int32_t)[0] =
                 ecs_vec_get_t(&scopes, int32_t, i)[0];
@@ -116258,9 +116257,9 @@ static int flecs_irc_compile_stmt(
     int32_t marks = -1;
     int32_t stmt = -1;
     if (c->force_depth && !node->skip) {
-        marks = flecs_irc_marks(c, scope, node);
+        marks = flecs_irc_marks(c, node);
     } else {
-        marks = flecs_irc_marks(c, scope, node);
+        marks = flecs_irc_marks(c, node);
         stmt = flecs_irc_emit(c, EcsIrStmt, 0, 0, marks, node);
         ecs_script_ir_op_t *op = flecs_irc_op(c, stmt);
         op->imm.u64 = node->input;

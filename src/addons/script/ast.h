@@ -44,6 +44,7 @@ typedef struct ecs_script_node_t {
     uint64_t internal;
     uint64_t direct_internal;
 
+    ecs_script_entity_t *hoisted;
     bool skip;
 } ecs_script_node_t;
 
@@ -122,6 +123,7 @@ struct ecs_script_entity_t {
      * it possible for the scope mark/cleanup logic to find them. When set, this
      * is the statement that owns the expression. */
     ecs_script_node_t *hoisted_by;
+    ecs_script_entity_t *next_hoisted;
 
     ecs_entity_t eval;
     ecs_entity_t eval_kind;

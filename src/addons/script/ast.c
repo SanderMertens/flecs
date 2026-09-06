@@ -62,6 +62,8 @@ void flecs_script_hoist_entity(
 {
     ecs_assert(entity->hoisted_by == NULL, ECS_INTERNAL_ERROR, NULL);
     entity->hoisted_by = owner;
+    entity->next_hoisted = owner->hoisted;
+    owner->hoisted = entity;
     ecs_vec_append_t(&script->allocator, &scope->stmts,
         ecs_script_node_t*)[0] = (ecs_script_node_t*)entity;
 }
