@@ -2785,3 +2785,51 @@ void Await_deep_scope_cancel(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Await_many_live_strings_resume_and_cancel(void) {
+    ecs_world_t *world = ecs_init();
+    Await_reset();
+    ecs_async_function(world, {
+        .name = "step",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback,
+        .cancel = Await_cancel_callback
+    });
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    for (int i = 0; i < 640; i ++) {
+        ecs_strbuf_append(&buf, "const v%d = \"value_%d\"\n", i, i);
+    }
+    ecs_strbuf_appendstr(&buf, "await step()\n");
+    for (int i = 0; i < 640; i ++) {
+        ecs_strbuf_append(&buf, "\"{$v%d}\" {}\n", i);
+    }
+    char *code = ecs_strbuf_get(&buf);
+    ecs_script_t *script = ecs_script_parse(world, NULL, code, &ir_desc, NULL);
+    ecs_os_free(code);
+    test_assert(script != NULL);
+    for (int pass = 0; pass < 2; pass ++) {
+        ecs_script_task_t *task = ecs_script_task_new(script, NULL);
+        test_assert(task != NULL);
+        test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskPending);
+        test_int(await_future_count, pass + 1);
+        if (!pass) {
+            ecs_script_task_cancel(task);
+            test_int(await_cancel_count, 1);
+            test_assert(ecs_script_future_is_cancelled(await_futures[pass]));
+            test_uint(ecs_lookup(world, "value_0"), 0);
+        } else {
+            ecs_value_t value = ecs_value(ecs_i32_t, {42});
+            test_int(ecs_script_future_resolve(await_futures[pass], &value), 0);
+            test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskDone);
+            for (int i = 0; i < 640; i ++) {
+                char name[32];
+                snprintf(name, sizeof(name), "value_%d", i);
+                test_assert(ecs_lookup(world, name) != 0);
+            }
+        }
+        ecs_script_future_release(await_futures[pass]);
+        ecs_script_task_free(task);
+    }
+    ecs_script_free(script);
+    ecs_fini(world);
+}

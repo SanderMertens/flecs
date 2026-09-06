@@ -859,6 +859,7 @@ void Await_free_task_from_async_callback(void);
 void Await_await_in_template_body_fails_task(void);
 void Await_deep_scope_resume(void);
 void Await_deep_scope_cancel(void);
+void Await_many_live_strings_resume_and_cancel(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_setup(void);
@@ -6659,6 +6660,10 @@ bake_test_case Await_testcases[] = {
     {
         "deep_scope_cancel",
         Await_deep_scope_cancel
+    },
+    {
+        "many_live_strings_resume_and_cancel",
+        Await_many_live_strings_resume_and_cancel
     }
 };
 
@@ -16292,7 +16297,7 @@ static bake_test_suite suites[] = {
         "Await",
         Await_setup,
         NULL,
-        59,
+        60,
         Await_testcases,
         1,
         Await_params
