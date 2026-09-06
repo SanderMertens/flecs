@@ -103811,6 +103811,19 @@ static int flecs_script_type_component(
     return result == 1 ? 0 : result;
 }
 
+static int flecs_script_type_control_scope(
+    ecs_script_type_visitor_t *t,
+    ecs_script_scope_t *scope)
+{
+    ecs_script_entity_t *owner = ecs_vec_get_t(
+        &t->tables, ecs_script_type_table_t, t->table)->owner;
+    int32_t table = flecs_script_type_table_new(t, t->table, owner);
+    t->control_depth ++;
+    int result = flecs_script_type_scope(t, scope, table, true, false);
+    t->control_depth --;
+    return result;
+}
+
 static int flecs_script_type_with(
     ecs_script_type_visitor_t *t,
     ecs_script_with_t *node)
@@ -103823,13 +103836,7 @@ static int flecs_script_type_with(
 
     bool old_with = t->v->is_with_scope;
     t->v->is_with_scope = true;
-    int32_t table = flecs_script_type_table_new(t, t->table,
-        ecs_vec_get_t(&t->tables, ecs_script_type_table_t,
-            t->table)->owner);
-    t->control_depth ++;
-    int result = flecs_script_type_scope(
-        t, node->scope, table, true, false);
-    t->control_depth --;
+    int result = flecs_script_type_control_scope(t, node->scope);
     t->v->is_with_scope = old_with;
     return result;
 }
@@ -104125,15 +104132,9 @@ static int flecs_script_type_for(
     node->loop_var_sp[var_i] = var->sp;
 
     {
-        int32_t table = flecs_script_type_table_new(t, t->table,
-            ecs_vec_get_t(&t->tables, ecs_script_type_table_t,
-                t->table)->owner);
-        t->control_depth ++;
         t->for_depth ++;
-        int result = flecs_script_type_scope(
-            t, node->scope, table, true, false);
+        int result = flecs_script_type_control_scope(t, node->scope);
         t->for_depth --;
-        t->control_depth --;
         t->v->vars = ecs_script_vars_pop(t->v->vars);
         return result;
     }
@@ -104195,13 +104196,7 @@ static int flecs_script_type_pair_scope(
         return -1;
     }
 
-    int32_t table = flecs_script_type_table_new(t, t->table,
-        ecs_vec_get_t(&t->tables, ecs_script_type_table_t,
-            t->table)->owner);
-    t->control_depth ++;
-    int result = flecs_script_type_scope(
-        t, node->scope, table, true, false);
-    t->control_depth --;
+    int result = flecs_script_type_control_scope(t, node->scope);
     return result;
 }
 
@@ -104212,36 +104207,17 @@ static int flecs_script_type_if(
     if (flecs_script_type_check_expr(t, &node->expr, NULL) == -1) {
         return -1;
     }
-    ecs_script_entity_t *owner = ecs_vec_get_t(
-        &t->tables, ecs_script_type_table_t, t->table)->owner;
-    int32_t true_table = flecs_script_type_table_new(
-        t, t->table, owner);
-    int32_t false_table = flecs_script_type_table_new(
-        t, t->table, owner);
-    t->control_depth ++;
-    int result = flecs_script_type_scope(
-        t, node->if_true, true_table, true, false);
-    if (!result) {
-        result = flecs_script_type_scope(
-            t, node->if_false, false_table, true, false);
+    if (flecs_script_type_control_scope(t, node->if_true)) {
+        return -1;
     }
-    t->control_depth --;
-    return result;
+    return flecs_script_type_control_scope(t, node->if_false);
 }
 
 static int flecs_script_type_try(
     ecs_script_type_visitor_t *t,
     ecs_script_try_t *node)
 {
-    ecs_script_entity_t *owner = ecs_vec_get_t(
-        &t->tables, ecs_script_type_table_t, t->table)->owner;
-    int32_t try_table = flecs_script_type_table_new(
-        t, t->table, owner);
-    t->control_depth ++;
-    int result = flecs_script_type_scope(
-        t, node->try_scope, try_table, true, false);
-    if (result) {
-        t->control_depth --;
+    if (flecs_script_type_control_scope(t, node->try_scope)) {
         return -1;
     }
 
@@ -104264,16 +104240,10 @@ static int flecs_script_type_try(
                 catch_->eval_error = symbol.entity;
             }
         }
-        int32_t catch_table = flecs_script_type_table_new(
-            t, t->table, owner);
-        if (flecs_script_type_scope(
-            t, catch_->scope, catch_table, true, false))
-        {
-            t->control_depth --;
+        if (flecs_script_type_control_scope(t, catch_->scope)) {
             return -1;
         }
     }
-    t->control_depth --;
     return 0;
 }
 
@@ -104672,17 +104642,9 @@ static int flecs_script_type_node(
     }
 
     switch (node->kind) {
-    case EcsAstScope: {
-        ecs_script_type_table_t *cur = ecs_vec_get_t(
-            &t->tables, ecs_script_type_table_t, t->table);
-        int32_t table = flecs_script_type_table_new(
-            t, t->table, cur->owner);
-        t->control_depth ++;
-        int result = flecs_script_type_scope(t,
-            (ecs_script_scope_t*)node, table, true, false);
-        t->control_depth --;
-        return result;
-    }
+    case EcsAstScope:
+        return flecs_script_type_control_scope(
+            t, (ecs_script_scope_t*)node);
     case EcsAstTag:
         return flecs_script_type_tag(t, (ecs_script_tag_t*)node);
     case EcsAstWithTag:
