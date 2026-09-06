@@ -114823,55 +114823,66 @@ static int32_t flecs_irc_slots_begin(
     return index;
 }
 
-static void flecs_irc_marks_scope(
-    ecs_script_ir_compiler_t *c,
-    ecs_script_scope_t *scope,
-    ecs_vec_t *scopes,
-    ecs_vec_t *fors);
+typedef struct flecs_irc_collect_t {
+    ecs_vec_t *scopes;
+    ecs_vec_t *for_slots;
+    ecs_vec_t *fors;
+} flecs_irc_collect_t;
 
-static void flecs_irc_marks_node(
-    ecs_script_ir_compiler_t *c,
+static void flecs_irc_collect_scope(
+    ecs_script_scope_t *scope,
+    flecs_irc_collect_t *collect);
+
+static void flecs_irc_collect_node(
     ecs_script_node_t *node,
-    ecs_vec_t *scopes,
-    ecs_vec_t *fors)
+    flecs_irc_collect_t *collect)
 {
     switch(node->kind) {
     case EcsAstScope:
-        flecs_irc_marks_scope(c, (ecs_script_scope_t*)node, scopes, fors);
+        flecs_irc_collect_scope((ecs_script_scope_t*)node, collect);
         break;
     case EcsAstEntity:
-        flecs_irc_marks_scope(c, ((ecs_script_entity_t*)node)->scope,
-            scopes, fors);
+        flecs_irc_collect_scope(((ecs_script_entity_t*)node)->scope,
+            collect);
         break;
     case EcsAstWith: {
         ecs_script_with_t *n = (ecs_script_with_t*)node;
-        flecs_irc_marks_scope(c, n->expressions, scopes, fors);
-        flecs_irc_marks_scope(c, n->scope, scopes, fors);
+        flecs_irc_collect_scope(n->expressions, collect);
+        flecs_irc_collect_scope(n->scope, collect);
         break;
     }
     case EcsAstPairScope:
-        flecs_irc_marks_scope(c, ((ecs_script_pair_scope_t*)node)->scope,
-            scopes, fors);
+        flecs_irc_collect_scope(((ecs_script_pair_scope_t*)node)->scope,
+            collect);
         break;
     case EcsAstIf: {
         ecs_script_if_t *n = (ecs_script_if_t*)node;
-        flecs_irc_marks_scope(c, n->if_true, scopes, fors);
-        flecs_irc_marks_scope(c, n->if_false, scopes, fors);
+        flecs_irc_collect_scope(n->if_true, collect);
+        flecs_irc_collect_scope(n->if_false, collect);
         break;
     }
     case EcsAstFor: {
         ecs_script_for_t *n = (ecs_script_for_t*)node;
-        ecs_vec_append_t(NULL, fors, int32_t)[0] = n->for_slot;
-        flecs_irc_marks_scope(c, n->scope, scopes, fors);
+        if (collect->for_slots) {
+            ecs_vec_append_t(NULL, collect->for_slots, int32_t)[0] =
+                n->for_slot;
+        }
+        if (collect->fors) {
+            ecs_script_ir_for_t *elem = ecs_vec_append_t(
+                NULL, collect->fors, ecs_script_ir_for_t);
+            elem->for_slot = n->for_slot;
+            elem->scope_slot = n->scope->scope_slot;
+        }
+        flecs_irc_collect_scope(n->scope, collect);
         break;
     }
     case EcsAstTry: {
         ecs_script_try_t *n = (ecs_script_try_t*)node;
-        flecs_irc_marks_scope(c, n->try_scope, scopes, fors);
+        flecs_irc_collect_scope(n->try_scope, collect);
         ecs_script_catch_t *catches = ecs_vec_first(&n->catches);
         int32_t i, count = ecs_vec_count(&n->catches);
         for (i = 0; i < count; i ++) {
-            flecs_irc_marks_scope(c, catches[i].scope, scopes, fors);
+            flecs_irc_collect_scope(catches[i].scope, collect);
         }
         break;
     }
@@ -114896,17 +114907,17 @@ static void flecs_irc_marks_node(
     }
 }
 
-static void flecs_irc_marks_scope(
-    ecs_script_ir_compiler_t *c,
+static void flecs_irc_collect_scope(
     ecs_script_scope_t *scope,
-    ecs_vec_t *scopes,
-    ecs_vec_t *fors)
+    flecs_irc_collect_t *collect)
 {
-    ecs_vec_append_t(NULL, scopes, int32_t)[0] = scope->scope_slot;
+    if (collect->scopes) {
+        ecs_vec_append_t(NULL, collect->scopes, int32_t)[0] = scope->scope_slot;
+    }
     ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
     int32_t i, count = ecs_vec_count(&scope->stmts);
     for (i = 0; i < count; i ++) {
-        flecs_irc_marks_node(c, stmts[i], scopes, fors);
+        flecs_irc_collect_node(stmts[i], collect);
     }
 }
 
@@ -114918,11 +114929,12 @@ static int32_t flecs_irc_marks(
     ecs_vec_clear(&scopes);
     ecs_vec_clear(&fors);
 
-    flecs_irc_marks_node(c, node, &scopes, &fors);
+    flecs_irc_collect_t collect = {.scopes = &scopes, .for_slots = &fors};
+    flecs_irc_collect_node(node, &collect);
 
     ecs_script_entity_t *hoisted;
     for (hoisted = node->hoisted; hoisted; hoisted = hoisted->next_hoisted) {
-        flecs_irc_marks_node(c, (ecs_script_node_t*)hoisted, &scopes, &fors);
+        flecs_irc_collect_node((ecs_script_node_t*)hoisted, &collect);
     }
 
     int32_t result = -1;
@@ -116438,87 +116450,6 @@ static int flecs_irc_compile_scope(
     return 0;
 }
 
-static void flecs_irc_fors_scope(
-    ecs_script_ir_compiler_t *c,
-    ecs_script_scope_t *scope);
-
-static void flecs_irc_fors_node(
-    ecs_script_ir_compiler_t *c,
-    ecs_script_node_t *node)
-{
-    switch(node->kind) {
-    case EcsAstScope:
-        flecs_irc_fors_scope(c, (ecs_script_scope_t*)node);
-        break;
-    case EcsAstEntity:
-        flecs_irc_fors_scope(c, ((ecs_script_entity_t*)node)->scope);
-        break;
-    case EcsAstWith: {
-        ecs_script_with_t *n = (ecs_script_with_t*)node;
-        flecs_irc_fors_scope(c, n->expressions);
-        flecs_irc_fors_scope(c, n->scope);
-        break;
-    }
-    case EcsAstPairScope:
-        flecs_irc_fors_scope(c, ((ecs_script_pair_scope_t*)node)->scope);
-        break;
-    case EcsAstIf: {
-        ecs_script_if_t *n = (ecs_script_if_t*)node;
-        flecs_irc_fors_scope(c, n->if_true);
-        flecs_irc_fors_scope(c, n->if_false);
-        break;
-    }
-    case EcsAstFor: {
-        ecs_script_for_t *n = (ecs_script_for_t*)node;
-        ecs_script_ir_for_t *elem = ecs_vec_append_t(
-            NULL, &c->ir->fors, ecs_script_ir_for_t);
-        elem->for_slot = n->for_slot;
-        elem->scope_slot = n->scope->scope_slot;
-        flecs_irc_fors_scope(c, n->scope);
-        break;
-    }
-    case EcsAstTry: {
-        ecs_script_try_t *n = (ecs_script_try_t*)node;
-        flecs_irc_fors_scope(c, n->try_scope);
-        ecs_script_catch_t *catches = ecs_vec_first(&n->catches);
-        int32_t i, count = ecs_vec_count(&n->catches);
-        for (i = 0; i < count; i ++) {
-            flecs_irc_fors_scope(c, catches[i].scope);
-        }
-        break;
-    }
-    case EcsAstTag:
-    case EcsAstComponent:
-    case EcsAstWithTag:
-    case EcsAstWithComponent:
-    case EcsAstUsing:
-    case EcsAstModule:
-    case EcsAstAnnotation:
-    case EcsAstTemplate:
-    case EcsAstProp:
-    case EcsAstMut:
-    case EcsAstConst:
-    case EcsAstExportConst:
-    case EcsAstExportMut:
-    case EcsAstInclude:
-    case EcsAstFunction:
-    case EcsAstAwait:
-    case EcsAstContinue:
-        break;
-    }
-}
-
-static void flecs_irc_fors_scope(
-    ecs_script_ir_compiler_t *c,
-    ecs_script_scope_t *scope)
-{
-    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-    int32_t i, count = ecs_vec_count(&scope->stmts);
-    for (i = 0; i < count; i ++) {
-        flecs_irc_fors_node(c, stmts[i]);
-    }
-}
-
 static int flecs_irc_compile_function(
     ecs_script_ir_compiler_t *c,
     ecs_script_function_node_t *node)
@@ -116574,18 +116505,20 @@ static int flecs_irc_compile_entry(
     c->scope_pcs = NULL;
     c->force_depth = 0;
 
+    flecs_irc_collect_t collect = {.fors = &c->ir->fors};
     int result = 0;
     switch(kind) {
     case EcsIrEntryRoot:
         result = flecs_irc_compile_scope(
             c, ECS_CONST_CAST(ecs_script_scope_t*, node), 0);
-        flecs_irc_fors_scope(c, ECS_CONST_CAST(ecs_script_scope_t*, node));
+        flecs_irc_collect_scope(
+            ECS_CONST_CAST(ecs_script_scope_t*, node), &collect);
         break;
     case EcsIrEntryTemplate: {
         ecs_script_template_node_t *n =
             ECS_CONST_CAST(ecs_script_template_node_t*, node);
         result = flecs_irc_compile_scope(c, n->scope, 0);
-        flecs_irc_fors_scope(c, n->scope);
+        flecs_irc_collect_scope(n->scope, &collect);
         break;
     }
     case EcsIrEntryEntity:
