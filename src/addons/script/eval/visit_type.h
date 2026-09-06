@@ -12,11 +12,9 @@ typedef struct ecs_script_type_table_t {
 } ecs_script_type_table_t;
 
 typedef struct ecs_script_type_entity_t {
-    const char *name;
     ecs_script_entity_t *node;
     ecs_script_entity_t *parent_node;
     ecs_entity_t parent;
-    int32_t table;
     int32_t child_table;
     int32_t slot;
     bool in_template;
@@ -27,6 +25,8 @@ typedef struct ecs_script_type_visitor_t {
     ecs_vec_t tables;
     ecs_vec_t entities;
     ecs_vec_t skipped_vars;
+    ecs_hashmap_t names;
+    ecs_map_t nodes;
 
     ecs_script_node_t *stmt_node;
     int32_t table;

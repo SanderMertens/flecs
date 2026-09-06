@@ -51308,11 +51308,9 @@ typedef struct ecs_script_type_table_t {
 } ecs_script_type_table_t;
 
 typedef struct ecs_script_type_entity_t {
-    const char *name;
     ecs_script_entity_t *node;
     ecs_script_entity_t *parent_node;
     ecs_entity_t parent;
-    int32_t table;
     int32_t child_table;
     int32_t slot;
     bool in_template;
@@ -51323,6 +51321,8 @@ typedef struct ecs_script_type_visitor_t {
     ecs_vec_t tables;
     ecs_vec_t entities;
     ecs_vec_t skipped_vars;
+    ecs_hashmap_t names;
+    ecs_map_t nodes;
 
     ecs_script_node_t *stmt_node;
     int32_t table;
@@ -102592,6 +102592,58 @@ int flecs_script_struct_visit(
 
 #ifdef FLECS_SCRIPT
 
+typedef struct flecs_script_type_name_t {
+    const char *name;
+    uint64_t scope;
+    ecs_size_t length;
+    bool table;
+} flecs_script_type_name_t;
+
+static uint64_t flecs_script_type_name_hash(
+    const void *ptr)
+{
+    const flecs_script_type_name_t *key = ptr;
+    uint64_t hash[] = {
+        flecs_hash(key->name, key->length), key->scope, key->table
+    };
+    return flecs_hash(hash, ECS_SIZEOF(hash));
+}
+
+static int flecs_script_type_name_compare(
+    const void *first,
+    const void *second)
+{
+    const flecs_script_type_name_t *a = first, *b = second;
+    if (a->scope != b->scope || a->table != b->table ||
+        a->length != b->length)
+    {
+        return 1;
+    }
+    return ecs_os_memcmp(a->name, b->name, a->length);
+}
+
+static void flecs_script_type_init(
+    ecs_script_type_visitor_t *t)
+{
+    ecs_vec_init_t(NULL, &t->tables, ecs_script_type_table_t, 0);
+    ecs_vec_init_t(NULL, &t->entities, ecs_script_type_entity_t, 0);
+    ecs_vec_init_t(NULL, &t->skipped_vars, const char*, 0);
+    flecs_hashmap_init(&t->names, flecs_script_type_name_t, int32_t,
+        flecs_script_type_name_hash, flecs_script_type_name_compare, NULL);
+    ecs_map_init(&t->nodes, NULL);
+    flecs_script_type_table_new(t, -1, NULL);
+}
+
+static void flecs_script_type_fini(
+    ecs_script_type_visitor_t *t)
+{
+    ecs_map_fini(&t->nodes);
+    flecs_hashmap_fini(&t->names);
+    ecs_vec_fini_t(NULL, &t->skipped_vars, const char*);
+    ecs_vec_fini_t(NULL, &t->entities, ecs_script_type_entity_t);
+    ecs_vec_fini_t(NULL, &t->tables, ecs_script_type_table_t);
+}
+
 int32_t flecs_script_type_table_new(
     ecs_script_type_visitor_t *t,
     int32_t parent,
@@ -102615,14 +102667,6 @@ static const char* flecs_script_type_path_sep(
         ptr ++;
     }
     return NULL;
-}
-
-static bool flecs_script_type_name_eq(
-    const char *name,
-    const char *value,
-    ecs_size_t length)
-{
-    return !ecs_os_strncmp(name, value, length) && name[length] == '\0';
 }
 
 static void flecs_script_type_unresolved_ref(
@@ -102715,17 +102759,10 @@ static ecs_script_type_entity_t* flecs_script_type_find_in_table(
     const char *name,
     ecs_size_t length)
 {
-    int32_t i, count = ecs_vec_count(&t->entities);
-    ecs_script_type_entity_t *entities = ecs_vec_first(&t->entities);
-    for (i = count - 1; i >= 0; i --) {
-        ecs_script_type_entity_t *entity = &entities[i];
-        if (entity->table == table &&
-            flecs_script_type_name_eq(entity->name, name, length))
-        {
-            return entity;
-        }
-    }
-    return NULL;
+    flecs_script_type_name_t key = {name, (uint64_t)table, length, true};
+    const int32_t *index = flecs_hashmap_get(&t->names, &key, int32_t);
+    return index ? ecs_vec_get_t(
+        &t->entities, ecs_script_type_entity_t, *index) : NULL;
 }
 
 static ecs_script_type_entity_t* flecs_script_type_find_in_parent(
@@ -102734,17 +102771,10 @@ static ecs_script_type_entity_t* flecs_script_type_find_in_parent(
     const char *name,
     ecs_size_t length)
 {
-    int32_t i, count = ecs_vec_count(&t->entities);
-    ecs_script_type_entity_t *entities = ecs_vec_first(&t->entities);
-    for (i = count - 1; i >= 0; i --) {
-        ecs_script_type_entity_t *entity = &entities[i];
-        if (!entity->parent_node && entity->parent == parent &&
-            flecs_script_type_name_eq(entity->name, name, length))
-        {
-            return entity;
-        }
-    }
-    return NULL;
+    flecs_script_type_name_t key = {name, parent, length, false};
+    const int32_t *index = flecs_hashmap_get(&t->names, &key, int32_t);
+    return index ? ecs_vec_get_t(
+        &t->entities, ecs_script_type_entity_t, *index) : NULL;
 }
 
 static ecs_script_type_entity_t* flecs_script_type_find(
@@ -102829,6 +102859,9 @@ static ecs_script_type_entity_t* flecs_script_type_declare(
         *slot = entity->slot;
         if (node && !entity->node) {
             entity->node = node;
+            *ecs_map_ensure(&t->nodes, (uintptr_t)node) =
+                (uint64_t)(entity - (ecs_script_type_entity_t*)
+                    ecs_vec_first(&t->entities));
         }
         if (has_scope && entity->child_table == -1) {
             entity->child_table = flecs_script_type_table_new(
@@ -102847,14 +102880,26 @@ static ecs_script_type_entity_t* flecs_script_type_declare(
         &t->tables, ecs_script_type_table_t, t->table);
     entity = ecs_vec_append_t(
         NULL, &t->entities, ecs_script_type_entity_t);
-    entity->name = name;
     entity->node = node;
     entity->parent_node = table->owner;
     entity->parent = t->v->parent;
-    entity->table = t->table;
     entity->child_table = -1;
     entity->slot = flecs_script_type_slot_new(t, *slot);
     entity->in_template = t->template_scope;
+    int32_t index = ecs_vec_count(&t->entities) - 1;
+    flecs_script_type_name_t key = {name, (uint64_t)t->table, length, true};
+    flecs_hashmap_result_t result = flecs_hashmap_ensure(
+        &t->names, &key, int32_t);
+    *(int32_t*)result.value = index;
+    if (!entity->parent_node) {
+        key.scope = entity->parent;
+        key.table = false;
+        result = flecs_hashmap_ensure(&t->names, &key, int32_t);
+        *(int32_t*)result.value = index;
+    }
+    if (node) {
+        *ecs_map_ensure(&t->nodes, (uintptr_t)node) = (uint64_t)index;
+    }
     *slot = entity->slot;
     if (has_scope) {
         entity->child_table = flecs_script_type_table_new(
@@ -102890,14 +102935,9 @@ static ecs_script_type_entity_t* flecs_script_type_entity_from_node(
     ecs_script_type_visitor_t *t,
     ecs_script_entity_t *node)
 {
-    int32_t i, count = ecs_vec_count(&t->entities);
-    ecs_script_type_entity_t *entities = ecs_vec_first(&t->entities);
-    for (i = count - 1; i >= 0; i --) {
-        if (entities[i].node == node) {
-            return &entities[i];
-        }
-    }
-    return NULL;
+    const uint64_t *index = ecs_map_get(&t->nodes, (uintptr_t)node);
+    return index ? ecs_vec_get_t(
+        &t->entities, ecs_script_type_entity_t, (int32_t)*index) : NULL;
 }
 
 static int flecs_script_type_lookup(
@@ -104850,10 +104890,7 @@ int flecs_script_visit_type_entity_expr(
         .v = &visitor,
         .table = 0
     };
-    ecs_vec_init_t(NULL, &t.tables, ecs_script_type_table_t, 0);
-    ecs_vec_init_t(NULL, &t.entities, ecs_script_type_entity_t, 0);
-    ecs_vec_init_t(NULL, &t.skipped_vars, const char*, 0);
-    flecs_script_type_table_new(&t, -1, NULL);
+    flecs_script_type_init(&t);
     visitor.type_visitor = &t;
 
     int result = flecs_script_type_entity(&t, entity, false);
@@ -104862,9 +104899,7 @@ int flecs_script_visit_type_entity_expr(
     }
 
     visitor.type_visitor = NULL;
-    ecs_vec_fini_t(NULL, &t.skipped_vars, const char*);
-    ecs_vec_fini_t(NULL, &t.entities, ecs_script_type_entity_t);
-    ecs_vec_fini_t(NULL, &t.tables, ecs_script_type_table_t);
+    flecs_script_type_fini(&t);
     if (desc && desc->vars) {
         flecs_script_eval_pop_vars(&visitor);
     }
@@ -104891,10 +104926,7 @@ int flecs_script_visit_type(
         .v = v,
         .table = 0
     };
-    ecs_vec_init_t(NULL, &t.tables, ecs_script_type_table_t, 0);
-    ecs_vec_init_t(NULL, &t.entities, ecs_script_type_entity_t, 0);
-    ecs_vec_init_t(NULL, &t.skipped_vars, const char*, 0);
-    flecs_script_type_table_new(&t, -1, NULL);
+    flecs_script_type_init(&t);
 
     v->type_visitor = &t;
     int result = flecs_script_type_scope(
@@ -104904,9 +104936,7 @@ int flecs_script_visit_type(
         result = -1;
     }
 
-    ecs_vec_fini_t(NULL, &t.skipped_vars, const char*);
-    ecs_vec_fini_t(NULL, &t.entities, ecs_script_type_entity_t);
-    ecs_vec_fini_t(NULL, &t.tables, ecs_script_type_table_t);
+    flecs_script_type_fini(&t);
     ecs_vec_fini_t(&v->r->allocator, &v->r->using, ecs_entity_t);
     ecs_vec_fini_t(&v->r->allocator, &v->r->annot, ecs_script_annot_t*);
     v->r->using = outer_using;
