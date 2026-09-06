@@ -10,6 +10,34 @@
 
 ECS_COMPONENT_DECLARE(EcsScriptUpdateEvent);
 
+ecs_script_ref_t* flecs_script_ref_ensure(
+    ecs_vec_t *refs,
+    const ecs_script_ref_t *value)
+{
+    ecs_script_ref_t *array = ecs_vec_first(refs);
+    int32_t i, count = ecs_vec_count(refs);
+    for (i = 0; i < count; i ++) {
+        if (array[i].entity != value->entity ||
+            array[i].component != value->component ||
+            array[i].is_has != value->is_has)
+        {
+            continue;
+        }
+        if ((!array[i].name && !value->name) ||
+            (array[i].name && value->name &&
+                !ecs_os_strcmp(array[i].name, value->name)))
+        {
+            return &array[i];
+        }
+    }
+    ecs_script_ref_t *ref = ecs_vec_append_t(NULL, refs, ecs_script_ref_t);
+    *ref = *value;
+    ref->observer = 0;
+    ref->input = 0;
+    ref->is_resolve = false;
+    return ref;
+}
+
 static void flecs_script_ref_eval(
     ecs_world_t *world,
     ecs_entity_t script,

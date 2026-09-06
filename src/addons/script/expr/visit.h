@@ -44,11 +44,17 @@ int flecs_expr_visit_children(
     flecs_expr_visit_action_t action,
     void *ctx);
 
+struct ecs_script_ref_t;
+
+typedef int (*flecs_expr_ref_action_t)(
+    const struct ecs_script_ref_t *ref,
+    ecs_expr_node_t *dynamic,
+    void *ctx);
+
 int flecs_expr_visit_refs(
     const ecs_script_t *script,
     ecs_expr_node_t *node,
-    ecs_vec_t *refs,
-    ecs_vec_t *dynamic_refs,
-    ecs_vec_t *dyn_nodes);
+    flecs_expr_ref_action_t action,
+    void *ctx);
 
 #endif

@@ -21,8 +21,6 @@ typedef struct flecs_script_dep_ctx_t {
     ecs_vec_t *refs;
     ecs_vec_t *dynamic_refs;
     ecs_vec_t vars;
-    ecs_vec_t expr_refs;
-    ecs_vec_t expr_dynamic_refs;
     ecs_vec_t expr_dyn_nodes;
     ecs_vec_t component_owners;
     int32_t *input_count;
@@ -42,8 +40,6 @@ static void flecs_script_dep_fini(
     flecs_script_dep_ctx_t *ctx)
 {
     ecs_vec_fini_t(NULL, &ctx->vars, flecs_script_dep_var_t);
-    ecs_vec_fini_t(NULL, &ctx->expr_refs, ecs_script_ref_t);
-    ecs_vec_fini_t(NULL, &ctx->expr_dynamic_refs, ecs_script_ref_t);
     ecs_vec_fini_t(NULL, &ctx->expr_dyn_nodes, ecs_expr_node_t*);
     ecs_vec_fini_t(NULL, &ctx->component_owners, flecs_script_component_owner_t);
 }
@@ -321,43 +317,13 @@ static int flecs_script_dep_input_new(
     return 0;
 }
 
-static ecs_script_ref_t* flecs_script_dep_ref_find(
-    ecs_vec_t *refs,
-    const ecs_script_ref_t *value)
-{
-    ecs_script_ref_t *array = ecs_vec_first(refs);
-    int32_t i, count = ecs_vec_count(refs);
-    for (i = 0; i < count; i ++) {
-        if (array[i].entity != value->entity ||
-            array[i].component != value->component ||
-            array[i].is_has != value->is_has)
-        {
-            continue;
-        }
-        if ((!array[i].name && !value->name) ||
-            (array[i].name && value->name &&
-                !ecs_os_strcmp(array[i].name, value->name)))
-        {
-            return &array[i];
-        }
-    }
-    return NULL;
-}
-
 static int flecs_script_dep_ref_input(
     flecs_script_dep_ctx_t *ctx,
     ecs_vec_t *refs,
     const ecs_script_ref_t *value,
     uint64_t *input)
 {
-    ecs_script_ref_t *ref = flecs_script_dep_ref_find(refs, value);
-    if (!ref) {
-        ref = ecs_vec_append_t(NULL, refs, ecs_script_ref_t);
-        *ref = *value;
-        ref->observer = 0;
-        ref->input = 0;
-        ref->is_resolve = false;
-    }
+    ecs_script_ref_t *ref = flecs_script_ref_ensure(refs, value);
     if (!ref->input && flecs_script_dep_input_new(ctx, &ref->input)) {
         return -1;
     }
@@ -439,6 +405,33 @@ static int flecs_script_dep_expr_vars(
     return flecs_script_dep_expr_var(node, &expr_ctx);
 }
 
+static int flecs_script_dep_expr_ref(
+    const ecs_script_ref_t *ref,
+    ecs_expr_node_t *dynamic,
+    void *ptr)
+{
+    flecs_script_dep_expr_ctx_t *expr = ptr;
+    flecs_script_dep_ctx_t *ctx = expr->deps;
+    ecs_vec_t *refs = ref->entity ? ctx->refs : ctx->dynamic_refs;
+    if (refs && (ref->entity || ref->name) &&
+        flecs_script_dep_ref_input(ctx, refs, ref, expr->input))
+    {
+        return -1;
+    }
+    if (dynamic && ctx->v->script_entity && !ctx->template) {
+        ecs_expr_node_t **nodes = ecs_vec_first(&ctx->expr_dyn_nodes);
+        int32_t i, count = ecs_vec_count(&ctx->expr_dyn_nodes);
+        for (i = 0; i < count; i ++) {
+            if (nodes[i] == dynamic) {
+                return 0;
+            }
+        }
+        ecs_vec_append_t(NULL, &ctx->expr_dyn_nodes, ecs_expr_node_t*)[0] =
+            dynamic;
+    }
+    return 0;
+}
+
 static int flecs_script_dep_expr(
     flecs_script_dep_ctx_t *ctx,
     ecs_expr_node_t *node,
@@ -457,44 +450,17 @@ static int flecs_script_dep_expr(
             ctx, node, &discard, &discard_internal);
     }
 
-    bool track_dyn_nodes = ctx->v->script_entity && !ctx->template;
-
-    ecs_vec_t *refs = ecs_vec_reset_t(
-        NULL, &ctx->expr_refs, ecs_script_ref_t);
-    ecs_vec_t *dynamic_refs = ecs_vec_reset_t(
-        NULL, &ctx->expr_dynamic_refs, ecs_script_ref_t);
     ecs_vec_t *dyn_nodes = ecs_vec_reset_t(
         NULL, &ctx->expr_dyn_nodes, ecs_expr_node_t*);
-
+    flecs_script_dep_expr_ctx_t expr = {ctx, input, internal};
     if (flecs_expr_visit_refs(&ctx->v->base.script->pub, node,
-        refs, ctx->dynamic_refs ? dynamic_refs : NULL,
-        track_dyn_nodes ? dyn_nodes : NULL))
+        flecs_script_dep_expr_ref, &expr))
     {
         return -1;
     }
 
-    ecs_script_ref_t *array = ecs_vec_first(refs);
-    int32_t i, count = ecs_vec_count(refs);
-    for (i = 0; i < count; i ++) {
-        if (flecs_script_dep_ref_input(
-            ctx, ctx->refs, &array[i], input))
-        {
-            return -1;
-        }
-    }
-
-    array = ecs_vec_first(dynamic_refs);
-    count = ecs_vec_count(dynamic_refs);
-    for (i = 0; i < count; i ++) {
-        if (flecs_script_dep_ref_input(
-            ctx, ctx->dynamic_refs, &array[i], input))
-        {
-            return -1;
-        }
-    }
-
     ecs_expr_node_t **nodes = ecs_vec_first(dyn_nodes);
-    count = ecs_vec_count(dyn_nodes);
+    int32_t i, count = ecs_vec_count(dyn_nodes);
     for (i = 0; i < count; i ++) {
         uint64_t dyn_input = 0;
         if (flecs_script_dep_input_new(ctx, &dyn_input)) {

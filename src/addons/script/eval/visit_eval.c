@@ -1989,6 +1989,18 @@ void flecs_script_user_function_ctx_free(
     ecs_os_free(uf);
 }
 
+static int flecs_script_function_ref(
+    const ecs_script_ref_t *ref,
+    ecs_expr_node_t *dynamic,
+    void *ctx)
+{
+    (void)dynamic;
+    if (ref->entity) {
+        flecs_script_ref_ensure(ctx, ref);
+    }
+    return 0;
+}
+
 int flecs_script_eval_function(
     ecs_script_eval_visitor_t *v,
     ecs_script_function_node_t *node)
@@ -2026,7 +2038,7 @@ int flecs_script_eval_function(
         ecs_assert(var->expr != NULL && var->expr->type_info != NULL,
             ECS_INTERNAL_ERROR, NULL);
         if (flecs_expr_visit_refs(&v->base.script->pub,
-            var->expr, &fn_refs, NULL, NULL))
+            var->expr, flecs_script_function_ref, &fn_refs))
         {
             ecs_vec_fini_t(NULL, &fn_refs, ecs_script_ref_t);
             return -1;
@@ -2034,7 +2046,7 @@ int flecs_script_eval_function(
     }
     if (node->return_expr && flecs_expr_visit_refs(
         &v->base.script->pub, node->return_expr,
-        &fn_refs, NULL, NULL))
+        flecs_script_function_ref, &fn_refs))
     {
         ecs_vec_fini_t(NULL, &fn_refs, ecs_script_ref_t);
         return -1;
