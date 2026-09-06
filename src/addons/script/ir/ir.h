@@ -326,9 +326,7 @@ const ecs_script_ir_entry_t* flecs_script_ir_entry(
     const void *node);
 
 void flecs_script_ir_vm_init(
-    ecs_script_ir_vm_t *vm,
-    ecs_script_impl_t *script,
-    const ecs_script_eval_desc_t *desc);
+    ecs_script_ir_vm_t *vm);
 
 void flecs_script_ir_vm_fini(
     ecs_script_ir_vm_t *vm,

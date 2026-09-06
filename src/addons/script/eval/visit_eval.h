@@ -192,8 +192,7 @@ typedef struct ecs_script_runner_t {
 
 void flecs_script_runner_init(
     ecs_script_runner_t *r,
-    const ecs_script_impl_t *script,
-    const ecs_script_eval_desc_t *desc);
+    const ecs_script_eval_visitor_t *v);
 
 void flecs_script_runner_fini(
     ecs_script_runner_t *r,

@@ -666,7 +666,8 @@ static int flecs_script_template_instantiate(
         }
         v = &vm->v;
     } else {
-        flecs_script_runner_init(&runner, impl, &desc);
+        flecs_script_eval_visit_init(impl, &runner.v, &desc);
+        flecs_script_runner_init(&runner, &runner.v);
         v = &runner.v;
     }
     ecs_vec_t prev_using = v->r->using;

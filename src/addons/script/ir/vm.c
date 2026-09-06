@@ -3939,12 +3939,9 @@ void flecs_script_ir_vm_free(
 }
 
 void flecs_script_ir_vm_init(
-    ecs_script_ir_vm_t *vm,
-    ecs_script_impl_t *script,
-    const ecs_script_eval_desc_t *desc)
+    ecs_script_ir_vm_t *vm)
 {
-    flecs_script_eval_visit_init(script, &vm->v, desc);
-    flecs_ir_vm_setup(vm, flecs_script_ir_ensure(script));
+    flecs_ir_vm_setup(vm, flecs_script_ir_ensure(vm->v.base.script));
 }
 
 void flecs_script_ir_vm_abandon(

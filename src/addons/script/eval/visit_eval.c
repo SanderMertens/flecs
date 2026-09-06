@@ -2717,10 +2717,9 @@ static flecs_script_run_status_t flecs_script_runner_exec(
 
 void flecs_script_runner_init(
     ecs_script_runner_t *r,
-    const ecs_script_impl_t *script,
-    const ecs_script_eval_desc_t *desc)
+    const ecs_script_eval_visitor_t *v)
 {
-    flecs_script_eval_visit_init(script, &r->v, desc);
+    r->v = *v;
     ecs_os_memset(r->frames, 0, sizeof(r->frames));
     r->frames[0] = r->frame_storage;
     r->frame_count = 0;
@@ -2747,21 +2746,6 @@ void flecs_script_runner_fini(
     flecs_script_eval_visit_fini(&r->v, desc);
 }
 
-static void flecs_script_runner_init_nested(
-    ecs_script_runner_t *r,
-    const ecs_script_eval_visitor_t *v)
-{
-    r->v = *v;
-    ecs_os_memset(r->frames, 0, sizeof(r->frames));
-    r->frames[0] = r->frame_storage;
-    r->frame_count = 0;
-    r->last_entity = 0;
-    r->can_suspend = false;
-#ifdef FLECS_SCRIPT_ASYNC
-    ecs_os_zeromem(&r->async);
-#endif
-}
-
 flecs_script_run_status_t flecs_script_runner_run_scope(
     ecs_script_runner_t *r,
     ecs_script_scope_t *scope)
@@ -2786,10 +2770,11 @@ int flecs_script_eval_entity(
     ecs_script_eval_desc_t desc = {0};
 
     if (v) {
-        flecs_script_runner_init_nested(&runner, v);
+        flecs_script_runner_init(&runner, v);
     } else {
-        flecs_script_runner_init(&runner,
-            (const ecs_script_impl_t*)script, &desc);
+        flecs_script_eval_visit_init(
+            (const ecs_script_impl_t*)script, &runner.v, &desc);
+        flecs_script_runner_init(&runner, &runner.v);
         if (vars) {
             flecs_script_eval_push_vars(&runner.v, vars);
         }
@@ -3165,7 +3150,8 @@ int flecs_script_eval(
         impl->ir_enabled = true;
     }
 
-    flecs_script_runner_init(&runner, impl, &priv_desc);
+    flecs_script_eval_visit_init(impl, &runner.v, &priv_desc);
+    flecs_script_runner_init(&runner, &runner.v);
     int r = 0;
     if (!impl->compiled) {
         if (flecs_script_visit_include(&runner.v, impl->root)) {
