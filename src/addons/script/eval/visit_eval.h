@@ -169,9 +169,13 @@ typedef enum flecs_script_run_status_t {
     FlecsScriptRunSuspended
 } flecs_script_run_status_t;
 
+#define ECS_SCRIPT_FRAME_CHUNK_SIZE (16)
+
 typedef struct ecs_script_runner_t {
     ecs_script_eval_visitor_t v;
-    flecs_script_frame_t frames[ECS_SCRIPT_VISIT_MAX_DEPTH];
+    flecs_script_frame_t *frames[(ECS_SCRIPT_VISIT_MAX_DEPTH +
+        ECS_SCRIPT_FRAME_CHUNK_SIZE - 1) / ECS_SCRIPT_FRAME_CHUNK_SIZE];
+    flecs_script_frame_t frame_storage[ECS_SCRIPT_FRAME_CHUNK_SIZE];
     int32_t frame_count;
     ecs_entity_t last_entity; /* Result of last completed entity frame */
     bool can_suspend;

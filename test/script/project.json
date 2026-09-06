@@ -873,7 +873,9 @@
                 "cancel_task_from_async_callback",
                 "resume_from_async_callback",
                 "free_task_from_async_callback",
-                "await_in_template_body_fails_task"
+                "await_in_template_body_fails_task",
+                "deep_scope_resume",
+                "deep_scope_cancel"
             ]
         }, {
             "id": "TryCatch",

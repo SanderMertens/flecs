@@ -292,6 +292,7 @@ typedef struct ecs_script_ir_frame_t {
 } ecs_script_ir_frame_t;
 
 #define ECS_SCRIPT_IR_MAX_FRAMES (ECS_SCRIPT_VISIT_MAX_DEPTH * 3)
+#define ECS_SCRIPT_IR_FRAME_CHUNK_SIZE (16)
 
 typedef struct ecs_script_ir_vm_t {
     ecs_script_eval_visitor_t v;
@@ -311,7 +312,8 @@ typedef struct ecs_script_ir_vm_t {
     int32_t vscratch_size;
     int32_t vscratch_top;
     ecs_vec_t vheap;
-    ecs_script_ir_frame_t frames[ECS_SCRIPT_IR_MAX_FRAMES];
+    ecs_script_ir_frame_t *frames[(ECS_SCRIPT_IR_MAX_FRAMES +
+        ECS_SCRIPT_IR_FRAME_CHUNK_SIZE - 1) / ECS_SCRIPT_IR_FRAME_CHUNK_SIZE];
     int32_t frame_count;
     ecs_vec_t strbufs;
     ecs_vec_t cursors;

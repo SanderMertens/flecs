@@ -51004,9 +51004,13 @@ typedef enum flecs_script_run_status_t {
     FlecsScriptRunSuspended
 } flecs_script_run_status_t;
 
+#define ECS_SCRIPT_FRAME_CHUNK_SIZE (16)
+
 typedef struct ecs_script_runner_t {
     ecs_script_eval_visitor_t v;
-    flecs_script_frame_t frames[ECS_SCRIPT_VISIT_MAX_DEPTH];
+    flecs_script_frame_t *frames[(ECS_SCRIPT_VISIT_MAX_DEPTH +
+        ECS_SCRIPT_FRAME_CHUNK_SIZE - 1) / ECS_SCRIPT_FRAME_CHUNK_SIZE];
+    flecs_script_frame_t frame_storage[ECS_SCRIPT_FRAME_CHUNK_SIZE];
     int32_t frame_count;
     ecs_entity_t last_entity; /* Result of last completed entity frame */
     bool can_suspend;
@@ -52039,6 +52043,7 @@ typedef struct ecs_script_ir_frame_t {
 } ecs_script_ir_frame_t;
 
 #define ECS_SCRIPT_IR_MAX_FRAMES (ECS_SCRIPT_VISIT_MAX_DEPTH * 3)
+#define ECS_SCRIPT_IR_FRAME_CHUNK_SIZE (16)
 
 typedef struct ecs_script_ir_vm_t {
     ecs_script_eval_visitor_t v;
@@ -52058,7 +52063,8 @@ typedef struct ecs_script_ir_vm_t {
     int32_t vscratch_size;
     int32_t vscratch_top;
     ecs_vec_t vheap;
-    ecs_script_ir_frame_t frames[ECS_SCRIPT_IR_MAX_FRAMES];
+    ecs_script_ir_frame_t *frames[(ECS_SCRIPT_IR_MAX_FRAMES +
+        ECS_SCRIPT_IR_FRAME_CHUNK_SIZE - 1) / ECS_SCRIPT_IR_FRAME_CHUNK_SIZE];
     int32_t frame_count;
     ecs_vec_t strbufs;
     ecs_vec_t cursors;
@@ -100354,6 +100360,23 @@ int flecs_script_eval_node(
  * having to rebuild a C call stack. Each frame owns the evaluation state of
  * the statement it executes; the AST is never written to during evaluation. */
 
+static flecs_script_frame_t* flecs_script_frame_at(
+    const ecs_script_runner_t *r,
+    int32_t index)
+{
+    return &r->frames[index / ECS_SCRIPT_FRAME_CHUNK_SIZE]
+        [index % ECS_SCRIPT_FRAME_CHUNK_SIZE];
+}
+
+static void flecs_script_runner_frames_fini(
+    ecs_script_runner_t *r)
+{
+    int32_t i;
+    for (i = 1; i < (int32_t)(sizeof(r->frames) / sizeof(r->frames[0])); i ++) {
+        ecs_os_free(r->frames[i]);
+    }
+}
+
 static flecs_script_frame_t* flecs_script_frame_push(
     ecs_script_runner_t *r,
     ecs_script_node_t *node)
@@ -100369,7 +100392,12 @@ static flecs_script_frame_t* flecs_script_frame_push(
 
     bv->nodes[bv->depth ++] = node;
 
-    flecs_script_frame_t *frame = &r->frames[r->frame_count ++];
+    int32_t chunk = r->frame_count / ECS_SCRIPT_FRAME_CHUNK_SIZE;
+    if (!r->frames[chunk]) {
+        r->frames[chunk] = ecs_os_malloc_n(
+            flecs_script_frame_t, ECS_SCRIPT_FRAME_CHUNK_SIZE);
+    }
+    flecs_script_frame_t *frame = flecs_script_frame_at(r, r->frame_count ++);
     frame->node = node;
     frame->pc = 0;
     return frame;
@@ -100381,7 +100409,7 @@ void flecs_script_frame_pop(
     ecs_script_visit_t *bv = &r->v.base;
     bv->depth --;
     ecs_assert(bv->nodes[bv->depth] ==
-        r->frames[r->frame_count - 1].node, ECS_INTERNAL_ERROR, NULL);
+        flecs_script_frame_at(r, r->frame_count - 1)->node, ECS_INTERNAL_ERROR, NULL);
     r->frame_count --;
 }
 
@@ -100814,7 +100842,7 @@ void flecs_script_runner_abandon(
     ecs_script_runner_t *r)
 {
     while (r->frame_count) {
-        flecs_script_frame_leave(r, &r->frames[r->frame_count - 1]);
+        flecs_script_frame_leave(r, flecs_script_frame_at(r, r->frame_count - 1));
         r->v.base.depth --;
         r->frame_count --;
     }
@@ -100827,7 +100855,7 @@ static bool flecs_script_runner_continue(
 {
     int32_t frame = r->frame_count;
     while (frame > 0) {
-        if (r->frames[frame - 1].node->kind == EcsAstFor) {
+        if (flecs_script_frame_at(r, frame - 1)->node->kind == EcsAstFor) {
             break;
         }
         frame --;
@@ -100838,7 +100866,7 @@ static bool flecs_script_runner_continue(
     }
 
     while (r->frame_count > frame) {
-        flecs_script_frame_leave(r, &r->frames[r->frame_count - 1]);
+        flecs_script_frame_leave(r, flecs_script_frame_at(r, r->frame_count - 1));
         r->v.base.depth --;
         r->frame_count --;
     }
@@ -100853,7 +100881,7 @@ static bool flecs_script_runner_unwind(
     ecs_script_runner_t *r)
 {
     while (r->frame_count) {
-        flecs_script_frame_t *frame = &r->frames[r->frame_count - 1];
+        flecs_script_frame_t *frame = flecs_script_frame_at(r, r->frame_count - 1);
 
 #ifdef FLECS_SCRIPT_ASYNC
         if (flecs_script_try_catch(r, frame)) {
@@ -100889,7 +100917,7 @@ static flecs_script_run_status_t flecs_script_runner_exec(
             return FlecsScriptRunError;
         }
 
-        flecs_script_frame_t *frame = &r->frames[r->frame_count - 1];
+        flecs_script_frame_t *frame = flecs_script_frame_at(r, r->frame_count - 1);
         int res;
         switch(frame->node->kind) {
         case EcsAstScope:
@@ -100961,6 +100989,8 @@ void flecs_script_runner_init(
     const ecs_script_eval_desc_t *desc)
 {
     flecs_script_eval_visit_init(script, &r->v, desc);
+    ecs_os_memset(r->frames, 0, sizeof(r->frames));
+    r->frames[0] = r->frame_storage;
     r->frame_count = 0;
     r->last_entity = 0;
     r->can_suspend = false;
@@ -100984,17 +101014,17 @@ void flecs_script_runner_fini(
     }
     flecs_script_throw_clear(r);
 #endif
+    flecs_script_runner_frames_fini(r);
     flecs_script_eval_visit_fini(&r->v, desc);
 }
 
-/* Runner that borrows the state of an in-progress evaluation. Owns no
- * resources and needs no finalization; runs always return with an empty frame
- * stack since nested runners can't suspend. */
 static void flecs_script_runner_init_nested(
     ecs_script_runner_t *r,
     const ecs_script_eval_visitor_t *v)
 {
     r->v = *v;
+    ecs_os_memset(r->frames, 0, sizeof(r->frames));
+    r->frames[0] = r->frame_storage;
     r->frame_count = 0;
     r->last_entity = 0;
     r->can_suspend = false;
@@ -101046,7 +101076,9 @@ int flecs_script_eval_entity(
     }
 
     ecs_assert(runner.frame_count == 0, ECS_INTERNAL_ERROR, NULL);
-    if (!v) {
+    if (v) {
+        flecs_script_runner_frames_fini(&runner);
+    } else {
         if (vars) {
             flecs_script_eval_pop_vars(&runner.v);
         }
@@ -101062,7 +101094,7 @@ const char* flecs_script_runner_stmt_pos(
 {
     int32_t i;
     for (i = r->frame_count - 1; i >= 0; i --) {
-        const flecs_script_frame_t *frame = &r->frames[i];
+        const flecs_script_frame_t *frame = flecs_script_frame_at(r, i);
         if (frame->node->kind != EcsAstScope) {
             continue;
         }
@@ -117272,11 +117304,25 @@ static void flecs_ir_regs_ensure(
     vm->reg_count = new_count;
 }
 
+static void flecs_ir_scratch_init(
+    ecs_script_ir_vm_t *vm,
+    char **ptr,
+    int32_t *capacity,
+    int32_t size)
+{
+    int32_t initial = vm->can_suspend ? 4096 : FLECS_IR_SCRATCH_SIZE;
+    *capacity = size > initial ? size : initial;
+    *ptr = ecs_os_malloc(*capacity);
+}
+
 static void* flecs_ir_scratch_alloc(
     ecs_script_ir_vm_t *vm,
     int32_t size,
     int32_t align)
 {
+    if (!vm->scratch) {
+        flecs_ir_scratch_init(vm, &vm->scratch, &vm->scratch_size, size);
+    }
     int32_t top = (vm->scratch_top + (align - 1)) & ~(align - 1);
     if (top + size <= vm->scratch_size) {
         vm->scratch_top = top + size;
@@ -117311,6 +117357,9 @@ static void* flecs_ir_var_alloc(
     ecs_script_ir_vm_t *vm,
     const ecs_type_info_t *ti)
 {
+    if (!vm->vscratch) {
+        flecs_ir_scratch_init(vm, &vm->vscratch, &vm->vscratch_size, ti->size);
+    }
     int32_t align = ti->alignment;
     int32_t top = (vm->vscratch_top + (align - 1)) & ~(align - 1);
     void *ptr;
@@ -117431,6 +117480,14 @@ static void flecs_ir_reg_borrow(
     reg->owned = false;
 }
 
+static ecs_script_ir_frame_t* flecs_ir_frame_at(
+    const ecs_script_ir_vm_t *vm,
+    int32_t index)
+{
+    return &vm->frames[index / ECS_SCRIPT_IR_FRAME_CHUNK_SIZE]
+        [index % ECS_SCRIPT_IR_FRAME_CHUNK_SIZE];
+}
+
 static ecs_script_ir_frame_t* flecs_ir_frame_push(
     ecs_script_ir_vm_t *vm,
     ecs_script_ir_frame_kind_t kind,
@@ -117438,7 +117495,12 @@ static ecs_script_ir_frame_t* flecs_ir_frame_push(
 {
     ecs_assert(vm->frame_count < ECS_SCRIPT_IR_MAX_FRAMES,
         ECS_INTERNAL_ERROR, NULL);
-    ecs_script_ir_frame_t *frame = &vm->frames[vm->frame_count ++];
+    int32_t chunk = vm->frame_count / ECS_SCRIPT_IR_FRAME_CHUNK_SIZE;
+    if (!vm->frames[chunk]) {
+        vm->frames[chunk] = ecs_os_malloc_n(
+            ecs_script_ir_frame_t, ECS_SCRIPT_IR_FRAME_CHUNK_SIZE);
+    }
+    ecs_script_ir_frame_t *frame = flecs_ir_frame_at(vm, vm->frame_count ++);
     frame->kind = (int16_t)kind;
     frame->state = 0;
     frame->pc = pc;
@@ -117449,7 +117511,7 @@ static ecs_script_ir_frame_t* flecs_ir_frame_top(
     ecs_script_ir_vm_t *vm)
 {
     ecs_assert(vm->frame_count > 0, ECS_INTERNAL_ERROR, NULL);
-    return &vm->frames[vm->frame_count - 1];
+    return flecs_ir_frame_at(vm, vm->frame_count - 1);
 }
 
 static void flecs_ir_expr_release(
@@ -120222,10 +120284,10 @@ static bool flecs_ir_continue(
 {
     int32_t i;
     for (i = vm->frame_count - 1; i >= 0; i --) {
-        if (vm->frames[i].kind == EcsIrFrameFor) {
+        if (flecs_ir_frame_at(vm, i)->kind == EcsIrFrameFor) {
             break;
         }
-        if (vm->frames[i].kind == EcsIrFrameBlock) {
+        if (flecs_ir_frame_at(vm, i)->kind == EcsIrFrameBlock) {
             return false;
         }
     }
@@ -120239,7 +120301,7 @@ static bool flecs_ir_continue(
         vm->frame_count --;
     }
 
-    vm->pc = vm->frames[i].pc;
+    vm->pc = flecs_ir_frame_at(vm, i)->pc;
     return true;
 }
 
@@ -121030,12 +121092,13 @@ static void flecs_ir_vm_setup(
 {
     vm->regs = NULL;
     vm->reg_count = 0;
-    vm->scratch = ecs_os_malloc(FLECS_IR_SCRATCH_SIZE);
-    vm->scratch_size = FLECS_IR_SCRATCH_SIZE;
+    ecs_os_memset(vm->frames, 0, sizeof(vm->frames));
+    vm->scratch = NULL;
+    vm->scratch_size = 0;
     ecs_vec_init_t(NULL, &vm->owned, flecs_ir_owned_t, 0);
     ecs_vec_init_t(NULL, &vm->heap, void*, 0);
-    vm->vscratch = ecs_os_malloc(FLECS_IR_SCRATCH_SIZE);
-    vm->vscratch_size = FLECS_IR_SCRATCH_SIZE;
+    vm->vscratch = NULL;
+    vm->vscratch_size = 0;
     ecs_vec_init_t(NULL, &vm->vheap, void*, 0);
     ecs_vec_init_t(NULL, &vm->strbufs, ecs_strbuf_t, 0);
     ecs_vec_init_t(NULL, &vm->cursors, ecs_meta_cursor_t, 0);
@@ -121080,6 +121143,10 @@ static void flecs_ir_vm_teardown(
     ecs_script_ir_vm_t *vm)
 {
     flecs_ir_vm_clear(vm);
+    int32_t i;
+    for (i = 0; i < (int32_t)(sizeof(vm->frames) / sizeof(vm->frames[0])); i ++) {
+        ecs_os_free(vm->frames[i]);
+    }
     ecs_vec_fini_t(NULL, &vm->strbufs, ecs_strbuf_t);
     ecs_vec_fini_t(NULL, &vm->cursors, ecs_meta_cursor_t);
     ecs_vec_fini_t(NULL, &vm->pending_marks, int32_t);

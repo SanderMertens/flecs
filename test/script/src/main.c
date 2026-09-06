@@ -857,6 +857,8 @@ void Await_cancel_task_from_async_callback(void);
 void Await_resume_from_async_callback(void);
 void Await_free_task_from_async_callback(void);
 void Await_await_in_template_body_fails_task(void);
+void Await_deep_scope_resume(void);
+void Await_deep_scope_cancel(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_setup(void);
@@ -6645,6 +6647,14 @@ bake_test_case Await_testcases[] = {
     {
         "await_in_template_body_fails_task",
         Await_await_in_template_body_fails_task
+    },
+    {
+        "deep_scope_resume",
+        Await_deep_scope_resume
+    },
+    {
+        "deep_scope_cancel",
+        Await_deep_scope_cancel
     }
 };
 
@@ -16262,7 +16272,7 @@ static bake_test_suite suites[] = {
         "Await",
         Await_setup,
         NULL,
-        57,
+        59,
         Await_testcases,
         1,
         Await_params

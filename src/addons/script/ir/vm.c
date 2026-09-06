@@ -48,11 +48,25 @@ static void flecs_ir_regs_ensure(
     vm->reg_count = new_count;
 }
 
+static void flecs_ir_scratch_init(
+    ecs_script_ir_vm_t *vm,
+    char **ptr,
+    int32_t *capacity,
+    int32_t size)
+{
+    int32_t initial = vm->can_suspend ? 4096 : FLECS_IR_SCRATCH_SIZE;
+    *capacity = size > initial ? size : initial;
+    *ptr = ecs_os_malloc(*capacity);
+}
+
 static void* flecs_ir_scratch_alloc(
     ecs_script_ir_vm_t *vm,
     int32_t size,
     int32_t align)
 {
+    if (!vm->scratch) {
+        flecs_ir_scratch_init(vm, &vm->scratch, &vm->scratch_size, size);
+    }
     int32_t top = (vm->scratch_top + (align - 1)) & ~(align - 1);
     if (top + size <= vm->scratch_size) {
         vm->scratch_top = top + size;
@@ -87,6 +101,9 @@ static void* flecs_ir_var_alloc(
     ecs_script_ir_vm_t *vm,
     const ecs_type_info_t *ti)
 {
+    if (!vm->vscratch) {
+        flecs_ir_scratch_init(vm, &vm->vscratch, &vm->vscratch_size, ti->size);
+    }
     int32_t align = ti->alignment;
     int32_t top = (vm->vscratch_top + (align - 1)) & ~(align - 1);
     void *ptr;
@@ -207,6 +224,14 @@ static void flecs_ir_reg_borrow(
     reg->owned = false;
 }
 
+static ecs_script_ir_frame_t* flecs_ir_frame_at(
+    const ecs_script_ir_vm_t *vm,
+    int32_t index)
+{
+    return &vm->frames[index / ECS_SCRIPT_IR_FRAME_CHUNK_SIZE]
+        [index % ECS_SCRIPT_IR_FRAME_CHUNK_SIZE];
+}
+
 static ecs_script_ir_frame_t* flecs_ir_frame_push(
     ecs_script_ir_vm_t *vm,
     ecs_script_ir_frame_kind_t kind,
@@ -214,7 +239,12 @@ static ecs_script_ir_frame_t* flecs_ir_frame_push(
 {
     ecs_assert(vm->frame_count < ECS_SCRIPT_IR_MAX_FRAMES,
         ECS_INTERNAL_ERROR, NULL);
-    ecs_script_ir_frame_t *frame = &vm->frames[vm->frame_count ++];
+    int32_t chunk = vm->frame_count / ECS_SCRIPT_IR_FRAME_CHUNK_SIZE;
+    if (!vm->frames[chunk]) {
+        vm->frames[chunk] = ecs_os_malloc_n(
+            ecs_script_ir_frame_t, ECS_SCRIPT_IR_FRAME_CHUNK_SIZE);
+    }
+    ecs_script_ir_frame_t *frame = flecs_ir_frame_at(vm, vm->frame_count ++);
     frame->kind = (int16_t)kind;
     frame->state = 0;
     frame->pc = pc;
@@ -225,7 +255,7 @@ static ecs_script_ir_frame_t* flecs_ir_frame_top(
     ecs_script_ir_vm_t *vm)
 {
     ecs_assert(vm->frame_count > 0, ECS_INTERNAL_ERROR, NULL);
-    return &vm->frames[vm->frame_count - 1];
+    return flecs_ir_frame_at(vm, vm->frame_count - 1);
 }
 
 static void flecs_ir_expr_release(
@@ -2999,10 +3029,10 @@ static bool flecs_ir_continue(
 {
     int32_t i;
     for (i = vm->frame_count - 1; i >= 0; i --) {
-        if (vm->frames[i].kind == EcsIrFrameFor) {
+        if (flecs_ir_frame_at(vm, i)->kind == EcsIrFrameFor) {
             break;
         }
-        if (vm->frames[i].kind == EcsIrFrameBlock) {
+        if (flecs_ir_frame_at(vm, i)->kind == EcsIrFrameBlock) {
             return false;
         }
     }
@@ -3016,7 +3046,7 @@ static bool flecs_ir_continue(
         vm->frame_count --;
     }
 
-    vm->pc = vm->frames[i].pc;
+    vm->pc = flecs_ir_frame_at(vm, i)->pc;
     return true;
 }
 
@@ -3807,12 +3837,13 @@ static void flecs_ir_vm_setup(
 {
     vm->regs = NULL;
     vm->reg_count = 0;
-    vm->scratch = ecs_os_malloc(FLECS_IR_SCRATCH_SIZE);
-    vm->scratch_size = FLECS_IR_SCRATCH_SIZE;
+    ecs_os_memset(vm->frames, 0, sizeof(vm->frames));
+    vm->scratch = NULL;
+    vm->scratch_size = 0;
     ecs_vec_init_t(NULL, &vm->owned, flecs_ir_owned_t, 0);
     ecs_vec_init_t(NULL, &vm->heap, void*, 0);
-    vm->vscratch = ecs_os_malloc(FLECS_IR_SCRATCH_SIZE);
-    vm->vscratch_size = FLECS_IR_SCRATCH_SIZE;
+    vm->vscratch = NULL;
+    vm->vscratch_size = 0;
     ecs_vec_init_t(NULL, &vm->vheap, void*, 0);
     ecs_vec_init_t(NULL, &vm->strbufs, ecs_strbuf_t, 0);
     ecs_vec_init_t(NULL, &vm->cursors, ecs_meta_cursor_t, 0);
@@ -3857,6 +3888,10 @@ static void flecs_ir_vm_teardown(
     ecs_script_ir_vm_t *vm)
 {
     flecs_ir_vm_clear(vm);
+    int32_t i;
+    for (i = 0; i < (int32_t)(sizeof(vm->frames) / sizeof(vm->frames[0])); i ++) {
+        ecs_os_free(vm->frames[i]);
+    }
     ecs_vec_fini_t(NULL, &vm->strbufs, ecs_strbuf_t);
     ecs_vec_fini_t(NULL, &vm->cursors, ecs_meta_cursor_t);
     ecs_vec_fini_t(NULL, &vm->pending_marks, int32_t);
