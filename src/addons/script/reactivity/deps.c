@@ -10,13 +10,20 @@ typedef struct flecs_script_component_owner_t {
     int32_t entity_symbol;
 } flecs_script_component_owner_t;
 
+typedef struct flecs_script_dep_var_t {
+    uint64_t input;
+    uint64_t internal;
+} flecs_script_dep_var_t;
+
 typedef struct flecs_script_dep_ctx_t {
     ecs_script_eval_visitor_t *v;
     ecs_script_template_t *template;
     ecs_vec_t *refs;
     ecs_vec_t *dynamic_refs;
     ecs_vec_t vars;
-    ecs_vec_t vars_internal;
+    ecs_vec_t expr_refs;
+    ecs_vec_t expr_dynamic_refs;
+    ecs_vec_t expr_dyn_nodes;
     ecs_vec_t component_owners;
     int32_t *input_count;
     int32_t scope_count;
@@ -30,6 +37,16 @@ typedef struct flecs_script_dep_ctx_t {
     ecs_script_entity_t *entity;
     ecs_script_scope_t *scope;
 } flecs_script_dep_ctx_t;
+
+static void flecs_script_dep_fini(
+    flecs_script_dep_ctx_t *ctx)
+{
+    ecs_vec_fini_t(NULL, &ctx->vars, flecs_script_dep_var_t);
+    ecs_vec_fini_t(NULL, &ctx->expr_refs, ecs_script_ref_t);
+    ecs_vec_fini_t(NULL, &ctx->expr_dynamic_refs, ecs_script_ref_t);
+    ecs_vec_fini_t(NULL, &ctx->expr_dyn_nodes, ecs_expr_node_t*);
+    ecs_vec_fini_t(NULL, &ctx->component_owners, flecs_script_component_owner_t);
+}
 
 static int flecs_script_dep_node(
     flecs_script_dep_ctx_t *ctx,
@@ -348,24 +365,6 @@ static int flecs_script_dep_ref_input(
     return 0;
 }
 
-static void flecs_script_dep_vars_ensure(
-    flecs_script_dep_ctx_t *ctx,
-    int32_t count)
-{
-    int32_t old_count = ecs_vec_count(&ctx->vars);
-    if (count <= old_count) {
-        return;
-    }
-    ecs_vec_set_count_t(NULL, &ctx->vars, uint64_t, count);
-    ecs_vec_set_count_t(NULL, &ctx->vars_internal, uint64_t, count);
-    uint64_t *vars = ecs_vec_first(&ctx->vars);
-    uint64_t *internal = ecs_vec_first(&ctx->vars_internal);
-    ecs_os_memset(&vars[old_count], 0,
-        (count - old_count) * ECS_SIZEOF(uint64_t));
-    ecs_os_memset(&internal[old_count], 0,
-        (count - old_count) * ECS_SIZEOF(uint64_t));
-}
-
 static uint64_t flecs_script_dep_var_get(
     flecs_script_dep_ctx_t *ctx,
     int32_t sp)
@@ -373,17 +372,17 @@ static uint64_t flecs_script_dep_var_get(
     if (sp < 0 || sp >= ecs_vec_count(&ctx->vars)) {
         return 0;
     }
-    return ecs_vec_get_t(&ctx->vars, uint64_t, sp)[0];
+    return ecs_vec_get_t(&ctx->vars, flecs_script_dep_var_t, sp)->input;
 }
 
 static uint64_t flecs_script_dep_var_get_internal(
     flecs_script_dep_ctx_t *ctx,
     int32_t sp)
 {
-    if (sp < 0 || sp >= ecs_vec_count(&ctx->vars_internal)) {
+    if (sp < 0 || sp >= ecs_vec_count(&ctx->vars)) {
         return 0;
     }
-    return ecs_vec_get_t(&ctx->vars_internal, uint64_t, sp)[0];
+    return ecs_vec_get_t(&ctx->vars, flecs_script_dep_var_t, sp)->internal;
 }
 
 static void flecs_script_dep_var_set(
@@ -395,9 +394,10 @@ static void flecs_script_dep_var_set(
     if (sp < 0) {
         return;
     }
-    flecs_script_dep_vars_ensure(ctx, sp + 1);
-    ecs_vec_get_t(&ctx->vars, uint64_t, sp)[0] = input;
-    ecs_vec_get_t(&ctx->vars_internal, uint64_t, sp)[0] = internal;
+    ecs_vec_set_min_count_zeromem_t(NULL, &ctx->vars,
+        flecs_script_dep_var_t, sp + 1);
+    ecs_vec_get_t(&ctx->vars, flecs_script_dep_var_t, sp)[0] =
+        (flecs_script_dep_var_t){input, internal};
 }
 
 typedef struct flecs_script_dep_expr_ctx_t {
@@ -459,57 +459,46 @@ static int flecs_script_dep_expr(
 
     bool track_dyn_nodes = ctx->v->script_entity && !ctx->template;
 
-    ecs_vec_t refs = {0};
-    ecs_vec_t dynamic_refs = {0};
-    ecs_vec_t dyn_nodes = {0};
-    ecs_vec_init_t(NULL, &refs, ecs_script_ref_t, 0);
-    if (ctx->dynamic_refs) {
-        ecs_vec_init_t(NULL, &dynamic_refs, ecs_script_ref_t, 0);
-    }
-    if (track_dyn_nodes) {
-        ecs_vec_init_t(NULL, &dyn_nodes, ecs_expr_node_t*, 0);
-    }
+    ecs_vec_t *refs = ecs_vec_reset_t(
+        NULL, &ctx->expr_refs, ecs_script_ref_t);
+    ecs_vec_t *dynamic_refs = ecs_vec_reset_t(
+        NULL, &ctx->expr_dynamic_refs, ecs_script_ref_t);
+    ecs_vec_t *dyn_nodes = ecs_vec_reset_t(
+        NULL, &ctx->expr_dyn_nodes, ecs_expr_node_t*);
 
     if (flecs_expr_visit_refs(&ctx->v->base.script->pub, node,
-        &refs, ctx->dynamic_refs ? &dynamic_refs : NULL,
-        track_dyn_nodes ? &dyn_nodes : NULL, &refs))
+        refs, ctx->dynamic_refs ? dynamic_refs : NULL,
+        track_dyn_nodes ? dyn_nodes : NULL, refs))
     {
-        ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
-        if (ctx->dynamic_refs) {
-            ecs_vec_fini_t(NULL, &dynamic_refs, ecs_script_ref_t);
-        }
-        if (track_dyn_nodes) {
-            ecs_vec_fini_t(NULL, &dyn_nodes, ecs_expr_node_t*);
-        }
         return -1;
     }
 
-    ecs_script_ref_t *array = ecs_vec_first(&refs);
-    int32_t i, count = ecs_vec_count(&refs);
+    ecs_script_ref_t *array = ecs_vec_first(refs);
+    int32_t i, count = ecs_vec_count(refs);
     for (i = 0; i < count; i ++) {
         if (flecs_script_dep_ref_input(
             ctx, ctx->refs, &array[i], input))
         {
-            goto error;
+            return -1;
         }
     }
 
-    array = ecs_vec_first(&dynamic_refs);
-    count = ecs_vec_count(&dynamic_refs);
+    array = ecs_vec_first(dynamic_refs);
+    count = ecs_vec_count(dynamic_refs);
     for (i = 0; i < count; i ++) {
         if (flecs_script_dep_ref_input(
             ctx, ctx->dynamic_refs, &array[i], input))
         {
-            goto error;
+            return -1;
         }
     }
 
-    ecs_expr_node_t **nodes = ecs_vec_first(&dyn_nodes);
-    count = ecs_vec_count(&dyn_nodes);
+    ecs_expr_node_t **nodes = ecs_vec_first(dyn_nodes);
+    count = ecs_vec_count(dyn_nodes);
     for (i = 0; i < count; i ++) {
         uint64_t dyn_input = 0;
         if (flecs_script_dep_input_new(ctx, &dyn_input)) {
-            goto error;
+            return -1;
         }
         if (nodes[i]->kind == EcsExprHas) {
             ((ecs_expr_has_t*)nodes[i])->dyn_input = dyn_input;
@@ -519,23 +508,7 @@ static int flecs_script_dep_expr(
         *input |= dyn_input;
     }
 
-    ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
-    if (ctx->dynamic_refs) {
-        ecs_vec_fini_t(NULL, &dynamic_refs, ecs_script_ref_t);
-    }
-    if (track_dyn_nodes) {
-        ecs_vec_fini_t(NULL, &dyn_nodes, ecs_expr_node_t*);
-    }
     return flecs_script_dep_expr_vars(ctx, node, input, internal);
-error:
-    ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
-    if (ctx->dynamic_refs) {
-        ecs_vec_fini_t(NULL, &dynamic_refs, ecs_script_ref_t);
-    }
-    if (track_dyn_nodes) {
-        ecs_vec_fini_t(NULL, &dyn_nodes, ecs_expr_node_t*);
-    }
-    return -1;
 }
 
 static int flecs_script_dep_id(
@@ -1080,15 +1053,11 @@ static int flecs_script_dep_template_analyze(
         .dynamic_refs = &template->dynamic_refs,
         .entity_symbol = template->root_symbol
     };
-    ecs_vec_init_t(NULL, &ctx.vars, uint64_t, 0);
-    ecs_vec_init_t(NULL, &ctx.vars_internal, uint64_t, 0);
+    ecs_vec_init_t(NULL, &ctx.vars, flecs_script_dep_var_t, 0);
     ecs_vec_init_t(NULL, &ctx.component_owners,
         flecs_script_component_owner_t, 0);
     if (flecs_script_dep_template_init(&ctx, template, outer)) {
-        ecs_vec_fini_t(NULL, &ctx.vars, uint64_t);
-        ecs_vec_fini_t(NULL, &ctx.vars_internal, uint64_t);
-        ecs_vec_fini_t(NULL, &ctx.component_owners,
-            flecs_script_component_owner_t);
+        flecs_script_dep_fini(&ctx);
         return -1;
     }
     template->computed_count = 0;
@@ -1109,10 +1078,7 @@ static int flecs_script_dep_template_analyze(
         }
         template->input_count = *ctx.input_count;
     }
-    ecs_vec_fini_t(NULL, &ctx.vars, uint64_t);
-        ecs_vec_fini_t(NULL, &ctx.vars_internal, uint64_t);
-    ecs_vec_fini_t(NULL, &ctx.component_owners,
-        flecs_script_component_owner_t);
+    flecs_script_dep_fini(&ctx);
     return result;
 }
 
@@ -1149,15 +1115,11 @@ int flecs_script_analyze_dependencies(
         .input_count = &impl->input_count,
         .entity_symbol = -1
     };
-    ecs_vec_init_t(NULL, &ctx.vars, uint64_t, 0);
-    ecs_vec_init_t(NULL, &ctx.vars_internal, uint64_t, 0);
+    ecs_vec_init_t(NULL, &ctx.vars, flecs_script_dep_var_t, 0);
     ecs_vec_init_t(NULL, &ctx.component_owners,
         flecs_script_component_owner_t, 0);
     if (flecs_script_dep_assign_refs(&ctx, &impl->refs)) {
-        ecs_vec_fini_t(NULL, &ctx.vars, uint64_t);
-        ecs_vec_fini_t(NULL, &ctx.vars_internal, uint64_t);
-        ecs_vec_fini_t(NULL, &ctx.component_owners,
-            flecs_script_component_owner_t);
+        flecs_script_dep_fini(&ctx);
         return -1;
     }
     int32_t old_depth = v->base.depth;
@@ -1180,10 +1142,7 @@ int flecs_script_analyze_dependencies(
         }
         flecs_script_for_slots_init(&impl->for_slots, ctx.for_count);
     }
-    ecs_vec_fini_t(NULL, &ctx.vars, uint64_t);
-        ecs_vec_fini_t(NULL, &ctx.vars_internal, uint64_t);
-    ecs_vec_fini_t(NULL, &ctx.component_owners,
-        flecs_script_component_owner_t);
+    flecs_script_dep_fini(&ctx);
     return result;
 }
 
