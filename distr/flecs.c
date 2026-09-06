@@ -96915,7 +96915,7 @@ ECS_COMPONENT_DECLARE(EcsScriptTask);
 
 struct ecs_script_task_t {
     ecs_script_t *script;
-    ecs_script_runner_t runner;
+    ecs_script_runner_t *runner;
     ecs_script_ir_vm_t *vm;
     ecs_script_eval_desc_t eval_desc;
     ecs_script_vars_t *initial_vars;
@@ -97426,7 +97426,7 @@ static ecs_script_eval_visitor_t* flecs_script_task_visitor(
     if (task->vm) {
         return &task->vm->v;
     }
-    return &task->runner.v;
+    return &task->runner->v;
 }
 
 static void flecs_script_task_push_this(
@@ -97533,19 +97533,16 @@ ecs_script_task_t* ecs_script_task_new(
         result->loop = desc->loop;
         result->iterations = desc->iterations;
     }
-    flecs_script_runner_init(&result->runner,
-        flecs_script_impl(result->script), &result->eval_desc);
-    result->runner.can_suspend = true;
-    result->runner.async_entity = result->entity;
+    ecs_script_impl_t *impl = flecs_script_impl(result->script);
+    ecs_script_eval_visitor_t visitor;
+    flecs_script_eval_visit_init(impl, &visitor, &result->eval_desc);
     if (result->entity) {
-        flecs_script_task_push_this(
-            &result->runner.v, runtime, result->entity);
+        flecs_script_task_push_this(&visitor, runtime, result->entity);
         result->has_owner_vars = true;
     }
-    ecs_script_impl_t *impl = flecs_script_impl(result->script);
     if (!impl->compiled) {
-        if (flecs_script_visit_include(&result->runner.v, impl->root) ||
-            flecs_script_visit_type(&result->runner.v, impl->root))
+        if (flecs_script_visit_include(&visitor, impl->root) ||
+            flecs_script_visit_type(&visitor, impl->root))
         {
             goto task_error;
         }
@@ -97557,18 +97554,17 @@ ecs_script_task_t* ecs_script_task_new(
         if (!result->vm->ir) {
             flecs_script_ir_vm_fini(result->vm, &result->eval_desc);
             ecs_os_free(result->vm);
-            result->vm = NULL;
             goto task_error;
         }
+        result->vm->v = visitor;
         result->vm->can_suspend = true;
         result->vm->async_entity = result->entity;
-        if (result->has_owner_vars) {
-            result->runner.v.vars = ecs_script_vars_pop(
-                result->runner.v.vars);
-            flecs_script_task_push_this(
-                &result->vm->v, runtime, result->entity);
-        }
-        flecs_script_runner_fini(&result->runner, &result->eval_desc);
+    } else {
+        result->runner = ecs_os_malloc_t(ecs_script_runner_t);
+        flecs_script_runner_init(result->runner, impl, &result->eval_desc);
+        result->runner->v = visitor;
+        result->runner->can_suspend = true;
+        result->runner->async_entity = result->entity;
     }
     if (result->entity) {
         flecs_script_task_register(result);
@@ -97577,9 +97573,9 @@ ecs_script_task_t* ecs_script_task_new(
     return result;
 task_error:
     if (result->has_owner_vars) {
-        result->runner.v.vars = ecs_script_vars_pop(result->runner.v.vars);
+        visitor.vars = ecs_script_vars_pop(visitor.vars);
     }
-    flecs_script_runner_fini(&result->runner, &result->eval_desc);
+    flecs_script_eval_visit_fini(&visitor, &result->eval_desc);
     ecs_script_runtime_free(runtime);
     if (result->ctx_free) {
         result->ctx_free(result->ctx);
@@ -97596,7 +97592,7 @@ static ecs_script_future_t** flecs_script_task_future(
     if (task->vm) {
         return &task->vm->future;
     }
-    return &task->runner.future;
+    return &task->runner->future;
 }
 
 static void flecs_script_task_cancel_future(
@@ -97643,7 +97639,7 @@ ecs_script_task_status_t ecs_script_task_resume(
             &ir->entries, ecs_script_ir_entry_t, ir->root_entry));
     } else {
         status = flecs_script_runner_run_scope(
-            &task->runner, flecs_script_impl(task->script)->root);
+            task->runner, flecs_script_impl(task->script)->root);
     }
     bool nested_error = world_rt->error;
     world_rt->error = prev_error;
@@ -97671,7 +97667,7 @@ ecs_script_task_status_t ecs_script_task_resume(
         if (repeat) {
             ecs_assert(task->vm
                 ? task->vm->frame_count == 0
-                : task->runner.frame_count == 0,
+                : task->runner->frame_count == 0,
                 ECS_INTERNAL_ERROR, NULL);
             ecs_assert(flecs_script_task_visitor(task)->vars ==
                 task->initial_vars, ECS_INTERNAL_ERROR, NULL);
@@ -97728,7 +97724,7 @@ void ecs_script_task_free(
     if (task->vm) {
         flecs_script_ir_vm_abandon(task->vm);
     } else {
-        flecs_script_runner_abandon(&task->runner);
+        flecs_script_runner_abandon(task->runner);
     }
     ecs_script_eval_visitor_t *v = flecs_script_task_visitor(task);
     ecs_assert(v->vars == task->initial_vars, ECS_INTERNAL_ERROR, NULL);
@@ -97739,7 +97735,8 @@ void ecs_script_task_free(
         flecs_script_ir_vm_fini(task->vm, &task->eval_desc);
         ecs_os_free(task->vm);
     } else {
-        flecs_script_runner_fini(&task->runner, &task->eval_desc);
+        flecs_script_runner_fini(task->runner, &task->eval_desc);
+        ecs_os_free(task->runner);
     }
     ecs_script_runtime_free(task->eval_desc.runtime);
     if (task->ctx_free) {
@@ -97832,14 +97829,14 @@ static int flecs_script_task_component_serialize(
 
         ecs_script_future_t *future = task->vm
             ? task->vm->future
-            : task->runner.future;
+            : task->runner->future;
         if (future) {
             state.awaiting = future->function_ctx.function;
         }
 
         const char *pos = task->vm
             ? flecs_script_ir_vm_stmt_pos(task->vm)
-            : flecs_script_runner_stmt_pos(&task->runner);
+            : flecs_script_runner_stmt_pos(task->runner);
         if (pos) {
             flecs_script_task_stmt_line(task->script->code, pos,
                 &state.line, &state.column);
