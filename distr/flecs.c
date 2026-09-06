@@ -119045,9 +119045,9 @@ static int flecs_ir_const_end(
     void *ptr = flecs_ir_var_alloc(vm, ti);
     if (reg->value.type == type && !ti->hooks.copy && !ti->hooks.move) {
         if (ti->size == 8) {
-            *(uint64_t*)ptr = *(uint64_t*)reg->value.ptr;
+            ecs_os_memcpy(ptr, reg->value.ptr, 8);
         } else if (ti->size == 4) {
-            *(uint32_t*)ptr = *(uint32_t*)reg->value.ptr;
+            ecs_os_memcpy(ptr, reg->value.ptr, 4);
         } else if (ti->size == 1) {
             *(uint8_t*)ptr = *(uint8_t*)reg->value.ptr;
         } else {
