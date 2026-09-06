@@ -429,21 +429,6 @@ int flecs_script_step_await(
     return result;
 }
 
-int flecs_script_step_try(
-    ecs_script_runner_t *r,
-    flecs_script_frame_t *frame)
-{
-    ecs_script_try_t *node = (ecs_script_try_t*)frame->node;
-    if (frame->pc == 0) {
-        frame->pc = 1;
-        flecs_script_scope_push(r, node->try_scope);
-        return 0;
-    }
-
-    flecs_script_frame_pop(r);
-    return 0;
-}
-
 bool flecs_script_try_catch(
     ecs_script_runner_t *r,
     flecs_script_frame_t *frame)

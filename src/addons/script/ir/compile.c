@@ -1800,20 +1800,15 @@ ecs_script_ir_t* flecs_script_ir_compile(
         .ir = ir
     };
 
-
-
     ir->root_entry = flecs_irc_entry_add(&c, script->root, EcsIrEntryRoot);
 
     int32_t i;
     for (i = 0; i < ecs_vec_count(&ir->entries); i ++) {
         if (flecs_irc_compile_entry(&c, i)) {
-
-
             flecs_script_ir_free(ir);
             return NULL;
         }
     }
-
 
     return ir;
 }

@@ -2198,6 +2198,48 @@ static flecs_script_frame_t* flecs_script_frame_push(
     return frame;
 }
 
+static void flecs_script_frame_leave(
+    ecs_script_runner_t *r,
+    flecs_script_frame_t *frame)
+{
+    ecs_script_eval_visitor_t *v = &r->v;
+    switch(frame->node->kind) {
+    case EcsAstScope:
+        flecs_script_eval_scope_leave(v, &frame->state.scope);
+        break;
+    case EcsAstEntity:
+        if (frame->pc >= 1) {
+            flecs_script_eval_entity_leave(v, &frame->state.entity);
+        }
+        break;
+    case EcsAstWith:
+        if (frame->pc >= 1) {
+            flecs_script_eval_with_leave(v, &frame->state.with);
+        }
+        break;
+    case EcsAstPairScope:
+        if (frame->pc >= 1) {
+            flecs_script_eval_pair_scope_leave(v, &frame->state.pair_scope);
+        }
+        break;
+    case EcsAstFor:
+        if (frame->pc >= 1) {
+            flecs_script_eval_for_leave(v, &frame->state.for_);
+        }
+        break;
+    case EcsAstIf:
+        if (frame->pc >= 1) {
+            v->force = frame->state.if_.force;
+        }
+        break;
+    case EcsAstTry:
+        break;
+    default:
+        ecs_abort(ECS_INTERNAL_ERROR, "corrupt script frame node");
+    }
+    flecs_script_frame_pop(r);
+}
+
 void flecs_script_frame_pop(
     ecs_script_runner_t *r)
 {
@@ -2432,8 +2474,7 @@ static int flecs_script_step_scope(
 #ifdef FLECS_SCRIPT_ASYNC
             if (r->can_suspend) {
                 frame->pc ++;
-                flecs_script_frame_t *try_frame = flecs_script_frame_push(
-                    r, stmt);
+                flecs_script_frame_push(r, stmt);
                 return 0;
             }
 #endif
@@ -2483,13 +2524,15 @@ static int flecs_script_step_entity(
     return 0;
 }
 
-static int flecs_script_step_if(
+static int flecs_script_control_enter(
     ecs_script_runner_t *r,
     flecs_script_frame_t *frame)
 {
     ecs_script_eval_visitor_t *v = &r->v;
-    ecs_script_if_t *node = (ecs_script_if_t*)frame->node;
-    if (frame->pc == 0) {
+    ecs_script_scope_t *scope;
+    switch(frame->node->kind) {
+    case EcsAstIf: {
+        ecs_script_if_t *node = (ecs_script_if_t*)frame->node;
         frame->state.if_.force = v->force;
         ecs_value_t condval = { .type = 0, .ptr = NULL };
         if (flecs_script_eval_expr(v, &node->expr, &condval)) {
@@ -2519,100 +2562,42 @@ static int flecs_script_step_if(
 
         ecs_ptr_free(v->world, condval.type, condval.ptr);
 
-        frame->pc = 1;
         v->force = frame->state.if_.force ||
             ((node->node.direct_input & v->input) != 0) ||
-        ((node->node.direct_internal & v->internal) != 0);
-        flecs_script_scope_push(r, cond ? node->if_true : node->if_false);
-        return 0;
+            ((node->node.direct_internal & v->internal) != 0);
+        scope = cond ? node->if_true : node->if_false;
+        break;
     }
-
-    v->force = frame->state.if_.force;
-    flecs_script_frame_pop(r);
-    return 0;
-}
-
-static int flecs_script_step_with(
-    ecs_script_runner_t *r,
-    flecs_script_frame_t *frame)
-{
-    ecs_script_eval_visitor_t *v = &r->v;
-    ecs_script_with_t *node = (ecs_script_with_t*)frame->node;
-    if (frame->pc == 0) {
+    case EcsAstWith: {
+        ecs_script_with_t *node = (ecs_script_with_t*)frame->node;
         if (flecs_script_eval_with_enter(v, node, &frame->state.with)) {
             return -1;
         }
-        frame->pc = 1;
-        flecs_script_scope_push(r, node->scope);
-        return 0;
+        scope = node->scope;
+        break;
     }
-
-    flecs_script_eval_with_leave(v, &frame->state.with);
-    flecs_script_frame_pop(r);
-    return 0;
-}
-
-static int flecs_script_step_pair_scope(
-    ecs_script_runner_t *r,
-    flecs_script_frame_t *frame)
-{
-    ecs_script_eval_visitor_t *v = &r->v;
-    ecs_script_pair_scope_t *node = (ecs_script_pair_scope_t*)frame->node;
-    if (frame->pc == 0) {
+    case EcsAstPairScope: {
+        ecs_script_pair_scope_t *node = (ecs_script_pair_scope_t*)frame->node;
         if (flecs_script_eval_pair_scope_enter(
             v, node, &frame->state.pair_scope))
         {
             return -1;
         }
-        frame->pc = 1;
-        flecs_script_scope_push(r, node->scope);
-        return 0;
+        scope = node->scope;
+        break;
     }
-
-    flecs_script_eval_pair_scope_leave(v, &frame->state.pair_scope);
-    flecs_script_frame_pop(r);
-    return 0;
-}
-
-static void flecs_script_frame_leave(
-    ecs_script_runner_t *r,
-    flecs_script_frame_t *frame)
-{
-    ecs_script_eval_visitor_t *v = &r->v;
-    switch(frame->node->kind) {
-    case EcsAstScope:
-        flecs_script_eval_scope_leave(v, &frame->state.scope);
-        break;
-    case EcsAstEntity:
-        if (frame->pc >= 1) {
-            flecs_script_eval_entity_leave(v, &frame->state.entity);
-        }
-        break;
-    case EcsAstWith:
-        if (frame->pc >= 1) {
-            flecs_script_eval_with_leave(v, &frame->state.with);
-        }
-        break;
-    case EcsAstPairScope:
-        if (frame->pc >= 1) {
-            flecs_script_eval_pair_scope_leave(v, &frame->state.pair_scope);
-        }
-        break;
-    case EcsAstFor:
-        if (frame->pc >= 1) {
-            flecs_script_eval_for_leave(v, &frame->state.for_);
-        }
-        break;
-    case EcsAstIf:
-        if (frame->pc >= 1) {
-            v->force = frame->state.if_.force;
-        }
-        break;
+#ifdef FLECS_SCRIPT_ASYNC
     case EcsAstTry:
+        scope = ((ecs_script_try_t*)frame->node)->try_scope;
         break;
+#endif
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "corrupt script frame node");
     }
+
+    frame->pc = 1;
+    flecs_script_scope_push(r, scope);
+    return 0;
 }
 
 void flecs_script_runner_abandon(
@@ -2620,8 +2605,6 @@ void flecs_script_runner_abandon(
 {
     while (r->frame_count) {
         flecs_script_frame_leave(r, flecs_script_frame_at(r, r->frame_count - 1));
-        r->v.base.depth --;
-        r->frame_count --;
     }
 }
 
@@ -2644,8 +2627,6 @@ static bool flecs_script_runner_continue(
 
     while (r->frame_count > frame) {
         flecs_script_frame_leave(r, flecs_script_frame_at(r, r->frame_count - 1));
-        r->v.base.depth --;
-        r->frame_count --;
     }
 
     return true;
@@ -2667,8 +2648,6 @@ static bool flecs_script_runner_unwind(
 #endif
 
         flecs_script_frame_leave(r, frame);
-        r->v.base.depth --;
-        r->frame_count --;
     }
 
 #ifdef FLECS_SCRIPT_ASYNC
@@ -2703,25 +2682,17 @@ static flecs_script_run_status_t flecs_script_runner_exec(
         case EcsAstEntity:
             res = flecs_script_step_entity(r, frame);
             break;
-        case EcsAstIf:
-            res = flecs_script_step_if(r, frame);
-            break;
         case EcsAstFor:
             res = flecs_script_step_for(r, frame);
             break;
-        case EcsAstWith:
-            res = flecs_script_step_with(r, frame);
-            break;
-        case EcsAstPairScope:
-            res = flecs_script_step_pair_scope(r, frame);
-            break;
-        case EcsAstTry:
-#ifdef FLECS_SCRIPT_ASYNC
-            res = flecs_script_step_try(r, frame);
-            break;
-#endif
         default:
-            ecs_abort(ECS_INTERNAL_ERROR, "corrupt script frame node");
+            if (!frame->pc) {
+                res = flecs_script_control_enter(r, frame);
+            } else {
+                flecs_script_frame_leave(r, frame);
+                res = 0;
+            }
+            break;
         }
 
         if (res == -1) {

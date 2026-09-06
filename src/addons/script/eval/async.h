@@ -46,10 +46,6 @@ int flecs_script_step_await(
     ecs_script_runner_t *r,
     ecs_script_node_t *stmt);
 
-int flecs_script_step_try(
-    ecs_script_runner_t *r,
-    flecs_script_frame_t *frame);
-
 /* Enter a catch clause if the frame is a try block that catches the pending
  * thrown error. Returns false if the error should continue to unwind. */
 bool flecs_script_try_catch(
