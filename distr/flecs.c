@@ -51452,6 +51452,9 @@ int flecs_script_await_poll(
     const ecs_script_node_t *stmt,
     ecs_script_future_t **ready);
 
+void flecs_script_async_fini(
+    flecs_script_async_state_t *state);
+
 void flecs_script_throw_clear(
     flecs_script_async_state_t *state);
 
@@ -97169,6 +97172,14 @@ void flecs_script_throw_clear(
     state->throw_node = NULL;
 }
 
+void flecs_script_async_fini(
+    flecs_script_async_state_t *state)
+{
+    ecs_script_future_release(state->future);
+    state->future = NULL;
+    flecs_script_throw_clear(state);
+}
+
 void flecs_script_report_throw(
     ecs_script_eval_visitor_t *v,
     flecs_script_async_state_t *state)
@@ -100938,11 +100949,7 @@ void flecs_script_runner_fini(
 {
     flecs_script_runner_abandon(r);
 #ifdef FLECS_SCRIPT_ASYNC
-    if (r->async.future) {
-        ecs_script_future_release(r->async.future);
-        r->async.future = NULL;
-    }
-    flecs_script_throw_clear(&r->async);
+    flecs_script_async_fini(&r->async);
 #endif
     flecs_script_runner_frames_fini(r);
     flecs_script_eval_visit_fini(&r->v, desc);
@@ -120458,11 +120465,7 @@ static void flecs_ir_vm_clear(
     }
     vm->vheap.count = 0;
 #ifdef FLECS_SCRIPT_ASYNC
-    if (vm->async.future) {
-        ecs_script_future_release(vm->async.future);
-        vm->async.future = NULL;
-    }
-    flecs_script_throw_clear(&vm->async);
+    flecs_script_async_fini(&vm->async);
 #endif
 }
 
@@ -120624,13 +120627,6 @@ void flecs_script_ir_vm_fini(
     const ecs_script_eval_desc_t *desc)
 {
     flecs_ir_vm_teardown(vm);
-#ifdef FLECS_SCRIPT_ASYNC
-    if (vm->async.future) {
-        ecs_script_future_release(vm->async.future);
-        vm->async.future = NULL;
-    }
-    flecs_script_throw_clear(&vm->async);
-#endif
     flecs_script_eval_visit_fini(&vm->v, desc);
 }
 

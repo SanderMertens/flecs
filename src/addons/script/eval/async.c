@@ -241,6 +241,14 @@ void flecs_script_throw_clear(
     state->throw_node = NULL;
 }
 
+void flecs_script_async_fini(
+    flecs_script_async_state_t *state)
+{
+    ecs_script_future_release(state->future);
+    state->future = NULL;
+    flecs_script_throw_clear(state);
+}
+
 void flecs_script_report_throw(
     ecs_script_eval_visitor_t *v,
     flecs_script_async_state_t *state)

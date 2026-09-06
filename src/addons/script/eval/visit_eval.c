@@ -2736,11 +2736,7 @@ void flecs_script_runner_fini(
 {
     flecs_script_runner_abandon(r);
 #ifdef FLECS_SCRIPT_ASYNC
-    if (r->async.future) {
-        ecs_script_future_release(r->async.future);
-        r->async.future = NULL;
-    }
-    flecs_script_throw_clear(&r->async);
+    flecs_script_async_fini(&r->async);
 #endif
     flecs_script_runner_frames_fini(r);
     flecs_script_eval_visit_fini(&r->v, desc);

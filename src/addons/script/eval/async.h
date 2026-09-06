@@ -63,6 +63,9 @@ int flecs_script_await_poll(
     const ecs_script_node_t *stmt,
     ecs_script_future_t **ready);
 
+void flecs_script_async_fini(
+    flecs_script_async_state_t *state);
+
 void flecs_script_throw_clear(
     flecs_script_async_state_t *state);
 

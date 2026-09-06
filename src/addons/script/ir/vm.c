@@ -3735,11 +3735,7 @@ static void flecs_ir_vm_clear(
     }
     vm->vheap.count = 0;
 #ifdef FLECS_SCRIPT_ASYNC
-    if (vm->async.future) {
-        ecs_script_future_release(vm->async.future);
-        vm->async.future = NULL;
-    }
-    flecs_script_throw_clear(&vm->async);
+    flecs_script_async_fini(&vm->async);
 #endif
 }
 
@@ -3901,13 +3897,6 @@ void flecs_script_ir_vm_fini(
     const ecs_script_eval_desc_t *desc)
 {
     flecs_ir_vm_teardown(vm);
-#ifdef FLECS_SCRIPT_ASYNC
-    if (vm->async.future) {
-        ecs_script_future_release(vm->async.future);
-        vm->async.future = NULL;
-    }
-    flecs_script_throw_clear(&vm->async);
-#endif
     flecs_script_eval_visit_fini(&vm->v, desc);
 }
 
