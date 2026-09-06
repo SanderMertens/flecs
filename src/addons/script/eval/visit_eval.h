@@ -155,9 +155,6 @@ typedef struct flecs_script_frame_t {
         flecs_script_with_state_t with;
         flecs_script_pair_scope_state_t pair_scope;
         struct {
-            int32_t catch_index;
-        } try_;
-        struct {
             bool force;
         } if_;
     } state;
@@ -171,6 +168,15 @@ typedef enum flecs_script_run_status_t {
 
 #define ECS_SCRIPT_FRAME_CHUNK_SIZE (16)
 
+#ifdef FLECS_SCRIPT_ASYNC
+typedef struct flecs_script_async_state_t {
+    ecs_script_future_t *future;
+    ecs_entity_t entity;
+    ecs_script_future_t *thrown;
+    const ecs_script_node_t *throw_node;
+} flecs_script_async_state_t;
+#endif
+
 typedef struct ecs_script_runner_t {
     ecs_script_eval_visitor_t v;
     flecs_script_frame_t *frames[(ECS_SCRIPT_VISIT_MAX_DEPTH +
@@ -180,13 +186,7 @@ typedef struct ecs_script_runner_t {
     ecs_entity_t last_entity; /* Result of last completed entity frame */
     bool can_suspend;
 #ifdef FLECS_SCRIPT_ASYNC
-    ecs_script_future_t *future; /* Pending awaited future */
-    ecs_entity_t async_entity;   /* Owner entity for async function calls */
-
-    /* Rejected future whose error is propagating, catchable with try/catch.
-     * Runtime errors don't set this and are never caught. */
-    ecs_script_future_t *thrown;
-    ecs_script_node_t *throw_node;
+    flecs_script_async_state_t async;
 #endif
 } ecs_script_runner_t;
 

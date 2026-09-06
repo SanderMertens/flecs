@@ -2423,7 +2423,6 @@ static int flecs_script_step_scope(
                 frame->pc ++;
                 flecs_script_frame_t *try_frame = flecs_script_frame_push(
                     r, stmt);
-                try_frame->state.try_.catch_index = -1;
                 return 0;
             }
 #endif
@@ -2678,9 +2677,9 @@ static bool flecs_script_runner_unwind(
     }
 
 #ifdef FLECS_SCRIPT_ASYNC
-    if (r->thrown) {
+    if (r->async.thrown) {
         /* Thrown error wasn't caught by a try block, report it */
-        flecs_script_report_throw(r);
+        flecs_script_report_throw(&r->v, &r->async);
     }
 #endif
     return false;
@@ -2778,10 +2777,7 @@ void flecs_script_runner_init(
     r->last_entity = 0;
     r->can_suspend = false;
 #ifdef FLECS_SCRIPT_ASYNC
-    r->future = NULL;
-    r->async_entity = 0;
-    r->thrown = NULL;
-    r->throw_node = NULL;
+    ecs_os_zeromem(&r->async);
 #endif
 }
 
@@ -2791,11 +2787,11 @@ void flecs_script_runner_fini(
 {
     flecs_script_runner_abandon(r);
 #ifdef FLECS_SCRIPT_ASYNC
-    if (r->future) {
-        ecs_script_future_release(r->future);
-        r->future = NULL;
+    if (r->async.future) {
+        ecs_script_future_release(r->async.future);
+        r->async.future = NULL;
     }
-    flecs_script_throw_clear(r);
+    flecs_script_throw_clear(&r->async);
 #endif
     flecs_script_runner_frames_fini(r);
     flecs_script_eval_visit_fini(&r->v, desc);
@@ -2812,10 +2808,7 @@ static void flecs_script_runner_init_nested(
     r->last_entity = 0;
     r->can_suspend = false;
 #ifdef FLECS_SCRIPT_ASYNC
-    r->future = NULL;
-    r->async_entity = 0;
-    r->thrown = NULL;
-    r->throw_node = NULL;
+    ecs_os_zeromem(&r->async);
 #endif
 }
 

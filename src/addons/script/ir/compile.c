@@ -1410,16 +1410,8 @@ static int flecs_irc_compile_try(
     int32_t catch_count = ecs_vec_count(&node->catches);
     int32_t catch_first = ecs_vec_count(&c->ir->catches);
     int32_t i;
-    for (i = 0; i < catch_count; i ++) {
-        ecs_script_catch_t *catch_ = ecs_vec_get_t(
-            &node->catches, ecs_script_catch_t, i);
-        ecs_script_ir_catch_t *desc = ecs_vec_append_t(
-            NULL, &c->ir->catches, ecs_script_ir_catch_t);
-        desc->error = catch_->eval_error;
-        desc->symbol = catch_->error_symbol;
-        desc->catch_all = catch_->error == NULL;
-        desc->pc = -1;
-    }
+    ecs_vec_set_count_t(NULL, &c->ir->catches,
+        int32_t, catch_first + catch_count);
 
     int32_t enter = flecs_irc_emit(
         c, EcsIrTryEnter, catch_first, catch_count, 0, node);
@@ -1438,8 +1430,8 @@ static int flecs_irc_compile_try(
     for (i = 0; i < catch_count; i ++) {
         ecs_script_catch_t *catch_ = ecs_vec_get_t(
             &node->catches, ecs_script_catch_t, i);
-        ecs_vec_get_t(&c->ir->catches, ecs_script_ir_catch_t,
-            catch_first + i)->pc = flecs_irc_pc(c);
+        ecs_vec_get_t(&c->ir->catches, int32_t,
+            catch_first + i)[0] = flecs_irc_pc(c);
         if (flecs_irc_compile_scope(c, catch_->scope, 0)) {
             goto error;
         }
@@ -1914,7 +1906,7 @@ static void flecs_irc_init(
     ecs_vec_init_t(NULL, &ir->ops, ecs_script_ir_op_t, 0);
     ecs_vec_init_t(NULL, &ir->ids, ecs_script_ir_id_t, 0);
     ecs_vec_init_t(NULL, &ir->slots, int32_t, 0);
-    ecs_vec_init_t(NULL, &ir->catches, ecs_script_ir_catch_t, 0);
+    ecs_vec_init_t(NULL, &ir->catches, int32_t, 0);
     ecs_vec_init_t(NULL, &ir->entries, ecs_script_ir_entry_t, 0);
     ecs_map_init(&ir->entry_index, NULL);
     ecs_vec_init_t(NULL, &ir->fors, ecs_script_ir_for_t, 0);
@@ -1932,7 +1924,7 @@ void flecs_script_ir_free(
     ecs_vec_fini_t(NULL, &ir->ops, ecs_script_ir_op_t);
     ecs_vec_fini_t(NULL, &ir->ids, ecs_script_ir_id_t);
     ecs_vec_fini_t(NULL, &ir->slots, int32_t);
-    ecs_vec_fini_t(NULL, &ir->catches, ecs_script_ir_catch_t);
+    ecs_vec_fini_t(NULL, &ir->catches, int32_t);
     ecs_vec_fini_t(NULL, &ir->entries, ecs_script_ir_entry_t);
     ecs_map_fini(&ir->entry_index);
     ecs_vec_fini_t(NULL, &ir->fors, ecs_script_ir_for_t);

@@ -188,13 +188,6 @@ typedef struct ecs_script_ir_id_t {
     bool visitor;
 } ecs_script_ir_id_t;
 
-typedef struct ecs_script_ir_catch_t {
-    ecs_entity_t error;
-    int32_t symbol;
-    int32_t pc;
-    bool catch_all;
-} ecs_script_ir_catch_t;
-
 typedef struct ecs_script_ir_for_t {
     int32_t for_slot;
     int32_t scope_slot;
@@ -274,9 +267,6 @@ typedef struct ecs_script_ir_frame_t {
             int32_t var_index[3];
         } for_;
         struct {
-            int32_t catch_index;
-        } try_;
-        struct {
             int32_t scratch_top;
             int32_t owned_count;
             int32_t heap_count;
@@ -324,10 +314,7 @@ typedef struct ecs_script_ir_vm_t {
     bool dirty;
     bool can_suspend;
 #ifdef FLECS_SCRIPT_ASYNC
-    ecs_script_future_t *future;
-    ecs_entity_t async_entity;
-    ecs_script_future_t *thrown;
-    const ecs_script_node_t *throw_node;
+    flecs_script_async_state_t async;
 #endif
 } ecs_script_ir_vm_t;
 

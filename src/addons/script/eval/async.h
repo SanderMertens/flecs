@@ -56,11 +56,28 @@ bool flecs_script_try_catch(
     ecs_script_runner_t *r,
     flecs_script_frame_t *frame);
 
+int32_t flecs_script_find_catch(
+    ecs_script_eval_visitor_t *v,
+    const flecs_script_async_state_t *state,
+    const ecs_script_try_t *node);
+
+int flecs_script_await_poll(
+    ecs_script_eval_visitor_t *v,
+    flecs_script_async_state_t *async,
+    const ecs_script_node_t *stmt,
+    ecs_script_future_t **ready);
+
+int flecs_script_await_export(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_var_node_t *node,
+    const ecs_value_t *value);
+
 void flecs_script_throw_clear(
-    ecs_script_runner_t *r);
+    flecs_script_async_state_t *state);
 
 void flecs_script_report_throw(
-    ecs_script_runner_t *r);
+    ecs_script_eval_visitor_t *v,
+    flecs_script_async_state_t *state);
 
 void flecs_script_async_import(
     ecs_world_t *world);

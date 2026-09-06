@@ -51007,9 +51007,6 @@ typedef struct flecs_script_frame_t {
         flecs_script_with_state_t with;
         flecs_script_pair_scope_state_t pair_scope;
         struct {
-            int32_t catch_index;
-        } try_;
-        struct {
             bool force;
         } if_;
     } state;
@@ -51023,6 +51020,15 @@ typedef enum flecs_script_run_status_t {
 
 #define ECS_SCRIPT_FRAME_CHUNK_SIZE (16)
 
+#ifdef FLECS_SCRIPT_ASYNC
+typedef struct flecs_script_async_state_t {
+    ecs_script_future_t *future;
+    ecs_entity_t entity;
+    ecs_script_future_t *thrown;
+    const ecs_script_node_t *throw_node;
+} flecs_script_async_state_t;
+#endif
+
 typedef struct ecs_script_runner_t {
     ecs_script_eval_visitor_t v;
     flecs_script_frame_t *frames[(ECS_SCRIPT_VISIT_MAX_DEPTH +
@@ -51032,13 +51038,7 @@ typedef struct ecs_script_runner_t {
     ecs_entity_t last_entity; /* Result of last completed entity frame */
     bool can_suspend;
 #ifdef FLECS_SCRIPT_ASYNC
-    ecs_script_future_t *future; /* Pending awaited future */
-    ecs_entity_t async_entity;   /* Owner entity for async function calls */
-
-    /* Rejected future whose error is propagating, catchable with try/catch.
-     * Runtime errors don't set this and are never caught. */
-    ecs_script_future_t *thrown;
-    ecs_script_node_t *throw_node;
+    flecs_script_async_state_t async;
 #endif
 } ecs_script_runner_t;
 
@@ -51432,11 +51432,28 @@ bool flecs_script_try_catch(
     ecs_script_runner_t *r,
     flecs_script_frame_t *frame);
 
+int32_t flecs_script_find_catch(
+    ecs_script_eval_visitor_t *v,
+    const flecs_script_async_state_t *state,
+    const ecs_script_try_t *node);
+
+int flecs_script_await_poll(
+    ecs_script_eval_visitor_t *v,
+    flecs_script_async_state_t *async,
+    const ecs_script_node_t *stmt,
+    ecs_script_future_t **ready);
+
+int flecs_script_await_export(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_var_node_t *node,
+    const ecs_value_t *value);
+
 void flecs_script_throw_clear(
-    ecs_script_runner_t *r);
+    flecs_script_async_state_t *state);
 
 void flecs_script_report_throw(
-    ecs_script_runner_t *r);
+    ecs_script_eval_visitor_t *v,
+    flecs_script_async_state_t *state);
 
 void flecs_script_async_import(
     ecs_world_t *world);
@@ -51956,13 +51973,6 @@ typedef struct ecs_script_ir_id_t {
     bool visitor;
 } ecs_script_ir_id_t;
 
-typedef struct ecs_script_ir_catch_t {
-    ecs_entity_t error;
-    int32_t symbol;
-    int32_t pc;
-    bool catch_all;
-} ecs_script_ir_catch_t;
-
 typedef struct ecs_script_ir_for_t {
     int32_t for_slot;
     int32_t scope_slot;
@@ -52042,9 +52052,6 @@ typedef struct ecs_script_ir_frame_t {
             int32_t var_index[3];
         } for_;
         struct {
-            int32_t catch_index;
-        } try_;
-        struct {
             int32_t scratch_top;
             int32_t owned_count;
             int32_t heap_count;
@@ -52092,10 +52099,7 @@ typedef struct ecs_script_ir_vm_t {
     bool dirty;
     bool can_suspend;
 #ifdef FLECS_SCRIPT_ASYNC
-    ecs_script_future_t *future;
-    ecs_entity_t async_entity;
-    ecs_script_future_t *thrown;
-    const ecs_script_node_t *throw_node;
+    flecs_script_async_state_t async;
 #endif
 } ecs_script_ir_vm_t;
 
@@ -97157,29 +97161,96 @@ error:
 /* Async statement evaluation, invoked by the script runner */
 
 void flecs_script_throw_clear(
-    ecs_script_runner_t *r)
+    flecs_script_async_state_t *state)
 {
-    if (r->thrown) {
-        ecs_script_future_release(r->thrown);
-        r->thrown = NULL;
+    if (state->thrown) {
+        ecs_script_future_release(state->thrown);
+        state->thrown = NULL;
     }
-    r->throw_node = NULL;
+    state->throw_node = NULL;
 }
 
 void flecs_script_report_throw(
-    ecs_script_runner_t *r)
+    ecs_script_eval_visitor_t *v,
+    flecs_script_async_state_t *state)
 {
-    ecs_script_eval_visitor_t *v = &r->v;
-    ecs_entity_t error_id = r->thrown->error_id;
-    const char *msg = r->thrown->error;
+    ecs_entity_t error_id = state->thrown->error_id;
+    const char *msg = state->thrown->error;
     if (error_id) {
         char *path = ecs_get_path(v->world, error_id);
-        flecs_script_eval_error(v, r->throw_node, "%s: %s", path, msg);
+        flecs_script_eval_error(v, state->throw_node, "%s: %s", path, msg);
         ecs_os_free(path);
     } else {
-        flecs_script_eval_error(v, r->throw_node, "%s", msg);
+        flecs_script_eval_error(v, state->throw_node, "%s", msg);
     }
-    flecs_script_throw_clear(r);
+    flecs_script_throw_clear(state);
+}
+
+int flecs_script_await_poll(
+    ecs_script_eval_visitor_t *v,
+    flecs_script_async_state_t *async,
+    const ecs_script_node_t *stmt,
+    ecs_script_future_t **ready)
+{
+    ecs_assert(async->future != NULL, ECS_INTERNAL_ERROR, NULL);
+    flecs_script_future_state_t state = flecs_script_future_poll(async->future);
+    if (state == FlecsScriptFuturePending) {
+        return 1;
+    }
+
+    ecs_script_future_t *future = async->future;
+    async->future = NULL;
+    if (state == FlecsScriptFutureRejected) {
+        flecs_script_throw_clear(async);
+        async->thrown = future;
+        async->throw_node = stmt;
+        return -1;
+    }
+    if (state == FlecsScriptFutureCancelled) {
+        flecs_script_eval_error(v, stmt, "awaited operation was cancelled");
+        ecs_script_future_release(future);
+        return -1;
+    }
+    *ready = future;
+    return 0;
+}
+
+int flecs_script_await_export(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_var_node_t *node,
+    const ecs_value_t *value)
+{
+    if (ecs_script_vars_lookup(v->vars, node->name)) {
+        flecs_script_eval_error(v, node,
+            "exported variable '%s' shadows a local variable",
+            node->name);
+        return -1;
+    }
+
+    bool is_mut = node->node.kind == EcsAstExportMut;
+    ecs_entity_t global_var;
+    if (is_mut) {
+        global_var = ecs_mut_var(v->world, {
+            .parent = v->parent,
+            .name = node->name,
+            .type = value->type,
+            .value = value->ptr
+        });
+    } else {
+        global_var = ecs_const_var(v->world, {
+            .parent = v->parent,
+            .name = node->name,
+            .type = value->type,
+            .value = value->ptr
+        });
+    }
+    if (!global_var) {
+        flecs_script_eval_error(v, node,
+            "failed to create exported %s variable '%s'",
+            is_mut ? "mut" : "const", node->name);
+        return -1;
+    }
+    return 0;
 }
 
 static int flecs_script_await_args(
@@ -97248,7 +97319,7 @@ static int flecs_script_await_start(
         }
     }
 
-    r->future = flecs_script_future_start(v->world, r->async_entity,
+    r->async.future = flecs_script_future_start(v->world, r->async.entity,
         call->node.type, &call->calldata, argc, argv);
 
     for (int32_t i = 0; i < value_count; i ++) {
@@ -97265,37 +97336,7 @@ static int flecs_script_await_assign_const(
     bool export)
 {
     if (export) {
-        if (ecs_script_vars_lookup(v->vars, node->name)) {
-            flecs_script_eval_error(v, node,
-                "exported variable '%s' shadows a local variable",
-                node->name);
-            return -1;
-        }
-
-        bool is_mut = node->node.kind == EcsAstExportMut;
-        ecs_entity_t global_var;
-        if (is_mut) {
-            global_var = ecs_mut_var(v->world, {
-                .parent = v->parent,
-                .name = node->name,
-                .type = value->type,
-                .value = value->ptr
-            });
-        } else {
-            global_var = ecs_const_var(v->world, {
-                .parent = v->parent,
-                .name = node->name,
-                .type = value->type,
-                .value = value->ptr
-            });
-        }
-        if (!global_var) {
-            flecs_script_eval_error(v, node,
-                "failed to create exported %s variable '%s'",
-                is_mut ? "mut" : "const", node->name);
-            return -1;
-        }
-        return 0;
+        return flecs_script_await_export(v, node, value);
     }
 
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->name);
@@ -97316,12 +97357,12 @@ static int flecs_script_await_assign_const(
     return 0;
 }
 
-static int32_t flecs_script_find_catch(
-    ecs_script_runner_t *r,
-    ecs_script_try_t *node)
+int32_t flecs_script_find_catch(
+    ecs_script_eval_visitor_t *v,
+    const flecs_script_async_state_t *state,
+    const ecs_script_try_t *node)
 {
-    ecs_script_eval_visitor_t *v = &r->v;
-    ecs_entity_t throw_id = r->thrown->error_id;
+    ecs_entity_t throw_id = state->thrown->error_id;
     int32_t i, count = ecs_vec_count(&node->catches);
     ecs_script_catch_t *catches = ecs_vec_first(&node->catches);
     for (i = 0; i < count; i ++) {
@@ -97367,40 +97408,19 @@ int flecs_script_step_await(
         return -1;
     }
 
-    if (!r->future) {
+    if (!r->async.future) {
         if (flecs_script_await_start(r, stmt, expr)) {
             return -1;
         }
     }
 
-    flecs_script_future_state_t state = flecs_script_future_poll(r->future);
-    if (state == FlecsScriptFuturePending) {
-        return 1;
+    ecs_script_future_t *future = NULL;
+    int result = flecs_script_await_poll(v, &r->async, stmt, &future);
+    if (result) {
+        return result;
     }
-
-    ecs_script_future_t *future = r->future;
-    r->future = NULL;
-
-    if (state == FlecsScriptFutureRejected) {
-        /* Record the error instead of reporting it immediately, so that an
-         * enclosing try block can catch it. If it remains uncaught it is
-         * reported when it propagates out of the script. The reference to the
-         * rejected future is transferred to the runner. */
-        flecs_script_throw_clear(r);
-        r->thrown = future;
-        r->throw_node = stmt;
-        return -1;
-    }
-
-    int result = 0;
-    if (state == FlecsScriptFutureCancelled) {
-        flecs_script_eval_error(v, stmt,
-            "awaited operation was cancelled");
-        result = -1;
-    } else if (var && flecs_script_await_assign_const(
-        v, var, &future->value, export))
-    {
-        result = -1;
+    if (var) {
+        result = flecs_script_await_assign_const(v, var, &future->value, export);
     }
 
     ecs_script_future_release(future);
@@ -97428,20 +97448,19 @@ bool flecs_script_try_catch(
 {
     /* Runtime errors are not catchable, and an error thrown from a catch
      * handler can only be caught by an enclosing try block. */
-    if (frame->node->kind != EcsAstTry || !r->thrown ||
+    if (frame->node->kind != EcsAstTry || !r->async.thrown ||
         frame->pc != 1)
     {
         return false;
     }
 
     ecs_script_try_t *node = (ecs_script_try_t*)frame->node;
-    int32_t catch_index = flecs_script_find_catch(r, node);
+    int32_t catch_index = flecs_script_find_catch(&r->v, &r->async, node);
     if (catch_index == -1) {
         return false;
     }
 
-    flecs_script_throw_clear(r);
-    frame->state.try_.catch_index = catch_index;
+    flecs_script_throw_clear(&r->async);
     frame->pc = 2;
     ecs_script_catch_t *catches = ecs_vec_first(&node->catches);
     flecs_script_scope_push(r, catches[catch_index].scope);
@@ -97586,13 +97605,13 @@ ecs_script_task_t* ecs_script_task_new(
         }
         result->vm->v = visitor;
         result->vm->can_suspend = true;
-        result->vm->async_entity = result->entity;
+        result->vm->async.entity = result->entity;
     } else {
         result->runner = ecs_os_malloc_t(ecs_script_runner_t);
         flecs_script_runner_init(result->runner, impl, &result->eval_desc);
         result->runner->v = visitor;
         result->runner->can_suspend = true;
-        result->runner->async_entity = result->entity;
+        result->runner->async.entity = result->entity;
     }
     if (result->entity) {
         flecs_script_task_register(result);
@@ -97618,9 +97637,9 @@ static ecs_script_future_t** flecs_script_task_future(
     ecs_script_task_t *task)
 {
     if (task->vm) {
-        return &task->vm->future;
+        return &task->vm->async.future;
     }
-    return &task->runner->future;
+    return &task->runner->async.future;
 }
 
 static void flecs_script_task_cancel_future(
@@ -97856,8 +97875,8 @@ static int flecs_script_task_component_serialize(
         state.iteration = task->completed_iterations;
 
         ecs_script_future_t *future = task->vm
-            ? task->vm->future
-            : task->runner->future;
+            ? task->vm->async.future
+            : task->runner->async.future;
         if (future) {
             state.awaiting = future->function_ctx.function;
         }
@@ -100688,7 +100707,6 @@ static int flecs_script_step_scope(
                 frame->pc ++;
                 flecs_script_frame_t *try_frame = flecs_script_frame_push(
                     r, stmt);
-                try_frame->state.try_.catch_index = -1;
                 return 0;
             }
 #endif
@@ -100943,9 +100961,9 @@ static bool flecs_script_runner_unwind(
     }
 
 #ifdef FLECS_SCRIPT_ASYNC
-    if (r->thrown) {
+    if (r->async.thrown) {
         /* Thrown error wasn't caught by a try block, report it */
-        flecs_script_report_throw(r);
+        flecs_script_report_throw(&r->v, &r->async);
     }
 #endif
     return false;
@@ -101043,10 +101061,7 @@ void flecs_script_runner_init(
     r->last_entity = 0;
     r->can_suspend = false;
 #ifdef FLECS_SCRIPT_ASYNC
-    r->future = NULL;
-    r->async_entity = 0;
-    r->thrown = NULL;
-    r->throw_node = NULL;
+    ecs_os_zeromem(&r->async);
 #endif
 }
 
@@ -101056,11 +101071,11 @@ void flecs_script_runner_fini(
 {
     flecs_script_runner_abandon(r);
 #ifdef FLECS_SCRIPT_ASYNC
-    if (r->future) {
-        ecs_script_future_release(r->future);
-        r->future = NULL;
+    if (r->async.future) {
+        ecs_script_future_release(r->async.future);
+        r->async.future = NULL;
     }
-    flecs_script_throw_clear(r);
+    flecs_script_throw_clear(&r->async);
 #endif
     flecs_script_runner_frames_fini(r);
     flecs_script_eval_visit_fini(&r->v, desc);
@@ -101077,10 +101092,7 @@ static void flecs_script_runner_init_nested(
     r->last_entity = 0;
     r->can_suspend = false;
 #ifdef FLECS_SCRIPT_ASYNC
-    r->future = NULL;
-    r->async_entity = 0;
-    r->thrown = NULL;
-    r->throw_node = NULL;
+    ecs_os_zeromem(&r->async);
 #endif
 }
 
@@ -116227,16 +116239,8 @@ static int flecs_irc_compile_try(
     int32_t catch_count = ecs_vec_count(&node->catches);
     int32_t catch_first = ecs_vec_count(&c->ir->catches);
     int32_t i;
-    for (i = 0; i < catch_count; i ++) {
-        ecs_script_catch_t *catch_ = ecs_vec_get_t(
-            &node->catches, ecs_script_catch_t, i);
-        ecs_script_ir_catch_t *desc = ecs_vec_append_t(
-            NULL, &c->ir->catches, ecs_script_ir_catch_t);
-        desc->error = catch_->eval_error;
-        desc->symbol = catch_->error_symbol;
-        desc->catch_all = catch_->error == NULL;
-        desc->pc = -1;
-    }
+    ecs_vec_set_count_t(NULL, &c->ir->catches,
+        int32_t, catch_first + catch_count);
 
     int32_t enter = flecs_irc_emit(
         c, EcsIrTryEnter, catch_first, catch_count, 0, node);
@@ -116255,8 +116259,8 @@ static int flecs_irc_compile_try(
     for (i = 0; i < catch_count; i ++) {
         ecs_script_catch_t *catch_ = ecs_vec_get_t(
             &node->catches, ecs_script_catch_t, i);
-        ecs_vec_get_t(&c->ir->catches, ecs_script_ir_catch_t,
-            catch_first + i)->pc = flecs_irc_pc(c);
+        ecs_vec_get_t(&c->ir->catches, int32_t,
+            catch_first + i)[0] = flecs_irc_pc(c);
         if (flecs_irc_compile_scope(c, catch_->scope, 0)) {
             goto error;
         }
@@ -116731,7 +116735,7 @@ static void flecs_irc_init(
     ecs_vec_init_t(NULL, &ir->ops, ecs_script_ir_op_t, 0);
     ecs_vec_init_t(NULL, &ir->ids, ecs_script_ir_id_t, 0);
     ecs_vec_init_t(NULL, &ir->slots, int32_t, 0);
-    ecs_vec_init_t(NULL, &ir->catches, ecs_script_ir_catch_t, 0);
+    ecs_vec_init_t(NULL, &ir->catches, int32_t, 0);
     ecs_vec_init_t(NULL, &ir->entries, ecs_script_ir_entry_t, 0);
     ecs_map_init(&ir->entry_index, NULL);
     ecs_vec_init_t(NULL, &ir->fors, ecs_script_ir_for_t, 0);
@@ -116749,7 +116753,7 @@ void flecs_script_ir_free(
     ecs_vec_fini_t(NULL, &ir->ops, ecs_script_ir_op_t);
     ecs_vec_fini_t(NULL, &ir->ids, ecs_script_ir_id_t);
     ecs_vec_fini_t(NULL, &ir->slots, int32_t);
-    ecs_vec_fini_t(NULL, &ir->catches, ecs_script_ir_catch_t);
+    ecs_vec_fini_t(NULL, &ir->catches, int32_t);
     ecs_vec_fini_t(NULL, &ir->entries, ecs_script_ir_entry_t);
     ecs_map_fini(&ir->entry_index);
     ecs_vec_fini_t(NULL, &ir->fors, ecs_script_ir_for_t);
@@ -120138,31 +120142,6 @@ static int flecs_ir_script(
 }
 
 #ifdef FLECS_SCRIPT_ASYNC
-static void flecs_ir_throw_clear(
-    ecs_script_ir_vm_t *vm)
-{
-    if (vm->thrown) {
-        ecs_script_future_release(vm->thrown);
-        vm->thrown = NULL;
-    }
-    vm->throw_node = NULL;
-}
-
-static void flecs_ir_report_throw(
-    ecs_script_ir_vm_t *vm)
-{
-    ecs_entity_t error_id = vm->thrown->error_id;
-    const char *msg = vm->thrown->error;
-    if (error_id) {
-        char *path = ecs_get_path(vm->v.world, error_id);
-        flecs_ir_error(vm, vm->throw_node, "%s: %s", path, msg);
-        ecs_os_free(path);
-    } else {
-        flecs_ir_error(vm, vm->throw_node, "%s", msg);
-    }
-    flecs_ir_throw_clear(vm);
-}
-
 static int flecs_ir_await_launch(
     ecs_script_ir_vm_t *vm,
     const ecs_script_ir_op_t *op)
@@ -120191,7 +120170,7 @@ static int flecs_ir_await_launch(
     }
 
     int32_t argc = (op->flags & EcsIrAwaitMethod) ? count - 1 : count;
-    vm->future = flecs_script_future_start(vm->v.world, vm->async_entity,
+    vm->async.future = flecs_script_future_start(vm->v.world, vm->async.entity,
         call->node.type, &call->calldata, argc, argv);
     return 0;
 }
@@ -120204,36 +120183,7 @@ static int flecs_ir_await_assign(
     ecs_script_eval_visitor_t *v = &vm->v;
     const ecs_script_var_node_t *node = op->node;
     if (op->flags & EcsIrAwaitExport) {
-        if (ecs_script_vars_lookup(v->vars, node->name)) {
-            flecs_ir_error(vm, node,
-                "exported variable '%s' shadows a local variable",
-                node->name);
-            return -1;
-        }
-        bool is_mut = node->node.kind == EcsAstExportMut;
-        ecs_entity_t global_var;
-        if (is_mut) {
-            global_var = ecs_mut_var(v->world, {
-                .parent = v->parent,
-                .name = node->name,
-                .type = value->type,
-                .value = value->ptr
-            });
-        } else {
-            global_var = ecs_const_var(v->world, {
-                .parent = v->parent,
-                .name = node->name,
-                .type = value->type,
-                .value = value->ptr
-            });
-        }
-        if (!global_var) {
-            flecs_ir_error(vm, node,
-                "failed to create exported %s variable '%s'",
-                is_mut ? "mut" : "const", node->name);
-            return -1;
-        }
-        return 0;
+        return flecs_script_await_export(v, node, value);
     }
 
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, NULL);
@@ -120251,34 +120201,14 @@ static int flecs_ir_await_poll(
     const ecs_script_ir_op_t *op,
     bool *suspended)
 {
-    const ecs_script_node_t *stmt = op->node;
-    *suspended = false;
-
-    ecs_assert(vm->future != NULL, ECS_INTERNAL_ERROR, NULL);
-    flecs_script_future_state_t state = flecs_script_future_poll(vm->future);
-    if (state == FlecsScriptFuturePending) {
-        *suspended = true;
-        return 0;
+    ecs_script_future_t *future = NULL;
+    int result = flecs_script_await_poll(&vm->v, &vm->async, op->node, &future);
+    *suspended = result == 1;
+    if (result) {
+        return result == 1 ? 0 : -1;
     }
-
-    ecs_script_future_t *future = vm->future;
-    vm->future = NULL;
-
-    if (state == FlecsScriptFutureRejected) {
-        flecs_ir_throw_clear(vm);
-        vm->thrown = future;
-        vm->throw_node = stmt;
-        return -1;
-    }
-
-    int result = 0;
-    if (state == FlecsScriptFutureCancelled) {
-        flecs_ir_error(vm, stmt, "awaited operation was cancelled");
-        result = -1;
-    } else if ((op->flags & EcsIrAwaitVar) &&
-        flecs_ir_await_assign(vm, op, &future->value))
-    {
-        result = -1;
+    if (op->flags & EcsIrAwaitVar) {
+        result = flecs_ir_await_assign(vm, op, &future->value);
     }
 
     ecs_script_future_release(future);
@@ -120289,38 +120219,19 @@ static bool flecs_ir_try_catch(
     ecs_script_ir_vm_t *vm,
     ecs_script_ir_frame_t *frame)
 {
-    if (frame->kind != EcsIrFrameTry || !vm->thrown || frame->state != 1) {
+    if (frame->kind != EcsIrFrameTry || !vm->async.thrown || frame->state != 1) {
         return false;
     }
 
     const ecs_script_ir_op_t *op = &vm->ops[frame->pc];
-    ecs_entity_t throw_id = vm->thrown->error_id;
-    int32_t i, first = op->a, count = op->b;
-    const ecs_script_ir_catch_t *catches = ecs_vec_first(&vm->ir->catches);
-    for (i = 0; i < count; i ++) {
-        const ecs_script_ir_catch_t *c = &catches[first + i];
-        if (c->catch_all) {
-            break;
-        }
-        if (!throw_id) {
-            continue;
-        }
-        ecs_entity_t e = c->error;
-        if (c->symbol != -1) {
-            e = flecs_script_symbol_entity(&vm->v, c->symbol);
-        }
-        if (e == throw_id) {
-            break;
-        }
-    }
-    if (i == count) {
+    int32_t i = flecs_script_find_catch(&vm->v, &vm->async, op->node);
+    if (i == -1) {
         return false;
     }
 
-    flecs_ir_throw_clear(vm);
+    flecs_script_throw_clear(&vm->async);
     frame->state = 2;
-    frame->u.try_.catch_index = i;
-    vm->pc = catches[first + i].pc;
+    vm->pc = ecs_vec_get_t(&vm->ir->catches, int32_t, op->a + i)[0];
     return true;
 }
 #endif
@@ -120744,7 +120655,6 @@ static flecs_script_run_status_t flecs_ir_exec(
                 ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
                     vm, EcsIrFrameTry, pc);
                 frame->state = 1;
-                frame->u.try_.catch_index = -1;
                 break;
             }
 #endif
@@ -120767,7 +120677,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 res = -1;
                 break;
             }
-            if (vm->future) {
+            if (vm->async.future) {
                 vm->pc = op->b;
             }
             break;
@@ -121137,8 +121047,8 @@ static flecs_script_run_status_t flecs_ir_exec(
         if (res) {
             if (!flecs_ir_unwind(vm, base)) {
 #ifdef FLECS_SCRIPT_ASYNC
-                if (vm->thrown && base == 0) {
-                    flecs_ir_report_throw(vm);
+                if (vm->async.thrown && base == 0) {
+                    flecs_script_report_throw(&vm->v, &vm->async);
                 }
 #endif
                 flecs_ir_block_pop(vm);
@@ -121167,10 +121077,7 @@ static void flecs_ir_vm_reset(
     vm->dirty = false;
     vm->can_suspend = false;
 #ifdef FLECS_SCRIPT_ASYNC
-    vm->future = NULL;
-    vm->async_entity = 0;
-    vm->thrown = NULL;
-    vm->throw_node = NULL;
+    ecs_os_zeromem(&vm->async);
 #endif
 }
 
@@ -121219,11 +121126,11 @@ static void flecs_ir_vm_clear(
     }
     vm->vheap.count = 0;
 #ifdef FLECS_SCRIPT_ASYNC
-    if (vm->future) {
-        ecs_script_future_release(vm->future);
-        vm->future = NULL;
+    if (vm->async.future) {
+        ecs_script_future_release(vm->async.future);
+        vm->async.future = NULL;
     }
-    flecs_ir_throw_clear(vm);
+    flecs_script_throw_clear(&vm->async);
 #endif
 }
 
@@ -121389,11 +121296,11 @@ void flecs_script_ir_vm_fini(
 {
     flecs_ir_vm_teardown(vm);
 #ifdef FLECS_SCRIPT_ASYNC
-    if (vm->future) {
-        ecs_script_future_release(vm->future);
-        vm->future = NULL;
+    if (vm->async.future) {
+        ecs_script_future_release(vm->async.future);
+        vm->async.future = NULL;
     }
-    flecs_ir_throw_clear(vm);
+    flecs_script_throw_clear(&vm->async);
 #endif
     flecs_script_eval_visit_fini(&vm->v, desc);
 }
