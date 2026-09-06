@@ -2894,7 +2894,9 @@
                 "conditional_component_w_named_initializer_toggles",
                 "conditional_pair_w_named_initializer_toggles",
                 "conditional_component_w_named_initializer_on_entity",
-                "branch_cleanup_deletes_entity_w_child"
+                "branch_cleanup_deletes_entity_w_child",
+                "sparse_blocks_preserve_ownership",
+                "sparse_blocks_restore_cached_constants"
             ]
         }, {
             "id": "ConstVar",

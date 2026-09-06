@@ -1676,11 +1676,25 @@ static int flecs_irc_compile_scope(
     c->scope_pcs = &stmt_pcs;
 
     int32_t i, count = ecs_vec_count(&scope->stmts);
+    int32_t block = -1, block_first = 0;
+    bool blocks = count >= 32 && !c->force_depth;
     for (i = 0; i < count; i ++) {
         ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
         if (flecs_script_node_is_hoisted(stmts[i])) {
             flecs_irc_entry_add(c, stmts[i], EcsIrEntryEntity);
             continue;
+        }
+        if (blocks && (block == -1 ||
+            ecs_vec_count(&stmt_pcs) - block_first > 32))
+        {
+            if (block != -1) {
+                flecs_irc_op(c, block)->b = flecs_irc_pc(c);
+                flecs_irc_op(c, block)->c =
+                    ecs_vec_count(&stmt_pcs) - block_first - 1;
+            }
+            block_first = ecs_vec_count(&stmt_pcs);
+            block = flecs_irc_emit(c, EcsIrStmtBlock, 0, 0, 0, scope);
+            ecs_vec_append_t(NULL, &stmt_pcs, int32_t)[0] = block;
         }
         if (flecs_irc_compile_stmt(c, scope, i)) {
             c->scope = prev;
@@ -1688,6 +1702,26 @@ static int flecs_irc_compile_scope(
             ecs_vec_fini_t(NULL, &stmt_pcs, int32_t);
             return -1;
         }
+        if (block != -1) {
+            const ecs_script_ir_op_t *stmt_op = flecs_irc_op(
+                c, *ecs_vec_last_t(&stmt_pcs, int32_t));
+            bool always = stmt_op->flags & (EcsIrStmtAlways | EcsIrStmtCached);
+            if (stmt_op->c != -1) {
+                const int32_t *marks = ecs_vec_get_t(
+                    &c->ir->slots, int32_t, stmt_op->c);
+                always |= marks[1] != 0;
+            }
+            ecs_script_ir_op_t *block_op = flecs_irc_op(c, block);
+            block_op->imm.u64 |= stmts[i]->input;
+            if (always) {
+                block_op->flags |= EcsIrStmtAlways;
+            }
+        }
+    }
+
+    if (block != -1) {
+        flecs_irc_op(c, block)->b = flecs_irc_pc(c);
+        flecs_irc_op(c, block)->c = ecs_vec_count(&stmt_pcs) - block_first - 1;
     }
 
     c->scope = prev;

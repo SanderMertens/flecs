@@ -16,6 +16,7 @@ const char* flecs_script_ir_op_name(
     case EcsIrEnd: return "End";
     case EcsIrJump: return "Jump";
     case EcsIrStmt: return "Stmt";
+    case EcsIrStmtBlock: return "StmtBlock";
     case EcsIrMark: return "Mark";
     case EcsIrAnnotClear: return "AnnotClear";
     case EcsIrScopeEnter: return "ScopeEnter";
@@ -200,6 +201,10 @@ void flecs_script_ir_to_buf(
             break;
         case EcsIrConstCached:
             ecs_strbuf_append(buf, "slot=%d else-> %d", op->a, op->b);
+            break;
+        case EcsIrStmtBlock:
+            ecs_strbuf_append(buf, "count=%d input=0x%llx skip-> %d",
+                op->c, (unsigned long long)op->imm.u64, op->b);
             break;
         case EcsIrStmt:
             ecs_strbuf_append(buf, "input=0x%llx skip-> %d",

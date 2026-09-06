@@ -488,6 +488,19 @@ static void flecs_ir_mark(
     ecs_script_ir_vm_t *vm,
     int32_t index)
 {
+    if (index < 0) {
+        const ecs_script_ir_op_t *block = &vm->ops[-index - 1];
+        const int32_t *pcs = ecs_vec_get_t(
+            &vm->ir->scope_stmts, int32_t, block->a + 1);
+        int32_t i;
+        for (i = 0; i < block->c; i ++) {
+            int32_t marks = vm->ops[pcs[i]].c;
+            if (marks != -1) {
+                flecs_ir_mark(vm, marks);
+            }
+        }
+        return;
+    }
     ecs_script_eval_visitor_t *v = &vm->v;
     const int32_t *slots = ecs_vec_get_t(&vm->ir->slots, int32_t, index);
     int32_t i, scope_count = slots[0], for_count = slots[1];
@@ -3146,6 +3159,24 @@ static flecs_script_run_status_t flecs_ir_exec(
         case EcsIrJump:
             vm->pc = op->a;
             break;
+        case EcsIrStmtBlock:
+            if (v->script_entity && !ecs_is_alive(v->world, v->script_entity)) {
+                flecs_ir_unwind(vm, base);
+                flecs_ir_block_pop(vm);
+                return FlecsScriptRunError;
+            }
+            if (!flecs_ir_stmt_runs(vm, op)) {
+                if (vm->dirty) {
+                    flecs_ir_mark(vm, -pc - 1);
+                } else {
+                    ecs_vec_append_t(NULL, &vm->pending_marks, int32_t)[0] = -pc - 1;
+                }
+#ifdef FLECS_SCRIPT_IR_PROFILE
+                flecs_ir_profile_stats[EcsIrProfileStmtSkipped] += op->c;
+#endif
+                vm->pc = op->b;
+            }
+            break;
         case EcsIrStmt: {
             if (v->script_entity && !ecs_is_alive(v->world, v->script_entity)) {
                 flecs_ir_unwind(vm, base);
@@ -3170,6 +3201,10 @@ static flecs_script_run_status_t flecs_ir_exec(
                     break;
                 }
                 const ecs_script_ir_op_t *next_op = &ops[next];
+                if (next_op->kind == EcsIrStmtBlock) {
+                    vm->pc = next;
+                    break;
+                }
                 if (flecs_ir_stmt_runs(vm, next_op)) {
                     flecs_ir_prof(EcsIrProfileStmtRun);
                     vm->pc = next + 1;

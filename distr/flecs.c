@@ -51770,6 +51770,7 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrEnd,
     EcsIrJump,
     EcsIrStmt,
+    EcsIrStmtBlock,
     EcsIrMark,
     EcsIrAnnotClear,
     EcsIrScopeEnter,
@@ -116517,11 +116518,25 @@ static int flecs_irc_compile_scope(
     c->scope_pcs = &stmt_pcs;
 
     int32_t i, count = ecs_vec_count(&scope->stmts);
+    int32_t block = -1, block_first = 0;
+    bool blocks = count >= 32 && !c->force_depth;
     for (i = 0; i < count; i ++) {
         ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
         if (flecs_script_node_is_hoisted(stmts[i])) {
             flecs_irc_entry_add(c, stmts[i], EcsIrEntryEntity);
             continue;
+        }
+        if (blocks && (block == -1 ||
+            ecs_vec_count(&stmt_pcs) - block_first > 32))
+        {
+            if (block != -1) {
+                flecs_irc_op(c, block)->b = flecs_irc_pc(c);
+                flecs_irc_op(c, block)->c =
+                    ecs_vec_count(&stmt_pcs) - block_first - 1;
+            }
+            block_first = ecs_vec_count(&stmt_pcs);
+            block = flecs_irc_emit(c, EcsIrStmtBlock, 0, 0, 0, scope);
+            ecs_vec_append_t(NULL, &stmt_pcs, int32_t)[0] = block;
         }
         if (flecs_irc_compile_stmt(c, scope, i)) {
             c->scope = prev;
@@ -116529,6 +116544,26 @@ static int flecs_irc_compile_scope(
             ecs_vec_fini_t(NULL, &stmt_pcs, int32_t);
             return -1;
         }
+        if (block != -1) {
+            const ecs_script_ir_op_t *stmt_op = flecs_irc_op(
+                c, *ecs_vec_last_t(&stmt_pcs, int32_t));
+            bool always = stmt_op->flags & (EcsIrStmtAlways | EcsIrStmtCached);
+            if (stmt_op->c != -1) {
+                const int32_t *marks = ecs_vec_get_t(
+                    &c->ir->slots, int32_t, stmt_op->c);
+                always |= marks[1] != 0;
+            }
+            ecs_script_ir_op_t *block_op = flecs_irc_op(c, block);
+            block_op->imm.u64 |= stmts[i]->input;
+            if (always) {
+                block_op->flags |= EcsIrStmtAlways;
+            }
+        }
+    }
+
+    if (block != -1) {
+        flecs_irc_op(c, block)->b = flecs_irc_pc(c);
+        flecs_irc_op(c, block)->c = ecs_vec_count(&stmt_pcs) - block_first - 1;
     }
 
     c->scope = prev;
@@ -116809,6 +116844,7 @@ const char* flecs_script_ir_op_name(
     case EcsIrEnd: return "End";
     case EcsIrJump: return "Jump";
     case EcsIrStmt: return "Stmt";
+    case EcsIrStmtBlock: return "StmtBlock";
     case EcsIrMark: return "Mark";
     case EcsIrAnnotClear: return "AnnotClear";
     case EcsIrScopeEnter: return "ScopeEnter";
@@ -116993,6 +117029,10 @@ void flecs_script_ir_to_buf(
             break;
         case EcsIrConstCached:
             ecs_strbuf_append(buf, "slot=%d else-> %d", op->a, op->b);
+            break;
+        case EcsIrStmtBlock:
+            ecs_strbuf_append(buf, "count=%d input=0x%llx skip-> %d",
+                op->c, (unsigned long long)op->imm.u64, op->b);
             break;
         case EcsIrStmt:
             ecs_strbuf_append(buf, "input=0x%llx skip-> %d",
@@ -117782,6 +117822,19 @@ static void flecs_ir_mark(
     ecs_script_ir_vm_t *vm,
     int32_t index)
 {
+    if (index < 0) {
+        const ecs_script_ir_op_t *block = &vm->ops[-index - 1];
+        const int32_t *pcs = ecs_vec_get_t(
+            &vm->ir->scope_stmts, int32_t, block->a + 1);
+        int32_t i;
+        for (i = 0; i < block->c; i ++) {
+            int32_t marks = vm->ops[pcs[i]].c;
+            if (marks != -1) {
+                flecs_ir_mark(vm, marks);
+            }
+        }
+        return;
+    }
     ecs_script_eval_visitor_t *v = &vm->v;
     const int32_t *slots = ecs_vec_get_t(&vm->ir->slots, int32_t, index);
     int32_t i, scope_count = slots[0], for_count = slots[1];
@@ -120439,6 +120492,24 @@ static flecs_script_run_status_t flecs_ir_exec(
         case EcsIrJump:
             vm->pc = op->a;
             break;
+        case EcsIrStmtBlock:
+            if (v->script_entity && !ecs_is_alive(v->world, v->script_entity)) {
+                flecs_ir_unwind(vm, base);
+                flecs_ir_block_pop(vm);
+                return FlecsScriptRunError;
+            }
+            if (!flecs_ir_stmt_runs(vm, op)) {
+                if (vm->dirty) {
+                    flecs_ir_mark(vm, -pc - 1);
+                } else {
+                    ecs_vec_append_t(NULL, &vm->pending_marks, int32_t)[0] = -pc - 1;
+                }
+#ifdef FLECS_SCRIPT_IR_PROFILE
+                flecs_ir_profile_stats[EcsIrProfileStmtSkipped] += op->c;
+#endif
+                vm->pc = op->b;
+            }
+            break;
         case EcsIrStmt: {
             if (v->script_entity && !ecs_is_alive(v->world, v->script_entity)) {
                 flecs_ir_unwind(vm, base);
@@ -120463,6 +120534,10 @@ static flecs_script_run_status_t flecs_ir_exec(
                     break;
                 }
                 const ecs_script_ir_op_t *next_op = &ops[next];
+                if (next_op->kind == EcsIrStmtBlock) {
+                    vm->pc = next;
+                    break;
+                }
                 if (flecs_ir_stmt_runs(vm, next_op)) {
                     flecs_ir_prof(EcsIrProfileStmtRun);
                     vm->pc = next + 1;

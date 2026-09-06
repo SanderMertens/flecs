@@ -8188,3 +8188,113 @@ void Reactivity_branch_cleanup_deletes_entity_w_child(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_sparse_blocks_preserve_ownership(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Mass"}),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+    ecs_entity_t marker = ecs_entity(world, {.name = "Marker"});
+    ecs_entity_t hot = ecs_entity(world, {.name = "hot"});
+    ecs_entity_t cold = ecs_entity(world, {.name = "cold"});
+    ecs_set_id(world, hot, mass, sizeof(Mass), &(Mass){1});
+    ecs_set_id(world, cold, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    for (int i = 0; i < 128; i ++) {
+        if (i == 48) {
+            ecs_strbuf_appendstr(&buf,
+                "if hot[Mass].value > 0 { Active { child {} } }\n");
+        }
+        if (i == 112) {
+            ecs_strbuf_appendstr(&buf,
+                "for i in 0..2 { \"loop_$i\" { Mass: {cold[Mass].value} } }\n");
+        }
+        ecs_strbuf_append(&buf,
+            "e%d { Mass: {cold[Mass].value}; entity: {new { Marker }} }\n", i);
+    }
+    char *code = ecs_strbuf_get(&buf);
+    test_assert(ecs_script(world, {.code = code, .ir = ir_enabled}) != 0);
+    ecs_os_free(code);
+
+    ecs_entity_t entities[128], created[128], loops[2];
+    for (int i = 0; i < 128; i ++) {
+        char name[32];
+        snprintf(name, sizeof(name), "e%d", i);
+        entities[i] = ecs_lookup(world, name);
+        test_assert(entities[i] != 0);
+        const ecs_entity_t *value = ecs_get(world, entities[i], ecs_entity_t);
+        test_assert(value != NULL);
+        created[i] = *value;
+        ecs_set_id(world, entities[i], mass, sizeof(Mass), &(Mass){99});
+    }
+    loops[0] = ecs_lookup(world, "loop_0");
+    loops[1] = ecs_lookup(world, "loop_1");
+    test_assert(loops[0] != 0);
+    test_assert(loops[1] != 0);
+
+    for (int pass = 0; pass < 4; pass ++) {
+        ecs_entity_t active = ecs_lookup(world, "Active");
+        ecs_entity_t child = ecs_lookup(world, "Active.child");
+        ecs_set_id(world, hot, mass, sizeof(Mass), &(Mass){pass % 2});
+        if (pass % 2) {
+            test_assert(ecs_lookup(world, "Active.child") != 0);
+        } else {
+            test_assert(!ecs_is_alive(world, active));
+            test_assert(!ecs_is_alive(world, child));
+            test_uint(ecs_lookup(world, "Active"), 0);
+        }
+        for (int i = 0; i < 128; i ++) {
+            test_assert(ecs_is_alive(world, entities[i]));
+            test_assert(ecs_has_id(world, created[i], marker));
+            const ecs_entity_t *value = ecs_get(world, entities[i], ecs_entity_t);
+            test_assert(value != NULL);
+            test_uint(*value, created[i]);
+            const Mass *m = ecs_get_id(world, entities[i], mass);
+            test_assert(m != NULL);
+            test_int(m->value, 99);
+        }
+        test_uint(ecs_lookup(world, "loop_0"), loops[0]);
+        test_uint(ecs_lookup(world, "loop_1"), loops[1]);
+    }
+    ecs_fini(world);
+}
+
+void Reactivity_sparse_blocks_restore_cached_constants(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Mass"}),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+    ecs_entity_t hot = ecs_entity(world, {.name = "hot"});
+    ecs_entity_t cold = ecs_entity(world, {.name = "cold"});
+    ecs_set_id(world, hot, mass, sizeof(Mass), &(Mass){1});
+    ecs_set_id(world, cold, mass, sizeof(Mass), &(Mass){10});
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    for (int i = 0; i < 96; i ++) {
+        if (i == 40) {
+            ecs_strbuf_appendstr(&buf, "const value = hot[Mass].value * 2\n");
+        }
+        ecs_strbuf_append(&buf, "e%d { Mass: {cold[Mass].value} }\n", i);
+    }
+    ecs_strbuf_appendstr(&buf, "result { Mass: {value + cold[Mass].value} }\n");
+    char *code = ecs_strbuf_get(&buf);
+    test_assert(ecs_script(world, {.code = code, .ir = ir_enabled}) != 0);
+    ecs_os_free(code);
+    ecs_entity_t result = ecs_lookup(world, "result");
+    test_assert(result != 0);
+
+    for (int i = 1; i <= 4; i ++) {
+        ecs_set_id(world, cold, mass, sizeof(Mass), &(Mass){i * 10});
+        const Mass *m = ecs_get_id(world, result, mass);
+        test_assert(m != NULL);
+        test_int(m->value, i * 10 + i * 2);
+        ecs_set_id(world, hot, mass, sizeof(Mass), &(Mass){i + 1});
+        m = ecs_get_id(world, result, mass);
+        test_assert(m != NULL);
+        test_int(m->value, i * 10 + (i + 1) * 2);
+    }
+    ecs_fini(world);
+}
