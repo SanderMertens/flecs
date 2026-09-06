@@ -123852,7 +123852,7 @@ void flecs_script_update_resolve_observers(
     ecs_script_impl_t *impl,
     ecs_vec_t *observers)
 {
-    int32_t i, j, ref_count = ecs_vec_count(&impl->unresolved_refs);
+    int32_t i, ref_count = ecs_vec_count(&impl->unresolved_refs);
     ecs_script_unresolved_ref_t *refs = ecs_vec_first(
         &impl->unresolved_refs);
     int32_t component_ref_count = ecs_vec_count(
@@ -123874,58 +123874,18 @@ void flecs_script_update_resolve_observers(
             component = ecs_id(EcsComponent);
         }
 
-        ecs_script_ref_t *elems = ecs_vec_first(&resolve_refs);
-        int32_t elem_count = ecs_vec_count(&resolve_refs);
-        for (j = 0; j < elem_count; j ++) {
-            if (elems[j].name && elems[j].component == component &&
-                !ecs_os_strcmp(elems[j].name, name))
-            {
-                break;
-            }
-        }
-        if (j != elem_count) {
-            continue;
-        }
-
-        ecs_script_ref_t *ref = ecs_vec_append_t(
-            NULL, &resolve_refs, ecs_script_ref_t);
-        ref->entity = 0;
-        ref->name = name;
-        ref->component = component;
-        ref->observer = 0;
-        ref->input = 0;
-        ref->is_has = false;
-        ref->is_resolve = true;
+        flecs_script_ref_ensure(&resolve_refs, &(ecs_script_ref_t){
+            .name = name,
+            .component = component
+        })->is_resolve = true;
     }
 
     for (i = 0; i < component_ref_count; i ++) {
-        ecs_entity_t entity = component_refs[i].entity;
-        ecs_id_t component = component_refs[i].component;
-        bool is_has = component_refs[i].is_has;
-
-        ecs_script_ref_t *elems = ecs_vec_first(&resolve_refs);
-        int32_t elem_count = ecs_vec_count(&resolve_refs);
-        for (j = 0; j < elem_count; j ++) {
-            if (!elems[j].name && elems[j].entity == entity &&
-                elems[j].component == component &&
-                elems[j].is_has == is_has)
-            {
-                break;
-            }
-        }
-        if (j != elem_count) {
-            continue;
-        }
-
-        ecs_script_ref_t *ref = ecs_vec_append_t(
-            NULL, &resolve_refs, ecs_script_ref_t);
-        ref->entity = entity;
-        ref->name = NULL;
-        ref->component = component;
-        ref->observer = 0;
-        ref->input = 0;
-        ref->is_has = is_has;
-        ref->is_resolve = true;
+        flecs_script_ref_ensure(&resolve_refs, &(ecs_script_ref_t){
+            .entity = component_refs[i].entity,
+            .component = component_refs[i].component,
+            .is_has = component_refs[i].is_has
+        })->is_resolve = true;
     }
 
     if (!ecs_vec_count(&resolve_refs)) {
