@@ -26,7 +26,6 @@ typedef struct ecs_script_type_visitor_t {
     ecs_vec_t entities;
     ecs_vec_t skipped_vars;
     ecs_hashmap_t names;
-    ecs_map_t nodes;
 
     ecs_script_node_t *stmt_node;
     int32_t table;

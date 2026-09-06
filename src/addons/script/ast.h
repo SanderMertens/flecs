@@ -116,6 +116,7 @@ struct ecs_script_entity_t {
     bool name_is_var;
     bool kind_w_expr;
     bool non_fragmenting_parent;
+    int32_t type_index;
     ecs_script_scope_t *scope;
     ecs_expr_node_t *name_expr;
 

@@ -49950,6 +49950,7 @@ struct ecs_script_entity_t {
     bool name_is_var;
     bool kind_w_expr;
     bool non_fragmenting_parent;
+    int32_t type_index;
     ecs_script_scope_t *scope;
     ecs_expr_node_t *name_expr;
 
@@ -51360,7 +51361,6 @@ typedef struct ecs_script_type_visitor_t {
     ecs_vec_t entities;
     ecs_vec_t skipped_vars;
     ecs_hashmap_t names;
-    ecs_map_t nodes;
 
     ecs_script_node_t *stmt_node;
     int32_t table;
@@ -102587,14 +102587,12 @@ static void flecs_script_type_init(
     ecs_vec_init_t(NULL, &t->skipped_vars, const char*, 0);
     flecs_hashmap_init(&t->names, flecs_script_type_name_t, int32_t,
         flecs_script_type_name_hash, flecs_script_type_name_compare, NULL);
-    ecs_map_init(&t->nodes, NULL);
     flecs_script_type_table_new(t, -1, NULL);
 }
 
 static void flecs_script_type_fini(
     ecs_script_type_visitor_t *t)
 {
-    ecs_map_fini(&t->nodes);
     flecs_hashmap_fini(&t->names);
     ecs_vec_fini_t(NULL, &t->skipped_vars, const char*);
     ecs_vec_fini_t(NULL, &t->entities, ecs_script_type_entity_t);
@@ -102816,9 +102814,10 @@ static ecs_script_type_entity_t* flecs_script_type_declare(
         *slot = entity->slot;
         if (node && !entity->node) {
             entity->node = node;
-            *ecs_map_ensure(&t->nodes, (uintptr_t)node) =
-                (uint64_t)(entity - (ecs_script_type_entity_t*)
-                    ecs_vec_first(&t->entities));
+        }
+        if (node && entity->node == node) {
+            node->type_index = (int32_t)(entity -
+                (ecs_script_type_entity_t*)ecs_vec_first(&t->entities)) + 1;
         }
         if (has_scope && entity->child_table == -1) {
             entity->child_table = flecs_script_type_table_new(
@@ -102855,7 +102854,7 @@ static ecs_script_type_entity_t* flecs_script_type_declare(
         *(int32_t*)result.value = index;
     }
     if (node) {
-        *ecs_map_ensure(&t->nodes, (uintptr_t)node) = (uint64_t)index;
+        node->type_index = index + 1;
     }
     *slot = entity->slot;
     if (has_scope) {
@@ -102892,9 +102891,8 @@ static ecs_script_type_entity_t* flecs_script_type_entity_from_node(
     ecs_script_type_visitor_t *t,
     ecs_script_entity_t *node)
 {
-    const uint64_t *index = ecs_map_get(&t->nodes, (uintptr_t)node);
-    return index ? ecs_vec_get_t(
-        &t->entities, ecs_script_type_entity_t, (int32_t)*index) : NULL;
+    return node->type_index ? ecs_vec_get_t(
+        &t->entities, ecs_script_type_entity_t, node->type_index - 1) : NULL;
 }
 
 static int flecs_script_type_lookup(
@@ -104309,6 +104307,7 @@ static int flecs_script_type_entity(
     node->eval_kind = 0;
     node->kind_symbol = -1;
     node->kind_sp = -1;
+    node->type_index = 0;
     ecs_script_type_entity_t *entry = NULL;
     int32_t child_table;
     if (node->name && !node->name_expr) {
