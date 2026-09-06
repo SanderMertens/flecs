@@ -286,28 +286,6 @@ int flecs_script_await_poll(
     return 0;
 }
 
-static int flecs_script_await_args(
-    ecs_script_eval_visitor_t *v,
-    ecs_expr_function_t *call,
-    ecs_value_t *argv)
-{
-    ecs_expr_initializer_element_t *elems = ecs_vec_first(
-        &call->args->elements);
-    int32_t i, count = ecs_vec_count(&call->args->elements);
-    for (i = 0; i < count; i ++) {
-        argv[i] = ecs_value_new(v->world, elems[i].value->type);
-        if (flecs_script_eval_expr(v, &elems[i].value, &argv[i])) {
-            goto error;
-        }
-    }
-    return 0;
-error:
-    for (int32_t j = 0; j <= i; j ++) {
-        ecs_value_fini(v->world, &argv[j]);
-    }
-    return -1;
-}
-
 static int flecs_script_await_start(
     ecs_script_runner_t *r,
     ecs_script_node_t *stmt,
@@ -328,38 +306,37 @@ static int flecs_script_await_start(
         return -1;
     }
 
-    bool is_method = expr->kind == EcsExprMethod;
+    int32_t arg_offset = expr->kind == EcsExprMethod;
     int32_t argc = ecs_vec_count(&call->args->elements);
-    int32_t arg_offset = is_method;
     int32_t value_count = argc + arg_offset;
-    ecs_value_t *argv = NULL;
-    if (value_count) {
-        argv = ecs_os_calloc_n(ecs_value_t, value_count);
-        if (is_method) {
-            argv[0] = ecs_value_new(v->world, call->left->type);
-            if (flecs_script_eval_expr(v, &call->left, &argv[0])) {
-                ecs_value_fini(v->world, &argv[0]);
-                ecs_os_free(argv);
-                return -1;
-            }
-        }
-        if (argc && flecs_script_await_args(v, call, &argv[arg_offset])) {
-            if (is_method) {
-                ecs_value_fini(v->world, &argv[0]);
-            }
-            ecs_os_free(argv);
-            return -1;
+    ecs_value_t *argv = value_count
+        ? ecs_os_alloca_n(ecs_value_t, value_count) : NULL;
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(
+        &call->args->elements);
+    int32_t evaluated = 0;
+    int result = 0;
+    for (int32_t i = 0; i < value_count; i ++) {
+        ecs_expr_node_t **arg = arg_offset && !i
+            ? &call->left : &elems[i - arg_offset].value;
+        argv[i] = ecs_value_new(v->world, (*arg)->type);
+        evaluated ++;
+        if (flecs_script_eval_expr(v, arg, &argv[i])) {
+            result = -1;
+            goto done;
         }
     }
 
     r->async.future = flecs_script_future_start(v->world, r->async.entity,
         call->node.type, &call->calldata, argc, argv);
 
-    for (int32_t i = 0; i < value_count; i ++) {
+done:
+    for (int32_t i = result ? arg_offset : 0; i < evaluated; i ++) {
         ecs_value_fini(v->world, &argv[i]);
     }
-    ecs_os_free(argv);
-    return 0;
+    if (result && arg_offset) {
+        ecs_value_fini(v->world, &argv[0]);
+    }
+    return result;
 }
 
 static int flecs_script_await_assign_const(
@@ -367,7 +344,6 @@ static int flecs_script_await_assign_const(
     ecs_script_var_node_t *node,
     const ecs_value_t *value)
 {
-
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->name);
     if (!var) {
         flecs_script_eval_error(v, node,
