@@ -50798,6 +50798,7 @@ struct ecs_script_runtime_t {
     ecs_vec_t annot;
     ecs_vec_t pending_resolves;
     ecs_vec_t ir_vms;
+    ecs_vec_t call_runtimes;
 
     /* Template instances with changed props whose re-evaluation is deferred
      * until the command queue is flushed. One marker event is enqueued per
@@ -50829,6 +50830,13 @@ struct ecs_script_runtime_t {
 
 ecs_script_runtime_t* flecs_script_runtime_get(
     ecs_world_t *world);
+
+ecs_script_runtime_t* flecs_script_runtime_acquire_call(
+    ecs_script_runtime_t *r);
+
+void flecs_script_runtime_release_call(
+    ecs_script_runtime_t *r,
+    ecs_script_runtime_t *call);
 
 void flecs_script_runtime_error_reset(
     ecs_script_runtime_t *r);
@@ -97933,6 +97941,7 @@ ecs_script_runtime_t* ecs_script_runtime_new(void)
     ecs_vec_init_t(&r->allocator, &r->annot, ecs_script_annot_t*, 0);
     ecs_vec_init_t(&r->allocator, &r->pending_resolves, ecs_entity_t, 0);
     ecs_vec_init_t(NULL, &r->ir_vms, ecs_script_ir_vm_t*, 0);
+    ecs_vec_init_t(NULL, &r->call_runtimes, ecs_script_runtime_t*, 0);
     ecs_vec_init_t(NULL, &r->template_pending,
         ecs_script_template_pending_t, 0);
     return r;
@@ -97941,6 +97950,12 @@ ecs_script_runtime_t* ecs_script_runtime_new(void)
 void ecs_script_runtime_free(
     ecs_script_runtime_t *r)
 {
+    int32_t i, count = ecs_vec_count(&r->call_runtimes);
+    ecs_script_runtime_t **calls = ecs_vec_first(&r->call_runtimes);
+    for (i = 0; i < count; i ++) {
+        ecs_script_runtime_free(calls[i]);
+    }
+    ecs_vec_fini_t(NULL, &r->call_runtimes, ecs_script_runtime_t*);
     flecs_expr_stack_fini(&r->expr_stack);
     flecs_script_ir_vm_pool_fini(r);
     flecs_script_template_pending_fini(&r->template_pending);
@@ -97954,6 +97969,25 @@ void ecs_script_runtime_free(
     ecs_os_free(r->error_name);
     ecs_os_free(r->unresolved_errors);
     ecs_os_free(r);
+}
+
+ecs_script_runtime_t* flecs_script_runtime_acquire_call(
+    ecs_script_runtime_t *r)
+{
+    if (r->call_runtimes.count) {
+        return ((ecs_script_runtime_t**)r->call_runtimes.array)
+            [-- r->call_runtimes.count];
+    }
+    return ecs_script_runtime_new();
+}
+
+void flecs_script_runtime_release_call(
+    ecs_script_runtime_t *r,
+    ecs_script_runtime_t *call)
+{
+    ecs_script_runtime_clear(call);
+    flecs_script_runtime_error_reset(call);
+    ecs_vec_append_t(NULL, &r->call_runtimes, ecs_script_runtime_t*)[0] = call;
 }
 
 void flecs_script_runtime_error_reset(
@@ -100134,7 +100168,10 @@ void flecs_script_user_function_callback(
     }
 
     ecs_script_eval_visitor_t v;
-    ecs_script_eval_desc_t desc = {0};
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    ecs_script_eval_desc_t desc = {
+        .runtime = flecs_script_runtime_acquire_call(runtime)
+    };
     flecs_script_eval_visit_init(impl, &v, &desc);
 
     ecs_allocator_t *a = &v.r->allocator;
@@ -100188,6 +100225,7 @@ void flecs_script_user_function_callback(
 done:
     v.vars = ecs_script_vars_pop(v.vars);
     flecs_script_eval_visit_fini(&v, &desc);
+    flecs_script_runtime_release_call(runtime, desc.runtime);
 
     if (failed) {
         flecs_script_runtime_get(world)->error = true;
@@ -121447,9 +121485,12 @@ void flecs_script_ir_call_function(
         return;
     }
 
-    ecs_script_ir_vm_t *vm = ecs_os_malloc_t(ecs_script_ir_vm_t);
-    ecs_script_eval_desc_t desc = {0};
-    flecs_script_ir_vm_init(vm, impl, &desc);
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    ecs_script_eval_desc_t desc = {
+        .runtime = flecs_script_runtime_acquire_call(runtime)
+    };
+    ecs_script_ir_vm_t *vm = flecs_ir_vm_acquire(desc.runtime, ir);
+    flecs_script_eval_visit_init(impl, &vm->v, &desc);
     ecs_script_eval_visitor_t *v = &vm->v;
 
     ecs_allocator_t *a = &v->r->allocator;
@@ -121488,8 +121529,8 @@ void flecs_script_ir_call_function(
     v->type_visitor = NULL;
 
     v->vars = ecs_script_vars_pop(v->vars);
-    flecs_script_ir_vm_fini(vm, &desc);
-    ecs_os_free(vm);
+    flecs_ir_vm_release(desc.runtime, vm);
+    flecs_script_runtime_release_call(runtime, desc.runtime);
 
     if (failed) {
         flecs_script_runtime_get(world)->error = true;

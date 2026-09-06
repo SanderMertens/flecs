@@ -984,6 +984,8 @@ void Function_fn_w_large_struct_param_no_leak(void);
 void Function_entity_lookup_w_null_path(void);
 void Function_redeclare_function_no_leak(void);
 void Function_redeclare_method_no_leak(void);
+void Function_repeated_nested_calls_with_strings(void);
+void Function_repeated_calls_after_error(void);
 
 // Testsuite 'Template'
 void Template_setup(void);
@@ -7137,6 +7139,14 @@ bake_test_case Function_testcases[] = {
     {
         "redeclare_method_no_leak",
         Function_redeclare_method_no_leak
+    },
+    {
+        "repeated_nested_calls_with_strings",
+        Function_repeated_nested_calls_with_strings
+    },
+    {
+        "repeated_calls_after_error",
+        Function_repeated_calls_after_error
     }
 };
 
@@ -16290,7 +16300,7 @@ static bake_test_suite suites[] = {
         "Function",
         Function_setup,
         NULL,
-        83,
+        85,
         Function_testcases,
         1,
         Function_params

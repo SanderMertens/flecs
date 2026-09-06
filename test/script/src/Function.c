@@ -2262,3 +2262,46 @@ void Function_redeclare_method_no_leak(void) {
 
     ecs_fini(world);
 }
+
+void Function_repeated_nested_calls_with_strings(void) {
+    ecs_world_t *world = ecs_init();
+    test_int(ecs_script_run_w_desc(world, NULL,
+        "fn inner(s: string) -> string { \"{s}!\" }\n"
+        "fn outer(s: string) -> string { inner(inner(s)) }",
+        &ir_desc, NULL), 0);
+    ecs_entity_t function = ecs_lookup(world, "outer");
+    test_assert(function != 0);
+    for (int i = 0; i < 100; i ++) {
+        ecs_string_t text = i % 2 ? "second" : "first";
+        ecs_value_t arg = {ecs_id(ecs_string_t), &text};
+        ecs_value_t result = {0};
+        test_int(ecs_function_call(world, function, 1, &arg, &result), 0);
+        test_str(*(char**)result.ptr, i % 2 ? "second!!" : "first!!");
+        ecs_value_fini(world, &result);
+    }
+    ecs_fini(world);
+}
+
+void Function_repeated_calls_after_error(void) {
+    ecs_world_t *world = ecs_init();
+    test_int(ecs_script_run_w_desc(world, NULL,
+        "fn pick(i: i32) -> string { match i { 1: \"ok\" } }",
+        &ir_desc, NULL), 0);
+    ecs_entity_t function = ecs_lookup(world, "pick");
+    test_assert(function != 0);
+    ecs_log_set_level(-4);
+    for (int i = 0; i < 100; i ++) {
+        int32_t input = i % 2;
+        ecs_value_t arg = {ecs_id(ecs_i32_t), &input};
+        ecs_value_t result = {0};
+        int status = ecs_function_call(world, function, 1, &arg, &result);
+        if (input) {
+            test_int(status, 0);
+            test_str(*(char**)result.ptr, "ok");
+        } else {
+            test_assert(status != 0);
+        }
+        ecs_value_fini(world, &result);
+    }
+    ecs_fini(world);
+}

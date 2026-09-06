@@ -16,6 +16,7 @@ struct ecs_script_runtime_t {
     ecs_vec_t annot;
     ecs_vec_t pending_resolves;
     ecs_vec_t ir_vms;
+    ecs_vec_t call_runtimes;
 
     /* Template instances with changed props whose re-evaluation is deferred
      * until the command queue is flushed. One marker event is enqueued per
@@ -47,6 +48,13 @@ struct ecs_script_runtime_t {
 
 ecs_script_runtime_t* flecs_script_runtime_get(
     ecs_world_t *world);
+
+ecs_script_runtime_t* flecs_script_runtime_acquire_call(
+    ecs_script_runtime_t *r);
+
+void flecs_script_runtime_release_call(
+    ecs_script_runtime_t *r,
+    ecs_script_runtime_t *call);
 
 void flecs_script_runtime_error_reset(
     ecs_script_runtime_t *r);

@@ -4192,9 +4192,12 @@ void flecs_script_ir_call_function(
         return;
     }
 
-    ecs_script_ir_vm_t *vm = ecs_os_malloc_t(ecs_script_ir_vm_t);
-    ecs_script_eval_desc_t desc = {0};
-    flecs_script_ir_vm_init(vm, impl, &desc);
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    ecs_script_eval_desc_t desc = {
+        .runtime = flecs_script_runtime_acquire_call(runtime)
+    };
+    ecs_script_ir_vm_t *vm = flecs_ir_vm_acquire(desc.runtime, ir);
+    flecs_script_eval_visit_init(impl, &vm->v, &desc);
     ecs_script_eval_visitor_t *v = &vm->v;
 
     ecs_allocator_t *a = &v->r->allocator;
@@ -4233,8 +4236,8 @@ void flecs_script_ir_call_function(
     v->type_visitor = NULL;
 
     v->vars = ecs_script_vars_pop(v->vars);
-    flecs_script_ir_vm_fini(vm, &desc);
-    ecs_os_free(vm);
+    flecs_ir_vm_release(desc.runtime, vm);
+    flecs_script_runtime_release_call(runtime, desc.runtime);
 
     if (failed) {
         flecs_script_runtime_get(world)->error = true;

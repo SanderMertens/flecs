@@ -1010,7 +1010,9 @@
                 "fn_w_large_struct_param_no_leak",
                 "entity_lookup_w_null_path",
                 "redeclare_function_no_leak",
-                "redeclare_method_no_leak"
+                "redeclare_method_no_leak",
+                "repeated_nested_calls_with_strings",
+                "repeated_calls_after_error"
             ]
         }, {
             "id": "Template",

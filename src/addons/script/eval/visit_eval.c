@@ -1913,7 +1913,10 @@ void flecs_script_user_function_callback(
     }
 
     ecs_script_eval_visitor_t v;
-    ecs_script_eval_desc_t desc = {0};
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    ecs_script_eval_desc_t desc = {
+        .runtime = flecs_script_runtime_acquire_call(runtime)
+    };
     flecs_script_eval_visit_init(impl, &v, &desc);
 
     ecs_allocator_t *a = &v.r->allocator;
@@ -1967,6 +1970,7 @@ void flecs_script_user_function_callback(
 done:
     v.vars = ecs_script_vars_pop(v.vars);
     flecs_script_eval_visit_fini(&v, &desc);
+    flecs_script_runtime_release_call(runtime, desc.runtime);
 
     if (failed) {
         flecs_script_runtime_get(world)->error = true;
