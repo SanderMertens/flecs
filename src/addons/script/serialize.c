@@ -439,9 +439,6 @@ static int flecs_expr_ser_type_ops(
                 goto error;
             }
             break;
-        case EcsOpScope:
-        case EcsOpPrimitive:
-        case EcsOpPop:
         default:
             ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
         }

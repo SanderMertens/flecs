@@ -92,7 +92,6 @@ static int32_t flecs_irc_entry_add(
     entry->node = node;
     entry->kind = kind;
     entry->pc = -1;
-    entry->reg_first = 0;
     entry->reg_count = 0;
     entry->for_first = 0;
     entry->for_count = 0;

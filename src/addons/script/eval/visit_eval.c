@@ -2610,22 +2610,6 @@ static void flecs_script_frame_leave(
         break;
     case EcsAstTry:
         break;
-    case EcsAstTag:
-    case EcsAstComponent:
-    case EcsAstWithTag:
-    case EcsAstWithComponent:
-    case EcsAstUsing:
-    case EcsAstModule:
-    case EcsAstAnnotation:
-    case EcsAstTemplate:
-    case EcsAstProp:
-    case EcsAstMut:
-    case EcsAstConst:
-    case EcsAstExportConst:
-    case EcsAstExportMut:
-    case EcsAstInclude:
-    case EcsAstFunction:
-    case EcsAstAwait:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "corrupt script frame node");
     }
@@ -2736,22 +2720,6 @@ static flecs_script_run_status_t flecs_script_runner_exec(
             res = flecs_script_step_try(r, frame);
             break;
 #endif
-        case EcsAstTag:
-        case EcsAstComponent:
-        case EcsAstWithTag:
-        case EcsAstWithComponent:
-        case EcsAstUsing:
-        case EcsAstModule:
-        case EcsAstAnnotation:
-        case EcsAstTemplate:
-        case EcsAstProp:
-        case EcsAstMut:
-        case EcsAstConst:
-        case EcsAstExportConst:
-        case EcsAstExportMut:
-        case EcsAstInclude:
-        case EcsAstFunction:
-        case EcsAstAwait:
         default:
             ecs_abort(ECS_INTERNAL_ERROR, "corrupt script frame node");
         }

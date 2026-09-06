@@ -7,7 +7,6 @@
 #define FLECS_SCRIPT_IR_H
 
 typedef enum ecs_script_ir_op_kind_t {
-    EcsIrNop,
     EcsIrEnd,
     EcsIrJump,
     EcsIrStmt,
@@ -46,10 +45,8 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrAnnot,
     EcsIrTemplate,
     EcsIrMutCheck,
-    EcsIrConstBegin,
     EcsIrConstEnd,
     EcsIrConstCached,
-    EcsIrConstError,
     EcsIrExprBegin,
     EcsIrExprEnd,
     EcsIrLoadConst,
@@ -203,7 +200,6 @@ typedef struct ecs_script_ir_entry_t {
     const void *node;
     ecs_script_ir_entry_kind_t kind;
     int32_t pc;
-    int32_t reg_first;
     int32_t reg_count;
     int32_t for_first;
     int32_t for_count;

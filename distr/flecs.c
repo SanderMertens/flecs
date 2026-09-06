@@ -51805,7 +51805,6 @@ int flecs_script_analyze_dependencies(
 #define FLECS_SCRIPT_IR_H
 
 typedef enum ecs_script_ir_op_kind_t {
-    EcsIrNop,
     EcsIrEnd,
     EcsIrJump,
     EcsIrStmt,
@@ -51844,10 +51843,8 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrAnnot,
     EcsIrTemplate,
     EcsIrMutCheck,
-    EcsIrConstBegin,
     EcsIrConstEnd,
     EcsIrConstCached,
-    EcsIrConstError,
     EcsIrExprBegin,
     EcsIrExprEnd,
     EcsIrLoadConst,
@@ -52001,7 +51998,6 @@ typedef struct ecs_script_ir_entry_t {
     const void *node;
     ecs_script_ir_entry_kind_t kind;
     int32_t pc;
-    int32_t reg_first;
     int32_t reg_count;
     int32_t for_first;
     int32_t for_count;
@@ -75779,9 +75775,6 @@ static int flecs_expr_ser_type_ops(
                 goto error;
             }
             break;
-        case EcsOpScope:
-        case EcsOpPrimitive:
-        case EcsOpPop:
         default:
             ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
         }
@@ -100838,22 +100831,6 @@ static void flecs_script_frame_leave(
         break;
     case EcsAstTry:
         break;
-    case EcsAstTag:
-    case EcsAstComponent:
-    case EcsAstWithTag:
-    case EcsAstWithComponent:
-    case EcsAstUsing:
-    case EcsAstModule:
-    case EcsAstAnnotation:
-    case EcsAstTemplate:
-    case EcsAstProp:
-    case EcsAstMut:
-    case EcsAstConst:
-    case EcsAstExportConst:
-    case EcsAstExportMut:
-    case EcsAstInclude:
-    case EcsAstFunction:
-    case EcsAstAwait:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "corrupt script frame node");
     }
@@ -100964,22 +100941,6 @@ static flecs_script_run_status_t flecs_script_runner_exec(
             res = flecs_script_step_try(r, frame);
             break;
 #endif
-        case EcsAstTag:
-        case EcsAstComponent:
-        case EcsAstWithTag:
-        case EcsAstWithComponent:
-        case EcsAstUsing:
-        case EcsAstModule:
-        case EcsAstAnnotation:
-        case EcsAstTemplate:
-        case EcsAstProp:
-        case EcsAstMut:
-        case EcsAstConst:
-        case EcsAstExportConst:
-        case EcsAstExportMut:
-        case EcsAstInclude:
-        case EcsAstFunction:
-        case EcsAstAwait:
         default:
             ecs_abort(ECS_INTERNAL_ERROR, "corrupt script frame node");
         }
@@ -107426,52 +107387,6 @@ int flecs_value_binary(
     case EcsTokMulAssign:
         ECS_BINARY_ASSIGN_OP(left, right, out, *=);
         break;
-    case EcsTokEnd:
-    case EcsTokUnknown:
-    case EcsTokScopeOpen:
-    case EcsTokScopeClose:
-    case EcsTokParenOpen:
-    case EcsTokParenClose:
-    case EcsTokBracketOpen:
-    case EcsTokBracketClose:
-    case EcsTokHasBracketOpen:
-    case EcsTokMember:
-    case EcsTokComma:
-    case EcsTokSemiColon:
-    case EcsTokColon:
-    case EcsTokAssign:
-    case EcsTokNot:
-    case EcsTokOptional:
-    case EcsTokAnnotation:
-    case EcsTokNewline:
-    case EcsTokMatch:
-    case EcsTokRange:
-    case EcsTokIdentifier:
-    case EcsTokFunction:
-    case EcsTokString:
-    case EcsTokChar:
-    case EcsTokNumber:
-    case EcsTokKeywordModule:
-    case EcsTokKeywordUsing:
-    case EcsTokKeywordWith:
-    case EcsTokKeywordIf:
-    case EcsTokKeywordElse:
-    case EcsTokKeywordFor:
-    case EcsTokKeywordIn:
-    case EcsTokKeywordTemplate:
-    case EcsTokKeywordMatch:
-    case EcsTokKeywordNew:
-    case EcsTokKeywordExport:
-    case EcsTokKeywordProp:
-    case EcsTokKeywordMut:
-    case EcsTokKeywordConst:
-    case EcsTokKeywordInclude:
-    case EcsTokKeywordFn:
-    case EcsTokKeywordAwait:
-    case EcsTokKeywordScript:
-    case EcsTokKeywordTry:
-    case EcsTokKeywordCatch:
-    case EcsTokArrow:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
     }
@@ -111502,52 +111417,6 @@ static bool flecs_expr_oper_valid_for_type(
             (type == ecs_id(ecs_bool_t)) ||
             (type == ecs_id(ecs_char_t)) ||
             (type == ecs_id(ecs_entity_t));
-    case EcsTokUnknown:
-    case EcsTokScopeOpen:
-    case EcsTokScopeClose:
-    case EcsTokParenOpen:
-    case EcsTokParenClose:
-    case EcsTokBracketOpen:
-    case EcsTokBracketClose:
-    case EcsTokHasBracketOpen:
-    case EcsTokMember:
-    case EcsTokComma:
-    case EcsTokSemiColon:
-    case EcsTokColon:
-    case EcsTokAssign:
-    case EcsTokNot:
-    case EcsTokOptional:
-    case EcsTokAnnotation:
-    case EcsTokNewline:
-    case EcsTokMatch:
-    case EcsTokRange:
-    case EcsTokIdentifier:
-    case EcsTokFunction:
-    case EcsTokChar:
-    case EcsTokString:
-    case EcsTokNumber:
-    case EcsTokKeywordModule:
-    case EcsTokKeywordUsing:
-    case EcsTokKeywordWith:
-    case EcsTokKeywordIf:
-    case EcsTokKeywordElse:
-    case EcsTokKeywordFor:
-    case EcsTokKeywordIn:
-    case EcsTokKeywordMatch:
-    case EcsTokKeywordNew:
-    case EcsTokKeywordExport:
-    case EcsTokKeywordTemplate:
-    case EcsTokKeywordProp:
-    case EcsTokKeywordMut:
-    case EcsTokKeywordConst:
-    case EcsTokKeywordInclude:
-    case EcsTokKeywordFn:
-    case EcsTokKeywordAwait:
-    case EcsTokKeywordScript:
-    case EcsTokKeywordTry:
-    case EcsTokKeywordCatch:
-    case EcsTokArrow:
-    case EcsTokEnd:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
@@ -111655,54 +111524,6 @@ static int flecs_expr_type_for_operator(
     case EcsTokSub:
     case EcsTokMul:
         break;
-    case EcsTokAddAssign:
-    case EcsTokMulAssign:
-    case EcsTokUnknown:
-    case EcsTokScopeOpen:
-    case EcsTokScopeClose:
-    case EcsTokParenOpen:
-    case EcsTokParenClose:
-    case EcsTokBracketOpen:
-    case EcsTokBracketClose:
-    case EcsTokHasBracketOpen:
-    case EcsTokMember:
-    case EcsTokComma:
-    case EcsTokSemiColon:
-    case EcsTokColon:
-    case EcsTokAssign:
-    case EcsTokNot:
-    case EcsTokOptional:
-    case EcsTokAnnotation:
-    case EcsTokNewline:
-    case EcsTokMatch:
-    case EcsTokRange:
-    case EcsTokIdentifier:
-    case EcsTokFunction:
-    case EcsTokChar:
-    case EcsTokString:
-    case EcsTokNumber:
-    case EcsTokKeywordModule:
-    case EcsTokKeywordUsing:
-    case EcsTokKeywordWith:
-    case EcsTokKeywordIf:
-    case EcsTokKeywordElse:
-    case EcsTokKeywordFor:
-    case EcsTokKeywordIn:
-    case EcsTokKeywordMatch:
-    case EcsTokKeywordNew:
-    case EcsTokKeywordExport:
-    case EcsTokKeywordTemplate:
-    case EcsTokKeywordProp:
-    case EcsTokKeywordMut:
-    case EcsTokKeywordConst:
-    case EcsTokKeywordInclude:
-    case EcsTokKeywordFn:
-    case EcsTokKeywordAwait:
-    case EcsTokKeywordScript:
-    case EcsTokKeywordTry:
-    case EcsTokKeywordCatch:
-    case EcsTokArrow:
-    case EcsTokEnd:
     default:
         ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
     }
@@ -114738,7 +114559,6 @@ static int32_t flecs_irc_entry_add(
     entry->node = node;
     entry->kind = kind;
     entry->pc = -1;
-    entry->reg_first = 0;
     entry->reg_count = 0;
     entry->for_first = 0;
     entry->for_count = 0;
@@ -116487,7 +116307,6 @@ const char* flecs_script_ir_op_name(
     ecs_script_ir_op_kind_t kind)
 {
     switch(kind) {
-    case EcsIrNop: return "Nop";
     case EcsIrEnd: return "End";
     case EcsIrJump: return "Jump";
     case EcsIrStmt: return "Stmt";
@@ -116526,10 +116345,8 @@ const char* flecs_script_ir_op_name(
     case EcsIrAnnot: return "Annot";
     case EcsIrTemplate: return "Template";
     case EcsIrMutCheck: return "MutCheck";
-    case EcsIrConstBegin: return "ConstBegin";
     case EcsIrConstEnd: return "ConstEnd";
     case EcsIrConstCached: return "ConstCached";
-    case EcsIrConstError: return "ConstError";
     case EcsIrExprBegin: return "ExprBegin";
     case EcsIrExprEnd: return "ExprEnd";
     case EcsIrLoadConst: return "LoadConst";
@@ -116960,7 +116777,6 @@ void flecs_script_ir_to_buf(
         case EcsIrScript:
             ecs_strbuf_append(buf, "r%d", op->a);
             break;
-        case EcsIrNop:
         case EcsIrEnd:
         case EcsIrAnnotClear:
         case EcsIrScopeLeave:
@@ -116975,8 +116791,6 @@ void flecs_script_ir_to_buf(
         case EcsIrTryLeave:
         case EcsIrAwaitPoll:
         case EcsIrMutCheck:
-        case EcsIrConstBegin:
-        case EcsIrConstError:
         case EcsIrExprEnd:
         case EcsIrDynPush:
         case EcsIrDynPop:
@@ -120004,8 +119818,6 @@ static flecs_script_run_status_t flecs_ir_exec(
 #endif
 
         switch((ecs_script_ir_op_kind_t)op->kind) {
-        case EcsIrNop:
-            break;
         case EcsIrEnd:
         case EcsIrReturn: {
             if (op->kind == EcsIrReturn) {
@@ -120407,9 +120219,6 @@ static flecs_script_run_status_t flecs_ir_exec(
                     "mut variables are only allowed in templates");
                 res = -1;
             }
-            break;
-        case EcsIrConstBegin:
-        case EcsIrConstError:
             break;
         case EcsIrConstEnd:
             res = flecs_ir_const_end(vm, op);

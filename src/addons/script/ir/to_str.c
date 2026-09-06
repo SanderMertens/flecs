@@ -12,7 +12,6 @@ const char* flecs_script_ir_op_name(
     ecs_script_ir_op_kind_t kind)
 {
     switch(kind) {
-    case EcsIrNop: return "Nop";
     case EcsIrEnd: return "End";
     case EcsIrJump: return "Jump";
     case EcsIrStmt: return "Stmt";
@@ -51,10 +50,8 @@ const char* flecs_script_ir_op_name(
     case EcsIrAnnot: return "Annot";
     case EcsIrTemplate: return "Template";
     case EcsIrMutCheck: return "MutCheck";
-    case EcsIrConstBegin: return "ConstBegin";
     case EcsIrConstEnd: return "ConstEnd";
     case EcsIrConstCached: return "ConstCached";
-    case EcsIrConstError: return "ConstError";
     case EcsIrExprBegin: return "ExprBegin";
     case EcsIrExprEnd: return "ExprEnd";
     case EcsIrLoadConst: return "LoadConst";
@@ -485,7 +482,6 @@ void flecs_script_ir_to_buf(
         case EcsIrScript:
             ecs_strbuf_append(buf, "r%d", op->a);
             break;
-        case EcsIrNop:
         case EcsIrEnd:
         case EcsIrAnnotClear:
         case EcsIrScopeLeave:
@@ -500,8 +496,6 @@ void flecs_script_ir_to_buf(
         case EcsIrTryLeave:
         case EcsIrAwaitPoll:
         case EcsIrMutCheck:
-        case EcsIrConstBegin:
-        case EcsIrConstError:
         case EcsIrExprEnd:
         case EcsIrDynPush:
         case EcsIrDynPop:

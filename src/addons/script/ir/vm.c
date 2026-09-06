@@ -3021,8 +3021,6 @@ static flecs_script_run_status_t flecs_ir_exec(
 #endif
 
         switch((ecs_script_ir_op_kind_t)op->kind) {
-        case EcsIrNop:
-            break;
         case EcsIrEnd:
         case EcsIrReturn: {
             if (op->kind == EcsIrReturn) {
@@ -3424,9 +3422,6 @@ static flecs_script_run_status_t flecs_ir_exec(
                     "mut variables are only allowed in templates");
                 res = -1;
             }
-            break;
-        case EcsIrConstBegin:
-        case EcsIrConstError:
             break;
         case EcsIrConstEnd:
             res = flecs_ir_const_end(vm, op);
