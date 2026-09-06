@@ -222,6 +222,7 @@ struct ecs_script_ir_t {
     ecs_vec_t slots;
     ecs_vec_t catches;
     ecs_vec_t entries;
+    ecs_map_t entry_index;
     ecs_vec_t fors;
     ecs_vec_t components;
     ecs_vec_t scope_stmts;

@@ -83,13 +83,12 @@ static int32_t flecs_irc_entry_add(
     const void *node,
     ecs_script_ir_entry_kind_t kind)
 {
-    ecs_script_ir_entry_t *entries = ecs_vec_first(&c->ir->entries);
-    int32_t i, count = ecs_vec_count(&c->ir->entries);
-    for (i = 0; i < count; i ++) {
-        if (entries[i].node == node) {
-            return i;
-        }
+    const uint64_t *existing = ecs_map_get(
+        &c->ir->entry_index, (uintptr_t)node);
+    if (existing) {
+        return (int32_t)*existing;
     }
+    int32_t count = ecs_vec_count(&c->ir->entries);
     ecs_script_ir_entry_t *entry = ecs_vec_append_t(
         NULL, &c->ir->entries, ecs_script_ir_entry_t);
     entry->node = node;
@@ -99,6 +98,7 @@ static int32_t flecs_irc_entry_add(
     entry->reg_count = 0;
     entry->for_first = 0;
     entry->for_count = 0;
+    ecs_map_insert(&c->ir->entry_index, (uintptr_t)node, (uint64_t)count);
     return count;
 }
 
@@ -1887,6 +1887,7 @@ static void flecs_irc_init(
     ecs_vec_init_t(NULL, &ir->slots, int32_t, 0);
     ecs_vec_init_t(NULL, &ir->catches, ecs_script_ir_catch_t, 0);
     ecs_vec_init_t(NULL, &ir->entries, ecs_script_ir_entry_t, 0);
+    ecs_map_init(&ir->entry_index, NULL);
     ecs_vec_init_t(NULL, &ir->fors, ecs_script_ir_for_t, 0);
     ecs_vec_init_t(NULL, &ir->components, ecs_id_t, 0);
     ecs_vec_init_t(NULL, &ir->scope_stmts, int32_t, 0);
@@ -1904,6 +1905,7 @@ void flecs_script_ir_free(
     ecs_vec_fini_t(NULL, &ir->slots, int32_t);
     ecs_vec_fini_t(NULL, &ir->catches, ecs_script_ir_catch_t);
     ecs_vec_fini_t(NULL, &ir->entries, ecs_script_ir_entry_t);
+    ecs_map_fini(&ir->entry_index);
     ecs_vec_fini_t(NULL, &ir->fors, ecs_script_ir_for_t);
     ecs_vec_fini_t(NULL, &ir->components, ecs_id_t);
     ecs_vec_fini_t(NULL, &ir->scope_stmts, int32_t);
@@ -1954,14 +1956,9 @@ const ecs_script_ir_entry_t* flecs_script_ir_entry(
     const ecs_script_ir_t *ir,
     const void *node)
 {
-    const ecs_script_ir_entry_t *entries = ecs_vec_first(&ir->entries);
-    int32_t i, count = ecs_vec_count(&ir->entries);
-    for (i = 0; i < count; i ++) {
-        if (entries[i].node == node) {
-            return &entries[i];
-        }
-    }
-    return NULL;
+    const uint64_t *index = ecs_map_get(&ir->entry_index, (uintptr_t)node);
+    return index ? ecs_vec_get_t(
+        &ir->entries, ecs_script_ir_entry_t, (int32_t)*index) : NULL;
 }
 
 #endif
