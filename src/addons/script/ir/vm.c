@@ -2863,27 +2863,6 @@ static int flecs_ir_await_launch(
     return 0;
 }
 
-static int flecs_ir_await_assign(
-    ecs_script_ir_vm_t *vm,
-    const ecs_script_ir_op_t *op,
-    const ecs_value_t *value)
-{
-    ecs_script_eval_visitor_t *v = &vm->v;
-    const ecs_script_var_node_t *node = op->node;
-    if (op->flags & EcsIrAwaitExport) {
-        return flecs_script_await_export(v, node, value);
-    }
-
-    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, NULL);
-    const ecs_type_info_t *ti = ecs_get_type_info(v->world, value->type);
-    var->value.type = value->type;
-    var->value.ptr = flecs_ir_var_alloc(vm, ti);
-    var->type_info = ti;
-    var->owned = true;
-    ecs_ptr_copy(v->world, value->type, var->value.ptr, value->ptr);
-    return 0;
-}
-
 static int flecs_ir_await_poll(
     ecs_script_ir_vm_t *vm,
     const ecs_script_ir_op_t *op,
@@ -2896,7 +2875,15 @@ static int flecs_ir_await_poll(
         return result == 1 ? 0 : -1;
     }
     if (op->flags & EcsIrAwaitVar) {
-        result = flecs_ir_await_assign(vm, op, &future->value);
+        ecs_script_eval_visitor_t *v = &vm->v;
+        const ecs_value_t *value = &future->value;
+        ecs_script_var_t *var = ecs_script_vars_declare(v->vars, NULL);
+        const ecs_type_info_t *ti = ecs_get_type_info(v->world, value->type);
+        var->value.type = value->type;
+        var->value.ptr = flecs_ir_var_alloc(vm, ti);
+        var->type_info = ti;
+        var->owned = true;
+        ecs_ptr_copy(v->world, value->type, var->value.ptr, value->ptr);
     }
 
     ecs_script_future_release(future);

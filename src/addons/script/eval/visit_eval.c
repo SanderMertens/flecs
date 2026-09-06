@@ -2381,8 +2381,7 @@ static int flecs_script_step_scope(
         }
 
         if (stmt->kind == EcsAstAwait ||
-            ((stmt->kind == EcsAstConst || stmt->kind == EcsAstExportConst ||
-              stmt->kind == EcsAstExportMut) &&
+            (stmt->kind == EcsAstConst &&
                 ((ecs_script_var_node_t*)stmt)->is_await))
         {
             ecs_assert(v->base.depth < ECS_SCRIPT_VISIT_MAX_DEPTH,

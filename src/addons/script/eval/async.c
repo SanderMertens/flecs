@@ -286,44 +286,6 @@ int flecs_script_await_poll(
     return 0;
 }
 
-int flecs_script_await_export(
-    ecs_script_eval_visitor_t *v,
-    const ecs_script_var_node_t *node,
-    const ecs_value_t *value)
-{
-    if (ecs_script_vars_lookup(v->vars, node->name)) {
-        flecs_script_eval_error(v, node,
-            "exported variable '%s' shadows a local variable",
-            node->name);
-        return -1;
-    }
-
-    bool is_mut = node->node.kind == EcsAstExportMut;
-    ecs_entity_t global_var;
-    if (is_mut) {
-        global_var = ecs_mut_var(v->world, {
-            .parent = v->parent,
-            .name = node->name,
-            .type = value->type,
-            .value = value->ptr
-        });
-    } else {
-        global_var = ecs_const_var(v->world, {
-            .parent = v->parent,
-            .name = node->name,
-            .type = value->type,
-            .value = value->ptr
-        });
-    }
-    if (!global_var) {
-        flecs_script_eval_error(v, node,
-            "failed to create exported %s variable '%s'",
-            is_mut ? "mut" : "const", node->name);
-        return -1;
-    }
-    return 0;
-}
-
 static int flecs_script_await_args(
     ecs_script_eval_visitor_t *v,
     ecs_expr_function_t *call,
@@ -403,12 +365,8 @@ static int flecs_script_await_start(
 static int flecs_script_await_assign_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node,
-    const ecs_value_t *value,
-    bool export)
+    const ecs_value_t *value)
 {
-    if (export) {
-        return flecs_script_await_export(v, node, value);
-    }
 
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->name);
     if (!var) {
@@ -462,15 +420,12 @@ int flecs_script_step_await(
     ecs_script_eval_visitor_t *v = &r->v;
     ecs_expr_node_t **expr;
     ecs_script_var_node_t *var = NULL;
-    bool export = false;
 
     if (stmt->kind == EcsAstAwait) {
         expr = &((ecs_script_await_t*)stmt)->expr;
     } else {
         var = (ecs_script_var_node_t*)stmt;
         expr = &var->expr;
-        export = stmt->kind == EcsAstExportConst ||
-            stmt->kind == EcsAstExportMut;
     }
 
     if (!r->can_suspend) {
@@ -491,7 +446,7 @@ int flecs_script_step_await(
         return result;
     }
     if (var) {
-        result = flecs_script_await_assign_const(v, var, &future->value, export);
+        result = flecs_script_await_assign_const(v, var, &future->value);
     }
 
     ecs_script_future_release(future);

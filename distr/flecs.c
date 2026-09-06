@@ -51443,11 +51443,6 @@ int flecs_script_await_poll(
     const ecs_script_node_t *stmt,
     ecs_script_future_t **ready);
 
-int flecs_script_await_export(
-    ecs_script_eval_visitor_t *v,
-    const ecs_script_var_node_t *node,
-    const ecs_value_t *value);
-
 void flecs_script_throw_clear(
     flecs_script_async_state_t *state);
 
@@ -51897,7 +51892,6 @@ typedef enum ecs_script_ir_op_kind_t {
 #define EcsIrCallMethod      (1u << 1)
 #define EcsIrAwaitMethod     (1u << 0)
 #define EcsIrAwaitVar        (1u << 1)
-#define EcsIrAwaitExport     (1u << 2)
 #define EcsIrAnnotNoTarget   (1u << 0)
 #define EcsIrAnnotBadTarget  (1u << 1)
 #define EcsIrComponentInterface (1u << 1)
@@ -97215,44 +97209,6 @@ int flecs_script_await_poll(
     return 0;
 }
 
-int flecs_script_await_export(
-    ecs_script_eval_visitor_t *v,
-    const ecs_script_var_node_t *node,
-    const ecs_value_t *value)
-{
-    if (ecs_script_vars_lookup(v->vars, node->name)) {
-        flecs_script_eval_error(v, node,
-            "exported variable '%s' shadows a local variable",
-            node->name);
-        return -1;
-    }
-
-    bool is_mut = node->node.kind == EcsAstExportMut;
-    ecs_entity_t global_var;
-    if (is_mut) {
-        global_var = ecs_mut_var(v->world, {
-            .parent = v->parent,
-            .name = node->name,
-            .type = value->type,
-            .value = value->ptr
-        });
-    } else {
-        global_var = ecs_const_var(v->world, {
-            .parent = v->parent,
-            .name = node->name,
-            .type = value->type,
-            .value = value->ptr
-        });
-    }
-    if (!global_var) {
-        flecs_script_eval_error(v, node,
-            "failed to create exported %s variable '%s'",
-            is_mut ? "mut" : "const", node->name);
-        return -1;
-    }
-    return 0;
-}
-
 static int flecs_script_await_args(
     ecs_script_eval_visitor_t *v,
     ecs_expr_function_t *call,
@@ -97332,12 +97288,8 @@ static int flecs_script_await_start(
 static int flecs_script_await_assign_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node,
-    const ecs_value_t *value,
-    bool export)
+    const ecs_value_t *value)
 {
-    if (export) {
-        return flecs_script_await_export(v, node, value);
-    }
 
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->name);
     if (!var) {
@@ -97391,15 +97343,12 @@ int flecs_script_step_await(
     ecs_script_eval_visitor_t *v = &r->v;
     ecs_expr_node_t **expr;
     ecs_script_var_node_t *var = NULL;
-    bool export = false;
 
     if (stmt->kind == EcsAstAwait) {
         expr = &((ecs_script_await_t*)stmt)->expr;
     } else {
         var = (ecs_script_var_node_t*)stmt;
         expr = &var->expr;
-        export = stmt->kind == EcsAstExportConst ||
-            stmt->kind == EcsAstExportMut;
     }
 
     if (!r->can_suspend) {
@@ -97420,7 +97369,7 @@ int flecs_script_step_await(
         return result;
     }
     if (var) {
-        result = flecs_script_await_assign_const(v, var, &future->value, export);
+        result = flecs_script_await_assign_const(v, var, &future->value);
     }
 
     ecs_script_future_release(future);
@@ -100665,8 +100614,7 @@ static int flecs_script_step_scope(
         }
 
         if (stmt->kind == EcsAstAwait ||
-            ((stmt->kind == EcsAstConst || stmt->kind == EcsAstExportConst ||
-              stmt->kind == EcsAstExportMut) &&
+            (stmt->kind == EcsAstConst &&
                 ((ecs_script_var_node_t*)stmt)->is_await))
         {
             ecs_assert(v->base.depth < ECS_SCRIPT_VISIT_MAX_DEPTH,
@@ -115966,9 +115914,6 @@ static int flecs_irc_compile_await(
     } else {
         expr = ((ecs_script_var_node_t*)stmt)->expr;
         flags |= EcsIrAwaitVar;
-        if (stmt->kind == EcsAstExportConst || stmt->kind == EcsAstExportMut) {
-            flags |= EcsIrAwaitExport;
-        }
     }
 
     int32_t check = flecs_irc_emit(c, EcsIrAwaitStart, 0, 0, 0, stmt);
@@ -116369,9 +116314,6 @@ static int flecs_irc_compile_stmt(
     }
     case EcsAstExportConst:
     case EcsAstExportMut:
-        if (((ecs_script_var_node_t*)node)->is_await) {
-            result = flecs_irc_compile_await(c, node);
-        }
         break;
     case EcsAstEntity: {
         ecs_script_entity_t *n = (ecs_script_entity_t*)node;
@@ -120148,27 +120090,6 @@ static int flecs_ir_await_launch(
     return 0;
 }
 
-static int flecs_ir_await_assign(
-    ecs_script_ir_vm_t *vm,
-    const ecs_script_ir_op_t *op,
-    const ecs_value_t *value)
-{
-    ecs_script_eval_visitor_t *v = &vm->v;
-    const ecs_script_var_node_t *node = op->node;
-    if (op->flags & EcsIrAwaitExport) {
-        return flecs_script_await_export(v, node, value);
-    }
-
-    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, NULL);
-    const ecs_type_info_t *ti = ecs_get_type_info(v->world, value->type);
-    var->value.type = value->type;
-    var->value.ptr = flecs_ir_var_alloc(vm, ti);
-    var->type_info = ti;
-    var->owned = true;
-    ecs_ptr_copy(v->world, value->type, var->value.ptr, value->ptr);
-    return 0;
-}
-
 static int flecs_ir_await_poll(
     ecs_script_ir_vm_t *vm,
     const ecs_script_ir_op_t *op,
@@ -120181,7 +120102,15 @@ static int flecs_ir_await_poll(
         return result == 1 ? 0 : -1;
     }
     if (op->flags & EcsIrAwaitVar) {
-        result = flecs_ir_await_assign(vm, op, &future->value);
+        ecs_script_eval_visitor_t *v = &vm->v;
+        const ecs_value_t *value = &future->value;
+        ecs_script_var_t *var = ecs_script_vars_declare(v->vars, NULL);
+        const ecs_type_info_t *ti = ecs_get_type_info(v->world, value->type);
+        var->value.type = value->type;
+        var->value.ptr = flecs_ir_var_alloc(vm, ti);
+        var->type_info = ti;
+        var->owned = true;
+        ecs_ptr_copy(v->world, value->type, var->value.ptr, value->ptr);
     }
 
     ecs_script_future_release(future);

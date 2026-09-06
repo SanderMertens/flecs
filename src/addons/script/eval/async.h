@@ -67,11 +67,6 @@ int flecs_script_await_poll(
     const ecs_script_node_t *stmt,
     ecs_script_future_t **ready);
 
-int flecs_script_await_export(
-    ecs_script_eval_visitor_t *v,
-    const ecs_script_var_node_t *node,
-    const ecs_value_t *value);
-
 void flecs_script_throw_clear(
     flecs_script_async_state_t *state);
 

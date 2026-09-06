@@ -1164,9 +1164,6 @@ static int flecs_irc_compile_await(
     } else {
         expr = ((ecs_script_var_node_t*)stmt)->expr;
         flags |= EcsIrAwaitVar;
-        if (stmt->kind == EcsAstExportConst || stmt->kind == EcsAstExportMut) {
-            flags |= EcsIrAwaitExport;
-        }
     }
 
     int32_t check = flecs_irc_emit(c, EcsIrAwaitStart, 0, 0, 0, stmt);
@@ -1567,9 +1564,6 @@ static int flecs_irc_compile_stmt(
     }
     case EcsAstExportConst:
     case EcsAstExportMut:
-        if (((ecs_script_var_node_t*)node)->is_await) {
-            result = flecs_irc_compile_await(c, node);
-        }
         break;
     case EcsAstEntity: {
         ecs_script_entity_t *n = (ecs_script_entity_t*)node;
