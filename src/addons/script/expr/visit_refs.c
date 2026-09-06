@@ -108,7 +108,6 @@ typedef struct flecs_expr_ref_ctx_t {
     ecs_vec_t *refs;
     ecs_vec_t *dynamic_refs;
     ecs_vec_t *dyn_nodes;
-    ecs_vec_t *fn_refs;
 } flecs_expr_ref_ctx_t;
 
 static int flecs_expr_ref_visit(
@@ -123,7 +122,6 @@ static int flecs_expr_ref_visit(
     ecs_vec_t *refs = ctx->refs;
     ecs_vec_t *dynamic_refs = ctx->dynamic_refs;
     ecs_vec_t *dyn_nodes = ctx->dyn_nodes;
-    ecs_vec_t *fn_refs = ctx->fn_refs;
     switch(node->kind) {
     case EcsExprGlobalVariable: {
         ecs_expr_variable_t *n = (ecs_expr_variable_t*)node;
@@ -139,7 +137,7 @@ static int flecs_expr_ref_visit(
         if (flecs_expr_visit_children(node, flecs_expr_ref_visit, ctx)) {
             return -1;
         }
-        if (fn_refs &&
+        if (refs &&
             n->calldata.is.callback == flecs_script_user_function_callback)
         {
             const EcsScriptFunction *fn = ecs_get(
@@ -149,12 +147,7 @@ static int flecs_expr_ref_visit(
                 ecs_script_ref_t *uf_refs = ecs_vec_first(&uf->refs);
                 int32_t i, count = ecs_vec_count(&uf->refs);
                 for (i = 0; i < count; i ++) {
-                    if (refs) {
-                        flecs_expr_add_ref(refs, uf_refs[i].entity,
-                            uf_refs[i].name, uf_refs[i].component,
-                            uf_refs[i].is_has);
-                    }
-                    flecs_expr_add_ref(fn_refs, uf_refs[i].entity,
+                    flecs_expr_add_ref(refs, uf_refs[i].entity,
                         uf_refs[i].name, uf_refs[i].component,
                         uf_refs[i].is_has);
                 }
@@ -209,10 +202,9 @@ int flecs_expr_visit_refs(
     ecs_expr_node_t *node,
     ecs_vec_t *refs,
     ecs_vec_t *dynamic_refs,
-    ecs_vec_t *dyn_nodes,
-    ecs_vec_t *fn_refs)
+    ecs_vec_t *dyn_nodes)
 {
-    flecs_expr_ref_ctx_t ctx = {script, refs, dynamic_refs, dyn_nodes, fn_refs};
+    flecs_expr_ref_ctx_t ctx = {script, refs, dynamic_refs, dyn_nodes};
     return flecs_expr_ref_visit(node, &ctx);
 }
 

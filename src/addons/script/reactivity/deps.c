@@ -468,7 +468,7 @@ static int flecs_script_dep_expr(
 
     if (flecs_expr_visit_refs(&ctx->v->base.script->pub, node,
         refs, ctx->dynamic_refs ? dynamic_refs : NULL,
-        track_dyn_nodes ? dyn_nodes : NULL, refs))
+        track_dyn_nodes ? dyn_nodes : NULL))
     {
         return -1;
     }
