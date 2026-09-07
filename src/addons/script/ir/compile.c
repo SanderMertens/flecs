@@ -1157,7 +1157,7 @@ static int flecs_irc_compile_entity(
         return -1;
     }
 
-    flecs_irc_emit(c, EcsIrEntityLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameEntity, 0, 0, node);
     return 0;
 }
 
@@ -1188,7 +1188,7 @@ static int flecs_irc_compile_pair_scope(
         return -1;
     }
 
-    flecs_irc_emit(c, EcsIrPairScopeLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFramePairScope, 0, 0, node);
     return 0;
 }
 
@@ -1232,7 +1232,7 @@ static int flecs_irc_compile_with(
         return -1;
     }
 
-    flecs_irc_emit(c, EcsIrWithLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameWith, 0, 0, node);
     return 0;
 }
 
@@ -1262,7 +1262,7 @@ static int flecs_irc_compile_if(
     }
     c->reg_floor = floor;
     flecs_irc_op(c, jump)->a = flecs_irc_pc(c);
-    flecs_irc_emit(c, EcsIrIfLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameIf, 0, 0, node);
     return 0;
 }
 
@@ -1304,7 +1304,7 @@ static int flecs_irc_compile_for(
 
     flecs_irc_emit(c, EcsIrJump, next, 0, 0, node);
     flecs_irc_op(c, next)->a = flecs_irc_pc(c);
-    flecs_irc_emit(c, EcsIrForLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameFor, 0, 0, node);
     flecs_irc_emit(c, EcsIrExprEnd, 0, 0, 0, node);
     return 0;
 }
@@ -1352,7 +1352,7 @@ static int flecs_irc_compile_try(
         flecs_irc_op(c, jump_ops[i])->a = end;
     }
     flecs_irc_op(c, enter)->c = end;
-    flecs_irc_emit(c, EcsIrTryLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameTry, 0, 0, node);
     ecs_vec_fini_t(NULL, &jumps, int32_t);
     return 0;
 error:
@@ -1587,7 +1587,7 @@ static int flecs_irc_compile_scope(
     }
 
     c->scope = prev;
-    flecs_irc_emit(c, EcsIrScopeLeave, 0, 0, 0, scope);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameScope, 0, 0, scope);
     return 0;
 }
 

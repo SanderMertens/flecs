@@ -50834,31 +50834,25 @@ int flecs_script_analyze_dependencies(
 
 typedef enum ecs_script_ir_op_kind_t {
     EcsIrEnd,
+    EcsIrLeave,
     EcsIrJump,
     EcsIrStmt,
     EcsIrStmtBlock,
     EcsIrMark,
     EcsIrAnnotClear,
     EcsIrScopeEnter,
-    EcsIrScopeLeave,
     EcsIrEntityEnter,
-    EcsIrEntityLeave,
     EcsIrWithEnter,
     EcsIrWithBody,
-    EcsIrWithLeave,
     EcsIrWithTag,
     EcsIrWithComponentBegin,
     EcsIrWithComponentEnd,
     EcsIrPairScopeEnter,
-    EcsIrPairScopeLeave,
     EcsIrIfEnter,
-    EcsIrIfLeave,
     EcsIrForEnter,
     EcsIrForNext,
-    EcsIrForLeave,
     EcsIrContinue,
     EcsIrTryEnter,
-    EcsIrTryLeave,
     EcsIrAwaitStart,
     EcsIrAwaitLaunch,
     EcsIrAwaitPoll,
@@ -108558,7 +108552,7 @@ static int flecs_irc_compile_entity(
         return -1;
     }
 
-    flecs_irc_emit(c, EcsIrEntityLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameEntity, 0, 0, node);
     return 0;
 }
 
@@ -108589,7 +108583,7 @@ static int flecs_irc_compile_pair_scope(
         return -1;
     }
 
-    flecs_irc_emit(c, EcsIrPairScopeLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFramePairScope, 0, 0, node);
     return 0;
 }
 
@@ -108633,7 +108627,7 @@ static int flecs_irc_compile_with(
         return -1;
     }
 
-    flecs_irc_emit(c, EcsIrWithLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameWith, 0, 0, node);
     return 0;
 }
 
@@ -108663,7 +108657,7 @@ static int flecs_irc_compile_if(
     }
     c->reg_floor = floor;
     flecs_irc_op(c, jump)->a = flecs_irc_pc(c);
-    flecs_irc_emit(c, EcsIrIfLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameIf, 0, 0, node);
     return 0;
 }
 
@@ -108705,7 +108699,7 @@ static int flecs_irc_compile_for(
 
     flecs_irc_emit(c, EcsIrJump, next, 0, 0, node);
     flecs_irc_op(c, next)->a = flecs_irc_pc(c);
-    flecs_irc_emit(c, EcsIrForLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameFor, 0, 0, node);
     flecs_irc_emit(c, EcsIrExprEnd, 0, 0, 0, node);
     return 0;
 }
@@ -108753,7 +108747,7 @@ static int flecs_irc_compile_try(
         flecs_irc_op(c, jump_ops[i])->a = end;
     }
     flecs_irc_op(c, enter)->c = end;
-    flecs_irc_emit(c, EcsIrTryLeave, 0, 0, 0, node);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameTry, 0, 0, node);
     ecs_vec_fini_t(NULL, &jumps, int32_t);
     return 0;
 error:
@@ -108988,7 +108982,7 @@ static int flecs_irc_compile_scope(
     }
 
     c->scope = prev;
-    flecs_irc_emit(c, EcsIrScopeLeave, 0, 0, 0, scope);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameScope, 0, 0, scope);
     return 0;
 }
 
@@ -109147,31 +109141,25 @@ const char* flecs_script_ir_op_name(
 {
     switch(kind) {
     case EcsIrEnd: return "End";
+    case EcsIrLeave: return "Leave";
     case EcsIrJump: return "Jump";
     case EcsIrStmt: return "Stmt";
     case EcsIrStmtBlock: return "StmtBlock";
     case EcsIrMark: return "Mark";
     case EcsIrAnnotClear: return "AnnotClear";
     case EcsIrScopeEnter: return "ScopeEnter";
-    case EcsIrScopeLeave: return "ScopeLeave";
     case EcsIrEntityEnter: return "EntityEnter";
-    case EcsIrEntityLeave: return "EntityLeave";
     case EcsIrWithEnter: return "WithEnter";
     case EcsIrWithBody: return "WithBody";
-    case EcsIrWithLeave: return "WithLeave";
     case EcsIrWithTag: return "WithTag";
     case EcsIrWithComponentBegin: return "WithComponentBegin";
     case EcsIrWithComponentEnd: return "WithComponentEnd";
     case EcsIrPairScopeEnter: return "PairScopeEnter";
-    case EcsIrPairScopeLeave: return "PairScopeLeave";
     case EcsIrIfEnter: return "IfEnter";
-    case EcsIrIfLeave: return "IfLeave";
     case EcsIrForEnter: return "ForEnter";
     case EcsIrForNext: return "ForNext";
-    case EcsIrForLeave: return "ForLeave";
     case EcsIrContinue: return "Continue";
     case EcsIrTryEnter: return "TryEnter";
-    case EcsIrTryLeave: return "TryLeave";
     case EcsIrAwaitStart: return "AwaitStart";
     case EcsIrAwaitLaunch: return "AwaitLaunch";
     case EcsIrAwaitPoll: return "AwaitPoll";
@@ -109626,18 +109614,19 @@ void flecs_script_ir_to_buf(
         case EcsIrScript:
             ecs_strbuf_append(buf, "r%d", op->a);
             break;
+        case EcsIrLeave: {
+            static const char *const frames[] = {
+                "block", "scope", "entity", "with", "pair_scope", "if",
+                "for", "try", "expr"
+            };
+            ecs_strbuf_appendstr(buf, frames[op->a]);
+            break;
+        }
         case EcsIrEnd:
         case EcsIrAnnotClear:
-        case EcsIrScopeLeave:
-        case EcsIrEntityLeave:
         case EcsIrWithEnter:
         case EcsIrWithBody:
-        case EcsIrWithLeave:
-        case EcsIrPairScopeLeave:
-        case EcsIrIfLeave:
-        case EcsIrForLeave:
         case EcsIrContinue:
-        case EcsIrTryLeave:
         case EcsIrAwaitPoll:
         case EcsIrMutCheck:
         case EcsIrExprEnd:
@@ -112417,10 +112406,14 @@ static flecs_script_run_status_t flecs_ir_exec(
             }
             break;
         }
-        case EcsIrScopeLeave: {
+
+        case EcsIrLeave: {
             ecs_script_ir_frame_t *frame = flecs_ir_frame_top(vm);
-            ecs_assert(frame->kind == EcsIrFrameScope, ECS_INTERNAL_ERROR, NULL);
-            flecs_ir_scope_leave(vm, frame);
+            ecs_assert(frame->kind == op->a, ECS_INTERNAL_ERROR, NULL);
+            if (frame->kind == EcsIrFrameEntity) {
+                vm->last_entity = frame->u.entity.eval;
+            }
+            flecs_ir_frame_leave(vm, frame);
             vm->frame_count --;
             break;
         }
@@ -112438,14 +112431,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             }
             break;
         }
-        case EcsIrEntityLeave: {
-            ecs_script_ir_frame_t *frame = flecs_ir_frame_top(vm);
-            ecs_assert(frame->kind == EcsIrFrameEntity, ECS_INTERNAL_ERROR, NULL);
-            vm->last_entity = frame->u.entity.eval;
-            flecs_script_eval_entity_leave(v, &frame->u.entity);
-            vm->frame_count --;
-            break;
-        }
+
         case EcsIrWithEnter: {
             ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
                 vm, EcsIrFrameWith, pc);
@@ -112464,13 +112450,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 ((node->direct_internal & v->internal) != 0);
             break;
         }
-        case EcsIrWithLeave: {
-            ecs_script_ir_frame_t *frame = flecs_ir_frame_top(vm);
-            ecs_assert(frame->kind == EcsIrFrameWith, ECS_INTERNAL_ERROR, NULL);
-            flecs_script_eval_with_leave(v, &frame->u.with);
-            vm->frame_count --;
-            break;
-        }
+
         case EcsIrWithTag:
             res = flecs_ir_with_tag(vm, op);
             break;
@@ -112493,14 +112473,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             }
             break;
         }
-        case EcsIrPairScopeLeave: {
-            ecs_script_ir_frame_t *frame = flecs_ir_frame_top(vm);
-            ecs_assert(frame->kind == EcsIrFramePairScope,
-                ECS_INTERNAL_ERROR, NULL);
-            flecs_script_eval_pair_scope_leave(v, &frame->u.pair_scope);
-            vm->frame_count --;
-            break;
-        }
+
         case EcsIrIfEnter: {
             flecs_ir_set_dirty(vm);
             ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
@@ -112515,13 +112488,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             }
             break;
         }
-        case EcsIrIfLeave: {
-            ecs_script_ir_frame_t *frame = flecs_ir_frame_top(vm);
-            ecs_assert(frame->kind == EcsIrFrameIf, ECS_INTERNAL_ERROR, NULL);
-            v->force = frame->u.if_.force;
-            vm->frame_count --;
-            break;
-        }
+
         case EcsIrForEnter: {
             flecs_ir_set_dirty(vm);
             flecs_script_for_state_t state;
@@ -112564,13 +112531,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             }
             break;
         }
-        case EcsIrForLeave: {
-            ecs_script_ir_frame_t *frame = flecs_ir_frame_top(vm);
-            ecs_assert(frame->kind == EcsIrFrameFor, ECS_INTERNAL_ERROR, NULL);
-            flecs_ir_for_leave(vm, frame);
-            vm->frame_count --;
-            break;
-        }
+
         case EcsIrContinue:
             if (!flecs_ir_continue(vm)) {
                 flecs_ir_error(vm, op->node,
@@ -112592,12 +112553,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             res = -1;
             break;
         }
-        case EcsIrTryLeave: {
-            ecs_script_ir_frame_t *frame = flecs_ir_frame_top(vm);
-            ecs_assert(frame->kind == EcsIrFrameTry, ECS_INTERNAL_ERROR, NULL);
-            vm->frame_count --;
-            break;
-        }
+
         case EcsIrAwaitStart:
 #ifdef FLECS_SCRIPT_ASYNC
             if (!vm->can_suspend || base != 0) {

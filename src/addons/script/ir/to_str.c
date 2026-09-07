@@ -13,31 +13,25 @@ const char* flecs_script_ir_op_name(
 {
     switch(kind) {
     case EcsIrEnd: return "End";
+    case EcsIrLeave: return "Leave";
     case EcsIrJump: return "Jump";
     case EcsIrStmt: return "Stmt";
     case EcsIrStmtBlock: return "StmtBlock";
     case EcsIrMark: return "Mark";
     case EcsIrAnnotClear: return "AnnotClear";
     case EcsIrScopeEnter: return "ScopeEnter";
-    case EcsIrScopeLeave: return "ScopeLeave";
     case EcsIrEntityEnter: return "EntityEnter";
-    case EcsIrEntityLeave: return "EntityLeave";
     case EcsIrWithEnter: return "WithEnter";
     case EcsIrWithBody: return "WithBody";
-    case EcsIrWithLeave: return "WithLeave";
     case EcsIrWithTag: return "WithTag";
     case EcsIrWithComponentBegin: return "WithComponentBegin";
     case EcsIrWithComponentEnd: return "WithComponentEnd";
     case EcsIrPairScopeEnter: return "PairScopeEnter";
-    case EcsIrPairScopeLeave: return "PairScopeLeave";
     case EcsIrIfEnter: return "IfEnter";
-    case EcsIrIfLeave: return "IfLeave";
     case EcsIrForEnter: return "ForEnter";
     case EcsIrForNext: return "ForNext";
-    case EcsIrForLeave: return "ForLeave";
     case EcsIrContinue: return "Continue";
     case EcsIrTryEnter: return "TryEnter";
-    case EcsIrTryLeave: return "TryLeave";
     case EcsIrAwaitStart: return "AwaitStart";
     case EcsIrAwaitLaunch: return "AwaitLaunch";
     case EcsIrAwaitPoll: return "AwaitPoll";
@@ -492,18 +486,19 @@ void flecs_script_ir_to_buf(
         case EcsIrScript:
             ecs_strbuf_append(buf, "r%d", op->a);
             break;
+        case EcsIrLeave: {
+            static const char *const frames[] = {
+                "block", "scope", "entity", "with", "pair_scope", "if",
+                "for", "try", "expr"
+            };
+            ecs_strbuf_appendstr(buf, frames[op->a]);
+            break;
+        }
         case EcsIrEnd:
         case EcsIrAnnotClear:
-        case EcsIrScopeLeave:
-        case EcsIrEntityLeave:
         case EcsIrWithEnter:
         case EcsIrWithBody:
-        case EcsIrWithLeave:
-        case EcsIrPairScopeLeave:
-        case EcsIrIfLeave:
-        case EcsIrForLeave:
         case EcsIrContinue:
-        case EcsIrTryLeave:
         case EcsIrAwaitPoll:
         case EcsIrMutCheck:
         case EcsIrExprEnd:
