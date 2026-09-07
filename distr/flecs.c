@@ -49575,6 +49575,19 @@ ecs_expr_cast_t* flecs_expr_cast(
 #ifndef FLECS_EXPR_SCRIPT_VISIT_H
 #define FLECS_EXPR_SCRIPT_VISIT_H
 
+typedef struct {
+    ecs_primitive_kind_t kind;
+    ecs_size_t size;
+    int8_t expressiveness;
+    int8_t storage;
+    bool integer;
+    bool signed_integer;
+    bool floating_point;
+} flecs_expr_type_info_t;
+
+const flecs_expr_type_info_t* flecs_expr_type_info(
+    ecs_entity_t type);
+
 void flecs_expr_visit_error_(
     const ecs_script_t *script,
     const void *node,
@@ -100652,37 +100665,12 @@ char* flecs_string_escape(
 bool flecs_value_is_0(
     const ecs_value_t *value)
 {
-    ecs_entity_t type = value->type;
-    void *ptr = value->ptr;
-           if (type == ecs_id(ecs_bool_t)) {
-        return *(ecs_bool_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_i8_t)) {
-        return *(ecs_i8_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_i16_t)) {
-        return *(ecs_i16_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_i32_t)) {
-        return *(ecs_i32_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_i64_t)) {
-        return *(ecs_i64_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_iptr_t)) {
-        return *(ecs_iptr_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_u8_t)) {
-        return *(ecs_u8_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_u16_t)) {
-        return *(ecs_u16_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_u32_t)) {
-        return *(ecs_u32_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_u64_t)) {
-        return *(ecs_u64_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_uptr_t)) {
-        return *(ecs_uptr_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_f32_t)) {
-        return ECS_EQZERO(*(ecs_f32_t*)ptr);
-    } else if (type == ecs_id(ecs_f64_t)) {
-        return ECS_EQZERO(*(ecs_f64_t*)ptr);
-    } else {
+    const flecs_expr_type_info_t *info = flecs_expr_type_info(value->type);
+    if (!info || !(info->integer || info->floating_point || info->kind == EcsBool)) {
         return true;
     }
+    uint64_t zero = 0;
+    return !ecs_os_memcmp(value->ptr, &zero, info->size);
 }
 
 ecs_expr_swizzle_t* flecs_expr_expand_swizzle_get(
@@ -103524,42 +103512,33 @@ static bool flecs_expr_is_skipped_var(
     return flecs_script_type_is_skipped_var(v->type_visitor, name);
 }
 
-typedef struct {
-    ecs_size_t size;
-    int8_t expressiveness;
-    int8_t storage;
-    bool integer;
-    bool signed_integer;
-    bool floating_point;
-} flecs_expr_type_info_t;
-
-#define FLECS_EXPR_TYPE_INFO(T, I, S, F, E, R) \
+#define FLECS_EXPR_TYPE_INFO(T, K, I, S, F, E, R) \
     if (type == ecs_id(T)) { \
-        *out = (flecs_expr_type_info_t){ECS_SIZEOF(T), E, R, I, S, F}; \
-        return true; \
+        static const flecs_expr_type_info_t info = { \
+            K, ECS_SIZEOF(T), E, R, I, S, F}; \
+        return &info; \
     }
 
-static bool flecs_expr_type_info(
-    ecs_entity_t type,
-    flecs_expr_type_info_t *out)
+const flecs_expr_type_info_t* flecs_expr_type_info(
+    ecs_entity_t type)
 {
-    FLECS_EXPR_TYPE_INFO(ecs_bool_t, false, true, false, 1, 1)
-    FLECS_EXPR_TYPE_INFO(ecs_char_t, false, true, false, 2, 1)
-    FLECS_EXPR_TYPE_INFO(ecs_u8_t, true, false, false, 2, 2)
-    FLECS_EXPR_TYPE_INFO(ecs_u16_t, true, false, false, 3, 3)
-    FLECS_EXPR_TYPE_INFO(ecs_u32_t, true, false, false, 4, 4)
-    FLECS_EXPR_TYPE_INFO(ecs_uptr_t, true, false, false, 5, 6)
-    FLECS_EXPR_TYPE_INFO(ecs_u64_t, true, false, false, 6, 7)
-    FLECS_EXPR_TYPE_INFO(ecs_i8_t, true, true, false, 7, 1)
-    FLECS_EXPR_TYPE_INFO(ecs_i16_t, true, true, false, 8, 2)
-    FLECS_EXPR_TYPE_INFO(ecs_i32_t, true, true, false, 9, 3)
-    FLECS_EXPR_TYPE_INFO(ecs_iptr_t, true, true, false, 10, 5)
-    FLECS_EXPR_TYPE_INFO(ecs_i64_t, true, true, false, 11, 6)
-    FLECS_EXPR_TYPE_INFO(ecs_f32_t, false, false, true, 12, 3)
-    FLECS_EXPR_TYPE_INFO(ecs_f64_t, false, false, true, 13, 4)
-    FLECS_EXPR_TYPE_INFO(ecs_string_t, false, false, false, -1, -1)
-    FLECS_EXPR_TYPE_INFO(ecs_entity_t, false, false, false, -1, -1)
-    return false;
+    FLECS_EXPR_TYPE_INFO(ecs_bool_t, EcsBool, false, true, false, 1, 1)
+    FLECS_EXPR_TYPE_INFO(ecs_char_t, EcsChar, false, true, false, 2, 1)
+    FLECS_EXPR_TYPE_INFO(ecs_u8_t, EcsU8, true, false, false, 2, 2)
+    FLECS_EXPR_TYPE_INFO(ecs_u16_t, EcsU16, true, false, false, 3, 3)
+    FLECS_EXPR_TYPE_INFO(ecs_u32_t, EcsU32, true, false, false, 4, 4)
+    FLECS_EXPR_TYPE_INFO(ecs_uptr_t, EcsUPtr, true, false, false, 5, 6)
+    FLECS_EXPR_TYPE_INFO(ecs_u64_t, EcsU64, true, false, false, 6, 7)
+    FLECS_EXPR_TYPE_INFO(ecs_i8_t, EcsI8, true, true, false, 7, 1)
+    FLECS_EXPR_TYPE_INFO(ecs_i16_t, EcsI16, true, true, false, 8, 2)
+    FLECS_EXPR_TYPE_INFO(ecs_i32_t, EcsI32, true, true, false, 9, 3)
+    FLECS_EXPR_TYPE_INFO(ecs_iptr_t, EcsIPtr, true, true, false, 10, 5)
+    FLECS_EXPR_TYPE_INFO(ecs_i64_t, EcsI64, true, true, false, 11, 6)
+    FLECS_EXPR_TYPE_INFO(ecs_f32_t, EcsF32, false, false, true, 12, 3)
+    FLECS_EXPR_TYPE_INFO(ecs_f64_t, EcsF64, false, false, true, 13, 4)
+    FLECS_EXPR_TYPE_INFO(ecs_string_t, EcsString, false, false, false, -1, -1)
+    FLECS_EXPR_TYPE_INFO(ecs_entity_t, EcsEntity, false, false, false, -1, -1)
+    return NULL;
 }
 
 #undef FLECS_EXPR_TYPE_INFO
@@ -103567,38 +103546,38 @@ static bool flecs_expr_type_info(
 bool flecs_expr_is_type_integer(
     ecs_entity_t type)
 {
-    flecs_expr_type_info_t info;
-    return flecs_expr_type_info(type, &info) && info.integer;
+    const flecs_expr_type_info_t *info = flecs_expr_type_info(type);
+    return info && info->integer;
 }
 
 bool flecs_expr_is_type_number(
     ecs_entity_t type)
 {
-    flecs_expr_type_info_t info;
-    return flecs_expr_type_info(type, &info) &&
-        (info.integer || info.floating_point);
+    const flecs_expr_type_info_t *info = flecs_expr_type_info(type);
+    return info &&
+        (info->integer || info->floating_point);
 }
 
 bool flecs_expr_is_type_signed_integer(
     ecs_entity_t type)
 {
-    flecs_expr_type_info_t info;
-    return flecs_expr_type_info(type, &info) && info.signed_integer;
+    const flecs_expr_type_info_t *info = flecs_expr_type_info(type);
+    return info && info->signed_integer;
 }
 
 bool flecs_expr_is_type_unsigned_integer(
     ecs_entity_t type)
 {
-    flecs_expr_type_info_t info;
-    return flecs_expr_type_info(type, &info) && info.integer &&
-        !info.signed_integer;
+    const flecs_expr_type_info_t *info = flecs_expr_type_info(type);
+    return info && info->integer &&
+        !info->signed_integer;
 }
 
 bool flecs_expr_is_type_float(
     ecs_entity_t type)
 {
-    flecs_expr_type_info_t info;
-    return flecs_expr_type_info(type, &info) && info.floating_point;
+    const flecs_expr_type_info_t *info = flecs_expr_type_info(type);
+    return info && info->floating_point;
 }
 
 bool flecs_expr_is_type_string(
@@ -103610,9 +103589,9 @@ bool flecs_expr_is_type_string(
 static int32_t flecs_expr_expressiveness_score(
     ecs_entity_t type)
 {
-    flecs_expr_type_info_t info;
-    if (flecs_expr_type_info(type, &info)) {
-        return info.expressiveness;
+    const flecs_expr_type_info_t *info = flecs_expr_type_info(type);
+    if (info) {
+        return info->expressiveness;
     }
     return false;
 }
@@ -103620,9 +103599,9 @@ static int32_t flecs_expr_expressiveness_score(
 static ecs_size_t flecs_expr_storage_score(
     ecs_entity_t type)
 {
-    flecs_expr_type_info_t info;
-    if (flecs_expr_type_info(type, &info)) {
-        return flecs_ito(ecs_size_t, info.storage);
+    const flecs_expr_type_info_t *info = flecs_expr_type_info(type);
+    if (info) {
+        return flecs_ito(ecs_size_t, info->storage);
     }
     return false;
 }
@@ -103630,9 +103609,9 @@ static ecs_size_t flecs_expr_storage_score(
 ecs_size_t flecs_expr_storage_size(
     ecs_entity_t type)
 {
-    flecs_expr_type_info_t info;
-    if (flecs_expr_type_info(type, &info)) {
-        return info.size;
+    const flecs_expr_type_info_t *info = flecs_expr_type_info(type);
+    if (info) {
+        return info->size;
     }
     return false;
 }
@@ -103672,68 +103651,38 @@ static ecs_entity_t flecs_expr_narrow_type(
     ecs_entity_t lvalue,
     ecs_expr_node_t *node)
 {
-    ecs_entity_t type = node->type;
-
     if (node->kind != EcsExprValue) {
-        return type;
+        return node->type;
+    }
+    const flecs_expr_type_info_t *info = flecs_expr_type_info(node->type);
+    if (!info || !(info->integer || info->floating_point))
+    {
+        return node->type;
+    }
+    if (info->floating_point || info->kind == EcsIPtr || info->kind == EcsUPtr) {
+        return lvalue == ecs_id(ecs_f32_t) ? lvalue : node->type;
     }
 
-    if (!flecs_expr_is_type_number(type)) {
-        return type;
-    }
-
-    void *ptr = ((ecs_expr_value_node_t*)node)->ptr;
-
-    uint64_t uval;
-
-    if (type == ecs_id(ecs_u8_t)) {
-        uval = *(ecs_u8_t*)ptr;
-    } else if (type == ecs_id(ecs_u16_t)) {
-        uval = *(ecs_u16_t*)ptr;
-    } else if (type == ecs_id(ecs_u32_t)) {
-        uval = *(ecs_u32_t*)ptr;
-    } else if (type == ecs_id(ecs_u64_t)) {
-        uval = *(ecs_u64_t*)ptr;
-    } else {
-        int64_t ival;
-
-        if (type == ecs_id(ecs_i8_t)) {
-            ival = *(ecs_i8_t*)ptr;
-        } else if (type == ecs_id(ecs_i16_t)) {
-            ival = *(ecs_i16_t*)ptr;
-        } else if (type == ecs_id(ecs_i32_t)) {
-            ival = *(ecs_i32_t*)ptr;
-        } else if (type == ecs_id(ecs_i64_t)) {
-            ival = *(ecs_i64_t*)ptr;
-        } else {
-            /* If the lvalue type is a floating point type we can narrow the
-             * literal to that since we'll lose double precision anyway. */
-            if (lvalue == ecs_id(ecs_f32_t)) {
-                return ecs_id(ecs_f32_t);
-            }
-            return type;
-        }
-
-        if (ival <= INT8_MAX && ival >= INT8_MIN) {
+    double value = ecs_meta_ptr_to_float(
+        info->kind, ((ecs_expr_value_node_t*)node)->ptr);
+    if (info->signed_integer) {
+        if (value >= INT8_MIN && value <= INT8_MAX) {
             return ecs_id(ecs_i8_t);
-        } else if (ival <= INT16_MAX && ival >= INT16_MIN) {
+        } else if (value >= INT16_MIN && value <= INT16_MAX) {
             return ecs_id(ecs_i16_t);
-        } else if (ival <= INT32_MAX && ival >= INT32_MIN) {
+        } else if (value >= INT32_MIN && value <= INT32_MAX) {
             return ecs_id(ecs_i32_t);
-        } else {
-            return ecs_id(ecs_i64_t);
         }
+        return ecs_id(ecs_i64_t);
     }
-
-    if (uval <= UINT8_MAX) {
+    if (value <= UINT8_MAX) {
         return ecs_id(ecs_u8_t);
-    } else if (uval <= UINT16_MAX) {
+    } else if (value <= UINT16_MAX) {
         return ecs_id(ecs_u16_t);
-    } else if (uval <= UINT32_MAX) {
+    } else if (value <= UINT32_MAX) {
         return ecs_id(ecs_u32_t);
-    } else {
-        return ecs_id(ecs_u64_t);
     }
+    return ecs_id(ecs_u64_t);
 }
 
 static bool flecs_expr_oper_is_arithmetic(

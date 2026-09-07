@@ -6,6 +6,19 @@
 #ifndef FLECS_EXPR_SCRIPT_VISIT_H
 #define FLECS_EXPR_SCRIPT_VISIT_H
 
+typedef struct {
+    ecs_primitive_kind_t kind;
+    ecs_size_t size;
+    int8_t expressiveness;
+    int8_t storage;
+    bool integer;
+    bool signed_integer;
+    bool floating_point;
+} flecs_expr_type_info_t;
+
+const flecs_expr_type_info_t* flecs_expr_type_info(
+    ecs_entity_t type);
+
 void flecs_expr_visit_error_(
     const ecs_script_t *script,
     const void *node,

@@ -320,37 +320,12 @@ char* flecs_string_escape(
 bool flecs_value_is_0(
     const ecs_value_t *value)
 {
-    ecs_entity_t type = value->type;
-    void *ptr = value->ptr;
-           if (type == ecs_id(ecs_bool_t)) {
-        return *(ecs_bool_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_i8_t)) {
-        return *(ecs_i8_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_i16_t)) {
-        return *(ecs_i16_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_i32_t)) {
-        return *(ecs_i32_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_i64_t)) {
-        return *(ecs_i64_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_iptr_t)) {
-        return *(ecs_iptr_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_u8_t)) {
-        return *(ecs_u8_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_u16_t)) {
-        return *(ecs_u16_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_u32_t)) {
-        return *(ecs_u32_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_u64_t)) {
-        return *(ecs_u64_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_uptr_t)) {
-        return *(ecs_uptr_t*)ptr == 0;
-    } else if (type == ecs_id(ecs_f32_t)) {
-        return ECS_EQZERO(*(ecs_f32_t*)ptr);
-    } else if (type == ecs_id(ecs_f64_t)) {
-        return ECS_EQZERO(*(ecs_f64_t*)ptr);
-    } else {
+    const flecs_expr_type_info_t *info = flecs_expr_type_info(value->type);
+    if (!info || !(info->integer || info->floating_point || info->kind == EcsBool)) {
         return true;
     }
+    uint64_t zero = 0;
+    return !ecs_os_memcmp(value->ptr, &zero, info->size);
 }
 
 ecs_expr_swizzle_t* flecs_expr_expand_swizzle_get(
