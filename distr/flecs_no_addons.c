@@ -4280,13 +4280,14 @@ error:
     return NULL;
 }
 
-void* flecs_defer_set(
+static FLECS_ALWAYS_INLINE void* flecs_defer_set_impl(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,
-    void *value)
+    const void *value,
+    bool copy)
 {
     ecs_assert(value != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
@@ -4300,110 +4301,29 @@ void* flecs_defer_set(
     flecs_component_ptr_t ptr = flecs_defer_get_existing(
         world, entity, r, id, size);
 
-    if (world->stage_count != 1) {
-        /* If world has multiple stages we need to insert a set command
-         * with temporary storage, as the value could be lost otherwise
-         * by a command in another stage. */
+    if (copy && world->stage_count != 1) {
+
         ptr.ptr = NULL;
     }
 
     const ecs_type_info_t *ti = ptr.ti;
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER,
         "provided component is not a type");
     ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
         "mismatching size specified for component in ensure/emplace/set (%u vs %u)",
             size, ti->size);
 
-    /* Handle trivial set command (no hooks, OnSet observers) */
     if (id < FLECS_HI_COMPONENT_ID) {
         if (!world->non_trivial_set[id]) {
             if (!ptr.ptr) {
                 ptr.ptr = flecs_stack_alloc(
                     &stage->cmd->stack, size, ti->alignment);
-                
-                /* No OnSet observers, so ensure is enough */
+
                 cmd->kind = EcsCmdEnsure;
                 cmd->is._1.size = size;
                 cmd->is._1.value = ptr.ptr;
             } else {
-                /* No OnSet observers, so the only thing we need to do is make sure
-                * that a preceding remove command doesn't cause the entity to
-                * end up without the component. */
-                cmd->kind = EcsCmdAdd;
-            }
 
-            ecs_os_memcpy(ptr.ptr, value, size);
-            return ptr.ptr;
-        }
-    }
-
-    if (!ptr.ptr) {
-        bool is_dont_fragment = 
-            flecs_component_get_flags(world, id) & EcsIdDontFragment;
-        cmd->kind = is_dont_fragment ? EcsCmdSetDontFragment : EcsCmdSet;
-        cmd->is._1.size = size;
-        ptr.ptr = cmd->is._1.value =
-            flecs_stack_alloc(&stage->cmd->stack, size, ti->alignment);
-        flecs_type_info_copy_ctor(ptr.ptr, value, 1, ti);
-    } else {
-        cmd->kind = EcsCmdAddModified;
-
-        /* Call on_replace hook before copying the new value. */
-        if (ti->hooks.on_replace) {
-            flecs_invoke_replace_hook(
-                world, r->table, entity, id, ptr.ptr, value, ti);
-        }
-
-        flecs_type_info_copy(ptr.ptr, value, 1, ti);
-    }
-
-    return ptr.ptr;
-error:
-    return NULL;
-}
-
-/* Same as flecs_defer_set, but doesn't copy value into storage. */
-void* flecs_defer_cpp_set(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_id_t id,
-    ecs_size_t size,
-    const void *value)
-{
-    ecs_assert(value != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
-    ecs_assert(cmd != NULL, ECS_INTERNAL_ERROR, NULL);
-    cmd->entity = entity;
-    cmd->id = id;
-
-    ecs_record_t *r = flecs_entities_get(world, entity);
-    flecs_component_ptr_t ptr = flecs_defer_get_existing(
-        world, entity, r, id, size);
-
-    const ecs_type_info_t *ti = ptr.ti;
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
-        "provided component is not a type");
-    ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
-        "mismatching size specified for component in ensure/emplace/set");
-
-    /* Handle trivial set command (no hooks, OnSet observers) */
-    if (id < FLECS_HI_COMPONENT_ID) {
-        if (!world->non_trivial_set[id]) {
-            if (!ptr.ptr) {
-                ptr.ptr = flecs_stack_alloc(
-                    &stage->cmd->stack, size, ti->alignment);
-                
-                /* No OnSet observers, so ensure is enough */
-                cmd->kind = EcsCmdEnsure;
-                cmd->is._1.size = size;
-                cmd->is._1.value = ptr.ptr;
-            } else {
-                /* No OnSet observers, so the only thing we need to do is make sure
-                 * that a preceding remove command doesn't cause the entity to
-                 * end up without the component. */
                 cmd->kind = EcsCmdAdd;
             }
 
@@ -4419,21 +4339,49 @@ void* flecs_defer_cpp_set(
         cmd->is._1.size = size;
         ptr.ptr = cmd->is._1.value =
             flecs_stack_alloc(&stage->cmd->stack, size, ti->alignment);
-
-        flecs_type_info_ctor(ptr.ptr, 1, ti);
+        if (copy) {
+            flecs_type_info_copy_ctor(ptr.ptr, value, 1, ti);
+        } else {
+            flecs_type_info_ctor(ptr.ptr, 1, ti);
+        }
     } else {
         cmd->kind = EcsCmdAddModified;
 
-        /* Call on_replace hook before copying the new value. */
         if (ti->hooks.on_replace) {
             flecs_invoke_replace_hook(
                 world, r->table, entity, id, ptr.ptr, value, ti);
+        }
+
+        if (copy) {
+            flecs_type_info_copy(ptr.ptr, value, 1, ti);
         }
     }
 
     return ptr.ptr;
 error:
     return NULL;
+}
+
+void* flecs_defer_set(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_size_t size,
+    void *value)
+{
+    return flecs_defer_set_impl(world, stage, entity, id, size, value, true);
+}
+
+void* flecs_defer_cpp_set(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_size_t size,
+    const void *value)
+{
+    return flecs_defer_set_impl(world, stage, entity, id, size, value, false);
 }
 
 void* flecs_defer_cpp_assign(
