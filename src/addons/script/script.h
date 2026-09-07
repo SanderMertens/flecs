@@ -105,25 +105,19 @@ typedef struct ecs_script_computed_t {
     bool valid;
 } ecs_script_computed_t;
 
-typedef struct ecs_script_for_key_t {
-    ecs_entity_t parent;
-    const char *name;
-} ecs_script_for_key_t;
-
 typedef struct ecs_script_for_component_t {
     ecs_id_t component;
     int32_t visit;
 } ecs_script_for_component_t;
 
 typedef struct ecs_script_for_entry_t {
-    ecs_entity_t entity;
     int32_t visit;
     ecs_vec_t components; /* vec<ecs_script_for_component_t> */
 } ecs_script_for_entry_t;
 
 typedef struct ecs_script_for_slot_t {
     ecs_vec_t entities; /* vec<ecs_entity_t>, anonymous entities */
-    ecs_hashmap_t names; /* ecs_script_for_key_t -> ecs_script_for_entry_t */
+    ecs_map_t named;
     ecs_entity_t cache_entity;
     ecs_script_for_entry_t *cache_entry;
     int32_t scope_slot;
@@ -158,7 +152,6 @@ void flecs_script_for_slot_track(
     bool *named);
 
 void flecs_script_for_slot_track_component(
-    ecs_world_t *world,
     ecs_script_for_slot_t *slot,
     ecs_entity_t entity,
     ecs_id_t component,

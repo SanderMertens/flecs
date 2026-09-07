@@ -951,7 +951,7 @@ void flecs_script_track_component(
     if (v->entity && v->entity->for_slot >= 0 &&
         v->entity->for_slot < ecs_vec_count(&v->state->for_slots))
     {
-        flecs_script_for_slot_track_component(v->world, ecs_vec_get_t(
+        flecs_script_for_slot_track_component(ecs_vec_get_t(
             &v->state->for_slots, ecs_script_for_slot_t, v->entity->for_slot),
             v->entity->eval, component, v->visit);
         return;
