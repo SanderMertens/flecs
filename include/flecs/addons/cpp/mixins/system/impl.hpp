@@ -85,7 +85,7 @@ struct system final : entity
     }
 
     /** Construct from a world and a system descriptor. */
-    explicit system(flecs::world_t *world, ecs_system_desc_t *desc) {
+    explicit system(flecs::world_t *world, const ecs_system_desc_t *desc) {
         world_ = world;
         id_ = ecs_system_init(world, desc);
     }

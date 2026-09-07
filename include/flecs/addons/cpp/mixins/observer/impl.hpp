@@ -22,7 +22,7 @@ struct observer final : entity
     explicit observer() : entity() { }
 
     /** Construct from a world and an observer descriptor. */
-    observer(flecs::world_t *world, ecs_observer_desc_t *desc) {
+    observer(flecs::world_t *world, const ecs_observer_desc_t *desc) {
         world_ = world;
         id_ = ecs_observer_init(world, desc);
     }

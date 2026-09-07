@@ -337,7 +337,8 @@ struct run_delegate : delegate {
 
 template <typename Func, typename Event = void>
 struct entity_observer_delegate : delegate {
-    explicit entity_observer_delegate(Func&& func) noexcept
+    template <typename F>
+    explicit entity_observer_delegate(F&& func) noexcept
         : func_(FLECS_FWD(func)) { }
 
     static void run(ecs_iter_t *iter) {

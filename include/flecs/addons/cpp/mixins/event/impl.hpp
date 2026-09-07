@@ -24,7 +24,7 @@ inline flecs::event_builder_typed<E> world::event() const {
 namespace _ {
     template <typename Event = void, typename Func>
     void entity_observer_create(world_t *world, entity_t event, entity_t entity, Func&& func) {
-        using Delegate = entity_observer_delegate<Func, Event>;
+        using Delegate = entity_observer_delegate<decay_t<Func>, Event>;
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ecs_observer_desc_t desc = {};
         desc.events[0] = event;

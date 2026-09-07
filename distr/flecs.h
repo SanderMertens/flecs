@@ -30581,7 +30581,8 @@ struct run_delegate : delegate {
 
 template <typename Func, typename Event = void>
 struct entity_observer_delegate : delegate {
-    explicit entity_observer_delegate(Func&& func) noexcept
+    template <typename F>
+    explicit entity_observer_delegate(F&& func) noexcept
         : func_(FLECS_FWD(func)) { }
 
     static void run(ecs_iter_t *iter) {
@@ -33898,30 +33899,21 @@ inline flecs::term world::term() const {
 namespace flecs {
 namespace _ {
 
-// Macros for template types so we don't go cross-eyed.
-#define FLECS_TBUILDER template<typename ... Components> class
-#define FLECS_IBUILDER template<typename IBase, typename ... Components> class
+template <typename T, typename TDesc, typename Base,
+    template <typename, typename...> class IBuilder, typename... Components>
+struct builder : IBuilder<Base, Components...> {
+    using IBase = IBuilder<Base, Components...>;
 
-template<FLECS_TBUILDER T, typename TDesc, typename Base, FLECS_IBUILDER IBuilder, typename ... Components>
-struct builder : IBuilder<Base, Components ...>
-{
-    using IBase = IBuilder<Base, Components ...>;
-
-public:
-    builder(flecs::world_t *world)
-        : IBase(&desc_)
-        , desc_{}
-        , world_(world) { }
-
-    builder(const builder& f) 
-        : IBase(&desc_, f.term_index_)
+    explicit builder(world_t *world, const char *name = nullptr)
+        : IBase(&desc_), desc_{}, world_(world)
     {
-        world_ = f.world_;
-        desc_ = f.desc_;
+        set_name(name);
     }
 
-    builder(builder&& f)  noexcept
-        : builder<T, TDesc, Base, IBuilder, Components...>(f) { }
+    builder(const builder& other)
+        : IBase(&desc_, other.term_index_), desc_(other.desc_), world_(other.world_) { }
+
+    builder(builder&& other) noexcept : builder(other) { }
 
     operator TDesc*() {
         return &desc_;
@@ -33931,18 +33923,63 @@ public:
         return &desc_;
     }
 
-    T<Components ...> build() const {
-        return T<Components...>(world_, *static_cast<const Base*>(this));
+    T build() const {
+        return T(world_, &desc_);
+    }
+
+    template <typename Func, typename... Each>
+    T run(Func&& func, Each&&... each_func) {
+        using Delegate = run_delegate<decay_t<Func>>;
+        set_run<Delegate, Delegate::run>(FLECS_FWD(func));
+        if constexpr (sizeof...(Each)) {
+            return each(FLECS_FWD(each_func)...);
+        } else {
+            return build();
+        }
+    }
+
+    template <typename Func>
+    T each(Func&& func) {
+        using Delegate = each_delegate<decay_t<Func>, Components...>;
+        desc_.callback = Delegate::run;
+        desc_.callback_ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        desc_.callback_ctx_free = free_obj<Delegate>;
+        return build();
+    }
+
+    template <typename Func>
+    T run_each(Func&& func) {
+        using Delegate = each_delegate<decay_t<Func>, Components...>;
+        set_run<Delegate, Delegate::run_each>(FLECS_FWD(func));
+        return build();
     }
 
 protected:
-    flecs::world_t* world_v() override { return world_; }
-    TDesc desc_;
-    flecs::world_t *world_;
-};
+    world_t* world_v() override {
+        return world_;
+    }
 
-#undef FLECS_TBUILDER
-#undef FLECS_IBUILDER
+    void set_name(const char *name) {
+        if (name) {
+            ecs_entity_desc_t desc = {};
+            desc.name = name;
+            desc.sep = "::";
+            desc.root_sep = "::";
+            desc_.entity = ecs_entity_init(world_, &desc);
+        }
+    }
+
+    TDesc desc_;
+    world_t *world_;
+
+private:
+    template <typename Delegate, ecs_iter_action_t Run, typename Func>
+    void set_run(Func&& func) {
+        desc_.run = Run;
+        desc_.run_ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        desc_.run_ctx_free = free_obj<Delegate>;
+    }
+};
 
 } // namespace _
 } // namespace flecs
@@ -34274,7 +34311,7 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using query_builder_base = builder<
-        query, ecs_query_desc_t, query_builder<Components...>, 
+        query<Components...>, ecs_query_desc_t, query_builder<Components...>,
         query_builder_i, Components ...>;
 }
 
@@ -34295,13 +34332,7 @@ struct query_builder final : _::query_builder_base<Components...> {
         : _::query_builder_base<Components...>(world)
     {
         _::populate_signature<Components...>(world, this);
-        if (name != nullptr) {
-            ecs_entity_desc_t entity_desc = {};
-            entity_desc.name = name;
-            entity_desc.sep = "::";
-            entity_desc.root_sep = "::";
-            this->desc_.entity = ecs_entity_init(world, &entity_desc);
-        }
+        this->set_name(name);
     }
 
     template <typename Func>
@@ -34756,101 +34787,6 @@ inline query_base::operator flecs::query<> () const {
 #pragma once
 
 namespace flecs {
-namespace _ {
-
-// Macros for template types so we don't go cross-eyed.
-#define FLECS_IBUILDER template<typename IBase, typename ... Components> class
-
-template<typename T, typename TDesc, typename Base, FLECS_IBUILDER IBuilder, typename ... Components>
-struct node_builder : IBuilder<Base, Components ...>
-{
-    using IBase = IBuilder<Base, Components ...>;
-
-public:
-    explicit node_builder(flecs::world_t* world, const char *name = nullptr)
-        : IBase(&desc_)
-        , desc_{}
-        , world_(world)
-    {
-        if (name != nullptr) {
-            ecs_entity_desc_t entity_desc = {};
-            entity_desc.name = name;
-            entity_desc.sep = "::";
-            entity_desc.root_sep = "::";
-            desc_.entity = ecs_entity_init(world_, &entity_desc);
-        }
-    }
-
-    node_builder(const node_builder& f)
-        : IBase(&desc_, f.term_index_)
-    {
-        world_ = f.world_;
-        desc_ = f.desc_;
-    }
-
-    node_builder(node_builder&& f) noexcept
-        : node_builder<T, TDesc, Base, IBuilder, Components...>(f) { }
-
-    template <typename Func>
-    T run(Func&& func) {
-        using Delegate = typename _::run_delegate<
-            typename std::decay<Func>::type>;
-
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        desc_.run = Delegate::run;
-        desc_.run_ctx = ctx;
-        desc_.run_ctx_free = _::free_obj<Delegate>;
-        return T(world_, &desc_);
-    }
-
-    template <typename Func, typename EachFunc>
-    T run(Func&& func, EachFunc&& each_func) {
-        using Delegate = typename _::run_delegate<
-            typename std::decay<Func>::type>;
-
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        desc_.run = Delegate::run;
-        desc_.run_ctx = ctx;
-        desc_.run_ctx_free = _::free_obj<Delegate>;
-        return each(FLECS_FWD(each_func));
-    }
-
-    template <typename Func>
-    T each(Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, Components...>;
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        desc_.callback = Delegate::run;
-        desc_.callback_ctx = ctx;
-        desc_.callback_ctx_free = _::free_obj<Delegate>;
-        return T(world_, &desc_);
-    }
-
-    template <typename Func>
-    T run_each(Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, Components...>;
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        desc_.run = Delegate::run_each;
-        desc_.run_ctx = ctx;
-        desc_.run_ctx_free = _::free_obj<Delegate>;
-        return T(world_, &desc_);
-    }
-
-protected:
-    flecs::world_t* world_v() override { return world_; }
-    TDesc desc_;
-    flecs::world_t *world_;
-};
-
-#undef FLECS_IBUILDER
-
-} // namespace _
-} // namespace flecs
-
-#pragma once
-
-namespace flecs {
 
 /** Observer builder interface.
  * 
@@ -34929,7 +34865,7 @@ private:
 namespace flecs {
 namespace _ {
     template <typename ... Components>
-    using observer_builder_base = node_builder<
+    using observer_builder_base = builder<
         observer, ecs_observer_desc_t, observer_builder<Components...>, 
         observer_builder_i, Components ...>;
 }
@@ -34965,7 +34901,7 @@ struct observer final : entity
     explicit observer() : entity() { }
 
     /** Construct from a world and an observer descriptor. */
-    observer(flecs::world_t *world, ecs_observer_desc_t *desc) {
+    observer(flecs::world_t *world, const ecs_observer_desc_t *desc) {
         world_ = world;
         id_ = ecs_observer_init(world, desc);
     }
@@ -35078,7 +35014,7 @@ inline flecs::event_builder_typed<E> world::event() const {
 namespace _ {
     template <typename Event = void, typename Func>
     void entity_observer_create(world_t *world, entity_t event, entity_t entity, Func&& func) {
-        using Delegate = entity_observer_delegate<Func, Event>;
+        using Delegate = entity_observer_delegate<decay_t<Func>, Event>;
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ecs_observer_desc_t desc = {};
         desc.events[0] = event;
@@ -35437,7 +35373,7 @@ private:
 namespace flecs {
 namespace _ {
     template <typename ... Components>
-    using system_builder_base = node_builder<
+    using system_builder_base = builder<
         system, ecs_system_desc_t, system_builder<Components...>, 
         system_builder_i, Components ...>;
 }
@@ -35549,7 +35485,7 @@ struct system final : entity
     }
 
     /** Construct from a world and a system descriptor. */
-    explicit system(flecs::world_t *world, ecs_system_desc_t *desc) {
+    explicit system(flecs::world_t *world, const ecs_system_desc_t *desc) {
         world_ = world;
         id_ = ecs_system_init(world, desc);
     }
@@ -35830,7 +35766,7 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using pipeline_builder_base = builder<
-        pipeline, ecs_pipeline_desc_t, pipeline_builder<Components...>, 
+        pipeline<Components...>, ecs_pipeline_desc_t, pipeline_builder<Components...>,
         pipeline_builder_i, Components ...>;
 }
 
@@ -35853,13 +35789,7 @@ struct pipeline_builder final : _::pipeline_builder_base<Components...> {
         : _::pipeline_builder_base<Components...>(world)
     {
         _::populate_signature<Components...>(world, this);
-        if (name != nullptr) {
-            ecs_entity_desc_t entity_desc = {};
-            entity_desc.name = name;
-            entity_desc.sep = "::";
-            entity_desc.root_sep = "::";
-            this->desc_.entity = ecs_entity_init(world, &entity_desc);
-        }
+        this->set_name(name);
     }
 };
 
@@ -36949,7 +36879,7 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using alert_builder_base = builder<
-        alert, ecs_alert_desc_t, alert_builder<Components...>, 
+        alert<Components...>, ecs_alert_desc_t, alert_builder<Components...>,
         alert_builder_i, Components ...>;
 }
 
@@ -36963,13 +36893,7 @@ struct alert_builder final : _::alert_builder_base<Components...> {
         : _::alert_builder_base<Components...>(world)
     {
         _::populate_signature<Components...>(world, this);
-        if (name != nullptr) {
-            ecs_entity_desc_t entity_desc = {};
-            entity_desc.name = name;
-            entity_desc.sep = "::";
-            entity_desc.root_sep = "::";
-            this->desc_.entity = ecs_entity_init(world, &entity_desc);
-        }
+        this->set_name(name);
     }
 };
 

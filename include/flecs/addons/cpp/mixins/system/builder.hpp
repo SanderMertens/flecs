@@ -6,13 +6,13 @@
 #pragma once
 
 #include "../../utils/function_traits.hpp"
-#include "../../utils/node_builder.hpp"
+#include "../../utils/builder.hpp"
 #include "builder_i.hpp"
 
 namespace flecs {
 namespace _ {
     template <typename ... Components>
-    using system_builder_base = node_builder<
+    using system_builder_base = builder<
         system, ecs_system_desc_t, system_builder<Components...>, 
         system_builder_i, Components ...>;
 }
