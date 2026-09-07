@@ -529,6 +529,7 @@
                 "try_query",
                 "query",
                 "named_query",
+                "query_error_restores_log",
                 "call",
                 "call_string",
                 "call_missing_argument",

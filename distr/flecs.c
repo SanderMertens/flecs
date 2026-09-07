@@ -27415,61 +27415,6 @@ static ECS_DTOR(EcsRest, ptr, {
     ecs_os_free(ptr->ipaddr);
 })
 
-static char *rest_last_err;
-static ecs_os_api_log_t rest_prev_log;
-static ecs_os_api_log_t rest_prev_fatal_log;
-
-static void flecs_rest_set_prev_log(
-    ecs_os_api_log_t prev_log,
-    bool try)
-{
-    rest_prev_log = try ? NULL : prev_log;
-    rest_prev_fatal_log = prev_log;
-}
-
-static void flecs_rest_capture_log(
-    int32_t level, 
-    const char *file,
-    int32_t line, 
-    const char *msg)
-{
-    (void)file; (void)line;
-
-    if (level <= -4) {
-        /* Make sure to always log fatal errors */
-        if (rest_prev_fatal_log) {
-            ecs_log_enable_colors(true);
-            rest_prev_fatal_log(level, file, line, msg);
-            ecs_log_enable_colors(false);
-            return;
-        } else {
-            fprintf(stderr, "%s:%d: %s", file, line, msg);
-        }
-    }
-
-#ifdef FLECS_DEBUG
-    /* In debug mode, log unexpected errors to the console */
-    if (level < 0) {
-        /* Also log to previous log function in debug mode */
-        if (rest_prev_log) {
-            ecs_log_enable_colors(true);
-            rest_prev_log(level, file, line, msg);
-            ecs_log_enable_colors(false);
-        }
-    }
-#endif
-
-    if (!rest_last_err && level <= -3) {
-        rest_last_err = ecs_os_strdup(msg);
-    }
-}
-
-static char* flecs_rest_get_captured_log(void) {
-    char *result = rest_last_err;
-    rest_last_err = NULL;
-    return result;
-}
-
 static void flecs_reply_verror(
     ecs_http_reply_t *reply,
     const char *fmt,
@@ -28026,8 +27971,9 @@ static ecs_entity_t flecs_rest_call_lookup(
 }
 #endif
 
-static void flecs_rest_reply_set_captured_log(
-    ecs_http_reply_t *reply);
+static void flecs_rest_reply_capture(
+    ecs_http_reply_t *reply,
+    bool ok);
 
 static bool flecs_rest_call(
     ecs_world_t *world,
@@ -28089,20 +28035,13 @@ static bool flecs_rest_call(
             }
             *(char*)var->value.ptr = value[0];
         } else {
-            bool prev_color = ecs_log_enable_colors(false);
-            ecs_os_api_log_t prev_log = ecs_os_api.log_;
-            flecs_rest_set_prev_log(prev_log, true);
-            ecs_os_api.log_ = flecs_rest_capture_log;
+            flecs_log_capture_push(true);
 
             ecs_expr_eval_desc_t desc = { .type = params[i].type };
             const char *ptr = ecs_expr_run(
                 world, value, &var->value, &desc);
 
-            ecs_os_api.log_ = prev_log;
-            ecs_log_enable_colors(prev_color);
-
-            char *err = flecs_rest_get_captured_log();
-            ecs_os_free(err);
+            ecs_os_free(flecs_log_capture_pop());
             if (!ptr || ptr[0] != '\0') {
                 flecs_reply_error(reply, "invalid value for argument '%s'",
                     params[i].name);
@@ -28127,22 +28066,14 @@ static bool flecs_rest_call(
         .lookup_ctx = &function
     };
 
-    bool prev_color = ecs_log_enable_colors(false);
-    ecs_os_api_log_t prev_log = ecs_os_api.log_;
-    flecs_rest_set_prev_log(prev_log, true);
-    ecs_os_api.log_ = flecs_rest_capture_log;
+    flecs_log_capture_push(true);
 
     const char *ptr = ecs_expr_run(world, expr_str, &result, &desc);
 
-    ecs_os_api.log_ = prev_log;
-    ecs_log_enable_colors(prev_color);
     ecs_os_free(expr_str);
 
-    if (!ptr) {
-        flecs_rest_reply_set_captured_log(reply);
-    } else {
-        char *err = flecs_rest_get_captured_log();
-        ecs_os_free(err);
+    flecs_rest_reply_capture(reply, ptr != NULL);
+    if (ptr) {
         if (ecs_ptr_to_json_buf(
             world, result.type, result.ptr, &reply->body))
         {
@@ -28198,21 +28129,23 @@ static bool flecs_rest_action(
     return true;
 }
 
-static void flecs_rest_reply_set_captured_log(
-    ecs_http_reply_t *reply)
+static void flecs_rest_reply_capture(
+    ecs_http_reply_t *reply,
+    bool ok)
 {
-    char *err = flecs_rest_get_captured_log();
-    if (err) {
-        char *escaped_err = flecs_astresc('"', err);
-        flecs_reply_error(reply, "%s", escaped_err);
-        ecs_os_free(escaped_err);
-        ecs_os_free(err);
+    char *err = flecs_log_capture_pop();
+    if (!ok) {
+        if (err) {
+            char *escaped_err = flecs_astresc('"', err);
+            flecs_reply_error(reply, "%s", escaped_err);
+            ecs_os_free(escaped_err);
+        }
+        reply->code = 400;
     }
-
-    reply->code = 400;
+    ecs_os_free(err);
 }
 
-static void flecs_rest_iter_to_reply(
+static bool flecs_rest_iter_to_reply(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
     ecs_poly_t *query,
@@ -28230,15 +28163,11 @@ static void flecs_rest_iter_to_reply(
 
     if (offset < 0 || limit < 0) {
         flecs_reply_error(reply, "invalid offset/limit parameter");
-        return;
+        return true;
     }
 
     ecs_iter_t pit = ecs_page_iter(it, offset, limit);
-    if (ecs_iter_to_json_buf(&pit, &reply->body, &desc)) {
-        flecs_rest_reply_set_captured_log(reply);
-    }
-
-    flecs_rest_int_param(req, "offset", &offset);
+    return ecs_iter_to_json_buf(&pit, &reply->body, &desc) == 0;
 }
 
 static bool flecs_rest_reply_existing_query(
@@ -28282,31 +28211,28 @@ static bool flecs_rest_reply_existing_query(
     ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_dbg_2("rest: request query '%s'", name);
-    bool prev_color = ecs_log_enable_colors(false);
-    ecs_os_api_log_t prev_log = ecs_os_api.log_;
-    flecs_rest_set_prev_log(ecs_os_api.log_, try);
-    ecs_os_api.log_ = flecs_rest_capture_log;
+    flecs_log_capture_push(try);
+    bool ok = false;
 
     const char *vars = ecs_http_get_param(req, "vars");
     if (vars) {
     #ifdef FLECS_QUERY_DSL
         if (ecs_query_args_parse(q, &it, vars) == NULL) {
-            flecs_rest_reply_set_captured_log(reply);
-            return true;
+            ecs_iter_fini(&it);
+            goto done;
         }
     #else
         flecs_reply_error(reply,
             "cannot parse query arg expression: script addon required");
         reply->code = 400;
-        return true;
+        ecs_iter_fini(&it);
+        goto done;
     #endif
     }
 
-    flecs_rest_iter_to_reply(req, reply, q, &it);
-
-    ecs_os_api.log_ = prev_log;
-    ecs_log_enable_colors(prev_color);    
-
+    ok = flecs_rest_iter_to_reply(req, reply, q, &it);
+done:
+    flecs_rest_reply_capture(reply, ok);
     return true;
 }
 
@@ -28331,26 +28257,19 @@ static bool flecs_rest_get_query(
     flecs_rest_bool_param(req, "try", &try);
 
     ecs_dbg_2("rest: request query '%s'", expr);
-    bool prev_color = ecs_log_enable_colors(false);
-    ecs_os_api_log_t prev_log = ecs_os_api.log_;
-    flecs_rest_set_prev_log(ecs_os_api.log_, try);
-    ecs_os_api.log_ = flecs_rest_capture_log;
+    flecs_log_capture_push(try);
 
     ecs_query_t *q = ecs_query(world, { .expr = expr });
-    if (!q) {
-        flecs_rest_reply_set_captured_log(reply);
-        if (try) {
-            /* If client is trying queries, don't spam console with errors */
-            reply->code = 200;
-        }
-    } else {
+    bool ok = q != NULL;
+    if (q) {
         ecs_iter_t it = ecs_query_iter(world, q);
-        flecs_rest_iter_to_reply(req, reply, q, &it);
+        ok = flecs_rest_iter_to_reply(req, reply, q, &it);
         ecs_query_fini(q);
     }
-
-    ecs_os_api.log_ = prev_log;
-    ecs_log_enable_colors(prev_color);
+    flecs_rest_reply_capture(reply, ok);
+    if (!q && try) {
+        reply->code = 200;
+    }
 
     return true;
 }

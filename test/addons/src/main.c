@@ -479,6 +479,7 @@ void Rest_get_cached_invalid(void);
 void Rest_try_query(void);
 void Rest_query(void);
 void Rest_named_query(void);
+void Rest_query_error_restores_log(void);
 void Rest_call(void);
 void Rest_call_string(void);
 void Rest_call_missing_argument(void);
@@ -2353,6 +2354,10 @@ bake_test_case Rest_testcases[] = {
         Rest_named_query
     },
     {
+        "query_error_restores_log",
+        Rest_query_error_restores_log
+    },
+    {
         "call",
         Rest_call
     },
@@ -2963,7 +2968,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        45,
+        46,
         Rest_testcases
     },
     {

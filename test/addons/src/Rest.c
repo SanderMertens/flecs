@@ -1301,3 +1301,44 @@ void Rest_script_update_new_script(void) {
 
     ecs_fini(world);
 }
+
+void Rest_query_error_restores_log(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_query_t *q = ecs_query(world, {
+        .entity = ecs_entity(world, {.name = "Q"}),
+        .expr = "(ChildOf, $parent)"
+    });
+    test_assert(q != NULL);
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+    ecs_os_api_log_t prev_log = ecs_os_api.log_;
+
+    for (int nested = 0; nested < 2; nested ++) {
+        if (nested) {
+            ecs_log_start_capture(true);
+        }
+        ecs_os_api_log_t active_log = ecs_os_api.log_;
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        ecs_http_server_request(srv, "GET",
+            "/query?name=Q&vars=parent:&try=true", NULL, &reply);
+        test_int(reply.code, 400);
+        test_assert(ecs_os_api.log_ == active_log);
+        char *body = ecs_strbuf_get(&reply.body);
+        test_assert(body != NULL);
+        test_assert(strstr(body, "error") != NULL);
+        ecs_os_free(body);
+        ecs_strbuf_reset(&reply.headers);
+
+        if (nested) {
+            ecs_err("outer capture survived");
+            char *err = ecs_log_stop_capture();
+            test_str(err, "outer capture survived");
+            ecs_os_free(err);
+        }
+        test_assert(ecs_os_api.log_ == prev_log);
+    }
+
+    ecs_rest_server_fini(srv);
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
