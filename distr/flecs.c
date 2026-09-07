@@ -74312,22 +74312,11 @@ ecs_entity_t EcsPeriod1h = 0;
 ecs_entity_t EcsPeriod1d = 0;
 ecs_entity_t EcsPeriod1w = 0;
 
-#define FlecsDayIntervalCount (24)
-#define FlecsWeekIntervalCount (168)
-
 typedef struct {
     ecs_stats_api_t api;
     ecs_query_t *query;
-} ecs_monitor_stats_ctx_t;
-
-typedef struct {
-    ecs_stats_api_t api;
-} ecs_reduce_stats_ctx_t;
-
-typedef struct {
-    ecs_stats_api_t api;
     int32_t interval;
-} ecs_aggregate_stats_ctx_t;
+} ecs_monitor_stats_ctx_t;
 
 static void MonitorStats(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
@@ -74423,33 +74412,7 @@ static void MonitorStats(ecs_iter_t *it) {
 }
 
 static void ReduceStats(ecs_iter_t *it) {
-    ecs_reduce_stats_ctx_t *ctx = it->ctx;
-
-    void *dst = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
-    void *src = ecs_field_w_size(it, ecs_field_size(it, 1), 1);
-
-    dst = ECS_OFFSET_T(dst, EcsStatsHeader);
-    src = ECS_OFFSET_T(src, EcsStatsHeader);
-
-    if (!ctx->api.query_component_id) {
-        if (ctx->api.is_pointer) {
-            dst = *((void**)dst);
-            src = *((void**)src);
-        }
-        ctx->api.reduce(dst, src);
-    } else {
-        ecs_map_iter_t mit = ecs_map_iter(src);
-        while (ecs_map_next(&mit)) {
-            void *src_el = ecs_map_ptr(&mit);
-            void *dst_el = ecs_map_ensure_alloc(
-                dst, ctx->api.stats_size, ecs_map_key(&mit));
-            ctx->api.reduce(dst_el, src_el);
-        }
-    }
-}
-
-static void AggregateStats(ecs_iter_t *it) {
-    ecs_aggregate_stats_ctx_t *ctx = it->ctx;
+    ecs_monitor_stats_ctx_t *ctx = it->ctx;
     int32_t interval = ctx->interval;
 
     EcsStatsHeader *dst_hdr = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
@@ -74530,154 +74493,63 @@ static void flecs_monitor_ctx_free(
     ecs_os_free(ctx);
 }
 
-static void flecs_reduce_ctx_free(
-    void *ptr)
-{
-    ecs_os_free(ptr);
-}
-
-static void flecs_aggregate_ctx_free(
-    void *ptr)
-{
-    ecs_os_free(ptr);
-}
-
 void flecs_stats_api_import(
     ecs_world_t *world,
     ecs_stats_api_t *api)
 {
     ecs_entity_t kind = api->monitor_component_id;
     ecs_entity_t prev = ecs_set_scope(world, kind);
-
-    ecs_query_t *q = NULL;
-    if (api->query_component_id) {
-        q = ecs_query(world, {
-            .terms = {{ .id = api->query_component_id }},
-            .cache_kind = EcsQueryCacheNone,
-            .flags = EcsQueryMatchDisabled
-        });
-    }
-
-    // Called each frame, collects 60 measurements per second
-    {
+    struct {
+        const char *name;
+        ecs_entity_t period;
+        ecs_entity_t source;
+        int32_t interval;
+    } periods[] = {
+        {"Monitor1s", EcsPeriod1s, 0, 0},
+        {"Monitor1m", EcsPeriod1m, EcsPeriod1s, 1},
+        {"Monitor1h", EcsPeriod1h, EcsPeriod1m, 1},
+        {"Monitor1d", EcsPeriod1d, EcsPeriod1m, 24},
+        {"Monitor1w", EcsPeriod1w, EcsPeriod1h, 168}
+    };
+    ecs_entity_t minute = 0;
+    for (int32_t i = 0; i < 5; i ++) {
         ecs_monitor_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_monitor_stats_ctx_t);
         ctx->api = *api;
-        ctx->query = q;
-
-        ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1s" }),
+        ctx->interval = periods[i].interval;
+        if (!i && api->query_component_id) {
+            ctx->query = ecs_query(world, {
+                .terms = {{ .id = api->query_component_id }},
+                .cache_kind = EcsQueryCacheNone,
+                .flags = EcsQueryMatchDisabled
+            });
+        }
+        ecs_system_desc_t desc = {
+            .entity = ecs_entity(world, { .name = periods[i].name }),
             .phase = EcsPreFrame,
             .query.terms = {{
-                .id = ecs_pair(kind, EcsPeriod1s),
-                .src.id = EcsWorld 
+                .id = ecs_pair(kind, periods[i].period),
+                .src.id = EcsWorld
             }},
-            .callback = MonitorStats,
+            .callback = i ? ReduceStats : MonitorStats,
+            .interval = i == 1 ? 1 : 0,
+            .rate = i > 1 ? 60 : 0,
+            .tick_source = i > 1 ? minute : 0,
             .ctx = ctx,
             .ctx_free = flecs_monitor_ctx_free
-        });
+        };
+        if (i) {
+            desc.query.terms[1].id = ecs_pair(kind, periods[i].source);
+            desc.query.terms[1].src.id = EcsWorld;
+        }
+        ecs_entity_t system = ecs_system_init(world, &desc);
+        if (i == 1) {
+            minute = system;
+        }
     }
-
-    // Called each second, reduces into 60 measurements per minute
-    ecs_entity_t mw1m;
-    {
-        ecs_reduce_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_reduce_stats_ctx_t);
-        ctx->api = *api;
-
-        mw1m = ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1m" }),
-            .phase = EcsPreFrame,
-            .query.terms = {{
-                .id = ecs_pair(kind, EcsPeriod1m),
-                .src.id = EcsWorld 
-            }, {
-                .id = ecs_pair(kind, EcsPeriod1s),
-                .src.id = EcsWorld 
-            }},
-            .callback = ReduceStats,
-            .interval = (ecs_ftime_t)1,
-            .ctx = ctx,
-            .ctx_free = flecs_reduce_ctx_free
-        });
-    }
-
-    // Called each minute, reduces into 60 measurements per hour
-    {
-        ecs_reduce_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_reduce_stats_ctx_t);
-        ctx->api = *api;
-
-        ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1h" }),
-            .phase = EcsPreFrame,
-            .query.terms = {{
-                .id = ecs_pair(kind, EcsPeriod1h),
-                .src.id = EcsWorld 
-            }, {
-                .id = ecs_pair(kind, EcsPeriod1m),
-                .src.id = EcsWorld 
-            }},
-            .callback = ReduceStats,
-            .rate = 60,
-            .tick_source = mw1m,
-            .ctx = ctx,
-            .ctx_free = flecs_reduce_ctx_free
-        });
-    }
-
-    // Called each minute, reduces into 24 measurements per day
-    {
-        ecs_aggregate_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_aggregate_stats_ctx_t);
-        ctx->api = *api;
-        ctx->interval = FlecsDayIntervalCount;
-
-        ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1d" }),
-            .phase = EcsPreFrame,
-            .query.terms = {{
-                .id = ecs_pair(kind, EcsPeriod1d),
-                .src.id = EcsWorld 
-            }, {
-                .id = ecs_pair(kind, EcsPeriod1m),
-                .src.id = EcsWorld 
-            }},
-            .callback = AggregateStats,
-            .rate = 60,
-            .tick_source = mw1m,
-            .ctx = ctx,
-            .ctx_free = flecs_aggregate_ctx_free
-        });
-    }
-
-    // Called each hour, reduces into 168 measurements per week
-    {
-        ecs_aggregate_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_aggregate_stats_ctx_t);
-        ctx->api = *api;
-        ctx->interval = FlecsWeekIntervalCount;
-
-        ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1w" }),
-            .phase = EcsPreFrame,
-            .query.terms = {{
-                .id = ecs_pair(kind, EcsPeriod1w),
-                .src.id = EcsWorld 
-            }, {
-                .id = ecs_pair(kind, EcsPeriod1h),
-                .src.id = EcsWorld 
-            }},
-            .callback = AggregateStats,
-            .rate = 60,
-            .tick_source = mw1m,
-            .ctx = ctx,
-            .ctx_free = flecs_aggregate_ctx_free
-        });
-    }
-
     ecs_set_scope(world, prev);
-
-    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1s);
-    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1m);
-    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1h);
-    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1d);
-    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1w);
+    for (int32_t i = 0; i < 5; i ++) {
+        ecs_add_pair(world, EcsWorld, kind, periods[i].period);
+    }
 }
 
 void FlecsStatsImport(
