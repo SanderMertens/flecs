@@ -1342,3 +1342,50 @@ void Rest_query_error_restores_log(void) {
     ecs_query_fini(q);
     ecs_fini(world);
 }
+
+void Rest_call_zero_arguments(void) {
+    ecs_world_t *world = ecs_init();
+    test_int(ecs_script_run(world, NULL,
+        "fn answer() -> i32 { 42 }", NULL), 0);
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(ecs_http_server_request(srv, "GET", "/call/answer", NULL, &reply), 0);
+    test_int(reply.code, 200);
+    char *body = ecs_strbuf_get(&reply.body);
+    test_str(body, "42");
+    ecs_os_free(body);
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_call_invalid_argument_after_string(void) {
+    ecs_world_t *world = ecs_init();
+    test_int(ecs_script_run(world, NULL,
+        "fn echo(value: string, count: i32) -> string { value }", NULL), 0);
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(ecs_http_server_request(srv, "GET",
+        "/call/echo?value=hello&count=invalid", NULL, &reply), -1);
+    test_int(reply.code, 400);
+    char *body = ecs_strbuf_get(&reply.body);
+    test_str(body, "{\"error\":\"invalid value for argument 'count'\"}");
+    ecs_os_free(body);
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_call_argument_expression(void) {
+    ecs_world_t *world = ecs_init();
+    test_int(ecs_script_run(world, NULL,
+        "fn square(value: i32) -> i32 { value * value }", NULL), 0);
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(ecs_http_server_request(srv, "GET",
+        "/call/square?value=3%2B4", NULL, &reply), 0);
+    test_int(reply.code, 200);
+    char *body = ecs_strbuf_get(&reply.body);
+    test_str(body, "49");
+    ecs_os_free(body);
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

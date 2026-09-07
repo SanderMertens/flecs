@@ -594,18 +594,6 @@ static bool flecs_rest_script(
 #endif
 }
 
-#ifdef FLECS_SCRIPT
-static ecs_entity_t flecs_rest_call_lookup(
-    const ecs_world_t *world,
-    const char *name,
-    void *ctx)
-{
-    (void)world;
-    (void)name;
-    return *(ecs_entity_t*)ctx;
-}
-#endif
-
 static void flecs_rest_reply_capture(
     ecs_http_reply_t *reply,
     bool ok);
@@ -634,12 +622,14 @@ static bool flecs_rest_call(
         return true;
     }
 
-    ecs_script_vars_t *vars = ecs_script_vars_init(world);
-    ecs_strbuf_t expr = ECS_STRBUF_INIT;
-    ecs_strbuf_appendlit(&expr, "rest_call(");
-
+    if (!func->callback || !ecs_get_type_info(world, func->return_type)) {
+        flecs_reply_error(reply, "function '%s' cannot be called synchronously", path);
+        reply->code = 400;
+        return true;
+    }
     int32_t i, param_count = ecs_vec_count(&func->params);
     ecs_script_parameter_t *params = ecs_vec_first(&func->params);
+    ecs_value_t *args = param_count ? ecs_os_calloc_n(ecs_value_t, param_count) : NULL;
     for (i = 0; i < param_count; i ++) {
         const char *value = ecs_http_get_param(req, params[i].name);
         if (!value) {
@@ -648,19 +638,17 @@ static bool flecs_rest_call(
             goto done;
         }
 
-        ecs_script_var_t *var = ecs_script_vars_define_id(
-            vars, params[i].name, params[i].type);
-        if (!var) {
-            flecs_reply_error(reply, "invalid type for argument '%s'",
-                params[i].name);
+        if (!ecs_get_type_info(world, params[i].type)) {
+            flecs_reply_error(reply, "invalid type for argument '%s'", params[i].name);
             reply->code = 500;
             goto done;
         }
+        args[i] = ecs_value_new(world, params[i].type);
 
         const EcsPrimitive *primitive = ecs_get(
             world, params[i].type, EcsPrimitive);
         if (primitive && primitive->kind == EcsString) {
-            *(ecs_string_t*)var->value.ptr = ecs_os_strdup(value);
+            *(ecs_string_t*)args[i].ptr = ecs_os_strdup(value);
         } else if (primitive && primitive->kind == EcsChar) {
             if (value[0] == '\0' || value[1] != '\0') {
                 flecs_reply_error(reply, "invalid value for argument '%s'",
@@ -668,13 +656,13 @@ static bool flecs_rest_call(
                 reply->code = 400;
                 goto done;
             }
-            *(char*)var->value.ptr = value[0];
+            *(char*)args[i].ptr = value[0];
         } else {
             flecs_log_capture_push(true);
 
             ecs_expr_eval_desc_t desc = { .type = params[i].type };
             const char *ptr = ecs_expr_run(
-                world, value, &var->value, &desc);
+                world, value, &args[i], &desc);
 
             ecs_os_free(flecs_log_capture_pop());
             if (!ptr || ptr[0] != '\0') {
@@ -684,31 +672,13 @@ static bool flecs_rest_call(
                 goto done;
             }
         }
-
-        if (i) {
-            ecs_strbuf_appendlit(&expr, ", ");
-        }
-        ecs_strbuf_append(&expr, "$%s", params[i].name);
     }
-    ecs_strbuf_appendlit(&expr, ")");
 
-    char *expr_str = ecs_strbuf_get(&expr);
-    ecs_value_t result = { .type = func->return_type };
-    ecs_expr_eval_desc_t desc = {
-        .vars = vars,
-        .type = func->return_type,
-        .lookup_action = flecs_rest_call_lookup,
-        .lookup_ctx = &function
-    };
-
+    ecs_value_t result = {0};
     flecs_log_capture_push(true);
-
-    const char *ptr = ecs_expr_run(world, expr_str, &result, &desc);
-
-    ecs_os_free(expr_str);
-
-    flecs_rest_reply_capture(reply, ptr != NULL);
-    if (ptr) {
+    bool ok = ecs_function_call(world, function, param_count, args, &result) == 0;
+    flecs_rest_reply_capture(reply, ok);
+    if (ok) {
         if (ecs_ptr_to_json_buf(
             world, result.type, result.ptr, &reply->body))
         {
@@ -718,13 +688,13 @@ static bool flecs_rest_call(
         }
     }
 
-    if (result.ptr) {
-        ecs_ptr_free(world, result.type, result.ptr);
-    }
+    ecs_value_fini(world, &result);
 
 done:
-    ecs_strbuf_reset(&expr);
-    ecs_script_vars_fini(vars);
+    for (i = 0; i < param_count; i ++) {
+        ecs_value_fini(world, &args[i]);
+    }
+    ecs_os_free(args);
     return true;
 #else
     return false;

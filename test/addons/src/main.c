@@ -484,6 +484,9 @@ void Rest_named_query(void);
 void Rest_query_error_restores_log(void);
 void Rest_call(void);
 void Rest_call_string(void);
+void Rest_call_zero_arguments(void);
+void Rest_call_invalid_argument_after_string(void);
+void Rest_call_argument_expression(void);
 void Rest_call_missing_argument(void);
 void Rest_call_not_found(void);
 void Rest_entity_not_found_w_dot_sep(void);
@@ -2376,6 +2379,18 @@ bake_test_case Rest_testcases[] = {
         Rest_call_string
     },
     {
+        "call_zero_arguments",
+        Rest_call_zero_arguments
+    },
+    {
+        "call_invalid_argument_after_string",
+        Rest_call_invalid_argument_after_string
+    },
+    {
+        "call_argument_expression",
+        Rest_call_argument_expression
+    },
+    {
         "call_missing_argument",
         Rest_call_missing_argument
     },
@@ -2978,7 +2993,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        46,
+        49,
         Rest_testcases
     },
     {
