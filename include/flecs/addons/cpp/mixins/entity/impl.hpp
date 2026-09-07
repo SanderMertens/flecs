@@ -108,85 +108,57 @@ inline flecs::table_range entity_view::range() const {
     return flecs::table_range();
 }
 
-template <typename Func>
-inline void entity_view::each(const Func& func) const {
-    const ecs_type_t *type = ecs_get_type(world_, id_);
-    if (type) {
-        const ecs_id_t *ids = type->array;
-        int32_t count = type->count;
+namespace _ {
 
-        for (int i = 0; i < count; i ++) {
-            ecs_id_t id = ids[i];
-            flecs::id ent(world_, id);
-            func(ent);
+template <bool Match, typename Func>
+void each_id(flecs::world_t *world, flecs::entity_t entity,
+    flecs::id_t pattern, const Func& func)
+{
+    auto real_world = const_cast<flecs::world_t*>(ecs_get_world(world));
+    const ecs_table_t *table = ecs_get_table(world, entity);
+    const ecs_type_t *type = table ? ecs_table_get_type(table) : nullptr;
+    if (type) {
+        const auto ids = type->array;
+        const int32_t count = type->count;
+        for (int32_t cur = 0; cur < count; cur ++) {
+            if constexpr (Match) {
+                cur = ecs_search_offset(real_world, table, cur, pattern, nullptr);
+                if (cur == -1) {
+                    break;
+                }
+            }
+            flecs::id id(world, ids[cur]);
+            func(id);
         }
     }
-
-    /* Iterate components with the DontFragment trait, which are not stored in
-     * the entity's table. */
-    const flecs::world_t *real_world = ecs_get_world(world_);
-    const ecs_record_t *r = ecs_record_find(real_world, id_);
+    const ecs_record_t *r = ecs_record_find(real_world, entity);
     if (r && (r->row & EcsEntityHasDontFragment)) {
-        ecs_component_record_t *cur = flecs_component_dont_fragment_first(
-            real_world);
-        for (; cur; cur = flecs_component_dont_fragment_next(cur)) {
-            ecs_id_t id = flecs_component_get_id(cur);
-            if (ecs_id_is_wildcard(id)) {
+        for (auto cr = flecs_component_dont_fragment_first(real_world); cr;
+            cr = flecs_component_dont_fragment_next(cr))
+        {
+            auto id = flecs_component_get_id(cr);
+            if (ecs_id_is_wildcard(id) || (Match && !ecs_id_match(id, pattern))) {
                 continue;
             }
-
-            ecs_sparse_t *sparse = flecs_component_get_sparse(cur);
-            if (sparse && flecs_sparse_has(sparse, id_)) {
-                flecs::id ent(world_, id);
+            auto sparse = flecs_component_get_sparse(cr);
+            if (sparse && flecs_sparse_has(sparse, entity)) {
+                flecs::id ent(world, id);
                 func(ent);
             }
         }
     }
 }
 
+}
+
+template <typename Func>
+inline void entity_view::each(const Func& func) const {
+    _::each_id<false>(world_, id_, 0, func);
+}
+
 template <typename Func>
 inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& func) const {
-    flecs::world_t *real_world = const_cast<flecs::world_t*>(
-        ecs_get_world(world_));
-
-    flecs::id_t pattern = pred;
-    if (obj) {
-        pattern = ecs_pair(pred, obj);
-    }
-
-    const ecs_table_t *table = ecs_get_table(world_, id_);
-    const ecs_type_t *type = table ? ecs_table_get_type(table) : nullptr;
-    if (type) {
-        int32_t cur = 0;
-        id_t *ids = type->array;
-
-        while (-1 != (cur = ecs_search_offset(real_world, table, cur, pattern, nullptr)))
-        {
-            flecs::id ent(world_, ids[cur]);
-            func(ent);
-            cur ++;
-        }
-    }
-
-    /* Iterate components with the DontFragment trait, which are not stored in
-     * the entity's table. */
-    const ecs_record_t *r = ecs_record_find(real_world, id_);
-    if (r && (r->row & EcsEntityHasDontFragment)) {
-        ecs_component_record_t *cr = flecs_component_dont_fragment_first(
-            real_world);
-        for (; cr; cr = flecs_component_dont_fragment_next(cr)) {
-            ecs_id_t id = flecs_component_get_id(cr);
-            if (ecs_id_is_wildcard(id) || !ecs_id_match(id, pattern)) {
-                continue;
-            }
-
-            ecs_sparse_t *sparse = flecs_component_get_sparse(cr);
-            if (sparse && flecs_sparse_has(sparse, id_)) {
-                flecs::id ent(world_, id);
-                func(ent);
-            }
-        }
-    }
+    _::each_id<true>(world_, id_, obj ? ecs_pair(pred, obj) : pred, func);
 }
 
 template <typename Func>
