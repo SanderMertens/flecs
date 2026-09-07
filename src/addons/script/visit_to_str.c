@@ -510,7 +510,9 @@ int ecs_script_ast_to_buf(
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(buf != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_script_str_visitor_t v = { .buf = buf, .colors = colors };
-    if (ecs_script_visit(flecs_script_impl(script), &v, flecs_script_stmt_to_str)) {
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    if (ecs_script_visit_from(impl, &v,
+        flecs_script_stmt_to_str, (ecs_script_node_t*)impl->root, 0)) {
         goto error;
     }
 

@@ -116,17 +116,4 @@ int ecs_script_visit_from_(
     return 0;
 }
 
-int ecs_script_visit_(
-    ecs_script_visit_t *visitor,
-    ecs_visit_action_t visit,
-    ecs_script_impl_t *script)
-{
-    if (!script->root) {
-        return -1;
-    }
-
-    return ecs_script_visit_from_(visitor, visit, script, 
-        (ecs_script_node_t*)script->root, 0);
-}
-
 #endif

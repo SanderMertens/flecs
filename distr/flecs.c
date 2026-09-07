@@ -50744,16 +50744,6 @@ struct ecs_script_visit_t {
     int32_t depth;
 };
 
-int ecs_script_visit_(
-    ecs_script_visit_t *visitor,
-    ecs_visit_action_t visit,
-    ecs_script_impl_t *script);
-
-#define ecs_script_visit(script, visitor, visit) \
-    ecs_script_visit_((ecs_script_visit_t*)visitor,\
-        visit,\
-        script)
-
 int ecs_script_visit_from_(
     ecs_script_visit_t *visitor,
     ecs_visit_action_t visit,
@@ -76248,19 +76238,6 @@ int ecs_script_visit_from_(
     return 0;
 }
 
-int ecs_script_visit_(
-    ecs_script_visit_t *visitor,
-    ecs_visit_action_t visit,
-    ecs_script_impl_t *script)
-{
-    if (!script->root) {
-        return -1;
-    }
-
-    return ecs_script_visit_from_(visitor, visit, script, 
-        (ecs_script_node_t*)script->root, 0);
-}
-
 #endif
 
 #ifdef FLECS_SCRIPT
@@ -76498,8 +76475,9 @@ int flecs_script_visit_free(
         .script = impl
     };
 
-    if (ecs_script_visit(
-        flecs_script_impl(script), &v, flecs_script_stmt_free)) 
+    if (ecs_script_visit_from(
+        flecs_script_impl(script), &v, flecs_script_stmt_free,
+        (ecs_script_node_t*)impl->root, 0))
     {
         goto error;
     }
@@ -77015,7 +76993,9 @@ int ecs_script_ast_to_buf(
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(buf != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_script_str_visitor_t v = { .buf = buf, .colors = colors };
-    if (ecs_script_visit(flecs_script_impl(script), &v, flecs_script_stmt_to_str)) {
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    if (ecs_script_visit_from(impl, &v,
+        flecs_script_stmt_to_str, (ecs_script_node_t*)impl->root, 0)) {
         goto error;
     }
 

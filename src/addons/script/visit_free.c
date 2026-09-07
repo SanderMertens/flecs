@@ -241,8 +241,9 @@ int flecs_script_visit_free(
         .script = impl
     };
 
-    if (ecs_script_visit(
-        flecs_script_impl(script), &v, flecs_script_stmt_free)) 
+    if (ecs_script_visit_from(
+        flecs_script_impl(script), &v, flecs_script_stmt_free,
+        (ecs_script_node_t*)impl->root, 0))
     {
         goto error;
     }

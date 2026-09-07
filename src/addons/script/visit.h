@@ -25,16 +25,6 @@ struct ecs_script_visit_t {
     int32_t depth;
 };
 
-int ecs_script_visit_(
-    ecs_script_visit_t *visitor,
-    ecs_visit_action_t visit,
-    ecs_script_impl_t *script);
-
-#define ecs_script_visit(script, visitor, visit) \
-    ecs_script_visit_((ecs_script_visit_t*)visitor,\
-        visit,\
-        script)
-
 int ecs_script_visit_from_(
     ecs_script_visit_t *visitor,
     ecs_visit_action_t visit,
