@@ -182,7 +182,7 @@ static void flecs_script_template_root_clear(
         .instance_template = template,
         .visit = 1
     };
-    flecs_script_eval_cleanup(&v);
+    flecs_script_eval_cleanup(&v, true);
 }
 
 static void flecs_script_template_root_remove(
@@ -864,11 +864,7 @@ static int flecs_script_template_instantiate(
             break;
         }
 
-        if (vm) {
-            flecs_script_ir_cleanup_w_vm(v, vm->ir, entry, vm->dirty);
-        } else {
-            flecs_script_eval_cleanup(v);
-        }
+        flecs_script_eval_cleanup(v, vm ? vm->dirty : true);
         root = ecs_ensure_pair(
             world, entities[i], EcsScriptTemplateRoot, template_entity);
         root->initialized = true;

@@ -1520,11 +1520,15 @@ static int flecs_ir_for_enter(
         node->scope->scope_slot < ecs_vec_count(v->scope_slots) &&
         ecs_vec_get_t(v->scope_slots,
             int32_t, node->scope->scope_slot)[0] == v->visit;
-    if (!visited && v->for_slots && node->for_slot >= 0 &&
+    if (v->for_slots && node->for_slot >= 0 &&
         node->for_slot < ecs_vec_count(v->for_slots))
     {
-        flecs_script_for_slot_clear(v->world, ecs_vec_get_t(
-            v->for_slots, ecs_script_for_slot_t, node->for_slot), false);
+        ecs_script_for_slot_t *slot = ecs_vec_get_t(
+            v->for_slots, ecs_script_for_slot_t, node->for_slot);
+        slot->scope_slot = node->scope->scope_slot;
+        if (!visited) {
+            flecs_script_for_slot_clear(v->world, slot, false);
+        }
     }
 
     ecs_entity_t key_type = 0;
@@ -3948,46 +3952,6 @@ const char* flecs_script_ir_vm_stmt_pos(
     return NULL;
 }
 
-void flecs_script_ir_cleanup(
-    ecs_script_eval_visitor_t *v,
-    const ecs_script_ir_t *ir,
-    const ecs_script_ir_entry_t *entry)
-{
-    flecs_script_ir_cleanup_w_vm(v, ir, entry, true);
-}
-
-void flecs_script_ir_cleanup_w_vm(
-    ecs_script_eval_visitor_t *v,
-    const ecs_script_ir_t *ir,
-    const ecs_script_ir_entry_t *entry,
-    bool dirty)
-{
-    if (dirty || v->input == UINT64_MAX) {
-        flecs_script_cleanup_slots(v);
-    }
-
-    if (!v->for_slots) {
-        return;
-    }
-
-    int32_t slot_count = ecs_vec_count(v->for_slots);
-    const ecs_script_ir_for_t *fors = ecs_vec_first(&ir->fors);
-    int32_t i, end = entry->for_first + entry->for_count;
-    for (i = entry->for_first; i < end; i ++) {
-        const ecs_script_ir_for_t *f = &fors[i];
-        if (f->for_slot < 0 || f->for_slot >= slot_count) {
-            continue;
-        }
-        ecs_script_for_slot_t *slot = ecs_vec_get_t(
-            v->for_slots, ecs_script_for_slot_t, f->for_slot);
-        if (!flecs_script_scope_visited(v, f->scope_slot)) {
-            flecs_script_for_slot_clear(v->world, slot, true);
-        } else {
-            flecs_script_for_slot_purge(v->world, slot, v->visit);
-        }
-    }
-}
-
 int flecs_script_ir_eval_root(
     ecs_script_eval_visitor_t *v,
     ecs_script_impl_t *script)
@@ -4005,7 +3969,7 @@ int flecs_script_ir_eval_root(
     flecs_script_run_status_t status = flecs_script_ir_vm_run(vm, entry);
     int result = -1;
     if (status == FlecsScriptRunDone) {
-        flecs_script_ir_cleanup_w_vm(&vm->v, ir, entry, vm->dirty);
+        flecs_script_eval_cleanup(&vm->v, vm->dirty);
         result = 0;
     }
 

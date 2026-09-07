@@ -184,11 +184,6 @@ typedef struct ecs_script_ir_id_t {
     bool visitor;
 } ecs_script_ir_id_t;
 
-typedef struct ecs_script_ir_for_t {
-    int32_t for_slot;
-    int32_t scope_slot;
-} ecs_script_ir_for_t;
-
 typedef enum ecs_script_ir_entry_kind_t {
     EcsIrEntryRoot,
     EcsIrEntryTemplate,
@@ -201,8 +196,6 @@ typedef struct ecs_script_ir_entry_t {
     ecs_script_ir_entry_kind_t kind;
     int32_t pc;
     int32_t reg_count;
-    int32_t for_first;
-    int32_t for_count;
 } ecs_script_ir_entry_t;
 
 struct ecs_script_ir_t {
@@ -211,7 +204,6 @@ struct ecs_script_ir_t {
     ecs_vec_t catches;
     ecs_vec_t entries;
     ecs_map_t entry_index;
-    ecs_vec_t fors;
     ecs_vec_t components;
     ecs_vec_t scope_stmts;
     int32_t root_entry;
@@ -355,17 +347,6 @@ flecs_script_run_status_t flecs_script_ir_vm_resume(
 
 const char* flecs_script_ir_vm_stmt_pos(
     const ecs_script_ir_vm_t *vm);
-
-void flecs_script_ir_cleanup(
-    ecs_script_eval_visitor_t *v,
-    const ecs_script_ir_t *ir,
-    const ecs_script_ir_entry_t *entry);
-
-void flecs_script_ir_cleanup_w_vm(
-    ecs_script_eval_visitor_t *v,
-    const ecs_script_ir_t *ir,
-    const ecs_script_ir_entry_t *entry,
-    bool dirty);
 
 int flecs_script_ir_eval_root(
     ecs_script_eval_visitor_t *v,

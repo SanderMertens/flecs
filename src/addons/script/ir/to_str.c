@@ -184,9 +184,8 @@ void flecs_script_ir_to_buf(
                 } else if (entries[e].kind == EcsIrEntryFunction) {
                     kind = "fn";
                 }
-                ecs_strbuf_append(buf, "%s%s block %d (regs=%d, fors=%d)\n",
-                    i ? "\n" : "", kind, e, entries[e].reg_count,
-                    entries[e].for_count);
+                ecs_strbuf_append(buf, "%s%s block %d (regs=%d)\n",
+                    i ? "\n" : "", kind, e, entries[e].reg_count);
             }
         }
 

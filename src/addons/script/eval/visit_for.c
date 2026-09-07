@@ -42,6 +42,7 @@ static void flecs_script_for_entry_fini(
 static void flecs_script_for_slot_init(
     ecs_script_for_slot_t *slot)
 {
+    slot->scope_slot = -1;
     ecs_vec_init_t(NULL, &slot->entities, ecs_entity_t, 0);
     flecs_hashmap_init(&slot->names, ecs_script_for_key_t,
         ecs_script_for_entry_t, flecs_script_for_key_hash,
@@ -403,11 +404,15 @@ static int flecs_script_for_enter(
         node->scope->scope_slot < ecs_vec_count(v->scope_slots) &&
         ecs_vec_get_t(v->scope_slots,
             int32_t, node->scope->scope_slot)[0] == v->visit;
-    if (!visited && v->for_slots && node->for_slot >= 0 &&
+    if (v->for_slots && node->for_slot >= 0 &&
         node->for_slot < ecs_vec_count(v->for_slots))
     {
-        flecs_script_for_slot_clear(v->world, ecs_vec_get_t(
-            v->for_slots, ecs_script_for_slot_t, node->for_slot), false);
+        ecs_script_for_slot_t *slot = ecs_vec_get_t(
+            v->for_slots, ecs_script_for_slot_t, node->for_slot);
+        slot->scope_slot = node->scope->scope_slot;
+        if (!visited) {
+            flecs_script_for_slot_clear(v->world, slot, false);
+        }
     }
 
     ecs_entity_t key_type = 0;

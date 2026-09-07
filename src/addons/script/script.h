@@ -126,6 +126,7 @@ typedef struct ecs_script_for_slot_t {
     ecs_hashmap_t names; /* ecs_script_for_key_t -> ecs_script_for_entry_t */
     ecs_entity_t cache_entity;
     ecs_script_for_entry_t *cache_entry;
+    int32_t scope_slot;
 } ecs_script_for_slot_t;
 
 void flecs_script_for_slots_init(

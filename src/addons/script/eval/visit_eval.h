@@ -295,7 +295,8 @@ void flecs_script_eval_begin(
     int32_t visit);
 
 void flecs_script_eval_cleanup(
-    ecs_script_eval_visitor_t *v);
+    ecs_script_eval_visitor_t *v,
+    bool dirty);
 
 int flecs_script_eval_node(
     ecs_script_visit_t *v,
@@ -437,9 +438,6 @@ const ecs_script_var_t* flecs_script_template_prop_var(
 bool flecs_script_scope_visited(
     ecs_script_eval_visitor_t *v,
     int32_t slot);
-
-void flecs_script_cleanup_slots(
-    ecs_script_eval_visitor_t *v);
 
 /* Functions shared between type and eval visitor */
 

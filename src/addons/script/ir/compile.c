@@ -93,8 +93,6 @@ static int32_t flecs_irc_entry_add(
     entry->kind = kind;
     entry->pc = -1;
     entry->reg_count = 0;
-    entry->for_first = 0;
-    entry->for_count = 0;
     ecs_map_insert(&c->ir->entry_index, (uintptr_t)node, (uint64_t)count);
     return count;
 }
@@ -1623,89 +1621,6 @@ static int flecs_irc_compile_function(
     return 0;
 }
 
-static void flecs_irc_fors_scope(
-    ecs_script_scope_t *scope,
-    ecs_script_ir_compiler_t *c);
-
-static void flecs_irc_fors_node(
-    ecs_script_node_t *node,
-    ecs_script_ir_compiler_t *c)
-{
-    switch(node->kind) {
-    case EcsAstScope:
-        flecs_irc_fors_scope((ecs_script_scope_t*)node, c);
-        break;
-    case EcsAstEntity:
-        flecs_irc_fors_scope(((ecs_script_entity_t*)node)->scope,
-            c);
-        break;
-    case EcsAstWith: {
-        ecs_script_with_t *n = (ecs_script_with_t*)node;
-        flecs_irc_fors_scope(n->expressions, c);
-        flecs_irc_fors_scope(n->scope, c);
-        break;
-    }
-    case EcsAstPairScope:
-        flecs_irc_fors_scope(((ecs_script_pair_scope_t*)node)->scope,
-            c);
-        break;
-    case EcsAstIf: {
-        ecs_script_if_t *n = (ecs_script_if_t*)node;
-        flecs_irc_fors_scope(n->if_true, c);
-        flecs_irc_fors_scope(n->if_false, c);
-        break;
-    }
-    case EcsAstFor: {
-        ecs_script_for_t *n = (ecs_script_for_t*)node;
-        ecs_script_ir_for_t *elem = ecs_vec_append_t(
-            NULL, &c->ir->fors, ecs_script_ir_for_t);
-        elem->for_slot = n->for_slot;
-        elem->scope_slot = n->scope->scope_slot;
-        flecs_irc_fors_scope(n->scope, c);
-        break;
-    }
-    case EcsAstTry: {
-        ecs_script_try_t *n = (ecs_script_try_t*)node;
-        flecs_irc_fors_scope(n->try_scope, c);
-        ecs_script_catch_t *catches = ecs_vec_first(&n->catches);
-        int32_t i, count = ecs_vec_count(&n->catches);
-        for (i = 0; i < count; i ++) {
-            flecs_irc_fors_scope(catches[i].scope, c);
-        }
-        break;
-    }
-    case EcsAstTag:
-    case EcsAstComponent:
-    case EcsAstWithTag:
-    case EcsAstWithComponent:
-    case EcsAstUsing:
-    case EcsAstModule:
-    case EcsAstAnnotation:
-    case EcsAstTemplate:
-    case EcsAstProp:
-    case EcsAstMut:
-    case EcsAstConst:
-    case EcsAstExportConst:
-    case EcsAstExportMut:
-    case EcsAstInclude:
-    case EcsAstFunction:
-    case EcsAstAwait:
-    case EcsAstContinue:
-        break;
-    }
-}
-
-static void flecs_irc_fors_scope(
-    ecs_script_scope_t *scope,
-    ecs_script_ir_compiler_t *c)
-{
-    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-    int32_t i, count = ecs_vec_count(&scope->stmts);
-    for (i = 0; i < count; i ++) {
-        flecs_irc_fors_node(stmts[i], c);
-    }
-}
-
 static int flecs_irc_compile_entry(
     ecs_script_ir_compiler_t *c,
     int32_t index)
@@ -1713,7 +1628,6 @@ static int flecs_irc_compile_entry(
     ecs_script_ir_entry_t *entry = ecs_vec_get_t(
         &c->ir->entries, ecs_script_ir_entry_t, index);
     entry->pc = flecs_irc_pc(c);
-    entry->for_first = ecs_vec_count(&c->ir->fors);
     ecs_script_ir_entry_kind_t kind = entry->kind;
     const void *node = entry->node;
     c->entry = index;
@@ -1729,14 +1643,11 @@ static int flecs_irc_compile_entry(
     case EcsIrEntryRoot:
         result = flecs_irc_compile_scope(
             c, ECS_CONST_CAST(ecs_script_scope_t*, node), 0);
-        flecs_irc_fors_scope(
-            ECS_CONST_CAST(ecs_script_scope_t*, node), c);
         break;
     case EcsIrEntryTemplate: {
         ecs_script_template_node_t *n =
             ECS_CONST_CAST(ecs_script_template_node_t*, node);
         result = flecs_irc_compile_scope(c, n->scope, 0);
-        flecs_irc_fors_scope(n->scope, c);
         break;
     }
     case EcsIrEntryEntity:
@@ -1753,7 +1664,6 @@ static int flecs_irc_compile_entry(
 
     entry = ecs_vec_get_t(&c->ir->entries, ecs_script_ir_entry_t, index);
     entry->reg_count = c->reg_max;
-    entry->for_count = ecs_vec_count(&c->ir->fors) - entry->for_first;
     return result;
 }
 
@@ -1765,7 +1675,6 @@ static void flecs_irc_init(
     ecs_vec_init_t(NULL, &ir->catches, int32_t, 0);
     ecs_vec_init_t(NULL, &ir->entries, ecs_script_ir_entry_t, 0);
     ecs_map_init(&ir->entry_index, NULL);
-    ecs_vec_init_t(NULL, &ir->fors, ecs_script_ir_for_t, 0);
     ecs_vec_init_t(NULL, &ir->components, ecs_id_t, 0);
     ecs_vec_init_t(NULL, &ir->scope_stmts, int32_t, 0);
     ir->root_entry = -1;
@@ -1782,7 +1691,6 @@ void flecs_script_ir_free(
     ecs_vec_fini_t(NULL, &ir->catches, int32_t);
     ecs_vec_fini_t(NULL, &ir->entries, ecs_script_ir_entry_t);
     ecs_map_fini(&ir->entry_index);
-    ecs_vec_fini_t(NULL, &ir->fors, ecs_script_ir_for_t);
     ecs_vec_fini_t(NULL, &ir->components, ecs_id_t);
     ecs_vec_fini_t(NULL, &ir->scope_stmts, int32_t);
     ecs_os_free(ir);
