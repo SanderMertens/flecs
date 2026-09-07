@@ -9,13 +9,16 @@ namespace flecs {
 template <typename ... Components>
 struct iter_iterable;
 
-/** Forward declaration of page_iterable. */
-template <typename ... Components>
-struct page_iterable;
+namespace _ {
+    template <auto Create, ecs_iter_next_action_t Next, typename... Components>
+    struct chained_iterable;
+}
 
-/** Forward declaration of worker_iterable. */
-template <typename ... Components>
-struct worker_iterable;
+template <typename... Components>
+using page_iterable = _::chained_iterable<ecs_page_iter, ecs_page_next, Components...>;
+
+template <typename... Components>
+using worker_iterable = _::chained_iterable<ecs_worker_iter, ecs_worker_next, Components...>;
 
 /** Base class for iterable query objects. */
 template <typename ... Components>
@@ -124,32 +127,10 @@ struct iterable {
         return this->iter().first();
     }
 
-    /** Set query variable by ID. */
-    iter_iterable<Components...> set_var(int var_id, flecs::entity_t value) const {
-        return this->iter().set_var(var_id, value);
+    template <typename Var, typename Value>
+    iter_iterable<Components...> set_var(Var var, Value value) const {
+        return this->iter().set_var(var, value);
     }
-
-#ifdef FLECS_QUERY_PLANS
-    /** Set query variable by name to an entity value. */
-    iter_iterable<Components...> set_var(const char *name, flecs::entity_t value) const {
-        return this->iter().set_var(name, value);
-    }
-
-    /** Set query variable by name to a table value. */
-    iter_iterable<Components...> set_var(const char *name, flecs::table_t *value) const {
-        return this->iter().set_var(name, value);
-    }
-
-    /** Set query variable by name to a table range (C type). */
-    iter_iterable<Components...> set_var(const char *name, ecs_table_range_t value) const {
-        return this->iter().set_var(name, value);
-    }
-
-    /** Set query variable by name to a table range. */
-    iter_iterable<Components...> set_var(const char *name, flecs::table_range value) const {
-        return this->iter().set_var(name, value);
-    }
-#endif
 
 #ifdef FLECS_CACHED_QUERIES
     /** Limit results to tables with the specified group ID (grouped queries only). */
@@ -184,52 +165,38 @@ struct iter_iterable final : iterable<Components...> {
     {
         it_ = it->get_iter(world);
         next_ = it->next_action();
-        next_each_ = it->next_action();
         ecs_assert(next_ != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        ecs_assert(next_each_ != nullptr, ECS_INTERNAL_ERROR, nullptr);
     }
 
-    /** Set query variable by ID. */
-    iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
-        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, nullptr);
-        ecs_iter_set_var(&it_, var_id, value);
-        return *this;
-    }
-
+    template <typename Var, typename Value>
+    iter_iterable& set_var(Var var, Value value) {
+        int var_id;
 #ifdef FLECS_QUERY_PLANS
-    /** Set query variable by name to an entity value. */
-    iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
-        int var_id = ecs_query_find_var(it_.query, name);
-        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, "%s", name);
-        ecs_iter_set_var(&it_, var_id, value);
-        return *this;
-    }
-
-    /** Set query variable by name to a table value. */
-    iter_iterable<Components...>& set_var(const char *name, flecs::table_t *value) {
-        int var_id = ecs_query_find_var(it_.query, name);
-        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, "%s", name);
-        ecs_iter_set_var_as_table(&it_, var_id, value);
-        return *this;
-    }
-
-    /** Set query variable by name to a table range (C type). */
-    iter_iterable<Components...>& set_var(const char *name, ecs_table_range_t value) {
-        int var_id = ecs_query_find_var(it_.query, name);
-        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, "%s", name);
-        ecs_iter_set_var_as_range(&it_, var_id, &value);
-        return *this;
-    }
-
-    /** Set query variable by name to a table range. */
-    iter_iterable<Components...>& set_var(const char *name, flecs::table_range value) {
-        ecs_table_range_t range;
-        range.table = value.get_table();
-        range.offset = value.offset();
-        range.count = value.count();
-        return set_var(name, range);
-    }
+        if constexpr (std::is_convertible_v<Var, const char*>) {
+            var_id = ecs_query_find_var(it_.query, var);
+        } else
 #endif
+        {
+            var_id = var;
+        }
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, "query variable was not found");
+        if constexpr (std::is_convertible_v<Value, flecs::entity_t>) {
+            ecs_iter_set_var(&it_, var_id, value);
+        } else if constexpr (std::is_convertible_v<Value, flecs::table_t*> &&
+            !std::is_base_of_v<flecs::table_range, Value>)
+        {
+            ecs_iter_set_var_as_table(&it_, var_id, value);
+        } else {
+            ecs_table_range_t range;
+            if constexpr (std::is_same_v<Value, ecs_table_range_t>) {
+                range = value;
+            } else {
+                range = {value.get_table(), value.offset(), value.count()};
+            }
+            ecs_iter_set_var_as_range(&it_, var_id, &range);
+        }
+        return *this;
+    }
 
 #   ifdef FLECS_JSON
 #   include "../mixins/json/iterable.inl"
@@ -238,7 +205,7 @@ struct iter_iterable final : iterable<Components...> {
     /** Return the total number of entities in the result. */
     int32_t count() {
         int32_t result = 0;
-        while (next_each_(&it_)) {
+        while (next_(&it_)) {
             result += it_.count;
         }
         return result;
@@ -246,7 +213,7 @@ struct iter_iterable final : iterable<Components...> {
 
     /** Return whether the iterator yields at least one result. */
     bool is_true() {
-        bool result = next_each_(&it_);
+        bool result = next_(&it_);
         if (result) {
             ecs_iter_fini(&it_);
         }
@@ -256,7 +223,7 @@ struct iter_iterable final : iterable<Components...> {
     /** Return the first matching entity. */
     flecs::entity first() {
         flecs::entity result;
-        if (next_each_(&it_) && it_.count) {
+        if (next_(&it_) && it_.count) {
             result = flecs::entity(it_.world, it_.entities[0]);
             ecs_iter_fini(&it_);
         }
@@ -295,7 +262,6 @@ protected:
 private:
     ecs_iter_t it_;
     ecs_iter_next_action_t next_;
-    ecs_iter_next_action_t next_each_;
 };
 
 template <typename ... Components>
@@ -316,72 +282,36 @@ iter_iterable<Components...> iterable<Components...>::iter(flecs::entity e) cons
     return iter_iterable<Components...>(this, e.world());
 }
 
-/** Paged iterable adapter. Limits iteration to a range of entities. */
-template <typename ... Components>
-struct page_iterable final : iterable<Components...> {
-    /** Construct a page_iterable from an offset, limit, and source iterable. */
-    template <typename Iterable>
-    page_iterable(int32_t offset, int32_t limit, Iterable *it)
-        : offset_(offset)
-        , limit_(limit)
-    {
-        chain_it_ = it->get_iter(nullptr);
-    }
+namespace _ {
+
+template <auto Create, ecs_iter_next_action_t Next, typename... Components>
+struct chained_iterable final : iterable<Components...> {
+    chained_iterable(int32_t first, int32_t second, const iterable<Components...> *source)
+        : chain_it_(source->get_iter(nullptr)), args_{first, second} { }
 
 protected:
-    ecs_iter_t get_iter(flecs::world_t*) const {
-        return ecs_page_iter(&chain_it_, offset_, limit_);
+    ecs_iter_t get_iter(flecs::world_t*) const override {
+        return Create(&chain_it_, args_[0], args_[1]);
     }
 
-    ecs_iter_next_action_t next_action() const {
-        return ecs_page_next;
+    ecs_iter_next_action_t next_action() const override {
+        return Next;
     }
 
 private:
     ecs_iter_t chain_it_;
-    int32_t offset_;
-    int32_t limit_;
+    int32_t args_[2];
 };
 
-template <typename ... Components>
-page_iterable<Components...> iterable<Components...>::page(
-    int32_t offset,
-    int32_t limit)
-{
+}
+
+template <typename... Components>
+page_iterable<Components...> iterable<Components...>::page(int32_t offset, int32_t limit) {
     return page_iterable<Components...>(offset, limit, this);
 }
 
-/** Worker iterable adapter. Divides entities across workers. */
-template <typename ... Components>
-struct worker_iterable final : iterable<Components...> {
-    /** Construct a worker_iterable from an index, count, and source iterable. */
-    worker_iterable(int32_t index, int32_t count, iterable<Components...> *it)
-        : index_(index)
-        , count_(count)
-    {
-        chain_it_ = it->get_iter(nullptr);
-    }
-
-protected:
-    ecs_iter_t get_iter(flecs::world_t*) const {
-        return ecs_worker_iter(&chain_it_, index_, count_);
-    }
-
-    ecs_iter_next_action_t next_action() const {
-        return ecs_worker_next;
-    }
-
-private:
-    ecs_iter_t chain_it_;
-    int32_t index_;
-    int32_t count_;
-};
-
-template <typename ... Components>
-worker_iterable<Components...> iterable<Components...>::worker(
-    int32_t index,
-    int32_t count)
-{
+template <typename... Components>
+worker_iterable<Components...> iterable<Components...>::worker(int32_t index, int32_t count) {
     return worker_iterable<Components...>(index, count, this);
 }
 
