@@ -470,6 +470,8 @@ void Http_teardown_stopped(void);
 void Http_stop_start(void);
 void Http_decode_plus(void);
 void Http_query_params_max(void);
+void Http_headers_and_body(void);
+void Http_headers_max_with_body(void);
 
 // Testsuite 'Rest'
 void Rest_teardown(void);
@@ -2321,6 +2323,14 @@ bake_test_case Http_testcases[] = {
     {
         "query_params_max",
         Http_query_params_max
+    },
+    {
+        "headers_and_body",
+        Http_headers_and_body
+    },
+    {
+        "headers_max_with_body",
+        Http_headers_max_with_body
     }
 };
 
@@ -2961,7 +2971,7 @@ static bake_test_suite suites[] = {
         "Http",
         NULL,
         NULL,
-        6,
+        8,
         Http_testcases
     },
     {

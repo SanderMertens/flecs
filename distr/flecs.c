@@ -46809,40 +46809,13 @@ struct ecs_http_server_t {
     ecs_hashmap_t request_cache;
 };
 
-/** Fragment state, used by HTTP request parser */
-typedef enum  {
-    HttpFragStateBegin,
-    HttpFragStateMethod,
-    HttpFragStatePath,
-    HttpFragStateVersion,
-    HttpFragStateHeaderStart,
-    HttpFragStateHeaderName,
-    HttpFragStateHeaderValueStart,
-    HttpFragStateHeaderValue,
-    HttpFragStateCR,
-    HttpFragStateCRLF,
-    HttpFragStateCRLFCR,
-    HttpFragStateBody,
-    HttpFragStateDone
-} HttpFragState;
-
-/** A fragment is a partially received HTTP request */
 typedef struct {
-    HttpFragState state;
     ecs_strbuf_t buf;
     ecs_http_method_t method;
     int32_t body_offset;
-    int32_t query_offset;
-    int32_t header_offsets[ECS_HTTP_HEADER_COUNT_MAX];
-    int32_t header_value_offsets[ECS_HTTP_HEADER_COUNT_MAX];
-    int32_t header_count;
-    int32_t param_offsets[ECS_HTTP_QUERY_PARAM_COUNT_MAX];
-    int32_t param_value_offsets[ECS_HTTP_QUERY_PARAM_COUNT_MAX];
-    int32_t param_count;
+    int32_t line_offset;
+    int32_t scan;
     int32_t content_length;
-    char *header_buf_ptr;
-    char header_buf[32];
-    bool parse_content_length;
     bool invalid;
 } ecs_http_fragment_t;
 
@@ -47096,6 +47069,9 @@ static void http_decode_url_str(
         if (ch == '%' && ptr[1]) {
             dst[0] = http_hex_2_int(ptr[1], ptr[2]);
             dst ++;
+            if (!ptr[2]) {
+                break;
+            }
             ptr += 2;
         } else if (ch == '+') {
             dst[0] = ' ';
@@ -47108,53 +47084,25 @@ static void http_decode_url_str(
     dst[0] = '\0';
 }
 
-static void http_parse_method(
-    ecs_http_fragment_t *frag)
+static ecs_http_method_t http_parse_method(
+    const char *method,
+    int32_t length)
 {
-    char *method = ecs_strbuf_get_small(&frag->buf);
-    if (!ecs_os_strcmp(method, "GET")) frag->method = EcsHttpGet;
-    else if (!ecs_os_strcmp(method, "POST")) frag->method = EcsHttpPost;
-    else if (!ecs_os_strcmp(method, "PUT")) frag->method = EcsHttpPut;
-    else if (!ecs_os_strcmp(method, "DELETE")) frag->method = EcsHttpDelete;
-    else if (!ecs_os_strcmp(method, "OPTIONS")) frag->method = EcsHttpOptions;
-    else {
-        frag->method = EcsHttpMethodUnsupported;
-        frag->invalid = true;
+    static const struct {
+        const char *name;
+        ecs_http_method_t kind;
+    } methods[] = {
+        {"GET", EcsHttpGet}, {"POST", EcsHttpPost}, {"PUT", EcsHttpPut},
+        {"DELETE", EcsHttpDelete}, {"OPTIONS", EcsHttpOptions}
+    };
+    for (int32_t i = 0; i < 5; i ++) {
+        if (ecs_os_strlen(methods[i].name) == length &&
+            !ecs_os_memcmp(method, methods[i].name, length))
+        {
+            return methods[i].kind;
+        }
     }
-    ecs_strbuf_reset(&frag->buf);
-}
-
-static bool http_header_writable(
-    ecs_http_fragment_t *frag)
-{
-    return frag->header_count < ECS_HTTP_HEADER_COUNT_MAX;
-}
-
-static bool http_param_writable(
-    ecs_http_fragment_t *frag)
-{
-    return frag->param_count < ECS_HTTP_QUERY_PARAM_COUNT_MAX;
-}
-
-static void http_header_buf_reset(
-    ecs_http_fragment_t *frag)
-{
-    frag->header_buf[0] = '\0';
-    frag->header_buf_ptr = frag->header_buf;
-}
-
-static void http_header_buf_append(
-    ecs_http_fragment_t *frag,
-    char ch)
-{
-    if ((frag->header_buf_ptr - frag->header_buf) < 
-        (ECS_SIZEOF(frag->header_buf) - 1))
-    {
-        frag->header_buf_ptr[0] = ch;
-        frag->header_buf_ptr ++;
-    } else {
-        frag->header_buf_ptr[0] = '\0';
-    }
+    return EcsHttpMethodUnsupported;
 }
 
 static uint64_t http_request_key_hash(const void *ptr) {
@@ -47239,41 +47187,65 @@ static char* http_decode_request(
     ecs_http_fragment_t *frag)
 {
     ecs_os_zeromem(req);
-
-    ecs_size_t req_len = frag->buf.length;
     char *res = ecs_strbuf_get(&frag->buf);
-    if (!res) {
+    if (!res || frag->invalid) {
+        ecs_os_free(res);
         return NULL;
     }
-
+    char *target = strchr(res, ' ') + 1;
+    char *end = strchr(target, ' ');
+    char *line = strstr(end, "\r\n") + 2;
+    *end = '\0';
     req->pub.method = frag->method;
-    req->pub.path = res + 1;
+    req->pub.path = target + 1;
+    req->res = res;
+    req->req_len = flecs_ito(int32_t, end - res + 1);
+    char *key = target;
+    for (char *p = target; p != end; p ++) {
+        char c = *p;
+        if (c != '?' && c != '&' && c != '=') {
+            continue;
+        }
+        int32_t count = req->pub.param_count;
+        if (count < ECS_HTTP_QUERY_PARAM_COUNT_MAX) {
+            *p = '\0';
+            if (c == '=') {
+                req->pub.params[count].key = key;
+                req->pub.params[count].value = p + 1;
+                req->pub.param_count ++;
+                key = target;
+            } else {
+                key = p + 1;
+            }
+        } else if (c == '&') {
+            *p = '\0';
+        }
+    }
     http_decode_url_str(req->pub.path);
-
-    if (frag->body_offset) {
-        req->pub.body = &res[frag->body_offset];
-    }
-    int32_t i, count = frag->header_count;
-    for (i = 0; i < count; i ++) {
-        req->pub.headers[i].key = &res[frag->header_offsets[i]];
-        req->pub.headers[i].value = &res[frag->header_value_offsets[i]];
-    }
-    count = frag->param_count;
-    for (i = 0; i < count; i ++) {
-        req->pub.params[i].key = &res[frag->param_offsets[i]];
-        req->pub.params[i].value = &res[frag->param_value_offsets[i]];
-        /* Safe, member is only const so that end-user can't change it */
+    for (int32_t i = 0; i < req->pub.param_count; i ++) {
         http_decode_url_str(ECS_CONST_CAST(char*, req->pub.params[i].value));
     }
-
-    req->pub.header_count = frag->header_count;
-    req->pub.param_count = frag->param_count;
-    req->res = res;
-    req->req_len = frag->header_offsets[0];
-    if (!req->req_len) {
-        req->req_len = req_len;
+    while (line < res + frag->body_offset - 2) {
+        char *next = strstr(line, "\r\n");
+        *next = '\0';
+        char *value = strchr(line, ':');
+        if (value && req->pub.header_count < ECS_HTTP_HEADER_COUNT_MAX) {
+            *value ++ = '\0';
+            if (*value == ' ') {
+                value ++;
+            }
+            if (*value) {
+                int32_t h = req->pub.header_count ++;
+                req->pub.headers[h].key = line;
+                req->pub.headers[h].value = value;
+            }
+        }
+        line = next + 2;
     }
-
+    if (frag->content_length) {
+        req->pub.body = res + frag->body_offset;
+        req->pub.body[frag->content_length] = '\0';
+    }
     return res;
 }
 
@@ -47297,9 +47269,9 @@ static ecs_http_request_entry_t* http_enqueue_request(
             req.pub.conn = (ecs_http_connection_t*)conn;
 
             /* Check cache for GET requests */
-            if (frag->method == EcsHttpGet) {
+            if (req.pub.method == EcsHttpGet) {
                 ecs_http_request_entry_t *entry = 
-                    http_find_request_entry(srv, res, frag->header_offsets[0]);
+                    http_find_request_entry(srv, res, req.req_len);
                 if (entry) {
                     /* If an entry is found, don't enqueue a request. Instead
                      * return the cached response immediately. */
@@ -47323,172 +47295,64 @@ static ecs_http_request_entry_t* http_enqueue_request(
 
 static bool http_parse_request(
     ecs_http_fragment_t *frag,
-    const char* req_frag, 
-    ecs_size_t req_frag_len) 
+    const char *req_frag,
+    ecs_size_t req_frag_len)
 {
-    int32_t i;
-    for (i = 0; i < req_frag_len; i++) {
-        char c = req_frag[i];
-        switch (frag->state) {
-        case HttpFragStateBegin:
-            ecs_os_memset_t(frag, 0, ecs_http_fragment_t);
-            frag->state = HttpFragStateMethod;
-            frag->header_buf_ptr = frag->header_buf;
-
-            /* fall through */
-        case HttpFragStateMethod:
-            if (c == ' ') {
-                http_parse_method(frag);
-                ecs_strbuf_reset(&frag->buf);
-                frag->state = HttpFragStatePath;
-                frag->buf.content = NULL;
-            } else {
-                ecs_strbuf_appendch(&frag->buf, c);
-            }
-            break;
-        case HttpFragStatePath:
-            if (c == ' ') {
-                frag->state = HttpFragStateVersion;
-                ecs_strbuf_appendch(&frag->buf, '\0');
-            } else {
-                if (c == '?' || c == '=' || c == '&') {
-                    if (http_param_writable(frag)) {
-                        ecs_strbuf_appendch(&frag->buf, '\0');
-                        int32_t offset = ecs_strbuf_written(&frag->buf);
-                        if (c == '?' || c == '&') {
-                            frag->param_offsets[frag->param_count] = offset;
-                        } else {
-                            frag->param_value_offsets[frag->param_count] = offset;
-                            frag->param_count ++;
-                        }
-                    } else if (c == '&') {
-                        ecs_strbuf_appendch(&frag->buf, '\0');
-                    }
-                } else {
-                    ecs_strbuf_appendch(&frag->buf, c);
-                }
-            }
-            break;
-        case HttpFragStateVersion:
-            if (c == '\r') {
-                frag->state = HttpFragStateCR;
-            } /* version is not stored */
-            break;
-        case HttpFragStateHeaderStart:
-            if (http_header_writable(frag)) {
-                frag->header_offsets[frag->header_count] = 
-                    ecs_strbuf_written(&frag->buf);
-            }
-            http_header_buf_reset(frag);
-            frag->state = HttpFragStateHeaderName;
-
-            /* fall through */
-        case HttpFragStateHeaderName:
-            if (c == ':') {
-                frag->state = HttpFragStateHeaderValueStart;
-                http_header_buf_append(frag, '\0');
-                frag->parse_content_length = !ecs_os_strcmp(
-                    frag->header_buf, "Content-Length");
-
-                if (http_header_writable(frag)) {
-                    ecs_strbuf_appendch(&frag->buf, '\0');
-                    frag->header_value_offsets[frag->header_count] =
-                        ecs_strbuf_written(&frag->buf);
-                }
-            } else if (c == '\r') {
-                frag->state = HttpFragStateCR;
-            } else  {
-                http_header_buf_append(frag, c);
-                if (http_header_writable(frag)) {
-                    ecs_strbuf_appendch(&frag->buf, c);
-                }
-            }
-            break;
-        case HttpFragStateHeaderValueStart:
-            http_header_buf_reset(frag);
-            frag->state = HttpFragStateHeaderValue;
-            if (c == ' ') { /* skip first space */
-                break;
-            }
-
-            /* fall through */
-        case HttpFragStateHeaderValue:
-            if (c == '\r') {
-                if (frag->parse_content_length) {
-                    http_header_buf_append(frag, '\0');
-                    int32_t len = atoi(frag->header_buf);
-                    if (len < 0) {
-                        frag->invalid = true;
-                    } else {
-                        frag->content_length = len;
-                    }
-                    frag->parse_content_length = false;
-                }
-                if (http_header_writable(frag)) {
-                    int32_t cur = ecs_strbuf_written(&frag->buf);
-                    if (frag->header_offsets[frag->header_count] < cur &&
-                        frag->header_value_offsets[frag->header_count] < cur)
-                    {
-                        ecs_strbuf_appendch(&frag->buf, '\0');
-                        frag->header_count ++;
-                    }
-                }
-                frag->state = HttpFragStateCR;
-            } else {
-                if (frag->parse_content_length) {
-                    http_header_buf_append(frag, c);
-                }
-                if (http_header_writable(frag)) {
-                    ecs_strbuf_appendch(&frag->buf, c);
-                }
-            }
-            break;
-        case HttpFragStateCR:
-            if (c == '\n') {
-                frag->state = HttpFragStateCRLF;
-            } else {
-                frag->state = HttpFragStateHeaderStart;
-            } 
-            break;
-        case HttpFragStateCRLF:
-            if (c == '\r') {
-                frag->state = HttpFragStateCRLFCR;
-            } else {
-                frag->state = HttpFragStateHeaderStart;
-                i--;
-            }
-            break;
-        case HttpFragStateCRLFCR:
-            if (c == '\n') {
-                if (frag->content_length != 0) {
-                    frag->body_offset = ecs_strbuf_written(&frag->buf);
-                    frag->state = HttpFragStateBody;
-                } else {
-                    frag->state = HttpFragStateDone;
-                }
-            } else {
-                frag->state = HttpFragStateHeaderStart;
-            }
-            break;
-        case HttpFragStateBody: {
-                ecs_strbuf_appendch(&frag->buf, c);
-                if ((ecs_strbuf_written(&frag->buf) - frag->body_offset) == 
-                    frag->content_length) 
-                {
-                    frag->state = HttpFragStateDone;
-                }
-            }
-            break;
-        case HttpFragStateDone:
-            break;
-        }
-    }
-
-    if (frag->state == HttpFragStateDone) {
-        return true;
-    } else {
+    if (req_frag_len < 0 || req_frag_len >
+        ECS_HTTP_REQUEST_LEN_MAX - ecs_strbuf_written(&frag->buf))
+    {
+        frag->invalid = true;
         return false;
     }
+    ecs_strbuf_appendstrn(&frag->buf, req_frag, req_frag_len);
+    char *buf = frag->buf.content;
+    int32_t length = ecs_strbuf_written(&frag->buf);
+    while (!frag->body_offset && frag->scan < length) {
+        char *nl = memchr(buf + frag->scan, '\n', length - frag->scan);
+        if (!nl) {
+            frag->scan = length;
+            break;
+        }
+        int32_t end = flecs_ito(int32_t, nl - buf);
+        frag->scan = end + 1;
+        if (end == frag->line_offset || nl[-1] != '\r') {
+            frag->invalid = true;
+            return false;
+        }
+        char *line = buf + frag->line_offset;
+        int32_t line_length = end - frag->line_offset - 1;
+        if (memchr(line, 0, line_length)) {
+            frag->invalid = true;
+            return false;
+        }
+        if (!frag->line_offset) {
+            char *space = memchr(line, ' ', line_length);
+            if (!space || !memchr(space + 1, ' ', nl - space - 2)) {
+                frag->invalid = true;
+                return false;
+            }
+            frag->method = http_parse_method(line,
+                flecs_ito(int32_t, space - line));
+            frag->invalid = frag->method == EcsHttpMethodUnsupported;
+        } else if (!line_length) {
+            frag->body_offset = end + 1;
+        } else if (line_length >= 15 &&
+            !ecs_os_memcmp(line, "Content-Length:", 15))
+        {
+            char saved = nl[-1];
+            nl[-1] = '\0';
+            int64_t content_length = strtoll(line + 15, NULL, 10);
+            nl[-1] = saved;
+            if (content_length < 0 || content_length > ECS_HTTP_REQUEST_LEN_MAX) {
+                frag->invalid = true;
+                return false;
+            }
+            frag->content_length = flecs_ito(int32_t, content_length);
+        }
+        frag->line_offset = end + 1;
+    }
+    return frag->body_offset &&
+        length - frag->body_offset >= frag->content_length;
 }
 
 static ecs_http_send_request_t* http_send_queue_post(

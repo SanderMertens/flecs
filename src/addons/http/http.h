@@ -125,40 +125,13 @@ struct ecs_http_server_t {
     ecs_hashmap_t request_cache;
 };
 
-/** Fragment state, used by HTTP request parser */
-typedef enum  {
-    HttpFragStateBegin,
-    HttpFragStateMethod,
-    HttpFragStatePath,
-    HttpFragStateVersion,
-    HttpFragStateHeaderStart,
-    HttpFragStateHeaderName,
-    HttpFragStateHeaderValueStart,
-    HttpFragStateHeaderValue,
-    HttpFragStateCR,
-    HttpFragStateCRLF,
-    HttpFragStateCRLFCR,
-    HttpFragStateBody,
-    HttpFragStateDone
-} HttpFragState;
-
-/** A fragment is a partially received HTTP request */
 typedef struct {
-    HttpFragState state;
     ecs_strbuf_t buf;
     ecs_http_method_t method;
     int32_t body_offset;
-    int32_t query_offset;
-    int32_t header_offsets[ECS_HTTP_HEADER_COUNT_MAX];
-    int32_t header_value_offsets[ECS_HTTP_HEADER_COUNT_MAX];
-    int32_t header_count;
-    int32_t param_offsets[ECS_HTTP_QUERY_PARAM_COUNT_MAX];
-    int32_t param_value_offsets[ECS_HTTP_QUERY_PARAM_COUNT_MAX];
-    int32_t param_count;
+    int32_t line_offset;
+    int32_t scan;
     int32_t content_length;
-    char *header_buf_ptr;
-    char header_buf[32];
-    bool parse_content_length;
     bool invalid;
 } ecs_http_fragment_t;
 

@@ -517,7 +517,9 @@
                 "teardown_stopped",
                 "stop_start",
                 "decode_plus",
-                "query_params_max"
+                "query_params_max",
+                "headers_and_body",
+                "headers_max_with_body"
             ]
         }, {
             "id": "Rest",

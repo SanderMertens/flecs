@@ -139,3 +139,58 @@ void Http_stop_start(void) {
     
     ecs_http_server_fini(srv);
 }
+
+static bool OnRequestHeadersBody(
+    const ecs_http_request_t *request,
+    ecs_http_reply_t *reply,
+    void *ctx)
+{
+    int32_t *header_count = ctx;
+    test_int(request->method, EcsHttpPost);
+    test_str(request->path, "hello world");
+    test_str(ecs_http_get_param(request, "a"), "one two");
+    test_str(ecs_http_get_param(request, "b"), "three four");
+    test_str(request->body, "abc\r\nxyz");
+    test_int(request->header_count, *header_count);
+    test_str(request->headers[0].key, "X-Header");
+    test_str(request->headers[0].value, "value");
+    ecs_strbuf_appendstr(&reply->body, request->body);
+    return true;
+}
+
+static void Http_headers_body_request(int32_t count) {
+    ecs_set_os_api_impl();
+    int32_t expected_count = count + 1;
+    if (expected_count > ECS_HTTP_HEADER_COUNT_MAX) {
+        expected_count = ECS_HTTP_HEADER_COUNT_MAX;
+    }
+    ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
+        .callback = OnRequestHeadersBody,
+        .ctx = &expected_count
+    });
+    test_assert(srv != NULL);
+    ecs_strbuf_t req = ECS_STRBUF_INIT;
+    ecs_strbuf_appendstr(&req,
+        "POST /hello+world?a=one%20two&b=three+four HTTP/1.1\r\n");
+    for (int32_t i = 0; i < count; i ++) {
+        ecs_strbuf_appendstr(&req, "X-Header: value\r\n");
+    }
+    ecs_strbuf_appendstr(&req, "Content-Length:8\r\n\r\nabc\r\nxyz");
+    char *text = ecs_strbuf_get(&req);
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(ecs_http_server_http_request(srv, text, 0, &reply), 0);
+    test_int(reply.code, 200);
+    char *body = ecs_strbuf_get(&reply.body);
+    test_str(body, "abc\r\nxyz");
+    ecs_os_free(body);
+    ecs_os_free(text);
+    ecs_http_server_fini(srv);
+}
+
+void Http_headers_and_body(void) {
+    Http_headers_body_request(1);
+}
+
+void Http_headers_max_with_body(void) {
+    Http_headers_body_request(ECS_HTTP_HEADER_COUNT_MAX + 1);
+}
