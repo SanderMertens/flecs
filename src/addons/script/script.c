@@ -17,26 +17,34 @@ ECS_COMPONENT_DECLARE(EcsScriptMethod);
 ECS_DECLARE(EcsScriptVectorType);
 ECS_DECLARE(EcsScriptError);
 
-static ECS_MOVE(EcsScript, dst, src, {
-    if (dst->script) {
-        if (dst->template_ && (dst->template_ != src->template_)) {
-            flecs_script_template_fini(
-                flecs_script_impl(dst->script), dst->template_);
-        }
-        ecs_script_free(dst->script);
+static void flecs_script_component_fini(
+    EcsScript *ptr,
+    const EcsScript *next)
+{
+    if (ptr->template_ && (!next || ptr->template_ != next->template_)) {
+        flecs_script_template_fini(
+            flecs_script_impl(ptr->script), ptr->template_);
     }
 
-    if (dst->filename != src->filename) {
-        ecs_os_free(dst->filename);
+    if (ptr->script) {
+        ecs_script_free(ptr->script);
     }
-    if (dst->code != src->code) {
-        ecs_os_free(dst->code);
+
+    if (!next || ptr->filename != next->filename) {
+        ecs_os_free(ptr->filename);
     }
-    if (dst->error != src->error) {
-        ecs_os_free(dst->error);
+    if (!next || ptr->code != next->code) {
+        ecs_os_free(ptr->code);
     }
-    flecs_script_ref_observers_fini(&dst->observers);
-    flecs_script_ref_observers_fini(&dst->dyn_observers);
+    if (!next || ptr->error != next->error) {
+        ecs_os_free(ptr->error);
+    }
+    flecs_script_ref_observers_fini(&ptr->observers);
+    flecs_script_ref_observers_fini(&ptr->dyn_observers);
+}
+
+static ECS_MOVE(EcsScript, dst, src, {
+    flecs_script_component_fini(dst, src);
 
     dst->filename = src->filename;
     dst->code = src->code;
@@ -58,21 +66,7 @@ static ECS_MOVE(EcsScript, dst, src, {
 })
 
 static ECS_DTOR(EcsScript, ptr, {
-    if (ptr->template_) {
-        flecs_script_template_fini(
-            flecs_script_impl(ptr->script), ptr->template_);
-    }
-
-    if (ptr->script) {
-        ecs_script_free(ptr->script);
-    }
-
-    flecs_script_ref_observers_fini(&ptr->observers);
-    flecs_script_ref_observers_fini(&ptr->dyn_observers);
-
-    ecs_os_free(ptr->filename);
-    ecs_os_free(ptr->code);
-    ecs_os_free(ptr->error);
+    flecs_script_component_fini(ptr, NULL);
 })
 
 static ecs_id_t flecs_script_tag(
