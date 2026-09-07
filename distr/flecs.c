@@ -60679,28 +60679,6 @@ static void flecs_rtt_map_copy(
     }
 }
 
-static ecs_map_key_t* flecs_rtt_map_sorted_keys(
-    const ecs_map_t *map)
-{
-    int32_t i = 0, count = ecs_map_count(map);
-    ecs_map_key_t *keys = ecs_os_malloc_n(ecs_map_key_t, count);
-    ecs_map_iter_t it = ecs_map_iter(map);
-    while (ecs_map_next(&it)) {
-        keys[i ++] = ecs_map_key(&it);
-    }
-
-    int32_t j;
-    for (i = 1; i < count; i ++) {
-        ecs_map_key_t key = keys[i];
-        for (j = i; (j > 0) && (keys[j - 1] > key); j --) {
-            keys[j] = keys[j - 1];
-        }
-        keys[j] = key;
-    }
-
-    return keys;
-}
-
 static int flecs_rtt_map_cmp(
     const void *a_ptr,
     const void *b_ptr,
@@ -60709,52 +60687,46 @@ static int flecs_rtt_map_cmp(
     if (a_ptr == b_ptr) {
         return 0;
     }
-
-    const ecs_map_t *map_a = a_ptr;
-    const ecs_map_t *map_b = b_ptr;
-
-    int32_t count_a = ecs_map_count(map_a);
-    int32_t count_b = ecs_map_count(map_b);
-    {
-        int c = count_a - count_b;
-        if (c != 0) {
-            return c;
+    const ecs_map_t *a = a_ptr, *b = b_ptr;
+    int32_t count_diff = ecs_map_count(a) - ecs_map_count(b);
+    if (count_diff) {
+        return count_diff;
+    }
+    bool different_keys = false;
+    ecs_map_key_t first_key = UINT64_MAX;
+    ecs_map_iter_t it = ecs_map_iter(a);
+    while (ecs_map_next(&it)) {
+        ecs_map_key_t key = ecs_map_key(&it);
+        if (key <= first_key && !ecs_map_get(b, key)) {
+            first_key = key;
+            different_keys = true;
         }
     }
-
-    if (!count_a) {
-        return 0;
+    if (different_keys) {
+        it = ecs_map_iter(b);
+        while (ecs_map_next(&it)) {
+            ecs_map_key_t key = ecs_map_key(&it);
+            if (key < first_key && !ecs_map_get(a, key)) {
+                return 1;
+            }
+        }
+        return -1;
     }
-
-    const ecs_type_info_t *value_ti = type_info->hooks.lifecycle_ctx;
-
+    const ecs_type_info_t *ti = type_info->hooks.lifecycle_ctx;
     int result = 0;
-    ecs_map_key_t *keys_a = flecs_rtt_map_sorted_keys(map_a);
-    ecs_map_key_t *keys_b = flecs_rtt_map_sorted_keys(map_b);
-
-    int32_t i;
-    for (i = 0; i < count_a; i ++) {
-        if (keys_a[i] != keys_b[i]) {
-            result = (keys_a[i] > keys_b[i]) ? 1 : -1;
-            goto done;
+    it = ecs_map_iter(a);
+    while (ecs_map_next(&it)) {
+        ecs_map_key_t key = ecs_map_key(&it);
+        if (key <= first_key) {
+            int cmp = flecs_type_info_cmp(
+                flecs_rtt_map_value_ptr(ti, &it.res[1]),
+                flecs_rtt_map_value_ptr(ti, ecs_map_get(b, key)), ti);
+            if (cmp) {
+                first_key = key;
+                result = cmp;
+            }
         }
     }
-
-    for (i = 0; i < count_a; i ++) {
-        ecs_map_val_t *val_a = ecs_map_get(map_a, keys_a[i]);
-        ecs_map_val_t *val_b = ecs_map_get(map_b, keys_a[i]);
-        result = flecs_type_info_cmp(
-            flecs_rtt_map_value_ptr(value_ti, val_a),
-            flecs_rtt_map_value_ptr(value_ti, val_b),
-            value_ti);
-        if (result != 0) {
-            goto done;
-        }
-    }
-
-done:
-    ecs_os_free(keys_a);
-    ecs_os_free(keys_b);
     return result;
 }
 

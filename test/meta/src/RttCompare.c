@@ -2666,3 +2666,35 @@ void RttCompare_map_of_struct_with_strings(void) {
 
     ecs_fini(world);
 }
+
+void RttCompare_map_key_order_precedes_values(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t type = ecs_map_type(world, {
+        .key_type = ecs_id(ecs_u64_t), .type = ecs_id(ecs_i32_t)
+    });
+    const ecs_type_info_t *ti = ecs_get_type_info(world, type);
+    ecs_map_t a = {0}, b = {0};
+    ecs_map_init(&a, NULL);
+    ecs_map_init(&b, NULL);
+    *(int32_t*)ecs_map_ensure(&a, UINT64_MAX) = -10;
+    *(int32_t*)ecs_map_ensure(&a, 2) = 0;
+    *(int32_t*)ecs_map_ensure(&a, 0) = -10;
+    *(int32_t*)ecs_map_ensure(&b, 0) = 10;
+    *(int32_t*)ecs_map_ensure(&b, 1) = 0;
+    *(int32_t*)ecs_map_ensure(&b, UINT64_MAX) = 10;
+    test_assert(ti->hooks.cmp(&a, &b, ti) > 0);
+    test_assert(ti->hooks.cmp(&b, &a, ti) < 0);
+    ecs_map_remove(&b, 1);
+    *(int32_t*)ecs_map_ensure(&b, 2) = 0;
+    *(int32_t*)ecs_map_ensure(&a, UINT64_MAX) = 20;
+    test_assert(ti->hooks.cmp(&a, &b, ti) < 0);
+    test_assert(ti->hooks.cmp(&b, &a, ti) > 0);
+    *(int32_t*)ecs_map_ensure(&a, 0) = 10;
+    test_assert(ti->hooks.cmp(&a, &b, ti) > 0);
+    *(int32_t*)ecs_map_ensure(&a, UINT64_MAX) = 10;
+    test_int(ti->hooks.cmp(&a, &b, ti), 0);
+    test_assert(ti->hooks.equals(&a, &b, ti));
+    ecs_map_fini(&a);
+    ecs_map_fini(&b);
+    ecs_fini(world);
+}

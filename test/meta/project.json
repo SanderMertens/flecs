@@ -1558,6 +1558,7 @@
                 "vector_of_opaque",
                 "struct_with_vector_of_ints_different_length",
                 "map_of_ints",
+                "map_key_order_precedes_values",
                 "map_of_strings",
                 "map_of_struct_with_strings"
             ]

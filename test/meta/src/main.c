@@ -1505,6 +1505,7 @@ void RttCompare_vector_of_arrays_of_strings(void);
 void RttCompare_vector_of_opaque(void);
 void RttCompare_struct_with_vector_of_ints_different_length(void);
 void RttCompare_map_of_ints(void);
+void RttCompare_map_key_order_precedes_values(void);
 void RttCompare_map_of_strings(void);
 void RttCompare_map_of_struct_with_strings(void);
 
@@ -7398,6 +7399,10 @@ bake_test_case RttCompare_testcases[] = {
         RttCompare_map_of_ints
     },
     {
+        "map_key_order_precedes_values",
+        RttCompare_map_key_order_precedes_values
+    },
+    {
         "map_of_strings",
         RttCompare_map_of_strings
     },
@@ -7671,7 +7676,7 @@ static bake_test_suite suites[] = {
         "RttCompare",
         NULL,
         NULL,
-        31,
+        32,
         RttCompare_testcases
     },
     {
