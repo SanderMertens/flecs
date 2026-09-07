@@ -14,6 +14,19 @@ ECS_COMPONENT_DECLARE(EcsScriptTemplateInstanceUpdateEvent);
 ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 ECS_DECLARE(EcsScriptTemplate);
 
+static void flecs_script_delete_observers(
+    ecs_world_t *world,
+    ecs_vec_t *observers)
+{
+    ecs_script_ref_t *obs = ecs_vec_first(observers);
+    int32_t i, count = ecs_vec_count(observers);
+    for (i = 0; i < count; i ++) {
+        if (obs[i].observer && ecs_is_alive(world, obs[i].observer)) {
+            ecs_delete(world, obs[i].observer);
+        }
+    }
+}
+
 static void flecs_script_template_root_fini(
     EcsScriptTemplateRoot *root)
 {
@@ -46,16 +59,9 @@ static void flecs_script_template_root_on_remove(
     EcsScriptTemplateRoot *ptr = ecs_field_w_size(
         it, sizeof(EcsScriptTemplateRoot), 0);
 
-    int32_t i, j;
+    int32_t i;
     for (i = 0; i < it->count; i ++) {
-        ecs_vec_t *observers = &ptr[i].observers;
-        ecs_script_ref_t *obs = ecs_vec_first(observers);
-        int32_t count = ecs_vec_count(observers);
-        for (j = 0; j < count; j ++) {
-            if (obs[j].observer && ecs_is_alive(world, obs[j].observer)) {
-                ecs_delete(world, obs[j].observer);
-            }
-        }
+        flecs_script_delete_observers(world, &ptr[i].observers);
     }
 }
 
@@ -1105,13 +1111,7 @@ static void flecs_script_template_delete_observers(
     ecs_world_t *world,
     ecs_script_template_t *template)
 {
-    ecs_script_ref_t *obs = ecs_vec_first(&template->observers);
-    int32_t i, count = ecs_vec_count(&template->observers);
-    for (i = 0; i < count; i ++) {
-        if (obs[i].observer && ecs_is_alive(world, obs[i].observer)) {
-            ecs_delete(world, obs[i].observer);
-        }
-    }
+    flecs_script_delete_observers(world, &template->observers);
     ecs_vec_clear(&template->observers);
 }
 
