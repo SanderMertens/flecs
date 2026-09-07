@@ -30481,92 +30481,68 @@ static void flecs_table_grow_column(
     ecs_assert(column->size == dst_size, ECS_INTERNAL_ERROR, NULL);
 }
 
-/* Grow all data structures in a table */
-static int32_t flecs_table_grow_data(
+static FLECS_ALWAYS_INLINE int32_t flecs_table_grow_data(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t to_add,
-    int32_t size,
-    const ecs_entity_t *ids)
+    const ecs_entity_t *ids,
+    bool construct,
+    bool on_add)
 {
-    flecs_poly_assert(world, ecs_world_t);
+    ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE,
+        FLECS_LOCKED_STORAGE_MSG("table append"));
+    flecs_table_check_sanity(table);
 
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->data.count + to_add == size, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t count = ecs_table_count(table);
-    int32_t column_count = table->column_count;
+    int32_t count = table->data.count;
+    int32_t prev_size = table->data.size;
+    ecs_vec_t entities = ecs_vec_from_entities(table);
+    ecs_vec_grow_t(NULL, &entities, ecs_entity_t, to_add);
+    ecs_entity_t *e = ECS_ELEM_T(entities.array, ecs_entity_t, count);
+    ecs_os_memcpy_n(e, ids, ecs_entity_t, to_add);
+    table->data.entities = entities.array;
 
     if (!count && to_add) {
         table->flags &= ~EcsTableEmpty;
         table->flags |= EcsTableNotEmpty;
     }
 
-    /* Add entity to column with entity ids */
-    ecs_vec_t v_entities = ecs_vec_from_entities(table);
-    ecs_vec_set_size_t(NULL, &v_entities, ecs_entity_t, size);
-
-    ecs_entity_t *e = NULL;
-    
-    if (size) {
-        e = ECS_ELEM_T(v_entities.array, ecs_entity_t, v_entities.count);
-    }
-
-    v_entities.count += to_add;
-    if (v_entities.size > size) {
-        size = v_entities.size;
-    }
-
-    /* Update table entities/count/size */
-    int32_t prev_count = table->data.count, prev_size = table->data.size;
-    table->data.entities = v_entities.array;
-    table->data.count = v_entities.count;
-    table->data.size = v_entities.size;
-
-    /* Initialize entity ids and record ptrs */
-    int32_t i;
-    if (e) {
-        if (ids) {
-            ecs_os_memcpy_n(e, ids, ecs_entity_t, to_add);
-        } else {
-            ecs_os_memset(e, 0, ECS_SIZEOF(ecs_entity_t) * to_add);
+    bool complex = table->flags & (EcsTableIsComplex|EcsTableHasIsA);
+    if (!complex) {
+        if (prev_size != entities.size) {
+            for (int32_t i = 0; i < table->column_count; i ++) {
+                ecs_column_t *column = &table->data.columns[i];
+                column->data = ecs_os_realloc(
+                    column->data, column->ti->size * entities.size);
+            }
         }
+        table->data.count = entities.count;
+        table->data.size = entities.size;
+        flecs_table_mark_table_dirty(world, table, 0);
+        return count;
     }
-
     flecs_table_update_overrides(world, table);
+    table->data.count = entities.count;
+    table->data.size = entities.size;
 
-    /* Add elements to each column array */
-    ecs_column_t *columns = table->data.columns;
-    for (i = 0; i < column_count; i ++) {
-        ecs_column_t *column = &columns[i];
+    for (int32_t i = 0; i < table->column_count; i ++) {
+        ecs_column_t *column = &table->data.columns[i];
         const ecs_type_info_t *ti = column->ti;
-        ecs_vec_t v_column = ecs_vec_from_column_ext(column, prev_count, prev_size, ti->size);
-        flecs_table_grow_column(world, table, i, &v_column, ti, to_add, size, true);
-        ecs_assert(v_column.size == size, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(v_column.size == v_entities.size, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(v_column.count == v_entities.count, ECS_INTERNAL_ERROR, NULL);
-        column->data = v_column.array;
-
-        if (to_add) {
-            flecs_table_invoke_add_hooks(
-                world, table, i, e, count, to_add, false);
+        ecs_vec_t v = ecs_vec_from_column_ext(column, count, prev_size, ti->size);
+        flecs_table_grow_column(world, table, i, &v, ti,
+            to_add, entities.size, construct);
+        column->data = v.array;
+        if (on_add && to_add && ti->hooks.on_add) {
+            flecs_table_invoke_hook(world, table, ti->hooks.on_add,
+                EcsOnAdd, column, e, count, to_add);
         }
     }
 
-    ecs_table__t *meta = table->_;
-    int32_t bs_count = meta->bs_count;
-    ecs_bitset_t *bs_columns = meta->bs_columns; 
-
-    /* Add elements to each bitset column */
-    for (i = 0; i < bs_count; i ++) {
-        ecs_bitset_t *bs = &bs_columns[i];
-        flecs_bitset_addn(bs, to_add);
+    for (int32_t i = 0; i < table->_->bs_count; i ++) {
+        flecs_bitset_addn(&table->_->bs_columns[i], to_add);
     }
 
-    /* If the table is monitored, indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);
-
-    /* Return index of first added entity */
+    flecs_table_check_sanity(table);
     return count;
 }
 
@@ -30604,23 +30580,6 @@ static void flecs_table_copy_elem(
     }
 }
 
-/* Append operation for tables that don't have any complex logic */
-static void flecs_table_fast_append(
-    ecs_table_t *table)
-{
-    /* Add elements to each column array */
-    ecs_column_t *columns = table->data.columns;
-    int32_t i, count = table->column_count;
-    for (i = 0; i < count; i ++) {
-        ecs_column_t *column = &columns[i];
-        const ecs_type_info_t *ti = column->ti;
-        ecs_vec_t v = ecs_vec_from_column(column, table, ti->size);
-        ecs_vec_append(NULL, &v, ti->size);
-        column->data = v.array;
-    }
-}
-
-/* Append entity to table */
 void flecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -30628,90 +30587,7 @@ void flecs_table_append(
     bool construct,
     bool on_add)
 {
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, 
-        FLECS_LOCKED_STORAGE_MSG("table append"));
-
-    flecs_table_check_sanity(table);
-
-    /* Get count & size before growing entities array. This tells us whether the
-     * arrays will realloc */
-    int32_t count = ecs_table_count(table);
-    int32_t column_count = table->column_count;
-    ecs_column_t *columns = table->data.columns;
-
-    /* Grow buffer with entity ids, set new element to new entity */
-    ecs_vec_t v_entities = ecs_vec_from_entities(table);
-    ecs_entity_t *e = ecs_vec_append_t(NULL, &v_entities, ecs_entity_t);
-        
-    ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_entity_t *entities = table->data.entities = v_entities.array;
-    *e = entity;
- 
-    /* If the table is monitored, indicate that there has been a change */
-    flecs_table_mark_table_dirty(world, table, 0);
-    ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
-
-    if (!count) {
-        table->flags &= ~EcsTableEmpty;
-        table->flags |= EcsTableNotEmpty;
-    }
-
-    /* Fast path: no toggle columns, no lifecycle actions */
-    if (!(table->flags & (EcsTableIsComplex|EcsTableHasIsA))) {
-        flecs_table_fast_append(table);
-        table->data.count = v_entities.count;
-        table->data.size = v_entities.size;
-        return;
-    }
-
-    flecs_table_update_overrides(world, table);
-
-    int32_t prev_count = table->data.count;
-    int32_t prev_size = table->data.size;
-
-    ecs_assert(table->data.count == v_entities.count - 1, 
-        ECS_INTERNAL_ERROR, NULL);
-    table->data.count = v_entities.count;
-    table->data.size = v_entities.size;
-
-    /* Reobtain size to ensure that the columns have the same size as the
-     * entities vector. This keeps reasoning about when allocations occur
-     * easier. */
-    int32_t size = v_entities.size;
-
-    /* Grow component arrays with 1 element */
-    int32_t i;
-    for (i = 0; i < column_count; i ++) {
-        ecs_column_t *column = &columns[i];
-        const ecs_type_info_t *ti = column->ti;
-        ecs_vec_t v_column = ecs_vec_from_column_ext(column, prev_count, prev_size, ti->size);
-        flecs_table_grow_column(world, table, i, &v_column, ti, 1, size, construct);
-        column->data = v_column.array;
-
-        ecs_iter_action_t on_add_hook;
-        if (on_add && (on_add_hook = column->ti->hooks.on_add)) {
-            flecs_table_invoke_hook(world, table, on_add_hook, EcsOnAdd, column,
-                &entities[count], count, 1);
-        }
-
-        ecs_assert(v_column.size == v_entities.size, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(v_column.count == v_entities.count, 
-            ECS_INTERNAL_ERROR, NULL);
-    }
-
-    ecs_table__t *meta = table->_;
-    int32_t bs_count = meta->bs_count;
-    ecs_bitset_t *bs_columns = meta->bs_columns;
-
-    /* Add element to each bitset column */
-    for (i = 0; i < bs_count; i ++) {
-        ecs_assert(bs_columns != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_bitset_t *bs = &bs_columns[i];
-        flecs_bitset_addn(bs, 1);
-    }
-
-    flecs_table_check_sanity(table);
+    flecs_table_grow_data(world, table, 1, &entity, construct, on_add);
 }
 
 /* Delete operation for tables that don't have any complex logic */
@@ -31008,9 +30884,8 @@ int32_t flecs_table_appendn(
     }
 
     flecs_table_check_sanity(table);
-    int32_t cur_count = ecs_table_count(table);
     int32_t result = flecs_table_grow_data(
-        world, table, to_add, cur_count + to_add, ids);
+        world, table, to_add, ids, true, true);
     flecs_table_check_sanity(table);
 
     return result;
