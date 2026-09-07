@@ -141,73 +141,58 @@ static int flecs_meta_ser_scalar(
     return 0;
 }
 
+ecs_entity_t flecs_meta_primitive_type(
+    ecs_primitive_kind_t kind)
+{
+    static const ecs_entity_t *types[] = {
+        [EcsBool] = &ecs_id(ecs_bool_t),
+        [EcsChar] = &ecs_id(ecs_char_t),
+        [EcsByte] = &ecs_id(ecs_byte_t),
+        [EcsU8] = &ecs_id(ecs_u8_t),
+        [EcsU16] = &ecs_id(ecs_u16_t),
+        [EcsU32] = &ecs_id(ecs_u32_t),
+        [EcsU64] = &ecs_id(ecs_u64_t),
+        [EcsI8] = &ecs_id(ecs_i8_t),
+        [EcsI16] = &ecs_id(ecs_i16_t),
+        [EcsI32] = &ecs_id(ecs_i32_t),
+        [EcsI64] = &ecs_id(ecs_i64_t),
+        [EcsF32] = &ecs_id(ecs_f32_t),
+        [EcsF64] = &ecs_id(ecs_f64_t),
+        [EcsUPtr] = &ecs_id(ecs_uptr_t),
+        [EcsIPtr] = &ecs_id(ecs_iptr_t),
+        [EcsString] = &ecs_id(ecs_string_t),
+        [EcsEntity] = &ecs_id(ecs_entity_t),
+        [EcsId] = &ecs_id(ecs_id_t),
+    };
+    if (kind < EcsBool || kind > EcsPrimitiveKindLast) {
+        return 0;
+    }
+    return *types[kind];
+}
+
 ecs_meta_op_kind_t flecs_meta_primitive_to_op_kind(
     ecs_primitive_kind_t kind)
 {
-    switch(kind) {
-    case EcsBool: return EcsOpBool;
-    case EcsChar: return EcsOpChar;
-    case EcsByte: return EcsOpByte;
-    case EcsU8: return EcsOpU8;
-    case EcsU16: return EcsOpU16;
-    case EcsU32: return EcsOpU32;
-    case EcsU64: return EcsOpU64;
-    case EcsI8: return EcsOpI8;
-    case EcsI16: return EcsOpI16;
-    case EcsI32: return EcsOpI32;
-    case EcsI64: return EcsOpI64;
-    case EcsF32: return EcsOpF32;
-    case EcsF64: return EcsOpF64;
-    case EcsUPtr: return EcsOpUPtr;
-    case EcsIPtr: return EcsOpIPtr;
-    case EcsString: return EcsOpString;
-    case EcsEntity: return EcsOpEntity;
-    case EcsId: return EcsOpId;
-    default: ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    if (kind < EcsBool || kind > EcsPrimitiveKindLast) {
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
+    return (ecs_meta_op_kind_t)(EcsOpPrimitive + kind);
 }
 
 ecs_entity_t flecs_meta_op_kind_to_type(
     ecs_meta_op_kind_t kind)
 {
-    switch(kind) {
-    case EcsOpBool: return ecs_id(ecs_bool_t);
-    case EcsOpChar: return ecs_id(ecs_char_t);
-    case EcsOpByte:  return ecs_id(ecs_byte_t);
-    case EcsOpU8: return ecs_id(ecs_u8_t);
-    case EcsOpU16: return ecs_id(ecs_u16_t);
-    case EcsOpU32: return ecs_id(ecs_u32_t);
-    case EcsOpU64: return ecs_id(ecs_u64_t);
-    case EcsOpI8: return ecs_id(ecs_i8_t);
-    case EcsOpI16: return ecs_id(ecs_i16_t);
-    case EcsOpI32: return ecs_id(ecs_u32_t);
-    case EcsOpI64: return ecs_id(ecs_u64_t);
-    case EcsOpF32: return ecs_id(ecs_f32_t);
-    case EcsOpF64: return ecs_id(ecs_f64_t);
-    case EcsOpIPtr: return ecs_id(ecs_iptr_t);
-    case EcsOpUPtr: return ecs_id(ecs_uptr_t);
-    case EcsOpString: return ecs_id(ecs_string_t);
-    case EcsOpEntity: return ecs_id(ecs_entity_t);
-    case EcsOpId: return ecs_id(ecs_id_t);
-    case EcsOpEnum:
-    case EcsOpBitmask:
-    case EcsOpForward:
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpOpaqueValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpPop:
-    case EcsOpPrimitive:
-    case EcsOpScope:
+    if (kind == EcsOpI32) {
+        kind = EcsOpU32;
+    } else if (kind == EcsOpI64) {
+        kind = EcsOpU64;
+    }
+    ecs_entity_t type = flecs_meta_primitive_type(
+        (ecs_primitive_kind_t)(kind - EcsOpPrimitive));
+    if (!type) {
         ecs_err("cannot convert kind to type");
     }
-
-    return 0;
+    return type;
 }
 
 const char* flecs_meta_op_kind_str(

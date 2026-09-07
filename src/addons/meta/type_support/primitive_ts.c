@@ -102,61 +102,10 @@ static void flecs_set_primitive(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        switch(type->kind) {
-        case EcsBool:
-            flecs_init_type_t(world, e, EcsPrimitiveType, bool);
-            break;
-        case EcsChar:
-            flecs_init_type_t(world, e, EcsPrimitiveType, char);
-            break;
-        case EcsByte:
-            flecs_init_type_t(world, e, EcsPrimitiveType, bool);
-            break;
-        case EcsU8:
-            flecs_init_type_t(world, e, EcsPrimitiveType, uint8_t);
-            break;
-        case EcsU16:
-            flecs_init_type_t(world, e, EcsPrimitiveType, uint16_t);
-            break;
-        case EcsU32:
-            flecs_init_type_t(world, e, EcsPrimitiveType, uint32_t);
-            break;
-        case EcsU64:
-            flecs_init_type_t(world, e, EcsPrimitiveType, uint64_t);
-            break;
-        case EcsI8:
-            flecs_init_type_t(world, e, EcsPrimitiveType, int8_t);
-            break;
-        case EcsI16:
-            flecs_init_type_t(world, e, EcsPrimitiveType, int16_t);
-            break;
-        case EcsI32:
-            flecs_init_type_t(world, e, EcsPrimitiveType, int32_t);
-            break;
-        case EcsI64:
-            flecs_init_type_t(world, e, EcsPrimitiveType, int64_t);
-            break;
-        case EcsF32:
-            flecs_init_type_t(world, e, EcsPrimitiveType, float);
-            break;
-        case EcsF64:
-            flecs_init_type_t(world, e, EcsPrimitiveType, double);
-            break;
-        case EcsUPtr:
-            flecs_init_type_t(world, e, EcsPrimitiveType, uintptr_t);
-            break;
-        case EcsIPtr:
-            flecs_init_type_t(world, e, EcsPrimitiveType, intptr_t);
-            break;
-        case EcsString:
-            flecs_init_type_t(world, e, EcsPrimitiveType, char*);
-            break;
-        case EcsEntity:
-            flecs_init_type_t(world, e, EcsPrimitiveType, ecs_entity_t);
-            break;
-        case EcsId:
-            flecs_init_type_t(world, e, EcsPrimitiveType, ecs_id_t);
-            break;
+        ecs_entity_t builtin = flecs_meta_primitive_type(type->kind);
+        if (builtin) {
+            const ecs_type_info_t *ti = ecs_get_type_info(world, builtin);
+            flecs_init_type(world, e, EcsPrimitiveType, ti->size, ti->alignment);
         }
     }
 }

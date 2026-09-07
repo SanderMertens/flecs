@@ -29,6 +29,9 @@ void flecs_type_serializer_dtor(
 ecs_meta_op_kind_t flecs_meta_primitive_to_op_kind(
     ecs_primitive_kind_t kind);
 
+ecs_entity_t flecs_meta_primitive_type(
+    ecs_primitive_kind_t kind);
+
 ecs_entity_t flecs_meta_op_kind_to_type(
     ecs_meta_op_kind_t kind);
 
