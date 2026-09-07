@@ -48,33 +48,55 @@ static void flecs_ir_regs_ensure(
     vm->reg_count = new_count;
 }
 
-static void flecs_ir_scratch_init(
+static void* flecs_ir_arena_alloc(
     ecs_script_ir_vm_t *vm,
-    char **ptr,
-    int32_t *capacity,
-    int32_t size)
-{
-    int32_t initial = vm->can_suspend ? 4096 : FLECS_IR_SCRATCH_SIZE;
-    *capacity = size > initial ? size : initial;
-    *ptr = ecs_os_malloc(*capacity);
-}
-
-static void* flecs_ir_scratch_alloc(
-    ecs_script_ir_vm_t *vm,
+    ecs_script_ir_arena_t *arena,
     int32_t size,
     int32_t align)
 {
-    if (!vm->scratch) {
-        flecs_ir_scratch_init(vm, &vm->scratch, &vm->scratch_size, size);
+    if (!arena->data) {
+        int32_t initial = vm->can_suspend ? 4096 : FLECS_IR_SCRATCH_SIZE;
+        arena->size = size > initial ? size : initial;
+        arena->data = ecs_os_malloc(arena->size);
     }
-    int32_t top = (vm->scratch_top + (align - 1)) & ~(align - 1);
-    if (top + size <= vm->scratch_size) {
-        vm->scratch_top = top + size;
-        return vm->scratch + top;
+    int32_t top = (arena->top + (align - 1)) & ~(align - 1);
+    if (top + size <= arena->size) {
+        arena->top = top + size;
+        return arena->data + top;
     }
     void *ptr = ecs_os_malloc(size);
-    ecs_vec_append_t(NULL, &vm->heap, void*)[0] = ptr;
+    ecs_vec_append_t(NULL, &arena->heap, void*)[0] = ptr;
     return ptr;
+}
+
+static void flecs_ir_arena_restore(
+    ecs_script_ir_arena_t *arena,
+    int32_t top,
+    int32_t heap_count)
+{
+    void **heap = arena->heap.array;
+    for (int32_t i = heap_count; i < arena->heap.count; i ++) {
+        ecs_os_free(heap[i]);
+    }
+    arena->heap.count = heap_count;
+    arena->top = top;
+}
+
+static void flecs_ir_arena_init(
+    ecs_script_ir_arena_t *arena)
+{
+    arena->data = NULL;
+    arena->size = 0;
+    arena->top = 0;
+    ecs_vec_init_t(NULL, &arena->heap, void*, 0);
+}
+
+static void flecs_ir_arena_fini(
+    ecs_script_ir_arena_t *arena)
+{
+    ecs_vec_fini_t(NULL, &arena->heap, void*);
+    ecs_os_free(arena->data);
+    arena->data = NULL;
 }
 
 static inline ecs_script_var_t* flecs_ir_var_declare(
@@ -101,19 +123,8 @@ static void* flecs_ir_var_alloc(
     ecs_script_ir_vm_t *vm,
     const ecs_type_info_t *ti)
 {
-    if (!vm->vscratch) {
-        flecs_ir_scratch_init(vm, &vm->vscratch, &vm->vscratch_size, ti->size);
-    }
-    int32_t align = ti->alignment;
-    int32_t top = (vm->vscratch_top + (align - 1)) & ~(align - 1);
-    void *ptr;
-    if (top + ti->size <= vm->vscratch_size) {
-        vm->vscratch_top = top + ti->size;
-        ptr = vm->vscratch + top;
-    } else {
-        ptr = ecs_os_malloc(ti->size);
-        ecs_vec_append_t(NULL, &vm->vheap, void*)[0] = ptr;
-    }
+    void *ptr = flecs_ir_arena_alloc(
+        vm, &vm->vscratch, ti->size, ti->alignment);
     if (ti->hooks.ctor) {
         ti->hooks.ctor(ptr, 1, ti);
     } else {
@@ -129,7 +140,8 @@ static void* flecs_ir_reg_alloc_w_init(
     bool init)
 {
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    void *ptr = flecs_ir_scratch_alloc(vm, ti->size, ti->alignment);
+    void *ptr = flecs_ir_arena_alloc(
+        vm, &vm->scratch, ti->size, ti->alignment);
     if (init) {
         if (ti->hooks.ctor) {
             ti->hooks.ctor(ptr, 1, ti);
@@ -197,10 +209,10 @@ static inline void* flecs_ir_reg_out_raw(
         return reg->value.ptr;
     }
     if (!ti->hooks.dtor && ti->size <= 16) {
-        int32_t top = (vm->scratch_top + 15) & ~15;
-        if (top + 16 <= vm->scratch_size) {
-            void *out = vm->scratch + top;
-            vm->scratch_top = top + 16;
+        int32_t top = (vm->scratch.top + 15) & ~15;
+        if (top + 16 <= vm->scratch.size) {
+            void *out = vm->scratch.data + top;
+            vm->scratch.top = top + 16;
             reg->value.ptr = out;
             reg->value.type = node->type;
             reg->ti = ti;
@@ -277,17 +289,8 @@ static void flecs_ir_expr_release(
             frame->u.expr.owned_count);
     }
 
-    int32_t heap_count = vm->heap.count;
-    if (heap_count > frame->u.expr.heap_count) {
-        void **heap = ecs_vec_first(&vm->heap);
-        int32_t i;
-        for (i = frame->u.expr.heap_count; i < heap_count; i ++) {
-            ecs_os_free(heap[i]);
-        }
-        ecs_vec_set_count_t(NULL, &vm->heap, void*, frame->u.expr.heap_count);
-    }
-
-    vm->scratch_top = frame->u.expr.scratch_top;
+    flecs_ir_arena_restore(&vm->scratch,
+        frame->u.expr.scratch_top, frame->u.expr.heap_count);
 
     int32_t strbuf_count = vm->strbufs.count;
     if (strbuf_count > frame->u.expr.strbuf_count) {
@@ -310,9 +313,9 @@ static void flecs_ir_expr_begin(
     int32_t pc)
 {
     ecs_script_ir_frame_t *frame = flecs_ir_frame_push(vm, EcsIrFrameExpr, pc);
-    frame->u.expr.scratch_top = vm->scratch_top;
+    frame->u.expr.scratch_top = vm->scratch.top;
     frame->u.expr.owned_count = vm->owned.count;
-    frame->u.expr.heap_count = vm->heap.count;
+    frame->u.expr.heap_count = vm->scratch.heap.count;
     frame->u.expr.strbuf_count = vm->strbufs.count;
     frame->u.expr.cursor_count = vm->cursors.count;
     if (op->node && ((const ecs_script_node_t*)op->node)->kind == EcsAstConst) {
@@ -349,15 +352,7 @@ static void flecs_ir_vars_truncate(
         }
         vars->vars.count = count;
     }
-    int32_t heap_count = vm->vheap.count;
-    if (heap_count > vheap_count) {
-        void **heap = vm->vheap.array;
-        for (i = vheap_count; i < heap_count; i ++) {
-            ecs_os_free(heap[i]);
-        }
-        vm->vheap.count = vheap_count;
-    }
-    vm->vscratch_top = vscratch_top;
+    flecs_ir_arena_restore(&vm->vscratch, vscratch_top, vheap_count);
 }
 
 static void flecs_ir_scope_leave(
@@ -2346,10 +2341,10 @@ static int NAME(\
         dst->value.type = node->node.type;\
         dst->ti = node->node.type_info;\
     } else {\
-        int32_t top = (vm->scratch_top + 7) & ~7;\
-        if (top + 8 <= vm->scratch_size) {\
-            out = vm->scratch + top;\
-            vm->scratch_top = top + 8;\
+        int32_t top = (vm->scratch.top + 7) & ~7;\
+        if (top + 8 <= vm->scratch.size) {\
+            out = vm->scratch.data + top;\
+            vm->scratch.top = top + 8;\
             dst->value.ptr = out;\
             dst->value.type = node->node.type;\
             dst->ti = node->node.type_info;\
@@ -3073,8 +3068,8 @@ static flecs_script_run_status_t flecs_ir_exec(
             }
             if (op->b > 0) {
                 frame->u.scope.var_count = v->vars->vars.count;
-                frame->u.scope.vscratch_top = vm->vscratch_top;
-                frame->u.scope.vheap_count = vm->vheap.count;
+                frame->u.scope.vscratch_top = vm->vscratch.top;
+                frame->u.scope.vheap_count = vm->vscratch.heap.count;
             }
             if (v->entity && op->c &&
                 (v->force || v->entity->created))
@@ -3213,8 +3208,8 @@ static flecs_script_run_status_t flecs_ir_exec(
             flecs_script_for_state_t state;
             int32_t var_index[3];
             int32_t var_count = v->vars->vars.count;
-            int32_t vscratch_top = vm->vscratch_top;
-            int32_t vheap_count = vm->vheap.count;
+            int32_t vscratch_top = vm->vscratch.top;
+            int32_t vheap_count = vm->vscratch.heap.count;
             res = flecs_ir_for_enter(vm, op, &state, var_index);
             if (!res) {
                 ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
@@ -3681,8 +3676,8 @@ static void flecs_ir_vm_reset(
     vm->pc = 0;
     vm->entry = 0;
     vm->reg_base = 0;
-    vm->scratch_top = 0;
-    vm->vscratch_top = 0;
+    vm->scratch.top = 0;
+    vm->vscratch.top = 0;
     vm->frame_count = 0;
     vm->last_entity = 0;
     vm->cond = false;
@@ -3700,13 +3695,9 @@ static void flecs_ir_vm_setup(
     vm->regs = NULL;
     vm->reg_count = 0;
     ecs_os_memset(vm->frames, 0, sizeof(vm->frames));
-    vm->scratch = NULL;
-    vm->scratch_size = 0;
+    flecs_ir_arena_init(&vm->scratch);
+    flecs_ir_arena_init(&vm->vscratch);
     ecs_vec_init_t(NULL, &vm->owned, flecs_ir_owned_t, 0);
-    ecs_vec_init_t(NULL, &vm->heap, void*, 0);
-    vm->vscratch = NULL;
-    vm->vscratch_size = 0;
-    ecs_vec_init_t(NULL, &vm->vheap, void*, 0);
     ecs_vec_init_t(NULL, &vm->strbufs, ecs_strbuf_t, 0);
     ecs_vec_init_t(NULL, &vm->cursors, ecs_meta_cursor_t, 0);
     ecs_vec_init_t(NULL, &vm->pending_marks, int32_t, 0);
@@ -3724,19 +3715,9 @@ static void flecs_ir_vm_clear(
     vm->strbufs.count = 0;
     vm->cursors.count = 0;
     vm->pending_marks.count = 0;
-    count = vm->heap.count;
-    void **heap = vm->heap.array;
-    for (i = 0; i < count; i ++) {
-        ecs_os_free(heap[i]);
-    }
-    vm->heap.count = 0;
+    flecs_ir_arena_restore(&vm->scratch, 0, 0);
+    flecs_ir_arena_restore(&vm->vscratch, 0, 0);
     vm->owned.count = 0;
-    count = vm->vheap.count;
-    heap = vm->vheap.array;
-    for (i = 0; i < count; i ++) {
-        ecs_os_free(heap[i]);
-    }
-    vm->vheap.count = 0;
 #ifdef FLECS_SCRIPT_ASYNC
     flecs_script_async_fini(&vm->async);
 #endif
@@ -3753,13 +3734,9 @@ static void flecs_ir_vm_teardown(
     ecs_vec_fini_t(NULL, &vm->strbufs, ecs_strbuf_t);
     ecs_vec_fini_t(NULL, &vm->cursors, ecs_meta_cursor_t);
     ecs_vec_fini_t(NULL, &vm->pending_marks, int32_t);
-    ecs_vec_fini_t(NULL, &vm->heap, void*);
+    flecs_ir_arena_fini(&vm->scratch);
+    flecs_ir_arena_fini(&vm->vscratch);
     ecs_vec_fini_t(NULL, &vm->owned, flecs_ir_owned_t);
-    ecs_os_free(vm->scratch);
-    vm->scratch = NULL;
-    ecs_vec_fini_t(NULL, &vm->vheap, void*);
-    ecs_os_free(vm->vscratch);
-    vm->vscratch = NULL;
     ecs_os_free(vm->regs);
     vm->regs = NULL;
     vm->reg_count = 0;
