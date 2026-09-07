@@ -572,23 +572,6 @@ static ecs_table_t* flecs_table_ensure(
     return flecs_table_new(world, &copy, elem, prev);
 }
 
-static void flecs_diff_insert_added(
-    ecs_world_t *world,
-    ecs_table_diff_builder_t *diff,
-    ecs_id_t id)
-{
-    ecs_vec_append_t(&world->allocator, &diff->added, ecs_id_t)[0] = id;
-}
-
-static void flecs_diff_insert_removed(
-    ecs_world_t *world,
-    ecs_table_diff_builder_t *diff,
-    ecs_id_t id)
-{
-    ecs_allocator_t *a = &world->allocator;
-    ecs_vec_append_t(a, &diff->removed, ecs_id_t)[0] = id;
-}
-
 static bool flecs_id_is_alive(
     ecs_world_t *world,
     ecs_id_t id)
@@ -660,87 +643,46 @@ static void flecs_compute_table_diff(
         return;
     }
 
-    ecs_id_t *ids_node = node_type.array;
-    ecs_id_t *ids_next = next_type.array;
-    int32_t i_node = 0, node_count = node_type.count;
-    int32_t i_next = 0, next_count = next_type.count;
-    int32_t added_count = 0;
-    int32_t removed_count = 0;
-    ecs_flags32_t added_flags = 0, removed_flags = 0;
-    bool trivial_edge = !ECS_HAS_RELATION(id, EcsIsA) && !childof;
-
-    /* First do a scan to see how big the diff is, so we don't have to realloc
-     * or alloc more memory than required. */
-    for (; i_node < node_count && i_next < next_count; ) {
-        ecs_id_t id_node = ids_node[i_node];
-        ecs_id_t id_next = ids_next[i_next];
-
-        bool added = id_next < id_node;
-        bool removed = id_node < id_next;
-
-        trivial_edge &= !added || id_next == id;
-        trivial_edge &= !removed || id_node == id;
-
-        if (added) {
-            added_flags |= flecs_id_flags_get(world, id_next) & 
-                EcsTableAddEdgeFlags;
-            added_count ++;
-        }
-
-        if (removed) {
-            removed_flags |= flecs_id_flags_get(world, id_node) & 
-                EcsTableRemoveEdgeFlags;
-            removed_count ++;
-        }
-
-        i_node += id_node <= id_next;
-        i_next += id_next <= id_node;
-    }
-
-    for (; i_next < next_count; i_next ++) {
-        added_flags |= flecs_id_flags_get(world, ids_next[i_next]) & 
-            EcsTableAddEdgeFlags;
-        added_count ++;
-    }
-
-    for (; i_node < node_count; i_node ++) {
-        removed_flags |= flecs_id_flags_get(world, ids_node[i_node]) & 
-            EcsTableRemoveEdgeFlags;
-        removed_count ++;
-    }
-
-    trivial_edge &= (added_count + removed_count) <= 1 && 
-        !ecs_id_is_wildcard(id) && !(added_flags|removed_flags);
-
-    if (trivial_edge) {
-        /* If edge is trivial, there's no need to create a diff element for it */
-        return;
-    }
-
     ecs_table_diff_builder_t *builder = &world->allocators.diff_builder;
     int32_t added_offset = builder->added.count;
     int32_t removed_offset = builder->removed.count;
+    ecs_flags32_t added_flags = 0, removed_flags = 0;
+    bool trivial_edge = !ECS_HAS_RELATION(id, EcsIsA) && !childof &&
+        !ecs_id_is_wildcard(id);
 
-    for (i_node = 0, i_next = 0; i_node < node_count && i_next < next_count; ) {
-        ecs_id_t id_node = ids_node[i_node];
-        ecs_id_t id_next = ids_next[i_next];
-
-        if (id_next < id_node) {
-            flecs_diff_insert_added(world, builder, id_next);
-        } else if (id_node < id_next) {
-            flecs_diff_insert_removed(world, builder, id_node);
+    int32_t i_node = 0, i_next = 0;
+    while (i_node < node_type.count || i_next < next_type.count) {
+        if (i_node < node_type.count && i_next < next_type.count &&
+            node_type.array[i_node] == next_type.array[i_next])
+        {
+            i_node ++;
+            i_next ++;
+            continue;
         }
-
-        i_node += id_node <= id_next;
-        i_next += id_next <= id_node;
+        bool added = i_node == node_type.count ||
+            (i_next < next_type.count &&
+                next_type.array[i_next] < node_type.array[i_node]);
+        ecs_id_t changed = added
+            ? next_type.array[i_next ++] : node_type.array[i_node ++];
+        ecs_vec_t *ids = added ? &builder->added : &builder->removed;
+        ecs_vec_append_t(&world->allocator, ids, ecs_id_t)[0] = changed;
+        ecs_flags32_t flags = flecs_id_flags_get(world, changed);
+        if (added) {
+            added_flags |= flags & EcsTableAddEdgeFlags;
+        } else {
+            removed_flags |= flags & EcsTableRemoveEdgeFlags;
+        }
+        trivial_edge &= changed == id;
     }
 
-    for (; i_next < next_count; i_next ++) {
-        flecs_diff_insert_added(world, builder, ids_next[i_next]);
-    }
-
-    for (; i_node < node_count; i_node ++) {
-        flecs_diff_insert_removed(world, builder, ids_node[i_node]);
+    int32_t added_count = builder->added.count - added_offset;
+    int32_t removed_count = builder->removed.count - removed_offset;
+    if (trivial_edge && (added_count + removed_count) <= 1 &&
+        !(added_flags | removed_flags))
+    {
+        builder->added.count = added_offset;
+        builder->removed.count = removed_offset;
+        return;
     }
 
     ecs_table_diff_t *diff = flecs_bcalloc(&world->allocators.table_diff);
