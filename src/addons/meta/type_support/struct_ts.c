@@ -369,138 +369,63 @@ static int flecs_struct_layout(
     bool member_unchanged)
 {
     ecs_member_t *members = ecs_vec_first_t(&s->members, ecs_member_t);
-    int32_t i, count = ecs_vec_count(&s->members);
-
-    /* Compute member offsets and size & alignment of struct */
-    ecs_size_t size = 0;
-    ecs_size_t alignment = 0;
+    int32_t count = ecs_vec_count(&s->members);
+    ecs_size_t size = 0, alignment = 0;
     bool layout_changed = false;
-
-    if (explicit_member == -1) {
-        const EcsStruct *base_st = NULL;
-        ecs_entity_t base = flecs_struct_base(world, struct_type, &base_st);
-        int32_t inherited = flecs_struct_inherited_count(
-            world, struct_type, s);
-
-        for (i = 0; i < count; i ++) {
-            ecs_member_t *elem = &members[i];
-
-            ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
-
-            /* Get component of member type to get its size & alignment */
-            const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
-            if (!mbr_comp) {
-                char *path = ecs_get_path(world, elem->type);
-                ecs_err("member '%s' is not a type", path);
-                ecs_os_free(path);
-                return -1;
-            }
-
-            ecs_size_t member_alignment = mbr_comp->alignment;
-            int64_t total_size = (int64_t)mbr_comp->size *
-                (elem->count ? elem->count : 1);
-            if (total_size > INT32_MAX) {
-                total_size = 0;
-            }
-
-            ecs_size_t member_size = (ecs_size_t)total_size;
-
-            if (!member_size || !member_alignment) {
-                char *path = ecs_get_path(world, elem->type);
-                ecs_err("member '%s' has 0 size/alignment", path);
-                ecs_os_free(path);
-                return -1;
-            }
-
+    bool explicit_offset = explicit_member != -1;
+    const EcsStruct *base_st = NULL;
+    ecs_entity_t base = explicit_offset ? 0 :
+        flecs_struct_base(world, struct_type, &base_st);
+    int32_t inherited = base_st ? ecs_vec_count(&base_st->members) : 0;
+    if (inherited > count) {
+        inherited = count;
+    }
+    int32_t first = explicit_offset ? explicit_member : 0;
+    int32_t end = explicit_offset ? first + 1 : count;
+    for (int32_t i = first; i < end; i ++) {
+        ecs_member_t *elem = &members[i];
+        const EcsComponent *comp = ecs_get(world, elem->type, EcsComponent);
+        if (!comp) {
+            ecs_err("member '%s' is not a type",
+                flecs_errstr(ecs_get_path(world, elem->type)));
+            return -1;
+        }
+        int64_t member_size = (int64_t)comp->size *
+            (elem->count ? elem->count : 1);
+        if (!member_size || member_size > INT32_MAX || !comp->alignment) {
+            ecs_err("member '%s' has 0 size/alignment",
+                flecs_errstr(ecs_get_path(world, elem->type)));
+            return -1;
+        }
+        ecs_size_t member_alignment = comp->alignment;
+        ecs_size_t offset = elem->offset;
+        if (!explicit_offset) {
             if (i == inherited && base) {
                 size = flecs_struct_base_size(world, base, size);
             }
-
-            if (i < inherited) {
-                ecs_assert(base_st != NULL, ECS_INTERNAL_ERROR, NULL);
-                const ecs_member_t *base_members = ecs_vec_first_t(
-                    &base_st->members, ecs_member_t);
-                size = base_members[i].offset;
-            } else {
-                size = ECS_ALIGN(size, member_alignment);
-            }
-            if (elem->size != member_size || elem->offset != size) {
-                layout_changed = true;
-            }
-            elem->size = member_size;
-            elem->offset = size;
-
-            /* Synchronize offset with Member component */
+            offset = i < inherited
+                ? ecs_vec_get_t(&base_st->members, ecs_member_t, i)->offset
+                : ECS_ALIGN(size, member_alignment);
             if (elem->member && i >= inherited) {
-                EcsMember *member_data = ecs_ensure(
-                    world, elem->member, EcsMember);
-                member_data->offset = elem->offset;
-            }
-
-            size += member_size;
-
-            if (member_alignment > alignment) {
-                alignment = member_alignment;
+                ecs_ensure(world, elem->member, EcsMember)->offset = offset;
             }
         }
-
-        if (base && inherited == count) {
-            size = flecs_struct_base_size(world, base, size);
-        }
-    } else {
-        i = explicit_member;
-
-        /* If members have explicit offsets, we can't rely on computed 
-         * size/alignment values. Calculate size as if this is the last member
-         * instead, since this will validate if the member fits in the struct.
-         * It doesn't matter if the size is smaller than the actual struct size
-         * because flecs_init_type function compares computed size with actual
-         * (component) size to determine if the type is partial. */
-        ecs_member_t *elem = &members[i];
-
-        ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
-
-        /* Get component of member type to get its size & alignment */
-        const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
-        if (!mbr_comp) {
-            char *path = ecs_get_path(world, elem->type);
-            ecs_err("member '%s' is not a type", path);
-            ecs_os_free(path);
-            return -1;
-        }
-
-        ecs_size_t member_alignment = mbr_comp->alignment;
-        int64_t total_size = (int64_t)mbr_comp->size *
-            (elem->count ? elem->count : 1);
-        if (total_size > INT32_MAX) {
-            total_size = 0;
-        }
-
-        ecs_size_t member_size = (ecs_size_t)total_size;
-
-        if (!member_size || !member_alignment) {
-            char *path = ecs_get_path(world, elem->type);
-            ecs_err("member '%s' has 0 size/alignment", path);
-            ecs_os_free(path);
-            return -1;
-        }
-
-        if (elem->size != member_size) {
-            layout_changed = true;
-        }
-        elem->size = member_size;
-        size = elem->offset + member_size;
-
-        const EcsComponent* comp = ecs_get(world, struct_type, EcsComponent);
-        if (comp) {
-            alignment = comp->alignment;
-        } else {
+        layout_changed |= elem->size != member_size || elem->offset != offset;
+        elem->size = (ecs_size_t)member_size;
+        elem->offset = offset;
+        size = offset + elem->size;
+        if (member_alignment > alignment) {
             alignment = member_alignment;
         }
     }
-
+    if (explicit_offset) {
+        const EcsComponent *comp = ecs_get(world, struct_type, EcsComponent);
+        if (comp) {
+            alignment = comp->alignment;
+        }
+    } else if (base && inherited == count) {
+        size = flecs_struct_base_size(world, base, size);
+    }
     if (size == 0) {
         ecs_err("struct '%s' has 0 size", ecs_get_name(world, struct_type));
         return -1;
