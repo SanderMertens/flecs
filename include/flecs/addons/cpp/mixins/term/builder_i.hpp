@@ -114,109 +114,19 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return this->id(id);
     }
 
-    /** Call prior to setting values for the src identifier. */
-    Base& src() {
-        this->assert_term();
-        this->term_ref_ = &term_->src;
-        return *this;
+    template <typename T = void, typename... Args>
+    Base& src(Args... args) {
+        return select_ref<T>(&ecs_term_t::src, args...);
     }
 
-    /** Call prior to setting values for the first identifier. This is either the
-     * component identifier, or the first element of a pair (in case the second is
-     * populated as well). */
-    Base& first() {
-        this->assert_term();
-        this->term_ref_ = &term_->first;
-        return *this;
+    template <typename T = void, typename... Args>
+    Base& first(Args... args) {
+        return select_ref<T>(&ecs_term_t::first, args...);
     }
 
-    /** Call prior to setting values for the second identifier. This is the second
-     * element of a pair. Requires that first() is populated as well. */
-    Base& second() {
-        this->assert_term();
-        this->term_ref_ = &term_->second;
-        return *this;
-    }
-
-    /** Select the src identifier, initialize it with an entity ID. */
-    Base& src(flecs::entity_t id) {
-        this->src();
-        this->id(id);
-        return *this;
-    }
-
-    /** Select the src identifier, initialize it with the ID associated with the type. */
-    template<typename T>
-    Base& src() {
-        this->src(_::type<T>::id(this->world_v()));
-        return *this;
-    }
-
-    /** Select the src identifier, initialize it with a name. If the name starts with a $,
-     * the name is interpreted as a variable. */
-    Base& src(const char *name) {
-        ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
-        this->src();
-        if (name[0] == '$') {
-            this->var(&name[1]);
-        } else {
-            this->name(name);
-        }
-        return *this;
-    }
-
-    /** Select the first identifier, initialize it with an entity ID. */
-    Base& first(flecs::entity_t id) {
-        this->first();
-        this->id(id);
-        return *this;
-    }
-
-    /** Select the first identifier, initialize it with the ID associated with the type. */
-    template<typename T>
-    Base& first() {
-        this->first(_::type<T>::id(this->world_v()));
-        return *this;
-    }
-
-    /** Select the first identifier, initialize it with a name. If the name starts with a $,
-     * the name is interpreted as a variable. */
-    Base& first(const char *name) {
-        ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
-        this->first();
-        if (name[0] == '$') {
-            this->var(&name[1]);
-        } else {
-            this->name(name);
-        }
-        return *this;
-    }
-
-    /** Select the second identifier, initialize it with an entity ID. */
-    Base& second(flecs::entity_t id) {
-        this->second();
-        this->id(id);
-        return *this;
-    }
-
-    /** Select the second identifier, initialize it with the ID associated with the type. */
-    template<typename T>
-    Base& second() {
-        this->second(_::type<T>::id(this->world_v()));
-        return *this;
-    }
-
-    /** Select the second identifier, initialize it with a name. If the name starts with a $,
-     * the name is interpreted as a variable. */
-    Base& second(const char *name) {
-        ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
-        this->second();
-        if (name[0] == '$') {
-            this->var(&name[1]);
-        } else {
-            this->name(name);
-        }
-        return *this;
+    template <typename T = void, typename... Args>
+    Base& second(Args... args) {
+        return select_ref<T>(&ecs_term_t::second, args...);
     }
 
     /** The up flag indicates that the term identifier may be substituted by
@@ -418,6 +328,30 @@ protected:
     }
 
 private:
+    Base& set_ref() {
+        return *this;
+    }
+
+    Base& set_ref(flecs::entity_t id) {
+        return this->id(id);
+    }
+
+    Base& set_ref(const char *name) {
+        ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
+        return name[0] == '$' ? this->var(name + 1) : this->name(name);
+    }
+
+    template <typename T, typename... Args>
+    Base& select_ref(ecs_term_ref_t ecs_term_t::*ref, Args... args) {
+        assert_term();
+        this->term_ref_ = &(term_->*ref);
+        if constexpr (std::is_void_v<T>) {
+            return set_ref(args...);
+        } else {
+            return set_ref(_::type<T>::id(this->world_v()));
+        }
+    }
+
     void assert_term() {
         ecs_assert(term_ != nullptr, ECS_INVALID_PARAMETER, 
             "no active term (call .with() first)");

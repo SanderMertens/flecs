@@ -272,7 +272,7 @@ inline void system_builder<Components...>::prepend_each_callback_signature() {
         }
 
         this->term_index_ = 0;
-        _::sig<CallbackComponents...>(this->world_).populate(this);
+        _::populate_signature<CallbackComponents...>(this->world_, this);
         this->term_index_ = existing_term_count + callback_term_count;
     }
 }

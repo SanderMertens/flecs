@@ -25,7 +25,7 @@ struct alert_builder final : _::alert_builder_base<Components...> {
     alert_builder(flecs::world_t* world, const char *name = nullptr)
         : _::alert_builder_base<Components...>(world)
     {
-        _::sig<Components...>(world).populate(this);
+        _::populate_signature<Components...>(world, this);
         if (name != nullptr) {
             ecs_entity_desc_t entity_desc = {};
             entity_desc.name = name;

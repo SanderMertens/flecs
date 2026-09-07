@@ -26,7 +26,7 @@ struct system_builder final : _::system_builder_base<Components...> {
     system_builder(flecs::world_t* world, const char *name = nullptr)
         : _::system_builder_base<Components...>(world, name)
     {
-        _::sig<Components...>(world).populate(this);
+        _::populate_signature<Components...>(world, this);
 
 #ifdef FLECS_PIPELINE
         this->desc_.phase = flecs::OnUpdate;

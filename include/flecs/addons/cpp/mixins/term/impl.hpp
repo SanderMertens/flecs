@@ -14,69 +14,32 @@ namespace flecs {
  * @ingroup cpp_core_queries
  */
 struct term final : term_builder_i<term> {
-    /** Default constructor. */
-    term()
-        : term_builder_i<term>(&value)
-        , value({})
-        , world_(nullptr) { }
+    term() : term(nullptr) { }
 
-    /** Construct from a world. */
-    term(flecs::world_t *world_ptr)
+    term(flecs::world_t *world_ptr, ecs_term_t t = {})
         : term_builder_i<term>(&value)
-        , value({})
+        , value(t)
         , world_(world_ptr) { }
 
-    /** Construct from a world and an existing term descriptor. */
-    term(flecs::world_t *world_ptr, ecs_term_t t)
-        : term_builder_i<term>(&value)
-        , value({})
-        , world_(world_ptr) {
-            value = t;
-            this->set_term(&value);
-        }
-
-    /** Construct from a world and a component ID. */
     term(flecs::world_t *world_ptr, id_t component_id)
-        : term_builder_i<term>(&value)
-        , value({})
-        , world_(world_ptr) {
-            if (component_id & ECS_ID_FLAGS_MASK) {
-                value.id = component_id;
-            } else {
-                value.first.id = component_id;
-            }
-            this->set_term(&value);
+        : term(world_ptr)
+    {
+        if (component_id & ECS_ID_FLAGS_MASK) {
+            value.id = component_id;
+        } else {
+            value.first.id = component_id;
         }
+    }
 
-    /** Construct from a world and a pair of entity IDs. */
     term(flecs::world_t *world_ptr, entity_t first, entity_t second)
-        : term_builder_i<term>(&value)
-        , value({})
-        , world_(world_ptr) {
-            value.id = ecs_pair(first, second);
-            this->set_term(&value);
-        }
+        : term(world_ptr, ecs_pair(first, second)) { }
 
-    /** Construct from a component ID (no world). */
-    term(id_t component_id)
-        : term_builder_i<term>(&value)
-        , value({})
-        , world_(nullptr) {
-            if (component_id & ECS_ID_FLAGS_MASK) {
-                value.id = component_id;
-            } else {
-                value.first.id = component_id;
-            }
-        }
+    term(id_t component_id) : term(nullptr, component_id) { }
 
-    /** Construct from a pair of IDs (no world). */
-    term(id_t first, id_t second)
-        : term_builder_i<term>(&value)
-        , value({})
-        , world_(nullptr) {
-            value.first.id = first;
-            value.second.id = second;
-        }
+    term(id_t first, id_t second) : term() {
+        value.first.id = first;
+        value.second.id = second;
+    }
 
     /** Reset the term to its default state. */
     void reset() {

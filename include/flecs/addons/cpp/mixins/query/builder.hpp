@@ -25,14 +25,14 @@ struct query_builder final : _::query_builder_base<Components...> {
     query_builder(flecs::world_t* world, flecs::entity query_entity)
         : _::query_builder_base<Components...>(world)
     {
-        _::sig<Components...>(world).populate(this);
+        _::populate_signature<Components...>(world, this);
         this->desc_.entity = query_entity.id();
     }
 
     query_builder(flecs::world_t* world, const char *name = nullptr)
         : _::query_builder_base<Components...>(world)
     {
-        _::sig<Components...>(world).populate(this);
+        _::populate_signature<Components...>(world, this);
         if (name != nullptr) {
             ecs_entity_desc_t entity_desc = {};
             entity_desc.name = name;

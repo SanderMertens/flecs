@@ -56,180 +56,68 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    /** @name With methods
-     * @{
-     */
-
-    /** Add a term for the specified type. */
-    template<typename T>
+    template <typename T>
     Base& with() {
-        this->term();
-        *this->term_ = flecs::term(_::type<T>::id(this->world_v()));
-        this->term_->inout = static_cast<ecs_inout_kind_t>(
-            _::type_to_inout<T>());
-        return *this;
+        return with(_::type<T>::id(this->world_v())).inout(_::type_to_inout<T>());
     }
 
-    /** Add a term for the specified component ID. */
-    Base& with(id_t component_id) {
-        this->term();
-        *this->term_ = flecs::term(component_id);
-        return *this;
+    template <typename First, typename Second>
+    Base& with() {
+        return with(_::type<First>::id(this->world_v()), _::type<Second>::id(this->world_v()));
     }
 
-    /** Add a term for the specified component name. */
-    Base& with(const char *component_name) {
-        this->term();
-        *this->term_ = flecs::term().first(component_name);
-        return *this;
+    template <typename First, typename Second>
+    Base& with(Second second) {
+        return with(_::type<First>::id(this->world_v()), second);
     }
 
-    /** Add a term for a pair specified by name. */
-    Base& with(const char *first, const char *second) {
+    template <typename Arg>
+    Base& with(Arg&& arg) {
+        using T = decay_t<Arg>;
+        if constexpr (is_enum_v<T>) {
+            return with(_::type<T>::id(this->world_v()), _::entity_id(this->world_v(), arg));
+        } else {
+            this->term();
+            if constexpr (std::is_same_v<T, flecs::term>) {
+                *this->term_ = arg;
+            } else if constexpr (std::is_convertible_v<T, const char*>) {
+                *this->term_ = flecs::term().first(arg);
+            } else {
+                *this->term_ = flecs::term(arg);
+            }
+            return *this;
+        }
+    }
+
+    template <typename First, typename Second>
+    Base& with(First first, Second second) {
         this->term();
         *this->term_ = flecs::term().first(first).second(second);
         return *this;
     }
 
-    /** Add a term for a pair specified by entity IDs. */
-    Base& with(entity_t first, entity_t second) {
-        this->term();
-        *this->term_ = flecs::term(first, second);
-        return *this;
-    }
-
-    /** Add a term for a pair with an entity ID first and a name second. */
-    Base& with(entity_t first, const char *second) {
-        this->term();
-        *this->term_ = flecs::term(first).second(second);
-        return *this;
-    }
-
-    /** Add a term for a pair with a name first and an entity ID second. */
-    Base& with(const char *first, entity_t second) {
-        this->term();
-        *this->term_ = flecs::term().first(first).second(second);
-        return *this;
-    }
-
-    /** Add a term for a pair with type First and an entity ID second. */
-    template<typename First>
-    Base& with(entity_t second) {
-        return this->with(_::type<First>::id(this->world_v()), second);
-    }
-
-    /** Add a term for a pair with type First and name second. */
-    template<typename First>
-    Base& with(const char *second) {
-        return this->with(_::type<First>::id(this->world_v())).second(second);
-    }
-
-    /** Add a term for a pair with types First and Second. */
-    template<typename First, typename Second>
-    Base& with() {
-        return this->with<First>(_::type<Second>::id(this->world_v()));
-    }
-
-    /** Add a term for an enum value. */
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    Base& with(E value) {
-        flecs::entity_t r = _::type<E>::id(this->world_v());
-        auto o = enum_type<E>(this->world_v()).entity(value);
-        return this->with(r, o);
-    }
-
-    /** Add a term from an existing term reference. */
-    Base& with(flecs::term& term) {
-        this->term();
-        *this->term_ = term;
-        return *this;
-    }
-
-    /** Add a term from an existing term (move). */
-    Base& with(flecs::term&& term) {
-        this->term();
-        *this->term_ = term;
-        return *this;
-    }
-
-    /** @}
-     * @name Without methods
-     * Shorthand for .with(...).not_().
-     * @{
-     */
-
-    /** Add a negated term. */
-    template <typename ... Args>
+    template <typename... T, typename... Args>
     Base& without(Args&&... args) {
-        return this->with(FLECS_FWD(args)...).not_();
+        return this->template with<T...>(FLECS_FWD(args)...).not_();
     }
 
-    /** Add a negated term for the specified type. */
-    template <typename T, typename ... Args>
-    Base& without(Args&&... args) {
-        return this->with<T>(FLECS_FWD(args)...).not_();
-    }
-
-    /** Add a negated term for a pair of types. */
-    template <typename First, typename Second>
-    Base& without() {
-        return this->with<First, Second>().not_();
-    }
-
-    /** @}
-     * @name Write/read methods
-     * @{
-     */
-
-    /** Short for inout_stage(flecs::Out). */
     Base& write() {
-        term_builder_i<Base>::write();
-        return *this;
+        return term_builder_i<Base>::write();
     }
 
-    /** Add a write term with the specified arguments. */
-    template <typename ... Args>
+    template <typename... T, typename... Args>
     Base& write(Args&&... args) {
-        return this->with(FLECS_FWD(args)...).write();
+        return this->template with<T...>(FLECS_FWD(args)...).write();
     }
 
-    /** Add a write term for the specified type. */
-    template <typename T, typename ... Args>
-    Base& write(Args&&... args) {
-        return this->with<T>(FLECS_FWD(args)...).write();
-    }
-
-    /** Add a write term for a pair of types. */
-    template <typename First, typename Second>
-    Base& write() {
-        return this->with<First, Second>().write();
-    }
-
-    /** Short for inout_stage(flecs::In). */
     Base& read() {
-        term_builder_i<Base>::read();
-        return *this;
+        return term_builder_i<Base>::read();
     }
 
-    /** Add a read term with the specified arguments. */
-    template <typename ... Args>
+    template <typename... T, typename... Args>
     Base& read(Args&&... args) {
-        return this->with(FLECS_FWD(args)...).read();
+        return this->template with<T...>(FLECS_FWD(args)...).read();
     }
-
-    /** Add a read term for the specified type. */
-    template <typename T, typename ... Args>
-    Base& read(Args&&... args) {
-        return this->with<T>(FLECS_FWD(args)...).read();
-    }
-
-    /** Add a read term for a pair of types. */
-    template <typename First, typename Second>
-    Base& read() {
-        return this->with<First, Second>().read();
-    }
-
-    /** @} */
 
     /** Open a query scope. */
     Base& scope_open() {
