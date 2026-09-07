@@ -60351,12 +60351,6 @@ typedef struct ecs_rtt_struct_ctx_t {
 
 } ecs_rtt_struct_ctx_t;
 
-/* Lifecycle context for runtime arrays */
-typedef struct ecs_rtt_array_ctx_t {
-    const ecs_type_info_t *type_info;
-    int32_t elem_count;
-} ecs_rtt_array_ctx_t;
-
 /* Generic copy assign hook */
 static void flecs_rtt_default_copy(
     void *dst_ptr,
@@ -60648,13 +60642,10 @@ static ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
  * invoke the member hooks when necessary. */
 static void flecs_rtt_init_default_hooks_struct(
     ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_type_info_t *ti)
+    const ecs_type_info_t *ti,
+    const ecs_member_t *members,
+    int32_t member_count)
 {
-    /* Obtain struct information to figure out what members it contains: */
-    const EcsStruct *struct_info = ecs_get(world, component, EcsStruct);
-    ecs_assert(struct_info != NULL, ECS_INTERNAL_ERROR, NULL);
-
     /* These flags will be set to true if we determine we need to generate a
      * hook of a particular type: */
     bool ctor_hook_required = false;
@@ -60666,11 +60657,10 @@ static void flecs_rtt_init_default_hooks_struct(
 
     /* Iterate all struct members and see if any member type has hooks. If so,
      * the struct itself will need to have that hook: */
-    int i, member_count = ecs_vec_count(&struct_info->members);
-    ecs_member_t *members = ecs_vec_first(&struct_info->members);
+    int i;
     ecs_flags32_t flags = 0;
     for (i = 0; i < member_count; i++) {
-        ecs_member_t *m = &members[i];
+        const ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
         if (!member_ti || member_ti == ti) {
             continue;
@@ -60708,7 +60698,7 @@ static void flecs_rtt_init_default_hooks_struct(
      * build the vector of calls that will then be executed by the generic hook
      * handler: */
     for (i = 0; i < member_count; i++) {
-        ecs_member_t *m = &members[i];
+        const ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
         if (!member_ti || member_ti == ti) {
             continue;
@@ -60776,203 +60766,6 @@ static void flecs_rtt_init_default_hooks_struct(
             comp_data->hook.equals = member_ti->hooks.equals; 
         }
     }
-}
-
-/*
- *
- * RTT array support
- *
- */
-
-static void flecs_rtt_free_lifecycle_array_ctx(
-    void *ctx)
-{
-    if (!ctx) {
-        return;
-    }
-
-    ecs_os_free(ctx);
-}
-
-/* Generic array constructor. It will invoke the constructor of the underlying
- * type for all the elements */
-static void flecs_rtt_array_ctor(
-    void *ptr,
-    int32_t count, /* note: "count" is how many arrays to initialize, not how
-                      many elements are in the array */
-    const ecs_type_info_t *type_info)
-{
-    ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    int i;
-    for (i = 0; i < count; i++) {
-        void *arr = ECS_ELEM(ptr, type_info->size, i);
-        flecs_type_info_ctor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
-    }
-}
-
-/* Generic array destructor. It will invoke the destructor of the underlying
- * type for all the elements */
-static void flecs_rtt_array_dtor(
-    void *ptr,
-    int32_t count, /* note: "count" is how many arrays to destroy, not how
-                      many elements are in the array */
-    const ecs_type_info_t *type_info)
-{
-    ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    int i;
-    for (i = 0; i < count; i++) {
-        void *arr = ECS_ELEM(ptr, type_info->size, i);
-        flecs_type_info_dtor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
-    }
-}
-
-/* Generic array move hook. It will invoke the move hook of the underlying
- * type for all the elements */
-static void flecs_rtt_array_move(
-    void *dst_ptr,
-    void *src_ptr,
-    int32_t count, /* note: "count" is how many arrays to move, not how
-                      many elements are in the array */
-    const ecs_type_info_t *type_info)
-{
-    ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    int i;
-    for (i = 0; i < count; i++) {
-        void *src_arr = ECS_ELEM(src_ptr, type_info->size, i);
-        void *dst_arr = ECS_ELEM(dst_ptr, type_info->size, i);
-        flecs_type_info_move(
-            dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
-    }
-}
-
-/* Generic array copy hook. It will invoke the copy hook of the underlying
- * type for all the elements */
-static void flecs_rtt_array_copy(
-    void *dst_ptr,
-    const void *src_ptr,
-    int32_t count, /* note: "count" is how many arrays to copy, not how
-                      many elements are in the array */
-    const ecs_type_info_t *type_info)
-{
-    ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    int i;
-    for (i = 0; i < count; i++) {
-        const void *src_arr = ECS_ELEM(src_ptr, type_info->size, i);
-        void *dst_arr = ECS_ELEM(dst_ptr, type_info->size, i);
-        flecs_type_info_copy(
-            dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
-    }
-}
-
-/* Generic array compare hook. It will invoke the compare hook of the underlying
- * type for each element */
-static int flecs_rtt_array_cmp(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *type_info)
-{
-    if(a_ptr == b_ptr) {
-        return 0;
-    }
-
-    ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_size_t element_size = rtt_ctx->type_info->size;
-    int i;
-    for (i = 0; i < rtt_ctx->elem_count; i++) {
-        const void *a_element = ECS_ELEM(a_ptr, element_size, i);
-        const void *b_element = ECS_ELEM(b_ptr, element_size, i);
-        int c = flecs_type_info_cmp(a_element, b_element, rtt_ctx->type_info);
-        if(c != 0) {
-            return c;
-        }
-    }
-    return 0;
-}
-
-/* Generic array equals hook. It will invoke the equals hook of the underlying
- * type for each element */
-static bool flecs_rtt_array_equals(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *type_info)
-{
-    if(a_ptr == b_ptr) {
-        return true;
-    }
-
-    ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_size_t element_size = rtt_ctx->type_info->size;
-    int i;
-    for (i = 0; i < rtt_ctx->elem_count; i++) {
-        const void *a_element = ECS_ELEM(a_ptr, element_size, i);
-        const void *b_element = ECS_ELEM(b_ptr, element_size, i);
-        bool eq = flecs_type_info_equals(
-            a_element, b_element, rtt_ctx->type_info);
-        if(!eq) {
-            return false;
-        }
-    }
-    return true;
-}
-
-/* Checks if an array's underlying type has hooks installed. If so, it generates
- * and installs the required hooks for the array type itself. These hooks will
- * invoke the underlying type's hook for each element in the array. */
-static void flecs_rtt_init_default_hooks_array(
-    ecs_world_t *world, 
-    ecs_entity_t component)
-{
-    const EcsArray *array_info = ecs_get(world, component, EcsArray);
-    ecs_assert(array_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    const ecs_type_info_t *element_ti =
-        ecs_get_type_info(world, array_info->type);
-    ecs_flags32_t flags = element_ti->hooks.flags;
-    bool ctor_hook_required =
-        element_ti->hooks.ctor && element_ti->hooks.ctor != flecs_default_ctor;
-    bool dtor_hook_required = element_ti->hooks.dtor != NULL;
-    bool move_hook_required = element_ti->hooks.move != NULL;
-    bool copy_hook_required = element_ti->hooks.copy != NULL;
-    bool valid_cmp = element_ti->hooks.cmp != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
-    bool valid_equals = element_ti->hooks.equals != NULL && !(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
-    
-
-    ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
-    
-    hooks.ctor = ctor_hook_required && !(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) ? 
-        flecs_rtt_array_ctor : NULL;
-    hooks.dtor = dtor_hook_required && !(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) ? 
-        flecs_rtt_array_dtor : NULL;
-    hooks.move = move_hook_required && !(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) ? 
-        flecs_rtt_array_move : NULL;
-    hooks.copy = copy_hook_required && !(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ? 
-        flecs_rtt_array_copy : NULL;
-    hooks.cmp = valid_cmp && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) ? 
-        flecs_rtt_array_cmp : NULL;
-    hooks.equals = valid_equals && !(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) ? 
-        flecs_rtt_array_equals : NULL;
-
-    if (hooks.lifecycle_ctx_free) {
-        hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
-        hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
-    }
-
-    if (hooks.ctor || hooks.dtor || hooks.move ||
-        hooks.copy || hooks.cmp || hooks.equals) 
-    {
-        ecs_rtt_array_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_array_ctx_t);
-        rtt_ctx->type_info = element_ti;
-        rtt_ctx->elem_count = array_info->count;
-        if (hooks.lifecycle_ctx_free) {
-            hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
-        }
-
-        hooks.lifecycle_ctx = rtt_ctx;
-        hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_array_ctx;
-    }
-
-    hooks.flags = flags;
-    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
-    ecs_set_hooks_id(world, component, &hooks);
 }
 
 /*
@@ -61520,18 +61313,14 @@ static void flecs_rtt_set_hook(
 static int flecs_rtt_gen_struct_hook(
     ecs_world_t *world,
     ecs_entity_t component,
-    bool equals)
+    bool equals,
+    const ecs_member_t *members,
+    int32_t member_count)
 {
-    const EcsStruct *struct_info = ecs_get(world, component, EcsStruct);
-    if (!struct_info) {
-        return -1;
-    }
-
-    int i, member_count = ecs_vec_count(&struct_info->members);
-    ecs_member_t *members = ecs_vec_first(&struct_info->members);
+    int i;
 
     for (i = 0; i < member_count; i++) {
-        ecs_member_t *m = &members[i];
+        const ecs_member_t *m = &members[i];
         if (m->type == component) {
             continue;
         }
@@ -61565,7 +61354,7 @@ static int flecs_rtt_gen_struct_hook(
     ecs_vec_clear(v);
 
     for (i = 0; i < member_count; i++) {
-        ecs_member_t *m = &members[i];
+        const ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
         if (!member_ti || m->type == component) {
             continue;
@@ -61584,47 +61373,6 @@ static int flecs_rtt_gen_struct_hook(
 
     flecs_rtt_set_hook(&hooks, equals,
         flecs_rtt_struct_cmp, flecs_rtt_struct_equals);
-    ecs_set_hooks_id(world, component, &hooks);
-    return 0;
-}
-
-static int flecs_rtt_gen_array_hook(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    bool equals)
-{
-    const EcsArray *array_info = ecs_get(world, component, EcsArray);
-    if (!array_info || array_info->type == component) {
-        return -1;
-    }
-
-    if (flecs_rtt_ensure_hook(world, array_info->type, equals)) {
-        return -1;
-    }
-
-    const ecs_type_info_t *element_ti =
-        ecs_get_type_info(world, array_info->type);
-    if (!element_ti) {
-        return -1;
-    }
-
-    const ecs_type_info_t *ti = ecs_get_type_info(world, component);
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_type_hooks_t hooks = ti->hooks;
-    if (hooks.lifecycle_ctx_free != flecs_rtt_free_lifecycle_array_ctx) {
-        if (hooks.lifecycle_ctx != NULL) {
-            return -1;
-        }
-        ecs_rtt_array_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_array_ctx_t);
-        rtt_ctx->type_info = element_ti;
-        rtt_ctx->elem_count = array_info->count;
-        hooks.lifecycle_ctx = rtt_ctx;
-        hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_array_ctx;
-    }
-
-    flecs_rtt_set_hook(&hooks, equals,
-        flecs_rtt_array_cmp, flecs_rtt_array_equals);
     ecs_set_hooks_id(world, component, &hooks);
     return 0;
 }
@@ -61677,10 +61425,19 @@ static int flecs_rtt_ensure_hook(
     }
 
     switch (type_ptr->kind) {
-    case EcsStructType:
-        return flecs_rtt_gen_struct_hook(world, type, equals);
-    case EcsArrayType:
-        return flecs_rtt_gen_array_hook(world, type, equals);
+    case EcsStructType: {
+        const EcsStruct *st = ecs_get(world, type, EcsStruct);
+        return st ? flecs_rtt_gen_struct_hook(world, type, equals,
+            st->members.array, st->members.count) : -1;
+    }
+    case EcsArrayType: {
+        const EcsArray *arr = ecs_get(world, type, EcsArray);
+        if (!arr || arr->type == type) {
+            return -1;
+        }
+        ecs_member_t member = { .type = arr->type, .count = arr->count };
+        return flecs_rtt_gen_struct_hook(world, type, equals, &member, 1);
+    }
     case EcsVectorType: {
         const EcsVector *v = ecs_get(world, type, EcsVector);
         return flecs_rtt_gen_collection_hook(world, type,
@@ -61758,9 +61515,13 @@ void flecs_rtt_init_default_hooks(
         ecs_assert(ti,ECS_INTERNAL_ERROR,NULL);
 
         if (type->kind == EcsStructType) {
-            flecs_rtt_init_default_hooks_struct(world, component, ti);
+            const EcsStruct *st = ecs_get(world, component, EcsStruct);
+            flecs_rtt_init_default_hooks_struct(
+                world, ti, st->members.array, st->members.count);
         } else if (type->kind == EcsArrayType) {
-            flecs_rtt_init_default_hooks_array(world, component);
+            const EcsArray *arr = ecs_get(world, component, EcsArray);
+            ecs_member_t member = { .type = arr->type, .count = arr->count };
+            flecs_rtt_init_default_hooks_struct(world, ti, &member, 1);
         } else if (type->kind == EcsVectorType) {
             flecs_rtt_init_default_hooks_vector(world, component);
         } else if (type->kind == EcsMapType) {
