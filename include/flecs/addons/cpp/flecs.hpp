@@ -100,6 +100,7 @@ struct each_delegate;
 #include "log.hpp"
 #include "pair.hpp"
 #include "lifecycle_traits.hpp"
+#include "utils/component_id.hpp"
 #include "world.hpp"
 #include "field.hpp"
 #include "iter.hpp"

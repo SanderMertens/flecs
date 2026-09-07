@@ -769,112 +769,32 @@ struct world {
     ref<T> get_ref() const;
 
 
-    /* try_get */
-
-    /** Get singleton component.
-     */
-    const void* try_get(flecs::id_t id) const;
-
-    /** Get singleton pair.
-     */
-    const void* try_get(flecs::entity_t r, flecs::entity_t t) const;
-
-    /** Get singleton component.
-     */
-    template <typename T>
-    const T* try_get() const;
-
-    /** Get singleton pair.
-     */
-    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
-        typename A = actual_type_t<P>>
-    const A* try_get() const;
-
-    /** Get singleton pair.
-     */
-    template <typename First, typename Second>
-    const First* try_get(Second second) const;
-
-
-    /* get */
-
-    /** Get singleton component.
-     */
-    const void* get(flecs::id_t id) const;
-
-    /** Get singleton component.
-     */
-    const void* get(flecs::entity_t r, flecs::entity_t t) const;
-
-    template <typename T>
-    const T& get() const;
-
-    /** Get singleton pair.
-     */
-    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
-        typename A = actual_type_t<P>>
-    const A& get() const;
-
-    /** Get singleton pair.
-     */
-    template <typename First, typename Second>
-    const First& get(Second second) const;
-
-    /** Get singleton component inside a callback.
-     */
-    template <typename Func, if_t< is_callable<Func>::value > = 0 >
+    template <typename Func, if_t<is_callable<Func>::value> = 0>
     void get(const Func& func) const;
 
+    template <typename... T, typename... Args>
+    decltype(auto) try_get(Args... args) const {
+        auto id = _::make_id<T...>(world_, args...);
+        return _::get_component<false, false>(world_, id.owner(world_), id);
+    }
 
-    /* try_get_mut */
+    template <typename... T, typename... Args>
+    decltype(auto) get(Args... args) const {
+        auto id = _::make_id<T...>(world_, args...);
+        return _::get_component<false, true>(world_, id.owner(world_), id);
+    }
 
-    /** Get mutable singleton component.
-     */
-    void* try_get_mut(flecs::id_t id) const;
+    template <typename... T, typename... Args>
+    decltype(auto) try_get_mut(Args... args) const {
+        auto id = _::make_id<T...>(world_, args...);
+        return _::get_component<true, false>(world_, id.owner(world_), id);
+    }
 
-    /** Get mutable singleton pair.
-     */
-    void* try_get_mut(flecs::entity_t r, flecs::entity_t t) const;
-
-    template <typename T>
-    T* try_get_mut() const;
-
-    /** Get mutable singleton pair.
-     */
-    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
-        typename A = actual_type_t<P>>
-    A* try_get_mut() const;
-
-    /** Get mutable singleton pair.
-     */
-    template <typename First, typename Second>
-    First* try_get_mut(Second second) const;
-
-
-    /* get_mut */
-
-    /** Get mutable singleton component.
-     */
-    void* get_mut(flecs::id_t id) const;
-
-    /** Get mutable singleton pair.
-     */
-    void* get_mut(flecs::entity_t r, flecs::entity_t t) const;
-
-    template <typename T>
-    T& get_mut() const;
-
-    /** Get mutable singleton pair.
-     */
-    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
-        typename A = actual_type_t<P>>
-    A& get_mut() const;
-
-    /** Get mutable singleton pair.
-     */
-    template <typename First, typename Second>
-    First& get_mut(Second second) const;
-
+    template <typename... T, typename... Args>
+    decltype(auto) get_mut(Args... args) const {
+        auto id = _::make_id<T...>(world_, args...);
+        return _::get_component<true, true>(world_, id.owner(world_), id);
+    }
 
     /** Test if world has singleton component.
      * 

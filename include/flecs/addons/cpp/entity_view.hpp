@@ -274,645 +274,83 @@ struct entity_view : public id {
     }
 
 
-    /* try_get */
-
-    /** Get component value.
-     * 
-     * @tparam T The component to get.
-     * @return Pointer to the component value, nullptr if the entity does not
-     *         have the component.
-     */
-    template <typename T, if_t< is_actual<T>::value > = 0>
-    const T* try_get() const {
-        auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        return static_cast<const T*>(_::get_ptr<T>(world_, id_, comp_id));
+    template <typename... T, typename... Args>
+    decltype(auto) try_get(Args... args) const {
+        return _::get_component<false, false>(world_, id_,
+            _::make_id<T...>(world_, args...));
     }
 
-    /** Get component value.
-     * Overload for when T is not the same as the actual type, which happens
-     * when using pair types.
-     * 
-     * @tparam T The component to get.
-     * @return Pointer to the component value, nullptr if the entity does not
-     *         have the component.
-     */
-    template <typename T, typename A = actual_type_t<T>, 
-        if_t< flecs::is_pair<T>::value > = 0>
-    const A* try_get() const {
-        auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<A>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        return static_cast<const A*>(ecs_get_id(world_, id_, comp_id));
+    template <typename... T, typename... Args>
+    decltype(auto) try_get_second(Args... args) const {
+        return _::get_component<false, false>(world_, id_,
+            _::second_id<T...>(world_, args...));
     }
 
-    /** Get a pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return Pointer to the pair component value, nullptr if not found.
-     */
-    template <typename First, typename Second, typename P = pair<First, Second>,
-        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value > = 0>
-    const A* try_get() const {
-        return this->try_get<P>();
-    }
-
-    /** Get a pair.
-     * This operation gets the value for a pair from the entity. 
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return Pointer to the first element value, nullptr if not found.
-     */
-    template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
-    const First* try_get(Second second) const {
-        auto first = _::type<First>::id(world_);
-        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        return static_cast<const First*>(
-            ecs_get_id(world_, id_, ecs_pair(first, second)));
-    }
-
-    /** Get a pair.
-     * This operation gets the value for a pair from the entity. 
-     *
-     * @tparam First The first element of the pair.
-     * @param constant The enum constant.
-     * @return Pointer to the first element value, nullptr if not found.
-     */
-    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
-    const First* try_get(Second constant) const {
-        const auto& et = enum_type<Second>(this->world_);
-        flecs::entity_t target = et.entity(constant);
-        return try_get<First>(target);
-    }
-
-    /** Get component value (untyped).
-     * 
-     * @param comp The component to get.
-     * @return Pointer to the component value, nullptr if the entity does not
-     *         have the component.
-     */
-    const void* try_get(flecs::id_t comp) const {
-        return ecs_get_id(world_, id_, comp);
-    }
-
-    /** Get a pair (untyped).
-     * This operation gets the value for a pair from the entity. If neither the
-     * first nor the second part of the pair is a component, the operation
-     * will fail.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return Pointer to the pair component value, nullptr if not found.
-     */
-    const void* try_get(flecs::entity_t first, flecs::entity_t second) const {
-        return ecs_get_id(world_, id_, ecs_pair(first, second));
-    }
-
-    /** Get multiple component values as a tuple of const pointers.
-     *
-     * @tparam Ts The component types (must be between 2 and 8).
-     * @return A tuple of const pointers to the component values.
-     */
-    template<typename... Ts>
+    template <typename... T>
     auto try_get_n() const {
-        flecs_static_assert(sizeof...(Ts) > 1, "try_get_n requires at least two components");
-        flecs_static_assert(sizeof...(Ts) < 9, "try_get_n cannot fetch more than eight components");
-        return typename tuple_builder<sizeof...(Ts), Ts...>::type_const_ptr {try_get<Ts>()...};
+        static_assert(sizeof...(T) > 1 && sizeof...(T) < 9,
+            "component tuple requires between two and eight components");
+        return typename tuple_builder<sizeof...(T), T...>::type_const_ptr {try_get<T>()...};
     }
 
-    /** Get the second part for a pair.
-     * This operation gets the value for a pair from the entity. The first
-     * part of the pair should not be a component.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first part of the pair.
-     * @return Pointer to the second element value, nullptr if not found.
-     */
-    template<typename Second>
-    const Second* try_get_second(flecs::entity_t first) const {
-        auto second = _::type<Second>::id(world_);
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != nullptr,
-            ECS_INVALID_PARAMETER, "pair is not a component");
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
-            ECS_INVALID_PARAMETER, "type of pair is not Second");
-        ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        return static_cast<const Second*>(
-            ecs_get_id(world_, id_, ecs_pair(first, second)));
-    }
-
-    /** Get the second part for a pair.
-     * This operation gets the value for a pair from the entity. The first
-     * part of the pair should not be a component.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return Pointer to the second element value, nullptr if not found.
-     */
-    template<typename First, typename Second>
-    const Second* try_get_second() const {
-        return try_get<pair_object<First, Second>>();
-    }
-
-
-    /* get */
-
-    /** Get component value.
-     *
-     * @tparam T The component to get.
-     * @return Reference to the component value, panics if the entity does not
-     *         have the component.
-     */
-    template <typename T, if_t< is_actual<T>::value > = 0>
-    const T& get() const {
-        const T *r = try_get<T>();
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component '%s' (use try_get)",
-                flecs::_::type_name<T>());
-        return *r;
-    }
-
-    /** Get component value.
-     * Overload for when T is not the same as the actual type, which happens
-     * when using pair types.
-     *
-     * @tparam T The component to get.
-     * @return Reference to the component value, panics if the entity does not
-     *         have the component.
-     */
-    template <typename T, typename A = actual_type_t<T>,
-        if_t< flecs::is_pair<T>::value > = 0>
-    const A& get() const {
-        const A *r = try_get<T>();
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component '%s' (use try_get)",
-            flecs::_::type_name<T>());
-        return *r;
-    }
-    
-    /** Get a pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return Reference to the pair value, panics if the entity does not
-     *         have the pair.
-     */
-    template <typename First, typename Second, typename P = pair<First, Second>,
-        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value > = 0>
-    const A& get() const {
-        return this->get<P>();
-    }
-
-    /** Get a pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return Reference to the first element value, panics if the entity does not
-     *         have the pair.
-     */
-    template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
-    const First& get(Second second) const {
-        const First *r = try_get<First>(second);
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
-            "invalid get: entity does not have pair (use try_get)");
-        return *r;
-    }
-
-    /** Get a pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param constant The enum constant.
-     * @return Reference to the first element value, panics if the entity does not
-     *         have the pair.
-     */
-    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
-    const First& get(Second constant) const {
-        const auto& et = enum_type<Second>(this->world_);
-        flecs::entity_t target = et.entity(constant);
-        return get<First>(target);
-    }
-
-    /** Get component value (untyped).
-     * 
-     * @param comp The component to get.
-     * @return Pointer to the component value, panics if the entity does not
-     *         have the component.
-     */
-    const void* get(flecs::id_t comp) const {
-        const void *r = ecs_get_id(world_, id_, comp);
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component (use try_get)");
-        return r;
-    }
-
-    /** Get a pair (untyped).
-     * This operation gets the value for a pair from the entity. If neither the
-     * first nor the second part of the pair is a component, the operation
-     * will fail.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return Pointer to the pair value, panics if the entity does not
-     *         have the pair.
-     */
-    const void* get(flecs::entity_t first, flecs::entity_t second) const {
-        const void *r = ecs_get_id(world_, id_, ecs_pair(first, second));
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
-            "invalid get: entity does not have pair (use try_get)");
-        return r;
-    }
-
-    /** Get 1..N components.
-     * This operation accepts a callback with as arguments the components to
-     * retrieve. The callback will only be invoked when the entity has all
-     * the components.
-     *
-     * This operation is faster than individually calling get() for each component,
-     * as it only obtains entity metadata once.
-     *
-     * While the callback is invoked, the table in which the components are
-     * stored is locked, which prevents mutations that could cause invalidation
-     * of the component references. Note that this is not an actual lock:
-     * invalid access causes a runtime panic and so it is still up to the
-     * application to ensure access is protected.
-     *
-     * The component arguments must be references and can be either const or
-     * non-const. The table is locked for the duration of the callback.
-     * 
-     * Example:
-     *
-     * @code
-     * e.get([](Position& p, Velocity& v) {
-     *   p.x += v.x;
-     * });
-     * 
-     * e.get([](const Position& p) {
-     *   std::cout << p.x << std::endl;
-     * });
-     * @endcode
-     *
-     * @param func The callback to invoke.
-     * @return True if the entity has all components, false if not.
-     */
-    template <typename Func, if_t< is_callable<Func>::value > = 0>
+    template <typename Func, if_t<is_callable<Func>::value> = 0>
     bool get(const Func& func) const;
 
-    /** Get multiple component values as a tuple of const references.
-     *
-     * @tparam Ts The component types (must be between 2 and 8).
-     * @return A tuple of const references to the component values.
-     */
-    template<typename... Ts>
+    template <typename... T, typename... Args>
+    decltype(auto) get(Args... args) const {
+        return _::get_component<false, true>(world_, id_,
+            _::make_id<T...>(world_, args...));
+    }
+
+    template <typename... T, typename... Args>
+    decltype(auto) get_second(Args... args) const {
+        return _::get_component<false, true>(world_, id_,
+            _::second_id<T...>(world_, args...));
+    }
+
+    template <typename... T>
     auto get_n() const {
-        flecs_static_assert(sizeof...(Ts) > 1, "get_n requires at least two components");
-        flecs_static_assert(sizeof...(Ts) < 9, "get_n cannot fetch more than eight components");
-        return typename tuple_builder<sizeof...(Ts), Ts...>::type_const {get<Ts>()...};
+        static_assert(sizeof...(T) > 1 && sizeof...(T) < 9,
+            "component tuple requires between two and eight components");
+        return typename tuple_builder<sizeof...(T), T...>::type_const {get<T>()...};
     }
 
-    /** Get the second part for a pair.
-     * This operation gets the value for a pair from the entity. The first
-     * part of the pair should not be a component.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first part of the pair.
-     * @return Reference to the second element value. Panics if the entity does
-     *         not have the pair.
-     */
-    template<typename Second>
-    const Second& get_second(flecs::entity_t first) const {
-        const Second *r = try_get_second<Second>(first);
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
-            "invalid get_second: entity does not have pair (use try_get_second)");
-        return *r;
+    template <typename... T, typename... Args>
+    decltype(auto) try_get_mut(Args... args) const {
+        return _::get_component<true, false>(world_, id_,
+            _::make_id<T...>(world_, args...));
     }
 
-    /** Get the second part for a pair.
-     * This operation gets the value for a pair from the entity. The first
-     * part of the pair should not be a component.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return Reference to the second element value. Panics if the entity does
-     *         not have the pair.
-     */
-    template<typename First, typename Second>
-    const Second& get_second() const {
-        const Second *r = try_get<First, Second>();
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
-            "invalid get_second: entity does not have pair (use try_get_second)");
-        return *r;
+    template <typename... T, typename... Args>
+    decltype(auto) try_get_mut_second(Args... args) const {
+        return _::get_component<true, false>(world_, id_,
+            _::second_id<T...>(world_, args...));
     }
 
-
-    /* try_get_mut */
-
-    /** Get mutable component value.
-     * 
-     * @tparam T The component to get.
-     * @return Pointer to the component value, nullptr if the entity does not
-     *         have the component.
-     */
-    template <typename T, if_t< is_actual<T>::value > = 0>
-    T* try_get_mut() const {
-        auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        return static_cast<T*>(_::get_mut_ptr<T>(world_, id_, comp_id));
-    }
-
-    /** Get mutable component value.
-     * Overload for when T is not the same as the actual type, which happens
-     * when using pair types.
-     * 
-     * @tparam T The component to get.
-     * @return Pointer to the component value, nullptr if the entity does not
-     *         have the component.
-     */
-    template <typename T, typename A = actual_type_t<T>, 
-        if_t< flecs::is_pair<T>::value > = 0>
-    A* try_get_mut() const {
-        auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<A>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        return static_cast<A*>(ecs_get_mut_id(world_, id_, comp_id));
-    }
-
-    /** Get a mutable pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return Pointer to the pair component value, nullptr if not found.
-     */
-    template <typename First, typename Second, typename P = pair<First, Second>,
-        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value > = 0>
-    A* try_get_mut() const {
-        return this->try_get_mut<P>();
-    }
-
-    /** Get a mutable pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return Pointer to the first element value, nullptr if not found.
-     */
-    template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
-    First* try_get_mut(Second second) const {
-        auto first = _::type<First>::id(world_);
-        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER, 
-            "operation invalid for empty type");
-        return static_cast<First*>(
-            ecs_get_mut_id(world_, id_, ecs_pair(first, second)));
-    }
-
-    /** Get a mutable pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param constant The enum constant.
-     * @return Pointer to the first element value, nullptr if not found.
-     */
-    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
-    First* try_get_mut(Second constant) const {
-        const auto& et = enum_type<Second>(this->world_);
-        flecs::entity_t target = et.entity(constant);
-        return try_get_mut<First>(target);
-    }
-
-    /** Get mutable component value (untyped).
-     * 
-     * @param comp The component to get.
-     * @return Pointer to the component value, nullptr if the entity does not
-     *         have the component.
-     */
-    void* try_get_mut(flecs::id_t comp) const {
-        return ecs_get_mut_id(world_, id_, comp);
-    }
-
-    /** Get a mutable pair (untyped).
-     * This operation gets the value for a pair from the entity. If neither the
-     * first nor the second part of the pair is a component, the operation
-     * will fail.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return Pointer to the pair component value, nullptr if not found.
-     */
-    void* try_get_mut(flecs::entity_t first, flecs::entity_t second) const {
-        return ecs_get_mut_id(world_, id_, ecs_pair(first, second));
-    }
-
-    /** Get multiple mutable component values as a tuple of pointers.
-     *
-     * @tparam Ts The component types (must be between 2 and 8).
-     * @return A tuple of pointers to the mutable component values.
-     */
-    template<typename... Ts>
+    template <typename... T>
     auto try_get_mut_n() const {
-        flecs_static_assert(sizeof...(Ts) > 1, "try_get_mut_n requires at least two components");
-        flecs_static_assert(sizeof...(Ts) < 9, "try_get_mut_n cannot fetch more than eight components");
-        return typename tuple_builder<sizeof...(Ts), Ts...>::type_ptr {try_get_mut<Ts>()...};
+        static_assert(sizeof...(T) > 1 && sizeof...(T) < 9,
+            "component tuple requires between two and eight components");
+        return typename tuple_builder<sizeof...(T), T...>::type_ptr {try_get_mut<T>()...};
     }
 
-    /** Get the second part for a pair.
-     * This operation gets the value for a pair from the entity. The first
-     * part of the pair should not be a component.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first part of the pair.
-     * @return Pointer to the second element value, nullptr if not found.
-     */
-    template<typename Second>
-    Second* try_get_mut_second(flecs::entity_t first) const {
-        auto second = _::type<Second>::id(world_);
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != nullptr,
-            ECS_INVALID_PARAMETER, "pair is not a component");
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
-            ECS_INVALID_PARAMETER, "type of pair is not Second");
-        ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER, 
-            "operation invalid for empty type");
-        return static_cast<Second*>(
-            ecs_get_mut_id(world_, id_, ecs_pair(first, second)));
+    template <typename... T, typename... Args>
+    decltype(auto) get_mut(Args... args) const {
+        return _::get_component<true, true>(world_, id_,
+            _::make_id<T...>(world_, args...));
     }
 
-    /** Get the second part for a pair.
-     * This operation gets the value for a pair from the entity. The first
-     * part of the pair should not be a component.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return Pointer to the second element value, nullptr if not found.
-     */
-    template<typename First, typename Second>
-    Second* try_get_mut_second() const {
-        return try_get_mut<pair_object<First, Second>>();
+    template <typename... T, typename... Args>
+    decltype(auto) get_mut_second(Args... args) const {
+        return _::get_component<true, true>(world_, id_,
+            _::second_id<T...>(world_, args...));
     }
 
-
-    /* get_mut */
-
-    /** Get mutable component value.
-     *
-     * @tparam T The component to get.
-     * @return Reference to the component value. Panics if the entity does not
-     *         have the component.
-     */
-    template <typename T, if_t< is_actual<T>::value > = 0>
-    T& get_mut() const {
-        T* r = try_get_mut<T>();
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get_mut: entity does not have component (use try_get_mut)");
-        return *r;
-    }
-
-    /** Get mutable component value.
-     * Overload for when T is not the same as the actual type, which happens
-     * when using pair types.
-     *
-     * @tparam T The component to get.
-     * @return Reference to the component value. Panics if the entity does not
-     *         have the component.
-     */
-    template <typename T, typename A = actual_type_t<T>,
-        if_t< flecs::is_pair<T>::value > = 0>
-    A& get_mut() const {
-        A* r = try_get_mut<T>();
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get_mut: entity does not have component (use try_get_mut)");
-        return *r;
-    }
-
-    /** Get a mutable pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return Reference to the pair component value. Panics if the entity does
-     *         not have the pair.
-     */
-    template <typename First, typename Second, typename P = pair<First, Second>,
-        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value > = 0>
-    A& get_mut() const {
-        A* r = try_get_mut<First, Second>();
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
-            "invalid get_mut: entity does not have pair (use try_get_mut)");
-        return *r;
-    }
-
-    /** Get a mutable pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return Reference to the first element value. Panics if the entity does
-     *         not have the pair.
-     */
-    template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
-    First& get_mut(Second second) const {
-        First* r = try_get_mut<First>(second);
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
-            "invalid get_mut: entity does not have pair (use try_get_mut)");
-        return *r;
-    }
-
-    /** Get a mutable pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param constant The enum constant.
-     * @return Reference to the first element value. Panics if the entity does
-     *         not have the pair.
-     */
-    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
-    First& get_mut(Second constant) const {
-        const auto& et = enum_type<Second>(this->world_);
-        flecs::entity_t target = et.entity(constant);
-        return get_mut<First>(target);
-    }
-
-    /** Get mutable component value (untyped).
-     *
-     * @param comp The component to get.
-     * @return Pointer to the component value. Panics if the entity does not
-     *         have the component.
-     */
-    void* get_mut(flecs::id_t comp) const {
-        void *r = ecs_get_mut_id(world_, id_, comp);
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
-            "invalid get_mut: entity does not have component (use try_get_mut)");
-        return r;
-    }
-
-    /** Get a mutable pair (untyped).
-     * This operation gets the value for a pair from the entity. If neither the
-     * first nor the second part of the pair is a component, the operation
-     * will fail.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return Pointer to the pair component value. Panics if the entity does
-     *         not have the pair.
-     */
-    void* get_mut(flecs::entity_t first, flecs::entity_t second) const {
-        void *r = ecs_get_mut_id(world_, id_, ecs_pair(first, second));
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
-            "invalid get_mut: entity does not have pair (use try_get_mut)");
-        return r;
-    }
-
-    /** Get multiple mutable component values as a tuple of references.
-     *
-     * @tparam Ts The component types (must be between 2 and 8).
-     * @return A tuple of references to the mutable component values.
-     */
-    template<typename... Ts>
+    template <typename... T>
     auto get_mut_n() const {
-        flecs_static_assert(sizeof...(Ts) > 1, "get_mut_n requires at least two components");
-        flecs_static_assert(sizeof...(Ts) < 9, "get_mut_n cannot fetch more than eight components");
-        return typename tuple_builder<sizeof...(Ts), Ts...>::type {get_mut<Ts>()...};
-    }
-
-    /** Get the second part for a pair.
-     * This operation gets the value for a pair from the entity. The first
-     * part of the pair should not be a component.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first part of the pair.
-     * @return Reference to the second element value. Panics if the entity does
-     *         not have the pair.
-     */
-    template<typename Second>
-    Second& get_mut_second(flecs::entity_t first) const {
-        Second *r = try_get_mut_second<Second>(first);
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
-            "invalid get_mut_second: entity does not have pair (use try_get_mut_second)");
-        return *r;
-    }
-
-    /** Get the second part for a pair.
-     * This operation gets the value for a pair from the entity. The first
-     * part of the pair should not be a component.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return Reference to the second element value. Panics if the entity does
-     *         not have the pair.
-     */
-    template<typename First, typename Second>
-    Second& get_mut_second() const {
-        Second *r = try_get_mut_second<First, Second>();
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
-            "invalid get_mut_second: entity does not have pair (use try_get_mut_second)");
-        return *r;
+        static_assert(sizeof...(T) > 1 && sizeof...(T) < 9,
+            "component tuple requires between two and eight components");
+        return typename tuple_builder<sizeof...(T), T...>::type {get_mut<T>()...};
     }
 
     /** Get enum constant for enum relationship.
