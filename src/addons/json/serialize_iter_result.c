@@ -297,8 +297,9 @@ bool flecs_json_serialize_get_value_ctx(
         return false;
     }
 
-    if (!ctx->initialized) {
-        ctx->initialized = true;
+    if (ctx->id != id) {
+        ecs_os_free(ctx->id_label);
+        *ctx = (ecs_json_value_ser_ctx_t){ .id = id };
 
         ecs_strbuf_t idlbl = ECS_STRBUF_INIT;
         flecs_json_id_member(&idlbl, world, id, 

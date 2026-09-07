@@ -2802,3 +2802,30 @@ void SerializeEntityToJson_serialize_w_quote_in_alert_message(void) {
 void SerializeEntityToJson_struct_i32_long_number_literal(void) {
 }
 
+
+void SerializeEntityToJson_serialize_more_than_256_components(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t type = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Value"}),
+        .members = {{"x", ecs_id(ecs_i32_t)}}
+    });
+    ecs_entity_t e = ecs_entity(world, {.name = "e"});
+    for (int32_t i = 0; i < 300; i ++) {
+        char name[16];
+        snprintf(name, sizeof(name), "T%d", i);
+        ecs_entity_t target = ecs_entity(world, {.name = name});
+        ecs_set_id(world, e, ecs_pair(type, target), sizeof(i), &i);
+    }
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    const char *ptr = json;
+    int32_t count = 0;
+    while ((ptr = strstr(ptr, "\"x\":"))) {
+        count ++;
+        ptr ++;
+    }
+    test_int(count, 300);
+    test_assert(strstr(json, "\"(Value,T299)\":{\"x\":299}") != NULL);
+    ecs_os_free(json);
+    ecs_fini(world);
+}

@@ -998,6 +998,7 @@
         }, {
             "id": "SerializeEntityToJson",
             "testcases": [
+                "serialize_more_than_256_components",
                 "serialize_empty",
                 "serialize_w_name",
                 "serialize_w_name_1_tag",
@@ -1102,6 +1103,7 @@
         }, {
             "id": "SerializeIterToJson",
             "testcases": [
+                "table_different_dont_fragment_components",
                 "serialize_1_comps_empty",
                 "serialize_1_comps_2_ents_same_table",
                 "serialize_1_tag_2_ents_same_table",

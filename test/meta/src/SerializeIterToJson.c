@@ -3134,3 +3134,35 @@ void SerializeIterToJson_serialize_table_dont_fragment_no_leak(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_table_different_dont_fragment_components(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_TAG(world, Tag);
+    ecs_entity_t a = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "A"}),
+        .members = {{"x", ecs_id(ecs_i32_t)}}
+    });
+    ecs_entity_t b = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "B"}),
+        .members = {{"y", ecs_id(ecs_i32_t)}}
+    });
+    ecs_add_id(world, a, EcsDontFragment);
+    ecs_add_id(world, b, EcsDontFragment);
+    ecs_entity_t e1 = ecs_entity(world, {.name = "e1"});
+    ecs_entity_t e2 = ecs_entity(world, {.name = "e2"});
+    ecs_add_id(world, e1, Tag);
+    ecs_add_id(world, e2, Tag);
+    ecs_i32_t v1 = 10, v2 = 20;
+    ecs_set_id(world, e1, a, sizeof(v1), &v1);
+    ecs_set_id(world, e2, b, sizeof(v2), &v2);
+    test_assert(ecs_get_table(world, e1) == ecs_get_table(world, e2));
+    ecs_query_t *q = ecs_query(world, {.terms = {{Tag}}});
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_table = true;
+    char *json = ecs_iter_to_json(&it, &desc);
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"tags\":[\"Tag\"], \"components\":{\"A\":{\"x\":10}}}, {\"name\":\"e2\", \"tags\":[\"Tag\"], \"components\":{\"B\":{\"y\":20}}}]}");
+    ecs_os_free(json);
+    ecs_query_fini(q);
+    ecs_fini(world);
+}

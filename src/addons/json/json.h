@@ -33,7 +33,7 @@ typedef struct ecs_json_value_ser_ctx_t {
     ecs_entity_t type;
     const EcsTypeSerializer *ser;
     char *id_label;
-    bool initialized;
+    ecs_id_t id;
 } ecs_json_value_ser_ctx_t;
 
 /* Cached data for serializer */

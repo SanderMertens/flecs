@@ -965,6 +965,7 @@ void SerializeToJson_ecs_struct_2_members(void);
 void SerializeToJson_ecs_struct_3_members(void);
 
 // Testsuite 'SerializeEntityToJson'
+void SerializeEntityToJson_serialize_more_than_256_components(void);
 void SerializeEntityToJson_serialize_empty(void);
 void SerializeEntityToJson_serialize_w_name(void);
 void SerializeEntityToJson_serialize_w_name_1_tag(void);
@@ -1067,6 +1068,7 @@ void SerializeEntityToJson_serialize_w_quote_in_parent_name(void);
 void SerializeEntityToJson_serialize_w_quote_in_alert_message(void);
 
 // Testsuite 'SerializeIterToJson'
+void SerializeIterToJson_table_different_dont_fragment_components(void);
 void SerializeIterToJson_serialize_1_comps_empty(void);
 void SerializeIterToJson_serialize_1_comps_2_ents_same_table(void);
 void SerializeIterToJson_serialize_1_tag_2_ents_same_table(void);
@@ -5290,6 +5292,10 @@ bake_test_case SerializeToJson_testcases[] = {
 
 bake_test_case SerializeEntityToJson_testcases[] = {
     {
+        "serialize_more_than_256_components",
+        SerializeEntityToJson_serialize_more_than_256_components
+    },
+    {
         "serialize_empty",
         SerializeEntityToJson_serialize_empty
     },
@@ -5692,6 +5698,10 @@ bake_test_case SerializeEntityToJson_testcases[] = {
 };
 
 bake_test_case SerializeIterToJson_testcases[] = {
+    {
+        "table_different_dont_fragment_components",
+        SerializeIterToJson_table_different_dont_fragment_components
+    },
     {
         "serialize_1_comps_empty",
         SerializeIterToJson_serialize_1_comps_empty
@@ -7611,14 +7621,14 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        100,
+        101,
         SerializeEntityToJson_testcases
     },
     {
         "SerializeIterToJson",
         NULL,
         NULL,
-        87,
+        88,
         SerializeIterToJson_testcases
     },
     {
