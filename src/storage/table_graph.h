@@ -19,35 +19,26 @@ typedef struct ecs_table_diff_builder_t {
     ecs_flags32_t removed_flags;
 } ecs_table_diff_builder_t;
 
-/** Edge linked list (used to keep track of incoming edges) */
-typedef struct ecs_graph_edge_hdr_t {
-    struct ecs_graph_edge_hdr_t *prev;
-    struct ecs_graph_edge_hdr_t *next;
-} ecs_graph_edge_hdr_t;
+typedef struct ecs_graph_edges_t ecs_graph_edges_t;
 
-/** Single edge. */
 typedef struct ecs_graph_edge_t {
-    ecs_graph_edge_hdr_t hdr;
-    ecs_table_t *from;               /* Edge source table */
-    ecs_table_t *to;                 /* Edge destination table */
-    ecs_table_diff_t *diff;          /* Added/removed components for edge */
-    ecs_id_t id;                     /* Id associated with edge */
+    struct ecs_graph_edge_t *next;
+    struct ecs_graph_edge_t **prev;
+    ecs_graph_edges_t *from;
+    ecs_table_t *to;
+    ecs_table_diff_t *diff;
+    ecs_id_t id;
 } ecs_graph_edge_t;
 
-/* Edges to other tables. */
-typedef struct ecs_graph_edges_t {
-    ecs_graph_edge_t *lo;            /* Small array optimized for low edges */
-    ecs_map_t *hi;                   /* Map for hi edges (map<id, edge_t>) */
-} ecs_graph_edges_t;
+struct ecs_graph_edges_t {
+    ecs_graph_edge_t *lo;
+    ecs_map_t *hi;
+};
 
-/* Table graph node */
 typedef struct ecs_graph_node_t {
-    /* Outgoing edges */
-    ecs_graph_edges_t add;    
-    ecs_graph_edges_t remove; 
-
-    /* Incoming edges (next = add edges, prev = remove edges) */
-    ecs_graph_edge_hdr_t refs;
+    ecs_graph_edges_t add;
+    ecs_graph_edges_t remove;
+    ecs_graph_edge_t *incoming[2];
 } ecs_graph_node_t;
 
 /** Add to existing type */
