@@ -59,7 +59,8 @@ static void flecs_script_ref_eval(
         ecs_defer_suspend(world);
     }
     impl->evaluating = true;
-    ecs_script_runtime_t *runtime = ecs_script_runtime_new();
+    ecs_script_runtime_t *pool = flecs_script_runtime_get(world);
+    ecs_script_runtime_t *runtime = flecs_script_runtime_acquire_call(pool);
     ecs_script_eval_desc_t desc = { .runtime = runtime };
     ecs_script_eval_result_t result = {0};
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
@@ -84,7 +85,7 @@ static void flecs_script_ref_eval(
     } else {
         ecs_os_free(result.error);
     }
-    ecs_script_runtime_free(runtime);
+    flecs_script_runtime_release_call(pool, runtime);
     if (is_deferred) {
         ecs_defer_resume(world);
     }
@@ -151,11 +152,12 @@ static void flecs_script_resolve_run(
     }
 
     char *code = ecs_os_strdup(s->code);
-    ecs_script_runtime_t *runtime = ecs_script_runtime_new();
+    ecs_script_runtime_t *pool = flecs_script_runtime_get(world);
+    ecs_script_runtime_t *runtime = flecs_script_runtime_acquire_call(pool);
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     flecs_script_update(world, script, 0, code, runtime);
     ecs_set_scope(world, prev_scope);
-    ecs_script_runtime_free(runtime);
+    flecs_script_runtime_release_call(pool, runtime);
     ecs_os_free(code);
 }
 
@@ -283,13 +285,7 @@ static void flecs_script_on_update_event(
     if (evt->input) {
         flecs_script_ref_eval(world, evt->script, evt->input);
     } else {
-        char *code = ecs_os_strdup(s->code);
-        ecs_script_runtime_t *runtime = ecs_script_runtime_new();
-        ecs_entity_t prev_scope = ecs_set_scope(world, 0);
-        flecs_script_update(world, evt->script, 0, code, runtime);
-        ecs_set_scope(world, prev_scope);
-        ecs_script_runtime_free(runtime);
-        ecs_os_free(code);
+        flecs_script_resolve_run(world, evt->script);
     }
 }
 
