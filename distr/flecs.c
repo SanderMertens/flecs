@@ -94283,94 +94283,36 @@ void flecs_script_eval_scope_leave(
     v->scope_slot = state->scope_slot;
 }
 
-static void flecs_script_apply_non_fragmenting_childof(
-    ecs_world_t *world,
-    ecs_script_entity_t *node,
-    bool enabled);
-
-static void flecs_script_apply_non_fragmenting_childof_to_scope(
-    ecs_world_t *world,
+static int flecs_script_apply_tree_scope(
     ecs_script_scope_t *scope,
-    bool enabled)
+    void *ctx)
 {
-    if (!scope) {
-        return;
-    }
-
-    int32_t i, count = ecs_vec_count(&scope->stmts);
     ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-    for (i = 0; i < count; i ++) {
+    for (int32_t i = 0; i < ecs_vec_count(&scope->stmts); i ++) {
         ecs_script_node_t *stmt = stmts[i];
-        switch(stmt->kind) {
-        case EcsAstScope:
-            flecs_script_apply_non_fragmenting_childof_to_scope(
-                world, (ecs_script_scope_t*)stmt, enabled);
-            break;
-        case EcsAstEntity:
-            flecs_script_apply_non_fragmenting_childof(
-                world, (ecs_script_entity_t*)stmt, enabled);
-            break;
-        case EcsAstIf:
-            flecs_script_apply_non_fragmenting_childof_to_scope(
-                world, ((ecs_script_if_t*)stmt)->if_false, enabled);
-            flecs_script_apply_non_fragmenting_childof_to_scope(
-                world, ((ecs_script_if_t*)stmt)->if_true, enabled);
-            break;
-        case EcsAstFor:
-            flecs_script_apply_non_fragmenting_childof_to_scope(
-                world, ((ecs_script_for_t*)stmt)->scope, enabled);
-            break;
-        case EcsAstTry: {
-            ecs_script_try_t *try_stmt = (ecs_script_try_t*)stmt;
-            flecs_script_apply_non_fragmenting_childof_to_scope(
-                world, try_stmt->try_scope, enabled);
-            int32_t c, catch_count = ecs_vec_count(&try_stmt->catches);
-            ecs_script_catch_t *catches = ecs_vec_first(&try_stmt->catches);
-            for (c = 0; c < catch_count; c ++) {
-                flecs_script_apply_non_fragmenting_childof_to_scope(
-                    world, catches[c].scope, enabled);
-            }
-            break;
+        if (stmt->kind == EcsAstTemplate || stmt->kind == EcsAstFunction) {
+            continue;
         }
-        case EcsAstWith:
-        case EcsAstWithTag:
-        case EcsAstWithComponent:
-            flecs_script_apply_non_fragmenting_childof_to_scope(
-                world, ((ecs_script_with_t*)stmt)->scope, enabled);
-            break;
-        case EcsAstPairScope:
-            flecs_script_apply_non_fragmenting_childof_to_scope(
-                world, ((ecs_script_pair_scope_t*)stmt)->scope, enabled);
-            break;
-        case EcsAstTag:
-        case EcsAstComponent:
-        case EcsAstUsing:
-        case EcsAstModule:
-        case EcsAstAnnotation:
-        case EcsAstTemplate:
-        case EcsAstProp:
-        case EcsAstMut:
-        case EcsAstConst:
-        case EcsAstExportConst:
-        case EcsAstExportMut:
-        case EcsAstInclude:
-        case EcsAstFunction:
-        case EcsAstAwait:
-        case EcsAstContinue:
-            break;
+        if (stmt->kind == EcsAstEntity) {
+            ((ecs_script_entity_t*)stmt)->non_fragmenting_parent = *(bool*)ctx;
+        }
+        if (stmt->kind == EcsAstScope) {
+            flecs_script_apply_tree_scope((ecs_script_scope_t*)stmt, ctx);
+        } else {
+            flecs_script_visit_scopes(stmt, flecs_script_apply_tree_scope, ctx);
         }
     }
+    return 0;
 }
 
 static void flecs_script_apply_non_fragmenting_childof(
-    ecs_world_t *world,
     ecs_script_entity_t *node,
     bool enabled)
 {
     node->non_fragmenting_parent = enabled;
-
-    flecs_script_apply_non_fragmenting_childof_to_scope(
-        world, node->scope, enabled);
+    if (node->scope) {
+        flecs_script_apply_tree_scope(node->scope, &enabled);
+    }
 }
 
 void flecs_script_apply_tree_annot(
@@ -94382,9 +94324,9 @@ void flecs_script_apply_tree_annot(
     }
 
     if (!ecs_os_strcmp(annot->expr, "Parent")) {
-        flecs_script_apply_non_fragmenting_childof(NULL, node, true);
+        flecs_script_apply_non_fragmenting_childof(node, true);
     } else if (!ecs_os_strcmp(annot->expr, "ChildOf")) {
-        flecs_script_apply_non_fragmenting_childof(NULL, node, false);
+        flecs_script_apply_non_fragmenting_childof(node, false);
     }
 }
 
@@ -94416,9 +94358,9 @@ int flecs_script_apply_annot(
     } else
     if (!ecs_os_strcmp(annot->name, "tree")) {
         if (!ecs_os_strcmp(annot->expr, "Parent")) {
-            flecs_script_apply_non_fragmenting_childof(v->world, node, true);
+            flecs_script_apply_non_fragmenting_childof(node, true);
         } else if (!ecs_os_strcmp(annot->expr, "ChildOf")) {
-            flecs_script_apply_non_fragmenting_childof(v->world, node, false);
+            flecs_script_apply_non_fragmenting_childof(node, false);
         } else {
             flecs_script_eval_error(v, annot, 
                 "invalid value for tree annotation: '%s' (expected 'Parent' or 'ChildOf')",
