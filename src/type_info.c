@@ -371,6 +371,44 @@ static bool flecs_type_hooks_storage_equal(
     return true;
 }
 
+static ecs_flags32_t flecs_type_hooks_specified(
+    const ecs_type_hooks_t *hooks,
+    bool exclude_illegal)
+{
+    ecs_flags32_t result = 0;
+    if (hooks->ctor && (!exclude_illegal || hooks->ctor != flecs_ctor_illegal)) {
+        result |= ECS_TYPE_HOOK_CTOR_ILLEGAL;
+    }
+    if (hooks->dtor && (!exclude_illegal || hooks->dtor != flecs_dtor_illegal)) {
+        result |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
+    }
+    if (hooks->copy && (!exclude_illegal || hooks->copy != flecs_copy_illegal)) {
+        result |= ECS_TYPE_HOOK_COPY_ILLEGAL;
+    }
+    if (hooks->move && (!exclude_illegal || hooks->move != flecs_move_illegal)) {
+        result |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
+    }
+    if (hooks->copy_ctor && (!exclude_illegal || hooks->copy_ctor != flecs_copy_ctor_illegal)) {
+        result |= ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL;
+    }
+    if (hooks->move_ctor && (!exclude_illegal || hooks->move_ctor != flecs_move_ctor_illegal)) {
+        result |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
+    }
+    if (hooks->ctor_move_dtor && (!exclude_illegal || hooks->ctor_move_dtor != flecs_move_ctor_illegal)) {
+        result |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
+    }
+    if (hooks->move_dtor && (!exclude_illegal || hooks->move_dtor != flecs_move_ctor_illegal)) {
+        result |= ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
+    }
+    if (hooks->cmp && (!exclude_illegal || hooks->cmp != flecs_comp_illegal)) {
+        result |= ECS_TYPE_HOOK_CMP_ILLEGAL;
+    }
+    if (hooks->equals && (!exclude_illegal || hooks->equals != flecs_equals_illegal)) {
+        result |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    }
+    return result;
+}
+
 void ecs_set_hooks_id(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -379,80 +417,12 @@ void ecs_set_hooks_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
 
-    /* TODO: Refactor to enforce flags consistency: */
-    ecs_flags32_t flags = h->flags;
-    flags &= ~((ecs_flags32_t)ECS_TYPE_HOOKS);
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL && 
-        h->ctor != NULL && 
-        h->ctor != flecs_ctor_illegal),
-        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
-            "cannot specify both ctor hook and illegal flag",
-                flecs_errstr(ecs_get_path(world, component)));
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL && 
-        h->dtor != NULL && 
-        h->dtor != flecs_dtor_illegal),
-        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
-            "cannot specify both dtor hook and illegal flag",
-                flecs_errstr(ecs_get_path(world, component)));
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_COPY_ILLEGAL && 
-        h->copy != NULL && 
-        h->copy != flecs_copy_illegal),
-        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
-            "cannot specify both copy hook and illegal flag",
-                flecs_errstr(ecs_get_path(world, component)));
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL && 
-        h->move != NULL && 
-        h->move != flecs_move_illegal),
-        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
-            "cannot specify both move hook and illegal flag",
-                flecs_errstr(ecs_get_path(world, component)));
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL && 
-        h->copy_ctor != NULL && 
-        h->copy_ctor != flecs_copy_ctor_illegal),
-        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
-            "cannot specify both copy ctor hook and illegal flag",
-                flecs_errstr(ecs_get_path(world, component)));
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL && 
-        h->move_ctor != NULL && 
-        h->move_ctor != flecs_move_ctor_illegal),
-        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
-            "cannot specify both move ctor hook and illegal flag",
-                flecs_errstr(ecs_get_path(world, component)));
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL && 
-        h->ctor_move_dtor != NULL && 
-        h->ctor_move_dtor != flecs_move_ctor_illegal),
-        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
-            "cannot specify both ctor move dtor hook and illegal flag",
-                flecs_errstr(ecs_get_path(world, component)));
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL && 
-        h->move_dtor != NULL && 
-        h->move_dtor != flecs_move_ctor_illegal),
-        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
-            "cannot specify both move dtor hook and illegal flag",
-                flecs_errstr(ecs_get_path(world, component)));
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_CMP_ILLEGAL && 
-        h->cmp != NULL && 
-        h->cmp != flecs_comp_illegal),
-        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
-            "cannot specify both compare hook and illegal flag",
-                flecs_errstr(ecs_get_path(world, component)));
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL && 
-        h->equals != NULL && 
-        h->equals != flecs_equals_illegal),
-        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
-            "cannot specify both equals hook and illegal flag",
-                flecs_errstr(ecs_get_path(world, component)));
-
+    ecs_flags32_t flags = h->flags & ~(ecs_flags32_t)ECS_TYPE_HOOKS;
+    ecs_flags32_t conflicts = flags & flecs_type_hooks_specified(h, true);
+    ecs_check(!conflicts, ECS_INVALID_PARAMETER,
+        "illegal call to set_hooks() for component '%s': "
+        "cannot specify callbacks with illegal flags (0x%x)",
+        flecs_errstr(ecs_get_path(world, component)), conflicts);
 
     flecs_stage_from_world(&world);
 
@@ -467,26 +437,9 @@ void ecs_set_hooks_id(
 
     ecs_type_hooks_t prev_hooks = ti->hooks;
 
-    ecs_flags32_t prev_illegal = prev_hooks.flags & ECS_TYPE_HOOKS_ILLEGAL;
-    if (h->ctor) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_CTOR_ILLEGAL;
-    if (h->dtor) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_DTOR_ILLEGAL;
-    if (h->copy) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_COPY_ILLEGAL;
-    if (h->move) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_MOVE_ILLEGAL;
-    if (h->copy_ctor) {
-        prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL;
-    }
-    if (h->move_ctor) {
-        prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
-    }
-    if (h->ctor_move_dtor) {
-        prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
-    }
-    if (h->move_dtor) {
-        prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
-    }
-    if (h->cmp) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_CMP_ILLEGAL;
-    if (h->equals) prev_illegal &= ~(ecs_flags32_t)ECS_TYPE_HOOK_EQUALS_ILLEGAL;
-    flags |= prev_illegal;
+    ecs_type_hooks_t hooks = prev_hooks;
+    flags |= (prev_hooks.flags & ECS_TYPE_HOOKS_ILLEGAL) &
+        ~flecs_type_hooks_specified(h, false);
 
     if (!ti->size) {
         const EcsComponent *component_ptr = ecs_get(
@@ -505,48 +458,48 @@ void ecs_set_hooks_id(
         ti->alignment = component_ptr->alignment;
     }
 
-    if (h->ctor) ti->hooks.ctor = h->ctor;
-    if (h->dtor) ti->hooks.dtor = h->dtor;
-    if (h->copy) ti->hooks.copy = h->copy;
-    if (h->move) ti->hooks.move = h->move;
-    if (h->copy_ctor) ti->hooks.copy_ctor = h->copy_ctor;
-    if (h->move_ctor) ti->hooks.move_ctor = h->move_ctor;
-    if (h->ctor_move_dtor) ti->hooks.ctor_move_dtor = h->ctor_move_dtor;
-    if (h->move_dtor) ti->hooks.move_dtor = h->move_dtor;
-    if (h->cmp) ti->hooks.cmp = h->cmp;
-    if (h->equals) ti->hooks.equals = h->equals;
+    if (h->ctor) hooks.ctor = h->ctor;
+    if (h->dtor) hooks.dtor = h->dtor;
+    if (h->copy) hooks.copy = h->copy;
+    if (h->move) hooks.move = h->move;
+    if (h->copy_ctor) hooks.copy_ctor = h->copy_ctor;
+    if (h->move_ctor) hooks.move_ctor = h->move_ctor;
+    if (h->ctor_move_dtor) hooks.ctor_move_dtor = h->ctor_move_dtor;
+    if (h->move_dtor) hooks.move_dtor = h->move_dtor;
+    if (h->cmp) hooks.cmp = h->cmp;
+    if (h->equals) hooks.equals = h->equals;
 
-    if (h->on_add) ti->hooks.on_add = h->on_add;
-    if (h->on_remove) ti->hooks.on_remove = h->on_remove;
-    if (h->on_set) ti->hooks.on_set = h->on_set;
-    if (h->on_replace) ti->hooks.on_replace = h->on_replace;
-    if (h->on_validate) ti->hooks.on_validate = h->on_validate;
+    if (h->on_add) hooks.on_add = h->on_add;
+    if (h->on_remove) hooks.on_remove = h->on_remove;
+    if (h->on_set) hooks.on_set = h->on_set;
+    if (h->on_replace) hooks.on_replace = h->on_replace;
+    if (h->on_validate) hooks.on_validate = h->on_validate;
 
-    if (h->ctx) ti->hooks.ctx = h->ctx;
-    if (h->binding_ctx) ti->hooks.binding_ctx = h->binding_ctx;
-    if (h->lifecycle_ctx) ti->hooks.lifecycle_ctx = h->lifecycle_ctx;
-    if (h->ctx_free) ti->hooks.ctx_free = h->ctx_free;
-    if (h->binding_ctx_free) ti->hooks.binding_ctx_free = h->binding_ctx_free;
-    if (h->lifecycle_ctx_free) ti->hooks.lifecycle_ctx_free = h->lifecycle_ctx_free;
+    if (h->ctx) hooks.ctx = h->ctx;
+    if (h->binding_ctx) hooks.binding_ctx = h->binding_ctx;
+    if (h->lifecycle_ctx) hooks.lifecycle_ctx = h->lifecycle_ctx;
+    if (h->ctx_free) hooks.ctx_free = h->ctx_free;
+    if (h->binding_ctx_free) hooks.binding_ctx_free = h->binding_ctx_free;
+    if (h->lifecycle_ctx_free) hooks.lifecycle_ctx_free = h->lifecycle_ctx_free;
 
     /* If no constructor is set, invoking any of the other lifecycle actions
      * is not safe as they will potentially access uninitialized memory. For
      * ease of use, if no constructor is specified, set a default one that
      * initializes the component to 0. */
     if (!h->ctor && (h->dtor || h->copy || h->move)) {
-        ti->hooks.ctor = flecs_default_ctor;   
+        hooks.ctor = flecs_default_ctor;
     }
 
     /* Set default copy ctor, move ctor and merge */
     if (!h->copy_ctor && !(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL)) {
         if (h->copy) {
-            ti->hooks.copy_ctor = flecs_default_copy_ctor;
+            hooks.copy_ctor = flecs_default_copy_ctor;
         }
     }
 
     if (!h->move_ctor && !(flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL)) {
         if (h->move) {
-            ti->hooks.move_ctor = flecs_default_move_ctor;
+            hooks.move_ctor = flecs_default_move_ctor;
         }
     }
 
@@ -560,17 +513,17 @@ void ecs_set_hooks_id(
                     illegal_check |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
                     /* If an explicit move ctor has been set, use callback
                      * that uses the move ctor vs. using a ctor+move */
-                    ti->hooks.ctor_move_dtor = flecs_default_move_ctor_w_dtor;
+                    hooks.ctor_move_dtor = flecs_default_move_ctor_w_dtor;
                 } else {
                     illegal_check |= ECS_TYPE_HOOK_CTOR_ILLEGAL;
                     /* If no explicit move_ctor has been set, use
                      * combination of ctor + move + dtor */
-                    ti->hooks.ctor_move_dtor = flecs_default_ctor_w_move_w_dtor;
+                    hooks.ctor_move_dtor = flecs_default_ctor_w_move_w_dtor;
                 }
             } else {
                 illegal_check |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
                 /* If no dtor has been set, this is just a move ctor */
-                ti->hooks.ctor_move_dtor = ti->hooks.move_ctor;
+                hooks.ctor_move_dtor = hooks.move_ctor;
             }
         } else {
             /* If move is not set but move_ctor and dtor is, we can still set
@@ -579,9 +532,9 @@ void ecs_set_hooks_id(
                 illegal_check |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
                 if (h->dtor) {
                     illegal_check |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
-                    ti->hooks.ctor_move_dtor = flecs_default_move_ctor_w_dtor;
+                    hooks.ctor_move_dtor = flecs_default_move_ctor_w_dtor;
                 } else {
-                    ti->hooks.ctor_move_dtor = ti->hooks.move_ctor;
+                    hooks.ctor_move_dtor = hooks.move_ctor;
                 }
             }
         }
@@ -596,14 +549,14 @@ void ecs_set_hooks_id(
             illegal_check |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
             if (h->dtor) {
                 illegal_check |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
-                ti->hooks.move_dtor = flecs_default_move_w_dtor;
+                hooks.move_dtor = flecs_default_move_w_dtor;
             } else {
-                ti->hooks.move_dtor = flecs_default_move;
+                hooks.move_dtor = flecs_default_move;
             }
         } else {
             if (h->dtor) {
                 illegal_check |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
-                ti->hooks.move_dtor = flecs_default_dtor;
+                hooks.move_dtor = flecs_default_dtor;
             }
         }
         if(flags & illegal_check) {
@@ -611,97 +564,66 @@ void ecs_set_hooks_id(
         }
     }
 
-    if (!ti->hooks.cmp || ti->hooks.cmp == flecs_comp_illegal) {
+    if (!hooks.cmp || hooks.cmp == flecs_comp_illegal) {
         flags |= ECS_TYPE_HOOK_CMP_ILLEGAL;
     }
 
-    if (!ti->hooks.equals || ti->hooks.equals == flecs_equals_illegal) {
+    if (!hooks.equals || hooks.equals == flecs_equals_illegal) {
         if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
             flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
         } else {
-            ti->hooks.equals = flecs_default_equals;
+            hooks.equals = flecs_default_equals;
             flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
         }
     }
 
-    ti->hooks.flags = flags;
-
-    if (ti->hooks.ctor) ti->hooks.flags |= ECS_TYPE_HOOK_CTOR;
-    if (ti->hooks.dtor) ti->hooks.flags |= ECS_TYPE_HOOK_DTOR;
-    if (ti->hooks.move) ti->hooks.flags |= ECS_TYPE_HOOK_MOVE;
-    if (ti->hooks.move_ctor) ti->hooks.flags |= ECS_TYPE_HOOK_MOVE_CTOR;
-    if (ti->hooks.ctor_move_dtor) ti->hooks.flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR;
-    if (ti->hooks.move_dtor) ti->hooks.flags |= ECS_TYPE_HOOK_MOVE_DTOR;
-    if (ti->hooks.copy) ti->hooks.flags |= ECS_TYPE_HOOK_COPY;
-    if (ti->hooks.copy_ctor) ti->hooks.flags |= ECS_TYPE_HOOK_COPY_CTOR;
-    if (ti->hooks.cmp) ti->hooks.flags |= ECS_TYPE_HOOK_CMP;
-    if (ti->hooks.equals) ti->hooks.flags |= ECS_TYPE_HOOK_EQUALS;
-
-    ti->hooks.flags |= prev_hooks.flags & ECS_TYPE_HOOK_IN_USE;
-
-    if(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) ti->hooks.ctor = flecs_ctor_illegal;
-    if(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) ti->hooks.dtor = flecs_dtor_illegal;
-    if(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ti->hooks.copy = flecs_copy_illegal;
-    if(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) ti->hooks.move = flecs_move_illegal;
-    if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) ti->hooks.cmp = flecs_comp_illegal;
-    if(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) ti->hooks.equals = flecs_equals_illegal;
+    if(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) hooks.ctor = flecs_ctor_illegal;
+    if(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) hooks.dtor = flecs_dtor_illegal;
+    if(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) hooks.copy = flecs_copy_illegal;
+    if(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) hooks.move = flecs_move_illegal;
+    if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) hooks.cmp = flecs_comp_illegal;
+    if(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) hooks.equals = flecs_equals_illegal;
 
     if(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL) {
-        ti->hooks.copy_ctor = flecs_copy_ctor_illegal;
+        hooks.copy_ctor = flecs_copy_ctor_illegal;
     }
 
-    if(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL) {
-        ti->hooks.move_ctor = flecs_move_ctor_illegal;
+    if(flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL) {
+        hooks.move_ctor = flecs_move_ctor_illegal;
     }
 
-    if(ti->hooks.flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL) {
-        ti->hooks.ctor_move_dtor = flecs_move_ctor_illegal;
+    if(flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL) {
+        hooks.ctor_move_dtor = flecs_move_ctor_illegal;
     }
 
-    if(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL) {
-        ti->hooks.move_dtor = flecs_move_ctor_illegal;
+    if(flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL) {
+        hooks.move_dtor = flecs_move_ctor_illegal;
     }
 
-    if (flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) {
-        ti->hooks.flags |= ECS_TYPE_HOOK_CTOR;
-    }
-    if (flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) {
-        ti->hooks.flags |= ECS_TYPE_HOOK_DTOR;
-    }
-    if (flags & ECS_TYPE_HOOK_COPY_ILLEGAL) {
-        ti->hooks.flags |= ECS_TYPE_HOOK_COPY;
-    }
-    if (flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) {
-        ti->hooks.flags |= ECS_TYPE_HOOK_MOVE;
-    }
-    if (flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL) {
-        ti->hooks.flags |= ECS_TYPE_HOOK_COPY_CTOR;
-    }
-    if (ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL) {
-        ti->hooks.flags |= ECS_TYPE_HOOK_MOVE_CTOR;
-    }
-    if (ti->hooks.flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL) {
-        ti->hooks.flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR;
-    }
-    if (ti->hooks.flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL) {
-        ti->hooks.flags |= ECS_TYPE_HOOK_MOVE_DTOR;
-    }
-    if (flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
-        ti->hooks.flags |= ECS_TYPE_HOOK_CMP;
-    }
-    if (flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
-        ti->hooks.flags |= ECS_TYPE_HOOK_EQUALS;
-    }
+    hooks.flags = flags;
 
-    if (in_use && !flecs_type_hooks_storage_equal(&ti->hooks, &prev_hooks)) {
-        ti->hooks = prev_hooks;
+    if (hooks.ctor) hooks.flags |= ECS_TYPE_HOOK_CTOR;
+    if (hooks.dtor) hooks.flags |= ECS_TYPE_HOOK_DTOR;
+    if (hooks.move) hooks.flags |= ECS_TYPE_HOOK_MOVE;
+    if (hooks.move_ctor) hooks.flags |= ECS_TYPE_HOOK_MOVE_CTOR;
+    if (hooks.ctor_move_dtor) hooks.flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR;
+    if (hooks.move_dtor) hooks.flags |= ECS_TYPE_HOOK_MOVE_DTOR;
+    if (hooks.copy) hooks.flags |= ECS_TYPE_HOOK_COPY;
+    if (hooks.copy_ctor) hooks.flags |= ECS_TYPE_HOOK_COPY_CTOR;
+    if (hooks.cmp) hooks.flags |= ECS_TYPE_HOOK_CMP;
+    if (hooks.equals) hooks.flags |= ECS_TYPE_HOOK_EQUALS;
+
+    hooks.flags |= prev_hooks.flags & ECS_TYPE_HOOK_IN_USE;
+
+    if (in_use && !flecs_type_hooks_storage_equal(&hooks, &prev_hooks)) {
         ecs_throw(ECS_ALREADY_IN_USE, "illegal call to set_hooks() for "
             "component '%s': cannot change which hooks are set while the "
             "component is in use", flecs_errstr(ecs_get_path(world, component)));
     }
 
+    ti->hooks = hooks;
     if (component < FLECS_HI_COMPONENT_ID) {
-        if (ti->hooks.on_set || ti->hooks.copy || ti->hooks.move || ti->hooks.on_replace || ti->hooks.on_validate) {
+        if (hooks.on_set || hooks.copy || hooks.move || hooks.on_replace || hooks.on_validate) {
             world->non_trivial_set[component] = true;
         }
     }
