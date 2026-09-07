@@ -121741,7 +121741,6 @@ typedef struct flecs_script_dep_ctx_t {
     int32_t member;
     int32_t entity_symbol;
     bool no_deps;
-    bool no_computed;
     int32_t conditional;
     ecs_script_entity_t *entity;
     ecs_script_scope_t *scope;
@@ -122399,7 +122398,7 @@ static int flecs_script_dep_node_impl(
         }
         if (node->kind == EcsAstConst) {
             bool computed = ctx->template && !ctx->conditional &&
-                !ctx->no_computed && !n->is_await &&
+                !n->is_await &&
                 ctx->template->computed_count < 64;
             if (computed) {
                 int32_t slot = ctx->template->computed_count ++;
@@ -122665,81 +122664,6 @@ static int flecs_script_dep_template_init(
     return 0;
 }
 
-static bool flecs_script_dep_scope_has_template(
-    ecs_script_scope_t *scope)
-{
-    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-    int32_t i, count = ecs_vec_count(&scope->stmts);
-    for (i = 0; i < count; i ++) {
-        ecs_script_node_t *node = stmts[i];
-        switch(node->kind) {
-        case EcsAstTemplate:
-            return true;
-        case EcsAstScope:
-            if (flecs_script_dep_scope_has_template(
-                (ecs_script_scope_t*)node))
-            {
-                return true;
-            }
-            break;
-        case EcsAstEntity:
-            if (flecs_script_dep_scope_has_template(
-                ((ecs_script_entity_t*)node)->scope))
-            {
-                return true;
-            }
-            break;
-        case EcsAstWith:
-            if (flecs_script_dep_scope_has_template(
-                ((ecs_script_with_t*)node)->scope))
-            {
-                return true;
-            }
-            break;
-        case EcsAstPairScope:
-            if (flecs_script_dep_scope_has_template(
-                ((ecs_script_pair_scope_t*)node)->scope))
-            {
-                return true;
-            }
-            break;
-        case EcsAstIf: {
-            ecs_script_if_t *n = (ecs_script_if_t*)node;
-            if (flecs_script_dep_scope_has_template(n->if_true) ||
-                flecs_script_dep_scope_has_template(n->if_false))
-            {
-                return true;
-            }
-            break;
-        }
-        case EcsAstFor:
-            if (flecs_script_dep_scope_has_template(
-                ((ecs_script_for_t*)node)->scope))
-            {
-                return true;
-            }
-            break;
-        case EcsAstTry: {
-            ecs_script_try_t *n = (ecs_script_try_t*)node;
-            if (flecs_script_dep_scope_has_template(n->try_scope)) {
-                return true;
-            }
-            ecs_script_catch_t *catches = ecs_vec_first(&n->catches);
-            int32_t j, catch_count = ecs_vec_count(&n->catches);
-            for (j = 0; j < catch_count; j ++) {
-                if (flecs_script_dep_scope_has_template(catches[j].scope)) {
-                    return true;
-                }
-            }
-            break;
-        }
-        default:
-            break;
-        }
-    }
-    return false;
-}
-
 static int flecs_script_dep_template_analyze(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_t *template,
@@ -122760,8 +122684,6 @@ static int flecs_script_dep_template_analyze(
         return -1;
     }
     template->computed_count = 0;
-    ctx.no_computed = flecs_script_dep_scope_has_template(
-        template->node->scope);
     int32_t old_depth = v->base.depth;
     v->base.depth = 0;
     int result = flecs_script_dep_scope(&ctx, template->node->scope);
