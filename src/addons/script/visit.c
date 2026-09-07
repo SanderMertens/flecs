@@ -93,25 +93,6 @@ int ecs_script_visit_scope_(
     return 0;
 }
 
-int ecs_script_visit_node_(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node)
-{
-    int32_t depth = v->depth;
-    if (flecs_script_visit_push_checked(v, node)) {
-        return -1;
-    }
-
-    if (v->visit(v, node)) {
-        v->depth = depth;
-        return -1;
-    }
-
-    v->depth = depth;
-
-    return 0;
-}
-
 int ecs_script_visit_from_(
     ecs_script_visit_t *visitor,
     ecs_visit_action_t visit,
@@ -126,10 +107,16 @@ int ecs_script_visit_from_(
     visitor->script = script;
     visitor->visit = visit;
     visitor->depth = depth;
-    int result = ecs_script_visit_node(visitor, node);
-    if (result) {
+    if (flecs_script_visit_push_checked(visitor, node)) {
         return -1;
     }
+
+    if (visitor->visit(visitor, node)) {
+        visitor->depth = depth;
+        return -1;
+    }
+
+    visitor->depth = depth;
 
     if (visitor->depth != depth) {
         ecs_parser_error(script->pub.name, NULL, 0, "unexpected end of script");

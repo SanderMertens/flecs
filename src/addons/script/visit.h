@@ -49,14 +49,6 @@ int ecs_script_visit_from_(
         from, \
         depth)
 
-int ecs_script_visit_node_(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node);
-
-#define ecs_script_visit_node(visitor, node) \
-    ecs_script_visit_node_((ecs_script_visit_t*)visitor, \
-        (ecs_script_node_t*)node)
-
 int ecs_script_visit_scope_(
     ecs_script_visit_t *v,
     ecs_script_scope_t *node);
