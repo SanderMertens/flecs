@@ -9,20 +9,6 @@
 #include "table_graph.h"
 
 #ifdef FLECS_SANITIZE
-#define ecs_vec_from_column(arg_column, table, arg_elem_size) {\
-    .array = (arg_column)->data,\
-    .count = table->data.count,\
-    .size = table->data.size,\
-    .elem_size = arg_elem_size\
-}
-
-#define ecs_vec_from_column_ext(arg_column, arg_count, arg_size, arg_elem_size) {\
-    .array = (arg_column)->data,\
-    .count = arg_count,\
-    .size = arg_size,\
-    .elem_size = arg_elem_size\
-}
-
 #define ecs_vec_from_entities(table) {\
     .array = table->data.entities,\
     .count = table->data.count,\
@@ -30,27 +16,12 @@
     .elem_size = ECS_SIZEOF(ecs_entity_t)\
 }
 #else
-#define ecs_vec_from_column(arg_column, table, arg_elem_size) {\
-    .array = (arg_column)->data,\
-    .count = table->data.count,\
-    .size = table->data.size,\
-}
-
-#define ecs_vec_from_column_ext(arg_column, arg_count, arg_size, arg_elem_size) {\
-    .array = (arg_column)->data,\
-    .count = arg_count,\
-    .size = arg_size,\
-}
-
 #define ecs_vec_from_entities(table) {\
     .array = table->data.entities,\
     .count = table->data.count,\
     .size = table->data.size,\
 }
 #endif
-
-#define ecs_vec_from_column_t(arg_column, table, T)\
-    ecs_vec_from_column(arg_column, table, ECS_SIZEOF(T))
 
 /** Overrides (set if table overrides components) */
 
