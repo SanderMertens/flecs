@@ -35,6 +35,7 @@ typedef enum ecs_expr_node_kind_t {
 
 struct ecs_expr_node_t {
     ecs_expr_node_kind_t kind;
+    ecs_size_t alloc_size;
     ecs_entity_t type;
     const ecs_type_info_t *type_info;
     const char *pos;

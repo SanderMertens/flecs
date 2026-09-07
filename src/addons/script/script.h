@@ -277,6 +277,13 @@ int flecs_script_update(
 ecs_script_scope_t* flecs_script_scope_new(
     ecs_parser_t *parser);
 
+typedef int (*flecs_script_scope_action_t)(ecs_script_scope_t *scope, void *ctx);
+
+int flecs_script_visit_scopes(
+    ecs_script_node_t *node,
+    flecs_script_scope_action_t action,
+    void *ctx);
+
 int flecs_script_visit_free(
     ecs_script_t *script);
 

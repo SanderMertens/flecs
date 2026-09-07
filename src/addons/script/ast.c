@@ -25,6 +25,7 @@ static void* flecs_ast_new_(
     ecs_script_node_t *result = flecs_calloc_w_dbg_info(
         a, size, "ecs_script_node_t");
     result->kind = kind;
+    result->alloc_size = size;
     result->pos = parser->stmt_pos ? parser->stmt_pos : parser->pos;
     return result;
 }
@@ -474,6 +475,63 @@ ecs_script_function_node_t* flecs_script_insert_function(
 
     flecs_ast_append(parser, scope->stmts, ecs_script_function_node_t, result);
     return result;
+}
+
+int flecs_script_visit_scopes(
+    ecs_script_node_t *node,
+    flecs_script_scope_action_t action,
+    void *ctx)
+{
+    ecs_script_scope_t *scopes[2] = {0};
+    switch (node->kind) {
+    case EcsAstEntity:
+        scopes[0] = ((ecs_script_entity_t*)node)->scope;
+        break;
+    case EcsAstWith:
+        scopes[0] = ((ecs_script_with_t*)node)->expressions;
+        scopes[1] = ((ecs_script_with_t*)node)->scope;
+        break;
+    case EcsAstTemplate:
+        scopes[0] = ((ecs_script_template_node_t*)node)->scope;
+        break;
+    case EcsAstPairScope:
+        scopes[0] = ((ecs_script_pair_scope_t*)node)->scope;
+        break;
+    case EcsAstIf:
+        scopes[0] = ((ecs_script_if_t*)node)->if_true;
+        scopes[1] = ((ecs_script_if_t*)node)->if_false;
+        break;
+    case EcsAstFor:
+        scopes[0] = ((ecs_script_for_t*)node)->scope;
+        break;
+    case EcsAstFunction:
+        scopes[0] = ((ecs_script_function_node_t*)node)->body;
+        break;
+    case EcsAstTry: {
+        ecs_script_try_t *stmt = (ecs_script_try_t*)node;
+        int result = stmt->try_scope ? action(stmt->try_scope, ctx) : 0;
+        if (result) {
+            return result;
+        }
+        ecs_script_catch_t *catches = ecs_vec_first(&stmt->catches);
+        for (int32_t i = 0; i < ecs_vec_count(&stmt->catches); i ++) {
+            result = catches[i].scope ? action(catches[i].scope, ctx) : 0;
+            if (result) {
+                return result;
+            }
+        }
+        return 0;
+    }
+    default:
+        break;
+    }
+    for (int32_t i = 0; i < 2; i ++) {
+        int result = scopes[i] ? action(scopes[i], ctx) : 0;
+        if (result) {
+            return result;
+        }
+    }
+    return 0;
 }
 
 #endif

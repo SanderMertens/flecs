@@ -8,210 +8,19 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-static int flecs_script_stmt_free(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node);
-
-static void flecs_script_scope_free(
-    ecs_script_visit_t *v,
-    ecs_script_scope_t *node)
+static int flecs_script_scope_free(
+    ecs_script_scope_t *scope,
+    void *ctx)
 {
-    int32_t i, count = ecs_vec_count(&node->stmts);
-    ecs_script_node_t **nodes = ecs_vec_first(&node->stmts);
-    for (i = 0; i < count; i ++) {
-        flecs_script_stmt_free(v, nodes[i]);
-    }
-    ecs_vec_fini_t(&v->script->allocator, &node->stmts, ecs_script_node_t*);
-    ecs_vec_fini_t(&v->script->allocator, &node->components, ecs_id_t);
-    flecs_free_t(&v->script->allocator, ecs_script_scope_t, node);
+    return flecs_script_visit_free_node(ctx, (ecs_script_node_t*)scope);
 }
 
 static void flecs_script_id_free(
-    ecs_script_visit_t *v,
+    ecs_script_t *script,
     ecs_script_id_t *id)
 {
-    if (id->first_expr) {
-        flecs_expr_visit_free(&v->script->pub, id->first_expr);
-    }
-    if (id->second_expr) {
-        flecs_expr_visit_free(&v->script->pub, id->second_expr);
-    }
-}
-
-static void flecs_script_with_free(
-    ecs_script_visit_t *v,
-    ecs_script_with_t *node)
-{
-    flecs_script_scope_free(v, node->expressions);
-    flecs_script_scope_free(v, node->scope);
-}
-
-static void flecs_script_template_free(
-    ecs_script_visit_t *v,
-    ecs_script_template_node_t *node)
-{
-    flecs_script_scope_free(v, node->scope);
-}
-
-static void flecs_script_entity_free(
-    ecs_script_visit_t *v,
-    ecs_script_entity_t *node)
-{
-    flecs_script_scope_free(v, node->scope);
-    if (node->name_expr) {
-        flecs_expr_visit_free(&v->script->pub, node->name_expr);
-    }
-}
-
-static void flecs_script_pair_scope_free(
-    ecs_script_visit_t *v,
-    ecs_script_pair_scope_t *node)
-{
-    flecs_script_scope_free(v, node->scope);
-    flecs_script_id_free(v, &node->id);
-}
-
-static void flecs_script_if_free(
-    ecs_script_visit_t *v,
-    ecs_script_if_t *node)
-{
-    flecs_script_scope_free(v, node->if_true);
-    flecs_script_scope_free(v, node->if_false);
-    flecs_expr_visit_free(&v->script->pub, node->expr);
-}
-
-static void flecs_script_for_free(
-    ecs_script_visit_t *v,
-    ecs_script_for_t *node)
-{
-    flecs_expr_visit_free(&v->script->pub, node->from);
-    flecs_expr_visit_free(&v->script->pub, node->to);
-    flecs_expr_visit_free(&v->script->pub, node->expr);
-    flecs_script_scope_free(v, node->scope);
-}
-
-static void flecs_script_tag_free(
-    ecs_script_visit_t *v,
-    ecs_script_tag_t *node)
-{
-    flecs_script_id_free(v, &node->id);
-}
-
-static void flecs_script_component_free(
-    ecs_script_visit_t *v,
-    ecs_script_component_t *node)
-{
-    flecs_expr_visit_free(&v->script->pub, node->expr);
-    flecs_script_id_free(v, &node->id);
-}
-
-static void flecs_script_var_node_free(
-    ecs_script_visit_t *v,
-    ecs_script_var_node_t *node)
-{
-    flecs_expr_visit_free(&v->script->pub, node->expr);
-}
-
-static int flecs_script_stmt_free(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node)
-{
-    ecs_allocator_t *a = &v->script->allocator;
-    switch(node->kind) {
-    case EcsAstScope:
-        flecs_script_scope_free(v, (ecs_script_scope_t*)node);
-        break;
-    case EcsAstWith:
-        flecs_script_with_free(v, (ecs_script_with_t*)node);
-        flecs_free_t(a, ecs_script_with_t, node);
-        break;
-    case EcsAstTemplate:
-        flecs_script_template_free(v, (ecs_script_template_node_t*)node);
-        flecs_free_t(a, ecs_script_template_node_t, node);
-        break;
-    case EcsAstEntity:
-        flecs_script_entity_free(v, (ecs_script_entity_t*)node);
-        flecs_free_t(a, ecs_script_entity_t, node);
-        break;
-    case EcsAstPairScope:
-        flecs_script_pair_scope_free(v, (ecs_script_pair_scope_t*)node);
-        flecs_free_t(a, ecs_script_pair_scope_t, node);
-        break;
-    case EcsAstIf:
-        flecs_script_if_free(v, (ecs_script_if_t*)node);
-        flecs_free_t(a, ecs_script_if_t, node);
-        break;
-    case EcsAstFor:
-        flecs_script_for_free(v, (ecs_script_for_t*)node);
-        flecs_free_t(a, ecs_script_for_t, node);
-        break;
-    case EcsAstTag:
-        flecs_script_tag_free(v, (ecs_script_tag_t*)node);
-        flecs_free_t(a, ecs_script_tag_t, node);
-        break;
-    case EcsAstComponent:
-    case EcsAstWithComponent:
-        flecs_script_component_free(v, (ecs_script_component_t*)node);
-        flecs_free_t(a, ecs_script_component_t, node);
-        break;
-    case EcsAstWithTag:
-        flecs_free_t(a, ecs_script_tag_t, node);
-        break;
-    case EcsAstUsing:
-        flecs_free_t(a, ecs_script_using_t, node);
-        break;
-    case EcsAstContinue:
-        flecs_free_t(a, ecs_script_continue_t, node);
-        break;
-    case EcsAstModule:
-        flecs_free_t(a, ecs_script_module_t, node);
-        break;
-    case EcsAstAnnotation:
-        flecs_free_t(a, ecs_script_annot_t, node);
-        break;
-    case EcsAstProp:
-    case EcsAstMut:
-    case EcsAstConst:
-    case EcsAstExportConst:
-    case EcsAstExportMut:
-        flecs_script_var_node_free(v, (ecs_script_var_node_t*)node);
-        flecs_free_t(a, ecs_script_var_node_t, node);
-        break;
-    case EcsAstInclude:
-        flecs_free_t(a, ecs_script_include_t, node);
-        break;
-    case EcsAstAwait: {
-        ecs_script_await_t *await = (ecs_script_await_t*)node;
-        flecs_expr_visit_free(&v->script->pub, await->expr);
-        flecs_free_t(a, ecs_script_await_t, node);
-        break;
-    }
-    case EcsAstTry: {
-        ecs_script_try_t *try_stmt = (ecs_script_try_t*)node;
-        flecs_script_scope_free(v, try_stmt->try_scope);
-        int32_t i, count = ecs_vec_count(&try_stmt->catches);
-        ecs_script_catch_t *catches = ecs_vec_first(&try_stmt->catches);
-        for (i = 0; i < count; i ++) {
-            flecs_script_scope_free(v, catches[i].scope);
-        }
-        ecs_vec_fini_t(a, &try_stmt->catches, ecs_script_catch_t);
-        flecs_free_t(a, ecs_script_try_t, node);
-        break;
-    }
-    case EcsAstFunction: {
-        ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
-        flecs_script_scope_free(v, fn->body);
-        if (fn->return_expr) {
-            flecs_expr_visit_free(&v->script->pub, fn->return_expr);
-        }
-        ecs_vec_fini_t(&v->script->allocator, &fn->params,
-            ecs_script_fn_param_t);
-        flecs_free_t(a, ecs_script_function_node_t, node);
-        break;
-    }
-    }
-
-    return 0;
+    flecs_expr_visit_free(script, id->first_expr);
+    flecs_expr_visit_free(script, id->second_expr);
 }
 
 int flecs_script_visit_free_node(
@@ -219,16 +28,72 @@ int flecs_script_visit_free_node(
     ecs_script_node_t *node)
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_script_impl_t *impl = flecs_script_impl(script);
-
-    ecs_script_visit_t v = {
-        .script = impl
-    };
-
-    if (flecs_script_stmt_free(&v, node)) {
-        goto error;
+    if (!node) {
+        return 0;
     }
-
+    ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
+    flecs_script_visit_scopes(node, flecs_script_scope_free, script);
+    switch (node->kind) {
+    case EcsAstScope: {
+        ecs_script_scope_t *scope = (ecs_script_scope_t*)node;
+        ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
+        for (int32_t i = 0; i < ecs_vec_count(&scope->stmts); i ++) {
+            flecs_script_visit_free_node(script, stmts[i]);
+        }
+        ecs_vec_fini_t(a, &scope->stmts, ecs_script_node_t*);
+        ecs_vec_fini_t(a, &scope->components, ecs_id_t);
+        break;
+    }
+    case EcsAstEntity:
+        flecs_expr_visit_free(script, ((ecs_script_entity_t*)node)->name_expr);
+        break;
+    case EcsAstPairScope:
+        flecs_script_id_free(script, &((ecs_script_pair_scope_t*)node)->id);
+        break;
+    case EcsAstIf:
+        flecs_expr_visit_free(script, ((ecs_script_if_t*)node)->expr);
+        break;
+    case EcsAstFor: {
+        ecs_script_for_t *stmt = (ecs_script_for_t*)node;
+        flecs_expr_visit_free(script, stmt->from);
+        flecs_expr_visit_free(script, stmt->to);
+        flecs_expr_visit_free(script, stmt->expr);
+        break;
+    }
+    case EcsAstTag:
+    case EcsAstWithTag:
+        flecs_script_id_free(script, &((ecs_script_tag_t*)node)->id);
+        break;
+    case EcsAstComponent:
+    case EcsAstWithComponent: {
+        ecs_script_component_t *stmt = (ecs_script_component_t*)node;
+        flecs_expr_visit_free(script, stmt->expr);
+        flecs_script_id_free(script, &stmt->id);
+        break;
+    }
+    case EcsAstProp:
+    case EcsAstMut:
+    case EcsAstConst:
+    case EcsAstExportConst:
+    case EcsAstExportMut:
+        flecs_expr_visit_free(script, ((ecs_script_var_node_t*)node)->expr);
+        break;
+    case EcsAstAwait:
+        flecs_expr_visit_free(script, ((ecs_script_await_t*)node)->expr);
+        break;
+    case EcsAstTry:
+        ecs_vec_fini_t(a, &((ecs_script_try_t*)node)->catches, ecs_script_catch_t);
+        break;
+    case EcsAstFunction: {
+        ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
+        flecs_expr_visit_free(script, fn->return_expr);
+        ecs_vec_fini_t(a, &fn->params, ecs_script_fn_param_t);
+        break;
+    }
+    default:
+        break;
+    }
+    flecs_free(a, node->alloc_size, node);
     return 0;
 error:
     return -1;
@@ -238,22 +103,10 @@ int flecs_script_visit_free(
     ecs_script_t *script)
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_script_impl_t *impl = flecs_script_impl(script);
-    if (!impl->expr && !impl->root) {
-        return 0;
-    }
-
-    ecs_script_visit_t v = {
-        .script = impl
-    };
-
-    if (flecs_script_stmt_free(&v, (ecs_script_node_t*)impl->root)) {
-        goto error;
-    }
-
-    return 0;
+    return flecs_script_visit_free_node(script,
+        (ecs_script_node_t*)flecs_script_impl(script)->root);
 error:
-    return - 1;
+    return -1;
 }
 
 #endif

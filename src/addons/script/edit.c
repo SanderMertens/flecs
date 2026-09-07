@@ -74,79 +74,53 @@ static const char* flecs_script_edit_skip_ws(
     return pos;
 }
 
-static void flecs_script_edit_index_scope(
-    ecs_script_impl_t *impl,
-    ecs_script_scope_t *scope);
+typedef struct flecs_script_edit_walk_t {
+    int (*action)(ecs_script_entity_t *node, void *ctx);
+    void *ctx;
+} flecs_script_edit_walk_t;
 
-static void flecs_script_edit_index_node(
-    ecs_script_impl_t *impl,
-    ecs_script_node_t *node)
+static int flecs_script_edit_walk(
+    ecs_script_scope_t *scope,
+    void *ctx)
 {
-    switch(node->kind) {
-    case EcsAstEntity: {
-        ecs_script_entity_t *entity = (ecs_script_entity_t*)node;
-        if (entity->symbol >= 0 &&
-            entity->symbol < ecs_vec_count(&impl->state.symbol_slots))
+    flecs_script_edit_walk_t *walk = ctx;
+    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
+    for (int32_t i = 0; i < ecs_vec_count(&scope->stmts); i ++) {
+        ecs_script_node_t *node = stmts[i];
+        if (node->kind == EcsAstTemplate || node->kind == EcsAstFor ||
+            node->kind == EcsAstFunction)
         {
-            ecs_script_symbol_slot_t *slot = ecs_vec_get_t(
-                &impl->state.symbol_slots, ecs_script_symbol_slot_t, entity->symbol);
-            if (slot->entity && !ecs_map_get(
-                &impl->entity_index, slot->entity))
-            {
-                ecs_map_insert_ptr(
-                    &impl->entity_index, slot->entity, entity);
+            continue;
+        }
+        if (node->kind == EcsAstEntity) {
+            int result = walk->action((ecs_script_entity_t*)node, walk->ctx);
+            if (result) {
+                return result;
             }
         }
-
-        flecs_script_edit_index_scope(impl, entity->scope);
-        break;
-    }
-    case EcsAstWith: {
-        ecs_script_with_t *with = (ecs_script_with_t*)node;
-        flecs_script_edit_index_scope(impl, with->scope);
-        break;
-    }
-    case EcsAstPairScope: {
-        ecs_script_pair_scope_t *ps = (ecs_script_pair_scope_t*)node;
-        flecs_script_edit_index_scope(impl, ps->scope);
-        break;
-    }
-    case EcsAstIf: {
-        ecs_script_if_t *stmt = (ecs_script_if_t*)node;
-        flecs_script_edit_index_scope(impl, stmt->if_true);
-        flecs_script_edit_index_scope(impl, stmt->if_false);
-        break;
-    }
-    case EcsAstTry: {
-        ecs_script_try_t *stmt = (ecs_script_try_t*)node;
-        flecs_script_edit_index_scope(impl, stmt->try_scope);
-        {
-            ecs_script_catch_t *catches = ecs_vec_first(&stmt->catches);
-            int32_t i, count = ecs_vec_count(&stmt->catches);
-            for (i = 0; i < count; i ++) {
-                flecs_script_edit_index_scope(impl, catches[i].scope);
-            }
+        int result = flecs_script_visit_scopes(node, flecs_script_edit_walk, ctx);
+        if (result) {
+            return result;
         }
-        break;
     }
-    default:
-        break;
-    }
+    return 0;
 }
 
-static void flecs_script_edit_index_scope(
-    ecs_script_impl_t *impl,
-    ecs_script_scope_t *scope)
+static int flecs_script_edit_index_entity(
+    ecs_script_entity_t *entity,
+    void *ctx)
 {
-    if (!scope) {
-        return;
+    ecs_script_impl_t *impl = ctx;
+    if (entity->symbol >= 0 &&
+        entity->symbol < ecs_vec_count(&impl->state.symbol_slots))
+    {
+        ecs_script_symbol_slot_t *slot = ecs_vec_get_t(
+            &impl->state.symbol_slots, ecs_script_symbol_slot_t, entity->symbol);
+        if (slot->entity && !ecs_map_get(&impl->entity_index, slot->entity)) {
+            ecs_map_insert_ptr(&impl->entity_index, slot->entity, entity);
+        }
     }
-
-    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-    int32_t i, count = ecs_vec_count(&scope->stmts);
-    for (i = 0; i < count; i ++) {
-        flecs_script_edit_index_node(impl, stmts[i]);
-    }
+    return 0;
 }
 
 static bool flecs_script_edit_is_template_entity(
@@ -175,7 +149,8 @@ static ecs_script_entity_t* flecs_script_edit_find(
     if (!impl->entity_index_valid || impl->entity_index_visit != impl->state.visit) {
         ecs_map_fini(&impl->entity_index);
         ecs_map_init(&impl->entity_index, NULL);
-        flecs_script_edit_index_scope(impl, impl->root);
+        flecs_script_edit_walk_t walk = {flecs_script_edit_index_entity, impl};
+        flecs_script_edit_walk(impl->root, &walk);
         impl->entity_index_valid = true;
         impl->entity_index_visit = impl->state.visit;
     }
@@ -192,84 +167,21 @@ void flecs_script_entity_index_fini(
     }
 }
 
-static ecs_script_entity_t* flecs_script_edit_find_symbol_scope(
-    ecs_script_scope_t *scope,
-    int32_t symbol);
+typedef struct flecs_script_edit_symbol_t {
+    int32_t symbol;
+    ecs_script_entity_t *node;
+} flecs_script_edit_symbol_t;
 
-static ecs_script_entity_t* flecs_script_edit_find_symbol_node(
-    ecs_script_node_t *node,
-    int32_t symbol)
+static int flecs_script_edit_find_symbol(
+    ecs_script_entity_t *node,
+    void *ctx)
 {
-    switch(node->kind) {
-    case EcsAstEntity: {
-        ecs_script_entity_t *entity = (ecs_script_entity_t*)node;
-        if (entity->symbol == symbol) {
-            return entity;
-        }
-
-        return flecs_script_edit_find_symbol_scope(entity->scope, symbol);
+    flecs_script_edit_symbol_t *symbol = ctx;
+    if (node->symbol != symbol->symbol) {
+        return 0;
     }
-    case EcsAstWith: {
-        ecs_script_with_t *with = (ecs_script_with_t*)node;
-        return flecs_script_edit_find_symbol_scope(with->scope, symbol);
-    }
-    case EcsAstPairScope: {
-        ecs_script_pair_scope_t *ps = (ecs_script_pair_scope_t*)node;
-        return flecs_script_edit_find_symbol_scope(ps->scope, symbol);
-    }
-    case EcsAstIf: {
-        ecs_script_if_t *stmt = (ecs_script_if_t*)node;
-        ecs_script_entity_t *result = flecs_script_edit_find_symbol_scope(
-            stmt->if_true, symbol);
-        if (!result) {
-            result = flecs_script_edit_find_symbol_scope(
-                stmt->if_false, symbol);
-        }
-        return result;
-    }
-    case EcsAstTry: {
-        ecs_script_try_t *stmt = (ecs_script_try_t*)node;
-        ecs_script_entity_t *result = flecs_script_edit_find_symbol_scope(
-            stmt->try_scope, symbol);
-        if (!result) {
-            ecs_script_catch_t *catches = ecs_vec_first(&stmt->catches);
-            int32_t i, count = ecs_vec_count(&stmt->catches);
-            for (i = 0; i < count; i ++) {
-                result = flecs_script_edit_find_symbol_scope(
-                    catches[i].scope, symbol);
-                if (result) {
-                    break;
-                }
-            }
-        }
-        return result;
-    }
-    default:
-        break;
-    }
-
-    return NULL;
-}
-
-static ecs_script_entity_t* flecs_script_edit_find_symbol_scope(
-    ecs_script_scope_t *scope,
-    int32_t symbol)
-{
-    if (!scope) {
-        return NULL;
-    }
-
-    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-    int32_t i, count = ecs_vec_count(&scope->stmts);
-    for (i = 0; i < count; i ++) {
-        ecs_script_entity_t *result = flecs_script_edit_find_symbol_node(
-            stmts[i], symbol);
-        if (result) {
-            return result;
-        }
-    }
-
-    return NULL;
+    symbol->node = node;
+    return 1;
 }
 
 static ecs_script_entity_t* flecs_script_edit_find_in_instance(
@@ -320,8 +232,10 @@ static ecs_script_entity_t* flecs_script_edit_find_in_instance(
         return NULL;
     }
 
-    ecs_script_entity_t *node = flecs_script_edit_find_symbol_scope(
-        template->node->scope, symbol);
+    flecs_script_edit_symbol_t find = {symbol, NULL};
+    flecs_script_edit_walk_t walk = {flecs_script_edit_find_symbol, &find};
+    flecs_script_edit_walk(template->node->scope, &walk);
+    ecs_script_entity_t *node = find.node;
     if (!node) {
         return NULL;
     }

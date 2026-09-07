@@ -22,6 +22,7 @@ static void* flecs_expr_ast_new_(
     ecs_expr_node_t *result = flecs_calloc_w_dbg_info(a, size,
         "ecs_expr_node_t");
     result->kind = kind;
+    result->alloc_size = size;
     result->pos = parser->pos;
     return result;
 }
@@ -35,6 +36,7 @@ ecs_expr_value_node_t* flecs_expr_value_from(
         &((ecs_script_impl_t*)script)->allocator, ecs_expr_value_node_t);
     result->ptr = &result->storage.u64;
     result->node.kind = EcsExprValue;
+    result->node.alloc_size = ECS_SIZEOF(ecs_expr_value_node_t);
     result->node.pos = node ? node->pos : NULL;
     result->node.end = node ? node->end : NULL;
     result->node.type = type;
@@ -52,6 +54,7 @@ ecs_expr_variable_t* flecs_expr_variable_from(
     result->name = name;
     result->sp = -1;
     result->node.kind = EcsExprVariable;
+    result->node.alloc_size = ECS_SIZEOF(ecs_expr_variable_t);
     result->node.pos = node ? node->pos : NULL;
     result->node.end = node ? node->end : NULL;
     return result;
@@ -65,6 +68,7 @@ ecs_expr_member_t* flecs_expr_member_from(
     ecs_expr_member_t *result = flecs_calloc_t(
         &flecs_script_impl(script)->allocator, ecs_expr_member_t);
     result->node.kind = EcsExprMember;
+    result->node.alloc_size = ECS_SIZEOF(ecs_expr_member_t);
     result->node.pos = node->pos;
     result->node.end = node->end;
     result->left = node;
@@ -81,6 +85,7 @@ ecs_expr_swizzle_t* flecs_expr_swizzle_from(
     ecs_expr_swizzle_t *result = flecs_calloc_t(
         &flecs_script_impl(script)->allocator, ecs_expr_swizzle_t);
     result->node.kind = EcsExprSwizzle;
+    result->node.alloc_size = ECS_SIZEOF(ecs_expr_swizzle_t);
     result->node.pos = node->pos;
     result->node.end = node->end;
     result->left = left;
@@ -408,6 +413,7 @@ ecs_expr_cast_t* flecs_expr_cast(
     ecs_allocator_t *a = &((ecs_script_impl_t*)script)->allocator;
     ecs_expr_cast_t *result = flecs_calloc_t(a, ecs_expr_cast_t);
     result->node.kind = EcsExprCast;
+    result->node.alloc_size = ECS_SIZEOF(ecs_expr_cast_t);
     if (flecs_expr_is_type_number(expr->type) && 
         flecs_expr_is_type_number(type)) 
     {

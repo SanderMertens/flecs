@@ -35,6 +35,7 @@ typedef enum ecs_script_node_kind_t {
 
 typedef struct ecs_script_node_t {
     ecs_script_node_kind_t kind;
+    ecs_size_t alloc_size;
     const char *pos;
     const char *end;
     uint64_t input;
