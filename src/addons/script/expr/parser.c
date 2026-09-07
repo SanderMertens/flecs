@@ -160,11 +160,12 @@ const char* flecs_script_parse_initializer(
     ecs_parser_t *parser,
     const char *pos,
     char until,
-    ecs_expr_initializer_t **node_out)
+    ecs_expr_node_t **node_out)
 {
     bool first = true;
 
-    ecs_expr_initializer_t *node = *node_out = flecs_expr_initializer(parser);
+    ecs_expr_initializer_t *node = flecs_expr_initializer(parser);
+    *node_out = (ecs_expr_node_t*)node;
     ecs_allocator_t *a = &parser->script->allocator;
 
     do {
@@ -172,6 +173,7 @@ const char* flecs_script_parse_initializer(
 
         /* End of initializer */
         LookAhead(
+            case ']':
             case ')':
             case '}': {
                 if ((char)lookahead_token.kind != until) {
@@ -190,114 +192,32 @@ const char* flecs_script_parse_initializer(
             a, &node->elements, ecs_expr_initializer_element_t);
         ecs_os_zeromem(elem);
 
-        /* Parse member name */
-        {
-            LookAhead_2(EcsTokIdentifier, ':', {
-                elem->member = Token(0);
-                LookAhead_Keep();
+        if (until != ']') {
+            LookAhead_1(EcsTokIdentifier,
+                const char *old_pos = pos;
                 pos = lookahead;
-                break;
-            })
-        }
-        {
-            LookAhead_2(EcsTokIdentifier, EcsTokAddAssign, {
-                elem->member = Token(0);
-                elem->operator = EcsTokAddAssign;
-                LookAhead_Keep();
-                pos = lookahead;
-                break;
-            })
-        }
-        {
-            LookAhead_2(EcsTokIdentifier, EcsTokMulAssign, {
-                elem->member = Token(0);
-                elem->operator = EcsTokMulAssign;
-                LookAhead_Keep();
-                pos = lookahead;
-                break;
-            })
-        }
-
-        pos = flecs_script_parse_expr(parser, pos, 0, &elem->value);
-        if (!pos) {
-            goto error;
-        }
-
-        if (elem->member) {
-            node->is_partial = true;
-        }
-
-        if (elem->value && elem->value->kind == EcsExprInitializer &&
-            ((ecs_expr_initializer_t*)elem->value)->is_partial)
-        {
-            node->is_partial = true;
-        }
-
-        {
-            /* Parse next element or end of initializer */
-            LookAhead(
-                case ',': {
-                    pos = lookahead;
-                    break;
+                LookAhead(
+                    case ':':
+                    case EcsTokAddAssign:
+                    case EcsTokMulAssign:
+                        elem->member = Token(0);
+                        elem->operator = lookahead_token.kind == ':'
+                            ? 0 : lookahead_token.kind;
+                        LookAhead_Keep();
+                        break;
+                )
+                if (!elem->member) {
+                    pos = old_pos;
                 }
-
-                case ')':
-                case '}':
-                    /* Return last character of initializer */
-                    pos = lookahead - 1;
-
-                case '\n': {
-                    if ((char)lookahead_token.kind != until) {
-                        Error("expected '%c'", until);
-                    }
-                    EndOfRule;
-                }
-
-                case '\0':
-                    pos = lookahead;
-                    EndOfRule;
             )
         }
-    } while (true);
-
-    ParserEnd;
-}
-
-static const char* flecs_script_parse_collection_initializer(
-    ecs_parser_t *parser,
-    const char *pos,
-    ecs_expr_node_t **node_out)
-{
-    bool first = true;
-
-    ecs_expr_initializer_t *node = flecs_expr_initializer(parser);
-    *node_out = (ecs_expr_node_t*)node;
-    ecs_allocator_t *a = &parser->script->allocator;
-
-    do {
-        ParserBegin;
-
-        /* End of initializer */
-        LookAhead_1(']', {
-            if (first) {
-                node->node.kind = EcsExprEmptyInitializer;
-            }
-            pos = lookahead - 1;
-            EndOfRule;
-        })
-
-        first = false;
-
-        ecs_expr_initializer_element_t *elem = ecs_vec_append_t(
-            a, &node->elements, ecs_expr_initializer_element_t);
-        ecs_os_zeromem(elem);
 
         pos = flecs_script_parse_expr(parser, pos, 0, &elem->value);
         if (!pos) {
             goto error;
         }
 
-        {
+        if (until == ']') {
             bool is_key = false;
 
             LookAhead_1(':', {
@@ -317,7 +237,7 @@ static const char* flecs_script_parse_collection_initializer(
             }
         }
 
-        if (!elem->key && ecs_vec_count(&node->elements) == 1) {
+        if (until == ']' && !elem->key && ecs_vec_count(&node->elements) == 1) {
             bool is_range = false;
 
             LookAhead_1(EcsTokRange, {
@@ -344,6 +264,10 @@ static const char* flecs_script_parse_collection_initializer(
             }
         }
 
+        if (elem->member) {
+            node->is_partial = true;
+        }
+
         if (elem->value && elem->value->kind == EcsExprInitializer &&
             ((ecs_expr_initializer_t*)elem->value)->is_partial)
         {
@@ -357,9 +281,25 @@ static const char* flecs_script_parse_collection_initializer(
                     pos = lookahead;
                     break;
                 }
-                case ']': {
+
+                case ']':
+                case ')':
+                case '}':
+                    pos = lookahead - 1;
+
+                case '\n': {
+                    if ((char)lookahead_token.kind != until) {
+                        Error("expected '%c'", until);
+                    }
                     EndOfRule;
                 }
+
+                case '\0':
+                    if (until == ']') {
+                        Error("expected ']'");
+                    }
+                    pos = lookahead;
+                    EndOfRule;
             )
         }
     } while (true);
@@ -375,8 +315,9 @@ static const char* flecs_script_parse_function(
     ecs_expr_function_t *result = flecs_expr_function(parser);
     result->left = *out;
 
-    pos = flecs_script_parse_initializer(
-        parser, pos, ')', &result->args);
+    ecs_expr_node_t *args = NULL;
+    pos = flecs_script_parse_initializer(parser, pos, ')', &args);
+    result->args = (ecs_expr_initializer_t*)args;
     if (!pos) {
         goto error;
     }
@@ -816,44 +757,31 @@ static const char* flecs_script_parse_lhs(
             break;
         }
 
-        case '{': {
-            ecs_expr_initializer_t *node = NULL;
-            pos = flecs_script_parse_initializer(parser, pos, '}', &node);
-            if (!pos) {
-                flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
-                goto error;
-            }
-
-            *out = (ecs_expr_node_t*)node;
-
-            Parse_1('}', {
-                break;
-            })
-
-            can_have_rhs = false;
-            break;
-        }
-
+        case '{':
         case '[': {
+            char until = tokenizer->tokens[0].kind == '{' ? '}' : ']';
             ecs_expr_node_t *node = NULL;
-            pos = flecs_script_parse_collection_initializer(parser, pos, &node);
+            pos = flecs_script_parse_initializer(parser, pos, until, &node);
             if (!pos) {
                 flecs_script_parser_expr_free(parser, node);
                 goto error;
             }
 
-            if (node->kind == EcsExprInitializer ||
-                node->kind == EcsExprEmptyInitializer)
+            if (until == ']' && (node->kind == EcsExprInitializer ||
+                node->kind == EcsExprEmptyInitializer))
             {
                 ((ecs_expr_initializer_t*)node)->is_collection = true;
             }
-
             *out = node;
 
-            Parse_1(']', {
-                break;
-            })
-
+            Parse(
+                case '}':
+                case ']':
+                    if (t->kind != until) {
+                        Error("expected '%c'", until);
+                    }
+                    break;
+            )
             can_have_rhs = false;
             break;
         }

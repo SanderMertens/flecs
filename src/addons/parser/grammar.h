@@ -101,16 +101,15 @@
 #define Initializer(until, ...)\
     {\
         ecs_expr_node_t *INITIALIZER = NULL;\
-        ecs_expr_initializer_t *_initializer = NULL;\
         if (until != '\n') {\
             parser->significant_newline = false;\
         }\
         parser->expr_pos = (until == '\n') ? pos : pos - 1;\
         if (!(pos = flecs_script_parse_initializer(\
-            parser, pos, until, &_initializer))) \
+            parser, pos, until, &INITIALIZER))) \
         {\
             flecs_expr_visit_free(\
-                &parser->script->pub, (ecs_expr_node_t*)_initializer);\
+                &parser->script->pub, INITIALIZER);\
             goto error;\
         }\
         parser->significant_newline = true;\
@@ -122,7 +121,6 @@
                 pos --;\
             }\
         }\
-        INITIALIZER = (ecs_expr_node_t*)_initializer;\
         pos ++;\
         parser->expr_end = (until == '\n')\
             ? flecs_parser_stmt_end(parser, pos)\

@@ -44,7 +44,7 @@ const char* flecs_script_parse_initializer(
     ecs_parser_t *parser,
     const char *pos,
     char until,
-    ecs_expr_initializer_t **node_out);
+    ecs_expr_node_t **node_out);
 
 const char* flecs_expr_format_parse(
     ecs_parser_t *parser,
