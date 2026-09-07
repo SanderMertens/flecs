@@ -30613,176 +30613,89 @@ private:
 //// Utility to invoke callback on entity if it has components in signature
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename ... Args>
+template <typename ArgList>
 struct entity_with_delegate_impl;
 
-template<typename ... Args>
-struct entity_with_delegate_impl<arg_list<Args ...>> {
-    using ColumnArray = flecs::array<int32_t, sizeof...(Args)>;
+template <typename... Args>
+struct entity_with_delegate_impl<arg_list<Args...>> {
     using ArrayType = flecs::array<void*, sizeof...(Args)>;
-    using DummyArray = flecs::array<int, sizeof...(Args)>;
     using IdArray = flecs::array<id_t, sizeof...(Args)>;
 
-    static 
-    bool get_ptrs(world_t *world, flecs::entity_t e, const ecs_record_t *r, ecs_table_t *table,
-        ArrayType& ptrs) 
+    static bool get_ptrs(world_t *world, entity_t entity, const ecs_record_t *record,
+        ecs_table_t *table, IdArray& ids, ArrayType& ptrs)
     {
         ecs_assert(table != nullptr, ECS_INTERNAL_ERROR, nullptr);
-
-        /* table_index_of needs the real world. */
-        const flecs::world_t *real_world = ecs_get_world(world);
-
-        IdArray ids ({
-            _::type<Args>().id(world)...
-        });
-
-        /* Get column indices for components. */
-        ColumnArray columns ({
-            ecs_table_get_column_index(real_world, table,
-                _::type<Args>().id(world))...
-        });
-
-        /* Get pointers for columns for the entity. */
+        const world_t *real_world = ecs_get_world(world);
         size_t i = 0;
-        for (int32_t column : columns) {
-            if (column == -1) {
-                /* Component could be sparse. */
-                void *ptr = ecs_get_mut_id(world, e, ids[i]);
-                if (!ptr) {
-                    return false;
-                }
-
-                ptrs[i ++] = ptr;
-                continue;
+        for (auto id : ids) {
+            int32_t column = ecs_table_get_column_index(real_world, table, id);
+            void *ptr = column == -1 ? ecs_get_mut_id(world, entity, id) :
+                ecs_record_get_by_column(record, column, 0);
+            if (!ptr) {
+                return false;
             }
-
-            ptrs[i ++] = ecs_record_get_by_column(r, column, 0);
+            ptrs[i ++] = ptr;
         }
-
         return true;
     }
 
-    static bool ensure_ptrs(world_t *world, ecs_entity_t e, ArrayType& ptrs) {
-        /* Get pointers w/ensure. */
-        size_t i = 0;
-        DummyArray dummy ({
-            (ptrs[i ++] = ecs_ensure_id(world, e, 
-                _::type<Args>().id(world), sizeof(Args)), 0)...
-        });
-
-        return true;
-    }    
-
     template <typename Func>
-    static bool invoke_get(world_t *world, entity_t e, const Func& func) {
-        ecs_record_t *r = ecs_record_find(world, e);
-        if (!r) {
+    static bool invoke_get(world_t *world, entity_t entity, const Func& func) {
+        ecs_record_t *record = ecs_record_find(world, entity);
+        if (!record || !record->table) {
             return false;
         }
-
-        ecs_table_t *table = r->table;
-        if (!table) {
-            return false;
-        }
-
+        auto table = record->table;
         ECS_TABLE_LOCK(world, table);
-
+        IdArray ids ({ _::type<Args>::id(world)... });
         ArrayType ptrs;
-        bool has_components = get_ptrs(world, e, r, table, ptrs);
-        if (has_components) {
-            invoke_callback(func, 0, ptrs);
+        bool found = get_ptrs(world, entity, record, table, ids, ptrs);
+        if (found) {
+            invoke_callback(func, ptrs, std::index_sequence_for<Args...>{});
         }
-
         ECS_TABLE_UNLOCK(world, table);
-
-        return has_components;
+        return found;
     }
 
     template <typename Func>
-    static bool invoke_ensure(
-        world_t *world, 
-        entity_t id, 
-        const Func& func) 
-    {
-        flecs::world w(world);
-
+    static bool invoke_ensure(world_t *world, entity_t entity, const Func& func) {
+        IdArray ids ({ _::type<Args>::id(world)... });
         ArrayType ptrs;
         ecs_table_t *table = nullptr;
-
-        // When not deferred, take the fast path.
-        if (!w.is_deferred()) {
-            // A bit of low-level code so we only do at most one table move and one
-            // entity lookup for the entire operation.
-
-            // Make sure the object is not a stage. Operations on a stage are
-            // only allowed when the stage is in deferred mode, which is when
-            // the world is in readonly mode.
-            ecs_assert(!w.is_stage(), ECS_INVALID_PARAMETER, nullptr);
-
-            // Find the record for the entity.
-            ecs_record_t *r = ecs_record_find(world, id);
-            ecs_assert(r != nullptr, ECS_INVALID_PARAMETER, nullptr);
-
-            IdArray ids ({ w.id<Args>()... });
-            flecs_add_ids(world, id, ids.ptr(),
-                static_cast<int32_t>(sizeof...(Args)));
-            table = r->table;
-
-            if (!get_ptrs(w, id, r, table, ptrs)) {
+        if (!ecs_is_deferred(world)) {
+            ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INVALID_PARAMETER, nullptr);
+            ecs_record_t *record = ecs_record_find(world, entity);
+            ecs_assert(record != nullptr, ECS_INVALID_PARAMETER, nullptr);
+            flecs_add_ids(world, entity, ids.ptr(), static_cast<int32_t>(sizeof...(Args)));
+            table = record->table;
+            if (!get_ptrs(world, entity, record, table, ids, ptrs)) {
                 ecs_abort(ECS_INTERNAL_ERROR, nullptr);
             }
-
             ECS_TABLE_LOCK(world, table);
-
-        // When deferred, obtain pointers with regular ensure.
         } else {
-            ensure_ptrs(world, id, ptrs);
+            size_t i = 0;
+            ((ptrs[i] = ecs_ensure_id(world, entity, ids[i], sizeof(Args)), i ++), ...);
         }
-
-        invoke_callback(func, 0, ptrs);
-
-        if (!w.is_deferred()) {
+        invoke_callback(func, ptrs, std::index_sequence_for<Args...>{});
+        if (table) {
             ECS_TABLE_UNLOCK(world, table);
         }
-
-        // Call modified on each component.
-        DummyArray dummy_after ({
-            ( ecs_modified_id(world, id, w.id<Args>()), 0)...
-        });
-        (void)dummy_after;
-
+        for (auto id : ids) {
+            ecs_modified_id(world, entity, id);
+        }
         return true;
-    }    
+    }
 
 private:
-    template <typename Func, typename ... TArgs, 
-        if_t<sizeof...(TArgs) == sizeof...(Args)> = 0>
-    static void invoke_callback(
-        const Func& f, size_t, ArrayType&, TArgs&& ... comps) 
-    {
-        f(*static_cast<typename base_arg_type<Args>::type*>(comps)...);
-    }
-
-    template <typename Func, typename ... TArgs, 
-        if_t<sizeof...(TArgs) != sizeof...(Args)> = 0>
-    static void invoke_callback(const Func& f, size_t arg, ArrayType& ptrs, 
-        TArgs&& ... comps) 
-    {
-        invoke_callback(f, arg + 1, ptrs, comps..., ptrs[arg]);
+    template <typename Func, size_t... I>
+    static void invoke_callback(const Func& func, ArrayType& ptrs, std::index_sequence<I...>) {
+        func(*static_cast<base_arg_type_t<Args>*>(ptrs[I])...);
     }
 };
 
-template <typename Func, typename U = int>
-struct entity_with_delegate {
-    static_assert(function_traits<Func>::value, "type is not callable");
-};
-
-template <typename Func>
-struct entity_with_delegate<Func, if_t< is_callable<Func>::value > >
-    : entity_with_delegate_impl< arg_list_t<Func> >
-{
-    static_assert(function_traits<Func>::arity > 0,
-        "function must have at least one argument");
+template <typename Func, typename = int>
+struct entity_with_delegate : entity_with_delegate_impl<arg_list_t<Func>> {
+    static_assert(arity<Func>::value > 0, "function must have at least one argument");
 };
 
 /** Strip references from each-callback argument types. */
