@@ -41,194 +41,119 @@ static void flecs_rtt_default_move(
     flecs_rtt_default_copy(dst_ptr, src_ptr, count, type_info);
 }
 
-/*
- *
- * RTT struct support
- *
- */
+typedef enum flecs_rtt_action_t {
+    FlecsRttCtor,
+    FlecsRttDtor,
+    FlecsRttCopy,
+    FlecsRttMove,
+    FlecsRttCompare,
+    FlecsRttEquals
+} flecs_rtt_action_t;
 
-/* Invokes struct member types' constructor/destructor using saved information
- * in the lifecycle context */
-static void flecs_rtt_struct_xtor(
+static FLECS_ALWAYS_INLINE int flecs_rtt_struct_action(
     void *ptr,
+    const void *src,
     int32_t count,
-    const ecs_type_info_t *type_info,
-    bool dtor)
+    const ecs_type_info_t *ti,
+    flecs_rtt_action_t action)
 {
-    ecs_rtt_struct_ctx_t *ctx = type_info->hooks.lifecycle_ctx;
-    ecs_vec_t *xtor_data_vec = dtor ? &ctx->dtors : &ctx->members;
-    int cb_count = ecs_vec_count(xtor_data_vec);
-    int i, j;
-    for (j = 0; j < count; j++) {
-        void *elem_ptr = ECS_ELEM(ptr, type_info->size, j);
-        for (i = 0; i < cb_count; i++) {
-            ecs_rtt_call_data_t *xtor_data =
-                ecs_vec_get_t(xtor_data_vec, ecs_rtt_call_data_t, i);
-            ecs_xtor_t hook = dtor ? xtor_data->type_info->hooks.dtor :
-                xtor_data->type_info->hooks.ctor;
-            if (!hook && !dtor) {
-                hook = flecs_default_ctor;
-            }
-            hook(ECS_OFFSET(elem_ptr, xtor_data->offset),
-                xtor_data->count, xtor_data->type_info);
-        }
-    }
-}
-
-/* Generic struct constructor. It will read hook call data from the struct's
- * lifecycle context and call the constructors configured when the type was
- * created. */
-static void flecs_rtt_struct_ctor(
-    void *ptr,
-    int32_t count,
-    const ecs_type_info_t *type_info)
-{
-    flecs_rtt_struct_xtor(ptr, count, type_info, false);
-}
-
-/* Generic struct destructor. It will read hook call data from the struct's
- * lifecycle context and call the destructors configured when the type was
- * created. */
-static void flecs_rtt_struct_dtor(
-    void *ptr,
-    int32_t count,
-    const ecs_type_info_t *type_info)
-{
-    flecs_rtt_struct_xtor(ptr, count, type_info, true);
-}
-
-/* Generic move hook. It will read hook call data from the struct's lifecycle
- * context and call the move hooks configured when the type was created. */
-static void flecs_rtt_struct_move(
-    void *dst_ptr,
-    void *src_ptr,
-    int32_t count,
-    const ecs_type_info_t *type_info)
-{
-    ecs_rtt_struct_ctx_t *ctx = type_info->hooks.lifecycle_ctx;
-    ecs_vec_t *rtt_ctx = &ctx->members;
-    ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int cb_count = ecs_vec_count(rtt_ctx);
-    int i, j;
-    for (j = 0; j < count; j++) {
-        ecs_size_t elem_offset = type_info->size * j;
-        void *elem_dst_ptr = ECS_OFFSET(dst_ptr, elem_offset);
-        void *elem_src_ptr = ECS_OFFSET(src_ptr, elem_offset);
-        for (i = 0; i < cb_count; i++) {
-            ecs_rtt_call_data_t *move_data =
-                ecs_vec_get_t(rtt_ctx, ecs_rtt_call_data_t, i);
-            ecs_move_t hook = move_data->type_info->hooks.move;
-            (hook ? hook : flecs_rtt_default_move)(
-                ECS_OFFSET(elem_dst_ptr, move_data->offset),
-                ECS_OFFSET(elem_src_ptr, move_data->offset),
-                move_data->count,
-                move_data->type_info);
-        }
-    }
-}
-
-/* Generic copy hook. It will read hook call data from the struct's lifecycle
- * context and call the copy hooks configured when the type was created. */
-static void flecs_rtt_struct_copy(
-    void *dst_ptr,
-    const void *src_ptr,
-    int32_t count,
-    const ecs_type_info_t *type_info)
-{
-    ecs_rtt_struct_ctx_t *ctx = type_info->hooks.lifecycle_ctx;
-    ecs_vec_t *rtt_ctx = &ctx->members;
-    ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int cb_count = ecs_vec_count(rtt_ctx);
-    int i, j;
-    for (j = 0; j < count; j++) {
-        ecs_size_t elem_offset = type_info->size * j;
-        void *elem_dst_ptr = ECS_OFFSET(dst_ptr, elem_offset);
-        const void *elem_src_ptr = ECS_OFFSET(src_ptr, elem_offset);
-        for (i = 0; i < cb_count; i++) {
-            ecs_rtt_call_data_t *copy_data =
-                ecs_vec_get_t(rtt_ctx, ecs_rtt_call_data_t, i);
-            ecs_copy_t hook = copy_data->type_info->hooks.copy;
-            (hook ? hook : flecs_rtt_default_copy)(
-                ECS_OFFSET(elem_dst_ptr, copy_data->offset),
-                ECS_OFFSET(elem_src_ptr, copy_data->offset),
-                copy_data->count,
-                copy_data->type_info);
-        }
-    }
-}
-
-/* Generic compare hook. It will read hook call data from the struct's
- * lifecycle context and call the compare hooks configured when the type was
- * created. */
-static int flecs_rtt_struct_cmp(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *type_info)
-{
-    if(a_ptr == b_ptr) {
+    if (action >= FlecsRttCompare && ptr == src) {
         return 0;
     }
-
-    ecs_rtt_struct_ctx_t *ctx = type_info->hooks.lifecycle_ctx;
-    ecs_vec_t *rtt_ctx = &ctx->members;
-    ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int cb_count = ecs_vec_count(rtt_ctx);
-    int i;
-    for (i = 0; i < cb_count; i++) {
-        ecs_rtt_call_data_t *comp_data =
-        ecs_vec_get_t(rtt_ctx, ecs_rtt_call_data_t, i);
-        ecs_size_t size = comp_data->type_info->size;
-        int32_t e;
-        for (e = 0; e < comp_data->count; e++) {
-            int c = comp_data->type_info->hooks.cmp(
-                ECS_OFFSET(a_ptr, comp_data->offset + e * size),
-                ECS_OFFSET(b_ptr, comp_data->offset + e * size),
-                comp_data->type_info);
-            if (c != 0) {
-                return c;
+    ecs_rtt_struct_ctx_t *ctx = ti->hooks.lifecycle_ctx;
+    ecs_vec_t *vec = action == FlecsRttDtor ? &ctx->dtors : &ctx->members;
+    const ecs_rtt_call_data_t *members = ecs_vec_first(vec);
+    int32_t i, j, member_count = ecs_vec_count(vec);
+    for (j = 0; j < count; j ++) {
+        for (i = 0; i < member_count; i ++) {
+            const ecs_rtt_call_data_t *m = &members[i];
+            const ecs_type_info_t *mt = m->type_info;
+            void *dst = ECS_OFFSET(ptr, ti->size * j + m->offset);
+            const void *from = src ? ECS_OFFSET(src, ti->size * j + m->offset) : NULL;
+            switch (action) {
+            case FlecsRttCtor:
+                (mt->hooks.ctor ? mt->hooks.ctor : flecs_default_ctor)(
+                    dst, m->count, mt);
+                break;
+            case FlecsRttDtor:
+                mt->hooks.dtor(dst, m->count, mt);
+                break;
+            case FlecsRttCopy:
+                (mt->hooks.copy ? mt->hooks.copy : flecs_rtt_default_copy)(
+                    dst, from, m->count, mt);
+                break;
+            case FlecsRttMove:
+                (mt->hooks.move ? mt->hooks.move : flecs_rtt_default_move)(
+                    dst, ECS_CONST_CAST(void*, from), m->count, mt);
+                break;
+            case FlecsRttCompare:
+            case FlecsRttEquals:
+                for (int32_t e = 0; e < m->count; e ++) {
+                    const void *a = ECS_ELEM(dst, mt->size, e);
+                    const void *b = ECS_ELEM(from, mt->size, e);
+                    int result = action == FlecsRttEquals ?
+                        !mt->hooks.equals(a, b, mt) : mt->hooks.cmp(a, b, mt);
+                    if (result) {
+                        return result;
+                    }
+                }
+                break;
             }
         }
     }
     return 0;
 }
 
-/* Generic equals hook. It will read hook call data from the struct's
- * lifecycle context and call the equals hooks configured when the type was
- * created. */
-static bool flecs_rtt_struct_equals(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *type_info)
+static void flecs_rtt_struct_ctor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
 {
-    if(a_ptr == b_ptr) {
-        return true;
-    }
+    flecs_rtt_struct_action(ptr, NULL, count, ti, FlecsRttCtor);
+}
 
-    ecs_rtt_struct_ctx_t *ctx = type_info->hooks.lifecycle_ctx;
-    ecs_vec_t *rtt_ctx = &ctx->members;
-    ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
+static void flecs_rtt_struct_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    flecs_rtt_struct_action(ptr, NULL, count, ti, FlecsRttDtor);
+}
 
-    int cb_count = ecs_vec_count(rtt_ctx);
-    int i;
-    for (i = 0; i < cb_count; i++) {
-        ecs_rtt_call_data_t *comp_data =
-        ecs_vec_get_t(rtt_ctx, ecs_rtt_call_data_t, i);
-        ecs_size_t size = comp_data->type_info->size;
-        int32_t e;
-        for (e = 0; e < comp_data->count; e++) {
-            bool eq = comp_data->type_info->hooks.equals(
-                ECS_OFFSET(a_ptr, comp_data->offset + e * size),
-                ECS_OFFSET(b_ptr, comp_data->offset + e * size),
-                comp_data->type_info);
-            if (!eq) {
-                return false;
-            }
-        }
-    }
-    return true;
+static void flecs_rtt_struct_copy(
+    void *ptr,
+    const void *src,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    flecs_rtt_struct_action(ptr, src, count, ti, FlecsRttCopy);
+}
+
+static void flecs_rtt_struct_move(
+    void *ptr,
+    void *src,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    flecs_rtt_struct_action(ptr, src, count, ti, FlecsRttMove);
+}
+
+static int flecs_rtt_struct_cmp(
+    const void *ptr,
+    const void *src,
+    const ecs_type_info_t *ti)
+{
+    return flecs_rtt_struct_action(
+        ECS_CONST_CAST(void*, ptr), src, 1, ti, FlecsRttCompare);
+}
+
+static bool flecs_rtt_struct_equals(
+    const void *ptr,
+    const void *src,
+    const ecs_type_info_t *ti)
+{
+    return !flecs_rtt_struct_action(
+        ECS_CONST_CAST(void*, ptr), src, 1, ti, FlecsRttEquals);
 }
 
 static void flecs_rtt_free_lifecycle_nop(
