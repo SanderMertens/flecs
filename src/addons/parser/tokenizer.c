@@ -43,35 +43,93 @@ static bool flecs_keyword_boundary(
     return false;
 }
 
-static bool flecs_keyword_match(
-    const char *pos,
-    const char *keyword)
-{
-    ecs_size_t len = ecs_os_strlen(keyword);
-    if (ecs_os_strncmp(pos, keyword, len)) {
-        return false;
-    }
+static const struct {
+    const char *spelling;
+    const char *description;
+    uint8_t length;
+} flecs_tokens[EcsTokLast] = {
+    [EcsTokUnknown] = {"unknown token", "unknown token ", 0},
+    [EcsTokColon] = {":", "", 1},
+    [EcsTokScopeOpen] = {"{", "", 1},
+    [EcsTokScopeClose] = {"}", "", 1},
+    [EcsTokParenOpen] = {"(", "", 1},
+    [EcsTokParenClose] = {")", "", 1},
+    [EcsTokBracketOpen] = {"[", "", 1},
+    [EcsTokBracketClose] = {"]", "", 1},
+    [EcsTokAnnotation] = {"@", "", 1},
+    [EcsTokComma] = {",", "", 1},
+    [EcsTokSemiColon] = {";", "", 1},
+    [EcsTokAssign] = {"=", "", 1},
+    [EcsTokAdd] = {"+", "", 1},
+    [EcsTokSub] = {"-", "", 1},
+    [EcsTokMul] = {"*", "", 1},
+    [EcsTokDiv] = {"/", "", 1},
+    [EcsTokMod] = {"%", "", 1},
+    [EcsTokBitwiseOr] = {"|", "", 1},
+    [EcsTokBitwiseAnd] = {"&", "", 1},
+    [EcsTokNot] = {"!", "", 1},
+    [EcsTokOptional] = {"?", "", 1},
+    [EcsTokEq] = {"==", "", 2},
+    [EcsTokNeq] = {"!=", "", 2},
+    [EcsTokGt] = {">", "", 1},
+    [EcsTokGtEq] = {">=", "", 2},
+    [EcsTokLt] = {"<", "", 1},
+    [EcsTokLtEq] = {"<=", "", 2},
+    [EcsTokAnd] = {"&&", "", 2},
+    [EcsTokOr] = {"||", "", 2},
+    [EcsTokMatch] = {"~=", "", 2},
+    [EcsTokRange] = {"..", "", 2},
+    [EcsTokShiftLeft] = {"<<", "", 2},
+    [EcsTokShiftRight] = {">>", "", 2},
+    [EcsTokAddAssign] = {"+=", "", 2},
+    [EcsTokMulAssign] = {"*=", "", 2},
+    [EcsTokHasBracketOpen] = {"?[", "", 2},
+    [EcsTokKeywordWith] = {"with", "keyword ", 4},
+    [EcsTokKeywordUsing] = {"using", "keyword ", 5},
+    [EcsTokKeywordProp] = {"prop", "keyword ", 4},
+    [EcsTokKeywordMut] = {"mut", "keyword ", 3},
+    [EcsTokKeywordConst] = {"const", "keyword ", 5},
+    [EcsTokKeywordMatch] = {"match", "keyword ", 5},
+    [EcsTokKeywordNew] = {"new", "keyword ", 3},
+    [EcsTokKeywordExport] = {"export", "keyword ", 6},
+    [EcsTokKeywordIf] = {"if", "keyword ", 2},
+    [EcsTokKeywordElse] = {"else", "keyword ", 4},
+    [EcsTokKeywordFor] = {"for", "keyword ", 3},
+    [EcsTokKeywordIn] = {"in", "keyword ", 2},
+    [EcsTokKeywordTemplate] = {"template", "keyword ", 8},
+    [EcsTokKeywordModule] = {"module", "keyword ", 6},
+    [EcsTokKeywordInclude] = {"include", "keyword ", 7},
+    [EcsTokKeywordFn] = {"fn", "keyword ", 2},
+    [EcsTokKeywordAwait] = {"await", "keyword ", 5},
+    [EcsTokKeywordTry] = {"try", "keyword ", 3},
+    [EcsTokKeywordCatch] = {"catch", "keyword ", 5},
+    [EcsTokKeywordContinue] = {"continue", "keyword ", 8},
+    [EcsTokKeywordScript] = {"script", "keyword ", 6},
+    [EcsTokArrow] = {"->", "", 2},
+    [EcsTokIdentifier] = {"identifier", "identifier ", 0},
+    [EcsTokFunction] = {"function", "function ", 0},
+    [EcsTokString] = {"string", "string ", 0},
+    [EcsTokChar] = {"char", "char ", 0},
+    [EcsTokNumber] = {"number", "number ", 0},
+    [EcsTokNewline] = {"newline", "newline", 0},
+    [EcsTokMember] = {".", "member", 0},
+    [EcsTokEnd] = {"end of script", "end of script", 0},
+};
 
-    return flecs_keyword_boundary(pos + len);
-}
-
-#define Keyword(keyword, _kind)\
-    } else if (flecs_keyword_match(pos, keyword)) {\
-        out->value = keyword;\
-        out->kind = _kind;\
-        return pos + ecs_os_strlen(keyword);
-
-#define OperatorMultiChar(oper, _kind)\
-    } else if (!ecs_os_strncmp(pos, oper, ecs_os_strlen(oper))) {\
-        out->value = oper;\
-        out->kind = _kind;\
-        return pos + ecs_os_strlen(oper);
-
-#define Operator(oper, _kind)\
-    } else if (pos[0] == oper[0]) {\
-        out->value = oper;\
-        out->kind = _kind;\
-        return pos + 1;
+static const ecs_token_kind_t flecs_token_pairs[128][2] = {
+    ['+'] = {EcsTokAddAssign},
+    ['*'] = {EcsTokMulAssign},
+    ['-'] = {EcsTokArrow},
+    ['?'] = {EcsTokHasBracketOpen},
+    ['.'] = {EcsTokRange},
+    ['='] = {EcsTokEq},
+    ['!'] = {EcsTokNeq},
+    ['<'] = {EcsTokLtEq, EcsTokShiftLeft},
+    ['>'] = {EcsTokGtEq, EcsTokShiftRight},
+    ['&'] = {EcsTokAnd},
+    ['|'] = {EcsTokOr},
+    ['~'] = {EcsTokMatch}
+};
 
 static char* flecs_tokenizer_write(
     ecs_parser_t *parser,
@@ -92,163 +150,25 @@ static char* flecs_tokenizer_write(
 const char* flecs_token_kind_str(
     ecs_token_kind_t kind)
 {
-    switch(kind) {
-    case EcsTokUnknown:
-        return "unknown token ";
-    case EcsTokColon:
-    case EcsTokScopeOpen:
-    case EcsTokScopeClose:
-    case EcsTokParenOpen:
-    case EcsTokParenClose:
-    case EcsTokBracketOpen:
-    case EcsTokBracketClose:
-    case EcsTokAnnotation:
-    case EcsTokComma:
-    case EcsTokSemiColon:
-    case EcsTokAssign:
-    case EcsTokAdd:
-    case EcsTokSub:
-    case EcsTokMul:
-    case EcsTokDiv:
-    case EcsTokMod:
-    case EcsTokBitwiseOr:
-    case EcsTokBitwiseAnd:
-    case EcsTokNot:
-    case EcsTokOptional:
-    case EcsTokEq:
-    case EcsTokNeq:
-    case EcsTokGt:
-    case EcsTokGtEq:
-    case EcsTokLt:
-    case EcsTokLtEq:
-    case EcsTokAnd:
-    case EcsTokOr:
-    case EcsTokMatch:
-    case EcsTokRange:
-    case EcsTokShiftLeft:
-    case EcsTokShiftRight:
-    case EcsTokAddAssign:
-    case EcsTokMulAssign:
-    case EcsTokHasBracketOpen:
-        return "";
-    case EcsTokKeywordWith:
-    case EcsTokKeywordUsing:
-    case EcsTokKeywordProp:
-    case EcsTokKeywordMut:
-    case EcsTokKeywordConst:
-    case EcsTokKeywordIf:
-    case EcsTokKeywordElse:
-    case EcsTokKeywordFor:
-    case EcsTokKeywordIn:
-    case EcsTokKeywordTemplate:
-    case EcsTokKeywordModule:
-    case EcsTokKeywordMatch:
-    case EcsTokKeywordNew:
-    case EcsTokKeywordExport:
-    case EcsTokKeywordInclude:
-    case EcsTokKeywordFn:
-    case EcsTokKeywordAwait:
-    case EcsTokKeywordTry:
-    case EcsTokKeywordCatch:
-    case EcsTokKeywordContinue:
-    case EcsTokKeywordScript:
-        return "keyword ";
-    case EcsTokArrow:
-        return "";
-    case EcsTokIdentifier:
-        return "identifier ";
-    case EcsTokFunction:
-        return "function ";
-    case EcsTokString:
-        return "string ";
-    case EcsTokChar:
-        return "char ";
-    case EcsTokNumber:
-        return "number ";
-    case EcsTokNewline:
-        return "newline";
-    case EcsTokMember:
-        return "member";
-    case EcsTokEnd:
-        return "end of script";
-    default:
-        return "<corrupt>";
+    if ((unsigned)kind < EcsTokLast && flecs_tokens[kind].description) {
+        return flecs_tokens[kind].description;
     }
+    return "<corrupt>";
 }
 
 const char* flecs_token_str(
     ecs_token_kind_t kind)
 {
-    switch(kind) {
-    case EcsTokUnknown: return "unknown token";
-    case EcsTokColon: return ":";
-    case EcsTokScopeOpen: return "{";
-    case EcsTokScopeClose: return "}";
-    case EcsTokParenOpen: return "(";
-    case EcsTokParenClose: return ")";
-    case EcsTokBracketOpen: return "[";
-    case EcsTokBracketClose: return "]";
-    case EcsTokAnnotation: return "@";
-    case EcsTokComma: return ",";
-    case EcsTokSemiColon: return ";";
-    case EcsTokAssign: return "=";
-    case EcsTokAdd: return "+";
-    case EcsTokSub: return "-";
-    case EcsTokMul: return "*";
-    case EcsTokDiv: return "/";
-    case EcsTokMod: return "%%";
-    case EcsTokBitwiseOr: return "|";
-    case EcsTokBitwiseAnd: return "&";
-    case EcsTokNot: return "!";
-    case EcsTokOptional: return "?";
-    case EcsTokEq: return "==";
-    case EcsTokNeq: return "!=";
-    case EcsTokGt: return ">";
-    case EcsTokGtEq: return ">=";
-    case EcsTokLt: return "<";
-    case EcsTokLtEq: return "<=";
-    case EcsTokAnd: return "&&";
-    case EcsTokOr: return "||";
-    case EcsTokMatch: return "~=";
-    case EcsTokRange: return "..";
-    case EcsTokShiftLeft: return "<<";
-    case EcsTokShiftRight: return ">>";
-    case EcsTokAddAssign: return "+=";
-    case EcsTokMulAssign: return "*=";
-    case EcsTokHasBracketOpen: return "?[";
-    case EcsTokKeywordWith: return "with";
-    case EcsTokKeywordUsing: return "using";
-    case EcsTokKeywordProp: return "prop";
-    case EcsTokKeywordMut: return "mut";
-    case EcsTokKeywordConst: return "const";
-    case EcsTokKeywordMatch: return "match";
-    case EcsTokKeywordNew: return "new";
-    case EcsTokKeywordExport: return "export";
-    case EcsTokKeywordIf: return "if";
-    case EcsTokKeywordElse: return "else";
-    case EcsTokKeywordFor: return "for";
-    case EcsTokKeywordIn: return "in";
-    case EcsTokKeywordTemplate: return "template";
-    case EcsTokKeywordModule: return "module";
-    case EcsTokKeywordInclude: return "include";
-    case EcsTokKeywordFn: return "fn";
-    case EcsTokKeywordAwait: return "await";
-    case EcsTokKeywordTry: return "try";
-    case EcsTokKeywordCatch: return "catch";
-    case EcsTokKeywordContinue: return "continue";
-    case EcsTokKeywordScript: return "script";
-    case EcsTokArrow: return "->";
-    case EcsTokIdentifier: return "identifier";
-    case EcsTokFunction: return "function";
-    case EcsTokString: return "string";
-    case EcsTokChar: return "char";
-    case EcsTokNumber: return "number";
-    case EcsTokNewline: return "newline";
-    case EcsTokMember: return "member";
-    case EcsTokEnd: return "end of script";
-    default:
-        return "<corrupt>";
+    if (kind == EcsTokMod) {
+        return "%%";
     }
+    if (kind == EcsTokMember) {
+        return "member";
+    }
+    if ((unsigned)kind < EcsTokLast && flecs_tokens[kind].spelling) {
+        return flecs_tokens[kind].spelling;
+    }
+    return "<corrupt>";
 }
 
 const char* flecs_scan_whitespace(
@@ -774,71 +694,40 @@ static const char* flecs_token_scan(
     } else if (flecs_script_is_number(pos)) {
         return flecs_script_number(parser, pos, out);
 
-    OperatorMultiChar ("+=",       EcsTokAddAssign)
-    OperatorMultiChar ("*=",       EcsTokMulAssign)
-    Operator          (":",        EcsTokColon)
-    Operator          ("{",        EcsTokScopeOpen)
-    Operator          ("}",        EcsTokScopeClose)
-    Operator          ("(",        EcsTokParenOpen)
-    Operator          (")",        EcsTokParenClose)
-    Operator          ("[",        EcsTokBracketOpen)
-    Operator          ("]",        EcsTokBracketClose)
-    Operator          ("@",        EcsTokAnnotation)
-    Operator          (",",        EcsTokComma)
-    Operator          (";",        EcsTokSemiColon)
-    Operator          ("+",        EcsTokAdd)
-    OperatorMultiChar ("->",       EcsTokArrow)
-    Operator          ("-",        EcsTokSub)
-    Operator          ("*",        EcsTokMul)
-    Operator          ("/",        EcsTokDiv)
-    Operator          ("%%",       EcsTokMod)
-    OperatorMultiChar ("?[",       EcsTokHasBracketOpen)
-    Operator          ("?",        EcsTokOptional)
-    
-    OperatorMultiChar ("..",       EcsTokRange)
-    Operator          (".",        EcsTokMember)
+    }
 
-    OperatorMultiChar ("==",       EcsTokEq)
-    OperatorMultiChar ("!=",       EcsTokNeq)
-    OperatorMultiChar ("<<",       EcsTokShiftLeft)
-    OperatorMultiChar (">>",       EcsTokShiftRight)
-    OperatorMultiChar (">=",       EcsTokGtEq)
-    OperatorMultiChar ("<=",       EcsTokLtEq)
-    
-    OperatorMultiChar ("&&",       EcsTokAnd)
-    OperatorMultiChar ("||",       EcsTokOr)
-    OperatorMultiChar ("~=",       EcsTokMatch)
+    unsigned char ch = (unsigned char)pos[0];
+    if (ch < 128) {
+        for (int32_t i = 0; i < 2; i ++) {
+            ecs_token_kind_t kind = flecs_token_pairs[ch][i];
+            if (kind && pos[1] == flecs_tokens[kind].spelling[1]) {
+                out->kind = kind;
+                out->value = flecs_tokens[kind].spelling;
+                return pos + 2;
+            }
+        }
+        if (flecs_tokens[ch].spelling &&
+            (!flecs_tokens[ch].description[0] || ch == '.'))
+        {
+            out->kind = (ecs_token_kind_t)ch;
+            out->value = ch == '%' ? "%%" : flecs_tokens[ch].spelling;
+            return pos + 1;
+        }
+    }
 
-    Operator          ("!",        EcsTokNot)
-    Operator          ("=",        EcsTokAssign)
-    Operator          ("&",        EcsTokBitwiseAnd)
-    Operator          ("|",        EcsTokBitwiseOr)
-    Operator          (">",        EcsTokGt)
-    Operator          ("<",        EcsTokLt)
+    for (ecs_token_kind_t kind = EcsTokKeywordWith; kind < EcsTokLast; kind ++) {
+        const char *word = flecs_tokens[kind].spelling;
+        int32_t len = flecs_tokens[kind].length;
+        if (word[0] == pos[0] && !ecs_os_strncmp(pos, word, len) &&
+            flecs_keyword_boundary(pos + len))
+        {
+            out->kind = kind;
+            out->value = word;
+            return pos + len;
+        }
+    }
 
-    Keyword           ("with",     EcsTokKeywordWith)
-    Keyword           ("using",    EcsTokKeywordUsing)
-    Keyword           ("template", EcsTokKeywordTemplate)
-    Keyword           ("prop",     EcsTokKeywordProp)
-    Keyword           ("mut",      EcsTokKeywordMut)
-    Keyword           ("const",    EcsTokKeywordConst)
-    Keyword           ("if",       EcsTokKeywordIf)
-    Keyword           ("else",     EcsTokKeywordElse)
-    Keyword           ("for",      EcsTokKeywordFor)
-    Keyword           ("in",       EcsTokKeywordIn)
-    Keyword           ("match",    EcsTokKeywordMatch)
-    Keyword           ("new",      EcsTokKeywordNew)
-    Keyword           ("export",   EcsTokKeywordExport)
-    Keyword           ("module",   EcsTokKeywordModule)
-    Keyword           ("include",  EcsTokKeywordInclude)
-    Keyword           ("fn",       EcsTokKeywordFn)
-    Keyword           ("await",    EcsTokKeywordAwait)
-    Keyword           ("try",      EcsTokKeywordTry)
-    Keyword           ("catch",    EcsTokKeywordCatch)
-    Keyword           ("continue", EcsTokKeywordContinue)
-    Keyword           ("script",   EcsTokKeywordScript)
-
-    } else if (pos[0] == '\'') {
+    if (pos[0] == '\'') {
         return flecs_script_char(parser, pos, out);
 
     } else if (pos[0] == '"') {
