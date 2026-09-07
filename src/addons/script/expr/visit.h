@@ -36,7 +36,7 @@ void flecs_expr_visit_free(
     ecs_expr_node_t *node);
 
 typedef int (*flecs_expr_visit_action_t)(
-    ecs_expr_node_t *node,
+    ecs_expr_node_t **node,
     void *ctx);
 
 int flecs_expr_visit_children(

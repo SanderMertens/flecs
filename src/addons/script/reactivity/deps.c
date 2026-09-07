@@ -370,9 +370,10 @@ typedef struct flecs_script_dep_expr_ctx_t {
 } flecs_script_dep_expr_ctx_t;
 
 static int flecs_script_dep_expr_var(
-    ecs_expr_node_t *node,
+    ecs_expr_node_t **node_ptr,
     void *ptr)
 {
+    ecs_expr_node_t *node = *node_ptr;
     if (!node) {
         return 0;
     }
@@ -399,7 +400,7 @@ static int flecs_script_dep_expr_vars(
     uint64_t *internal)
 {
     flecs_script_dep_expr_ctx_t expr_ctx = {ctx, input, internal};
-    return flecs_script_dep_expr_var(node, &expr_ctx);
+    return flecs_script_dep_expr_var(&node, &expr_ctx);
 }
 
 static int flecs_script_dep_expr_ref(

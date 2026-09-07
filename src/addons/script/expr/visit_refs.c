@@ -63,9 +63,10 @@ typedef struct flecs_expr_ref_ctx_t {
 } flecs_expr_ref_ctx_t;
 
 static int flecs_expr_ref_visit(
-    ecs_expr_node_t *node,
+    ecs_expr_node_t **node_ptr,
     void *ptr)
 {
+    ecs_expr_node_t *node = *node_ptr;
     if (!node) {
         return 0;
     }
@@ -125,7 +126,7 @@ static int flecs_expr_ref_visit(
                 return -1;
             }
         }
-        return flecs_expr_ref_visit(left, ctx);
+        return flecs_expr_ref_visit(&left, ctx);
     }
     default:
         break;
@@ -140,7 +141,7 @@ int flecs_expr_visit_refs(
     void *ctx)
 {
     flecs_expr_ref_ctx_t visitor = {script, action, ctx};
-    return flecs_expr_ref_visit(node, &visitor);
+    return flecs_expr_ref_visit(&node, &visitor);
 }
 
 #endif

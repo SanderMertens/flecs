@@ -9,10 +9,10 @@
 #include "../script.h"
 
 static int flecs_expr_free_child(
-    ecs_expr_node_t *node,
+    ecs_expr_node_t **node,
     void *ctx)
 {
-    flecs_expr_visit_free(ctx, node);
+    flecs_expr_visit_free(ctx, *node);
     return 0;
 }
 

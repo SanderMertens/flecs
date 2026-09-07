@@ -440,15 +440,15 @@ int flecs_expr_visit_children(
         ecs_expr_node_t **expressions = ecs_vec_first(&n->expressions);
         int32_t i, count = ecs_vec_count(&n->expressions);
         for (i = 0; i < count; i ++) {
-            if (action(expressions[i], ctx)) {
+            if (action(&expressions[i], ctx)) {
                 return -1;
             }
         }
         ecs_expr_format_t *formats = ecs_vec_first(&n->formats);
         count = ecs_vec_count(&n->formats);
         for (i = 0; i < count; i ++) {
-            if (action(formats[i].width, ctx) ||
-                action(formats[i].precision, ctx))
+            if (action(&formats[i].width, ctx) ||
+                action(&formats[i].precision, ctx))
             {
                 return -1;
             }
@@ -461,8 +461,8 @@ int flecs_expr_visit_children(
         ecs_expr_initializer_element_t *elems = ecs_vec_first(&n->elements);
         int32_t i, count = ecs_vec_count(&n->elements);
         for (i = 0; i < count; i ++) {
-            if (action(elems[i].key, ctx) ||
-                action(elems[i].value, ctx))
+            if (action(&elems[i].key, ctx) ||
+                action(&elems[i].value, ctx))
             {
                 return -1;
             }
@@ -470,37 +470,38 @@ int flecs_expr_visit_children(
         break;
     }
     case EcsExprUnary:
-        return action(((ecs_expr_unary_t*)node)->expr, ctx);
+        return action(&((ecs_expr_unary_t*)node)->expr, ctx);
     case EcsExprBinary: {
         ecs_expr_binary_t *n = (ecs_expr_binary_t*)node;
-        if (action(n->left, ctx) ||
-            action(n->right, ctx))
+        if (action(&n->left, ctx) ||
+            action(&n->right, ctx))
         {
             return -1;
         }
         break;
     }
     case EcsExprIdentifier:
-        return action(((ecs_expr_identifier_t*)node)->expr, ctx);
+        return action(&((ecs_expr_identifier_t*)node)->expr, ctx);
     case EcsExprFunction:
     case EcsExprMethod: {
         ecs_expr_function_t *n = (ecs_expr_function_t*)node;
-        if (action(n->left, ctx) ||
-            action((ecs_expr_node_t*)n->args, ctx))
+        ecs_expr_node_t *args = (ecs_expr_node_t*)n->args;
+        if (action(&n->left, ctx) || action(&args, ctx))
         {
             return -1;
         }
+        n->args = (ecs_expr_initializer_t*)args;
         break;
     }
     case EcsExprMember:
-        return action(((ecs_expr_member_t*)node)->left, ctx);
+        return action(&((ecs_expr_member_t*)node)->left, ctx);
     case EcsExprSwizzle:
-        return action(((ecs_expr_swizzle_t*)node)->left, ctx);
+        return action(&((ecs_expr_swizzle_t*)node)->left, ctx);
     case EcsExprComponent:
     case EcsExprElement: {
         ecs_expr_element_t *n = (ecs_expr_element_t*)node;
-        if (action(n->left, ctx) ||
-            action(n->index, ctx))
+        if (action(&n->left, ctx) ||
+            action(&n->index, ctx))
         {
             return -1;
         }
@@ -508,9 +509,9 @@ int flecs_expr_visit_children(
     }
     case EcsExprHas: {
         ecs_expr_has_t *n = (ecs_expr_has_t*)node;
-        if (action(n->left, ctx) ||
-            action(n->first, ctx) ||
-            action(n->second, ctx))
+        if (action(&n->left, ctx) ||
+            action(&n->first, ctx) ||
+            action(&n->second, ctx))
         {
             return -1;
         }
@@ -518,23 +519,23 @@ int flecs_expr_visit_children(
     }
     case EcsExprCast:
     case EcsExprCastNumber:
-        return action(((ecs_expr_cast_t*)node)->expr, ctx);
+        return action(&((ecs_expr_cast_t*)node)->expr, ctx);
     case EcsExprMatch: {
         ecs_expr_match_t *n = (ecs_expr_match_t*)node;
-        if (action(n->expr, ctx)) {
+        if (action(&n->expr, ctx)) {
             return -1;
         }
         ecs_expr_match_element_t *elems = ecs_vec_first(&n->elements);
         int32_t i, count = ecs_vec_count(&n->elements);
         for (i = 0; i < count; i ++) {
-            if (action(elems[i].compare, ctx) ||
-                action(elems[i].expr, ctx))
+            if (action(&elems[i].compare, ctx) ||
+                action(&elems[i].expr, ctx))
             {
                 return -1;
             }
         }
-        if (action(n->any.compare, ctx) ||
-            action(n->any.expr, ctx))
+        if (action(&n->any.compare, ctx) ||
+            action(&n->any.expr, ctx))
         {
             return -1;
         }
@@ -542,8 +543,8 @@ int flecs_expr_visit_children(
     }
     case EcsExprRange: {
         ecs_expr_range_t *n = (ecs_expr_range_t*)node;
-        if (action(n->from, ctx) ||
-            action(n->to, ctx))
+        if (action(&n->from, ctx) ||
+            action(&n->to, ctx))
         {
             return -1;
         }
