@@ -102347,140 +102347,64 @@ int flecs_value_unary(
     return 0;
 }
 
-#define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
+#define FLECS_VALUE_COMPARE(T)\
+    case EcsTokEq: *(bool*)out = l == r; return 0;\
+    case EcsTokNeq: *(bool*)out = l != r; return 0;\
+    case EcsTokGt: *(bool*)out = l > r; return 0;\
+    case EcsTokGtEq: *(bool*)out = l >= r; return 0;\
+    case EcsTokLt: *(bool*)out = l < r; return 0;\
+    case EcsTokLtEq: *(bool*)out = l <= r; return 0;
 
-#define ECS_BOP_DO(left, right, result, op, R, T)\
-    ECS_VALUE_GET(result, R) = (R)(ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T))
+#define FLECS_VALUE_INTEGER(T)\
+    case EcsTokMod: *(T*)out = (T)(l % r); return 0;\
+    case EcsTokBitwiseAnd: *(T*)out = (T)(l & r); return 0;\
+    case EcsTokBitwiseOr: *(T*)out = (T)(l | r); return 0;\
+    case EcsTokShiftLeft: *(T*)out = (T)(l << r); return 0;\
+    case EcsTokShiftRight: *(T*)out = (T)(l >> r); return 0;
 
-#define ECS_BOP(left, right, result, op, R, T)\
-    if ((result)->type == ecs_id(ecs_u64_t)) { \
-        ECS_BOP_DO(left, right, result, op, ecs_u64_t, T);\
-    } else if ((result)->type == ecs_id(ecs_u32_t)) { \
-        ECS_BOP_DO(left, right, result, op, ecs_u32_t, T);\
-    } else if ((result)->type == ecs_id(ecs_u16_t)) { \
-        ECS_BOP_DO(left, right, result, op, ecs_u16_t, T);\
-    } else if ((result)->type == ecs_id(ecs_u8_t)) { \
-        ECS_BOP_DO(left, right, result, op, ecs_u8_t, T);\
-    } else if ((result)->type == ecs_id(ecs_i64_t)) { \
-        ECS_BOP_DO(left, right, result, op, ecs_i64_t, T);\
-    } else if ((result)->type == ecs_id(ecs_i32_t)) { \
-        ECS_BOP_DO(left, right, result, op, ecs_i32_t, T);\
-    } else if ((result)->type == ecs_id(ecs_i16_t)) { \
-        ECS_BOP_DO(left, right, result, op, ecs_i16_t, T);\
-    } else if ((result)->type == ecs_id(ecs_i8_t)) { \
-        ECS_BOP_DO(left, right, result, op, ecs_i8_t, T);\
-    } else if ((result)->type == ecs_id(ecs_f64_t)) { \
-        ECS_BOP_DO(left, right, result, op, ecs_f64_t, T);\
-    } else if ((result)->type == ecs_id(ecs_f32_t)) { \
-        ECS_BOP_DO(left, right, result, op, ecs_f32_t, T);\
-    } else if ((result)->type == ecs_id(ecs_char_t)) { \
-        ECS_BOP_DO(left, right, result, op, ecs_char_t, T);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
+#define FLECS_VALUE_FLOAT(T)
 
-#define ECS_BOP_COND(left, right, result, op, R, T)\
-    ECS_VALUE_GET(result, ecs_bool_t) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)
+#define FLECS_VALUE_ARITHMETIC(T)\
+    case EcsTokAdd: *(T*)out = (T)(l + r); return 0;\
+    case EcsTokSub: *(T*)out = (T)(l - r); return 0;\
+    case EcsTokMul: *(T*)out = (T)(l * r); return 0;\
+    case EcsTokDiv: *(T*)out = (T)(l / r); return 0;\
+    case EcsTokAddAssign: *(T*)out += r; return 0;\
+    case EcsTokMulAssign: *(T*)out *= r; return 0;
 
-#define ECS_BOP_ASSIGN(left, right, result, op, R, T)\
-    ECS_VALUE_GET(result, R) op (R)(ECS_VALUE_GET(right, T))
+#define FLECS_VALUE_BINARY(T, ARITHMETIC, INTEGER)\
+static int flecs_value_binary_##T(\
+    const void *left, const void *right, void *out, ecs_token_kind_t operator)\
+{\
+    T l = *(const T*)left, r = *(const T*)right;\
+    switch (operator) {\
+    FLECS_VALUE_COMPARE(T)\
+    ARITHMETIC(T)\
+    INTEGER(T)\
+    default: ecs_abort(ECS_INTERNAL_ERROR, "invalid binary operator");\
+    }\
+    return -1;\
+}
 
-/* Unsigned operations */
-#define ECS_BINARY_UINT_OPS(left, right, result, op, OP)\
-    if ((right)->type == ecs_id(ecs_u64_t)) { \
-        OP(left, right, result, op, ecs_u64_t, ecs_u64_t);\
-    } else if ((right)->type == ecs_id(ecs_u32_t)) { \
-        OP(left, right, result, op, ecs_u32_t, ecs_u32_t);\
-    } else if ((right)->type == ecs_id(ecs_u16_t)) { \
-        OP(left, right, result, op, ecs_u16_t, ecs_u16_t);\
-    } else if ((right)->type == ecs_id(ecs_u8_t)) { \
-        OP(left, right, result, op, ecs_u8_t, ecs_u8_t);\
-    }
+FLECS_VALUE_BINARY(ecs_i8_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
+FLECS_VALUE_BINARY(ecs_i16_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
+FLECS_VALUE_BINARY(ecs_i32_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
+FLECS_VALUE_BINARY(ecs_i64_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
+FLECS_VALUE_BINARY(ecs_u8_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
+FLECS_VALUE_BINARY(ecs_u16_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
+FLECS_VALUE_BINARY(ecs_u32_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
+FLECS_VALUE_BINARY(ecs_u64_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_INTEGER)
+FLECS_VALUE_BINARY(ecs_f32_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_FLOAT)
+FLECS_VALUE_BINARY(ecs_f64_t, FLECS_VALUE_ARITHMETIC, FLECS_VALUE_FLOAT)
+FLECS_VALUE_BINARY(ecs_char_t, FLECS_VALUE_FLOAT, FLECS_VALUE_FLOAT)
+FLECS_VALUE_BINARY(ecs_bool_t, FLECS_VALUE_FLOAT, FLECS_VALUE_FLOAT)
+FLECS_VALUE_BINARY(ecs_entity_t, FLECS_VALUE_FLOAT, FLECS_VALUE_FLOAT)
 
-/* Unsigned + signed operations */
-#define ECS_BINARY_INT_OPS(left, right, result, op, OP)\
-    ECS_BINARY_UINT_OPS(left, right, result, op, OP)\
-     else if ((right)->type == ecs_id(ecs_i64_t)) { \
-        OP(left, right, result, op, ecs_i64_t, ecs_i64_t);\
-    } else if ((right)->type == ecs_id(ecs_i32_t)) { \
-        OP(left, right, result, op, ecs_i32_t, ecs_i32_t);\
-    } else if ((right)->type == ecs_id(ecs_i16_t)) { \
-        OP(left, right, result, op, ecs_i16_t, ecs_i16_t);\
-    } else if ((right)->type == ecs_id(ecs_i8_t)) { \
-        OP(left, right, result, op, ecs_i8_t, ecs_i8_t);\
-    }
-
-/* Unsigned + signed + floating point operations */
-#define ECS_BINARY_NUMBER_OPS(left, right, result, op, OP)\
-    ECS_BINARY_INT_OPS(left, right, result, op, OP)\
-      else if ((right)->type == ecs_id(ecs_f64_t)) { \
-        OP(left, right, result, op, ecs_f64_t, ecs_f64_t);\
-    } else if ((right)->type == ecs_id(ecs_f32_t)) { \
-        OP(left, right, result, op, ecs_f32_t, ecs_f32_t);\
-    }
-
-/* Combinations + error checking */
-
-#define ECS_BINARY_INT_OP(left, right, result, op)\
-    ECS_BINARY_INT_OPS(left, right, result, op, ECS_BOP) else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_UINT_OP(left, right, result, op)\
-    ECS_BINARY_UINT_OPS(left, right, result, op, ECS_BOP) else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_OP(left, right, result, op)\
-    ECS_BINARY_NUMBER_OPS(left, right, result, op, ECS_BOP) else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_COND_EQ_OP(left, right, result, op)\
-    ECS_BINARY_NUMBER_OPS(left, right, result, op, ECS_BOP_COND)\
-      else if ((right)->type == ecs_id(ecs_char_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_char_t);\
-    } else if ((right)->type == ecs_id(ecs_u8_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_u8_t);\
-    } else if ((right)->type == ecs_id(ecs_bool_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else if ((right)->type == ecs_id(ecs_entity_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_entity_t, ecs_entity_t);\
-    } else if ((right)->type == ecs_id(ecs_string_t)) { \
-        char *lstr = *(char**)(left)->ptr;\
-        char *rstr = *(char**)(right)->ptr;\
-        if (lstr && rstr) {\
-            *(bool*)(result)->ptr = ecs_os_strcmp(lstr, rstr) op 0;\
-        } else {\
-            *(bool*)(result)->ptr = lstr == rstr;\
-        }\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_COND_OP(left, right, result, op)\
-    ECS_BINARY_NUMBER_OPS(left, right, result, op, ECS_BOP_COND)\
-      else if ((right)->type == ecs_id(ecs_char_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_char_t);\
-    } else if ((right)->type == ecs_id(ecs_u8_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_u8_t);\
-    } else if ((right)->type == ecs_id(ecs_bool_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else if ((right)->type == ecs_id(ecs_entity_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_entity_t, ecs_entity_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_ASSIGN_OP(left, right, result, op)\
-    ECS_BINARY_NUMBER_OPS(left, right, result, op, ECS_BOP_ASSIGN)\
-
-#define ECS_BINARY_BOOL_OP(left, right, result, op)\
-    if ((right)->type == ecs_id(ecs_bool_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
+#undef FLECS_VALUE_BINARY
+#undef FLECS_VALUE_ARITHMETIC
+#undef FLECS_VALUE_INTEGER
+#undef FLECS_VALUE_FLOAT
+#undef FLECS_VALUE_COMPARE
 
 int flecs_value_binary(
     const ecs_script_t *script,
@@ -102490,76 +102414,53 @@ int flecs_value_binary(
     ecs_value_t *out,
     ecs_token_kind_t operator)
 {
-    if (operator == EcsTokDiv || operator == EcsTokMod) {
-        if (flecs_value_is_0(right)) {
-            flecs_expr_visit_error(script, node, "division by zero");
-            return -1;
-        }
+    if (operator == EcsTokAddAssign || operator == EcsTokMulAssign) {
+        left = out;
     }
-
-    switch(operator) {
-    case EcsTokAdd:
-        ECS_BINARY_OP(left, right, out, +);
-        break;
-    case EcsTokSub:
-        ECS_BINARY_OP(left, right, out, -);
-        break;
-    case EcsTokMul:
-        ECS_BINARY_OP(left, right, out, *);
-        break;
-    case EcsTokDiv:
-        ECS_BINARY_OP(left, right, out, /);
-        break;
-    case EcsTokMod:
-        ECS_BINARY_INT_OP(left, right, out, %);
-        break;
-    case EcsTokEq:
-        ECS_BINARY_COND_EQ_OP(left, right, out, ==);
-        break;
-    case EcsTokNeq:
-        ECS_BINARY_COND_EQ_OP(left, right, out, !=);
-        break;
-    case EcsTokGt:
-        ECS_BINARY_COND_OP(left, right, out, >);
-        break;
-    case EcsTokGtEq:
-        ECS_BINARY_COND_OP(left, right, out, >=);
-        break;
-    case EcsTokLt:
-        ECS_BINARY_COND_OP(left, right, out, <);
-        break;
-    case EcsTokLtEq:
-        ECS_BINARY_COND_OP(left, right, out, <=);
-        break;
-    case EcsTokAnd:
-        ECS_BINARY_BOOL_OP(left, right, out, &&);
-        break;
-    case EcsTokOr:
-        ECS_BINARY_BOOL_OP(left, right, out, ||);
-        break;
-    case EcsTokBitwiseAnd:
-        ECS_BINARY_INT_OP(left, right, out, &);
-        break;
-    case EcsTokBitwiseOr:
-        ECS_BINARY_INT_OP(left, right, out, |);
-        break;
-    case EcsTokShiftLeft:
-        ECS_BINARY_INT_OP(left, right, out, <<);
-        break;
-    case EcsTokShiftRight:
-        ECS_BINARY_INT_OP(left, right, out, >>);
-        break;
-    case EcsTokAddAssign:
-        ECS_BINARY_ASSIGN_OP(left, right, out, +=);
-        break;
-    case EcsTokMulAssign:
-        ECS_BINARY_ASSIGN_OP(left, right, out, *=);
-        break;
-    default:
-        ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
+    if ((operator == EcsTokDiv || operator == EcsTokMod) && flecs_value_is_0(right)) {
+        flecs_expr_visit_error(script, node, "division by zero");
+        return -1;
     }
-
-    return 0;
+    if (operator == EcsTokAnd || operator == EcsTokOr) {
+        bool l = *(bool*)left->ptr, r = *(bool*)right->ptr;
+        *(bool*)out->ptr = operator == EcsTokAnd ? l && r : l || r;
+        return 0;
+    }
+    if (right->type == ecs_id(ecs_string_t)) {
+        char *l = *(char**)left->ptr, *r = *(char**)right->ptr;
+        ecs_assert(operator == EcsTokEq || operator == EcsTokNeq, ECS_INTERNAL_ERROR, NULL);
+        *(bool*)out->ptr = l && r
+            ? (operator == EcsTokEq ? !ecs_os_strcmp(l, r) : ecs_os_strcmp(l, r) != 0)
+            : l == r;
+        return 0;
+    }
+    if (operator == EcsTokAdd || operator == EcsTokSub || operator == EcsTokMul ||
+        operator == EcsTokDiv || operator == EcsTokMod || operator == EcsTokBitwiseAnd ||
+        operator == EcsTokBitwiseOr || operator == EcsTokShiftLeft || operator == EcsTokShiftRight ||
+        operator == EcsTokAddAssign || operator == EcsTokMulAssign)
+    {
+        ecs_assert(out->type == right->type, ECS_INTERNAL_ERROR, NULL);
+    }
+#define FLECS_VALUE_DISPATCH(T)\
+    if (right->type == ecs_id(T)) {\
+        return flecs_value_binary_##T(left->ptr, right->ptr, out->ptr, operator);\
+    }
+    FLECS_VALUE_DISPATCH(ecs_i8_t)
+    FLECS_VALUE_DISPATCH(ecs_i16_t)
+    FLECS_VALUE_DISPATCH(ecs_i32_t)
+    FLECS_VALUE_DISPATCH(ecs_i64_t)
+    FLECS_VALUE_DISPATCH(ecs_u8_t)
+    FLECS_VALUE_DISPATCH(ecs_u16_t)
+    FLECS_VALUE_DISPATCH(ecs_u32_t)
+    FLECS_VALUE_DISPATCH(ecs_u64_t)
+    FLECS_VALUE_DISPATCH(ecs_f32_t)
+    FLECS_VALUE_DISPATCH(ecs_f64_t)
+    FLECS_VALUE_DISPATCH(ecs_char_t)
+    FLECS_VALUE_DISPATCH(ecs_bool_t)
+    FLECS_VALUE_DISPATCH(ecs_entity_t)
+#undef FLECS_VALUE_DISPATCH
+    ecs_abort(ECS_INTERNAL_ERROR, "invalid binary operand type");
+    return -1;
 }
 
 bool flecs_string_is_interpolated(
