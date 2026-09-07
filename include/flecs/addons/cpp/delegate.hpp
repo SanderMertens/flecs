@@ -456,32 +456,47 @@ struct entity_with_delegate : entity_with_delegate_impl<arg_list_t<Func>> {
 };
 
 /** Strip references from each-callback argument types. */
-template <typename ArgList>
+template <typename ArgList, bool Normalize>
 struct each_normalize_args;
 
-template <typename ... Args>
-struct each_normalize_args<arg_list<Args...>> {
-    using type = arg_list<remove_reference_t<Args>...>;
+template <bool Normalize, typename ... Args>
+struct each_normalize_args<arg_list<Args...>, Normalize> {
+    using type = arg_list<conditional_t<Normalize, remove_reference_t<Args>, Args>...>;
 };
 
 /** Extract the component argument list from an each-callback signature.
  * Skips a leading flecs::entity or flecs::iter argument when present. */
-template <typename ArgList, typename = int>
+template <typename ArgList, typename = int, bool Normalize = true>
 struct each_callback_args {
-    using type = typename each_normalize_args<ArgList>::type;
+    using type = typename each_normalize_args<ArgList, Normalize>::type;
 };
 
-template <typename First, typename ... Args>
+template <bool Normalize, typename First, typename ... Args>
 struct each_callback_args<arg_list<First, Args...>,
-    if_t<is_same<decay_t<First>, flecs::entity>::value>> {
-    using type = typename each_normalize_args<arg_list<Args...>>::type;
+    if_t<is_same<decay_t<First>, flecs::entity>::value>, Normalize> {
+    using type = typename each_normalize_args<arg_list<Args...>, Normalize>::type;
 };
 
-template <typename First, typename Second, typename ... Args>
+template <bool Normalize, typename First, typename Second, typename ... Args>
 struct each_callback_args<arg_list<First, Second, Args...>,
-    if_t<is_same<decay_t<First>, flecs::iter>::value>> {
-    using type = typename each_normalize_args<arg_list<Args...>>::type;
+    if_t<is_same<decay_t<First>, flecs::iter>::value>, Normalize> {
+    using type = typename each_normalize_args<arg_list<Args...>, Normalize>::type;
 };
+
+template <typename Delegate, ecs_iter_action_t Action, bool Run,
+    typename Desc, typename Func>
+void set_callback(Desc& desc, Func&& func) {
+    (Run ? desc.run : desc.callback) = Action;
+    (Run ? desc.run_ctx : desc.callback_ctx) = FLECS_NEW(Delegate)(FLECS_FWD(func));
+    (Run ? desc.run_ctx_free : desc.callback_ctx_free) = free_obj<Delegate>;
+}
+
+template <bool Run, typename Desc, typename Func, typename... Components>
+void set_each_callback(Desc& desc, Func&& func, arg_list<Components...>) {
+    using Delegate = each_delegate<decay_t<Func>, Components...>;
+    set_callback<Delegate, Run ? Delegate::run_each : Delegate::run, Run>(
+        desc, FLECS_FWD(func));
+}
 
 } // namespace _
 

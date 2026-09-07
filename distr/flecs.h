@@ -30700,32 +30700,47 @@ struct entity_with_delegate : entity_with_delegate_impl<arg_list_t<Func>> {
 };
 
 /** Strip references from each-callback argument types. */
-template <typename ArgList>
+template <typename ArgList, bool Normalize>
 struct each_normalize_args;
 
-template <typename ... Args>
-struct each_normalize_args<arg_list<Args...>> {
-    using type = arg_list<remove_reference_t<Args>...>;
+template <bool Normalize, typename ... Args>
+struct each_normalize_args<arg_list<Args...>, Normalize> {
+    using type = arg_list<conditional_t<Normalize, remove_reference_t<Args>, Args>...>;
 };
 
 /** Extract the component argument list from an each-callback signature.
  * Skips a leading flecs::entity or flecs::iter argument when present. */
-template <typename ArgList, typename = int>
+template <typename ArgList, typename = int, bool Normalize = true>
 struct each_callback_args {
-    using type = typename each_normalize_args<ArgList>::type;
+    using type = typename each_normalize_args<ArgList, Normalize>::type;
 };
 
-template <typename First, typename ... Args>
+template <bool Normalize, typename First, typename ... Args>
 struct each_callback_args<arg_list<First, Args...>,
-    if_t<is_same<decay_t<First>, flecs::entity>::value>> {
-    using type = typename each_normalize_args<arg_list<Args...>>::type;
+    if_t<is_same<decay_t<First>, flecs::entity>::value>, Normalize> {
+    using type = typename each_normalize_args<arg_list<Args...>, Normalize>::type;
 };
 
-template <typename First, typename Second, typename ... Args>
+template <bool Normalize, typename First, typename Second, typename ... Args>
 struct each_callback_args<arg_list<First, Second, Args...>,
-    if_t<is_same<decay_t<First>, flecs::iter>::value>> {
-    using type = typename each_normalize_args<arg_list<Args...>>::type;
+    if_t<is_same<decay_t<First>, flecs::iter>::value>, Normalize> {
+    using type = typename each_normalize_args<arg_list<Args...>, Normalize>::type;
 };
+
+template <typename Delegate, ecs_iter_action_t Action, bool Run,
+    typename Desc, typename Func>
+void set_callback(Desc& desc, Func&& func) {
+    (Run ? desc.run : desc.callback) = Action;
+    (Run ? desc.run_ctx : desc.callback_ctx) = FLECS_NEW(Delegate)(FLECS_FWD(func));
+    (Run ? desc.run_ctx_free : desc.callback_ctx_free) = free_obj<Delegate>;
+}
+
+template <bool Run, typename Desc, typename Func, typename... Components>
+void set_each_callback(Desc& desc, Func&& func, arg_list<Components...>) {
+    using Delegate = each_delegate<decay_t<Func>, Components...>;
+    set_callback<Delegate, Run ? Delegate::run_each : Delegate::run, Run>(
+        desc, FLECS_FWD(func));
+}
 
 } // namespace _
 
@@ -33449,7 +33464,7 @@ struct builder : IBuilder<Base, Components...> {
     template <typename Func, typename... Each>
     T run(Func&& func, Each&&... each_func) {
         using Delegate = run_delegate<decay_t<Func>>;
-        set_run<Delegate, Delegate::run>(FLECS_FWD(func));
+        set_callback<Delegate, Delegate::run, true>(desc_, FLECS_FWD(func));
         if constexpr (sizeof...(Each)) {
             return each(FLECS_FWD(each_func)...);
         } else {
@@ -33459,17 +33474,13 @@ struct builder : IBuilder<Base, Components...> {
 
     template <typename Func>
     T each(Func&& func) {
-        using Delegate = each_delegate<decay_t<Func>, Components...>;
-        desc_.callback = Delegate::run;
-        desc_.callback_ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        desc_.callback_ctx_free = free_obj<Delegate>;
+        set_each_callback<false>(desc_, FLECS_FWD(func), arg_list<Components...>{});
         return build();
     }
 
     template <typename Func>
     T run_each(Func&& func) {
-        using Delegate = each_delegate<decay_t<Func>, Components...>;
-        set_run<Delegate, Delegate::run_each>(FLECS_FWD(func));
+        set_each_callback<true>(desc_, FLECS_FWD(func), arg_list<Components...>{});
         return build();
     }
 
@@ -33491,13 +33502,6 @@ protected:
     TDesc desc_;
     world_t *world_;
 
-private:
-    template <typename Delegate, ecs_iter_action_t Run, typename Func>
-    void set_run(Func&& func) {
-        desc_.run = Run;
-        desc_.run_ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        desc_.run_ctx_free = free_obj<Delegate>;
-    }
 };
 
 } // namespace _
@@ -34208,70 +34212,26 @@ inline sparse_query<Components...>::operator flecs::query<Components...>() const
     return flecs::query_builder<Components...>(world_).build();
 }
 
-// world::each
 namespace _ {
 
-// Each with entity parameter
-template<typename Func, typename ... Args>
-struct query_delegate_w_ent;
-
-template<typename Func, typename E>
-struct query_delegate_w_ent<Func, arg_list<E> >
-{
-    query_delegate_w_ent(const flecs::world& world, Func&& func) {
+template <typename Func, typename... Components>
+void world_each(const flecs::world& world, Func&& func, arg_list<Components...>) {
+    if constexpr (sizeof...(Components) == 0) {
         ecs_entities_t entities = ecs_get_entities(ecs_get_world(world));
-
         for (int32_t i = 0; i < entities.alive_count; i ++) {
             func(flecs::entity(world, entities.ids[i]));
         }
+    } else {
+        world.query<Components...>().each(FLECS_FWD(func));
     }
-};
-
-template<typename Func, typename E, typename ... Args>
-struct query_delegate_w_ent<Func, arg_list<E, Args ...> >
-{
-    query_delegate_w_ent(const flecs::world& world, Func&& func) {
-        auto f = world.query<Args ...>();
-        f.each(FLECS_MOV(func));
-    }
-};
-
-// Each without entity parameter
-template<typename Func, typename ... Args>
-struct query_delegate_no_ent;
-
-template<typename Func, typename ... Args>
-struct query_delegate_no_ent<Func, arg_list<Args ...> >
-{
-    query_delegate_no_ent(const flecs::world& world, Func&& func) {
-        auto f = world.query<Args ...>();
-        f.each(FLECS_MOV(func));
-    }
-};
-
-// Switch between function with and without entity parameter
-template<typename Func, typename T = int>
-struct query_delegate;
-
-template <typename Func>
-struct query_delegate<Func, if_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
-    query_delegate(const flecs::world& world, Func&& func) {
-        query_delegate_w_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
-    }
-};
-
-template <typename Func>
-struct query_delegate<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
-    query_delegate(const flecs::world& world, Func&& func) {
-        query_delegate_no_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
-    }
-};
+}
 
 }
 
 template <typename Func>
 inline void world::each(Func&& func) const {
-    _::query_delegate<Func> f_delegate(*this, FLECS_MOV(func));
+    using Components = typename _::each_callback_args<arg_list_t<Func>, int, false>::type;
+    _::world_each(*this, FLECS_FWD(func), Components{});
 }
 
 template <typename T, typename Func>
@@ -34443,11 +34403,8 @@ struct observer final : entity
     observer& run(Func&& func) {
         using Delegate = typename _::run_delegate<
             typename std::decay<Func>::type>;
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ecs_observer_desc_t desc = {};
-        desc.run = Delegate::run;
-        desc.run_ctx = ctx;
-        desc.run_ctx_free = _::free_obj<Delegate>;
+        _::set_callback<Delegate, Delegate::run, true>(desc, FLECS_FWD(func));
         ecs_observer_update(world_, id_, &desc);
         return *this;
     }
@@ -34457,7 +34414,10 @@ struct observer final : entity
     observer& each(Func&& func) {
         using CallbackComponents =
             typename _::each_callback_args<arg_list_t<Func>>::type;
-        return each_callback(CallbackComponents{}, FLECS_FWD(func));
+        ecs_observer_desc_t desc = {};
+        _::set_each_callback<false>(desc, FLECS_FWD(func), CallbackComponents{});
+        ecs_observer_update(world_, id_, &desc);
+        return *this;
     }
 
     /** Replace the observer's run callback and use an each callback for
@@ -34466,7 +34426,10 @@ struct observer final : entity
     observer& run_each(Func&& func) {
         using CallbackComponents =
             typename _::each_callback_args<arg_list_t<Func>>::type;
-        return run_each_callback(CallbackComponents{}, FLECS_FWD(func));
+        ecs_observer_desc_t desc = {};
+        _::set_each_callback<true>(desc, FLECS_FWD(func), CallbackComponents{});
+        ecs_observer_update(world_, id_, &desc);
+        return *this;
     }
 
     /** Get the query for this observer. */
@@ -34474,32 +34437,6 @@ struct observer final : entity
         return flecs::query<>(ecs_observer_get(world_, id_)->query);
     }
 
-private:
-    template <typename ... CallbackComponents, typename Func>
-    observer& each_callback(_::arg_list<CallbackComponents...>, Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, CallbackComponents...>;
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ecs_observer_desc_t desc = {};
-        desc.callback = Delegate::run;
-        desc.callback_ctx = ctx;
-        desc.callback_ctx_free = _::free_obj<Delegate>;
-        ecs_observer_update(world_, id_, &desc);
-        return *this;
-    }
-
-    template <typename ... CallbackComponents, typename Func>
-    observer& run_each_callback(_::arg_list<CallbackComponents...>, Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, CallbackComponents...>;
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ecs_observer_desc_t desc = {};
-        desc.run = Delegate::run_each;
-        desc.run_ctx = ctx;
-        desc.run_ctx_free = _::free_obj<Delegate>;
-        ecs_observer_update(world_, id_, &desc);
-        return *this;
-    }
 };
 
 /** Mixin implementation. */
@@ -35027,11 +34964,8 @@ struct system final : entity
     system& run(Func&& func) {
         using Delegate = typename _::run_delegate<
             typename std::decay<Func>::type>;
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ecs_system_desc_t desc = {};
-        desc.run = Delegate::run;
-        desc.run_ctx = ctx;
-        desc.run_ctx_free = _::free_obj<Delegate>;
+        _::set_callback<Delegate, Delegate::run, true>(desc, FLECS_FWD(func));
         ecs_system_update(world_, id_, &desc);
         return *this;
     }
@@ -35041,7 +34975,10 @@ struct system final : entity
     system& each(Func&& func) {
         using CallbackComponents =
             typename _::each_callback_args<arg_list_t<Func>>::type;
-        return each_callback(CallbackComponents{}, FLECS_FWD(func));
+        ecs_system_desc_t desc = {};
+        _::set_each_callback<false>(desc, FLECS_FWD(func), CallbackComponents{});
+        ecs_system_update(world_, id_, &desc);
+        return *this;
     }
 
     /** Replace the system's run callback and use an each callback for
@@ -35050,7 +34987,10 @@ struct system final : entity
     system& run_each(Func&& func) {
         using CallbackComponents =
             typename _::each_callback_args<arg_list_t<Func>>::type;
-        return run_each_callback(CallbackComponents{}, FLECS_FWD(func));
+        ecs_system_desc_t desc = {};
+        _::set_each_callback<true>(desc, FLECS_FWD(func), CallbackComponents{});
+        ecs_system_update(world_, id_, &desc);
+        return *this;
     }
 
     /** Get the query for this system. */
@@ -35146,32 +35086,6 @@ void set_tick_source(flecs::entity e);
 
 #   endif
 
-private:
-    template <typename ... CallbackComponents, typename Func>
-    system& each_callback(_::arg_list<CallbackComponents...>, Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, CallbackComponents...>;
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ecs_system_desc_t desc = {};
-        desc.callback = Delegate::run;
-        desc.callback_ctx = ctx;
-        desc.callback_ctx_free = _::free_obj<Delegate>;
-        ecs_system_update(world_, id_, &desc);
-        return *this;
-    }
-
-    template <typename ... CallbackComponents, typename Func>
-    system& run_each_callback(_::arg_list<CallbackComponents...>, Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, CallbackComponents...>;
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ecs_system_desc_t desc = {};
-        desc.run = Delegate::run_each;
-        desc.run_ctx = ctx;
-        desc.run_ctx_free = _::free_obj<Delegate>;
-        ecs_system_update(world_, id_, &desc);
-        return *this;
-    }
 };
 
 /** Mixin implementation. */
@@ -35213,13 +35127,8 @@ inline system system_builder<Components...>::each_callback(
 {
     this->template prepend_each_callback_signature<CallbackComponents...>();
 
-    using Delegate = typename _::each_delegate<
-        typename std::decay<Func>::type, CallbackComponents...>;
-
-    auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-    this->desc_.run = Delegate::run_each;
-    this->desc_.run_ctx = ctx;
-    this->desc_.run_ctx_free = _::free_obj<Delegate>;
+    _::set_each_callback<true>(this->desc_, FLECS_FWD(func),
+        _::arg_list<CallbackComponents...>{});
     return system(this->world_, &this->desc_);
 }
 

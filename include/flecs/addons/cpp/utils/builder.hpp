@@ -41,7 +41,7 @@ struct builder : IBuilder<Base, Components...> {
     template <typename Func, typename... Each>
     T run(Func&& func, Each&&... each_func) {
         using Delegate = run_delegate<decay_t<Func>>;
-        set_run<Delegate, Delegate::run>(FLECS_FWD(func));
+        set_callback<Delegate, Delegate::run, true>(desc_, FLECS_FWD(func));
         if constexpr (sizeof...(Each)) {
             return each(FLECS_FWD(each_func)...);
         } else {
@@ -51,17 +51,13 @@ struct builder : IBuilder<Base, Components...> {
 
     template <typename Func>
     T each(Func&& func) {
-        using Delegate = each_delegate<decay_t<Func>, Components...>;
-        desc_.callback = Delegate::run;
-        desc_.callback_ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        desc_.callback_ctx_free = free_obj<Delegate>;
+        set_each_callback<false>(desc_, FLECS_FWD(func), arg_list<Components...>{});
         return build();
     }
 
     template <typename Func>
     T run_each(Func&& func) {
-        using Delegate = each_delegate<decay_t<Func>, Components...>;
-        set_run<Delegate, Delegate::run_each>(FLECS_FWD(func));
+        set_each_callback<true>(desc_, FLECS_FWD(func), arg_list<Components...>{});
         return build();
     }
 
@@ -83,13 +79,6 @@ protected:
     TDesc desc_;
     world_t *world_;
 
-private:
-    template <typename Delegate, ecs_iter_action_t Run, typename Func>
-    void set_run(Func&& func) {
-        desc_.run = Run;
-        desc_.run_ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        desc_.run_ctx_free = free_obj<Delegate>;
-    }
 };
 
 } // namespace _

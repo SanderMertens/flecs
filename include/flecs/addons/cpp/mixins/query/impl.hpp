@@ -343,70 +343,26 @@ inline sparse_query<Components...>::operator flecs::query<Components...>() const
     return flecs::query_builder<Components...>(world_).build();
 }
 
-// world::each
 namespace _ {
 
-// Each with entity parameter
-template<typename Func, typename ... Args>
-struct query_delegate_w_ent;
-
-template<typename Func, typename E>
-struct query_delegate_w_ent<Func, arg_list<E> >
-{
-    query_delegate_w_ent(const flecs::world& world, Func&& func) {
+template <typename Func, typename... Components>
+void world_each(const flecs::world& world, Func&& func, arg_list<Components...>) {
+    if constexpr (sizeof...(Components) == 0) {
         ecs_entities_t entities = ecs_get_entities(ecs_get_world(world));
-
         for (int32_t i = 0; i < entities.alive_count; i ++) {
             func(flecs::entity(world, entities.ids[i]));
         }
+    } else {
+        world.query<Components...>().each(FLECS_FWD(func));
     }
-};
-
-template<typename Func, typename E, typename ... Args>
-struct query_delegate_w_ent<Func, arg_list<E, Args ...> >
-{
-    query_delegate_w_ent(const flecs::world& world, Func&& func) {
-        auto f = world.query<Args ...>();
-        f.each(FLECS_MOV(func));
-    }
-};
-
-// Each without entity parameter
-template<typename Func, typename ... Args>
-struct query_delegate_no_ent;
-
-template<typename Func, typename ... Args>
-struct query_delegate_no_ent<Func, arg_list<Args ...> >
-{
-    query_delegate_no_ent(const flecs::world& world, Func&& func) {
-        auto f = world.query<Args ...>();
-        f.each(FLECS_MOV(func));
-    }
-};
-
-// Switch between function with and without entity parameter
-template<typename Func, typename T = int>
-struct query_delegate;
-
-template <typename Func>
-struct query_delegate<Func, if_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
-    query_delegate(const flecs::world& world, Func&& func) {
-        query_delegate_w_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
-    }
-};
-
-template <typename Func>
-struct query_delegate<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
-    query_delegate(const flecs::world& world, Func&& func) {
-        query_delegate_no_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
-    }
-};
+}
 
 }
 
 template <typename Func>
 inline void world::each(Func&& func) const {
-    _::query_delegate<Func> f_delegate(*this, FLECS_MOV(func));
+    using Components = typename _::each_callback_args<arg_list_t<Func>, int, false>::type;
+    _::world_each(*this, FLECS_FWD(func), Components{});
 }
 
 template <typename T, typename Func>
