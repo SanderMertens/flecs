@@ -69,16 +69,16 @@ void register_lifecycle_actions(
         // If the component is non-trivial, register component lifecycle actions.
         // Depending on the type, not all callbacks may be available.
         ecs_type_hooks_t cl{};
-        cl.ctor = ctor<T>(cl.flags);
-        cl.dtor = dtor<T>(cl.flags);
+        cl.ctor = xtor<T, false>(cl.flags);
+        cl.dtor = xtor<T, true>(cl.flags);
 
-        cl.copy = copy<T>(cl.flags);
-        cl.copy_ctor = copy_ctor<T>(cl.flags);
-        cl.move = move<T>(cl.flags);
-        cl.move_ctor = move_ctor<T>(cl.flags);
+        cl.copy = transfer<T, false, false>(cl.flags);
+        cl.copy_ctor = transfer<T, false, true>(cl.flags);
+        cl.move = transfer<T, true, false>(cl.flags);
+        cl.move_ctor = transfer<T, true, true>(cl.flags);
 
-        cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
-        cl.move_dtor = move_dtor<T>(cl.flags);
+        cl.ctor_move_dtor = transfer<T, true, true, true>(cl.flags);
+        cl.move_dtor = transfer<T, true, false, true>(cl.flags);
 
         cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
         ecs_set_hooks_id(world, component, &cl);

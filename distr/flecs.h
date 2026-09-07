@@ -25308,253 +25308,83 @@ void* get_mut_ptr(
 namespace flecs 
 {
 
-namespace _ 
-{
-
-// T()
-// Can't coexist with T(flecs::entity) or T(flecs::world, flecs::entity).
-template <typename T>
-void ctor_impl(void *ptr, int32_t count, const ecs_type_info_t *info) {
-    (void)info; ecs_assert(info->size == ECS_SIZEOF(T),
-        ECS_INTERNAL_ERROR, nullptr);
-    T *arr = static_cast<T*>(ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&arr[i], T);
-    }
-}
-
-// ~T()
-template <typename T>
-void dtor_impl(void *ptr, int32_t count, const ecs_type_info_t *info) {
-    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, nullptr);
-    T *arr = static_cast<T*>(ptr);
-    for (int i = 0; i < count; i ++) {
-        arr[i].~T();
-    }
-}
-
-// T& operator=(const T&)
-template <typename T>
-void copy_impl(void *dst_ptr, const void *src_ptr, int32_t count, 
-    const ecs_type_info_t *info)
-{
-    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, nullptr);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    const T *src_arr = static_cast<const T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        dst_arr[i] = src_arr[i];
-    }
-}
-
-// T& operator=(T&&)
-template <typename T>
-void move_impl(void *dst_ptr, void *src_ptr, int32_t count, 
-    const ecs_type_info_t *info)
-{
-    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, nullptr);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    T *src_arr = static_cast<T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        dst_arr[i] = FLECS_MOV(src_arr[i]);
-    }
-}
-
-// T(const T&)
-template <typename T>
-void copy_ctor_impl(void *dst_ptr, const void *src_ptr, int32_t count,
-    const ecs_type_info_t *info)
-{
-    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, nullptr);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    const T *src_arr = static_cast<const T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(src_arr[i]));
-    }
-}
-
-// T(T&&)
-template <typename T>
-void move_ctor_impl(void *dst_ptr, void *src_ptr, int32_t count, 
-    const ecs_type_info_t *info)
-{
-    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, nullptr);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    T *src_arr = static_cast<T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(FLECS_MOV(src_arr[i])));
-    }
-}
-
-// T(T&&), ~T()
-// Typically used when moving to a new table, and removing from the old table.
-template <typename T>
-void ctor_move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
-    const ecs_type_info_t *info)
-{
-    (void)info; ecs_assert(info->size == ECS_SIZEOF(T),
-        ECS_INTERNAL_ERROR, nullptr);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    T *src_arr = static_cast<T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(FLECS_MOV(src_arr[i])));
-        src_arr[i].~T();
-    }
-}
-
-// Move assign + dtor (non-trivial move assignment).
-// Typically used when moving a component to a deleted component.
-template <typename T, if_not_t<
-    std::is_trivially_move_assignable<T>::value > = 0>
-void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count, 
-    const ecs_type_info_t *info)
-{
-    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, nullptr);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    T *src_arr = static_cast<T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        // Move assignment should free dst and assign dst to src.
-        dst_arr[i] = FLECS_MOV(src_arr[i]);
-        // Destruct src. Move should have left the object in a state where it no
-        // longer holds resources, but it still needs to be destructed.
-        src_arr[i].~T();
-    }
-}
-
-// Move assign + dtor (trivial move assignment).
-// Typically used when moving a component to a deleted component.
-template <typename T, if_t<
-    std::is_trivially_move_assignable<T>::value > = 0>
-void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count, 
-    const ecs_type_info_t *info)
-{
-    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, nullptr);
-    T *dst_arr = static_cast<T*>(dst_ptr);
-    T *src_arr = static_cast<T*>(src_ptr);
-    for (int i = 0; i < count; i ++) {
-        // Clean up resources of dst.
-        dst_arr[i].~T();
-        // Copy src to dst.
-        dst_arr[i] = FLECS_MOV(src_arr[i]);
-        // No need to destruct src. Since this is a trivial move, the code
-        // should be agnostic to the address of the component, which means we
-        // can pretend nothing got destructed.
-    }
-}
-
-} // namespace _
-
-/** Trait to test if a type is constructible by Flecs. */
 template <typename T>
 struct is_flecs_constructible {
-    static constexpr bool value = 
-        std::is_default_constructible<actual_type_t<T>>::value;
+    static constexpr bool value = std::is_default_constructible<actual_type_t<T>>::value;
 };
 
-namespace _
-{
+namespace _ {
 
-template <typename T>
-ecs_xtor_t ctor(ecs_flags32_t &flags) {
-    if constexpr (is_trivially_constructible_v<T>) {
+template <typename T, bool Destroy>
+ecs_xtor_t xtor(ecs_flags32_t& flags) {
+    constexpr bool trivial = Destroy ? is_trivially_destructible_v<T> : is_trivially_constructible_v<T>;
+    constexpr bool legal = Destroy ? is_destructible_v<T> : is_default_constructible_v<T>;
+    if constexpr (trivial) {
         return nullptr;
-    } else if constexpr (!is_default_constructible_v<T>) {
-        flags |= ECS_TYPE_HOOK_CTOR_ILLEGAL;
+    } else if constexpr (!legal) {
+        flecs_static_assert(!Destroy || always_false<T>::value, "component type must be destructible");
+        flags |= Destroy ? ECS_TYPE_HOOK_DTOR_ILLEGAL : ECS_TYPE_HOOK_CTOR_ILLEGAL;
         return nullptr;
     } else {
-        return ctor_impl<T>;
+        return [](void *ptr, int32_t count, const ecs_type_info_t *info) {
+            (void)info;
+            ecs_assert(info->size == ECS_SIZEOF(T), ECS_INTERNAL_ERROR, nullptr);
+            T *arr = static_cast<T*>(ptr);
+            for (int32_t i = 0; i < count; i ++) {
+                if constexpr (Destroy) {
+                    arr[i].~T();
+                } else {
+                    FLECS_PLACEMENT_NEW(&arr[i], T);
+                }
+            }
+        };
     }
 }
 
-template <typename T>
-ecs_xtor_t dtor(ecs_flags32_t &flags) {
-    if constexpr (is_trivially_destructible_v<T>) {
+template <typename T, bool Move, bool Construct, bool Destroy = false>
+conditional_t<Move, ecs_move_t, ecs_copy_t> transfer(ecs_flags32_t& flags) {
+    constexpr bool trivial = (Construct
+        ? (Move ? is_trivially_move_constructible_v<T> : is_trivially_copy_constructible_v<T>)
+        : (Move ? is_trivially_move_assignable_v<T> : is_trivially_copyable_v<T>)) &&
+        (!Destroy || is_trivially_destructible_v<T>);
+    constexpr bool legal = (Construct
+        ? (Move ? is_move_constructible_v<T> : is_copy_constructible_v<T>)
+        : (Move ? is_move_assignable_v<T> : is_copy_assignable_v<T>)) &&
+        (!Destroy || is_destructible_v<T>);
+    constexpr auto illegal = Move
+        ? (Construct
+            ? (Destroy ? ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL : ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL)
+            : (Destroy ? ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL : ECS_TYPE_HOOK_MOVE_ILLEGAL))
+        : (Construct ? ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL : ECS_TYPE_HOOK_COPY_ILLEGAL);
+    if constexpr (trivial) {
         return nullptr;
-    } else if constexpr (!is_destructible_v<T>) {
-        flecs_static_assert(always_false<T>::value, 
-            "component type must be destructible");
-        flags |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
-        return nullptr;
-    } else {
-        return dtor_impl<T>;
-    }
-}
-
-template <typename T>
-ecs_copy_t copy(ecs_flags32_t &flags) {
-    if constexpr (is_trivially_copyable_v<T>) {
-        return nullptr;
-    } else if constexpr (!is_copy_assignable_v<T>) {
-        flags |= ECS_TYPE_HOOK_COPY_ILLEGAL;
-        return nullptr;
-    } else {
-        return copy_impl<T>;
-    }
-}
-
-template <typename T>
-ecs_move_t move(ecs_flags32_t &flags) {
-    if constexpr (is_trivially_move_assignable_v<T>) {
-        return nullptr;
-    } else if constexpr (!is_move_assignable_v<T>) {
-        flags |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
+    } else if constexpr (!legal) {
+        flags |= illegal;
         return nullptr;
     } else {
-        return move_impl<T>;
-    }
-}
-
-template <typename T>
-ecs_copy_t copy_ctor(ecs_flags32_t &flags) {
-    if constexpr (is_trivially_copy_constructible_v<T>) {
-        return nullptr;
-    } else if constexpr (!is_copy_constructible_v<T>) {
-        flags |= ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL;
-        return nullptr;
-    } else {
-        return copy_ctor_impl<T>;
-    }
-}
-
-template <typename T>
-ecs_move_t move_ctor(ecs_flags32_t &flags) {
-    if constexpr (is_trivially_move_constructible_v<T>) {
-        return nullptr;
-    } else if constexpr (!is_move_constructible_v<T>) {
-        flags |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
-        return nullptr;
-    } else {
-        return move_ctor_impl<T>;
-    }
-}
-
-template <typename T>
-ecs_move_t ctor_move_dtor(ecs_flags32_t &flags) {
-    if constexpr (is_trivially_move_constructible_v<T> && is_trivially_destructible_v<T>) {
-        return nullptr;
-    } else if constexpr (!is_move_constructible_v<T> || !is_destructible_v<T>) {
-        flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
-        return nullptr;
-    } else {
-        return ctor_move_dtor_impl<T>;
-    }
-}
-
-template <typename T>
-ecs_move_t move_dtor(ecs_flags32_t &flags) {
-    if constexpr (is_trivially_move_assignable_v<T> && is_trivially_destructible_v<T>) {
-        return nullptr;
-    } else if constexpr (!is_move_assignable_v<T> || !is_destructible_v<T>) {
-        flags |= ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
-        return nullptr;
-    } else {
-        return move_dtor_impl<T>;
+        return [](void *dst_ptr, conditional_t<Move, void*, const void*> src_ptr,
+            int32_t count, const ecs_type_info_t *info)
+        {
+            (void)info;
+            ecs_assert(info->size == ECS_SIZEOF(T), ECS_INTERNAL_ERROR, nullptr);
+            T *dst = static_cast<T*>(dst_ptr);
+            auto src = static_cast<conditional_t<Move, T*, const T*>>(src_ptr);
+            for (int32_t i = 0; i < count; i ++) {
+                using Value = conditional_t<Move, T&&, const T&>;
+                Value value = static_cast<Value>(src[i]);
+                if constexpr (Destroy && !Construct && is_trivially_move_assignable_v<T>) {
+                    dst[i].~T();
+                }
+                if constexpr (Construct) {
+                    FLECS_PLACEMENT_NEW(&dst[i], T(FLECS_FWD(value)));
+                } else {
+                    dst[i] = FLECS_FWD(value);
+                }
+                if constexpr (Destroy && (Construct || !is_trivially_move_assignable_v<T>)) {
+                    src[i].~T();
+                }
+            }
+        };
     }
 }
 
@@ -31353,16 +31183,16 @@ void register_lifecycle_actions(
         // If the component is non-trivial, register component lifecycle actions.
         // Depending on the type, not all callbacks may be available.
         ecs_type_hooks_t cl{};
-        cl.ctor = ctor<T>(cl.flags);
-        cl.dtor = dtor<T>(cl.flags);
+        cl.ctor = xtor<T, false>(cl.flags);
+        cl.dtor = xtor<T, true>(cl.flags);
 
-        cl.copy = copy<T>(cl.flags);
-        cl.copy_ctor = copy_ctor<T>(cl.flags);
-        cl.move = move<T>(cl.flags);
-        cl.move_ctor = move_ctor<T>(cl.flags);
+        cl.copy = transfer<T, false, false>(cl.flags);
+        cl.copy_ctor = transfer<T, false, true>(cl.flags);
+        cl.move = transfer<T, true, false>(cl.flags);
+        cl.move_ctor = transfer<T, true, true>(cl.flags);
 
-        cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
-        cl.move_dtor = move_dtor<T>(cl.flags);
+        cl.ctor_move_dtor = transfer<T, true, true, true>(cl.flags);
+        cl.move_dtor = transfer<T, true, false, true>(cl.flags);
 
         cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
         ecs_set_hooks_id(world, component, &cl);
