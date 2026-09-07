@@ -66,7 +66,6 @@ typedef enum {
     EcsQueryIdsLeft,        /* Find ids in use that match (*, T) wildcard */
     EcsQueryIdsAll,         /* Find all non-pair ids in use that match (*) */
     EcsQueryEach,           /* Iterate entities in table, populate entity variable */
-    EcsQueryStore,          /* Store table or entity in variable */
     EcsQueryReset,          /* Reset value of variable to wildcard (*) */
     EcsQueryOr,             /* Or operator */
     EcsQueryOptional,       /* Optional operator */

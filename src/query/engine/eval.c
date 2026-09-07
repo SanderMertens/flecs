@@ -1057,19 +1057,6 @@ static bool flecs_query_each(
     return true;
 }
 
-static bool flecs_query_store(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    if (!redo) {
-        flecs_query_var_set_entity(op, op->src.var, op->first.entity, ctx);
-        return true;
-    } else {
-        return false;
-    }
-}
-
 static bool flecs_query_reset(
     const ecs_query_op_t *op,
     bool redo,
@@ -1685,7 +1672,6 @@ static bool flecs_query_dispatch(
     case EcsQueryIdsLeft: return flecs_query_idsleft(op, redo, ctx);
     case EcsQueryIdsAll: return flecs_query_idsall(op, redo, ctx);
     case EcsQueryEach: return flecs_query_each(op, redo, ctx);
-    case EcsQueryStore: return flecs_query_store(op, redo, ctx);
     case EcsQueryReset: return flecs_query_reset(op, redo, ctx);
     case EcsQueryOr: return flecs_query_or(op, redo, ctx);
     case EcsQueryOptional: return flecs_query_optional(op, redo, ctx);

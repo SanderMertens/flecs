@@ -35,7 +35,6 @@ const char* flecs_query_op_str(
     case EcsQueryIdsLeft:        return "idsl        ";
     case EcsQueryIdsAll:         return "idsa        ";
     case EcsQueryEach:           return "each        ";
-    case EcsQueryStore:          return "store       ";
     case EcsQueryReset:          return "reset       ";
     case EcsQueryOr:             return "or          ";
     case EcsQueryOptional:       return "option      ";
