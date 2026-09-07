@@ -14518,80 +14518,53 @@ static void flecs_observer_poly_fini(void *ptr) {
     flecs_observer_fini(ptr);
 }
 
-/* Small helper that allows simple observers which are rejected by the regular
- * query fast path to be created without relying on query plans. */
-static bool flecs_observer_finalize_simple_special(
+static bool flecs_observer_init_trivial(
     ecs_world_t *world,
-    ecs_query_t *q,
-    const ecs_query_desc_t *desc)
+    const ecs_query_desc_t *desc,
+    ecs_term_t *term,
+    ecs_flags32_t *flags)
 {
-    if (desc->expr || desc->order_by_callback || desc->group_by_callback) {
-        return false;
-    }
-
-    if (!ecs_term_is_initialized(&desc->terms[0]) ||
+    if (desc->expr || desc->order_by_callback || desc->group_by_callback ||
+        !ecs_term_is_initialized(&desc->terms[0]) ||
         ecs_term_is_initialized(&desc->terms[1]))
     {
         return false;
     }
-
-    ecs_term_t term = desc->terms[0];
+    *term = desc->terms[0];
     ecs_query_validator_ctx_t ctx = {
-        .world = world,
-        .desc = desc,
-        .term = &term
+        .world = world, .desc = desc, .term = term
     };
-
-    if (flecs_term_finalize(world, &term, &ctx)) {
+    if (flecs_term_finalize(world, term, &ctx)) {
         return false;
     }
-
-    bool is_wildcard = ecs_id_is_wildcard(term.id);
-    bool is_any = term.id == EcsAny;
-    bool is_disabled = term.id == EcsDisabled;
-    bool is_prefab = false;
-
-    if ((!is_wildcard && !is_disabled && !is_prefab) ||
-        term.oper != EcsAnd ||
-        !ecs_term_match_this(&term) ||
-        (is_wildcard && !is_any && !(term.flags_ & EcsTermIsCacheable)) ||
-        ((term.src.id & EcsTraverseFlags) != EcsSelf) || term.trav ||
-        (term.flags_ & (EcsTermIsToggle|EcsTermDontFragment|
-            EcsTermIsSparse|EcsTermTransitive|EcsTermReflexive|
-            EcsTermIdInherited|EcsTermIsMember)))
+    bool wildcard = ecs_id_is_wildcard(term->id);
+    bool disabled = term->id == EcsDisabled;
+    bool prefab = false;
+    bool special = wildcard || disabled || prefab;
+    if (term->oper != EcsAnd || !ecs_term_match_this(term) ||
+        ((term->src.id & EcsTraverseFlags) != EcsSelf) || term->trav ||
+        ECS_PAIR_FIRST(term->id) == EcsChildOf ||
+        (term->flags_ & (EcsTermIsToggle|EcsTermDontFragment|EcsTermIsSparse|
+            EcsTermTransitive|EcsTermReflexive|EcsTermIdInherited|EcsTermIsMember)) ||
+        (!special && (!(term->flags_ & EcsTermIsTrivial) || term->inout)) ||
+        (wildcard && term->id != EcsAny && !(term->flags_ & EcsTermIsCacheable)))
     {
         return false;
     }
-
-    q->terms[0] = term;
-    q->ids[0] = term.id;
-    q->term_count = 1;
-    q->field_count = 1;
-    q->set_fields = 1;
-    q->flags = desc->flags | EcsQueryMatchThis | EcsQueryMatchOnlyThis |
-        EcsQueryMatchOnlySelf;
-    if (is_wildcard) {
-        q->flags |= EcsQueryMatchWildcards;
-    } else {
-        q->flags |= EcsQueryIsTrivial;
-        q->static_id_fields = 1;
+    ecs_component_record_t *cr = flecs_components_get(world, term->id);
+    ecs_flags32_t cr_flags = cr ? cr->flags :
+        flecs_component_get_flags(world, term->id);
+    if (cr_flags & (EcsIdSparse|EcsIdDontFragment)) {
+        return false;
     }
-    if (is_disabled) {
-        q->flags |= EcsQueryMatchDisabled;
+    *flags = desc->flags;
+    if (disabled) {
+        *flags |= EcsQueryMatchDisabled;
     }
-    if (is_prefab) {
-        q->flags |= EcsQueryMatchPrefab;
+    if (prefab) {
+        *flags |= EcsQueryMatchPrefab;
     }
-
-    const ecs_type_info_t *ti = ecs_get_type_info(world, term.id);
-    if (ti) {
-        q->sizes[0] = ti->size;
-        q->data_fields = 1;
-        q->read_fields = 1;
-        q->write_fields = 1;
-    }
-
-    flecs_component_lock(world, term.id);
+    flecs_component_lock(world, term->id);
     return true;
 }
 
@@ -14623,71 +14596,24 @@ ecs_observer_t* flecs_observer_init(
     query_desc.entity = 0;
     query_desc.cache_kind = EcsQueryCacheNone;
 
-    ecs_query_t *query = NULL;
-    
-    /* Temporary arrays for dummy query */
-    ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
-    ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};
-    ecs_id_t ids[FLECS_TERM_COUNT_MAX] = {0};
-
-    ecs_query_t dummy_query = {
-        .terms = terms,
-        .sizes = sizes,
-        .ids = ids
-    };
-
-    if (desc->events[0] != EcsMonitor) {
-        bool simple = false;
-        simple = flecs_query_finalize_simple(
-            world, &dummy_query, &query_desc);
-        if (!simple) {
-            simple = flecs_observer_finalize_simple_special(
-                world, &dummy_query, &query_desc);
-        }
-
-        if (simple) {
-            /* Flag is set if query increased the keep_alive count of the 
-             * queried for component, which prevents deleting the component
-             * while queries are still alive. */
-            bool trivial_observer = (dummy_query.term_count == 1) &&
-                ((dummy_query.flags & EcsQueryIsTrivial) ||
-                    ((dummy_query.flags & EcsQueryMatchWildcards) &&
-                     ((dummy_query.terms[0].flags_ & EcsTermIsCacheable) ||
-                        (dummy_query.terms[0].id == EcsAny)) &&
-                     (dummy_query.terms[0].oper == EcsAnd))) &&
-                (dummy_query.flags & EcsQueryMatchOnlySelf) &&
-                !dummy_query.row_fields;
-
-            if (trivial_observer &&
-                ECS_PAIR_FIRST(dummy_query.terms[0].id) != EcsChildOf)
-            {
-                dummy_query.flags |= desc->query.flags;
-                query = &dummy_query;
-            } else {
-                /* We're going to create an actual query, so undo the keep_alive
-                 * increment of the dummy_query. */
-                int32_t i, count = dummy_query.term_count;
-                for (i = 0; i < count; i ++) {
-                    ecs_term_t *term = &terms[i];
-                    flecs_component_unlock(world, term->id);
-                }
-            }
-        }
-    }
-
-    /* Create query */
-    if (!query) {
-        query = o->query = ecs_query_init(
-            world, &query_desc);
-        if (query == NULL) {
+    ecs_term_t trivial_term;
+    ecs_term_t *terms = &trivial_term;
+    int32_t term_count = 1;
+    ecs_flags32_t query_flags = 0;
+    bool trivial = desc->events[0] != EcsMonitor &&
+        flecs_observer_init_trivial(world, &query_desc, &trivial_term, &query_flags);
+    if (!trivial) {
+        ecs_query_t *query = o->query = ecs_query_init(world, &query_desc);
+        if (!query) {
             flecs_observer_fini(o);
-            return 0;
+            return NULL;
         }
-
-        flecs_poly_assert(query, ecs_query_t);
+        terms = query->terms;
+        term_count = query->term_count;
+        query_flags = query->flags;
     }
 
-    ecs_check(query->term_count > 0, ECS_INVALID_PARAMETER,
+    ecs_check(term_count > 0, ECS_INVALID_PARAMETER,
         "observer must have at least one term");
 
     int i;
@@ -14705,7 +14631,7 @@ ecs_observer_t* flecs_observer_init(
     o->world = world;
     impl->term_index = desc->term_index_;
     impl->flags |= desc->flags_ | 
-        (query->flags & (EcsQueryMatchPrefab|EcsQueryMatchDisabled));
+        (query_flags & (EcsQueryMatchPrefab|EcsQueryMatchDisabled));
 
     ecs_check(!(desc->yield_existing && 
         (desc->flags_ & (EcsObserverYieldOnCreate|EcsObserverYieldOnDelete))), 
@@ -14753,8 +14679,8 @@ ecs_observer_t* flecs_observer_init(
 
     bool multi = false;
 
-    if (query->term_count == 1 && !desc->last_event_id) {
-        ecs_term_t *term = &query->terms[0];
+    if (term_count == 1 && !desc->last_event_id) {
+        ecs_term_t *term = &terms[0];
         /* If the query has a single term but it is a *From operator, we
          * need to create a multi observer */
         multi |= (term->oper == EcsAndFrom) || (term->oper == EcsOrFrom);
@@ -14765,8 +14691,8 @@ ecs_observer_t* flecs_observer_init(
     }
 
     bool is_monitor = impl->flags & EcsObserverIsMonitor;
-    if (query->term_count == 1 && !is_monitor && !multi) {
-        ecs_term_t *term = &query->terms[0];
+    if (term_count == 1 && !is_monitor && !multi) {
+        ecs_term_t *term = &terms[0];
         term->field_index = flecs_ito(int8_t, desc->term_index_);
         if (flecs_uni_observer_init(world, o, term->id, desc)) {
             goto error;
