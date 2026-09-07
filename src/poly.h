@@ -113,4 +113,11 @@ ecs_observable_t* flecs_get_observable(
 flecs_poly_dtor_t* flecs_get_dtor(
     const ecs_poly_t *poly);
 
+void flecs_poly_update_ctx(
+    void **ctx,
+    ecs_ctx_free_t *ctx_free,
+    void *value,
+    ecs_ctx_free_t free_value,
+    bool preserve_null);
+
 #endif

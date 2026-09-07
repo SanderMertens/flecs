@@ -3583,6 +3583,13 @@ ecs_observable_t* flecs_get_observable(
 flecs_poly_dtor_t* flecs_get_dtor(
     const ecs_poly_t *poly);
 
+void flecs_poly_update_ctx(
+    void **ctx,
+    ecs_ctx_free_t *ctx_free,
+    void *value,
+    ecs_ctx_free_t free_value,
+    bool preserve_null);
+
 #endif
 
 #ifndef FLECS_STAGE_H
@@ -16783,29 +16790,12 @@ ecs_entity_t ecs_observer_update(
         "entity %s is not an observer, use ecs_observer_init() to create it",
             flecs_errstr(ecs_get_path(world, entity)));
 
-    /* desc->ctx == NULL means "do not touch ctx", not "set ctx to NULL".
-     * Only free the existing ctx when the caller is explicitly replacing it. */
-    if (desc->ctx && desc->ctx != o->ctx) {
-        if (o->ctx_free && o->ctx) {
-            o->ctx_free(o->ctx);
-        }
-    }
-
-    if (o->callback_ctx_free) {
-        if (o->callback_ctx && o->callback_ctx != desc->callback_ctx) {
-            o->callback_ctx_free(o->callback_ctx);
-            o->callback_ctx_free = NULL;
-            o->callback_ctx = NULL;
-        }
-    }
-
-    if (o->run_ctx_free) {
-        if (o->run_ctx && o->run_ctx != desc->run_ctx) {
-            o->run_ctx_free(o->run_ctx);
-            o->run_ctx_free = NULL;
-            o->run_ctx = NULL;
-        }
-    }
+    flecs_poly_update_ctx(&o->ctx, &o->ctx_free,
+        desc->ctx, desc->ctx_free, true);
+    flecs_poly_update_ctx(&o->callback_ctx, &o->callback_ctx_free,
+        desc->callback_ctx, desc->callback_ctx_free, false);
+    flecs_poly_update_ctx(&o->run_ctx, &o->run_ctx_free,
+        desc->run_ctx, desc->run_ctx_free, false);
 
     if (desc->run) {
         o->run = desc->run;
@@ -16819,30 +16809,6 @@ ecs_entity_t ecs_observer_update(
         if (!desc->run) {
             o->run = NULL;
         }
-    }
-
-    if (desc->ctx) {
-        o->ctx = desc->ctx;
-    }
-
-    if (desc->callback_ctx) {
-        o->callback_ctx = desc->callback_ctx;
-    }
-
-    if (desc->run_ctx) {
-        o->run_ctx = desc->run_ctx;
-    }
-
-    if (desc->ctx_free) {
-        o->ctx_free = desc->ctx_free;
-    }
-
-    if (desc->callback_ctx_free) {
-        o->callback_ctx_free = desc->callback_ctx_free;
-    }
-
-    if (desc->run_ctx_free) {
-        o->run_ctx_free = desc->run_ctx_free;
     }
 
     flecs_poly_modified(world, entity, ecs_observer_t);
@@ -18601,6 +18567,28 @@ flecs_poly_dtor_t* flecs_get_dtor(
     const ecs_poly_t *poly)
 {
     return (flecs_poly_dtor_t*)assert_mixin(poly, EcsMixinDtor);
+}
+
+void flecs_poly_update_ctx(
+    void **ctx,
+    ecs_ctx_free_t *ctx_free,
+    void *value,
+    ecs_ctx_free_t free_value,
+    bool preserve_null)
+{
+    if (*ctx != value && (!preserve_null || value) && *ctx && *ctx_free) {
+        (*ctx_free)(*ctx);
+        if (!preserve_null) {
+            *ctx = NULL;
+            *ctx_free = NULL;
+        }
+    }
+    if (value) {
+        *ctx = value;
+    }
+    if (free_value) {
+        *ctx_free = free_value;
+    }
 }
 
 ecs_ref_t ecs_ref_init_id(
@@ -75716,29 +75704,12 @@ ecs_entity_t ecs_system_update(
         "entity %s is not a system, use ecs_system_init() to create it",
             flecs_errstr(ecs_get_path(world, entity)));
 
-    /* desc->ctx == NULL means "do not touch ctx", not "set ctx to NULL".
-     * Only free the existing ctx when the caller is explicitly replacing it. */
-    if (desc->ctx && desc->ctx != system->ctx) {
-        if (system->ctx_free && system->ctx) {
-            system->ctx_free(system->ctx);
-        }
-    }
-
-    if (system->callback_ctx_free) {
-        if (system->callback_ctx && system->callback_ctx != desc->callback_ctx) {
-            system->callback_ctx_free(system->callback_ctx);
-            system->callback_ctx_free = NULL;
-            system->callback_ctx = NULL;
-        }
-    }
-
-    if (system->run_ctx_free) {
-        if (system->run_ctx && system->run_ctx != desc->run_ctx) {
-            system->run_ctx_free(system->run_ctx);
-            system->run_ctx_free = NULL;
-            system->run_ctx = NULL;
-        }
-    }
+    flecs_poly_update_ctx(&system->ctx, &system->ctx_free,
+        desc->ctx, desc->ctx_free, true);
+    flecs_poly_update_ctx(&system->callback_ctx, &system->callback_ctx_free,
+        desc->callback_ctx, desc->callback_ctx_free, false);
+    flecs_poly_update_ctx(&system->run_ctx, &system->run_ctx_free,
+        desc->run_ctx, desc->run_ctx_free, false);
 
     if (desc->run) {
         system->run = desc->run;
@@ -75752,30 +75723,6 @@ ecs_entity_t ecs_system_update(
         if (!desc->run) {
             system->run = NULL;
         }
-    }
-
-    if (desc->ctx) {
-        system->ctx = desc->ctx;
-    }
-
-    if (desc->callback_ctx) {
-        system->callback_ctx = desc->callback_ctx;
-    }
-
-    if (desc->run_ctx) {
-        system->run_ctx = desc->run_ctx;
-    }
-
-    if (desc->ctx_free) {
-        system->ctx_free = desc->ctx_free;
-    }
-
-    if (desc->callback_ctx_free) {
-        system->callback_ctx_free = desc->callback_ctx_free;
-    }
-
-    if (desc->run_ctx_free) {
-        system->run_ctx_free = desc->run_ctx_free;
     }
 
     if (desc->multi_threaded) {

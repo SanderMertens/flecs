@@ -237,3 +237,25 @@ flecs_poly_dtor_t* flecs_get_dtor(
 {
     return (flecs_poly_dtor_t*)assert_mixin(poly, EcsMixinDtor);
 }
+
+void flecs_poly_update_ctx(
+    void **ctx,
+    ecs_ctx_free_t *ctx_free,
+    void *value,
+    ecs_ctx_free_t free_value,
+    bool preserve_null)
+{
+    if (*ctx != value && (!preserve_null || value) && *ctx && *ctx_free) {
+        (*ctx_free)(*ctx);
+        if (!preserve_null) {
+            *ctx = NULL;
+            *ctx_free = NULL;
+        }
+    }
+    if (value) {
+        *ctx = value;
+    }
+    if (free_value) {
+        *ctx_free = free_value;
+    }
+}

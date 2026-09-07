@@ -373,29 +373,12 @@ ecs_entity_t ecs_system_update(
         "entity %s is not a system, use ecs_system_init() to create it",
             flecs_errstr(ecs_get_path(world, entity)));
 
-    /* desc->ctx == NULL means "do not touch ctx", not "set ctx to NULL".
-     * Only free the existing ctx when the caller is explicitly replacing it. */
-    if (desc->ctx && desc->ctx != system->ctx) {
-        if (system->ctx_free && system->ctx) {
-            system->ctx_free(system->ctx);
-        }
-    }
-
-    if (system->callback_ctx_free) {
-        if (system->callback_ctx && system->callback_ctx != desc->callback_ctx) {
-            system->callback_ctx_free(system->callback_ctx);
-            system->callback_ctx_free = NULL;
-            system->callback_ctx = NULL;
-        }
-    }
-
-    if (system->run_ctx_free) {
-        if (system->run_ctx && system->run_ctx != desc->run_ctx) {
-            system->run_ctx_free(system->run_ctx);
-            system->run_ctx_free = NULL;
-            system->run_ctx = NULL;
-        }
-    }
+    flecs_poly_update_ctx(&system->ctx, &system->ctx_free,
+        desc->ctx, desc->ctx_free, true);
+    flecs_poly_update_ctx(&system->callback_ctx, &system->callback_ctx_free,
+        desc->callback_ctx, desc->callback_ctx_free, false);
+    flecs_poly_update_ctx(&system->run_ctx, &system->run_ctx_free,
+        desc->run_ctx, desc->run_ctx_free, false);
 
     if (desc->run) {
         system->run = desc->run;
@@ -411,29 +394,6 @@ ecs_entity_t ecs_system_update(
         }
     }
 
-    if (desc->ctx) {
-        system->ctx = desc->ctx;
-    }
-
-    if (desc->callback_ctx) {
-        system->callback_ctx = desc->callback_ctx;
-    }
-
-    if (desc->run_ctx) {
-        system->run_ctx = desc->run_ctx;
-    }
-
-    if (desc->ctx_free) {
-        system->ctx_free = desc->ctx_free;
-    }
-
-    if (desc->callback_ctx_free) {
-        system->callback_ctx_free = desc->callback_ctx_free;
-    }
-
-    if (desc->run_ctx_free) {
-        system->run_ctx_free = desc->run_ctx_free;
-    }
 
     if (desc->multi_threaded) {
         system->multi_threaded = desc->multi_threaded;
