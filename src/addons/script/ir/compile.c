@@ -413,20 +413,20 @@ static int flecs_irc_compile_interpolated_string(
 {
     flecs_irc_emit(c, EcsIrStrBegin, dst, 0, 0, node);
 
-    int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
-    char **fragments = ecs_vec_first(&node->fragments);
-    ecs_expr_format_t *formats = ecs_vec_first(&node->formats);
+    int32_t i, count = ecs_vec_count(&node->fragments);
+    ecs_expr_fragment_t *fragments = ecs_vec_first(&node->fragments);
     for (i = 0; i < count; i ++) {
-        char *fragment = fragments[i];
+        char *fragment = fragments[i].text;
         if (fragment) {
             int32_t op = flecs_irc_emit(c, EcsIrStrFrag, 0, 0, 0, node);
             flecs_irc_op(c, op)->imm.str = fragment;
+        }
+        if (!fragments[i].expr) {
             continue;
         }
 
-        ecs_expr_node_t *expr = ecs_vec_get_t(
-            &node->expressions, ecs_expr_node_t*, e)[0];
-        ecs_expr_format_t *format = &formats[e ++];
+        ecs_expr_node_t *expr = fragments[i].expr;
+        ecs_expr_format_t *format = &fragments[i].format;
 
         if (!format->is_present && expr->kind == EcsExprCast &&
             expr->type == ecs_id(ecs_string_t))

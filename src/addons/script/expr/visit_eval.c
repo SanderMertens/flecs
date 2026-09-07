@@ -64,17 +64,16 @@ static int flecs_expr_interpolated_string_visit_eval(
 
     flecs_expr_stack_push(ctx->stack);
 
-    int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
-    char **fragments = ecs_vec_first(&node->fragments);
-    ecs_expr_format_t *formats = ecs_vec_first(&node->formats);
+    int32_t i, count = ecs_vec_count(&node->fragments);
+    ecs_expr_fragment_t *fragments = ecs_vec_first(&node->fragments);
     for (i = 0; i < count; i ++) {
-        char *fragment = fragments[i];
+        char *fragment = fragments[i].text;
         if (fragment) {
             ecs_strbuf_appendstr(&buf, fragment);
-        } else {
-            ecs_expr_node_t *expr = ecs_vec_get_t(
-                &node->expressions, ecs_expr_node_t*, e)[0];
-            ecs_expr_format_t *format = &formats[e ++];
+        }
+        if (fragments[i].expr) {
+            ecs_expr_node_t *expr = fragments[i].expr;
+            ecs_expr_format_t *format = &fragments[i].format;
             
             ecs_expr_value_t *val = flecs_expr_eval_result(
                 ctx, expr, &(ecs_expr_value_t){0});

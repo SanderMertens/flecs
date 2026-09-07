@@ -50,14 +50,13 @@ static void flecs_expr_interpolated_string_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_interpolated_string_t *node)
 {
-    int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
-    char **fragments = ecs_vec_first(&node->fragments);
-    ecs_expr_node_t **expressions = ecs_vec_first(&node->expressions);
+    int32_t i, count = ecs_vec_count(&node->fragments);
+    ecs_expr_fragment_t *fragments = ecs_vec_first(&node->fragments);
 
     ecs_strbuf_appendlit(v->buf, "interpolated(");
 
     for (i = 0; i < count; i ++) {
-        char *fragment = fragments[i];
+        char *fragment = fragments[i].text;
 
         if (i) {
             ecs_strbuf_appendlit(v->buf, ", ");
@@ -69,9 +68,12 @@ static void flecs_expr_interpolated_string_to_str(
             ecs_strbuf_appendstr(v->buf, fragment);
             ecs_strbuf_appendlit(v->buf, "\"");
             flecs_expr_color_to_str(v, ECS_NORMAL);
-        } else {
-            ecs_expr_node_t *expr = expressions[e ++];
-            flecs_expr_node_to_str(v, expr);
+        }
+        if (fragments[i].expr) {
+            if (fragment) {
+                ecs_strbuf_appendlit(v->buf, ", ");
+            }
+            flecs_expr_node_to_str(v, fragments[i].expr);
         }
     }
 

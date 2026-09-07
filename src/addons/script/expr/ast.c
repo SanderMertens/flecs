@@ -197,11 +197,8 @@ ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
     result->buffer = flecs_strdup(&parser->script->allocator, value);
     result->buffer_size = ecs_os_strlen(result->buffer) + 1;
     result->node.type = ecs_id(ecs_string_t);
-    ecs_vec_init_t(&parser->script->allocator, &result->fragments, char*, 0);
-    ecs_vec_init_t(&parser->script->allocator, &result->expressions, 
-        ecs_expr_node_t*, 0);
-    ecs_vec_init_t(&parser->script->allocator, &result->formats,
-        ecs_expr_format_t, 0);
+    ecs_vec_init_t(&parser->script->allocator, &result->fragments,
+        ecs_expr_fragment_t, 0);
 
     return result;
 }
@@ -443,18 +440,16 @@ int flecs_expr_visit_children(
     case EcsExprInterpolatedString: {
         ecs_expr_interpolated_string_t *n =
             (ecs_expr_interpolated_string_t*)node;
-        ecs_expr_node_t **expressions = ecs_vec_first(&n->expressions);
-        int32_t i, count = ecs_vec_count(&n->expressions);
+        ecs_expr_fragment_t *fragments = ecs_vec_first(&n->fragments);
+        int32_t i, count = ecs_vec_count(&n->fragments);
         for (i = 0; i < count; i ++) {
-            if (action(&expressions[i], ctx)) {
+            if (action(&fragments[i].expr, ctx)) {
                 return -1;
             }
         }
-        ecs_expr_format_t *formats = ecs_vec_first(&n->formats);
-        count = ecs_vec_count(&n->formats);
         for (i = 0; i < count; i ++) {
-            if (action(&formats[i].width, ctx) ||
-                action(&formats[i].precision, ctx))
+            if (action(&fragments[i].format.width, ctx) ||
+                action(&fragments[i].format.precision, ctx))
             {
                 return -1;
             }

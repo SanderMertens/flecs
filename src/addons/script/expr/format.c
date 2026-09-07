@@ -62,15 +62,6 @@ static void flecs_expr_format_parse_error(
         column, "%s", message);
 }
 
-void flecs_expr_format_fini(
-    ecs_script_t *script,
-    ecs_expr_format_t *format)
-{
-    flecs_expr_visit_free(script, format->width);
-    flecs_expr_visit_free(script, format->precision);
-    ecs_os_zeromem(format);
-}
-
 const char* flecs_expr_format_parse(
     ecs_parser_t *parser,
     const char *pos,

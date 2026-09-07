@@ -15,7 +15,6 @@ int flecs_value_copy_to(
     ecs_value_t *dst,
     const ecs_expr_value_t *src);
 
-
 int flecs_value_binary(
     const ecs_script_t *script,
     const ecs_expr_node_t *node,
@@ -47,10 +46,6 @@ const char* flecs_expr_format_parse(
     const char *pos,
     ecs_expr_format_t *format,
     const ecs_expr_eval_desc_t *desc);
-
-void flecs_expr_format_fini(
-    ecs_script_t *script,
-    ecs_expr_format_t *format);
 
 int flecs_expr_format_value(
     const ecs_script_t *script,

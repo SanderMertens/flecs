@@ -60,14 +60,18 @@ typedef struct ecs_expr_format_t {
     bool is_present;
 } ecs_expr_format_t;
 
+typedef struct ecs_expr_fragment_t {
+    char *text;
+    ecs_expr_node_t *expr;
+    ecs_expr_format_t format;
+} ecs_expr_fragment_t;
+
 typedef struct ecs_expr_interpolated_string_t {
     ecs_expr_node_t node;
     char *value;              /* modified by parser */
     char *buffer;             /* for storing expr tokens */
     ecs_size_t buffer_size;
-    ecs_vec_t fragments;      /* vec<char*> */
-    ecs_vec_t expressions;    /* vec<ecs_expr_node_t*> */
-    ecs_vec_t formats;        /* vec<ecs_expr_format_t> */
+    ecs_vec_t fragments;
 } ecs_expr_interpolated_string_t;
 
 typedef struct ecs_expr_initializer_element_t {
