@@ -40,6 +40,20 @@ int flecs_value_blit_u64(
     const ecs_value_t *key_value,
     uint64_t *key_out);
 
+typedef enum flecs_meta_format_t {
+    EcsMetaStr,
+    EcsMetaExpr,
+    EcsMetaExprPrecise,
+    EcsMetaJson
+} flecs_meta_format_t;
+
+int flecs_meta_serialize(
+    const ecs_world_t *world,
+    const ecs_vec_t *ops,
+    const void *ptr,
+    ecs_strbuf_t *str,
+    flecs_meta_format_t format);
+
 int flecs_meta_ser_primitive(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
