@@ -187,7 +187,6 @@ typedef struct {
     ecs_id_t id;
     int32_t cur;
     bool self;
-    bool exclusive;
 
     ecs_component_record_t *cr;
     ecs_table_range_t prev_range;

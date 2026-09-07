@@ -179,184 +179,21 @@ next:
     return true;
 }
 
-static bool flecs_query_sparse_select_wildcard(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    ecs_flags32_t table_mask,
-    ecs_id_t id)
-{
-    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
-
-    if (!redo) {
-        ecs_component_record_t *cr = flecs_components_get(ctx->world, id);
-        if (!cr) {
-            return false;
-        }
-
-        if (ECS_PAIR_FIRST(id) == EcsWildcard) {
-            op_ctx->cr = cr->pair->second.next;
-        } else {
-            ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
-                ECS_INTERNAL_ERROR, NULL);
-            op_ctx->cr = cr->pair->first.next;
-        }
-    } else {
-        goto next_select;
-    }
-
-next:
-    if (!flecs_query_sparse_init_sparse(op_ctx, op_ctx->cr)) {
-        return false;
-    }
-
-next_select:
-    if (flecs_query_sparse_select_id(op, true, ctx, table_mask, 0)) {
-        ecs_id_t actual_id = op_ctx->cr->id;
-        ctx->it->ids[op->field_index] = actual_id;
-        flecs_query_set_vars(op, actual_id, ctx);
-
-        if (op->match_flags & EcsTermMatchAny) {
-            ctx->it->ids[op->field_index] = id;
-        }
-
-        return true;
-    }
-    
-next_component: {
-        ecs_component_record_t *cr = op_ctx->cr;
-        if (ECS_PAIR_FIRST(id) == EcsWildcard) {
-            cr = op_ctx->cr = cr->pair->second.next;
-        } else {
-            ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
-                ECS_INTERNAL_ERROR, NULL);
-            cr = op_ctx->cr = cr->pair->first.next;
-        }
-
-        if (!cr) {
-            return false;
-        }
-
-        if (!(cr->flags & EcsIdDontFragment)) {
-            goto next_component;
-        }
-    }
-
-    goto next;
-}
-
-static bool flecs_query_sparse_next_wildcard_pair(
-    ecs_query_sparse_ctx_t *op_ctx)
-{
-    ecs_component_record_t *cr = op_ctx->cr;
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    do {
-        cr = cr->non_fragmenting.next;
-    } while (cr && (!ECS_IS_PAIR(cr->id) || ecs_id_is_wildcard(cr->id)));
-
-    if (!cr) {
-        return false;
-    }
-
-    op_ctx->cr = cr;
-
-    ecs_assert(cr->flags & EcsIdDontFragment, ECS_INTERNAL_ERROR, NULL);
-
-    return true;
-}
-
-static bool flecs_query_sparse_select_all_wildcard_pairs(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    ecs_flags32_t table_mask)
-{
-    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
-
-    if (!redo) {
-        ecs_component_record_t *cr = op_ctx->cr = 
-            ctx->world->cr_non_fragmenting_head;
-        if (!cr) {
-            return false;
-        }
-
-        if (!ECS_IS_PAIR(cr->id)|| ecs_id_is_wildcard(cr->id)) {
-            goto next_component;
-        }
-    } else {
-        goto next_select;
-    }
-
-next:
-    if (!flecs_query_sparse_init_sparse(op_ctx, op_ctx->cr)) {
-        return false;
-    }
-
-next_select:
-    if (flecs_query_sparse_select_id(op, true, ctx, table_mask, 0)) {
-        ecs_id_t actual_id = op_ctx->cr->id;
-        ctx->it->ids[op->field_index] = actual_id;
-        flecs_query_set_vars(op, actual_id, ctx);
-        return true;
-    }
-
-next_component:
-    if (!flecs_query_sparse_next_wildcard_pair(op_ctx)) {
-        return false;
-    }
-
-    goto next;
-}
-
-bool flecs_query_sparse_select(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    ecs_flags32_t table_mask)
-{
-    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
-    ecs_id_t id;
-    if (!redo) {
-        id = op_ctx->id = flecs_query_op_get_id(op, ctx);
-    } else {
-        id = op_ctx->id;
-    }
-    if (ecs_id_is_wildcard(id)) {
-        if (id == ecs_pair(EcsWildcard, EcsWildcard)) {
-            return flecs_query_sparse_select_all_wildcard_pairs(
-                op, redo, ctx, table_mask);
-        } else {
-            return flecs_query_sparse_select_wildcard(
-                op, redo, ctx, table_mask, id);
-        }
-    } else {
-        return flecs_query_sparse_select_id(op, redo, ctx, table_mask, id);
-    }
-}
-
 static bool flecs_query_sparse_with_id(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
     bool not,
-    ecs_id_t id,
+    ecs_component_record_t *cr,
     void **ptr_out)
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
 
     if (!redo) {
-        ecs_component_record_t *cr = flecs_components_get(ctx->world, id);
-        if (!cr) {
+        if (!flecs_query_sparse_init_sparse(op_ctx, cr)) {
             goto no_sparse;
         }
 
-        ecs_sparse_t *sparse = cr->sparse;
-        if (!sparse || !flecs_sparse_count(sparse)) {
-            goto no_sparse;
-        }
-
-        op_ctx->sparse = sparse;
         flecs_query_sparse_init_range(op, ctx, op_ctx);
     } else {
         if (!op_ctx->range.table) {
@@ -390,7 +227,7 @@ static bool flecs_query_sparse_with_exclusive(
 
     ecs_id_t actual_id = op_ctx->cr->id;
     void *tgt_ptr = NULL;
-    if (flecs_query_sparse_with_id(op, redo, ctx, not, actual_id, &tgt_ptr)) {
+    if (flecs_query_sparse_with_id(op, redo, ctx, not, op_ctx->cr, &tgt_ptr)) {
         if (!not) {
             ecs_entity_t tgt = *(ecs_entity_t*)tgt_ptr;
             actual_id = ctx->it->ids[op->field_index] = 
@@ -408,147 +245,97 @@ static bool flecs_query_sparse_with_exclusive(
     return false;
 }
 
-static bool flecs_query_sparse_with_wildcard(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    bool not,
+static ecs_component_record_t* flecs_query_sparse_next_component(
+    ecs_component_record_t *cr,
     ecs_id_t id)
 {
-    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
-    bool with_redo = false;
-
-    if (!redo) {
-        ecs_component_record_t *cr = flecs_components_get(ctx->world, id);
-        if (!cr) {
-            op_ctx->cr = NULL;
-            return not;
-        }
-
-        if (cr->flags & EcsIdExclusive) {
-            op_ctx->cr = cr;
-            op_ctx->exclusive = true;
-            return flecs_query_sparse_with_exclusive(op, false, ctx, not, id);
-        }
-
-        if (!not) {
-            if (ECS_PAIR_FIRST(id) == EcsWildcard) {
-                op_ctx->cr = cr->pair->second.next;
-            } else {
-                ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
-                    ECS_INTERNAL_ERROR, NULL);
-                op_ctx->cr = cr->pair->first.next;
-            }
+    bool all = id == ecs_pair(EcsWildcard, EcsWildcard);
+    do {
+        if (all) {
+            cr = cr->non_fragmenting.next;
+        } else if (ECS_PAIR_FIRST(id) == EcsWildcard) {
+            cr = cr->pair->second.next;
         } else {
-            op_ctx->cr = cr;
+            cr = cr->pair->first.next;
         }
-
-        if (!op_ctx->cr) {
-            return not;
-        }
-    } else {
-        if (op_ctx->exclusive) {
-            return flecs_query_sparse_with_exclusive(op, true, ctx, not, id);
-        }
-        if (!op_ctx->cr) {
-            return false;
-        }
-        with_redo = true;
-        goto next_select;
-    }
-
-next:
-    if (!flecs_query_sparse_init_sparse(op_ctx, op_ctx->cr)) {
-        return not;
-    }
-
-next_select: {
-        ecs_id_t actual_id = op_ctx->cr->id;
-
-        if (flecs_query_sparse_with_id(op, with_redo, ctx, not, actual_id, NULL)) {
-            ctx->it->ids[op->field_index] = actual_id;
-            flecs_query_set_vars(op, actual_id, ctx);
-
-            if (op->match_flags & EcsTermMatchAny) {
-                ctx->it->ids[op->field_index] = id;
-            }
-
-            return true;
-        }
-    }
-
-next_component: {
-        ecs_component_record_t *cr = op_ctx->cr;
-        if (!not) {
-            if (ECS_PAIR_FIRST(id) == EcsWildcard) {
-                cr = op_ctx->cr = cr->pair->second.next;
-            } else {
-                ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
-                    ECS_INTERNAL_ERROR, NULL);
-                cr = op_ctx->cr = cr->pair->first.next;
-            }
-        } else {
-            cr = NULL;
-        }
-
-        if (!cr) {
-            return false;
-        }
-
-        if (!(cr->flags & EcsIdDontFragment)) {
-            goto next_component;
-        }
-    }
-
-    with_redo = false;
-    goto next;
+    } while (cr && (!(cr->flags & EcsIdDontFragment) ||
+        (all && (!ECS_IS_PAIR(cr->id) || ecs_id_is_wildcard(cr->id)))));
+    return cr;
 }
 
-static bool flecs_query_sparse_with_all_wildcard_pairs(
+static FLECS_ALWAYS_INLINE bool flecs_query_sparse_wildcard(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
-    bool not)
+    ecs_id_t id,
+    bool select,
+    bool not,
+    ecs_flags32_t table_mask)
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
-    bool with_redo = false;
-
+    bool all = id == ecs_pair(EcsWildcard, EcsWildcard);
     if (!redo) {
-        ecs_component_record_t *cr = op_ctx->cr = 
-            ctx->world->cr_non_fragmenting_head;
+        ecs_component_record_t *cr = all
+            ? ctx->world->cr_non_fragmenting_head
+            : flecs_components_get(ctx->world, id);
+        if (cr && all) {
+            if (!ECS_IS_PAIR(cr->id) || ecs_id_is_wildcard(cr->id)) {
+                cr = flecs_query_sparse_next_component(cr, id);
+            }
+        } else if (cr && (select || (!not && !(cr->flags & EcsIdExclusive)))) {
+            cr = flecs_query_sparse_next_component(cr, id);
+        }
+        op_ctx->cr = cr;
         if (!cr) {
-            return false;
+            return !all && not;
         }
-
-        if (!ECS_IS_PAIR(cr->id) || ecs_id_is_wildcard(cr->id)) {
-            goto next_component;
-        }
-    } else {
-        with_redo = true;
-        goto next_select;
     }
 
-next:
-    if (!flecs_query_sparse_init_sparse(op_ctx, op_ctx->cr)) {
-        return false;
+    if (!select && !all && op_ctx->cr &&
+        (op_ctx->cr->flags & EcsIdExclusive))
+    {
+        return flecs_query_sparse_with_exclusive(op, redo, ctx, not, id);
     }
 
-next_select: {
+    while (op_ctx->cr) {
         ecs_id_t actual_id = op_ctx->cr->id;
-        if (flecs_query_sparse_with_id(op, with_redo, ctx, not, actual_id, NULL)) {
-            ctx->it->ids[op->field_index] = actual_id;
-            flecs_query_set_vars(op, actual_id, ctx);
+        if (!redo && !flecs_query_sparse_init_sparse(op_ctx, op_ctx->cr)) {
+            return !all && not;
+        }
+        bool result = select
+            ? flecs_query_sparse_select_id(op, true, ctx, table_mask, actual_id)
+            : flecs_query_sparse_with_id(op, redo, ctx, not, op_ctx->cr, NULL);
+        if (result) {
+            if (!select) {
+                ctx->it->ids[op->field_index] = actual_id;
+                flecs_query_set_vars(op, actual_id, ctx);
+            }
+            if (!all && (op->match_flags & EcsTermMatchAny)) {
+                ctx->it->ids[op->field_index] = id;
+            }
             return true;
         }
+        op_ctx->cr = !all && not ? NULL
+            : flecs_query_sparse_next_component(op_ctx->cr, id);
+        redo = false;
     }
+    return false;
+}
 
-next_component:
-    if (!flecs_query_sparse_next_wildcard_pair(op_ctx)) {
-        return false;
+bool flecs_query_sparse_select(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    ecs_flags32_t table_mask)
+{
+    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
+    ecs_id_t id = redo ? op_ctx->id
+        : (op_ctx->id = flecs_query_op_get_id(op, ctx));
+    if (ecs_id_is_wildcard(id)) {
+        return flecs_query_sparse_wildcard(
+            op, redo, ctx, id, true, false, table_mask);
     }
-
-    with_redo = false;
-    goto next;
+    return flecs_query_sparse_select_id(op, redo, ctx, table_mask, id);
 }
 
 bool flecs_query_sparse_with(
@@ -558,21 +345,13 @@ bool flecs_query_sparse_with(
     bool not)
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
-    ecs_id_t id;
-    if (!redo) {
-        id = op_ctx->id = flecs_query_op_get_id(op, ctx);
-    } else {
-        id = op_ctx->id;
-    }
+    ecs_id_t id = redo ? op_ctx->id
+        : (op_ctx->id = flecs_query_op_get_id(op, ctx));
     if (ecs_id_is_wildcard(id)) {
-        if (id == ecs_pair(EcsWildcard, EcsWildcard)) {
-            return flecs_query_sparse_with_all_wildcard_pairs(op, redo, ctx, not);
-        } else {
-            return flecs_query_sparse_with_wildcard(op, redo, ctx, not, id);
-        }
-    } else {
-        return flecs_query_sparse_with_id(op, redo, ctx, not, id, NULL);
+        return flecs_query_sparse_wildcard(op, redo, ctx, id, false, not, 0);
     }
+    return flecs_query_sparse_with_id(op, redo, ctx, not,
+        redo ? NULL : flecs_components_get(ctx->world, id), NULL);
 }
 
 bool flecs_query_sparse_up(
