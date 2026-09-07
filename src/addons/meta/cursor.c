@@ -2376,38 +2376,7 @@ char ecs_meta_get_char(
     switch(op->kind) {
     case EcsOpChar:
         return *(ecs_char_t*)ptr;
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpOpaqueValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpScope:
-    case EcsOpEnum:
-    case EcsOpBitmask:
-    case EcsOpPrimitive:
-    case EcsOpBool:
-    case EcsOpByte:
-    case EcsOpU8:
-    case EcsOpU16:
-    case EcsOpU32:
-    case EcsOpU64:
-    case EcsOpI8:
-    case EcsOpI16:
-    case EcsOpI32:
-    case EcsOpI64:
-    case EcsOpF32:
-    case EcsOpF64:
-    case EcsOpUPtr:
-    case EcsOpIPtr:
-    case EcsOpString:
-    case EcsOpEntity:
-    case EcsOpId:
+    default:
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for char");
         break;
     }
@@ -2652,38 +2621,7 @@ ecs_entity_t ecs_meta_get_entity(
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
     switch(op->kind) {
     case EcsOpEntity: return *(ecs_entity_t*)ptr;
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpOpaqueValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpScope:
-    case EcsOpEnum:
-    case EcsOpBitmask:
-    case EcsOpPrimitive:
-    case EcsOpChar:
-    case EcsOpBool:
-    case EcsOpByte:
-    case EcsOpU8:
-    case EcsOpU16:
-    case EcsOpU32:
-    case EcsOpU64:
-    case EcsOpI8:
-    case EcsOpI16:
-    case EcsOpI32:
-    case EcsOpI64:
-    case EcsOpF32:
-    case EcsOpF64:
-    case EcsOpUPtr:
-    case EcsOpIPtr:
-    case EcsOpString:
-    case EcsOpId:
+    default:
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for entity");
         break;
     }
@@ -2700,37 +2638,7 @@ ecs_entity_t ecs_meta_get_id(
     switch(op->kind) {
     case EcsOpEntity: return *(ecs_id_t*)ptr; /* Entities are valid ids */
     case EcsOpId: return *(ecs_id_t*)ptr;
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpOpaqueValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpScope:
-    case EcsOpEnum:
-    case EcsOpBitmask:
-    case EcsOpPrimitive:
-    case EcsOpChar:
-    case EcsOpBool:
-    case EcsOpByte:
-    case EcsOpU8:
-    case EcsOpU16:
-    case EcsOpU32:
-    case EcsOpU64:
-    case EcsOpI8:
-    case EcsOpI16:
-    case EcsOpI32:
-    case EcsOpI64:
-    case EcsOpF32:
-    case EcsOpF64:
-    case EcsOpUPtr:
-    case EcsOpIPtr:
-    case EcsOpString:
+    default:
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for entity");
         break;
     }
