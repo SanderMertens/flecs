@@ -69524,6 +69524,9 @@ static const char* flecs_script_stmt_parse(
 {
     ParserBegin;
 
+    const char *component_first = NULL, *component_second = NULL;
+    bool component_collection = false;
+
     parser->stmt_pos = NULL;
 
     Parse(
@@ -69994,43 +69997,10 @@ pair: {
             EndOfRule;
         }
 
-        // (Eats, Apples):
         case ':': {
-            // Use lookahead so that expression parser starts at "match"
-            LookAhead_1(EcsTokKeywordMatch, {
-                // (Eats, Apples): match expr
-                Expr('\n', {
-                    ecs_script_component_t *comp = 
-                        flecs_script_insert_pair_component(
-                            parser, Token(1), Token(3));
-                    comp->expr = EXPR;
-                    EndOfRule; 
-                })
-            })
-
-            {
-                // (Eats, Apples): {
-                LookAhead_1('{', {
-                    pos = lookahead;
-                    // (Eats, Apples): { expr }
-                    Initializer('}',
-                        ecs_script_component_t *comp =
-                            flecs_script_insert_pair_component(
-                                parser, Token(1), Token(3));
-                        comp->expr = INITIALIZER;
-                        EndOfRule;
-                    )
-                })
-            }
-
-            // (Eats, Apples): expr
-            Expr('\n', {
-                ecs_script_component_t *comp =
-                    flecs_script_insert_pair_component(
-                        parser, Token(1), Token(3));
-                comp->expr = EXPR;
-                EndOfRule;
-            })
+            component_first = Token(1);
+            component_second = Token(3);
+            goto component_expr;
         }
 
         // (IsA, Machine) {
@@ -70042,114 +70012,55 @@ pair: {
     )
 }
 
-// auto_override |
 identifier_flag: {
-    ecs_id_t flag;
-    if (!ecs_os_strcmp(Token(0), "auto_override")) {
-        flag = ECS_AUTO_OVERRIDE;
-    } else {
+    if (ecs_os_strcmp(Token(0), "auto_override")) {
         Error("invalid flag '%s'", Token(0));
     }
 
     Parse(
-        // auto_override | (
         case '(':
-            // auto_override | (Rel, Tgt)
             Parse_4(EcsTokIdentifier, ',', EcsTokIdentifier, ')',
-                ecs_script_tag_t *tag = flecs_script_insert_pair_tag(
-                    parser, Token(3), Token(5));
-                tag->id.flag = flag;
-
-                {
-                    // auto_override | (Rel, Tgt) } (end of scope)
-                    LookAhead_1('}',
-                        EndOfRule;
-                    )
-                }
-
-                Parse(
-                    // auto_override | (Rel, Tgt)\n
-                    EcsTokEndOfStatement: {
-                        EndOfRule;
-                    }
-
-                    // auto_override | (Rel, Tgt):
-                    case ':': {
-                        Parse_1('{',
-                            // auto_override | (Rel, Tgt): {expr}
-                            Expr('}', {
-                                ecs_script_component_t *comp = 
-                                    flecs_script_insert_pair_component(
-                                        parser, Token(3), Token(5));
-                                comp->expr = EXPR;
-                                EndOfRule; 
-                            })
-                        )
-                    }
-                )
+                component_first = Token(3);
+                component_second = Token(5);
+                goto flagged_id;
             )
+        case EcsTokIdentifier:
+            component_first = Token(2);
+            goto flagged_id;
+    )
+}
 
-        // auto_override | Position
-        case EcsTokIdentifier: {
-            ecs_script_tag_t *tag = flecs_script_insert_tag(
-                parser, Token(2));
-            tag->id.flag = flag;
+flagged_id: {
+    ecs_script_tag_t *tag = flecs_script_insert_pair_tag(
+        parser, component_first, component_second);
+    tag->id.flag = ECS_AUTO_OVERRIDE;
 
-            {
-                // auto_override | Position } (end of scope)
-                LookAhead_1('}',
-                    EndOfRule;
-                )
-            }
+    LookAhead_1('}',
+        EndOfRule;
+    )
 
-            Parse(
-                // auto_override | Position\n
-                EcsTokEndOfStatement: {
-                    EndOfRule;
-                }
-
-                // auto_override | Position:
-                case ':': {
-                    Parse_1('{',
-                        // auto_override | Position: {expr}
-                        Expr('}', {
-                            ecs_script_component_t *comp = 
-                                flecs_script_insert_component(
-                                    parser, Token(2));
-                            comp->expr = EXPR;
-                            EndOfRule; 
-                        })
-                    )
-                }
+    Parse(
+        EcsTokEndOfStatement:
+            EndOfRule;
+        case ':':
+            Parse_1('{',
+                pos --;
+                goto component_expr;
             )
-        }
     )
 }
 
 // Position:
 identifier_colon: {
-    {
-        // Position: {
-        LookAhead_1('{',
-            pos = lookahead;
-            goto component_expr_scope;
-        )
-    }
-
-    {
-        // Position: [
-        LookAhead_1('[',
-            pos = lookahead;
-            goto component_expr_collection;
-        )
-    }
-
-    {
-        // Position: match
-        LookAhead_1(EcsTokKeywordMatch,
-            goto component_expr_match;
-        )
-    }
+    component_first = Token(0);
+    LookAhead(
+        case '[':
+            component_collection = true;
+            goto component_expr;
+        case '{':
+        case EcsTokKeywordMatch:
+            goto component_expr;
+    )
 
     bool is_inherit = tokenizer->tokens[0].kind == EcsTokString;
     int32_t colon_stack_count = tokenizer->stack.count;
@@ -70173,7 +70084,7 @@ identifier_colon: {
     tokenizer->stack.count = colon_stack_count;
 
     if (!is_inherit) {
-        goto component_expr_value;
+        goto component_expr;
     }
 
     // enterprise : SpaceShip
@@ -70311,48 +70222,12 @@ identifier_paren: {
     )
 }
 
-// Position: {
-component_expr_scope: {
-
-    // Position: {expr}
-    Expr('}', {
-        ecs_script_component_t *comp = flecs_script_insert_component(
-            parser, Token(0));
-        comp->expr = EXPR;
-        EndOfRule; 
-    })
-}
-
-// Points: [
-component_expr_collection: {
-    // Position: [expr]
-    Expr(']', {
-        ecs_script_component_t *comp = flecs_script_insert_component(
-            parser, Token(0));
-        comp->expr = EXPR;
-        comp->is_collection = true;
-        EndOfRule; 
-    })
-}
-
-// Position: match
-component_expr_match: {
-
-    // Position: match expr
+component_expr: {
     Expr('\n', {
-        ecs_script_component_t *comp = flecs_script_insert_component(
-            parser, Token(0));
+        ecs_script_component_t *comp = flecs_script_insert_pair_component(
+            parser, component_first, component_second);
         comp->expr = EXPR;
-        EndOfRule;
-    })
-}
-
-// Position: expr
-component_expr_value: {
-    Expr('\n', {
-        ecs_script_component_t *comp = flecs_script_insert_component(
-            parser, Token(0));
-        comp->expr = EXPR;
+        comp->is_collection = component_collection;
         EndOfRule;
     })
 }
