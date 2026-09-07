@@ -62674,95 +62674,64 @@ static bool flecs_script_is_number(
     return isdigit(c[0]) || ((c[0] == '-') && isdigit(c[1]));
 }
 
+static const char* flecs_script_digits(
+    const char *pos,
+    int base)
+{
+    while (base == 16 ? isxdigit((unsigned char)*pos) :
+        base == 2 ? (*pos == '0' || *pos == '1') : isdigit((unsigned char)*pos))
+    {
+        pos ++;
+    }
+    return pos;
+}
+
 static const char* flecs_script_number(
     ecs_parser_t *parser,
     const char *pos,
-    ecs_token_t *out) 
+    ecs_token_t *out)
 {
-    out->kind = EcsTokNumber;
-    out->value = parser->token_cur;
-    
-    bool dot_parsed = false;
-    bool e_parsed = false;
-    bool digit_parsed = false;
+    const char *start = pos;
     int base = 10;
-
-    ecs_assert(flecs_script_is_number(pos), ECS_INTERNAL_ERROR, NULL);
-    char *outpos = parser->token_cur;
-
-    if (pos[0] == '-') {
-        outpos = flecs_tokenizer_write(parser, outpos, pos[0]);
+    if (*pos == '-') {
         pos ++;
     }
-
-    if (pos[0] == '0' && (pos[1] == 'x' || pos[1] == 'X')) {
-        base = 16;
-        outpos = flecs_tokenizer_write(parser, outpos, pos[0]);
-        outpos = flecs_tokenizer_write(parser, outpos, pos[1]);
-        pos += 2;
-    } else if (pos[0] == '0' && (pos[1] == 'b' || pos[1] == 'B')) {
-        base = 2;
-        outpos = flecs_tokenizer_write(parser, outpos, pos[0]);
-        outpos = flecs_tokenizer_write(parser, outpos, pos[1]);
-        pos += 2;
+    if (pos[0] == '0') {
+        if (pos[1] == 'x' || pos[1] == 'X') {
+            base = 16;
+        } else if (pos[1] == 'b' || pos[1] == 'B') {
+            base = 2;
+        }
+        pos += base != 10 ? 2 : 0;
     }
-
-    do {
-        char c = pos[0];
-        bool valid_number = false;
-        bool handled_char = false;
-
-        if (c == '.') {
-            if (!dot_parsed && !e_parsed) {
-                if (isdigit(pos[1])) {
-                    dot_parsed = true;
-                    valid_number = true;
-                }
-            }
-        } else if ((c == 'e' || c == 'E') && base == 10) {
-            if (!e_parsed && digit_parsed) {
-                if (isdigit(pos[1])) {
-                    e_parsed = true;
-                    valid_number = true;
-                } else if ((pos[1] == '+' || pos[1] == '-') && isdigit(pos[2])) {
-                    e_parsed = true;
-                    valid_number = true;
-                    handled_char = true;
-
-                    outpos = flecs_tokenizer_write(parser, outpos, c);
-                    outpos = flecs_tokenizer_write(parser, outpos, pos[1]);
-                    pos += 2;
-                }
-            }
-        } else if ((base == 10) && isdigit(c)) {
-            digit_parsed = true;
-            valid_number = true;
-        } else if ((base == 16) && isxdigit(c)) {
-            digit_parsed = true;
-            valid_number = true;
-        }  else if ((base == 2) && (c == '0' || c == '1')) {
-            digit_parsed = true;
-            valid_number = true;
+    const char *digits = pos;
+    pos = flecs_script_digits(pos, base);
+    bool has_digits = pos != digits;
+    if (*pos == '.' && isdigit((unsigned char)pos[1])) {
+        digits = ++ pos;
+        pos = flecs_script_digits(pos, base);
+        has_digits |= pos != digits;
+    }
+    if (base == 10 && (*pos == 'e' || *pos == 'E')) {
+        digits = pos + 1;
+        digits += *digits == '+' || *digits == '-';
+        if (isdigit((unsigned char)*digits)) {
+            pos = flecs_script_digits(digits, base);
         }
-
-        if (!valid_number) {
-            if (!digit_parsed && base != 10) {
-                ecs_parser_error(parser->name, parser->code,
-                    flecs_parser_errpos(parser, pos), "missing digits in number literal");
-                return NULL;
-            }
-
-            outpos = flecs_tokenizer_write(parser, outpos, '\0');
-            parser->token_cur = outpos;
-            break;
-        }
-
-        if (!handled_char) {
-            outpos = flecs_tokenizer_write(parser, outpos, pos[0]);
-            pos ++;
-        }
-    } while (true);
-
+    }
+    if (!has_digits && base != 10) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, pos), "missing digits in number literal");
+        return NULL;
+    }
+    ecs_size_t length = flecs_ito(ecs_size_t, pos - start);
+    ecs_assert(!parser->token_end || parser->token_cur + length < parser->token_end,
+        ECS_INVALID_OPERATION, "out of parser token storage");
+    out->kind = EcsTokNumber;
+    out->value = parser->token_cur;
+    ecs_os_memcpy(parser->token_cur, start, length);
+    parser->token_cur[length] = '\0';
+    parser->token_cur += length + 1;
     return pos;
 }
 
