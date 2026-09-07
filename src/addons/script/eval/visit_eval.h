@@ -27,14 +27,9 @@ typedef struct ecs_script_eval_visitor_t {
     bool is_with_scope;
     ecs_script_vars_t *vars;
     void *type_visitor;
-    ecs_vec_t *symbol_slots;
-    ecs_vec_t *component_slots;
-    ecs_vec_t *scope_slots;
-    ecs_vec_t *for_slots;
     uint64_t input;
     uint64_t internal;
-    ecs_script_computed_t *computed;
-    int32_t computed_count;
+    ecs_script_state_t *state;
     int32_t symbol_offset;
     int32_t visit;
     int32_t scope_slot;

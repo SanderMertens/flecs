@@ -111,15 +111,9 @@ void flecs_script_template_pending_fini(
     ecs_vec_t *pending);
 
 typedef struct EcsScriptTemplateRoot {
+    ecs_script_state_t state;
     ecs_vec_t observers;
-    ecs_vec_t symbol_slots;
-    ecs_vec_t component_slots;
-    ecs_vec_t scope_slots;
-    ecs_vec_t for_slots;
-    ecs_vec_t computed;
     uint64_t changed;
-    int32_t visit;
-    bool initialized;
 } EcsScriptTemplateRoot;
 
 typedef struct EcsScriptTemplateInstanceUpdateEvent {

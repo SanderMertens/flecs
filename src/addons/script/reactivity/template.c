@@ -14,63 +14,25 @@ ECS_COMPONENT_DECLARE(EcsScriptTemplateInstanceUpdateEvent);
 ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 ECS_DECLARE(EcsScriptTemplate);
 
-static void flecs_script_template_computed_free(
-    EcsScriptTemplateRoot *root)
-{
-    ecs_script_computed_t *slots = ecs_vec_first(&root->computed);
-    int32_t i, count = ecs_vec_count(&root->computed);
-    for (i = 0; i < count; i ++) {
-        if (slots[i].ptr) {
-            if (slots[i].ti && slots[i].ti->hooks.dtor) {
-                flecs_type_info_dtor(slots[i].ptr, 1, slots[i].ti);
-            }
-            ecs_os_free(slots[i].ptr);
-        }
-        slots[i].ptr = NULL;
-        slots[i].ti = NULL;
-        slots[i].valid = false;
-    }
-}
-
 static void flecs_script_template_root_fini(
     EcsScriptTemplateRoot *root)
 {
-    flecs_script_template_computed_free(root);
-    ecs_vec_fini_t(NULL, &root->computed, ecs_script_computed_t);
+    flecs_script_state_fini(&root->state);
     ecs_vec_fini_t(NULL, &root->observers, ecs_script_ref_t);
-    ecs_vec_fini_t(NULL, &root->symbol_slots, ecs_script_symbol_slot_t);
-    ecs_vec_fini_t(NULL, &root->component_slots,
-        ecs_script_component_slot_t);
-    ecs_vec_fini_t(NULL, &root->scope_slots, int32_t);
-    flecs_script_for_slots_fini(&root->for_slots);
 }
 
 static ECS_CTOR(EcsScriptTemplateRoot, ptr, {
     ecs_vec_init_t(NULL, &ptr->observers, ecs_script_ref_t, 0);
-    ecs_vec_init_t(NULL, &ptr->symbol_slots, ecs_script_symbol_slot_t, 0);
-    ecs_vec_init_t(NULL, &ptr->component_slots,
-        ecs_script_component_slot_t, 0);
-    ecs_vec_init_t(NULL, &ptr->scope_slots, int32_t, 0);
-    ecs_vec_init_t(NULL, &ptr->for_slots, ecs_script_for_slot_t, 0);
-    ecs_vec_init_t(NULL, &ptr->computed, ecs_script_computed_t, 0);
+    flecs_script_state_init(&ptr->state);
     ptr->changed = 0;
-    ptr->visit = 0;
-    ptr->initialized = false;
 })
 
 static ECS_MOVE(EcsScriptTemplateRoot, dst, src, {
     flecs_script_template_root_fini(dst);
     *dst = *src;
-    ecs_vec_init_t(NULL, &src->computed, ecs_script_computed_t, 0);
+    flecs_script_state_init(&src->state);
     ecs_vec_init_t(NULL, &src->observers, ecs_script_ref_t, 0);
-    ecs_vec_init_t(NULL, &src->symbol_slots, ecs_script_symbol_slot_t, 0);
-    ecs_vec_init_t(NULL, &src->component_slots,
-        ecs_script_component_slot_t, 0);
-    ecs_vec_init_t(NULL, &src->scope_slots, int32_t, 0);
-    ecs_vec_init_t(NULL, &src->for_slots, ecs_script_for_slot_t, 0);
     src->changed = 0;
-    src->visit = 0;
-    src->initialized = false;
 })
 
 static ECS_DTOR(EcsScriptTemplateRoot, ptr, {
@@ -102,44 +64,32 @@ static void flecs_script_template_root_init(
     ecs_script_template_t *template,
     ecs_script_impl_t *impl)
 {
-    if (ecs_vec_count(&root->computed) != template->computed_count) {
-        flecs_script_template_computed_free(root);
-        ecs_vec_set_count_t(NULL, &root->computed,
+    if (ecs_vec_count(&root->state.computed) != template->computed_count) {
+        flecs_script_state_clear_computed(&root->state);
+        ecs_vec_set_count_t(NULL, &root->state.computed,
             ecs_script_computed_t, template->computed_count);
         if (template->computed_count) {
-            ecs_os_memset(ecs_vec_first(&root->computed), 0,
+            ecs_os_memset(ecs_vec_first(&root->state.computed), 0,
                 template->computed_count * ECS_SIZEOF(ecs_script_computed_t));
         }
     }
-    if (ecs_vec_count(&root->symbol_slots) == template->symbol_count) {
+    if (ecs_vec_count(&root->state.symbol_slots) == template->symbol_count) {
         return;
     }
-    ecs_vec_set_count_t(NULL, &root->symbol_slots,
+    ecs_vec_set_count_t(NULL, &root->state.symbol_slots,
         ecs_script_symbol_slot_t, template->symbol_count);
     if (template->symbol_count) {
-        ecs_os_memset(ecs_vec_first(&root->symbol_slots), 0,
+        ecs_os_memset(ecs_vec_first(&root->state.symbol_slots), 0,
             template->symbol_count * ECS_SIZEOF(ecs_script_symbol_slot_t));
-        ecs_script_symbol_slot_t *dst = ecs_vec_first(&root->symbol_slots);
-        ecs_script_symbol_slot_t *src = ecs_vec_first(&impl->symbol_slots);
+        ecs_script_symbol_slot_t *dst = ecs_vec_first(&root->state.symbol_slots);
+        ecs_script_symbol_slot_t *src = ecs_vec_first(&impl->state.symbol_slots);
         int32_t i;
         for (i = 0; i < template->symbol_count; i ++) {
             dst[i].scope_slot = src[template->symbol_offset + i].scope_slot;
         }
     }
-    ecs_vec_set_count_t(NULL, &root->component_slots,
-        ecs_script_component_slot_t, template->component_count);
-    if (template->component_count) {
-        ecs_os_memset(ecs_vec_first(&root->component_slots), 0,
-            template->component_count *
-                ECS_SIZEOF(ecs_script_component_slot_t));
-    }
-    ecs_vec_set_count_t(NULL, &root->scope_slots,
-        int32_t, template->scope_count);
-    if (template->scope_count) {
-        ecs_os_memset(ecs_vec_first(&root->scope_slots), 0,
-            template->scope_count * ECS_SIZEOF(int32_t));
-    }
-    flecs_script_for_slots_init(&root->for_slots, template->for_count);
+    flecs_script_state_resize(&root->state, template->scope_count,
+        template->component_count, template->for_count);
 }
 
 static void flecs_script_template_root_clear(
@@ -148,36 +98,30 @@ static void flecs_script_template_root_clear(
     ecs_script_impl_t *impl,
     EcsScriptTemplateRoot *root)
 {
-    ecs_vec_t symbol_slots = root->symbol_slots;
-    ecs_vec_t component_slots = root->component_slots;
-    ecs_vec_t scope_slots = root->scope_slots;
-    ecs_vec_t for_slots = root->for_slots;
+    ecs_script_state_t state = root->state;
 
-    flecs_script_template_computed_free(root);
+    flecs_script_state_clear_computed(&root->state);
 
-    ecs_script_for_slot_t *for_slot_array = ecs_vec_first(&for_slots);
-    int32_t i, count = ecs_vec_count(&for_slots);
+    ecs_script_for_slot_t *for_slot_array = ecs_vec_first(&state.for_slots);
+    int32_t i, count = ecs_vec_count(&state.for_slots);
     for (i = 0; i < count; i ++) {
         flecs_script_for_slot_clear(world, &for_slot_array[i], true);
     }
 
     int32_t root_symbol = template->root_symbol - template->symbol_offset;
-    if (root_symbol >= 0 && root_symbol < ecs_vec_count(&symbol_slots)) {
-        ecs_vec_get_t(&symbol_slots,
+    if (root_symbol >= 0 && root_symbol < ecs_vec_count(&state.symbol_slots)) {
+        ecs_vec_get_t(&state.symbol_slots,
             ecs_script_symbol_slot_t, root_symbol)->scope_slot = -1;
     }
-    if (ecs_vec_count(&scope_slots)) {
-        ecs_os_memset(ecs_vec_first(&scope_slots), 0,
-            ecs_vec_count(&scope_slots) * ECS_SIZEOF(int32_t));
+    if (ecs_vec_count(&state.scope_slots)) {
+        ecs_os_memset(ecs_vec_first(&state.scope_slots), 0,
+            ecs_vec_count(&state.scope_slots) * ECS_SIZEOF(int32_t));
     }
 
     ecs_script_eval_visitor_t v = {
         .base.script = impl,
         .world = world,
-        .symbol_slots = &symbol_slots,
-        .component_slots = &component_slots,
-        .scope_slots = &scope_slots,
-        .for_slots = &for_slots,
+        .state = &state,
         .instance_template = template,
         .visit = 1
     };
@@ -334,7 +278,7 @@ static void flecs_script_template_defer_on_set(
     for (i = 0; i < it->count; i ++) {
         const EcsScriptTemplateRoot *root = ecs_get_pair(it->real_world,
             it->entities[i], EcsScriptTemplateRoot, template_entity);
-        uint64_t input = root && root->initialized
+        uint64_t input = root && root->state.initialized
             ? root->changed
             : UINT64_MAX;
         if (!input) {
@@ -636,10 +580,7 @@ static int flecs_script_template_instantiate(
     ecs_vec_init_t(NULL, &desc.runtime->with_type_info, ecs_type_info_t*, 0);
 
     ecs_script_scope_t *scope = template->node->scope;
-    ecs_vec_t symbol_slots = {0};
-    ecs_vec_t component_slots = {0};
-    ecs_vec_t scope_slots = {0};
-    ecs_vec_t for_slots = {0};
+    ecs_script_state_t state;
 
     ecs_script_entity_t instance_node = {
         .node = {
@@ -676,33 +617,16 @@ static int flecs_script_template_instantiate(
         world, instance, EcsScriptTemplateRoot, template_entity);
     flecs_script_template_root_init(
         root, template, impl);
-    symbol_slots = root->symbol_slots;
-    component_slots = root->component_slots;
-    scope_slots = root->scope_slots;
-    for_slots = root->for_slots;
-    v->computed = ecs_vec_first(&root->computed);
-    v->computed_count = ecs_vec_count(&root->computed);
-    v->symbol_slots = &symbol_slots;
-    v->component_slots = &component_slots;
-    v->scope_slots = &scope_slots;
-    v->for_slots = &for_slots;
-    uint64_t run_input = root->initialized ? input : UINT64_MAX;
+    state = root->state;
+    v->state = &state;
+    uint64_t run_input = root->state.initialized ? input : UINT64_MAX;
     if (!run_input) {
         goto done;
     }
-    if (root->visit == INT32_MAX) {
-        if (ecs_vec_count(&root->scope_slots)) {
-            ecs_os_memset(ecs_vec_first(&root->scope_slots), 0,
-                ecs_vec_count(&root->scope_slots) * ECS_SIZEOF(int32_t));
-        }
-        root->visit = 1;
-    } else {
-        root->visit ++;
-    }
-    flecs_script_eval_begin(v, run_input, root->visit);
+    flecs_script_eval_begin(v, run_input, flecs_script_state_next(&root->state));
     int32_t root_symbol = template->root_symbol - template->symbol_offset;
     ecs_script_symbol_slot_t *root_slot = ecs_vec_get_t(
-        &root->symbol_slots, ecs_script_symbol_slot_t, root_symbol);
+        &root->state.symbol_slots, ecs_script_symbol_slot_t, root_symbol);
     root_slot->entity = instance;
     root_slot->scope_slot = scope->scope_slot;
 
@@ -789,7 +713,7 @@ static int flecs_script_template_instantiate(
     flecs_script_eval_cleanup(v, vm ? vm->dirty : true);
     root = ecs_ensure_pair(
         world, instance, EcsScriptTemplateRoot, template_entity);
-    root->initialized = true;
+    root->state.initialized = true;
     root->changed = 0;
 
     if (ecs_vec_count(&template->dynamic_refs)) {
@@ -814,12 +738,7 @@ done:
     v->r->with = prev_with;
     v->r->with_type_info = prev_with_type_info;
     v->r->using = prev_using;
-    v->symbol_slots = NULL;
-    v->computed = NULL;
-    v->computed_count = 0;
-    v->component_slots = &v->base.script->component_slots;
-    v->scope_slots = &v->base.script->scope_slots;
-    v->for_slots = &v->base.script->for_slots;
+    v->state = &v->base.script->state;
     if (vm) {
         flecs_script_ir_vm_free(vm, &desc);
     } else {
@@ -1056,7 +975,7 @@ static void flecs_script_template_on_set(
     for (i = 0; i < it->count; i ++) {
         const EcsScriptTemplateRoot *root = ecs_get_pair(world,
             it->entities[i], EcsScriptTemplateRoot, template_entity);
-        uint64_t input = root && root->initialized
+        uint64_t input = root && root->state.initialized
             ? root->changed
             : UINT64_MAX;
         if (!input) {
@@ -1100,7 +1019,7 @@ static void flecs_script_template_on_replace(
         EcsScriptTemplateRoot *root = ECS_CONST_CAST(EcsScriptTemplateRoot*,
             ecs_get_pair(world, it->entities[i],
                 EcsScriptTemplateRoot, template_entity));
-        if (!root || !root->initialized) {
+        if (!root || !root->state.initialized) {
             continue;
         }
         for (m = 0; m < member_count; m ++) {
@@ -1560,7 +1479,7 @@ static int flecs_script_visit_type_template(
     ecs_assert(t != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_script_template_node_t *tnode = template->node;
     if (tnode->symbol_offset == -1) {
-        tnode->symbol_offset = ecs_vec_count(&v->base.script->symbol_slots);
+        tnode->symbol_offset = ecs_vec_count(&v->base.script->state.symbol_slots);
     }
     template->symbol_offset = tnode->symbol_offset;
     if (tnode->root_symbol == -1) {
@@ -1625,7 +1544,7 @@ static int flecs_script_visit_type_template(
     v->entity = old_entity;
     if (tnode->symbol_count == -1) {
         tnode->symbol_count = ecs_vec_count(
-            &v->base.script->symbol_slots) - template->symbol_offset;
+            &v->base.script->state.symbol_slots) - template->symbol_offset;
     }
     template->symbol_count = tnode->symbol_count;
     return result;

@@ -171,6 +171,39 @@ typedef struct ecs_script_region_t {
     int32_t for_count;
 } ecs_script_region_t;
 
+typedef struct ecs_script_state_t {
+    ecs_vec_t symbol_slots;
+    ecs_vec_t component_slots;
+    ecs_vec_t scope_slots;
+    ecs_vec_t for_slots;
+    ecs_vec_t computed;
+    int32_t visit;
+    bool initialized;
+} ecs_script_state_t;
+
+void flecs_script_state_init(
+    ecs_script_state_t *state);
+
+void flecs_script_state_fini(
+    ecs_script_state_t *state);
+
+void flecs_script_state_clear_computed(
+    ecs_script_state_t *state);
+
+void flecs_script_state_resize(
+    ecs_script_state_t *state,
+    int32_t scope_count,
+    int32_t component_count,
+    int32_t for_count);
+
+int32_t flecs_script_state_next(
+    ecs_script_state_t *state);
+
+void flecs_script_state_mark(
+    ecs_script_state_t *state,
+    const ecs_script_region_t *region,
+    int32_t visit);
+
 struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_entity_t entity; /* Set if script is managed (has EcsScript) */
@@ -185,11 +218,8 @@ struct ecs_script_impl_t {
     int32_t task_refcount;
     ecs_vec_t refs;
     ecs_vec_t run_refs;
-    ecs_vec_t symbol_slots;
-    ecs_vec_t component_slots;
-    ecs_vec_t scope_slots;
+    ecs_script_state_t state;
     ecs_vec_t regions;
-    ecs_vec_t for_slots;
     ecs_vec_t unresolved_refs;
     ecs_vec_t unresolved_component_refs;
     ecs_vec_t lenient_warned; /* vec<const char*> */
@@ -198,7 +228,6 @@ struct ecs_script_impl_t {
     int32_t entity_index_visit;
     bool entity_index_valid;
     int32_t input_count;
-    int32_t visit;
     bool evaluating;
     bool compiled;
     bool lenient;

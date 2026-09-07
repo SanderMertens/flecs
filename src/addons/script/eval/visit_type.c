@@ -242,13 +242,13 @@ int32_t flecs_script_type_slot_new(
 {
     ecs_script_impl_t *impl = t->v->base.script;
     if (expected != -1) {
-        ecs_assert(expected < ecs_vec_count(&impl->symbol_slots),
+        ecs_assert(expected < ecs_vec_count(&impl->state.symbol_slots),
             ECS_INTERNAL_ERROR, NULL);
         return expected;
     }
-    int32_t result = ecs_vec_count(&impl->symbol_slots);
+    int32_t result = ecs_vec_count(&impl->state.symbol_slots);
     ecs_script_symbol_slot_t *slot = ecs_vec_append_t(
-        NULL, &impl->symbol_slots, ecs_script_symbol_slot_t);
+        NULL, &impl->state.symbol_slots, ecs_script_symbol_slot_t);
     slot->entity = 0;
     slot->scope_slot = -1;
     return result;

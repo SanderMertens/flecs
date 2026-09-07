@@ -27,9 +27,9 @@ static ecs_entity_t flecs_expr_ref_entity(
         if (!entity && identifier->symbol != -1) {
             ecs_script_impl_t *impl = flecs_script_impl(
                 ECS_CONST_CAST(ecs_script_t*, script));
-            if (identifier->symbol < ecs_vec_count(&impl->symbol_slots)) {
+            if (identifier->symbol < ecs_vec_count(&impl->state.symbol_slots)) {
                 entity = ecs_vec_get_t(
-                    &impl->symbol_slots, ecs_script_symbol_slot_t,
+                    &impl->state.symbol_slots, ecs_script_symbol_slot_t,
                     identifier->symbol)->entity;
             }
         }

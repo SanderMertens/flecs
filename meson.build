@@ -100,6 +100,7 @@ flecs_src = files(
     'src/addons/script/modules/functions_math_perlin.c',
     'src/addons/script/modules/platform.c',
     'src/addons/script/reactivity/refs.c',
+    'src/addons/script/reactivity/state.c',
     'src/addons/script/reactivity/template.c',
     'src/addons/script/expr/ast.c',
     'src/addons/script/expr/format.c',

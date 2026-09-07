@@ -400,15 +400,15 @@ static int flecs_script_for_enter(
     state->for_slot = v->for_slot;
     state->force = v->force;
 
-    bool visited = v->scope_slots && node->scope->scope_slot >= 0 &&
-        node->scope->scope_slot < ecs_vec_count(v->scope_slots) &&
-        ecs_vec_get_t(v->scope_slots,
+    bool visited = node->scope->scope_slot >= 0 &&
+        node->scope->scope_slot < ecs_vec_count(&v->state->scope_slots) &&
+        ecs_vec_get_t(&v->state->scope_slots,
             int32_t, node->scope->scope_slot)[0] == v->visit;
-    if (v->for_slots && node->for_slot >= 0 &&
-        node->for_slot < ecs_vec_count(v->for_slots))
+    if (node->for_slot >= 0 &&
+        node->for_slot < ecs_vec_count(&v->state->for_slots))
     {
         ecs_script_for_slot_t *slot = ecs_vec_get_t(
-            v->for_slots, ecs_script_for_slot_t, node->for_slot);
+            &v->state->for_slots, ecs_script_for_slot_t, node->for_slot);
         slot->scope_slot = node->scope->scope_slot;
         if (!visited) {
             flecs_script_for_slot_clear(v->world, slot, false);
@@ -575,17 +575,17 @@ void flecs_script_for_merge_slots(
     int32_t dst_slot,
     int32_t src_slot)
 {
-    if (!v->for_slots || dst_slot < 0 || src_slot < 0 ||
-        dst_slot >= ecs_vec_count(v->for_slots) ||
-        src_slot >= ecs_vec_count(v->for_slots))
+    if (dst_slot < 0 || src_slot < 0 ||
+        dst_slot >= ecs_vec_count(&v->state->for_slots) ||
+        src_slot >= ecs_vec_count(&v->state->for_slots))
     {
         return;
     }
 
     ecs_vec_t *dst = &ecs_vec_get_t(
-        v->for_slots, ecs_script_for_slot_t, dst_slot)->entities;
+        &v->state->for_slots, ecs_script_for_slot_t, dst_slot)->entities;
     ecs_vec_t *src = &ecs_vec_get_t(
-        v->for_slots, ecs_script_for_slot_t, src_slot)->entities;
+        &v->state->for_slots, ecs_script_for_slot_t, src_slot)->entities;
     ecs_entity_t *src_array = ecs_vec_first(src);
     int32_t i, src_count = ecs_vec_count(src);
     for (i = 0; i < src_count; i ++) {

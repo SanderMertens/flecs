@@ -86,10 +86,10 @@ static void flecs_script_edit_index_node(
     case EcsAstEntity: {
         ecs_script_entity_t *entity = (ecs_script_entity_t*)node;
         if (entity->symbol >= 0 &&
-            entity->symbol < ecs_vec_count(&impl->symbol_slots))
+            entity->symbol < ecs_vec_count(&impl->state.symbol_slots))
         {
             ecs_script_symbol_slot_t *slot = ecs_vec_get_t(
-                &impl->symbol_slots, ecs_script_symbol_slot_t, entity->symbol);
+                &impl->state.symbol_slots, ecs_script_symbol_slot_t, entity->symbol);
             if (slot->entity && !ecs_map_get(
                 &impl->entity_index, slot->entity))
             {
@@ -172,12 +172,12 @@ static ecs_script_entity_t* flecs_script_edit_find(
         return NULL;
     }
 
-    if (!impl->entity_index_valid || impl->entity_index_visit != impl->visit) {
+    if (!impl->entity_index_valid || impl->entity_index_visit != impl->state.visit) {
         ecs_map_fini(&impl->entity_index);
         ecs_map_init(&impl->entity_index, NULL);
         flecs_script_edit_index_scope(impl, impl->root);
         impl->entity_index_valid = true;
-        impl->entity_index_visit = impl->visit;
+        impl->entity_index_visit = impl->state.visit;
     }
 
     return ecs_map_get_ptr(&impl->entity_index, entity);
@@ -296,8 +296,8 @@ static ecs_script_entity_t* flecs_script_edit_find_in_instance(
     }
 
     ecs_script_template_t *template = sc->template_;
-    const ecs_script_symbol_slot_t *slots = ecs_vec_first(&root->symbol_slots);
-    int32_t i, count = ecs_vec_count(&root->symbol_slots);
+    const ecs_script_symbol_slot_t *slots = ecs_vec_first(&root->state.symbol_slots);
+    int32_t i, count = ecs_vec_count(&root->state.symbol_slots);
     int32_t slot = -1;
 
     for (i = 0; i < count; i ++) {

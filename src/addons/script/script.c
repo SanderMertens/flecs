@@ -97,12 +97,8 @@ ecs_script_t* flecs_script_new(
     result->refcount = 1;
     ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &result->run_refs, ecs_script_ref_t, 0);
-    ecs_vec_init_t(NULL, &result->symbol_slots, ecs_script_symbol_slot_t, 0);
-    ecs_vec_init_t(NULL, &result->component_slots,
-        ecs_script_component_slot_t, 0);
-    ecs_vec_init_t(NULL, &result->scope_slots, int32_t, 0);
+    flecs_script_state_init(&result->state);
     ecs_vec_init_t(NULL, &result->regions, ecs_script_region_t, 0);
-    ecs_vec_init_t(NULL, &result->for_slots, ecs_script_for_slot_t, 0);
     ecs_vec_init_t(NULL, &result->unresolved_refs,
         ecs_script_unresolved_ref_t, 0);
     ecs_vec_init_t(NULL, &result->unresolved_component_refs,
@@ -313,12 +309,8 @@ void ecs_script_free(
         flecs_expr_visit_free(script, impl->expr);
         ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_t);
         ecs_vec_fini_t(NULL, &impl->run_refs, ecs_script_ref_t);
-        ecs_vec_fini_t(NULL, &impl->symbol_slots, ecs_script_symbol_slot_t);
-        ecs_vec_fini_t(NULL, &impl->component_slots,
-            ecs_script_component_slot_t);
-        ecs_vec_fini_t(NULL, &impl->scope_slots, int32_t);
+        flecs_script_state_fini(&impl->state);
         ecs_vec_fini_t(NULL, &impl->regions, ecs_script_region_t);
-        flecs_script_for_slots_fini(&impl->for_slots);
         ecs_vec_fini_t(NULL, &impl->unresolved_refs,
             ecs_script_unresolved_ref_t);
         ecs_vec_fini_t(NULL, &impl->unresolved_component_refs,

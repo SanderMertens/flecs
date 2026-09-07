@@ -486,7 +486,7 @@ static void flecs_script_dep_symbol_scope(
     if (symbol < 0) {
         return;
     }
-    ecs_vec_t *slots = &ctx->v->base.script->symbol_slots;
+    ecs_vec_t *slots = &ctx->v->base.script->state.symbol_slots;
     if (symbol >= ecs_vec_count(slots)) {
         return;
     }
@@ -1028,20 +1028,8 @@ int flecs_script_analyze_dependencies(
     int result = flecs_script_dep_scope(&ctx, scope);
     v->base.depth = old_depth;
     if (!result) {
-        ecs_vec_set_count_t(NULL, &impl->scope_slots,
-            int32_t, ctx.scope_count);
-        if (ctx.scope_count) {
-            ecs_os_memset(ecs_vec_first(&impl->scope_slots), 0,
-                ctx.scope_count * ECS_SIZEOF(int32_t));
-        }
-        ecs_vec_set_count_t(NULL, &impl->component_slots,
-            ecs_script_component_slot_t, ctx.component_count);
-        if (ctx.component_count) {
-            ecs_os_memset(ecs_vec_first(&impl->component_slots), 0,
-                ctx.component_count *
-                    ECS_SIZEOF(ecs_script_component_slot_t));
-        }
-        flecs_script_for_slots_init(&impl->for_slots, ctx.for_count);
+        flecs_script_state_resize(&impl->state, ctx.scope_count,
+            ctx.component_count, ctx.for_count);
     }
     flecs_script_dep_fini(&ctx);
     return result;
