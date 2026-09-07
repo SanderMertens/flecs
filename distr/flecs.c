@@ -109523,61 +109523,81 @@ static bool flecs_expr_is_skipped_var(
     return flecs_script_type_is_skipped_var(v->type_visitor, name);
 }
 
+typedef struct {
+    ecs_size_t size;
+    int8_t expressiveness;
+    int8_t storage;
+    bool integer;
+    bool signed_integer;
+    bool floating_point;
+} flecs_expr_type_info_t;
+
+#define FLECS_EXPR_TYPE_INFO(T, I, S, F, E, R) \
+    if (type == ecs_id(T)) { \
+        *out = (flecs_expr_type_info_t){ECS_SIZEOF(T), E, R, I, S, F}; \
+        return true; \
+    }
+
+static bool flecs_expr_type_info(
+    ecs_entity_t type,
+    flecs_expr_type_info_t *out)
+{
+    FLECS_EXPR_TYPE_INFO(ecs_bool_t, false, true, false, 1, 1)
+    FLECS_EXPR_TYPE_INFO(ecs_char_t, false, true, false, 2, 1)
+    FLECS_EXPR_TYPE_INFO(ecs_u8_t, true, false, false, 2, 2)
+    FLECS_EXPR_TYPE_INFO(ecs_u16_t, true, false, false, 3, 3)
+    FLECS_EXPR_TYPE_INFO(ecs_u32_t, true, false, false, 4, 4)
+    FLECS_EXPR_TYPE_INFO(ecs_uptr_t, true, false, false, 5, 6)
+    FLECS_EXPR_TYPE_INFO(ecs_u64_t, true, false, false, 6, 7)
+    FLECS_EXPR_TYPE_INFO(ecs_i8_t, true, true, false, 7, 1)
+    FLECS_EXPR_TYPE_INFO(ecs_i16_t, true, true, false, 8, 2)
+    FLECS_EXPR_TYPE_INFO(ecs_i32_t, true, true, false, 9, 3)
+    FLECS_EXPR_TYPE_INFO(ecs_iptr_t, true, true, false, 10, 5)
+    FLECS_EXPR_TYPE_INFO(ecs_i64_t, true, true, false, 11, 6)
+    FLECS_EXPR_TYPE_INFO(ecs_f32_t, false, false, true, 12, 3)
+    FLECS_EXPR_TYPE_INFO(ecs_f64_t, false, false, true, 13, 4)
+    FLECS_EXPR_TYPE_INFO(ecs_string_t, false, false, false, -1, -1)
+    FLECS_EXPR_TYPE_INFO(ecs_entity_t, false, false, false, -1, -1)
+    return false;
+}
+
+#undef FLECS_EXPR_TYPE_INFO
+
 bool flecs_expr_is_type_integer(
     ecs_entity_t type)
 {
-         if (type == ecs_id(ecs_u8_t))     return true;
-    else if (type == ecs_id(ecs_u16_t))    return true;
-    else if (type == ecs_id(ecs_u32_t))    return true;
-    else if (type == ecs_id(ecs_u64_t))    return true;
-    else if (type == ecs_id(ecs_uptr_t))   return true;
-    else if (type == ecs_id(ecs_i8_t))     return true;
-    else if (type == ecs_id(ecs_i16_t))    return true;
-    else if (type == ecs_id(ecs_i32_t))    return true;
-    else if (type == ecs_id(ecs_i64_t))    return true;
-    else if (type == ecs_id(ecs_iptr_t))   return true;
-    else return false;
+    flecs_expr_type_info_t info;
+    return flecs_expr_type_info(type, &info) && info.integer;
 }
 
 bool flecs_expr_is_type_number(
     ecs_entity_t type)
 {
-         if (flecs_expr_is_type_integer(type)) return true;
-    else if (type == ecs_id(ecs_f32_t))        return true;
-    else if (type == ecs_id(ecs_f64_t))        return true;
-    else return false;
+    flecs_expr_type_info_t info;
+    return flecs_expr_type_info(type, &info) &&
+        (info.integer || info.floating_point);
 }
 
 bool flecs_expr_is_type_signed_integer(
     ecs_entity_t type)
 {
-         if (type == ecs_id(ecs_i8_t))     return true;
-    else if (type == ecs_id(ecs_i16_t))    return true;
-    else if (type == ecs_id(ecs_i32_t))    return true;
-    else if (type == ecs_id(ecs_i64_t))    return true;
-    else if (type == ecs_id(ecs_iptr_t))   return true;
-    else if (type == ecs_id(ecs_bool_t))   return true;
-    else if (type == ecs_id(ecs_char_t))   return true;
-    else return false;
+    flecs_expr_type_info_t info;
+    return flecs_expr_type_info(type, &info) && info.signed_integer;
 }
 
 bool flecs_expr_is_type_unsigned_integer(
     ecs_entity_t type)
 {
-         if (type == ecs_id(ecs_u8_t))     return true;
-    else if (type == ecs_id(ecs_u16_t))    return true;
-    else if (type == ecs_id(ecs_u32_t))    return true;
-    else if (type == ecs_id(ecs_u64_t))    return true;
-    else if (type == ecs_id(ecs_uptr_t))   return true;
-    else return false;
+    flecs_expr_type_info_t info;
+    return flecs_expr_type_info(type, &info) && info.integer &&
+        !info.signed_integer;
 }
 
 bool flecs_expr_is_type_float(
     ecs_entity_t type)
 {
-         if (type == ecs_id(ecs_f32_t))    return true;
-    else if (type == ecs_id(ecs_f64_t))    return true;
-    else return false;
+    flecs_expr_type_info_t info;
+    return flecs_expr_type_info(type, &info) && info.floating_point;
 }
 
 bool flecs_expr_is_type_string(
@@ -109586,95 +109606,34 @@ bool flecs_expr_is_type_string(
     return type == ecs_id(ecs_string_t);
 }
 
-/* Returns how expressive a type is. This is used to determine whether an 
- * implicit cast is allowed, where only casts from less to more expressive types
- * are valid. */
 static int32_t flecs_expr_expressiveness_score(
     ecs_entity_t type)
 {
-    if      (type == ecs_id(ecs_bool_t))   return 1;
-    else if (type == ecs_id(ecs_char_t))   return 2;
-
-    else if (type == ecs_id(ecs_u8_t))     return 2;
-    else if (type == ecs_id(ecs_u16_t))    return 3;
-    else if (type == ecs_id(ecs_u32_t))    return 4;
-    else if (type == ecs_id(ecs_uptr_t))   return 5;
-    else if (type == ecs_id(ecs_u64_t))    return 6;
-
-    else if (type == ecs_id(ecs_i8_t))     return 7;
-    else if (type == ecs_id(ecs_i16_t))    return 8;
-    else if (type == ecs_id(ecs_i32_t))    return 9;
-    else if (type == ecs_id(ecs_iptr_t))   return 10;
-    else if (type == ecs_id(ecs_i64_t))    return 11;
-
-    else if (type == ecs_id(ecs_f32_t))    return 12;
-    else if (type == ecs_id(ecs_f64_t))    return 13;
-
-    else if (type == ecs_id(ecs_string_t)) return -1;
-    else if (type == ecs_id(ecs_entity_t)) return -1;
-    else return false;
+    flecs_expr_type_info_t info;
+    if (flecs_expr_type_info(type, &info)) {
+        return info.expressiveness;
+    }
+    return false;
 }
 
-/* Returns a score based on the representable value range of a type. This is
- * used in combination with expressiveness to determine whether a type can be
- * implicitly cast. An implicit cast is only valid if the destination type is
- * both more expressive and has a larger value range. */
 static ecs_size_t flecs_expr_storage_score(
     ecs_entity_t type)
 {
-    if      (type == ecs_id(ecs_bool_t))   return 1;
-    else if (type == ecs_id(ecs_char_t))   return 1;
-
-    /* Unsigned integers have a larger storage size than signed integers, since
-     * the unsigned range of a signed integer is smaller. */
-    else if (type == ecs_id(ecs_u8_t))     return 2;
-    else if (type == ecs_id(ecs_u16_t))    return 3;
-    else if (type == ecs_id(ecs_u32_t))    return 4;
-    else if (type == ecs_id(ecs_uptr_t))   return 6;
-    else if (type == ecs_id(ecs_u64_t))    return 7;
-
-    else if (type == ecs_id(ecs_i8_t))     return 1;
-    else if (type == ecs_id(ecs_i16_t))    return 2;
-    else if (type == ecs_id(ecs_i32_t))    return 3;
-    else if (type == ecs_id(ecs_iptr_t))   return 5;
-    else if (type == ecs_id(ecs_i64_t))    return 6;
-
-    /* Floating point types have a smaller storage score, since the largest
-     * integer that can be represented exactly is lower than the actual
-     * storage size. */
-    else if (type == ecs_id(ecs_f32_t))    return 3;
-    else if (type == ecs_id(ecs_f64_t))    return 4;
-
-    else if (type == ecs_id(ecs_string_t)) return -1;
-    else if (type == ecs_id(ecs_entity_t)) return -1;
-    else return false;
+    flecs_expr_type_info_t info;
+    if (flecs_expr_type_info(type, &info)) {
+        return flecs_ito(ecs_size_t, info.storage);
+    }
+    return false;
 }
 
-/** Returns the storage size for a primitive type */
 ecs_size_t flecs_expr_storage_size(
     ecs_entity_t type)
 {
-    if      (type == ecs_id(ecs_bool_t))   return ECS_SIZEOF(ecs_bool_t);
-    else if (type == ecs_id(ecs_char_t))   return ECS_SIZEOF(ecs_char_t);
-
-    else if (type == ecs_id(ecs_u8_t))     return ECS_SIZEOF(ecs_u8_t);
-    else if (type == ecs_id(ecs_u16_t))    return ECS_SIZEOF(ecs_u16_t);
-    else if (type == ecs_id(ecs_u32_t))    return ECS_SIZEOF(ecs_u32_t);
-    else if (type == ecs_id(ecs_uptr_t))   return ECS_SIZEOF(ecs_uptr_t);
-    else if (type == ecs_id(ecs_u64_t))    return ECS_SIZEOF(ecs_u64_t);
-
-    else if (type == ecs_id(ecs_i8_t))     return ECS_SIZEOF(ecs_i8_t);
-    else if (type == ecs_id(ecs_i16_t))    return ECS_SIZEOF(ecs_i16_t);
-    else if (type == ecs_id(ecs_i32_t))    return ECS_SIZEOF(ecs_i32_t);
-    else if (type == ecs_id(ecs_iptr_t))   return ECS_SIZEOF(ecs_iptr_t);
-    else if (type == ecs_id(ecs_i64_t))    return ECS_SIZEOF(ecs_i64_t);
-
-    else if (type == ecs_id(ecs_f32_t))    return ECS_SIZEOF(ecs_f32_t);
-    else if (type == ecs_id(ecs_f64_t))    return ECS_SIZEOF(ecs_f64_t);
-
-    else if (type == ecs_id(ecs_string_t)) return ECS_SIZEOF(ecs_string_t);
-    else if (type == ecs_id(ecs_entity_t)) return ECS_SIZEOF(ecs_entity_t);
-    else return false;
+    flecs_expr_type_info_t info;
+    if (flecs_expr_type_info(type, &info)) {
+        return info.size;
+    }
+    return false;
 }
 
 /* This function returns true if a type can be cast without changing the
