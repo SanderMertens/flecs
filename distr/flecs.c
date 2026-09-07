@@ -94627,325 +94627,46 @@ static ECS_DTOR(ecs_string_t, ptr, {
 
 /* Primitive comparers */
 
-static int flecs_compare_bool(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    return 
-        (int)(*((const ecs_bool_t*)a_ptr)) - (int)(*((const ecs_bool_t*)b_ptr));
+#define FLECS_PRIMITIVE_COMPARE(T, NAME, EQUALS) \
+static int flecs_compare_##NAME( \
+    const void *a_ptr, \
+    const void *b_ptr, \
+    const ecs_type_info_t *ti) \
+{ \
+    (void)ti; \
+    T a = *(const T*)a_ptr; \
+    T b = *(const T*)b_ptr; \
+    return (a > b) - (a < b); \
+} \
+static bool flecs_equals_##NAME( \
+    const void *a_ptr, \
+    const void *b_ptr, \
+    const ecs_type_info_t *ti) \
+{ \
+    return EQUALS(a_ptr, b_ptr, ti) == 0; \
 }
 
-static bool flecs_equals_bool(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_bool(a_ptr, b_ptr, ti) == 0;
-}
+FLECS_PRIMITIVE_COMPARE(ecs_bool_t, bool, flecs_compare_bool)
+FLECS_PRIMITIVE_COMPARE(ecs_char_t, char, flecs_compare_char)
+FLECS_PRIMITIVE_COMPARE(ecs_byte_t, byte, flecs_compare_byte)
+FLECS_PRIMITIVE_COMPARE(ecs_u8_t, u8, flecs_compare_u8)
+FLECS_PRIMITIVE_COMPARE(ecs_u16_t, u16, flecs_compare_u16)
+FLECS_PRIMITIVE_COMPARE(ecs_u32_t, u32, flecs_compare_u32)
 
-static int flecs_compare_char(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    return 
-        (int)(*((const ecs_char_t*)a_ptr)) - (int)(*((const ecs_char_t*)b_ptr));
-}
+FLECS_PRIMITIVE_COMPARE(ecs_u64_t, u64, flecs_compare_u64)
+FLECS_PRIMITIVE_COMPARE(ecs_uptr_t, uptr, flecs_compare_uptr)
+FLECS_PRIMITIVE_COMPARE(ecs_i8_t, i8, flecs_compare_i8)
+FLECS_PRIMITIVE_COMPARE(ecs_i16_t, i16, flecs_compare_i16)
+FLECS_PRIMITIVE_COMPARE(ecs_i32_t, i32, flecs_compare_i32)
+FLECS_PRIMITIVE_COMPARE(ecs_i64_t, i64, flecs_compare_i64)
+FLECS_PRIMITIVE_COMPARE(ecs_iptr_t, iptr, flecs_compare_iptr)
 
-static bool flecs_equals_char(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_char(a_ptr, b_ptr, ti) == 0;
-}
+FLECS_PRIMITIVE_COMPARE(ecs_f32_t, f32, flecs_compare_u32)
+FLECS_PRIMITIVE_COMPARE(ecs_f64_t, f64, flecs_compare_u64)
+FLECS_PRIMITIVE_COMPARE(ecs_entity_t, entity, flecs_compare_entity)
+FLECS_PRIMITIVE_COMPARE(ecs_id_t, id, flecs_compare_id)
 
-static int flecs_compare_byte(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    return 
-        (int)(*((const ecs_byte_t*)a_ptr)) - (int)(*((const ecs_byte_t*)b_ptr));
-}
-
-static bool flecs_equals_byte(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_byte(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_u8(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    return (int)(*((const ecs_u8_t*)a_ptr)) - (int)(*((const ecs_u8_t*)b_ptr));
-}
-
-static bool flecs_equals_u8(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_u8(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_u16(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    return (int)(*((const ecs_u16_t*)a_ptr)) - (int)(*((const ecs_u16_t*)b_ptr));
-}
-
-static bool flecs_equals_u16(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_u16(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_u32(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    ecs_u32_t a = *((const ecs_u32_t*)a_ptr);
-    ecs_u32_t b = *((const ecs_u32_t*)b_ptr);
-    return (a > b) - (a < b);
-}
-
-static bool flecs_equals_u32(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_u32(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_u64(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    ecs_u64_t a = *((const ecs_u64_t*)a_ptr);
-    ecs_u64_t b = *((const ecs_u64_t*)b_ptr);
-    return (a > b) - (a < b);
-}
-
-static bool flecs_equals_u64(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_u64(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_uptr(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    ecs_uptr_t a = *((const ecs_uptr_t*)a_ptr);
-    ecs_uptr_t b = *((const ecs_uptr_t*)b_ptr);
-    return (a > b) - (a < b);
-}
-
-static bool flecs_equals_uptr(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_uptr(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_i8(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    return (int)(*((const ecs_i8_t*)a_ptr)) - 
-           (int)(*((const ecs_i8_t*)b_ptr));
-}
-
-static bool flecs_equals_i8(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_i8(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_i16(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    return (int)(*((const ecs_i16_t*)a_ptr)) - 
-           (int)(*((const ecs_i16_t*)b_ptr));
-}
-
-static bool flecs_equals_i16(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_i16(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_i32(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    ecs_i32_t a = *((const ecs_i32_t*)a_ptr);
-    ecs_i32_t b = *((const ecs_i32_t*)b_ptr);
-    return (a > b) - (a < b);
-}
-
-static bool flecs_equals_i32(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_i32(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_i64(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    ecs_i64_t a = *((const ecs_i64_t*)a_ptr);
-    ecs_i64_t b = *((const ecs_i64_t*)b_ptr);
-    return (a > b) - (a < b);
-}
-
-static bool flecs_equals_i64(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_i64(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_iptr(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    ecs_iptr_t a = *((const ecs_iptr_t*)a_ptr);
-    ecs_iptr_t b = *((const ecs_iptr_t*)b_ptr);
-    return (a > b) - (a < b);
-}
-
-static bool flecs_equals_iptr(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_iptr(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_f32(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    ecs_f32_t a = *((const ecs_f32_t*)a_ptr);
-    ecs_f32_t b = *((const ecs_f32_t*)b_ptr);
-    if (a < b) return -1;
-    if (a > b) return 1;
-    return 0;
-}
-
-static bool flecs_equals_f32(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    /* intentional equal check as if it was an integer */
-    return flecs_compare_u32(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_f64(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    ecs_f64_t a = *((const ecs_f64_t*)a_ptr);
-    ecs_f64_t b = *((const ecs_f64_t*)b_ptr);
-    if (a < b) return -1;
-    if (a > b) return 1;
-    return 0;
-}
-
-static bool flecs_equals_f64(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    /* intentional equal check as if it was an integer */
-    return flecs_compare_u64(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_entity(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    ecs_entity_t a = *((const ecs_entity_t*)a_ptr);
-    ecs_entity_t b = *((const ecs_entity_t*)b_ptr);
-    return (a > b) - (a < b);
-}
-
-static bool flecs_equals_entity(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_entity(a_ptr, b_ptr, ti) == 0;
-}
-
-static int flecs_compare_id(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    (void)ti;
-    ecs_id_t a = *((const ecs_id_t*)a_ptr);
-    ecs_id_t b = *((const ecs_id_t*)b_ptr);
-    return (a > b) - (a < b);
-}
-
-static bool flecs_equals_id(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti)
-{
-    return flecs_compare_id(a_ptr, b_ptr, ti) == 0;
-}
+#undef FLECS_PRIMITIVE_COMPARE
 
 int flecs_compare_string(
     const void *a_ptr,
