@@ -16,107 +16,16 @@ struct entity_builder : entity_view {
 
     using entity_view::entity_view;
 
-    /** Add a component to an entity.
-     * To ensure the component is initialized, it should have a constructor.
-     * 
-     * @tparam T The component type to add.
-     */
-    template <typename T>
-    const Self& add() const  {
-        flecs_static_assert(is_flecs_constructible<T>::value,
-            "cannot default construct type: add T::T() or use emplace<T>()");
-        ecs_add_id(this->world_, this->id_, _::type<T>::id(this->world_));
+    template <typename... T, typename... Args>
+    const Self& add(Args... args) const {
+        _::add_component(this->world_, this->id_,
+            _::make_id<T...>(this->world_, args...));
         return to_base();
     }
 
-     /** Add a pair for an enum constant.
-     * This operation will add a pair to the entity where the first element is
-     * the enumeration type, and the second element the enumeration constant.
-     * 
-     * The operation may be used with regular (C-style) enumerations as well as
-     * enum classes.
-     * 
-     * @param value The enumeration value.
-     */
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    const Self& add(E value) const  {
-        flecs::entity_t first = _::type<E>::id(this->world_);
-        const auto& et = enum_type<E>(this->world_);
-        flecs::entity_t second = et.entity(value);
-
-        ecs_assert(second, ECS_INVALID_PARAMETER, "Enum constant was not found in reflection data.");
-        return this->add(first, second);
-    }
-
-    /** Add an entity to an entity.
-     * Add an entity to the entity. This is typically used for tagging.
-     *
-     * @param component The component or tag to add.
-     */
-    const Self& add(id_t component) const  {
-        ecs_add_id(this->world_, this->id_, component);
-        return to_base();
-    }
-
-    /** Add a pair.
-     * This operation adds a pair to the entity.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    const Self& add(entity_t first, entity_t second) const  {
-        ecs_add_pair(this->world_, this->id_, first, second);
-        return to_base();
-    }
-
-    /** Add a pair.
-     * This operation adds a pair to the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template<typename First, typename Second>
-    const Self& add() const  {
-        return this->add<First>(_::type<Second>::id(this->world_));
-    }
-
-    /** Add a pair.
-     * This operation adds a pair to the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
-    const Self& add(Second second) const  {
-        flecs_static_assert(is_flecs_constructible<First>::value,
-            "cannot default construct type: add T::T() or use emplace<T>()");
-        return this->add(_::type<First>::id(this->world_), second);
-    }
-
-    /** Add a pair.
-     * This operation adds a pair to the entity that consists of a tag
-     * combined with an enum constant.
-     *
-     * @tparam First The first element of the pair.
-     * @param constant The enum constant.
-     */
-    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
-    const Self& add(Second constant) const  {
-        flecs_static_assert(is_flecs_constructible<First>::value,
-            "cannot default construct type: add T::T() or use emplace<T>()");
-        const auto& et = enum_type<Second>(this->world_);
-        return this->add<First>(et.entity(constant));
-    }
-
-    /** Add a pair.
-     * This operation adds a pair to the entity.
-     *
-     * @param first The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template<typename Second>
-    const Self& add_second(flecs::entity_t first) const  {
-        return this->add(first, _::type<Second>::id(this->world_));
+    template <typename Second>
+    const Self& add_second(flecs::entity_t first) const {
+        return add(first, _::type<Second>::id(this->world_));
     }
 
     /** Conditional add.
@@ -268,144 +177,26 @@ struct entity_builder : entity_view {
         return this->depends_on(_::type<T>::id(this->world_));
     }
 
-    /** Remove a component from an entity.
-     *
-     * @tparam T The type of the component to remove.
-     */
-    template <typename T>
-    const Self& remove() const {
-        ecs_remove_id(this->world_, this->id_, _::type<T>::id(this->world_));
+    template <typename... T, typename... Args>
+    const Self& remove(Args... args) const {
+        ecs_remove_id(this->world_, this->id_,
+            _::make_id<T...>(this->world_, args...).id);
         return to_base();
     }
 
-    /** Remove an entity from an entity.
-     *
-     * @param entity The entity to remove.
-     */
-    const Self& remove(entity_t entity) const  {
-        ecs_remove_id(this->world_, this->id_, entity);
-        return to_base();
-    }
-
-    /** Remove a pair.
-     * This operation removes a pair from the entity.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    const Self& remove(entity_t first, entity_t second) const  {
-        ecs_remove_pair(this->world_, this->id_, first, second);
-        return to_base();
-    }
-
-    /** Remove a pair.
-     * This operation removes a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template<typename First, typename Second>
-    const Self& remove() const  {
-        return this->remove<First>(_::type<Second>::id(this->world_));
-    }
-
-    /** Remove a pair.
-     * This operation removes the pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
-    const Self& remove(Second second) const  {
-        return this->remove(_::type<First>::id(this->world_), second);
-    }
-
-    /** Remove a pair.
-     * This operation removes a pair from the entity.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first element of the pair.
-     */
-    template<typename Second>
-    const Self& remove_second(flecs::entity_t first) const  {
-        return this->remove(first, _::type<Second>::id(this->world_));
-    }
-
-    /** Remove a pair.
-     * This operation removes the pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param constant The enum constant.
-     */
-    template<typename First, typename Second, if_t< is_enum<Second>::value > = 0>
-    const Self& remove(Second constant) const  {
-        const auto& et = enum_type<Second>(this->world_);
-        flecs::entity_t second = et.entity(constant);
-        return this->remove<First>(second);
-    }  
-
-    /** Mark ID for auto-overriding.
-     * When an entity inherits from a base entity (using the `IsA` relationship),
-     * any IDs marked for auto-overriding on the base will be overridden
-     * automatically by the entity.
-     *
-     * @param id The ID to mark for overriding.
-     */
-    const Self& auto_override(flecs::id_t id) const  {
-        return this->add(ECS_AUTO_OVERRIDE | id);
-    }
-
-    /** Mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t) const
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    const Self& auto_override(flecs::entity_t first, flecs::entity_t second) const  {
-        return this->auto_override(ecs_pair(first, second));
-    }
-
-    /** Mark component for auto-overriding.
-     * @see auto_override(flecs::id_t) const
-     *
-     * @tparam T The component to mark for overriding.
-     */
-    template <typename T>
-    const Self& auto_override() const  {
-        return this->auto_override(_::type<T>::id(this->world_));
-    }
-
-    /** Mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t) const
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    template <typename First>
-    const Self& auto_override(flecs::entity_t second) const  {
-        return this->auto_override(_::type<First>::id(this->world_), second);
-    }
-
-    /** Mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t) const
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template <typename First, typename Second>
-    const Self& auto_override() const  {
-        return this->auto_override<First>(_::type<Second>::id(this->world_));
-    }
-
-    /** Mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t) const
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first element of the pair.
-     */
     template <typename Second>
-    const Self& auto_override_second(flecs::entity_t first) const  {
-        return this->auto_override(first, _::type<Second>::id(this->world_));
+    const Self& remove_second(flecs::entity_t first) const {
+        return remove(first, _::type<Second>::id(this->world_));
+    }
+
+    template <typename... T, typename... Args>
+    const Self& auto_override(Args... args) const {
+        return add(ECS_AUTO_OVERRIDE | _::make_id<T...>(this->world_, args...).id);
+    }
+
+    template <typename Second>
+    const Self& auto_override_second(flecs::entity_t first) const {
+        return auto_override(first, _::type<Second>::id(this->world_));
     }
 
     /** Set component, mark component for auto-overriding.

@@ -3,9 +3,10 @@
 namespace flecs {
 namespace _ {
 
-template <typename T = void, bool Sparse = false, typename Owner = void>
+template <typename T = void, bool Sparse = false, typename Owner = void, typename Construct = T>
 struct component_id {
     using type = T;
+    using construct_type = Construct;
     static constexpr bool sparse = Sparse;
     flecs::id_t id;
     flecs::entity_t entity;
@@ -23,7 +24,9 @@ struct component_id {
 template <typename T>
 flecs::entity_t entity_id(world_t *world, T value) {
     if constexpr (is_enum_v<T>) {
-        return flecs::enum_type<T>(world).entity(value);
+        auto entity = flecs::enum_type<T>(world).entity(value);
+        ecs_assert(entity, ECS_INVALID_PARAMETER, "enum constant was not found");
+        return entity;
     } else {
         (void)world;
         return value;
@@ -43,7 +46,9 @@ auto resolve_id(world_t *world, arg_list<T>) {
 
 template <typename First, typename Second>
 auto resolve_id(world_t *world, arg_list<First, Second>) {
-    return resolve_id(world, arg_list<flecs::pair<First, Second>>{});
+    using T = flecs::pair<First, Second>;
+    return component_id<actual_type_t<T>, false, First, First>{
+        _::type<T>::id(world), 0};
 }
 
 template <typename First, typename Second>
@@ -85,6 +90,25 @@ template <typename First, typename Second>
 auto second_id(world_t *world) {
     static_assert(is_empty_v<First>, "first element of pair must be a tag");
     return make_id<First, Second>(world);
+}
+
+template <typename Id>
+void add_component(world_t *world, flecs::entity_t entity, Id id) {
+    flecs_static_assert(std::is_void_v<typename Id::construct_type> ||
+        is_flecs_constructible<typename Id::construct_type>::value,
+        "cannot default construct component: use emplace<T>()");
+    ecs_add_id(world, entity, id.id);
+}
+
+template <typename Id>
+bool has_component(world_t *world, flecs::entity_t entity, Id id) {
+    if (ecs_has_id(world, entity, id.id)) {
+        return true;
+    }
+    if constexpr (Id::sparse && is_enum_v<typename Id::type>) {
+        return ecs_has_pair(world, entity, id.id, flecs::Wildcard);
+    }
+    return false;
 }
 
 template <bool Mutable, bool Required, typename Id>

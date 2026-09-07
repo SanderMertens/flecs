@@ -460,225 +460,29 @@ struct entity_view : public id {
      */
     flecs::entity lookup(const char *path, bool search_path = false) const;
 
-    /** Check if entity has the provided entity.
-     *
-     * @param e The entity to check.
-     * @return True if the entity has the provided entity, false otherwise.
-     */
-    bool has(flecs::id_t e) const {
-        return ecs_has_id(world_, id_, e);
-    }     
-
-    /** Check if entity has the provided component.
-     *
-     * @tparam T The component to check.
-     * @return True if the entity has the provided component, false otherwise.
-     */
-    template <typename T>
-    bool has() const {
-        flecs::id_t cid = _::type<T>::id(world_);
-        bool result = ecs_has_id(world_, id_, cid);
-        if (result) {
-            return result;
-        }
-
-        if (is_enum<T>::value) {
-            return ecs_has_pair(world_, id_, cid, flecs::Wildcard);
-        }
-
-        return false;
+    template <typename... T, typename... Args>
+    bool has(Args... args) const {
+        return _::has_component(world_, id_, _::make_id<T...>(world_, args...));
     }
 
-    /** Check if entity has the provided enum constant.
-     *
-     * @tparam E The enum type (can be deduced).
-     * @param value The enum constant to check. 
-     * @return True if the entity has the provided constant, false otherwise.
-     */
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    bool has(E value) const {
-        auto r = _::type<E>::id(world_);
-        auto o = enum_type<E>(world_).entity(value);
-        ecs_assert(o, ECS_INVALID_PARAMETER,
-            "Constant was not found in Enum reflection data."
-            " Did you mean to use has<E>() instead of has(E)?");
-        return ecs_has_pair(world_, id_, r, o);
-    }
-
-    /** Check if entity has the provided pair.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return True if the entity has the provided pair, false otherwise.
-     */
-    template <typename First, typename Second>
-    bool has() const {
-        return this->has<First>(_::type<Second>::id(world_));
-    }
-
-    /** Check if entity has the provided pair.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if the entity has the provided pair, false otherwise.
-     */
-    template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
-    bool has(Second second) const {
-        auto comp_id = _::type<First>::id(world_);
-        return ecs_has_id(world_, id_, ecs_pair(comp_id, second));
-    }
-
-    /** Check if entity has the provided pair.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first element of the pair.
-     * @return True if the entity has the provided pair, false otherwise.
-     */
     template <typename Second>
     bool has_second(flecs::entity_t first) const {
-        return this->has(first, _::type<Second>::id(world_));
+        return has(first, _::type<Second>::id(world_));
     }
 
-    /** Check if entity has the provided pair.
-     *
-     * @tparam First The first element of the pair.
-     * @param value The enum constant.
-     * @return True if the entity has the provided pair, false otherwise.
-     */
-    template<typename First, typename E, if_t< is_enum<E>::value && !std::is_same<First, E>::value > = 0>
-    bool has(E value) const {
-        const auto& et = enum_type<E>(this->world_);
-        flecs::entity_t second = et.entity(value);
-        return has<First>(second);
+    template <typename... T, typename... Args>
+    bool owns(Args... args) const {
+        return ecs_owns_id(world_, id_, _::make_id<T...>(world_, args...).id);
     }
 
-    /** Check if entity has the provided pair.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if the entity has the provided pair, false otherwise.
-     */
-    bool has(flecs::id_t first, flecs::id_t second) const {
-        return ecs_has_id(world_, id_, ecs_pair(first, second));
-    }
-
-    /** Check if entity owns the provided entity.
-     * An entity is owned if it is not shared from a base entity.
-     *
-     * @param e The entity to check.
-     * @return True if the entity owns the provided entity, false otherwise.
-     */
-    bool owns(flecs::id_t e) const {
-        return ecs_owns_id(world_, id_, e);
-    }
-
-    /** Check if entity owns the provided pair.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if the entity owns the provided pair, false otherwise.
-     */
-    template <typename First>
-    bool owns(flecs::id_t second) const {
-        auto comp_id = _::type<First>::id(world_);
-        return owns(ecs_pair(comp_id, second));
-    }
-
-    /** Check if entity owns the provided pair.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if the entity owns the provided pair, false otherwise.
-     */
-    bool owns(flecs::id_t first, flecs::id_t second) const {
-        return owns(ecs_pair(first, second));
-    }
-
-    /** Check if entity owns the provided component.
-     * A component is owned if it is not shared from a base entity.
-     *
-     * @tparam T The component to check.
-     * @return True if the entity owns the provided component, false otherwise.
-     */
-    template <typename T>
-    bool owns() const {
-        return owns(_::type<T>::id(world_));
-    }
-
-    /** Check if entity owns the provided pair.
-     * A pair is owned if it is not shared from a base entity.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return True if the entity owns the provided pair, false otherwise.
-     */
-    template <typename First, typename Second>
-    bool owns() const {
-        return owns(
-            _::type<First>::id(world_),
-            _::type<Second>::id(world_));
-    }
-
-    /** Check if entity owns the provided pair.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first element of the pair.
-     * @return True if the entity owns the provided pair, false otherwise.
-     */
     template <typename Second>
     bool owns_second(flecs::entity_t first) const {
         return owns(first, _::type<Second>::id(world_));
     }
 
-    /** Test if ID is enabled.
-     *
-     * @param id The ID to test.
-     * @return True if enabled, false if not.
-     */
-    bool enabled(flecs::id_t id) const {
-        return ecs_is_enabled_id(world_, id_, id);
-    }
-
-    /** Test if component is enabled.
-     *
-     * @tparam T The component to test.
-     * @return True if enabled, false if not.
-     */
-    template<typename T>
-    bool enabled() const {
-        return this->enabled(_::type<T>::id(world_));
-    }
-
-    /** Test if pair is enabled.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if enabled, false if not.
-     */
-    bool enabled(flecs::id_t first, flecs::id_t second) const {
-        return this->enabled(ecs_pair(first, second));
-    }
-
-    /** Test if pair is enabled.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if enabled, false if not.
-     */
-    template <typename First>
-    bool enabled(flecs::id_t second) const {
-        return this->enabled(_::type<First>::id(world_), second);
-    }
-
-    /** Test if pair is enabled.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return True if enabled, false if not.
-     */
-    template <typename First, typename Second>
-    bool enabled() const {
-        return this->enabled<First>(_::type<Second>::id(world_));
+    template <typename... T, typename... Args>
+    bool enabled(Args... args) const {
+        return ecs_is_enabled_id(world_, id_, _::make_id<T...>(world_, args...).id);
     }
 
     /** Clone an entity.

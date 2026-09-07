@@ -25679,9 +25679,10 @@ ecs_equals_t equals() {
 namespace flecs {
 namespace _ {
 
-template <typename T = void, bool Sparse = false, typename Owner = void>
+template <typename T = void, bool Sparse = false, typename Owner = void, typename Construct = T>
 struct component_id {
     using type = T;
+    using construct_type = Construct;
     static constexpr bool sparse = Sparse;
     flecs::id_t id;
     flecs::entity_t entity;
@@ -25699,7 +25700,9 @@ struct component_id {
 template <typename T>
 flecs::entity_t entity_id(world_t *world, T value) {
     if constexpr (is_enum_v<T>) {
-        return flecs::enum_type<T>(world).entity(value);
+        auto entity = flecs::enum_type<T>(world).entity(value);
+        ecs_assert(entity, ECS_INVALID_PARAMETER, "enum constant was not found");
+        return entity;
     } else {
         (void)world;
         return value;
@@ -25719,7 +25722,9 @@ auto resolve_id(world_t *world, arg_list<T>) {
 
 template <typename First, typename Second>
 auto resolve_id(world_t *world, arg_list<First, Second>) {
-    return resolve_id(world, arg_list<flecs::pair<First, Second>>{});
+    using T = flecs::pair<First, Second>;
+    return component_id<actual_type_t<T>, false, First, First>{
+        _::type<T>::id(world), 0};
 }
 
 template <typename First, typename Second>
@@ -25761,6 +25766,25 @@ template <typename First, typename Second>
 auto second_id(world_t *world) {
     static_assert(is_empty_v<First>, "first element of pair must be a tag");
     return make_id<First, Second>(world);
+}
+
+template <typename Id>
+void add_component(world_t *world, flecs::entity_t entity, Id id) {
+    flecs_static_assert(std::is_void_v<typename Id::construct_type> ||
+        is_flecs_constructible<typename Id::construct_type>::value,
+        "cannot default construct component: use emplace<T>()");
+    ecs_add_id(world, entity, id.id);
+}
+
+template <typename Id>
+bool has_component(world_t *world, flecs::entity_t entity, Id id) {
+    if (ecs_has_id(world, entity, id.id)) {
+        return true;
+    }
+    if constexpr (Id::sparse && is_enum_v<typename Id::type>) {
+        return ecs_has_pair(world, entity, id.id, flecs::Wildcard);
+    }
+    return false;
 }
 
 template <bool Mutable, bool Required, typename Id>
@@ -26590,112 +26614,23 @@ struct world {
         return _::get_component<true, true>(world_, id.owner(world_), id);
     }
 
-    /** Test if world has singleton component.
-     * 
-     * @tparam T The component to check.
-     * @return Whether the world has the singleton component.
-     */
-    template <typename T>
-    bool has() const;
+    template <typename... T, typename... Args>
+    bool has(Args... args) const {
+        auto id = _::make_id<T...>(world_, args...);
+        return _::has_component(world_, id.owner(world_), id);
+    }
 
-    /** Test if world has the provided pair.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return Whether the world has the singleton pair.
-     */
-    template <typename First, typename Second>
-    bool has() const;
+    template <typename... T, typename... Args>
+    void add(Args... args) const {
+        auto id = _::make_id<T...>(world_, args...);
+        _::add_component(world_, id.owner(world_), id);
+    }
 
-    /** Test if world has the provided pair.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return Whether the world has the singleton pair.
-     */
-    template <typename First>
-    bool has(flecs::id_t second) const;
-
-    /** Test if world has the provided pair.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return Whether the world has the singleton pair.
-     */
-    bool has(flecs::id_t first, flecs::id_t second) const;
-
-    /** Check for enum singleton constant.
-     *
-     * @tparam E The enum type.
-     * @param value The enum constant to check.
-     * @return Whether the world has the specified enum constant.
-     */
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    bool has(E value) const;
-
-    /** Add singleton component.
-     */
-    template <typename T>
-    void add() const;
-
-    /** Add a pair to the singleton component.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template <typename First, typename Second>
-    void add() const;
-
-    /** Add a pair to the singleton component.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    template <typename First>
-    void add(flecs::entity_t second) const;
-
-    /** Add a pair to the singleton entity.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    void add(flecs::entity_t first, flecs::entity_t second) const;
-
-    /** Add enum singleton constant.
-     *
-     * @tparam E The enum type.
-     * @param value The enum constant.
-     */
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    void add(E value) const;
-
-    /** Remove singleton component.
-     */
-    template <typename T>
-    void remove() const;
-
-    /** Remove the pair singleton component.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template <typename First, typename Second>
-    void remove() const;
-
-    /** Remove the pair singleton component.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    template <typename First>
-    void remove(flecs::entity_t second) const;
-
-    /** Remove the pair singleton component.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    void remove(flecs::entity_t first, flecs::entity_t second) const;
+    template <typename... T, typename... Args>
+    void remove(Args... args) const {
+        auto id = _::make_id<T...>(world_, args...);
+        ecs_remove_id(world_, id.owner(world_), id.id);
+    }
 
     /** Iterate entities in root of world.
      * Accepts a callback with the following signature:
@@ -26771,57 +26706,9 @@ struct world {
      */
     void use(flecs::entity entity, const char *alias = nullptr) const;
 
-    /** Count entities matching a component.
-     *
-     * @param component_id The component ID.
-     * @return The number of entities matching the component.
-     */
-    int count(flecs::id_t component_id) const {
-        return ecs_count_id(world_, component_id);
-    }
-
-    /** Count entities matching a pair.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return The number of entities matching the pair.
-     */
-    int count(flecs::entity_t first, flecs::entity_t second) const {
-        return ecs_count_id(world_, ecs_pair(first, second));
-    }
-
-    /** Count entities matching a component.
-     *
-     * @tparam T The component type.
-     * @return The number of entities matching the component.
-     */
-    template <typename T>
-    int count() const {
-        return count(_::type<T>::id(world_));
-    }
-
-    /** Count entities matching a pair.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return The number of entities matching the pair.
-     */
-    template <typename First>
-    int count(flecs::entity_t second) const {
-        return count(_::type<First>::id(world_), second);
-    }
-
-    /** Count entities matching a pair.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return The number of entities matching the pair.
-     */
-    template <typename First, typename Second>
-    int count() const {
-        return count(
-            _::type<First>::id(world_),
-            _::type<Second>::id(world_));
+    template <typename... T, typename... Args>
+    int count(Args... args) const {
+        return ecs_count_id(world_, _::make_id<T...>(world_, args...).id);
     }
 
     /** All entities created in the function are created in the scope. All operations
@@ -26842,60 +26729,14 @@ struct world {
         scope(parent, func);
     }
 
-    /** Delete all entities with specified id. */
-    void delete_with(id_t the_id) const {
-        ecs_delete_with(world_, the_id);
+    template <typename... T, typename... Args>
+    void delete_with(Args... args) const {
+        ecs_delete_with(world_, _::make_id<T...>(world_, args...).id);
     }
 
-    /** Delete all entities with specified pair. */
-    void delete_with(entity_t first, entity_t second) const {
-        delete_with(ecs_pair(first, second));
-    }
-
-    /** Delete all entities with specified component. */
-    template <typename T>
-    void delete_with() const {
-        delete_with(_::type<T>::id(world_));
-    }
-
-    /** Delete all entities with specified pair. */
-    template <typename First, typename Second>
-    void delete_with() const {
-        delete_with(_::type<First>::id(world_), _::type<Second>::id(world_));
-    }
-
-    /** Delete all entities with specified pair. */
-    template <typename First>
-    void delete_with(entity_t second) const {
-        delete_with(_::type<First>::id(world_), second);
-    }
-
-    /** Remove all instances of specified id. */
-    void remove_all(id_t the_id) const {
-        ecs_remove_all(world_, the_id);
-    }
-
-    /** Remove all instances of specified pair. */
-    void remove_all(entity_t first, entity_t second) const {
-        remove_all(ecs_pair(first, second));
-    }
-
-    /** Remove all instances of specified component. */
-    template <typename T>
-    void remove_all() const {
-        remove_all(_::type<T>::id(world_));
-    }
-
-    /** Remove all instances of specified pair. */
-    template <typename First, typename Second>
-    void remove_all() const {
-        remove_all(_::type<First>::id(world_), _::type<Second>::id(world_));
-    }
-
-    /** Remove all instances of specified pair. */
-    template <typename First>
-    void remove_all(entity_t second) const {
-        remove_all(_::type<First>::id(world_), second);
+    template <typename... T, typename... Args>
+    void remove_all(Args... args) const {
+        ecs_remove_all(world_, _::make_id<T...>(world_, args...).id);
     }
 
     /** Defer all operations called in function.
@@ -27053,32 +26894,9 @@ struct world {
         }
     }
 
-    /** Return the type info. */
-    const flecs::type_info_t* type_info(flecs::id_t component) {
-        return ecs_get_type_info(world_, component);
-    }
-
-    /** Return the type info. */
-    const flecs::type_info_t* type_info(flecs::entity_t r, flecs::entity_t t) {
-        return ecs_get_type_info(world_, ecs_pair(r, t));
-    }
-
-    /** Return the type info. */
-    template <typename T>
-    const flecs::type_info_t* type_info() {
-        return ecs_get_type_info(world_, _::type<T>::id(world_));
-    }
-
-    /** Return the type info. */
-    template <typename R>
-    const flecs::type_info_t* type_info(flecs::entity_t t) {
-        return type_info(_::type<R>::id(world_), t);
-    }
-
-    /** Return the type info. */
-    template <typename R, typename T>
-    const flecs::type_info_t* type_info() {
-        return type_info<R>(_::type<T>::id(world_));
+    template <typename... T, typename... Args>
+    const flecs::type_info_t* type_info(Args... args) {
+        return ecs_get_type_info(world_, _::make_id<T...>(world_, args...).id);
     }
 
 /** Get ID from a type.
@@ -29323,225 +29141,29 @@ struct entity_view : public id {
      */
     flecs::entity lookup(const char *path, bool search_path = false) const;
 
-    /** Check if entity has the provided entity.
-     *
-     * @param e The entity to check.
-     * @return True if the entity has the provided entity, false otherwise.
-     */
-    bool has(flecs::id_t e) const {
-        return ecs_has_id(world_, id_, e);
-    }     
-
-    /** Check if entity has the provided component.
-     *
-     * @tparam T The component to check.
-     * @return True if the entity has the provided component, false otherwise.
-     */
-    template <typename T>
-    bool has() const {
-        flecs::id_t cid = _::type<T>::id(world_);
-        bool result = ecs_has_id(world_, id_, cid);
-        if (result) {
-            return result;
-        }
-
-        if (is_enum<T>::value) {
-            return ecs_has_pair(world_, id_, cid, flecs::Wildcard);
-        }
-
-        return false;
+    template <typename... T, typename... Args>
+    bool has(Args... args) const {
+        return _::has_component(world_, id_, _::make_id<T...>(world_, args...));
     }
 
-    /** Check if entity has the provided enum constant.
-     *
-     * @tparam E The enum type (can be deduced).
-     * @param value The enum constant to check. 
-     * @return True if the entity has the provided constant, false otherwise.
-     */
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    bool has(E value) const {
-        auto r = _::type<E>::id(world_);
-        auto o = enum_type<E>(world_).entity(value);
-        ecs_assert(o, ECS_INVALID_PARAMETER,
-            "Constant was not found in Enum reflection data."
-            " Did you mean to use has<E>() instead of has(E)?");
-        return ecs_has_pair(world_, id_, r, o);
-    }
-
-    /** Check if entity has the provided pair.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return True if the entity has the provided pair, false otherwise.
-     */
-    template <typename First, typename Second>
-    bool has() const {
-        return this->has<First>(_::type<Second>::id(world_));
-    }
-
-    /** Check if entity has the provided pair.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if the entity has the provided pair, false otherwise.
-     */
-    template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
-    bool has(Second second) const {
-        auto comp_id = _::type<First>::id(world_);
-        return ecs_has_id(world_, id_, ecs_pair(comp_id, second));
-    }
-
-    /** Check if entity has the provided pair.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first element of the pair.
-     * @return True if the entity has the provided pair, false otherwise.
-     */
     template <typename Second>
     bool has_second(flecs::entity_t first) const {
-        return this->has(first, _::type<Second>::id(world_));
+        return has(first, _::type<Second>::id(world_));
     }
 
-    /** Check if entity has the provided pair.
-     *
-     * @tparam First The first element of the pair.
-     * @param value The enum constant.
-     * @return True if the entity has the provided pair, false otherwise.
-     */
-    template<typename First, typename E, if_t< is_enum<E>::value && !std::is_same<First, E>::value > = 0>
-    bool has(E value) const {
-        const auto& et = enum_type<E>(this->world_);
-        flecs::entity_t second = et.entity(value);
-        return has<First>(second);
+    template <typename... T, typename... Args>
+    bool owns(Args... args) const {
+        return ecs_owns_id(world_, id_, _::make_id<T...>(world_, args...).id);
     }
 
-    /** Check if entity has the provided pair.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if the entity has the provided pair, false otherwise.
-     */
-    bool has(flecs::id_t first, flecs::id_t second) const {
-        return ecs_has_id(world_, id_, ecs_pair(first, second));
-    }
-
-    /** Check if entity owns the provided entity.
-     * An entity is owned if it is not shared from a base entity.
-     *
-     * @param e The entity to check.
-     * @return True if the entity owns the provided entity, false otherwise.
-     */
-    bool owns(flecs::id_t e) const {
-        return ecs_owns_id(world_, id_, e);
-    }
-
-    /** Check if entity owns the provided pair.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if the entity owns the provided pair, false otherwise.
-     */
-    template <typename First>
-    bool owns(flecs::id_t second) const {
-        auto comp_id = _::type<First>::id(world_);
-        return owns(ecs_pair(comp_id, second));
-    }
-
-    /** Check if entity owns the provided pair.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if the entity owns the provided pair, false otherwise.
-     */
-    bool owns(flecs::id_t first, flecs::id_t second) const {
-        return owns(ecs_pair(first, second));
-    }
-
-    /** Check if entity owns the provided component.
-     * A component is owned if it is not shared from a base entity.
-     *
-     * @tparam T The component to check.
-     * @return True if the entity owns the provided component, false otherwise.
-     */
-    template <typename T>
-    bool owns() const {
-        return owns(_::type<T>::id(world_));
-    }
-
-    /** Check if entity owns the provided pair.
-     * A pair is owned if it is not shared from a base entity.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return True if the entity owns the provided pair, false otherwise.
-     */
-    template <typename First, typename Second>
-    bool owns() const {
-        return owns(
-            _::type<First>::id(world_),
-            _::type<Second>::id(world_));
-    }
-
-    /** Check if entity owns the provided pair.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first element of the pair.
-     * @return True if the entity owns the provided pair, false otherwise.
-     */
     template <typename Second>
     bool owns_second(flecs::entity_t first) const {
         return owns(first, _::type<Second>::id(world_));
     }
 
-    /** Test if ID is enabled.
-     *
-     * @param id The ID to test.
-     * @return True if enabled, false if not.
-     */
-    bool enabled(flecs::id_t id) const {
-        return ecs_is_enabled_id(world_, id_, id);
-    }
-
-    /** Test if component is enabled.
-     *
-     * @tparam T The component to test.
-     * @return True if enabled, false if not.
-     */
-    template<typename T>
-    bool enabled() const {
-        return this->enabled(_::type<T>::id(world_));
-    }
-
-    /** Test if pair is enabled.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if enabled, false if not.
-     */
-    bool enabled(flecs::id_t first, flecs::id_t second) const {
-        return this->enabled(ecs_pair(first, second));
-    }
-
-    /** Test if pair is enabled.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return True if enabled, false if not.
-     */
-    template <typename First>
-    bool enabled(flecs::id_t second) const {
-        return this->enabled(_::type<First>::id(world_), second);
-    }
-
-    /** Test if pair is enabled.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return True if enabled, false if not.
-     */
-    template <typename First, typename Second>
-    bool enabled() const {
-        return this->enabled<First>(_::type<Second>::id(world_));
+    template <typename... T, typename... Args>
+    bool enabled(Args... args) const {
+        return ecs_is_enabled_id(world_, id_, _::make_id<T...>(world_, args...).id);
     }
 
     /** Clone an entity.
@@ -29823,107 +29445,16 @@ struct entity_builder : entity_view {
 
     using entity_view::entity_view;
 
-    /** Add a component to an entity.
-     * To ensure the component is initialized, it should have a constructor.
-     * 
-     * @tparam T The component type to add.
-     */
-    template <typename T>
-    const Self& add() const  {
-        flecs_static_assert(is_flecs_constructible<T>::value,
-            "cannot default construct type: add T::T() or use emplace<T>()");
-        ecs_add_id(this->world_, this->id_, _::type<T>::id(this->world_));
+    template <typename... T, typename... Args>
+    const Self& add(Args... args) const {
+        _::add_component(this->world_, this->id_,
+            _::make_id<T...>(this->world_, args...));
         return to_base();
     }
 
-     /** Add a pair for an enum constant.
-     * This operation will add a pair to the entity where the first element is
-     * the enumeration type, and the second element the enumeration constant.
-     * 
-     * The operation may be used with regular (C-style) enumerations as well as
-     * enum classes.
-     * 
-     * @param value The enumeration value.
-     */
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    const Self& add(E value) const  {
-        flecs::entity_t first = _::type<E>::id(this->world_);
-        const auto& et = enum_type<E>(this->world_);
-        flecs::entity_t second = et.entity(value);
-
-        ecs_assert(second, ECS_INVALID_PARAMETER, "Enum constant was not found in reflection data.");
-        return this->add(first, second);
-    }
-
-    /** Add an entity to an entity.
-     * Add an entity to the entity. This is typically used for tagging.
-     *
-     * @param component The component or tag to add.
-     */
-    const Self& add(id_t component) const  {
-        ecs_add_id(this->world_, this->id_, component);
-        return to_base();
-    }
-
-    /** Add a pair.
-     * This operation adds a pair to the entity.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    const Self& add(entity_t first, entity_t second) const  {
-        ecs_add_pair(this->world_, this->id_, first, second);
-        return to_base();
-    }
-
-    /** Add a pair.
-     * This operation adds a pair to the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template<typename First, typename Second>
-    const Self& add() const  {
-        return this->add<First>(_::type<Second>::id(this->world_));
-    }
-
-    /** Add a pair.
-     * This operation adds a pair to the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
-    const Self& add(Second second) const  {
-        flecs_static_assert(is_flecs_constructible<First>::value,
-            "cannot default construct type: add T::T() or use emplace<T>()");
-        return this->add(_::type<First>::id(this->world_), second);
-    }
-
-    /** Add a pair.
-     * This operation adds a pair to the entity that consists of a tag
-     * combined with an enum constant.
-     *
-     * @tparam First The first element of the pair.
-     * @param constant The enum constant.
-     */
-    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
-    const Self& add(Second constant) const  {
-        flecs_static_assert(is_flecs_constructible<First>::value,
-            "cannot default construct type: add T::T() or use emplace<T>()");
-        const auto& et = enum_type<Second>(this->world_);
-        return this->add<First>(et.entity(constant));
-    }
-
-    /** Add a pair.
-     * This operation adds a pair to the entity.
-     *
-     * @param first The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template<typename Second>
-    const Self& add_second(flecs::entity_t first) const  {
-        return this->add(first, _::type<Second>::id(this->world_));
+    template <typename Second>
+    const Self& add_second(flecs::entity_t first) const {
+        return add(first, _::type<Second>::id(this->world_));
     }
 
     /** Conditional add.
@@ -30075,144 +29606,26 @@ struct entity_builder : entity_view {
         return this->depends_on(_::type<T>::id(this->world_));
     }
 
-    /** Remove a component from an entity.
-     *
-     * @tparam T The type of the component to remove.
-     */
-    template <typename T>
-    const Self& remove() const {
-        ecs_remove_id(this->world_, this->id_, _::type<T>::id(this->world_));
+    template <typename... T, typename... Args>
+    const Self& remove(Args... args) const {
+        ecs_remove_id(this->world_, this->id_,
+            _::make_id<T...>(this->world_, args...).id);
         return to_base();
     }
 
-    /** Remove an entity from an entity.
-     *
-     * @param entity The entity to remove.
-     */
-    const Self& remove(entity_t entity) const  {
-        ecs_remove_id(this->world_, this->id_, entity);
-        return to_base();
-    }
-
-    /** Remove a pair.
-     * This operation removes a pair from the entity.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    const Self& remove(entity_t first, entity_t second) const  {
-        ecs_remove_pair(this->world_, this->id_, first, second);
-        return to_base();
-    }
-
-    /** Remove a pair.
-     * This operation removes a pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template<typename First, typename Second>
-    const Self& remove() const  {
-        return this->remove<First>(_::type<Second>::id(this->world_));
-    }
-
-    /** Remove a pair.
-     * This operation removes the pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
-    const Self& remove(Second second) const  {
-        return this->remove(_::type<First>::id(this->world_), second);
-    }
-
-    /** Remove a pair.
-     * This operation removes a pair from the entity.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first element of the pair.
-     */
-    template<typename Second>
-    const Self& remove_second(flecs::entity_t first) const  {
-        return this->remove(first, _::type<Second>::id(this->world_));
-    }
-
-    /** Remove a pair.
-     * This operation removes the pair from the entity.
-     *
-     * @tparam First The first element of the pair.
-     * @param constant The enum constant.
-     */
-    template<typename First, typename Second, if_t< is_enum<Second>::value > = 0>
-    const Self& remove(Second constant) const  {
-        const auto& et = enum_type<Second>(this->world_);
-        flecs::entity_t second = et.entity(constant);
-        return this->remove<First>(second);
-    }  
-
-    /** Mark ID for auto-overriding.
-     * When an entity inherits from a base entity (using the `IsA` relationship),
-     * any IDs marked for auto-overriding on the base will be overridden
-     * automatically by the entity.
-     *
-     * @param id The ID to mark for overriding.
-     */
-    const Self& auto_override(flecs::id_t id) const  {
-        return this->add(ECS_AUTO_OVERRIDE | id);
-    }
-
-    /** Mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t) const
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    const Self& auto_override(flecs::entity_t first, flecs::entity_t second) const  {
-        return this->auto_override(ecs_pair(first, second));
-    }
-
-    /** Mark component for auto-overriding.
-     * @see auto_override(flecs::id_t) const
-     *
-     * @tparam T The component to mark for overriding.
-     */
-    template <typename T>
-    const Self& auto_override() const  {
-        return this->auto_override(_::type<T>::id(this->world_));
-    }
-
-    /** Mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t) const
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    template <typename First>
-    const Self& auto_override(flecs::entity_t second) const  {
-        return this->auto_override(_::type<First>::id(this->world_), second);
-    }
-
-    /** Mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t) const
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template <typename First, typename Second>
-    const Self& auto_override() const  {
-        return this->auto_override<First>(_::type<Second>::id(this->world_));
-    }
-
-    /** Mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t) const
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first element of the pair.
-     */
     template <typename Second>
-    const Self& auto_override_second(flecs::entity_t first) const  {
-        return this->auto_override(first, _::type<Second>::id(this->world_));
+    const Self& remove_second(flecs::entity_t first) const {
+        return remove(first, _::type<Second>::id(this->world_));
+    }
+
+    template <typename... T, typename... Args>
+    const Self& auto_override(Args... args) const {
+        return add(ECS_AUTO_OVERRIDE | _::make_id<T...>(this->world_, args...).id);
+    }
+
+    template <typename Second>
+    const Self& auto_override_second(flecs::entity_t first) const {
+        return auto_override(first, _::type<Second>::id(this->world_));
     }
 
     /** Set component, mark component for auto-overriding.
@@ -39411,101 +38824,6 @@ inline ref<T> world::get_ref() const {
 }
 
 /** Try to get a singleton value by component ID (returns nullptr if not found). */
-template <typename T>
-inline bool world::has() const {
-    flecs::entity e(world_, _::type<T>::id(world_));
-    return e.has<T>();
-}
-
-/** Check for singleton pair component. */
-template <typename First, typename Second>
-inline bool world::has() const {
-    flecs::entity e(world_, _::type<First>::id(world_));
-    return e.has<First, Second>();
-}
-
-/** Check for singleton pair component. */
-template <typename First>
-inline bool world::has(flecs::id_t second) const {
-    flecs::entity e(world_, _::type<First>::id(world_));
-    return e.has<First>(second);
-}
-
-/** Check for singleton pair by entity IDs. */
-inline bool world::has(flecs::id_t first, flecs::id_t second) const {
-    flecs::entity e(world_, first);
-    return e.has(first, second);
-}
-
-/** Check for singleton enum constant. */
-template <typename E, if_t< is_enum<E>::value > >
-inline bool world::has(E value) const {
-    flecs::entity e(world_, _::type<E>::id(world_));
-    return e.has(value);
-}
-
-/** Add a singleton component. */
-template <typename T>
-inline void world::add() const {
-    flecs::entity e(world_, _::type<T>::id(world_));
-    e.add<T>();
-}
-
-/** Add a singleton pair component. */
-template <typename First, typename Second>
-inline void world::add() const {
-    flecs::entity e(world_, _::type<First>::id(world_));
-    e.add<First, Second>();
-}
-
-/** Add a singleton pair component. */
-template <typename First>
-inline void world::add(flecs::entity_t second) const {
-    flecs::entity e(world_, _::type<First>::id(world_));
-    e.add<First>(second);
-}
-
-/** Add a singleton pair by entity IDs. */
-inline void world::add(flecs::entity_t first, flecs::entity_t second) const {
-    flecs::entity e(world_, first);
-    e.add(first, second);
-}
-
-/** Add a singleton enum constant value. */
-template <typename E, if_t< is_enum<E>::value > >
-inline void world::add(E value) const {
-    flecs::entity e(world_, _::type<E>::id(world_));
-    e.add(value);
-}
-
-/** Remove a singleton component. */
-template <typename T>
-inline void world::remove() const {
-    flecs::entity e(world_, _::type<T>::id(world_));
-    e.remove<T>();
-}
-
-/** Remove a singleton pair component. */
-template <typename First, typename Second>
-inline void world::remove() const {
-    flecs::entity e(world_, _::type<First>::id(world_));
-    e.remove<First, Second>();
-}
-
-/** Remove a singleton pair component by second entity. */
-template <typename First>
-inline void world::remove(flecs::entity_t second) const {
-    flecs::entity e(world_, _::type<First>::id(world_));
-    e.remove<First>(second);
-}
-
-/** Remove a singleton pair by entity IDs. */
-inline void world::remove(flecs::entity_t first, flecs::entity_t second) const {
-    flecs::entity e(world_, first);
-    e.remove(first, second);
-}
-
-/** Iterate over children of the root entity. */
 template <typename Func>
 inline void world::children(Func&& f) const {
     this->entity(0).children(FLECS_FWD(f));
