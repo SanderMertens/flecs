@@ -103356,65 +103356,48 @@ static int flecs_expr_fold_eval(
     const ecs_expr_eval_desc_t *desc)
 {
     ecs_expr_node_t *node = *node_ptr;
+    if (node->kind == EcsExprUnary) {
+        ecs_expr_unary_t *unary = (ecs_expr_unary_t*)node;
+        ecs_expr_value_node_t *result = (ecs_expr_value_node_t*)unary->expr;
+        ecs_value_t value = { .type = result->node.type, .ptr = result->ptr };
+        if (flecs_value_unary(script, &value, &value, unary->operator)) {
+            return -1;
+        }
+        unary->expr = NULL;
+        result->node.pos = node->pos;
+        result->node.end = node->end;
+        flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
+        return 0;
+    }
     ecs_expr_value_node_t *result = flecs_expr_value_from(script, node, node->type);
-    result->ptr = ecs_ptr_new_w_type_info(script->world, result->node.type_info);
-    flecs_type_info_claim(result->node.type_info);
+    const ecs_type_info_t *ti = result->node.type_info;
+    if (ti->size > ECS_SIZEOF(result->storage) || ti->hooks.dtor) {
+        result->ptr = ecs_ptr_new_w_type_info(script->world, ti);
+        flecs_type_info_claim(ti);
+    } else {
+        flecs_type_info_ctor(result->ptr, 1, ti);
+    }
     ecs_value_t value = { .type = node->type, .ptr = result->ptr };
-    if (flecs_expr_visit_eval(script, node, desc, &value)) {
+    int ret;
+    if (node->kind == EcsExprCastNumber) {
+        ecs_expr_value_node_t *src = (ecs_expr_value_node_t*)
+            ((ecs_expr_cast_t*)node)->expr;
+        ecs_meta_cursor_t cur = ecs_meta_cursor(
+            script->world, node->type, value.ptr);
+        ret = ecs_meta_set_value(&cur,
+            &(ecs_value_t){ .type = src->node.type, .ptr = src->ptr });
+        if (ret) {
+            flecs_expr_visit_error(script, node, "failed to assign value");
+        }
+    } else {
+        ret = flecs_expr_visit_eval(script, node, desc, &value);
+    }
+    if (ret) {
         flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
         return -1;
     }
     flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     return 0;
-}
-
-static int flecs_expr_unary_visit_fold(
-    ecs_script_t *script,
-    ecs_expr_node_t **node_ptr,
-    const ecs_expr_eval_desc_t *desc)
-{
-    ecs_expr_unary_t *node = (ecs_expr_unary_t*)*node_ptr;
-
-    if (node->operator != EcsTokNot) {
-        flecs_expr_visit_error(script, node, 
-            "operator invalid for unary expression");
-        goto error;
-    }
-
-    if (flecs_expr_visit_fold(script, &node->expr, desc)) {
-        goto error;
-    }
-
-    if (node->expr->kind != EcsExprValue) {
-        /* Only folding literals */
-        return 0;
-    }
-
-    if (node->expr->type != ecs_id(ecs_bool_t)) {
-        char *type_str = ecs_get_path(script->world, node->node.type);
-        flecs_expr_visit_error(script, node,
-            "! operator cannot be applied to value of type '%s' (must be bool)",
-            type_str);
-        ecs_os_free(type_str);
-        goto error;
-    }
-
-    ecs_expr_value_node_t *result = flecs_expr_value_from(
-        script, (ecs_expr_node_t*)node, ecs_id(ecs_bool_t));
-    result->ptr = &result->storage.bool_;
-
-    ecs_value_t dst = { .ptr = result->ptr, .type = ecs_id(ecs_bool_t) };
-    ecs_value_t src = { 
-        .ptr = ((ecs_expr_value_node_t*)node->expr)->ptr, .type = ecs_id(ecs_bool_t) };
-    if (flecs_value_unary(script, &src, &dst, node->operator)) {
-        goto error;
-    }
-
-    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
-
-    return 0;
-error:
-    return -1;
 }
 
 static int flecs_expr_binary_visit_fold(
@@ -103461,96 +103444,12 @@ static int flecs_expr_binary_visit_fold(
         return 0;
     }
 
-    ecs_expr_value_node_t *left = (ecs_expr_value_node_t*)node->left;
-    ecs_expr_value_node_t *right = (ecs_expr_value_node_t*)node->right;
-
-    ecs_value_t lop = { .type = left->node.type, .ptr = left->ptr };
-    ecs_value_t rop = { .type = right->node.type, .ptr = right->ptr };
-
-    /* flecs_value_binary will detect division by 0, but we have more 
-     * information about where it happens here. */
-    if (node->operator == EcsTokDiv || node->operator == EcsTokMod) {
-        if (flecs_value_is_0(&rop)) {
-            flecs_expr_visit_error(script, node, 
-                "invalid division by zero");
-            goto error;
-        }
-    }
-
-    ecs_expr_value_node_t *result = flecs_expr_value_from(
-        script, (ecs_expr_node_t*)node, node->node.type);
-    ecs_value_t res = { .type = result->node.type, .ptr = result->ptr };
-
-    if (flecs_value_binary(
-        script, &node->node, &lop, &rop, &res, node->operator))
-    {
-        goto error;
-    }
-
-    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
-    return 0;
-error:  
+    return flecs_expr_fold_eval(script, node_ptr, desc);
+error:
     return -1;
 }
 
-static int flecs_expr_cast_visit_fold(
-    ecs_script_t *script,
-    ecs_expr_node_t **node_ptr,
-    const ecs_expr_eval_desc_t *desc)
-{
-    ecs_expr_cast_t *node = (ecs_expr_cast_t*)*node_ptr;
-
-    if (flecs_expr_visit_fold(script, &node->expr, desc)) {
-        goto error;
-    }
-
-    if (node->expr->kind != EcsExprValue) {
-        /* Only folding literals for now */
-        return 0;
-    }
-
-    ecs_expr_value_node_t *expr = (ecs_expr_value_node_t*)node->expr;
-    ecs_entity_t dst_type = node->node.type;
-    ecs_entity_t src_type = expr->node.type;
-
-    if (dst_type == src_type) {
-        /* No cast necessary if types are equal */
-        return 0;
-    }
-
-    void *dst_ptr = ecs_ptr_new(script->world, dst_type);
-
-    ecs_meta_cursor_t cur = ecs_meta_cursor(script->world, dst_type, dst_ptr);
-    ecs_value_t value = {
-        .type = src_type,
-        .ptr = expr->ptr
-    };
-
-    if (ecs_meta_set_value(&cur, &value)) {
-        flecs_expr_visit_error(script, node, "failed to assign value");
-        ecs_ptr_free(script->world, dst_type, dst_ptr);
-        goto error;
-    }
-
-    if (expr->ptr != &expr->storage) {
-        ecs_ptr_free_w_type_info(script->world, expr->node.type_info, expr->ptr);
-        flecs_type_info_release(expr->node.type_info);
-    }
-
-    expr->node.type = dst_type;
-    expr->node.type_info = ecs_get_type_info(script->world, dst_type);
-    flecs_type_info_claim(expr->node.type_info);
-    expr->ptr = dst_ptr;
-
-    node->expr = NULL; /* Prevent cleanup */
-    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)expr);
-
-    return 0;
-error:  
-    return -1;  
-}
-
-static int flecs_expr_interpolated_string_visit_fold(
+static int flecs_expr_pure_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -103805,21 +103704,13 @@ int flecs_expr_visit_fold(
     case EcsExprValue:
         break;
     case EcsExprInterpolatedString:
-        if (flecs_expr_interpolated_string_visit_fold(script, node_ptr, desc)) {
-            goto error;
-        }
-        break;
+    case EcsExprUnary:
+    case EcsExprCast:
+    case EcsExprCastNumber:
+        return flecs_expr_pure_visit_fold(script, node_ptr, desc);
     case EcsExprInitializer:
     case EcsExprEmptyInitializer:
-        if (flecs_expr_initializer_visit_fold(script, node_ptr, desc)) {
-            goto error;
-        }
-        break;
-    case EcsExprUnary:
-        if (flecs_expr_unary_visit_fold(script, node_ptr, desc)) {
-            goto error;
-        }
-        break;
+        return flecs_expr_initializer_visit_fold(script, node_ptr, desc);
     case EcsExprBinary:
         if (flecs_expr_binary_visit_fold(script, node_ptr, desc)) {
             goto error;
@@ -103869,12 +103760,6 @@ int flecs_expr_visit_fold(
         break;
     case EcsExprNew:
     case EcsExprScript:
-        break;
-    case EcsExprCast:
-    case EcsExprCastNumber:
-        if (flecs_expr_cast_visit_fold(script, node_ptr, desc)) {
-            goto error;
-        }
         break;
     }
 
