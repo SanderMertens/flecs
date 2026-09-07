@@ -173,12 +173,6 @@ bool flecs_query_select(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
-bool flecs_query_select_id(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    ecs_flags32_t table_filter);
-
 bool flecs_query_with(
     const ecs_query_op_t *op,
     bool redo,
@@ -348,7 +342,6 @@ typedef enum ecs_query_up_select_trav_kind_t {
 
 typedef enum ecs_query_up_select_kind_t {
     FlecsQueryUpSelectDefault,
-    FlecsQueryUpSelectId,
     FlecsQueryUpSelectSparse
 } ecs_query_up_select_kind_t;
 

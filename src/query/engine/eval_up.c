@@ -30,8 +30,6 @@ static bool flecs_query_up_select_table(
             } else {
                 result = flecs_query_tree_and(op, redo, ctx);
             }
-        } else if (kind == FlecsQueryUpSelectId) {
-            result = flecs_query_select_id(op, redo, ctx, 0);
         } else if (kind == FlecsQueryUpSelectDefault) {
             result = flecs_query_select_w_id(op, redo, ctx, 
                 impl->with, 0);
@@ -160,9 +158,6 @@ bool flecs_query_up_select(
         if (!self) {
             /* If operation does not match owned components, return false */
             return false;
-        } else if (kind == FlecsQueryUpSelectId) {
-            return flecs_query_select_id(op, redo, ctx,
-                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
         } else if (kind == FlecsQueryUpSelectDefault) {
             return flecs_query_select(op, redo, ctx);
         } else if (kind == FlecsQueryUpSelectSparse) {

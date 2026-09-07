@@ -352,55 +352,6 @@ bool flecs_query_and(
     }
 }
 
-bool flecs_query_select_id(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    ecs_flags32_t table_filter)
-{
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
-    ecs_iter_t *it = ctx->it;
-    int8_t field = op->field_index;
-    ecs_assert(field != -1, ECS_INTERNAL_ERROR, NULL);
-
-    if (!redo) {
-        ecs_id_t id = it->ids[field];
-        ecs_component_record_t *cr = op_ctx->cr;
-        if (!cr || cr->id != id) {
-            cr = op_ctx->cr = flecs_components_get(ctx->world, id);
-            if (!cr) {
-                return false;
-            }
-        }
-
-        if (ctx->query->pub.flags & EcsQueryMatchEmptyTables) {
-            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it, EcsTableEmpty|EcsTableNotEmpty)) {
-                return false;
-            }
-        } else {
-            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it, EcsTableNotEmpty)) {
-                return false;
-            }
-        }
-    }
-
-repeat: {}
-    const ecs_table_cache_elem_t *elem = flecs_table_cache_next(
-        &op_ctx->it);
-    if (!elem) {
-        return false;
-    }
-
-    ecs_table_t *table = elem->table;
-    if (flecs_query_table_filter(table, op->other, table_filter)) {
-        goto repeat;
-    }
-
-    flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
-    flecs_query_it_set_tr(it, field, elem->tr);
-    return true;
-}
-
 bool flecs_query_and_any(
     const ecs_query_op_t *op,
     bool redo,
