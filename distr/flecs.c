@@ -59506,23 +59506,8 @@ bool ecs_meta_get_bool(
     case EcsOpBitmask: return *(ecs_u32_t*)ptr != 0;
     case EcsOpEntity: return *(ecs_entity_t*)ptr != 0;
     case EcsOpId: return *(ecs_id_t*)ptr != 0;
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpOpaqueValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpScope:
-    case EcsOpPrimitive:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for bool");
-        break;
     default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for bool");
         break;
     }
 
@@ -59581,23 +59566,8 @@ int64_t ecs_meta_get_int(
         ecs_throw(ECS_INVALID_PARAMETER,
             "invalid conversion from id to int");
         break;
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpOpaqueValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpScope:
-    case EcsOpPrimitive:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for int");
-        break;
     default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for int");
         break;
     }
 error:
@@ -59631,23 +59601,8 @@ uint64_t ecs_meta_get_uint(
     case EcsOpBitmask: return *(const ecs_u32_t*)ptr;
     case EcsOpEntity: return *(const ecs_entity_t*)ptr;
     case EcsOpId: return *(const ecs_id_t*)ptr;
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpOpaqueValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpScope:
-    case EcsOpPrimitive:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for uint");
-        break;
     default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for uint");
         break;
     }
 error:
@@ -59685,23 +59640,8 @@ static double flecs_meta_to_float(
         ecs_throw(ECS_INVALID_PARAMETER,
             "invalid conversion from id to float");
         break;
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpOpaqueValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpScope:
-    case EcsOpPrimitive:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for float");
-        break;
     default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for float");
         break;
     }
 error:
