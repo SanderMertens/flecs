@@ -30918,12 +30918,7 @@ struct type_impl {
         index(); // Make sure the global component index is initialized.
 #endif
 
-        s_size = sizeof(T);
-        s_alignment = alignof(T);
-        if (is_empty<T>::value && allow_tag) {
-            s_size = 0;
-            s_alignment = 0;
-        }
+        s_has_data = !is_empty<T>::value || !allow_tag;
     }
 
     static void init_builtin(
@@ -31045,12 +31040,12 @@ struct type_impl {
 
     // Return the size of a component.
     static size_t size() {
-        return s_size;
+        return s_has_data ? sizeof(T) : 0;
     }
 
     // Return the alignment of a component.
     static size_t alignment() {
-        return s_alignment;
+        return s_has_data ? alignof(T) : 0;
     }
 
     // Was the component already registered?
@@ -31071,8 +31066,7 @@ struct type_impl {
     // This function is only used to test cross-translation-unit features. No
     // code other than test cases should invoke this function.
     static void reset() {
-        s_size = 0;
-        s_alignment = 0;
+        s_has_data = false;
 #ifndef FLECS_MULTI_WORLD
         s_id = 0;
 #endif
@@ -31087,13 +31081,11 @@ struct type_impl {
     static entity_t s_id;
 #endif
 
-    static size_t s_size;
-    static size_t s_alignment;
+    static bool s_has_data;
 };
 
 // Global templated variables that hold the component identifier and other info.
-template <typename T> inline size_t   type_impl<T>::s_size;
-template <typename T> inline size_t   type_impl<T>::s_alignment;
+template <typename T> inline bool type_impl<T>::s_has_data;
 #ifndef FLECS_MULTI_WORLD
 template <typename T> inline entity_t type_impl<T>::s_id;
 #endif
