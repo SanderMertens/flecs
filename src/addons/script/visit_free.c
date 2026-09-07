@@ -8,11 +8,19 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+static int flecs_script_stmt_free(
+    ecs_script_visit_t *v,
+    ecs_script_node_t *node);
+
 static void flecs_script_scope_free(
     ecs_script_visit_t *v,
     ecs_script_scope_t *node)
 {
-    ecs_script_visit_scope(v, node);
+    int32_t i, count = ecs_vec_count(&node->stmts);
+    ecs_script_node_t **nodes = ecs_vec_first(&node->stmts);
+    for (i = 0; i < count; i ++) {
+        flecs_script_stmt_free(v, nodes[i]);
+    }
     ecs_vec_fini_t(&v->script->allocator, &node->stmts, ecs_script_node_t*);
     ecs_vec_fini_t(&v->script->allocator, &node->components, ecs_id_t);
     flecs_free_t(&v->script->allocator, ecs_script_scope_t, node);
@@ -214,8 +222,7 @@ int flecs_script_visit_free_node(
     ecs_script_impl_t *impl = flecs_script_impl(script);
 
     ecs_script_visit_t v = {
-        .script = impl,
-        .visit = flecs_script_stmt_free
+        .script = impl
     };
 
     if (flecs_script_stmt_free(&v, node)) {
@@ -237,8 +244,7 @@ int flecs_script_visit_free(
     }
 
     ecs_script_visit_t v = {
-        .script = impl,
-        .visit = flecs_script_stmt_free
+        .script = impl
     };
 
     if (flecs_script_stmt_free(&v, (ecs_script_node_t*)impl->root)) {

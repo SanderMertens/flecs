@@ -1388,10 +1388,26 @@ int flecs_script_eval_with_enter(
     state->is_with_scope = v->is_with_scope;
     state->force = v->force;
 
-    if (ecs_script_visit_scope(v, node->expressions)) {
-        flecs_script_eval_with_leave(v, state);
-        return -1;
+    int32_t depth = v->base.depth;
+    ecs_script_node_t **nodes = ecs_vec_first(&node->expressions->stmts);
+    int32_t i, count = ecs_vec_count(&node->expressions->stmts);
+    ecs_assert(depth + 1 < ECS_SCRIPT_VISIT_MAX_DEPTH,
+        ECS_INTERNAL_ERROR, NULL);
+    v->base.nodes[v->base.depth ++] = (ecs_script_node_t*)node->expressions;
+    for (i = 0; i < count; i ++) {
+        v->base.prev = i ? nodes[i - 1] : NULL;
+        v->base.next = i + 1 < count ? nodes[i + 1] : NULL;
+        ecs_assert(v->base.depth < ECS_SCRIPT_VISIT_MAX_DEPTH,
+            ECS_INTERNAL_ERROR, NULL);
+        v->base.nodes[v->base.depth ++] = nodes[i];
+        if (flecs_script_eval_node(&v->base, nodes[i])) {
+            v->base.depth = depth;
+            flecs_script_eval_with_leave(v, state);
+            return -1;
+        }
+        v->base.depth --;
     }
+    v->base.depth = depth;
 
     v->is_with_scope = true;
     v->force = state->force ||
@@ -2677,7 +2693,6 @@ void flecs_script_eval_visit_init(
 {
     *v = (ecs_script_eval_visitor_t){
         .base = {
-            .visit = (ecs_visit_action_t)flecs_script_eval_node,
             .script = ECS_CONST_CAST(ecs_script_impl_t*, script)
         },
         .world = script->pub.world,

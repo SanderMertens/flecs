@@ -20,6 +20,10 @@ static int flecs_script_scope_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_scope_t *scope);
 
+static int flecs_script_stmt_to_str(
+    ecs_script_visit_t *v,
+    ecs_script_node_t *node);
+
 static void flecs_script_color_to_str(
     ecs_script_str_visitor_t *v,
     const char *color)
@@ -351,8 +355,12 @@ static int flecs_script_scope_to_str(
 
     v->depth ++;
 
-    if (ecs_script_visit_scope(v, scope)) {
-        return -1;
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+    ecs_script_node_t **nodes = ecs_vec_first(&scope->stmts);
+    for (i = 0; i < count; i ++) {
+        if (flecs_script_stmt_to_str(&v->base, nodes[i])) {
+            return -1;
+        }
     }
 
     v->depth --;
@@ -488,7 +496,6 @@ int ecs_script_ast_node_to_buf(
         .buf = buf, .colors = colors, .depth = depth 
     };
     v.base.script = (ecs_script_impl_t*)ECS_CONST_CAST(ecs_script_t*, script);
-    v.base.visit = flecs_script_stmt_to_str;
     v.base.depth = depth;
 
     if (flecs_script_stmt_to_str(&v.base, node)) {
@@ -511,7 +518,6 @@ int ecs_script_ast_to_buf(
     ecs_script_str_visitor_t v = { .buf = buf, .colors = colors };
     ecs_script_impl_t *impl = flecs_script_impl(script);
     v.base.script = impl;
-    v.base.visit = flecs_script_stmt_to_str;
     if (flecs_script_stmt_to_str(&v.base, (ecs_script_node_t*)impl->root)) {
         goto error;
     }

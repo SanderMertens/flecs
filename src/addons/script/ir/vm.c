@@ -3757,7 +3757,6 @@ static void flecs_ir_visit_init(
     const ecs_script_eval_desc_t *desc)
 {
     v->base.script = script;
-    v->base.visit = NULL;
     v->base.prev = NULL;
     v->base.next = NULL;
     v->base.depth = 0;
