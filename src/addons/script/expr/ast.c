@@ -496,6 +496,7 @@ int flecs_expr_visit_children(
         return action(((ecs_expr_member_t*)node)->left, ctx);
     case EcsExprSwizzle:
         return action(((ecs_expr_swizzle_t*)node)->left, ctx);
+    case EcsExprComponent:
     case EcsExprElement: {
         ecs_expr_element_t *n = (ecs_expr_element_t*)node;
         if (action(n->left, ctx) ||
@@ -504,10 +505,6 @@ int flecs_expr_visit_children(
             return -1;
         }
         break;
-    }
-    case EcsExprComponent: {
-        ecs_expr_component_t *n = (ecs_expr_component_t*)node;
-        return action(n->expr, ctx);
     }
     case EcsExprHas: {
         ecs_expr_has_t *n = (ecs_expr_has_t*)node;

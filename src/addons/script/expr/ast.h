@@ -155,12 +155,6 @@ typedef struct ecs_expr_element_t {
     int32_t elem_count;
 } ecs_expr_element_t;
 
-typedef struct ecs_expr_component_t {
-    ecs_expr_node_t node;
-    ecs_expr_node_t *expr;
-    ecs_id_t component;
-} ecs_expr_component_t;
-
 typedef struct ecs_expr_has_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *left;
