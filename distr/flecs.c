@@ -103306,7 +103306,20 @@ static int flecs_expr_function_visit_eval(
     ecs_expr_function_t *node,
     ecs_expr_value_t *out)
 {
+    bool method = node->node.kind == EcsExprMethod;
+    if (method && !node->left) {
+        return 0;
+    }
     flecs_expr_stack_push(ctx->stack);
+    ecs_value_t receiver = {0};
+    if (method) {
+        ecs_expr_value_t *expr = flecs_expr_eval_result(
+            ctx, node->left, &(ecs_expr_value_t){0});
+        if (!expr) {
+            goto error;
+        }
+        receiver = expr->value;
+    }
 
     const ecs_function_calldata_t *calldata = &node->calldata;
 
@@ -103321,16 +103334,20 @@ static int flecs_expr_function_visit_eval(
 #ifdef FLECS_SCRIPT_ASYNC
     if (calldata->async_callback) {
         flecs_expr_visit_error(ctx->script, node,
-            "async function '%s' requires await", node->function_name);
+            "async %s '%s' requires await",
+            method ? "method" : "function", node->function_name);
         goto error;
     }
 #endif
 
     ecs_value_t *argv = NULL;
     int32_t argc = ecs_vec_count(&node->args->elements);
-    if (argc) {
-        argv = ecs_os_alloca_n(ecs_value_t, argc);
-        if (flecs_expr_function_args_visit_eval(ctx, node->args, argv)) {
+    if (argc || method) {
+        argv = ecs_os_alloca_n(ecs_value_t, argc + method);
+        if (method) {
+            argv[0] = receiver;
+        }
+        if (flecs_expr_function_args_visit_eval(ctx, node->args, argv + method)) {
             goto error;
         }
     }
@@ -103347,84 +103364,12 @@ static int flecs_expr_function_visit_eval(
     if (r->error) {
         r->error = false;
         flecs_expr_visit_error(ctx->script, node,
-            "error in script function '%s'",
-            node->function_name);
+            "error in script %s '%s'",
+            method ? "method" : "function", node->function_name);
         goto error;
     }
 
     out->owned = true;
-
-    flecs_expr_stack_pop(ctx->stack);
-    return 0;
-error:
-    flecs_expr_stack_pop(ctx->stack);
-    return -1;
-}
-
-static int flecs_expr_method_visit_eval(
-    ecs_script_eval_ctx_t *ctx,
-    ecs_expr_function_t *node,
-    ecs_expr_value_t *out)
-{
-    flecs_expr_stack_push(ctx->stack);
-
-    if (node->left) {
-        ecs_expr_value_t *expr = flecs_expr_eval_result(
-            ctx, node->left, &(ecs_expr_value_t){0});
-        if (!expr) {
-            goto error;
-        }
-
-        const ecs_function_calldata_t *calldata = &node->calldata;
-
-        ecs_function_ctx_t call_ctx = {
-            .world = ctx->world,
-            .function = calldata->function,
-            .ctx = calldata->ctx
-        };
-
-        ecs_assert(expr->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-#ifdef FLECS_SCRIPT_ASYNC
-        if (calldata->async_callback) {
-            flecs_expr_visit_error(ctx->script, node,
-                "async method '%s' requires await", node->function_name);
-            goto error;
-        }
-#endif
-
-        int32_t argc = ecs_vec_count(&node->args->elements);
-        ecs_value_t *argv = ecs_os_alloca_n(ecs_value_t, argc + 1);
-        argv[0] = expr->value;
-
-        if (argc) {
-            if (flecs_expr_function_args_visit_eval(
-                ctx, node->args, &argv[1])) 
-            {
-                goto error;
-            }
-        }
-
-        int32_t elem_count = calldata->vector_elem_count;
-        if (elem_count) {
-            node->calldata.is.vector_callback(
-                &call_ctx, argc, argv, &out->value, elem_count);
-        } else {
-            node->calldata.is.callback(&call_ctx, argc, argv, &out->value);
-        }
-
-        ecs_script_runtime_t *r = flecs_script_runtime_get(ctx->world);
-        if (r->error) {
-            r->error = false;
-            flecs_expr_visit_error(ctx->script, node,
-                "error in script method '%s'",
-                node->function_name);
-            goto error;
-        }
-
-        out->owned = true;
-    }
 
     flecs_expr_stack_pop(ctx->stack);
     return 0;
@@ -103964,15 +103909,9 @@ static int flecs_expr_visit_eval_priv(
         }
         break;
     case EcsExprFunction:
-        if (flecs_expr_function_visit_eval(
-            ctx, (ecs_expr_function_t*)node, out)) 
-        {
-            goto error;
-        }
-        break;
     case EcsExprMethod:
-        if (flecs_expr_method_visit_eval(
-            ctx, (ecs_expr_function_t*)node, out)) 
+        if (flecs_expr_function_visit_eval(
+            ctx, (ecs_expr_function_t*)node, out))
         {
             goto error;
         }
