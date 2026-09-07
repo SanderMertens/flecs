@@ -10,175 +10,55 @@
  * @{
  */
 
-private:
-
-/** Add a member to a component. */
-untyped_component& internal_member(
-    flecs::entity_t type_id, 
-    flecs::entity_t unit, 
-    const char *name, 
-    int32_t count = 0, 
-    size_t offset = 0, 
-    bool use_offset = false) 
+untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit,
+    const char *name, int32_t count = 0, size_t offset = SIZE_MAX)
 {
     ecs_member_t m = {};
     m.name = name;
     m.type = type_id;
     m.unit = unit;
     m.count = count;
-    m.offset = static_cast<int32_t>(offset);
-    m.use_offset = use_offset;
-    
+    m.use_offset = offset != SIZE_MAX;
+    m.offset = m.use_offset ? static_cast<int32_t>(offset) : 0;
     ecs_struct_add_member(world_, id_, &m);
-
     return *this;
 }
 
-public: 
-
-/** Add a member with unit. */
-untyped_component& member(
-    flecs::entity_t type_id,
-    flecs::entity_t unit,
-    const char *name,
-    int32_t count = 0) 
-{
-    return internal_member(type_id, unit, name, count, 0, false);
-}
-
-/** Add a member with unit, count, and offset. */
-untyped_component& member(
-    flecs::entity_t type_id, 
-    flecs::entity_t unit, 
-    const char *name, 
-    int32_t count, 
-    size_t offset) 
-{
-    return internal_member(type_id, unit, name, count, offset, true);
-}
-
-/** Add a member. */
-untyped_component& member(
-    flecs::entity_t type_id,
-    const char* name,
-    int32_t count = 0) 
-{
-    return member(type_id, 0, name, count);
-}
-
-/** Add a member with count and offset. */
-untyped_component& member(
-    flecs::entity_t type_id, 
-    const char* name, 
-    int32_t count, 
-    size_t offset) 
+untyped_component& member(flecs::entity_t type_id, const char *name,
+    int32_t count = 0, size_t offset = SIZE_MAX)
 {
     return member(type_id, 0, name, count, offset);
 }
 
-/** Add a member. */
+template <typename MemberType, typename UnitType = void>
+untyped_component& member(const char *name, int32_t count = 0, size_t offset = SIZE_MAX) {
+    flecs::entity_t unit = 0;
+    if constexpr (!std::is_void_v<UnitType>) {
+        unit = _::type<UnitType>::id(world_);
+    }
+    return member(_::type<MemberType>::id(world_), unit, name, count, offset);
+}
+
 template <typename MemberType>
-untyped_component& member(
-    const char *name,
-    int32_t count = 0) 
+untyped_component& member(flecs::entity_t unit, const char *name,
+    int32_t count = 0, size_t offset = SIZE_MAX)
 {
-    flecs::entity_t type_id = _::type<MemberType>::id(world_);
-    return member(type_id, name, count);
+    return member(_::type<MemberType>::id(world_), unit, name, count, offset);
 }
 
-/** Add a member. */
-template <typename MemberType>
-untyped_component& member(
-    const char *name,
-    int32_t count,
-    size_t offset) 
-{
-    flecs::entity_t type_id = _::type<MemberType>::id(world_);
-    return member(type_id, name, count, offset);
-}
-
-/** Add a member with unit. */
-template <typename MemberType>
-untyped_component& member(
-    flecs::entity_t unit,
-    const char *name,
-    int32_t count = 0) 
-{
-    flecs::entity_t type_id = _::type<MemberType>::id(world_);
-    return member(type_id, unit, name, count);
-}
-
-/** Add a member with unit. */
-template <typename MemberType>
-untyped_component& member(
-    flecs::entity_t unit,
-    const char *name,
-    int32_t count,
-    size_t offset) 
-{
-    flecs::entity_t type_id = _::type<MemberType>::id(world_);
-    return member(type_id, unit, name, count, offset);
-}
-
-/** Add a member with unit. */
-template <typename MemberType, typename UnitType>
-untyped_component& member(
-    const char *name,
-    int32_t count = 0) 
-{
-    flecs::entity_t type_id = _::type<MemberType>::id(world_);
-    flecs::entity_t unit_id = _::type<UnitType>::id(world_);
-    return member(type_id, unit_id, name, count);
-}
-
-/** Add a member with unit. */
-template <typename MemberType, typename UnitType>
-untyped_component& member(
-    const char *name,
-    int32_t count,
-    size_t offset) 
-{
-    flecs::entity_t type_id = _::type<MemberType>::id(world_);
-    flecs::entity_t unit_id = _::type<UnitType>::id(world_);
-    return member(type_id, unit_id, name, count, offset);
-}
-
-/** Add a member using pointer-to-member. */
 template <typename MemberType, typename ComponentType,
-    typename RealType = typename std::remove_extent<MemberType>::type>
-untyped_component& member(
-    const MemberType ComponentType::* ptr,
-    const char* name)
+    typename RealType = std::remove_extent_t<MemberType>>
+untyped_component& member(const MemberType ComponentType::*ptr,
+    const char *name, flecs::entity_t unit = 0)
 {
-    flecs::entity_t type_id = _::type<RealType>::id(world_);
     size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
-    return member(type_id, name, std::extent<MemberType>::value, offset);
+    return member(_::type<RealType>::id(world_), unit, name, std::extent<MemberType>::value, offset);
 }
 
-/** Add a member with unit using pointer-to-member. */
-template <typename MemberType, typename ComponentType,
-    typename RealType = typename std::remove_extent<MemberType>::type>
-untyped_component& member(
-    const MemberType ComponentType::* ptr,
-    const char* name,
-    flecs::entity_t unit)
-{
-    flecs::entity_t type_id = _::type<RealType>::id(world_);
-    size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
-    return member(type_id, unit, name, std::extent<MemberType>::value, offset);
-}
-
-/** Add a member with unit using pointer-to-member. */
 template <typename UnitType, typename MemberType, typename ComponentType,
-    typename RealType = typename std::remove_extent<MemberType>::type>
-untyped_component& member(
-    const MemberType ComponentType::* ptr,
-    const char* name)
-{
-    flecs::entity_t type_id = _::type<RealType>::id(world_);
-    flecs::entity_t unit_id = _::type<UnitType>::id(world_);
-    size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
-    return member(type_id, unit_id, name, std::extent<MemberType>::value, offset);
+    typename RealType = std::remove_extent_t<MemberType>>
+untyped_component& member(const MemberType ComponentType::*ptr, const char *name) {
+    return member<MemberType, ComponentType, RealType>(ptr, name, _::type<UnitType>::id(world_));
 }
 
 /** Add a constant. */
@@ -236,85 +116,36 @@ untyped_component& array(
     return *this;
 }
 
-/** Add a member value range. */
-untyped_component& range(
-    double min,
-    double max) 
-{
-    flecs::member_t *m = ecs_cpp_last_member(world_, id_);
-    if (!m) {
+untyped_component& range(double min, double max) {
+    return set_member_range<&flecs::member_t::range, &flecs::MemberRanges::value>(min, max);
+}
+
+untyped_component& warning_range(double min, double max) {
+    return set_member_range<&flecs::member_t::warning_range, &flecs::MemberRanges::warning>(min, max);
+}
+
+untyped_component& error_range(double min, double max) {
+    return set_member_range<&flecs::member_t::error_range, &flecs::MemberRanges::error>(min, max);
+}
+
+private:
+    template <auto MemberRange, auto EntityRange>
+    untyped_component& set_member_range(double min, double max) {
+        auto member = ecs_cpp_last_member(world_, id_);
+        if (member) {
+            member->*MemberRange = {min, max};
+            auto entity = member->member;
+            if (entity) {
+                auto id = _::type<flecs::MemberRanges>::id(world_);
+                auto ranges = static_cast<flecs::MemberRanges*>(
+                    ecs_ensure_id(world_, entity, id, sizeof(flecs::MemberRanges)));
+                ranges->*EntityRange = {min, max};
+                ecs_modified_id(world_, entity, id);
+            }
+        }
         return *this;
     }
 
-    m->range.min = min;
-    m->range.max = max;
-
-    if (m->member) {
-        flecs::world w(world_);
-        flecs::entity me = w.entity(m->member);
-        flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
-            ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
-                sizeof(flecs::MemberRanges)));
-        mr->value.min = min;
-        mr->value.max = max;
-        me.modified<flecs::MemberRanges>();
-    }
-
-    return *this;
-}
-
-/** Add a member warning range. */
-untyped_component& warning_range(
-    double min,
-    double max) 
-{
-    flecs::member_t *m = ecs_cpp_last_member(world_, id_);
-    if (!m) {
-        return *this;
-    }
-
-    m->warning_range.min = min;
-    m->warning_range.max = max;
-
-    if (m->member) {
-        flecs::world w(world_);
-        flecs::entity me = w.entity(m->member);
-        flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
-            ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
-                sizeof(flecs::MemberRanges)));
-        mr->warning.min = min;
-        mr->warning.max = max;
-        me.modified<flecs::MemberRanges>();
-    }
-
-    return *this;
-}
-
-/** Add a member error range. */
-untyped_component& error_range(
-    double min,
-    double max) 
-{
-    flecs::member_t *m = ecs_cpp_last_member(world_, id_);
-    if (!m) {
-        return *this;
-    }
-
-    m->error_range.min = min;
-    m->error_range.max = max;
-
-    if (m->member) {
-        flecs::world w(world_);
-        flecs::entity me = w.entity(m->member);
-        flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
-            ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
-                sizeof(flecs::MemberRanges)));
-        mr->error.min = min;
-        mr->error.max = max;
-        me.modified<flecs::MemberRanges>();
-    }
-
-    return *this;
-}
+public:
 
 /** @} */
