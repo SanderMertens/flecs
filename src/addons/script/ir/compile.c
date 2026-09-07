@@ -120,16 +120,71 @@ static ecs_script_ir_num_class_t flecs_irc_num_class(
     return EcsIrNumNone;
 }
 
-static uint64_t flecs_irc_num_pack(
-    ecs_entity_t left,
-    ecs_entity_t result)
-{
-    int32_t lsize = 0, rsize = 0;
-    ecs_script_ir_num_class_t lclass = flecs_irc_num_class(left, &lsize);
-    ecs_script_ir_num_class_t rclass = flecs_irc_num_class(result, &rsize);
-    return (uint64_t)lclass | ((uint64_t)lsize << 8) |
-        ((uint64_t)rclass << 16) | ((uint64_t)rsize << 24);
+#define FLECS_IR_CAST(S, D)\
+static void flecs_irc_cast_##S##_##D(void *dst, const void *src) {\
+    *(D*)dst = (D)*(const S*)src;\
 }
+
+#define FLECS_IR_CAST_TARGETS(M, S)\
+    M(S, int8_t)\
+    M(S, int16_t)\
+    M(S, int32_t)\
+    M(S, int64_t)\
+    M(S, uint8_t)\
+    M(S, uint16_t)\
+    M(S, uint32_t)\
+    M(S, uint64_t)\
+    M(S, float)\
+    M(S, double)
+
+FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, int8_t)
+FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, int16_t)
+FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, int32_t)
+FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, int64_t)
+FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, uint8_t)
+FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, uint16_t)
+FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, uint32_t)
+FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, uint64_t)
+FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, float)
+FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, double)
+FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, bool)
+
+#undef FLECS_IR_CAST
+#define FLECS_IR_CAST_ENTRY(S, D) flecs_irc_cast_##S##_##D,
+
+static ecs_script_ir_cast_t flecs_irc_cast_handler(
+    ecs_entity_t from,
+    ecs_entity_t to)
+{
+    static const ecs_script_ir_cast_t handlers[11][10] = {
+        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, int8_t)},
+        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, int16_t)},
+        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, int32_t)},
+        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, int64_t)},
+        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, uint8_t)},
+        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, uint16_t)},
+        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, uint32_t)},
+        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, uint64_t)},
+        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, float)},
+        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, double)},
+        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, bool)},
+    };
+    static const int8_t indexes[4][9] = {
+        [EcsIrNumSigned] = { [1] = 0, [2] = 1, [4] = 2, [8] = 3 },
+        [EcsIrNumUnsigned] = { [1] = 4, [2] = 5, [4] = 6, [8] = 7 },
+        [EcsIrNumFloat] = { [4] = 8, [8] = 9 }
+    };
+    int32_t from_size, to_size;
+    ecs_script_ir_num_class_t from_class = flecs_irc_num_class(from, &from_size);
+    ecs_script_ir_num_class_t to_class = flecs_irc_num_class(to, &to_size);
+    bool from_bool = from == ecs_id(ecs_bool_t);
+    ecs_assert((from_class || from_bool) && to_class, ECS_INTERNAL_ERROR, NULL);
+    return handlers[from_bool ? 10 : indexes[from_class][from_size]]
+        [indexes[to_class][to_size]];
+}
+
+#undef FLECS_IR_CAST_ENTRY
+#undef FLECS_IR_CAST_TARGETS
 
 static int32_t flecs_irc_id(
     ecs_script_ir_compiler_t *c,
@@ -772,9 +827,8 @@ static int flecs_irc_compile_expr(
         if (n->expr->type == ecs_id(ecs_bool_t) && rclass != EcsIrNumNone) {
             int32_t op = flecs_irc_emit(c, EcsIrCastNumber, dst, src, 0, node);
             flecs_irc_op(c, op)->flags = place;
-            flecs_irc_op(c, op)->imm.u64 = (uint64_t)EcsIrNumUnsigned |
-                ((uint64_t)1 << 8) | ((uint64_t)rclass << 16) |
-                ((uint64_t)rsize << 24);
+            flecs_irc_op(c, op)->imm.cast = flecs_irc_cast_handler(
+                n->expr->type, node->type);
             return 0;
         }
         int32_t op = flecs_irc_emit(c, EcsIrCast, dst, src, 0, node);
@@ -789,7 +843,7 @@ static int flecs_irc_compile_expr(
         }
         int32_t op = flecs_irc_emit(c, EcsIrCastNumber, dst, src, 0, node);
         flecs_irc_op(c, op)->flags = place;
-        flecs_irc_op(c, op)->imm.u64 = flecs_irc_num_pack(
+        flecs_irc_op(c, op)->imm.cast = flecs_irc_cast_handler(
             n->expr->type, node->type);
         return 0;
     }

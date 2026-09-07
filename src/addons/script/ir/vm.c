@@ -1987,89 +1987,6 @@ static int flecs_ir_has(
     return 0;
 }
 
-static bool flecs_ir_num_load(
-    ecs_script_ir_num_class_t class,
-    int32_t size,
-    const void *ptr,
-    int64_t *i,
-    uint64_t *u,
-    double *f)
-{
-    switch(class) {
-    case EcsIrNumSigned:
-        switch(size) {
-        case 1: *i = *(const int8_t*)ptr; return true;
-        case 2: *i = *(const int16_t*)ptr; return true;
-        case 4: *i = *(const int32_t*)ptr; return true;
-        case 8: *i = *(const int64_t*)ptr; return true;
-        }
-        return false;
-    case EcsIrNumUnsigned:
-        switch(size) {
-        case 1: *u = *(const uint8_t*)ptr; return true;
-        case 2: *u = *(const uint16_t*)ptr; return true;
-        case 4: *u = *(const uint32_t*)ptr; return true;
-        case 8: *u = *(const uint64_t*)ptr; return true;
-        }
-        return false;
-    case EcsIrNumFloat:
-        switch(size) {
-        case 4: *f = (double)*(const float*)ptr; return true;
-        case 8: *f = *(const double*)ptr; return true;
-        }
-        return false;
-    case EcsIrNumNone:
-        return false;
-    }
-    return false;
-}
-
-#define FLECS_IR_NUM_STORE(NAME, T)\
-static void NAME(\
-    ecs_script_ir_num_class_t class,\
-    int32_t size,\
-    void *ptr,\
-    T value)\
-{\
-    switch(class) {\
-    case EcsIrNumSigned:\
-        switch(size) {\
-        case 1: *(int8_t*)ptr = (int8_t)value; return;\
-        case 2: *(int16_t*)ptr = (int16_t)value; return;\
-        case 4: *(int32_t*)ptr = (int32_t)value; return;\
-        case 8: *(int64_t*)ptr = (int64_t)value; return;\
-        }\
-        return;\
-    case EcsIrNumUnsigned:\
-        switch(size) {\
-        case 1: *(uint8_t*)ptr = (uint8_t)value; return;\
-        case 2: *(uint16_t*)ptr = (uint16_t)value; return;\
-        case 4: *(uint32_t*)ptr = (uint32_t)value; return;\
-        case 8: *(uint64_t*)ptr = (uint64_t)value; return;\
-        }\
-        return;\
-    case EcsIrNumFloat:\
-        switch(size) {\
-        case 4: *(float*)ptr = (float)value; return;\
-        case 8: *(double*)ptr = (double)value; return;\
-        }\
-        return;\
-    case EcsIrNumNone:\
-        return;\
-    }\
-}
-
-FLECS_IR_NUM_STORE(flecs_ir_num_store_i, int64_t)
-FLECS_IR_NUM_STORE(flecs_ir_num_store_u, uint64_t)
-FLECS_IR_NUM_STORE(flecs_ir_num_store_f, double)
-
-#undef FLECS_IR_NUM_STORE
-
-#define FLECS_IR_NUM_LCLASS(packed) ((ecs_script_ir_num_class_t)((packed) & 0xff))
-#define FLECS_IR_NUM_LSIZE(packed)  ((int32_t)(((packed) >> 8) & 0xff))
-#define FLECS_IR_NUM_RCLASS(packed) ((ecs_script_ir_num_class_t)(((packed) >> 16) & 0xff))
-#define FLECS_IR_NUM_RSIZE(packed)  ((int32_t)(((packed) >> 24) & 0xff))
-
 static int flecs_ir_binary(
     ecs_script_ir_vm_t *vm,
     const ecs_script_ir_op_t *op)
@@ -2205,66 +2122,10 @@ static int flecs_ir_cast_number(
     ecs_script_ir_vm_t *vm,
     const ecs_script_ir_op_t *op)
 {
-    const ecs_expr_cast_t *node = op->node;
     ecs_script_ir_reg_t *dst = flecs_ir_reg(vm, op->a);
-    ecs_script_ir_reg_t *src = flecs_ir_reg(vm, op->b);
+    const ecs_script_ir_reg_t *src = flecs_ir_reg(vm, op->b);
     void *out = flecs_ir_reg_out_raw(vm, op, dst);
-
-    uint64_t packed = op->imm.u64;
-    const void *in = src->value.ptr;
-#define FLECS_IR_PACK(lc, ls, rc, rs)\
-    ((uint64_t)(lc) | ((uint64_t)(ls) << 8) | ((uint64_t)(rc) << 16) |\
-        ((uint64_t)(rs) << 24))
-    switch(packed) {
-    case FLECS_IR_PACK(EcsIrNumSigned, 4, EcsIrNumSigned, 8):
-        *(int64_t*)out = *(const int32_t*)in; return 0;
-    case FLECS_IR_PACK(EcsIrNumSigned, 8, EcsIrNumSigned, 4):
-        *(int32_t*)out = (int32_t)*(const int64_t*)in; return 0;
-    case FLECS_IR_PACK(EcsIrNumSigned, 8, EcsIrNumFloat, 4):
-        *(float*)out = (float)*(const int64_t*)in; return 0;
-    case FLECS_IR_PACK(EcsIrNumSigned, 8, EcsIrNumFloat, 8):
-        *(double*)out = (double)*(const int64_t*)in; return 0;
-    case FLECS_IR_PACK(EcsIrNumSigned, 4, EcsIrNumFloat, 4):
-        *(float*)out = (float)*(const int32_t*)in; return 0;
-    case FLECS_IR_PACK(EcsIrNumSigned, 4, EcsIrNumFloat, 8):
-        *(double*)out = (double)*(const int32_t*)in; return 0;
-    case FLECS_IR_PACK(EcsIrNumFloat, 4, EcsIrNumFloat, 8):
-        *(double*)out = (double)*(const float*)in; return 0;
-    case FLECS_IR_PACK(EcsIrNumFloat, 8, EcsIrNumFloat, 4):
-        *(float*)out = (float)*(const double*)in; return 0;
-    case FLECS_IR_PACK(EcsIrNumFloat, 8, EcsIrNumSigned, 8):
-        *(int64_t*)out = (int64_t)*(const double*)in; return 0;
-    case FLECS_IR_PACK(EcsIrNumFloat, 4, EcsIrNumSigned, 8):
-        *(int64_t*)out = (int64_t)*(const float*)in; return 0;
-    default:
-        break;
-    }
-    ecs_script_ir_num_class_t lclass = FLECS_IR_NUM_LCLASS(packed);
-    int32_t lsize = FLECS_IR_NUM_LSIZE(packed);
-    ecs_script_ir_num_class_t rclass = FLECS_IR_NUM_RCLASS(packed);
-    int32_t rsize = FLECS_IR_NUM_RSIZE(packed);
-
-    int64_t i = 0;
-    uint64_t u = 0;
-    double f = 0;
-    if (!flecs_ir_num_load(lclass, lsize, in, &i, &u, &f)) {
-        flecs_ir_expr_error(vm, node, "failed to cast value");
-        return -1;
-    }
-
-    switch(lclass) {
-    case EcsIrNumSigned:
-        flecs_ir_num_store_i(rclass, rsize, out, i);
-        break;
-    case EcsIrNumUnsigned:
-        flecs_ir_num_store_u(rclass, rsize, out, u);
-        break;
-    case EcsIrNumFloat:
-        flecs_ir_num_store_f(rclass, rsize, out, f);
-        break;
-    case EcsIrNumNone:
-        break;
-    }
+    op->imm.cast(out, src->value.ptr);
     return 0;
 }
 

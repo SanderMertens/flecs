@@ -144,6 +144,8 @@ typedef enum ecs_script_ir_num_class_t {
     EcsIrNumFloat
 } ecs_script_ir_num_class_t;
 
+typedef void (*ecs_script_ir_cast_t)(void *dst, const void *src);
+
 typedef struct ecs_script_ir_op_t {
     uint16_t kind;
     uint16_t flags;
@@ -158,6 +160,7 @@ typedef struct ecs_script_ir_op_t {
         ecs_entity_t entity;
         void *ptr;
         const char *str;
+        ecs_script_ir_cast_t cast;
     } imm;
     const void *node;
 } ecs_script_ir_op_t;
