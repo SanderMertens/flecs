@@ -101,6 +101,7 @@ void EnumTypes_constant_to_entity_w_bitmask(void);
 
 // Testsuite 'BitmaskTypes'
 void BitmaskTypes_bitmask_1_constant(void);
+void BitmaskTypes_update_constant(void);
 void BitmaskTypes_bitmask_2_constants(void);
 void BitmaskTypes_bitmask_3_constants(void);
 void BitmaskTypes_bitmask_4_constants(void);
@@ -1891,6 +1892,10 @@ bake_test_case BitmaskTypes_testcases[] = {
     {
         "bitmask_1_constant",
         BitmaskTypes_bitmask_1_constant
+    },
+    {
+        "update_constant",
+        BitmaskTypes_update_constant
     },
     {
         "bitmask_2_constants",
@@ -7522,7 +7527,7 @@ static bake_test_suite suites[] = {
         "BitmaskTypes",
         NULL,
         NULL,
-        7,
+        8,
         BitmaskTypes_testcases
     },
     {

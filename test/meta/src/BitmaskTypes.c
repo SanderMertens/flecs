@@ -206,3 +206,20 @@ void BitmaskTypes_bitmask_w_short_notation(void) {
 
     ecs_fini(world);
 }
+
+void BitmaskTypes_update_constant(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t type = ecs_bitmask(world, {
+        .constants = {{"A"}, {"B"}, {"C"}}
+    });
+    ecs_entity_t b = ecs_lookup_child(world, type, "B");
+    ecs_set_pair_second(world, b, EcsConstant, ecs_u32_t, {8});
+    const EcsConstants *constants = ecs_get(world, type, EcsConstants);
+    test_int(ecs_map_count(constants->constants), 3);
+    test_int(ecs_vec_count(&constants->ordered_constants), 3);
+    meta_test_constant(world, type, "A", 1, 0);
+    meta_test_constant(world, type, "C", 4, 1);
+    meta_test_constant(world, type, "B", 8, 2);
+    test_assert(!ecs_map_get(constants->constants, 2));
+    ecs_fini(world);
+}

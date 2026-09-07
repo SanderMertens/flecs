@@ -56,6 +56,65 @@ static ECS_DTOR(EcsConstants, ptr, {
     flecs_ordered_constants_dtor(&ptr->ordered_constants);
 })
 
+static void flecs_constants_remove(
+    EcsConstants *ptr,
+    ecs_entity_t entity)
+{
+    ecs_enum_constant_t *constants = ecs_vec_first(&ptr->ordered_constants);
+    int32_t i, count = ecs_vec_count(&ptr->ordered_constants);
+    for (i = 0; i < count; i ++) {
+        ecs_enum_constant_t *c = &constants[i];
+        if (c->constant == entity) {
+            ecs_map_key_t key = (uint64_t)c->value | c->value_unsigned;
+            ecs_os_free(ECS_CONST_CAST(char*, c->name));
+            ecs_map_remove_free(ptr->constants, key);
+            ecs_vec_remove_ordered_t(
+                &ptr->ordered_constants, ecs_enum_constant_t, i);
+            break;
+        }
+    }
+}
+
+static int flecs_constants_insert(
+    ecs_world_t *world,
+    EcsConstants *ptr,
+    ecs_entity_t entity,
+    int64_t value,
+    uint64_t value_unsigned,
+    bool abort_on_conflict)
+{
+    ecs_map_key_t key = (uint64_t)value | value_unsigned;
+    ecs_enum_constant_t *c = ecs_map_get_ptr(ptr->constants, key);
+    if (c) {
+        char *path = ecs_get_path(world, entity);
+        if (abort_on_conflict) {
+            ecs_abort(ECS_INTERNAL_ERROR,
+                "conflicting constant value %u for '%s' (other is '%s')",
+                    value_unsigned, path, c->name);
+        } else {
+            ecs_err("conflicting constant value for '%s' (other is '%s')",
+                path, c->name);
+        }
+        ecs_os_free(path);
+        return -1;
+    }
+    if (!ptr->constants) {
+        ptr->constants = ecs_os_malloc_t(ecs_map_t);
+        ecs_map_init(ptr->constants, NULL);
+    }
+    ecs_map_init_if(ptr->constants, &world->allocator);
+    c = ecs_map_insert_alloc_t(ptr->constants, ecs_enum_constant_t, key);
+    *c = (ecs_enum_constant_t){
+        .name = ecs_os_strdup(ecs_get_name(world, entity)),
+        .value = value,
+        .value_unsigned = value_unsigned,
+        .constant = entity
+    };
+    ecs_vec_init_if_t(&ptr->ordered_constants, ecs_enum_constant_t);
+    *ecs_vec_append_t(NULL, &ptr->ordered_constants, ecs_enum_constant_t) = *c;
+    return 0;
+}
+
 static int flecs_add_constant_to_enum(
     ecs_world_t *world, 
     ecs_entity_t type, 
@@ -95,35 +154,7 @@ static int flecs_add_constant_to_enum(
         ut_is_unsigned = true;
     }
 
-    if (!ptr->constants) {
-        ptr->constants = ecs_os_malloc_t(ecs_map_t);
-        ecs_map_init(ptr->constants, NULL);
-    }
-
-    /* Remove constant from map and vector if it was already added */
-    ecs_map_iter_t it = ecs_map_iter(ptr->constants);
-    while (ecs_map_next(&it)) {
-        ecs_enum_constant_t *c = ecs_map_ptr(&it);
-        if (c->constant == e) {
-            ecs_os_free(ECS_CONST_CAST(char*, c->name));
-            ecs_map_remove_free(ptr->constants, ecs_map_key(&it));
-
-            ecs_enum_constant_t* constants = ecs_vec_first_t(
-                &ptr->ordered_constants, ecs_enum_constant_t);
-            int32_t i, count = ecs_vec_count(&ptr->ordered_constants);
-            for (i = 0; i < count; i++) {
-                if (constants[i].constant == e) {
-                    break;
-                }
-            }
-            if (i < count) {
-                for (int j = i; j < count - 1; j++) {
-                    constants[j] = constants[j + 1];
-                }
-                ecs_vec_remove_last(&ptr->ordered_constants);
-            }
-        }
-    }
+    flecs_constants_remove(ptr, e);
 
     /* Check if constant sets explicit value */
     int64_t value = 0;
@@ -163,67 +194,25 @@ static int flecs_add_constant_to_enum(
         value_set = true;
     }
 
-    /* Make sure constant value doesn't conflict if set / find the next value */
-    it = ecs_map_iter(ptr->constants);
-    while (ecs_map_next(&it)) {
-        ecs_enum_constant_t *c = ecs_map_ptr(&it);
-        if (ut_is_unsigned) {
-            if (value_set) {
-                if (c->value_unsigned == value_unsigned) {
-                    char *path = ecs_get_path(world, e);
-                    ecs_abort(ECS_INTERNAL_ERROR, 
-                        "conflicting constant value %u for '%s' (other is '%s')",
-                        value_unsigned, path, c->name);
-                    ecs_os_free(path);
-                    
-                    return -1;
-                }
-            } else {
+    if (!value_set) {
+        ecs_map_iter_t it = ecs_map_iter(ptr->constants);
+        while (ecs_map_next(&it)) {
+            ecs_enum_constant_t *c = ecs_map_ptr(&it);
+            if (ut_is_unsigned) {
                 if (c->value_unsigned >= value_unsigned) {
                     value_unsigned = c->value_unsigned + 1;
                 }
-            }
-        } else {
-            if (value_set) {
-                if (c->value == value) {
-                    char *path = ecs_get_path(world, e);
-                    ecs_err("conflicting constant value %d for '%s' (other is '%s')",
-                        value, path, c->name);
-                    ecs_os_free(path);
-                    return -1;
-                }
-            } else {
-                if (c->value >= value) {
-                    value = c->value + 1;
-                }
+            } else if (c->value >= value) {
+                value = c->value + 1;
             }
         }
     }
 
-    ecs_map_init_if(ptr->constants, &world->allocator);
-    ecs_enum_constant_t *c;
-    if (ut_is_unsigned) {
-        c = ecs_map_insert_alloc_t(ptr->constants, 
-            ecs_enum_constant_t, value_unsigned);
-        c->value_unsigned = value_unsigned;
-        c->value = 0;
-    } else {
-        c = ecs_map_insert_alloc_t(ptr->constants, 
-            ecs_enum_constant_t, (ecs_map_key_t)value);
-        c->value_unsigned = 0;
-        c->value = value;
-
+    if (flecs_constants_insert(world, ptr, e, value, value_unsigned,
+        ut_is_unsigned))
+    {
+        return -1;
     }
-    c->name = ecs_os_strdup(ecs_get_name(world, e));
-    c->constant = e;
-
-    ecs_vec_init_if_t(&ptr->ordered_constants, ecs_enum_constant_t);
-    ecs_enum_constant_t* ordered_c = ecs_vec_append_t(NULL,
-        &ptr->ordered_constants, ecs_enum_constant_t);
-    ordered_c->name = c->name;
-    ordered_c->value = value;
-    ordered_c->value_unsigned = value_unsigned;
-    ordered_c->constant = c->constant;
 
     if (!value_set) {
         const ecs_type_info_t *ti = ecs_get_type_info(world, ut);
@@ -233,20 +222,13 @@ static int flecs_add_constant_to_enum(
             world, e, ecs_pair(EcsConstant, ut), flecs_ito(size_t, ti->size));
         ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, ut, cptr);
-        if (ut_is_unsigned) {
-            if (ecs_meta_set_uint(&cur, value_unsigned)) {
-                char *path = ecs_get_path(world, e);
-                ecs_err("failed to assign value to constant '%s'", path);
-                ecs_os_free(path);
-                return -1;
-            }
-        } else {
-            if (ecs_meta_set_int(&cur, value)) {
-                char *path = ecs_get_path(world, e);
-                ecs_err("failed to assign value to constant '%s'", path);
-                ecs_os_free(path);
-                return -1;
-            }
+        int ret = ut_is_unsigned ? ecs_meta_set_uint(&cur, value_unsigned) :
+            ecs_meta_set_int(&cur, value);
+        if (ret) {
+            char *path = ecs_get_path(world, e);
+            ecs_err("failed to assign value to constant '%s'", path);
+            ecs_os_free(path);
+            return -1;
         }
     }
 
@@ -264,30 +246,7 @@ static int flecs_add_constant_to_bitmask(
     ecs_add(world, type, EcsBitmask);
     EcsConstants *ptr = ecs_ensure(world, type, EcsConstants);
     
-    /* Remove constant from map and vector if it was already added */
-    ecs_map_iter_t it = ecs_map_iter(ptr->constants);
-    while (ecs_map_next(&it)) {
-        ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
-        if (c->constant == e) {
-            ecs_os_free(ECS_CONST_CAST(char*, c->name));
-            ecs_map_remove_free(ptr->constants, ecs_map_key(&it));
-
-            ecs_bitmask_constant_t* constants = ecs_vec_first_t(
-                &ptr->ordered_constants, ecs_bitmask_constant_t);
-            int32_t i, count = ecs_vec_count(&ptr->ordered_constants);
-            for (i = 0; i < count; i++) {
-                if (constants[i].constant == c->value) {
-                    break;
-                }
-            }
-            if (i < count) {
-                for (int j = i; j < count - 1; j++) {
-                    constants[j] = constants[j + 1];
-                }
-                ecs_vec_remove_last(&ptr->ordered_constants);
-            }
-        }
-    }
+    flecs_constants_remove(ptr, e);
 
     /* Check if constant sets explicit value */
     uint32_t value = 1;
@@ -307,38 +266,9 @@ static int flecs_add_constant_to_bitmask(
         value = 1u << (ecs_u32_t)ecs_map_count(ptr->constants);
     }
 
-    if (!ptr->constants) {
-        ptr->constants = ecs_os_malloc_t(ecs_map_t);
-        ecs_map_init(ptr->constants, NULL);
+    if (flecs_constants_insert(world, ptr, e, value, 0, false)) {
+        return -1;
     }
-
-    /* Make sure constant value doesn't conflict */
-    it = ecs_map_iter(ptr->constants);
-    while  (ecs_map_next(&it)) {
-        ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
-        if (c->value == value) {
-            char *path = ecs_get_path(world, e);
-            ecs_err("conflicting constant value for '%s' (other is '%s')",
-                path, c->name);
-            ecs_os_free(path);
-            return -1;
-        }
-    }
-
-    ecs_map_init_if(ptr->constants, &world->allocator);
-
-    ecs_bitmask_constant_t *c = ecs_map_insert_alloc_t(ptr->constants, 
-        ecs_bitmask_constant_t, value);
-    c->name = ecs_os_strdup(ecs_get_name(world, e));
-    c->value = value;
-    c->constant = e;
-
-    ecs_vec_init_if_t(&ptr->ordered_constants, ecs_bitmask_constant_t);
-    ecs_bitmask_constant_t* ordered_c = ecs_vec_append_t(NULL,
-        &ptr->ordered_constants, ecs_bitmask_constant_t);
-    ordered_c->name = c->name;
-    ordered_c->value = value;
-    ordered_c->constant = c->constant;
 
     ecs_u32_t *cptr = ecs_ensure_pair_second(
         world, e, EcsConstant, ecs_u32_t);

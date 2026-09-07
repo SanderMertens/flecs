@@ -110,6 +110,7 @@
             "id": "BitmaskTypes",
             "testcases": [
                 "bitmask_1_constant",
+                "update_constant",
                 "bitmask_2_constants",
                 "bitmask_3_constants",
                 "bitmask_4_constants",
