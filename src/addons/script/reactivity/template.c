@@ -9,7 +9,6 @@
 #include "../script.h"
 #include "../../meta/meta.h"
 
-ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 static ECS_TAG_DECLARE(EcsScriptTemplateFlushEvent);
 ECS_COMPONENT_DECLARE(EcsScriptTemplateInstanceUpdateEvent);
 ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
@@ -212,44 +211,6 @@ static void flecs_script_template_root_remove(
         flecs_script_template_root_clear(world, template, impl, &roots[i]);
     }
 }
-
-static void flecs_template_set_event_free(EcsScriptTemplateSetEvent *ptr) {
-    if (ptr->entities != &ptr->entity_storage) {
-        ecs_os_free(ptr->entities);
-    }
-    if (ptr->inputs != &ptr->input_storage) {
-        ecs_os_free(ptr->inputs);
-    }
-    if (ptr->data != ptr->data_storage) {
-        ecs_os_free(ptr->data);
-    }
-}
-
-static ECS_MOVE(EcsScriptTemplateSetEvent, dst, src, {
-    flecs_template_set_event_free(dst);
-
-    *dst = *src;
-
-    if (src->entities == &src->entity_storage) {
-        dst->entities = &dst->entity_storage;
-    }
-
-    if (src->inputs == &src->input_storage) {
-        dst->inputs = &dst->input_storage;
-    }
-
-    if (src->data == src->data_storage) {
-        dst->data = &dst->data_storage;
-    }
-
-    src->entities = NULL;
-    src->inputs = NULL;
-    src->data = NULL;
-})
-
-static ECS_DTOR(EcsScriptTemplateSetEvent, ptr, {
-    flecs_template_set_event_free(ptr);
-})
 
 static void flecs_script_template_on_add(
     ecs_iter_t *it)
@@ -1060,36 +1021,6 @@ static void flecs_on_template_instance_update_event(
 
     flecs_script_template_instance_update(
         world, evt->template_entity, evt->instance, evt->input);
-}
-
-static void flecs_on_template_set_event(
-    ecs_iter_t *it)
-{
-    ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
-
-    EcsScriptTemplateSetEvent *evt = it->param;
-    ecs_world_t *world = it->real_world;
-    ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
-
-    ecs_defer_suspend(world);
-
-    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
-    int32_t prev_depth = rt->template_depth;
-    int32_t i;
-    rt->template_depth = evt->depth;
-
-    const ecs_type_info_t *ti = ecs_get_type_info(world, evt->component);
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    for (i = 0; i < evt->count; i ++) {
-        void *data = ECS_OFFSET(evt->data, ti->size * i);
-        flecs_script_template_instantiate(
-            world, evt->template_entity, evt->component,
-            &evt->entities[i], data, 1, evt->inputs[i], true);
-    }
-
-    rt->template_depth = prev_depth;
-
-    ecs_defer_resume(world);
 }
 
 static void flecs_on_template_flush_event(
@@ -2103,7 +2034,6 @@ int flecs_script_template_update_vars(
 void flecs_script_template_import(
     ecs_world_t *world)
 {
-    ECS_COMPONENT_DEFINE(world, EcsScriptTemplateSetEvent);
     ECS_TAG_DEFINE(world, EcsScriptTemplateFlushEvent);
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateInstanceUpdateEvent);
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateRoot);
@@ -2113,13 +2043,6 @@ void flecs_script_template_import(
 #ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, EcsScriptTemplate, EcsRelationship);
 #endif
-
-    ecs_set_hooks(world, EcsScriptTemplateSetEvent, {
-        .ctor = flecs_default_ctor,
-        .move = ecs_move(EcsScriptTemplateSetEvent),
-        .dtor = ecs_dtor(EcsScriptTemplateSetEvent),
-        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
-    });
 
     ecs_set_hooks(world, EcsScriptTemplateRoot, {
         .ctor = ecs_ctor(EcsScriptTemplateRoot),
@@ -2139,13 +2062,6 @@ void flecs_script_template_import(
         }},
         .events = { EcsOnRemove },
         .callback = flecs_script_template_root_remove
-    });
-
-    ecs_observer(world, {
-        .entity = ecs_entity(world, { .name = "TemplateSetObserver" }),
-        .query.terms = {{ .id = EcsAny }},
-        .events = { ecs_id(EcsScriptTemplateSetEvent) },
-        .callback = flecs_on_template_set_event
     });
 
     ecs_observer(world, {

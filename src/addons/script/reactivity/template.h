@@ -12,7 +12,6 @@
 #define FLECS_SCRIPT_TEMPLATE_DEPTH_MAX (64)
 #endif
 
-extern ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateInstanceUpdateEvent);
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 
@@ -122,25 +121,6 @@ typedef struct EcsScriptTemplateRoot {
     int32_t visit;
     bool initialized;
 } EcsScriptTemplateRoot;
-
-/* Event used for deferring template instantiation */
-typedef struct EcsScriptTemplateSetEvent {
-    ecs_entity_t template_entity;
-    ecs_entity_t component;
-    ecs_entity_t *entities;
-    uint64_t *inputs;
-    void *data;
-    int32_t count;
-
-    /* Instantiation depth at the time the event was enqueued */
-    int32_t depth;
-
-    /* Storage for small template types */
-    int64_t _align; /* Align data storage to 8 bytes */
-    char data_storage[ECS_TEMPLATE_SMALL_SIZE];
-    ecs_entity_t entity_storage;
-    uint64_t input_storage;
-} EcsScriptTemplateSetEvent;
 
 typedef struct EcsScriptTemplateInstanceUpdateEvent {
     ecs_entity_t template_entity;
