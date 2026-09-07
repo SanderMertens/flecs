@@ -257,7 +257,6 @@ typedef struct ecs_script_ir_frame_t {
             int32_t cursor_count;
         } expr;
         struct {
-            int32_t pc;
             int32_t reg_base;
             int32_t entry;
             bool vars;

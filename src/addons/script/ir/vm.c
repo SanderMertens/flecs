@@ -2884,7 +2884,6 @@ static int flecs_ir_run_nested(
     int32_t base = vm->frame_count;
     ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
         vm, EcsIrFrameBlock, vm->pc);
-    frame->u.block.pc = vm->pc;
     frame->u.block.reg_base = vm->reg_base;
     frame->u.block.entry = vm->entry;
     frame->u.block.vars = false;
@@ -2910,7 +2909,7 @@ static void flecs_ir_block_pop(
     ecs_script_ir_frame_t *frame = flecs_ir_frame_top(vm);
     ecs_assert(frame->kind == EcsIrFrameBlock, ECS_INTERNAL_ERROR, NULL);
     flecs_ir_block_leave(vm, frame);
-    vm->pc = frame->u.block.pc;
+    vm->pc = frame->pc;
     vm->reg_base = frame->u.block.reg_base;
     vm->entry = frame->u.block.entry;
     vm->frame_count --;
@@ -3857,7 +3856,6 @@ flecs_script_run_status_t flecs_script_ir_vm_run(
         const ecs_script_ir_entry_t *entries = ecs_vec_first(&vm->ir->entries);
         ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
             vm, EcsIrFrameBlock, -1);
-        frame->u.block.pc = -1;
         frame->u.block.reg_base = 0;
         frame->u.block.entry = 0;
         frame->u.block.vars = true;
