@@ -1531,23 +1531,9 @@ int ecs_meta_set_bool(
             break;
         }
     }
-    /* fall through */
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpScope:
-    case EcsOpPrimitive:
+    default:
         flecs_meta_conversion_error(cursor, op, "bool");
         return -1;
-    default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     return 0;
@@ -1596,34 +1582,9 @@ int ecs_meta_set_char(
             break;
         }
     }
-    /* fall through */
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpScope:
-    case EcsOpBitmask:
-    case EcsOpPrimitive:
-    case EcsOpByte:
-    case EcsOpU8:
-    case EcsOpU16:
-    case EcsOpU32:
-    case EcsOpU64:
-    case EcsOpF32:
-    case EcsOpF64:
-    case EcsOpUPtr:
-    case EcsOpEntity:
-    case EcsOpId:
+    default:
         flecs_meta_conversion_error(cursor, op, "char");
         return -1;
-    default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     return 0;
@@ -1678,25 +1639,11 @@ int ecs_meta_set_int(
             break;
         }
     }
-    /* fall through */
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpScope:
-    case EcsOpPrimitive: {
+    default: {
         if(!value) return ecs_meta_set_null(cursor);
         flecs_meta_conversion_error(cursor, op, "int");
         return -1;
     }
-    default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     return 0;
@@ -1751,24 +1698,10 @@ int ecs_meta_set_uint(
             break;
         }
     }
-    /* fall through */
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpScope:
-    case EcsOpPrimitive:
+    default:
         if(!value) return ecs_meta_set_null(cursor);
         flecs_meta_conversion_error(cursor, op, "uint");
         return -1;
-    default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     return 0;
@@ -1833,23 +1766,9 @@ int ecs_meta_set_float(
             break;
         }
     }
-    /* fall through */
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpScope:
-    case EcsOpPrimitive:
+    default:
         flecs_meta_conversion_error(cursor, op, "float");
         return -1;
-    default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     return 0;
@@ -2033,38 +1952,7 @@ int ecs_meta_set_string_literal(
         flecs_meta_set_t(ecs_char_t, ptr, value[1]);
         break;
 
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpOpaqueValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpScope:
-    case EcsOpEnum:
-    case EcsOpBitmask:
-    case EcsOpPrimitive:
-    case EcsOpBool:
-    case EcsOpByte:
-    case EcsOpU8:
-    case EcsOpU16:
-    case EcsOpU32:
-    case EcsOpU64:
-    case EcsOpI8:
-    case EcsOpI16:
-    case EcsOpI32:
-    case EcsOpI64:
-    case EcsOpF32:
-    case EcsOpF64:
-    case EcsOpUPtr:
-    case EcsOpIPtr:
-    case EcsOpString:
-    case EcsOpEntity:
-    case EcsOpId:
+    default:
         len -= 2;
 
         char *result = ecs_os_malloc(len + 1);
@@ -2077,9 +1965,6 @@ int ecs_meta_set_string_literal(
         }
 
         ecs_os_free(result);
-        break;
-    default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
         break;
     }
 
@@ -2130,40 +2015,9 @@ int ecs_meta_set_entity(
             break;
         }
     }
-    /* fall through */
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpScope:
-    case EcsOpEnum:
-    case EcsOpBitmask:
-    case EcsOpPrimitive:
-    case EcsOpChar:
-    case EcsOpByte:
-    case EcsOpU8:
-    case EcsOpU16:
-    case EcsOpU32:
-    case EcsOpU64:
-    case EcsOpI8:
-    case EcsOpI16:
-    case EcsOpI32:
-    case EcsOpI64:
-    case EcsOpF32:
-    case EcsOpF64:
-    case EcsOpUPtr:
-    case EcsOpIPtr:
+    default:
         flecs_meta_conversion_error(cursor, op, "entity");
         goto error;
-    default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
-        break;
     }
 
     return 0;
@@ -2207,42 +2061,9 @@ int ecs_meta_set_id(
             break;
         }
     }
-    /* fall through */
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpScope:
-    case EcsOpEnum:
-    case EcsOpBitmask:
-    case EcsOpPrimitive:
-    case EcsOpBool:
-    case EcsOpChar:
-    case EcsOpByte:
-    case EcsOpU8:
-    case EcsOpU16:
-    case EcsOpU32:
-    case EcsOpU64:
-    case EcsOpI8:
-    case EcsOpI16:
-    case EcsOpI32:
-    case EcsOpI64:
-    case EcsOpF32:
-    case EcsOpF64:
-    case EcsOpUPtr:
-    case EcsOpIPtr:
-    case EcsOpEntity:
+    default:
         flecs_meta_conversion_error(cursor, op, "id");
         goto error;
-    default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
-        break;
     }
 
     return 0;
@@ -2272,43 +2093,9 @@ int ecs_meta_set_null(
             break;
         }
     }
-    /* fall through */
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpScope:
-    case EcsOpEnum:
-    case EcsOpBitmask:
-    case EcsOpPrimitive:
-    case EcsOpBool:
-    case EcsOpChar:
-    case EcsOpByte:
-    case EcsOpU8:
-    case EcsOpU16:
-    case EcsOpU32:
-    case EcsOpU64:
-    case EcsOpI8:
-    case EcsOpI16:
-    case EcsOpI32:
-    case EcsOpI64:
-    case EcsOpF32:
-    case EcsOpF64:
-    case EcsOpUPtr:
-    case EcsOpIPtr:
-    case EcsOpEntity:
-    case EcsOpId:
+    default:
         flecs_meta_conversion_error(cursor, op, "null");
         goto error;
-    default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
-        break;
     }
 
     return 0;
