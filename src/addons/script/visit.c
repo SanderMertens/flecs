@@ -69,37 +69,4 @@ int ecs_script_visit_scope_(
     return 0;
 }
 
-int ecs_script_visit_from_(
-    ecs_script_visit_t *visitor,
-    ecs_visit_action_t visit,
-    ecs_script_impl_t *script,
-    ecs_script_node_t *node,
-    int32_t depth)
-{
-    if (!script->root) {
-        return -1;
-    }
-
-    visitor->script = script;
-    visitor->visit = visit;
-    visitor->depth = depth;
-    if (flecs_script_visit_push_checked(visitor, node)) {
-        return -1;
-    }
-
-    if (visitor->visit(visitor, node)) {
-        visitor->depth = depth;
-        return -1;
-    }
-
-    visitor->depth = depth;
-
-    if (visitor->depth != depth) {
-        ecs_parser_error(script->pub.name, NULL, 0, "unexpected end of script");
-        return -1;
-    }
-
-    return 0;
-}
-
 #endif

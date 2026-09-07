@@ -214,12 +214,11 @@ int flecs_script_visit_free_node(
     ecs_script_impl_t *impl = flecs_script_impl(script);
 
     ecs_script_visit_t v = {
-        .script = impl
+        .script = impl,
+        .visit = flecs_script_stmt_free
     };
 
-    if (ecs_script_visit_from(
-        flecs_script_impl(script), &v, flecs_script_stmt_free, node, 0))
-    {
+    if (flecs_script_stmt_free(&v, node)) {
         goto error;
     }
 
@@ -238,13 +237,11 @@ int flecs_script_visit_free(
     }
 
     ecs_script_visit_t v = {
-        .script = impl
+        .script = impl,
+        .visit = flecs_script_stmt_free
     };
 
-    if (ecs_script_visit_from(
-        flecs_script_impl(script), &v, flecs_script_stmt_free,
-        (ecs_script_node_t*)impl->root, 0))
-    {
+    if (flecs_script_stmt_free(&v, (ecs_script_node_t*)impl->root)) {
         goto error;
     }
 

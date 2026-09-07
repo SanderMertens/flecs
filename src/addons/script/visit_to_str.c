@@ -487,12 +487,11 @@ int ecs_script_ast_node_to_buf(
     ecs_script_str_visitor_t v = { 
         .buf = buf, .colors = colors, .depth = depth 
     };
+    v.base.script = (ecs_script_impl_t*)ECS_CONST_CAST(ecs_script_t*, script);
+    v.base.visit = flecs_script_stmt_to_str;
+    v.base.depth = depth;
 
-    /* Safe, string visitor doesn't modify script */
-    if (ecs_script_visit_from(
-        (ecs_script_impl_t*)ECS_CONST_CAST(ecs_script_t*, script), 
-        &v, flecs_script_stmt_to_str, node, depth)) 
-    {
+    if (flecs_script_stmt_to_str(&v.base, node)) {
         goto error;
     }
 
@@ -511,8 +510,9 @@ int ecs_script_ast_to_buf(
     ecs_check(buf != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_script_str_visitor_t v = { .buf = buf, .colors = colors };
     ecs_script_impl_t *impl = flecs_script_impl(script);
-    if (ecs_script_visit_from(impl, &v,
-        flecs_script_stmt_to_str, (ecs_script_node_t*)impl->root, 0)) {
+    v.base.script = impl;
+    v.base.visit = flecs_script_stmt_to_str;
+    if (flecs_script_stmt_to_str(&v.base, (ecs_script_node_t*)impl->root)) {
         goto error;
     }
 

@@ -25,20 +25,6 @@ struct ecs_script_visit_t {
     int32_t depth;
 };
 
-int ecs_script_visit_from_(
-    ecs_script_visit_t *visitor,
-    ecs_visit_action_t visit,
-    ecs_script_impl_t *script,
-    ecs_script_node_t *node,
-    int32_t depth);
-
-#define ecs_script_visit_from(script, visitor, visit, from, depth) \
-    ecs_script_visit_from_((ecs_script_visit_t*)visitor,\
-        visit,\
-        script, \
-        from, \
-        depth)
-
 int ecs_script_visit_scope_(
     ecs_script_visit_t *v,
     ecs_script_scope_t *node);
