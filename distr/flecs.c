@@ -49990,11 +49990,6 @@ typedef struct ecs_script_with_t {
     ecs_script_scope_t *scope;
 } ecs_script_with_t;
 
-typedef struct ecs_script_inherit_t {
-    ecs_script_node_t node;
-    ecs_script_scope_t *base_list;
-} ecs_script_inherit_t;
-
 typedef struct ecs_script_pair_scope_t {
     ecs_script_node_t node;
     ecs_script_id_t id;
@@ -50779,12 +50774,6 @@ int ecs_script_visit_scope_(
 
 #define ecs_script_visit_scope(visitor, node) \
     ecs_script_visit_scope_((ecs_script_visit_t*)visitor, node)
-
-ecs_script_node_t* ecs_script_parent_node_(
-    ecs_script_visit_t *v);
-
-#define ecs_script_parent_node(visitor) \
-    ecs_script_parent_node_((ecs_script_visit_t*)visitor)
 
 ecs_script_scope_t* ecs_script_current_scope_(
     ecs_script_visit_t *v);
@@ -76162,16 +76151,6 @@ static int flecs_script_visit_push_checked(
 
     v->nodes[v->depth ++] = node;
     return 0;
-}
-
-ecs_script_node_t* ecs_script_parent_node_(
-    ecs_script_visit_t *v)
-{
-    if (v->depth > 1) {
-        return v->nodes[v->depth - 2]; /* Last node is current node */
-    } else {
-        return NULL;
-    }
 }
 
 ecs_script_scope_t* ecs_script_current_scope_(

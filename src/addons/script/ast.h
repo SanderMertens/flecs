@@ -133,11 +133,6 @@ typedef struct ecs_script_with_t {
     ecs_script_scope_t *scope;
 } ecs_script_with_t;
 
-typedef struct ecs_script_inherit_t {
-    ecs_script_node_t node;
-    ecs_script_scope_t *base_list;
-} ecs_script_inherit_t;
-
 typedef struct ecs_script_pair_scope_t {
     ecs_script_node_t node;
     ecs_script_id_t id;

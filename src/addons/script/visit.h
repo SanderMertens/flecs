@@ -56,12 +56,6 @@ int ecs_script_visit_scope_(
 #define ecs_script_visit_scope(visitor, node) \
     ecs_script_visit_scope_((ecs_script_visit_t*)visitor, node)
 
-ecs_script_node_t* ecs_script_parent_node_(
-    ecs_script_visit_t *v);
-
-#define ecs_script_parent_node(visitor) \
-    ecs_script_parent_node_((ecs_script_visit_t*)visitor)
-
 ecs_script_scope_t* ecs_script_current_scope_(
     ecs_script_visit_t *v);
 
