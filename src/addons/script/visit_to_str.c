@@ -16,11 +16,11 @@ typedef struct ecs_script_str_visitor_t {
     bool colors;
 } ecs_script_str_visitor_t;
 
-static int flecs_script_scope_to_str(
+static void flecs_script_scope_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_scope_t *scope);
 
-static int flecs_script_stmt_to_str(
+static void flecs_script_stmt_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_node_t *node);
 
@@ -80,7 +80,7 @@ static void flecs_script_id_to_str(
     }
 
     if (id->second) {
-        flecs_scriptbuf_append(v, "(%s, %s)", 
+        flecs_scriptbuf_append(v, "(%s, %s)",
             id->first, id->second);
     } else {
         flecs_scriptbuf_appendstr(v, id->first);
@@ -131,216 +131,18 @@ static const char* flecs_script_node_to_str(
     return "???";
 }
 
-static void flecs_scriptbuf_node(
+static void flecs_script_named_scope_to_str(
     ecs_script_str_visitor_t *v,
-    ecs_script_node_t *node)
+    const char *name,
+    ecs_script_scope_t *scope)
 {
-    flecs_script_color_to_str(v, ECS_BLUE);
-    flecs_scriptbuf_append(v, "%s: ", flecs_script_node_to_str(node));
-    flecs_script_color_to_str(v, ECS_NORMAL);
-}
-
-static void flecs_script_tag_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_tag_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    flecs_script_id_to_str(v, &node->id);
-    flecs_scriptbuf_appendstr(v, "\n");
-}
-
-static void flecs_script_component_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_component_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    flecs_script_id_to_str(v, &node->id);
-    if (node->expr) {
-        flecs_scriptbuf_appendstr(v, ": ");
-        flecs_expr_to_str(v, node->expr);
-    }
-    flecs_scriptbuf_appendstr(v, "\n");
-}
-
-static void flecs_script_with_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_with_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    
-    flecs_scriptbuf_appendstr(v, "{\n");
-    v->depth ++;
     flecs_script_color_to_str(v, ECS_CYAN);
-    flecs_scriptbuf_appendstr(v, "expressions: ");
+    flecs_scriptbuf_append(v, "%s: ", name);
     flecs_script_color_to_str(v, ECS_NORMAL);
-    flecs_script_scope_to_str(v, node->expressions);
-    flecs_script_color_to_str(v, ECS_CYAN);
-    flecs_scriptbuf_append(v, "scope: ");
-    flecs_script_color_to_str(v, ECS_NORMAL);
-    flecs_script_scope_to_str(v, node->scope);
-    v->depth --;
-    flecs_scriptbuf_appendstr(v, "}\n");
+    flecs_script_scope_to_str(v, scope);
 }
 
-static void flecs_script_using_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_using_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    flecs_scriptbuf_append(v, "%s\n", node->name);
-}
-
-static void flecs_script_module_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_module_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    flecs_scriptbuf_append(v, "%s\n", node->name);
-}
-
-static void flecs_script_annot_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_annot_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    flecs_script_color_to_str(v, ECS_GREEN);
-    flecs_scriptbuf_append(v, "%s = \"%s\"", node->name, node->expr);
-    flecs_script_color_to_str(v, ECS_NORMAL);
-    flecs_scriptbuf_appendstr(v, "\n");
-}
-
-static void flecs_script_template_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_template_node_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    flecs_scriptbuf_append(v, "%s ", node->name);
-    if (node->base) {
-        flecs_scriptbuf_append(v, ": %s ", node->base);
-    }
-    flecs_script_scope_to_str(v, node->scope);
-}
-
-static void flecs_script_var_node_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_var_node_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    if (node->type) {
-        flecs_scriptbuf_append(v, "%s : %s%s = ", 
-            node->name,
-            node->type_is_template ? "template " : "",
-            node->type);
-    } else {
-        flecs_scriptbuf_append(v, "%s = ", 
-            node->name);
-    }
-    if (node->is_await) {
-        flecs_scriptbuf_appendstr(v, "await ");
-    }
-    flecs_expr_to_str(v, node->expr);
-    flecs_scriptbuf_appendstr(v, "\n");
-}
-
-static void flecs_script_entity_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_entity_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    if (node->kind) {
-        flecs_scriptbuf_append(v, "%s ", node->kind);
-    }
-    if (node->name) {
-        flecs_scriptbuf_append(v, "%s ", node->name);
-    } else {
-        flecs_scriptbuf_appendstr(v, "<anon> ");
-    }
-
-    if (!flecs_scope_is_empty(node->scope)) {
-        flecs_script_scope_to_str(v, node->scope);
-    } else {
-        flecs_scriptbuf_appendstr(v, "\n");
-    }
-}
-
-static void flecs_script_pair_scope_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_pair_scope_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    flecs_script_id_to_str(v, &node->id);
-    flecs_scriptbuf_appendstr(v, " ");
-    flecs_script_scope_to_str(v, node->scope);
-}
-
-static void flecs_script_if_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_if_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    flecs_expr_to_str(v, node->expr);
-
-    flecs_scriptbuf_appendstr(v, " {\n");
-    v->depth ++;
-    flecs_script_color_to_str(v, ECS_CYAN);
-    flecs_scriptbuf_appendstr(v, "true: ");
-    flecs_script_color_to_str(v, ECS_NORMAL);
-    flecs_script_scope_to_str(v, node->if_true);
-    flecs_script_color_to_str(v, ECS_CYAN);
-    flecs_scriptbuf_appendstr(v, "false: ");
-    flecs_script_color_to_str(v, ECS_NORMAL);
-    flecs_script_scope_to_str(v, node->if_false);
-    v->depth --;
-    flecs_scriptbuf_appendstr(v, "}\n");
-}
-
-static void flecs_script_include_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_include_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    flecs_scriptbuf_append(v, "%s\n", node->filename);
-}
-
-static void flecs_script_for_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_for_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-
-    int32_t i;
-    if (node->loop_var_count > 1) {
-        flecs_scriptbuf_appendstr(v, "(");
-    }
-    for (i = 0; i < node->loop_var_count; i ++) {
-        if (i) {
-            flecs_scriptbuf_appendstr(v, ", ");
-        }
-        flecs_scriptbuf_appendstr(v, node->loop_vars[i]);
-    }
-    if (node->loop_var_count > 1) {
-        flecs_scriptbuf_appendstr(v, ")");
-    }
-
-    flecs_script_color_to_str(v, ECS_BLUE);
-    flecs_scriptbuf_appendstr(v, " in ");
-    flecs_script_color_to_str(v, ECS_NORMAL);
-    if (node->expr) {
-        flecs_expr_to_str(v, node->expr);
-    } else {
-        flecs_expr_to_str(v, node->from);
-        flecs_scriptbuf_appendstr(v, " .. ");
-        flecs_expr_to_str(v, node->to);
-    }
-
-    flecs_scriptbuf_appendstr(v, " {\n");
-    v->depth ++;
-    flecs_script_scope_to_str(v, node->scope);
-    v->depth --;
-    flecs_scriptbuf_appendstr(v, "}\n");
-}
-
-static int flecs_script_scope_to_str(
+static void flecs_script_scope_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_scope_t *scope)
 {
@@ -348,7 +150,7 @@ static int flecs_script_scope_to_str(
 
     if (!ecs_vec_count(&scope->stmts)) {
         flecs_scriptbuf_appendstr(v, "{}\n");
-        return 0;
+        return;
     }
 
     flecs_scriptbuf_appendstr(v, "{\n");
@@ -358,87 +160,182 @@ static int flecs_script_scope_to_str(
     int32_t i, count = ecs_vec_count(&scope->stmts);
     ecs_script_node_t **nodes = ecs_vec_first(&scope->stmts);
     for (i = 0; i < count; i ++) {
-        if (flecs_script_stmt_to_str(v, nodes[i])) {
-            return -1;
-        }
+        flecs_script_stmt_to_str(v, nodes[i]);
     }
 
     v->depth --;
 
     flecs_scriptbuf_appendstr(v, "}\n");
-
-    return 0;
 }
 
-static int flecs_script_stmt_to_str(
+static void flecs_script_stmt_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_node_t *node)
 {
+    if (node->kind != EcsAstScope) {
+        flecs_script_color_to_str(v, ECS_BLUE);
+        flecs_scriptbuf_append(v, "%s: ", flecs_script_node_to_str(node));
+        flecs_script_color_to_str(v, ECS_NORMAL);
+    }
+    ecs_script_scope_t *scope = NULL;
+    bool wrap = false;
     switch(node->kind) {
     case EcsAstScope:
-        if (flecs_script_scope_to_str(v, (ecs_script_scope_t*)node)) {
-            return -1;
+        flecs_script_scope_to_str(v, (ecs_script_scope_t*)node);
+        return;
+    case EcsAstTag:
+    case EcsAstWithTag: {
+        ecs_script_tag_t *stmt = (ecs_script_tag_t*)node;
+        flecs_script_id_to_str(v, &stmt->id);
+        break;
+    }
+    case EcsAstComponent:
+    case EcsAstWithComponent: {
+        ecs_script_component_t *stmt = (ecs_script_component_t*)node;
+        flecs_script_id_to_str(v, &stmt->id);
+        if (stmt->expr) {
+            flecs_scriptbuf_appendstr(v, ": ");
+            flecs_expr_to_str(v, stmt->expr);
         }
         break;
-    case EcsAstTag:
-    case EcsAstWithTag:
-        flecs_script_tag_to_str(v, (ecs_script_tag_t*)node);
+    }
+    case EcsAstWith: {
+        ecs_script_with_t *stmt = (ecs_script_with_t*)node;
+        flecs_scriptbuf_appendstr(v, "{\n");
+        v->depth ++;
+        flecs_script_named_scope_to_str(v, "expressions", stmt->expressions);
+        flecs_script_named_scope_to_str(v, "scope", stmt->scope);
+        v->depth --;
+        flecs_scriptbuf_appendstr(v, "}\n");
+        return;
+    }
+    case EcsAstUsing: {
+        ecs_script_using_t *stmt = (ecs_script_using_t*)node;
+        flecs_scriptbuf_append(v, "%s", stmt->name);
         break;
-    case EcsAstComponent:
-    case EcsAstWithComponent:
-        flecs_script_component_to_str(v, (ecs_script_component_t*)node);
+    }
+    case EcsAstModule: {
+        ecs_script_module_t *stmt = (ecs_script_module_t*)node;
+        flecs_scriptbuf_append(v, "%s", stmt->name);
         break;
-    case EcsAstWith:
-        flecs_script_with_to_str(v, (ecs_script_with_t*)node);
+    }
+    case EcsAstAnnotation: {
+        ecs_script_annot_t *stmt = (ecs_script_annot_t*)node;
+        flecs_script_color_to_str(v, ECS_GREEN);
+        flecs_scriptbuf_append(v, "%s = \"%s\"", stmt->name, stmt->expr);
+        flecs_script_color_to_str(v, ECS_NORMAL);
         break;
-    case EcsAstUsing:
-        flecs_script_using_to_str(v, (ecs_script_using_t*)node);
+    }
+    case EcsAstTemplate: {
+        ecs_script_template_node_t *stmt = (ecs_script_template_node_t*)node;
+        flecs_scriptbuf_append(v, "%s ", stmt->name);
+        if (stmt->base) {
+            flecs_scriptbuf_append(v, ": %s ", stmt->base);
+        }
+        scope = stmt->scope;
         break;
-    case EcsAstModule:
-        flecs_script_module_to_str(v, (ecs_script_module_t*)node);
-        break;
-    case EcsAstAnnotation:
-        flecs_script_annot_to_str(v, (ecs_script_annot_t*)node);
-        break;
-    case EcsAstTemplate:
-        flecs_script_template_to_str(v, (ecs_script_template_node_t*)node);
-        break;
+    }
     case EcsAstConst:
     case EcsAstExportConst:
     case EcsAstExportMut:
     case EcsAstProp:
-    case EcsAstMut:
-        flecs_script_var_node_to_str(v, (ecs_script_var_node_t*)node);
+    case EcsAstMut: {
+        ecs_script_var_node_t *stmt = (ecs_script_var_node_t*)node;
+        if (stmt->type) {
+            flecs_scriptbuf_append(v, "%s : %s%s = ",
+                stmt->name,
+                stmt->type_is_template ? "template " : "",
+                stmt->type);
+        } else {
+            flecs_scriptbuf_append(v, "%s = ",
+                stmt->name);
+        }
+        if (stmt->is_await) {
+            flecs_scriptbuf_appendstr(v, "await ");
+        }
+        flecs_expr_to_str(v, stmt->expr);
         break;
-    case EcsAstEntity:
-        flecs_script_entity_to_str(v, (ecs_script_entity_t*)node);
+    }
+    case EcsAstEntity: {
+        ecs_script_entity_t *stmt = (ecs_script_entity_t*)node;
+        if (stmt->kind) {
+            flecs_scriptbuf_append(v, "%s ", stmt->kind);
+        }
+        if (stmt->name) {
+            flecs_scriptbuf_append(v, "%s ", stmt->name);
+        } else {
+            flecs_scriptbuf_appendstr(v, "<anon> ");
+        }
+
+        if (!flecs_scope_is_empty(stmt->scope)) {
+            scope = stmt->scope;
+        }
         break;
-    case EcsAstPairScope:
-        flecs_script_pair_scope_to_str(v, (ecs_script_pair_scope_t*)node);
+    }
+    case EcsAstPairScope: {
+        ecs_script_pair_scope_t *stmt = (ecs_script_pair_scope_t*)node;
+        flecs_script_id_to_str(v, &stmt->id);
+        flecs_scriptbuf_appendstr(v, " ");
+        scope = stmt->scope;
         break;
-    case EcsAstIf:
-        flecs_script_if_to_str(v, (ecs_script_if_t*)node);
+    }
+    case EcsAstIf: {
+        ecs_script_if_t *stmt = (ecs_script_if_t*)node;
+        flecs_expr_to_str(v, stmt->expr);
+        flecs_scriptbuf_appendstr(v, " {\n");
+        v->depth ++;
+        flecs_script_named_scope_to_str(v, "true", stmt->if_true);
+        flecs_script_named_scope_to_str(v, "false", stmt->if_false);
+        v->depth --;
+        flecs_scriptbuf_appendstr(v, "}\n");
+        return;
+    }
+    case EcsAstFor: {
+        ecs_script_for_t *stmt = (ecs_script_for_t*)node;
+
+        int32_t i;
+        if (stmt->loop_var_count > 1) {
+            flecs_scriptbuf_appendstr(v, "(");
+        }
+        for (i = 0; i < stmt->loop_var_count; i ++) {
+            if (i) {
+                flecs_scriptbuf_appendstr(v, ", ");
+            }
+            flecs_scriptbuf_appendstr(v, stmt->loop_vars[i]);
+        }
+        if (stmt->loop_var_count > 1) {
+            flecs_scriptbuf_appendstr(v, ")");
+        }
+
+        flecs_script_color_to_str(v, ECS_BLUE);
+        flecs_scriptbuf_appendstr(v, " in ");
+        flecs_script_color_to_str(v, ECS_NORMAL);
+        if (stmt->expr) {
+            flecs_expr_to_str(v, stmt->expr);
+        } else {
+            flecs_expr_to_str(v, stmt->from);
+            flecs_scriptbuf_appendstr(v, " .. ");
+            flecs_expr_to_str(v, stmt->to);
+        }
+
+        scope = stmt->scope;
+        wrap = true;
         break;
-    case EcsAstFor:
-        flecs_script_for_to_str(v, (ecs_script_for_t*)node);
+    }
+    case EcsAstInclude: {
+        ecs_script_include_t *stmt = (ecs_script_include_t*)node;
+        flecs_scriptbuf_append(v, "%s", stmt->filename);
         break;
-    case EcsAstInclude:
-        flecs_script_include_to_str(v, (ecs_script_include_t*)node);
-        break;
+    }
     case EcsAstAwait: {
         ecs_script_await_t *await = (ecs_script_await_t*)node;
-        flecs_scriptbuf_node(v, node);
         flecs_expr_to_str(v, await->expr);
-        flecs_scriptbuf_appendstr(v, "\n");
         break;
     }
     case EcsAstContinue:
-        flecs_scriptbuf_node(v, node);
-        flecs_scriptbuf_appendstr(v, "\n");
         break;
     case EcsAstTry: {
         ecs_script_try_t *try_stmt = (ecs_script_try_t*)node;
-        flecs_scriptbuf_node(v, node);
         flecs_scriptbuf_appendstr(v, "{\n");
         v->depth ++;
         flecs_script_scope_to_str(v, try_stmt->try_scope);
@@ -456,11 +353,10 @@ static int flecs_script_stmt_to_str(
         }
         v->depth --;
         flecs_scriptbuf_appendstr(v, "}\n");
-        break;
+        return;
     }
     case EcsAstFunction: {
         ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
-        flecs_scriptbuf_node(v, &fn->node);
         flecs_scriptbuf_append(v, "%s(", fn->name);
         int32_t i, count = ecs_vec_count(&fn->params);
         ecs_script_fn_param_t *params = ecs_vec_first(&fn->params);
@@ -476,12 +372,23 @@ static int flecs_script_stmt_to_str(
         if (fn->return_expr) {
             flecs_expr_to_str(v, fn->return_expr);
         }
-        flecs_scriptbuf_appendstr(v, "\n");
         break;
     }
     }
 
-    return 0;
+    if (scope) {
+        if (wrap) {
+            flecs_scriptbuf_appendstr(v, " {\n");
+            v->depth ++;
+        }
+        flecs_script_scope_to_str(v, scope);
+        if (wrap) {
+            v->depth --;
+            flecs_scriptbuf_appendstr(v, "}\n");
+        }
+    } else {
+        flecs_scriptbuf_appendstr(v, "\n");
+    }
 }
 
 int ecs_script_ast_node_to_buf(
@@ -491,19 +398,13 @@ int ecs_script_ast_node_to_buf(
     bool colors,
     int32_t depth)
 {
-    ecs_script_str_visitor_t v = { 
-        .buf = buf, .colors = colors, .depth = depth 
+    ecs_script_str_visitor_t v = {
+        .buf = buf, .colors = colors, .depth = depth
     };
     v.script = (ecs_script_impl_t*)ECS_CONST_CAST(ecs_script_t*, script);
 
-    if (flecs_script_stmt_to_str(&v, node)) {
-        goto error;
-    }
-
+    flecs_script_stmt_to_str(&v, node);
     return 0;
-error:
-    ecs_strbuf_reset(buf);
-    return -1;
 }
 
 int ecs_script_ast_to_buf(
@@ -513,14 +414,8 @@ int ecs_script_ast_to_buf(
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(buf != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_script_str_visitor_t v = { .buf = buf, .colors = colors };
-    ecs_script_impl_t *impl = flecs_script_impl(script);
-    v.script = impl;
-    if (flecs_script_stmt_to_str(&v, (ecs_script_node_t*)impl->root)) {
-        goto error;
-    }
-
-    return 0;
+    return ecs_script_ast_node_to_buf(script,
+        (ecs_script_node_t*)flecs_script_impl(script)->root, buf, colors, 0);
 error:
     ecs_strbuf_reset(buf);
     return -1;
