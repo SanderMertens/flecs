@@ -950,9 +950,7 @@ static int flecs_irc_compile_component(
         int32_t op = flecs_irc_emit(c,
             with ? EcsIrWithComponentBegin : EcsIrComponentBegin,
             id, tmp, 0, node);
-        flecs_irc_op(c, op)->flags = (uint16_t)(
-            (partial ? EcsIrComponentPartial : 0) |
-            (node->id.interface ? EcsIrComponentInterface : 0));
+        flecs_irc_op(c, op)->flags = partial ? EcsIrComponentPartial : 0;
 
         bool in_place;
         if (desc->ti) {
@@ -972,18 +970,12 @@ static int flecs_irc_compile_component(
         op = flecs_irc_emit(c,
             with ? EcsIrWithComponentEnd : EcsIrComponentEnd,
             id, value, tmp, node);
-        flecs_irc_op(c, op)->flags = (uint16_t)(
-            node->id.interface ? EcsIrComponentInterface : 0);
     } else {
         if (with) {
             int32_t op = flecs_irc_emit(
                 c, EcsIrWithComponentBegin, id, -1, 0, node);
-            flecs_irc_op(c, op)->flags = (uint16_t)(
-                node->id.interface ? EcsIrComponentInterface : 0);
         } else {
             int32_t op = flecs_irc_emit(c, EcsIrComponentEnd, id, -1, -1, node);
-            flecs_irc_op(c, op)->flags = (uint16_t)(
-                node->id.interface ? EcsIrComponentInterface : 0);
         }
     }
 

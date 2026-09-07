@@ -111,7 +111,6 @@ typedef enum ecs_script_ir_op_kind_t {
 #define EcsIrAwaitVar        (1u << 1)
 #define EcsIrAnnotNoTarget   (1u << 0)
 #define EcsIrAnnotBadTarget  (1u << 1)
-#define EcsIrComponentInterface (1u << 1)
 #define EcsIrComponentPartial   (1u << 2)
 #define EcsIrElementMap      (1u << 0)
 #define EcsIrElementVector   (1u << 1)
