@@ -36900,16 +36900,8 @@ inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
         return flecs::entity(world_, entity);
     }
 #ifdef FLECS_META
-    // Reflection data lookup failed. Try a value lookup among flecs::Constant relationships.
-    flecs::world world = flecs::world(world_);
-    return world.query_builder()
-        .with(flecs::ChildOf, world.id<E>())
-        .with(flecs::Constant, world.id<int32_t>())
-        .build()
-        .find([value](flecs::entity constant) {
-            const int32_t& constant_value = constant.get_second<int32_t>(flecs::Constant);
-            return value == static_cast<underlying_type_t<E>>(constant_value);
-        });
+    return flecs::entity(world_, ecs_constant_to_entity_id(
+        world_, _::type<E>::id(world_), static_cast<int64_t>(value)));
 #else
     return flecs::entity::null(world_);
 #endif
