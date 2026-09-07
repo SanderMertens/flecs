@@ -25343,37 +25343,16 @@ static int flecs_query_finalize_terms(
             ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
         }
 
-        /* If one of the terms in an OR chain isn't cacheable, none are */
         if (term->flags_ & EcsTermIsCacheable) {
-            /* Current term is marked as cacheable. Check if it is part of an OR
-             * chain, and if so, the previous term was also cacheable. */
-            if (prev_is_or) {
-                if (term[-1].flags_ & EcsTermIsCacheable) {
-                    cacheable_terms ++;
-                } else {
-                    ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
-                }
-            } else {
-                cacheable_terms ++;
+            if (prev_is_or && !(term[-1].flags_ & EcsTermIsCacheable)) {
+                ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
             }
-
-            /* Toggle terms may be cacheable for fetching the initial component, 
-             * but require an additional toggle instruction for evaluation. */
             if (term->flags_ & EcsTermIsToggle) {
                 cacheable = false;
             }
         } else if (prev_is_or) {
-            /* Current term is not cacheable. If it is part of an OR chain, mark
-             * previous terms in the chain as also not cacheable. */
-            int32_t j;
-            for (j = i - 1; j >= 0; j --) {
-                if (terms[j].oper != EcsOr) {
-                    break;
-                }
-                if (terms[j].flags_ & EcsTermIsCacheable) {
-                    cacheable_terms --;
-                    ECS_BIT_CLEAR16(terms[j].flags_, EcsTermIsCacheable);
-                }
+            for (int32_t j = i - 1; j >= 0 && terms[j].oper == EcsOr; j --) {
+                ECS_BIT_CLEAR16(terms[j].flags_, EcsTermIsCacheable);
             }
         }
 
@@ -25510,10 +25489,7 @@ static int flecs_query_finalize_terms(
         if (is_sparse) {
             term->flags_ |= EcsTermIsSparse;
             ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
-            if (term->flags_ & EcsTermIsCacheable) {
-                cacheable_terms --;
-                ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
-            }
+            ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
 
             /* Sparse component fields must be accessed with ecs_field_at */
             if (!nodata_term) {
@@ -25559,10 +25535,7 @@ static int flecs_query_finalize_terms(
         if (scope_nesting) {
             term->flags_ |= EcsTermIsScope;
             ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
-            if (term->flags_ & EcsTermIsCacheable) {
-                cacheable_terms --;
-                ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
-            }
+            ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
         }
 
         if (first_id == EcsScopeClose) {
@@ -25614,9 +25587,26 @@ static int flecs_query_finalize_terms(
 
     q->field_count = flecs_ito(int8_t, field_count);
 
+    bool is_trivial = term_count != 0, match_only_self = true;
     if (field_count) {
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &terms[i];
+            cacheable_terms += (term->flags_ & EcsTermIsCacheable) != 0;
+            match_only_self &= !(term->src.id & EcsUp);
+            is_trivial &= (term->flags_ & EcsTermIsTrivial) != 0;
+            if (ECS_TERM_REF_ID(&term->first) == EcsChildOf &&
+                ECS_TERM_REF_ID(&term->second) != 0)
+            {
+                is_trivial = false;
+            }
+            if ((term->flags_ & EcsTermIsTrivial) &&
+                (term->src.id & EcsTraverseFlags) == EcsSelf &&
+                !ecs_id_is_wildcard(term->id))
+            {
+                q->bloom_filter = flecs_table_bloom_filter_add(
+                    q->bloom_filter, term->id);
+            }
+
             int32_t field = term->field_index;
             q->ids[field] = term->id;
 
@@ -25648,61 +25638,12 @@ static int flecs_query_finalize_terms(
 
     ECS_BIT_COND(q->flags, EcsQueryHasCondSet, cond_set);
 
-    /* A trivial term with a Self source matches an id that the table of the
-     * $this variable must have, which makes it usable for the bloom filter
-     * that quickly discards tables that cannot match the query. */
-    for (i = 0; i < term_count; i ++) {
-        ecs_term_t *term = &terms[i];
-
-        if (!(term->flags_ & EcsTermIsTrivial)) {
-            continue;
-        }
-
-        if ((term->src.id & EcsTraverseFlags) != EcsSelf) {
-            continue;
-        }
-
-        if (ecs_id_is_wildcard(term->id)) {
-            continue;
-        }
-
-        q->bloom_filter = flecs_table_bloom_filter_add(
-            q->bloom_filter, term->id);
-    }
-
-    /* Check if this is a trivial query */
-    if ((q->flags & EcsQueryMatchOnlyThis)) {
-        if (!(q->flags & 
-            (EcsQueryHasPred|EcsQueryMatchDisabled|EcsQueryMatchPrefab))) 
-        {
-            ECS_BIT_SET(q->flags, EcsQueryMatchOnlySelf);
-
-            bool is_trivial = true;
-
-            for (i = 0; i < term_count; i ++) {
-                ecs_term_t *term = &terms[i];
-                ecs_term_ref_t *src = &term->src;
-
-                if (src->id & EcsUp) {
-                    ECS_BIT_CLEAR(q->flags, EcsQueryMatchOnlySelf);
-                }
-
-                if (ECS_TERM_REF_ID(&term->first) == EcsChildOf) {
-                    if (ECS_TERM_REF_ID(&term->second) != 0) {
-                        is_trivial = false;
-                        continue;
-                    }
-                }
-
-                if (!(term->flags_ & EcsTermIsTrivial)) {
-                    is_trivial = false;
-                    continue;
-                }
-            }
-
-            if (term_count && is_trivial) {
-                ECS_BIT_SET(q->flags, EcsQueryIsTrivial);
-            }
+    if ((q->flags & EcsQueryMatchOnlyThis) && !(q->flags &
+        (EcsQueryHasPred|EcsQueryMatchDisabled|EcsQueryMatchPrefab)))
+    {
+        ECS_BIT_COND(q->flags, EcsQueryMatchOnlySelf, match_only_self);
+        if (is_trivial) {
+            q->flags |= EcsQueryIsTrivial;
         }
     }
 
