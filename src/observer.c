@@ -51,6 +51,49 @@ static ecs_flags32_t flecs_id_flag_for_event(
     return 0;
 }
 
+static void flecs_observer_set_table_flags(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_flags32_t flags)
+{
+    table->flags |= flags;
+    if (id && (flags == EcsTableHasOnAdd || flags == EcsTableHasOnRemove ||
+        flags == EcsTableHasUpNotify))
+    {
+        flecs_table_edges_add_flags(world, table, id, flags);
+    }
+}
+
+static void flecs_observer_set_tables_flags(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_flags32_t flags)
+{
+    if (!flags || (world->flags & EcsWorldFini)) {
+        return;
+    }
+
+    if (!id || id == EcsAny) {
+        ecs_sparse_t *tables = &world->store.tables;
+        int32_t count = flecs_sparse_count(tables);
+        for (int32_t i = 0; i < count; i ++) {
+            flecs_observer_set_table_flags(world,
+                flecs_sparse_get_dense_t(tables, ecs_table_t, i), id, flags);
+        }
+    } else {
+        ecs_component_record_t *cr = flecs_components_get(world, id);
+        if (cr) {
+            ecs_table_cache_iter_t it;
+            flecs_table_cache_iter(&cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty);
+            const ecs_table_cache_elem_t *elem;
+            while ((elem = flecs_table_cache_next(&it))) {
+                flecs_observer_set_table_flags(world, elem->table, id, flags);
+            }
+        }
+    }
+}
+
 static void flecs_inc_observer_count(
     ecs_world_t *world,
     ecs_entity_t event,
@@ -70,66 +113,28 @@ static void flecs_inc_observer_count(
         category_result = result - idt->up_notify_count;
     }
 
-    if (category_result == value && value > 0) {
-        /* Notify framework that there are observers for the event/id. This 
-         * allows parts of the code to skip event evaluation early */
-        if (up_notify) {
-            flecs_notify_tables(world, id, &(ecs_table_event_t){
-                .kind = EcsTableUpNotifyForId,
-                .event = event
-            });
-
-            ecs_component_record_t *cr = flecs_components_get(world, id);
+    ecs_flags32_t flags = up_notify
+        ? EcsIdHasUpNotify : flecs_id_flag_for_event(event);
+    if ((category_result == value && value > 0) ||
+        (category_result == 0 && value < 0))
+    {
+        ecs_component_record_t *cr = flecs_components_get(world, id);
+        if (value > 0) {
+            flecs_observer_set_tables_flags(world, id, flags);
             if (cr) {
-                cr->flags |= EcsIdHasUpNotify;
+                cr->flags |= flags;
             }
-        } else {
-            flecs_notify_tables(world, id, &(ecs_table_event_t){
-                .kind = EcsTableTriggersForId,
-                .event = event
-            });
-
-            ecs_flags32_t flags = flecs_id_flag_for_event(event);
-            if (flags) {
-                ecs_component_record_t *cr = flecs_components_get(world, id);
-                if (cr) {
-                    cr->flags |= flags;
+            if (!up_notify && (event == EcsOnSet || event == EcsWildcard)) {
+                if (id < FLECS_HI_COMPONENT_ID) {
+                    world->non_trivial_set[id] = true;
                 }
-
-                /* Track that we've created an OnSet observer so we know not to
-                 * take fast code path when doing a set operation. */
-                if (event == EcsOnSet || event == EcsWildcard) {
-                    if (id < FLECS_HI_COMPONENT_ID) {
-                        world->non_trivial_set[id] = true;
-                    }
-
-                    if (id == EcsWildcard || id == EcsAny) {
-                        ecs_os_memset_n(world->non_trivial_set, true, bool,
-                            FLECS_HI_COMPONENT_ID);
-                    }
+                if (id == EcsWildcard || id == EcsAny) {
+                    ecs_os_memset_n(world->non_trivial_set, true, bool,
+                        FLECS_HI_COMPONENT_ID);
                 }
             }
-        }
-    } else if (category_result == 0 && value < 0) {
-        /* Ditto, but the reverse */
-        if (up_notify) {
-            ecs_component_record_t *cr = flecs_components_get(world, id);
-            if (cr) {
-                cr->flags &= ~EcsIdHasUpNotify;
-            }
-        } else {
-            flecs_notify_tables(world, id, &(ecs_table_event_t){
-                .kind = EcsTableNoTriggersForId,
-                .event = event
-            });
-
-            ecs_flags32_t flags = flecs_id_flag_for_event(event);
-            if (flags) {
-                ecs_component_record_t *cr = flecs_components_get(world, id);
-                if (cr) {
-                    cr->flags &= ~flags;
-                }
-            }
+        } else if (cr) {
+            cr->flags &= ~flags;
         }
     }
 

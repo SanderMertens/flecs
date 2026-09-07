@@ -1024,43 +1024,6 @@ ecs_world_t* ecs_init_w_args(
     return world;
 }
 
-void flecs_notify_tables(
-    ecs_world_t *world,
-    ecs_id_t id,
-    ecs_table_event_t *event)
-{
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (world->flags & EcsWorldFini) {
-        return;
-    }
-
-    /* If no id is specified, broadcast to all tables */
-    if (!id || id == EcsAny) {
-        ecs_sparse_t *tables = &world->store.tables;
-        int32_t i, count = flecs_sparse_count(tables);
-        for (i = 0; i < count; i ++) {
-            ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
-            flecs_table_notify(world, table, id, event);
-        }
-
-    /* If id is specified, only broadcast to tables with id */
-    } else {
-        ecs_component_record_t *cr = flecs_components_get(world, id);
-        if (!cr) {
-            return;
-        }
-
-        ecs_table_cache_iter_t it;
-        const ecs_table_cache_elem_t *elem;
-
-        flecs_table_cache_iter(&cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty);
-        while ((elem = flecs_table_cache_next(&it))) {
-            flecs_table_notify(world, elem->table, id, event);
-        }
-    }
-}
-
 void ecs_atfini(
     ecs_world_t *world,
     ecs_fini_action_t action,

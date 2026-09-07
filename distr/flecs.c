@@ -815,27 +815,6 @@ void flecs_table_clear_edges_for_id(
 #define ecs_vec_from_column_t(arg_column, table, T)\
     ecs_vec_from_column(arg_column, table, ECS_SIZEOF(T))
 
-/* Table event type for notifying tables of world events */
-typedef enum ecs_table_eventkind_t {
-    EcsTableTriggersForId,
-    EcsTableNoTriggersForId,
-    EcsTableUpNotifyForId,
-} ecs_table_eventkind_t;
-
-typedef struct ecs_table_event_t {
-    ecs_table_eventkind_t kind;
-
-    /* Component info event */
-    ecs_entity_t component;
-
-    /* Event match */
-    ecs_entity_t event;
-
-    /* If the number of fields gets out of hand, this can be turned into a union
-     * but since events are very temporary objects, this works for now and makes
-     * initializing an event a bit simpler. */
-} ecs_table_event_t;
-
 /** Overrides (set if table overrides components) */
 
 /* Override type used for tables with a single IsA pair */
@@ -1022,12 +1001,6 @@ void flecs_table_mark_dirty(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t component);
-
-void flecs_table_notify(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    ecs_table_event_t *event);
 
 /* Increase traversable count of table */
 void flecs_table_traversable_add(
@@ -3907,12 +3880,6 @@ void flecs_type_info_claim(
 /* Decrease type info refcount, free when it reaches 0. */
 void flecs_type_info_release(
     const ecs_type_info_t *ti);
-
-/* Notify tables with component of event (or all tables if id is 0). */
-void flecs_notify_tables(
-    ecs_world_t *world,
-    ecs_id_t id,
-    ecs_table_event_t *event);
 
 /* Increase table version (used for invalidating ecs_ref_t's). */
 void flecs_increment_table_version(
@@ -15346,6 +15313,49 @@ static ecs_flags32_t flecs_id_flag_for_event(
     return 0;
 }
 
+static void flecs_observer_set_table_flags(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_flags32_t flags)
+{
+    table->flags |= flags;
+    if (id && (flags == EcsTableHasOnAdd || flags == EcsTableHasOnRemove ||
+        flags == EcsTableHasUpNotify))
+    {
+        flecs_table_edges_add_flags(world, table, id, flags);
+    }
+}
+
+static void flecs_observer_set_tables_flags(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_flags32_t flags)
+{
+    if (!flags || (world->flags & EcsWorldFini)) {
+        return;
+    }
+
+    if (!id || id == EcsAny) {
+        ecs_sparse_t *tables = &world->store.tables;
+        int32_t count = flecs_sparse_count(tables);
+        for (int32_t i = 0; i < count; i ++) {
+            flecs_observer_set_table_flags(world,
+                flecs_sparse_get_dense_t(tables, ecs_table_t, i), id, flags);
+        }
+    } else {
+        ecs_component_record_t *cr = flecs_components_get(world, id);
+        if (cr) {
+            ecs_table_cache_iter_t it;
+            flecs_table_cache_iter(&cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty);
+            const ecs_table_cache_elem_t *elem;
+            while ((elem = flecs_table_cache_next(&it))) {
+                flecs_observer_set_table_flags(world, elem->table, id, flags);
+            }
+        }
+    }
+}
+
 static void flecs_inc_observer_count(
     ecs_world_t *world,
     ecs_entity_t event,
@@ -15365,66 +15375,28 @@ static void flecs_inc_observer_count(
         category_result = result - idt->up_notify_count;
     }
 
-    if (category_result == value && value > 0) {
-        /* Notify framework that there are observers for the event/id. This 
-         * allows parts of the code to skip event evaluation early */
-        if (up_notify) {
-            flecs_notify_tables(world, id, &(ecs_table_event_t){
-                .kind = EcsTableUpNotifyForId,
-                .event = event
-            });
-
-            ecs_component_record_t *cr = flecs_components_get(world, id);
+    ecs_flags32_t flags = up_notify
+        ? EcsIdHasUpNotify : flecs_id_flag_for_event(event);
+    if ((category_result == value && value > 0) ||
+        (category_result == 0 && value < 0))
+    {
+        ecs_component_record_t *cr = flecs_components_get(world, id);
+        if (value > 0) {
+            flecs_observer_set_tables_flags(world, id, flags);
             if (cr) {
-                cr->flags |= EcsIdHasUpNotify;
+                cr->flags |= flags;
             }
-        } else {
-            flecs_notify_tables(world, id, &(ecs_table_event_t){
-                .kind = EcsTableTriggersForId,
-                .event = event
-            });
-
-            ecs_flags32_t flags = flecs_id_flag_for_event(event);
-            if (flags) {
-                ecs_component_record_t *cr = flecs_components_get(world, id);
-                if (cr) {
-                    cr->flags |= flags;
+            if (!up_notify && (event == EcsOnSet || event == EcsWildcard)) {
+                if (id < FLECS_HI_COMPONENT_ID) {
+                    world->non_trivial_set[id] = true;
                 }
-
-                /* Track that we've created an OnSet observer so we know not to
-                 * take fast code path when doing a set operation. */
-                if (event == EcsOnSet || event == EcsWildcard) {
-                    if (id < FLECS_HI_COMPONENT_ID) {
-                        world->non_trivial_set[id] = true;
-                    }
-
-                    if (id == EcsWildcard || id == EcsAny) {
-                        ecs_os_memset_n(world->non_trivial_set, true, bool,
-                            FLECS_HI_COMPONENT_ID);
-                    }
+                if (id == EcsWildcard || id == EcsAny) {
+                    ecs_os_memset_n(world->non_trivial_set, true, bool,
+                        FLECS_HI_COMPONENT_ID);
                 }
             }
-        }
-    } else if (category_result == 0 && value < 0) {
-        /* Ditto, but the reverse */
-        if (up_notify) {
-            ecs_component_record_t *cr = flecs_components_get(world, id);
-            if (cr) {
-                cr->flags &= ~EcsIdHasUpNotify;
-            }
-        } else {
-            flecs_notify_tables(world, id, &(ecs_table_event_t){
-                .kind = EcsTableNoTriggersForId,
-                .event = event
-            });
-
-            ecs_flags32_t flags = flecs_id_flag_for_event(event);
-            if (flags) {
-                ecs_component_record_t *cr = flecs_components_get(world, id);
-                if (cr) {
-                    cr->flags &= ~flags;
-                }
-            }
+        } else if (cr) {
+            cr->flags &= ~flags;
         }
     }
 
@@ -21517,43 +21489,6 @@ ecs_world_t* ecs_init_w_args(
 #endif
 
     return world;
-}
-
-void flecs_notify_tables(
-    ecs_world_t *world,
-    ecs_id_t id,
-    ecs_table_event_t *event)
-{
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (world->flags & EcsWorldFini) {
-        return;
-    }
-
-    /* If no id is specified, broadcast to all tables */
-    if (!id || id == EcsAny) {
-        ecs_sparse_t *tables = &world->store.tables;
-        int32_t i, count = flecs_sparse_count(tables);
-        for (i = 0; i < count; i ++) {
-            ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
-            flecs_table_notify(world, table, id, event);
-        }
-
-    /* If id is specified, only broadcast to tables with id */
-    } else {
-        ecs_component_record_t *cr = flecs_components_get(world, id);
-        if (!cr) {
-            return;
-        }
-
-        ecs_table_cache_iter_t it;
-        const ecs_table_cache_elem_t *elem;
-
-        flecs_table_cache_iter(&cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty);
-        while ((elem = flecs_table_cache_next(&it))) {
-            flecs_table_notify(world, elem->table, id, event);
-        }
-    }
 }
 
 void ecs_atfini(
@@ -42085,42 +42020,6 @@ static void flecs_table_records_unregister(
     flecs_wfree_n(world, ecs_table_record_t, count, table->_->records);
 }
 
-/* Keep track of what kind of builtin event observers are registered that can
- * potentially match the table. This allows code to early out of calling the
- * emit function that notifies observers. */
-static void flecs_table_add_trigger_flags(
-    ecs_world_t *world, 
-    ecs_table_t *table, 
-    ecs_id_t id,
-    ecs_entity_t event) 
-{
-    (void)world;
-
-    ecs_flags32_t flags = 0;
-
-    if (event == EcsOnAdd) {
-        flags = EcsTableHasOnAdd;
-    } else if (event == EcsOnRemove) {
-        flags = EcsTableHasOnRemove;
-    } else if (event == EcsOnSet) {
-        flags = EcsTableHasOnSet;
-    } else if (event == EcsOnTableCreate) {
-        flags = EcsTableHasOnTableCreate;
-    } else if (event == EcsOnTableDelete) {
-        flags = EcsTableHasOnTableDelete;
-    } else if (event == EcsWildcard) {
-        flags = EcsTableHasOnAdd|EcsTableHasOnRemove|EcsTableHasOnSet|
-            EcsTableHasOnTableCreate|EcsTableHasOnTableDelete;
-    }
-
-    table->flags |= flags;
-
-    /* Add observer flags to incoming edges for id */
-    if (id && ((flags == EcsTableHasOnAdd) || (flags == EcsTableHasOnRemove))) {
-        flecs_table_edges_add_flags(world, table, id, flags);
-    }
-}
-
 /* Invoke OnRemove observers for all entities in table. Useful during table 
  * deletion or when clearing entities from a table. */
 static void flecs_table_notify_on_remove(
@@ -43464,34 +43363,6 @@ void flecs_table_merge(
 
     flecs_table_check_sanity(src_table);
     flecs_table_check_sanity(dst_table);
-}
-
-/* Internal mechanism for propagating information to tables */
-void flecs_table_notify(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    ecs_table_event_t *event)
-{
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (world->flags & EcsWorldFini) {
-        return;
-    }
-
-    switch(event->kind) {
-    case EcsTableTriggersForId:
-        flecs_table_add_trigger_flags(world, table, id, event->event);
-        break;
-    case EcsTableUpNotifyForId:
-        table->flags |= EcsTableHasUpNotify;
-        if (id) {
-            flecs_table_edges_add_flags(world, table, id, EcsTableHasUpNotify);
-        }
-        break;
-    case EcsTableNoTriggersForId:
-        break; /* TODO */
-    }
 }
 
 static int32_t flecs_table_get_toggle_column(

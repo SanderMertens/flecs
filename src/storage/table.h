@@ -52,27 +52,6 @@
 #define ecs_vec_from_column_t(arg_column, table, T)\
     ecs_vec_from_column(arg_column, table, ECS_SIZEOF(T))
 
-/* Table event type for notifying tables of world events */
-typedef enum ecs_table_eventkind_t {
-    EcsTableTriggersForId,
-    EcsTableNoTriggersForId,
-    EcsTableUpNotifyForId,
-} ecs_table_eventkind_t;
-
-typedef struct ecs_table_event_t {
-    ecs_table_eventkind_t kind;
-
-    /* Component info event */
-    ecs_entity_t component;
-
-    /* Event match */
-    ecs_entity_t event;
-
-    /* If the number of fields gets out of hand, this can be turned into a union
-     * but since events are very temporary objects, this works for now and makes
-     * initializing an event a bit simpler. */
-} ecs_table_event_t;
-
 /** Overrides (set if table overrides components) */
 
 /* Override type used for tables with a single IsA pair */
@@ -259,12 +238,6 @@ void flecs_table_mark_dirty(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t component);
-
-void flecs_table_notify(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    ecs_table_event_t *event);
 
 /* Increase traversable count of table */
 void flecs_table_traversable_add(

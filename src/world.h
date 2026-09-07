@@ -228,12 +228,6 @@ void flecs_type_info_claim(
 void flecs_type_info_release(
     const ecs_type_info_t *ti);
 
-/* Notify tables with component of event (or all tables if id is 0). */
-void flecs_notify_tables(
-    ecs_world_t *world,
-    ecs_id_t id,
-    ecs_table_event_t *event);
-
 /* Increase table version (used for invalidating ecs_ref_t's). */
 void flecs_increment_table_version(
     ecs_world_t *world,

@@ -871,42 +871,6 @@ static void flecs_table_records_unregister(
     flecs_wfree_n(world, ecs_table_record_t, count, table->_->records);
 }
 
-/* Keep track of what kind of builtin event observers are registered that can
- * potentially match the table. This allows code to early out of calling the
- * emit function that notifies observers. */
-static void flecs_table_add_trigger_flags(
-    ecs_world_t *world, 
-    ecs_table_t *table, 
-    ecs_id_t id,
-    ecs_entity_t event) 
-{
-    (void)world;
-
-    ecs_flags32_t flags = 0;
-
-    if (event == EcsOnAdd) {
-        flags = EcsTableHasOnAdd;
-    } else if (event == EcsOnRemove) {
-        flags = EcsTableHasOnRemove;
-    } else if (event == EcsOnSet) {
-        flags = EcsTableHasOnSet;
-    } else if (event == EcsOnTableCreate) {
-        flags = EcsTableHasOnTableCreate;
-    } else if (event == EcsOnTableDelete) {
-        flags = EcsTableHasOnTableDelete;
-    } else if (event == EcsWildcard) {
-        flags = EcsTableHasOnAdd|EcsTableHasOnRemove|EcsTableHasOnSet|
-            EcsTableHasOnTableCreate|EcsTableHasOnTableDelete;
-    }
-
-    table->flags |= flags;
-
-    /* Add observer flags to incoming edges for id */
-    if (id && ((flags == EcsTableHasOnAdd) || (flags == EcsTableHasOnRemove))) {
-        flecs_table_edges_add_flags(world, table, id, flags);
-    }
-}
-
 /* Invoke OnRemove observers for all entities in table. Useful during table 
  * deletion or when clearing entities from a table. */
 static void flecs_table_notify_on_remove(
@@ -2250,34 +2214,6 @@ void flecs_table_merge(
 
     flecs_table_check_sanity(src_table);
     flecs_table_check_sanity(dst_table);
-}
-
-/* Internal mechanism for propagating information to tables */
-void flecs_table_notify(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    ecs_table_event_t *event)
-{
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (world->flags & EcsWorldFini) {
-        return;
-    }
-
-    switch(event->kind) {
-    case EcsTableTriggersForId:
-        flecs_table_add_trigger_flags(world, table, id, event->event);
-        break;
-    case EcsTableUpNotifyForId:
-        table->flags |= EcsTableHasUpNotify;
-        if (id) {
-            flecs_table_edges_add_flags(world, table, id, EcsTableHasUpNotify);
-        }
-        break;
-    case EcsTableNoTriggersForId:
-        break; /* TODO */
-    }
 }
 
 static int32_t flecs_table_get_toggle_column(
