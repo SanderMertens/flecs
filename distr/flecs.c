@@ -29302,21 +29302,6 @@ static bool flecs_rest_cmd_has_id(
     case EcsCmdDisable:
     case EcsCmdPath:
         return false;
-    case EcsCmdBulkNew:
-    case EcsCmdAdd:
-    case EcsCmdRemove:
-    case EcsCmdSet:
-    case EcsCmdSetDontFragment:
-    case EcsCmdEmplace:
-    case EcsCmdEnsure:
-    case EcsCmdEnsureDontFragment:
-    case EcsCmdModified:
-    case EcsCmdModifiedNoHook:
-    case EcsCmdAddModified:
-    case EcsCmdOnDeleteAction:
-    case EcsCmdEnable:
-    case EcsCmdEvent:
-    case EcsCmdSkip:
     default:
         return true;
     }
