@@ -13,34 +13,16 @@ namespace flecs
 namespace _ 
 {
 
-// Binding ctx for component hooks.
 struct component_binding_ctx {
-    void *on_add = nullptr;
-    void *on_remove = nullptr;
-    void *on_set = nullptr;
-    void *on_replace = nullptr;
-    void *on_validate = nullptr;
-    ecs_ctx_free_t free_on_add = nullptr;
-    ecs_ctx_free_t free_on_remove = nullptr;
-    ecs_ctx_free_t free_on_set = nullptr;
-    ecs_ctx_free_t free_on_replace = nullptr;
-    ecs_ctx_free_t free_on_validate = nullptr;
+    enum Hook { OnAdd, OnRemove, OnSet, OnReplace, OnValidate, Count };
+    void *callbacks[Count] = {};
+    ecs_ctx_free_t free[Count] = {};
 
     ~component_binding_ctx() {
-        if (on_add && free_on_add) {
-            free_on_add(on_add);
-        }
-        if (on_remove && free_on_remove) {
-            free_on_remove(on_remove);
-        }
-        if (on_set && free_on_set) {
-            free_on_set(on_set);
-        }
-        if (on_replace && free_on_replace) {
-            free_on_replace(on_replace);
-        }
-        if (on_validate && free_on_validate) {
-            free_on_validate(on_validate);
+        for (size_t i = 0; i < Count; i ++) {
+            if (callbacks[i] && free[i]) {
+                free[i](callbacks[i]);
+            }
         }
     }
 };
@@ -194,44 +176,22 @@ struct each_delegate : public delegate {
         _::free_obj<each_delegate>(obj);
     }
 
-    // Static function to call for component on_add hook.
-    static void run_add(ecs_iter_t *iter) {
-        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
-            iter->callback_ctx);
-        iter->callback_ctx = ctx->on_add;
-        run(iter);
-    }
-
-    // Static function to call for component on_remove hook.
-    static void run_remove(ecs_iter_t *iter) {
-        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
-            iter->callback_ctx);
-        iter->callback_ctx = ctx->on_remove;
-        run(iter);
-    }
-
-    // Static function to call for component on_set hook.
-    static void run_set(ecs_iter_t *iter) {
-        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
-            iter->callback_ctx);
-        iter->callback_ctx = ctx->on_set;
-        run(iter);
-    }
-
-    // Static function to call for component on_replace hook.
-    static void run_replace(ecs_iter_t *iter) {
-        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
-            iter->callback_ctx);
-        iter->callback_ctx = ctx->on_replace;
-        run(iter);
+    template <component_binding_ctx::Hook Hook>
+    static void run_hook(ecs_iter_t *iter) {
+        auto ctx = static_cast<component_binding_ctx*>(iter->callback_ctx);
+        auto self = static_cast<const each_delegate*>(ctx->callbacks[Hook]);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
+        iter->callback_ctx = ctx->callbacks[Hook];
+        self->template invoke_until<false,
+            Hook != component_binding_ctx::OnReplace>(iter);
     }
 
 protected:
-    template <bool Find>
+    template <bool Find, bool Shared = true>
     flecs::entity invoke_until(ecs_iter_t *iter) const {
         field_ptrs<Components...> terms;
         iter->flags |= EcsIterCppEach;
-        if (iter->ref_fields | iter->up_fields) {
+        if (Shared && (iter->ref_fields | iter->up_fields)) {
             terms.populate(iter);
             return invoke_rows<Find, true>(iter, terms.fields_,
                 std::index_sequence_for<Components...>{});
@@ -320,7 +280,7 @@ struct validate_delegate : public delegate {
         ecs_assert(h != nullptr, ECS_INTERNAL_ERROR, nullptr);
         auto ctx = static_cast<component_binding_ctx*>(h->binding_ctx);
         ecs_assert(ctx != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        auto self = static_cast<const validate_delegate*>(ctx->on_validate);
+        auto self = static_cast<const validate_delegate*>(ctx->callbacks[component_binding_ctx::OnValidate]);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         return self->func_(
             flecs::entity(world, entity), *static_cast<T*>(ptr));

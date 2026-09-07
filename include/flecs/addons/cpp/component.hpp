@@ -531,16 +531,9 @@ struct component : untyped_component {
      */
     template <typename Func>
     component<T>& on_add(Func&& func) {
-        using Delegate = typename _::each_delegate<typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = get_hooks();
-        ecs_assert(h.on_add == nullptr, ECS_INVALID_OPERATION,
-            "on_add hook is already set");
-        BindingCtx *ctx = get_binding_ctx(h);
-        h.on_add = Delegate::run_add;
-        ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_add = _::free_obj<Delegate>;
-        set_hooks(h);
-        return *this;
+        using Delegate = _::each_delegate<decay_t<Func>, T>;
+        return set_hook<Delegate, &flecs::type_hooks_t::on_add,
+            BindingCtx::OnAdd>(FLECS_FWD(func));
     }
 
     /** Register on_remove hook.
@@ -550,17 +543,9 @@ struct component : untyped_component {
      */
     template <typename Func>
     component<T>& on_remove(Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = get_hooks();
-        ecs_assert(h.on_remove == nullptr, ECS_INVALID_OPERATION,
-            "on_remove hook is already set");
-        BindingCtx *ctx = get_binding_ctx(h);
-        h.on_remove = Delegate::run_remove;
-        ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_remove = _::free_obj<Delegate>;
-        set_hooks(h);
-        return *this;
+        using Delegate = _::each_delegate<decay_t<Func>, T>;
+        return set_hook<Delegate, &flecs::type_hooks_t::on_remove,
+            BindingCtx::OnRemove>(FLECS_FWD(func));
     }
 
     /** Register on_set hook.
@@ -570,17 +555,9 @@ struct component : untyped_component {
      */
     template <typename Func>
     component<T>& on_set(Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = get_hooks();
-        ecs_assert(h.on_set == nullptr, ECS_INVALID_OPERATION,
-            "on_set hook is already set");
-        BindingCtx *ctx = get_binding_ctx(h);
-        h.on_set = Delegate::run_set;
-        ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_set = _::free_obj<Delegate>;
-        set_hooks(h);
-        return *this;
+        using Delegate = _::each_delegate<decay_t<Func>, T>;
+        return set_hook<Delegate, &flecs::type_hooks_t::on_set,
+            BindingCtx::OnSet>(FLECS_FWD(func));
     }
 
     /** Register on_replace hook.
@@ -590,17 +567,9 @@ struct component : untyped_component {
      */
     template <typename Func>
     component<T>& on_replace(Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, T, T>;
-        flecs::type_hooks_t h = get_hooks();
-        ecs_assert(h.on_replace == nullptr, ECS_INVALID_OPERATION,
-            "on_replace hook is already set");
-        BindingCtx *ctx = get_binding_ctx(h);
-        h.on_replace = Delegate::run_replace;
-        ctx->on_replace = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_replace = _::free_obj<Delegate>;
-        set_hooks(h);
-        return *this;
+        using Delegate = _::each_delegate<decay_t<Func>, T, T>;
+        return set_hook<Delegate, &flecs::type_hooks_t::on_replace,
+            BindingCtx::OnReplace>(FLECS_FWD(func));
     }
 
     /** Register on_validate hook.
@@ -614,17 +583,9 @@ struct component : untyped_component {
      */
     template <typename Func>
     component<T>& on_validate(Func&& func) {
-        using Delegate = _::validate_delegate<
-            typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = get_hooks();
-        ecs_assert(h.on_validate == nullptr, ECS_INVALID_OPERATION,
-            "on_validate hook is already set");
-        BindingCtx *ctx = get_binding_ctx(h);
-        h.on_validate = Delegate::run;
-        ctx->on_validate = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_validate = _::free_obj<Delegate>;
-        set_hooks(h);
-        return *this;
+        using Delegate = _::validate_delegate<decay_t<Func>, T>;
+        return set_hook<Delegate, &flecs::type_hooks_t::on_validate,
+            BindingCtx::OnValidate>(FLECS_FWD(func));
     }
 
     using untyped_component::on_compare;
@@ -685,6 +646,25 @@ struct component : untyped_component {
 
 private:
     using BindingCtx = _::component_binding_ctx;
+
+    template <typename Delegate, auto Hook, BindingCtx::Hook Slot, typename Func>
+    component<T>& set_hook(Func&& func) {
+        flecs::type_hooks_t h = get_hooks();
+        ecs_assert(h.*Hook == nullptr, ECS_INVALID_OPERATION,
+            "component hook is already set");
+        if constexpr (std::is_same_v<Delegate,
+            _::validate_delegate<decay_t<Func>, T>>)
+        {
+            h.*Hook = Delegate::run;
+        } else {
+            h.*Hook = Delegate::template run_hook<Slot>;
+        }
+        BindingCtx *ctx = get_binding_ctx(h);
+        ctx->callbacks[Slot] = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ctx->free[Slot] = _::free_obj<Delegate>;
+        set_hooks(h);
+        return *this;
+    }
 
     BindingCtx* get_binding_ctx(flecs::type_hooks_t& h){
         BindingCtx *result = static_cast<BindingCtx*>(h.binding_ctx);
