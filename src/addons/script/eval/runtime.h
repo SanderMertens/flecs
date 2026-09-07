@@ -6,13 +6,17 @@
 #ifndef FLECS_SCRIPT_RUNTIME_H
 #define FLECS_SCRIPT_RUNTIME_H
 
+typedef struct ecs_script_with_value_t {
+    ecs_value_t value;
+    const ecs_type_info_t *ti;
+} ecs_script_with_value_t;
+
 struct ecs_script_runtime_t {
     ecs_allocator_t allocator;
     ecs_expr_stack_t expr_stack;
     ecs_stack_t stack;
     ecs_vec_t using;
     ecs_vec_t with;
-    ecs_vec_t with_type_info;
     ecs_vec_t annot;
     ecs_vec_t pending_resolves;
     ecs_vec_t ir_vms;

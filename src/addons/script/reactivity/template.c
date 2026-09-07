@@ -569,15 +569,13 @@ static int flecs_script_template_instantiate(
     }
     ecs_vec_t prev_using = v->r->using;
     ecs_vec_t prev_with = desc.runtime->with;
-    ecs_vec_t prev_with_type_info = desc.runtime->with_type_info;
 
     v->r->using = template->using_;
     v->template_entity = template_entity;
     v->body_template = template_entity;
     v->instance_template = template;
     v->symbol_offset = template->symbol_offset;
-    ecs_vec_init_t(NULL, &desc.runtime->with, ecs_value_t, 0);
-    ecs_vec_init_t(NULL, &desc.runtime->with_type_info, ecs_type_info_t*, 0);
+    ecs_vec_init_t(NULL, &desc.runtime->with, ecs_script_with_value_t, 0);
 
     ecs_script_scope_t *scope = template->node->scope;
     ecs_script_state_t state;
@@ -731,12 +729,9 @@ done:
     rt->template_depth --;
 
     ecs_vec_fini_t(&desc.runtime->allocator,
-        &desc.runtime->with, ecs_value_t);
-    ecs_vec_fini_t(&desc.runtime->allocator,
-        &desc.runtime->with_type_info, ecs_type_info_t*);
+        &desc.runtime->with, ecs_script_with_value_t);
 
     v->r->with = prev_with;
-    v->r->with_type_info = prev_with_type_info;
     v->r->using = prev_using;
     v->state = &v->base.script->state;
     if (vm) {

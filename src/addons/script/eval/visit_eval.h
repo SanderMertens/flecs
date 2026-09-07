@@ -390,17 +390,12 @@ ecs_script_var_t* flecs_script_for_declare_var(
 /* Runtime bookkeeping helpers shared with the IR runtime */
 
 ecs_value_t* flecs_script_with_append(
-    ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
     const ecs_type_info_t *ti);
 
 void flecs_script_with_set_count(
-    ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
     int32_t count);
-
-int32_t flecs_script_with_count(
-    ecs_script_eval_visitor_t *v);
 
 int32_t flecs_script_symbol_runtime_slot(
     const ecs_script_eval_visitor_t *v,

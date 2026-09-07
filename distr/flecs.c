@@ -50821,13 +50821,17 @@ ecs_script_scope_t* ecs_script_current_scope_(
 #ifndef FLECS_SCRIPT_RUNTIME_H
 #define FLECS_SCRIPT_RUNTIME_H
 
+typedef struct ecs_script_with_value_t {
+    ecs_value_t value;
+    const ecs_type_info_t *ti;
+} ecs_script_with_value_t;
+
 struct ecs_script_runtime_t {
     ecs_allocator_t allocator;
     ecs_expr_stack_t expr_stack;
     ecs_stack_t stack;
     ecs_vec_t using;
     ecs_vec_t with;
-    ecs_vec_t with_type_info;
     ecs_vec_t annot;
     ecs_vec_t pending_resolves;
     ecs_vec_t ir_vms;
@@ -51266,17 +51270,12 @@ ecs_script_var_t* flecs_script_for_declare_var(
 /* Runtime bookkeeping helpers shared with the IR runtime */
 
 ecs_value_t* flecs_script_with_append(
-    ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
     const ecs_type_info_t *ti);
 
 void flecs_script_with_set_count(
-    ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
     int32_t count);
-
-int32_t flecs_script_with_count(
-    ecs_script_eval_visitor_t *v);
 
 int32_t flecs_script_symbol_runtime_slot(
     const ecs_script_eval_visitor_t *v,
@@ -97808,8 +97807,7 @@ ecs_script_runtime_t* ecs_script_runtime_new(void)
     flecs_allocator_init(&r->allocator);
     flecs_stack_init(&r->stack);
     ecs_vec_init_t(&r->allocator, &r->using, ecs_entity_t, 0);
-    ecs_vec_init_t(&r->allocator, &r->with, ecs_value_t, 0);
-    ecs_vec_init_t(&r->allocator, &r->with_type_info, ecs_type_info_t*, 0);
+    ecs_vec_init_t(&r->allocator, &r->with, ecs_script_with_value_t, 0);
     ecs_vec_init_t(&r->allocator, &r->annot, ecs_script_annot_t*, 0);
     ecs_vec_init_t(&r->allocator, &r->pending_resolves, ecs_entity_t, 0);
     ecs_vec_init_t(NULL, &r->ir_vms, ecs_script_ir_vm_t*, 0);
@@ -97833,8 +97831,7 @@ void ecs_script_runtime_free(
     flecs_script_template_pending_fini(&r->template_pending);
     ecs_vec_fini_t(&r->allocator, &r->pending_resolves, ecs_entity_t);
     ecs_vec_fini_t(&r->allocator, &r->annot, ecs_script_annot_t*);
-    ecs_vec_fini_t(&r->allocator, &r->with, ecs_value_t);
-    ecs_vec_fini_t(&r->allocator, &r->with_type_info, ecs_type_info_t*);
+    ecs_vec_fini_t(&r->allocator, &r->with, ecs_script_with_value_t);
     ecs_vec_fini_t(&r->allocator, &r->using, ecs_entity_t);
     flecs_allocator_fini(&r->allocator);
     flecs_stack_fini(&r->stack);
@@ -97877,7 +97874,6 @@ void ecs_script_runtime_clear(
 {
     ecs_vec_clear(&r->annot);
     ecs_vec_clear(&r->with);
-    ecs_vec_clear(&r->with_type_info);
     ecs_vec_clear(&r->using);
     ecs_os_free(r->unresolved_errors);
     r->unresolved_errors = NULL;
@@ -98192,36 +98188,24 @@ void flecs_script_eval_error_(
 }
 
 ecs_value_t* flecs_script_with_append(
-    ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
     const ecs_type_info_t *ti)
 {
-    if (ecs_vec_count(&v->r->with)) {
-        ecs_assert(ecs_vec_last_t(&v->r->with, ecs_value_t)->type == 0, 
-            ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(ecs_vec_last_t(&v->r->with, ecs_value_t)->ptr == NULL, 
-            ECS_INTERNAL_ERROR, NULL);
-        ecs_vec_remove_last(&v->r->with);
-    }
-
-    ecs_vec_append_t(a, &v->r->with_type_info, const ecs_type_info_t*)[0] = ti;
-
-    ecs_vec_append_t(a, &v->r->with, ecs_value_t);
-    ecs_value_t *last = ecs_vec_append_t(a, &v->r->with, ecs_value_t);
-    ecs_os_memset_t(last, 0, ecs_value_t);
-    return ecs_vec_get_t(&v->r->with, ecs_value_t, ecs_vec_count(&v->r->with) - 2);
+    ecs_script_with_value_t *elem = ecs_vec_append_t(
+        &v->r->allocator, &v->r->with, ecs_script_with_value_t);
+    elem->ti = ti;
+    return &elem->value;
 }
 
 void flecs_script_with_set_count(
-    ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
     int32_t count)
 {
-    int32_t i = count, until = ecs_vec_count(&v->r->with) - 1;
+    ecs_script_with_value_t *with = ecs_vec_first(&v->r->with);
+    int32_t i = count, until = ecs_vec_count(&v->r->with);
     for (; i < until; i ++) {
-        ecs_value_t *val = ecs_vec_get_t(&v->r->with, ecs_value_t, i);
-        ecs_type_info_t *ti = ecs_vec_get_t(
-            &v->r->with_type_info, ecs_type_info_t*, i)[0];
+        ecs_value_t *val = &with[i].value;
+        const ecs_type_info_t *ti = with[i].ti;
         if (ti) {
             if (ti->hooks.dtor) {
                 flecs_type_info_dtor(val->ptr, 1, ti);
@@ -98229,29 +98213,8 @@ void flecs_script_with_set_count(
             flecs_stack_free(val->ptr, ti->size);
         }
     }
-
-    if (count) {
-        ecs_value_t *last = ecs_vec_get_t(&v->r->with, ecs_value_t, count);
-        ecs_os_memset_t(last, 0, ecs_value_t);
-        ecs_vec_set_count_t(a, &v->r->with, ecs_value_t, count + 1);
-    } else {
-        ecs_vec_set_count_t(a, &v->r->with, ecs_value_t, 0);
-    }
-
-    ecs_vec_set_count_t(a, &v->r->with_type_info, ecs_type_info_t*, count);
-}
-
-int32_t flecs_script_with_count(
-    ecs_script_eval_visitor_t *v)
-{
-    if (ecs_vec_count(&v->r->with)) {
-        ecs_assert(ecs_vec_last_t(&v->r->with, ecs_value_t)->type == 0, 
-            ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(ecs_vec_last_t(&v->r->with, ecs_value_t)->ptr == NULL, 
-            ECS_INTERNAL_ERROR, NULL);
-        return ecs_vec_count(&v->r->with) - 1;
-    }
-    return 0;
+    ecs_vec_set_count_t(&v->r->allocator, &v->r->with,
+        ecs_script_with_value_t, count);
 }
 
 const ecs_type_info_t* flecs_script_get_type_info(
@@ -98583,24 +98546,17 @@ void flecs_script_apply_with(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity)
 {
-    ecs_value_t *with = NULL;
-    if (flecs_script_with_count(v)) {
-        with = ecs_vec_first_t(&v->r->with, ecs_value_t);
-    }
-    if (!with) {
-        return;
-    }
-
-    int32_t i;
-    for (i = 0; with[i].type; i ++) {
-        if (with[i].ptr) {
-            const ecs_type_info_t *ti = ecs_get_type_info(
-                v->world, with[i].type);
+    ecs_script_with_value_t *with = ecs_vec_first(&v->r->with);
+    int32_t i, count = ecs_vec_count(&v->r->with);
+    for (i = 0; i < count; i ++) {
+        ecs_value_t *value = &with[i].value;
+        if (value->ptr) {
+            const ecs_type_info_t *ti = with[i].ti;
             ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_set_id(v->world, entity, with[i].type,
-                flecs_ito(size_t, ti->size), with[i].ptr);
+            ecs_set_id(v->world, entity, value->type,
+                flecs_ito(size_t, ti->size), value->ptr);
         } else {
-            ecs_add_id(v->world, entity, with[i].type);
+            ecs_add_id(v->world, entity, value->type);
         }
     }
 }
@@ -99475,8 +99431,6 @@ static int flecs_script_eval_with_tag(
         return -1;
     }
 
-    ecs_allocator_t *a = &v->r->allocator;
-
     if (node->id.value_sp != -1) {
         const ecs_script_var_t *var = flecs_script_template_prop_var(
             v, node, node->id.value_sp, node->id.eval);
@@ -99488,7 +99442,7 @@ static int flecs_script_eval_with_tag(
         if (!ti) {
             return -1;
         }
-        ecs_value_t *value = flecs_script_with_append(a, v, ti);
+        ecs_value_t *value = flecs_script_with_append(v, ti);
         value->type = node->id.eval;
         value->ptr = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
         flecs_type_info_ctor(value->ptr, 1, ti);
@@ -99496,7 +99450,7 @@ static int flecs_script_eval_with_tag(
         return 0;
     }
 
-    ecs_value_t *value = flecs_script_with_append(a, v, NULL);
+    ecs_value_t *value = flecs_script_with_append(v, NULL);
     value->type = node->id.eval;
     value->ptr = NULL;
 
@@ -99511,11 +99465,10 @@ static int flecs_script_eval_with_component(
         return -1;
     }
 
-    ecs_allocator_t *a = &v->r->allocator;
     const ecs_type_info_t *ti = flecs_script_get_type_info(
         v, node, node->id.eval);
 
-    ecs_value_t *value = flecs_script_with_append(a, v, ti);
+    ecs_value_t *value = flecs_script_with_append(v, ti);
     value->type = node->id.eval;
     value->ptr = NULL;
 
@@ -99553,7 +99506,7 @@ int flecs_script_eval_with_enter(
     ecs_script_with_t *node,
     flecs_script_with_state_t *state)
 {
-    state->with_count = flecs_script_with_count(v);
+    state->with_count = ecs_vec_count(&v->r->with);
     state->cursor = flecs_stack_get_cursor(&v->r->stack);
     state->is_with_scope = v->is_with_scope;
     state->force = v->force;
@@ -99575,10 +99528,9 @@ void flecs_script_eval_with_leave(
     ecs_script_eval_visitor_t *v,
     const flecs_script_with_state_t *state)
 {
-    ecs_allocator_t *a = &v->r->allocator;
     v->is_with_scope = state->is_with_scope;
     v->force = state->force;
-    flecs_script_with_set_count(a, v, state->with_count);
+    flecs_script_with_set_count(v, state->with_count);
     flecs_stack_restore_cursor(&v->r->stack, state->cursor);
 }
 
@@ -99927,7 +99879,6 @@ int flecs_script_eval_pair_scope_enter(
         return -1;
     }
 
-    ecs_allocator_t *a = &v->r->allocator;
     state->with_relationship = v->with_relationship;
     state->second = 0;
     state->with_relationship_sp = v->with_relationship_sp;
@@ -99937,14 +99888,15 @@ int flecs_script_eval_pair_scope_enter(
 
     if (state->with_relationship != first) {
         /* Append new element to with stack */
-        ecs_value_t *value = flecs_script_with_append(a, v, NULL);
+        ecs_value_t *value = flecs_script_with_append(v, NULL);
         value->type = ecs_pair(first, second);
         value->ptr = NULL;
-        v->with_relationship_sp = flecs_script_with_count(v) - 1;
+        v->with_relationship_sp = ecs_vec_count(&v->r->with) - 1;
     } else {
         /* Get existing with element for current relationship stack */
-        ecs_value_t *value = ecs_vec_get_t(
-            &v->r->with, ecs_value_t, v->with_relationship_sp);
+        ecs_value_t *value = &ecs_vec_get_t(
+            &v->r->with, ecs_script_with_value_t,
+            v->with_relationship_sp)->value;
         ecs_assert(ECS_PAIR_FIRST(value->type) == (uint32_t)first, 
             ECS_INTERNAL_ERROR, NULL);
         state->second = ECS_PAIR_SECOND(value->type);
@@ -99962,14 +99914,13 @@ void flecs_script_eval_pair_scope_leave(
     ecs_script_eval_visitor_t *v,
     const flecs_script_pair_scope_state_t *state)
 {
-    ecs_allocator_t *a = &v->r->allocator;
-
     if (state->second) {
-        ecs_value_t *value = ecs_vec_get_t(
-            &v->r->with, ecs_value_t, v->with_relationship_sp);
+        ecs_value_t *value = &ecs_vec_get_t(
+            &v->r->with, ecs_script_with_value_t,
+            v->with_relationship_sp)->value;
         value->type = ecs_pair(v->with_relationship, state->second);
     } else {
-        flecs_script_with_set_count(a, v, v->with_relationship_sp);
+        flecs_script_with_set_count(v, v->with_relationship_sp);
     }
 
     v->with_relationship = state->with_relationship;
@@ -117375,7 +117326,6 @@ static int flecs_ir_with_tag(
         return -1;
     }
 
-    ecs_allocator_t *a = &v->r->allocator;
     if (desc->value_sp != -1) {
         const ecs_script_var_t *var = flecs_script_template_prop_var(
             v, (void*)node, desc->value_sp, id);
@@ -117386,7 +117336,7 @@ static int flecs_ir_with_tag(
         if (!ti) {
             return -1;
         }
-        ecs_value_t *value = flecs_script_with_append(a, v, ti);
+        ecs_value_t *value = flecs_script_with_append(v, ti);
         value->type = id;
         value->ptr = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
         flecs_type_info_ctor(value->ptr, 1, ti);
@@ -117394,7 +117344,7 @@ static int flecs_ir_with_tag(
         return 0;
     }
 
-    ecs_value_t *value = flecs_script_with_append(a, v, NULL);
+    ecs_value_t *value = flecs_script_with_append(v, NULL);
     value->type = id;
     value->ptr = NULL;
     return 0;
@@ -117412,13 +117362,12 @@ static int flecs_ir_with_component_begin(
         return -1;
     }
 
-    ecs_allocator_t *a = &v->r->allocator;
     const ecs_type_info_t *ti = desc->ti;
     if (!ti) {
         ti = flecs_script_get_type_info(v, (void*)node, id);
     }
 
-    ecs_value_t *value = flecs_script_with_append(a, v, ti);
+    ecs_value_t *value = flecs_script_with_append(v, ti);
     value->type = id;
     value->ptr = NULL;
 
@@ -117469,8 +117418,8 @@ static int flecs_ir_with_component_end(
     ecs_script_ir_reg_t *tmp = flecs_ir_reg(vm, op->c);
     const ecs_type_info_t *ti = tmp->ti;
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_value_t *with_value = ecs_vec_get_t(
-        &v->r->with, ecs_value_t, flecs_script_with_count(v) - 1);
+    ecs_value_t *with_value = &ecs_vec_last_t(
+        &v->r->with, ecs_script_with_value_t)->value;
 
     ecs_script_ir_reg_t *val = flecs_ir_reg(vm, op->b);
     if (flecs_ir_value_to(vm, val, ti->component, with_value->ptr, ti)) {
@@ -117678,7 +117627,6 @@ static int flecs_ir_pair_scope_enter(
         return -1;
     }
 
-    ecs_allocator_t *a = &v->r->allocator;
     state->with_relationship = v->with_relationship;
     state->second = 0;
     state->with_relationship_sp = v->with_relationship_sp;
@@ -117687,13 +117635,14 @@ static int flecs_ir_pair_scope_enter(
     v->with_relationship = first;
 
     if (state->with_relationship != first) {
-        ecs_value_t *value = flecs_script_with_append(a, v, NULL);
+        ecs_value_t *value = flecs_script_with_append(v, NULL);
         value->type = ecs_pair(first, second);
         value->ptr = NULL;
-        v->with_relationship_sp = flecs_script_with_count(v) - 1;
+        v->with_relationship_sp = ecs_vec_count(&v->r->with) - 1;
     } else {
-        ecs_value_t *value = ecs_vec_get_t(
-            &v->r->with, ecs_value_t, v->with_relationship_sp);
+        ecs_value_t *value = &ecs_vec_get_t(
+            &v->r->with, ecs_script_with_value_t,
+            v->with_relationship_sp)->value;
         ecs_assert(ECS_PAIR_FIRST(value->type) == (uint32_t)first,
             ECS_INTERNAL_ERROR, NULL);
         state->second = ECS_PAIR_SECOND(value->type);
@@ -119371,7 +119320,7 @@ static flecs_script_run_status_t flecs_ir_exec(
         case EcsIrWithEnter: {
             ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
                 vm, EcsIrFrameWith, pc);
-            frame->u.with.with_count = flecs_script_with_count(v);
+            frame->u.with.with_count = ecs_vec_count(&v->r->with);
             frame->u.with.cursor = flecs_stack_get_cursor(&v->r->stack);
             frame->u.with.is_with_scope = v->is_with_scope;
             frame->u.with.force = v->force;
@@ -123775,15 +123724,13 @@ static int flecs_script_template_instantiate(
     }
     ecs_vec_t prev_using = v->r->using;
     ecs_vec_t prev_with = desc.runtime->with;
-    ecs_vec_t prev_with_type_info = desc.runtime->with_type_info;
 
     v->r->using = template->using_;
     v->template_entity = template_entity;
     v->body_template = template_entity;
     v->instance_template = template;
     v->symbol_offset = template->symbol_offset;
-    ecs_vec_init_t(NULL, &desc.runtime->with, ecs_value_t, 0);
-    ecs_vec_init_t(NULL, &desc.runtime->with_type_info, ecs_type_info_t*, 0);
+    ecs_vec_init_t(NULL, &desc.runtime->with, ecs_script_with_value_t, 0);
 
     ecs_script_scope_t *scope = template->node->scope;
     ecs_script_state_t state;
@@ -123937,12 +123884,9 @@ done:
     rt->template_depth --;
 
     ecs_vec_fini_t(&desc.runtime->allocator,
-        &desc.runtime->with, ecs_value_t);
-    ecs_vec_fini_t(&desc.runtime->allocator,
-        &desc.runtime->with_type_info, ecs_type_info_t*);
+        &desc.runtime->with, ecs_script_with_value_t);
 
     v->r->with = prev_with;
-    v->r->with_type_info = prev_with_type_info;
     v->r->using = prev_using;
     v->state = &v->base.script->state;
     if (vm) {
