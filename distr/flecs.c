@@ -61737,445 +61737,71 @@ static int flecs_meta_serialize_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
-    ecs_vec_t *ops);
+    ecs_vec_t *ops,
+    bool root);
 
-static ecs_meta_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_op_kind_t kind) {
-    ecs_meta_op_t *op = ecs_vec_append_t(NULL, ops, ecs_meta_op_t);
-    op->kind = kind;
-    op->offset = 0;
-    op->op_count = 1;
-    op->type_info = NULL;
-    op->name = NULL;
-    op->is.members = NULL;
-    op->type = 0;
-    op->member_index = 0;
-    return op;
-}
-
-static ecs_meta_op_t* flecs_meta_ops_get(ecs_vec_t *ops, int32_t index) {
-    ecs_meta_op_t* op = ecs_vec_get_t(ops, ecs_meta_op_t, index);
-    ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
-    return op;
-}
-
-static int flecs_meta_serialize_primitive(
+static int flecs_meta_serialize_scope(
     ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_size_t offset,
-    ecs_vec_t *ops)
-{
-    const EcsPrimitive *ptr = ecs_get(world, type, EcsPrimitive);
-    if (!ptr) {
-        char *name = ecs_get_path(world, type);
-        ecs_err("entity '%s' is not a primitive type", name);
-        ecs_os_free(name);
-        return -1;
-    }
-
-    ecs_meta_op_t *op = flecs_meta_ops_add(ops, 
-        flecs_meta_primitive_to_op_kind(ptr->kind));
-    op->offset = offset;
-    op->type = type;
-    op->type_info = ecs_get_type_info(world, type);
-    ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    return 0;
-}
-
-static int flecs_meta_serialize_enum(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_size_t offset,
-    ecs_vec_t *ops)
-{
-    (void)world;
-    
-    ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpEnum);
-    op->offset = offset;
-    op->type = type;
-    op->type_info = ecs_get_type_info(world, type);
-    ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    const EcsConstants *constants = ecs_get(world, type, EcsConstants);
-    ecs_assert(constants != NULL, ECS_INVALID_PARAMETER, NULL);
-    op->is.constants = constants->constants;
-    ecs_assert(op->is.constants != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    const EcsEnum *enum_type = ecs_get(world, type, EcsEnum);
-    ecs_assert(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_entity_t underlying = enum_type->underlying_type;
-    ecs_assert(underlying != 0, ECS_INTERNAL_ERROR, NULL);
-
-    const EcsPrimitive *prim_type = ecs_get(world, underlying, EcsPrimitive);
-    ecs_assert(prim_type != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    switch(prim_type->kind) {
-    case EcsU8: 
-        op->underlying_kind = EcsOpU8; 
-        break;
-    case EcsU16:
-        op->underlying_kind = EcsOpU16;
-        break;
-    case EcsU32:
-        op->underlying_kind = EcsOpU32;
-        break;
-    case EcsUPtr:
-        op->underlying_kind = EcsOpUPtr;
-        break;
-    case EcsU64:
-        op->underlying_kind = EcsOpU64;
-        break;
-    case EcsI8:
-        op->underlying_kind = EcsOpI8;
-        break;
-    case EcsI16:
-        op->underlying_kind = EcsOpI16;
-        break;
-    case EcsI32:
-        op->underlying_kind = EcsOpI32;
-        break;
-    case EcsIPtr:
-        op->underlying_kind = EcsOpIPtr;
-        break;
-    case EcsI64:
-        op->underlying_kind = EcsOpI64;
-        break;
-    case EcsBool:
-    case EcsChar:
-    case EcsByte:
-    case EcsF32:
-    case EcsF64:
-    case EcsString:
-    case EcsEntity:
-    case EcsId:
-        ecs_abort(ECS_INTERNAL_ERROR, 
-            "invalid primitive type kind for underlying enum type");
-    }
-
-    return 0;
-}
-
-static int flecs_meta_serialize_bitmask(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_size_t offset,
-    ecs_vec_t *ops)
-{
-    (void)world;
-    
-    ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpBitmask);
-    op->offset = offset;
-    op->type = type;
-    op->type_info = ecs_get_type_info(world, type);
-    ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    const EcsConstants *bitmask_type = ecs_get(world, type, EcsConstants);
-    ecs_assert(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
-    op->is.constants = bitmask_type->constants;
-    ecs_assert(op->is.constants != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return 0;
-}
-
-static int flecs_meta_serialize_array_inline(
-    ecs_world_t *world,
-    ecs_entity_t elem_type,
-    int32_t count,
-    ecs_size_t offset,
+    ecs_meta_op_t op,
+    ecs_entity_t element,
+    int32_t array_count,
     ecs_vec_t *ops)
 {
     int32_t first = ecs_vec_count(ops);
-
-    {
-        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPushArray);
-        op->type = elem_type;
-        op->type_info = NULL;
-        op->elem_size = flecs_type_size(world, elem_type);
-        op->offset = offset;
-    }
-
-    if (flecs_meta_serialize_type(world, elem_type, 0, ops) != 0) {
-        return -1;
-    }
-
-    {
-        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPop);
-        op->type = elem_type;
-        op->type_info = NULL;
-        op->offset = 0;
-        op->elem_size = count;
-    }
-
-    flecs_meta_ops_get(ops, first)->op_count = 
-        flecs_ito(int16_t, ecs_vec_count(ops) - first);
-
-    return 0;
-}
-
-static int flecs_meta_serialize_array_type(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_vec_t *ops)
-{
-    const EcsArray *ptr = ecs_get(world, type, EcsArray);
-    if (!ptr) {
-        return -1;
-    }
-
-    return flecs_meta_serialize_array_inline(
-        world, ptr->type, ptr->count, 0, ops);
-}
-
-static int flecs_meta_serialize_vector_type(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_vec_t *ops)
-{
-    const EcsVector *ptr = ecs_get(world, type, EcsVector);
-    if (!ptr) {
-        return -1; /* Should never happen, will trigger internal error */
-    }
-
-    int32_t first = ecs_vec_count(ops);
-
-    {
-        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPushVector);
-        op->offset = 0;
-        op->type = type;
-        op->type_info = ecs_get_type_info(world, type);
-        ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-        op->elem_size = flecs_type_size(world, ptr->type);
-    }
-
-    if (flecs_meta_serialize_type(world, ptr->type, 0, ops) != 0) {
-        return -1;
-    }
-
-    {
-        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPop);
-        op->offset = 0;
-        op->type = type;
-        op->type_info = ecs_get_type_info(world, type);
-        ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    flecs_meta_ops_get(ops, first)->op_count = 
-        flecs_ito(int16_t, ecs_vec_count(ops) - first);
-
-    return 0;
-}
-
-static int flecs_meta_serialize_map_type(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_vec_t *ops)
-{
-    const EcsMap *ptr = ecs_get(world, type, EcsMap);
-    if (!ptr) {
-        return -1;
-    }
-
-    const EcsType *key_type = ecs_get(world, ptr->key_type, EcsType);
-    if (!key_type) {
-        return -1;
-    }
-
-    int32_t first = ecs_vec_count(ops);
-
-    {
-        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPushMap);
-        op->offset = 0;
-        op->type = type;
-        op->type_info = ecs_get_type_info(world, type);
-        ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-        op->elem_size = flecs_type_size(world, ptr->type);
-
-        if (key_type->kind == EcsEnumType) {
-            op->underlying_kind = EcsOpEnum;
-        } else if (key_type->kind == EcsBitmaskType) {
-            op->underlying_kind = EcsOpBitmask;
-        } else {
-            const EcsPrimitive *key_prim = ecs_get(
-                world, ptr->key_type, EcsPrimitive);
-            if (!key_prim) {
-                return -1;
+    *ecs_vec_append_t(NULL, ops, ecs_meta_op_t) = op;
+    if (op.kind == EcsOpPushStruct) {
+        const EcsStruct *st = ecs_get(world, op.type, EcsStruct);
+        ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_member_t *members = ecs_vec_first(&st->members);
+        int32_t count = ecs_vec_count(&st->members);
+        ecs_hashmap_t *index = count ?
+            flecs_name_index_new(&world->allocator) : NULL;
+        ecs_vec_get_t(ops, ecs_meta_op_t, first)->is.members = index;
+        for (int32_t i = 0; i < count; i ++) {
+            ecs_member_t *m = &members[i];
+            int32_t cur = ecs_vec_count(ops);
+            int ret;
+            if (m->count >= 1) {
+                ecs_meta_op_t array = {
+                    .kind = EcsOpPushArray,
+                    .type = m->type,
+                    .offset = m->offset,
+                    .elem_size = flecs_type_size(world, m->type)
+                };
+                ret = flecs_meta_serialize_scope(
+                    world, array, m->type, m->count, ops);
+            } else {
+                ret = flecs_meta_serialize_type(
+                    world, m->type, m->offset, ops, false);
             }
-
-            op->underlying_kind = flecs_meta_primitive_to_op_kind(
-                key_prim->kind);
-        }
-
-        if (key_type->kind == EcsEnumType ||
-            key_type->kind == EcsBitmaskType)
-        {
-            const EcsConstants *constants = ecs_get(
-                world, ptr->key_type, EcsConstants);
-            ecs_assert(constants != NULL, ECS_INVALID_PARAMETER, NULL);
-            op->is.constants = constants->constants;
-            ecs_assert(op->is.constants != NULL, ECS_INTERNAL_ERROR, NULL);
-        }
-    }
-
-    if (flecs_meta_serialize_type(world, ptr->type, 0, ops) != 0) {
-        return -1;
-    }
-
-    {
-        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPop);
-        op->offset = 0;
-        op->type = type;
-        op->type_info = ecs_get_type_info(world, type);
-        ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    flecs_meta_ops_get(ops, first)->op_count =
-        flecs_ito(int16_t, ecs_vec_count(ops) - first);
-
-    return 0;
-}
-
-static int flecs_meta_serialize_value_type(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_vec_t *ops)
-{
-    int32_t first = ecs_vec_count(ops);
-
-    {
-        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPushValue);
-        op->offset = 0;
-        op->type = type;
-        op->type_info = ecs_get_type_info(world, type);
-        ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    {
-        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPop);
-        op->offset = 0;
-        op->type = type;
-        op->type_info = ecs_get_type_info(world, type);
-        ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    flecs_meta_ops_get(ops, first)->op_count =
-        flecs_ito(int16_t, ecs_vec_count(ops) - first);
-
-    return 0;
-}
-
-static int flecs_meta_serialize_forward(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_size_t offset,
-    ecs_vec_t *ops)
-{
-    (void)world;
-    ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpForward);
-    op->offset = offset;
-    op->type = type;
-    op->type_info = ecs_get_type_info(world, type);
-    ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    return 0;
-}
-
-static int flecs_meta_serialize_opaque_type(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_size_t offset,
-    ecs_vec_t *ops)
-{
-    (void)world;
-    const EcsOpaque *o = ecs_get(world, type, EcsOpaque);
-    ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
-    const EcsType *t = ecs_get(world, o->as_type, EcsType);
-    ecs_assert(t != NULL, ECS_INTERNAL_ERROR, 
-        "missing reflection for Opaque::as_type");
-
-    ecs_meta_op_kind_t kind = EcsOpOpaqueValue;
-    if (t->kind == EcsArrayType) {
-        kind = EcsOpOpaqueArray;
-    } else if (t->kind == EcsVectorType) {
-        kind = EcsOpOpaqueVector;
-    } else if (t->kind == EcsStructType) {
-        kind = EcsOpOpaqueStruct;
-    }
-
-    ecs_meta_op_t *op = flecs_meta_ops_add(ops, kind);
-    op->offset = offset;
-    op->type = type;
-    op->type_info = ecs_get_type_info(world, type);
-    ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    op->is.opaque = o->serialize;
-    return 0;
-}
-
-static int flecs_meta_serialize_struct(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_size_t offset,
-    ecs_vec_t *ops)
-{
-    const EcsStruct *ptr = ecs_get(world, type, EcsStruct);
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t cur, first = ecs_vec_count(ops);
-    ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPushStruct);
-    op->offset = offset;
-    op->type = type;
-    op->type_info = ecs_get_type_info(world, type);
-    ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_member_t *members = ecs_vec_first(&ptr->members);
-    int32_t i, count = ecs_vec_count(&ptr->members);
-
-    ecs_hashmap_t *member_index = NULL;
-    if (count) {        
-        op->is.members = member_index = flecs_name_index_new(&world->allocator);
-    }
-
-    for (i = 0; i < count; i ++) {
-        ecs_member_t *member = &members[i];
-
-        cur = ecs_vec_count(ops);
-
-        if (member->count >= 1) {
-            if (flecs_meta_serialize_array_inline(
-                world, member->type, member->count, member->offset, ops))
-            {
+            if (ret) {
                 continue;
             }
-
-            op = flecs_meta_ops_get(ops, cur);
-        } else {
-            if (flecs_meta_serialize_type(
-                world, member->type, member->offset, ops))
-            {
-                continue;
+            ecs_meta_op_t *member_op = ecs_vec_get_t(ops, ecs_meta_op_t, cur);
+            if (!member_op->type) {
+                member_op->type = m->type;
             }
-
-            op = flecs_meta_ops_get(ops, cur);
-            if (!op->type) {
-                op->type = member->type;
-            }
-
-            op->op_count = flecs_ito(int16_t, ecs_vec_count(ops) - cur);
+            member_op->op_count = flecs_ito(int16_t, ecs_vec_count(ops) - cur);
+            member_op->name = ecs_os_strdup(m->name);
+            member_op->member_index = flecs_ito(int16_t, i);
+            flecs_name_index_ensure(index, flecs_ito(uint64_t, cur - first - 1),
+                member_op->name, 0, 0);
         }
-
-        /* Serializer must own the member name, as the name strings in the
-         * EcsStruct component can be freed while the serializer is in use
-         * (for example when deserializing reflection data). */
-        op->name = ecs_os_strdup(member->name);
-        op->member_index = flecs_ito(int16_t, i);
-
-        flecs_name_index_ensure(
-            member_index, flecs_ito(uint64_t, cur - first - 1),
-                op->name, 0, 0);
+    } else if (element && flecs_meta_serialize_type(
+        world, element, 0, ops, false))
+    {
+        return -1;
     }
-
-    ecs_meta_op_t *pop = flecs_meta_ops_add(ops, EcsOpPop);
-    pop->type = type;
-    flecs_meta_ops_get(ops, first)->op_count = 
+    ecs_meta_op_t *pop = ecs_vec_append_t(NULL, ops, ecs_meta_op_t);
+    *pop = (ecs_meta_op_t){
+        .kind = EcsOpPop,
+        .op_count = 1,
+        .type = op.type,
+        .type_info = op.kind == EcsOpPushStruct ? NULL : op.type_info,
+        .elem_size = array_count
+    };
+    ecs_vec_get_t(ops, ecs_meta_op_t, first)->op_count =
         flecs_ito(int16_t, ecs_vec_count(ops) - first);
-
     return 0;
 }
 
@@ -62183,48 +61809,134 @@ static int flecs_meta_serialize_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
-    ecs_vec_t *ops)
+    ecs_vec_t *ops,
+    bool root)
 {
-    const EcsType *ptr = ecs_get(world, type, EcsType);
-    if (!ptr) {
-        char *path = ecs_get_path(world, type);
-        ecs_err("missing reflection data for type '%s'", path);
-        ecs_os_free(path);
+    const EcsType *t = ecs_get(world, type, EcsType);
+    if (!t) {
+        ecs_err("missing reflection data for type '%s'",
+            flecs_errstr(ecs_get_path(world, type)));
         return -1;
     }
-
-    int ret = 0;
-    switch(ptr->kind) {
-    case EcsPrimitiveType:
-        ret = flecs_meta_serialize_primitive(world, type, offset, ops);
-        break;
-    case EcsEnumType:
-        ret = flecs_meta_serialize_enum(world, type, offset, ops);
-        break;
-    case EcsBitmaskType:
-        ret = flecs_meta_serialize_bitmask(world, type, offset, ops);
-        break;
-    case EcsStructType:
-        ret = flecs_meta_serialize_struct(world, type, offset, ops);
-        break;
-    case EcsArrayType:
-        ret = flecs_meta_serialize_forward(world, type, offset, ops);
-        break;
-    case EcsVectorType:
-        ret = flecs_meta_serialize_forward(world, type, offset, ops);
-        break;
-    case EcsMapType:
-        ret = flecs_meta_serialize_forward(world, type, offset, ops);
-        break;
-    case EcsValueType:
-        ret = flecs_meta_serialize_forward(world, type, offset, ops);
-        break;
-    case EcsOpaqueType:
-        ret = flecs_meta_serialize_opaque_type(world, type, offset, ops);
+    ecs_meta_op_t op = {
+        .kind = EcsOpForward,
+        .op_count = 1,
+        .type = type,
+        .type_info = ecs_get_type_info(world, type),
+        .offset = offset
+    };
+    ecs_assert(op.type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_entity_t element = 0;
+    int32_t array_count = 0;
+    switch (t->kind) {
+    case EcsPrimitiveType: {
+        const EcsPrimitive *p = ecs_get(world, type, EcsPrimitive);
+        if (!p) {
+            ecs_err("entity '%s' is not a primitive type",
+                flecs_errstr(ecs_get_path(world, type)));
+            return -1;
+        }
+        op.kind = flecs_meta_primitive_to_op_kind(p->kind);
         break;
     }
-
-    return ret;
+    case EcsEnumType:
+    case EcsBitmaskType: {
+        const EcsConstants *c = ecs_get(world, type, EcsConstants);
+        ecs_assert(c != NULL, ECS_INVALID_PARAMETER, NULL);
+        op.is.constants = c->constants;
+        ecs_assert(op.is.constants != NULL, ECS_INTERNAL_ERROR, NULL);
+        op.kind = EcsOpBitmask;
+        if (t->kind == EcsEnumType) {
+            const EcsEnum *e = ecs_get(world, type, EcsEnum);
+            ecs_assert(e != NULL, ECS_INVALID_PARAMETER, NULL);
+            const EcsPrimitive *p = ecs_get(
+                world, e->underlying_type, EcsPrimitive);
+            ecs_assert(p != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert((p->kind >= EcsU8 && p->kind <= EcsI64) ||
+                p->kind == EcsUPtr || p->kind == EcsIPtr,
+                ECS_INTERNAL_ERROR, "invalid underlying enum type");
+            op.kind = EcsOpEnum;
+            op.underlying_kind = flecs_meta_primitive_to_op_kind(p->kind);
+        }
+        break;
+    }
+    case EcsStructType:
+        op.kind = EcsOpPushStruct;
+        break;
+    case EcsArrayType:
+        if (root) {
+            const EcsArray *a = ecs_get(world, type, EcsArray);
+            if (!a) {
+                return -1;
+            }
+            op.kind = EcsOpPushArray;
+            op.type = element = a->type;
+            op.type_info = NULL;
+            array_count = a->count;
+        }
+        break;
+    case EcsVectorType:
+        if (root) {
+            const EcsVector *v = ecs_get(world, type, EcsVector);
+            if (!v) {
+                return -1;
+            }
+            op.kind = EcsOpPushVector;
+            element = v->type;
+        }
+        break;
+    case EcsMapType:
+        if (root) {
+            const EcsMap *m = ecs_get(world, type, EcsMap);
+            if (!m) {
+                return -1;
+            }
+            const EcsTypeSerializer *key = ecs_get(
+                world, m->key_type, EcsTypeSerializer);
+            if (!key || !ecs_vec_count(&key->ops)) {
+                return -1;
+            }
+            const ecs_meta_op_t *key_op = ecs_vec_first(&key->ops);
+            op.kind = EcsOpPushMap;
+            op.underlying_kind = key_op->kind;
+            op.is.constants = key_op->is.constants;
+            element = m->type;
+        }
+        break;
+    case EcsValueType:
+        if (root) {
+            op.kind = EcsOpPushValue;
+        }
+        break;
+    case EcsOpaqueType: {
+        const EcsOpaque *o = ecs_get(world, type, EcsOpaque);
+        ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
+        const EcsType *as = ecs_get(world, o->as_type, EcsType);
+        ecs_assert(as != NULL, ECS_INTERNAL_ERROR,
+            "missing reflection for Opaque::as_type");
+        op.kind = EcsOpOpaqueValue;
+        if (as->kind == EcsArrayType) {
+            op.kind = EcsOpOpaqueArray;
+        } else if (as->kind == EcsVectorType) {
+            op.kind = EcsOpOpaqueVector;
+        } else if (as->kind == EcsStructType) {
+            op.kind = EcsOpOpaqueStruct;
+        }
+        op.is.opaque = o->serialize;
+        break;
+    }
+    }
+    if (op.kind == EcsOpPushStruct || op.kind == EcsOpPushArray ||
+        op.kind == EcsOpPushVector || op.kind == EcsOpPushMap ||
+        op.kind == EcsOpPushValue)
+    {
+        if (element) {
+            op.elem_size = flecs_type_size(world, element);
+        }
+        return flecs_meta_serialize_scope(world, op, element, array_count, ops);
+    }
+    *ecs_vec_append_t(NULL, ops, ecs_meta_op_t) = op;
+    return 0;
 }
 
 void flecs_meta_type_serializer_init(
@@ -62246,18 +61958,7 @@ void flecs_meta_type_serializer_init(
             continue;
         }
 
-        int ret;
-        if (type_ptr->kind == EcsArrayType) {
-            ret = flecs_meta_serialize_array_type(world, type, &ops);
-        } else if (type_ptr->kind == EcsVectorType) {
-            ret = flecs_meta_serialize_vector_type(world, type, &ops);
-        } else if (type_ptr->kind == EcsMapType) {
-            ret = flecs_meta_serialize_map_type(world, type, &ops);
-        } else if (type_ptr->kind == EcsValueType) {
-            ret = flecs_meta_serialize_value_type(world, type, &ops);
-        } else {
-            ret = flecs_meta_serialize_type(world, type, 0, &ops);
-        }
+        int ret = flecs_meta_serialize_type(world, type, 0, &ops, true);
 
         if (ret != 0) {
             ecs_vec_fini_t(NULL, &ops, ecs_meta_op_t);
