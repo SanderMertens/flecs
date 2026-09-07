@@ -558,14 +558,23 @@ static int flecs_irc_compile_binary(
     if (!node->vector_count) {
         ecs_entity_t lt = node->left->type, rt = node->node.type;
         bool cmp = rt == ecs_id(ecs_bool_t);
-        if (lt == ecs_id(ecs_i64_t) && (cmp || rt == lt)) {
-            kind = EcsIrBinaryI64;
-        } else if (lt == ecs_id(ecs_i32_t) && (cmp || rt == lt)) {
-            kind = EcsIrBinaryI32;
-        } else if (lt == ecs_id(ecs_f64_t) && (cmp || rt == lt)) {
-            kind = EcsIrBinaryF64;
-        } else if (lt == ecs_id(ecs_f32_t) && (cmp || rt == lt)) {
-            kind = EcsIrBinaryF32;
+        int32_t size;
+        ecs_script_ir_num_class_t class = flecs_irc_num_class(lt, &size);
+        if (class && (cmp || rt == lt)) {
+            static const ecs_script_ir_op_kind_t kinds[4][9] = {
+                [EcsIrNumSigned] = {
+                    [1] = EcsIrBinaryI8, [2] = EcsIrBinaryI16,
+                    [4] = EcsIrBinaryI32, [8] = EcsIrBinaryI64
+                },
+                [EcsIrNumUnsigned] = {
+                    [1] = EcsIrBinaryU8, [2] = EcsIrBinaryU16,
+                    [4] = EcsIrBinaryU32, [8] = EcsIrBinaryU64
+                },
+                [EcsIrNumFloat] = {
+                    [4] = EcsIrBinaryF32, [8] = EcsIrBinaryF64
+                }
+            };
+            kind = kinds[class][size];
         }
         if (kind != EcsIrBinary && (node->operator == EcsTokAddAssign ||
             node->operator == EcsTokMulAssign || node->operator == EcsTokAnd ||
@@ -585,9 +594,6 @@ static int flecs_irc_compile_binary(
     int32_t op = flecs_irc_emit(c, kind, dst, left, right, node);
     ecs_script_ir_op_t *ptr = flecs_irc_op(c, op);
     ptr->flags = (uint16_t)(node->operator | (in_place ? 0x8000 : 0));
-    if (!node->vector_count) {
-        ptr->imm.u64 = flecs_irc_num_pack(node->left->type, node->node.type);
-    }
 
     if (skip != -1) {
         flecs_irc_op(c, skip)->b = flecs_irc_pc(c);

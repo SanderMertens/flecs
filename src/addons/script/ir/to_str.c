@@ -66,6 +66,12 @@ const char* flecs_script_ir_op_name(
     case EcsIrHas: return "Has";
     case EcsIrUnary: return "Unary";
     case EcsIrBinary: return "Binary";
+    case EcsIrBinaryI8: return "BinaryI8";
+    case EcsIrBinaryI16: return "BinaryI16";
+    case EcsIrBinaryU8: return "BinaryU8";
+    case EcsIrBinaryU16: return "BinaryU16";
+    case EcsIrBinaryU32: return "BinaryU32";
+    case EcsIrBinaryU64: return "BinaryU64";
     case EcsIrBinaryI64: return "BinaryI64";
     case EcsIrBinaryI32: return "BinaryI32";
     case EcsIrBinaryF64: return "BinaryF64";
@@ -391,6 +397,12 @@ void flecs_script_ir_to_buf(
                 ((const ecs_expr_unary_t*)op->node)->operator), op->b);
             break;
         case EcsIrBinary:
+        case EcsIrBinaryI8:
+        case EcsIrBinaryI16:
+        case EcsIrBinaryU8:
+        case EcsIrBinaryU16:
+        case EcsIrBinaryU32:
+        case EcsIrBinaryU64:
         case EcsIrBinaryI64:
         case EcsIrBinaryI32:
         case EcsIrBinaryF64:

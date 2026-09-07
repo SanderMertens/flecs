@@ -2070,176 +2070,6 @@ FLECS_IR_NUM_STORE(flecs_ir_num_store_f, double)
 #define FLECS_IR_NUM_RCLASS(packed) ((ecs_script_ir_num_class_t)(((packed) >> 16) & 0xff))
 #define FLECS_IR_NUM_RSIZE(packed)  ((int32_t)(((packed) >> 24) & 0xff))
 
-static bool flecs_ir_binary_fast(
-    ecs_script_ir_vm_t *vm,
-    const ecs_script_ir_op_t *op,
-    const ecs_value_t *left,
-    const ecs_value_t *right,
-    void *out,
-    ecs_token_kind_t operator)
-{
-    uint64_t packed = op->imm.u64;
-    ecs_script_ir_num_class_t lclass = FLECS_IR_NUM_LCLASS(packed);
-    int32_t lsize = FLECS_IR_NUM_LSIZE(packed);
-    ecs_script_ir_num_class_t rclass = FLECS_IR_NUM_RCLASS(packed);
-    int32_t rsize = FLECS_IR_NUM_RSIZE(packed);
-    if (lclass == EcsIrNumNone || rclass == EcsIrNumNone) {
-        return false;
-    }
-
-    int64_t li = 0, ri = 0;
-    uint64_t lu = 0, ru = 0;
-    double lf = 0, rf = 0;
-    if (!flecs_ir_num_load(lclass, lsize, left->ptr, &li, &lu, &lf) ||
-        !flecs_ir_num_load(lclass, lsize, right->ptr, &ri, &ru, &rf))
-    {
-        return false;
-    }
-
-    if (operator == EcsTokDiv || operator == EcsTokMod) {
-        bool zero = false;
-        if (lclass == EcsIrNumSigned) {
-            zero = ri == 0;
-        } else if (lclass == EcsIrNumUnsigned) {
-            zero = ru == 0;
-        } else {
-            zero = ECS_EQZERO(rf);
-        }
-        if (zero) {
-            flecs_ir_expr_error(vm, op->node, "division by zero");
-            vm->cond = true;
-            return true;
-        }
-    }
-
-    bool cmp = false;
-    switch(operator) {
-    case EcsTokAdd:
-    case EcsTokSub:
-    case EcsTokMul:
-    case EcsTokDiv:
-        if (lclass == EcsIrNumSigned) {
-            int64_t r = 0;
-            switch(operator) {
-            case EcsTokAdd: r = li + ri; break;
-            case EcsTokSub: r = li - ri; break;
-            case EcsTokMul: r = li * ri; break;
-            default: r = li / ri; break;
-            }
-            flecs_ir_num_store_i(rclass, rsize, out, r);
-        } else if (lclass == EcsIrNumUnsigned) {
-            uint64_t r = 0;
-            switch(operator) {
-            case EcsTokAdd: r = lu + ru; break;
-            case EcsTokSub: r = lu - ru; break;
-            case EcsTokMul: r = lu * ru; break;
-            default: r = lu / ru; break;
-            }
-            flecs_ir_num_store_u(rclass, rsize, out, r);
-        } else {
-            double r = 0;
-            switch(operator) {
-            case EcsTokAdd: r = lf + rf; break;
-            case EcsTokSub: r = lf - rf; break;
-            case EcsTokMul: r = lf * rf; break;
-            default: r = lf / rf; break;
-            }
-            if (lsize == 4 && rsize == 4 && rclass == EcsIrNumFloat) {
-                float lf32 = (float)lf, rf32 = (float)rf, r32 = 0;
-                switch(operator) {
-                case EcsTokAdd: r32 = lf32 + rf32; break;
-                case EcsTokSub: r32 = lf32 - rf32; break;
-                case EcsTokMul: r32 = lf32 * rf32; break;
-                default: r32 = lf32 / rf32; break;
-                }
-                *(float*)out = r32;
-            } else {
-                flecs_ir_num_store_f(rclass, rsize, out, r);
-            }
-        }
-        return true;
-    case EcsTokMod:
-    case EcsTokBitwiseAnd:
-    case EcsTokBitwiseOr:
-    case EcsTokShiftLeft:
-    case EcsTokShiftRight:
-        if (lclass == EcsIrNumSigned) {
-            int64_t r = 0;
-            switch(operator) {
-            case EcsTokMod: r = li % ri; break;
-            case EcsTokBitwiseAnd: r = li & ri; break;
-            case EcsTokBitwiseOr: r = li | ri; break;
-            case EcsTokShiftLeft: r = li << ri; break;
-            default: r = li >> ri; break;
-            }
-            flecs_ir_num_store_i(rclass, rsize, out, r);
-        } else if (lclass == EcsIrNumUnsigned) {
-            uint64_t r = 0;
-            switch(operator) {
-            case EcsTokMod: r = lu % ru; break;
-            case EcsTokBitwiseAnd: r = lu & ru; break;
-            case EcsTokBitwiseOr: r = lu | ru; break;
-            case EcsTokShiftLeft: r = lu << ru; break;
-            default: r = lu >> ru; break;
-            }
-            flecs_ir_num_store_u(rclass, rsize, out, r);
-        } else {
-            return false;
-        }
-        return true;
-    case EcsTokEq:
-    case EcsTokNeq:
-    case EcsTokGt:
-    case EcsTokGtEq:
-    case EcsTokLt:
-    case EcsTokLtEq:
-        if (lclass == EcsIrNumSigned) {
-            switch(operator) {
-            case EcsTokEq: cmp = li == ri; break;
-            case EcsTokNeq: cmp = li != ri; break;
-            case EcsTokGt: cmp = li > ri; break;
-            case EcsTokGtEq: cmp = li >= ri; break;
-            case EcsTokLt: cmp = li < ri; break;
-            default: cmp = li <= ri; break;
-            }
-        } else if (lclass == EcsIrNumUnsigned) {
-            switch(operator) {
-            case EcsTokEq: cmp = lu == ru; break;
-            case EcsTokNeq: cmp = lu != ru; break;
-            case EcsTokGt: cmp = lu > ru; break;
-            case EcsTokGtEq: cmp = lu >= ru; break;
-            case EcsTokLt: cmp = lu < ru; break;
-            default: cmp = lu <= ru; break;
-            }
-        } else {
-            if (lsize == 4) {
-                float a = (float)lf, b = (float)rf;
-                switch(operator) {
-                case EcsTokEq: cmp = a == b; break;
-                case EcsTokNeq: cmp = a != b; break;
-                case EcsTokGt: cmp = a > b; break;
-                case EcsTokGtEq: cmp = a >= b; break;
-                case EcsTokLt: cmp = a < b; break;
-                default: cmp = a <= b; break;
-                }
-            } else {
-                switch(operator) {
-                case EcsTokEq: cmp = lf == rf; break;
-                case EcsTokNeq: cmp = lf != rf; break;
-                case EcsTokGt: cmp = lf > rf; break;
-                case EcsTokGtEq: cmp = lf >= rf; break;
-                case EcsTokLt: cmp = lf < rf; break;
-                default: cmp = lf <= rf; break;
-                }
-            }
-        }
-        *(bool*)out = cmp;
-        return true;
-    default:
-        return false;
-    }
-}
-
 static int flecs_ir_binary(
     ecs_script_ir_vm_t *vm,
     const ecs_script_ir_op_t *op)
@@ -2260,16 +2090,6 @@ static int flecs_ir_binary(
 
     const ecs_script_t *script = &vm->v.base.script->pub;
     if (!node->vector_count) {
-        if (node->node.type != ecs_id(ecs_bool_t) ||
-            left->value.type != ecs_id(ecs_bool_t))
-        {
-            vm->cond = false;
-            if (flecs_ir_binary_fast(
-                vm, op, &left->value, &right->value, out, operator))
-            {
-                return vm->cond ? -1 : 0;
-            }
-        }
         ecs_value_t out_value = { .type = node->node.type, .ptr = out };
         return flecs_value_binary(script, &node->node, &left->value,
             &right->value, &out_value, operator);
@@ -2298,15 +2118,29 @@ static int flecs_ir_binary(
     return 0;
 }
 
-#define FLECS_IR_BINARY_TYPED(NAME, T, CMP_ONLY_FLOAT)\
+#define FLECS_IR_INTEGER_OPS(T)\
+    case EcsTokMod:\
+        if (!r) {\
+            flecs_ir_expr_error(vm, node, "division by zero");\
+            return -1;\
+        }\
+        *(T*)out = (T)(l % r); return 0;\
+    case EcsTokBitwiseAnd: *(T*)out = (T)(l & r); return 0;\
+    case EcsTokBitwiseOr: *(T*)out = (T)(l | r); return 0;\
+    case EcsTokShiftLeft: *(T*)out = (T)(l << r); return 0;\
+    case EcsTokShiftRight: *(T*)out = (T)(l >> r); return 0;
+
+#define FLECS_IR_FLOAT_OPS(T)
+
+#define FLECS_IR_BINARY_TYPED(NAME, T, W, CMP_ONLY_FLOAT, INT_OPS)\
 static int NAME(\
     ecs_script_ir_vm_t *vm,\
     const ecs_script_ir_op_t *op)\
 {\
     const ecs_expr_binary_t *node = op->node;\
     ecs_script_ir_reg_t *dst = flecs_ir_reg(vm, op->a);\
-    T l = *(T*)flecs_ir_reg(vm, op->b)->value.ptr;\
-    T r = *(T*)flecs_ir_reg(vm, op->c)->value.ptr;\
+    W l = *(T*)flecs_ir_reg(vm, op->b)->value.ptr;\
+    W r = *(T*)flecs_ir_reg(vm, op->c)->value.ptr;\
     ecs_token_kind_t operator = (ecs_token_kind_t)(op->flags & 0x7fff);\
     void *out;\
     if (op->flags & 0x8000) {\
@@ -2328,15 +2162,16 @@ static int NAME(\
         }\
     }\
     switch(operator) {\
-    case EcsTokAdd: *(T*)out = l + r; return 0;\
-    case EcsTokSub: *(T*)out = l - r; return 0;\
-    case EcsTokMul: *(T*)out = l * r; return 0;\
+    INT_OPS(T)\
+    case EcsTokAdd: *(T*)out = (T)(l + r); return 0;\
+    case EcsTokSub: *(T*)out = (T)(l - r); return 0;\
+    case EcsTokMul: *(T*)out = (T)(l * r); return 0;\
     case EcsTokDiv:\
         if (CMP_ONLY_FLOAT ? ECS_EQZERO(r) : (r == 0)) {\
             flecs_ir_expr_error(vm, node, "division by zero");\
             return -1;\
         }\
-        *(T*)out = l / r; return 0;\
+        *(T*)out = (T)(l / r); return 0;\
     case EcsTokEq: *(bool*)out = l == r; return 0;\
     case EcsTokNeq: *(bool*)out = l != r; return 0;\
     case EcsTokGt: *(bool*)out = l > r; return 0;\
@@ -2351,10 +2186,20 @@ static int NAME(\
         &out_value, operator);\
 }
 
-FLECS_IR_BINARY_TYPED(flecs_ir_binary_i64, int64_t, false)
-FLECS_IR_BINARY_TYPED(flecs_ir_binary_i32, int32_t, false)
-FLECS_IR_BINARY_TYPED(flecs_ir_binary_f64, double, true)
-FLECS_IR_BINARY_TYPED(flecs_ir_binary_f32, float, true)
+FLECS_IR_BINARY_TYPED(flecs_ir_binary_i64, int64_t, int64_t, false, FLECS_IR_INTEGER_OPS)
+FLECS_IR_BINARY_TYPED(flecs_ir_binary_i32, int32_t, int32_t, false, FLECS_IR_INTEGER_OPS)
+FLECS_IR_BINARY_TYPED(flecs_ir_binary_f64, double, double, true, FLECS_IR_FLOAT_OPS)
+FLECS_IR_BINARY_TYPED(flecs_ir_binary_f32, float, float, true, FLECS_IR_FLOAT_OPS)
+FLECS_IR_BINARY_TYPED(flecs_ir_binary_i8, int8_t, int64_t, false, FLECS_IR_INTEGER_OPS)
+FLECS_IR_BINARY_TYPED(flecs_ir_binary_i16, int16_t, int64_t, false, FLECS_IR_INTEGER_OPS)
+FLECS_IR_BINARY_TYPED(flecs_ir_binary_u8, uint8_t, uint64_t, false, FLECS_IR_INTEGER_OPS)
+FLECS_IR_BINARY_TYPED(flecs_ir_binary_u16, uint16_t, uint64_t, false, FLECS_IR_INTEGER_OPS)
+FLECS_IR_BINARY_TYPED(flecs_ir_binary_u32, uint32_t, uint64_t, false, FLECS_IR_INTEGER_OPS)
+FLECS_IR_BINARY_TYPED(flecs_ir_binary_u64, uint64_t, uint64_t, false, FLECS_IR_INTEGER_OPS)
+
+#undef FLECS_IR_BINARY_TYPED
+#undef FLECS_IR_INTEGER_OPS
+#undef FLECS_IR_FLOAT_OPS
 
 static int flecs_ir_cast_number(
     ecs_script_ir_vm_t *vm,
@@ -3413,6 +3258,24 @@ static flecs_script_run_status_t flecs_ir_exec(
         }
         case EcsIrBinary:
             res = flecs_ir_binary(vm, op);
+            break;
+        case EcsIrBinaryI8:
+            res = flecs_ir_binary_i8(vm, op);
+            break;
+        case EcsIrBinaryI16:
+            res = flecs_ir_binary_i16(vm, op);
+            break;
+        case EcsIrBinaryU8:
+            res = flecs_ir_binary_u8(vm, op);
+            break;
+        case EcsIrBinaryU16:
+            res = flecs_ir_binary_u16(vm, op);
+            break;
+        case EcsIrBinaryU32:
+            res = flecs_ir_binary_u32(vm, op);
+            break;
+        case EcsIrBinaryU64:
+            res = flecs_ir_binary_u64(vm, op);
             break;
         case EcsIrBinaryI64:
             res = flecs_ir_binary_i64(vm, op);
