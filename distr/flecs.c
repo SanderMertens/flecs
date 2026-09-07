@@ -76351,7 +76351,7 @@ error:
 #ifdef FLECS_SCRIPT
 
 typedef struct ecs_script_str_visitor_t {
-    ecs_script_visit_t base;
+    ecs_script_impl_t *script;
     ecs_strbuf_t *buf;
     int32_t depth;
     bool newline;
@@ -76363,7 +76363,7 @@ static int flecs_script_scope_to_str(
     ecs_script_scope_t *scope);
 
 static int flecs_script_stmt_to_str(
-    ecs_script_visit_t *v,
+    ecs_script_str_visitor_t *v,
     ecs_script_node_t *node);
 
 static void flecs_script_color_to_str(
@@ -76435,7 +76435,7 @@ static void flecs_expr_to_str(
 {
     if (expr) {
         flecs_expr_to_str_buf(
-            &v->base.script->pub, expr, v->buf, v->colors);
+            &v->script->pub, expr, v->buf, v->colors);
     } else {
         flecs_scriptbuf_appendstr(v, "{}");
     }
@@ -76700,7 +76700,7 @@ static int flecs_script_scope_to_str(
     int32_t i, count = ecs_vec_count(&scope->stmts);
     ecs_script_node_t **nodes = ecs_vec_first(&scope->stmts);
     for (i = 0; i < count; i ++) {
-        if (flecs_script_stmt_to_str(&v->base, nodes[i])) {
+        if (flecs_script_stmt_to_str(v, nodes[i])) {
             return -1;
         }
     }
@@ -76713,10 +76713,9 @@ static int flecs_script_scope_to_str(
 }
 
 static int flecs_script_stmt_to_str(
-    ecs_script_visit_t *_v,
+    ecs_script_str_visitor_t *v,
     ecs_script_node_t *node)
 {
-    ecs_script_str_visitor_t *v = (ecs_script_str_visitor_t*)_v;
     switch(node->kind) {
     case EcsAstScope:
         if (flecs_script_scope_to_str(v, (ecs_script_scope_t*)node)) {
@@ -76837,10 +76836,9 @@ int ecs_script_ast_node_to_buf(
     ecs_script_str_visitor_t v = { 
         .buf = buf, .colors = colors, .depth = depth 
     };
-    v.base.script = (ecs_script_impl_t*)ECS_CONST_CAST(ecs_script_t*, script);
-    v.base.depth = depth;
+    v.script = (ecs_script_impl_t*)ECS_CONST_CAST(ecs_script_t*, script);
 
-    if (flecs_script_stmt_to_str(&v.base, node)) {
+    if (flecs_script_stmt_to_str(&v, node)) {
         goto error;
     }
 
@@ -76859,8 +76857,8 @@ int ecs_script_ast_to_buf(
     ecs_check(buf != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_script_str_visitor_t v = { .buf = buf, .colors = colors };
     ecs_script_impl_t *impl = flecs_script_impl(script);
-    v.base.script = impl;
-    if (flecs_script_stmt_to_str(&v.base, (ecs_script_node_t*)impl->root)) {
+    v.script = impl;
+    if (flecs_script_stmt_to_str(&v, (ecs_script_node_t*)impl->root)) {
         goto error;
     }
 
