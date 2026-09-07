@@ -42,7 +42,8 @@ typedef struct ecs_expr_value_t {
 } ecs_expr_value_t;
 
 typedef struct ecs_expr_stack_frame_t {
-    ecs_stack_cursor_t *cur;
+    ecs_stack_page_t *page;
+    int32_t page_sp;
     int32_t sp;
 } ecs_expr_stack_frame_t;
 

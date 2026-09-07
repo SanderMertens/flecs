@@ -18,6 +18,24 @@ static void flecs_visit_fold_replace(
     *node_ptr = with;
 }
 
+static int flecs_expr_fold_eval(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_expr_node_t *node = *node_ptr;
+    ecs_expr_value_node_t *result = flecs_expr_value_from(script, node, node->type);
+    result->ptr = ecs_ptr_new_w_type_info(script->world, result->node.type_info);
+    flecs_type_info_claim(result->node.type_info);
+    ecs_value_t value = { .type = node->type, .ptr = result->ptr };
+    if (flecs_expr_visit_eval(script, node, desc, &value)) {
+        flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
+        return -1;
+    }
+    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
+    return 0;
+}
+
 static int flecs_expr_unary_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -255,70 +273,7 @@ static int flecs_expr_interpolated_string_visit_fold(
     }
 
     if (can_fold) {
-        ecs_strbuf_t buf = ECS_STRBUF_INIT;
-        e = 0;
-
-        for (i = 0; i < count; i ++) {
-            char *fragment = fragments[i];
-            if (fragment) {
-                ecs_strbuf_appendstr(&buf, fragment);
-            } else {
-                ecs_expr_node_t *expr = ecs_vec_get_t(
-                    &node->expressions, ecs_expr_node_t*, e)[0];
-                ecs_expr_format_t *format = &formats[e ++];
-                ecs_assert(expr->kind == EcsExprValue, 
-                    ECS_INTERNAL_ERROR, NULL);
-
-                ecs_expr_value_node_t *value = (ecs_expr_value_node_t*)expr;
-                if (format->is_present) {
-                    int32_t width = 0;
-                    int32_t precision = -1;
-                    if (format->width) {
-                        ecs_assert(format->width->kind == EcsExprValue,
-                            ECS_INTERNAL_ERROR, NULL);
-                        ecs_expr_value_node_t *width_value =
-                            (ecs_expr_value_node_t*)format->width;
-                        ecs_assert(width_value->node.type ==
-                            ecs_id(ecs_i32_t), ECS_INTERNAL_ERROR, NULL);
-                        width = *(int32_t*)width_value->ptr;
-                    }
-                    if (format->precision) {
-                        ecs_assert(format->precision->kind == EcsExprValue,
-                            ECS_INTERNAL_ERROR, NULL);
-                        ecs_expr_value_node_t *precision_value =
-                            (ecs_expr_value_node_t*)format->precision;
-                        ecs_assert(precision_value->node.type ==
-                            ecs_id(ecs_i32_t), ECS_INTERNAL_ERROR, NULL);
-                        precision = *(int32_t*)precision_value->ptr;
-                    }
-
-                    ecs_value_t format_value = {
-                        .type = value->node.type,
-                        .ptr = value->ptr
-                    };
-                    if (flecs_expr_format_value(script, expr, &format_value,
-                        format, width, precision, &buf))
-                    {
-                        ecs_strbuf_reset(&buf);
-                        goto error;
-                    }
-                } else {
-                    ecs_assert(expr->type == ecs_id(ecs_string_t),
-                        ECS_INTERNAL_ERROR, NULL);
-                    ecs_strbuf_appendstr(&buf, *(char**)value->ptr);
-                }
-            }
-        }
-
-        char **value = ecs_ptr_new(script->world, ecs_id(ecs_string_t));
-        *value = ecs_strbuf_get(&buf);
-
-        ecs_expr_value_node_t *result = flecs_expr_value_from(
-            script, (ecs_expr_node_t*)node, ecs_id(ecs_string_t));
-        result->ptr = value;
-        flecs_type_info_claim(result->node.type_info);
-
-        flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
+        return flecs_expr_fold_eval(script, node_ptr, desc);
     }
 
     return 0;
@@ -379,103 +334,17 @@ error:
     return -1;
 }
 
-static int flecs_expr_initializer_post_fold(
-    ecs_script_t *script,
-    ecs_expr_initializer_t *node,
-    void *value,
-    ecs_size_t value_size)
-{
-    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
-    int32_t i, count = ecs_vec_count(&node->elements);
-    for (i = 0; i < count; i ++) {
-        ecs_expr_initializer_element_t *elem = &elems[i];
-        ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (elem->value->kind == EcsExprInitializer) {
-            if (flecs_expr_initializer_post_fold(
-                script, (ecs_expr_initializer_t*)elem->value, value, value_size)) 
-            {
-                goto error;
-            }
-            continue;
-        }
-
-        if (elem->value->kind != EcsExprValue) {
-            flecs_expr_visit_error(script, node, 
-                "expected value for initializer element");
-            goto error;
-        }
-
-        ecs_expr_value_node_t *elem_value = (ecs_expr_value_node_t*)elem->value;
-
-        /* Type is guaranteed to be correct, since type visitor will insert
-         * a cast to the type of the initializer element. */
-        ecs_entity_t type = elem_value->node.type;
-        if (flecs_expr_initializer_validate_assign(
-            script, node, elem, type, value_size))
-        {
-            goto error;
-        }
-
-        if (ecs_ptr_copy(script->world, type, 
-            ECS_OFFSET(value, elem->offset), elem_value->ptr)) 
-        {
-            goto error;
-        }
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
 static int flecs_expr_initializer_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
 {
-    bool can_fold = true;
-    void *value = NULL;
-
     ecs_expr_initializer_t *node = (ecs_expr_initializer_t*)*node_ptr;
-
-    if (node->is_partial) {
-        can_fold = false;
-    }
-
+    bool can_fold = !node->is_partial;
     if (flecs_expr_initializer_pre_fold(script, node, desc, &can_fold)) {
-        goto error;
+        return -1;
     }
-
-    /* If all elements of initializer fold to literals, initializer itself can
-     * be folded into a literal. */
-    if (can_fold) {
-        value = ecs_ptr_new(script->world, node->node.type);
-        const ecs_type_info_t *type_info = ecs_get_type_info(
-            script->world, node->node.type);
-        ecs_assert(type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (flecs_expr_initializer_post_fold(
-            script, node, value, type_info->size))
-        {
-            goto error;
-        }
-
-        ecs_expr_value_node_t *result = flecs_expr_value_from(
-            script, (ecs_expr_node_t*)node, node->node.type);
-        result->ptr = value;
-        flecs_type_info_claim(result->node.type_info);
-        value = NULL;
-
-        flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
-    }
-
-    return 0;
-error:
-    if (value) {
-        ecs_ptr_free(script->world, node->node.type, value);
-    }
-    return -1;
+    return can_fold ? flecs_expr_fold_eval(script, node_ptr, desc) : 0;
 }
 
 static int flecs_expr_identifier_visit_fold(
