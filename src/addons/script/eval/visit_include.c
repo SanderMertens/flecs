@@ -212,8 +212,15 @@ int flecs_script_eval_include(
     ecs_script_eval_visitor_t *v,
     ecs_script_include_t *node)
 {
-    ecs_script_scope_t *cur_scope = ecs_script_current_scope(v);
-    if (cur_scope != v->base.script->root) {
+    int32_t i = v->base.depth - 1;
+    for (; i >= 0; i --) {
+        if (v->base.nodes[i]->kind == EcsAstScope) {
+            break;
+        }
+    }
+    if (i < 0 || (ecs_script_scope_t*)v->base.nodes[i] !=
+        v->base.script->root)
+    {
         flecs_script_eval_error(v, node,
             "include is only allowed at the root scope");
         return -1;

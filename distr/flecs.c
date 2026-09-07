@@ -50765,12 +50765,6 @@ int ecs_script_visit_scope_(
 #define ecs_script_visit_scope(visitor, node) \
     ecs_script_visit_scope_((ecs_script_visit_t*)visitor, node)
 
-ecs_script_scope_t* ecs_script_current_scope_(
-    ecs_script_visit_t *v);
-
-#define ecs_script_current_scope(visitor) \
-    ecs_script_current_scope_((ecs_script_visit_t*)visitor)
-
 #endif
 
 #ifndef FLECS_SCRIPT_EVAL_H
@@ -76141,20 +76135,6 @@ static int flecs_script_visit_push_checked(
 
     v->nodes[v->depth ++] = node;
     return 0;
-}
-
-ecs_script_scope_t* ecs_script_current_scope_(
-    ecs_script_visit_t *v)
-{
-    int32_t depth;
-    for(depth = v->depth - 1; depth >= 0; depth --) {
-        ecs_script_node_t *node = v->nodes[depth];
-        if (node->kind == EcsAstScope) {
-            return (ecs_script_scope_t*)node;
-        }
-    }
-
-    return NULL;
 }
 
 int ecs_script_visit_scope_(
@@ -101767,8 +101747,15 @@ int flecs_script_eval_include(
     ecs_script_eval_visitor_t *v,
     ecs_script_include_t *node)
 {
-    ecs_script_scope_t *cur_scope = ecs_script_current_scope(v);
-    if (cur_scope != v->base.script->root) {
+    int32_t i = v->base.depth - 1;
+    for (; i >= 0; i --) {
+        if (v->base.nodes[i]->kind == EcsAstScope) {
+            break;
+        }
+    }
+    if (i < 0 || (ecs_script_scope_t*)v->base.nodes[i] !=
+        v->base.script->root)
+    {
         flecs_script_eval_error(v, node,
             "include is only allowed at the root scope");
         return -1;

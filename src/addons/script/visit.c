@@ -21,20 +21,6 @@ static int flecs_script_visit_push_checked(
     return 0;
 }
 
-ecs_script_scope_t* ecs_script_current_scope_(
-    ecs_script_visit_t *v)
-{
-    int32_t depth;
-    for(depth = v->depth - 1; depth >= 0; depth --) {
-        ecs_script_node_t *node = v->nodes[depth];
-        if (node->kind == EcsAstScope) {
-            return (ecs_script_scope_t*)node;
-        }
-    }
-
-    return NULL;
-}
-
 int ecs_script_visit_scope_(
     ecs_script_visit_t *v,
     ecs_script_scope_t *scope)
