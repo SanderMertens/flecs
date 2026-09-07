@@ -44,7 +44,9 @@ typedef enum flecs_meta_format_t {
     EcsMetaStr,
     EcsMetaExpr,
     EcsMetaExprPrecise,
-    EcsMetaJson
+    EcsMetaJson,
+    EcsMetaExprPositional,
+    EcsMetaExprPrecisePositional
 } flecs_meta_format_t;
 
 int flecs_meta_serialize(

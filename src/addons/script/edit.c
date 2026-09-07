@@ -560,69 +560,6 @@ static char* flecs_script_edit_id_str(
     return flecs_script_edit_entity_name(impl, scopes, id);
 }
 
-static void flecs_script_edit_strip_members(
-    const char *expr,
-    ecs_strbuf_t *buf)
-{
-    const char *pos = expr;
-    bool elem_start = true;
-
-    while (pos[0]) {
-        char c = pos[0];
-
-        if (c == '"') {
-            const char *start = pos ++;
-            while (pos[0] && pos[0] != '"') {
-                if (pos[0] == '\\' && pos[1]) {
-                    pos ++;
-                }
-                pos ++;
-            }
-            if (pos[0]) {
-                pos ++;
-            }
-            ecs_strbuf_appendstrn(buf, start, flecs_ito(int32_t, pos - start));
-            elem_start = false;
-            continue;
-        }
-
-        if (elem_start && (isalpha((unsigned char)c) || c == '_')) {
-            const char *ident = pos;
-            while (flecs_script_edit_is_ident(pos[0])) {
-                pos ++;
-            }
-
-            const char *after = pos;
-            while (after[0] == ' ' || after[0] == '\t') {
-                after ++;
-            }
-
-            if (after[0] == ':' && after[1] != ':') {
-                after ++;
-                while (after[0] == ' ' || after[0] == '\t') {
-                    after ++;
-                }
-                pos = after;
-            } else {
-                ecs_strbuf_appendstrn(
-                    buf, ident, flecs_ito(int32_t, pos - ident));
-            }
-
-            elem_start = false;
-            continue;
-        }
-
-        if (c == '{' || c == '[' || c == '(' || c == ',') {
-            elem_start = true;
-        } else if (c != ' ' && c != '\t' && c != '\n') {
-            elem_start = false;
-        }
-
-        ecs_strbuf_appendch(buf, c);
-        pos ++;
-    }
-}
-
 static flecs_script_value_style_t flecs_script_edit_value_style(
     const char *pos,
     const char *end)
@@ -675,19 +612,11 @@ static char* flecs_script_edit_value_str(
         return NULL;
     }
 
-    char *expr = flecs_script_ptr_to_expr_precise(world, type, value);
+    bool positional = style == FlecsScriptValuePositional ||
+        style == FlecsScriptValueEmpty;
+    char *expr = flecs_script_ptr_to_expr_precise(world, type, value, positional);
     if (!expr) {
         return NULL;
-    }
-
-    if (style == FlecsScriptValuePositional || style == FlecsScriptValueEmpty) {
-        ecs_strbuf_t buf = ECS_STRBUF_INIT;
-        flecs_script_edit_strip_members(expr, &buf);
-        ecs_os_free(expr);
-        expr = ecs_strbuf_get(&buf);
-        if (!expr) {
-            return NULL;
-        }
     }
 
     if (parens) {

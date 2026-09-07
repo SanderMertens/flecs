@@ -3163,6 +3163,7 @@ void Edit_source_line_column(void);
 void Edit_source_component_stmt_ends(void);
 void Edit_set_named_initializer(void);
 void Edit_set_positional_initializer(void);
+void Edit_set_positional_enum_map(void);
 void Edit_set_empty_initializer(void);
 void Edit_set_partial_initializer(void);
 void Edit_set_multi_line_initializer(void);
@@ -15688,6 +15689,10 @@ bake_test_case Edit_testcases[] = {
         Edit_set_positional_initializer
     },
     {
+        "set_positional_enum_map",
+        Edit_set_positional_enum_map
+    },
+    {
         "set_empty_initializer",
         Edit_set_empty_initializer
     },
@@ -16491,7 +16496,7 @@ static bake_test_suite suites[] = {
         "Edit",
         Edit_setup,
         NULL,
-        101,
+        102,
         Edit_testcases,
         1,
         Edit_params

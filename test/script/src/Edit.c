@@ -3110,3 +3110,32 @@ void Edit_set_for_recreated_entity_after_clear(void) {
     ecs_script_edits_free(edits2);
     ecs_fini(world);
 }
+
+void Edit_set_positional_enum_map(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t color = ecs_enum(world, {
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .constants = {{"Red"}, {"Green"}}
+    });
+    ecs_entity_t map_type = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = color, .type = ecs_id(ecs_i32_t)
+    });
+    ecs_entity_t type = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Container"}),
+        .members = {{"values", map_type}}
+    });
+    ecs_script_t *script = edit_parse(world, "foo { Container: {[Red: 10]} }");
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    ecs_map_t map;
+    ecs_map_init(&map, NULL);
+    *ecs_map_ensure(&map, 0) = 20;
+    test_int(ecs_script_edits_set(edits, ecs_lookup(world, "foo"), type, &map), 0);
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result, "foo { Container: {[Red: 20]} }");
+    test_int(ecs_script_run(world, NULL, result, NULL), 0);
+    ecs_os_free(result);
+    ecs_map_fini(&map);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}

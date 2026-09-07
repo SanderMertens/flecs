@@ -15,8 +15,7 @@ static int flecs_ptr_to_buf(
     ecs_entity_t type,
     const void *ptr,
     ecs_strbuf_t *buf_out,
-    bool is_expr,
-    bool precise)
+    flecs_meta_format_t format)
 {
     const EcsTypeSerializer *ser = ecs_get(
         world, type, EcsTypeSerializer);
@@ -28,7 +27,7 @@ static int flecs_ptr_to_buf(
     }
 
     return flecs_meta_serialize(world, &ser->ops, ptr, buf_out,
-        precise ? EcsMetaExprPrecise : is_expr ? EcsMetaExpr : EcsMetaStr);
+        format);
 }
 
 int ecs_ptr_to_expr_buf(
@@ -37,16 +36,19 @@ int ecs_ptr_to_expr_buf(
     const void *ptr,
     ecs_strbuf_t *buf_out)
 {
-    return flecs_ptr_to_buf(world, type, ptr, buf_out, true, false);
+    return flecs_ptr_to_buf(world, type, ptr, buf_out, EcsMetaExpr);
 }
 
 char* flecs_script_ptr_to_expr_precise(
     const ecs_world_t *world,
     ecs_entity_t type,
-    const void *ptr)
+    const void *ptr,
+    bool positional)
 {
     ecs_strbuf_t str = ECS_STRBUF_INIT;
-    if (flecs_ptr_to_buf(world, type, ptr, &str, true, true)) {
+    if (flecs_ptr_to_buf(world, type, ptr, &str,
+        positional ? EcsMetaExprPrecisePositional : EcsMetaExprPrecise))
+    {
         ecs_strbuf_reset(&str);
         return NULL;
     }
@@ -75,7 +77,7 @@ int ecs_ptr_to_str_buf(
     const void *ptr,
     ecs_strbuf_t *buf_out)
 {
-    return flecs_ptr_to_buf(world, type, ptr, buf_out, false, false);
+    return flecs_ptr_to_buf(world, type, ptr, buf_out, EcsMetaStr);
 }
 
 char* ecs_ptr_to_str(

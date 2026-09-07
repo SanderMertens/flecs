@@ -3285,6 +3285,7 @@
                 "source_component_stmt_ends",
                 "set_named_initializer",
                 "set_positional_initializer",
+                "set_positional_enum_map",
                 "set_empty_initializer",
                 "set_partial_initializer",
                 "set_multi_line_initializer",

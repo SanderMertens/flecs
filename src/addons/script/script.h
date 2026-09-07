@@ -333,7 +333,8 @@ void flecs_script_entity_index_fini(
 char* flecs_script_ptr_to_expr_precise(
     const ecs_world_t *world,
     ecs_entity_t type,
-    const void *ptr);
+    const void *ptr,
+    bool positional);
 
 const char* flecs_script_stmt_w_separator(
     ecs_parser_t *parser,

@@ -63,7 +63,11 @@ static void flecs_meta_write_member(
     }
 #endif
     ecs_strbuf_list_next(str);
-    ecs_strbuf_append(str, "%s: ", name);
+    if (format != EcsMetaExprPositional &&
+        format != EcsMetaExprPrecisePositional)
+    {
+        ecs_strbuf_append(str, "%s: ", name);
+    }
 }
 
 static int flecs_meta_write_scope(
@@ -285,7 +289,8 @@ static int flecs_meta_write_opaque(
 
     flecs_meta_writer_t writer = {
         .str = str, .is_collection = is_collection,
-        .format = format == EcsMetaJson ? EcsMetaJson : EcsMetaExpr
+        .format = format == EcsMetaJson ? EcsMetaJson :
+            format >= EcsMetaExprPositional ? EcsMetaExprPositional : EcsMetaExpr
     };
 
     ecs_serializer_t ser = {
@@ -345,7 +350,9 @@ static int flecs_meta_write_primitive(
         }
     }
 #endif
-    if (format == EcsMetaExprPrecise && (kind == EcsOpF32 || kind == EcsOpF64)) {
+    if ((format == EcsMetaExprPrecise || format == EcsMetaExprPrecisePositional)
+        && (kind == EcsOpF32 || kind == EcsOpF64))
+    {
         char buf[32];
         bool is_f32 = kind == EcsOpF32;
         flecs_meta_flt_to_str(buf, 32, is_f32
