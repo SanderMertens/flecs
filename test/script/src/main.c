@@ -807,6 +807,8 @@ void Await_free_script_w_alive_task(void);
 void Await_parse_await_const(void);
 void Await_parse_await_stmt(void);
 void Await_register_async(void);
+void Await_register_async_publishes_complete_function(void);
+void Await_replace_async_function_with_sync(void);
 void Await_await_const_suspend_resume(void);
 void Await_await_stmt_sequence(void);
 void Await_reject(void);
@@ -6453,6 +6455,14 @@ bake_test_case Await_testcases[] = {
     {
         "register_async",
         Await_register_async
+    },
+    {
+        "register_async_publishes_complete_function",
+        Await_register_async_publishes_complete_function
+    },
+    {
+        "replace_async_function_with_sync",
+        Await_replace_async_function_with_sync
     },
     {
         "await_const_suspend_resume",
@@ -16302,7 +16312,7 @@ static bake_test_suite suites[] = {
         "Await",
         Await_setup,
         NULL,
-        60,
+        62,
         Await_testcases,
         1,
         Await_params

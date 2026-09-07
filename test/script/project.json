@@ -824,6 +824,8 @@
                 "parse_await_const",
                 "parse_await_stmt",
                 "register_async",
+                "register_async_publishes_complete_function",
+                "replace_async_function_with_sync",
                 "await_const_suspend_resume",
                 "await_stmt_sequence",
                 "reject",

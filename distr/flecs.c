@@ -69206,40 +69206,6 @@ static ECS_DTOR(EcsScriptFunction, ptr, {
     }
 })
 
-static ECS_COPY(EcsScriptMethod, dst, src, {
-    ecs_script_params_free(&dst->params);
-    if (dst->binding_ctx && dst->binding_ctx_free) {
-        dst->binding_ctx_free(dst->binding_ctx);
-    }
-    dst->binding_ctx = NULL;
-    dst->binding_ctx_free = NULL;
-    dst->return_type = src->return_type;
-    dst->callback = src->callback;
-    flecs_script_copy_async_callbacks(dst, src)
-    ecs_os_memcpy_n(dst->vector_callbacks, src->vector_callbacks,
-        ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
-    dst->ctx = src->ctx;
-    ecs_script_params_copy(&dst->params, &src->params);
-})
-
-static ECS_MOVE(EcsScriptMethod, dst, src, {
-    ecs_script_params_free(&dst->params);
-    if (dst->binding_ctx && dst->binding_ctx_free) {
-        dst->binding_ctx_free(dst->binding_ctx);
-    }
-    *dst = *src;
-    ecs_os_zeromem(src);
-})
-
-static ECS_DTOR(EcsScriptMethod, ptr, {
-    ecs_script_params_free(&ptr->params);
-    if (ptr->binding_ctx && ptr->binding_ctx_free) {
-        ptr->binding_ctx_free(ptr->binding_ctx);
-        ptr->binding_ctx = NULL;
-        ptr->binding_ctx_free = NULL;
-    }
-})
-
 ecs_entity_t ecs_const_var_init(
     ecs_world_t *world,
     ecs_const_var_desc_t *desc)
@@ -69560,14 +69526,16 @@ static bool flecs_script_function_has_vector_args(
 }
 
 static int flecs_script_function_validate_desc(
-    const ecs_function_desc_t *desc)
+    const ecs_function_desc_t *desc,
+    bool async)
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!flecs_script_function_has_vector_args(desc)) {
-        ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, "%s", desc->name);
+        ecs_check(async || desc->callback != NULL,
+            ECS_INVALID_PARAMETER, "%s", desc->name);
         ecs_check(desc->return_type != EcsScriptVectorType, ECS_INVALID_PARAMETER,
             "function '%s' cannot have flecs.script.vector return type unless "
             "at least one argument is of type flecs.script.vector",
@@ -69614,12 +69582,18 @@ static void flecs_script_function_parse_args(
     }
 }
 
-ecs_entity_t ecs_function_init(
+static ecs_entity_t flecs_script_function_init(
     ecs_world_t *world,
-    const ecs_function_desc_t *desc)
+    const ecs_function_desc_t *desc,
+    ecs_entity_t component,
+    bool async)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_dbg_assert(!flecs_script_function_validate_desc(desc), 
+    ecs_dbg_assert(!flecs_script_function_validate_desc(desc, async),
+        ECS_INVALID_PARAMETER, NULL);
+
+    (void)async;
+    ecs_check(component != ecs_id(EcsScriptMethod) || desc->parent != 0,
         ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_entity(world, { 
@@ -69631,36 +69605,39 @@ ecs_entity_t ecs_function_init(
         goto error;
     }
 
-    EcsScriptFunction *f = ecs_ensure(world, result, EcsScriptFunction);
+    EcsScriptFunction *f = ecs_ensure_id(
+        world, result, component, sizeof(EcsScriptFunction));
     ecs_script_params_free(&f->params);
     f->return_type = desc->return_type;
     f->callback = desc->callback;
+#ifdef FLECS_SCRIPT_ASYNC
+    f->async_callback = NULL;
+    f->async_cancel = NULL;
+#endif
     ecs_os_memcpy_n(f->vector_callbacks, desc->vector_callbacks, 
         ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
     f->ctx = desc->ctx;
 
     flecs_script_function_parse_args(desc, &f->params);
 
-    ecs_modified(world, result, EcsScriptFunction);
-
     return result;
 error:
     return 0;
 }
 
-#ifdef FLECS_SCRIPT_ASYNC
-static void flecs_async_function_placeholder(
-    const ecs_function_ctx_t *ctx,
-    int32_t argc,
-    const ecs_value_t *argv,
-    ecs_value_t *result)
+ecs_entity_t ecs_function_init(
+    ecs_world_t *world,
+    const ecs_function_desc_t *desc)
 {
-    (void)ctx;
-    (void)argc;
-    (void)argv;
-    (void)result;
+    ecs_entity_t result = flecs_script_function_init(
+        world, desc, ecs_id(EcsScriptFunction), false);
+    if (result) {
+        ecs_modified(world, result, EcsScriptFunction);
+    }
+    return result;
 }
 
+#ifdef FLECS_SCRIPT_ASYNC
 ecs_entity_t ecs_async_function_init(
     ecs_world_t *world,
     const ecs_async_function_desc_t *desc)
@@ -69672,19 +69649,18 @@ ecs_entity_t ecs_async_function_init(
         .name = desc->name,
         .parent = desc->parent,
         .return_type = desc->return_type,
-        .callback = flecs_async_function_placeholder,
         .ctx = desc->ctx
     };
     ecs_os_memcpy_n(fn_desc.params, desc->params,
         ecs_script_parameter_t, FLECS_SCRIPT_FUNCTION_ARGS_MAX);
 
-    ecs_entity_t result = ecs_function_init(world, &fn_desc);
+    ecs_entity_t result = flecs_script_function_init(
+        world, &fn_desc, ecs_id(EcsScriptFunction), true);
     if (!result) {
         goto error;
     }
 
     EcsScriptFunction *f = ecs_ensure(world, result, EcsScriptFunction);
-    f->callback = NULL;
     f->async_callback = desc->callback;
     f->async_cancel = desc->cancel;
     ecs_modified(world, result, EcsScriptFunction);
@@ -69698,35 +69674,12 @@ ecs_entity_t ecs_method_init(
     ecs_world_t *world,
     const ecs_function_desc_t *desc)
 {
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_dbg_assert(!flecs_script_function_validate_desc(desc), 
-        ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->parent != 0, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_entity_t result = ecs_entity(world, { 
-        .name = desc->name,
-        .parent = desc->parent
-    });
-
-    if (!result) {
-        goto error;
+    ecs_entity_t result = flecs_script_function_init(
+        world, desc, ecs_id(EcsScriptMethod), false);
+    if (result) {
+        ecs_modified(world, result, EcsScriptMethod);
     }
-
-    EcsScriptMethod *f = ecs_ensure(world, result, EcsScriptMethod);
-    ecs_script_params_free(&f->params);
-    f->return_type = desc->return_type;
-    f->callback = desc->callback;
-    ecs_os_memcpy_n(f->vector_callbacks, desc->vector_callbacks, 
-        ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
-    f->ctx = desc->ctx;
-    
-    flecs_script_function_parse_args(desc, &f->params);
-
-    ecs_modified(world, result, EcsScriptMethod);
-
     return result;
-error:
-    return 0;
 }
 
 static int flecs_script_function_call(
@@ -69909,9 +69862,9 @@ void flecs_function_import(
 
     ecs_set_hooks(world, EcsScriptMethod, {
         .ctor = flecs_default_ctor,
-        .dtor = ecs_dtor(EcsScriptMethod),
-        .copy = ecs_copy(EcsScriptMethod),
-        .move = ecs_move(EcsScriptMethod),
+        .dtor = ecs_dtor(EcsScriptFunction),
+        .copy = ecs_copy(EcsScriptFunction),
+        .move = ecs_move(EcsScriptFunction),
     });
 
     flecs_script_register_builtin_functions(world);

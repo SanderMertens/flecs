@@ -2833,3 +2833,68 @@ void Await_many_live_strings_resume_and_cancel(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+static void Await_observe_function_registration(ecs_iter_t *it) {
+    int32_t *counts = it->ctx;
+    const EcsScriptFunction *functions = ecs_field(it, EcsScriptFunction, 0);
+    for (int32_t i = 0; i < it->count; i ++) {
+        counts[0] ++;
+        if (!functions[i].callback && functions[i].async_callback == Await_callback) {
+            counts[1] ++;
+        }
+    }
+}
+
+void Await_register_async_publishes_complete_function(void) {
+    ecs_world_t *world = ecs_init();
+    int32_t counts[2] = {0};
+    ecs_observer(world, {
+        .query.terms = {{ecs_id(EcsScriptFunction)}},
+        .events = {EcsOnSet},
+        .callback = Await_observe_function_registration,
+        .ctx = counts
+    });
+    ecs_entity_t function = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_callback
+    });
+    test_assert(function != 0);
+    test_int(counts[0], 1);
+    test_int(counts[1], 1);
+    ecs_fini(world);
+}
+
+static void Await_replacement_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    (void)argv;
+    *(ecs_i32_t*)result->ptr = 42;
+}
+
+void Await_replace_async_function_with_sync(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t function = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_callback
+    });
+    test_uint(ecs_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_replacement_callback
+    }), function);
+    const EcsScriptFunction *f = ecs_get(world, function, EcsScriptFunction);
+    test_assert(f->async_callback == NULL);
+    test_assert(f->async_cancel == NULL);
+    ecs_i32_t value = 0;
+    ecs_value_t result = {ecs_id(ecs_i32_t), &value};
+    test_int(ecs_function_call(world, function, 0, NULL, &result), 0);
+    test_int(value, 42);
+    ecs_fini(world);
+}
