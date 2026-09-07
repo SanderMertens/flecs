@@ -104,22 +104,6 @@ inline entity world::lookup(const char *name, const char *sep, const char *root_
     return flecs::entity(*this, e);
 }
 
-#ifndef ensure
-/** Ensure a singleton component exists and return a mutable reference. */
-template <typename T>
-inline T& world::ensure() const {
-    flecs::entity e(world_, _::type<T>::id(world_));
-    return e.ensure<T>();
-}
-#endif
-
-/** Mark a singleton component as modified. */
-template <typename T>
-inline void world::modified() const {
-    flecs::entity e(world_, _::type<T>::id(world_));
-    e.modified<T>();
-}
-
 /** Get a ref for a singleton component. */
 template <typename T>
 inline ref<T> world::get_ref() const {

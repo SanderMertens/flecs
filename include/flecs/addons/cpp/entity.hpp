@@ -126,161 +126,29 @@ struct entity : entity_builder<entity>
 
     #ifndef ensure
 
-    /** Get mutable component value.
-     * This operation returns a mutable reference to the component. If the entity
-     * did not yet have the component, it will be added. If a base entity had
-     * the component, it will be overridden, and the value of the base component
-     * will be copied to the entity before this function returns.
-     *
-     * @tparam T The component to get.
-     * @return Reference to the component value.
-     */
-    template <typename T>
-    T& ensure() const {
-        auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        return *static_cast<T*>(ecs_ensure_id(world_, id_, comp_id, sizeof(T)));
+    template <typename... T, typename... Args>
+    decltype(auto) ensure(Args... args) const {
+        return _::get_component<true, true, true>(world_, id_,
+            _::make_id<T...>(world_, args...));
     }
 
-    /** Get mutable component value (untyped).
-     * This operation returns a mutable pointer to the component. If the entity
-     * did not yet have the component, it will be added. If a base entity had
-     * the component, it will be overridden, and the value of the base component
-     * will be copied to the entity before this function returns.
-     *
-     * @param comp The component to get.
-     * @return Pointer to the component value.
-     */
-    void* ensure(entity_t comp) const {
-        const flecs::type_info_t *ti = ecs_get_type_info(world_, comp);
-        ecs_assert(ti != nullptr && ti->size != 0, ECS_INVALID_PARAMETER, 
-            "provided component is not a type or has size 0");
-        return ecs_ensure_id(world_, id_, comp, static_cast<size_t>(ti->size));
-    }
-
-    /** Get mutable reference for a pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first part of the pair.
-     * @tparam Second The second part of the pair.
-     * @return Reference to the pair component value.
-     */
-    template <typename First, typename Second, typename P = pair<First, Second>,
-        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
-    A& ensure() const {
-        return *static_cast<A*>(ecs_ensure_id(world_, id_, ecs_pair(
-            _::type<First>::id(world_),
-            _::type<Second>::id(world_)), sizeof(A)));
-    }
-
-    /** Get mutable reference for the first element of a pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam First The first part of the pair.
-     * @param second The second element of the pair.
-     * @return Reference to the first element value.
-     */
-    template <typename First>
-    First& ensure(entity_t second) const {
-        auto first = _::type<First>::id(world_);
-        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        return *static_cast<First*>(
-            ecs_ensure_id(world_, id_, ecs_pair(first, second), sizeof(First)));
-    }
-
-    /** Get mutable pointer for a pair (untyped).
-     * This operation gets the value for a pair from the entity. If neither the
-     * first nor second element of the pair is a component, the operation will
-     * fail.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return Pointer to the pair component value.
-     */
-    void* ensure(entity_t first, entity_t second) const {
-        return ensure(ecs_pair(first, second));
-    }
-
-    /** Get mutable reference for the second element of a pair.
-     * This operation gets the value for a pair from the entity.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first element of the pair.
-     * @return Reference to the second element value.
-     */
     template <typename Second>
     Second& ensure_second(entity_t first) const {
-        auto second = _::type<Second>::id(world_);
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != nullptr,
-            ECS_INVALID_PARAMETER, "pair is not a component");
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
-            ECS_INVALID_PARAMETER, "type of pair is not Second");
-        ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        return *static_cast<Second*>(
-            ecs_ensure_id(world_, id_, ecs_pair(first, second), sizeof(Second)));
+        return _::get_component<true, true, true>(world_, id_,
+            _::second_id<Second>(world_, first));
     }
 
     #endif
 
-    /** Signal that component was modified.
-     *
-     * @tparam T The component that was modified.
-     */
-    template <typename T>
-    void modified() const {
-        auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        this->modified(comp_id);
-    }
-
-    /** Signal that the first element of a pair was modified.
-     *
-     * @tparam First The first part of the pair.
-     * @tparam Second The second part of the pair.
-     */
-    template <typename First, typename Second, typename A = actual_type_t<flecs::pair<First, Second>>>
-    void modified() const {
-        auto first = _::type<First>::id(world_);
-        auto second = _::type<Second>::id(world_);
-        ecs_assert(_::type<A>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        this->modified(first, second);
-    }
-
-    /** Signal that the first part of a pair was modified.
-     *
-     * @tparam First The first part of the pair.
-     * @param second The second element of the pair.
-     */
-    template <typename First>
-    void modified(entity_t second) const {
-        auto first = _::type<First>::id(world_);
-        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-        this->modified(first, second);
-    }
-
-    /** Signal that a pair has been modified (untyped).
-     * If neither the first nor the second element of the pair is a component,
-     * the operation will fail.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    void modified(entity_t first, entity_t second) const {
-        this->modified(ecs_pair(first, second));
-    }
-
-    /** Signal that component was modified.
-     *
-     * @param comp The component that was modified.
-     */
-    void modified(entity_t comp) const {
-        ecs_modified_id(world_, id_, comp);
+    template <typename... T, typename... Args>
+    void modified(Args... args) const {
+        auto id = _::make_id<T...>(world_, args...);
+        using A = typename decltype(id)::type;
+        if constexpr (!std::is_void_v<A>) {
+            ecs_assert(_::type<A>::size() != 0, ECS_INVALID_PARAMETER,
+                "operation invalid for empty type");
+        }
+        ecs_modified_id(world_, id_, id.id);
     }
 
     /** Get reference to component specified by component ID.
@@ -308,93 +176,17 @@ struct entity : entity_builder<entity>
         return ref<T>(world_, id_, component);
     }
 
-    /** Get reference to component.
-     * A reference allows for quick and safe access to a component value, and is
-     * a faster alternative to repeatedly calling get() for the same component.
-     *
-     * @tparam T Component for which to get a reference.
-     * @return The reference.
-     */
-    template <typename T, if_t< is_actual<T>::value > = 0>
-    ref<T> get_ref() const {
-        return ref<T>(world_, id_, _::type<T>::id(world_));
+    template <typename... T, typename... Args>
+    auto get_ref(Args... args) const {
+        auto id = _::make_id<T...>(world_, args...);
+        using A = typename decltype(id)::type;
+        using Ref = conditional_t<std::is_void_v<A>, untyped_ref, ref<A>>;
+        return Ref(world_, id_, id.id);
     }
 
-    /** Get reference to component.
-     * Overload for when T is not the same as the actual type, which happens
-     * when using pair types.
-     * A reference allows for quick and safe access to a component value, and is
-     * a faster alternative to repeatedly calling get() for the same component.
-     *
-     * @tparam T Component for which to get a reference.
-     * @return The reference.
-     */
-    template <typename T, typename A = actual_type_t<T>, if_t< flecs::is_pair<T>::value > = 0>
-    ref<A> get_ref() const {
-        return ref<A>(world_, id_,
-                      ecs_pair(_::type<typename T::first>::id(world_),
-                               _::type<typename T::second>::id(world_)));
-    }
-
-
-    /** Get reference to pair component.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     * @return The reference.
-     */
-    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
-        typename A = actual_type_t<P>>
-    ref<A> get_ref() const {
-        return ref<A>(world_, id_,
-            ecs_pair(_::type<First>::id(world_), _::type<Second>::id(world_)));
-    }
-
-    /** Get reference to the first element of a pair.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     * @return The reference.
-     */
-    template <typename First>
-    ref<First> get_ref(flecs::entity_t second) const {
-        auto first = _::type<First>::id(world_);
-        return ref<First>(world_, id_, ecs_pair(first, second));
-    }
-
-    /** Get untyped reference to component by component ID.
-     *
-     * @param component The component ID.
-     * @return The untyped reference.
-     */
-    untyped_ref get_ref(flecs::id_t component) const {
-        return untyped_ref(world_, id_, component);
-    }
-
-    /** Get untyped reference to pair by first and second entity IDs.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     * @return The untyped reference.
-     */
-    untyped_ref get_ref(flecs::id_t first, flecs::id_t second) const {
-        return untyped_ref(world_, id_, ecs_pair(first, second));
-    }
-
-    /** Get reference to the second element of a pair.
-     *
-     * @tparam Second The second element of the pair.
-     * @param first The first element of the pair.
-     * @return The reference.
-     */
     template <typename Second>
     ref<Second> get_ref_second(flecs::entity_t first) const {
-        auto second = _::type<Second>::id(world_);
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != nullptr,
-            ECS_INVALID_PARAMETER, "pair is not a component");
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
-            ECS_INVALID_PARAMETER, "type of pair is not Second");
-        return ref<Second>(world_, id_, ecs_pair(first, second));
+        return ref<Second>(world_, id_, _::second_id<Second>(world_, first).id);
     }
 
     /** Clear an entity.

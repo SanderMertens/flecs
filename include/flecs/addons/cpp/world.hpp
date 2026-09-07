@@ -619,17 +619,21 @@ struct world {
         flecs::emplace<T>(world_, component_id, component_id, FLECS_FWD(args)...);
     }
 
-    /** Ensure singleton component.
-     */
     #ifndef ensure
-    template <typename T>
-    T& ensure() const;
+    template <typename... T, typename... Args>
+    decltype(auto) ensure(Args... args) const {
+        auto id = _::make_id<T...>(world_, args...);
+        return _::get_component<true, true, true>(world_, id.owner(world_), id);
+    }
     #endif
 
-    /** Mark singleton component as modified.
-     */
     template <typename T>
-    void modified() const;
+    void modified() const {
+        auto id = _::make_id<T>(world_);
+        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
+        ecs_modified_id(world_, id.owner(world_), id.id);
+    }
 
     /** Get ref singleton component.
      */

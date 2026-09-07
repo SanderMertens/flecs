@@ -126,12 +126,20 @@ bool has_component(world_t *world, flecs::entity_t entity, Id id) {
     return false;
 }
 
-template <bool Mutable, bool Required, typename Id>
+template <bool Mutable, bool Required, bool Ensure = false, typename Id>
 decltype(auto) get_component(world_t *world, flecs::entity_t entity, Id id) {
     using T = typename Id::type;
     using A = conditional_t<Mutable, T, const T>;
     auto get = [&]() {
-        if constexpr (Id::sparse && !std::is_void_v<T>) {
+        if constexpr (Ensure) {
+            if constexpr (std::is_void_v<T>) {
+                auto ti = ecs_get_type_info(world, id.id);
+                ecs_assert(ti && ti->size, ECS_INVALID_PARAMETER, "component has no data");
+                return ecs_ensure_id(world, entity, id.id, static_cast<size_t>(ti->size));
+            } else {
+                return ecs_ensure_id(world, entity, id.id, sizeof(T));
+            }
+        } else if constexpr (Id::sparse && !std::is_void_v<T>) {
             if constexpr (Mutable) {
                 return _::get_mut_ptr<T>(world, entity, id.id);
             } else {
