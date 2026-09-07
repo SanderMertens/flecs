@@ -85,10 +85,6 @@ static void flecs_script_edit_index_node(
     switch(node->kind) {
     case EcsAstEntity: {
         ecs_script_entity_t *entity = (ecs_script_entity_t*)node;
-        if (flecs_script_node_is_hoisted(node)) {
-            return;
-        }
-
         if (entity->symbol >= 0 &&
             entity->symbol < ecs_vec_count(&impl->symbol_slots))
         {
@@ -207,10 +203,6 @@ static ecs_script_entity_t* flecs_script_edit_find_symbol_node(
     switch(node->kind) {
     case EcsAstEntity: {
         ecs_script_entity_t *entity = (ecs_script_entity_t*)node;
-        if (flecs_script_node_is_hoisted(node)) {
-            return NULL;
-        }
-
         if (entity->symbol == symbol) {
             return entity;
         }

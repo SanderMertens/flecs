@@ -49879,7 +49879,6 @@ typedef struct ecs_script_node_t {
     uint64_t internal;
     uint64_t direct_internal;
 
-    ecs_script_entity_t *hoisted;
     bool skip;
     int32_t region;
 } ecs_script_node_t;
@@ -49954,13 +49953,6 @@ struct ecs_script_entity_t {
     int32_t type_index;
     ecs_script_scope_t *scope;
     ecs_expr_node_t *name_expr;
-
-    /* Entities created by "new" expressions are hoisted into the statement list
-     * of the scope that contains the statement with the expression. This makes
-     * it possible for the scope mark/cleanup logic to find them. When set, this
-     * is the statement that owns the expression. */
-    ecs_script_node_t *hoisted_by;
-    ecs_script_entity_t *next_hoisted;
 
     ecs_entity_t eval;
     ecs_entity_t eval_kind;
@@ -50104,19 +50096,6 @@ typedef struct ecs_script_function_node_t {
 
 bool flecs_scope_is_empty(
     ecs_script_scope_t *scope);
-
-/* Returns true for entity nodes that were hoisted into a scope by a "new"
- * expression. Hoisted nodes are evaluated by the expression that created them,
- * not by the statement list they are stored in. */
-bool flecs_script_node_is_hoisted(
-    const ecs_script_node_t *node);
-
-/* Hoist entity node of a "new" expression into scope. */
-void flecs_script_hoist_entity(
-    ecs_script_impl_t *script,
-    ecs_script_scope_t *scope,
-    ecs_script_node_t *owner,
-    ecs_script_entity_t *entity);
 
 ecs_script_entity_t* flecs_script_insert_entity(
     ecs_parser_t *parser,
@@ -69765,27 +69744,6 @@ bool flecs_scope_is_empty(
     return ecs_vec_count(&scope->stmts) == 0;
 }
 
-bool flecs_script_node_is_hoisted(
-    const ecs_script_node_t *node)
-{
-    return node->kind == EcsAstEntity &&
-        ((const ecs_script_entity_t*)node)->hoisted_by != NULL;
-}
-
-void flecs_script_hoist_entity(
-    ecs_script_impl_t *script,
-    ecs_script_scope_t *scope,
-    ecs_script_node_t *owner,
-    ecs_script_entity_t *entity)
-{
-    ecs_assert(entity->hoisted_by == NULL, ECS_INTERNAL_ERROR, NULL);
-    entity->hoisted_by = owner;
-    entity->next_hoisted = owner->hoisted;
-    owner->hoisted = entity;
-    ecs_vec_append_t(&script->allocator, &scope->stmts,
-        ecs_script_node_t*)[0] = (ecs_script_node_t*)entity;
-}
-
 static int flecs_script_name_to_expr(
     ecs_parser_t *parser,
     const char *name,
@@ -70295,10 +70253,6 @@ static void flecs_script_edit_index_node(
     switch(node->kind) {
     case EcsAstEntity: {
         ecs_script_entity_t *entity = (ecs_script_entity_t*)node;
-        if (flecs_script_node_is_hoisted(node)) {
-            return;
-        }
-
         if (entity->symbol >= 0 &&
             entity->symbol < ecs_vec_count(&impl->symbol_slots))
         {
@@ -70417,10 +70371,6 @@ static ecs_script_entity_t* flecs_script_edit_find_symbol_node(
     switch(node->kind) {
     case EcsAstEntity: {
         ecs_script_entity_t *entity = (ecs_script_entity_t*)node;
-        if (flecs_script_node_is_hoisted(node)) {
-            return NULL;
-        }
-
         if (entity->symbol == symbol) {
             return entity;
         }
@@ -76270,11 +76220,6 @@ int ecs_script_visit_scope_(
 
     int32_t i, count = ecs_vec_count(&scope->stmts);
     for (i = 0; i < count; i ++) {
-        /* Entities hoisted into the scope by "new" expressions are visited by
-         * the expression that created them. */
-        if (flecs_script_node_is_hoisted(nodes[i])) {
-            continue;
-        }
 
         if (!i) {
             v->prev = NULL;
@@ -98821,9 +98766,6 @@ static void flecs_script_apply_non_fragmenting_childof_to_scope(
     ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
     for (i = 0; i < count; i ++) {
         ecs_script_node_t *stmt = stmts[i];
-        if (flecs_script_node_is_hoisted(stmt)) {
-            continue;
-        }
         switch(stmt->kind) {
         case EcsAstScope:
             flecs_script_apply_non_fragmenting_childof_to_scope(
@@ -100439,92 +100381,34 @@ void flecs_script_scope_push(
     }
 }
 
-static void flecs_script_mark_scope(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_scope_t *scope);
-
 static void flecs_script_mark_node(
     ecs_script_eval_visitor_t *v,
     ecs_script_node_t *node)
 {
-    switch(node->kind) {
-    case EcsAstScope:
-        flecs_script_mark_scope(v, (ecs_script_scope_t*)node);
-        break;
-    case EcsAstEntity:
-        flecs_script_mark_scope(v, ((ecs_script_entity_t*)node)->scope);
-        break;
-    case EcsAstWith: {
-        ecs_script_with_t *n = (ecs_script_with_t*)node;
-        flecs_script_mark_scope(v, n->expressions);
-        flecs_script_mark_scope(v, n->scope);
-        break;
+    if (!node->region) {
+        return;
     }
-    case EcsAstPairScope:
-        flecs_script_mark_scope(v, ((ecs_script_pair_scope_t*)node)->scope);
-        break;
-    case EcsAstIf: {
-        ecs_script_if_t *n = (ecs_script_if_t*)node;
-        flecs_script_mark_scope(v, n->if_true);
-        flecs_script_mark_scope(v, n->if_false);
-        break;
-    }
-    case EcsAstFor: {
-        ecs_script_for_t *n = (ecs_script_for_t*)node;
-        if (v->for_slots && n->for_slot >= 0 &&
-            n->for_slot < ecs_vec_count(v->for_slots))
-        {
-            flecs_script_for_slot_mark(ecs_vec_get_t(
-                v->for_slots, ecs_script_for_slot_t, n->for_slot), v->visit);
+    const ecs_script_region_t *region = ecs_vec_get_t(
+        &v->base.script->regions, ecs_script_region_t, node->region - 1);
+    if (v->scope_slots) {
+        int32_t count = ecs_vec_count(v->scope_slots);
+        int32_t *slots = ecs_vec_first(v->scope_slots);
+        for (int32_t i = 0; i < region->scope_count; i ++) {
+            int32_t slot = region->scope_first + i;
+            if (slot >= 0 && slot < count) {
+                slots[slot] = v->visit;
+            }
         }
-        flecs_script_mark_scope(v, n->scope);
-        break;
     }
-    case EcsAstTry: {
-        ecs_script_try_t *n = (ecs_script_try_t*)node;
-        flecs_script_mark_scope(v, n->try_scope);
-        ecs_script_catch_t *catches = ecs_vec_first(&n->catches);
-        int32_t i, count = ecs_vec_count(&n->catches);
-        for (i = 0; i < count; i ++) {
-            flecs_script_mark_scope(v, catches[i].scope);
+    if (v->for_slots) {
+        int32_t count = ecs_vec_count(v->for_slots);
+        for (int32_t i = 0; i < region->for_count; i ++) {
+            int32_t slot = region->for_first + i;
+            if (slot >= 0 && slot < count) {
+                flecs_script_for_slot_mark(ecs_vec_get_t(
+                    v->for_slots, ecs_script_for_slot_t, slot), v->visit);
+            }
         }
-        break;
-    }
-    case EcsAstTag:
-    case EcsAstComponent:
-    case EcsAstWithTag:
-    case EcsAstWithComponent:
-    case EcsAstUsing:
-    case EcsAstModule:
-    case EcsAstAnnotation:
-    case EcsAstTemplate:
-    case EcsAstProp:
-    case EcsAstMut:
-    case EcsAstConst:
-    case EcsAstExportConst:
-    case EcsAstExportMut:
-    case EcsAstInclude:
-    case EcsAstFunction:
-    case EcsAstAwait:
-    case EcsAstContinue:
-        break;
-    }
-}
-
-static void flecs_script_mark_scope(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_scope_t *scope)
-{
-    if (v->scope_slots && scope->scope_slot >= 0 &&
-        scope->scope_slot < ecs_vec_count(v->scope_slots))
-    {
-        ecs_vec_get_t(v->scope_slots,
-            int32_t, scope->scope_slot)[0] = v->visit;
-    }
-    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-    int32_t i, count = ecs_vec_count(&scope->stmts);
-    for (i = 0; i < count; i ++) {
-        flecs_script_mark_node(v, stmts[i]);
     }
 }
 
@@ -100563,22 +100447,6 @@ static int flecs_script_step_scope(
         ecs_script_node_t *stmt = nodes[frame->pc];
         v->base.prev = frame->pc ? nodes[frame->pc - 1] : NULL;
         v->base.next = (frame->pc + 1) < count ? nodes[frame->pc + 1] : NULL;
-
-        /* Entities hoisted into the scope by "new" expressions are evaluated by
-         * the statement that owns the expression. When that statement is
-         * skipped the expression isn't evaluated, which means the scope of the
-         * hoisted entity has to be marked as visited so cleanup doesn't reclaim
-         * it. When the statement does run, the expression creates the entity
-         * again and cleanup can reclaim what the statement no longer uses. */
-        if (flecs_script_node_is_hoisted(stmt)) {
-            if (!flecs_script_stmt_run(
-                v, ((ecs_script_entity_t*)stmt)->hoisted_by))
-            {
-                flecs_script_mark_node(v, stmt);
-            }
-            frame->pc ++;
-            continue;
-        }
 
         if (!flecs_script_stmt_run(v, stmt)) {
             ecs_script_computed_t *slot = stmt->kind == EcsAstConst
@@ -104553,17 +104421,10 @@ int flecs_script_type_scope(
         ECS_INTERNAL_ERROR, NULL);
     v->base.nodes[v->base.depth ++] = (ecs_script_node_t*)scope;
 
-    /* Typing a statement can hoist entities of "new" expressions into the
-     * scope, which can move the statement array. Only the statements that were
-     * in the scope before typing started have to be visited, as hoisted nodes
-     * are typed by the expression that created them. */
     int32_t i, count = ecs_vec_count(&scope->stmts);
     int result = 0;
     for (i = 0; i < count; i ++) {
         ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-        if (flecs_script_node_is_hoisted(stmts[i])) {
-            continue;
-        }
         ecs_script_node_t *node = stmts[i];
         v->base.prev = i ? stmts[i - 1] : NULL;
         v->base.next = i + 1 < count ? stmts[i + 1] : NULL;
@@ -104603,31 +104464,6 @@ int flecs_script_type_scope(
     return result;
 }
 
-/* Hoist the entity of a "new" expression into the scope of the statement that
- * contains the expression. This makes the entity visible to the logic that
- * marks the scopes of skipped statements as visited, which prevents cleanup
- * from reclaiming entities that are still owned by the script. The node stack
- * of the type visitor only contains scopes and their statements, which means
- * that the top of the stack is the statement that owns the expression, and the
- * element below it the scope that contains the statement. */
-static void flecs_script_type_hoist_entity(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_entity_t *entity)
-{
-    if (entity->hoisted_by || v->base.depth < 2) {
-        return;
-    }
-
-    ecs_script_node_t *owner = v->base.nodes[v->base.depth - 1];
-    ecs_script_node_t *scope = v->base.nodes[v->base.depth - 2];
-    if (scope->kind != EcsAstScope || owner->kind == EcsAstScope) {
-        return;
-    }
-
-    flecs_script_hoist_entity(v->base.script,
-        (ecs_script_scope_t*)scope, owner, entity);
-}
-
 int flecs_script_visit_type_entity_expr(
     ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
@@ -104641,11 +104477,6 @@ int flecs_script_visit_type_entity_expr(
         int result = flecs_script_type_entity(t, entity, false);
         if (old_function_scope) {
             entity->symbol = -1;
-        } else if (!result) {
-            /* Function bodies are evaluated per call and don't take part in the
-             * scope cleanup logic, so entities are only hoisted outside of
-             * function scopes. */
-            flecs_script_type_hoist_entity(v, entity);
         }
         t->function_scope = old_function_scope;
         return result;
@@ -115437,9 +115268,6 @@ static int flecs_irc_compile_with(
     int32_t i, count = ecs_vec_count(&node->expressions->stmts);
     for (i = 0; i < count; i ++) {
         ecs_script_node_t *stmt = stmts[i];
-        if (flecs_script_node_is_hoisted(stmt)) {
-            continue;
-        }
         c->reg_count = c->reg_floor;
         if (stmt->skip) {
             continue;
@@ -115799,10 +115627,6 @@ static int flecs_irc_compile_scope(
     bool blocks = count >= 32 && !c->force_depth;
     for (i = 0; i < count; i ++) {
         ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-        if (flecs_script_node_is_hoisted(stmts[i])) {
-            flecs_irc_entry_add(c, stmts[i], EcsIrEntryEntity);
-            continue;
-        }
         if (blocks && (block == -1 ||
             ecs_vec_count(&stmt_pcs) - block_first > 32))
         {
@@ -115870,10 +115694,6 @@ static int flecs_irc_compile_function(
     int32_t i, count = ecs_vec_count(&body->stmts);
     for (i = 0; i < count; i ++) {
         ecs_script_node_t **stmts = ecs_vec_first(&body->stmts);
-        if (flecs_script_node_is_hoisted(stmts[i])) {
-            flecs_irc_entry_add(c, stmts[i], EcsIrEntryEntity);
-            continue;
-        }
         if (flecs_irc_compile_stmt(c, body, i)) {
             c->scope = NULL;
             return -1;
@@ -122569,12 +122389,6 @@ static int flecs_script_dep_scope(
     ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
     int32_t i, count = ecs_vec_count(&scope->stmts);
     for (i = 0; i < count; i ++) {
-        /* Entities hoisted into the scope by "new" expressions are analyzed by
-         * the expression that created them, which adds the inputs of the entity
-         * to the statement that owns the expression. */
-        if (flecs_script_node_is_hoisted(stmts[i])) {
-            continue;
-        }
         if (flecs_script_dep_node(ctx, stmts[i])) {
             ctx->v->base.depth --;
             ctx->scope = prev_scope;
@@ -122585,9 +122399,6 @@ static int flecs_script_dep_scope(
     }
     uint64_t next_input = 0;
     for (i = count - 1; i >= 0; i --) {
-        if (flecs_script_node_is_hoisted(stmts[i])) {
-            continue;
-        }
         if (stmts[i]->kind == EcsAstAnnotation) {
             stmts[i]->input = next_input;
             scope->node.input |= next_input;

@@ -1151,9 +1151,6 @@ static int flecs_irc_compile_with(
     int32_t i, count = ecs_vec_count(&node->expressions->stmts);
     for (i = 0; i < count; i ++) {
         ecs_script_node_t *stmt = stmts[i];
-        if (flecs_script_node_is_hoisted(stmt)) {
-            continue;
-        }
         c->reg_count = c->reg_floor;
         if (stmt->skip) {
             continue;
@@ -1513,10 +1510,6 @@ static int flecs_irc_compile_scope(
     bool blocks = count >= 32 && !c->force_depth;
     for (i = 0; i < count; i ++) {
         ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-        if (flecs_script_node_is_hoisted(stmts[i])) {
-            flecs_irc_entry_add(c, stmts[i], EcsIrEntryEntity);
-            continue;
-        }
         if (blocks && (block == -1 ||
             ecs_vec_count(&stmt_pcs) - block_first > 32))
         {
@@ -1584,10 +1577,6 @@ static int flecs_irc_compile_function(
     int32_t i, count = ecs_vec_count(&body->stmts);
     for (i = 0; i < count; i ++) {
         ecs_script_node_t **stmts = ecs_vec_first(&body->stmts);
-        if (flecs_script_node_is_hoisted(stmts[i])) {
-            flecs_irc_entry_add(c, stmts[i], EcsIrEntryEntity);
-            continue;
-        }
         if (flecs_irc_compile_stmt(c, body, i)) {
             c->scope = NULL;
             return -1;

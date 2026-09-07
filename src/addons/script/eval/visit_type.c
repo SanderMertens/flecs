@@ -2121,17 +2121,10 @@ int flecs_script_type_scope(
         ECS_INTERNAL_ERROR, NULL);
     v->base.nodes[v->base.depth ++] = (ecs_script_node_t*)scope;
 
-    /* Typing a statement can hoist entities of "new" expressions into the
-     * scope, which can move the statement array. Only the statements that were
-     * in the scope before typing started have to be visited, as hoisted nodes
-     * are typed by the expression that created them. */
     int32_t i, count = ecs_vec_count(&scope->stmts);
     int result = 0;
     for (i = 0; i < count; i ++) {
         ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-        if (flecs_script_node_is_hoisted(stmts[i])) {
-            continue;
-        }
         ecs_script_node_t *node = stmts[i];
         v->base.prev = i ? stmts[i - 1] : NULL;
         v->base.next = i + 1 < count ? stmts[i + 1] : NULL;
@@ -2171,31 +2164,6 @@ int flecs_script_type_scope(
     return result;
 }
 
-/* Hoist the entity of a "new" expression into the scope of the statement that
- * contains the expression. This makes the entity visible to the logic that
- * marks the scopes of skipped statements as visited, which prevents cleanup
- * from reclaiming entities that are still owned by the script. The node stack
- * of the type visitor only contains scopes and their statements, which means
- * that the top of the stack is the statement that owns the expression, and the
- * element below it the scope that contains the statement. */
-static void flecs_script_type_hoist_entity(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_entity_t *entity)
-{
-    if (entity->hoisted_by || v->base.depth < 2) {
-        return;
-    }
-
-    ecs_script_node_t *owner = v->base.nodes[v->base.depth - 1];
-    ecs_script_node_t *scope = v->base.nodes[v->base.depth - 2];
-    if (scope->kind != EcsAstScope || owner->kind == EcsAstScope) {
-        return;
-    }
-
-    flecs_script_hoist_entity(v->base.script,
-        (ecs_script_scope_t*)scope, owner, entity);
-}
-
 int flecs_script_visit_type_entity_expr(
     ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
@@ -2209,11 +2177,6 @@ int flecs_script_visit_type_entity_expr(
         int result = flecs_script_type_entity(t, entity, false);
         if (old_function_scope) {
             entity->symbol = -1;
-        } else if (!result) {
-            /* Function bodies are evaluated per call and don't take part in the
-             * scope cleanup logic, so entities are only hoisted outside of
-             * function scopes. */
-            flecs_script_type_hoist_entity(v, entity);
         }
         t->function_scope = old_function_scope;
         return result;

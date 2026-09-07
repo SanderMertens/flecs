@@ -44,7 +44,6 @@ typedef struct ecs_script_node_t {
     uint64_t internal;
     uint64_t direct_internal;
 
-    ecs_script_entity_t *hoisted;
     bool skip;
     int32_t region;
 } ecs_script_node_t;
@@ -119,13 +118,6 @@ struct ecs_script_entity_t {
     int32_t type_index;
     ecs_script_scope_t *scope;
     ecs_expr_node_t *name_expr;
-
-    /* Entities created by "new" expressions are hoisted into the statement list
-     * of the scope that contains the statement with the expression. This makes
-     * it possible for the scope mark/cleanup logic to find them. When set, this
-     * is the statement that owns the expression. */
-    ecs_script_node_t *hoisted_by;
-    ecs_script_entity_t *next_hoisted;
 
     ecs_entity_t eval;
     ecs_entity_t eval_kind;
@@ -269,19 +261,6 @@ typedef struct ecs_script_function_node_t {
 
 bool flecs_scope_is_empty(
     ecs_script_scope_t *scope);
-
-/* Returns true for entity nodes that were hoisted into a scope by a "new"
- * expression. Hoisted nodes are evaluated by the expression that created them,
- * not by the statement list they are stored in. */
-bool flecs_script_node_is_hoisted(
-    const ecs_script_node_t *node);
-
-/* Hoist entity node of a "new" expression into scope. */
-void flecs_script_hoist_entity(
-    ecs_script_impl_t *script,
-    ecs_script_scope_t *scope,
-    ecs_script_node_t *owner,
-    ecs_script_entity_t *entity);
 
 ecs_script_entity_t* flecs_script_insert_entity(
     ecs_parser_t *parser,
