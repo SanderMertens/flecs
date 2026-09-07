@@ -269,8 +269,6 @@ void flecs_query_op_ctx_fini(
     }
     case EcsQueryUp:
     case EcsQuerySelfUp:
-    case EcsQueryTreeUp:
-    case EcsQueryTreeSelfUp:
     case EcsQueryTreeUpPre:
     case EcsQueryTreeSelfUpPre:
     case EcsQueryTreeUpPost:

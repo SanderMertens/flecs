@@ -92,8 +92,6 @@ typedef enum {
     EcsQueryTree,
     EcsQueryTreeWildcard,
     EcsQueryTreeWith,       /* Evaluate (ChildOf, tgt) against fixed or variable source */
-    EcsQueryTreeUp,         /* Return union of up(ChildOf) and tables with Parent */
-    EcsQueryTreeSelfUp,
     EcsQueryTreePre,        /* Tree instruction that doesn't filter Parent component / returns entire tables. */
     EcsQueryTreePost,       /* Tree instruction that applies filter to Parent component. */
     EcsQueryTreeUpPre,      /* Up traversal for ChildOf that doesn't filter Parent component / returns entire tables */

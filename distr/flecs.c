@@ -1327,8 +1327,6 @@ typedef enum {
     EcsQueryTree,
     EcsQueryTreeWildcard,
     EcsQueryTreeWith,       /* Evaluate (ChildOf, tgt) against fixed or variable source */
-    EcsQueryTreeUp,         /* Return union of up(ChildOf) and tables with Parent */
-    EcsQueryTreeSelfUp,
     EcsQueryTreePre,        /* Tree instruction that doesn't filter Parent component / returns entire tables. */
     EcsQueryTreePost,       /* Tree instruction that applies filter to Parent component. */
     EcsQueryTreeUpPre,      /* Up traversal for ChildOf that doesn't filter Parent component / returns entire tables */
@@ -35643,8 +35641,6 @@ const char* flecs_query_op_str(
     case EcsQueryTreeSelfUpPost: return "treesup_post";
     case EcsQueryTreeUpNot:      return "treeup_not  ";
     case EcsQueryTreeSelfUpNot:  return "treesup_not ";
-    case EcsQueryTreeUp:         return "tree_up     ";
-    case EcsQueryTreeSelfUp:     return "tree_selfup ";
     case EcsQueryTreeWith:       return "tree_w      ";
     case EcsQueryChildren:       return "children    ";
     case EcsQueryChildrenWc:     return "children_wc ";
@@ -87794,8 +87790,6 @@ void flecs_query_op_ctx_fini(
     }
     case EcsQueryUp:
     case EcsQuerySelfUp:
-    case EcsQueryTreeUp:
-    case EcsQueryTreeSelfUp:
     case EcsQueryTreeUpPre:
     case EcsQueryTreeSelfUpPre:
     case EcsQueryTreeUpPost:
