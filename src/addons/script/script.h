@@ -77,6 +77,7 @@ typedef struct ecs_script_unresolved_ref_t {
     flecs_script_unresolved_kind_t kind;
     int32_t line;
     int32_t column;
+    int32_t offset;
 } ecs_script_unresolved_ref_t;
 
 typedef struct ecs_script_unresolved_component_ref_t {

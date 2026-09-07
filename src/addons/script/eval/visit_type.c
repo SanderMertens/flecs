@@ -95,6 +95,7 @@ static void flecs_script_type_unresolved_ref(
     ref->kind = kind;
     ref->line = line;
     ref->column = column;
+    ref->offset = line ? (int32_t)(((ecs_script_node_t*)node)->pos - impl->pub.code) : -1;
 }
 
 static int flecs_script_type_report_unresolved(
@@ -109,56 +110,20 @@ static int flecs_script_type_report_unresolved(
     const char *code = impl->pub.code;
     ecs_script_unresolved_ref_t *refs = ecs_vec_first(
         &impl->unresolved_refs);
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    bool prev_append = flecs_log_capture_set_append(true);
     for (i = 0; i < count; i ++) {
         ecs_script_unresolved_ref_t *ref = &refs[i];
-        const char *line_start = NULL;
-        if (code && ref->line) {
-            line_start = code;
-            int32_t l;
-            for (l = 1; l < ref->line && line_start; l ++) {
-                line_start = strchr(line_start, '\n');
-                if (line_start) {
-                    line_start ++;
-                }
-            }
-        }
-        if (i) {
-            ecs_strbuf_appendch(&buf, '\n');
-        }
-        if (line_start) {
-            int32_t line_len = 0;
-            while (line_start[line_len] && line_start[line_len] != '\n') {
-                line_len ++;
-            }
-            int32_t col = ref->column - 1;
-            if (col > line_len) {
-                col = line_len;
-            }
-            ecs_parser_error(impl->pub.name, code,
-                (line_start - code) + col,
+        if (ref->offset != -1) {
+            ecs_parser_error(impl->pub.name, code, ref->offset,
                 "unresolved reference '%s'", ref->name);
-            ecs_strbuf_append(&buf, "%d: unresolved reference '%s'\n",
-                ref->line, ref->name);
-            ecs_strbuf_appendstrn(&buf, line_start, line_len);
-            ecs_strbuf_appendch(&buf, '\n');
-            int32_t c;
-            for (c = 0; c < col; c ++) {
-                ecs_strbuf_appendch(&buf, ' ');
-            }
-            ecs_strbuf_appendch(&buf, '^');
         } else {
             ecs_parser_error(impl->pub.name, NULL, 0,
-                "unresolved reference '%s' (line %d, column %d)",
-                ref->name, ref->line, ref->column);
-            ecs_strbuf_append(&buf,
                 "unresolved reference '%s' (line %d, column %d)",
                 ref->name, ref->line, ref->column);
         }
     }
 
-    ecs_os_free(v->r->unresolved_errors);
-    v->r->unresolved_errors = ecs_strbuf_get(&buf);
+    flecs_log_capture_set_append(prev_append);
     return -1;
 }
 

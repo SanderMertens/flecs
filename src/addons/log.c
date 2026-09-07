@@ -7,7 +7,8 @@
 
 #ifdef FLECS_LOG
 
-static char *flecs_log_last_err = NULL;
+static ecs_strbuf_t *flecs_log_last_err = NULL;
+static bool flecs_log_append_errors = false;
 static int32_t flecs_log_last_err_line = 0;
 static int32_t flecs_log_last_err_column = 0;
 static int32_t flecs_parser_err_line = 0;
@@ -21,7 +22,8 @@ static int32_t flecs_log_stopped_err_line = 0;
 static int32_t flecs_log_stopped_err_column = 0;
 
 typedef struct flecs_log_capture_frame_t {
-    char *last_err;
+    ecs_strbuf_t *last_err;
+    bool append_errors;
     int32_t last_err_line;
     int32_t last_err_column;
     int32_t parser_err_line;
@@ -72,8 +74,13 @@ static void flecs_log_capture_log(
     }
 #endif
 
-    if (!flecs_log_last_err && level <= -3) {
-        flecs_log_last_err = ecs_os_strdup(msg);
+    if (level <= -3 && (!flecs_log_last_err || flecs_log_append_errors)) {
+        if (!flecs_log_last_err) {
+            flecs_log_last_err = ecs_os_calloc_t(ecs_strbuf_t);
+        } else {
+            ecs_strbuf_appendch(flecs_log_last_err, '\n');
+        }
+        ecs_strbuf_appendstr(flecs_log_last_err, msg);
     }
 
     if (!flecs_log_last_err_line && level <= -3) {
@@ -83,9 +90,19 @@ static void flecs_log_capture_log(
 }
 
 static char* flecs_log_get_captured_log(void) {
-    char *result = flecs_log_last_err;
+    if (!flecs_log_last_err) {
+        return NULL;
+    }
+    char *result = ecs_strbuf_get(flecs_log_last_err);
+    ecs_os_free(flecs_log_last_err);
     flecs_log_last_err = NULL;
     return result;
+}
+
+bool flecs_log_capture_set_append(bool append) {
+    bool prev = flecs_log_append_errors;
+    flecs_log_append_errors = append;
+    return prev;
 }
 
 void ecs_log_start_capture(bool try) {
@@ -127,6 +144,8 @@ void flecs_log_capture_push(bool try) {
     flecs_log_capture_frame_t *frame =
         ecs_os_malloc_t(flecs_log_capture_frame_t);
     frame->last_err = flecs_log_last_err;
+    frame->append_errors = flecs_log_append_errors;
+    flecs_log_append_errors = false;
     frame->last_err_line = flecs_log_last_err_line;
     frame->last_err_column = flecs_log_last_err_column;
     frame->parser_err_line = flecs_parser_err_line;
@@ -148,11 +167,12 @@ char* flecs_log_capture_pop(void) {
         return ecs_log_stop_capture();
     }
 
-    char *result = flecs_log_last_err;
+    char *result = flecs_log_get_captured_log();
     flecs_log_stopped_err_line = flecs_log_last_err_line;
     flecs_log_stopped_err_column = flecs_log_last_err_column;
 
     flecs_log_last_err = frame->last_err;
+    flecs_log_append_errors = frame->append_errors;
     flecs_log_last_err_line = frame->last_err_line;
     flecs_log_last_err_column = frame->last_err_column;
     flecs_parser_err_line = frame->parser_err_line;
@@ -766,6 +786,11 @@ void ecs_assert_log_(
     (void)file;
     (void)line;
     (void)fmt;
+}
+
+bool flecs_log_capture_set_append(bool append) {
+    (void)append;
+    return false;
 }
 
 void ecs_log_start_capture(bool try) {

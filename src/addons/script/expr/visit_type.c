@@ -44,6 +44,7 @@ static bool flecs_expr_unresolved_ref(
     ref->kind = kind;
     flecs_script_pos_to_line_col(impl->pub.code, node->pos,
         &ref->line, &ref->column);
+    ref->offset = ref->line ? (int32_t)(node->pos - impl->pub.code) : -1;
     return true;
 }
 

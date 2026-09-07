@@ -4355,6 +4355,9 @@ void flecs_log_get_captured_error_pos(
     int32_t *line,
     int32_t *column);
 
+bool flecs_log_capture_set_append(
+    bool append);
+
 void flecs_log_capture_push(
     bool try);
 
@@ -24839,7 +24842,8 @@ int flecs_journal_get_counter(void) {
 
 #ifdef FLECS_LOG
 
-static char *flecs_log_last_err = NULL;
+static ecs_strbuf_t *flecs_log_last_err = NULL;
+static bool flecs_log_append_errors = false;
 static int32_t flecs_log_last_err_line = 0;
 static int32_t flecs_log_last_err_column = 0;
 static int32_t flecs_parser_err_line = 0;
@@ -24853,7 +24857,8 @@ static int32_t flecs_log_stopped_err_line = 0;
 static int32_t flecs_log_stopped_err_column = 0;
 
 typedef struct flecs_log_capture_frame_t {
-    char *last_err;
+    ecs_strbuf_t *last_err;
+    bool append_errors;
     int32_t last_err_line;
     int32_t last_err_column;
     int32_t parser_err_line;
@@ -24904,8 +24909,13 @@ static void flecs_log_capture_log(
     }
 #endif
 
-    if (!flecs_log_last_err && level <= -3) {
-        flecs_log_last_err = ecs_os_strdup(msg);
+    if (level <= -3 && (!flecs_log_last_err || flecs_log_append_errors)) {
+        if (!flecs_log_last_err) {
+            flecs_log_last_err = ecs_os_calloc_t(ecs_strbuf_t);
+        } else {
+            ecs_strbuf_appendch(flecs_log_last_err, '\n');
+        }
+        ecs_strbuf_appendstr(flecs_log_last_err, msg);
     }
 
     if (!flecs_log_last_err_line && level <= -3) {
@@ -24915,9 +24925,19 @@ static void flecs_log_capture_log(
 }
 
 static char* flecs_log_get_captured_log(void) {
-    char *result = flecs_log_last_err;
+    if (!flecs_log_last_err) {
+        return NULL;
+    }
+    char *result = ecs_strbuf_get(flecs_log_last_err);
+    ecs_os_free(flecs_log_last_err);
     flecs_log_last_err = NULL;
     return result;
+}
+
+bool flecs_log_capture_set_append(bool append) {
+    bool prev = flecs_log_append_errors;
+    flecs_log_append_errors = append;
+    return prev;
 }
 
 void ecs_log_start_capture(bool try) {
@@ -24959,6 +24979,8 @@ void flecs_log_capture_push(bool try) {
     flecs_log_capture_frame_t *frame =
         ecs_os_malloc_t(flecs_log_capture_frame_t);
     frame->last_err = flecs_log_last_err;
+    frame->append_errors = flecs_log_append_errors;
+    flecs_log_append_errors = false;
     frame->last_err_line = flecs_log_last_err_line;
     frame->last_err_column = flecs_log_last_err_column;
     frame->parser_err_line = flecs_parser_err_line;
@@ -24980,11 +25002,12 @@ char* flecs_log_capture_pop(void) {
         return ecs_log_stop_capture();
     }
 
-    char *result = flecs_log_last_err;
+    char *result = flecs_log_get_captured_log();
     flecs_log_stopped_err_line = flecs_log_last_err_line;
     flecs_log_stopped_err_column = flecs_log_last_err_column;
 
     flecs_log_last_err = frame->last_err;
+    flecs_log_append_errors = frame->append_errors;
     flecs_log_last_err_line = frame->last_err_line;
     flecs_log_last_err_column = frame->last_err_column;
     flecs_parser_err_line = frame->parser_err_line;
@@ -25596,6 +25619,11 @@ void ecs_assert_log_(
     (void)file;
     (void)line;
     (void)fmt;
+}
+
+bool flecs_log_capture_set_append(bool append) {
+    (void)append;
+    return false;
 }
 
 void ecs_log_start_capture(bool try) {
@@ -48989,6 +49017,7 @@ typedef struct ecs_script_unresolved_ref_t {
     flecs_script_unresolved_kind_t kind;
     int32_t line;
     int32_t column;
+    int32_t offset;
 } ecs_script_unresolved_ref_t;
 
 typedef struct ecs_script_unresolved_component_ref_t {
@@ -50080,7 +50109,6 @@ struct ecs_script_runtime_t {
     ecs_id_t current_tag;
 
     char *error_name;
-    char *unresolved_errors;
     int32_t include_depth;
 
     /* Nesting level of include statements. Guards against scripts that
@@ -93406,7 +93434,6 @@ void ecs_script_runtime_free(
     flecs_allocator_fini(&r->allocator);
     flecs_stack_fini(&r->stack);
     ecs_os_free(r->error_name);
-    ecs_os_free(r->unresolved_errors);
     ecs_os_free(r);
 }
 
@@ -93434,8 +93461,6 @@ void flecs_script_runtime_error_reset(
 {
     ecs_os_free(r->error_name);
     r->error_name = NULL;
-    ecs_os_free(r->unresolved_errors);
-    r->unresolved_errors = NULL;
     r->error = false;
 }
 
@@ -93445,8 +93470,6 @@ void ecs_script_runtime_clear(
     ecs_vec_clear(&r->annot);
     ecs_vec_clear(&r->with);
     ecs_vec_clear(&r->using);
-    ecs_os_free(r->unresolved_errors);
-    r->unresolved_errors = NULL;
     r->error = false;
 }
 
@@ -96607,26 +96630,8 @@ int flecs_script_eval(
     }
 
     if (result) {
-        char *unresolved = priv_desc.runtime->unresolved_errors;
-        priv_desc.runtime->unresolved_errors = NULL;
         result->error = flecs_log_capture_pop();
         flecs_log_get_captured_error_pos(&result->line, &result->column);
-        if (unresolved) {
-            if (!result->error) {
-                result->error = unresolved;
-            } else if (!ecs_os_strncmp(unresolved, result->error,
-                ecs_os_strlen(result->error)))
-            {
-                ecs_os_free(result->error);
-                result->error = unresolved;
-            } else {
-                char *error = flecs_asprintf(
-                    "%s\n%s", result->error, unresolved);
-                ecs_os_free(result->error);
-                ecs_os_free(unresolved);
-                result->error = error;
-            }
-        }
         if (!r && result->error) {
             ecs_err("%s", result->error);
             ecs_os_free(result->error);
@@ -97726,6 +97731,7 @@ static void flecs_script_type_unresolved_ref(
     ref->kind = kind;
     ref->line = line;
     ref->column = column;
+    ref->offset = line ? (int32_t)(((ecs_script_node_t*)node)->pos - impl->pub.code) : -1;
 }
 
 static int flecs_script_type_report_unresolved(
@@ -97740,56 +97746,20 @@ static int flecs_script_type_report_unresolved(
     const char *code = impl->pub.code;
     ecs_script_unresolved_ref_t *refs = ecs_vec_first(
         &impl->unresolved_refs);
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    bool prev_append = flecs_log_capture_set_append(true);
     for (i = 0; i < count; i ++) {
         ecs_script_unresolved_ref_t *ref = &refs[i];
-        const char *line_start = NULL;
-        if (code && ref->line) {
-            line_start = code;
-            int32_t l;
-            for (l = 1; l < ref->line && line_start; l ++) {
-                line_start = strchr(line_start, '\n');
-                if (line_start) {
-                    line_start ++;
-                }
-            }
-        }
-        if (i) {
-            ecs_strbuf_appendch(&buf, '\n');
-        }
-        if (line_start) {
-            int32_t line_len = 0;
-            while (line_start[line_len] && line_start[line_len] != '\n') {
-                line_len ++;
-            }
-            int32_t col = ref->column - 1;
-            if (col > line_len) {
-                col = line_len;
-            }
-            ecs_parser_error(impl->pub.name, code,
-                (line_start - code) + col,
+        if (ref->offset != -1) {
+            ecs_parser_error(impl->pub.name, code, ref->offset,
                 "unresolved reference '%s'", ref->name);
-            ecs_strbuf_append(&buf, "%d: unresolved reference '%s'\n",
-                ref->line, ref->name);
-            ecs_strbuf_appendstrn(&buf, line_start, line_len);
-            ecs_strbuf_appendch(&buf, '\n');
-            int32_t c;
-            for (c = 0; c < col; c ++) {
-                ecs_strbuf_appendch(&buf, ' ');
-            }
-            ecs_strbuf_appendch(&buf, '^');
         } else {
             ecs_parser_error(impl->pub.name, NULL, 0,
-                "unresolved reference '%s' (line %d, column %d)",
-                ref->name, ref->line, ref->column);
-            ecs_strbuf_append(&buf,
                 "unresolved reference '%s' (line %d, column %d)",
                 ref->name, ref->line, ref->column);
         }
     }
 
-    ecs_os_free(v->r->unresolved_errors);
-    v->r->unresolved_errors = ecs_strbuf_get(&buf);
+    flecs_log_capture_set_append(prev_append);
     return -1;
 }
 
@@ -105438,6 +105408,7 @@ static bool flecs_expr_unresolved_ref(
     ref->kind = kind;
     flecs_script_pos_to_line_col(impl->pub.code, node->pos,
         &ref->line, &ref->column);
+    ref->offset = ref->line ? (int32_t)(node->pos - impl->pub.code) : -1;
     return true;
 }
 

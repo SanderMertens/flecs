@@ -195,6 +195,9 @@ void flecs_log_get_captured_error_pos(
     int32_t *line,
     int32_t *column);
 
+bool flecs_log_capture_set_append(
+    bool append);
+
 void flecs_log_capture_push(
     bool try);
 
