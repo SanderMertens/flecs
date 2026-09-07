@@ -23150,175 +23150,11 @@ struct sparse_query;
 
 #pragma once
 
-#pragma once
-
-#define ECS_EVENT_DESC_ID_COUNT_MAX (8)
-
 namespace flecs {
 
-/**
- * @ingroup cpp_addons_event
- * @{
- */
-
-/** Event builder interface. */
-template <typename Base, typename E>
-struct event_builder_base {
-    event_builder_base(flecs::world_t *world, flecs::entity_t event)
-        : world_(world)
-        , desc_{}
-        , ids_{}
-        , ids_array_{}
-    {
-        desc_.event = event;
-    }
-
-    /** Add a component to emit for. */
-    template <typename T>
-    Base& id() {
-        ids_.array = ids_array_;
-        ids_.array[ids_.count] = _::type<T>().id(world_);
-        ids_.count ++;
-        return *this;
-    }
-    
-    /** Add a pair to emit for.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template <typename First, typename Second>
-    Base& id() {
-        return id(
-            ecs_pair(_::type<First>::id(this->world_), 
-                _::type<Second>::id(this->world_)));
-    }
-
-    /** Add a pair to emit for.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    template <typename First>
-    Base& id(entity_t second) {
-        return id(ecs_pair(_::type<First>::id(this->world_), second));
-    }
-
-    /** Add a pair to emit for.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    Base& id(entity_t first, entity_t second) {
-        return id(ecs_pair(first, second));
-    }
-
-    /** Add an enum constant to emit for.
-     *
-     * @tparam Enum The enum type.
-     * @param value The enum constant value.
-     */
-    template <typename Enum, if_t<is_enum<Enum>::value> = 0>
-    Base& id(Enum value) {
-        const auto& et = enum_type<Enum>(this->world_);
-        flecs::entity_t target = et.entity(value);
-        return id(et.entity(), target);
-    }
-
-    /** Add a (component) ID to emit for. */
-    Base& id(flecs::id_t id) {
-        ids_.array = ids_array_;
-        ids_.array[ids_.count] = id;
-        ids_.count ++;
-        return *this;
-    }
-
-    /** Set the entity for which to emit the event. */
-    Base& entity(flecs::entity_t e) {
-        desc_.entity = e;
-        return *this;
-    }
-
-    /** Set the table for which to emit the event. */
-    Base& table(flecs::table_t *t, int32_t offset = 0, int32_t count = 0) {
-        desc_.table = t;
-        desc_.offset = offset;
-        desc_.count = count;
-        return *this;
-    }
-
-    /** Set event data (const). */
-    Base& ctx(const E* ptr) {
-        desc_.const_param = ptr;
-        return *this;
-    }
-
-    /** Set event data (mutable). */
-    Base& ctx(E* ptr) {
-        desc_.param = ptr;
-        return *this;
-    }
-
-    /** Emit the event. */
-    void emit() {
-        ids_.array = ids_array_;
-        desc_.ids = &ids_;
-        desc_.observable = const_cast<flecs::world_t*>(ecs_get_world(world_));
-        ecs_emit(world_, &desc_);
-    }
-
-    /** Enqueue the event. */
-    void enqueue() {
-        ids_.array = ids_array_;
-        desc_.ids = &ids_;
-        desc_.observable = const_cast<flecs::world_t*>(ecs_get_world(world_));
-        ecs_enqueue(world_, &desc_);
-    }
-
-protected:
-    flecs::world_t *world_;
-    ecs_event_desc_t desc_;
-    flecs::type_t ids_;
-    flecs::id_t ids_array_[ECS_EVENT_DESC_ID_COUNT_MAX];
-
-private:
-    operator Base&() {
-        return *static_cast<Base*>(this);
-    }
-};
-
-/** Untyped event builder. */
-struct event_builder : event_builder_base<event_builder, void> {
-    using event_builder_base::event_builder_base;
-};
-
-/** Typed event builder. */
+struct event_builder;
 template <typename E>
-struct event_builder_typed : event_builder_base<event_builder_typed<E>, E> {
-private:
-    using Class = event_builder_typed<E>;
-
-public:
-    using event_builder_base<Class, E>::event_builder_base;
-
-    /** Set event data (const reference). */
-    Class& ctx(const E& ptr) {
-        this->desc_.const_param = &ptr;
-        return *this;
-    }
-
-    /** Set event data (rvalue reference). */
-    Class& ctx(E&& ptr) {
-        this->desc_.param = &ptr;
-        return *this;
-    }
-};
-
-/** @} */
-
-}
-
-namespace flecs {
+struct event_builder_typed;
 namespace _ {
 
 // Utility to derive event type from function.
@@ -25674,6 +25510,121 @@ decltype(auto) get_component(world_t *world, flecs::entity_t entity, Id id) {
 }
 
 }
+}
+
+#pragma once
+
+#define ECS_EVENT_DESC_ID_COUNT_MAX (8)
+
+namespace flecs {
+
+/**
+ * @ingroup cpp_addons_event
+ * @{
+ */
+
+/** Event builder interface. */
+template <typename Base, typename E>
+struct event_builder_base {
+    event_builder_base(flecs::world_t *world, flecs::entity_t event)
+        : world_(world)
+        , desc_{}
+        , ids_{}
+        , ids_array_{}
+    {
+        desc_.event = event;
+    }
+
+    template <typename... T, typename... Args>
+    Base& id(Args... args) {
+        ids_.array = ids_array_;
+        ids_.array[ids_.count ++] = _::make_id<T...>(world_, args...).id;
+        return *this;
+    }
+
+    /** Set the entity for which to emit the event. */
+    Base& entity(flecs::entity_t e) {
+        desc_.entity = e;
+        return *this;
+    }
+
+    /** Set the table for which to emit the event. */
+    Base& table(flecs::table_t *t, int32_t offset = 0, int32_t count = 0) {
+        desc_.table = t;
+        desc_.offset = offset;
+        desc_.count = count;
+        return *this;
+    }
+
+    /** Set event data (const). */
+    Base& ctx(const E* ptr) {
+        desc_.const_param = ptr;
+        return *this;
+    }
+
+    /** Set event data (mutable). */
+    Base& ctx(E* ptr) {
+        desc_.param = ptr;
+        return *this;
+    }
+
+    /** Emit the event. */
+    void emit() {
+        ids_.array = ids_array_;
+        desc_.ids = &ids_;
+        desc_.observable = const_cast<flecs::world_t*>(ecs_get_world(world_));
+        ecs_emit(world_, &desc_);
+    }
+
+    /** Enqueue the event. */
+    void enqueue() {
+        ids_.array = ids_array_;
+        desc_.ids = &ids_;
+        desc_.observable = const_cast<flecs::world_t*>(ecs_get_world(world_));
+        ecs_enqueue(world_, &desc_);
+    }
+
+protected:
+    flecs::world_t *world_;
+    ecs_event_desc_t desc_;
+    flecs::type_t ids_;
+    flecs::id_t ids_array_[ECS_EVENT_DESC_ID_COUNT_MAX];
+
+private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+};
+
+/** Untyped event builder. */
+struct event_builder : event_builder_base<event_builder, void> {
+    using event_builder_base::event_builder_base;
+};
+
+/** Typed event builder. */
+template <typename E>
+struct event_builder_typed : event_builder_base<event_builder_typed<E>, E> {
+private:
+    using Class = event_builder_typed<E>;
+
+public:
+    using event_builder_base<Class, E>::event_builder_base;
+
+    /** Set event data (const reference). */
+    Class& ctx(const E& ptr) {
+        this->desc_.const_param = &ptr;
+        return *this;
+    }
+
+    /** Set event data (rvalue reference). */
+    Class& ctx(E&& ptr) {
+        this->desc_.param = &ptr;
+        return *this;
+    }
+};
+
+/** @} */
+
 }
 
 #pragma once
@@ -29063,8 +29014,7 @@ E to_constant() const;
  * @param evt The event to emit.
  */
 void emit(flecs::entity_t evt) const {
-    flecs::world(world_)
-        .event(evt)
+    flecs::event_builder(world_, evt)
         .entity(id_)
         .emit();
 }
@@ -29096,8 +29046,7 @@ void emit() const {
  */
 template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
 void emit(const Evt& payload) const {
-    flecs::world(world_)
-        .event(_::type<Evt>::id(world_))
+    flecs::event_builder(world_, _::type<Evt>::id(world_))
         .entity(id_)
         .ctx(&payload)
         .emit();
@@ -29110,8 +29059,7 @@ void emit(const Evt& payload) const {
  * @param evt The event to enqueue.
  */
 void enqueue(flecs::entity_t evt) const {
-    flecs::world(world_)
-        .event(evt)
+    flecs::event_builder(world_, evt)
         .entity(id_)
         .enqueue();
 }
@@ -29143,8 +29091,7 @@ void enqueue() const {
  */
 template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
 void enqueue(const Evt& payload) const {
-    flecs::world(world_)
-        .event(_::type<Evt>::id(world_))
+    flecs::event_builder(world_, _::type<Evt>::id(world_))
         .entity(id_)
         .ctx(&payload)
         .enqueue();
@@ -30632,74 +30579,31 @@ struct run_delegate : delegate {
 //// Utility class to invoke an entity observer delegate
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename Func>
+template <typename Func, typename Event = void>
 struct entity_observer_delegate : delegate {
-    explicit entity_observer_delegate(Func&& func) noexcept 
-        : func_(FLECS_MOV(func)) { }
+    explicit entity_observer_delegate(Func&& func) noexcept
+        : func_(FLECS_FWD(func)) { }
 
-    // Static function that can be used as callback for systems/observers.
     static void run(ecs_iter_t *iter) {
-        invoke<Func>(iter);
+        auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
+        if constexpr (std::is_void_v<Event> || is_empty_v<Event>) {
+            self->invoke(iter);
+        } else {
+            ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION,
+                "entity observer invoked without payload");
+            self->invoke(iter, *static_cast<Event*>(iter->param));
+        }
     }
 
 private:
-    template <typename F,
-        decltype(std::declval<const F&>()(std::declval<flecs::entity>()), 0) = 0>
-    static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        self->func_(flecs::entity(iter->world, ecs_field_src(iter, 0)));
-    }
-
-    template <typename F,
-        decltype(std::declval<const F&>()(), 0) = 0>
-    static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        self->func_();
-    }
-
-    Func func_;
-};
-
-template <typename Func, typename Event>
-struct entity_payload_observer_delegate : delegate {
-    explicit entity_payload_observer_delegate(Func&& func) noexcept 
-        : func_(FLECS_MOV(func)) { }
-
-    // Static function that can be used as callback for systems/observers.
-    static void run(ecs_iter_t *iter) {
-        invoke<Func>(iter);
-    }
-
-private:
-    template <typename F,
-        decltype(std::declval<const F&>()(
-            std::declval<Event&>()), 0) = 0>
-    static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_payload_observer_delegate*>(
-            iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
-            "entity observer invoked without payload");
-
-        Event *data = static_cast<Event*>(iter->param);
-        self->func_(*data);
-    }
-
-    template <typename F,
-        decltype(std::declval<const F&>()(
-            std::declval<flecs::entity>(),
-            std::declval<Event&>()), 0) = 0>
-    static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_payload_observer_delegate*>(
-            iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
-            "entity observer invoked without payload");
-
-        Event *data = static_cast<Event*>(iter->param);
-        self->func_(flecs::entity(iter->world, ecs_field_src(iter, 0)), *data);
+    template <typename... Args>
+    void invoke(ecs_iter_t *iter, Args&... args) const {
+        if constexpr (std::is_invocable_v<const Func&, flecs::entity, Args&...>) {
+            func_(flecs::entity(iter->world, ecs_field_src(iter, 0)), args...);
+        } else {
+            func_(args...);
+        }
     }
 
     Func func_;
@@ -35259,68 +35163,32 @@ inline flecs::event_builder_typed<E> world::event() const {
 }
 
 namespace _ {
-    inline void entity_observer_create(
-        flecs::world_t *world,
-        flecs::entity_t event,
-        flecs::entity_t entity,
-        ecs_iter_action_t callback,
-        void *callback_ctx,
-        ecs_ctx_free_t callback_ctx_free) 
-    {
+    template <typename Event = void, typename Func>
+    void entity_observer_create(world_t *world, entity_t event, entity_t entity, Func&& func) {
+        using Delegate = entity_observer_delegate<Func, Event>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ecs_observer_desc_t desc = {};
         desc.events[0] = event;
         desc.query.terms[0].id = EcsAny;
         desc.query.terms[0].src.id = entity;
-        desc.callback = callback;
-        desc.callback_ctx = callback_ctx;
-        desc.callback_ctx_free = callback_ctx_free;
-
-        flecs::entity_t o = ecs_observer_init(world, &desc);
-        ecs_add_pair(world, o, EcsChildOf, entity);
+        desc.callback = Delegate::run;
+        desc.callback_ctx = ctx;
+        desc.callback_ctx_free = _::free_obj<Delegate>;
+        ecs_add_pair(world, ecs_observer_init(world, &desc), EcsChildOf, entity);
     }
-
-    template <typename Func>
-    struct entity_observer_factory {
-        template <typename Evt, if_t<is_empty<Evt>::value> = 0>
-        static void create(
-            flecs::world_t *world,
-            flecs::entity_t entity,
-            Func&& f)
-        {
-            using Delegate = _::entity_observer_delegate<Func>;
-            auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
-            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, _::free_obj<Delegate>);
-        }
-
-        template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
-        static void create(
-            flecs::world_t *world,
-            flecs::entity_t entity,
-            Func&& f)
-        {
-            using Delegate = _::entity_payload_observer_delegate<Func, Evt>;
-            auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
-            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, _::free_obj<Delegate>);
-        }
-    };
 }
 
 template <typename Self>
 template <typename Func>
 inline const Self& entity_builder<Self>::observe(flecs::entity_t evt, Func&& f) const {
-    using Delegate = _::entity_observer_delegate<Func>;
-    auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
-
-    _::entity_observer_create(world_, evt, id_, Delegate::run, ctx, _::free_obj<Delegate>);
-
+    _::entity_observer_create(world_, evt, id_, FLECS_FWD(f));
     return to_base();
 }
 
 template <typename Self>
 template <typename Evt, typename Func>
 inline const Self& entity_builder<Self>::observe(Func&& f) const {
-    _::entity_observer_factory<Func>::template create<Evt>(
-        world_, id_, FLECS_FWD(f));
+    _::entity_observer_create<Evt>(world_, _::type<Evt>::id(world_), id_, FLECS_FWD(f));
     return to_base();
 }
 

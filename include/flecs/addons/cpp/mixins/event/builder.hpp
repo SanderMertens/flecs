@@ -26,63 +26,10 @@ struct event_builder_base {
         desc_.event = event;
     }
 
-    /** Add a component to emit for. */
-    template <typename T>
-    Base& id() {
+    template <typename... T, typename... Args>
+    Base& id(Args... args) {
         ids_.array = ids_array_;
-        ids_.array[ids_.count] = _::type<T>().id(world_);
-        ids_.count ++;
-        return *this;
-    }
-    
-    /** Add a pair to emit for.
-     *
-     * @tparam First The first element of the pair.
-     * @tparam Second The second element of the pair.
-     */
-    template <typename First, typename Second>
-    Base& id() {
-        return id(
-            ecs_pair(_::type<First>::id(this->world_), 
-                _::type<Second>::id(this->world_)));
-    }
-
-    /** Add a pair to emit for.
-     *
-     * @tparam First The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    template <typename First>
-    Base& id(entity_t second) {
-        return id(ecs_pair(_::type<First>::id(this->world_), second));
-    }
-
-    /** Add a pair to emit for.
-     *
-     * @param first The first element of the pair.
-     * @param second The second element of the pair.
-     */
-    Base& id(entity_t first, entity_t second) {
-        return id(ecs_pair(first, second));
-    }
-
-    /** Add an enum constant to emit for.
-     *
-     * @tparam Enum The enum type.
-     * @param value The enum constant value.
-     */
-    template <typename Enum, if_t<is_enum<Enum>::value> = 0>
-    Base& id(Enum value) {
-        const auto& et = enum_type<Enum>(this->world_);
-        flecs::entity_t target = et.entity(value);
-        return id(et.entity(), target);
-    }
-
-    /** Add a (component) ID to emit for. */
-    Base& id(flecs::id_t id) {
-        ids_.array = ids_array_;
-        ids_.array[ids_.count] = id;
-        ids_.count ++;
+        ids_.array[ids_.count ++] = _::make_id<T...>(world_, args...).id;
         return *this;
     }
 

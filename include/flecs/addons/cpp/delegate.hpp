@@ -335,79 +335,35 @@ struct run_delegate : delegate {
 //// Utility class to invoke an entity observer delegate
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename Func>
+template <typename Func, typename Event = void>
 struct entity_observer_delegate : delegate {
-    explicit entity_observer_delegate(Func&& func) noexcept 
-        : func_(FLECS_MOV(func)) { }
+    explicit entity_observer_delegate(Func&& func) noexcept
+        : func_(FLECS_FWD(func)) { }
 
-    // Static function that can be used as callback for systems/observers.
     static void run(ecs_iter_t *iter) {
-        invoke<Func>(iter);
+        auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
+        if constexpr (std::is_void_v<Event> || is_empty_v<Event>) {
+            self->invoke(iter);
+        } else {
+            ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION,
+                "entity observer invoked without payload");
+            self->invoke(iter, *static_cast<Event*>(iter->param));
+        }
     }
 
 private:
-    template <typename F,
-        decltype(std::declval<const F&>()(std::declval<flecs::entity>()), 0) = 0>
-    static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        self->func_(flecs::entity(iter->world, ecs_field_src(iter, 0)));
-    }
-
-    template <typename F,
-        decltype(std::declval<const F&>()(), 0) = 0>
-    static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        self->func_();
+    template <typename... Args>
+    void invoke(ecs_iter_t *iter, Args&... args) const {
+        if constexpr (std::is_invocable_v<const Func&, flecs::entity, Args&...>) {
+            func_(flecs::entity(iter->world, ecs_field_src(iter, 0)), args...);
+        } else {
+            func_(args...);
+        }
     }
 
     Func func_;
 };
-
-template <typename Func, typename Event>
-struct entity_payload_observer_delegate : delegate {
-    explicit entity_payload_observer_delegate(Func&& func) noexcept 
-        : func_(FLECS_MOV(func)) { }
-
-    // Static function that can be used as callback for systems/observers.
-    static void run(ecs_iter_t *iter) {
-        invoke<Func>(iter);
-    }
-
-private:
-    template <typename F,
-        decltype(std::declval<const F&>()(
-            std::declval<Event&>()), 0) = 0>
-    static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_payload_observer_delegate*>(
-            iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
-            "entity observer invoked without payload");
-
-        Event *data = static_cast<Event*>(iter->param);
-        self->func_(*data);
-    }
-
-    template <typename F,
-        decltype(std::declval<const F&>()(
-            std::declval<flecs::entity>(),
-            std::declval<Event&>()), 0) = 0>
-    static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_payload_observer_delegate*>(
-            iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
-            "entity observer invoked without payload");
-
-        Event *data = static_cast<Event*>(iter->param);
-        self->func_(flecs::entity(iter->world, ecs_field_src(iter, 0)), *data);
-    }
-
-    Func func_;
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility to invoke callback on entity if it has components in signature

@@ -10,8 +10,7 @@
  * @param evt The event to emit.
  */
 void emit(flecs::entity_t evt) const {
-    flecs::world(world_)
-        .event(evt)
+    flecs::event_builder(world_, evt)
         .entity(id_)
         .emit();
 }
@@ -43,8 +42,7 @@ void emit() const {
  */
 template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
 void emit(const Evt& payload) const {
-    flecs::world(world_)
-        .event(_::type<Evt>::id(world_))
+    flecs::event_builder(world_, _::type<Evt>::id(world_))
         .entity(id_)
         .ctx(&payload)
         .emit();
@@ -58,8 +56,7 @@ void emit(const Evt& payload) const {
  * @param evt The event to enqueue.
  */
 void enqueue(flecs::entity_t evt) const {
-    flecs::world(world_)
-        .event(evt)
+    flecs::event_builder(world_, evt)
         .entity(id_)
         .enqueue();
 }
@@ -91,8 +88,7 @@ void enqueue() const {
  */
 template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
 void enqueue(const Evt& payload) const {
-    flecs::world(world_)
-        .event(_::type<Evt>::id(world_))
+    flecs::event_builder(world_, _::type<Evt>::id(world_))
         .entity(id_)
         .ctx(&payload)
         .enqueue();

@@ -5,9 +5,13 @@
 
 #pragma once
 
-#include "builder.hpp"
+
 
 namespace flecs {
+
+struct event_builder;
+template <typename E>
+struct event_builder_typed;
 namespace _ {
 
 // Utility to derive event type from function.
