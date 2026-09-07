@@ -59525,29 +59525,28 @@ static ecs_rtt_struct_ctx_t* flecs_rtt_struct_members(
     return result;
 }
 
-static void flecs_rtt_init_default_hooks_struct(
+static void flecs_rtt_struct_hooks(
     ecs_world_t *world,
     const ecs_type_info_t *ti,
     const ecs_member_t *members,
-    int32_t member_count)
+    int32_t member_count,
+    ecs_type_hooks_t *hooks)
 {
-    ecs_type_hooks_t hooks = ti->hooks;
-    if (hooks.lifecycle_ctx_free) {
-        hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+    if (hooks->lifecycle_ctx_free) {
+        hooks->lifecycle_ctx_free(hooks->lifecycle_ctx);
     }
     ecs_rtt_struct_ctx_t *ctx = flecs_rtt_struct_members(
-        world, ti, members, member_count, &hooks);
-    if (hooks.ctor || hooks.dtor || hooks.move || hooks.copy ||
-        hooks.cmp || hooks.equals)
+        world, ti, members, member_count, hooks);
+    if (hooks->ctor || hooks->dtor || hooks->move || hooks->copy ||
+        hooks->cmp || hooks->equals)
     {
-        hooks.lifecycle_ctx = ctx;
-        hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
+        hooks->lifecycle_ctx = ctx;
+        hooks->lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
     } else {
         flecs_rtt_free_lifecycle_struct_ctx(ctx);
-        hooks.lifecycle_ctx = NULL;
-        hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
+        hooks->lifecycle_ctx = NULL;
+        hooks->lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
     }
-    ecs_set_hooks_id(world, ti->component, &hooks);
 }
 
 /*
@@ -59734,62 +59733,6 @@ static bool flecs_rtt_vector_equals(
     return true;
 }
 
-/* Generates and installs required hooks for managing the vector and underlying
- * type lifecycle. Vectors always have hooks because at the very least the
- * vector structure itself must be initialized/destroyed/copied/moved, even if
- * empty. */
-static void flecs_rtt_init_default_hooks_vector(
-    ecs_world_t *world,
-    ecs_entity_t component)
-{
-    const EcsVector *vector_info = ecs_get(world, component, EcsVector);
-    ecs_assert(vector_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (!ecs_is_alive(world, vector_info->type)) {
-        ecs_err("vector '%s' has invalid element type", ecs_get_name(world, component));
-        return;
-    }
-
-    const ecs_type_info_t *element_ti =
-        ecs_get_type_info(world, vector_info->type);
-    if (!element_ti) {
-        ecs_err("vector '%s' has invalid element type", ecs_get_name(world, component));
-        return;
-    }
-
-    ecs_flags32_t flags = element_ti->hooks.flags;
-
-    ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
-    
-    if (hooks.lifecycle_ctx_free) {
-        hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
-    }
-    hooks.lifecycle_ctx = ECS_CONST_CAST(ecs_type_info_t*, element_ti);
-    hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
-
-    hooks.ctor = flecs_rtt_vector_ctor;
-    hooks.dtor = flecs_rtt_vector_dtor;
-    hooks.move = flecs_rtt_vector_move;
-    hooks.copy = flecs_rtt_vector_copy;
-    
-    if (element_ti->hooks.cmp != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL)) {
-        hooks.cmp = flecs_rtt_vector_cmp;
-    } else {
-        hooks.cmp = NULL;
-    }
-
-    if (element_ti->hooks.equals != NULL && !(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL)) {
-        hooks.equals = flecs_rtt_vector_equals;
-    } else {
-        hooks.equals = NULL;
-    }
-
-    /* propagate only the compare/equals hook illegal flag, if set */
-    hooks.flags |= flags & (ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL);
-    
-    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
-    ecs_set_hooks_id(world, component, &hooks);
-}
-
 static void* flecs_rtt_map_value_ptr(
     const ecs_type_info_t *value_ti,
     ecs_map_val_t *val)
@@ -59973,60 +59916,36 @@ static bool flecs_rtt_map_equals(
     return true;
 }
 
-static void flecs_rtt_init_default_hooks_map(
+static void flecs_rtt_collection_hooks(
     ecs_world_t *world,
-    ecs_entity_t component)
+    ecs_entity_t component,
+    ecs_entity_t element,
+    bool map,
+    ecs_type_hooks_t *hooks)
 {
-    const EcsMap *map_info = ecs_get(world, component, EcsMap);
-    ecs_assert(map_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (!ecs_is_alive(world, map_info->type)) {
-        ecs_err("map '%s' has invalid value type",
+    const ecs_type_info_t *ti = ecs_is_alive(world, element)
+        ? ecs_get_type_info(world, element) : NULL;
+    if (!ti) {
+        ecs_err("collection '%s' has invalid element type",
             ecs_get_name(world, component));
         return;
     }
-
-    const ecs_type_info_t *value_ti =
-        ecs_get_type_info(world, map_info->type);
-    if (!value_ti) {
-        ecs_err("map '%s' has invalid value type",
-            ecs_get_name(world, component));
-        return;
+    if (hooks->lifecycle_ctx_free) {
+        hooks->lifecycle_ctx_free(hooks->lifecycle_ctx);
     }
-
-    ecs_flags32_t flags = value_ti->hooks.flags;
-
-    ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
-
-    if (hooks.lifecycle_ctx_free) {
-        hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
-    }
-    hooks.lifecycle_ctx = ECS_CONST_CAST(ecs_type_info_t*, value_ti);
-    hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
-
-    hooks.ctor = flecs_default_ctor;
-    hooks.dtor = flecs_rtt_map_dtor;
-    hooks.move = flecs_rtt_map_move;
-    hooks.copy = flecs_rtt_map_copy;
-
-    if (value_ti->hooks.cmp != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL)) {
-        hooks.cmp = flecs_rtt_map_cmp;
-    } else {
-        hooks.cmp = NULL;
-    }
-
-    if (value_ti->hooks.equals != NULL &&
-        !(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL))
-    {
-        hooks.equals = flecs_rtt_map_equals;
-    } else {
-        hooks.equals = NULL;
-    }
-
-    hooks.flags |= flags &
-        (ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL);
-
-    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
-    ecs_set_hooks_id(world, component, &hooks);
+    hooks->lifecycle_ctx = ECS_CONST_CAST(ecs_type_info_t*, ti);
+    hooks->lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
+    hooks->ctor = map ? flecs_default_ctor : flecs_rtt_vector_ctor;
+    hooks->dtor = map ? flecs_rtt_map_dtor : flecs_rtt_vector_dtor;
+    hooks->move = map ? flecs_rtt_map_move : flecs_rtt_vector_move;
+    hooks->copy = map ? flecs_rtt_map_copy : flecs_rtt_vector_copy;
+    hooks->cmp = ti->hooks.cmp && !(ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL)
+        ? (map ? flecs_rtt_map_cmp : flecs_rtt_vector_cmp) : NULL;
+    hooks->equals = ti->hooks.equals && !(ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL)
+        ? (map ? flecs_rtt_map_equals : flecs_rtt_vector_equals) : NULL;
+    hooks->flags |= ti->hooks.flags &
+        (ECS_TYPE_HOOK_CMP_ILLEGAL | ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+    hooks->flags &= ECS_TYPE_HOOKS_ILLEGAL;
 }
 
 static int flecs_rtt_ensure_hook(
@@ -60238,27 +60157,29 @@ void flecs_rtt_init_default_hooks(
 
         const ecs_type_info_t *ti = ecs_get_type_info(world, component);
         ecs_assert(ti,ECS_INTERNAL_ERROR,NULL);
+        ecs_type_hooks_t hooks = ti->hooks;
 
         if (type->kind == EcsStructType) {
             const EcsStruct *st = ecs_get(world, component, EcsStruct);
-            flecs_rtt_init_default_hooks_struct(
-                world, ti, st->members.array, st->members.count);
+            flecs_rtt_struct_hooks(
+                world, ti, st->members.array, st->members.count, &hooks);
         } else if (type->kind == EcsArrayType) {
             const EcsArray *arr = ecs_get(world, component, EcsArray);
             ecs_member_t member = { .type = arr->type, .count = arr->count };
-            flecs_rtt_init_default_hooks_struct(world, ti, &member, 1);
+            flecs_rtt_struct_hooks(world, ti, &member, 1, &hooks);
         } else if (type->kind == EcsVectorType) {
-            flecs_rtt_init_default_hooks_vector(world, component);
+            const EcsVector *vector = ecs_get(world, component, EcsVector);
+            flecs_rtt_collection_hooks(world, component, vector->type, false, &hooks);
         } else if (type->kind == EcsMapType) {
-            flecs_rtt_init_default_hooks_map(world, component);
+            const EcsMap *map = ecs_get(world, component, EcsMap);
+            flecs_rtt_collection_hooks(world, component, map->type, true, &hooks);
         }
 
-        ecs_type_hooks_t hooks = ti->hooks;
         /* Make sure there is at least a default constructor. This ensures that
          * a new component value does not contain uninitialized memory, which
          * could cause serializers to crash when for example inspecting string
          * fields. */
-        if(!ti->hooks.ctor && !(ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL)) {
+        if(!hooks.ctor && !(hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL)) {
             hooks.ctor = flecs_default_ctor;
         }
 
