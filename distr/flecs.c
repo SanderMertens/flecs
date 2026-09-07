@@ -59861,39 +59861,56 @@ static ecs_rtt_struct_ctx_t* flecs_rtt_struct_members(
     ecs_world_t *world,
     const ecs_type_info_t *ti,
     const ecs_member_t *members,
-    int32_t member_count)
+    int32_t member_count,
+    ecs_type_hooks_t *hooks)
 {
     ecs_rtt_struct_ctx_t *result = ecs_os_malloc_t(ecs_rtt_struct_ctx_t);
     ecs_vec_init_t(NULL, &result->members, ecs_rtt_call_data_t, member_count);
     ecs_vec_init_t(NULL, &result->dtors, ecs_rtt_call_data_t, 0);
+    ecs_type_hooks_t available = {
+        .cmp = flecs_rtt_struct_cmp,
+        .equals = flecs_rtt_struct_equals
+    };
     for (int32_t i = 0; i < member_count; i ++) {
         const ecs_member_t *member = &members[i];
-        const ecs_type_info_t *member_ti = ecs_get_type_info(world, member->type);
-        if (!member_ti || member_ti == ti) {
+        const ecs_type_info_t *mt = ecs_get_type_info(world, member->type);
+        if (!mt || mt == ti) {
             continue;
         }
         ecs_rtt_call_data_t *data =
             ecs_vec_append_t(NULL, &result->members, ecs_rtt_call_data_t);
-        data->type_info = member_ti;
-        data->offset = member->offset;
-        data->count = member->count ? member->count : 1;
-        if (member_ti->hooks.dtor) {
+        *data = (ecs_rtt_call_data_t){
+            mt, member->offset, member->count ? member->count : 1
+        };
+        if (mt->hooks.dtor) {
             *ecs_vec_append_t(NULL, &result->dtors, ecs_rtt_call_data_t) = *data;
+            available.dtor = flecs_rtt_struct_dtor;
         }
+        if (mt->hooks.ctor && mt->hooks.ctor != flecs_default_ctor) {
+            available.ctor = flecs_rtt_struct_ctor;
+        }
+        if (mt->hooks.copy) available.copy = flecs_rtt_struct_copy;
+        if (mt->hooks.move) available.move = flecs_rtt_struct_move;
+        if (!mt->hooks.cmp) available.cmp = NULL;
+        if (!mt->hooks.equals) available.equals = NULL;
+        available.flags |= mt->hooks.flags & ECS_TYPE_HOOKS_ILLEGAL;
+    }
+    if (hooks) {
+        ecs_flags32_t flags = available.flags;
+        hooks->ctor = flags & ECS_TYPE_HOOK_CTOR_ILLEGAL ? NULL : available.ctor;
+        hooks->dtor = flags & ECS_TYPE_HOOK_DTOR_ILLEGAL ? NULL : available.dtor;
+        hooks->copy = flags & ECS_TYPE_HOOK_COPY_ILLEGAL ? NULL : available.copy;
+        hooks->move = flags & ECS_TYPE_HOOK_MOVE_ILLEGAL ? NULL : available.move;
+        hooks->cmp = flags & ECS_TYPE_HOOK_CMP_ILLEGAL ? NULL : available.cmp;
+        hooks->equals = flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL ? NULL : available.equals;
+        hooks->flags = flags;
     }
     return result;
 }
 
-static void flecs_rtt_configure_struct_hooks(
+static void flecs_rtt_init_default_hooks_struct(
     ecs_world_t *world,
     const ecs_type_info_t *ti,
-    ecs_flags32_t flags,
-    bool ctor,
-    bool dtor,
-    bool move,
-    bool copy,
-    bool cmp,
-    bool equals,
     const ecs_member_t *members,
     int32_t member_count)
 {
@@ -59901,95 +59918,19 @@ static void flecs_rtt_configure_struct_hooks(
     if (hooks.lifecycle_ctx_free) {
         hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
     }
-
-    hooks.ctor = ctor && !(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) ? 
-        flecs_rtt_struct_ctor : NULL;
-
-    hooks.dtor = dtor && !(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) ? 
-        flecs_rtt_struct_dtor : NULL;
-    
-    hooks.move = move && !(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) ? 
-        flecs_rtt_struct_move : NULL;
-
-    hooks.copy = copy && !(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ? 
-        flecs_rtt_struct_copy : NULL;
-    
-    hooks.cmp = cmp && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) ? 
-        flecs_rtt_struct_cmp : NULL;
-    
-    hooks.equals = equals && !(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) ? 
-        flecs_rtt_struct_equals : NULL;
-
-    if (hooks.ctor || hooks.dtor || hooks.move || hooks.copy 
-        || hooks.cmp || hooks.equals) {
-        hooks.lifecycle_ctx = flecs_rtt_struct_members(
-            world, ti, members, member_count);
+    ecs_rtt_struct_ctx_t *ctx = flecs_rtt_struct_members(
+        world, ti, members, member_count, &hooks);
+    if (hooks.ctor || hooks.dtor || hooks.move || hooks.copy ||
+        hooks.cmp || hooks.equals)
+    {
+        hooks.lifecycle_ctx = ctx;
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
     } else {
+        flecs_rtt_free_lifecycle_struct_ctx(ctx);
         hooks.lifecycle_ctx = NULL;
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
     }
-
-    hooks.flags = flags;
-    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, ti->component, &hooks);
-}
-
-/* Checks if a struct's member types have hooks installed. If so, it generates
- * and installs the required hooks for the struct type itself. These hooks will
- * invoke the member hooks when necessary. */
-static void flecs_rtt_init_default_hooks_struct(
-    ecs_world_t *world,
-    const ecs_type_info_t *ti,
-    const ecs_member_t *members,
-    int32_t member_count)
-{
-    /* These flags will be set to true if we determine we need to generate a
-     * hook of a particular type: */
-    bool ctor_hook_required = false;
-    bool dtor_hook_required = false;
-    bool move_hook_required = false;
-    bool copy_hook_required = false;
-    bool valid_cmp = true;
-    bool valid_equals = true;
-
-    /* Iterate all struct members and see if any member type has hooks. If so,
-     * the struct itself will need to have that hook: */
-    int i;
-    ecs_flags32_t flags = 0;
-    for (i = 0; i < member_count; i++) {
-        const ecs_member_t *m = &members[i];
-        const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
-        if (!member_ti || member_ti == ti) {
-            continue;
-        }
-        ctor_hook_required |= member_ti->hooks.ctor &&
-                              member_ti->hooks.ctor != flecs_default_ctor;
-        dtor_hook_required |= member_ti->hooks.dtor != NULL;
-        move_hook_required |= member_ti->hooks.move != NULL;
-        copy_hook_required |= member_ti->hooks.copy != NULL;
-        /* A struct has a valid cmp/equals hook if all its members have it: */
-        valid_cmp &= member_ti->hooks.cmp != NULL;
-        valid_equals  &= member_ti->hooks.equals != NULL;
-        flags |= member_ti->hooks.flags;
-    }
-
-    /* If any hook is required, then create a lifecycle context and configure a
-     * generic hook that will interpret that context: */
-    flecs_rtt_configure_struct_hooks(
-        world,
-        ti,
-        flags,
-        ctor_hook_required,
-        dtor_hook_required,
-        move_hook_required,
-        copy_hook_required,
-        valid_cmp,
-        valid_equals,
-        members,
-        member_count
-        );
-
 }
 
 /*
@@ -60534,7 +60475,7 @@ static int flecs_rtt_gen_struct_hook(
             return -1;
         }
         hooks.lifecycle_ctx = flecs_rtt_struct_members(
-            world, ti, members, member_count);
+            world, ti, members, member_count, NULL);
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
     }
 
