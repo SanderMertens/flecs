@@ -76,6 +76,21 @@ auto make_id(world_t *world, Args... args) {
     return resolve_id(world, arg_list<T...>{}, args...);
 }
 
+template <typename T = void, typename Second = void>
+struct value_type : actual_type<conditional_t<std::is_void_v<Second>, T, flecs::pair<T, Second>>> {};
+
+template <typename... T>
+using value_type_t = typename value_type<T...>::type;
+
+template <typename... T, typename A>
+auto value_id(world_t *world, const A&) {
+    if constexpr (sizeof...(T)) {
+        return make_id<T...>(world);
+    } else {
+        return make_id<A>(world);
+    }
+}
+
 template <typename Second>
 auto second_id(world_t *world, flecs::entity_t first) {
     auto second = _::type<Second>::id(world);

@@ -120,20 +120,6 @@ inline void world::modified() const {
     e.modified<T>();
 }
 
-/** Set a pair component value on a singleton. */
-template <typename First, typename Second>
-inline void world::set(Second second, const First& value) const {
-    flecs::entity e(world_, _::type<First>::id(world_));
-    e.set<First>(second, value);
-}
-
-/** Set a pair component value on a singleton (move). */
-template <typename First, typename Second>
-inline void world::set(Second second, First&& value) const {
-    flecs::entity e(world_, _::type<First>::id(world_));
-    e.set<First>(second, value);
-}
-
 /** Get a ref for a singleton component. */
 template <typename T>
 inline ref<T> world::get_ref() const {
