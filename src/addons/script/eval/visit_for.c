@@ -481,48 +481,11 @@ static bool flecs_script_for_next(
     return true;
 }
 
-void flecs_script_for_merge_slots(
-    ecs_script_eval_visitor_t *v,
-    int32_t dst_slot,
-    int32_t src_slot)
-{
-    if (dst_slot < 0 || src_slot < 0 ||
-        dst_slot >= ecs_vec_count(&v->state->for_slots) ||
-        src_slot >= ecs_vec_count(&v->state->for_slots))
-    {
-        return;
-    }
-
-    ecs_vec_t *dst = &ecs_vec_get_t(
-        &v->state->for_slots, ecs_script_for_slot_t, dst_slot)->entities;
-    ecs_vec_t *src = &ecs_vec_get_t(
-        &v->state->for_slots, ecs_script_for_slot_t, src_slot)->entities;
-    ecs_entity_t *src_array = ecs_vec_first(src);
-    int32_t i, src_count = ecs_vec_count(src);
-    for (i = 0; i < src_count; i ++) {
-        ecs_entity_t entity = src_array[i];
-        if (!ecs_is_alive(v->world, entity)) {
-            continue;
-        }
-        ecs_entity_t *dst_array = ecs_vec_first(dst);
-        int32_t j, dst_count = ecs_vec_count(dst);
-        for (j = 0; j < dst_count; j ++) {
-            if (dst_array[j] == entity) {
-                break;
-            }
-        }
-        if (j == dst_count) {
-            ecs_vec_append_t(NULL, dst, ecs_entity_t)[0] = entity;
-        }
-    }
-}
-
 void flecs_script_eval_for_leave(
     ecs_script_eval_visitor_t *v,
     flecs_script_for_state_t *state)
 {
     v->vars = ecs_script_vars_pop(v->vars);
-    flecs_script_for_merge_slots(v, state->for_slot, v->for_slot);
     v->for_slot = state->for_slot;
     v->force = state->force;
 

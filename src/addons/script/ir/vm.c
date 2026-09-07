@@ -376,7 +376,6 @@ static void flecs_ir_for_leave(
     flecs_script_for_state_t *state = &frame->u.for_.state;
     flecs_ir_vars_truncate(vm, frame->u.for_.var_count,
         frame->u.for_.vscratch_top, frame->u.for_.vheap_count);
-    flecs_script_for_merge_slots(v, state->for_slot, v->for_slot);
     v->for_slot = state->for_slot;
     v->force = state->force;
 }

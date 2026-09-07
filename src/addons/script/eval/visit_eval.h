@@ -358,11 +358,6 @@ void flecs_script_eval_for_leave(
     ecs_script_eval_visitor_t *v,
     flecs_script_for_state_t *state);
 
-void flecs_script_for_merge_slots(
-    ecs_script_eval_visitor_t *v,
-    int32_t dst_slot,
-    int32_t src_slot);
-
 int flecs_script_for_collection_kind(
     ecs_script_eval_visitor_t *v,
     ecs_script_for_t *node,
