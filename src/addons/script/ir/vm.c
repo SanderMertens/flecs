@@ -486,11 +486,8 @@ static void flecs_ir_mark(
 {
     if (index < 0) {
         const ecs_script_ir_op_t *block = &vm->ops[-index - 1];
-        const int32_t *pcs = ecs_vec_get_t(
-            &vm->ir->scope_stmts, int32_t, block->a + 1);
-        int32_t i;
-        for (i = 0; i < block->c; i ++) {
-            int32_t marks = vm->ops[pcs[i]].c;
+        for (int32_t pc = -index; pc < block->b; pc = vm->ops[pc].b) {
+            int32_t marks = vm->ops[pc].c;
             if (marks != -1) {
                 flecs_ir_mark(vm, marks);
             }
@@ -3001,16 +2998,10 @@ static flecs_script_run_status_t flecs_ir_exec(
                 break;
             }
             flecs_ir_stmt_skip(vm, op);
-            const int32_t *index = ecs_vec_first(&vm->ir->scope_stmts);
-            index += op->a + 1;
+            int32_t next = op->b;
             for (;;) {
-                int32_t next = *index ++;
-                if (next < 0) {
-                    vm->pc = -next - 1;
-                    break;
-                }
                 const ecs_script_ir_op_t *next_op = &ops[next];
-                if (next_op->kind == EcsIrStmtBlock) {
+                if (next_op->kind != EcsIrStmt) {
                     vm->pc = next;
                     break;
                 }
@@ -3024,6 +3015,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                     break;
                 }
                 flecs_ir_stmt_skip(vm, next_op);
+                next = next_op->b;
             }
             break;
         }

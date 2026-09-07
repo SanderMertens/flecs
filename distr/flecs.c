@@ -51976,7 +51976,6 @@ struct ecs_script_ir_t {
     ecs_vec_t catches;
     ecs_vec_t entries;
     ecs_map_t entry_index;
-    ecs_vec_t scope_stmts;
     int32_t root_entry;
 };
 
@@ -114109,7 +114108,6 @@ typedef struct ecs_script_ir_compiler_t {
     int32_t reg_floor;
     int32_t reg_max;
     int32_t force_depth;
-    ecs_vec_t *scope_pcs;
 } ecs_script_ir_compiler_t;
 
 static int flecs_irc_compile_expr(
@@ -115429,9 +115427,6 @@ static int flecs_irc_compile_stmt(
         op->flags = (uint16_t)(
             (flecs_irc_stmt_always(node) ? EcsIrStmtAlways : 0) |
             (node->skip ? EcsIrStmtSkip : 0));
-        if (c->scope_pcs) {
-            ecs_vec_append_t(NULL, c->scope_pcs, int32_t)[0] = stmt;
-        }
     }
 
     if (node->skip) {
@@ -115590,37 +115585,25 @@ static int flecs_irc_compile_scope(
     scope->parent = c->scope;
     ecs_script_scope_t *prev = c->scope;
     c->scope = scope;
-    ecs_vec_t stmt_pcs;
-    ecs_vec_init_t(NULL, &stmt_pcs, int32_t, 0);
-    ecs_vec_t *prev_scope_pcs = c->scope_pcs;
-    c->scope_pcs = &stmt_pcs;
 
     int32_t i, count = ecs_vec_count(&scope->stmts);
-    int32_t block = -1, block_first = 0;
+    int32_t block = -1;
     bool blocks = count >= 32 && !c->force_depth;
     for (i = 0; i < count; i ++) {
         ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
-        if (blocks && (block == -1 ||
-            ecs_vec_count(&stmt_pcs) - block_first > 32))
-        {
+        if (blocks && !(i % 32)) {
             if (block != -1) {
                 flecs_irc_op(c, block)->b = flecs_irc_pc(c);
-                flecs_irc_op(c, block)->c =
-                    ecs_vec_count(&stmt_pcs) - block_first - 1;
             }
-            block_first = ecs_vec_count(&stmt_pcs);
             block = flecs_irc_emit(c, EcsIrStmtBlock, 0, 0, 0, scope);
-            ecs_vec_append_t(NULL, &stmt_pcs, int32_t)[0] = block;
         }
+        int32_t stmt = flecs_irc_pc(c);
         if (flecs_irc_compile_stmt(c, scope, i)) {
             c->scope = prev;
-            c->scope_pcs = prev_scope_pcs;
-            ecs_vec_fini_t(NULL, &stmt_pcs, int32_t);
             return -1;
         }
         if (block != -1) {
-            const ecs_script_ir_op_t *stmt_op = flecs_irc_op(
-                c, *ecs_vec_last_t(&stmt_pcs, int32_t));
+            const ecs_script_ir_op_t *stmt_op = flecs_irc_op(c, stmt);
             bool always = stmt_op->flags & (EcsIrStmtAlways | EcsIrStmtCached);
             if (stmt_op->c != -1) {
                 const ecs_script_region_t *region = ecs_vec_get_t(
@@ -115629,6 +115612,7 @@ static int flecs_irc_compile_scope(
             }
             ecs_script_ir_op_t *block_op = flecs_irc_op(c, block);
             block_op->imm.u64 |= stmts[i]->input;
+            block_op->c ++;
             if (always) {
                 block_op->flags |= EcsIrStmtAlways;
             }
@@ -115637,22 +115621,10 @@ static int flecs_irc_compile_scope(
 
     if (block != -1) {
         flecs_irc_op(c, block)->b = flecs_irc_pc(c);
-        flecs_irc_op(c, block)->c = ecs_vec_count(&stmt_pcs) - block_first - 1;
     }
 
     c->scope = prev;
-    c->scope_pcs = prev_scope_pcs;
-    int32_t leave = flecs_irc_emit(c, EcsIrScopeLeave, 0, 0, 0, scope);
-
-    int32_t first = ecs_vec_count(&c->ir->scope_stmts);
-    int32_t *pcs = ecs_vec_first(&stmt_pcs);
-    int32_t pc_count = ecs_vec_count(&stmt_pcs);
-    for (i = 0; i < pc_count; i ++) {
-        ecs_vec_append_t(NULL, &c->ir->scope_stmts, int32_t)[0] = pcs[i];
-        flecs_irc_op(c, pcs[i])->a = first + i;
-    }
-    ecs_vec_append_t(NULL, &c->ir->scope_stmts, int32_t)[0] = -(leave + 1);
-    ecs_vec_fini_t(NULL, &stmt_pcs, int32_t);
+    flecs_irc_emit(c, EcsIrScopeLeave, 0, 0, 0, scope);
     return 0;
 }
 
@@ -115703,7 +115675,6 @@ static int flecs_irc_compile_entry(
     c->reg_floor = 0;
     c->reg_max = 0;
     c->scope = NULL;
-    c->scope_pcs = NULL;
     c->force_depth = 0;
 
     int result = 0;
@@ -115743,7 +115714,6 @@ static void flecs_irc_init(
     ecs_vec_init_t(NULL, &ir->catches, int32_t, 0);
     ecs_vec_init_t(NULL, &ir->entries, ecs_script_ir_entry_t, 0);
     ecs_map_init(&ir->entry_index, NULL);
-    ecs_vec_init_t(NULL, &ir->scope_stmts, int32_t, 0);
     ir->root_entry = -1;
 }
 
@@ -115758,7 +115728,6 @@ void flecs_script_ir_free(
     ecs_vec_fini_t(NULL, &ir->catches, int32_t);
     ecs_vec_fini_t(NULL, &ir->entries, ecs_script_ir_entry_t);
     ecs_map_fini(&ir->entry_index);
-    ecs_vec_fini_t(NULL, &ir->scope_stmts, int32_t);
     ecs_os_free(ir);
 }
 
@@ -116788,11 +116757,8 @@ static void flecs_ir_mark(
 {
     if (index < 0) {
         const ecs_script_ir_op_t *block = &vm->ops[-index - 1];
-        const int32_t *pcs = ecs_vec_get_t(
-            &vm->ir->scope_stmts, int32_t, block->a + 1);
-        int32_t i;
-        for (i = 0; i < block->c; i ++) {
-            int32_t marks = vm->ops[pcs[i]].c;
+        for (int32_t pc = -index; pc < block->b; pc = vm->ops[pc].b) {
+            int32_t marks = vm->ops[pc].c;
             if (marks != -1) {
                 flecs_ir_mark(vm, marks);
             }
@@ -119302,16 +119268,10 @@ static flecs_script_run_status_t flecs_ir_exec(
                 break;
             }
             flecs_ir_stmt_skip(vm, op);
-            const int32_t *index = ecs_vec_first(&vm->ir->scope_stmts);
-            index += op->a + 1;
+            int32_t next = op->b;
             for (;;) {
-                int32_t next = *index ++;
-                if (next < 0) {
-                    vm->pc = -next - 1;
-                    break;
-                }
                 const ecs_script_ir_op_t *next_op = &ops[next];
-                if (next_op->kind == EcsIrStmtBlock) {
+                if (next_op->kind != EcsIrStmt) {
                     vm->pc = next;
                     break;
                 }
@@ -119325,6 +119285,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                     break;
                 }
                 flecs_ir_stmt_skip(vm, next_op);
+                next = next_op->b;
             }
             break;
         }
