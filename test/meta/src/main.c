@@ -666,6 +666,7 @@ void Cursor_value_api_move_ctor(void);
 void Cursor_value_component_lifecycle(void);
 
 // Testsuite 'DeserializeFromJson'
+void DeserializeFromJson_restore_removes_trailing_tag_with_observer(void);
 void DeserializeFromJson_string_w_unknown_escape_large(void);
 void DeserializeFromJson_u64_max_roundtrip(void);
 void DeserializeFromJson_f64_nan_roundtrip(void);
@@ -4105,6 +4106,10 @@ bake_test_case Cursor_testcases[] = {
 };
 
 bake_test_case DeserializeFromJson_testcases[] = {
+    {
+        "restore_removes_trailing_tag_with_observer",
+        DeserializeFromJson_restore_removes_trailing_tag_with_observer
+    },
     {
         "string_w_unknown_escape_large",
         DeserializeFromJson_string_w_unknown_escape_large
@@ -7607,7 +7612,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        201,
+        202,
         DeserializeFromJson_testcases
     },
     {

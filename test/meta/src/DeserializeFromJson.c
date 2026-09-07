@@ -8446,3 +8446,30 @@ void DeserializeFromJson_value_unknown_type_strict(void) {
 
     ecs_fini(world);
 }
+
+static void DeserializeFromJson_count_removed(ecs_iter_t *it) {
+    int32_t *count = it->ctx;
+    *count += it->count;
+}
+
+void DeserializeFromJson_restore_removes_trailing_tag_with_observer(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_TAG(world, A);
+    ECS_TAG(world, B);
+    int32_t removed = 0;
+    ecs_observer(world, {
+        .query.terms = {{B}},
+        .events = {EcsOnRemove},
+        .callback = DeserializeFromJson_count_removed,
+        .ctx = &removed
+    });
+    ecs_entity_t e = ecs_new_w_id(world, A);
+    ecs_add_id(world, e, B);
+    const char *result = ecs_entity_from_json(world, e,
+        "{\"tags\":[\"A\"], \"components\":{}}", NULL);
+    test_str(result, "");
+    test_assert(ecs_has_id(world, e, A));
+    test_assert(!ecs_has_id(world, e, B));
+    test_int(removed, 1);
+    ecs_fini(world);
+}

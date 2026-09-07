@@ -695,6 +695,7 @@
         }, {
             "id": "DeserializeFromJson",
             "testcases": [
+                "restore_removes_trailing_tag_with_observer",
                 "string_w_unknown_escape_large",
                 "u64_max_roundtrip",
                 "f64_nan_roundtrip",
