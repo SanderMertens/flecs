@@ -57781,46 +57781,7 @@ case kind:\
     case_T_checked(EcsOpI16,  ecs_i16_t,  dst, src, bounds);\
     case_T_checked(EcsOpI32,  ecs_i32_t,  dst, src, bounds);\
     case_T_checked(EcsOpI64,  ecs_i64_t,  dst, src, bounds);\
-    case_T_checked(EcsOpIPtr, ecs_iptr_t, dst, src, bounds);\
-    case EcsOpEnum: {\
-        switch(op->underlying_kind) {\
-        case_T_checked(EcsOpI8,   ecs_i8_t,   dst, src, bounds);\
-        case_T_checked(EcsOpI16,  ecs_i16_t,  dst, src, bounds);\
-        case_T_checked(EcsOpI32,  ecs_i32_t,  dst, src, bounds);\
-        case_T_checked(EcsOpI64,  ecs_i64_t,  dst, src, bounds);\
-        case_T_checked(EcsOpIPtr, ecs_iptr_t, dst, src, bounds);\
-        case_T_checked(EcsOpU8,   ecs_u8_t,   dst, src, bounds);\
-        case_T_checked(EcsOpU16,  ecs_u16_t,  dst, src, bounds);\
-        case_T_checked(EcsOpU32,  ecs_u32_t,  dst, src, bounds);\
-        case_T_checked(EcsOpU64,  ecs_u64_t,  dst, src, bounds);\
-        case_T_checked(EcsOpUPtr, ecs_uptr_t, dst, src, bounds);\
-        case EcsOpPushStruct:\
-        case EcsOpPushArray:\
-        case EcsOpPushVector:\
-        case EcsOpPushMap:\
-        case EcsOpPushValue:\
-        case EcsOpPop:\
-        case EcsOpOpaqueStruct:\
-        case EcsOpOpaqueArray:\
-        case EcsOpOpaqueVector:\
-        case EcsOpForward:\
-        case EcsOpScope:\
-        case EcsOpOpaqueValue:\
-        case EcsOpEnum:\
-        case EcsOpBitmask:\
-        case EcsOpPrimitive:\
-        case EcsOpBool:\
-        case EcsOpChar:\
-        case EcsOpByte:\
-        case EcsOpF32:\
-        case EcsOpF64:\
-        case EcsOpString:\
-        case EcsOpEntity:\
-        case EcsOpId:\
-            break;\
-        }\
-        break;\
-    }\
+    case_T_checked(EcsOpIPtr, ecs_iptr_t, dst, src, bounds);
 
 #define cases_T_unsigned(dst, src, bounds)\
     case_T_checked(EcsOpByte, ecs_byte_t, dst, src, bounds);\
@@ -57853,291 +57814,294 @@ static void flecs_meta_conversion_error(
     }
 }
 
+typedef union flecs_meta_number_t {
+    int64_t i;
+    uint64_t u;
+    double f;
+} flecs_meta_number_t;
+
+static int flecs_meta_assign_opaque_number(
+    ecs_meta_cursor_t *cursor,
+    ecs_meta_op_t *op,
+    void *ptr,
+    ecs_primitive_kind_t kind,
+    flecs_meta_number_t number)
+{
+    const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
+    ecs_assert(opaque != NULL, ECS_INTERNAL_ERROR, NULL);
+    switch (kind) {
+    case EcsBool: {
+        bool value = number.i;
+        if (opaque->assign_bool) {
+            opaque->assign_bool(ptr, value);
+            return 0;
+        }
+        break;
+    }
+    case EcsChar: {
+        char value = number.i;
+        if (opaque->assign_char) {
+            opaque->assign_char(ptr, value);
+            return 0;
+        } else if (opaque->assign_uint) {
+            opaque->assign_uint(ptr, (uint64_t)value);
+            return 0;
+        } else if (opaque->assign_int) {
+            opaque->assign_int(ptr, value);
+            return 0;
+        }
+        break;
+    }
+    case EcsI64: {
+        int64_t value = number.i;
+        if (opaque->assign_int) {
+            opaque->assign_int(ptr, value);
+            return 0;
+        } else if (opaque->assign_float) {
+            opaque->assign_float(ptr, (double)value);
+            return 0;
+        } else if (opaque->assign_uint && (value > 0)) {
+            opaque->assign_uint(ptr, flecs_ito(uint64_t, value));
+            return 0;
+        } else if (opaque->assign_char && (value > 0) && (value < 256)) {
+            opaque->assign_char(ptr, flecs_ito(char, value));
+            return 0;
+        }
+        break;
+    }
+    case EcsU64: {
+        uint64_t value = number.u;
+        if (opaque->assign_uint) {
+            opaque->assign_uint(ptr, value);
+            return 0;
+        } else if (opaque->assign_float) {
+            opaque->assign_float(ptr, (double)value);
+            return 0;
+        } else if (opaque->assign_int && (value < INT64_MAX)) {
+            opaque->assign_int(ptr, flecs_uto(int64_t, value));
+            return 0;
+        } else if (opaque->assign_char && (value < 256)) {
+            opaque->assign_char(ptr, flecs_uto(char, value));
+            return 0;
+        }
+        break;
+    }
+    case EcsF64: {
+        double value = number.f;
+        if (opaque->assign_float) {
+            opaque->assign_float(ptr, value);
+            return 0;
+        } else if (opaque->assign_int &&
+            (value <= (double)INT64_MAX) && (value >= (double)INT64_MIN))
+        {
+            opaque->assign_int(ptr, (int64_t)value);
+            return 0;
+        } else if (opaque->assign_uint && (value >= 0)) {
+            opaque->assign_uint(ptr, (uint64_t)value);
+            return 0;
+        } else if (opaque->assign_entity && (value >= 0)) {
+            opaque->assign_entity(
+                ptr, ECS_CONST_CAST(ecs_world_t*, cursor->world),
+                    (ecs_entity_t)value);
+            return 0;
+        }
+        break;
+    }
+    case EcsEntity: {
+        ecs_entity_t value = number.u;
+        if (opaque && opaque->assign_entity) {
+            opaque->assign_entity(ptr,
+                ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
+            return 0;
+        }
+        break;
+    }
+    case EcsId: {
+        ecs_entity_t value = number.u;
+        if (opaque && opaque->assign_id) {
+            opaque->assign_id(ptr,
+                ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
+            return 0;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+    return -1;
+}
+
+static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
+    ecs_meta_cursor_t *cursor,
+    ecs_primitive_kind_t from,
+    flecs_meta_number_t number)
+{
+    static const ecs_entity_t *const types[EcsId + 1] = {
+        [EcsBool] = &ecs_id(ecs_bool_t),
+        [EcsChar] = &ecs_id(ecs_char_t),
+        [EcsI64] = &ecs_id(ecs_i64_t),
+        [EcsU64] = &ecs_id(ecs_u64_t),
+        [EcsF64] = &ecs_id(ecs_f64_t),
+        [EcsEntity] = &ecs_id(ecs_entity_t),
+        [EcsId] = &ecs_id(ecs_id_t)
+    };
+    ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
+    ecs_meta_op_t *op = flecs_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
+    ecs_meta_op_kind_t kind = op->kind;
+    if (from == EcsI64 || from == EcsU64 || from == EcsF64) {
+        ecs_assert(ptr != NULL, ECS_INVALID_OPERATION, "no object to assign");
+    }
+    if (flecs_meta_op_is_value(op)) {
+        kind = EcsOpPrimitive + from;
+        ptr = flecs_meta_cursor_value_ensure(cursor, ptr,
+            *types[from]);
+        if (!ptr) {
+            return -1;
+        }
+    } else if (kind == EcsOpEnum) {
+        kind = op->underlying_kind;
+    }
+    if (kind == EcsOpOpaqueValue) {
+        if (!flecs_meta_assign_opaque_number(cursor, op, ptr, from, number)) {
+            return 0;
+        }
+        goto error;
+    }
+    if (kind == EcsOpString) {
+        char *result = NULL;
+        switch (from) {
+        case EcsBool: result = ecs_os_strdup(number.i ? "true" : "false"); break;
+        case EcsChar: result = flecs_asprintf("%c", (char)number.i); break;
+        case EcsI64: result = flecs_asprintf("%"PRId64, number.i); break;
+        case EcsU64: result = flecs_asprintf("%"PRIu64, number.u); break;
+        case EcsF64: result = flecs_asprintf("%f", number.f); break;
+        case EcsEntity: result = ecs_get_path(cursor->world, number.u); break;
+        case EcsId: result = ecs_id_str(cursor->world, number.u); break;
+        default: goto error;
+        }
+        ecs_os_free(*(char**)ptr);
+        *(char**)ptr = result;
+        return 0;
+    }
+    if ((from == EcsEntity && kind != EcsOpEntity &&
+        kind != EcsOpId && kind != EcsOpBool) ||
+        (from == EcsId && kind != EcsOpId))
+    {
+        goto error;
+    }
+    if (from == EcsChar && op->kind != EcsOpEnum &&
+        kind != EcsOpBool && kind != EcsOpChar && kind != EcsOpI8 &&
+        kind != EcsOpI16 && kind != EcsOpI32 && kind != EcsOpI64 &&
+        kind != EcsOpIPtr)
+    {
+        goto error;
+    }
+    switch (from) {
+    case EcsBool:
+    case EcsChar:
+    case EcsI64: {
+        int64_t value = number.i;
+        switch (kind) {
+        cases_T_bool(ptr, value);
+        cases_T_signed(ptr, value, ecs_meta_bounds_signed);
+        cases_T_unsigned(ptr, value, ecs_meta_bounds_signed);
+        cases_T_float(ptr, value);
+        default: goto error;
+        }
+        return 0;
+    }
+    case EcsU64:
+    case EcsEntity:
+    case EcsId: {
+        uint64_t value = number.u;
+        switch (kind) {
+        cases_T_bool(ptr, value);
+        cases_T_signed(ptr, value, ecs_meta_bounds_unsigned);
+        cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
+        cases_T_float(ptr, value);
+        default: goto error;
+        }
+        return 0;
+    }
+    case EcsF64: {
+        double value = number.f;
+        switch (kind) {
+        case EcsOpBool: *(bool*)ptr = !ECS_EQZERO(value); break;
+        cases_T_signed(ptr, value, ecs_meta_bounds_float);
+        cases_T_unsigned(ptr, value, ecs_meta_bounds_float);
+        cases_T_float(ptr, value);
+        default: goto error;
+        }
+        return 0;
+    }
+    default:
+        break;
+    }
+error:
+    if ((from == EcsI64 || from == EcsU64) && !number.u) {
+        return ecs_meta_set_null(cursor);
+    }
+    const char *name = from == EcsI64 ? "int" : from == EcsU64 ? "uint" :
+        from == EcsF64 ? "float" : flecs_meta_op_kind_str(EcsOpPrimitive + from);
+    flecs_meta_conversion_error(cursor, op, name);
+    return -1;
+}
+
 int ecs_meta_set_bool(
     ecs_meta_cursor_t *cursor,
     bool value)
 {
-    ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
-    ecs_meta_op_t *op = flecs_cursor_get_op(scope);
-    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
-
-    if (flecs_meta_op_is_value(op)) {
-        ptr = flecs_meta_cursor_value_ensure(
-            cursor, ptr, ecs_id(ecs_bool_t));
-        if (!ptr) {
-            return -1;
-        }
-        flecs_meta_set_t(ecs_bool_t, ptr, value);
-        return 0;
-    }
-
-    switch(op->kind) {
-    cases_T_bool(ptr, value);
-    cases_T_signed(ptr, value, ecs_meta_bounds_signed);
-    cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
-    cases_T_float(ptr, value);
-    case EcsOpString: {
-        char *result;
-        if (value) {
-            result = ecs_os_strdup("true");
-        } else {
-            result = ecs_os_strdup("false");
-        }
-        ecs_os_free(*(ecs_string_t*)ptr);
-        flecs_meta_set_t(ecs_string_t, ptr, result);
-        break;
-    }
-    case EcsOpOpaqueValue: {
-        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (opaque->assign_bool) {
-            opaque->assign_bool(ptr, value);
-            break;
-        }
-    }
-    default:
-        flecs_meta_conversion_error(cursor, op, "bool");
-        return -1;
-    }
-
-    return 0;
-error:
-    return -1;
+    return flecs_meta_set_number(cursor, EcsBool,
+        (flecs_meta_number_t){.i = value});
 }
 
 int ecs_meta_set_char(
     ecs_meta_cursor_t *cursor,
     char value)
 {
-    ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
-    ecs_meta_op_t *op = flecs_cursor_get_op(scope);
-    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
-
-    if (flecs_meta_op_is_value(op)) {
-        ptr = flecs_meta_cursor_value_ensure(
-            cursor, ptr, ecs_id(ecs_char_t));
-        if (!ptr) {
-            return -1;
-        }
-        flecs_meta_set_t(ecs_char_t, ptr, value);
-        return 0;
-    }
-
-    switch(op->kind) {
-    cases_T_bool(ptr, value);
-    cases_T_signed(ptr, value, ecs_meta_bounds_signed);
-    case EcsOpString: {
-        char *result = flecs_asprintf("%c", value);
-        ecs_os_free(*(ecs_string_t*)ptr);
-        flecs_meta_set_t(ecs_string_t, ptr, result);
-        break;
-    }
-    case EcsOpOpaqueValue: {
-        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (opaque->assign_char) { /* preferred operation */
-            opaque->assign_char(ptr, value);
-            break;
-        } else if (opaque->assign_uint) {
-            opaque->assign_uint(ptr, (uint64_t)value);
-            break;
-        } else if (opaque->assign_int) {
-            opaque->assign_int(ptr, value);
-            break;
-        }
-    }
-    default:
-        flecs_meta_conversion_error(cursor, op, "char");
-        return -1;
-    }
-
-    return 0;
-error:
-    return -1;
+    return flecs_meta_set_number(cursor, EcsChar,
+        (flecs_meta_number_t){.i = value});
 }
 
 int ecs_meta_set_int(
     ecs_meta_cursor_t *cursor,
     int64_t value)
 {
-    ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
-    ecs_meta_op_t *op = flecs_cursor_get_op(scope);
-    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
-    ecs_assert(ptr != NULL, ECS_INVALID_OPERATION, "no object to assign");
-
-    if (flecs_meta_op_is_value(op)) {
-        ptr = flecs_meta_cursor_value_ensure(
-            cursor, ptr, ecs_id(ecs_i64_t));
-        if (!ptr) {
-            return -1;
-        }
-        flecs_meta_set_t(ecs_i64_t, ptr, value);
-        return 0;
-    }
-
-    switch(op->kind) {
-    cases_T_bool(ptr, value);
-    cases_T_signed(ptr, value, ecs_meta_bounds_signed);
-    cases_T_unsigned(ptr, value, ecs_meta_bounds_signed);
-    cases_T_float(ptr, value);
-    case EcsOpString: {
-        char *result = flecs_asprintf("%"PRId64, value);
-        ecs_os_free(*(ecs_string_t*)ptr);
-        flecs_meta_set_t(ecs_string_t, ptr, result);
-        break;
-    }
-    case EcsOpOpaqueValue: {
-        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (opaque->assign_int) { /* preferred operation */
-            opaque->assign_int(ptr, value);
-            break;
-        } else if (opaque->assign_float) { /* most expressive */
-            opaque->assign_float(ptr, (double)value);
-            break;
-        } else if (opaque->assign_uint && (value > 0)) {
-            opaque->assign_uint(ptr, flecs_ito(uint64_t, value));
-            break;
-        } else if (opaque->assign_char && (value > 0) && (value < 256)) {
-            opaque->assign_char(ptr, flecs_ito(char, value));
-            break;
-        }
-    }
-    default: {
-        if(!value) return ecs_meta_set_null(cursor);
-        flecs_meta_conversion_error(cursor, op, "int");
-        return -1;
-    }
-    }
-
-    return 0;
-error:
-    return -1;
+    return flecs_meta_set_number(cursor, EcsI64,
+        (flecs_meta_number_t){.i = value});
 }
 
 int ecs_meta_set_uint(
     ecs_meta_cursor_t *cursor,
     uint64_t value)
 {
-    ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
-    ecs_meta_op_t *op = flecs_cursor_get_op(scope);
-    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
-    ecs_assert(ptr != NULL, ECS_INVALID_OPERATION, "no object to assign");
-
-    if (flecs_meta_op_is_value(op)) {
-        ptr = flecs_meta_cursor_value_ensure(
-            cursor, ptr, ecs_id(ecs_u64_t));
-        if (!ptr) {
-            return -1;
-        }
-        flecs_meta_set_t(ecs_u64_t, ptr, value);
-        return 0;
-    }
-
-    switch(op->kind) {
-    cases_T_bool(ptr, value);
-    cases_T_signed(ptr, value, ecs_meta_bounds_unsigned);
-    cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
-    cases_T_float(ptr, value);
-    case EcsOpString: {
-        char *result = flecs_asprintf("%"PRIu64, value);
-        ecs_os_free(*(ecs_string_t*)ptr);
-        flecs_meta_set_t(ecs_string_t, ptr, result);
-        break;
-    }
-    case EcsOpOpaqueValue: {
-        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (opaque->assign_uint) { /* preferred operation */
-            opaque->assign_uint(ptr, value);
-            break;
-        } else if (opaque->assign_float) { /* most expressive */
-            opaque->assign_float(ptr, (double)value);
-            break;
-        } else if (opaque->assign_int && (value < INT64_MAX)) {
-            opaque->assign_int(ptr, flecs_uto(int64_t, value));
-            break;
-        } else if (opaque->assign_char && (value < 256)) {
-            opaque->assign_char(ptr, flecs_uto(char, value));
-            break;
-        }
-    }
-    default:
-        if(!value) return ecs_meta_set_null(cursor);
-        flecs_meta_conversion_error(cursor, op, "uint");
-        return -1;
-    }
-
-    return 0;
-error:
-    return -1;
+    return flecs_meta_set_number(cursor, EcsU64,
+        (flecs_meta_number_t){.u = value});
 }
 
 int ecs_meta_set_float(
     ecs_meta_cursor_t *cursor,
     double value)
 {
-    ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
-    ecs_meta_op_t *op = flecs_cursor_get_op(scope);
-    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
-    ecs_assert(ptr != NULL, ECS_INVALID_OPERATION, "no object to assign");
+    return flecs_meta_set_number(cursor, EcsF64,
+        (flecs_meta_number_t){.f = value});
+}
 
-    if (flecs_meta_op_is_value(op)) {
-        ptr = flecs_meta_cursor_value_ensure(
-            cursor, ptr, ecs_id(ecs_f64_t));
-        if (!ptr) {
-            return -1;
-        }
-        flecs_meta_set_t(ecs_f64_t, ptr, value);
-        return 0;
-    }
+int ecs_meta_set_entity(
+    ecs_meta_cursor_t *cursor,
+    ecs_entity_t value)
+{
+    return flecs_meta_set_number(cursor, EcsEntity,
+        (flecs_meta_number_t){.u = value});
+}
 
-    switch(op->kind) {
-    case EcsOpBool:
-        if (ECS_EQZERO(value)) {
-            flecs_meta_set_t(bool, ptr, false);
-        } else {
-            flecs_meta_set_t(bool, ptr, true);
-        }
-        break;
-    cases_T_signed(ptr, value, ecs_meta_bounds_float);
-    cases_T_unsigned(ptr, value, ecs_meta_bounds_float);
-    cases_T_float(ptr, value);
-    case EcsOpString: {
-        char *result = flecs_asprintf("%f", value);
-        ecs_os_free(*(ecs_string_t*)ptr);
-        flecs_meta_set_t(ecs_string_t, ptr, result);
-        break;
-    }
-    case EcsOpOpaqueValue: {
-        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (opaque->assign_float) { /* preferred operation */
-            opaque->assign_float(ptr, value);
-            break;
-        } else if (opaque->assign_int && /* most expressive */
-            (value <= (double)INT64_MAX) && (value >= (double)INT64_MIN)) 
-        {
-            opaque->assign_int(ptr, (int64_t)value);
-            break;
-        } else if (opaque->assign_uint && (value >= 0)) {
-            opaque->assign_uint(ptr, (uint64_t)value);
-            break;
-        } else if (opaque->assign_entity && (value >= 0)) {
-            opaque->assign_entity(
-                ptr, ECS_CONST_CAST(ecs_world_t*, cursor->world), 
-                    (ecs_entity_t)value);
-            break;
-        }
-    }
-    default:
-        flecs_meta_conversion_error(cursor, op, "float");
-        return -1;
-    }
-
-    return 0;
-error:
-    return -1;
+int ecs_meta_set_id(
+    ecs_meta_cursor_t *cursor,
+    ecs_entity_t value)
+{
+    return flecs_meta_set_number(cursor, EcsId,
+        (flecs_meta_number_t){.u = value});
 }
 
 int ecs_meta_set_value(
@@ -58330,104 +58294,6 @@ int ecs_meta_set_string_literal(
 
         ecs_os_free(result);
         break;
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-int ecs_meta_set_entity(
-    ecs_meta_cursor_t *cursor,
-    ecs_entity_t value)
-{
-    ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
-    ecs_meta_op_t *op = flecs_cursor_get_op(scope);
-    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
-
-    if (flecs_meta_op_is_value(op)) {
-        ptr = flecs_meta_cursor_value_ensure(
-            cursor, ptr, ecs_id(ecs_entity_t));
-        if (!ptr) {
-            return -1;
-        }
-        flecs_meta_set_t(ecs_entity_t, ptr, value);
-        return 0;
-    }
-
-    switch(op->kind) {
-    case EcsOpEntity:
-        flecs_meta_set_t(ecs_entity_t, ptr, value);
-        break;
-    case EcsOpId:
-        flecs_meta_set_t(ecs_id_t, ptr, value); /* entities are valid ids */
-        break;
-    case EcsOpBool:
-        flecs_meta_set_t(ecs_bool_t, ptr, value != 0);
-        break;
-    case EcsOpString: {
-        char *result = ecs_get_path(cursor->world, value);
-        ecs_os_free(*(ecs_string_t*)ptr);
-        flecs_meta_set_t(ecs_string_t, ptr, result);
-        break;
-    }   
-    case EcsOpOpaqueValue: {
-        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        if (opaque && opaque->assign_entity) {
-            opaque->assign_entity(ptr, 
-                ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
-            break;
-        }
-    }
-    default:
-        flecs_meta_conversion_error(cursor, op, "entity");
-        goto error;
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-int ecs_meta_set_id(
-    ecs_meta_cursor_t *cursor,
-    ecs_entity_t value)
-{
-    ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
-    ecs_meta_op_t *op = flecs_cursor_get_op(scope);
-    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
-
-    if (flecs_meta_op_is_value(op)) {
-        ptr = flecs_meta_cursor_value_ensure(
-            cursor, ptr, ecs_id(ecs_id_t));
-        if (!ptr) {
-            return -1;
-        }
-        flecs_meta_set_t(ecs_id_t, ptr, value);
-        return 0;
-    }
-
-    switch(op->kind) {
-    case EcsOpId:
-        flecs_meta_set_t(ecs_id_t, ptr, value);
-        break;
-    case EcsOpString: {
-        char *result = ecs_id_str(cursor->world, value);
-        ecs_os_free(*(ecs_string_t*)ptr);
-        flecs_meta_set_t(ecs_string_t, ptr, result);
-        break;
-    }
-    case EcsOpOpaqueValue: {
-        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        if (opaque && opaque->assign_id) {
-            opaque->assign_id(ptr, 
-                ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
-            break;
-        }
-    }
-    default:
-        flecs_meta_conversion_error(cursor, op, "id");
-        goto error;
     }
 
     return 0;
