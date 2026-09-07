@@ -59570,12 +59570,11 @@ static void flecs_rtt_vector_ctor(
     }
 }
 
-/* Generic vector destructor. It will invoke the destructor for each element of
- * the vector and finalize resources associated to the vector itself. */
-static void flecs_rtt_vector_dtor(
+static FLECS_ALWAYS_INLINE void flecs_rtt_vector_clear(
     void *ptr,
     int32_t count,
-    const ecs_type_info_t *type_info)
+    const ecs_type_info_t *type_info,
+    bool release)
 {
     const ecs_type_info_t *element_ti = type_info->hooks.lifecycle_ctx;
     int i;
@@ -59586,8 +59585,20 @@ static void flecs_rtt_vector_dtor(
             flecs_type_info_dtor(
                 ecs_vec_first(vec), num_elements, element_ti);
         }
-        ecs_vec_fini(NULL, vec, element_ti->size);
+        if (release) {
+            ecs_vec_fini(NULL, vec, element_ti->size);
+        } else {
+            ecs_vec_clear(vec);
+        }
     }
+}
+
+static void flecs_rtt_vector_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    flecs_rtt_vector_clear(ptr, count, ti, true);
 }
 
 /* Generic vector move hook. */
@@ -59615,43 +59626,20 @@ static void flecs_rtt_vector_copy(
     int32_t count,
     const ecs_type_info_t *type_info)
 {
-    const ecs_type_info_t *element_ti = type_info->hooks.lifecycle_ctx;
-    flecs_rtt_vector_dtor(dst_ptr, count, type_info);
-    bool has_copy = element_ti->hooks.copy != NULL;
-    bool has_ctor = element_ti->hooks.ctor != NULL;
-    bool has_dtor = element_ti->hooks.dtor != NULL;
-    int i;
-    for (i = 0; i < count; i++) {
-        const ecs_vec_t *src_vec = ECS_ELEM(src_ptr, type_info->size, i);
-        ecs_vec_t *dst_vec = ECS_ELEM(dst_ptr, type_info->size, i);
-        ecs_vec_init_if(dst_vec, element_ti->size);
-        int32_t src_count = ecs_vec_count(src_vec);
-        int32_t dst_count = ecs_vec_count(dst_vec);
-        if (has_dtor && dst_count) {
-            flecs_type_info_dtor(
-                ecs_vec_first(dst_vec), dst_count, element_ti);
-        }
-        ecs_vec_set_count(NULL, dst_vec, element_ti->size, src_count);
-        if (has_ctor) {
-            flecs_type_info_ctor(
-                ecs_vec_first(dst_vec), src_count, element_ti);
+    const ecs_type_info_t *ti = type_info->hooks.lifecycle_ctx;
+    flecs_rtt_vector_clear(dst_ptr, count, type_info, false);
+    for (int32_t i = 0; i < count; i ++) {
+        const ecs_vec_t *src = ECS_ELEM(src_ptr, type_info->size, i);
+        ecs_vec_t *dst = ECS_ELEM(dst_ptr, type_info->size, i);
+        ecs_vec_init_if(dst, ti->size);
+        int32_t src_count = ecs_vec_count(src);
+        ecs_vec_set_count(NULL, dst, ti->size, src_count);
+        if (ti->hooks.ctor) {
+            flecs_type_info_ctor(ecs_vec_first(dst), src_count, ti);
         } else {
-            flecs_default_ctor(
-                ecs_vec_first(dst_vec), src_count, element_ti);
+            flecs_default_ctor(ecs_vec_first(dst), src_count, ti);
         }
-        if (has_copy) {
-            flecs_type_info_copy(
-                ecs_vec_first(dst_vec),
-                ecs_vec_first(src_vec),
-                src_count,
-                element_ti);
-        } else {
-            flecs_rtt_default_copy(
-                ecs_vec_first(dst_vec),
-                ecs_vec_first(src_vec),
-                src_count,
-                element_ti);
-        }
+        flecs_type_info_copy(ecs_vec_first(dst), ecs_vec_first(src), src_count, ti);
     }
 }
 
