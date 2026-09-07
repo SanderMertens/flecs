@@ -81,38 +81,6 @@ error:
     return -1;
 }
 
-int flecs_value_move_to(
-    ecs_world_t *world,
-    ecs_value_t *dst,
-    ecs_value_t *src)
-{
-    ecs_assert(dst->type != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(src->type != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(src->ptr != 0, ECS_INTERNAL_ERROR, NULL);
-
-    if (src->type == dst->type) {
-        ecs_ptr_move(world, src->type, dst->ptr, src->ptr);
-    } else {
-        ecs_value_t tmp;
-        tmp.type = src->type;
-        tmp.ptr = ecs_ptr_new(world, src->type);
-        ecs_ptr_move(world, src->type, tmp.ptr, src->ptr);
-
-        /* Cast value to desired output type */
-        ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
-        if (ecs_meta_set_value(&cur, &tmp)) {
-            goto error;
-        }
-
-        ecs_ptr_free(world, src->type, tmp.ptr);
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-
 int flecs_value_unary(
     const ecs_script_t *script,
     const ecs_value_t *expr,

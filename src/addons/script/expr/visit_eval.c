@@ -1632,18 +1632,11 @@ int flecs_expr_visit_eval(
     }
 
     if (val != &val_tmp || out->ptr != val->value.ptr) {
-        if (val->owned) {
-            /* Values owned by the runtime can be moved to output */
-            if (flecs_value_move_to(ctx.world, out, &val->value)) {
-                flecs_expr_visit_error(script, node, "failed to write to output");
-                goto error;
-            }
-        } else {
-            /* Values not owned by the runtime should be copied */
-            if (flecs_value_copy_to(ctx.world, out, val)) {
-                flecs_expr_visit_error(script, node, "failed to write to output");
-                goto error;
-            }
+        if (val->owned && out->type == val->value.type) {
+            ecs_ptr_move(ctx.world, out->type, out->ptr, val->value.ptr);
+        } else if (flecs_value_copy_to(ctx.world, out, val)) {
+            flecs_expr_visit_error(script, node, "failed to write to output");
+            goto error;
         }
     }
 
