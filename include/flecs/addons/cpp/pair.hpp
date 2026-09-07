@@ -204,28 +204,6 @@ struct is_get_sparse_component {
             flecs::on_instantiate::inherit;
 };
 
-template <typename T>
-const void* get_ptr(
-    const flecs::world_t *world, flecs::entity_t entity, flecs::id_t id)
-{
-    if constexpr (is_get_sparse_component<T>::value) {
-        return ecs_get_sparse_id(world, entity, id, sizeof(T));
-    } else {
-        return ecs_get_id(world, entity, id);
-    }
-}
-
-template <typename T>
-void* get_mut_ptr(
-    const flecs::world_t *world, flecs::entity_t entity, flecs::id_t id)
-{
-    if constexpr (is_get_sparse_component<T>::value) {
-        return ecs_get_sparse_id(world, entity, id, sizeof(T));
-    } else {
-        return ecs_get_mut_id(world, entity, id);
-    }
-}
-
 } // namespace _
 
 /** @} */

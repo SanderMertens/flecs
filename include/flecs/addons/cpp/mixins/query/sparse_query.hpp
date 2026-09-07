@@ -9,17 +9,6 @@ namespace flecs {
  * @ingroup cpp_core
  * Direct iteration of sparse component storages. @{ */
 
-namespace _ {
-
-inline void* field_at_sparse(
-    const ecs_sparse_t *sparse, size_t size, uint64_t entity, bool checked)
-{
-    return flecs_sparse_get_w_check(sparse, static_cast<ecs_size_t>(size),
-        entity, checked);
-}
-
-}
-
 /** Query that iterates sparse component storages directly.
  * Returned by world::query() when all components have the dont_fragment
  * trait and don't declare the on_instantiate::inherit policy. */

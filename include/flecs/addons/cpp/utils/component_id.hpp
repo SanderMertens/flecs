@@ -139,12 +139,10 @@ decltype(auto) get_component(world_t *world, flecs::entity_t entity, Id id) {
             } else {
                 return ecs_ensure_id(world, entity, id.id, sizeof(T));
             }
-        } else if constexpr (Id::sparse && !std::is_void_v<T>) {
-            if constexpr (Mutable) {
-                return _::get_mut_ptr<T>(world, entity, id.id);
-            } else {
-                return _::get_ptr<T>(world, entity, id.id);
-            }
+        } else if constexpr (Id::sparse && !std::is_void_v<T> &&
+            is_get_sparse_component<T>::value)
+        {
+            return ecs_get_sparse_id(world, entity, id.id, sizeof(T));
         } else if constexpr (Mutable) {
             return ecs_get_mut_id(world, entity, id.id);
         } else {

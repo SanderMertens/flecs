@@ -25111,28 +25111,6 @@ struct is_get_sparse_component {
             flecs::on_instantiate::inherit;
 };
 
-template <typename T>
-const void* get_ptr(
-    const flecs::world_t *world, flecs::entity_t entity, flecs::id_t id)
-{
-    if constexpr (is_get_sparse_component<T>::value) {
-        return ecs_get_sparse_id(world, entity, id, sizeof(T));
-    } else {
-        return ecs_get_id(world, entity, id);
-    }
-}
-
-template <typename T>
-void* get_mut_ptr(
-    const flecs::world_t *world, flecs::entity_t entity, flecs::id_t id)
-{
-    if constexpr (is_get_sparse_component<T>::value) {
-        return ecs_get_sparse_id(world, entity, id, sizeof(T));
-    } else {
-        return ecs_get_mut_id(world, entity, id);
-    }
-}
-
 } // namespace _
 
 /** @} */
@@ -25481,12 +25459,10 @@ decltype(auto) get_component(world_t *world, flecs::entity_t entity, Id id) {
             } else {
                 return ecs_ensure_id(world, entity, id.id, sizeof(T));
             }
-        } else if constexpr (Id::sparse && !std::is_void_v<T>) {
-            if constexpr (Mutable) {
-                return _::get_mut_ptr<T>(world, entity, id.id);
-            } else {
-                return _::get_ptr<T>(world, entity, id.id);
-            }
+        } else if constexpr (Id::sparse && !std::is_void_v<T> &&
+            is_get_sparse_component<T>::value)
+        {
+            return ecs_get_sparse_id(world, entity, id.id, sizeof(T));
         } else if constexpr (Mutable) {
             return ecs_get_mut_id(world, entity, id.id);
         } else {
@@ -31665,17 +31641,6 @@ namespace flecs {
 /** @defgroup cpp_queries Sparse queries
  * @ingroup cpp_core
  * Direct iteration of sparse component storages. @{ */
-
-namespace _ {
-
-inline void* field_at_sparse(
-    const ecs_sparse_t *sparse, size_t size, uint64_t entity, bool checked)
-{
-    return flecs_sparse_get_w_check(sparse, static_cast<ecs_size_t>(size),
-        entity, checked);
-}
-
-}
 
 /** Query that iterates sparse component storages directly.
  * Returned by world::query() when all components have the dont_fragment
