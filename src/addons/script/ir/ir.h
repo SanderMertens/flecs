@@ -204,7 +204,6 @@ struct ecs_script_ir_t {
     ecs_vec_t catches;
     ecs_vec_t entries;
     ecs_map_t entry_index;
-    ecs_vec_t components;
     ecs_vec_t scope_stmts;
     int32_t root_entry;
 };

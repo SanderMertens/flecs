@@ -3076,24 +3076,23 @@ static flecs_script_run_status_t flecs_ir_exec(
                 frame->u.scope.vscratch_top = vm->vscratch_top;
                 frame->u.scope.vheap_count = vm->vheap.count;
             }
-            if (v->entity && op->c != -1 &&
+            if (v->entity && op->c &&
                 (v->force || v->entity->created))
             {
                 ecs_entity_t src = v->entity->eval;
                 if (src != EcsVariable) {
-                    const ecs_id_t *ids = ecs_vec_get_t(
-                        &vm->ir->components, ecs_id_t, op->c);
-                    int32_t i, count = (int32_t)ids[0];
+                    const ecs_id_t *ids = op->imm.ptr;
+                    int32_t i, count = op->c;
                     ecs_table_t *table = ecs_get_table(v->world, src);
                     bool missing = table == NULL;
                     for (i = 0; !missing && i < count; i ++) {
-                        if (ecs_search(v->world, table, ids[i + 1], NULL) == -1) {
+                        if (ecs_search(v->world, table, ids[i], NULL) == -1) {
                             missing = true;
                         }
                     }
                     if (missing) {
                         flecs_ir_prof(EcsIrProfileBatchAdd);
-                        flecs_add_ids(v->world, src, &ids[1], count);
+                        flecs_add_ids(v->world, src, ids, count);
                     } else {
                         flecs_ir_prof(EcsIrProfileBatchSkip);
                     }

@@ -233,13 +233,12 @@ void flecs_script_ir_to_buf(
             if (op->flags & EcsIrScopeEntity) {
                 ecs_strbuf_appendstr(buf, " entity");
             }
-            if (op->c != -1) {
-                const ecs_id_t *ids = ecs_vec_get_t(
-                    &ir->components, ecs_id_t, op->c);
+            if (op->c) {
+                const ecs_id_t *ids = op->imm.ptr;
                 ecs_strbuf_appendstr(buf, " add=[");
-                int32_t c, cc = (int32_t)ids[0];
+                int32_t c, cc = op->c;
                 for (c = 0; c < cc; c ++) {
-                    char *str = ecs_id_str(world, ids[c + 1]);
+                    char *str = ecs_id_str(world, ids[c]);
                     ecs_strbuf_append(buf, "%s%s", c ? ", " : "", str);
                     ecs_os_free(str);
                 }

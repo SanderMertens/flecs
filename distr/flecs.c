@@ -51999,7 +51999,6 @@ struct ecs_script_ir_t {
     ecs_vec_t catches;
     ecs_vec_t entries;
     ecs_map_t entry_index;
-    ecs_vec_t components;
     ecs_vec_t scope_stmts;
     int32_t root_entry;
 };
@@ -115800,22 +115799,11 @@ static int flecs_irc_compile_scope(
         var_count = -1;
     }
 
-    int32_t components = -1;
     int32_t component_count = ecs_vec_count(&scope->components);
-    if (component_count) {
-        components = ecs_vec_count(&c->ir->components);
-        ecs_vec_append_t(NULL, &c->ir->components, ecs_id_t)[0] =
-            (ecs_id_t)component_count;
-        ecs_id_t *ids = ecs_vec_first(&scope->components);
-        int32_t i;
-        for (i = 0; i < component_count; i ++) {
-            ecs_vec_append_t(NULL, &c->ir->components, ecs_id_t)[0] = ids[i];
-        }
-    }
-
     int32_t enter = flecs_irc_emit(
-        c, EcsIrScopeEnter, scope->scope_slot, var_count, components, scope);
+        c, EcsIrScopeEnter, scope->scope_slot, var_count, component_count, scope);
     flecs_irc_op(c, enter)->flags = flags;
+    flecs_irc_op(c, enter)->imm.ptr = ecs_vec_first(&scope->components);
 
     scope->parent = c->scope;
     ecs_script_scope_t *prev = c->scope;
@@ -115981,7 +115969,6 @@ static void flecs_irc_init(
     ecs_vec_init_t(NULL, &ir->catches, int32_t, 0);
     ecs_vec_init_t(NULL, &ir->entries, ecs_script_ir_entry_t, 0);
     ecs_map_init(&ir->entry_index, NULL);
-    ecs_vec_init_t(NULL, &ir->components, ecs_id_t, 0);
     ecs_vec_init_t(NULL, &ir->scope_stmts, int32_t, 0);
     ir->root_entry = -1;
 }
@@ -115997,7 +115984,6 @@ void flecs_script_ir_free(
     ecs_vec_fini_t(NULL, &ir->catches, int32_t);
     ecs_vec_fini_t(NULL, &ir->entries, ecs_script_ir_entry_t);
     ecs_map_fini(&ir->entry_index);
-    ecs_vec_fini_t(NULL, &ir->components, ecs_id_t);
     ecs_vec_fini_t(NULL, &ir->scope_stmts, int32_t);
     ecs_os_free(ir);
 }
@@ -116274,13 +116260,12 @@ void flecs_script_ir_to_buf(
             if (op->flags & EcsIrScopeEntity) {
                 ecs_strbuf_appendstr(buf, " entity");
             }
-            if (op->c != -1) {
-                const ecs_id_t *ids = ecs_vec_get_t(
-                    &ir->components, ecs_id_t, op->c);
+            if (op->c) {
+                const ecs_id_t *ids = op->imm.ptr;
                 ecs_strbuf_appendstr(buf, " add=[");
-                int32_t c, cc = (int32_t)ids[0];
+                int32_t c, cc = op->c;
                 for (c = 0; c < cc; c ++) {
-                    char *str = ecs_id_str(world, ids[c + 1]);
+                    char *str = ecs_id_str(world, ids[c]);
                     ecs_strbuf_append(buf, "%s%s", c ? ", " : "", str);
                     ecs_os_free(str);
                 }
@@ -119618,24 +119603,23 @@ static flecs_script_run_status_t flecs_ir_exec(
                 frame->u.scope.vscratch_top = vm->vscratch_top;
                 frame->u.scope.vheap_count = vm->vheap.count;
             }
-            if (v->entity && op->c != -1 &&
+            if (v->entity && op->c &&
                 (v->force || v->entity->created))
             {
                 ecs_entity_t src = v->entity->eval;
                 if (src != EcsVariable) {
-                    const ecs_id_t *ids = ecs_vec_get_t(
-                        &vm->ir->components, ecs_id_t, op->c);
-                    int32_t i, count = (int32_t)ids[0];
+                    const ecs_id_t *ids = op->imm.ptr;
+                    int32_t i, count = op->c;
                     ecs_table_t *table = ecs_get_table(v->world, src);
                     bool missing = table == NULL;
                     for (i = 0; !missing && i < count; i ++) {
-                        if (ecs_search(v->world, table, ids[i + 1], NULL) == -1) {
+                        if (ecs_search(v->world, table, ids[i], NULL) == -1) {
                             missing = true;
                         }
                     }
                     if (missing) {
                         flecs_ir_prof(EcsIrProfileBatchAdd);
-                        flecs_add_ids(v->world, src, &ids[1], count);
+                        flecs_add_ids(v->world, src, ids, count);
                     } else {
                         flecs_ir_prof(EcsIrProfileBatchSkip);
                     }
