@@ -24117,106 +24117,29 @@ int flecs_term_finalize(
         }
     }
 
-    /* Is term trivial/cacheable */
-    bool cacheable_term = true;
-    bool trivial_term = true;
-    if (term->oper != EcsAnd || term->flags_ & EcsTermIsOr) {
-        trivial_term = false;
+    bool childof = ECS_HAS_RELATION(term->id, EcsChildOf);
+    if (childof && term->oper == EcsAnd) {
+        term->flags_ |= EcsTermNonFragmentingChildOf;
     }
 
-    if (ECS_IS_PAIR(term->id) && (ECS_PAIR_FIRST(term->id) == EcsChildOf)) {
-        if (term->oper == EcsAnd) {
-            term->flags_ |= EcsTermNonFragmentingChildOf;
-        }
-
-        if (ECS_PAIR_SECOND(term->id)) {
-            trivial_term = false;
-        }
-    }
+    bool table_match = !(term->flags_ & (EcsTermTransitive|EcsTermIdInherited|
+        EcsTermReflexive|EcsTermIsMember|EcsTermDontFragment)) &&
+        !(first_entity == EcsPredEq || first_entity == EcsPredMatch ||
+            first_entity == EcsPredLookup);
+    bool cacheable_term = table_match && ECS_TERM_REF_ID(src) == EcsThis &&
+        term->id != ecs_childof(0);
+    bool trivial_term = table_match && term->oper == EcsAnd &&
+        !(term->flags_ & (EcsTermIsOr|EcsTermIsToggle)) &&
+        ecs_term_match_this(term) && (src->id & EcsSelf) &&
+        (!term->trav || term->trav == EcsIsA) &&
+        !(childof && ECS_PAIR_SECOND(term->id));
 
     if (ecs_id_is_wildcard(term->id)) {
-        if (ECS_PAIR_FIRST(term->id) == EcsWildcard) {
-            cacheable_term = false;
-            trivial_term = false;
-        }
-
-        if (!(cr_flags & EcsIdExclusive)) {
-            trivial_term = false;
-        }
-
-        if (first->id & EcsIsVariable) {
-            if (!ecs_id_is_wildcard(first_id) || first_id == EcsAny) {
-                trivial_term = false;
-                cacheable_term = false;
-            }
-        }
-
-        if (second->id & EcsIsVariable) {
-            if (!ecs_id_is_wildcard(second_id) || second_id == EcsAny) {
-                trivial_term = false;
-                if (second_id != EcsAny) {
-                    cacheable_term = false;
-                }
-            }
-        }
-    }
-
-    if (!ecs_term_match_this(term)) {
-        trivial_term = false;
-    }
-
-    if (term->flags_ & EcsTermTransitive) {
-        trivial_term = false;
-        cacheable_term = false; 
-    }
-
-    if (term->flags_ & EcsTermIdInherited) {
-        trivial_term = false;
-        cacheable_term = false;
-    }
-
-    if (term->flags_ & EcsTermReflexive) {
-        trivial_term = false;
-        cacheable_term = false;
-    }
-
-    if (term->trav && term->trav != EcsIsA) {
-        trivial_term = false;
-    }
-
-    if (!(src->id & EcsSelf)) {
-        trivial_term = false;
-    }
-
-    if (((ECS_TERM_REF_ID(&term->first) == EcsPredEq) || 
-         (ECS_TERM_REF_ID(&term->first) == EcsPredMatch) || 
-         (ECS_TERM_REF_ID(&term->first) == EcsPredLookup)) && 
-        (term->first.id & EcsIsEntity)) 
-    {
-        trivial_term = false;
-        cacheable_term = false;
-    }
-
-    if (ECS_TERM_REF_ID(src) != EcsThis) {
-        cacheable_term = false;
-    }
-
-    if (term->id == ecs_childof(0)) {
-        cacheable_term = false;
-    }
-
-    if (term->flags_ & EcsTermIsMember) {
-        trivial_term = false;
-        cacheable_term = false;
-    }
-
-    if (term->flags_ & EcsTermIsToggle) {
-        trivial_term = false;
-    }
-
-    if (term->flags_ & EcsTermDontFragment) {
-        trivial_term = false;
-        cacheable_term = false;
+        bool first_variable = (first->id & EcsIsVariable) && first_id != EcsWildcard;
+        bool second_variable = (second->id & EcsIsVariable) && second_id != EcsWildcard;
+        bool dynamic_id = ECS_PAIR_FIRST(term->id) == EcsWildcard || first_variable;
+        cacheable_term &= !dynamic_id && !(second_variable && second_id != EcsAny);
+        trivial_term &= !dynamic_id && !second_variable && (cr_flags & EcsIdExclusive);
     }
 
     ECS_BIT_COND16(term->flags_, EcsTermIsTrivial, trivial_term);
