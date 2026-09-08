@@ -1158,30 +1158,23 @@ static int flecs_query_finalize_terms(
             }
         }
 
-        if (term->src.id == EcsIsEntity) {
-            nodata_term = true;
-        } else if (term->inout == EcsInOutNone) {
-            nodata_term = true;
-        } else if (!ecs_get_type_info(world, term->id)) {
-            nodata_term = true;
-        } else if (term->flags_ & EcsTermIsMember) {
-            nodata_term = true;
-        } else if (scope_nesting) {
-            nodata_term = true;
-        } else {
-            if (ecs_id_is_tag(world, term->id)) {
-                nodata_term = true;
-            } else if ((ECS_PAIR_SECOND(term->id) == EcsWildcard) ||
-                       (ECS_PAIR_SECOND(term->id) == EcsAny)) 
-            {
-                /* If the second element of a pair is a wildcard and the first
-                 * element is not a type, we can't know in advance what the
-                 * type of the term is, so it can't provide data. */
-                if (!ecs_get_type_info(world, ecs_pair_first(world, term->id))) {
-                    nodata_term = true;
-                }
-            }
+        const ecs_type_info_t *ti = cr ? cr->type_info : ecs_get_type_info(world, term->id);
+        bool other_type = false;
+#ifdef FLECS_QUERY_PLANS
+        if (term->flags_ & EcsTermIsOr) {
+            other_type = flecs_query_or_other_type(q, i) != NULL;
         }
+#endif
+        int32_t field = term->field_index;
+        q->ids[field] = other_type ? 0 : term->id;
+        if (other_type) {
+            q->sizes[field] = 0;
+        } else if (ti && (!cr || !ECS_HAS_RELATION(cr->id, EcsWildcard))) {
+            q->sizes[field] = ti->size;
+            q->ids[field] = cr ? cr->id : term->id;
+        }
+        nodata_term = term->src.id == EcsIsEntity || term->inout == EcsInOutNone ||
+            !ti || (term->flags_ & EcsTermIsMember) || scope_nesting;
 
         if (!nodata_term && term->inout != EcsIn && term->inout != EcsInOutNone) {
             /* Non-this terms default to EcsIn */
@@ -1196,18 +1189,9 @@ static int flecs_query_finalize_terms(
             }
         }
 
-        if (!nodata_term) {
-            /* If terms in an OR chain do not all return the same type, the 
-             * field will not provide any data */
-            if (term->flags_ & EcsTermIsOr) {
-#ifdef FLECS_QUERY_PLANS
-                ecs_term_t *first = flecs_query_or_other_type(q, i);
-                if (first) {
-                    nodata_term = true;
-                }
-#endif
-                q->data_fields &= (ecs_termset_t)~(1llu << term->field_index);
-            }
+        if (!nodata_term && (term->flags_ & EcsTermIsOr)) {
+            nodata_term = other_type;
+            q->data_fields &= (ecs_termset_t)~(1llu << field);
         }
 
         if (term->flags_ & EcsTermIsMember) {
@@ -1397,38 +1381,8 @@ static int flecs_query_finalize_terms(
                     q->bloom_filter, term->id);
             }
 
-            int32_t field = term->field_index;
-            q->ids[field] = term->id;
-
             if (!ecs_term_match_0(term)) {
                 flecs_component_lock(world, term->id);
-            }
-
-            if (term->flags_ & EcsTermIsOr) {
-#ifdef FLECS_QUERY_PLANS
-                if (flecs_query_or_other_type(q, i)) {
-                    q->sizes[field] = 0;
-                    q->ids[field] = 0;
-                    continue;
-                }
-#endif
-            }
-
-            ecs_component_record_t *cr = flecs_components_get(world, term->id);
-            if (cr) {
-                if (!ECS_IS_PAIR(cr->id) || ECS_PAIR_FIRST(cr->id) != EcsWildcard) {
-                    if (cr->type_info) {
-                        q->sizes[field] = cr->type_info->size;
-                        q->ids[field] = cr->id;
-                    }
-                }
-            } else {
-                const ecs_type_info_t *ti = ecs_get_type_info(
-                    world, term->id);
-                if (ti) {
-                    q->sizes[field] = ti->size;
-                    q->ids[field] = term->id;
-                }
             }
         }
     }
