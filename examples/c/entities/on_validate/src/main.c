@@ -22,7 +22,7 @@ void on_set_position(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         printf("%s set to {%.0f, %.0f}\n",
-            ecs_get_name(it->world, it->entities[i]), p[i].x, p[i].y);
+            ecs_get_name(it->stage, it->entities[i]), p[i].x, p[i].y);
     }
 }
 

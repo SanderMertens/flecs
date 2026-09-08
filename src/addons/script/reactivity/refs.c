@@ -54,48 +54,51 @@ static void flecs_script_ref_eval(
 
     ecs_script_impl_t *impl = flecs_script_impl(s->script);
     if (impl->evaluating) {
+        impl->pending_inputs |= input;
         return;
     }
 
-    bool is_deferred = ecs_is_deferred(world);
-    if (is_deferred) {
-        ecs_defer_suspend(world);
-    }
-
-    impl->evaluating = true;
+    world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
     ecs_script_runtime_t *pool = flecs_script_runtime_get(world);
-    ecs_script_runtime_t *runtime = flecs_script_runtime_acquire_call(pool);
-    ecs_script_eval_desc_t desc = { .runtime = runtime };
-    ecs_script_eval_result_t result = {0};
-    ecs_entity_t prev_scope = ecs_set_scope(world, 0);
-    ecs_vec_clear(&impl->run_refs);
-    int rc = flecs_script_eval(s->script, &desc,
-        ecs_pair_t(EcsScript, script), input, &result);
-    ecs_set_scope(world, prev_scope);
-    impl->evaluating = false;
-    s = ecs_ensure(world, script, EcsScript);
-    if (s && s->script == &impl->pub && !rc) {
-        flecs_script_update_dyn_observers(
-            world, script, impl, &s->dyn_observers, input);
+
+    do {
+        impl->pending_inputs = 0;
+        impl->evaluating = true;
+        ecs_script_runtime_t *runtime = flecs_script_runtime_acquire_call(pool);
+        ecs_script_eval_desc_t desc = { .runtime = runtime };
+        ecs_script_eval_result_t result = {0};
+        ecs_entity_t prev_scope = ecs_set_scope(world, 0);
+        ecs_vec_clear(&impl->run_refs);
+        int rc = flecs_script_eval(s->script, &desc,
+            ecs_pair_t(EcsScript, script), input, &result);
+        ecs_set_scope(world, prev_scope);
+        impl->evaluating = false;
         s = ecs_ensure(world, script, EcsScript);
-    }
+        if (s && s->script == &impl->pub && !rc) {
+            flecs_script_update_dyn_observers(
+                world, script, impl, &s->dyn_observers, input);
+            s = ecs_ensure(world, script, EcsScript);
+        }
 
-    ecs_vec_clear(&impl->run_refs);
-    if (s && s->error) {
-        ecs_os_free(s->error);
-        s->error = NULL;
-    }
+        ecs_vec_clear(&impl->run_refs);
+        if (s && s->error) {
+            ecs_os_free(s->error);
+            s->error = NULL;
+        }
 
-    if (s && rc) {
-        s->error = result.error;
-    } else {
-        ecs_os_free(result.error);
-    }
+        if (s && rc) {
+            s->error = result.error;
+        } else {
+            ecs_os_free(result.error);
+        }
 
-    flecs_script_runtime_release_call(pool, runtime);
-    if (is_deferred) {
-        ecs_defer_resume(world);
-    }
+        flecs_script_runtime_release_call(pool, runtime);
+        if (!s || s->script != &impl->pub || rc) {
+            break;
+        }
+
+        input = impl->pending_inputs;
+    } while (input);
 }
 
 static const char* flecs_script_name_leaf(
@@ -117,7 +120,7 @@ void flecs_script_ref_on_set(
 {
     ecs_script_ref_ctx_t *ctx = it->ctx;
     ecs_entity_t script = ctx->script;
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
 
     if (!ecs_is_alive(world, script)) {
         return;
@@ -129,13 +132,14 @@ void flecs_script_ref_on_set(
     }
 
     if (flecs_script_impl(s->script)->evaluating) {
+        flecs_script_impl(s->script)->pending_inputs |= ctx->input;
         return;
     }
 
-    if (ecs_is_deferred(it->world)) {
+    if (ecs_is_deferred(it->stage)) {
         EcsScriptUpdateEvent evt = { .script = script };
         evt.input = ctx->input;
-        ecs_enqueue(it->world, &(ecs_event_desc_t){
+        ecs_enqueue(it->stage, &(ecs_event_desc_t){
             .event = ecs_id(EcsScriptUpdateEvent),
             .entity = EcsAny,
             .param = &evt
@@ -239,7 +243,7 @@ static void flecs_script_resolve_on_set(
 {
     ecs_script_ref_ctx_t *ctx = it->ctx;
     ecs_entity_t script = ctx->script;
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
 
     if (!ecs_is_alive(world, script)) {
         return;
@@ -272,9 +276,9 @@ static void flecs_script_resolve_on_set(
         return;
     }
 
-    if (ecs_is_deferred(it->world)) {
+    if (ecs_is_deferred(it->stage)) {
         EcsScriptUpdateEvent evt = { .script = script };
-        ecs_enqueue(it->world, &(ecs_event_desc_t){
+        ecs_enqueue(it->stage, &(ecs_event_desc_t){
             .event = ecs_id(EcsScriptUpdateEvent),
             .entity = EcsAny,
             .param = &evt
@@ -288,10 +292,10 @@ static void flecs_script_resolve_on_set(
 static void flecs_script_on_update_event(
     ecs_iter_t *it)
 {
-    ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_is_deferred(it->stage), ECS_INTERNAL_ERROR, NULL);
 
     EcsScriptUpdateEvent *evt = it->param;
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
 
     if (!ecs_is_alive(world, evt->script)) {

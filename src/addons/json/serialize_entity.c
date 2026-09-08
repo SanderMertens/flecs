@@ -29,8 +29,8 @@ int flecs_entity_to_json_buf(
     /* Create iterator that's populated just with entity */
     int32_t row = ECS_RECORD_TO_ROW(r->row);
     ecs_iter_t it = {
+        .stage = ECS_CONST_CAST(ecs_world_t*, world),
         .world = ECS_CONST_CAST(ecs_world_t*, world),
-        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
         .table = r->table,
         .offset = row,
         .count = 1,

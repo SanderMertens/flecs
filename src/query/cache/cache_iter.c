@@ -27,7 +27,7 @@ void flecs_query_cache_iter_init(
     /* If query uses order_by, iterate the array with ordered table slices. */
     if (cache->order_by_callback) {
         /* Check if query needs sorting. */
-        flecs_query_cache_sort_tables(it->real_world, impl);
+        flecs_query_cache_sort_tables(it->world, impl);
         qit->tables = &cache->table_slices;
         qit->all_tables = qit->tables;
         qit->group = NULL;
@@ -119,40 +119,6 @@ static ecs_query_cache_match_t* flecs_query_cache_next(
 #endif
 
         return qm;
-    }
-}
-
-/* Find next match in trivial cache. A trivial cache doesn't have to handle
- * wildcards, multiple groups or fields matched through up traversal. */
-static ecs_query_cache_match_t* flecs_query_trivial_cache_next(
-    const ecs_query_run_ctx_t *ctx)
-{
-    ecs_iter_t *it = ctx->it;
-    ecs_query_iter_t *qit = &it->priv_.iter.query;
-
-    repeat: {
-        if (qit->cur == ecs_vec_count(qit->tables)) {
-            return NULL;
-        }
-
-        ecs_query_triv_cache_match_t *qm = ecs_vec_get_t(
-            qit->tables, ecs_query_triv_cache_match_t, qit->cur);
-        ecs_table_t *table = it->table = qm->table;
-        int32_t count = it->count = ecs_table_count(table);
-
-        qit->cur ++;
-
-        if (!count) {
-            if (!(it->flags & EcsIterMatchEmptyTables)) {
-                goto repeat;
-            }
-        }
-
-        it->entities = ecs_table_entities(table);
-        it->columns = qm->columns;
-        it->set_fields = qm->set_fields;
-
-        return qit->elem = (ecs_query_cache_match_t*)qm;
     }
 }
 
@@ -258,7 +224,34 @@ bool flecs_query_is_cache_search(
 bool flecs_query_is_trivial_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
-    return flecs_query_trivial_cache_next(ctx) != NULL;
+    ecs_iter_t *it = ctx->it;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
+    ecs_vec_t *tables = qit->tables;
+    ecs_query_triv_cache_match_t *matches = tables->array;
+    int32_t cur = qit->cur;
+    int32_t table_count = tables->count;
+    bool match_empty = (it->flags & EcsIterMatchEmptyTables) != 0;
+
+    while (cur < table_count) {
+        ecs_query_triv_cache_match_t *qm = &matches[cur ++];
+        ecs_table_t *table = qm->table;
+        int32_t count = table->data.count;
+        if (!count && !match_empty) {
+            continue;
+        }
+
+        qit->cur = cur;
+        qit->elem = (ecs_query_cache_match_t*)qm;
+        it->table = table;
+        it->count = count;
+        it->entities = table->data.entities;
+        it->columns = qm->columns;
+        it->set_fields = qm->set_fields;
+        return true;
+    }
+
+    qit->cur = cur;
+    return false;
 }
 
 /* Test if query that is entirely cached matches constrained $this */

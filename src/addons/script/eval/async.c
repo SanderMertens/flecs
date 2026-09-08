@@ -1450,10 +1450,10 @@ int32_t ecs_script_tasks_progress(
         return 0;
     }
 
-    bool is_defer = ecs_is_deferred(world);
+    bool is_readonly = ecs_stage_is_readonly(world);
     ecs_suspend_readonly_state_t srs;
     ecs_world_t *real_world = NULL;
-    if (is_defer) {
+    if (is_readonly) {
         real_world = flecs_suspend_readonly(world, &srs);
         ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
@@ -1501,7 +1501,7 @@ int32_t ecs_script_tasks_progress(
 
     rt->async_progressing = false;
 
-    if (is_defer) {
+    if (is_readonly) {
         flecs_resume_readonly(real_world, &srs);
     }
 

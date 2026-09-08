@@ -1139,7 +1139,7 @@ static void AddVelocity(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], Velocity, {1, 1});
+        ecs_set(it->stage, it->entities[i], Velocity, {1, 1});
     }
 }
 
@@ -1837,11 +1837,11 @@ void Prefab_on_set_on_instance(void) {
 
 void InstantiateInProgress(ecs_iter_t *it) {
     ecs_id_t Prefab = ecs_field_id(it, 1);
-    ecs_entity_t *ids = ecs_get_ctx(it->world);
+    ecs_entity_t *ids = ecs_get_ctx(it->stage);
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ids[i] = ecs_new_w_pair(it->world, EcsIsA, Prefab);
+        ids[i] = ecs_new_w_pair(it->stage, EcsIsA, Prefab);
     }
 }
 
@@ -1884,11 +1884,11 @@ void Prefab_instantiate_in_progress(void) {
 void NewInProgress(ecs_iter_t *it) {
     ecs_id_t Prefab = ecs_field_id(it, 1);
 
-    ecs_entity_t *ids = ecs_get_ctx(it->world);
+    ecs_entity_t *ids = ecs_get_ctx(it->stage);
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ids[i] = ecs_new_w_pair(it->world, EcsIsA, Prefab);
+        ids[i] = ecs_new_w_pair(it->stage, EcsIsA, Prefab);
     }
 }
 
@@ -2099,7 +2099,7 @@ void AddPrefab(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add_pair(it->world, it->entities[i], EcsIsA, Prefab);
+        ecs_add_pair(it->stage, it->entities[i], EcsIsA, Prefab);
     }
 }
 
@@ -2248,10 +2248,10 @@ void Prefab_no_instantiate_on_2nd_add_in_progress(void) {
 }
 
 void NewPrefab_w_count(ecs_iter_t *it) {
-    ecs_entity_t *ids = ecs_get_ctx(it->world);
+    ecs_entity_t *ids = ecs_get_ctx(it->stage);
     ecs_id_t Prefab = ecs_field_id(it, 0);
 
-    const ecs_entity_t *new_ids = ecs_bulk_new_w_id(it->world, ecs_pair(EcsIsA, Prefab), 3);
+    const ecs_entity_t *new_ids = ecs_bulk_new_w_id(it->stage, ecs_pair(EcsIsA, Prefab), 3);
     test_assert(new_ids != NULL);
     memcpy(ids, new_ids, sizeof(ecs_entity_t) * 3);
 }
@@ -2315,7 +2315,7 @@ static void OnSetVelocity(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Velocity);
+        ecs_add(it->stage, it->entities[i], Velocity);
 
         if (ecs_field_is_self(it, 0)) {
             v[i].x ++;
@@ -2385,16 +2385,16 @@ void AddPrefabInProgress(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add_pair(it->world, it->entities[i], EcsIsA, Prefab);
-        test_assert( ecs_has_id(it->world, it->entities[i], Prefab));
-        test_assert( ecs_has(it->world, it->entities[i], Velocity));
+        ecs_add_pair(it->stage, it->entities[i], EcsIsA, Prefab);
+        test_assert( ecs_has_id(it->stage, it->entities[i], Prefab));
+        test_assert( ecs_has(it->stage, it->entities[i], Velocity));
         
-        const Velocity *v = ecs_get(it->world, it->entities[i], Velocity);
+        const Velocity *v = ecs_get(it->stage, it->entities[i], Velocity);
         test_assert(v != NULL);
         test_int(v->x, 1);
         test_int(v->y, 2);
 
-        test_assert( ecs_get(it->world, Prefab, Velocity) == v);
+        test_assert( ecs_get(it->stage, Prefab, Velocity) == v);
     }
 }
 
@@ -2471,7 +2471,7 @@ static void AddMass(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Mass);
+        ecs_add(it->stage, it->entities[i], Mass);
     }
 }
 
@@ -2585,9 +2585,9 @@ void Prefab_rematch_twice(void) {
 static void AddPosition(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
     
-    ecs_entity_t *base = ecs_get_ctx(it->world);
+    ecs_entity_t *base = ecs_get_ctx(it->stage);
 
-    ecs_add(it->world, *base, Position);
+    ecs_add(it->stage, *base, Position);
 }
 
 void Prefab_add_to_empty_base_in_system(void) {
@@ -2654,8 +2654,8 @@ static void CloneInOnAdd(ecs_iter_t *it)
 
         if (!has_cloned_test) {
             ecs_entity_t e = it->entities[i];
-            ecs_entity_t clone = ecs_clone(it->world, 0, e, true);
-            ecs_add_pair(it->world, e, EcsIsA, clone);
+            ecs_entity_t clone = ecs_clone(it->stage, 0, e, true);
+            ecs_add_pair(it->stage, e, EcsIsA, clone);
         }
     }
 }
@@ -2809,8 +2809,8 @@ static ecs_entity_t new_instance_1, new_instance_2;
 static void CreateInstances(ecs_iter_t *it) {
     ecs_id_t Prefab = ecs_field_id(it, 0);
 
-    new_instance_1 = ecs_new_w_pair(it->world, EcsIsA, Prefab);
-    new_instance_2 = ecs_new_w_pair(it->world, EcsIsA, Prefab);
+    new_instance_1 = ecs_new_w_pair(it->stage, EcsIsA, Prefab);
+    new_instance_2 = ecs_new_w_pair(it->stage, EcsIsA, Prefab);
 }
 
 void Prefab_create_multiple_nested_w_on_set_in_progress(void) {
@@ -5762,14 +5762,14 @@ void Prefab_defer_instantiate_and_set_inherit_and_override(void) {
     ecs_set(world, base, Position, {10, 20});
     ecs_set(world, base, Velocity, {1, 2});
 
-    ecs_defer_begin(world);
-    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
-    ecs_set(world, inst, Position, {20, 30});
-    ecs_set(world, inst, Velocity, {2, 3});
-    test_assert(!ecs_has_pair(world, inst, EcsIsA, base));
-    test_assert(!ecs_has(world, inst, Position));
-    test_assert(!ecs_has(world, inst, Velocity));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_entity_t inst = ecs_new_w_pair(stage_1, EcsIsA, base);
+    ecs_set(stage_1, inst, Position, {20, 30});
+    ecs_set(stage_1, inst, Velocity, {2, 3});
+    test_assert(!ecs_has_pair(stage_1, inst, EcsIsA, base));
+    test_assert(!ecs_has(stage_1, inst, Position));
+    test_assert(!ecs_has(stage_1, inst, Velocity));
+    ecs_merge(stage_1);
     test_assert(ecs_has_pair(world, inst, EcsIsA, base));
     test_assert(ecs_has(world, inst, Position));
     test_assert(ecs_has(world, inst, Velocity));
@@ -5796,14 +5796,14 @@ void Prefab_defer_instantiate_and_set_inherit_and_new(void) {
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
     ecs_set(world, base, Velocity, {1, 2});
 
-    ecs_defer_begin(world);
-    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
-    ecs_set(world, inst, Position, {20, 30});
-    ecs_set(world, inst, Velocity, {2, 3});
-    test_assert(!ecs_has_pair(world, inst, EcsIsA, base));
-    test_assert(!ecs_has(world, inst, Position));
-    test_assert(!ecs_has(world, inst, Velocity));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_entity_t inst = ecs_new_w_pair(stage_1, EcsIsA, base);
+    ecs_set(stage_1, inst, Position, {20, 30});
+    ecs_set(stage_1, inst, Velocity, {2, 3});
+    test_assert(!ecs_has_pair(stage_1, inst, EcsIsA, base));
+    test_assert(!ecs_has(stage_1, inst, Position));
+    test_assert(!ecs_has(stage_1, inst, Velocity));
+    ecs_merge(stage_1);
     test_assert(ecs_has_pair(world, inst, EcsIsA, base));
     test_assert(ecs_has(world, inst, Position));
     test_assert(ecs_has(world, inst, Velocity));
@@ -5829,8 +5829,7 @@ void Prefab_instantiate_while_defer_suspended(void) {
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
     ecs_set(world, p, Position, {10, 20});
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
     test_assert(ecs_has_pair(world, inst, EcsIsA, p));
     test_assert(ecs_has(world, inst, Position));
@@ -5841,8 +5840,7 @@ void Prefab_instantiate_while_defer_suspended(void) {
         test_int(ptr->x, 10);
         test_int(ptr->y, 20);
     }
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_pair(world, inst, EcsIsA, p));
     test_assert(ecs_has(world, inst, Position));
@@ -5869,15 +5867,13 @@ void Prefab_instantiate_w_union_while_defer_suspended(void) {
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
     ecs_add_pair(world, p, Rel, TgtA);
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
     test_assert(ecs_has_pair(world, inst, EcsIsA, p));
     test_assert(ecs_has_pair(world, inst, Rel, TgtA));
     test_assert(!ecs_has_pair(world, inst, Rel, TgtB));
     test_assert(ecs_get_target(world, inst, Rel, 0) == TgtA);
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_pair(world, inst, EcsIsA, p));
     test_assert(ecs_has_pair(world, inst, Rel, TgtA));
@@ -5896,8 +5892,7 @@ void Prefab_instantiate_w_sparse_component_while_defer_suspended(void) {
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
     ecs_set(world, p, Position, {10, 20});
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
     {
         const Position *p = ecs_get(world, inst, Position);
@@ -5905,8 +5900,7 @@ void Prefab_instantiate_w_sparse_component_while_defer_suspended(void) {
         test_int(p->x, 10);
         test_int(p->y, 20);
     }
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, inst, Position);
@@ -5927,12 +5921,10 @@ void Prefab_instantiate_w_sparse_tag_while_defer_suspended(void) {
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
     ecs_add(world, p, Foo);
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
     test_assert(ecs_has(world, inst, Foo));
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, inst, Foo));
 
@@ -5949,8 +5941,7 @@ void Prefab_instantiate_w_sparse_pair_while_defer_suspended(void) {
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
     ecs_set_pair(world, p, Position, Tgt, {10, 20});
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
     {
         const Position *p = ecs_get_pair(world, inst, Position, Tgt);
@@ -5958,8 +5949,7 @@ void Prefab_instantiate_w_sparse_pair_while_defer_suspended(void) {
         test_int(p->x, 10);
         test_int(p->y, 20);
     }
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get_pair(world, inst, Position, Tgt);
@@ -5981,12 +5971,10 @@ void Prefab_instantiate_w_sparse_pair_tag_while_defer_suspended(void) {
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
     ecs_add_pair(world, p, Foo, Tgt);
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
     test_assert(ecs_has_pair(world, inst, Foo, Tgt));
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_pair(world, inst, Foo, Tgt));
 
@@ -6002,8 +5990,7 @@ void Prefab_instantiate_w_non_fragmenting_component_while_defer_suspended(void) 
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
     ecs_set(world, p, Position, {10, 20});
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
     {
         const Position *p = ecs_get(world, inst, Position);
@@ -6011,8 +5998,7 @@ void Prefab_instantiate_w_non_fragmenting_component_while_defer_suspended(void) 
         test_int(p->x, 10);
         test_int(p->y, 20);
     }
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, inst, Position);
@@ -6033,12 +6019,10 @@ void Prefab_instantiate_w_non_fragmenting_tag_while_defer_suspended(void) {
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
     ecs_add(world, p, Foo);
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
     test_assert(ecs_has(world, inst, Foo));
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, inst, Foo));
 
@@ -6055,8 +6039,7 @@ void Prefab_instantiate_w_non_fragmenting_pair_while_defer_suspended(void) {
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
     ecs_set_pair(world, p, Position, Tgt, {10, 20});
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
     {
         const Position *p = ecs_get_pair(world, inst, Position, Tgt);
@@ -6064,8 +6047,7 @@ void Prefab_instantiate_w_non_fragmenting_pair_while_defer_suspended(void) {
         test_int(p->x, 10);
         test_int(p->y, 20);
     }
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get_pair(world, inst, Position, Tgt);
@@ -6087,12 +6069,10 @@ void Prefab_instantiate_w_non_fragmenting_pair_tag_while_defer_suspended(void) {
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
     ecs_add_pair(world, p, Foo, Tgt);
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
     test_assert(ecs_has_pair(world, inst, Foo, Tgt));
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_pair(world, inst, Foo, Tgt));
 

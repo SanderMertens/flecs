@@ -1085,12 +1085,12 @@ void ComponentInheritance_change_isa_deferred(void) {
     ecs_entity_t e = ecs_new_w_id(world, Warrior);
     test_bool(ecs_has_id(world, e, Unit), false);
 
-    ecs_defer_begin(world);
-    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_add_pair(stage_1, Warrior, EcsIsA, Unit);
     test_bool(ecs_has_id(world, e, Unit), false);
 
     test_expect_abort();
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 }
 
 void ComponentInheritance_cyclic_isa_not_allowed(void) {
@@ -1605,9 +1605,9 @@ void ComponentInheritance_multi_derived_deferred(void) {
 
     ecs_entity_t e = ecs_new_w_id(world, Warrior);
 
-    ecs_defer_begin(world);
-    ecs_add_id(world, e, Wizard);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, e, Wizard);
+    ecs_merge(stage_1);
 
     test_bool(ecs_has_id(world, e, Warrior), true);
     test_bool(ecs_has_id(world, e, Wizard), true);

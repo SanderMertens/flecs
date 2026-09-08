@@ -498,7 +498,7 @@ static const char* flecs_query_arg_parse(
             Error("unknown variable '%s'", Token(0));
         }
 
-        ecs_entity_t val = ecs_lookup(q->world, Token(2));
+        ecs_entity_t val = ecs_lookup(q->stage, Token(2));
         if (!val) {
             Error("unresolved entity '%s'", Token(2));
         }
@@ -565,7 +565,7 @@ const char* ecs_query_args_parse(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(expr != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    const char *q_name = q->entity ? ecs_get_name(q->world, q->entity) : NULL;
+    const char *q_name = q->entity ? ecs_get_name(q->stage, q->entity) : NULL;
     if (ecs_os_strlen(expr) > 512) {
         ecs_parser_error(q_name, expr, 0, "query argument expression too long");
         return NULL;
@@ -575,7 +575,7 @@ const char* ecs_query_args_parse(
     ecs_parser_t parser = {
         .name = q_name,
         .code = expr,
-        .world = q->real_world,
+        .world = q->world,
         .token_cur = token_buffer
     };
 

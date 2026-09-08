@@ -299,7 +299,7 @@ static int32_t flecs_query_op_ref_str(
 
         color_chars = ecs_os_strlen("#[green]#[reset]#[green]#[reset]");
     } else if (flags & EcsQueryIsEntity) {
-        char *path = ecs_get_path(query->pub.world, ref->entity);
+        char *path = ecs_get_path(query->pub.stage, ref->entity);
         ecs_strbuf_appendlit(buf, "#[blue]");
         ecs_strbuf_appendstr(buf, path);
         ecs_strbuf_appendlit(buf, "#[reset]");
@@ -721,7 +721,7 @@ char* ecs_query_str(
     const ecs_query_t *q)
 {
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_world_t *world = q->world;
+    ecs_world_t *world = q->stage;
 
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     const ecs_term_t *terms = q->terms;

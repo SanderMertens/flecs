@@ -58,6 +58,8 @@ void ecs_ref_update(
     ecs_check(id == ref->id, ECS_INVALID_PARAMETER, "id does not match ref");
 #endif
 
+    world = ecs_get_world(world);
+
     flecs_check_exclusive_world_access_read(world);
 
     if (ref->table_version_fast == flecs_get_table_version_fast(

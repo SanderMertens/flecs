@@ -27,18 +27,18 @@ void Init(ecs_iter_t *it) {
 }
 
 static void Add_to_current(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_ctx(it->world);
+    IterData *ctx = ecs_get_ctx(it->stage);
 
     int i;
     for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_id(it->world, it->entities[i], ctx->component);
+            ecs_add_id(it->stage, it->entities[i], ctx->component);
 
-            test_assert( !!ecs_get_type(it->world, it->entities[i]));
+            test_assert( !!ecs_get_type(it->stage, it->entities[i]));
         }
 
         if (ctx->component_2) {
-            ecs_add_id(it->world, it->entities[i], ctx->component_2);
+            ecs_add_id(it->stage, it->entities[i], ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -46,18 +46,18 @@ static void Add_to_current(ecs_iter_t *it) {
 }
 
 static void Remove_from_current(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_ctx(it->world);
+    IterData *ctx = ecs_get_ctx(it->stage);
 
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
 
         if (ctx->component) {
-            ecs_remove_id(it->world, e, ctx->component);
+            ecs_remove_id(it->stage, e, ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_remove_id(it->world, e, ctx->component_2);
+            ecs_remove_id(it->stage, e, ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -65,13 +65,13 @@ static void Remove_from_current(ecs_iter_t *it) {
 }
 
 static void Set_current(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_ctx(it->world);
+    IterData *ctx = ecs_get_ctx(it->stage);
     
     ecs_entity_t ecs_id(Rotation) = ctx->component;
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], Rotation, {10 + it->entities[i]});
+        ecs_set(it->stage, it->entities[i], Rotation, {10 + it->entities[i]});
         ctx->entity_count ++;
     }
 }
@@ -489,7 +489,7 @@ static void AddVelocity(ecs_iter_t *it) {
     for (i = 0; i < it->count; i ++) {
         p[i].x = 1;
         p[i].y = 2;
-        ecs_add_id(it->world, it->entities[i], v);
+        ecs_add_id(it->stage, it->entities[i], v);
     }
 }
 
@@ -597,7 +597,7 @@ static void AddAgain(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Position);
+        ecs_add(it->stage, it->entities[i], Position);
     }
 }
 
@@ -666,7 +666,7 @@ void SystemA(ecs_iter_t *it) {
     int i, tag;
     for (i = 0; i < it->count; i ++) {
         for (tag = 1000; tag < 1100; tag ++) {
-            ecs_add_id(it->world, it->entities[i], tag);
+            ecs_add_id(it->stage, it->entities[i], tag);
         }
     }
 }
@@ -676,7 +676,7 @@ void SystemB(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_has(it->world, it->entities[i], Position);
+        ecs_has(it->stage, it->entities[i], Position);
     }
 }
 
@@ -696,7 +696,7 @@ void TriggerOnAdd_2_systems_w_table_creation(void) {
 void NewWithPosition(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
-    ecs_entity_t e = ecs_new_w(it->world, Position);
+    ecs_entity_t e = ecs_new_w(it->stage, Position);
     test_assert(e != 0); 
 }
 
@@ -714,7 +714,7 @@ void TriggerOnAdd_2_systems_w_table_creation_in_progress(void) {
 }
 
 static void TestContext(ecs_iter_t *it) {
-    void *world_ctx = ecs_get_ctx(it->world);
+    void *world_ctx = ecs_get_ctx(it->stage);
     test_assert(world_ctx == it->ctx);
     int32_t *param = it->ctx;
     (*param) ++;
@@ -762,11 +762,11 @@ void TriggerOnAdd_get_sys_context_from_param(void) {
 
 
 void Add_3_to_current(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_ctx(it->world);
+    IterData *ctx = ecs_get_ctx(it->stage);
     int i;
     for (i = 0; i < it->count; i ++) {
         if (ctx->component_3) {
-            ecs_add_id(it->world, it->entities[i], ctx->component_3);
+            ecs_add_id(it->stage, it->entities[i], ctx->component_3);
         }
         ctx->entity_count ++;
     }
@@ -817,20 +817,20 @@ void TriggerOnAdd_on_remove_in_on_add(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_defer_begin(world);
-    ecs_add(world, e1, Position);
-    ecs_add(world, e1, Velocity);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e1, Position);
+    ecs_add(stage_1, e1, Velocity);
+    ecs_merge(stage_1);
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
-    ecs_defer_begin(world);
-    ecs_add(world, e2, Position);
-    ecs_add(world, e2, Velocity);
-    ecs_defer_end(world);
+    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_2, e2, Position);
+    ecs_add(stage_2, e2, Velocity);
+    ecs_merge(stage_2);
     ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
-    ecs_defer_begin(world);
-    ecs_add(world, e3, Position);
-    ecs_add(world, e3, Velocity);
-    ecs_defer_end(world);
+    ecs_world_t *stage_3 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_3, e3, Position);
+    ecs_add(stage_3, e3, Velocity);
+    ecs_merge(stage_3);
 
     test_assert( ecs_has(world, e1, Position));
     test_assert( ecs_has(world, e2, Position));

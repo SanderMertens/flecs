@@ -368,10 +368,10 @@ static void TableColumns(ecs_iter_t *it) {
     test_int(components[0], ecs_id(Position));
     test_int(components[1], ecs_id(Velocity));
 
-    void *column_0 = ecs_table_get(it->real_world, it->table, Position, 0);
+    void *column_0 = ecs_table_get(it->world, it->table, Position, 0);
     test_assert(column_0 == p);
 
-    void *column_1 = ecs_table_get(it->real_world, it->table, Velocity, 0);
+    void *column_1 = ecs_table_get(it->world, it->table, Velocity, 0);
     test_assert(column_1 == v);
 
     is_invoked ++;
@@ -452,7 +452,7 @@ void SystemMisc_dont_enable_after_rematch(void) {
 static void SysA(ecs_iter_t *it)
 {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
-    ecs_add(it->world, it->entities[0], Velocity);
+    ecs_add(it->stage, it->entities[0], Velocity);
 }
 
 static int b_invoked;
@@ -661,11 +661,11 @@ void SystemMisc_add_to_system_in_progress(void) {
 
     ecs_new_w(world, Position);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_add(world, Dummy, Tag);
+    ecs_add(stage_1, Dummy, Tag);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     ecs_progress(world, 0);
     test_assert(dummy_invoked == true);

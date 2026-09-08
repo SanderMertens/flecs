@@ -23,7 +23,7 @@ static void ProgressTimers(ecs_iter_t *it) {
             continue;
         }
 
-        const ecs_world_info_t *info = ecs_get_world_info(it->world);
+        const ecs_world_info_t *info = ecs_get_world_info(it->stage);
         ecs_ftime_t time_elapsed = timer[i].time + info->delta_time_raw;
         ecs_ftime_t timeout = timer[i].timeout;
         
@@ -60,7 +60,7 @@ static void ProgressRateFilters(ecs_iter_t *it) {
 
         if (src) {
             const EcsTickSource *tick_src = ecs_get(
-                it->world, src, EcsTickSource);
+                it->stage, src, EcsTickSource);
             if (tick_src) {
                 inc = tick_src->tick;
             } else {

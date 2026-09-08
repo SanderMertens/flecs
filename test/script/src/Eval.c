@@ -17170,8 +17170,6 @@ void Eval_component_expr_member_no_var(void) {
     ecs_fini(world);
 }
 
-
-
 void Eval_map_i64_i32_component(void) {
     ecs_world_t *world = ecs_init();
 
@@ -20065,9 +20063,9 @@ static void script_update_on_remove(ecs_iter_t *it) {
     script_update_on_remove_invoked += it->count;
 
     if (script_entity_under_update &&
-        ecs_is_alive(it->world, script_entity_under_update))
+        ecs_is_alive(it->stage, script_entity_under_update))
     {
-        ecs_add_id(it->world,
+        ecs_add_id(it->stage,
             script_entity_under_update, script_update_marker);
     }
 }

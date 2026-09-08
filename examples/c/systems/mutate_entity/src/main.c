@@ -19,12 +19,9 @@ void Expire(ecs_iter_t *it) {
             // data, mutations (like a delete) are added to a command queue and
             // executed when it's safe to do so.
  
-             // A system should not use the world pointer that is provided by the
-             // ecs_init function, as this will throw an error that the world is
-             // in readonly mode (try replacing it->world with it->real_world).
-            ecs_delete(it->world, it->entities[i]);
+            ecs_delete(it->stage, it->entities[i]);
             printf("Expire: %s deleted!\n", ecs_get_name(
-                it->world, it->entities[i]));
+                it->stage, it->entities[i]));
         }
     }
 }
@@ -35,7 +32,7 @@ void PrintExpire(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         printf("PrintExpire: %s has %.2f seconds left\n", ecs_get_name(
-            it->world, it->entities[i]), t[i].value);
+            it->stage, it->entities[i]), t[i].value);
     }
 }
 
@@ -43,7 +40,7 @@ void PrintExpire(ecs_iter_t *it) {
 void Expired(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
         printf("Expired: %s actually deleted\n", ecs_get_name(
-            it->world, it->entities[i]));
+            it->stage, it->entities[i]));
     }
 }
 

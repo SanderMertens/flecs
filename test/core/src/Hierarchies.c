@@ -2109,10 +2109,10 @@ void Hierarchies_defer_batch_remove_name_w_add_childof(void) {
     test_assert(ecs_lookup(world, "e") == e);
 
     ecs_entity_t parent = ecs_new(world);
-    ecs_defer_begin(world);
-    ecs_clear(world, e);
-    ecs_add_pair(world, e, EcsChildOf, parent);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_clear(stage_1, e);
+    ecs_add_pair(stage_1, e, EcsChildOf, parent);
+    ecs_merge(stage_1);
 
     test_assert(ecs_lookup(world, "e") == 0);
     test_assert(ecs_has_pair(world, e, EcsChildOf, parent));
@@ -2128,10 +2128,10 @@ void Hierarchies_defer_batch_remove_childof_w_add_name(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
     test_assert(e != 0);
     
-    ecs_defer_begin(world);
-    ecs_clear(world, e);
-    ecs_set_name(world, e, "e");
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_clear(stage_1, e);
+    ecs_set_name(stage_1, e, "e");
+    ecs_merge(stage_1);
 
     test_assert(ecs_get_name(world, e) != NULL);
     test_assert(ecs_lookup(world, "e") == e);
@@ -2154,10 +2154,10 @@ void Hierarchies_defer_batch_remove_add_childof_same_pair_named(void) {
     /* Remove + re-add the same (ChildOf, parent) in a defer batch moves a
      * named child to the end of its siblings. The child returns to its
      * original table, so the name-index reparent is a no-op. */
-    ecs_defer_begin(world);
-    ecs_remove_pair(world, c1, EcsChildOf, parent);
-    ecs_add_pair(world, c1, EcsChildOf, parent);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove_pair(stage_1, c1, EcsChildOf, parent);
+    ecs_add_pair(stage_1, c1, EcsChildOf, parent);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_pair(world, c1, EcsChildOf, parent));
     test_str("c1", ecs_get_name(world, c1));
