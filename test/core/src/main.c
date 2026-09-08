@@ -2860,6 +2860,12 @@ void World_clear_builtin(void);
 void World_delete_builtin(void);
 void World_rename_builtin(void);
 void World_remove_name_builtin(void);
+void World_fini_w_scoped_component_added_to_builtin(void);
+void World_fini_w_root_component_added_to_builtin(void);
+void World_fini_w_scoped_tag_added_to_builtin(void);
+void World_fini_w_scoped_component_set_on_builtin(void);
+void World_delete_scoped_component_added_to_builtin(void);
+void World_delete_scope_of_component_added_to_builtin(void);
 void World_delete_flecs(void);
 void World_delete_flecs_core(void);
 void World_remove_name_from_flecs(void);
@@ -14629,6 +14635,30 @@ bake_test_case World_testcases[] = {
         World_remove_name_builtin
     },
     {
+        "fini_w_scoped_component_added_to_builtin",
+        World_fini_w_scoped_component_added_to_builtin
+    },
+    {
+        "fini_w_root_component_added_to_builtin",
+        World_fini_w_root_component_added_to_builtin
+    },
+    {
+        "fini_w_scoped_tag_added_to_builtin",
+        World_fini_w_scoped_tag_added_to_builtin
+    },
+    {
+        "fini_w_scoped_component_set_on_builtin",
+        World_fini_w_scoped_component_set_on_builtin
+    },
+    {
+        "delete_scoped_component_added_to_builtin",
+        World_delete_scoped_component_added_to_builtin
+    },
+    {
+        "delete_scope_of_component_added_to_builtin",
+        World_delete_scope_of_component_added_to_builtin
+    },
+    {
         "delete_flecs",
         World_delete_flecs
     },
@@ -17136,7 +17166,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        177,
+        183,
         World_testcases
     },
     {

@@ -398,7 +398,7 @@ static void flecs_actions_on_remove_intern_w_reparent(
     int32_t count,
     const ecs_table_diff_t *diff)
 {
-    if (!(world->flags & EcsWorldFini)) {
+    if (!(world->flags & EcsWorldQuit)) {
         ecs_check(!(table->flags & EcsTableHasBuiltins), 
             ECS_INVALID_OPERATION,
             "removing components from builtin entities is not allowed");

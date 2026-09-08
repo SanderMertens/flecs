@@ -1555,7 +1555,9 @@
                 "get_type_info_T_tag",
                 "get_type_info_r_t_tag",
                 "get_type_info_R_t_tag",
-                "get_type_info_R_T_tag"
+                "get_type_info_R_T_tag",
+                "fini_w_scoped_component_added_to_builtin",
+                "fini_w_scoped_tag_added_to_builtin"
             ]
         }, {
             "id": "Singleton",

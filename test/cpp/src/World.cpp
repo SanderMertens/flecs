@@ -2081,3 +2081,30 @@ void World_get_type_info_R_T_tag(void) {
     const flecs::type_info_t *ti = world.type_info<Tag, Tgt>();
     test_assert(ti == nullptr);
 }
+
+namespace outer {
+struct ScopedComponent {
+    float x, y;
+};
+struct ScopedTag { };
+}
+
+void World_fini_w_scoped_component_added_to_builtin(void) {
+    flecs::world world;
+
+    world.component<outer::ScopedComponent>("::outer::ScopedComponent");
+    world.entity<flecs::Identifier>().set<outer::ScopedComponent>({10, 20});
+
+    test_assert(world.entity<flecs::Identifier>().has<outer::ScopedComponent>());
+    test_assert(world.lookup("::outer::ScopedComponent") != 0);
+}
+
+void World_fini_w_scoped_tag_added_to_builtin(void) {
+    flecs::world world;
+
+    world.component<outer::ScopedTag>("::outer::ScopedTag");
+    world.entity<flecs::Identifier>().add<outer::ScopedTag>();
+
+    test_assert(world.entity<flecs::Identifier>().has<outer::ScopedTag>());
+    test_assert(world.lookup("::outer::ScopedTag") != 0);
+}

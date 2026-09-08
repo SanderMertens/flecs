@@ -3578,6 +3578,128 @@ void World_remove_name_builtin(void) {
         world, ecs_id(EcsComponent), ecs_id(EcsIdentifier), EcsName);
 }
 
+void World_fini_w_scoped_component_added_to_builtin(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "outer" });
+    ecs_entity_t comp = ecs_component(world, {
+        .entity = ecs_entity(world, { .name = "MyComponent", .parent = parent }),
+        .type = {
+            .size = ECS_SIZEOF(Position),
+            .alignment = ECS_ALIGNOF(Position)
+        }
+    });
+
+    ecs_add_id(world, ecs_id(EcsIdentifier), comp);
+    test_assert(ecs_has_id(world, ecs_id(EcsIdentifier), comp));
+
+    ecs_fini(world);
+
+    test_assert(true);
+}
+
+void World_fini_w_root_component_added_to_builtin(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t comp = ecs_component(world, {
+        .entity = ecs_entity(world, { .name = "MyComponent" }),
+        .type = {
+            .size = ECS_SIZEOF(Position),
+            .alignment = ECS_ALIGNOF(Position)
+        }
+    });
+
+    ecs_add_id(world, ecs_id(EcsIdentifier), comp);
+    test_assert(ecs_has_id(world, ecs_id(EcsIdentifier), comp));
+
+    ecs_fini(world);
+
+    test_assert(true);
+}
+
+void World_fini_w_scoped_tag_added_to_builtin(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "outer" });
+    ecs_entity_t tag = ecs_entity(world, { .name = "MyTag", .parent = parent });
+
+    ecs_add_id(world, EcsExclusive, tag);
+    test_assert(ecs_has_id(world, EcsExclusive, tag));
+
+    ecs_fini(world);
+
+    test_assert(true);
+}
+
+void World_fini_w_scoped_component_set_on_builtin(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "outer" });
+    ecs_entity_t comp = ecs_component(world, {
+        .entity = ecs_entity(world, { .name = "MyComponent", .parent = parent }),
+        .type = {
+            .size = ECS_SIZEOF(Position),
+            .alignment = ECS_ALIGNOF(Position)
+        }
+    });
+
+    Position *p = ecs_ensure_id(world, ecs_id(EcsIdentifier), comp, sizeof(Position));
+    test_assert(p != NULL);
+    p->x = 10;
+    p->y = 20;
+
+    const Position *ptr = ecs_get_id(world, ecs_id(EcsIdentifier), comp);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+
+    test_assert(true);
+}
+
+void World_delete_scoped_component_added_to_builtin(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "outer" });
+    ecs_entity_t comp = ecs_component(world, {
+        .entity = ecs_entity(world, { .name = "MyComponent", .parent = parent }),
+        .type = {
+            .size = ECS_SIZEOF(Position),
+            .alignment = ECS_ALIGNOF(Position)
+        }
+    });
+
+    ecs_add_id(world, ecs_id(EcsIdentifier), comp);
+
+    test_expect_abort();
+
+    ecs_delete(world, comp);
+}
+
+void World_delete_scope_of_component_added_to_builtin(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "outer" });
+    ecs_entity_t comp = ecs_component(world, {
+        .entity = ecs_entity(world, { .name = "MyComponent", .parent = parent }),
+        .type = {
+            .size = ECS_SIZEOF(Position),
+            .alignment = ECS_ALIGNOF(Position)
+        }
+    });
+
+    ecs_add_id(world, ecs_id(EcsIdentifier), comp);
+
+    test_expect_abort();
+
+    ecs_delete(world, parent);
+}
+
 void World_delete_flecs(void) {
     install_test_abort();
 

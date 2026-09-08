@@ -1506,6 +1506,8 @@ void World_get_type_info_T_tag(void);
 void World_get_type_info_r_t_tag(void);
 void World_get_type_info_R_t_tag(void);
 void World_get_type_info_R_T_tag(void);
+void World_fini_w_scoped_component_added_to_builtin(void);
+void World_fini_w_scoped_tag_added_to_builtin(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -7607,6 +7609,14 @@ bake_test_case World_testcases[] = {
     {
         "get_type_info_R_T_tag",
         World_get_type_info_R_T_tag
+    },
+    {
+        "fini_w_scoped_component_added_to_builtin",
+        World_fini_w_scoped_component_added_to_builtin
+    },
+    {
+        "fini_w_scoped_tag_added_to_builtin",
+        World_fini_w_scoped_tag_added_to_builtin
     }
 };
 
@@ -8579,7 +8589,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        122,
+        124,
         World_testcases
     },
     {
