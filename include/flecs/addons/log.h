@@ -149,7 +149,7 @@ void ecs_print_(
  */
 FLECS_API
 void ecs_printv_(
-    int level,
+    int32_t level,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -180,7 +180,7 @@ void ecs_log_(
  */
 FLECS_API
 void ecs_logv_(
-    int level,
+    int32_t level,
     const char *file,
     int32_t line,
     const char *fmt,

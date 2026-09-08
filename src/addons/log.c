@@ -322,7 +322,7 @@ void flecs_colorize_buf(
 }
 
 void ecs_printv_(
-    int level,
+    int32_t level,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -351,7 +351,7 @@ void ecs_printv_(
 }
 
 void ecs_print_(
-    int level,
+    int32_t level,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -364,7 +364,7 @@ void ecs_print_(
 }
 
 void ecs_logv_(
-    int level,
+    int32_t level,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -378,7 +378,7 @@ void ecs_logv_(
 }
 
 void ecs_log_(
-    int level,
+    int32_t level,
     const char *file,
     int32_t line,
     const char *fmt,
