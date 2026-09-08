@@ -35335,10 +35335,6 @@ static int flecs_term_ref_lookup(
         }
         return 0;
     } else if (ref->id & EcsIsName) {
-        if (ref->name == NULL) {
-            flecs_query_validator_error(ctx, "IsName flag specified without name");
-            return -1;
-        }
         return 0;
     }
 
@@ -35388,7 +35384,6 @@ static int flecs_term_ref_lookup(
     }
 
     ref->id = e | ECS_TERM_REF_FLAGS(ref);
-    ref_id = ECS_TERM_REF_ID(ref);
 
     if (!ecs_os_strcmp(name, "*") || !ecs_os_strcmp(name, "_") || 
         !ecs_os_strcmp(name, "$")) 
@@ -35397,18 +35392,11 @@ static int flecs_term_ref_lookup(
         ref->id |= EcsIsVariable;
     }
 
-    /* Check if looked up id is alive (relevant for numerical ids) */
-    if (!(ref->id & EcsIsName) && ref_id) {
-        if (!ecs_is_alive(world, ref_id)) {
-            flecs_query_validator_error(ctx, "identifier '%s' is not alive", 
-                ref->name);
-            return -1;
-        }
-
-        ref->name = NULL;
-        return 0;
+    if (!ecs_is_alive(world, e)) {
+        flecs_query_validator_error(ctx, "identifier '%s' is not alive", name);
+        return -1;
     }
-
+    ref->name = NULL;
     return 0;
 }
 
@@ -35439,17 +35427,12 @@ static int flecs_term_refs_finalize(
         src->id |= EcsIsVariable;
     }
 
-    /* Initialize term identifier flags */
-    if (flecs_term_ref_finalize_flags(src, ctx, "src")) {
-        return -1;
-    }
-
-    if (flecs_term_ref_finalize_flags(first, ctx, "first")) {
-        return -1;
-    }
-
-    if (flecs_term_ref_finalize_flags(second, ctx, "second")) {
-        return -1;
+    ecs_term_ref_t *refs[] = { src, first, second };
+    const char *names[] = { "src", "first", "second" };
+    for (int32_t i = 0; i < 3; i ++) {
+        if (flecs_term_ref_finalize_flags(refs[i], ctx, names[i])) {
+            return -1;
+        }
     }
 
     /* Lookup term identifiers by name */
@@ -35771,23 +35754,15 @@ int flecs_term_finalize(
     ecs_flags64_t first_flags = ECS_TERM_REF_FLAGS(first);
     ecs_flags64_t second_flags = ECS_TERM_REF_FLAGS(second);
 
-    if (first->name && (first->id & ~EcsTermRefFlags)) {
-        flecs_query_validator_error(ctx, 
-            "first.name (%s) and first.id have competing values",
-                first->name);
-        return -1;
-    }
-    if (src->name && (src->id & ~EcsTermRefFlags)) {
-        flecs_query_validator_error(ctx, 
-            "src.name (%s) and src.id have competing values",
-                src->name);
-        return -1;
-    }
-    if (second->name && (second->id & ~EcsTermRefFlags)) {
-        flecs_query_validator_error(ctx, 
-            "second.name (%s) and second.id have competing values", 
-                second->name);
-        return -1;
+    ecs_term_ref_t *refs[] = { src, first, second };
+    const char *names[] = { "src", "first", "second" };
+    for (int32_t i = 0; i < 3; i ++) {
+        if (refs[i]->name && (refs[i]->id & ~EcsTermRefFlags)) {
+            flecs_query_validator_error(ctx,
+                "%s.name (%s) and %s.id have competing values",
+                names[i], refs[i]->name, names[i]);
+            return -1;
+        }
     }
 
     if (ECS_IS_VALUE_PAIR(term->id) && !ecs_term_ref_is_set(second)) {
@@ -35895,27 +35870,9 @@ int flecs_term_finalize(
             }
         }
 
-        if (term->first.id & EcsCascade) {
-            flecs_query_validator_error(ctx, 
-                "cascade modifier invalid for term.first");
-            return -1;
-        }
-
-        if (term->second.id & EcsCascade) {
-            flecs_query_validator_error(ctx, 
-                "cascade modifier invalid for term.second");
-            return -1;
-        }
-
-        if (term->first.id & EcsDesc) {
-            flecs_query_validator_error(ctx, 
-                "desc modifier invalid for term.first");
-            return -1;
-        }
-
-        if (term->second.id & EcsDesc) {
-            flecs_query_validator_error(ctx, 
-                "desc modifier invalid for term.second");
+        if ((first->id | second->id) & (EcsCascade|EcsDesc)) {
+            flecs_query_validator_error(ctx,
+                "cascade and desc modifiers are only valid for term.src");
             return -1;
         }
 
