@@ -3384,6 +3384,7 @@ void Internals_no_double_system_table_after_merge(void);
 void Internals_recreate_deleted_table(void);
 void Internals_no_duplicate_root_table_id(void);
 void Internals_override_os_api_w_addon(void);
+void Internals_override_os_api_strdup_not_called_w_null(void);
 void Internals_records_resize_on_override(void);
 void Internals_table_observed_after_add(void);
 void Internals_table_observed_after_remove(void);
@@ -16663,6 +16664,10 @@ bake_test_case Internals_testcases[] = {
         Internals_override_os_api_w_addon
     },
     {
+        "override_os_api_strdup_not_called_w_null",
+        Internals_override_os_api_strdup_not_called_w_null
+    },
+    {
         "records_resize_on_override",
         Internals_records_resize_on_override
     },
@@ -17194,7 +17199,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        45,
+        46,
         Internals_testcases
     },
     {

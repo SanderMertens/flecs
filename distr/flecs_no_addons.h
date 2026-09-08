@@ -3750,7 +3750,7 @@ void ecs_os_set_api_defaults(void);
 
 /* Strings */
 #ifndef ecs_os_strdup
-#define ecs_os_strdup(str) ecs_os_api.strdup_(str)
+#define ecs_os_strdup(str) ecs_os_strdup_(str)
 #endif
 
 #ifdef __cplusplus
@@ -3965,6 +3965,10 @@ FLECS_API
 void ecs_os_strset(
     char **str, 
     const char *value);
+
+FLECS_API
+char* ecs_os_strdup_(
+    const char *str);
 
 /* Profile tracing */
 #define ecs_os_perf_trace_push(name)

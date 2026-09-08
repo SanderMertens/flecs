@@ -276,6 +276,29 @@ void Internals_override_os_api_w_addon(void) {
     ecs_fini(world);
 }
 
+static ecs_os_api_strdup_t orig_strdup;
+
+static char* strdup_assert_not_null(const char *str) {
+    test_assert(str != NULL);
+    return orig_strdup(str);
+}
+
+void Internals_override_os_api_strdup_not_called_w_null(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    orig_strdup = os_api.strdup_;
+    os_api.strdup_ = strdup_assert_not_null;
+    ecs_os_set_api(&os_api);
+
+    ecs_world_t *world = ecs_init();
+    ecs_fini(world);
+
+    os_api.strdup_ = orig_strdup;
+    ecs_os_set_api(&os_api);
+
+    test_assert(true);
+}
+
 void Internals_records_resize_on_override(void) {
     ecs_world_t *world = ecs_mini();
 

@@ -3481,6 +3481,7 @@
                 "recreate_deleted_table",
                 "no_duplicate_root_table_id",
                 "override_os_api_w_addon",
+                "override_os_api_strdup_not_called_w_null",
                 "records_resize_on_override",
                 "table_observed_after_add",
                 "table_observed_after_remove",

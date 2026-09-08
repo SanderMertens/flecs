@@ -445,6 +445,13 @@ static size_t ecs_os_api_fread(void *ptr, size_t size, size_t count, FILE *file)
     return fread(ptr, size, count, file);
 }
 
+char* ecs_os_strdup_(const char *str) {
+    if (!str) {
+        return NULL;
+    }
+    return ecs_os_api.strdup_(str);
+}
+
 void ecs_os_strset(char **str, const char *value) {
     char *old = str[0];
     str[0] = ecs_os_strdup(value);
