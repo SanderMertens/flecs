@@ -797,49 +797,29 @@ int flecs_query_trivial_has_range(
             }
         }
 
-        bool self_src = (terms[t].src.id & EcsSelf) != 0;
-        bool owned = self_src && (tr != NULL);
-        bool present = owned;
-        bool from_base = false;
-
-        ecs_entity_t base_src = 0;
-        ecs_table_record_t *base_tr = NULL;
-        if (!present && up) {
-            if (ecs_search_relation(real_world, table, 0, term_id, EcsIsA,
-                EcsUp, &base_src, NULL, &base_tr) != -1)
-            {
-                present = true;
-                from_base = true;
-            }
-        }
-
-        if (is_not) {
-            if (present) {
-                if (type_mismatch && !from_base) {
-                    *type_mismatch = true;
-                }
-                return 0;
-            }
+        if (!(terms[t].src.id & EcsSelf)) {
             tr = NULL;
-        } else {
-            if (!present) {
-                if (type_mismatch && !up) {
-                    *type_mismatch = true;
-                }
-                return 0;
-            }
-            if (!owned) {
-                if (!isa_ok || !base_src || !base_tr) {
-                    goto not_trivial;
-                }
-                term_trs[t] = base_tr;
-                term_srcs[t] = base_src;
-                any_from_base = true;
-                continue;
-            }
+        }
+        ecs_entity_t source = 0;
+        if (!tr && up) {
+            ecs_table_record_t *base_tr = NULL;
+            ecs_search_relation(real_world, table, 0, term_id, EcsIsA,
+                EcsUp, &source, NULL, &base_tr);
+            tr = base_tr;
         }
 
+        if ((tr != NULL) == is_not) {
+            if (type_mismatch && !source && (is_not || !up)) {
+                *type_mismatch = true;
+            }
+            return 0;
+        }
+        if (source && !isa_ok) {
+            goto not_trivial;
+        }
         term_trs[t] = tr;
+        term_srcs[t] = source;
+        any_from_base |= source != 0;
     }
 
     if (any_from_base ? !isa_ok : !self_ok) {
