@@ -9,15 +9,30 @@
 /** All observers for a specific (component) id */
 typedef struct ecs_event_id_record_t {
     /* Observers for Self */
-    ecs_map_t self;                  /* map<observer_id, observer_t> */
-    ecs_map_t self_up;               /* map<observer_id, observer_t> */
-    ecs_map_t up;                    /* map<observer_id, observer_t> */
+    ecs_map_t self;
+    ecs_map_t self_up;
+    ecs_map_t up;
 
     /* Number of active observers for (component) id */
     int32_t observer_count;
 
     int32_t up_notify_count;
 } ecs_event_id_record_t;
+
+typedef struct ecs_observer_subscription_t {
+    ecs_observer_t *observer;
+    ecs_id_t register_id;
+    ecs_entity_t src;
+    ecs_entity_t trav;
+    uint64_t id;
+    int8_t term_index;
+    int16_t oper;
+    bool row_field;
+    bool filter;
+    bool tag;
+    bool table_only;
+    bool trivial;
+} ecs_observer_subscription_t;
 
 typedef struct ecs_observer_impl_t {
     ecs_observer_t pub;
@@ -28,11 +43,8 @@ typedef struct ecs_observer_impl_t {
 
     ecs_flags32_t flags;        /**< Observer flags */
 
-    int8_t term_index;          /**< Index of the term in parent observer (single term observers only) */
-    ecs_id_t register_id;       /**< Id observer is registered with (single term observers only) */
-    uint64_t id;                /**< Internal id (not entity id) */
-
-    ecs_vec_t children;         /**< If multi observer, vector stores child observers */
+    ecs_observer_subscription_t subscription;
+    ecs_vec_t subscriptions;
 
     ecs_query_t *not_query;     /**< Query used to populate observer data when a
                                      term with a not operator triggers. */

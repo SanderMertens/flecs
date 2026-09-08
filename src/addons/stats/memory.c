@@ -662,7 +662,8 @@ static ecs_size_t flecs_observer_memory_get(
     const ecs_observer_impl_t *o)
 {
     ecs_size_t result = ECS_SIZEOF(ecs_observer_impl_t);
-    result += ecs_vec_size(&o->children) * ECS_SIZEOF(void*);
+    result += ecs_vec_size(&o->subscriptions) *
+        ECS_SIZEOF(ecs_observer_subscription_t);
 
     if (o->pub.query) {
         result += flecs_query_total_memory_get(o->pub.query);
@@ -670,12 +671,6 @@ static ecs_size_t flecs_observer_memory_get(
 
     if (o->not_query) {
         result += flecs_query_total_memory_get(o->not_query);
-    }
-
-    ecs_observer_impl_t **children = ecs_vec_first(&o->children);
-    int32_t i, count = ecs_vec_count(&o->children);
-    for (i = 0; i < count; i ++) {
-        result += flecs_observer_memory_get(children[i]);
     }
 
     return result;
