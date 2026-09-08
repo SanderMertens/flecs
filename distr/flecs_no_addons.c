@@ -13108,6 +13108,12 @@ static void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     o->callback(it);
 }
 
+static bool flecs_term_ref_is_named_var(
+    const ecs_term_ref_t *ref)
+{
+    return (ref->id & EcsIsVariable) && ref->name != NULL;
+}
+
 static bool flecs_observer_query_has_range(
     const ecs_query_t *query,
     ecs_table_range_t *range,
@@ -13974,6 +13980,12 @@ ecs_observer_t* flecs_observer_init(
         /* An observer with only optional terms is a special case that is
          * only handled by multi observers */
         multi |= term->oper == EcsOptional;
+    }
+
+    if (term_count == 1) {
+        ecs_term_t *term = &terms[0];
+        multi |= flecs_term_ref_is_named_var(&term->first) ||
+            flecs_term_ref_is_named_var(&term->second);
     }
 
     bool is_monitor = impl->flags & EcsObserverIsMonitor;

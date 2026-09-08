@@ -2417,6 +2417,15 @@ void Observer_propagate_custom_rel_add_to_target(void);
 void Observer_propagate_custom_rel_remove_from_target(void);
 void Observer_propagate_custom_rel_masked_add(void);
 void Observer_propagate_add_to_grandparent_w_parent_inherited(void);
+void Observer_single_term_observer_w_var_get_var_pair_second_on_add(void);
+void Observer_single_term_observer_w_var_get_var_pair_second_on_remove(void);
+void Observer_single_term_observer_w_var_get_var_pair_first_on_add(void);
+void Observer_single_term_observer_w_var_get_var_pair_both_vars_on_add(void);
+void Observer_single_term_observer_w_var_get_var_pair_second_on_set(void);
+void Observer_single_term_observer_w_var_get_var_pair_second_w_generation(void);
+void Observer_single_term_observer_w_var_get_var_nested_invoke(void);
+void Observer_single_term_observer_w_var_get_var_pair_second_on_delete_target(void);
+void Observer_single_term_observer_wo_var_invoked_once_per_event(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -12908,6 +12917,42 @@ bake_test_case Observer_testcases[] = {
     {
         "propagate_add_to_grandparent_w_parent_inherited",
         Observer_propagate_add_to_grandparent_w_parent_inherited
+    },
+    {
+        "single_term_observer_w_var_get_var_pair_second_on_add",
+        Observer_single_term_observer_w_var_get_var_pair_second_on_add
+    },
+    {
+        "single_term_observer_w_var_get_var_pair_second_on_remove",
+        Observer_single_term_observer_w_var_get_var_pair_second_on_remove
+    },
+    {
+        "single_term_observer_w_var_get_var_pair_first_on_add",
+        Observer_single_term_observer_w_var_get_var_pair_first_on_add
+    },
+    {
+        "single_term_observer_w_var_get_var_pair_both_vars_on_add",
+        Observer_single_term_observer_w_var_get_var_pair_both_vars_on_add
+    },
+    {
+        "single_term_observer_w_var_get_var_pair_second_on_set",
+        Observer_single_term_observer_w_var_get_var_pair_second_on_set
+    },
+    {
+        "single_term_observer_w_var_get_var_pair_second_w_generation",
+        Observer_single_term_observer_w_var_get_var_pair_second_w_generation
+    },
+    {
+        "single_term_observer_w_var_get_var_nested_invoke",
+        Observer_single_term_observer_w_var_get_var_nested_invoke
+    },
+    {
+        "single_term_observer_w_var_get_var_pair_second_on_delete_target",
+        Observer_single_term_observer_w_var_get_var_pair_second_on_delete_target
+    },
+    {
+        "single_term_observer_wo_var_invoked_once_per_event",
+        Observer_single_term_observer_wo_var_invoked_once_per_event
     }
 };
 
@@ -17117,7 +17162,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        400,
+        409,
         Observer_testcases
     },
     {

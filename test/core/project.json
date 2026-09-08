@@ -2481,7 +2481,16 @@
                 "propagate_custom_rel_add_to_target",
                 "propagate_custom_rel_remove_from_target",
                 "propagate_custom_rel_masked_add",
-                "propagate_add_to_grandparent_w_parent_inherited"
+                "propagate_add_to_grandparent_w_parent_inherited",
+                "single_term_observer_w_var_get_var_pair_second_on_add",
+                "single_term_observer_w_var_get_var_pair_second_on_remove",
+                "single_term_observer_w_var_get_var_pair_first_on_add",
+                "single_term_observer_w_var_get_var_pair_both_vars_on_add",
+                "single_term_observer_w_var_get_var_pair_second_on_set",
+                "single_term_observer_w_var_get_var_pair_second_w_generation",
+                "single_term_observer_w_var_get_var_nested_invoke",
+                "single_term_observer_w_var_get_var_pair_second_on_delete_target",
+                "single_term_observer_wo_var_invoked_once_per_event"
             ]
         }, {
             "id": "ObserverOnSet",

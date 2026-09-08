@@ -277,6 +277,12 @@ static void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     o->callback(it);
 }
 
+static bool flecs_term_ref_is_named_var(
+    const ecs_term_ref_t *ref)
+{
+    return (ref->id & EcsIsVariable) && ref->name != NULL;
+}
+
 static bool flecs_observer_query_has_range(
     const ecs_query_t *query,
     ecs_table_range_t *range,
@@ -285,25 +291,38 @@ static bool flecs_observer_query_has_range(
     ecs_iter_t *it)
 {
 #ifdef FLECS_QUERY_PLANS
-    bool first_var = (term->first.id & EcsIsVariable) && term->first.name;
-    bool second_var = (term->second.id & EcsIsVariable) && term->second.name;
+    bool first_var = flecs_term_ref_is_named_var(&term->first);
+    bool second_var = flecs_term_ref_is_named_var(&term->second);
     if (!first_var && !second_var) {
         return ecs_query_has_range(query, range, it);
+    }
+
+    ecs_world_t *world = query->real_world;
+    ecs_entity_t first = 0, second = 0;
+    if (first_var) {
+        first = flecs_entities_get_alive(world,
+            ECS_IS_PAIR(event_id) ? ECS_PAIR_FIRST(event_id) : event_id);
+        if (!first) {
+            return false;
+        }
+    }
+    if (second_var) {
+        if (!ECS_IS_PAIR(event_id)) {
+            return false;
+        }
+        second = flecs_entities_get_alive(world, ECS_PAIR_SECOND(event_id));
+        if (!second) {
+            return false;
+        }
     }
 
     *it = ecs_query_iter(query->world, query);
     ecs_iter_set_var_as_range(it, 0, range);
     if (first_var) {
-        ecs_iter_set_var(it, ecs_query_find_var(query, term->first.name),
-            ECS_IS_PAIR(event_id) ? ECS_PAIR_FIRST(event_id) : event_id);
+        ecs_iter_set_var(it, ecs_query_find_var(query, term->first.name), first);
     }
     if (second_var) {
-        if (!ECS_IS_PAIR(event_id)) {
-            ecs_iter_fini(it);
-            return false;
-        }
-        ecs_iter_set_var(it, ecs_query_find_var(query, term->second.name),
-            ECS_PAIR_SECOND(event_id));
+        ecs_iter_set_var(it, ecs_query_find_var(query, term->second.name), second);
     }
 
     return ecs_query_next(it);
@@ -1200,6 +1219,12 @@ ecs_observer_t* flecs_observer_init(
         /* An observer with only optional terms is a special case that is
          * only handled by multi observers */
         multi |= term->oper == EcsOptional;
+    }
+
+    if (term_count == 1) {
+        ecs_term_t *term = &terms[0];
+        multi |= flecs_term_ref_is_named_var(&term->first) ||
+            flecs_term_ref_is_named_var(&term->second);
     }
 
     bool is_monitor = impl->flags & EcsObserverIsMonitor;

@@ -1205,7 +1205,9 @@
                 "fixed_src_w_each",
                 "fixed_src_w_run",
                 "untyped_field",
-                "reuse_observer_builder"
+                "reuse_observer_builder",
+                "single_term_observer_w_var_get_var_pair_second",
+                "single_term_observer_w_var_get_var_pair_first"
             ]
         }, {
             "id": "ComponentLifecycle",

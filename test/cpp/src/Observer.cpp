@@ -1862,3 +1862,57 @@ void Observer_reuse_observer_builder(void) {
     test_int(count_1, 2);
     test_int(count_2, 1);
 }
+
+void Observer_single_term_observer_w_var_get_var_pair_second(void) {
+    flecs::world ecs;
+
+    struct Relationship {};
+    ecs.component<Relationship>();
+
+    auto source = ecs.entity("SourceEntity");
+    flecs::entity instance;
+    int32_t invoked = 0;
+
+    ecs.observer().event(flecs::OnAdd).with<Relationship>("$Source")
+        .each([&](flecs::iter& it, size_t row) {
+            test_assert(it.entity(row) == instance);
+            test_assert(it.get_var("this") == instance);
+            test_assert(it.get_var("Source") == source);
+            invoked ++;
+        });
+
+    instance = ecs.entity("Instance");
+    instance.add<Relationship>(source);
+    test_int(invoked, 1);
+
+    int32_t query_invoked = 0;
+    ecs.query_builder().with<Relationship>("$Source")
+        .each([&](flecs::iter& it, size_t row) {
+            test_assert(it.entity(row) == instance);
+            test_assert(it.get_var("Source") == source);
+            query_invoked ++;
+        });
+    test_int(query_invoked, 1);
+}
+
+void Observer_single_term_observer_w_var_get_var_pair_first(void) {
+    flecs::world ecs;
+
+    auto tgt = ecs.entity("Tgt");
+    auto rel = ecs.entity("Rel");
+    flecs::entity instance;
+    int32_t invoked = 0;
+
+    ecs.observer().event(flecs::OnRemove).with("$Rel", tgt)
+        .each([&](flecs::iter& it, size_t row) {
+            test_assert(it.entity(row) == instance);
+            test_assert(it.get_var("this") == instance);
+            test_assert(it.get_var("Rel") == rel);
+            invoked ++;
+        });
+
+    instance = ecs.entity("Instance").add(rel, tgt);
+    test_int(invoked, 0);
+    instance.remove(rel, tgt);
+    test_int(invoked, 1);
+}

@@ -15516,3 +15516,375 @@ void Observer_on_set_no_propagate_after_up_observer_deleted(void) {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    ecs_entity_t e;
+    ecs_entity_t rel;
+    ecs_entity_t tgt;
+    int32_t invoked;
+} single_term_var_ctx_t;
+
+static void SingleTermVarObserver(ecs_iter_t *it) {
+    single_term_var_ctx_t *ctx = it->ctx;
+    test_int(it->count, 1);
+    test_assert(it->entities[0] == ctx->e);
+    test_assert(it->query != NULL);
+
+    test_int(ecs_query_find_var(it->query, "this"), 0);
+    test_assert(ecs_iter_get_var(it, 0) == ctx->e);
+
+    ecs_table_range_t this_range = ecs_iter_get_var_as_range(it, 0);
+    test_assert(this_range.table == it->table);
+    test_int(this_range.offset, it->offset);
+    test_int(this_range.count, 1);
+
+    int32_t rel_var = ecs_query_find_var(it->query, "rel");
+    if (rel_var != -1) {
+        test_assert(rel_var > 0);
+        test_assert(ecs_iter_get_var(it, rel_var) == ctx->rel);
+        ecs_table_range_t r = ecs_iter_get_var_as_range(it, rel_var);
+        test_assert(r.table == ecs_get_table(it->world, ctx->rel));
+        test_int(r.count, 1);
+    }
+
+    int32_t tgt_var = ecs_query_find_var(it->query, "tgt");
+    if (tgt_var != -1) {
+        test_assert(tgt_var > 0);
+        test_assert(ecs_iter_get_var(it, tgt_var) == ctx->tgt);
+        ecs_table_range_t r = ecs_iter_get_var_as_range(it, tgt_var);
+        test_assert(r.table == ecs_get_table(it->world, ctx->tgt));
+        test_int(r.count, 1);
+        ecs_table_t *tgt_table = ecs_get_table(it->world, ctx->tgt);
+        if (ecs_table_count(tgt_table) == 1) {
+            test_assert(ecs_iter_get_var_as_table(it, tgt_var) == tgt_table);
+        } else {
+            test_assert(ecs_iter_get_var_as_table(it, tgt_var) == NULL);
+        }
+    }
+
+    ctx->invoked ++;
+}
+
+void Observer_single_term_observer_w_var_get_var_pair_second_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtTag);
+
+    ecs_entity_t tgt = ecs_new_w(world, TgtTag);
+    single_term_var_ctx_t ctx = { .rel = Rel, .tgt = tgt };
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ .first.id = Rel, .second.name = "$tgt" }},
+        .events = { EcsOnAdd },
+        .callback = SingleTermVarObserver,
+        .ctx = &ctx
+    });
+
+    const ecs_observer_t *op = ecs_observer_get(world, o);
+    test_assert(op != NULL);
+    test_assert(op->query != NULL);
+    test_int(op->query->var_count, 2);
+    test_int(ecs_query_find_var(op->query, "tgt"), 1);
+
+    ecs_entity_t e = ecs_new(world);
+    ctx.e = e;
+    ecs_add_pair(world, e, Rel, tgt);
+    test_int(ctx.invoked, 1);
+
+    ecs_entity_t other = ecs_new_w(world, TgtTag);
+    ctx.tgt = other;
+    ecs_add_pair(world, e, Rel, other);
+    test_int(ctx.invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_single_term_observer_w_var_get_var_pair_second_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtTag);
+
+    ecs_entity_t tgt = ecs_new_w(world, TgtTag);
+    single_term_var_ctx_t ctx = { .rel = Rel, .tgt = tgt };
+
+    ecs_observer(world, {
+        .query.terms = {{ .first.id = Rel, .second.name = "$tgt" }},
+        .events = { EcsOnRemove },
+        .callback = SingleTermVarObserver,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ctx.e = e;
+    ecs_add_pair(world, e, Rel, tgt);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, Rel, tgt);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_single_term_observer_w_var_get_var_pair_first_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, RelTag);
+
+    ecs_entity_t rel = ecs_new_w(world, RelTag);
+    single_term_var_ctx_t ctx = { .rel = rel, .tgt = Tgt };
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ .first.name = "$rel", .second.id = Tgt }},
+        .events = { EcsOnAdd },
+        .callback = SingleTermVarObserver,
+        .ctx = &ctx
+    });
+
+    const ecs_observer_t *op = ecs_observer_get(world, o);
+    test_assert(op != NULL);
+    test_assert(op->query != NULL);
+    test_int(op->query->var_count, 2);
+    test_int(ecs_query_find_var(op->query, "rel"), 1);
+
+    ecs_entity_t e = ecs_new(world);
+    ctx.e = e;
+    ecs_add_pair(world, e, rel, Tgt);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_single_term_observer_w_var_get_var_pair_both_vars_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelTag);
+    ECS_TAG(world, TgtTag);
+
+    ecs_entity_t rel = ecs_new_w(world, RelTag);
+    ecs_entity_t tgt = ecs_new_w(world, TgtTag);
+    single_term_var_ctx_t ctx = { .rel = rel, .tgt = tgt };
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ .first.name = "$rel", .second.name = "$tgt" }},
+        .events = { EcsOnAdd },
+        .callback = SingleTermVarObserver,
+        .ctx = &ctx
+    });
+
+    const ecs_observer_t *op = ecs_observer_get(world, o);
+    test_assert(op != NULL);
+    test_assert(op->query != NULL);
+    test_int(op->query->var_count, 3);
+
+    ecs_entity_t e = ecs_new(world);
+    ctx.e = e;
+    ecs_add_pair(world, e, rel, tgt);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_single_term_observer_w_var_get_var_pair_second_on_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtTag);
+
+    ecs_entity_t tgt = ecs_new_w(world, TgtTag);
+    single_term_var_ctx_t ctx = { .rel = ecs_id(Position), .tgt = tgt };
+
+    ecs_observer(world, {
+        .query.terms = {{ .first.id = ecs_id(Position), .second.name = "$tgt" }},
+        .events = { EcsOnSet },
+        .callback = SingleTermVarObserver,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ctx.e = e;
+    ecs_set_pair(world, e, Position, tgt, {10, 20});
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_single_term_observer_w_var_get_var_pair_second_w_generation(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtTag);
+
+    ecs_entity_t stale = ecs_new(world);
+    ecs_delete(world, stale);
+    ecs_entity_t tgt = ecs_new_w(world, TgtTag);
+    test_assert(tgt != stale);
+    test_assert((uint32_t)tgt == (uint32_t)stale);
+
+    single_term_var_ctx_t ctx = { .rel = Rel, .tgt = tgt };
+
+    ecs_observer(world, {
+        .query.terms = {{ .first.id = Rel, .second.name = "$tgt" }},
+        .events = { EcsOnAdd },
+        .callback = SingleTermVarObserver,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ctx.e = e;
+    ecs_add_pair(world, e, Rel, tgt);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+static void SingleTermVarNestedObserver(ecs_iter_t *it) {
+    single_term_var_ctx_t *ctx = it->ctx;
+    int32_t tgt_var = ecs_query_find_var(it->query, "tgt");
+    test_assert(tgt_var > 0);
+    ecs_entity_t tgt = ecs_iter_get_var(it, tgt_var);
+    test_assert(tgt == ctx->tgt);
+    if (!ctx->invoked ++) {
+        ecs_entity_t outer_tgt = ctx->tgt;
+        ecs_entity_t nested_tgt = ecs_new(it->world);
+        ecs_entity_t nested_e = ecs_new(it->world);
+        ctx->tgt = nested_tgt;
+        ecs_defer_suspend(it->world);
+        ecs_add_pair(it->world, nested_e, ctx->rel, nested_tgt);
+        ecs_defer_resume(it->world);
+        test_int(ctx->invoked, 2);
+        ctx->tgt = outer_tgt;
+        test_assert(ecs_iter_get_var(it, tgt_var) == outer_tgt);
+
+        ecs_query_t *q = ecs_query(it->world, {
+            .terms = {{ .first.id = ctx->rel, .second.name = "$tgt" }}
+        });
+        int32_t q_tgt_var = ecs_query_find_var(q, "tgt");
+        ecs_iter_t qit = ecs_query_iter(it->world, q);
+        int32_t matched = 0;
+        while (ecs_query_next(&qit)) {
+            ecs_entity_t q_tgt = ecs_iter_get_var(&qit, q_tgt_var);
+            test_assert(q_tgt == outer_tgt || q_tgt == nested_tgt);
+            matched += qit.count;
+        }
+        test_int(matched, 2);
+        ecs_query_fini(q);
+
+        test_assert(ecs_iter_get_var(it, tgt_var) == outer_tgt);
+        test_assert(ecs_iter_get_var(it, 0) == ctx->e);
+    }
+}
+
+void Observer_single_term_observer_w_var_get_var_nested_invoke(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t tgt = ecs_new(world);
+    single_term_var_ctx_t ctx = { .rel = Rel, .tgt = tgt };
+
+    ecs_observer(world, {
+        .query.terms = {{ .first.id = Rel, .second.name = "$tgt" }},
+        .events = { EcsOnAdd },
+        .callback = SingleTermVarNestedObserver,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ctx.e = e;
+    ecs_add_pair(world, e, Rel, tgt);
+    test_int(ctx.invoked, 2);
+
+    ecs_fini(world);
+}
+
+static void SingleTermVarDeleteTgtObserver(ecs_iter_t *it) {
+    single_term_var_ctx_t *ctx = it->ctx;
+    test_int(it->count, 1);
+    test_assert(it->entities[0] == ctx->e);
+    int32_t tgt_var = ecs_query_find_var(it->query, "tgt");
+    test_assert(tgt_var > 0);
+    test_assert(ecs_iter_get_var(it, tgt_var) == ctx->tgt);
+    test_assert(ecs_iter_get_var(it, 0) == ctx->e);
+    ctx->invoked ++;
+}
+
+void Observer_single_term_observer_w_var_get_var_pair_second_on_delete_target(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t tgt = ecs_new(world);
+    single_term_var_ctx_t ctx = { .rel = Rel, .tgt = tgt };
+
+    ecs_observer(world, {
+        .query.terms = {{ .first.id = Rel, .second.name = "$tgt" }},
+        .events = { EcsOnRemove },
+        .callback = SingleTermVarDeleteTgtObserver,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ctx.e = e;
+    ecs_add_pair(world, e, Rel, tgt);
+    test_int(ctx.invoked, 0);
+
+    ecs_delete(world, tgt);
+    test_int(ctx.invoked, 1);
+    test_assert(!ecs_has_pair(world, e, Rel, tgt));
+
+    ecs_fini(world);
+}
+
+static void SingleTermNoVarObserver(ecs_iter_t *it) {
+    single_term_var_ctx_t *ctx = it->ctx;
+    test_int(it->count, 1);
+    test_assert(it->entities[0] == ctx->e);
+    test_assert(it->event_id == ecs_pair(ctx->rel, ctx->tgt));
+    test_assert(ecs_field_id(it, 0) == ecs_pair(ctx->rel, ctx->tgt));
+    ctx->invoked ++;
+}
+
+void Observer_single_term_observer_wo_var_invoked_once_per_event(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtTag);
+
+    ecs_entity_t tgt = ecs_new_w(world, TgtTag);
+    single_term_var_ctx_t ctx = { .rel = Rel, .tgt = tgt };
+    single_term_var_ctx_t wc_ctx = { .rel = Rel, .tgt = tgt };
+
+    ecs_observer(world, {
+        .query.terms = {{ .first.id = Rel, .second.id = tgt }},
+        .events = { EcsOnAdd, EcsOnRemove },
+        .callback = SingleTermNoVarObserver,
+        .ctx = &ctx
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ .first.id = Rel, .second.id = EcsWildcard }},
+        .events = { EcsOnAdd, EcsOnRemove },
+        .callback = SingleTermNoVarObserver,
+        .ctx = &wc_ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ctx.e = e;
+    wc_ctx.e = e;
+    ecs_add_pair(world, e, Rel, tgt);
+    test_int(ctx.invoked, 1);
+    test_int(wc_ctx.invoked, 1);
+
+    ecs_add(world, e, TgtTag);
+    test_int(ctx.invoked, 1);
+    test_int(wc_ctx.invoked, 1);
+
+    ecs_remove_pair(world, e, Rel, tgt);
+    test_int(ctx.invoked, 2);
+    test_int(wc_ctx.invoked, 2);
+
+    ecs_fini(world);
+}

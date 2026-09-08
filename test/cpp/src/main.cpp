@@ -1168,6 +1168,8 @@ void Observer_fixed_src_w_each(void);
 void Observer_fixed_src_w_run(void);
 void Observer_untyped_field(void);
 void Observer_reuse_observer_builder(void);
+void Observer_single_term_observer_w_var_get_var_pair_second(void);
+void Observer_single_term_observer_w_var_get_var_pair_first(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -6287,6 +6289,14 @@ bake_test_case Observer_testcases[] = {
     {
         "reuse_observer_builder",
         Observer_reuse_observer_builder
+    },
+    {
+        "single_term_observer_w_var_get_var_pair_second",
+        Observer_single_term_observer_w_var_get_var_pair_second
+    },
+    {
+        "single_term_observer_w_var_get_var_pair_first",
+        Observer_single_term_observer_w_var_get_var_pair_first
     }
 };
 
@@ -8547,7 +8557,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        73,
+        75,
         Observer_testcases
     },
     {
