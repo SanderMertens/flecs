@@ -22,24 +22,8 @@
  *  Copyright (c) 2011-2020 Anton B. Gusev aka AHTOXA
  */
 
-#define MAX_PRECISION	(10)
 #define EXP_THRESHOLD   (3)
 #define INT64_MAX_F ((double)INT64_MAX)
-
-static const double rounders[MAX_PRECISION + 1] =
-{
-	0.5,				// 0
-	0.05,				// 1
-	0.005,				// 2
-	0.0005,				// 3
-	0.00005,			// 4
-	0.000005,			// 5
-	0.0000005,			// 6
-	0.00000005,			// 7
-	0.000000005,		// 8
-	0.0000000005,		// 9
-	0.00000000005		// 10
-};
 
 static char* flecs_strbuf_itoa(
     char *buf,
@@ -85,7 +69,6 @@ static char* flecs_strbuf_itoa(
 static void flecs_strbuf_ftoa(
     ecs_strbuf_t *out, 
     double f, 
-    int precision,
     char nan_delim)
 {
     char buf[64];
@@ -94,31 +77,16 @@ static void flecs_strbuf_ftoa(
 	int64_t intPart;
     int64_t exp = 0;
 
-    if (ecs_os_isnan(f)) {
+    bool nan = ecs_os_isnan(f);
+    if (nan || ecs_os_isinf(f)) {
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendlit(out, "NaN");
-            ecs_strbuf_appendch(out, nan_delim);
-            return;
-        } else {
-            ecs_strbuf_appendlit(out, "NaN");
-            return;
         }
-    }
-    if (ecs_os_isinf(f)) {
+        ecs_strbuf_appendstrn(out, nan ? "NaN" : "Inf", 3);
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendlit(out, "Inf");
-            ecs_strbuf_appendch(out, nan_delim);
-            return;
-        } else {
-            ecs_strbuf_appendlit(out, "Inf");
-            return;
         }
-    }
-
-	if (precision > MAX_PRECISION) {
-		precision = MAX_PRECISION;
+        return;
     }
 
 	if (f < 0) {
@@ -126,19 +94,7 @@ static void flecs_strbuf_ftoa(
 		*ptr++ = '-';
 	}
 
-	if (precision < 0) {
-		if (f < 1.0) precision = 6;
-		else if (f < 10.0) precision = 5;
-		else if (f < 100.0) precision = 4;
-		else if (f < 1000.0) precision = 3;
-		else if (f < 10000.0) precision = 2;
-		else if (f < 100000.0) precision = 1;
-		else precision = 0;
-	}
-
-	if (precision) {
-		f += rounders[precision];
-    }
+    f += 0.00000000005;
 
     /* Make sure that number can be represented as 64bit int, increase exp */
     while (f >= INT64_MAX_F) {
@@ -151,15 +107,13 @@ static void flecs_strbuf_ftoa(
 
     ptr = flecs_strbuf_itoa(ptr, intPart);
 
-	if (precision) {
-		*ptr++ = '.';
-		while (precision--) {
-			f *= 10.0;
-			c = (char)f;
-			*ptr++ = (char)('0' + c);
-			f -= c;
-		}
-	}
+    *ptr++ = '.';
+    for (int32_t i = 0; i < 10; i ++) {
+        f *= 10.0;
+        c = (char)f;
+        *ptr++ = (char)('0' + c);
+        f -= c;
+    }
 	*ptr = 0;
 
     /* Remove trailing 0s */
@@ -383,7 +337,7 @@ void ecs_strbuf_appendflt(
     char nan_delim)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    flecs_strbuf_ftoa(b, flt, 10, nan_delim);
+    flecs_strbuf_ftoa(b, flt, nan_delim);
 }
 
 void ecs_strbuf_appendbool(
