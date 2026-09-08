@@ -2732,6 +2732,22 @@ void Prefab_prefab_child_auto_override_pair_low_rel_id(void);
 void Prefab_reparent_to_prefab_is_prefab(void);
 void Prefab_add_same_childof_to_prefab_parent_w_name(void);
 void Prefab_override_exclusive_pair_w_value(void);
+void Prefab_add_component_to_prefab_after_instantiate(void);
+void Prefab_add_tag_to_prefab_after_instantiate(void);
+void Prefab_set_new_component_on_prefab_after_instantiate(void);
+void Prefab_remove_component_from_prefab_after_instantiate(void);
+void Prefab_add_component_to_prefab_after_instantiate_from_non_empty_table(void);
+void Prefab_add_component_to_nested_prefab_after_instantiate(void);
+void Prefab_add_component_to_nested_prefab_child_after_instantiate(void);
+void Prefab_add_component_to_prefab_after_instances_deleted(void);
+void Prefab_add_component_to_prefab_after_instances_deleted_and_table_cleanup(void);
+void Prefab_set_existing_component_on_prefab_after_instantiate(void);
+void Prefab_add_component_to_prefab_before_instantiate(void);
+void Prefab_fini_w_instantiated_prefab(void);
+void Prefab_add_inherit_component_to_prefab_after_instantiate(void);
+void Prefab_remove_inherit_component_from_prefab_after_instantiate(void);
+void Prefab_add_dont_inherit_component_to_prefab_after_instantiate(void);
+void Prefab_add_override_trait_component_to_prefab_after_instantiate(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -14139,6 +14155,70 @@ bake_test_case Prefab_testcases[] = {
     {
         "override_exclusive_pair_w_value",
         Prefab_override_exclusive_pair_w_value
+    },
+    {
+        "add_component_to_prefab_after_instantiate",
+        Prefab_add_component_to_prefab_after_instantiate
+    },
+    {
+        "add_tag_to_prefab_after_instantiate",
+        Prefab_add_tag_to_prefab_after_instantiate
+    },
+    {
+        "set_new_component_on_prefab_after_instantiate",
+        Prefab_set_new_component_on_prefab_after_instantiate
+    },
+    {
+        "remove_component_from_prefab_after_instantiate",
+        Prefab_remove_component_from_prefab_after_instantiate
+    },
+    {
+        "add_component_to_prefab_after_instantiate_from_non_empty_table",
+        Prefab_add_component_to_prefab_after_instantiate_from_non_empty_table
+    },
+    {
+        "add_component_to_nested_prefab_after_instantiate",
+        Prefab_add_component_to_nested_prefab_after_instantiate
+    },
+    {
+        "add_component_to_nested_prefab_child_after_instantiate",
+        Prefab_add_component_to_nested_prefab_child_after_instantiate
+    },
+    {
+        "add_component_to_prefab_after_instances_deleted",
+        Prefab_add_component_to_prefab_after_instances_deleted
+    },
+    {
+        "add_component_to_prefab_after_instances_deleted_and_table_cleanup",
+        Prefab_add_component_to_prefab_after_instances_deleted_and_table_cleanup
+    },
+    {
+        "set_existing_component_on_prefab_after_instantiate",
+        Prefab_set_existing_component_on_prefab_after_instantiate
+    },
+    {
+        "add_component_to_prefab_before_instantiate",
+        Prefab_add_component_to_prefab_before_instantiate
+    },
+    {
+        "fini_w_instantiated_prefab",
+        Prefab_fini_w_instantiated_prefab
+    },
+    {
+        "add_inherit_component_to_prefab_after_instantiate",
+        Prefab_add_inherit_component_to_prefab_after_instantiate
+    },
+    {
+        "remove_inherit_component_from_prefab_after_instantiate",
+        Prefab_remove_inherit_component_from_prefab_after_instantiate
+    },
+    {
+        "add_dont_inherit_component_to_prefab_after_instantiate",
+        Prefab_add_dont_inherit_component_to_prefab_after_instantiate
+    },
+    {
+        "add_override_trait_component_to_prefab_after_instantiate",
+        Prefab_add_override_trait_component_to_prefab_after_instantiate
     }
 };
 
@@ -17204,7 +17284,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        191,
+        207,
         Prefab_testcases
     },
     {

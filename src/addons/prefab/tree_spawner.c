@@ -373,3 +373,54 @@ void flecs_tree_spawner_assert_not_instantiated(
 #endif
 
 #endif
+
+#ifdef FLECS_DEBUG
+static bool flecs_prefab_diff_has_override(
+    ecs_world_t *world,
+    const ecs_type_t *type)
+{
+    int32_t i;
+    for (i = 0; i < type->count; i ++) {
+        ecs_id_t id = type->array[i];
+        if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
+            return true;
+        }
+
+        ecs_component_record_t *cr = flecs_components_get(world, id);
+        if (cr && !(cr->flags &
+            (EcsIdOnInstantiateInherit|EcsIdOnInstantiateDontInherit)))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void flecs_prefab_assert_not_instantiated(
+    ecs_world_t *world,
+    ecs_entity_t prefab,
+    const ecs_table_diff_t *diff)
+{
+    if (world->flags & EcsWorldQuit) {
+        return;
+    }
+
+    ecs_component_record_t *cr = flecs_components_get(
+        world, ecs_pair(EcsIsA, prefab));
+    if (!cr || !flecs_table_cache_count(&cr->cache)) {
+        return;
+    }
+
+    if (!flecs_prefab_diff_has_override(world, &diff->added) &&
+        !flecs_prefab_diff_has_override(world, &diff->removed))
+    {
+        return;
+    }
+
+    char *path = ecs_get_path(world, prefab);
+    ecs_abort(ECS_ALREADY_IN_USE,
+        "cannot add or remove auto-overridden components of prefab '%s' "
+        "after it has been instantiated", path);
+    ecs_os_free(path);
+}
+#endif
