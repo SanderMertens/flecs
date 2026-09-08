@@ -41594,90 +41594,42 @@ int32_t* flecs_table_get_dirty_state(
     return table->dirty_state;
 }
 
-/* Table move logic for bitset (toggle component) column */
 static void flecs_table_move_bitset_columns(
-    ecs_table_t *dst_table, 
+    ecs_table_t *dst_table,
     int32_t dst_index,
-    ecs_table_t *src_table, 
+    ecs_table_t *src_table,
     int32_t src_index,
     int32_t count,
     bool clear)
 {
-    int32_t i_old = 0, src_column_count = src_table->_->bs_count;
-    int32_t i_new = 0, dst_column_count = dst_table->_->bs_count;
-
-    if (!src_column_count && !dst_column_count) {
-        return;
-    }
-
-    ecs_bitset_t *src_columns = src_table->_->bs_columns;
-    ecs_bitset_t *dst_columns = dst_table->_->bs_columns;
-
-    ecs_type_t dst_type = dst_table->type;
-    ecs_type_t src_type = src_table->type;
-
-    ecs_id_t *dst_ids = dst_type.array;
-    ecs_id_t *src_ids = src_type.array;
-
-    int32_t dst_type_count = dst_type.count;
-    int32_t src_type_count = src_type.count;
-    int32_t ti_new = dst_table->_->bs_offset;
-    int32_t ti_old = src_table->_->bs_offset;
-
-    for (; (i_new < dst_column_count) && (i_old < src_column_count);) {
-        ecs_id_t dst_id = dst_ids[ti_new];
-        ecs_id_t src_id = src_ids[ti_old];
-
-        if (dst_id == src_id) {
-            ecs_bitset_t *src_bs = &src_columns[i_old];
-            ecs_bitset_t *dst_bs = &dst_columns[i_new];
-
+    ecs_table__t *src = src_table->_;
+    ecs_table__t *dst = dst_table->_;
+    int32_t dst_type = dst->bs_offset, dst_column = 0, src_column = 0;
+    for (int32_t i = src->bs_offset; src_column < src->bs_count; i ++) {
+        ecs_id_t id = src_table->type.array[i];
+        if (!ECS_HAS_ID_FLAG(id, TOGGLE)) {
+            continue;
+        }
+        ecs_bitset_t *src_bs = &src->bs_columns[src_column ++];
+        while (dst_type < dst_table->type.count &&
+            dst_table->type.array[dst_type] < id)
+        {
+            dst_column += ECS_HAS_ID_FLAG(
+                dst_table->type.array[dst_type], TOGGLE) != 0;
+            dst_type ++;
+        }
+        if (dst_type < dst_table->type.count &&
+            dst_table->type.array[dst_type] == id)
+        {
+            ecs_bitset_t *dst_bs = &dst->bs_columns[dst_column];
             flecs_bitset_ensure(dst_bs, dst_index + count);
-
-            int i;
-            for (i = 0; i < count; i ++) {
-                uint64_t value = flecs_bitset_get(src_bs, src_index + i);
-                flecs_bitset_set(dst_bs, dst_index + i, value);
-            }
-
-            if (clear) {
-                ecs_assert(count == flecs_bitset_count(src_bs),
-                    ECS_INTERNAL_ERROR, NULL);
-                flecs_bitset_fini(src_bs);
-            }
-        } else if (dst_id > src_id) {
-            if (clear) {
-                ecs_bitset_t *src_bs = &src_columns[i_old];
-                flecs_bitset_fini(src_bs);
+            for (int32_t j = 0; j < count; j ++) {
+                flecs_bitset_set(dst_bs, dst_index + j,
+                    flecs_bitset_get(src_bs, src_index + j));
             }
         }
-
-        if (dst_id <= src_id) {
-            i_new ++;
-            ti_new ++;
-            while ((ti_new < dst_type_count) &&
-                !ECS_HAS_ID_FLAG(dst_ids[ti_new], TOGGLE))
-            {
-                ti_new ++;
-            }
-        }
-        if (dst_id >= src_id) {
-            i_old ++;
-            ti_old ++;
-            while ((ti_old < src_type_count) &&
-                !ECS_HAS_ID_FLAG(src_ids[ti_old], TOGGLE))
-            {
-                ti_old ++;
-            }
-        }
-    }
-
-    /* Clear remaining columns */
-    if (clear) {
-        for (; (i_old < src_column_count); i_old ++) {
-            ecs_bitset_t *src_bs = &src_columns[i_old];
-            ecs_assert(count == flecs_bitset_count(src_bs), 
-                ECS_INTERNAL_ERROR, NULL);
+        if (clear) {
+            ecs_assert(count == flecs_bitset_count(src_bs), ECS_INTERNAL_ERROR, NULL);
             flecs_bitset_fini(src_bs);
         }
     }
