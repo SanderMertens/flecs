@@ -3053,6 +3053,16 @@ static void StringElem_ctor(
     string_elem_ctor_count += count;
 }
 
+static void StringElem_dtor(
+    void *ptr, int32_t count, const ecs_type_info_t *ti)
+{
+    (void)ti;
+    StringElem *elems = ptr;
+    for (int32_t i = 0; i < count; i ++) {
+        ecs_os_free(elems[i].name);
+    }
+}
+
 void Collection_vector_member_w_string_elems(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3073,7 +3083,8 @@ void Collection_vector_member_w_string_elems(void) {
     });
 
     ecs_set_hooks(world, StringElem, {
-        .ctor = StringElem_ctor
+        .ctor = StringElem_ctor,
+        .dtor = StringElem_dtor
     });
 
     ecs_entity_t vec = ecs_vector(world, {

@@ -777,7 +777,7 @@ static const char* flecs_script_parse_lhs(
             Parse(
                 case '}':
                 case ']':
-                    if (t->kind != until) {
+                    if (t->kind != (ecs_token_kind_t)until) {
                         Error("expected '%c'", until);
                     }
                     break;

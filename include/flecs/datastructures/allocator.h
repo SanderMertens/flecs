@@ -223,7 +223,7 @@ void flecs_free(
 
 /** Reallocate memory for count elements of type T (OS allocator fallback). */
 #define flecs_realloc_n(a, T, count_dst, count_src, ptr)\
-    flecs_realloc(a, ECS_SIZEOF(T) * count_dst, ECS_SIZEOF(T) * count_src, ptr)
+    flecs_realloc(a, ECS_SIZEOF(T) * (count_dst), ECS_SIZEOF(T) * (count_src), ptr)
 
 /** Duplicate count elements of type T (OS allocator fallback). */
 #define flecs_dup_n(a, T, count, ptr) flecs_dup(a, ECS_SIZEOF(T) * (count), ptr)

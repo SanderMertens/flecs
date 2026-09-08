@@ -370,7 +370,7 @@ done:
         }
     }
 
-    if (parser && parser->function_token) {
+    if (out && parser && parser->function_token) {
         if (pos[0] == '(') {
             out->kind = EcsTokFunction;
             pos ++;

@@ -556,7 +556,6 @@ static int flecs_meta_cursor_from_str(
         goto error;
     default:
         ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
-        break;
     }
 
     return 0;
@@ -1475,7 +1474,7 @@ static int flecs_meta_assign_opaque_number(
         break;
     }
     case EcsChar: {
-        char value = number.i;
+        char value = flecs_ito(char, number.i);
         if (opaque->assign_char) {
             opaque->assign_char(ptr, value);
             return 0;
@@ -1589,7 +1588,7 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
         ecs_assert(ptr != NULL, ECS_INVALID_OPERATION, "no object to assign");
     }
     if (flecs_meta_op_is_value(op)) {
-        kind = EcsOpPrimitive + from;
+        kind = (ecs_meta_op_kind_t)(EcsOpPrimitive + (int)from);
         ptr = flecs_meta_cursor_value_ensure(cursor, ptr,
             *types[from]);
         if (!ptr) {
@@ -1679,7 +1678,8 @@ error:
         return ecs_meta_set_null(cursor);
     }
     const char *name = from == EcsI64 ? "int" : from == EcsU64 ? "uint" :
-        from == EcsF64 ? "float" : flecs_meta_op_kind_str(EcsOpPrimitive + from);
+        from == EcsF64 ? "float" : flecs_meta_op_kind_str(
+            (ecs_meta_op_kind_t)(EcsOpPrimitive + (int)from));
     flecs_meta_conversion_error(cursor, op, name);
     return -1;
 }
@@ -1951,20 +1951,20 @@ int ecs_meta_set_null(
     case EcsOpString:
         ecs_os_free(*(char**)ptr);
         flecs_meta_set_t(ecs_string_t, ptr, NULL);
-        break;
+        return 0;
     case EcsOpOpaqueValue: {
         const EcsOpaque *ot = ecs_get(cursor->world, op->type, EcsOpaque);
         if (ot && ot->assign_null) {
             ot->assign_null(ptr);
-            break;
+            return 0;
         }
+        break;
     }
     default:
-        flecs_meta_conversion_error(cursor, op, "null");
-        goto error;
+        break;
     }
 
-    return 0;
+    flecs_meta_conversion_error(cursor, op, "null");
 error:
     return -1;
 }
@@ -1979,6 +1979,7 @@ static FLECS_ALWAYS_INLINE flecs_meta_number_t flecs_meta_to_number(
     const char *name = to == EcsBool ? "bool" : to == EcsI64 ? "int" :
         to == EcsU64 ? "uint" : to == EcsF64 ? "float" :
         to == EcsChar ? "char" : "entity";
+    (void)name;
     if ((to == EcsChar && kind != EcsOpChar) ||
         (to == EcsEntity && kind != EcsOpEntity) ||
         (to == EcsId && kind != EcsOpEntity && kind != EcsOpId))
@@ -2016,7 +2017,7 @@ static FLECS_ALWAYS_INLINE flecs_meta_number_t flecs_meta_to_number(
         from = EcsU64;
         break;
     case EcsOpF32:
-        value.f = *(const ecs_f32_t*)ptr;
+        value.f = (double)*(const ecs_f32_t*)ptr;
         from = EcsF64;
         break;
     case EcsOpF64:
@@ -2156,7 +2157,6 @@ const char* ecs_meta_get_string(
     /* fall through */
     default:
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for string");
-        break;
     }
 error:
     return 0;

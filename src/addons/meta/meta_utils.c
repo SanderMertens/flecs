@@ -176,7 +176,7 @@ ecs_meta_op_kind_t flecs_meta_primitive_to_op_kind(
     if (kind < EcsBool || kind > EcsPrimitiveKindLast) {
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
-    return (ecs_meta_op_kind_t)(EcsOpPrimitive + kind);
+    return (ecs_meta_op_kind_t)(EcsOpPrimitive + (int)kind);
 }
 
 ecs_entity_t flecs_meta_op_kind_to_type(

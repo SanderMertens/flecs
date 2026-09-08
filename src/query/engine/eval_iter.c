@@ -748,7 +748,7 @@ int flecs_query_trivial_has_range(
 
     ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;
 
-    if (table && ((offset + count) > ecs_table_count(table))) {
+    if (!table || ((offset + count) > ecs_table_count(table))) {
         return 0;
     }
 

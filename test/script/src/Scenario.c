@@ -1,4 +1,5 @@
 #include <script.h>
+#include <math.h>
 
 static bool ir_enabled = false;
 static ecs_script_eval_desc_t ir_desc = {0};
@@ -324,33 +325,33 @@ void Scenario_rocket_instantiate(void) {
 
     const Vec3 *p = scenario_get(world, "r.skirt", "Position3");
     test_assert(p != NULL);
-    test_flt(p->y, 0.44);
+    test_assert(fabs((double)(p->y) - (0.44)) < 0.00001);
 
     const ShapeValue *cyl = scenario_get(world, "r.tank_1", "Cylinder");
     test_assert(cyl != NULL);
     test_int(cyl->segments, 20);
     test_bool(cyl->smooth, true);
-    test_flt(cyl->length, 1.02 - 0.03);
+    test_assert(fabs((double)(cyl->length) - (1.02 - 0.03)) < 0.00001);
 
     p = scenario_get(world, "r.tank_1", "Position3");
     test_assert(p != NULL);
-    test_flt(p->y, 0.62 + 1.02 + 1.02 * 0.5);
+    test_assert(fabs((double)(p->y) - (0.62 + 1.02 + 1.02 * 0.5)) < 0.00001);
 
     p = scenario_get(world, "r.bay_1", "Position3");
     test_assert(p != NULL);
-    test_flt(p->y, 0.62 + 2 * 1.02 + 0.78 + 0.78 * 0.5);
+    test_assert(fabs((double)(p->y) - (0.62 + 2 * 1.02 + 0.78 + 0.78 * 0.5)) < 0.00001);
 
     const Vec3 *rot = scenario_get(world, "r.bay_1", "Rotation3");
     test_assert(rot != NULL);
-    test_flt(rot->y, 0.5);
+    test_assert(fabs((double)(rot->y) - (0.5)) < 0.00001);
 
     ecs_entity_t bay = ecs_lookup(world, "r.bay_1");
     test_int(scenario_child_count(world, bay), 1 + 4);
 
     const Vec3 *port = scenario_get(world, "r.bay_1.port_1", "Position3");
     test_assert(port != NULL);
-    test_flt(port->x, 1.5708 * (0.42 + 0.06));
-    test_flt(port->z, (0.42 + 0.06) - 1.5708);
+    test_assert(fabs((double)(port->x) - (1.5708 * (0.42 + 0.06))) < 0.00001);
+    test_assert(fabs((double)(port->z) - ((0.42 + 0.06) - 1.5708)) < 0.00001);
 
     ecs_entity_t port_e = ecs_lookup(world, "r.bay_1.port_1");
     test_int(scenario_child_count(world, port_e), 2);
@@ -366,7 +367,7 @@ void Scenario_rocket_instantiate(void) {
 
     p = scenario_get(world, "r.nose_cone", "Position3");
     test_assert(p != NULL);
-    test_flt(p->y, 0.62 + 2 * 1.02 + 2 * 0.78 + 0.57);
+    test_assert(fabs((double)(p->y) - (0.62 + 2 * 1.02 + 2 * 0.78 + 0.57)) < 0.00001);
 
     ecs_fini(world);
 }
@@ -422,7 +423,7 @@ void Scenario_rocket_partial_fuel(void) {
     test_assert(skirt != 0 && tank0 != 0 && bay0 != 0);
 
     const Vec3 *p = scenario_get(world, "r.bay_0", "Position3");
-    test_flt(p->y, 0.62 + 2 * 1.02 + 0.78 * 0.5);
+    test_assert(fabs((double)(p->y) - (0.62 + 2 * 1.02 + 0.78 * 0.5)) < 0.00001);
 
     scenario_set_prop(world, r, "Rocket", "fuel", 3);
 
@@ -434,9 +435,9 @@ void Scenario_rocket_partial_fuel(void) {
     test_int(scenario_child_count(world, r), 1 + 4 + 6 + 2 + 1);
 
     p = scenario_get(world, "r.bay_0", "Position3");
-    test_flt(p->y, 0.62 + 3 * 1.02 + 0.78 * 0.5);
+    test_assert(fabs((double)(p->y) - (0.62 + 3 * 1.02 + 0.78 * 0.5)) < 0.00001);
     p = scenario_get(world, "r.nose_cone", "Position3");
-    test_flt(p->y, 0.62 + 3 * 1.02 + 2 * 0.78 + 0.57);
+    test_assert(fabs((double)(p->y) - (0.62 + 3 * 1.02 + 2 * 0.78 + 0.57)) < 0.00001);
 
     scenario_set_prop(world, r, "Rocket", "fuel", 1);
 
@@ -447,7 +448,7 @@ void Scenario_rocket_partial_fuel(void) {
     test_int(scenario_child_count(world, r), 1 + 4 + 2 + 2 + 1);
 
     p = scenario_get(world, "r.bay_0", "Position3");
-    test_flt(p->y, 0.62 + 1 * 1.02 + 0.78 * 0.5);
+    test_assert(fabs((double)(p->y) - (0.62 + 1 * 1.02 + 0.78 * 0.5)) < 0.00001);
 
     ecs_fini(world);
 }
@@ -472,14 +473,14 @@ void Scenario_rocket_partial_engines(void) {
     test_int(scenario_child_count(world, r), 2 * 2 + 2 + 1);
 
     const Vec3 *p = scenario_get(world, "r.tank_0", "Position3");
-    test_flt(p->y, 1.02 * 0.5);
+    test_assert(fabs((double)(p->y) - (1.02 * 0.5)) < 0.00001);
 
     scenario_set_prop(world, r, "Rocket", "engines", 2);
 
     test_assert(ecs_lookup(world, "r.skirt") != 0);
     test_assert(ecs_lookup(world, "r.fin_3") != 0);
     p = scenario_get(world, "r.tank_0", "Position3");
-    test_flt(p->y, 0.62 + 1.02 * 0.5);
+    test_assert(fabs((double)(p->y) - (0.62 + 1.02 * 0.5)) < 0.00001);
 
     ecs_fini(world);
 }
@@ -503,7 +504,7 @@ void Scenario_rocket_partial_valid_toggle_twice(void) {
     test_assert(nose != 0);
     const ShapeValue *cone = scenario_get(world, "r.nose_cone", "Cone");
     test_assert(cone != NULL);
-    test_flt(cone->length, 0.88);
+    test_assert(fabs((double)(cone->length) - (0.88)) < 0.00001);
 
     scenario_set_prop(world, r, "Rocket", "valid", 0);
     test_assert(ecs_lookup(world, "r.nose_cone") == 0);
@@ -558,22 +559,22 @@ void Scenario_bunny_partial_value(void) {
     test_assert(ear != 0 && body != 0);
 
     const Vec3 *rot = scenario_get(world, "b.ear_left", "Rotation3");
-    test_flt(rot->z, -0.35);
+    test_assert(fabs((double)(rot->z) - (-0.35)) < 0.00001);
 
     scenario_set_prop(world, b, "Bunny", "speed", 20);
 
     test_assert(ecs_lookup(world, "b.ear_left") == ear);
     test_assert(ecs_lookup(world, "b.body") == body);
     rot = scenario_get(world, "b.ear_left", "Rotation3");
-    test_flt(rot->z, 0.4);
+    test_assert(fabs((double)(rot->z) - (0.4)) < 0.00001);
     rot = scenario_get(world, "b.ear_right", "Rotation3");
-    test_flt(rot->z, 0.4);
+    test_assert(fabs((double)(rot->z) - (0.4)) < 0.00001);
     const Vec3 *p = scenario_get(world, "b.body", "Position3");
-    test_flt(p->y, 0.55);
+    test_assert(fabs((double)(p->y) - (0.55)) < 0.00001);
 
     scenario_set_prop(world, b, "Bunny", "speed", 100);
     rot = scenario_get(world, "b.ear_left", "Rotation3");
-    test_flt(rot->z, 4.4);
+    test_assert(fabs((double)(rot->z) - (4.4)) < 0.00001);
 
     ecs_fini(world);
 }
@@ -602,7 +603,7 @@ void Scenario_bunny_partial_branch(void) {
     test_int(scenario_child_count(world, eye), 2);
     const Vec3 *rot = scenario_get(world, "b.eye_left.bar_a", "Rotation3");
     test_assert(rot != NULL);
-    test_flt(rot->z, 3.1415926 / 4);
+    test_assert(fabs((double)(rot->z) - (3.1415926 / 4)) < 0.00001);
 
     scenario_set_prop(world, b, "Bunny", "dead", 0);
 
@@ -630,13 +631,13 @@ void Scenario_gauge_partial_text_and_frac(void) {
     test_assert(fill != 0 && bg != 0);
 
     const RectValue *rect = scenario_get(world, "g.fill", "Rect");
-    test_flt(rect->width, 3 + (80 - 3) * 0.5);
+    test_assert(fabs((double)(rect->width) - (3 + (80 - 3) * 0.5)) < 0.00001);
 
     scenario_set_prop(world, g, "StatusGauge", "frac", 0.25);
     test_assert(ecs_lookup(world, "g.fill") == fill);
     test_assert(ecs_lookup(world, "g.bg") == bg);
     rect = scenario_get(world, "g.fill", "Rect");
-    test_flt(rect->width, 3 + (80 - 3) * 0.25);
+    test_assert(fabs((double)(rect->width) - (3 + (80 - 3) * 0.25)) < 0.00001);
 
     scenario_set_prop_str(world, g, "StatusGauge", "text", "ore");
     ecs_entity_t label = ecs_lookup(world, "g.label");
@@ -753,11 +754,11 @@ void Scenario_ir_and_ast_instances_coexist(void) {
 
     const Vec3 *rot = scenario_get(world, "b.b.ear_left", "Rotation3");
     test_assert(rot != NULL);
-    test_flt(rot->z, 0.4);
+    test_assert(fabs((double)(rot->z) - (0.4)) < 0.00001);
 
     scenario_set_prop(world, b, "Bunny2", "speed", 5);
     rot = scenario_get(world, "b.b.ear_left", "Rotation3");
-    test_flt(rot->z, -0.35);
+    test_assert(fabs((double)(rot->z) - (-0.35)) < 0.00001);
 
     ecs_fini(world);
 }
@@ -1018,7 +1019,7 @@ void Scenario_traffic_car_blinkers(void) {
         for (int32_t i = 0; i < it.count; i ++) {
             const EmissiveValue *e = ecs_get_id(world, it.entities[i], emissive);
             if (e && e->color.r == 255 && e->color.g == 0) {
-                test_flt(e->strength, 4.4);
+                test_assert(fabs((double)(e->strength) - (4.4)) < 0.00001);
                 brake_lamps ++;
             }
         }
@@ -1061,7 +1062,7 @@ void Scenario_traffic_streetlamp_daylight(void) {
     test_flt(traffic_bulb(world, "forced.bulb"), 16);
     {
         const EmissiveValue *e = scenario_get(world, "lamp.lens", "Emissive");
-        test_flt(e->strength, 0.2);
+        test_assert(fabs((double)(e->strength) - (0.2)) < 0.00001);
         const Vec3 *s = scenario_get(world, "lamp.glow", "Scale3");
         test_flt(s->x, 0);
     }
@@ -1073,12 +1074,12 @@ void Scenario_traffic_streetlamp_daylight(void) {
     test_flt(traffic_bulb(world, "forced.bulb"), 16);
     {
         const EmissiveValue *e = scenario_get(world, "lamp.lens", "Emissive");
-        test_flt(e->strength, 2.6);
+        test_assert(fabs((double)(e->strength) - (2.6)) < 0.00001);
         test_int(e->color.r, 255); test_int(e->color.g, 190);
         const Vec3 *s = scenario_get(world, "lamp.glow", "Scale3");
         test_flt(s->x, 1);
         e = scenario_get(world, "lamp.pool", "Emissive");
-        test_flt(e->strength, 0.05);
+        test_assert(fabs((double)(e->strength) - (0.05)) < 0.00001);
     }
 
     traffic_set_daylight(world, 0.2);
@@ -1089,7 +1090,7 @@ void Scenario_traffic_streetlamp_daylight(void) {
     test_flt(traffic_bulb(world, "forced.bulb"), 16);
     {
         const EmissiveValue *e = scenario_get(world, "lamp.lens", "Emissive");
-        test_flt(e->strength, 0.2);
+        test_assert(fabs((double)(e->strength) - (0.2)) < 0.00001);
         const Vec3 *s = scenario_get(world, "lamp.glow", "Scale3");
         test_flt(s->x, 0);
     }

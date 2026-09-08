@@ -107,6 +107,8 @@ void* flecs_hashmap_get_(
 {
     ecs_assert(map->key_size == key_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
+    (void)key_size;
+    (void)value_size;
 
     uint64_t hash = map->hash(key);
     ecs_hm_bucket_t *bucket = flecs_hashmap_find_key(
@@ -122,6 +124,7 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
 {
     ecs_assert(map->key_size == key_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
+    (void)value_size;
 
     uint64_t hash = map->hash(key);
     ecs_hm_bucket_t **r = ecs_map_ensure_ref(&map->impl, ecs_hm_bucket_t, hash);
@@ -173,6 +176,7 @@ void flecs_hashmap_remove_w_hash_(
 {
     ecs_assert(map->key_size == key_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
+    (void)key_size;
     (void)value_size;
 
     ecs_hm_bucket_t *bucket = flecs_hashmap_find_key(

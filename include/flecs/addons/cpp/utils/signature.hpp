@@ -21,6 +21,8 @@ namespace _ {
 
     template <typename... Components, typename Builder>
     void populate_signature(flecs::world_t *world, Builder *builder) {
+        (void)world;
+        (void)builder;
         (builder->with(_::type<remove_pointer_t<Components>>::id(world))
             .inout(type_to_inout<Components>()).oper(type_to_oper<Components>()), ...);
     }

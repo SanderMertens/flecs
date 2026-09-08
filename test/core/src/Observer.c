@@ -15117,11 +15117,11 @@ void Observer_nomatch_table_memo_alternating_tables(void) {
 
     int i;
     for (i = 0; i < 8; i ++) {
-        ctx = (Probe){0};
+        ecs_os_zeromem(&ctx);
         ecs_set(world, skip, Position, {10, 20});
         test_int(ctx.invoked, 0);
 
-        ctx = (Probe){0};
+        ecs_os_zeromem(&ctx);
         ecs_set(world, hit, Position, {10, 20});
         test_int(ctx.invoked, 1);
         test_uint(ctx.e[0], hit);
@@ -15160,13 +15160,13 @@ void Observer_nomatch_table_memo_after_table_delete(void) {
         });
     }
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_entity_t hit = ecs_new(world);
     ecs_set(world, hit, Position, {10, 20});
     test_int(ctx.invoked, 1);
     test_uint(ctx.e[0], hit);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_entity_t skip2 = ecs_new_w(world, TagA);
     ecs_set(world, skip2, Position, {10, 20});
     test_int(ctx.invoked, 0);
@@ -15196,15 +15196,15 @@ void Observer_up_isa_term_no_match_then_base_gains_component(void) {
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_add(world, inst, TagA);
     test_int(ctx.invoked, 0);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_set(world, base, Position, {10, 20});
     test_assert(ctx.invoked != 0);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_entity_t inst2 = ecs_new_w_pair(world, EcsIsA, base);
     ecs_add(world, inst2, TagA);
     test_assert(ctx.invoked != 0);
@@ -15237,12 +15237,12 @@ void Observer_up_isa_term_alternating_match_and_no_match(void) {
 
     int i;
     for (i = 0; i < 8; i ++) {
-        ctx = (Probe){0};
+        ecs_os_zeromem(&ctx);
         ecs_entity_t bad = ecs_new_w_pair(world, EcsIsA, without_pos);
         ecs_add(world, bad, TagA);
         test_int(ctx.invoked, 0);
 
-        ctx = (Probe){0};
+        ecs_os_zeromem(&ctx);
         ecs_entity_t good = ecs_new_w_pair(world, EcsIsA, with_pos);
         ecs_add(world, good, TagA);
         test_int(ctx.invoked, 1);
@@ -15274,7 +15274,7 @@ void Observer_up_isa_not_term_base_gains_component(void) {
 
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
     ecs_add(world, e1, TagA);
     test_int(ctx.invoked, 1);
@@ -15282,14 +15282,14 @@ void Observer_up_isa_not_term_base_gains_component(void) {
 
     ecs_add_id(world, base, TagB);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, base);
     ecs_add(world, e2, TagA);
     test_int(ctx.invoked, 0);
 
     ecs_remove_id(world, base, TagB);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, base);
     ecs_add(world, e3, TagA);
     test_int(ctx.invoked, 1);

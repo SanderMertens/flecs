@@ -75,6 +75,7 @@ struct flecs_script_entity_state_t {
     bool created;
 };
 
+FLECS_API
 int flecs_script_eval_entity_enter(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
@@ -221,12 +222,12 @@ void flecs_script_frame_pop(
 
 void flecs_script_eval_error_(
     ecs_script_eval_visitor_t *v,
-    ecs_script_node_t *node,
+    const ecs_script_node_t *node,
     const char *fmt,
     ...);
 
 #define flecs_script_eval_error(v, node, ...)\
-    flecs_script_eval_error_(v, (ecs_script_node_t*)node, __VA_ARGS__)
+    flecs_script_eval_error_(v, (const ecs_script_node_t*)node, __VA_ARGS__)
 
 bool flecs_script_is_builtin(
     const ecs_world_t *world,
@@ -248,7 +249,7 @@ ecs_entity_t flecs_script_create_entity(
 
 const ecs_type_info_t* flecs_script_get_type_info(
     ecs_script_eval_visitor_t *v,
-    void *node,
+    const void *node,
     ecs_id_t id);
 
 int flecs_script_eval_expr(
@@ -265,6 +266,7 @@ int flecs_script_eval_id_elem(
     int32_t sp,
     ecs_entity_t *elem);
 
+FLECS_API
 void flecs_script_eval_visit_init(
     const ecs_script_impl_t *script,
     ecs_script_eval_visitor_t *v,
@@ -280,6 +282,7 @@ void flecs_script_eval_push_vars(
 void flecs_script_eval_pop_vars(
     ecs_script_eval_visitor_t *v);
 
+FLECS_API
 void flecs_script_eval_visit_fini(
     ecs_script_eval_visitor_t *v,
     const ecs_script_eval_desc_t *desc);
@@ -293,6 +296,7 @@ void flecs_script_eval_cleanup(
     ecs_script_eval_visitor_t *v,
     bool dirty);
 
+FLECS_API
 int flecs_script_eval_node(
     ecs_script_visit_t *v,
     ecs_script_node_t *node);
@@ -302,7 +306,7 @@ int flecs_script_symbol_lookup(
     const ecs_expr_eval_desc_t *desc,
     ecs_entity_t from,
     const char *name,
-    flecs_script_lookup_kind_t lookup_kind,
+    ecs_flags32_t lookup_kind,
     flecs_script_symbol_t *symbol);
 
 int flecs_script_id_elem_lookup(
@@ -310,7 +314,7 @@ int flecs_script_id_elem_lookup(
     const ecs_expr_eval_desc_t *desc,
     ecs_entity_t first,
     const char *name,
-    flecs_script_lookup_kind_t lookup_kind,
+    ecs_flags32_t lookup_kind,
     ecs_entity_t *from_out,
     flecs_script_symbol_t *symbol);
 
@@ -319,7 +323,7 @@ int flecs_script_id_lookup(
     const ecs_expr_eval_desc_t *desc,
     const char *first_name,
     const char *second_name,
-    flecs_script_lookup_kind_t lookup_kind,
+    ecs_flags32_t lookup_kind,
     ecs_entity_t *first_out,
     ecs_id_t *id_out,
     const char **unresolved);
@@ -416,7 +420,7 @@ void flecs_script_track_component(
 
 const ecs_script_var_t* flecs_script_template_prop_var(
     ecs_script_eval_visitor_t *v,
-    void *node,
+    const void *node,
     int32_t sp,
     ecs_id_t id);
 

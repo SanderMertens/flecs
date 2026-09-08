@@ -11,7 +11,7 @@
 #include <inttypes.h>
 
 #define flecs_ir_error(vm, node, ...)\
-    flecs_script_eval_error_(&(vm)->v, (ecs_script_node_t*)(node), __VA_ARGS__)
+    flecs_script_eval_error_(&(vm)->v, (const ecs_script_node_t*)(node), __VA_ARGS__)
 
 #define flecs_ir_expr_error(vm, node, ...)\
     flecs_expr_visit_error_(&(vm)->v.base.script->pub, node, __VA_ARGS__)
@@ -238,8 +238,9 @@ static void flecs_ir_reg_borrow(
 
 static ecs_script_ir_frame_t* flecs_ir_frame_at(
     const ecs_script_ir_vm_t *vm,
-    uint32_t index)
+    int32_t frame_index)
 {
+    uint32_t index = flecs_ito(uint32_t, frame_index);
     return &vm->frames[index / ECS_SCRIPT_IR_FRAME_CHUNK_SIZE]
         [index % ECS_SCRIPT_IR_FRAME_CHUNK_SIZE];
 }
@@ -727,7 +728,7 @@ static const ecs_type_info_t* flecs_ir_id_type_info(
     if (desc->cache_ti) {
         return desc->cache_ti;
     }
-    return flecs_script_get_type_info(&vm->v, (void*)node, id);
+    return flecs_script_get_type_info(&vm->v, node, id);
 }
 
 static int flecs_ir_tag(
@@ -794,7 +795,7 @@ static int flecs_ir_tag(
 
     if (desc->value_sp != -1) {
         const ecs_script_var_t *var = flecs_script_template_prop_var(
-            v, (void*)node, desc->value_sp, id);
+            v, node, desc->value_sp, id);
         if (!var) {
             return -1;
         }
@@ -985,7 +986,7 @@ static int flecs_ir_component_alloc(
 
     if (desc->value_sp != -1) {
         const ecs_script_var_t *var = flecs_script_template_prop_var(
-            v, (void*)node, desc->value_sp, id);
+            v, node, desc->value_sp, id);
         if (!var) {
             return -1;
         }
@@ -1106,7 +1107,7 @@ static int flecs_ir_with_tag(
 
     if (desc->value_sp != -1) {
         const ecs_script_var_t *var = flecs_script_template_prop_var(
-            v, (void*)node, desc->value_sp, id);
+            v, node, desc->value_sp, id);
         if (!var) {
             return -1;
         }
@@ -1142,7 +1143,7 @@ static int flecs_ir_with_component_begin(
 
     const ecs_type_info_t *ti = desc->ti;
     if (!ti) {
-        ti = flecs_script_get_type_info(v, (void*)node, id);
+        ti = flecs_script_get_type_info(v, node, id);
     }
 
     ecs_value_t *value = flecs_script_with_append(v, ti);
@@ -1172,7 +1173,7 @@ static int flecs_ir_with_component_begin(
 
     if (desc->value_sp != -1) {
         const ecs_script_var_t *var = flecs_script_template_prop_var(
-            v, (void*)node, desc->value_sp, id);
+            v, node, desc->value_sp, id);
         if (!var) {
             return -1;
         }
@@ -2105,8 +2106,15 @@ static int NAME(\
 
 FLECS_IR_BINARY_TYPED(flecs_ir_binary_i64, int64_t, int64_t, false, FLECS_IR_INTEGER_OPS)
 FLECS_IR_BINARY_TYPED(flecs_ir_binary_i32, int32_t, int32_t, false, FLECS_IR_INTEGER_OPS)
+#if defined(ECS_TARGET_GNU) || defined(ECS_TARGET_CLANG)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
 FLECS_IR_BINARY_TYPED(flecs_ir_binary_f64, double, double, true, FLECS_IR_FLOAT_OPS)
 FLECS_IR_BINARY_TYPED(flecs_ir_binary_f32, float, float, true, FLECS_IR_FLOAT_OPS)
+#if defined(ECS_TARGET_GNU) || defined(ECS_TARGET_CLANG)
+#pragma GCC diagnostic pop
+#endif
 FLECS_IR_BINARY_TYPED(flecs_ir_binary_i8, int8_t, int64_t, false, FLECS_IR_INTEGER_OPS)
 FLECS_IR_BINARY_TYPED(flecs_ir_binary_i16, int16_t, int64_t, false, FLECS_IR_INTEGER_OPS)
 FLECS_IR_BINARY_TYPED(flecs_ir_binary_u8, uint8_t, uint64_t, false, FLECS_IR_INTEGER_OPS)
@@ -2767,6 +2775,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 }
             }
             if (op->flags & EcsIrScopeEntity) {
+                ecs_assert(v->entity != NULL, ECS_INTERNAL_ERROR, NULL);
                 v->parent = v->entity->eval;
             }
             break;

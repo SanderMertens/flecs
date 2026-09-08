@@ -881,7 +881,6 @@ static int flecs_irc_compile_expr(
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt expression node kind");
-    return -1;
 }
 
 static bool flecs_irc_expr_borrows(
@@ -1027,15 +1026,15 @@ static int flecs_irc_compile_component(
         if (flecs_irc_compile_expr(c, node->expr, value, in_place)) {
             return -1;
         }
-        op = flecs_irc_emit(c,
+        flecs_irc_emit(c,
             with ? EcsIrWithComponentEnd : EcsIrComponentEnd,
             id, value, tmp, node);
     } else {
         if (with) {
-            int32_t op = flecs_irc_emit(
+            flecs_irc_emit(
                 c, EcsIrWithComponentBegin, id, -1, 0, node);
         } else {
-            int32_t op = flecs_irc_emit(c, EcsIrComponentEnd, id, -1, -1, node);
+            flecs_irc_emit(c, EcsIrComponentEnd, id, -1, -1, node);
         }
     }
 
@@ -1601,7 +1600,6 @@ static int flecs_irc_compile_function(
 
     int32_t i, count = ecs_vec_count(&body->stmts);
     for (i = 0; i < count; i ++) {
-        ecs_script_node_t **stmts = ecs_vec_first(&body->stmts);
         if (flecs_irc_compile_stmt(c, body, i)) {
             c->scope = NULL;
             return -1;

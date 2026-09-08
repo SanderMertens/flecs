@@ -7976,6 +7976,7 @@ void ecs_set_id(
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_component_ptr_t dst = flecs_ensure(world, entity, component, r, 
         flecs_uto(int32_t, size));
+    ecs_check(dst.ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (component < FLECS_HI_COMPONENT_ID) {
         if (!world->non_trivial_set[component]) {
@@ -12137,7 +12138,6 @@ static void flecs_reachable_cache_ensure(
 
     if (depth >= FLECS_DAG_DEPTH_MAX) {
         ecs_abort(ECS_CYCLE_DETECTED, "cycle in traversable relationship");
-        return;
     }
 
     ecs_allocator_t *a = &world->allocator;
@@ -12235,7 +12235,6 @@ static void flecs_emit_forward(
 
     /* Propagate events for new reachable ids downwards */
     if (table->_->traversable_count) {
-        int32_t i;
         const ecs_entity_t *entities = ecs_table_entities(table);
         entities = ECS_ELEM_T(entities, ecs_entity_t, it->offset);
         for (i = 0; i < it->count; i ++) {
@@ -12246,9 +12245,9 @@ static void flecs_emit_forward(
         }
 
         if (i != it->count) {
-            ecs_reachable_elem_t *elems = ecs_vec_first_t(&rc->ids, 
+            elems = ecs_vec_first_t(&rc->ids,
                 ecs_reachable_elem_t);
-            int32_t count = ecs_vec_count(&rc->ids);
+            count = ecs_vec_count(&rc->ids);
             for (i = 0; i < count; i ++) {
                 ecs_reachable_elem_t *elem = &elems[i];
                 const ecs_table_record_t *tr = elem->tr;
@@ -13378,7 +13377,7 @@ static void flecs_multi_observer_invoke(
     prev_table = prev_table ? prev_table : &world->store.root;
 
     bool memoizable = !is_not && !(impl->flags & EcsObserverIsMonitor);
-    uint64_t epoch = world->info.table_delete_total;
+    uint64_t epoch = flecs_ito(uint64_t, world->info.table_delete_total);
     if (memoizable && impl->nomatch_table == table &&
         impl->nomatch_table_id == table->id && impl->nomatch_epoch == epoch)
     {
@@ -13980,8 +13979,8 @@ ecs_observer_t* flecs_observer_init(
     bool is_monitor = impl->flags & EcsObserverIsMonitor;
     if (term_count == 1 && !is_monitor && !multi) {
         ecs_term_t *term = &terms[0];
-        term->field_index = flecs_ito(int8_t, desc->term_index_);
         flecs_observer_add_subscription(world, o, term, term->id);
+        impl->subscription.term_index = flecs_ito(int8_t, desc->term_index_);
         if (impl->subscription.tag) {
             for (i = 0; i < o->event_count; i ++) {
                 if (o->events[i] == EcsOnSet) {
@@ -17292,6 +17291,7 @@ void ecs_set_hooks_id(
 
     ecs_flags32_t flags = h->flags & ~(ecs_flags32_t)ECS_TYPE_HOOKS;
     ecs_flags32_t conflicts = flags & flecs_type_hooks_specified(h, true);
+    (void)conflicts;
     ecs_check(!conflicts, ECS_INVALID_PARAMETER,
         "illegal call to set_hooks() for component '%s': "
         "cannot specify callbacks with illegal flags (0x%x)",
@@ -19960,6 +19960,8 @@ void* flecs_hashmap_get_(
 {
     ecs_assert(map->key_size == key_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
+    (void)key_size;
+    (void)value_size;
 
     uint64_t hash = map->hash(key);
     ecs_hm_bucket_t *bucket = flecs_hashmap_find_key(
@@ -19975,6 +19977,7 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
 {
     ecs_assert(map->key_size == key_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
+    (void)value_size;
 
     uint64_t hash = map->hash(key);
     ecs_hm_bucket_t **r = ecs_map_ensure_ref(&map->impl, ecs_hm_bucket_t, hash);
@@ -20026,6 +20029,7 @@ void flecs_hashmap_remove_w_hash_(
 {
     ecs_assert(map->key_size == key_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
+    (void)key_size;
     (void)value_size;
 
     ecs_hm_bucket_t *bucket = flecs_hashmap_find_key(
@@ -22353,7 +22357,9 @@ void ecs_vec_set_count_w_type_info(
             int32_t new_size = flecs_next_pow_of_2(elem_count);
             const char *type_name = NULL;
             void *array = flecs_vec_alloc(allocator, size, new_size, type_name);
-            flecs_type_info_ctor_move_dtor(array, v->array, old_count, ti);
+            if (old_count) {
+                flecs_type_info_ctor_move_dtor(array, v->array, old_count, ti);
+            }
             flecs_vec_free(allocator, size, v->size, v->array);
             v->array = array;
             v->size = new_size;
@@ -24462,7 +24468,7 @@ bool flecs_query_finalize_simple(
     ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
 
     /* All fields are InOut */
-    q->write_fields = (1u << term_count) - 1;
+    q->write_fields = UINT32_MAX >> (32 - term_count);
 
     /* Simple query that only queries for component ids */
 
@@ -30422,6 +30428,7 @@ static int flecs_type_new_without(
     if (at == -1) {
         return -1;
     }
+    ecs_assert(src->array != NULL, ECS_INTERNAL_ERROR, NULL);
     int32_t count = src->count, removed = 1;
     bool wildcard = ecs_id_is_wildcard(without);
     if (wildcard) {
@@ -30431,14 +30438,16 @@ static int flecs_type_new_without(
     }
 
     int32_t dst_count = count - removed;
+    ecs_assert(dst_count >= at, ECS_INTERNAL_ERROR, NULL);
     ecs_id_t *array = src->array;
     if (dst != src) {
         array = dst_count ? flecs_walloc_n(world, ecs_id_t, dst_count) : NULL;
-        if (at) {
+        if (at && array) {
             ecs_os_memcpy_n(array, src->array, ecs_id_t, at);
         }
     }
     if (dst_count > at) {
+        ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
         if (wildcard) {
             int32_t w = at;
             for (int32_t i = at + 1; i < count; i ++) {
@@ -32315,7 +32324,7 @@ int flecs_query_trivial_has_range(
 
     ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;
 
-    if (table && ((offset + count) > ecs_table_count(table))) {
+    if (!table || ((offset + count) > ecs_table_count(table))) {
         return 0;
     }
 

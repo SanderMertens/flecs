@@ -1004,6 +1004,7 @@ extern "C" {
  * case). Adding a "default" case fixes the warning, but silences future 
  * warnings about unhandled cases, which is worse. */
 #pragma clang diagnostic ignored "-Wswitch-default"
+#pragma clang diagnostic ignored "-Wswitch-enum"
 #if __clang_major__ == 13
 /* clang 13 can throw this warning for a macro in ctype.h. */
 #pragma clang diagnostic ignored "-Wreserved-identifier"
@@ -1036,6 +1037,7 @@ extern "C" {
 #endif
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #pragma GCC diagnostic ignored "-Wunused-macros"
+#pragma GCC diagnostic ignored "-Wswitch-enum"
 /* This warning gets thrown *sometimes* when not all members for a struct are
  * provided in an initializer. Flecs heavily relies on descriptor structs that
  * only require partial initialization, so this warning isn't useful.
@@ -3225,7 +3227,7 @@ void flecs_free(
 
 /** Reallocate memory for count elements of type T (OS allocator fallback). */
 #define flecs_realloc_n(a, T, count_dst, count_src, ptr)\
-    flecs_realloc(a, ECS_SIZEOF(T) * count_dst, ECS_SIZEOF(T) * count_src, ptr)
+    flecs_realloc(a, ECS_SIZEOF(T) * (count_dst), ECS_SIZEOF(T) * (count_src), ptr)
 
 /** Duplicate count elements of type T (OS allocator fallback). */
 #define flecs_dup_n(a, T, count, ptr) flecs_dup(a, ECS_SIZEOF(T) * (count), ptr)
@@ -5970,10 +5972,6 @@ FLECS_API
 ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
 
-/** Get the sparse storage for a row field.
- * Returns the sparse set that stores values for a field returned per-row (see
- * ecs_field_at()), or NULL when the field has a non-$this source. */
-FLECS_API
 /** Get the table ID.
  * This operation returns a unique numerical identifier for a table.
  *
@@ -22423,9 +22421,10 @@ public:
 
     int index_by_value(U value) const {
 #ifdef FLECS_CPP_NO_ENUM_REFLECTION
-        return value >= 0 && value < contiguous_until ? static_cast<int>(value) : -1;
+        return value >= 0 && static_cast<UU>(value) < static_cast<UU>(contiguous_until)
+            ? static_cast<int>(value) : -1;
 #else
-        if (value < static_cast<UU>(contiguous_until) && value >= 0) {
+        if (value >= 0 && static_cast<UU>(value) < static_cast<UU>(contiguous_until)) {
             return static_cast<int>(value);
         }
         for (int i = contiguous_until; i <= max; i ++) {
@@ -22590,24 +22589,25 @@ struct enum_data {
      */
     #ifdef FLECS_CPP_NO_ENUM_REFLECTION
     void register_constant(flecs::world_t *world, U v, flecs::entity_t e) {
-        if (v < 128) {
+        if (v >= 0 && v < 128) {
+            int index = static_cast<int>(v);
 #ifdef FLECS_MULTI_WORLD
-            if (!impl_.constants[v].index) {
-                impl_.constants[v].index = flecs_component_ids_index_get();
+            if (!impl_.constants[index].index) {
+                impl_.constants[index].index = flecs_component_ids_index_get();
             }
 #endif
 
 #ifdef FLECS_MULTI_WORLD
-            flecs_component_ids_set(world, impl_.constants[v].index, e);
+            flecs_component_ids_set(world, impl_.constants[index].index, e);
 #else
             (void)world;
-            impl_.constants[v].id = e;
+            impl_.constants[index].id = e;
 #endif
 
             impl_.max ++;
 
-            if (impl_.contiguous_until <= v) {
-                impl_.contiguous_until = v + 1;
+            if (impl_.contiguous_until <= index) {
+                impl_.contiguous_until = index + 1;
             }
         }
     }
@@ -25192,14 +25192,13 @@ conditional_t<Move, ecs_move_t, ecs_copy_t> transfer(ecs_flags32_t& flags) {
             auto src = static_cast<conditional_t<Move, T*, const T*>>(src_ptr);
             for (int32_t i = 0; i < count; i ++) {
                 using Value = conditional_t<Move, T&&, const T&>;
-                Value value = static_cast<Value>(src[i]);
                 if constexpr (Destroy && !Construct && is_trivially_move_assignable_v<T>) {
                     dst[i].~T();
                 }
                 if constexpr (Construct) {
-                    FLECS_PLACEMENT_NEW(&dst[i], T(FLECS_FWD(value)));
+                    FLECS_PLACEMENT_NEW(&dst[i], T(static_cast<Value>(src[i])));
                 } else {
-                    dst[i] = FLECS_FWD(value);
+                    dst[i] = static_cast<Value>(src[i]);
                 }
                 if constexpr (Destroy && (Construct || !is_trivially_move_assignable_v<T>)) {
                     src[i].~T();
@@ -31350,13 +31349,13 @@ private:
         auto member = ecs_cpp_last_member(world_, id_);
         if (member) {
             member->*MemberRange = {min, max};
-            auto entity = member->member;
-            if (entity) {
+            auto member_entity = member->member;
+            if (member_entity) {
                 auto id = _::type<flecs::MemberRanges>::id(world_);
                 auto ranges = static_cast<flecs::MemberRanges*>(
-                    ecs_ensure_id(world_, entity, id, sizeof(flecs::MemberRanges)));
+                    ecs_ensure_id(world_, member_entity, id, sizeof(flecs::MemberRanges)));
                 ranges->*EntityRange = {min, max};
-                ecs_modified_id(world_, entity, id);
+                ecs_modified_id(world_, member_entity, id);
             }
         }
         return *this;
@@ -32885,6 +32884,8 @@ namespace _ {
 
     template <typename... Components, typename Builder>
     void populate_signature(flecs::world_t *world, Builder *builder) {
+        (void)world;
+        (void)builder;
         (builder->with(_::type<remove_pointer_t<Components>>::id(world))
             .inout(type_to_inout<Components>()).oper(type_to_oper<Components>()), ...);
     }

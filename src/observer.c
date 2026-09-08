@@ -571,7 +571,7 @@ static void flecs_multi_observer_invoke(
     prev_table = prev_table ? prev_table : &world->store.root;
 
     bool memoizable = !is_not && !(impl->flags & EcsObserverIsMonitor);
-    uint64_t epoch = world->info.table_delete_total;
+    uint64_t epoch = flecs_ito(uint64_t, world->info.table_delete_total);
     if (memoizable && impl->nomatch_table == table &&
         impl->nomatch_table_id == table->id && impl->nomatch_epoch == epoch)
     {
@@ -1205,8 +1205,8 @@ ecs_observer_t* flecs_observer_init(
     bool is_monitor = impl->flags & EcsObserverIsMonitor;
     if (term_count == 1 && !is_monitor && !multi) {
         ecs_term_t *term = &terms[0];
-        term->field_index = flecs_ito(int8_t, desc->term_index_);
         flecs_observer_add_subscription(world, o, term, term->id);
+        impl->subscription.term_index = flecs_ito(int8_t, desc->term_index_);
         if (impl->subscription.tag) {
             for (i = 0; i < o->event_count; i ++) {
                 if (o->events[i] == EcsOnSet) {

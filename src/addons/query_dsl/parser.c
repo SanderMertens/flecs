@@ -163,7 +163,7 @@ static const char* flecs_query_term_parse(
         };
         for (int32_t i = 0; i < 6; i ++) {
             if (!ecs_os_strcmp(p.token.value, names[i])) {
-                term->inout = kinds[i];
+                term->inout = flecs_ito(int16_t, kinds[i]);
                 break;
             }
         }

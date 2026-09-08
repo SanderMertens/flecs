@@ -167,7 +167,7 @@ static ecs_size_t flecs_struct_base_size(
     return size;
 }
 
-#ifndef FLECS_NDEBUG
+#if !defined(FLECS_NDEBUG) || defined(FLECS_KEEP_ASSERT)
 static bool flecs_struct_has_derived(
     ecs_world_t *world,
     ecs_entity_t struct_type)

@@ -4,6 +4,26 @@ enum Color {
     Red, Green, Blue
 };
 
+static flecs::untyped_component with_member_entities(
+    flecs::untyped_component component)
+{
+    ecs_world_t *world = component.world();
+    const EcsStruct *st = ecs_get(world, component, EcsStruct);
+    test_assert(st != nullptr);
+
+    ecs_struct_desc_t desc = {};
+    desc.entity = component;
+    desc.create_member_entities = true;
+    int32_t count = ecs_vec_count(&st->members);
+    test_assert(count <= ECS_MEMBER_DESC_CACHE_SIZE);
+    const ecs_member_t *members = ecs_vec_first_t(&st->members, ecs_member_t);
+    for (int32_t i = 0; i < count; i ++) {
+        desc.members[i] = members[i];
+    }
+    test_assert(ecs_struct_init(world, &desc) != 0);
+    return component;
+}
+
 void Misc_setup(void) {
     ecs_os_set_api_defaults();
 }
@@ -284,9 +304,9 @@ void Misc_member_gauge_metric(void) {
 
     ecs.import<flecs::metrics>();
 
-    ecs.component<Position>()
+    with_member_entities(ecs.component<Position>()
         .member<float>("x")
-        .member<float>("y");
+        .member<float>("y"));
 
     ecs.metric("metrics::position_y")
         .kind<flecs::metrics::Gauge>()
@@ -588,9 +608,9 @@ void Misc_component_mixin_member_metric(void) {
 
     ecs.import<flecs::metrics>();
 
-    ecs.component<Position>()
+    with_member_entities(ecs.component<Position>()
         .member<float>("x")
-        .member<float>("y").metric<flecs::metrics::Gauge>();
+        .member<float>("y")).metric<flecs::metrics::Gauge>();
 
     flecs::entity e1 = ecs.entity().set<Position>({10, 20});
     flecs::entity e2 = ecs.entity().set<Position>({20, 30});
@@ -627,9 +647,9 @@ void Misc_component_mixin_member_metric_custom_parent_entity(void) {
 
     flecs::entity parent = ecs.entity();
 
-    ecs.component<Position>()
+    with_member_entities(ecs.component<Position>()
         .member<float>("x")
-        .member<float>("y").metric<flecs::metrics::Gauge>(parent);
+        .member<float>("y")).metric<flecs::metrics::Gauge>(parent);
 
     test_assert(parent.lookup("y") != 0);
 
@@ -669,9 +689,9 @@ void Misc_metric_description(void) {
 
     ecs.import<flecs::metrics>();
 
-    ecs.component<Position>()
+    with_member_entities(ecs.component<Position>()
         .member<float>("x")
-        .member<float>("y");
+        .member<float>("y"));
 
     flecs::entity m = ecs.metric("metrics::position_y")
         .kind<flecs::metrics::Gauge>()
@@ -713,9 +733,9 @@ void Misc_component_mixin_member_metric_description(void) {
 
     ecs.import<flecs::metrics>();
 
-    ecs.component<Position>()
+    with_member_entities(ecs.component<Position>()
         .member<float>("x")
-        .member<float>("y").metric<flecs::metrics::Gauge>(0, "Position y");
+        .member<float>("y")).metric<flecs::metrics::Gauge>(0, "Position y");
 
     flecs::entity m = ecs.entity("Position::y");
     test_str(m.doc_brief(), "Position y");
@@ -755,8 +775,8 @@ void Misc_member_metric_w_value_name(void) {
 
     flecs::entity parent = ecs.entity();
 
-    ecs.component<Mass>()
-        .member<float>("value").metric<flecs::metrics::Gauge>(parent);
+    with_member_entities(ecs.component<Mass>()
+        .member<float>("value")).metric<flecs::metrics::Gauge>(parent);
 
     test_assert(parent.lookup("value") == 0);
     test_assert(parent.lookup("mass") != 0);
@@ -803,8 +823,8 @@ void Misc_member_metric_w_value_name_camel_case_type(void) {
 
     flecs::entity parent = ecs.entity();
 
-    ecs.component<FooBar>()
-        .member<float>("value").metric<flecs::metrics::Gauge>(parent);
+    with_member_entities(ecs.component<FooBar>()
+        .member<float>("value")).metric<flecs::metrics::Gauge>(parent);
 
     test_assert(parent.lookup("value") == 0);
     test_assert(parent.lookup("foo_bar") != 0);
@@ -847,8 +867,8 @@ void Misc_member_metric_w_custom_name(void) {
 
     flecs::entity parent = ecs.entity();
 
-    ecs.component<FooBar>()
-        .member<float>("value").metric<flecs::metrics::Gauge>(parent, nullptr, "custom_name");
+    with_member_entities(ecs.component<FooBar>()
+        .member<float>("value")).metric<flecs::metrics::Gauge>(parent, nullptr, "custom_name");
 
     test_assert(parent.lookup("value") == 0);
     test_assert(parent.lookup("custom_name") != 0);
@@ -899,13 +919,13 @@ void Misc_dotmember_metric(void) {
 
     ecs.import<flecs::metrics>();
 
-    ecs.component<Point>()
+    with_member_entities(ecs.component<Point>()
         .member<float>("x")
-        .member<float>("y");
+        .member<float>("y"));
 
-    ecs.component<Position>()
+    with_member_entities(ecs.component<Position>()
         .member<float>("dummy")
-        .member<Point>("position");
+        .member<Point>("position"));
 
     ecs.metric("metrics::position_y")
         .kind<flecs::metrics::Gauge>()
@@ -1902,9 +1922,9 @@ void Misc_alert_for_member_range(void) {
 
     ecs.import<flecs::alerts>();
 
-    ecs.component<Mass>()
+    with_member_entities(ecs.component<Mass>()
         .member<float>("value")
-            .error_range(0, 100);
+            .error_range(0, 100));
 
     flecs::entity a = ecs.alert("high_mass")
         .with<Mass>()
@@ -1960,9 +1980,9 @@ void Misc_alert_w_member_range_from_var(void) {
 
     ecs.import<flecs::alerts>();
 
-    ecs.component<Mass>()
+    with_member_entities(ecs.component<Mass>()
         .member<float>("value")
-            .error_range(0, 100);
+            .error_range(0, 100));
 
     flecs::entity a = ecs.alert("high_parent_mass")
         .with(flecs::ChildOf).second("$parent")
@@ -2056,8 +2076,8 @@ void Misc_member_metric_w_pair_R_T(void) {
 
     ecs.import<flecs::metrics>();
 
-    ecs.component<Mass>()
-        .member<float>("value");
+    with_member_entities(ecs.component<Mass>()
+        .member<float>("value"));
 
     flecs::entity m = ecs.metric("mass")
         .kind<flecs::metrics::Gauge>()
@@ -2100,8 +2120,8 @@ void Misc_member_metric_w_pair_R_t(void) {
 
     ecs.import<flecs::metrics>();
 
-    ecs.component<Mass>()
-        .member<float>("value");
+    with_member_entities(ecs.component<Mass>()
+        .member<float>("value"));
 
     flecs::entity m = ecs.metric("mass")
         .kind<flecs::metrics::Gauge>()
@@ -2144,8 +2164,8 @@ void Misc_member_metric_w_pair_r_t(void) {
 
     ecs.import<flecs::metrics>();
 
-    ecs.component<Mass>()
-        .member<float>("value");
+    with_member_entities(ecs.component<Mass>()
+        .member<float>("value"));
 
     flecs::entity m = ecs.metric("mass")
         .kind<flecs::metrics::Gauge>()
@@ -2188,8 +2208,8 @@ void Misc_member_metric_w_pair_r_T(void) {
 
     ecs.import<flecs::metrics>();
 
-    ecs.component<Mass>()
-        .member<float>("value");
+    with_member_entities(ecs.component<Mass>()
+        .member<float>("value"));
 
     flecs::entity m = ecs.metric("mass")
         .kind<flecs::metrics::Gauge>()

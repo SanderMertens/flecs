@@ -1058,8 +1058,8 @@ static void flecs_script_template_on_replace(
         return;
     }
 
-    void *old_data = ecs_field_w_size(it, ti->size, 0);
-    void *new_data = ecs_field_w_size(it, ti->size, 1);
+    void *old_data = ecs_field_w_size(it, flecs_itosize(ti->size), 0);
+    void *new_data = ecs_field_w_size(it, flecs_itosize(ti->size), 1);
     ecs_script_template_member_t *members = ecs_vec_first(&template->members);
     int32_t i, m, member_count = ecs_vec_count(&template->members);
     for (i = 0; i < it->count; i ++) {

@@ -138,6 +138,7 @@ static int flecs_type_new_without(
     if (at == -1) {
         return -1;
     }
+    ecs_assert(src->array != NULL, ECS_INTERNAL_ERROR, NULL);
     int32_t count = src->count, removed = 1;
     bool wildcard = ecs_id_is_wildcard(without);
     if (wildcard) {
@@ -147,14 +148,16 @@ static int flecs_type_new_without(
     }
 
     int32_t dst_count = count - removed;
+    ecs_assert(dst_count >= at, ECS_INTERNAL_ERROR, NULL);
     ecs_id_t *array = src->array;
     if (dst != src) {
         array = dst_count ? flecs_walloc_n(world, ecs_id_t, dst_count) : NULL;
-        if (at) {
+        if (at && array) {
             ecs_os_memcpy_n(array, src->array, ecs_id_t, at);
         }
     }
     if (dst_count > at) {
+        ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
         if (wildcard) {
             int32_t w = at;
             for (int32_t i = at + 1; i < count; i ++) {

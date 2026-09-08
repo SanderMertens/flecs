@@ -318,7 +318,7 @@ static int flecs_script_type_lookup(
     ecs_script_type_visitor_t *t,
     ecs_entity_t first,
     const char *name,
-    flecs_script_lookup_kind_t lookup_kind,
+    ecs_flags32_t lookup_kind,
     ecs_entity_t *from_out,
     flecs_script_symbol_t *symbol)
 {

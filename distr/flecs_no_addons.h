@@ -818,6 +818,7 @@ extern "C" {
  * case). Adding a "default" case fixes the warning, but silences future 
  * warnings about unhandled cases, which is worse. */
 #pragma clang diagnostic ignored "-Wswitch-default"
+#pragma clang diagnostic ignored "-Wswitch-enum"
 #if __clang_major__ == 13
 /* clang 13 can throw this warning for a macro in ctype.h. */
 #pragma clang diagnostic ignored "-Wreserved-identifier"
@@ -850,6 +851,7 @@ extern "C" {
 #endif
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #pragma GCC diagnostic ignored "-Wunused-macros"
+#pragma GCC diagnostic ignored "-Wswitch-enum"
 /* This warning gets thrown *sometimes* when not all members for a struct are
  * provided in an initializer. Flecs heavily relies on descriptor structs that
  * only require partial initialization, so this warning isn't useful.
@@ -3031,7 +3033,7 @@ void flecs_free(
 
 /** Reallocate memory for count elements of type T (OS allocator fallback). */
 #define flecs_realloc_n(a, T, count_dst, count_src, ptr)\
-    flecs_realloc(a, ECS_SIZEOF(T) * count_dst, ECS_SIZEOF(T) * count_src, ptr)
+    flecs_realloc(a, ECS_SIZEOF(T) * (count_dst), ECS_SIZEOF(T) * (count_src), ptr)
 
 /** Duplicate count elements of type T (OS allocator fallback). */
 #define flecs_dup_n(a, T, count, ptr) flecs_dup(a, ECS_SIZEOF(T) * (count), ptr)
@@ -5543,10 +5545,6 @@ FLECS_API
 ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
 
-/** Get the sparse storage for a row field.
- * Returns the sparse set that stores values for a field returned per-row (see
- * ecs_field_at()), or NULL when the field has a non-$this source. */
-FLECS_API
 /** Get the table ID.
  * This operation returns a unique numerical identifier for a table.
  *

@@ -256,9 +256,10 @@ public:
 
     int index_by_value(U value) const {
 #ifdef FLECS_CPP_NO_ENUM_REFLECTION
-        return value >= 0 && value < contiguous_until ? static_cast<int>(value) : -1;
+        return value >= 0 && static_cast<UU>(value) < static_cast<UU>(contiguous_until)
+            ? static_cast<int>(value) : -1;
 #else
-        if (value < static_cast<UU>(contiguous_until) && value >= 0) {
+        if (value >= 0 && static_cast<UU>(value) < static_cast<UU>(contiguous_until)) {
             return static_cast<int>(value);
         }
         for (int i = contiguous_until; i <= max; i ++) {
@@ -423,24 +424,25 @@ struct enum_data {
      */
     #ifdef FLECS_CPP_NO_ENUM_REFLECTION
     void register_constant(flecs::world_t *world, U v, flecs::entity_t e) {
-        if (v < 128) {
+        if (v >= 0 && v < 128) {
+            int index = static_cast<int>(v);
 #ifdef FLECS_MULTI_WORLD
-            if (!impl_.constants[v].index) {
-                impl_.constants[v].index = flecs_component_ids_index_get();
+            if (!impl_.constants[index].index) {
+                impl_.constants[index].index = flecs_component_ids_index_get();
             }
 #endif
 
 #ifdef FLECS_MULTI_WORLD
-            flecs_component_ids_set(world, impl_.constants[v].index, e);
+            flecs_component_ids_set(world, impl_.constants[index].index, e);
 #else
             (void)world;
-            impl_.constants[v].id = e;
+            impl_.constants[index].id = e;
 #endif
 
             impl_.max ++;
 
-            if (impl_.contiguous_until <= v) {
-                impl_.contiguous_until = v + 1;
+            if (impl_.contiguous_until <= index) {
+                impl_.contiguous_until = index + 1;
             }
         }
     }

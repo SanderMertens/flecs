@@ -355,10 +355,6 @@ FLECS_API
 ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
 
-/** Get the sparse storage for a row field.
- * Returns the sparse set that stores values for a field returned per-row (see
- * ecs_field_at()), or NULL when the field has a non-$this source. */
-FLECS_API
 /** Get the table ID.
  * This operation returns a unique numerical identifier for a table.
  *

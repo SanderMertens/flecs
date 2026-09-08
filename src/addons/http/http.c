@@ -497,7 +497,8 @@ static bool http_parse_request(
     char *buf = frag->buf.content;
     int32_t length = ecs_strbuf_written(&frag->buf);
     while (!frag->body_offset && frag->scan < length) {
-        char *nl = memchr(buf + frag->scan, '\n', length - frag->scan);
+        char *nl = memchr(buf + frag->scan, '\n',
+            flecs_ito(size_t, length - frag->scan));
         if (!nl) {
             frag->scan = length;
             break;
@@ -510,13 +511,15 @@ static bool http_parse_request(
         }
         char *line = buf + frag->line_offset;
         int32_t line_length = end - frag->line_offset - 1;
-        if (memchr(line, 0, line_length)) {
+        if (memchr(line, 0, flecs_ito(size_t, line_length))) {
             frag->invalid = true;
             return false;
         }
         if (!frag->line_offset) {
-            char *space = memchr(line, ' ', line_length);
-            if (!space || !memchr(space + 1, ' ', nl - space - 2)) {
+            char *space = memchr(line, ' ', flecs_ito(size_t, line_length));
+            if (!space || !memchr(space + 1, ' ',
+                flecs_ito(size_t, nl - space - 2)))
+            {
                 frag->invalid = true;
                 return false;
             }

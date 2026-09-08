@@ -327,9 +327,14 @@ void TemplateInheritance_base_template_string_prop(void) {
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
-    test_struct(world, derived, 2, 16);
+    typedef struct {
+        ecs_string_t name;
+        ecs_f32_t z;
+    } Derived;
+    test_struct(world, derived, 2, ECS_SIZEOF(Derived));
     test_member(world, derived, 0, "name", ecs_id(ecs_string_t), 0);
-    test_member(world, derived, 1, "z", ecs_id(ecs_f32_t), 8);
+    test_member(world, derived, 1, "z", ecs_id(ecs_f32_t),
+        (int32_t)offsetof(Derived, z));
 
     ecs_entity_t e = ecs_lookup(world, "e");
     ecs_entity_t f = ecs_lookup(world, "f");

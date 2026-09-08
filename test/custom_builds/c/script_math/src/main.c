@@ -9,7 +9,7 @@ static ecs_entity_t rng_test_value_type(
     return ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Value" }),
         .members = {
-            {"v", ecs_id(ecs_u64_t)}
+            { .name = "v", .type = ecs_id(ecs_u64_t) }
         }
     });
 }

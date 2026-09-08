@@ -3838,9 +3838,6 @@ void Format_align_left_string_member(void) {
     test_str(result, "[abc     ]");
     ecs_os_free(result);
 
-    Label *ptr = ecs_get_mut_id(world, e, label);
-    ptr->value = NULL;
-
     ecs_fini(world);
 }
 

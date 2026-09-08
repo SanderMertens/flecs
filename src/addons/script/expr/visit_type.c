@@ -1468,6 +1468,14 @@ error:
     return -1;
 }
 
+static void flecs_expr_type_cursor(
+    ecs_script_t *script,
+    ecs_meta_cursor_t *cur,
+    ecs_entity_t type)
+{
+    *cur = ecs_meta_cursor(script->world, type, NULL);
+}
+
 static int flecs_expr_binary_visit_type(
     ecs_script_t *script,
     ecs_expr_binary_t *node,
@@ -1486,22 +1494,24 @@ static int flecs_expr_binary_visit_type(
     /* Operands are visited with a copy of the cursor. Visiting an operand can
      * move the cursor to the type of the operand, which must not be visible to
      * the expression that this binary expression is a part of. */
-    ecs_meta_cursor_t operand_cur = *cur;
+    ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
+    ecs_meta_cursor_t *operand_cur = flecs_alloc_t(a, ecs_meta_cursor_t);
+    *operand_cur = *cur;
 
-    if (operand_cur.valid) {
+    if (operand_cur->valid) {
         /* Provides a hint to the type visitor. The lvalue type will be used to
          * reduce the number of casts where possible. */
-        node->node.type = ecs_meta_get_type(&operand_cur);
+        node->node.type = ecs_meta_get_type(operand_cur);
 
         /* If the result of the binary expression is a boolean, it's likely a
          * conditional expression. We don't want to hint that the operands
          * of conditional expressions should be cast to booleans. */
         if (node->node.type == ecs_id(ecs_bool_t)) {
-            ecs_os_zeromem(&operand_cur);
+            ecs_os_zeromem(operand_cur);
         }
     }
 
-    if (flecs_expr_visit_type_priv(script, &node->left, &operand_cur, desc)) {
+    if (flecs_expr_visit_type_priv(script, &node->left, operand_cur, desc)) {
         goto error;
     }
 
@@ -1510,16 +1520,15 @@ static int flecs_expr_binary_visit_type(
         goto error;
     }
 
-    ecs_meta_cursor_t right_cur = operand_cur;
     if (node->right->kind == EcsExprIdentifier) {
         if (ecs_get(script->world, node->left->type, EcsEnum) != NULL) {
             /* If the left hand side is an enum, interpret untyped identifiers
              * on the right hand side as enum constants of the same type. */
-            right_cur = ecs_meta_cursor(script->world, node->left->type, NULL);
+            flecs_expr_type_cursor(script, operand_cur, node->left->type);
         }
     }
 
-    if (flecs_expr_visit_type_priv(script, &node->right, &right_cur, desc)) {
+    if (flecs_expr_visit_type_priv(script, &node->right, operand_cur, desc)) {
         goto error;
     }
 
@@ -1588,8 +1597,10 @@ static int flecs_expr_binary_visit_type(
 
     node->node.type = result_type;
 
+    flecs_free_t(a, ecs_meta_cursor_t, operand_cur);
     return 0;
 error:
+    flecs_free_t(a, ecs_meta_cursor_t, operand_cur);
     return -1;
 }
 
@@ -3264,7 +3275,7 @@ static int flecs_expr_visit_type_ex(
         break;
     case EcsExprMethod:
     case EcsExprComponent:
-        *cur = ecs_meta_cursor(script->world, node->type, NULL);
+        flecs_expr_type_cursor(script, cur, node->type);
         break;
     }
 

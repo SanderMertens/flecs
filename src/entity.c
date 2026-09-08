@@ -1938,6 +1938,7 @@ void ecs_set_id(
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_component_ptr_t dst = flecs_ensure(world, entity, component, r, 
         flecs_uto(int32_t, size));
+    ecs_check(dst.ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (component < FLECS_HI_COMPONENT_ID) {
         if (!world->non_trivial_set[component]) {

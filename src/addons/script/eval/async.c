@@ -562,7 +562,7 @@ ecs_script_task_t* ecs_script_task_new(
         ecs_is_alive(script->world, desc->entity),
         ECS_INVALID_PARAMETER, "task entity is not alive");
 
-    ecs_script_impl_t *impl = flecs_script_impl(script);
+    ecs_script_impl_t *impl = ECS_CONST_CAST(ecs_script_impl_t*, script);
     ecs_size_t engine_size = impl->ir_enabled
         ? ECS_SIZEOF(ecs_script_ir_vm_t) : ECS_SIZEOF(ecs_script_runner_t);
     ecs_size_t engine_align = impl->ir_enabled

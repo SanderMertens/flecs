@@ -550,7 +550,7 @@ ecs_entity_t ecs_script_init(
         }
 
         EcsScript *comp = ecs_ensure(world, e, EcsScript);
-        comp->filename = ecs_os_strdup(desc->filename);
+        ecs_os_strset(&comp->filename, desc->filename);
     }
 
     ecs_script_update(world, e, 0, script);

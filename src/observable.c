@@ -732,7 +732,6 @@ static void flecs_reachable_cache_ensure(
 
     if (depth >= FLECS_DAG_DEPTH_MAX) {
         ecs_abort(ECS_CYCLE_DETECTED, "cycle in traversable relationship");
-        return;
     }
 
     ecs_allocator_t *a = &world->allocator;
@@ -830,7 +829,6 @@ static void flecs_emit_forward(
 
     /* Propagate events for new reachable ids downwards */
     if (table->_->traversable_count) {
-        int32_t i;
         const ecs_entity_t *entities = ecs_table_entities(table);
         entities = ECS_ELEM_T(entities, ecs_entity_t, it->offset);
         for (i = 0; i < it->count; i ++) {
@@ -841,9 +839,9 @@ static void flecs_emit_forward(
         }
 
         if (i != it->count) {
-            ecs_reachable_elem_t *elems = ecs_vec_first_t(&rc->ids, 
+            elems = ecs_vec_first_t(&rc->ids,
                 ecs_reachable_elem_t);
-            int32_t count = ecs_vec_count(&rc->ids);
+            count = ecs_vec_count(&rc->ids);
             for (i = 0; i < count; i ++) {
                 ecs_reachable_elem_t *elem = &elems[i];
                 const ecs_table_record_t *tr = elem->tr;

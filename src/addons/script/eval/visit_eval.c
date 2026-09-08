@@ -38,7 +38,7 @@ static bool flecs_script_valid_lookup_path(
 
 void flecs_script_eval_error_(
     ecs_script_eval_visitor_t *v,
-    ecs_script_node_t *node,
+    const ecs_script_node_t *node,
     const char *fmt,
     ...)
 {
@@ -96,7 +96,7 @@ void flecs_script_with_set_count(
 
 const ecs_type_info_t* flecs_script_get_type_info(
     ecs_script_eval_visitor_t *v,
-    void *node,
+    const void *node,
     ecs_id_t id)
 {
     ecs_component_record_t *cr = flecs_components_ensure(v->world, id);
@@ -176,7 +176,7 @@ int flecs_script_symbol_lookup(
     const ecs_expr_eval_desc_t *desc,
     ecs_entity_t from,
     const char *name,
-    flecs_script_lookup_kind_t lookup_kind,
+    ecs_flags32_t lookup_kind,
     flecs_script_symbol_t *symbol)
 {
     ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -262,7 +262,7 @@ int flecs_script_id_elem_lookup(
     const ecs_expr_eval_desc_t *desc,
     ecs_entity_t first,
     const char *name,
-    flecs_script_lookup_kind_t lookup_kind,
+    ecs_flags32_t lookup_kind,
     ecs_entity_t *from_out,
     flecs_script_symbol_t *symbol)
 {
@@ -282,7 +282,7 @@ int flecs_script_id_lookup(
     const ecs_expr_eval_desc_t *desc,
     const char *first_name,
     const char *second_name,
-    flecs_script_lookup_kind_t lookup_kind,
+    ecs_flags32_t lookup_kind,
     ecs_entity_t *first_out,
     ecs_id_t *id_out,
     const char **unresolved)
@@ -924,7 +924,7 @@ void flecs_script_track_component(
 
 const ecs_script_var_t* flecs_script_template_prop_var(
     ecs_script_eval_visitor_t *v,
-    void *node,
+    const void *node,
     int32_t sp,
     ecs_id_t id)
 {
@@ -1856,6 +1856,7 @@ int flecs_script_eval_function(
 
     int32_t i;
     ecs_script_fn_param_t *params = ecs_vec_first(&node->params);
+    (void)params;
     for (i = 0; i < param_count; i ++) {
         ecs_assert(params[i].eval_type != 0, ECS_INTERNAL_ERROR, NULL);
     }
@@ -1994,8 +1995,9 @@ int flecs_script_eval_node(
 
 static flecs_script_frame_t* flecs_script_frame_at(
     const ecs_script_runner_t *r,
-    uint32_t index)
+    int32_t frame_index)
 {
+    uint32_t index = flecs_ito(uint32_t, frame_index);
     return &r->frames[index / ECS_SCRIPT_FRAME_CHUNK_SIZE]
         [index % ECS_SCRIPT_FRAME_CHUNK_SIZE];
 }

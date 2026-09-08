@@ -134,13 +134,13 @@ private:
         auto member = ecs_cpp_last_member(world_, id_);
         if (member) {
             member->*MemberRange = {min, max};
-            auto entity = member->member;
-            if (entity) {
+            auto member_entity = member->member;
+            if (member_entity) {
                 auto id = _::type<flecs::MemberRanges>::id(world_);
                 auto ranges = static_cast<flecs::MemberRanges*>(
-                    ecs_ensure_id(world_, entity, id, sizeof(flecs::MemberRanges)));
+                    ecs_ensure_id(world_, member_entity, id, sizeof(flecs::MemberRanges)));
                 ranges->*EntityRange = {min, max};
-                ecs_modified_id(world_, entity, id);
+                ecs_modified_id(world_, member_entity, id);
             }
         }
         return *this;

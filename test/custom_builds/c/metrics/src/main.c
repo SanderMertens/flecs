@@ -14,8 +14,8 @@ int main(int argc, char *argv[]) {
     ecs_struct(world, {
         .entity = ecs_id(Position),
         .members = {
-            { "x", ecs_id(ecs_f32_t) },
-            { "y", ecs_id(ecs_f32_t) },
+            { .name = "x", .type = ecs_id(ecs_f32_t) },
+            { .name = "y", .type = ecs_id(ecs_f32_t) },
         },
         .create_member_entities = true
     });

@@ -236,7 +236,7 @@ void flecs_stats_api_import(
                 .src.id = EcsWorld
             }},
             .callback = i ? ReduceStats : MonitorStats,
-            .interval = i == 1 ? 1 : 0,
+            .interval = i == 1 ? 1.0f : 0.0f,
             .rate = i > 1 ? 60 : 0,
             .tick_source = i > 1 ? minute : 0,
             .ctx = ctx,

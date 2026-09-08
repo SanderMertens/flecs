@@ -21,6 +21,11 @@ static int flecs_meta_write_forward(
     ecs_strbuf_t *str,
     flecs_meta_format_t format);
 
+#if defined(ECS_TARGET_GNU) || defined(ECS_TARGET_CLANG)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+
 static void flecs_meta_flt_to_str(
     char *buf,
     int32_t size,
@@ -50,6 +55,10 @@ static void flecs_meta_flt_to_str(
 
     ecs_os_snprintf(buf, size, "%.*g", max_precision, value);
 }
+
+#if defined(ECS_TARGET_GNU) || defined(ECS_TARGET_CLANG)
+#pragma GCC diagnostic pop
+#endif
 
 static void flecs_meta_write_member(
     ecs_strbuf_t *str,

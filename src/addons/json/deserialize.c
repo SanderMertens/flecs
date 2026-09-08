@@ -476,9 +476,11 @@ static const char* flecs_entity_from_json(
 
 end:
     if (e) {
-        qsort(ecs_vec_first(&ctx->ids),
-            flecs_itosize(ecs_vec_count(&ctx->ids)), sizeof(ecs_id_t),
-            flecs_id_qsort_cmp);
+        int32_t count = ecs_vec_count(&ctx->ids);
+        if (count > 1) {
+            qsort(ecs_vec_first(&ctx->ids), flecs_itosize(count),
+                sizeof(ecs_id_t), flecs_id_qsort_cmp);
+        }
         ecs_record_t *r = flecs_entities_get(world, e);
         ecs_defer_begin(world);
         if (replace_table && r && r->table) {

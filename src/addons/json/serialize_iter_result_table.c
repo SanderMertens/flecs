@@ -37,7 +37,7 @@ static ecs_component_record_t* flecs_json_type_next(
                 cr = r && (r->row & EcsEntityHasDontFragment) ?
                     it->world->cr_non_fragmenting_head : NULL;
             } else {
-                cr = it->cr->non_fragmenting.next;
+                cr = it->cr ? it->cr->non_fragmenting.next : NULL;
             }
             it->column = -1;
             if (!cr) {
@@ -82,7 +82,13 @@ static void flecs_json_serialize_table_tags(
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
-    flecs_json_type_iter_t it = {world, table, desc, entity, src_table != NULL};
+    flecs_json_type_iter_t it = {
+        .world = world,
+        .table = table,
+        .desc = desc,
+        .entity = entity,
+        .inherited = src_table != NULL
+    };
     ecs_component_record_t *cr = flecs_json_type_next(&it, 0);
     if (!cr) {
         return;
@@ -160,7 +166,13 @@ static void flecs_json_serialize_table_pairs(
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
-    flecs_json_type_iter_t it = {world, table, desc, entity, src_table != NULL};
+    flecs_json_type_iter_t it = {
+        .world = world,
+        .table = table,
+        .desc = desc,
+        .entity = entity,
+        .inherited = src_table != NULL
+    };
     ecs_component_record_t *cr = flecs_json_type_next(&it, 1);
     int32_t count = 0;
     ecs_id_t prev = 0;
@@ -262,7 +274,13 @@ static int flecs_json_serialize_table_components(
     int32_t row,
     int32_t *component_count)
 {
-    flecs_json_type_iter_t it = {world, table, desc, entity, src_table != NULL};
+    flecs_json_type_iter_t it = {
+        .world = world,
+        .table = table,
+        .desc = desc,
+        .entity = entity,
+        .inherited = src_table != NULL
+    };
     ecs_component_record_t *cr;
     while ((cr = flecs_json_type_next(&it, 2))) {
         const ecs_type_info_t *ti = cr->type_info;

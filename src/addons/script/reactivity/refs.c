@@ -374,6 +374,9 @@ static ecs_entity_t flecs_script_create_resolve_observer(
     desc.ctx_free = flecs_script_ref_ctx_free;
 
     ecs_entity_t observer = ecs_observer_init(world, &desc);
+    if (!observer) {
+        flecs_script_ref_ctx_free(ctx);
+    }
 
     ecs_set_scope(world, prev_scope);
 

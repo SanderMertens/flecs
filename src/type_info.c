@@ -419,6 +419,7 @@ void ecs_set_hooks_id(
 
     ecs_flags32_t flags = h->flags & ~(ecs_flags32_t)ECS_TYPE_HOOKS;
     ecs_flags32_t conflicts = flags & flecs_type_hooks_specified(h, true);
+    (void)conflicts;
     ecs_check(!conflicts, ECS_INVALID_PARAMETER,
         "illegal call to set_hooks() for component '%s': "
         "cannot specify callbacks with illegal flags (0x%x)",

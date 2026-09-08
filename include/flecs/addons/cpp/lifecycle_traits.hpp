@@ -71,14 +71,13 @@ conditional_t<Move, ecs_move_t, ecs_copy_t> transfer(ecs_flags32_t& flags) {
             auto src = static_cast<conditional_t<Move, T*, const T*>>(src_ptr);
             for (int32_t i = 0; i < count; i ++) {
                 using Value = conditional_t<Move, T&&, const T&>;
-                Value value = static_cast<Value>(src[i]);
                 if constexpr (Destroy && !Construct && is_trivially_move_assignable_v<T>) {
                     dst[i].~T();
                 }
                 if constexpr (Construct) {
-                    FLECS_PLACEMENT_NEW(&dst[i], T(FLECS_FWD(value)));
+                    FLECS_PLACEMENT_NEW(&dst[i], T(static_cast<Value>(src[i])));
                 } else {
-                    dst[i] = FLECS_FWD(value);
+                    dst[i] = static_cast<Value>(src[i]);
                 }
                 if constexpr (Destroy && (Construct || !is_trivially_move_assignable_v<T>)) {
                     src[i].~T();

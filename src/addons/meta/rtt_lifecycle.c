@@ -335,6 +335,9 @@ static void flecs_rtt_vector_copy(
         ecs_vec_init_if(dst, ti->size);
         int32_t src_count = ecs_vec_count(src);
         ecs_vec_set_count(NULL, dst, ti->size, src_count);
+        if (!src_count) {
+            continue;
+        }
         if (ti->hooks.ctor) {
             flecs_type_info_ctor(ecs_vec_first(dst), src_count, ti);
         } else {

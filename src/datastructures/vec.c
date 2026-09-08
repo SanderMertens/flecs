@@ -326,7 +326,9 @@ void ecs_vec_set_count_w_type_info(
             const char *type_name = NULL;
 #endif
             void *array = flecs_vec_alloc(allocator, size, new_size, type_name);
-            flecs_type_info_ctor_move_dtor(array, v->array, old_count, ti);
+            if (old_count) {
+                flecs_type_info_ctor_move_dtor(array, v->array, old_count, ti);
+            }
             flecs_vec_free(allocator, size, v->size, v->array);
             v->array = array;
             v->size = new_size;

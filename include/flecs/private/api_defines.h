@@ -109,6 +109,7 @@
  * case). Adding a "default" case fixes the warning, but silences future 
  * warnings about unhandled cases, which is worse. */
 #pragma clang diagnostic ignored "-Wswitch-default"
+#pragma clang diagnostic ignored "-Wswitch-enum"
 #if __clang_major__ == 13
 /* clang 13 can throw this warning for a macro in ctype.h. */
 #pragma clang diagnostic ignored "-Wreserved-identifier"
@@ -141,6 +142,7 @@
 #endif
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #pragma GCC diagnostic ignored "-Wunused-macros"
+#pragma GCC diagnostic ignored "-Wswitch-enum"
 /* This warning gets thrown *sometimes* when not all members for a struct are
  * provided in an initializer. Flecs heavily relies on descriptor structs that
  * only require partial initialization, so this warning isn't useful.
