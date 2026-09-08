@@ -411,111 +411,60 @@ static void flecs_table_append_to_records(
 }
 
 static void flecs_table_init_overrides(
-    ecs_world_t *world, 
-    ecs_table_t *table, 
+    ecs_world_t *world,
+    ecs_table_t *table,
     const ecs_table_record_t *tr)
 {
-    ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-
     if (!table->column_count) {
         return;
     }
-
-    ecs_table_overrides_t *o = flecs_walloc_t(world, ecs_table_overrides_t);
-    if (tr->count > 1) {
-        table->flags |= EcsTableHasMultiIsA;
-        o->is._n.tr = tr;
-        o->is._n.generations = flecs_wcalloc_n(world, int32_t, tr->count);
-
-        int32_t i;
-        for (i = 0; i < tr->count; i ++) {
-            o->is._n.generations[i] = -1;
-        }
-    } else {
-        const ecs_table_record_t *first = &table->_->records[tr->index];
-        const ecs_component_record_t *cr = first->hdr.cr;
-        ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(ECS_PAIR_FIRST(cr->id) == EcsIsA, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(first->count == 1, ECS_INTERNAL_ERROR, NULL);
-        o->is._1.generation = -1;
-        o->is._1.pair = cr->pair;
+    ecs_size_t bases_size = ECS_SIZEOF(ecs_table_overrides_t) +
+        (tr->count - 1) * ECS_SIZEOF(ecs_table_override_base_t);
+    ecs_size_t size = bases_size + table->column_count * ECS_SIZEOF(ecs_ref_t);
+    ecs_table_overrides_t *o = flecs_walloc(world, size);
+    o->count = tr->count;
+    o->size = size;
+    o->refs = ECS_OFFSET(o, bases_size);
+    ecs_os_memset_n(o->refs, 0, ecs_ref_t, table->column_count);
+    for (int32_t i = 0; i < o->count; i ++) {
+        o->bases[i].pair = table->_->records[tr->index + i].hdr.cr->pair;
+        o->bases[i].generation = -1;
     }
-
-    o->refs = flecs_wcalloc_n(world, ecs_ref_t, table->column_count);
-
     table->data.overrides = o;
 }
 
 static void flecs_table_fini_overrides(
-    ecs_world_t *world, 
+    ecs_world_t *world,
     ecs_table_t *table)
 {
-    if (!table->column_count) {
-        return;
-    }
-
     ecs_table_overrides_t *o = table->data.overrides;
-    if (!o) {
-        return;
+    if (o) {
+        flecs_wfree(world, o->size, o);
     }
-
-    if (table->flags & EcsTableHasMultiIsA) {
-        const ecs_table_record_t *tr = o->is._n.tr;
-        flecs_wfree_n(world, int32_t, tr->count, o->is._n.generations);
-    }
-
-    flecs_wfree_n(world, ecs_ref_t, table->column_count, o->refs);
-    flecs_wfree_t(world, ecs_table_overrides_t, o);
 }
 
 static void flecs_table_update_overrides(
-    ecs_world_t *world, 
+    ecs_world_t *world,
     ecs_table_t *table)
 {
-    if (!(table->flags & EcsTableHasIsA)) {
-        return;
-    }
-
     ecs_table_overrides_t *o = table->data.overrides;
     if (!o) {
         return;
     }
 
-    if (table->flags & EcsTableHasMultiIsA) {
-        const ecs_table_record_t *tr = o->is._n.tr;
-        const ecs_table_record_t *records = table->_->records;
-
-        int32_t *generations = o->is._n.generations;
-        int32_t i = tr->index, end = i + tr->count;
-        for (; i < end; i ++) {
-            ecs_component_record_t *cr = records[i].hdr.cr;
-            if (cr->pair->reachable.generation != *generations) {
-                break;
-            }
-            generations ++;
+    int32_t base_index = 0;
+    for (; base_index < o->count; base_index ++) {
+        ecs_table_override_base_t *base = &o->bases[base_index];
+        if (base->generation != base->pair->reachable.generation) {
+            break;
         }
-
-        if (i == end) {
-            /* Cache is up to date */
-            return;
-        }
-
-        generations = o->is._n.generations;
-        i = tr->index; end = i + tr->count;
-        for (; i < end; i ++) {
-            ecs_component_record_t *cr = records[i].hdr.cr;
-            generations[0] = cr->pair->reachable.generation;
-            generations ++;
-        }
-    } else {
-        /* Fast cache validation for tables with single IsA pair */
-        int32_t generation = o->is._1.pair->reachable.generation;
-        if (o->is._1.generation == generation) {
-            /* Cache is up to date */
-            return;
-        }
-
-        o->is._1.generation = generation;
+    }
+    if (base_index == o->count) {
+        return;
+    }
+    for (; base_index < o->count; base_index ++) {
+        ecs_table_override_base_t *base = &o->bases[base_index];
+        base->generation = base->pair->reachable.generation;
     }
 
     int16_t *map = &table->column_map[table->type.count];

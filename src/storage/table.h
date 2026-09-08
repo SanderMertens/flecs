@@ -23,26 +23,16 @@
 }
 #endif
 
-/** Overrides (set if table overrides components) */
-
-/* Override type used for tables with a single IsA pair */
-typedef struct ecs_table_1_override_t {
-    const ecs_pair_record_t *pair;   /* Pair data for (IsA, base) */
-    int32_t generation;              /* Reachable cache generation for IsA pair */
-} ecs_table_1_override_t;
-
-/* Override type used for tables with n IsA pairs (less common) */
-typedef struct ecs_table_n_overrides_t {
-    const ecs_table_record_t *tr;    /* Table record for (IsA, *) */
-    int32_t *generations;            /* Reachable cache generations (one per IsA pair) */
-} ecs_table_n_overrides_t;
+typedef struct ecs_table_override_base_t {
+    const ecs_pair_record_t *pair;
+    int32_t generation;
+} ecs_table_override_base_t;
 
 typedef struct ecs_table_overrides_t {
-    union {
-        ecs_table_1_override_t _1;
-        ecs_table_n_overrides_t _n;
-    } is;
-    ecs_ref_t *refs;                 /* Refs to base components (one for each column) */
+    ecs_ref_t *refs;
+    int32_t count;
+    ecs_size_t size;
+    ecs_table_override_base_t bases[1];
 } ecs_table_overrides_t;
 
 /** Infrequently accessed data not stored inline in ecs_table_t */
