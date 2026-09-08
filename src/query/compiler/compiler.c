@@ -692,7 +692,7 @@ static void flecs_query_insert_cache_search(
 
     if (childof_term != -1) {
         flecs_query_compile_term(
-            q->world, query, &q->terms[childof_term], ctx);
+            q->stage, query, &q->terms[childof_term], ctx);
     }
 
     if (has_childof_trav) {
@@ -715,7 +715,7 @@ static void flecs_query_insert_cache_search(
                 ecs_oper_kind_t oper = q->terms[i].oper;
                 q->terms[i].oper = EcsAnd;
                 flecs_query_compile_term(
-                    q->world, query, &q->terms[i], ctx);
+                    q->stage, query, &q->terms[i], ctx);
                 q->terms[i].oper = (int16_t)oper;
             }
         }

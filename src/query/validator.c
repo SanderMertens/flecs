@@ -53,7 +53,7 @@ static void flecs_query_validator_error(
     char *expr = ecs_strbuf_get(&buf);
     const char *name = NULL;
     if (ctx->query && ctx->query->entity) {
-        name = ecs_get_name(ctx->query->world, ctx->query->entity);
+        name = ecs_get_name(ctx->query->stage, ctx->query->entity);
     }
 
     va_list args;
@@ -906,7 +906,7 @@ static ecs_term_t* flecs_query_or_other_type(
     }
 
     if (first) {
-        ecs_world_t *world = q->world;
+        ecs_world_t *world = q->stage;
         const ecs_type_info_t *first_type = ecs_get_type_info(world, first->id);
         const ecs_type_info_t *term_type = ecs_get_type_info(world, term->id);
 

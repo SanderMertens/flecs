@@ -4,7 +4,7 @@
 // This example shows how to run a system at a specified time interval.
 
 void Tick(ecs_iter_t *it) {
-    printf("%s\n", ecs_get_name(it->world, it->system));
+    printf("%s\n", ecs_get_name(it->stage, it->system));
 }
 
 int main(int argc, char *argv[]) {

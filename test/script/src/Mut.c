@@ -391,10 +391,10 @@ void Mut_deferred_modified_reinstantiates(void) {
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     float value = 50;
-    ecs_set_id(world, e, mut, sizeof(float), &value);
-    ecs_defer_end(world);
+    ecs_set_id(stage_1, e, mut, sizeof(float), &value);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
@@ -2067,6 +2067,7 @@ void Mut_set_from_stage(void) {
 
     test_int(ecs_mut_var_get_t(world, "v", ecs_i32_t), 20);
 
+    ecs_merge(stage);
     ecs_fini(world);
 }
 
@@ -2096,6 +2097,7 @@ void Mut_set_struct_from_stage(void) {
     test_flt(p.x, 30.5);
     test_flt(p.y, 40.5);
 
+    ecs_merge(stage);
     ecs_fini(world);
 }
 
@@ -2119,5 +2121,6 @@ void Mut_modified_from_stage(void) {
 
     test_int(ecs_mut_var_get_t(world, "v", ecs_i32_t), 20);
 
+    ecs_merge(stage);
     ecs_fini(world);
 }

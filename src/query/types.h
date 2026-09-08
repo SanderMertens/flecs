@@ -371,9 +371,9 @@ typedef struct {
 
 typedef struct {
     ecs_sparse_t **sparse;
+    ecs_sparse_t *lead_sparse;
     ecs_entity_t *entities;
     int32_t cur;
-    int8_t lead;
 } ecs_query_sparse_trivial_ctx_t;
 
 /* *From operator iterator context */

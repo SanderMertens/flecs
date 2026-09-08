@@ -128,9 +128,9 @@ void Template_template_no_props_add_deferred(void) {
     test_assert(likes != 0);
     test_assert(likes_self != 0);
 
-    ecs_defer_begin(world);
-    ecs_add_id(world, bob, likes_self);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, bob, likes_self);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_id(world, bob, likes_self));
     test_assert(ecs_has_pair(world, bob, likes, bob));
@@ -7201,14 +7201,14 @@ void Template_deferred_updates_batched(void) {
     ecs_entity_t fx = ecs_lookup(world, "f.x");
     test_assert(t && e && f && g && ex && fx);
 
-    ecs_defer_begin(world);
-    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){10, 1});
-    ecs_set_id(world, f, t, sizeof(ReactionAB), &(ReactionAB){20, 2});
-    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){11, 1});
-    ecs_delete(world, g);
-    ecs_set_id(world, g, t, sizeof(ReactionAB), &(ReactionAB){30, 3});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set_id(stage_1, e, t, sizeof(ReactionAB), &(ReactionAB){10, 1});
+    ecs_set_id(stage_1, f, t, sizeof(ReactionAB), &(ReactionAB){20, 2});
+    ecs_set_id(stage_1, e, t, sizeof(ReactionAB), &(ReactionAB){11, 1});
+    ecs_delete(stage_1, g);
+    ecs_set_id(stage_1, g, t, sizeof(ReactionAB), &(ReactionAB){30, 3});
     test_int(on_position_count, 3);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, g));
     test_uint(ecs_lookup(world, "e.x"), ex);
@@ -7220,9 +7220,9 @@ void Template_deferred_updates_batched(void) {
         test_flt(p->x, 20);
     }
 
-    ecs_defer_begin(world);
-    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){12, 1});
-    ecs_defer_end(world);
+    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set_id(stage_2, e, t, sizeof(ReactionAB), &(ReactionAB){12, 1});
+    ecs_merge(stage_2);
     {
         const Position *p = ecs_get(world, ex, Position);
         test_flt(p->x, 12);
@@ -7270,10 +7270,10 @@ void Template_deferred_update_nested_template(void) {
     ecs_entity_t fleaf = ecs_lookup(world, "f.child.leaf");
     test_assert(t && e && f && eleaf && fleaf);
 
-    ecs_defer_begin(world);
-    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){10, 1});
-    ecs_set_id(world, f, t, sizeof(ReactionAB), &(ReactionAB){20, 2});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set_id(stage_1, e, t, sizeof(ReactionAB), &(ReactionAB){10, 1});
+    ecs_set_id(stage_1, f, t, sizeof(ReactionAB), &(ReactionAB){20, 2});
+    ecs_merge(stage_1);
 
     test_uint(ecs_lookup(world, "e.child.leaf"), eleaf);
     test_uint(ecs_lookup(world, "f.child.leaf"), fleaf);
@@ -7320,16 +7320,14 @@ void Template_deferred_update_from_system(void) {
     ecs_entity_t f = ecs_lookup(world, "f");
     test_assert(t && e && f);
 
-    ecs_defer_begin(world);
-    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){5, 1});
-    ecs_defer_begin(world);
-    ecs_set_id(world, f, t, sizeof(ReactionAB), &(ReactionAB){6, 2});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set_id(stage_1, e, t, sizeof(ReactionAB), &(ReactionAB){5, 1});
+    ecs_set_id(stage_1, f, t, sizeof(ReactionAB), &(ReactionAB){6, 2});
     {
-        const Position *p = ecs_get(world, ecs_lookup(world, "e.x"), Position);
+        const Position *p = ecs_get(stage_1, ecs_lookup(stage_1, "e.x"), Position);
         test_flt(p->x, 1);
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     {
         const Position *p = ecs_get(world, ecs_lookup(world, "e.x"), Position);
         test_flt(p->x, 5);
@@ -7917,9 +7915,9 @@ void Template_manual_instantiation(void) {
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_assert(!ecs_lookup(world, "b.child"));
-    ecs_defer_begin(world);
-    ecs_set_id(world, b, t, sizeof(ecs_i32_t), &(ecs_i32_t){50});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_set_id(stage_1, b, t, sizeof(ecs_i32_t), &(ecs_i32_t){50});
+    ecs_merge(stage_1);
     test_assert(!ecs_lookup(world, "b.child"));
     test_int(ecs_script_template_update(world, b, t), 0);
     p = ecs_get(world, ecs_lookup(world, "b.child"), Position);
@@ -8126,9 +8124,9 @@ void Template_template_w_props_as_tag_from_c_deferred(void) {
     test_assert(brick != 0);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
-    ecs_defer_begin(world);
-    ecs_add_id(world, e, brick);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, e, brick);
+    ecs_merge(stage_1);
 
     ecs_entity_t inst = ecs_lookup(world, "e");
     test_assert(inst != 0);
@@ -8288,10 +8286,10 @@ void Template_template_w_props_set_after_add_deferred(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     float height = 10;
 
-    ecs_defer_begin(world);
-    ecs_add_id(world, e, brick);
-    ecs_set_id(world, e, brick, sizeof(float), &height);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, e, brick);
+    ecs_set_id(stage_1, e, brick, sizeof(float), &height);
+    ecs_merge(stage_1);
 
     ecs_entity_t inst = ecs_lookup(world, "e");
     test_assert(inst != 0);
@@ -8411,12 +8409,12 @@ void Template_template_w_vector_prop_set_deferred(void) {
     elems[1] = (Vec2Value){0, 10};
     elems[2] = (Vec2Value){10, 10};
 
-    ecs_defer_begin(world);
-    ecs_entity_t a = ecs_entity(world, { .name = "a" });
-    ecs_entity_t b = ecs_entity(world, { .name = "b" });
-    ecs_set_id(world, a, roof, sizeof(ecs_vec_t), &footprint);
-    ecs_set_id(world, b, flat_roof, sizeof(ecs_vec_t), &flat_footprint);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_entity_t a = ecs_entity(stage_1, { .name = "a" });
+    ecs_entity_t b = ecs_entity(stage_1, { .name = "b" });
+    ecs_set_id(stage_1, a, roof, sizeof(ecs_vec_t), &footprint);
+    ecs_set_id(stage_1, b, flat_roof, sizeof(ecs_vec_t), &flat_footprint);
+    ecs_merge(stage_1);
 
     test_int(deferred_error_count, 0);
     test_int(deferred_instantiate_count, 2);
@@ -8521,12 +8519,12 @@ void Template_template_w_vector_prop_add_set_deferred(void) {
     ecs_entity_t a = ecs_entity(world, { .name = "a" });
     ecs_entity_t b = ecs_entity(world, { .name = "b" });
 
-    ecs_defer_begin(world);
-    ecs_add_id(world, a, roof);
-    ecs_set_id(world, a, roof, sizeof(ecs_vec_t), &footprint);
-    ecs_add_id(world, b, flat_roof);
-    ecs_set_id(world, b, flat_roof, sizeof(ecs_vec_t), &flat_footprint);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, a, roof);
+    ecs_set_id(stage_1, a, roof, sizeof(ecs_vec_t), &footprint);
+    ecs_add_id(stage_1, b, flat_roof);
+    ecs_set_id(stage_1, b, flat_roof, sizeof(ecs_vec_t), &flat_footprint);
+    ecs_merge(stage_1);
 
     test_int(deferred_error_count, 0);
     test_int(deferred_instantiate_count, 2);
@@ -8607,12 +8605,10 @@ void Template_template_w_vector_prop_script_kind_deferred(void) {
     deferred_instantiate_count = 0;
     deferred_error_count = 0;
 
-    ecs_defer_begin(world);
     test_assert(ecs_script_run_w_desc(world, NULL,
         HEAD "Roof a(footprint: [{0,0},{0,10},{10,10}])"
         LINE "FlatRoof b(footprint: [{0,0},{0,10},{10,10}])",
         &ir_desc, NULL) == 0);
-    ecs_defer_end(world);
 
     test_int(deferred_error_count, 0);
     test_int(deferred_instantiate_count, 2);
@@ -8634,6 +8630,47 @@ void Template_template_w_vector_prop_script_kind_deferred(void) {
     test_assert(p != NULL);
     test_flt(p->x, 0);
     test_flt(p->y, 0);
+
+    ecs_entity_t roof = ecs_lookup(world, "Roof");
+    ecs_entity_t flat_roof = ecs_lookup(world, "FlatRoof");
+    test_assert(roof != 0);
+    test_assert(flat_roof != 0);
+
+    ecs_vec_t footprint, flat_footprint;
+
+    ecs_vec_init_t(NULL, &footprint, Vec2Value, 2);
+    ecs_vec_set_count_t(NULL, &footprint, Vec2Value, 2);
+    Vec2Value *elems = ecs_vec_first_t(&footprint, Vec2Value);
+    elems[0] = (Vec2Value){5, 6};
+    elems[1] = (Vec2Value){7, 8};
+
+    ecs_vec_init_t(NULL, &flat_footprint, Vec2Value, 2);
+    ecs_vec_set_count_t(NULL, &flat_footprint, Vec2Value, 2);
+    elems = ecs_vec_first_t(&flat_footprint, Vec2Value);
+    elems[0] = (Vec2Value){9, 10};
+    elems[1] = (Vec2Value){11, 12};
+
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_set_id(stage_1, ecs_lookup(world, "a"), roof,
+        sizeof(ecs_vec_t), &footprint);
+    ecs_set_id(stage_1, ecs_lookup(world, "b"), flat_roof,
+        sizeof(ecs_vec_t), &flat_footprint);
+    ecs_merge(stage_1);
+
+    test_int(deferred_error_count, 0);
+
+    p = ecs_get_id(world, ecs_lookup(world, "a"), position);
+    test_assert(p != NULL);
+    test_flt(p->x, 5);
+    test_flt(p->y, 6);
+
+    p = ecs_get_id(world, ecs_lookup(world, "b"), position);
+    test_assert(p != NULL);
+    test_flt(p->x, 9);
+    test_flt(p->y, 10);
+
+    ecs_vec_fini_t(NULL, &footprint, Vec2Value);
+    ecs_vec_fini_t(NULL, &flat_footprint, Vec2Value);
 
     ecs_fini(world);
     ecs_os_set_api_defaults();
@@ -8690,12 +8727,10 @@ void Template_template_w_vector_prop_script_component_deferred(void) {
     deferred_instantiate_count = 0;
     deferred_error_count = 0;
 
-    ecs_defer_begin(world);
     test_assert(ecs_script_run_w_desc(world, NULL,
         HEAD "a { Roof: {footprint: [{0,0},{0,10},{10,10}]} }"
         LINE "b { FlatRoof: {footprint: [{0,0},{0,10},{10,10}]} }",
         &ir_desc, NULL) == 0);
-    ecs_defer_end(world);
 
     test_int(deferred_error_count, 0);
     test_int(deferred_instantiate_count, 2);
@@ -8717,6 +8752,47 @@ void Template_template_w_vector_prop_script_component_deferred(void) {
     test_assert(p != NULL);
     test_flt(p->x, 0);
     test_flt(p->y, 0);
+
+    ecs_entity_t roof = ecs_lookup(world, "Roof");
+    ecs_entity_t flat_roof = ecs_lookup(world, "FlatRoof");
+    test_assert(roof != 0);
+    test_assert(flat_roof != 0);
+
+    ecs_vec_t footprint, flat_footprint;
+
+    ecs_vec_init_t(NULL, &footprint, Vec2Value, 2);
+    ecs_vec_set_count_t(NULL, &footprint, Vec2Value, 2);
+    Vec2Value *elems = ecs_vec_first_t(&footprint, Vec2Value);
+    elems[0] = (Vec2Value){5, 6};
+    elems[1] = (Vec2Value){7, 8};
+
+    ecs_vec_init_t(NULL, &flat_footprint, Vec2Value, 2);
+    ecs_vec_set_count_t(NULL, &flat_footprint, Vec2Value, 2);
+    elems = ecs_vec_first_t(&flat_footprint, Vec2Value);
+    elems[0] = (Vec2Value){9, 10};
+    elems[1] = (Vec2Value){11, 12};
+
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_set_id(stage_1, ecs_lookup(world, "a"), roof,
+        sizeof(ecs_vec_t), &footprint);
+    ecs_set_id(stage_1, ecs_lookup(world, "b"), flat_roof,
+        sizeof(ecs_vec_t), &flat_footprint);
+    ecs_merge(stage_1);
+
+    test_int(deferred_error_count, 0);
+
+    p = ecs_get_id(world, ecs_lookup(world, "a"), position);
+    test_assert(p != NULL);
+    test_flt(p->x, 5);
+    test_flt(p->y, 6);
+
+    p = ecs_get_id(world, ecs_lookup(world, "b"), position);
+    test_assert(p != NULL);
+    test_flt(p->x, 9);
+    test_flt(p->y, 10);
+
+    ecs_vec_fini_t(NULL, &footprint, Vec2Value);
+    ecs_vec_fini_t(NULL, &flat_footprint, Vec2Value);
 
     ecs_fini(world);
     ecs_os_set_api_defaults();
@@ -8778,9 +8854,9 @@ void Template_template_add_deferred_instantiates_once(void) {
 
     ecs_entity_t a = ecs_entity(world, { .name = "a" });
 
-    ecs_defer_begin(world);
-    ecs_add_id(world, a, brick);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, a, brick);
+    ecs_merge(stage_1);
 
     test_int(deferred_error_count, 0);
     test_int(deferred_instantiate_count, 1);
@@ -8854,10 +8930,10 @@ void Template_template_add_remove_deferred_no_instantiate(void) {
 
     ecs_entity_t a = ecs_entity(world, { .name = "a" });
 
-    ecs_defer_begin(world);
-    ecs_add_id(world, a, brick);
-    ecs_remove_id(world, a, brick);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, a, brick);
+    ecs_remove_id(stage_1, a, brick);
+    ecs_merge(stage_1);
 
     test_int(deferred_error_count, 0);
     test_int(deferred_instantiate_count, 0);
@@ -8990,10 +9066,13 @@ void Template_template_in_scope_instantiates_once_deferred(void) {
         LINE "  FlatRoof: {footprint: [{10, 20}, {30, 40}]}"
         LINE "}", &ir_desc, NULL) == 0);
 
-    ecs_defer_begin(world);
-    test_assert(ecs_script_run_w_desc(world, NULL,
-        HEAD "probe { FlatRoofProbe: {} }", &ir_desc, NULL) == 0);
-    ecs_defer_end(world);
+    ecs_entity_t probe_template = ecs_lookup(world, "FlatRoofProbe");
+    test_assert(probe_template != 0);
+
+    ecs_entity_t probe = ecs_entity(world, { .name = "probe" });
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, probe, probe_template);
+    ecs_merge(stage_1);
 
     test_int(deferred_error_count, 0);
     test_int(deferred_instantiate_count, 1);
@@ -9288,10 +9367,13 @@ void Template_template_interface_prop_in_scope_instantiates_once_deferred(void) 
         LINE "  Building: {roof: FlatRoof}"
         LINE "}", &ir_desc, NULL) == 0);
 
-    ecs_defer_begin(world);
-    test_assert(ecs_script_run_w_desc(world, NULL,
-        HEAD "probe { BuildingProbe: {} }", &ir_desc, NULL) == 0);
-    ecs_defer_end(world);
+    ecs_entity_t probe_template = ecs_lookup(world, "BuildingProbe");
+    test_assert(probe_template != 0);
+
+    ecs_entity_t probe = ecs_entity(world, { .name = "probe" });
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, probe, probe_template);
+    ecs_merge(stage_1);
 
     test_int(deferred_error_count, 0);
     test_int(deferred_instantiate_count, 1);

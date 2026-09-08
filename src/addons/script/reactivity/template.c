@@ -238,7 +238,7 @@ static ECS_DTOR(EcsScriptTemplateRoot, ptr, {
 static void flecs_script_template_root_on_remove(
     ecs_iter_t *it)
 {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     EcsScriptTemplateRoot *ptr = ecs_field_w_size(
         it, sizeof(EcsScriptTemplateRoot), 0);
 
@@ -321,9 +321,9 @@ static void flecs_script_template_root_clear(
 static void flecs_script_template_root_remove(
     ecs_iter_t *it)
 {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_entity_t template_entity = ecs_pair_second(
-        it->real_world, ecs_field_id(it, 0));
+        it->world, ecs_field_id(it, 0));
 
     if (!template_entity || !ecs_is_alive(world, template_entity)) {
         return;
@@ -462,13 +462,13 @@ static void flecs_script_template_defer_on_set(
     const ecs_type_info_t *ti,
     void *data)
 {
-    ecs_script_runtime_t *rt = flecs_script_runtime_get(it->real_world);
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(it->world);
     bool owns_data = ti->hooks.copy_ctor != NULL &&
         !(ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
     bool any = false;
     int32_t i;
     for (i = 0; i < it->count; i ++) {
-        const EcsScriptTemplateRoot *root = ecs_get_pair(it->real_world,
+        const EcsScriptTemplateRoot *root = ecs_get_pair(it->world,
             it->entities[i], EcsScriptTemplateRoot, template_entity);
         uint64_t input = root && root->state.initialized
             ? root->changed
@@ -510,7 +510,7 @@ static void flecs_script_template_defer_on_set(
     }
 
     rt->template_pending_marker = true;
-    ecs_enqueue(it->world, &(ecs_event_desc_t){
+    ecs_enqueue(it->stage, &(ecs_event_desc_t){
         .event = EcsScriptTemplateFlushEvent,
         .entity = EcsAny
     });
@@ -1286,7 +1286,7 @@ static void flecs_script_template_ref_on_set(
 {
     ecs_script_ref_ctx_t *ctx = it->ctx;
     ecs_entity_t template_entity = ctx->script;
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
 
     if (!ecs_is_alive(world, template_entity)) {
         return;
@@ -1302,10 +1302,6 @@ static void flecs_script_template_ref_on_set(
         return;
     }
 
-    bool is_deferred = ecs_is_deferred(world);
-    if (is_deferred) {
-        ecs_defer_suspend(world);
-    }
 
     /* Gather all instances first so re-instantiation doesn't invalidate the
      * iterator by modifying the tables it iterates. */
@@ -1336,9 +1332,6 @@ static void flecs_script_template_ref_on_set(
 
     ecs_vec_fini_t(NULL, &instances, ecs_entity_t);
 
-    if (is_deferred) {
-        ecs_defer_resume(world);
-    }
 }
 
 static void flecs_script_template_instance_update(
@@ -1366,18 +1359,11 @@ static void flecs_script_template_instance_update(
         return;
     }
 
-    bool is_deferred = ecs_is_deferred(world);
-    if (is_deferred) {
-        ecs_defer_suspend(world);
-    }
 
     flecs_script_template_instantiate(
         world, template_entity, template_entity,
         instance, data, input);
 
-    if (is_deferred) {
-        ecs_defer_resume(world);
-    }
 }
 
 static void flecs_script_template_instance_ref_on_set(
@@ -1387,14 +1373,13 @@ static void flecs_script_template_instance_ref_on_set(
     ecs_entity_t template_entity = ctx->script;
     ecs_entity_t instance = ctx->instance;
 
-    if (it->event == EcsOnRemove && ecs_is_deferred(it->world)) {
+    if (it->event == EcsOnRemove && ecs_is_deferred(it->stage)) {
         EcsScriptTemplateInstanceUpdateEvent evt = {
             .template_entity = template_entity,
             .instance = instance,
             .input = ctx->input
         };
-
-        ecs_enqueue(it->world, &(ecs_event_desc_t){
+        ecs_enqueue(it->stage, &(ecs_event_desc_t){
             .event = ecs_id(EcsScriptTemplateInstanceUpdateEvent),
             .entity = EcsAny,
             .param = &evt
@@ -1404,14 +1389,14 @@ static void flecs_script_template_instance_ref_on_set(
     }
 
     flecs_script_template_instance_update(
-        it->real_world, template_entity, instance, ctx->input);
+        it->world, template_entity, instance, ctx->input);
 }
 
 static void flecs_on_template_instance_update_event(
     ecs_iter_t *it)
 {
     EcsScriptTemplateInstanceUpdateEvent *evt = it->param;
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
 
     flecs_script_template_instance_update(
@@ -1421,8 +1406,8 @@ static void flecs_on_template_instance_update_event(
 static void flecs_on_template_flush_event(
     ecs_iter_t *it)
 {
-    ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
-    ecs_world_t *world = it->real_world;
+    ecs_assert(ecs_is_deferred(it->stage), ECS_INTERNAL_ERROR, NULL);
+    ecs_world_t *world = it->world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
 
     ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
@@ -1431,7 +1416,6 @@ static void flecs_on_template_flush_event(
         return;
     }
 
-    ecs_defer_suspend(world);
     int32_t prev_depth = rt->template_depth;
     rt->template_pending_active = true;
     int32_t i;
@@ -1450,7 +1434,7 @@ static void flecs_on_template_flush_event(
     ecs_vec_clear(&rt->template_pending);
     rt->template_pending_active = false;
     rt->template_depth = prev_depth;
-    ecs_defer_resume(world);
+
 }
 
 /* Template on_set handler to update contents for new property values */
@@ -1485,7 +1469,7 @@ static void flecs_script_template_on_set(
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     void *data = ecs_field_w_size(it, flecs_ito(size_t, ti->size), 0);
 
-    if (ecs_is_deferred(it->world)) {
+    if (ecs_is_deferred(it->stage)) {
         flecs_script_template_defer_on_set(
             it, template_entity, component, ti, data);
         return;
@@ -1530,7 +1514,7 @@ static void flecs_script_template_on_add(
     }
 
     if (it->count == 1 && flecs_stage_is_ensure_add(
-        it->real_world, it->entities[0], template_entity))
+        it->world, it->entities[0], template_entity))
     {
         return;
     }
@@ -1643,7 +1627,7 @@ static void flecs_script_template_on_muts_replace(
     ecs_iter_t *it)
 {
     ecs_entity_t muts_entity = ecs_field_id(it, 0);
-    ecs_entity_t template_entity = ecs_get_parent(it->world, muts_entity);
+    ecs_entity_t template_entity = ecs_get_parent(it->stage, muts_entity);
     flecs_script_template_on_replace(it, template_entity, true);
 }
 
@@ -1657,7 +1641,7 @@ static void flecs_script_template_on_muts_set(
     ecs_iter_t *it)
 {
     ecs_entity_t muts_entity = ecs_field_id(it, 0);
-    ecs_entity_t template_entity = ecs_get_parent(it->world, muts_entity);
+    ecs_entity_t template_entity = ecs_get_parent(it->stage, muts_entity);
     flecs_script_template_on_set(it, template_entity);
 }
 
@@ -1672,7 +1656,7 @@ static void flecs_script_template_delete_observers(
 static void flecs_script_template_on_remove(
     ecs_iter_t *it)
 {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_entity_t template_entity = ecs_field_id(it, 0);
 
     if (!ecs_is_alive(world, template_entity)) {

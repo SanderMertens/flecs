@@ -508,43 +508,73 @@ bool flecs_query_trivial_sparse_search(
     int8_t i, field_count = q->field_count;
 
     if (!redo) {
-        op_ctx->sparse = flecs_iter_calloc_n(it, ecs_sparse_t*, field_count);
         op_ctx->entities = flecs_iter_calloc_n(it, ecs_entity_t, 
             FLECS_QUERY_SPARSE_BATCH_SIZE);
 
-        int8_t lead = 0;
-        for (i = 0; i < field_count; i ++) {
+        if (field_count == 1) {
             ecs_component_record_t *cr = flecs_components_get(
-                ctx->world, q->ids[i]);
+                ctx->world, q->ids[0]);
             if (!cr || !cr->sparse) {
                 return false;
             }
 
-            op_ctx->sparse[i] = cr->sparse;
-            if (op_ctx->sparse[i]->count < op_ctx->sparse[lead]->count) {
-                lead = i;
+            op_ctx->lead_sparse = cr->sparse;
+        } else {
+            op_ctx->sparse = flecs_iter_calloc_n(
+                it, ecs_sparse_t*, field_count);
+            int8_t lead = 0;
+            for (i = 0; i < field_count; i ++) {
+                ecs_component_record_t *cr = flecs_components_get(
+                    ctx->world, q->ids[i]);
+                if (!cr || !cr->sparse) {
+                    return false;
+                }
+
+                op_ctx->sparse[i] = cr->sparse;
+                if (op_ctx->sparse[i]->count < op_ctx->sparse[lead]->count) {
+                    lead = i;
+                }
             }
+
+            op_ctx->lead_sparse = op_ctx->sparse[lead];
+            op_ctx->sparse[lead] = op_ctx->sparse[0];
+            op_ctx->sparse[0] = op_ctx->lead_sparse;
         }
 
-        op_ctx->lead = lead;
         op_ctx->cur = 0;
     }
 
-    int8_t lead = op_ctx->lead;
-    ecs_sparse_t *lead_sparse = op_ctx->sparse[lead];
+    ecs_sparse_t *lead_sparse = op_ctx->lead_sparse;
     const uint64_t *ids = flecs_sparse_ids(lead_sparse);
     int32_t cur = op_ctx->cur, count = flecs_sparse_count(lead_sparse);
     ecs_entity_t *entities = op_ctx->entities;
     int32_t n = 0;
 
+    if (field_count == 1) {
+        ecs_table_t *prev_table = NULL;
+        bool filtered = false;
+        for (; cur < count && n < FLECS_QUERY_SPARSE_BATCH_SIZE; cur ++) {
+            ecs_entity_t e = ids[cur];
+            ecs_record_t *r = flecs_entities_get(ctx->world, e);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_table_t *table = r->table;
+            ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (table != prev_table) {
+                prev_table = table;
+                filtered = table->flags & (EcsTableNotQueryable|
+                    EcsTableIsPrefab|EcsTableIsDisabled);
+            }
+            if (!filtered) {
+                entities[n ++] = e;
+            }
+        }
+        goto yield;
+    }
+
     for (; cur < count && n < FLECS_QUERY_SPARSE_BATCH_SIZE; cur ++) {
         ecs_entity_t e = ids[cur];
 
-        for (i = 0; i < field_count; i ++) {
-            if (i == lead) {
-                continue;
-            }
-
+        for (i = 1; i < field_count; i ++) {
             if (!flecs_sparse_has(op_ctx->sparse[i], e)) {
                 goto next;
             }
@@ -567,6 +597,7 @@ next:
         continue;
     }
 
+yield:
     op_ctx->cur = cur;
 
     if (!n) {

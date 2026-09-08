@@ -241,19 +241,11 @@ char* flecs_to_snake_case(
  * read-only mode, so a multithreaded application should always explicitly
  * register components in advance.
  *
- * These operations also suspend deferred mode.
- *
  * Functions are public to support language bindings.
  */
 typedef struct ecs_suspend_readonly_state_t {
     bool is_readonly;
-    bool is_deferred;
-    bool cmd_flushing;
-    int32_t defer_count;
     ecs_entity_t scope;
-    ecs_commands_t cmd_stack[2];
-    ecs_commands_t *cmd;
-    ecs_stage_t *stage;
 } ecs_suspend_readonly_state_t;
 
 FLECS_API
@@ -411,9 +403,8 @@ void flecs_check_exclusive_world_access_read(
 #define flecs_check_exclusive_world_access_read(world)
 #endif
 
-/** End deferred mode (executes commands when stage->defer becomes 0). */
 FLECS_API
-bool flecs_defer_end(
+bool flecs_commands_end(
     ecs_world_t *world,
     ecs_stage_t *stage);
 

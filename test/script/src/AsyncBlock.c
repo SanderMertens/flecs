@@ -5205,10 +5205,10 @@ void AsyncBlock_template_mut_sparse_external_update(void) {
         ecs_add_id(world, ecs_new(world), mut);
     }
     test_assert(ecs_get_id(world, e, mut) == ptr);
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
     int32_t value = 9;
-    ecs_set_id(world, e, mut, sizeof(value), &value);
-    ecs_defer_end(world);
+    ecs_set_id(stage_1, e, mut, sizeof(value), &value);
+    ecs_merge(stage_1);
     test_int(ab_cancel_count, 0);
 
     ecs_entity_t pos = ecs_lookup(world, "Position");

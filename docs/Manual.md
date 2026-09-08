@@ -317,21 +317,22 @@ world.import<vehicles>();
 ```
 
 ## Deferred operations
-Applications can defer entity with the `ecs_defer_begin` and `ecs_defer_end` functions. This records all operations that happen inside the begin - end block, and executes them when `ecs_defer_end` is called. Deferred operations are useful when an application wants to make modifications to an entity while iterating, as doing this without deferring an operation could modify the underlying data structure. An example:
+Pass an explicit stage to enqueue ECS operations. Pass the world to execute operations immediately. The world has no deferred mode, and stages always enqueue operations.
 
 ```c
-ecs_defer_begin(world);
-    ecs_entity_t e = ecs_new(world);
-    ecs_add(world, e, Position);
-    ecs_set(world, e, Velocity, {1, 1});
-ecs_defer_end(world);
+ecs_world_t *stage = ecs_get_stage(world, 0);
+ecs_entity_t e = ecs_new(stage);
+ecs_add(stage, e, Position);
+ecs_set(stage, e, Velocity, {1, 1});
+ecs_merge(stage);
 ```
 
-The effects of these operations will not be visible until the `ecs_defer_end` operation.
+The queued changes become visible when the stage is merged. `ecs_readonly_end` merges all managed stages after leaving readonly mode. Each application thread must use its own stage.
 
-There are a few things to keep in mind when deferring:
-- creating a new entity will always return a new id which increases the last used id counter of the world
-- `ecs_ensure` returns a pointer initialized with the current component value, and does not take into account deferred set or ensure operations
-- if an operation is called on an entity which was deleted while deferred, the operation will ignored by `ecs_defer_end`
-- if a child entity is created for a deleted parent while deferred, the child entity will be deleted by `ecs_defer_end`
+Observer and system iterators expose `it->stage` for queued operations and `it->world` for access to the actual world. World operations require writable storage. In C++, use `it.stage()` and `it.world()`, and use `entity.mut(stage)` to obtain an entity handle that queues mutations.
 
+Observer commands use nested command queues. When a command invokes an observer, commands queued by that observer, including commands from further nested observers, finish before the next command in the parent queue.
+
+Creating a staged entity allocates its identifier immediately. Commands targeting an entity deleted before their execution are discarded. Commands that parent an entity to a deleted parent delete the child during the merge.
+
+When `ecs_ensure()` receives a stage, it returns existing component storage if the entity already has the component. Otherwise it returns temporary storage that will be applied when the stage is merged.

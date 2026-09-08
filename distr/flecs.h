@@ -4642,8 +4642,8 @@ struct ecs_query_t {
     void *binding_ctx;          /**< Context to be used for language bindings. */
 
     ecs_entity_t entity;        /**< Entity associated with query (optional). */
-    ecs_world_t *real_world;    /**< Actual world. */
-    ecs_world_t *world;         /**< World or stage the query was created with. */
+    ecs_world_t *stage;         /**< World or stage the query was created with. */
+    ecs_world_t *world;         /**< Actual world. */
 
     int32_t eval_count;         /**< Number of times the query is evaluated. */
 };
@@ -4982,11 +4982,23 @@ typedef struct ecs_iter_private_t {
     ecs_stack_cursor_t *stack_cursor; /* Stack cursor to restore to. */
 } ecs_iter_private_t;
 
+typedef struct ecs_cmd_entry_t {
+    int32_t first;
+    int32_t last;
+} ecs_cmd_entry_t;
+
 /* Data structures that store the command queue. */
 typedef struct ecs_commands_t {
+    struct ecs_commands_t *prev;
+    struct ecs_commands_t *next;
     ecs_vec_t queue;
     ecs_stack_t stack;          /* Temp memory used by deferred commands. */
     ecs_sparse_t entries;       /* <entity, op_entry_t> - command batching. */
+    ecs_entity_t entity;
+    ecs_cmd_entry_t entry;
+    int32_t cursor;
+    ecs_entity_t second_entity;
+    ecs_cmd_entry_t second_entry;
 } ecs_commands_t;
 
 #ifdef __cplusplus
@@ -5226,19 +5238,11 @@ char* flecs_to_snake_case(
  * read-only mode, so a multithreaded application should always explicitly
  * register components in advance.
  *
- * These operations also suspend deferred mode.
- *
  * Functions are public to support language bindings.
  */
 typedef struct ecs_suspend_readonly_state_t {
     bool is_readonly;
-    bool is_deferred;
-    bool cmd_flushing;
-    int32_t defer_count;
     ecs_entity_t scope;
-    ecs_commands_t cmd_stack[2];
-    ecs_commands_t *cmd;
-    ecs_stage_t *stage;
 } ecs_suspend_readonly_state_t;
 
 FLECS_API
@@ -5396,9 +5400,8 @@ void flecs_check_exclusive_world_access_read(
 #define flecs_check_exclusive_world_access_read(world)
 #endif
 
-/** End deferred mode (executes commands when stage->defer becomes 0). */
 FLECS_API
-bool flecs_defer_end(
+bool flecs_commands_end(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
@@ -6130,15 +6133,6 @@ typedef struct ecs_component_desc_t {
  * ecs_iter_t it = ecs_query_iter(world, q);
  * @endcode
  * 
- * When this code is called from a system, it is important to use the world
- * provided by its iterator object to ensure thread safety. For example:
- * 
- * @code
- * void Collide(ecs_iter_t *it) {
- *   ecs_iter_t qit = ecs_query_iter(it->world, Colliders);
- * }
- * @endcode
- * 
  * An iterator contains resources that need to be released. By default, this
  * is handled by the last call to next() that returns false. When iteration is
  * ended before iteration has completed, an application has to manually call
@@ -6157,9 +6151,8 @@ typedef struct ecs_component_desc_t {
  * @ingroup queries
  */
 struct ecs_iter_t {
-    /* World */
-    ecs_world_t *world;           /**< The world. Can point to a stage when in deferred or readonly mode. */
-    ecs_world_t *real_world;      /**< Actual world. Never points to a stage. */
+    ecs_world_t *stage;
+    ecs_world_t *world;
 
     /* Matched data */
     int32_t offset;               /**< Offset relative to the current table. */
@@ -7144,20 +7137,6 @@ ecs_flags32_t ecs_world_get_flags(
  * ecs_readonly_end() should always happen from a context where the code has
  * exclusive access to the world. The functions themselves are not thread-safe.
  * 
- * In a typical application, a (non-exhaustive) call stack that uses 
- * ecs_readonly_begin() and ecs_readonly_end() will look like this:
- * 
- * @code
- * ecs_progress()
- *   ecs_readonly_begin()
- *     ecs_defer_begin()
- * 
- *       // user code
- * 
- *   ecs_readonly_end()
- *     ecs_defer_end()
- * @endcode
- *
  * @param world The world.
  * @param multi_threaded Whether to enable multithreaded readonly mode.
  * @return Whether world is in readonly mode.
@@ -7187,103 +7166,14 @@ FLECS_API
 void ecs_merge(
     ecs_world_t *stage);
 
-/** Defer operations until the end of the frame.
- * When this operation is invoked while iterating, operations between the
- * ecs_defer_begin() and ecs_defer_end() operations are executed at the end
- * of the frame.
- *
- * This operation is thread-safe.
- *
- * @param world The world.
- * @return true if world changed from non-deferred mode to deferred mode.
- *
- * @see ecs_defer_end()
- * @see ecs_is_deferred()
- * @see ecs_defer_resume()
- * @see ecs_defer_suspend()
- * @see ecs_is_defer_suspended()
- */
-FLECS_API
-bool ecs_defer_begin(
-    ecs_world_t *world);
-
-/** End a block of operations to defer.
- * See ecs_defer_begin().
- *
- * This operation is thread-safe.
- *
- * @param world The world.
- * @return true if world changed from deferred mode to non-deferred mode.
- *
- * @see ecs_defer_begin()
- * @see ecs_is_deferred()
- * @see ecs_defer_resume()
- * @see ecs_defer_suspend()
- */
-FLECS_API
-bool ecs_defer_end(
-    ecs_world_t *world);
-
-/** Suspend deferring but do not flush queue.
- * This operation can be used to do an undeferred operation while not flushing
- * the operations in the queue.
- *
- * An application should invoke ecs_defer_resume() before ecs_defer_end() is called.
- * The operation may only be called when deferring is enabled.
- *
- * @param world The world.
- *
- * @see ecs_defer_begin()
- * @see ecs_defer_end()
- * @see ecs_is_deferred()
- * @see ecs_defer_resume()
- */
-FLECS_API
-void ecs_defer_suspend(
-    ecs_world_t *world);
-
-/** Resume deferring.
- * See ecs_defer_suspend().
- *
- * @param world The world.
- *
- * @see ecs_defer_begin()
- * @see ecs_defer_end()
- * @see ecs_is_deferred()
- * @see ecs_defer_suspend()
- */
-FLECS_API
-void ecs_defer_resume(
-    ecs_world_t *world);
-
 /** Test if deferring is enabled for the current stage.
  *
  * @param world The world.
  * @return True if deferred, false if not.
  *
- * @see ecs_defer_begin()
- * @see ecs_defer_end()
- * @see ecs_defer_resume()
- * @see ecs_defer_suspend()
- * @see ecs_is_defer_suspended()
  */
 FLECS_API
 bool ecs_is_deferred(
-    const ecs_world_t *world);
-
-/** Test if deferring is suspended for the current stage.
- *
- * @param world The world.
- * @return True if suspended, false if not.
- *
- * @see ecs_defer_begin()
- * @see ecs_defer_end()
- * @see ecs_is_deferred()
- * @see ecs_defer_resume()
- * @see ecs_defer_suspend()
- */
-FLECS_API
-bool ecs_is_defer_suspended(
     const ecs_world_t *world);
 
 /** Configure the world to have N stages.
@@ -8165,11 +8055,6 @@ FLECS_ALWAYS_INLINE void* ecs_get_sparse_id(
 /** Ensure an entity has a component and return a pointer.
  * This operation returns a mutable pointer to a component. If the entity did
  * not yet have the component, it will be added.
- *
- * If ensure() is called when the world is in deferred or read-only mode, the
- * function will:
- * - return a pointer to temporary storage if the component does not yet exist, or
- * - return a pointer to the existing component if it exists
  *
  * @param world The world.
  * @param entity The entity.
@@ -9654,23 +9539,6 @@ bool ecs_query_var_is_entity(
  * }
  * @endcode
  * 
- * The world passed into the operation must be either the actual world or the
- * current stage, when iterating from a system. The stage is accessible through
- * the it.world member.
- * 
- * Example:
- * @code
- * void MySystem(ecs_iter_t *it) {
- *   ecs_query_t *q = it->ctx; // Query passed as system context
- * 
- *   // Create query iterator from system stage
- *   ecs_iter_t qit = ecs_query_iter(it->world, q);
- *   while (ecs_query_next(&qit)) {
- *     // Iterate as usual
- *   }
- * }
- * @endcode
- * 
  * If query iteration is stopped without the last call to ecs_query_next() 
  * returning false, iterator resources need to be cleaned up explicitly
  * with ecs_iter_fini().
@@ -10107,12 +9975,6 @@ void ecs_emit(
     ecs_event_desc_t *desc);
 
 /** Enqueue an event.
- * Same as ecs_emit(), but enqueues an event in the command queue instead. The
- * event will be emitted when ecs_defer_end() is called.
- * 
- * If this operation is called when the provided world is not in deferred mode,
- * it behaves just like ecs_emit().
- * 
  * @param world The world.
  * @param desc The event parameters.
  */
@@ -25982,7 +25844,7 @@ void write_component(world_t *world, flecs::entity_t entity, T&& value, flecs::i
         dst = FLECS_MOV(value);
     }
     if (res.stage) {
-        flecs_defer_end(res.world, res.stage);
+        flecs_commands_end(res.world, res.stage);
     }
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);
@@ -26225,75 +26087,15 @@ struct world {
         ecs_readonly_end(world_);
     }
 
-    /** Defer operations until end of frame.
-     * When this operation is invoked while iterating, operations in between the
-     * defer_begin() and defer_end() operations are executed at the end of the frame.
-     *
-     * This operation is thread-safe.
-     *
-     * @return true if world changed from non-deferred mode to deferred mode.
-     *
-     * @see ecs_defer_begin()
-     * @see flecs::world::defer()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_resume()
-     * @see flecs::world::defer_suspend()
-     * @see flecs::world::is_defer_suspended()
-     */
-    bool defer_begin() const {
-        return ecs_defer_begin(world_);
-    }
-
-    /** End block of operations to defer.
-     * See defer_begin().
-     *
-     * This operation is thread-safe.
-     *
-     * @return true if world changed from deferred mode to non-deferred mode.
-     *
-     * @see ecs_defer_end()
-     * @see flecs::world::defer()
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_resume()
-     * @see flecs::world::defer_suspend()
-     * @see flecs::world::is_defer_suspended()
-     */
-    bool defer_end() const {
-        return ecs_defer_end(world_);
-    }
-
     /** Test whether deferring is enabled.
      *
      * @return True if deferred, false if not.
      *
      * @see ecs_is_deferred()
      * @see flecs::world::defer()
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::defer_resume()
-     * @see flecs::world::defer_suspend()
-     * @see flecs::world::is_defer_suspended()
      */
     bool is_deferred() const {
         return ecs_is_deferred(world_);
-    }
-
-    /** Test whether deferring is suspended.
-     *
-     * @return True if defer is suspended, false if not.
-     *
-     * @see ecs_is_defer_suspended()
-     * @see flecs::world::defer()
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_resume()
-     * @see flecs::world::defer_suspend()
-     */
-    bool is_defer_suspended() const {
-        return ecs_is_defer_suspended(world_);
     }
 
     /** Configure world to have N stages.
@@ -26388,11 +26190,6 @@ struct world {
      * An asynchronous stage can be used to asynchronously queue operations for
      * later merging with the world. An asynchronous stage is similar to a regular
      * stage, except that it does not allow reading from the world.
-     *
-     * Asynchronous stages are never merged automatically, and must therefore be
-     * manually merged with the ecs_merge() function. It is not necessary to call
-     * defer_begin() or defer_end() before and after enqueuing commands, as an
-     * asynchronous stage unconditionally defers operations.
      *
      * The application must ensure that no commands are added to the stage while the
      * stage is being merged.
@@ -26751,45 +26548,11 @@ struct world {
         ecs_remove_all(world_, _::make_id<T...>(world_, args...).id);
     }
 
-    /** Defer all operations called in function.
-     *
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_resume()
-     * @see flecs::world::defer_suspend()
-     */
     template <typename Func>
     void defer(const Func& func) const {
-        ecs_defer_begin(world_);
-        func();
-        ecs_defer_end(world_);
-    }
-
-    /** Suspend deferring operations.
-     *
-     * @see ecs_defer_suspend()
-     * @see flecs::world::defer()
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_resume()
-     */
-    void defer_suspend() const {
-        ecs_defer_suspend(world_);
-    }
-
-    /** Resume deferring operations.
-     *
-     * @see ecs_defer_resume()
-     * @see flecs::world::defer()
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_suspend()
-     */
-    void defer_resume() const {
-        ecs_defer_resume(world_);
+        flecs::world stage = get_stage(0);
+        func(stage);
+        stage.merge();
     }
 
     /** Check if entity ID exists in the world.
@@ -28011,6 +27774,7 @@ public:
 
     /** Get the world associated with the iterator. */
     flecs::world world() const;
+    flecs::world stage() const;
 
     /** Get a pointer to the underlying C iterator object. */
     const flecs::iter_t* c_ptr() const {
@@ -28368,12 +28132,12 @@ public:
      */
     bool next() {
         if (iter_->flags & EcsIterIsValid && iter_->table) {
-            ECS_TABLE_UNLOCK(iter_->world, iter_->table);
+            ECS_TABLE_UNLOCK(iter_->stage, iter_->table);
         }
         bool result = iter_->next(iter_);
         iter_->flags |= EcsIterIsValid;
         if (result && iter_->table) {
-            ECS_TABLE_LOCK(iter_->world, iter_->table);
+            ECS_TABLE_LOCK(iter_->stage, iter_->table);
         }
         return result;
     }
@@ -28405,7 +28169,7 @@ public:
      */
     void fini() {
         if (iter_->flags & EcsIterIsValid && iter_->table) {
-            ECS_TABLE_UNLOCK(iter_->world, iter_->table);
+            ECS_TABLE_UNLOCK(iter_->stage, iter_->table);
         }
         ecs_iter_fini(iter_);
     }
@@ -28418,7 +28182,7 @@ private:
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_field_id(iter_, index);
         ecs_assert(ECS_HAS_ID_FLAG(term_id, PAIR) ||
-            term_id == _::type<T>::id(iter_->world),
+            term_id == _::type<T>::id(iter_->stage),
             ECS_COLUMN_TYPE_MISMATCH, nullptr);
 #endif
 
@@ -28473,7 +28237,7 @@ private:
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_field_id(iter_, index);
         ecs_assert(ECS_HAS_ID_FLAG(term_id, PAIR) ||
-            term_id == _::type<T>::id(iter_->world),
+            term_id == _::type<T>::id(iter_->stage),
             ECS_COLUMN_TYPE_MISMATCH, nullptr);
 #endif
 
@@ -30933,7 +30697,7 @@ private:
         if constexpr (std::is_invocable_v<const Func&, flecs::entity, Args...>) {
             ecs_assert(iter->entities != nullptr, ECS_INVALID_PARAMETER,
                 "query does not return entities ($this variable is not populated)");
-            return func(flecs::entity(iter->world, iter->entities[i]),
+            return func(flecs::entity(iter->stage, iter->entities[i]),
                 FLECS_FWD(args)...);
         } else if constexpr (std::is_invocable_v<
             const Func&, flecs::iter&, size_t&, Args...>)
@@ -30949,7 +30713,7 @@ private:
     flecs::entity invoke_rows(ecs_iter_t *iter, Terms& terms,
         std::index_sequence<I...>) const
     {
-        ECS_TABLE_LOCK(iter->world, iter->table);
+        ECS_TABLE_LOCK(iter->stage, iter->table);
         size_t count = static_cast<size_t>(iter->count);
         if constexpr (Find) {
             if constexpr (!std::is_invocable_v<const Func&, flecs::entity,
@@ -30971,7 +30735,7 @@ private:
                     each_field<remove_reference_t<Components>, Ref>(
                         iter, terms[I], i).get_row()...))
                 {
-                    result = flecs::entity(iter->world, iter->entities[i]);
+                    result = flecs::entity(iter->stage, iter->entities[i]);
                     break;
                 }
             } else {
@@ -30980,7 +30744,7 @@ private:
                         iter, terms[I], i).get_row()...);
             }
         }
-        ECS_TABLE_UNLOCK(iter->world, iter->table);
+        ECS_TABLE_UNLOCK(iter->stage, iter->table);
         return result;
     }
 
@@ -31079,7 +30843,7 @@ private:
     template <typename... Args>
     void invoke(ecs_iter_t *iter, Args&... args) const {
         if constexpr (std::is_invocable_v<const Func&, flecs::entity, Args&...>) {
-            func_(flecs::entity(iter->world, ecs_field_src(iter, 0)), args...);
+            func_(flecs::entity(iter->stage, ecs_field_src(iter, 0)), args...);
         } else {
             func_(args...);
         }
@@ -32176,6 +31940,39 @@ private:
 
 namespace flecs {
 
+namespace _ {
+
+FLECS_ALWAYS_INLINE inline void* field_at_sparse(
+    const ecs_sparse_t *sparse, size_t size, uint64_t entity, bool checked)
+{
+    ecs_assert(sparse != nullptr, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(size == static_cast<size_t>(sparse->size),
+        ECS_INVALID_PARAMETER, NULL);
+
+    int32_t page_index = FLECS_SPARSE_PAGE(entity);
+    if (checked && page_index >= sparse->pages.count) {
+        return nullptr;
+    }
+
+    ecs_sparse_page_t *page = &static_cast<ecs_sparse_page_t*>(
+        sparse->pages.array)[page_index];
+    int32_t offset = FLECS_SPARSE_OFFSET(entity);
+    if (checked) {
+        if (!page->sparse) {
+            return nullptr;
+        }
+
+        int32_t dense = page->sparse[offset];
+        if (!dense || dense >= sparse->count) {
+            return nullptr;
+        }
+    }
+
+    return ECS_OFFSET(page->data, size * static_cast<size_t>(offset));
+}
+
+}
+
 /** @defgroup cpp_queries Sparse queries
  * @ingroup cpp_core
  * Direct iteration of sparse component storages. @{ */
@@ -32233,15 +32030,43 @@ private:
             }
         }
 
-        const uint64_t *entities = flecs_sparse_ids(sparse[lead]);
-        int32_t count = sparse[lead]->count - 1;
+        each_impl_dispatch<0>(lead, sparse,
+            std::index_sequence<Is...>{}, func);
+    }
+
+    template <size_t Lead, size_t ... Is, typename Func>
+    void each_impl_dispatch(
+        size_t lead,
+        ecs_sparse_t *const *sparse,
+        std::index_sequence<Is...> seq,
+        const Func& func) const
+    {
+        if (lead == Lead) {
+            each_impl_lead<Lead>(sparse, seq, func);
+            return;
+        }
+
+        if constexpr (Lead + 1 < sizeof...(Components)) {
+            each_impl_dispatch<Lead + 1>(lead, sparse, seq, func);
+        }
+    }
+
+    template <size_t Lead, size_t ... Is, typename Func>
+    void each_impl_lead(
+        ecs_sparse_t *const *sparse,
+        std::index_sequence<Is...>,
+        const Func& func) const
+    {
+        const uint64_t *entities = static_cast<const uint64_t*>(
+            sparse[Lead]->dense.array) + 1;
+        int32_t count = sparse[Lead]->count - 1;
 
         for (int32_t i = 0; i < count; i ++) {
             uint64_t e = entities[i];
-            void *ptrs[n];
-            if (!(... && (ptrs[Is] = flecs_sparse_get_w_check(
+            void *ptrs[sizeof...(Components)];
+            if (!(... && (ptrs[Is] = _::field_at_sparse(
                 sparse[Is], ECS_SIZEOF(remove_reference_t<Components>), e, 
-                Is != lead))))
+                Is != Lead))))
             {
                 continue;
             }
@@ -32872,7 +32697,7 @@ flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
     flecs::entity first() {
         while (next_(&it_)) {
             if (it_.count) {
-                flecs::entity result(it_.world, it_.entities[0]);
+                flecs::entity result(it_.stage, it_.entities[0]);
                 ecs_iter_fini(&it_);
                 return result;
             }
@@ -32890,7 +32715,7 @@ flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
     /** Limit results to tables with the specified group type (grouped queries only). */
     template <typename Group>
     iter_iterable<Components...>& set_group() {
-        ecs_iter_set_group(&it_, _::type<Group>().id(it_.real_world));
+        ecs_iter_set_group(&it_, _::type<Group>().id(it_.world));
         return *this;
     }
 #endif
@@ -32899,7 +32724,7 @@ protected:
     ecs_iter_t get_iter(flecs::world_t *world) const override {
         if (world) {
             ecs_iter_t result = it_;
-            result.world = world;
+            result.stage = world;
             return result;
         }
         return it_;
@@ -32923,7 +32748,7 @@ iter_iterable<Components...> iterable<Components...>::iter(flecs::world_t *world
 template <typename ... Components>
 iter_iterable<Components...> iterable<Components...>::iter(flecs::iter& it) const
 {
-    return iter_iterable<Components...>(this, it.world());
+    return iter_iterable<Components...>(this, it.stage());
 }
 
 template <typename ... Components>
@@ -33217,9 +33042,9 @@ inline flecs::entity entity_view::mut(const flecs::world& stage) const {
 }
 
 inline flecs::entity entity_view::mut(const flecs::iter& it) const {
-    ecs_assert(!it.world().is_readonly(), ECS_INVALID_PARAMETER, 
+    ecs_assert(!it.stage().is_readonly(), ECS_INVALID_PARAMETER,
         "cannot use iterator created for read-only world/stage to create mutable handle");
-    return flecs::entity(id_).set_stage(it.world().c_ptr());
+    return flecs::entity(id_).set_stage(it.stage().c_ptr());
 }
 
 inline flecs::entity entity_view::mut(const flecs::entity_view& e) const {
@@ -34410,7 +34235,7 @@ struct query_base {
 
     /** Get the entity associated with the query. */
     flecs::entity entity() const {
-        return flecs::entity(query_->world, query_->entity);
+        return flecs::entity(query_->stage, query_->entity);
     }
 
     /** Get a pointer to the underlying C query. */
@@ -34502,7 +34327,7 @@ struct query_base {
     template <typename Func>
     void each_term(const Func& func) {
         for (int i = 0; i < query_->term_count; i ++) {
-            flecs::term t(query_->world, query_->terms[i]);
+            flecs::term t(query_->stage, query_->terms[i]);
             func(t);
             t.reset(); // prevent freeing resources
         }
@@ -34510,7 +34335,7 @@ struct query_base {
 
     /** Get term at the specified index. */
     flecs::term term(int32_t index) const {
-        return flecs::term(query_->world, query_->terms[index]);
+        return flecs::term(query_->stage, query_->terms[index]);
     }
 
     /** Get the number of terms in the query. */
@@ -34644,7 +34469,7 @@ private:
         ecs_assert(query_ != nullptr, ECS_INVALID_PARAMETER, 
             "cannot iterate invalid query");
         if (!world) {
-            world = query_->world;
+            world = query_->stage;
         }
         return ecs_query_iter(world, query_);
     }
@@ -35115,7 +34940,8 @@ inline flecs::entity world::module(const char *name) const {
                 // Move entities that were created in the old parent to the
                 // renamed module.
                 bool has_modules = false;
-                ecs_defer_begin(world_);
+                ecs_world_t *stage = ecs_get_stage(
+                    ecs_get_world(world_), 0);
                 ecs_iter_t it = ecs_children(world_, cur);
                 while (ecs_children_next(&it)) {
                     for (int32_t i = 0; i < it.count; i ++) {
@@ -35129,10 +34955,10 @@ inline flecs::entity world::module(const char *name) const {
                         {
                             continue;
                         }
-                        ecs_add_pair(world_, child, EcsChildOf, result);
+                        ecs_add_pair(stage, child, EcsChildOf, result);
                     }
                 }
-                ecs_defer_end(world_);
+                ecs_merge(stage);
 
                 if (has_modules) {
                     break;
@@ -37175,17 +37001,17 @@ namespace flecs
 
 /** Get the entity associated with the system currently being run. */
 inline flecs::entity iter::system() const {
-    return flecs::entity(iter_->world, iter_->system);
+    return flecs::entity(iter_->stage, iter_->system);
 }
 
 /** Get the entity associated with the event that triggered the observer. */
 inline flecs::entity iter::event() const {
-    return flecs::entity(iter_->world, iter_->event);
+    return flecs::entity(iter_->stage, iter_->event);
 }
 
 /** Get the event ID (component or pair). */
 inline flecs::id iter::event_id() const {
-    return flecs::id(iter_->world, iter_->event_id);
+    return flecs::id(iter_->stage, iter_->event_id);
 }
 
 /** Get the iterator world. */
@@ -37193,50 +37019,54 @@ inline flecs::world iter::world() const {
     return flecs::world(iter_->world);
 }
 
+inline flecs::world iter::stage() const {
+    return flecs::world(iter_->stage);
+}
+
 /** Get the entity for a given row. */
 inline flecs::entity iter::entity(size_t row) const {
     ecs_assert(row < static_cast<size_t>(iter_->count),
         ECS_COLUMN_INDEX_OUT_OF_RANGE, nullptr);
-    return flecs::entity(iter_->world, iter_->entities[row]);
+    return flecs::entity(iter_->stage, iter_->entities[row]);
 }
 
 /** Get the source entity for a field. */
 inline flecs::entity iter::src(int8_t index) const {
-    return flecs::entity(iter_->world, ecs_field_src(iter_, index));
+    return flecs::entity(iter_->stage, ecs_field_src(iter_, index));
 }
 
 /** Get the ID for a field. */
 inline flecs::id iter::id(int8_t index) const {
-    return flecs::id(iter_->world, ecs_field_id(iter_, index));
+    return flecs::id(iter_->stage, ecs_field_id(iter_, index));
 }
 
 /** Get the pair ID for a field. */
 inline flecs::id iter::pair(int8_t index) const {
     flecs::id_t id = ecs_field_id(iter_, index);
     ecs_check(ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, nullptr);
-    return flecs::id(iter_->world, id);
+    return flecs::id(iter_->stage, id);
 error:
     return flecs::id();
 }
 
 /** Get the type of the current table. */
 inline flecs::type iter::type() const {
-    return flecs::type(iter_->world, ecs_table_get_type(iter_->table));
+    return flecs::type(iter_->stage, ecs_table_get_type(iter_->table));
 }
 
 /** Get the current table. */
 inline flecs::table iter::table() const {
-    return flecs::table(iter_->real_world, iter_->table);
+    return flecs::table(iter_->world, iter_->table);
 }
 
 /** Get the other table (used for on_add/on_remove observers). */
 inline flecs::table iter::other_table() const {
-    return flecs::table(iter_->real_world, iter_->other_table);
+    return flecs::table(iter_->world, iter_->other_table);
 }
 
 /** Get the table range for the current result. */
 inline flecs::table_range iter::range() const {
-    return flecs::table_range(iter_->real_world, iter_->table,
+    return flecs::table_range(iter_->world, iter_->table,
         iter_->offset, iter_->count);
 }
 
@@ -37288,7 +37118,7 @@ inline flecs::base_field<A> iter::base_field(int8_t index) const {
 /** Get the value of a variable by ID. */
 inline flecs::entity iter::get_var(int var_id) const {
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, nullptr);
-    return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
+    return flecs::entity(iter_->stage, ecs_iter_get_var(iter_, var_id));
 }
 
 /** Get the value of a variable by name.
@@ -37299,7 +37129,7 @@ inline flecs::entity iter::get_var(const char *name) const {
 
     int var_id = ecs_query_find_var(q, name);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, "%s", name);
-    return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
+    return flecs::entity(iter_->stage, ecs_iter_get_var(iter_, var_id));
 }
 #endif
 
@@ -37316,8 +37146,8 @@ void iter::targets(int8_t index, const Func& func) {
         ecs_id_t id = table_type->array[i];
         ecs_assert(ECS_IS_PAIR(id), ECS_INVALID_PARAMETER,
             "field does not match a pair");
-        flecs::entity tgt(iter_->world,
-            ecs_pair_second(iter_->real_world, id));
+        flecs::entity tgt(iter_->stage,
+            ecs_pair_second(iter_->world, id));
         func(tgt);
     }
 }

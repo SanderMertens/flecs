@@ -588,12 +588,12 @@ void TemplateParent_native_instantiation(void) {
         &ir_desc, NULL), 0);
     ecs_entity_t building = ecs_lookup(world, "Building");
     ecs_entity_t facade = ecs_lookup(world, "Facade");
-    ecs_defer_begin(world);
-    ecs_entity_t b = ecs_entity(world, { .name = "b" });
-    ecs_set_id(world, b, building, sizeof(int32_t), &(int32_t){30});
-    ecs_entity_t f = ecs_entity(world, { .name = "f", .parent = b });
-    ecs_add_id(world, f, facade);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_entity_t b = ecs_entity(stage_1, { .name = "b" });
+    ecs_set_id(stage_1, b, building, sizeof(int32_t), &(int32_t){30});
+    ecs_entity_t f = ecs_entity(stage_1, { .name = "f", .parent = b });
+    ecs_add_id(stage_1, f, facade);
+    ecs_merge(stage_1);
 
     ecs_entity_t e = ecs_lookup(world, "b.f");
     test_assert(e != 0);

@@ -11,11 +11,11 @@
 // they are guaranteed to always run on the main thread. 
 
 void Startup(ecs_iter_t *it) {
-    printf("%s\n", ecs_get_name(it->world, it->system));
+    printf("%s\n", ecs_get_name(it->stage, it->system));
 }
 
 void Update(ecs_iter_t *it) {
-    printf("%s\n", ecs_get_name(it->world, it->system));
+    printf("%s\n", ecs_get_name(it->stage, it->system));
 }
 
 int main(int argc, char *argv[]) {

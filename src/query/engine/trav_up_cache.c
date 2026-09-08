@@ -235,7 +235,7 @@ ecs_trav_up_t* flecs_query_get_up_cache(
         flecs_query_up_cache_fini(cache);
     }
 
-    ecs_world_t *world = ctx->it->real_world;
+    ecs_world_t *world = ctx->it->world;
     ecs_allocator_t *a = flecs_query_get_allocator(ctx->it);
     ecs_map_init_if(&cache->src, a);
 

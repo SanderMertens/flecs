@@ -933,14 +933,14 @@ void ComponentLifecycle_emplace_defer_use_move_ctor(void) {
 
         auto e = ecs.entity();
 
-        ecs.defer_begin();
-        e.emplace<CountNoDefaultCtor>(10);
+        flecs::world stage_1 = ecs.get_stage(0);
+        e.mut(stage_1).emplace<CountNoDefaultCtor>(10);
         test_assert(!e.has<CountNoDefaultCtor>());
         test_int(CountNoDefaultCtor::ctor_invoked, 1);
         test_int(CountNoDefaultCtor::dtor_invoked, 0);
         test_int(CountNoDefaultCtor::move_invoked, 0);
         test_int(CountNoDefaultCtor::move_ctor_invoked, 0);
-        ecs.defer_end();
+        stage_1.merge();
 
         test_assert(e.has<CountNoDefaultCtor>());
         test_int(CountNoDefaultCtor::ctor_invoked, 1);
@@ -1904,10 +1904,10 @@ void ComponentLifecycle_defer_emplace(void) {
 
     flecs::entity e = ecs.entity();
 
-    ecs.defer_begin();
-    e.emplace<DeferEmplaceTest>(10.0, 20.0);
+    flecs::world stage_1 = ecs.get_stage(0);
+    e.mut(stage_1).emplace<DeferEmplaceTest>(10.0, 20.0);
     test_assert(!e.has<DeferEmplaceTest>());
-    ecs.defer_end();
+    stage_1.merge();
     test_assert(e.has<DeferEmplaceTest>());
 
     const DeferEmplaceTest *p = e.try_get<DeferEmplaceTest>();
@@ -2034,14 +2034,14 @@ void ComponentLifecycle_dtor_after_defer_set(void) {
 
         auto e = ecs.entity();
 
-        ecs.defer_begin();
-        e.set<Pod>({10});
+        flecs::world stage_1 = ecs.get_stage(0);
+        e.mut(stage_1).set<Pod>({10});
         test_assert(!e.has<Pod>());
         test_int(Pod::ctor_invoked, 2);
         test_int(Pod::dtor_invoked, 1);
         test_int(Pod::move_invoked, 1);
         test_int(Pod::move_ctor_invoked, 0);
-        ecs.defer_end();
+        stage_1.merge();
 
         test_assert(e.has<Pod>());
         test_int(Pod::ctor_invoked, 3);

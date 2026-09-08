@@ -3534,7 +3534,7 @@ void QueryBuilder_iter_w_stage(void) {
 
     int32_t count = 0;
     q.iter(stage).each([&](flecs::iter& it, size_t i, Position&) {
-        test_assert(it.world() == stage);
+        test_assert(it.stage() == stage);
         test_assert(it.entity(i) == e1);
         count ++;
     });

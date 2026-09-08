@@ -43,7 +43,7 @@ ECS_COPY(String, dst, src, {
 // This callback is used for the add, remove and set hooks. Note that the
 // signature is the same as systems, triggers, observers.
 void hook_callback(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_entity_t event = it->event;
 
     for (int i = 0; i < it->count; i ++) {

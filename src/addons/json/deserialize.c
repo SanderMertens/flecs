@@ -503,7 +503,8 @@ end:
         }
 
         ecs_record_t *r = flecs_entities_get(world, e);
-        ecs_defer_begin(world);
+        ecs_world_t *stage = ecs_get_stage(world, 0);
+        flecs_commands_begin(world, world->stages[0]);
         if (replace_table && r && r->table) {
             const ecs_type_t *type = &r->table->type;
             for (int32_t i = 0; i < type->count; i ++) {
@@ -511,7 +512,7 @@ end:
                 if (!flecs_json_has_id(ctx, id)) {
                     ecs_assert(ecs_get_target(world, e, EcsChildOf, 0)
                         != EcsFlecsCore, ECS_INVALID_OPERATION, NULL);
-                    ecs_remove_id(world, e, id);
+                    ecs_remove_id(stage, e, id);
                 }
             }
         }
@@ -523,12 +524,12 @@ end:
                     flecs_sparse_has(cr->sparse, e) &&
                     !flecs_json_has_id(ctx, cr->id))
                 {
-                    ecs_remove_id(world, e, cr->id);
+                    ecs_remove_id(stage, e, cr->id);
                 }
             }
         }
 
-        ecs_defer_end(world);
+        flecs_commands_end(world, world->stages[0]);
     }
 
     return json;

@@ -733,7 +733,7 @@ static void TestAll(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         Param param = {.entity = it->entities[i], 0};
-        TestSubset(it->world, qTestSubset, it->frame_offset + i + 1, 0, &param);
+        TestSubset(it->stage, qTestSubset, it->frame_offset + i + 1, 0, &param);
         p[i].x += param.count;
     }
 }
@@ -952,7 +952,7 @@ void MultiThread_change_thread_count(void) {
 }
 
 static void QuitSystem(ecs_iter_t *it) {
-    ecs_quit(it->world);
+    ecs_quit(it->stage);
 }
 
 void MultiThread_multithread_quit(void) {
@@ -1008,7 +1008,7 @@ static void PeriodicDummySystem(ecs_iter_t * it) {
     
     int i;
     for (i = 0; i < it->count; i++ ) {
-        ecs_set(it->world, it->entities[i], Position, {0});
+        ecs_set(it->stage, it->entities[i], Position, {0});
     }
 }
 
@@ -1089,7 +1089,7 @@ void MultiThread_2_threads_single_threaded_system(void) {
 static int create_query_invoked = 0;
 
 static void CreateQuery(ecs_iter_t *it) {
-    ecs_query_t *q = ecs_query(it->world, { .expr = "0" });
+    ecs_query_t *q = ecs_query(it->stage, { .expr = "0" });
     ecs_query_fini(q);
     create_query_invoked ++;
 }
@@ -1270,7 +1270,7 @@ void sys_bulk_init_2(ecs_iter_t *it) {
         .ids = {ecs_id(Position)}
     });
 
-    ecs_iter_t qit = ecs_query_iter(it->world, it->ctx);
+    ecs_iter_t qit = ecs_query_iter(it->stage, it->ctx);
     ecs_iter_fini(&qit);
 }
 
@@ -1317,7 +1317,7 @@ static int invoked_count = 0;
 static int invoked_main_count = 0;
 
 static void dummy(ecs_iter_t *it) {
-    int stage_id = ecs_stage_get_id(it->world);
+    int stage_id = ecs_stage_get_id(it->stage);
 
     if (stage_id == 0) {
         test_assert(main_thread == ecs_os_thread_self());
@@ -1368,5 +1368,39 @@ void MultiThread_run_single_thread_on_main(void) {
     test_int(invoked_count, 1);
     test_int(invoked_main_count, 1);
 
+    ecs_fini(world);
+}
+
+static void CreateStageQuery(ecs_iter_t *it) {
+    for (int32_t i = 0; i < 32; i ++) {
+        ecs_query_t *q = ecs_query(it->stage, {
+            .terms = {{ ecs_id(Position), .inout = EcsIn }},
+            .cache_kind = EcsQueryCacheNone
+        });
+        test_assert(q != NULL);
+        ecs_iter_t qit = ecs_query_iter(it->stage, q);
+        int32_t count = 0;
+        while (ecs_query_next(&qit)) {
+            count += qit.count;
+        }
+        test_int(count, 32);
+        ecs_query_fini(q);
+    }
+}
+
+void MultiThread_create_query_from_stage(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT_DEFINE(world, Position);
+    ecs_system(world, {
+        .phase = EcsOnUpdate,
+        .query.terms = {{ ecs_id(Position), .inout = EcsIn }},
+        .multi_threaded = true,
+        .callback = CreateStageQuery
+    });
+    ecs_bulk_new(world, Position, 32);
+    set_worker_kind(world, 4);
+    for (int32_t i = 0; i < 16; i ++) {
+        ecs_progress(world, 0);
+    }
     ecs_fini(world);
 }

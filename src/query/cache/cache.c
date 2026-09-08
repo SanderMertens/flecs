@@ -263,10 +263,10 @@ static void flecs_query_cache_on_rematch_event(
     flecs_poly_assert(impl, ecs_query_t);
     ecs_assert(impl->cache != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_world_t *world = it->real_world;
-    ecs_assert(ecs_is_deferred(world), ECS_INTERNAL_ERROR, NULL);
+    ecs_world_t *world = it->world;
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+
+    ecs_enqueue(it->stage, &(ecs_event_desc_t){
         .event = EcsOnQueryCacheRevalidate,
         .entity = impl->cache->entity,
         .ids = &(ecs_type_t){
@@ -286,7 +286,7 @@ static void flecs_query_cache_on_revalidate_event(
 {
     const ecs_query_cache_revalidate_t *ev = it->param;
     ecs_assert(ev != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
 
     ecs_query_t *q = flecs_poly_get(world, ev->query, ecs_query_t);
     if (!q) {
@@ -635,7 +635,7 @@ static void flecs_query_cache_allocators_fini(
 void flecs_query_cache_fini(
     ecs_query_impl_t *impl)
 {
-    ecs_world_t *world = impl->pub.world;
+    ecs_world_t *world = impl->pub.stage;
     ecs_stage_t *stage = impl->stage;
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -695,7 +695,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_query_impl_t *impl,
     const ecs_query_desc_t *const_desc)
 {
-    ecs_world_t *world = impl->pub.real_world;
+    ecs_world_t *world = impl->pub.world;
     flecs_poly_assert(world, ecs_world_t);
 
     ecs_stage_t *stage = impl->stage;
