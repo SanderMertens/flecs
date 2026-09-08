@@ -271,7 +271,7 @@ static bool flecs_query_check_cache_monitor(
     }
 
     const ecs_query_cache_group_t *cur = cache->first_group;
-    do {
+    for (; cur; cur = cur->next) {
         int32_t i, count = ecs_vec_count(&cur->tables);
         for (i = 0; i < count; i ++) {
             ecs_query_cache_match_t *qm = 
@@ -291,7 +291,7 @@ static bool flecs_query_check_cache_monitor(
                 }
             }
         }
-    } while ((cur = cur->next));
+    }
 
     return false;
 }
@@ -304,7 +304,7 @@ static void flecs_query_init_query_monitors(
     ecs_query_cache_t *cache = impl->cache;
     if (cache) {
         const ecs_query_cache_group_t *cur = cache->first_group;
-        do {
+        for (; cur; cur = cur->next) {
             int32_t i, count = ecs_vec_count(&cur->tables);
             for (i = 0; i < count; i ++) {
                 ecs_query_cache_match_t *qm = 
@@ -320,7 +320,7 @@ static void flecs_query_init_query_monitors(
                     }
                 }
             }
-        } while ((cur = cur->next));
+        }
     }
 }
 

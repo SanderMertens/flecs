@@ -18,7 +18,8 @@ void flecs_query_cache_iter_init(
         return;
     }
 
-    qit->group = cache->first_group;
+    qit->group = cache->first_group
+        ? cache->first_group : &cache->default_group;
     qit->tables = &qit->group->tables;
     qit->all_tables = qit->tables;
     qit->cur = 0;
@@ -63,12 +64,6 @@ static ecs_query_cache_match_t* flecs_query_cache_next(
                 /* Prepare iterator for the next group */
                 qit->all_tables = qit->tables = &qit->group->tables;
                 qit->cur = 0;
-
-                /* Not common, but can happen if a query uses group_by and there
-                 * are no tables in the default group (group id 0). */
-                if (!ecs_vec_count(qit->tables)) {
-                    goto repeat;
-                }
 
             /* We're iterating a wildcard table vector */
             } else {
@@ -215,7 +210,8 @@ static void flecs_query_cache_iter_restart(
         qit->group = NULL;
         qit->cur = 0;
     } else {
-        qit->group = cache->first_group;
+        qit->group = cache->first_group
+            ? cache->first_group : &cache->default_group;
         qit->tables = qit->all_tables = &qit->group->tables;
         qit->cur = 0;
     }

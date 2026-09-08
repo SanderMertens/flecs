@@ -219,9 +219,9 @@ void flecs_query_cache_build_sorted_tables(
 
     /* Sort tables in group order */
     ecs_query_cache_group_t *cur = cache->first_group;
-    do {
+    for (; cur; cur = cur->next) {
         flecs_query_cache_build_sorted_table_range(cache, cur);
-    } while ((cur = cur->next));
+    }
 }
 
 void flecs_query_cache_sort_tables(
@@ -245,7 +245,7 @@ void flecs_query_cache_sort_tables(
     bool tables_sorted = false;
 
     ecs_query_cache_group_t *cur = cache->first_group;
-    do {
+    for (; cur; cur = cur->next) {
         int32_t i, count = ecs_vec_count(&cur->tables);
         for (i = 0; i < count; i ++) {
             ecs_query_cache_match_t *qm = 
@@ -309,7 +309,7 @@ void flecs_query_cache_sort_tables(
             flecs_query_cache_sort_table(world, table, column, compare, sort);
             tables_sorted = true;
         }
-    } while ((cur = cur->next)); /* Next group */
+    }
 
     if (tables_sorted || cache->match_count != cache->prev_match_count) {
         flecs_query_cache_build_sorted_tables(cache);

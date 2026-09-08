@@ -70383,7 +70383,7 @@ void ecs_query_memory_get(
         
         ecs_size_t cache_elem_size = flecs_query_cache_elem_size(cache);
         ecs_query_cache_group_t *cur = cache->first_group;
-        do {
+        for (; cur; cur = cur->next) {
             result->bytes_cache += ecs_vec_size(&cur->tables) * cache_elem_size;
 
             if (!(cache->query->flags & EcsQueryTrivialCache)) {
@@ -70406,9 +70406,7 @@ void ecs_query_memory_get(
                     }
                 }
             }
-            
-            cur = cur->next;
-        } while (cur && cur != cache->first_group);
+        }
 
         result->bytes_order_by += 
             ecs_vec_size(&cache->table_slices) * 
@@ -74068,11 +74066,6 @@ ecs_query_cache_t* flecs_query_cache_init(
         }
     }
 
-    ecs_size_t elem_size = flecs_query_cache_elem_size(result);
-    ecs_vec_init(&world->allocator, &result->default_group.tables,
-        elem_size, 0);
-    result->first_group = &result->default_group;
-
     /* The uncached query used to populate the cache always matches empty 
      * tables. This flag determines whether the empty tables are stored 
      * separately in the cache or are treated as regular tables. This is only
@@ -74189,7 +74182,8 @@ void flecs_query_cache_iter_init(
         return;
     }
 
-    qit->group = cache->first_group;
+    qit->group = cache->first_group
+        ? cache->first_group : &cache->default_group;
     qit->tables = &qit->group->tables;
     qit->all_tables = qit->tables;
     qit->cur = 0;
@@ -74234,12 +74228,6 @@ static ecs_query_cache_match_t* flecs_query_cache_next(
                 /* Prepare iterator for the next group */
                 qit->all_tables = qit->tables = &qit->group->tables;
                 qit->cur = 0;
-
-                /* Not common, but can happen if a query uses group_by and there
-                 * are no tables in the default group (group id 0). */
-                if (!ecs_vec_count(qit->tables)) {
-                    goto repeat;
-                }
 
             /* We're iterating a wildcard table vector */
             } else {
@@ -74386,7 +74374,8 @@ static void flecs_query_cache_iter_restart(
         qit->group = NULL;
         qit->cur = 0;
     } else {
-        qit->group = cache->first_group;
+        qit->group = cache->first_group
+            ? cache->first_group : &cache->default_group;
         qit->tables = qit->all_tables = &qit->group->tables;
         qit->cur = 0;
     }
@@ -74836,7 +74825,7 @@ static bool flecs_query_check_cache_monitor(
     }
 
     const ecs_query_cache_group_t *cur = cache->first_group;
-    do {
+    for (; cur; cur = cur->next) {
         int32_t i, count = ecs_vec_count(&cur->tables);
         for (i = 0; i < count; i ++) {
             ecs_query_cache_match_t *qm = 
@@ -74856,7 +74845,7 @@ static bool flecs_query_check_cache_monitor(
                 }
             }
         }
-    } while ((cur = cur->next));
+    }
 
     return false;
 }
@@ -74869,7 +74858,7 @@ static void flecs_query_init_query_monitors(
     ecs_query_cache_t *cache = impl->cache;
     if (cache) {
         const ecs_query_cache_group_t *cur = cache->first_group;
-        do {
+        for (; cur; cur = cur->next) {
             int32_t i, count = ecs_vec_count(&cur->tables);
             for (i = 0; i < count; i ++) {
                 ecs_query_cache_match_t *qm = 
@@ -74885,7 +74874,7 @@ static void flecs_query_init_query_monitors(
                     }
                 }
             }
-        } while ((cur = cur->next));
+        }
     }
 }
 
@@ -75279,22 +75268,6 @@ void ecs_iter_skip(
 
 #ifdef FLECS_CACHED_QUERIES
 
-/* Check if group is currently linked in the cache group list. */
-static bool flecs_query_cache_group_is_linked(
-    const ecs_query_cache_t *cache,
-    const ecs_query_cache_group_t *group)
-{
-    ecs_query_cache_group_t *cur = cache->first_group;
-    while (cur) {
-        if (cur == group) {
-            return true;
-        }
-        cur = cur->next;
-    }
-
-    return false;
-}
-
 /* Get group id for table. */
 static uint64_t flecs_query_cache_get_group_id(
     const ecs_query_cache_t *cache,
@@ -75326,91 +75299,42 @@ static void flecs_query_cache_group_insert(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group)
 {
-    if (!(cache->query->flags & EcsQueryGroupByOrdered)) {
-        group->next = cache->first_group;
-        cache->first_group = group;
-        return;
+    ecs_query_cache_group_t **link = &cache->first_group;
+    if (cache->query->flags & EcsQueryGroupByOrdered) {
+        bool desc = (cache->query->flags & EcsQueryGroupByDesc) != 0;
+        while (*link && (desc
+            ? (*link)->info.id > group->info.id
+            : (*link)->info.id < group->info.id))
+        {
+            link = &(*link)->next;
+        }
     }
-
-    bool desc = (cache->query->flags & EcsQueryGroupByDesc) != 0;
-
-    ecs_query_cache_group_t *cur = cache->first_group, *prev = NULL;
-    do {
-        ecs_assert(cur->info.id != group->info.id, ECS_INTERNAL_ERROR, NULL);
-        bool insert = cur->info.id > group->info.id;
-        if (desc) {
-            insert = !insert; /* Works since ids can't be the same. */
-        }
-
-        if (insert) {
-            if (prev) {
-                prev->next = group;
-            } else {
-                cache->first_group = group;
-            }
-            group->next = cur;
-            return;
-        }
-
-        prev = cur;
-    } while ((cur = cur->next));
-
-    prev->next = group;
-    ecs_assert(group->next == NULL, ECS_INTERNAL_ERROR, NULL);
+    group->next = *link;
+    *link = group;
 }
 
-/* Make sure a group exists for the provided group id. */
 static ecs_query_cache_group_t* flecs_query_cache_ensure_group(
     ecs_query_cache_t *cache,
     uint64_t group_id)
 {
-    if (!group_id) {
-        ecs_query_cache_group_t *group = &cache->default_group;
-        if (!group->info.table_count) {
-            if (ecs_map_is_init(&cache->groups)) {
-                ecs_query_cache_group_t **group_ptr = ecs_map_ensure_ref(
-                    &cache->groups, ecs_query_cache_group_t, 0);
-                *group_ptr = group;
-            }
-
-            if (!flecs_query_cache_group_is_linked(cache, group)) {
-                flecs_query_cache_group_insert(cache, group);
-            }
-
-            if (cache->on_group_create) {
-                group->info.ctx = cache->on_group_create(
-                    cache->query->world, 0, cache->group_by_ctx);
-            }
-        }
-
+    ecs_query_cache_group_t *group = flecs_query_cache_get_group(cache, group_id);
+    if (group && group->info.table_count) {
         return group;
     }
-
-    ecs_query_cache_group_t *group = ecs_map_get_deref(&cache->groups, 
-        ecs_query_cache_group_t, group_id);
-
-    if (!group) {
-        group = ecs_map_insert_alloc_t(&cache->groups, 
+    if (group_id) {
+        group = ecs_map_insert_alloc_t(&cache->groups,
             ecs_query_cache_group_t, group_id);
-        ecs_os_zeromem(group);
-
-        ecs_allocator_t *a = &cache->query->real_world->allocator;
-        if (flecs_query_cache_is_trivial(cache)) {
-            ecs_vec_init_t(a, &group->tables, ecs_query_triv_cache_match_t, 0);
-        } else {
-            ecs_vec_init_t(a, &group->tables, ecs_query_cache_match_t, 0);
-        }
-
-        group->info.id = group_id;
-
-        flecs_query_cache_group_insert(cache, group);
-
-        if (cache->on_group_create) {
-            group->info.ctx = cache->on_group_create(
-                cache->query->world, group_id, cache->group_by_ctx);
-        }
+    } else if (ecs_map_is_init(&cache->groups)) {
+        ecs_map_insert_ptr(&cache->groups, 0, group);
     }
-
+    ecs_allocator_t *a = &cache->query->real_world->allocator;
+    ecs_vec_init(a, &group->tables, flecs_query_cache_elem_size(cache), 0);
+    group->info.id = group_id;
+    flecs_query_cache_group_insert(cache, group);
+    if (cache->on_group_create) {
+        group->info.ctx = cache->on_group_create(
+            cache->query->world, group_id, cache->group_by_ctx);
+    }
     return group;
 }
 
@@ -75419,9 +75343,6 @@ static void flecs_query_cache_group_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group)
 {
-    /* Group callbacks are only meaningful for groups that have matched at
-     * least one table. The default group can exist as list head without ever
-     * being materialized through on_group_create (group id 0). */
     if (cache->on_group_delete && group->info.table_count) {
         cache->on_group_delete(cache->query->world, group->info.id,
             group->info.ctx, cache->group_by_ctx);
@@ -75430,6 +75351,11 @@ static void flecs_query_cache_group_fini(
     ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
 
     ecs_allocator_t *a = &cache->query->real_world->allocator;
+    int32_t count = ecs_vec_count(&group->tables);
+    for (int32_t i = 0; i < count; i ++) {
+        flecs_query_cache_match_fini(cache,
+            ecs_vec_get(&group->tables, elem_size, i));
+    }
     ecs_vec_fini(a, &group->tables, elem_size);
     group->info.table_count = 0;
     group->info.match_count = 0;
@@ -75449,32 +75375,13 @@ static void flecs_query_cache_remove_group(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group)
 {
-    ecs_query_cache_group_t *cur = cache->first_group, *prev = NULL;
-
-    do {
-        if (cur == group) {
-            if (prev) {
-                prev->next = group->next;
-            } else {
-                cache->first_group = group->next;
-            }
-            break;
-        }
-        
-        prev = cur;
-    } while ((cur = cur->next));
-    
-    /* If this is the default_group, make sure next is set to NULL since we 
-     * never delete the default group. */
-    group->next = NULL;
-
-    /* Ensure group was found */
-    ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (!cache->first_group) {
-        cache->first_group = &cache->default_group;
+    ecs_query_cache_group_t **link = &cache->first_group;
+    while (*link != group) {
+        ecs_assert(*link != NULL, ECS_INTERNAL_ERROR, NULL);
+        link = &(*link)->next;
     }
-
+    *link = group->next;
+    group->next = NULL;
     flecs_query_cache_group_fini(cache, group);
 }
 
@@ -75666,49 +75573,24 @@ void flecs_query_cache_remove_table(
     ecs_map_remove(&cache->tables, table->id);
 }
 
-/* Remove all groups from the cache. Typically called during query cleanup. */
-static void flecs_query_cache_remove_all_groups(
-    ecs_query_cache_t *cache)
-{
-    ecs_query_cache_group_t *cur = cache->first_group, *next = cur;
-
-    while ((cur = next)) {
-        next = cur->next;
-        flecs_query_cache_group_fini(cache, cur);
-    }
-
-    cache->first_group = &cache->default_group;
-    cache->default_group.next = NULL;
-}
-
-/* Remove all tables from the cache. Typically called during query cleanup. */
 void flecs_query_cache_remove_all_tables(
     ecs_query_cache_t *cache)
 {
     ecs_allocator_t *a = &cache->query->real_world->allocator;
-    ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
-
-    ecs_query_cache_group_t *cur = cache->first_group;
-    do {
-        int32_t i, count = ecs_vec_count(&cur->tables);
-        for (i = 0; i < count; i ++) {
-            flecs_query_cache_match_fini(
-                cache, ecs_vec_get(&cur->tables, elem_size, i));
-        }
-
-        ecs_vec_fini(a, &cur->tables, elem_size);
-    } while ((cur = cur->next));
+    ecs_query_cache_group_t *group = cache->first_group;
+    while (group) {
+        ecs_query_cache_group_t *next = group->next;
+        flecs_query_cache_group_fini(cache, group);
+        group = next;
+    }
+    cache->first_group = NULL;
+    cache->default_group.next = NULL;
 
     ecs_map_iter_t it = ecs_map_iter(&cache->tables);
     while (ecs_map_next(&it)) {
-        ecs_query_cache_table_t *qt = ecs_map_ptr(&it);
-        flecs_free_t(a, ecs_query_cache_table_t, qt);
+        flecs_free_t(a, ecs_query_cache_table_t, ecs_map_ptr(&it));
     }
-
     ecs_map_clear(&cache->tables);
-
-    flecs_query_cache_remove_all_groups(cache);
-
     ecs_assert(ecs_map_count(&cache->groups) == 0, ECS_INTERNAL_ERROR, NULL);
 }
 
@@ -76253,9 +76135,9 @@ void flecs_query_cache_build_sorted_tables(
 
     /* Sort tables in group order */
     ecs_query_cache_group_t *cur = cache->first_group;
-    do {
+    for (; cur; cur = cur->next) {
         flecs_query_cache_build_sorted_table_range(cache, cur);
-    } while ((cur = cur->next));
+    }
 }
 
 void flecs_query_cache_sort_tables(
@@ -76279,7 +76161,7 @@ void flecs_query_cache_sort_tables(
     bool tables_sorted = false;
 
     ecs_query_cache_group_t *cur = cache->first_group;
-    do {
+    for (; cur; cur = cur->next) {
         int32_t i, count = ecs_vec_count(&cur->tables);
         for (i = 0; i < count; i ++) {
             ecs_query_cache_match_t *qm = 
@@ -76343,7 +76225,7 @@ void flecs_query_cache_sort_tables(
             flecs_query_cache_sort_table(world, table, column, compare, sort);
             tables_sorted = true;
         }
-    } while ((cur = cur->next)); /* Next group */
+    }
 
     if (tables_sorted || cache->match_count != cache->prev_match_count) {
         flecs_query_cache_build_sorted_tables(cache);

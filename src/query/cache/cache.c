@@ -799,11 +799,6 @@ ecs_query_cache_t* flecs_query_cache_init(
         }
     }
 
-    ecs_size_t elem_size = flecs_query_cache_elem_size(result);
-    ecs_vec_init(&world->allocator, &result->default_group.tables,
-        elem_size, 0);
-    result->first_group = &result->default_group;
-
     /* The uncached query used to populate the cache always matches empty 
      * tables. This flag determines whether the empty tables are stored 
      * separately in the cache or are treated as regular tables. This is only

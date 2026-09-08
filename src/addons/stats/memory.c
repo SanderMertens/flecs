@@ -331,7 +331,7 @@ void ecs_query_memory_get(
         
         ecs_size_t cache_elem_size = flecs_query_cache_elem_size(cache);
         ecs_query_cache_group_t *cur = cache->first_group;
-        do {
+        for (; cur; cur = cur->next) {
             result->bytes_cache += ecs_vec_size(&cur->tables) * cache_elem_size;
 
             if (!(cache->query->flags & EcsQueryTrivialCache)) {
@@ -354,9 +354,7 @@ void ecs_query_memory_get(
                     }
                 }
             }
-            
-            cur = cur->next;
-        } while (cur && cur != cache->first_group);
+        }
 
         result->bytes_order_by += 
             ecs_vec_size(&cache->table_slices) * 
