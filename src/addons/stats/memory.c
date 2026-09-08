@@ -1076,17 +1076,10 @@ ecs_allocator_memory_t ecs_allocator_memory_get(
         &world->allocators.component_record);
     result.bytes_pair_record = flecs_ballocator_memory_get(
         &world->allocators.pair_record);
-    result.bytes_table_diff = flecs_ballocator_memory_get(
-        &world->allocators.table_diff);
     result.bytes_sparse_chunk = flecs_ballocator_memory_get(
         &world->allocators.sparse_chunk);
 
     result.bytes_allocator = flecs_allocator_memory_get(&world->allocator);
-    result.bytes_misc += ecs_vec_size(&world->allocators.diff_builder.added) *
-        ECS_SIZEOF(ecs_id_t);
-
-    result.bytes_misc += ecs_vec_size(&world->allocators.diff_builder.removed) *
-        ECS_SIZEOF(ecs_id_t);
     result.bytes_misc += ecs_vec_size(&world->store.records) *
         ECS_SIZEOF(ecs_table_record_t);
     result.bytes_misc += ecs_vec_size(&world->store.marked_ids) *

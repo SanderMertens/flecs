@@ -583,9 +583,7 @@ static void flecs_world_allocators_init(
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
     flecs_ballocator_init_t(&a->component_record, ecs_component_record_t);
     flecs_ballocator_init_t(&a->pair_record, ecs_pair_record_t);
-    flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
-    flecs_table_diff_builder_init(world, &world->allocators.diff_builder);
     ecs_vec_init_t(&world->allocator, 
         &world->allocators.tree_spawner, ecs_entity_t, 0);
 }
@@ -599,9 +597,7 @@ static void flecs_world_allocators_fini(
     flecs_ballocator_fini(&a->graph_edge);
     flecs_ballocator_fini(&a->component_record);
     flecs_ballocator_fini(&a->pair_record);
-    flecs_ballocator_fini(&a->table_diff);
     flecs_ballocator_fini(&a->sparse_chunk);
-    flecs_table_diff_builder_fini(world, &world->allocators.diff_builder);
     ecs_vec_fini_t(
         &world->allocator, &world->allocators.tree_spawner, ecs_entity_t);
 
