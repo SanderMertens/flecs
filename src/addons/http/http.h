@@ -105,7 +105,6 @@ struct ecs_http_server_t {
     double cache_purge_timeout;
 
     ecs_sparse_t connections; /* sparse<http_connection_t> */
-    ecs_sparse_t requests; /* sparse<http_request_t> */
 
     bool initialized;
 
@@ -135,10 +134,16 @@ typedef struct {
     bool invalid;
 } ecs_http_fragment_t;
 
-/** Extend public connection type with fragment data */
+typedef struct {
+    ecs_http_request_t pub;
+    char *res;
+    int32_t req_len;
+} ecs_http_request_impl_t;
+
 typedef struct {
     ecs_http_connection_t pub;
     ecs_http_socket_t sock;
+    ecs_http_request_impl_t request;
 
     /* Connection is purged after both the timeout expires and the connection has
      * exceeded the retry count. This ensures that a connection does not
@@ -146,12 +151,5 @@ typedef struct {
     double dequeue_timeout;
     int32_t dequeue_retries;    
 } ecs_http_connection_impl_t;
-
-typedef struct {
-    ecs_http_request_t pub;
-    uint64_t conn_id; /* for sanity check */
-    char *res;
-    int32_t req_len;
-} ecs_http_request_impl_t;
 
 #endif

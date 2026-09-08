@@ -229,16 +229,6 @@ static void http_reply_fini(ecs_http_reply_t* reply) {
     ecs_os_free(reply->body.content);
 }
 
-static void http_request_fini(ecs_http_request_impl_t *req) {
-    ecs_assert(req != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(req->pub.conn != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(req->pub.conn->server != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(req->pub.conn->id == req->conn_id, ECS_INTERNAL_ERROR, NULL);
-    ecs_os_free(req->res);
-    flecs_sparse_remove_t(&req->pub.conn->server->requests, 
-        ecs_http_request_impl_t, req->pub.id);
-}
-
 static void http_connection_free(ecs_http_connection_impl_t *conn) {
     ecs_assert(conn != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(conn->pub.id != 0, ECS_INTERNAL_ERROR, NULL);
@@ -248,6 +238,7 @@ static void http_connection_free(ecs_http_connection_impl_t *conn) {
         http_close(&conn->sock);
     }
 
+    ecs_os_free(conn->request.res);
     flecs_sparse_remove_t(&conn->pub.server->connections, 
         ecs_http_connection_impl_t, conn_id);
 }
@@ -481,11 +472,8 @@ static ecs_http_request_entry_t* http_enqueue_request(
                 }
             }
 
-            ecs_http_request_impl_t *req_ptr = flecs_sparse_add_t(
-                &srv->requests, ecs_http_request_impl_t);
-            *req_ptr = req;
-            req_ptr->pub.id = flecs_sparse_last_id(&srv->requests);
-            req_ptr->conn_id = conn->pub.id;
+            req.pub.id = conn->pub.id;
+            conn->request = req;
             ecs_os_linc(&ecs_http_request_received_count);
         }
     }
@@ -1091,7 +1079,6 @@ static void http_handle_request(
     }
 
     http_reply_fini(&reply);
-    http_request_fini(req);
     http_connection_free(conn);
 }
 
@@ -1131,17 +1118,16 @@ static int32_t http_dequeue_requests(
 {
     ecs_os_mutex_lock(srv->lock);
 
-    int32_t i, request_count = flecs_sparse_count(&srv->requests);
-    for (i = request_count - 1; i >= 1; i --) {
-        ecs_http_request_impl_t *req = flecs_sparse_get_dense_t(
-            &srv->requests, ecs_http_request_impl_t, i);
-        http_handle_request(srv, req);
-    }
-
-    int32_t connections_count = flecs_sparse_count(&srv->connections);
-    for (i = connections_count - 1; i >= 1; i --) {
+    int32_t request_count = 0;
+    int32_t count = flecs_sparse_count(&srv->connections);
+    for (int32_t i = count - 1; i >= 1; i --) {
         ecs_http_connection_impl_t *conn = flecs_sparse_get_dense_t(
             &srv->connections, ecs_http_connection_impl_t, i);
+        if (conn->request.res) {
+            http_handle_request(srv, &conn->request);
+            request_count ++;
+            continue;
+        }
 
         conn->dequeue_timeout += delta_time;
         conn->dequeue_retries ++;
@@ -1159,7 +1145,7 @@ static int32_t http_dequeue_requests(
     http_purge_request_cache(srv, false);
     ecs_os_mutex_unlock(srv->lock);
 
-    return request_count - 1;
+    return request_count;
 }
 
 const char* ecs_http_get_header(
@@ -1217,11 +1203,9 @@ ecs_http_server_t* ecs_http_server_init(
     }
 
     flecs_sparse_init_t(&srv->connections, NULL, NULL, ecs_http_connection_impl_t);
-    flecs_sparse_init_t(&srv->requests, NULL, NULL, ecs_http_request_impl_t);
 
     /* Start at id 1 */
     flecs_sparse_new_id(&srv->connections);
-    flecs_sparse_new_id(&srv->requests);
 
     /* Initialize request cache */
     flecs_hashmap_init(&srv->request_cache, 
@@ -1247,7 +1231,6 @@ void ecs_http_server_fini(
         ecs_os_mutex_free(srv->lock);
     }
     http_purge_request_cache(srv, true);
-    flecs_sparse_fini(&srv->requests);
     flecs_sparse_fini(&srv->connections);
     ecs_os_free(srv);
 }
@@ -1306,23 +1289,13 @@ void ecs_http_server_stop(
     ecs_os_thread_join(srv->send_queue.thread);
     ecs_trace("http: server threads shut down");
 
-    /* Cleanup all outstanding requests */
-    int i, count = flecs_sparse_count(&srv->requests);
-    for (i = count - 1; i >= 1; i --) {
-        http_request_fini(flecs_sparse_get_dense_t(
-            &srv->requests, ecs_http_request_impl_t, i));
-    }
-
-    /* Close all connections */
-    count = flecs_sparse_count(&srv->connections);
+    int32_t i, count = flecs_sparse_count(&srv->connections);
     for (i = count - 1; i >= 1; i --) {
         http_connection_free(flecs_sparse_get_dense_t(
             &srv->connections, ecs_http_connection_impl_t, i));
     }
 
     ecs_assert(flecs_sparse_count(&srv->connections) == 1, 
-        ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(flecs_sparse_count(&srv->requests) == 1,
         ECS_INTERNAL_ERROR, NULL);
 
     srv->thread = 0;

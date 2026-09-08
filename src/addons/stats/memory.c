@@ -913,10 +913,7 @@ static void flecs_http_memory_get(
     result->bytes_rest += ECS_SIZEOF(ecs_http_server_t);
 
     result->bytes_rest += flecs_sparse_memory_get(&srv->connections, 
-        ECS_SIZEOF(ecs_http_connection_t));
-
-    result->bytes_rest += flecs_sparse_memory_get(&srv->requests, 
-        ECS_SIZEOF(ecs_http_request_t));
+        ECS_SIZEOF(ecs_http_connection_impl_t));
 
     result->bytes_rest += flecs_hashmap_memory_get(&srv->request_cache);
 
