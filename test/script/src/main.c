@@ -992,6 +992,9 @@ void Function_repeated_calls_after_error(void);
 
 // Testsuite 'Template'
 void Template_setup(void);
+void Template_manual_instantiation(void);
+void Template_manual_update_and_remove(void);
+void Template_manual_managed_script_clear(void);
 void Template_instantiate_w_string_prop_no_leak(void);
 void Template_template_no_scope(void);
 void Template_template_no_props(void);
@@ -7169,6 +7172,18 @@ bake_test_case Function_testcases[] = {
 };
 
 bake_test_case Template_testcases[] = {
+    {
+        "manual_instantiation",
+        Template_manual_instantiation
+    },
+    {
+        "manual_update_and_remove",
+        Template_manual_update_and_remove
+    },
+    {
+        "manual_managed_script_clear",
+        Template_manual_managed_script_clear
+    },
     {
         "instantiate_w_string_prop_no_leak",
         Template_instantiate_w_string_prop_no_leak
@@ -16339,7 +16354,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        171,
+        174,
         Template_testcases,
         1,
         Template_params

@@ -16758,6 +16758,18 @@ extern ECS_COMPONENT_DECLARE(EcsScript);
 FLECS_API
 extern ECS_DECLARE(EcsScriptTemplate);
 
+FLECS_API
+extern ECS_DECLARE(EcsScriptTemplateManual);
+
+FLECS_API
+extern ECS_DECLARE(EcsScriptTemplatePending);
+
+FLECS_API
+int ecs_script_template_update(
+    ecs_world_t *world,
+    ecs_entity_t instance,
+    ecs_entity_t template_entity);
+
 /* Tag added to a managed script entity when the script failed to parse or
  * evaluate. The tag is removed when the script evaluates successfully. The
  * error message is stored in the error member of the EcsScript component. */

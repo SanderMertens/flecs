@@ -1024,6 +1024,9 @@
             },
             "setup": true,
             "testcases": [
+                "manual_instantiation",
+                "manual_update_and_remove",
+                "manual_managed_script_clear",
                 "instantiate_w_string_prop_no_leak",
                 "template_no_scope",
                 "template_no_props",

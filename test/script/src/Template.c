@@ -7359,3 +7359,94 @@ void Template_anonymous_instance_w_props_scope_newline(void) {
 
     ecs_fini(world);
 }
+
+void Template_manual_instantiation(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+    ecs_entity_t t = ecs_entity(world, { .name = "T" });
+    ecs_add_id(world, t, EcsScriptTemplateManual);
+    test_int(ecs_script_run_w_desc(world, NULL,
+        "template T { prop x: i32 = 10\n child { Position: {x, 20} } }\n"
+        "a { T: {x: 30} }\nb { T: {x: 40} }", &ir_desc, NULL), 0);
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t b = ecs_lookup(world, "b");
+    test_assert(!ecs_lookup(world, "a.child"));
+    test_assert(ecs_has_pair(world, a, EcsScriptTemplatePending, t));
+    test_int(ecs_script_template_update(world, a, t), 0);
+    test_assert(!ecs_has_pair(world, a, EcsScriptTemplatePending, t));
+    const Position *p = ecs_get(world, ecs_lookup(world, "a.child"), Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_assert(!ecs_lookup(world, "b.child"));
+    ecs_defer_begin(world);
+    ecs_set_id(world, b, t, sizeof(ecs_i32_t), &(ecs_i32_t){50});
+    ecs_defer_end(world);
+    test_assert(!ecs_lookup(world, "b.child"));
+    test_int(ecs_script_template_update(world, b, t), 0);
+    p = ecs_get(world, ecs_lookup(world, "b.child"), Position);
+    test_int(p->x, 50);
+    ecs_fini(world);
+}
+
+void Template_manual_update_and_remove(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+    test_int(ecs_script_run_w_desc(world, NULL,
+        "template T { prop name: string = \"first\"\n \"{name}\" { Position: {10, 20} } }",
+        &ir_desc, NULL), 0);
+    ecs_entity_t t = ecs_lookup(world, "T");
+    ecs_add_id(world, t, EcsScriptTemplateManual);
+    test_int(ecs_script_run_w_desc(world, NULL,
+        "a { T: {name: \"before\"} }", &ir_desc, NULL), 0);
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_int(ecs_script_run_w_desc(world, NULL,
+        "a { T: {name: \"after\"} }", &ir_desc, NULL), 0);
+    test_int(ecs_script_template_update(world, a, t), 0);
+    test_assert(ecs_lookup(world, "a.after"));
+    test_assert(!ecs_lookup(world, "a.before"));
+    test_int(ecs_script_run_w_desc(world, NULL,
+        "a { T: {name: \"last\"} }", &ir_desc, NULL), 0);
+    test_assert(ecs_lookup(world, "a.after"));
+    test_assert(ecs_has_pair(world, a, EcsScriptTemplatePending, t));
+    test_int(ecs_script_template_update(world, a, t), 0);
+    test_assert(ecs_lookup(world, "a.last"));
+    test_assert(!ecs_lookup(world, "a.after"));
+    ecs_modified_id(world, a, t);
+    ecs_remove_id(world, a, t);
+    test_assert(!ecs_has_pair(world, a, EcsScriptTemplatePending, t));
+    test_assert(!ecs_lookup(world, "a.last"));
+    test_int(ecs_script_template_update(world, a, t), -1);
+    ecs_fini(world);
+}
+
+void Template_manual_managed_script_clear(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+    ecs_entity_t t = ecs_entity(world, { .name = "T" });
+    ecs_add_id(world, t, EcsScriptTemplateManual);
+    ecs_entity_t script = ecs_script(world, {
+        .code = "template T { child { Position: {10, 20} } }\na { T }\nb { T }",
+        .ir = ir_enabled
+    });
+    test_assert(script != 0);
+    ecs_entity_t a = ecs_lookup(world, "a");
+    test_int(ecs_script_template_update(world, a, t), 0);
+    test_assert(ecs_lookup(world, "a.child"));
+    ecs_script_clear(world, script, 0);
+    test_assert(!ecs_lookup(world, "a"));
+    test_assert(!ecs_lookup(world, "a.child"));
+    test_assert(!ecs_lookup(world, "b"));
+    ecs_fini(world);
+}

@@ -112183,6 +112183,8 @@ static ECS_TAG_DECLARE(EcsScriptTemplateFlushEvent);
 ECS_COMPONENT_DECLARE(EcsScriptTemplateInstanceUpdateEvent);
 ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 ECS_DECLARE(EcsScriptTemplate);
+ECS_DECLARE(EcsScriptTemplateManual);
+ECS_DECLARE(EcsScriptTemplatePending);
 
 static void flecs_script_delete_observers(
     ecs_world_t *world,
@@ -112682,7 +112684,7 @@ static int flecs_script_template_validate_interfaces(
     return 0;
 }
 
-static int flecs_script_template_instantiate(
+static int flecs_script_template_instantiate_now(
     ecs_world_t *world,
     ecs_entity_t template_entity,
     ecs_entity_t component,
@@ -112932,6 +112934,55 @@ done:
     }
 
     return result;
+}
+
+static int flecs_script_template_instantiate(
+    ecs_world_t *world,
+    ecs_entity_t template_entity,
+    ecs_entity_t component,
+    ecs_entity_t instance,
+    void *data,
+    uint64_t input)
+{
+    if (ecs_has_id(world, template_entity, EcsScriptTemplateManual)) {
+        if (ecs_is_alive(world, instance) &&
+            ecs_has_id(world, instance, template_entity))
+        {
+            ecs_add_pair(world, instance, EcsScriptTemplatePending, template_entity);
+        }
+        return 0;
+    }
+    return flecs_script_template_instantiate_now(
+        world, template_entity, component, instance, data, input);
+}
+
+int ecs_script_template_update(
+    ecs_world_t *world,
+    ecs_entity_t instance,
+    ecs_entity_t template_entity)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!ecs_is_deferred(world) && !ecs_stage_is_readonly(world),
+        ECS_INVALID_OPERATION, NULL);
+    if (!ecs_is_alive(world, template_entity)) {
+        return -1;
+    }
+    const EcsScript *script = ecs_get(world, template_entity, EcsScript);
+    if (!script || !script->template_ || !ecs_is_alive(world, instance) ||
+        !ecs_has_id(world, instance, template_entity))
+    {
+        return -1;
+    }
+    ecs_remove_pair(world, instance, EcsScriptTemplatePending, template_entity);
+    const void *data = ecs_get_id(world, instance, template_entity);
+    void *copy = ecs_ptr_new(world, template_entity);
+    ecs_ptr_copy(world, template_entity, copy, data);
+    int result = flecs_script_template_instantiate_now(
+        world, template_entity, template_entity, instance, copy, UINT64_MAX);
+    ecs_ptr_free(world, template_entity, copy);
+    return result;
+error:
+    return -1;
 }
 
 static void flecs_script_template_ref_on_set(
@@ -113305,6 +113356,8 @@ static void flecs_script_template_on_remove(
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
+        ecs_remove_pair(world, it->entities[i],
+            EcsScriptTemplatePending, template_entity);
         EcsScriptTemplateRoot *root = ECS_CONST_CAST(EcsScriptTemplateRoot*,
             ecs_get_pair(world, it->entities[i],
                 EcsScriptTemplateRoot, template_entity));
@@ -114075,6 +114128,11 @@ void flecs_script_template_import(
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateInstanceUpdateEvent);
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateRoot);
     ECS_TAG_DEFINE(world, EcsScriptTemplate);
+    ECS_TAG_DEFINE(world, EcsScriptTemplateManual);
+    ECS_TAG_DEFINE(world, EcsScriptTemplatePending);
+
+    ecs_add_id(world, EcsScriptTemplatePending, EcsPairIsTag);
+    ecs_add_pair(world, EcsScriptTemplatePending, EcsOnInstantiate, EcsDontInherit);
 
     ecs_add_id(world, EcsScriptTemplate, EcsPairIsTag);
 #ifdef FLECS_CONSTRAINT_TRAITS
