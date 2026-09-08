@@ -1403,9 +1403,6 @@ void flecs_notify_on_set_ids(
 #define FLECS_ENTITY_NAME_H
 
 /* Called during bootstrap to register entity name observers with world. */
-void flecs_bootstrap_entity_name(
-    ecs_world_t *world);
-
 /* Update lookup index for entity names. */
 void flecs_reparent_name_index(
     ecs_world_t *world,
@@ -3223,8 +3220,10 @@ static void flecs_bootstrap_builtin(
     symbol_col[row].value = ecs_os_strdup(symbol);
     symbol_col[row].length = symbol_length;
     symbol_col[row].hash = flecs_hash(symbol, symbol_length);    
-    symbol_col[row].index_hash = 0;
-    symbol_col[row].index = NULL;
+    symbol_col[row].index_hash = symbol_col[row].hash;
+    symbol_col[row].index = &world->symbols;
+    flecs_name_index_ensure(&world->symbols, entity, symbol_col[row].value,
+        symbol_length, symbol_col[row].hash);
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -3698,7 +3697,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDependsOn, EcsTraversable);
 
     /* Run bootstrap functions for other parts of the code */
-    flecs_bootstrap_entity_name(world);
     flecs_bootstrap_parent_component(world);
     flecs_bootstrap_prefab(world);
 
@@ -9252,34 +9250,6 @@ static ecs_entity_t flecs_get_parent_from_path(
     *path_ptr = path;
 
     return parent;
-}
-
-static void flecs_on_set_symbol(
-    ecs_iter_t *it) 
-{
-    EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
-    ecs_world_t *world = it->real_world;
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        flecs_name_index_ensure(
-            &world->symbols, e, n[i].value, n[i].length, n[i].hash);
-    }
-}
-
-void flecs_bootstrap_entity_name(
-    ecs_world_t *world) 
-{
-    ecs_observer(world, {
-        .query.terms[0] = {
-            .id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)
-        },
-        .callback = flecs_on_set_symbol,
-        .events = {EcsOnSet},
-        .yield_existing = true,
-        .global_observer = true
-    });
 }
 
 void ecs_on_set(EcsIdentifier)(

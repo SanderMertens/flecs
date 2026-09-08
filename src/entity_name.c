@@ -381,34 +381,6 @@ static ecs_entity_t flecs_get_parent_from_path(
     return parent;
 }
 
-static void flecs_on_set_symbol(
-    ecs_iter_t *it) 
-{
-    EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
-    ecs_world_t *world = it->real_world;
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        flecs_name_index_ensure(
-            &world->symbols, e, n[i].value, n[i].length, n[i].hash);
-    }
-}
-
-void flecs_bootstrap_entity_name(
-    ecs_world_t *world) 
-{
-    ecs_observer(world, {
-        .query.terms[0] = {
-            .id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)
-        },
-        .callback = flecs_on_set_symbol,
-        .events = {EcsOnSet},
-        .yield_existing = true,
-        .global_observer = true
-    });
-}
-
 void ecs_on_set(EcsIdentifier)(
     ecs_iter_t *it) 
 {

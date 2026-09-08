@@ -469,8 +469,10 @@ static void flecs_bootstrap_builtin(
     symbol_col[row].value = ecs_os_strdup(symbol);
     symbol_col[row].length = symbol_length;
     symbol_col[row].hash = flecs_hash(symbol, symbol_length);    
-    symbol_col[row].index_hash = 0;
-    symbol_col[row].index = NULL;
+    symbol_col[row].index_hash = symbol_col[row].hash;
+    symbol_col[row].index = &world->symbols;
+    flecs_name_index_ensure(&world->symbols, entity, symbol_col[row].value,
+        symbol_length, symbol_col[row].hash);
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -944,7 +946,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDependsOn, EcsTraversable);
 
     /* Run bootstrap functions for other parts of the code */
-    flecs_bootstrap_entity_name(world);
     flecs_bootstrap_parent_component(world);
     flecs_bootstrap_prefab(world);
 #ifdef FLECS_CACHED_QUERIES
