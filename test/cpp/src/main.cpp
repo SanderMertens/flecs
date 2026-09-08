@@ -1482,6 +1482,12 @@ void World_set_lookup_path(void);
 void World_run_post_frame(void);
 void World_component_w_low_id(void);
 void World_get_set_log_level(void);
+void World_log_warn_caller_file_line(void);
+void World_log_err_caller_file_line(void);
+void World_log_trace_caller_file_line(void);
+void World_log_dbg_caller_file_line(void);
+void World_log_push_caller_file_line(void);
+void World_log_w_std_string_fmt(void);
 void World_reset_world(void);
 void World_id_from_pair_type(void);
 void World_scope_w_name(void);
@@ -7525,6 +7531,30 @@ bake_test_case World_testcases[] = {
         World_get_set_log_level
     },
     {
+        "log_warn_caller_file_line",
+        World_log_warn_caller_file_line
+    },
+    {
+        "log_err_caller_file_line",
+        World_log_err_caller_file_line
+    },
+    {
+        "log_trace_caller_file_line",
+        World_log_trace_caller_file_line
+    },
+    {
+        "log_dbg_caller_file_line",
+        World_log_dbg_caller_file_line
+    },
+    {
+        "log_push_caller_file_line",
+        World_log_push_caller_file_line
+    },
+    {
+        "log_w_std_string_fmt",
+        World_log_w_std_string_fmt
+    },
+    {
         "reset_world",
         World_reset_world
     },
@@ -8639,7 +8669,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        124,
+        130,
         World_testcases
     },
     {

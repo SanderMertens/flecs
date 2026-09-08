@@ -1536,6 +1536,106 @@ void World_get_set_log_level(void) {
     test_int(flecs::log::get_level(), 4);
 }
 
+static const char *log_capture_file = nullptr;
+static int32_t log_capture_line = 0;
+static int32_t log_capture_level = 0;
+static char log_capture_msg[256];
+
+static void log_capture(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    log_capture_level = level;
+    log_capture_file = file;
+    log_capture_line = line;
+    ecs_os_snprintf(log_capture_msg, 256, "%s", msg);
+}
+
+static void install_log_capture(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = log_capture;
+    ecs_os_set_api(&os_api);
+    flecs::log::set_level(4);
+    flecs::log::enable_colors(false);
+    log_capture_file = nullptr;
+    log_capture_line = 0;
+    log_capture_level = 100;
+    log_capture_msg[0] = '\0';
+}
+
+static bool log_file_ends_with(const char *file, const char *suffix) {
+    size_t file_len = strlen(file);
+    size_t suffix_len = strlen(suffix);
+    if (file_len < suffix_len) {
+        return false;
+    }
+    return !strcmp(file + file_len - suffix_len, suffix);
+}
+
+static void check_log_location(int32_t expected_line) {
+    test_assert(log_capture_file != nullptr);
+    test_assert(log_capture_line > 0);
+#if __cplusplus >= 202002L
+    test_assert(log_file_ends_with(log_capture_file, "World.cpp"));
+    test_int(log_capture_line, expected_line);
+#else
+    (void)expected_line;
+#endif
+}
+
+void World_log_warn_caller_file_line(void) {
+    install_log_capture();
+    int32_t line = __LINE__; flecs::log::warn("warn %d", 10);
+    test_int(log_capture_level, -2);
+    test_str(log_capture_msg, "warn 10");
+    check_log_location(line);
+}
+
+void World_log_err_caller_file_line(void) {
+    install_log_capture();
+    int32_t line = __LINE__; flecs::log::err("err %d", 20);
+    test_int(log_capture_level, -3);
+    test_str(log_capture_msg, "err 20");
+    check_log_location(line);
+}
+
+void World_log_trace_caller_file_line(void) {
+    install_log_capture();
+    int32_t line = __LINE__; flecs::log::trace("trace %d", 30);
+    test_int(log_capture_level, 0);
+    test_str(log_capture_msg, "trace 30");
+    check_log_location(line);
+}
+
+void World_log_dbg_caller_file_line(void) {
+    install_log_capture();
+    int32_t line = __LINE__; flecs::log::dbg("dbg %d", 40);
+    test_int(log_capture_level, 1);
+    test_str(log_capture_msg, "dbg 40");
+    check_log_location(line);
+}
+
+void World_log_push_caller_file_line(void) {
+    install_log_capture();
+    int32_t line = __LINE__; flecs::log::push("push %d", 50);
+    test_int(log_capture_level, 0);
+    test_str(log_capture_msg, "push 50");
+    check_log_location(line);
+    flecs::log::pop();
+}
+
+void World_log_w_std_string_fmt(void) {
+    install_log_capture();
+    std::string fmt = "string %d";
+    int32_t line = __LINE__; flecs::log::warn(fmt.c_str(), 60);
+    test_int(log_capture_level, -2);
+    test_str(log_capture_msg, "string 60");
+    check_log_location(line);
+}
+
 void World_reset_world(void) {
     flecs::world ecs;
     flecs::entity e = ecs.entity();

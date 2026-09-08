@@ -24803,8 +24803,42 @@ void init(flecs::world& world);
 
 #pragma once
 
+#if (__cplusplus >= 202002L) || (defined(_MSVC_LANG) && (_MSVC_LANG >= 202002L))
+#if defined(__has_include)
+#if __has_include(<source_location>)
+#include <source_location>
+#if defined(__cpp_lib_source_location) && (__cpp_lib_source_location >= 201907L)
+#define FLECS_CPP_SOURCE_LOCATION
+#endif
+#endif
+#endif
+#endif
+
 namespace flecs {
 namespace log {
+
+namespace _ {
+
+struct fmt_str {
+#ifdef FLECS_CPP_SOURCE_LOCATION
+    fmt_str(const char *fmt_,
+        std::source_location loc = std::source_location::current())
+        : fmt(fmt_)
+        , file(loc.file_name())
+        , line(static_cast<int32_t>(loc.line())) { }
+#else
+    fmt_str(const char *fmt_)
+        : fmt(fmt_)
+        , file(__FILE__)
+        , line(__LINE__) { }
+#endif
+
+    const char *fmt;
+    const char *file;
+    int32_t line;
+};
+
+}
 
 /**
  * @defgroup cpp_log Logging
@@ -24858,10 +24892,10 @@ inline void enable_timedelta(bool enabled = true) {
  *
  * @param fmt The format string.
  */
-inline void dbg(const char *fmt, ...) {
+inline void dbg(_::fmt_str fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    ecs_logv(1, fmt, args);
+    ecs_logv_(1, fmt.file, fmt.line, fmt.fmt, args);
     va_end(args);
 }
 
@@ -24869,10 +24903,10 @@ inline void dbg(const char *fmt, ...) {
  *
  * @param fmt The format string.
  */
-inline void trace(const char *fmt, ...) {
+inline void trace(_::fmt_str fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    ecs_logv(0, fmt, args);
+    ecs_logv_(0, fmt.file, fmt.line, fmt.fmt, args);
     va_end(args);
 }
 
@@ -24880,10 +24914,10 @@ inline void trace(const char *fmt, ...) {
  *
  * @param fmt The format string.
  */
-inline void warn(const char *fmt, ...) {
+inline void warn(_::fmt_str fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    ecs_logv(-2, fmt, args);
+    ecs_logv_(-2, fmt.file, fmt.line, fmt.fmt, args);
     va_end(args);
 }
 
@@ -24891,10 +24925,10 @@ inline void warn(const char *fmt, ...) {
  *
  * @param fmt The format string.
  */
-inline void err(const char *fmt, ...) {
+inline void err(_::fmt_str fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    ecs_logv(-3, fmt, args);
+    ecs_logv_(-3, fmt.file, fmt.line, fmt.fmt, args);
     va_end(args);
 }
 
@@ -24902,10 +24936,10 @@ inline void err(const char *fmt, ...) {
  *
  * @param fmt The format string.
  */
-inline void push(const char *fmt, ...) {
+inline void push(_::fmt_str fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    ecs_logv(0, fmt, args);
+    ecs_logv_(0, fmt.file, fmt.line, fmt.fmt, args);
     va_end(args);
     ecs_log_push();
 }
