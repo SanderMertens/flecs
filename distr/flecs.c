@@ -40657,6 +40657,21 @@ static void flecs_table_init_flags(
 }
 
 /* Utility function that appends an element to the table record array */
+static ecs_table_record_t* flecs_table_add_record(
+    ecs_world_t *world,
+    ecs_vec_t *records,
+    ecs_component_record_t *cr,
+    int32_t index,
+    int32_t count)
+{
+    ecs_table_record_t *tr = ecs_vec_append_t(
+        &world->allocator, records, ecs_table_record_t);
+    tr->hdr.cr = cr;
+    tr->index = flecs_ito(int16_t, index);
+    tr->count = flecs_ito(int16_t, count);
+    return tr;
+}
+
 static void flecs_table_append_to_records(
     ecs_world_t *world,
     ecs_vec_t *records,
@@ -40677,10 +40692,7 @@ static void flecs_table_append_to_records(
     }
 
     if (!tr) {
-        tr = ecs_vec_append_t(&world->allocator, records, ecs_table_record_t);
-        tr->hdr.cr = cr;
-        tr->index = flecs_ito(int16_t, column);
-        tr->count = 1;
+        flecs_table_add_record(world, records, cr, column, 1);
     } else {
         tr->count ++;
     }
@@ -40781,212 +40793,90 @@ void flecs_table_init(
     ecs_table_t *table,
     ecs_table_t *from)
 {
-    /* Make sure table->flags is initialized */
     flecs_table_init_flags(world, table);
 
-    /* The following code walks the table type to discover which id records the
-     * table needs to register table records with. 
-     *
-     * In addition to registering itself with id records for each id in the
-     * table type, a table also registers itself with wildcard id records. For
-     * example, if a table contains (Eats, Apples), it will register itself with
-     * wildcard id records (Eats, *),  (*, Apples) and (*, *). This makes it
-     * easier for wildcard queries to find the relevant tables. */
-
-    int32_t dst_i = 0, dst_count = table->type.count;
-    int32_t src_i = 0, src_count = 0;
+    int32_t dst_count = table->type.count, src_i = 0;
     ecs_id_t *dst_ids = table->type.array;
-    ecs_id_t *src_ids = NULL;
-    ecs_table_record_t *tr = NULL, *src_tr = NULL;
-    if (from) {
-        src_count = from->type.count;
-        src_ids = from->type.array;
-        src_tr = from->_->records;
-    }
-
-    /* We don't know in advance how large the records array will be, so use
-     * cached vector. This eliminates unnecessary allocations, and/or expensive
-     * iterations to determine how many records we need. */
-    ecs_allocator_t *a = &world->allocator;
     ecs_vec_t *records = &world->store.records;
-    ecs_vec_reset_t(a, records, ecs_table_record_t);
-    ecs_component_record_t *cr, *childof_cr = NULL;
-
-    int32_t last_id = -1; /* Track last regular (non-pair) id */
-    int32_t first_pair = -1; /* Track the first pair in the table */
-    int32_t first_role = -1; /* Track first id with role */
+    ecs_vec_reset_t(&world->allocator, records, ecs_table_record_t);
+    int32_t first_pair = -1, pair_count = 0, id_count = 0;
+    int32_t first_role = dst_count;
     bool has_low_id = false;
+    ecs_component_record_t *cr, *childof_cr = NULL;
+    ecs_table_record_t *tr;
 
-    /* Scan to find boundaries of regular ids, pairs and roles */
-    for (dst_i = 0; dst_i < dst_count; dst_i ++) {
-        ecs_id_t dst_id = dst_ids[dst_i];
-        if (first_pair == -1 && ECS_IS_PAIR(dst_id)) {
-            first_pair = dst_i;
+    for (int32_t i = 0; i < dst_count; i ++) {
+        ecs_id_t id = dst_ids[i];
+        while (from && src_i < from->type.count && from->type.array[src_i] < id) {
+            src_i ++;
         }
-        if ((dst_id & ECS_COMPONENT_MASK) == dst_id) {
-            last_id = dst_i;
-        } else if (first_role == -1 && !ECS_IS_PAIR(dst_id)) {
-            first_role = dst_i;
-        }
+        cr = from && src_i < from->type.count && from->type.array[src_i] == id
+            ? from->_->records[src_i].hdr.cr : flecs_components_ensure(world, id);
+        flecs_table_add_record(world, records, cr, i, 1);
 
-        has_low_id |= dst_id < FLECS_HI_COMPONENT_ID;
-
-        /* Build bloom filter for table */
-        table->bloom_filter = 
-            flecs_table_bloom_filter_add(table->bloom_filter, dst_id);
-    }
-
-    /* The easy part: initialize a record for every id in the type */
-    for (dst_i = 0; (dst_i < dst_count) && (src_i < src_count); ) {
-        ecs_id_t dst_id = dst_ids[dst_i];
-        ecs_id_t src_id = src_ids[src_i];
-
-        cr = NULL;
-
-        if (dst_id == src_id) {
-            ecs_assert(src_tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            cr = (ecs_component_record_t*)src_tr[src_i].hdr.cr;
-        } else if (dst_id < src_id) {
-            cr = flecs_components_ensure(world, dst_id);
-        }
-        if (cr) {
-            tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-            tr->hdr.cr = cr;
-            tr->index = flecs_ito(int16_t, dst_i);
-            tr->count = 1;
-        }
-
-        dst_i += dst_id <= src_id;
-        src_i += dst_id >= src_id;
-    }
-
-    /* Add remaining ids that the "from" table didn't have */
-    for (; (dst_i < dst_count); dst_i ++) {
-        ecs_id_t dst_id = dst_ids[dst_i];
-        tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-        cr = flecs_components_ensure(world, dst_id);
-        tr->hdr.cr = cr;
-        ecs_assert(tr->hdr.cr != NULL, ECS_INTERNAL_ERROR, NULL);
-        tr->index = flecs_ito(int16_t, dst_i);
-        tr->count = 1;
-    }
-
-    if (first_role != -1 || first_pair != -1) {
-        int32_t start = first_role;
-        if (first_pair != -1 && (start == -1 || first_pair < start)) {
-            start = first_pair;
-        }
-
-        /* Total number of records can never be higher than
-         * - number of regular (non-pair) ids +
-         * - three records for pairs: (R,T), (R,*), (*,T)
-         * - one wildcard (*), one any (_) and one pair wildcard (*,*) record
-         * - one record for (ChildOf, 0)
-         */
-        int32_t flag_id_count = dst_count - start;
-        int32_t record_count = start + 3 * flag_id_count + 3 + 1;
-        ecs_vec_set_min_size_t(a, records, ecs_table_record_t, record_count);
-    }
-
-    /* Add records for ids with roles (used by cleanup logic) */
-    if (first_role != -1) {
-        for (dst_i = first_role; dst_i < dst_count; dst_i ++) {
-            ecs_id_t id = dst_ids[dst_i];
-            if (!ECS_IS_PAIR(id)) {
-                ecs_entity_t first = 0;
-                ecs_entity_t second = 0;
-                if (ECS_HAS_ID_FLAG(id, PAIR)) {
-                    first = ECS_PAIR_FIRST(id);
-                    second = ECS_PAIR_SECOND(id);
-                } else {
-                    first = id & ECS_COMPONENT_MASK;
-                }
-                if (first) {
-                    flecs_table_append_to_records(world, records,
-                        ecs_pair(EcsFlag, first), dst_i, dst_count);
-                }
-                if (second) {
-                    flecs_table_append_to_records(world, records,
-                        ecs_pair(EcsFlag, second), dst_i, dst_count);
-                }
+        if (!(id & ECS_ID_FLAGS_MASK)) {
+            id_count ++;
+        } else if (ECS_IS_PAIR(id)) {
+            if (first_pair == -1) {
+                first_pair = i;
             }
+            pair_count ++;
+        } else if (first_role == dst_count) {
+            first_role = i;
         }
+        has_low_id |= id < FLECS_HI_COMPONENT_ID;
+        table->bloom_filter = flecs_table_bloom_filter_add(table->bloom_filter, id);
     }
 
-    int32_t last_pair = -1;
-    bool has_childof = !!(table->flags & (EcsTableHasChildOf|EcsTableHasParent));
-    if (first_pair != -1) {
-        /* Add a (Relationship, *) record for each relationship. */
-        ecs_entity_t r = 0;
-        for (dst_i = first_pair; dst_i < dst_count; dst_i ++) {
-            ecs_id_t dst_id = dst_ids[dst_i];
-            if (!ECS_IS_PAIR(dst_id)) {
-                break; /* no more pairs */
-            }
-            if (r != ECS_PAIR_FIRST(dst_id)) { /* New relationship, new record */
-                tr = ecs_vec_get_t(records, ecs_table_record_t, dst_i);
-
-                ecs_component_record_t *p_cr = tr->hdr.cr;
-                r = ECS_PAIR_FIRST(dst_id);
+    int32_t start = first_pair == -1 || first_role < first_pair
+        ? first_role : first_pair;
+    ecs_vec_set_min_size_t(&world->allocator, records, ecs_table_record_t,
+        start + 3 * (dst_count - start) + 4);
+    ecs_table_record_t *relationship = NULL;
+    ecs_entity_t last_relationship = 0;
+    for (int32_t i = start; i < dst_count; i ++) {
+        ecs_id_t id = dst_ids[i];
+        if (ECS_IS_PAIR(id)) {
+            ecs_entity_t r = ECS_PAIR_FIRST(id);
+            if (r != last_relationship) {
+                cr = ecs_vec_get_t(records, ecs_table_record_t, i)->hdr.cr;
                 if (r == EcsChildOf) {
-                    childof_cr = p_cr;
-                    ecs_assert(childof_cr->pair != NULL, 
-                        ECS_INTERNAL_ERROR, NULL);
+                    childof_cr = cr;
                 }
-
-                ecs_assert(p_cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-                cr = p_cr->pair->parent; /* (R, *) */
-                ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-                tr->hdr.cr = cr;
-                tr->index = flecs_ito(int16_t, dst_i);
-                tr->count = 0;
+                relationship = flecs_table_add_record(world, records,
+                    cr->pair->parent, i, 0);
+                last_relationship = r;
             }
-
-            ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            tr->count ++;
-        }
-
-        last_pair = dst_i;
-
-        /* Add a (*, Target) record for each relationship target. Type
-         * ids are sorted relationship-first, so we can't simply do a single 
-         * linear scan to find all occurrences for a target. */
-        for (dst_i = first_pair; dst_i < last_pair; dst_i ++) {
-            ecs_id_t dst_id = dst_ids[dst_i];
-
-            if (ECS_IS_VALUE_PAIR(dst_id)) {
-                continue;
+            relationship->count ++;
+            if (!ECS_IS_VALUE_PAIR(id)) {
+                flecs_table_append_to_records(world, records,
+                    ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)), i, dst_count);
             }
-
-            ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));
-
-            flecs_table_append_to_records(
-                world, records, tgt_id, dst_i, dst_count);
+        } else {
+            ecs_entity_t first = ECS_HAS_ID_FLAG(id, PAIR)
+                ? ECS_PAIR_FIRST(id) : id & ECS_COMPONENT_MASK;
+            ecs_entity_t second = ECS_HAS_ID_FLAG(id, PAIR) ? ECS_PAIR_SECOND(id) : 0;
+            if (first) {
+                flecs_table_append_to_records(world, records,
+                    ecs_pair(EcsFlag, first), i, dst_count);
+            }
+            if (second) {
+                flecs_table_append_to_records(world, records,
+                    ecs_pair(EcsFlag, second), i, dst_count);
+            }
         }
     }
 
-    /* Lastly, add records for all-wildcard ids */
-    if (last_id >= 0) {
-        tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-        tr->hdr.cr = world->cr_wildcard;
-        tr->index = 0;
-        tr->count = flecs_ito(int16_t, last_id + 1);
+    if (id_count) {
+        flecs_table_add_record(world, records, world->cr_wildcard, 0, id_count);
     }
-    if (last_pair - first_pair) {
-        tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-        tr->hdr.cr = world->cr_wildcard_wildcard;
-        tr->index = flecs_ito(int16_t, first_pair);
-        tr->count = flecs_ito(int16_t, last_pair - first_pair);
+    if (pair_count) {
+        flecs_table_add_record(world, records,
+            world->cr_wildcard_wildcard, first_pair, pair_count);
     }
-    if (!has_childof) {
-        tr = ecs_vec_append_t(a, records, ecs_table_record_t);
+    if (!(table->flags & (EcsTableHasChildOf|EcsTableHasParent))) {
         childof_cr = world->cr_childof_0;
-        tr->hdr.cr = childof_cr;
-        tr->index = -1; /* The table doesn't have a (ChildOf, 0) component */
-        tr->count = 0;
-
+        flecs_table_add_record(world, records, childof_cr, -1, 0);
         table->bloom_filter = flecs_table_bloom_filter_add(
             table->bloom_filter, ecs_pair(EcsChildOf, 0));
     }
