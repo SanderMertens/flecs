@@ -1038,130 +1038,42 @@ static void flecs_normalize_term_name(
 }
 #endif
 
-/* A term is self-trivial when it resolves like a trivial term for any table
- * that owns its id. That is a weaker property than EcsTermIsTrivial, which
- * also requires the id to never be inheritable: an inherited id costs a walk
- * of the IsA chain only when the table does not own it. Observers, which are
- * handed one table to test, hit the owned case almost always. */
-static
-bool flecs_term_is_self_trivial(
-    const ecs_term_t *term)
-{
-    /* A Not term is answered by the table just as well as an And term: the
-     * table either has the id or it doesn't. Optional terms are not, because
-     * they decide per field whether it is set. */
-    if (term->oper != EcsAnd && term->oper != EcsNot) {
-        return false;
-    }
-
-    if (term->flags_ & (EcsTermIsOr|EcsTermIsToggle|EcsTermDontFragment|
-        EcsTermIsSparse|EcsTermTransitive|EcsTermReflexive|EcsTermIsMember|
-        EcsTermIsScope|EcsTermMatchAny|EcsTermMatchAnySrc))
-    {
-        return false;
-    }
-
-    if (!ecs_term_match_this(term)) {
-        return false;
-    }
-
-    if (!(term->src.id & EcsSelf)) {
-        return false;
-    }
-
-    if (term->trav && term->trav != EcsIsA) {
-        return false;
-    }
-
-    if (ecs_id_is_wildcard(term->id)) {
-        return false;
-    }
-
-    if (ECS_IS_PAIR(term->id) && (ECS_PAIR_FIRST(term->id) == EcsChildOf) &&
-        ECS_PAIR_SECOND(term->id))
-    {
-        return false;
-    }
-
-    return true;
-}
-
-/* A term is IsA-trivial when whether it matches a table is decided by the
- * table's own type plus, at most, a search of the table's IsA chain. Such a
- * term can be answered without the query engine when the answer is "no", which
- * is the common case for an observer that is handed one table to test. Unlike
- * a self-trivial term the answer is not a pure function of the table type - a
- * base can gain or lose the id - so it must never be cached. */
-static
-bool flecs_term_is_isa_trivial(
-    const ecs_term_t *term)
-{
-    if (term->oper != EcsAnd && term->oper != EcsNot) {
-        return false;
-    }
-
-    if (term->flags_ & (EcsTermIsOr|EcsTermIsToggle|EcsTermDontFragment|
-        EcsTermIsSparse|EcsTermTransitive|EcsTermReflexive|EcsTermIsMember|
-        EcsTermIsScope|EcsTermMatchAny|EcsTermMatchAnySrc))
-    {
-        return false;
-    }
-
-    if (!ecs_term_match_this(term)) {
-        return false;
-    }
-
-    if (term->src.id & (EcsCascade|EcsDesc)) {
-        return false;
-    }
-
-    if (!(term->src.id & (EcsSelf|EcsUp))) {
-        return false;
-    }
-
-    if ((term->src.id & EcsUp) && term->trav != EcsIsA) {
-        return false;
-    }
-
-    if (!(term->src.id & EcsUp) && term->trav && term->trav != EcsIsA) {
-        return false;
-    }
-
-    if (ecs_id_is_wildcard(term->id)) {
-        return false;
-    }
-
-    if (ECS_IS_PAIR(term->id) && (ECS_PAIR_FIRST(term->id) == EcsChildOf) &&
-        ECS_PAIR_SECOND(term->id))
-    {
-        return false;
-    }
-
-    return true;
-}
-
-static
-void flecs_query_set_self_trivial(
+static void flecs_query_set_self_trivial(
     ecs_query_t *q)
 {
-    int32_t i, term_count = q->term_count;
-    bool base = term_count != 0 && !q->row_fields &&
-        !(q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryHasRefs|
-            EcsQueryMatchNothing|EcsQueryMatchWildcards));
-    bool self_trivial = base;
-    bool isa_trivial = base;
-
-    for (i = 0; (self_trivial || isa_trivial) && (i < term_count); i ++) {
-        if (self_trivial) {
-            self_trivial = flecs_term_is_self_trivial(&q->terms[i]);
-        }
-        if (isa_trivial) {
-            isa_trivial = flecs_term_is_isa_trivial(&q->terms[i]);
-        }
+    ecs_flags32_t flags = EcsQuerySelfTrivial | EcsQueryIsaTrivial;
+    if (!q->term_count || q->row_fields ||
+        (q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryHasRefs|
+            EcsQueryMatchNothing|EcsQueryMatchWildcards)))
+    {
+        flags = 0;
     }
 
-    ECS_BIT_COND(q->flags, EcsQuerySelfTrivial, self_trivial);
-    ECS_BIT_COND(q->flags, EcsQueryIsaTrivial, isa_trivial);
+    for (int32_t i = 0; flags && i < q->term_count; i ++) {
+        const ecs_term_t *term = &q->terms[i];
+        ecs_flags64_t src = term->src.id;
+        if ((term->oper != EcsAnd && term->oper != EcsNot) ||
+            (term->flags_ & (EcsTermIsOr|EcsTermIsToggle|EcsTermDontFragment|
+                EcsTermIsSparse|EcsTermTransitive|EcsTermReflexive|EcsTermIsMember|
+                EcsTermIsScope|EcsTermMatchAny|EcsTermMatchAnySrc)) ||
+            !ecs_term_match_this(term) ||
+            (term->trav && term->trav != EcsIsA) ||
+            ecs_id_is_wildcard(term->id) ||
+            (ECS_HAS_RELATION(term->id, EcsChildOf) && ECS_PAIR_SECOND(term->id)))
+        {
+            flags = 0;
+            break;
+        }
+        if (!(src & EcsSelf)) {
+            flags &= ~EcsQuerySelfTrivial;
+        }
+        if ((src & (EcsCascade|EcsDesc)) || !(src & (EcsSelf|EcsUp)) ||
+            ((src & EcsUp) && term->trav != EcsIsA))
+        {
+            flags &= ~EcsQueryIsaTrivial;
+        }
+    }
+    q->flags = (q->flags & ~(EcsQuerySelfTrivial|EcsQueryIsaTrivial)) | flags;
 }
 
 static int flecs_query_finalize_terms(
