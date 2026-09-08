@@ -1383,7 +1383,12 @@
                 "delete_module_w_explicit_component_and_system",
                 "module_has_singleton",
                 "rename_w_existing_entity_in_old_parent",
-                "rename_to_ancestor_w_existing_entity_in_old_parent"
+                "rename_to_ancestor_w_existing_entity_in_old_parent",
+                "nested_import_changes_scope_before_module_rename",
+                "nested_import_changes_scope_after_module_rename",
+                "scope_restored_after_import_w_nested_scope_change",
+                "nested_import_changes_scope_no_rename",
+                "rename_w_existing_component_in_old_parent"
             ]
         }, {
             "id": "ImplicitComponents",

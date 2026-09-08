@@ -1340,6 +1340,11 @@ void Module_delete_module_w_explicit_component_and_system(void);
 void Module_module_has_singleton(void);
 void Module_rename_w_existing_entity_in_old_parent(void);
 void Module_rename_to_ancestor_w_existing_entity_in_old_parent(void);
+void Module_nested_import_changes_scope_before_module_rename(void);
+void Module_nested_import_changes_scope_after_module_rename(void);
+void Module_scope_restored_after_import_w_nested_scope_change(void);
+void Module_nested_import_changes_scope_no_rename(void);
+void Module_rename_w_existing_component_in_old_parent(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -6962,6 +6967,26 @@ bake_test_case Module_testcases[] = {
     {
         "rename_to_ancestor_w_existing_entity_in_old_parent",
         Module_rename_to_ancestor_w_existing_entity_in_old_parent
+    },
+    {
+        "nested_import_changes_scope_before_module_rename",
+        Module_nested_import_changes_scope_before_module_rename
+    },
+    {
+        "nested_import_changes_scope_after_module_rename",
+        Module_nested_import_changes_scope_after_module_rename
+    },
+    {
+        "scope_restored_after_import_w_nested_scope_change",
+        Module_scope_restored_after_import_w_nested_scope_change
+    },
+    {
+        "nested_import_changes_scope_no_rename",
+        Module_nested_import_changes_scope_no_rename
+    },
+    {
+        "rename_w_existing_component_in_old_parent",
+        Module_rename_w_existing_component_in_old_parent
     }
 };
 
@@ -8578,7 +8603,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        29,
+        34,
         Module_testcases
     },
     {

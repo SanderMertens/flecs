@@ -29,11 +29,11 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     c_.add(flecs::Singleton);
 #endif
 
+    ecs_add_id(world, c_, EcsModule);
+
     ecs_set_scope(world, c_);
     world.emplace<T>(world);
     ecs_set_scope(world, scope);
-
-    ecs_add_id(world, c_, EcsModule);
 
     // It should now be possible to look up the module.
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, false, false);
@@ -91,6 +91,10 @@ inline flecs::entity world::module(const char *name) const {
         ecs_add_path_w_sep(world_, result, 0, name, "::", "::");
         flecs::entity parent = result.parent();
         if (prev_parent != parent) {
+            if (parent && result.has(flecs::Module)) {
+                parent.add(flecs::Module);
+            }
+
             // Module was reparented, clean up old parent(s).
             flecs::entity cur = prev_parent, next;
             while (cur) {
@@ -107,15 +111,29 @@ inline flecs::entity world::module(const char *name) const {
 
                 // Move entities that were created in the old parent to the
                 // renamed module.
+                bool has_modules = false;
                 ecs_defer_begin(world_);
                 ecs_iter_t it = ecs_children(world_, cur);
                 while (ecs_children_next(&it)) {
                     for (int32_t i = 0; i < it.count; i ++) {
-                        ecs_add_pair(world_, it.entities[i], EcsChildOf, 
-                            result);
+                        flecs::entity_t child = it.entities[i];
+                        if (ecs_has_id(world_, child, EcsModule)) {
+                            has_modules = true;
+                            continue;
+                        }
+                        if (ecs_has_pair(world_, child, ecs_id(EcsPoly), 
+                            EcsWildcard))
+                        {
+                            continue;
+                        }
+                        ecs_add_pair(world_, child, EcsChildOf, result);
                     }
                 }
                 ecs_defer_end(world_);
+
+                if (has_modules) {
+                    break;
+                }
 
                 cur.destruct();
                 this->set_version(cur);

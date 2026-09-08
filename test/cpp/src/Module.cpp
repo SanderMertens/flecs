@@ -83,6 +83,12 @@ namespace rename_ns {
     };
 }
 
+namespace rename_ns {
+    struct ComponentInOldParent {
+        int value;
+    };
+}
+
 namespace rename_ns_outer {
     namespace rename_ns_inner {
         struct RenamedModule {
@@ -679,4 +685,130 @@ void Module_rename_to_ancestor_w_existing_entity_in_old_parent(void) {
     test_str(o.path(), "::rename_ns_outer::o");
     test_assert(ecs.lookup("::rename_ns_outer::rename_ns_inner") == 0);
     test_assert(ecs.lookup("::rename_ns_outer") == m.parent());
+}
+
+namespace scope_change_ns {
+    struct ScopeChangeModule {
+        ScopeChangeModule(flecs::world& world) {
+            world.module<ScopeChangeModule>("::scope_change::inner");
+            world.set_scope(world.entity("::scope_change"));
+        }
+    };
+
+    struct ImportBeforeRename {
+        ImportBeforeRename(flecs::world& world) {
+            world.import<ScopeChangeModule>();
+            world.module<ImportBeforeRename>("::import_before_rename");
+            test_assert(world.get_scope() != 0);
+            test_assert(world.get_scope().is_alive());
+            test_str(world.get_scope().path(), "::import_before_rename");
+        }
+    };
+
+    struct ImportAfterRename {
+        ImportAfterRename(flecs::world& world) {
+            world.module<ImportAfterRename>("::import_after_rename");
+            world.import<ScopeChangeModule>();
+            test_assert(world.get_scope() != 0);
+            test_assert(world.get_scope().is_alive());
+            test_str(world.get_scope().path(), "::import_after_rename");
+        }
+    };
+
+    struct ImportNoRename {
+        ImportNoRename(flecs::world& world) {
+            world.import<ScopeChangeModule>();
+            test_assert(world.get_scope() != 0);
+            test_assert(world.get_scope().is_alive());
+            test_str(world.get_scope().path(),
+                "::scope_change_ns::ImportNoRename");
+        }
+    };
+}
+
+void Module_nested_import_changes_scope_before_module_rename(void) {
+    flecs::world ecs;
+
+    flecs::entity m = ecs.import<scope_change_ns::ImportBeforeRename>();
+    test_assert(m.is_alive());
+    test_assert(m.has(flecs::Module));
+    test_str(m.path(), "::import_before_rename");
+
+    flecs::entity inner = ecs.lookup("::scope_change::inner");
+    test_assert(inner != 0);
+    test_assert(inner.is_alive());
+    test_assert(inner.has(flecs::Module));
+    test_assert(inner == ecs.import<scope_change_ns::ScopeChangeModule>());
+
+    test_assert(ecs.lookup("::scope_change_ns") == 0);
+    test_assert(ecs.get_scope() == 0);
+}
+
+void Module_nested_import_changes_scope_after_module_rename(void) {
+    flecs::world ecs;
+
+    flecs::entity m = ecs.import<scope_change_ns::ImportAfterRename>();
+    test_assert(m.is_alive());
+    test_assert(m.has(flecs::Module));
+    test_str(m.path(), "::import_after_rename");
+
+    flecs::entity inner = ecs.lookup("::scope_change::inner");
+    test_assert(inner != 0);
+    test_assert(inner.is_alive());
+    test_assert(inner.has(flecs::Module));
+    test_assert(inner == ecs.import<scope_change_ns::ScopeChangeModule>());
+
+    test_assert(ecs.lookup("::scope_change_ns") == 0);
+    test_assert(ecs.get_scope() == 0);
+}
+
+void Module_scope_restored_after_import_w_nested_scope_change(void) {
+    flecs::world ecs;
+
+    flecs::entity parent = ecs.entity("parent");
+    ecs.set_scope(parent);
+
+    flecs::entity m = ecs.import<scope_change_ns::ImportBeforeRename>();
+    test_assert(m.is_alive());
+    test_str(m.path(), "::import_before_rename");
+    test_assert(ecs.get_scope() == parent);
+
+    ecs.set_scope(0);
+    test_assert(ecs.get_scope() == 0);
+}
+
+void Module_nested_import_changes_scope_no_rename(void) {
+    flecs::world ecs;
+
+    flecs::entity m = ecs.import<scope_change_ns::ImportNoRename>();
+    test_assert(m.is_alive());
+    test_assert(m.has(flecs::Module));
+    test_str(m.path(), "::scope_change_ns::ImportNoRename");
+
+    flecs::entity inner = ecs.lookup("::scope_change::inner");
+    test_assert(inner != 0);
+    test_assert(inner.is_alive());
+    test_assert(inner.has(flecs::Module));
+
+    test_assert(ecs.get_scope() == 0);
+}
+
+void Module_rename_w_existing_component_in_old_parent(void) {
+    flecs::world ecs;
+
+    flecs::entity c = ecs.component<rename_ns::ComponentInOldParent>();
+    test_str(c.path(), "::rename_ns::ComponentInOldParent");
+
+    flecs::entity m = ecs.import<rename_ns::RenamedModule>();
+    test_str(m.path(), "::renamed_module");
+
+    test_assert(c.is_alive());
+    test_assert(c.parent() == m);
+    test_str(c.path(), "::renamed_module::ComponentInOldParent");
+    test_assert(ecs.lookup("::rename_ns") == 0);
+    test_assert(ecs.lookup("::renamed_module::ComponentInOldParent") == c);
+
+    flecs::entity e = ecs.entity().set<rename_ns::ComponentInOldParent>({10});
+    test_assert(e.has<rename_ns::ComponentInOldParent>());
+    test_int(e.get<rename_ns::ComponentInOldParent>().value, 10);
 }
