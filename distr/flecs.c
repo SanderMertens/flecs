@@ -76707,10 +76707,14 @@ int flecs_query_compile(
     if (term_count == 1 && ecs_vec_count(ctx.ops)) {
         ecs_query_op_t *op = ecs_vec_last_t(ctx.ops, ecs_query_op_t);
         ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (op->kind == EcsQueryTree) {
-            op->kind = EcsQueryChildren;
-        } else if (op->kind == EcsQueryTreeWildcard) {
-            op->kind = EcsQueryChildrenWc;
+        if ((op->flags & (EcsQueryIsVar << EcsQuerySrc)) &&
+            (op->src.var == 0))
+        {
+            if (op->kind == EcsQueryTree) {
+                op->kind = EcsQueryChildren;
+            } else if (op->kind == EcsQueryTreeWildcard) {
+                op->kind = EcsQueryChildrenWc;
+            }
         }
     }
 
@@ -82903,7 +82907,7 @@ next:
             goto next;
         }
 
-        flecs_query_var_reset(0, ctx);
+        flecs_query_var_reset(op->src.var, ctx);
         if (op->match_flags & EcsTermMatchAny) {
             it->ids[field_index] = ecs_childof(EcsWildcard);
         } else {
@@ -83299,7 +83303,7 @@ bool flecs_query_children(
     const ecs_query_run_ctx_t *ctx)
 {
     uint64_t written = ctx->written[ctx->op_index];
-    if (written & (1ull << op->src.var)) {
+    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         return flecs_query_children_with(op, redo, ctx);
     } else {
         return flecs_query_children_select(op, redo, ctx);
@@ -83312,7 +83316,7 @@ bool flecs_query_tree_and(
     const ecs_query_run_ctx_t *ctx)
 {
     uint64_t written = ctx->written[ctx->op_index];
-    if (written & (1ull << op->src.var)) {
+    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         return flecs_query_tree_with(op, redo, ctx);
     } else {
         return flecs_query_tree_select(op, redo, ctx);
@@ -83326,7 +83330,7 @@ bool flecs_query_tree_and_wildcard(
     bool bulk_return)
 {
     uint64_t written = ctx->written[ctx->op_index];
-    if (written & (1ull << op->src.var)) {
+    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         return flecs_query_tree_with(op, redo, ctx);
     } else {
         if (op->match_flags & EcsTermMatchAny) {
@@ -83344,7 +83348,7 @@ bool flecs_query_tree_pre(
     const ecs_query_run_ctx_t *ctx)
 {
     uint64_t written = ctx->written[ctx->op_index];
-    if (written & (1ull << op->src.var)) {
+    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         return flecs_query_tree_with_pre(op, redo, ctx);
     } else {
         ecs_id_t id = flecs_query_op_get_id(op, ctx);
@@ -83360,7 +83364,8 @@ bool flecs_query_tree_post(
     /* Source should have been written as this instruction can only be inserted
      * after a cache instruction has been evaluated. */
     uint64_t written = ctx->written[ctx->op_index];
-    ecs_assert(written & (1ull << op->src.var), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(flecs_ref_is_written(op, &op->src, EcsQuerySrc, written),
+        ECS_INTERNAL_ERROR, NULL);
     (void)written;
 
     ecs_table_range_t range = flecs_query_get_range(
@@ -83445,7 +83450,8 @@ bool flecs_query_tree_up_post(
     /* Source should have been written as this instruction can only be inserted
      * after a cache instruction has been evaluated. */
     uint64_t written = ctx->written[ctx->op_index];
-    ecs_assert(written & (1ull << op->src.var), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(flecs_ref_is_written(op, &op->src, EcsQuerySrc, written),
+        ECS_INTERNAL_ERROR, NULL);
     (void)written;
 
     ecs_table_range_t range = flecs_query_get_range(

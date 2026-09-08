@@ -368,6 +368,60 @@ void Query_get_first_direct(void) {
     test_assert(first == e1);
 }
 
+void Query_get_first_w_non_this_src(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity("e1");
+    auto e2 = ecs.entity("e2");
+
+    auto q = ecs.query_builder().expr("ChildOf($x, *)").build();
+
+    auto first = q.iter().first();
+    test_assert(first == 0);
+
+    e1.child_of(e2);
+
+    first = q.iter().first();
+    test_assert(first == 0);
+}
+
+void Query_get_first_direct_w_non_this_src(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity("e1");
+    auto e2 = ecs.entity("e2");
+
+    auto q = ecs.query_builder().expr("ChildOf($x, _)").build();
+
+    auto first = q.first();
+    test_assert(first == 0);
+
+    e1.child_of(e2);
+
+    first = q.first();
+    test_assert(first == 0);
+}
+
+void Query_get_first_skips_empty_results(void) {
+    flecs::world ecs;
+
+    struct A {};
+    struct B {};
+
+    auto e1 = ecs.entity().add<A>().add<B>();
+    auto e2 = ecs.entity().add<A>();
+    e2.destruct();
+
+    auto q = ecs.query_builder<A>()
+        .cached()
+        .query_flags(EcsQueryMatchEmptyTables)
+        .build();
+
+    auto first = q.first();
+    test_assert(first != 0);
+    test_assert(first == e1);
+}
+
 void Query_each_w_no_this(void) {
     flecs::world ecs;
 

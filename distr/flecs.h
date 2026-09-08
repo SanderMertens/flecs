@@ -32342,12 +32342,14 @@ flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
 
     /** Return the first matching entity. */
     flecs::entity first() {
-        flecs::entity result;
-        if (next_(&it_) && it_.count) {
-            result = flecs::entity(it_.world, it_.entities[0]);
-            ecs_iter_fini(&it_);
+        while (next_(&it_)) {
+            if (it_.count) {
+                flecs::entity result(it_.world, it_.entities[0]);
+                ecs_iter_fini(&it_);
+                return result;
+            }
         }
-        return result;
+        return flecs::entity();
     }
 
 #ifdef FLECS_CACHED_QUERIES

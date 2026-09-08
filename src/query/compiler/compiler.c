@@ -1041,10 +1041,14 @@ int flecs_query_compile(
     if (term_count == 1 && ecs_vec_count(ctx.ops)) {
         ecs_query_op_t *op = ecs_vec_last_t(ctx.ops, ecs_query_op_t);
         ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (op->kind == EcsQueryTree) {
-            op->kind = EcsQueryChildren;
-        } else if (op->kind == EcsQueryTreeWildcard) {
-            op->kind = EcsQueryChildrenWc;
+        if ((op->flags & (EcsQueryIsVar << EcsQuerySrc)) &&
+            (op->src.var == 0))
+        {
+            if (op->kind == EcsQueryTree) {
+                op->kind = EcsQueryChildren;
+            } else if (op->kind == EcsQueryTreeWildcard) {
+                op->kind = EcsQueryChildrenWc;
+            }
         }
     }
 

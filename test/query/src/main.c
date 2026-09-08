@@ -2759,6 +2759,28 @@ void NonFragmentingChildOf_up_query_cache_stale_table_after_shrink(void);
 void NonFragmentingChildOf_not_up_cached_rematch_after_remove_from_parent(void);
 void NonFragmentingChildOf_not_up_uncached_mixed_parents(void);
 void NonFragmentingChildOf_this_src_childof_var_doesnt_match_root(void);
+void NonFragmentingChildOf_var_src_childof_wildcard_no_match(void);
+void NonFragmentingChildOf_var_src_childof_any_no_match(void);
+void NonFragmentingChildOf_var_src_self_childof_wildcard_no_match(void);
+void NonFragmentingChildOf_var_src_self_childof_any_no_match(void);
+void NonFragmentingChildOf_var_src_up_childof_wildcard_no_match(void);
+void NonFragmentingChildOf_var_src_up_childof_any_no_match(void);
+void NonFragmentingChildOf_var_src_self_up_childof_wildcard_no_match(void);
+void NonFragmentingChildOf_var_src_self_up_childof_any_no_match(void);
+void NonFragmentingChildOf_var_src_childof_wildcard(void);
+void NonFragmentingChildOf_var_src_childof_any(void);
+void NonFragmentingChildOf_var_src_self_childof_wildcard(void);
+void NonFragmentingChildOf_var_src_self_childof_any(void);
+void NonFragmentingChildOf_var_src_up_childof_wildcard(void);
+void NonFragmentingChildOf_var_src_up_childof_any(void);
+void NonFragmentingChildOf_var_src_self_up_childof_wildcard(void);
+void NonFragmentingChildOf_var_src_self_up_childof_any(void);
+void NonFragmentingChildOf_fixed_src_self_up_childof_wildcard(void);
+void NonFragmentingChildOf_fixed_src_self_up_childof_any(void);
+void NonFragmentingChildOf_fixed_src_self_up_childof_wildcard_expr(void);
+void NonFragmentingChildOf_fixed_src_self_up_childof_any_expr(void);
+void NonFragmentingChildOf_var_src_childof_parent_ordered_children(void);
+void NonFragmentingChildOf_var_src_childof_wildcard_ordered_children(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -13751,6 +13773,94 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "this_src_childof_var_doesnt_match_root",
         NonFragmentingChildOf_this_src_childof_var_doesnt_match_root
+    },
+    {
+        "var_src_childof_wildcard_no_match",
+        NonFragmentingChildOf_var_src_childof_wildcard_no_match
+    },
+    {
+        "var_src_childof_any_no_match",
+        NonFragmentingChildOf_var_src_childof_any_no_match
+    },
+    {
+        "var_src_self_childof_wildcard_no_match",
+        NonFragmentingChildOf_var_src_self_childof_wildcard_no_match
+    },
+    {
+        "var_src_self_childof_any_no_match",
+        NonFragmentingChildOf_var_src_self_childof_any_no_match
+    },
+    {
+        "var_src_up_childof_wildcard_no_match",
+        NonFragmentingChildOf_var_src_up_childof_wildcard_no_match
+    },
+    {
+        "var_src_up_childof_any_no_match",
+        NonFragmentingChildOf_var_src_up_childof_any_no_match
+    },
+    {
+        "var_src_self_up_childof_wildcard_no_match",
+        NonFragmentingChildOf_var_src_self_up_childof_wildcard_no_match
+    },
+    {
+        "var_src_self_up_childof_any_no_match",
+        NonFragmentingChildOf_var_src_self_up_childof_any_no_match
+    },
+    {
+        "var_src_childof_wildcard",
+        NonFragmentingChildOf_var_src_childof_wildcard
+    },
+    {
+        "var_src_childof_any",
+        NonFragmentingChildOf_var_src_childof_any
+    },
+    {
+        "var_src_self_childof_wildcard",
+        NonFragmentingChildOf_var_src_self_childof_wildcard
+    },
+    {
+        "var_src_self_childof_any",
+        NonFragmentingChildOf_var_src_self_childof_any
+    },
+    {
+        "var_src_up_childof_wildcard",
+        NonFragmentingChildOf_var_src_up_childof_wildcard
+    },
+    {
+        "var_src_up_childof_any",
+        NonFragmentingChildOf_var_src_up_childof_any
+    },
+    {
+        "var_src_self_up_childof_wildcard",
+        NonFragmentingChildOf_var_src_self_up_childof_wildcard
+    },
+    {
+        "var_src_self_up_childof_any",
+        NonFragmentingChildOf_var_src_self_up_childof_any
+    },
+    {
+        "fixed_src_self_up_childof_wildcard",
+        NonFragmentingChildOf_fixed_src_self_up_childof_wildcard
+    },
+    {
+        "fixed_src_self_up_childof_any",
+        NonFragmentingChildOf_fixed_src_self_up_childof_any
+    },
+    {
+        "fixed_src_self_up_childof_wildcard_expr",
+        NonFragmentingChildOf_fixed_src_self_up_childof_wildcard_expr
+    },
+    {
+        "fixed_src_self_up_childof_any_expr",
+        NonFragmentingChildOf_fixed_src_self_up_childof_any_expr
+    },
+    {
+        "var_src_childof_parent_ordered_children",
+        NonFragmentingChildOf_var_src_childof_parent_ordered_children
+    },
+    {
+        "var_src_childof_wildcard_ordered_children",
+        NonFragmentingChildOf_var_src_childof_wildcard_ordered_children
     }
 };
 
@@ -14571,7 +14681,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        323,
+        345,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

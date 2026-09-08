@@ -800,6 +800,9 @@ void Query_get_first(void);
 void Query_get_count_direct(void);
 void Query_get_is_true_direct(void);
 void Query_get_first_direct(void);
+void Query_get_first_w_non_this_src(void);
+void Query_get_first_direct_w_non_this_src(void);
+void Query_get_first_skips_empty_results(void);
 void Query_each_w_no_this(void);
 void Query_named_query(void);
 void Query_named_scoped_query(void);
@@ -4843,6 +4846,18 @@ bake_test_case Query_testcases[] = {
         Query_get_first_direct
     },
     {
+        "get_first_w_non_this_src",
+        Query_get_first_w_non_this_src
+    },
+    {
+        "get_first_direct_w_non_this_src",
+        Query_get_first_direct_w_non_this_src
+    },
+    {
+        "get_first_skips_empty_results",
+        Query_get_first_skips_empty_results
+    },
+    {
         "each_w_no_this",
         Query_each_w_no_this
     },
@@ -8559,7 +8574,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        165,
+        168,
         Query_testcases
     },
     {
