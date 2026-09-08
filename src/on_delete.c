@@ -569,17 +569,11 @@ static bool flecs_on_delete_clear_entities(
             if (flecs_component_has_non_fragmenting_childof(cr)) {
                 int32_t c, count = ecs_vec_count(&cr->pair->ordered_children);
                 ecs_entity_t *children = ecs_vec_first(&cr->pair->ordered_children);
-                
-                bool is_deferred = ecs_is_deferred(world);
-                if (is_deferred) {
-                    ecs_defer_suspend(world);
-                }
+
                 for (c = count - 1; c >= 0; c --) {
                     ecs_delete(world, children[c]);
                 }
-                if (is_deferred) {
-                    ecs_defer_resume(world);
-                }
+
             }
 
             /* User code (from observers) could have enqueued more ids to delete,
@@ -765,13 +759,14 @@ void flecs_delete_with(
 {
     flecs_journal_begin(world, EcsJournalDeleteWith, id, NULL, NULL);
 
+    bool deferred = ecs_is_deferred(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    if (flecs_defer_on_delete_action(stage, id, EcsDelete, force_delete)) {
+    if (flecs_defer_on_delete_action(stage, deferred, id, EcsDelete, force_delete)) {
         return;
     }
 
     flecs_on_delete(world, id, EcsDelete, false, force_delete);
-    flecs_defer_end(world, stage);
+    flecs_commands_end(world, stage);
 
     flecs_journal_end();
 }
@@ -789,13 +784,14 @@ void ecs_remove_all(
 {
     flecs_journal_begin(world, EcsJournalRemoveAll, id, NULL, NULL);
 
+    bool deferred = ecs_is_deferred(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    if (flecs_defer_on_delete_action(stage, id, EcsRemove, false)) {
+    if (flecs_defer_on_delete_action(stage, deferred, id, EcsRemove, false)) {
         return;
     }
 
     flecs_on_delete(world, id, EcsRemove, false, false);
-    flecs_defer_end(world, stage);
+    flecs_commands_end(world, stage);
 
     flecs_journal_end();
 }

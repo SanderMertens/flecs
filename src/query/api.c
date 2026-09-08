@@ -368,6 +368,9 @@ static ecs_query_t* flecs_query_init(
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
+    bool main_scope = false;
+    flecs_commands_begin(world, stage);
+
     ecs_query_impl_t *result = flecs_bcalloc(&stage->allocators.query_impl);
     flecs_poly_init(result, ecs_query_t);
 
@@ -408,6 +411,10 @@ static ecs_query_t* flecs_query_init(
 
     if (result->pub.cache_kind != EcsQueryCacheNone) {
         flecs_check_exclusive_world_access_write(result->pub.real_world);
+        if (stage != world->stages[0]) {
+            flecs_commands_begin(world, world->stages[0]);
+            main_scope = true;
+        }
     } else {
         flecs_check_exclusive_world_access_read(result->pub.real_world);
     }
@@ -433,10 +440,18 @@ static ecs_query_t* flecs_query_init(
         flecs_poly_modified(world, entity, ecs_query_t);
     }
 
+    if (main_scope) {
+        flecs_commands_end(world, world->stages[0]);
+    }
+    flecs_commands_end(world, stage);
     return &result->pub;
 error:
     result->pub.entity = 0;
     ecs_query_fini(&result->pub);
+    if (main_scope) {
+        flecs_commands_end(world, world->stages[0]);
+    }
+    flecs_commands_end(world, stage);
     return NULL;
 }
 
@@ -449,7 +464,7 @@ ecs_query_t* ecs_query_init(
     ecs_query_t *result = NULL;
     ecs_entity_t entity = const_desc->entity;
     if (entity) {
-        flecs_check_exclusive_world_access_write(world);
+        flecs_check_exclusive_world_access_write(ecs_get_world(world));
         ecs_check(!ecs_has_pair(world, entity, ecs_id(EcsPoly), EcsQuery),
             ECS_INVALID_OPERATION,
             "entity %s already is a query, use ecs_query_update() to modify",
@@ -476,19 +491,11 @@ ecs_query_t* ecs_query_update(
         ECS_INVALID_PARAMETER,
         "ecs_query_desc_t::entity does not match query entity");
 
-    flecs_check_exclusive_world_access_write(world);
+    flecs_check_exclusive_world_access_write(ecs_get_world(world));
 
     /* Remove the existing query if any. */
-    bool deferred = false;
-    if (ecs_is_deferred(world)) {
-        deferred = true;
-        /* Ensures that remove operation doesn't get applied after bind */
-        ecs_defer_suspend(world);
-    }
-    ecs_remove_pair(world, entity, ecs_id(EcsPoly), EcsQuery);
-    if (deferred) {
-        ecs_defer_resume(world);
-    }
+    ecs_remove_pair(ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world)),
+        entity, ecs_id(EcsPoly), EcsQuery);
 
     ecs_query_desc_t desc = *const_desc;
     desc.entity = entity;

@@ -1508,14 +1508,14 @@ static void delete_on_remove(ecs_iter_t *it) {
     Entity *comp = ecs_field(it, Entity, 0);
     test_assert(comp != NULL);
     test_assert(comp->other != 0);
-    ecs_delete(it->world, comp->other);
+    ecs_delete(it->stage, comp->other);
     trigger_count ++;
 }
 
 static void delete_self_on_remove(ecs_iter_t *it) {
     ecs_entity_t e = *(ecs_entity_t*)it->ctx;
     test_int(it->count, 1);
-    ecs_delete(it->world, e);
+    ecs_delete(it->stage, e);
     trigger_count ++;
 }
 
@@ -2508,7 +2508,7 @@ static int delete_target_invoked = 0;
 static void DeleteTarget(ecs_iter_t *it) {
     ecs_id_t pair = ecs_field_id(it, 0);
     test_assert(ecs_id_is_pair(pair));
-    ecs_delete(it->world, ECS_PAIR_SECOND(pair));
+    ecs_delete(it->stage, ECS_PAIR_SECOND(pair));
     delete_target_invoked ++;
 }
 
@@ -2546,7 +2546,7 @@ static void DeleteOther(ecs_iter_t *it) {
     ecs_entity_t e = *ctx;
     test_assert(e != 0);
 
-    ecs_delete(it->world, e);
+    ecs_delete(it->stage, e);
     delete_target_invoked ++;
 }
 
@@ -2588,7 +2588,7 @@ void OnDelete_delete_nested_in_on_remove(void) {
 static void AddRemoved(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 0);
     for (int i = 0; i < it->count; i ++) {
-        ecs_new_w_id(it->world, id); /* create entity with removed id */
+        ecs_new_w_id(it->stage, id); /* create entity with removed id */
     }
 }
 
@@ -2642,9 +2642,9 @@ static ecs_entity_t last_deleted = 0;
 static void TestAlive(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t parent = ecs_get_target(it->world, e, EcsChildOf, 0);
+        ecs_entity_t parent = ecs_get_target(it->stage, e, EcsChildOf, 0);
         if (parent) {
-            test_assert(ecs_is_alive(it->world, parent));
+            test_assert(ecs_is_alive(it->stage, parent));
             test_alive_parent_count ++;
         }
 
@@ -2700,7 +2700,7 @@ static ECS_COMPONENT_DECLARE(Position);
 static int on_remove_velocity = 0;
 static void ecs_on_remove(Velocity)(ecs_iter_t *it) {
     on_remove_velocity ++;
-    test_assert(ecs_is_alive(it->world, ecs_id(Position)));
+    test_assert(ecs_is_alive(it->stage, ecs_id(Position)));
 }
 
 void OnDelete_fini_cleanup_order_entity_after_singleton(void) {
@@ -2970,7 +2970,7 @@ void OnDelete_delete_observed_symmetric_relation(void) {
 
 static void on_remove_delete_with(ecs_iter_t *it) {
     test_int(it->count, 1);
-    ecs_delete_with(it->world, ecs_pair(EcsChildOf, it->entities[0]));
+    ecs_delete_with(it->stage, ecs_pair(EcsChildOf, it->entities[0]));
 }
 
 void OnDelete_nested_delete_with(void) {
@@ -3001,11 +3001,11 @@ void OnDelete_deferred_delete_with_after_create_named(void) {
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Tag);
 
-    ecs_defer_begin(world);
-    ecs_delete_with(world, Tag);
-    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
-    ecs_add(world, e2, Tag);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete_with(stage_1, Tag);
+    ecs_entity_t e2 = ecs_entity(stage_1, { .name = "e2" });
+    ecs_add(stage_1, e2, Tag);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e1));
     test_assert(ecs_is_alive(world, e2));
@@ -3026,11 +3026,11 @@ void OnDelete_deferred_delete_with_childof_after_create_named(void) {
     ecs_entity_t e1 = ecs_entity(world, { .name = "parent.e1" });
     ecs_add(world, e1, Tag);
 
-    ecs_defer_begin(world);
-    ecs_delete_with(world, ecs_childof(parent));
-    ecs_entity_t e2 = ecs_entity(world, { .name = "parent.e2" });
-    ecs_add(world, e2, Tag);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete_with(stage_1, ecs_childof(parent));
+    ecs_entity_t e2 = ecs_entity(stage_1, { .name = "parent.e2" });
+    ecs_add(stage_1, e2, Tag);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e1));
     test_assert(ecs_is_alive(world, e2));

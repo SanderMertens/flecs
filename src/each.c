@@ -41,8 +41,8 @@ ecs_iter_t ecs_each_id(
     flecs_check_exclusive_world_access_write(world);
 
     ecs_iter_t it = {
-        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
-        .world = ECS_CONST_CAST(ecs_world_t*, stage),
+        .world = ECS_CONST_CAST(ecs_world_t*, world),
+        .stage = ECS_CONST_CAST(ecs_world_t*, stage),
         .field_count = 1,
         .next = ecs_each_next
     };
@@ -113,8 +113,8 @@ ecs_iter_t ecs_children_w_rel(
     flecs_check_exclusive_world_access_read(world);
 
     ecs_iter_t it = {
-        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
-        .world = ECS_CONST_CAST(ecs_world_t*, stage),
+        .world = ECS_CONST_CAST(ecs_world_t*, world),
+        .stage = ECS_CONST_CAST(ecs_world_t*, stage),
         .field_count = 1,
         .next = ecs_children_next
     };

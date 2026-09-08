@@ -10,17 +10,17 @@ namespace flecs
 
 /** Get the entity associated with the system currently being run. */
 inline flecs::entity iter::system() const {
-    return flecs::entity(iter_->world, iter_->system);
+    return flecs::entity(iter_->stage, iter_->system);
 }
 
 /** Get the entity associated with the event that triggered the observer. */
 inline flecs::entity iter::event() const {
-    return flecs::entity(iter_->world, iter_->event);
+    return flecs::entity(iter_->stage, iter_->event);
 }
 
 /** Get the event ID (component or pair). */
 inline flecs::id iter::event_id() const {
-    return flecs::id(iter_->world, iter_->event_id);
+    return flecs::id(iter_->stage, iter_->event_id);
 }
 
 /** Get the iterator world. */
@@ -28,50 +28,54 @@ inline flecs::world iter::world() const {
     return flecs::world(iter_->world);
 }
 
+inline flecs::world iter::stage() const {
+    return flecs::world(iter_->stage);
+}
+
 /** Get the entity for a given row. */
 inline flecs::entity iter::entity(size_t row) const {
     ecs_assert(row < static_cast<size_t>(iter_->count),
         ECS_COLUMN_INDEX_OUT_OF_RANGE, nullptr);
-    return flecs::entity(iter_->world, iter_->entities[row]);
+    return flecs::entity(iter_->stage, iter_->entities[row]);
 }
 
 /** Get the source entity for a field. */
 inline flecs::entity iter::src(int8_t index) const {
-    return flecs::entity(iter_->world, ecs_field_src(iter_, index));
+    return flecs::entity(iter_->stage, ecs_field_src(iter_, index));
 }
 
 /** Get the ID for a field. */
 inline flecs::id iter::id(int8_t index) const {
-    return flecs::id(iter_->world, ecs_field_id(iter_, index));
+    return flecs::id(iter_->stage, ecs_field_id(iter_, index));
 }
 
 /** Get the pair ID for a field. */
 inline flecs::id iter::pair(int8_t index) const {
     flecs::id_t id = ecs_field_id(iter_, index);
     ecs_check(ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, nullptr);
-    return flecs::id(iter_->world, id);
+    return flecs::id(iter_->stage, id);
 error:
     return flecs::id();
 }
 
 /** Get the type of the current table. */
 inline flecs::type iter::type() const {
-    return flecs::type(iter_->world, ecs_table_get_type(iter_->table));
+    return flecs::type(iter_->stage, ecs_table_get_type(iter_->table));
 }
 
 /** Get the current table. */
 inline flecs::table iter::table() const {
-    return flecs::table(iter_->real_world, iter_->table);
+    return flecs::table(iter_->world, iter_->table);
 }
 
 /** Get the other table (used for on_add/on_remove observers). */
 inline flecs::table iter::other_table() const {
-    return flecs::table(iter_->real_world, iter_->other_table);
+    return flecs::table(iter_->world, iter_->other_table);
 }
 
 /** Get the table range for the current result. */
 inline flecs::table_range iter::range() const {
-    return flecs::table_range(iter_->real_world, iter_->table,
+    return flecs::table_range(iter_->world, iter_->table,
         iter_->offset, iter_->count);
 }
 
@@ -101,7 +105,7 @@ inline flecs::field<A> iter::field(int8_t index) const {
 /** Get the value of a variable by ID. */
 inline flecs::entity iter::get_var(int var_id) const {
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, nullptr);
-    return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
+    return flecs::entity(iter_->stage, ecs_iter_get_var(iter_, var_id));
 }
 
 /** Get the value of a variable by name.
@@ -112,7 +116,7 @@ inline flecs::entity iter::get_var(const char *name) const {
 
     int var_id = ecs_query_find_var(q, name);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, "%s", name);
-    return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
+    return flecs::entity(iter_->stage, ecs_iter_get_var(iter_, var_id));
 }
 #endif
 
@@ -129,8 +133,8 @@ void iter::targets(int8_t index, const Func& func) {
         ecs_id_t id = table_type->array[i];
         ecs_assert(ECS_IS_PAIR(id), ECS_INVALID_PARAMETER,
             "field does not match a pair");
-        flecs::entity tgt(iter_->world,
-            ecs_pair_second(iter_->real_world, id));
+        flecs::entity tgt(iter_->stage,
+            ecs_pair_second(iter_->world, id));
         func(tgt);
     }
 }

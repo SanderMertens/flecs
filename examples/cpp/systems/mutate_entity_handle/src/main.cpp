@@ -33,9 +33,6 @@ int main(int, char *[]) {
                 // any methods for mutating the entity, which forces the code to
                 // first call mut().
 
-                // The it.world() function can be used to provide the context:
-                //   t.to_delete.mut(it.world()).destruct();
-                // 
                 // The current entity can also be used to provide context. This 
                 // is useful for functions that accept a flecs::entity:
                 //   t.to_delete.mut(it.entity(index)).destruct();

@@ -68,7 +68,7 @@ static void TriggerAdd(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add_id(it->world, it->entities[i], id);
+        ecs_add_id(it->stage, it->entities[i], id);
     }
 }
 
@@ -77,21 +77,21 @@ static void TriggerRemove(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_remove_id(it->world, it->entities[i], id);
+        ecs_remove_id(it->stage, it->entities[i], id);
     }
 }
 
 static void TriggerClear(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_clear(it->world, it->entities[i]);
+        ecs_clear(it->stage, it->entities[i]);
     }
 }
 
 static void TriggerDelete(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_delete(it->world, it->entities[i]);
+        ecs_delete(it->stage, it->entities[i]);
     }
 }
 
@@ -2262,10 +2262,10 @@ void Trigger_remove_in_trigger(void) {
     });
 
     ecs_entity_t e = ecs_new(world);
-    ecs_defer_begin(world);
-    ecs_add_id(world, e, TagA);
-    ecs_add_id(world, e, TagB);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, e, TagA);
+    ecs_add_id(stage_1, e, TagB);
+    ecs_merge(stage_1);
     test_assert(e != 0);
 
     test_assert(!ecs_has_id(world, e, TagB));
@@ -2286,10 +2286,10 @@ void Trigger_clear_in_trigger(void) {
     });
 
     ecs_entity_t e = ecs_new(world);
-    ecs_defer_begin(world);
-    ecs_add_id(world, e, TagA);
-    ecs_add_id(world, e, TagB);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, e, TagA);
+    ecs_add_id(stage_1, e, TagB);
+    ecs_merge(stage_1);
     test_assert(e != 0);
 
     test_assert(!ecs_has_id(world, e, TagA));
@@ -2311,10 +2311,10 @@ void Trigger_delete_in_trigger(void) {
     });
 
     ecs_entity_t e = ecs_new(world);
-    ecs_defer_begin(world);
-    ecs_add_id(world, e, TagA);
-    ecs_add_id(world, e, TagB);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, e, TagA);
+    ecs_add_id(stage_1, e, TagB);
+    ecs_merge(stage_1);
     test_assert(e != 0);
 
     test_assert(!ecs_is_alive(world, e));
@@ -2356,7 +2356,7 @@ void RemoveSelf(ecs_iter_t *it) {
     for (i = 0; i < it->count; i ++) {
         test_assert(s[i].value == it->entities[i]);
         
-        const Self *ptr = ecs_get(it->world, it->entities[i], Self);
+        const Self *ptr = ecs_get(it->stage, it->entities[i], Self);
         test_assert(ptr != NULL);
         test_assert(ptr->value == it->entities[i]);
 
@@ -4147,11 +4147,11 @@ static void CreateTriggers(ecs_iter_t *it) {
 
     create_trigger_invoked ++;
 
-    ctx->first = ecs_new(it->world);
+    ctx->first = ecs_new(it->stage);
 
     int i;
     for (i = 0; i < ctx->count - 1; i ++) {
-        ecs_new(it->world);
+        ecs_new(it->stage);
     }
 
     for (i = 0; i < ctx->count; i ++) {

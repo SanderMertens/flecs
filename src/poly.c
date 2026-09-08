@@ -154,19 +154,12 @@ EcsPoly* flecs_poly_bind_(
     }
 
     /* Never defer creation of a poly object */
-    bool deferred = false;
-    if (ecs_is_deferred(world)) {
-        deferred = true;
-        ecs_defer_suspend(world);
-    }
+    world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
 
     /* If this is a new poly, leave the actual creation up to the caller so they
      * can tell the difference between a create or an update */
     EcsPoly *result = ecs_ensure_pair(world, entity, EcsPoly, tag);
 
-    if (deferred) {
-        ecs_defer_resume(world);
-    }
 
     return result;
 }

@@ -1890,7 +1890,7 @@ void Query_compare_term_id(void) {
     
     q.run([&](flecs::iter& it) {
         while (it.next()) {
-            test_assert(it.id(0) == it.world().id<Tag>());
+            test_assert(it.id(0) == it.stage().id<Tag>());
             test_assert(it.entity(0) == e);
         }
         count ++;
@@ -3066,9 +3066,9 @@ void Query_not_w_write(void) {
     auto e = ecs.entity().add<A>();
 
     int32_t count = 0;
-    ecs.defer([&] {
+    ecs.defer([&](flecs::world& stage_1) {
         q.each([&](flecs::entity e) {
-            e.add<B>();
+            e.mut(stage_1).add<B>();
             count ++;
         });
     });

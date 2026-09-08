@@ -31,40 +31,40 @@ static ecs_ftime_t sys_b_delta_time = 0;
 
 void SysA(ecs_iter_t *it) { 
     ecs_os_ainc(&sys_a_invoked);
-    sys_a_real_world = it->world == it->real_world;
-    sys_a_world_readonly = ecs_stage_is_readonly(it->real_world);
+    sys_a_real_world = it->stage == it->world;
+    sys_a_world_readonly = ecs_stage_is_readonly(it->world);
     sys_a_delta_time = it->delta_time;
 }
 void SysB(ecs_iter_t *it) { 
     test_assert(sys_a_invoked != 0);
     ecs_os_ainc(&sys_b_invoked);
-    sys_b_real_world = it->world == it->real_world;
-    sys_b_world_readonly = ecs_stage_is_readonly(it->real_world);
+    sys_b_real_world = it->stage == it->world;
+    sys_b_world_readonly = ecs_stage_is_readonly(it->world);
     sys_b_delta_time = it->delta_time;
 }
 void SysC(ecs_iter_t *it) { 
     test_assert(sys_b_invoked != 0);
     ecs_os_ainc(&sys_c_invoked);
-    sys_c_real_world = it->world == it->real_world;
-    sys_c_world_readonly = ecs_stage_is_readonly(it->real_world);
+    sys_c_real_world = it->stage == it->world;
+    sys_c_world_readonly = ecs_stage_is_readonly(it->world);
 }
 void SysD(ecs_iter_t *it) { 
     test_assert(sys_c_invoked != 0);
     ecs_os_ainc(&sys_d_invoked);
-    sys_d_real_world = it->world == it->real_world;
-    sys_d_world_readonly = ecs_stage_is_readonly(it->real_world);
+    sys_d_real_world = it->stage == it->world;
+    sys_d_world_readonly = ecs_stage_is_readonly(it->world);
 }
 void SysE(ecs_iter_t *it) { 
     test_assert(sys_d_invoked != 0);
     ecs_os_ainc(&sys_e_invoked);
-    sys_e_real_world = it->world == it->real_world;
-    sys_e_world_readonly = ecs_stage_is_readonly(it->real_world);
+    sys_e_real_world = it->stage == it->world;
+    sys_e_world_readonly = ecs_stage_is_readonly(it->world);
 }
 void SysF(ecs_iter_t *it) { 
     test_assert(sys_d_invoked != 0);
     ecs_os_ainc(&sys_f_invoked);
-    sys_f_real_world = it->world == it->real_world;
-    sys_f_world_readonly = ecs_stage_is_readonly(it->real_world);
+    sys_f_real_world = it->stage == it->world;
+    sys_f_world_readonly = ecs_stage_is_readonly(it->world);
 }
 
 void Pipeline_system_order_same_phase(void) {
@@ -397,7 +397,7 @@ static void SysOut(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], Velocity, {10, 20});
+        ecs_set(it->stage, it->entities[i], Velocity, {10, 20});
     }
 }
 
@@ -422,9 +422,9 @@ static void SysIn(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert( ecs_has(it->world, e, Velocity));
+        test_assert( ecs_has(it->stage, e, Velocity));
 
-        const Velocity *v_ptr = ecs_get(it->world, e, Velocity);
+        const Velocity *v_ptr = ecs_get(it->stage, e, Velocity);
         test_int(v_ptr->x, 10);
         test_int(v_ptr->y, 20);
     }
@@ -440,7 +440,7 @@ static void SysInMain(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert( ecs_has(it->world, e, Velocity));
+        test_assert( ecs_has(it->stage, e, Velocity));
 
         test_int(v[i].x, 10);
         test_int(v[i].y, 20);
@@ -449,7 +449,7 @@ static void SysInMain(ecs_iter_t *it) {
 
 static void SingletonOut(ecs_iter_t *it) {
     sys_out_invoked ++;
-    ecs_singleton_set(it->world, Velocity, {10, 20});
+    ecs_singleton_set(it->stage, Velocity, {10, 20});
 }
 
 static void SingletonIn(ecs_iter_t *it) {
@@ -878,16 +878,16 @@ static void RandomWrite(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], Position, {1, 2});
+        ecs_set(it->stage, it->entities[i], Position, {1, 2});
     }
 }
 
 static void RandomRead(ecs_iter_t *it) {
-    ecs_entity_t ecs_id(Position) = ecs_lookup(it->world, "Position");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(it->stage, "Position");
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        const Position *p = ecs_get(it->world, it->entities[i], Position);
+        const Position *p = ecs_get(it->stage, it->entities[i], Position);
         test_assert(p != NULL);
         test_int(p->x, 1);
         test_int(p->y, 2);
@@ -895,25 +895,25 @@ static void RandomRead(ecs_iter_t *it) {
 }
 
 static void RandomReadWrite(ecs_iter_t *it) {
-    ecs_entity_t ecs_id(Position) = ecs_lookup(it->world, "Position");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(it->stage, "Position");
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        const Position *p = ecs_get(it->world, it->entities[i], Position);
+        const Position *p = ecs_get(it->stage, it->entities[i], Position);
         test_assert(p != NULL);
         test_int(p->x, 1);
         test_int(p->y, 2);
 
-        ecs_set(it->world, it->entities[i], Position, {p->x + 1, p->y + 1});
+        ecs_set(it->stage, it->entities[i], Position, {p->x + 1, p->y + 1});
     }
 }
 
 static void RandomReadAfterRW(ecs_iter_t *it) {
-    ecs_entity_t ecs_id(Position) = ecs_lookup(it->world, "Position");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(it->stage, "Position");
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        const Position *p = ecs_get(it->world, it->entities[i], Position);
+        const Position *p = ecs_get(it->stage, it->entities[i], Position);
         test_assert(p != NULL);
         test_int(p->x, 2);
         test_int(p->y, 3);
@@ -925,8 +925,8 @@ static void RandomRead_Not(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        test_assert(!ecs_has(it->world, it->entities[i], Position));
-        const Position *p = ecs_get(it->world, it->entities[i], Position);
+        test_assert(!ecs_has(it->stage, it->entities[i], Position));
+        const Position *p = ecs_get(it->stage, it->entities[i], Position);
         test_assert(p == NULL);
     }
 }
@@ -1429,11 +1429,11 @@ void Pipeline_mixed_staging(void) {
     test_int(sys_d_invoked, 1);
     test_int(sys_e_invoked, 1);
     test_int(sys_f_invoked, 1);
-    test_int(sys_a_real_world, true);
+    test_int(sys_a_real_world, false);
     test_int(sys_b_real_world, false);
     test_int(sys_c_real_world, false);
-    test_int(sys_d_real_world, true);
-    test_int(sys_e_real_world, true);
+    test_int(sys_d_real_world, false);
+    test_int(sys_e_real_world, false);
     test_int(sys_f_real_world, false);
     test_int(sys_a_world_readonly, false);
     test_int(sys_b_world_readonly, true);
@@ -1449,11 +1449,11 @@ void Pipeline_mixed_staging(void) {
     test_int(sys_d_invoked, 2);
     test_int(sys_e_invoked, 2);
     test_int(sys_f_invoked, 2);
-    test_int(sys_a_real_world, true);
+    test_int(sys_a_real_world, false);
     test_int(sys_b_real_world, false);
     test_int(sys_c_real_world, false);
-    test_int(sys_d_real_world, true);
-    test_int(sys_e_real_world, true);
+    test_int(sys_d_real_world, false);
+    test_int(sys_e_real_world, false);
     test_int(sys_f_real_world, false);
     test_int(sys_a_world_readonly, false);
     test_int(sys_b_world_readonly, true);
@@ -1488,7 +1488,7 @@ static void WritePosition(ecs_iter_t *it) {
     if (*(bool*)it->ctx) {
         ecs_entity_t ecs_id(Position) = ecs_field_id(it, 1);
         for (int i = 0; i < it->count; i ++) {
-            ecs_add(it->world, it->entities[i], Position);
+            ecs_add(it->stage, it->entities[i], Position);
         }
     }
 }
@@ -1744,8 +1744,8 @@ void Pipeline_activate_after_add(void) {
 static ecs_query_t *q_result;
 
 static void CreateQuery(ecs_iter_t *it) {
-    test_assert(it->real_world == it->world);
-    q_result = ecs_query(it->world, { .expr = "Position" });
+    test_assert(it->world != it->stage);
+    q_result = ecs_query(it->stage, { .expr = "Position" });
     ecs_query_fini(q_result);
 }
 
@@ -1791,7 +1791,7 @@ static int match_singleton_invoked = 0;
 static int match_all_invoked = 0;
 
 static void set_singleton(ecs_iter_t *it) {
-    ecs_singleton_add(it->world, TagB);
+    ecs_singleton_add(it->stage, TagB);
     set_singleton_invoked ++;
 }
 
@@ -1970,11 +1970,11 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change(void) {
 
 static void Sys_w_MainWorldIter(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
-    ecs_query_t *f = ecs_query(it->real_world, {
+    ecs_query_t *f = ecs_query(it->world, {
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_iter_t fit = ecs_query_iter(it->real_world, f);
+    ecs_iter_t fit = ecs_query_iter(it->world, f);
     test_bool(true, ecs_query_next(&fit));
     test_int(1, fit.count);
     test_bool(false, ecs_query_next(&fit));
@@ -2014,13 +2014,13 @@ void Pipeline_iter_from_world_in_singlethread_system_multitead_app_tasks(void) {
 
 static int staging_system_invoked = 0;
 static void StagingSystem(ecs_iter_t *it) {
-    test_assert( ecs_stage_is_readonly(it->real_world));
+    test_assert( ecs_stage_is_readonly(it->world));
     staging_system_invoked ++;
 }
 
 static int no_staging_system_invoked = 0;
 static void NoStagingSystem(ecs_iter_t *it) {
-    test_assert( !ecs_stage_is_readonly(it->real_world));
+    test_assert( !ecs_stage_is_readonly(it->world));
     no_staging_system_invoked ++;
 }
 
@@ -2069,16 +2069,15 @@ static int no_staging_create_position_invoked = 0;
 static int no_staging_create_velocity_invoked = 0;
 
 static void NoStagingSystemCreatePosition(ecs_iter_t *it) {
-    ecs_defer_end(it->world);
     
     create_position_e = ecs_new(it->world);
     ecs_set(it->world, create_position_e, Position, {0, 0});
     
-    ecs_query_t *f = ecs_query(it->world, {
+    ecs_query_t *f = ecs_query(it->stage, {
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_iter_t fit = ecs_query_iter(it->world, f);
+    ecs_iter_t fit = ecs_query_iter(it->stage, f);
     test_bool(true, ecs_query_next(&fit));
     test_int(fit.count, 1);
     test_uint(fit.entities[0], create_position_e);
@@ -2086,21 +2085,19 @@ static void NoStagingSystemCreatePosition(ecs_iter_t *it) {
 
     ecs_query_fini(f);
 
-    ecs_defer_begin(it->world);
     no_staging_create_position_invoked ++;
 }
 
 static void NoStagingSystemCreateVelocity(ecs_iter_t *it) {
-    ecs_defer_end(it->world);
     
     create_velocity_e = ecs_new(it->world);
     ecs_set(it->world, create_velocity_e, Velocity, {0, 0});
     
-    ecs_query_t *f = ecs_query(it->world, {
+    ecs_query_t *f = ecs_query(it->stage, {
         .terms = {{ ecs_id(Velocity) }}
     });
 
-    ecs_iter_t fit = ecs_query_iter(it->world, f);
+    ecs_iter_t fit = ecs_query_iter(it->stage, f);
     test_bool(true, ecs_query_next(&fit));
     test_int(fit.count, 1);
     test_uint(fit.entities[0], create_velocity_e);
@@ -2108,7 +2105,6 @@ static void NoStagingSystemCreateVelocity(ecs_iter_t *it) {
 
     ecs_query_fini(f);
 
-    ecs_defer_begin(it->world);
     no_staging_create_velocity_invoked ++;
 }
 
@@ -2357,7 +2353,7 @@ static int add_id_invoked = 0;
 static int foo_system_invoked = 0;
 
 static void AddId(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_id_t id = ecs_field_id(it, 0);
 
     int i;
@@ -2470,7 +2466,7 @@ void Pipeline_pair_wildcard_read_after_staged_write(void) {
 static int add_pair_invoked = 0;
 
 static void AddPair(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_id_t id = ecs_field_id(it, 0);
 
     int i;
@@ -2560,16 +2556,16 @@ static int sys_add_tag_invoked = 0;
 static int sys_no_readonly_invoked = 0;
 
 static void sys_add_tag(ecs_iter_t *it) {
-  ecs_new_w(it->world, TagA);
-  ecs_new_w(it->world, TagB);
+  ecs_new_w(it->stage, TagA);
+  ecs_new_w(it->stage, TagB);
   sys_add_tag_invoked ++;
   test_assert(sys_a_invoked == 0);
 }
 
 static void sys_no_readonly(ecs_iter_t *it) {
     test_assert(sys_a_invoked == 1);
-    test_assert(it->world == it->real_world);
-    test_assert(!ecs_stage_is_readonly(it->real_world));
+    test_assert(it->stage != it->world);
+    test_assert(!ecs_stage_is_readonly(it->world));
     sys_no_readonly_invoked ++;
 }
 
@@ -2707,7 +2703,7 @@ void Pipeline_disable_parent(void) {
 static int no_staging_add_position_invoked = 0;
 
 static void NoReadonlyAddPosition(ecs_iter_t *it) {
-    test_assert(it->world == it->real_world);
+    test_assert(it->stage != it->world);
     no_staging_add_position_invoked ++;
 
     ecs_entity_t e = ecs_new(it->world);
@@ -3031,7 +3027,7 @@ void Pipeline_inactive_middle_system_merge_count(void) {
 
 static void CreateEntity(ecs_iter_t *it) {
     ecs_id_t tag = ecs_field_id(it, 0);
-    ecs_new_w_id(it->world, tag);
+    ecs_new_w_id(it->stage, tag);
 }
 
 void Pipeline_last_no_readonly_system_merge_count(void) {
@@ -3379,9 +3375,7 @@ static ecs_entity_t toggle_entity = 0;
 static int toggle_immediate_system_invoked = 0;
 
 static void ToggleImmediateSystem(ecs_iter_t *it) {
-    ecs_defer_suspend(it->world);
-    ecs_enable_id(it->world, toggle_entity, ToggleTag, false);
-    ecs_defer_resume(it->world);
+    ecs_enable_id(it->stage, toggle_entity, ToggleTag, false);
     toggle_immediate_system_invoked ++;
 }
 
@@ -3450,7 +3444,7 @@ void Pipeline_run_w_0_src_query(void) {
 
 static void AddPosition(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Position);
+        ecs_add(it->stage, it->entities[i], Position);
     }
 }
 
@@ -3458,7 +3452,7 @@ static int check_position_invoked = 0;
 
 static void CheckPosition(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
-        test_assert(ecs_has(it->world, it->entities[i], Position));
+        test_assert(ecs_has(it->stage, it->entities[i], Position));
         check_position_invoked ++;
     }
 }

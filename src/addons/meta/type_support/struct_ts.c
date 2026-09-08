@@ -222,7 +222,8 @@ static int flecs_struct_layout(
     ecs_entity_t struct_type,
     EcsStruct *s,
     int32_t explicit_member,
-    bool member_unchanged);
+    bool member_unchanged,
+    bool deferred);
 
 static int flecs_add_member_to_struct(
     ecs_world_t *world,
@@ -358,7 +359,7 @@ static int flecs_add_member_to_struct(
     bool explicit_offset = m.offset || m.use_offset;
 
     return flecs_struct_layout(
-        world, struct_type, s, explicit_offset ? i : -1, unchanged);
+        world, struct_type, s, explicit_offset ? i : -1, unchanged, false);
 }
 
 static int flecs_struct_layout(
@@ -366,8 +367,10 @@ static int flecs_struct_layout(
     ecs_entity_t struct_type,
     EcsStruct *s,
     int32_t explicit_member,
-    bool member_unchanged)
+    bool member_unchanged,
+    bool deferred)
 {
+    ecs_world_t *stage = deferred ? ecs_get_stage(world, 0) : world;
     ecs_member_t *members = ecs_vec_first_t(&s->members, ecs_member_t);
     int32_t i, count = ecs_vec_count(&s->members);
 
@@ -524,22 +527,22 @@ static int flecs_struct_layout(
         }
     }
 
-    ecs_modified(world, struct_type, EcsStruct);
+    ecs_modified(stage, struct_type, EcsStruct);
 
     /* Do this last as it triggers the update of EcsTypeSerializer */
-    if (flecs_init_type(world, struct_type, EcsStructType, size, alignment)) {
+    if (flecs_init_type(stage, struct_type, EcsStructType, size, alignment)) {
         return -1;
     }
 
     /* If current struct is also a member, assign to itself */
     if (ecs_has(world, struct_type, EcsMember)) {
-        EcsMember *type_mbr = ecs_ensure(world, struct_type, EcsMember);
+        EcsMember *type_mbr = ecs_ensure(stage, struct_type, EcsMember);
         ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         type_mbr->type = struct_type;
         type_mbr->count = 0;
 
-        ecs_modified(world, struct_type, EcsMember);
+        ecs_modified(stage, struct_type, EcsMember);
     }
 
     return 0;
@@ -813,7 +816,7 @@ ecs_entity_t ecs_struct_init(
         ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_vec_init_if_t(&s->members, ecs_member_t);
         if (flecs_struct_inherit(world, type, s)) {
-            if (flecs_struct_layout(world, type, s, -1, false)) {
+            if (flecs_struct_layout(world, type, s, -1, false, false)) {
                 goto error;
             }
         }
@@ -860,10 +863,10 @@ static void flecs_struct_on_add_base(ecs_iter_t *it) {
         }
 
         if (flecs_struct_inherit(world, e, s)) {
-            flecs_struct_layout(world, e, s, -1, false);
+            flecs_struct_layout(world, e, s, -1, false, true);
         }
 
-        ecs_modified(world, e, EcsStruct);
+        ecs_modified(it->stage, e, EcsStruct);
     }
 }
 

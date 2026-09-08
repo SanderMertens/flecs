@@ -47,12 +47,12 @@ static void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
         for (i = 0; i < count; i ++) {
             ecs_entity_t subj = it->entities[i];
             if (event == EcsOnAdd) {
-                if (!ecs_has_id(it->real_world, tgt, ecs_pair(rel, subj))) {
-                    ecs_add_pair(it->world, tgt, rel, subj);
+                if (!ecs_has_id(it->world, tgt, ecs_pair(rel, subj))) {
+                    ecs_add_pair(it->stage, tgt, rel, subj);
                 }
             } else {
-                if (ecs_has_id(it->real_world, tgt, ecs_pair(rel, subj))) {
-                    ecs_remove_pair(it->world, tgt, rel, subj);
+                if (ecs_has_id(it->world, tgt, ecs_pair(rel, subj))) {
+                    ecs_remove_pair(it->stage, tgt, rel, subj);
                 }
             }
         }
@@ -60,7 +60,7 @@ static void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
 }
 
 static void flecs_register_symmetric(ecs_iter_t *it) {
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -81,7 +81,7 @@ static void flecs_register_symmetric(ecs_iter_t *it) {
 #ifdef FLECS_DEBUG
 static void flecs_on_singleton_add_remove(ecs_iter_t *it) {
     ecs_entity_t component = ecs_field_id(it, 0);
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -95,14 +95,14 @@ static void flecs_on_singleton_add_remove(ecs_iter_t *it) {
                 "component '%s' must be added to itself",
                     flecs_errstr(ecs_id_str(world, component)),
                     flecs_errstr_1(ecs_get_path(world, it->entities[i])),
-                    flecs_errstr_2(ecs_get_path(it->world, relationship)));
+                    flecs_errstr_2(ecs_get_path(it->stage, relationship)));
             (void)relationship;
         } else {
             ecs_check(component == e, ECS_CONSTRAINT_VIOLATED,
                 "cannot add singleton component '%s' to entity '%s': singleton"
                 " component must be added to itself",
-                    flecs_errstr(ecs_get_path(it->world, component)),
-                    flecs_errstr_1(ecs_get_path(it->world, it->entities[i])));
+                    flecs_errstr(ecs_get_path(it->stage, component)),
+                    flecs_errstr_1(ecs_get_path(it->stage, it->entities[i])));
         }
 
     error:
@@ -116,7 +116,7 @@ static void flecs_register_singleton(ecs_iter_t *it) {
         it, EcsSingleton, EcsIdSingleton, 0, 0);
 
 #ifdef FLECS_DEBUG
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t component = it->entities[i];

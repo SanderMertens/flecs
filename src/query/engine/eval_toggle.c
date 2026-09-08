@@ -100,7 +100,7 @@ static bool flecs_query_toggle_for_up(
         if ((it->set_fields & field_bit)) {
             ecs_entity_t src = it->sources[i];
             ecs_assert(src != 0, ECS_INTERNAL_ERROR, NULL);
-            match = ecs_is_enabled_id(it->world, src, it->ids[i]);
+            match = ecs_is_enabled_id(it->stage, src, it->ids[i]);
         }
 
         if (field_bit & not_fields) {

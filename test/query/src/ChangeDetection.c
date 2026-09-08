@@ -1782,6 +1782,7 @@ void ChangeDetection_staged_query_w_fixed_inout_field_read(void) {
     ecs_query_fini(q);
     ecs_query_fini(qr);
 
+    ecs_merge(stage);
     ecs_fini(world);
 }
 

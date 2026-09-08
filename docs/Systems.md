@@ -1225,11 +1225,11 @@ world.system::<&Position>().read::<Transform>().each(|p| {
 </div>
 
 ### Immediate systems
-By default systems are ran while the world is in "readonly" mode, where all ECS operations are enqueued as commands. Readonly here means that structural changes, such as changing the components of an entity are deferred. Systems can still write component values while in readonly mode.
+By default systems run while the world is in readonly mode. Pass the iterator’s stage to queue structural changes, such as adding or removing components. Systems can still write existing component values while the world is readonly.
 
 In some cases however, operations need to be immediately visible to a system. A typical example is a system that assigns tasks to resources, like assigning plates to a waiter. A system should only assign plates to a waiter that hasn't been assigned any plates yet, but to know which waiters are free, the operation that assigns a plate to a waiter must be immediately visible.
 
-To accomplish this, systems can be marked with the `immediate` flag, which signals that a system should be ran while the world is not in readonly mode. This causes ECS operations to not get enqueued, and allows the system to directly see the results of operations. There are a few limitations to `immediate` systems:
+To accomplish this, systems can be marked with the `immediate` flag, which signals that a system should be ran while the world is not in readonly mode. Operations passed the iterator’s world execute immediately; operations passed its stage remain queued. There are a few limitations to `immediate` systems:
 
 - `immediate` systems are always single threaded
 - operations on the iterated over entity must still be deferred
@@ -1289,74 +1289,18 @@ world
 </ul>
 </div>
 
-This ensures the world is not in readonly mode when the system is ran. Operations are however still enqueued as commands, which ensures that the system can enqueue commands for the entity that is being iterated over. To prevent commands from being enqueued, a system needs to suspend and resume command enqueueing. This is an extra step, but makes it possible for a system to both enqueue commands for the iterated over entity, as well as do operations that are immediately visible. An example:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
+An immediate system runs while the world is writable. Pass `it->stage` to enqueue changes to entities being iterated, or `it->world` to apply a change immediately. Immediate changes must not move entities into or out of the table being iterated.
 
 ```c
 void AssignPlate(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
-        // ECS operations ran here are visible after running the system
-        ecs_defer_suspend(it->world);
-        // ECS operations ran here are immediately visible
-        ecs_defer_resume(it->world);
-        // ECS operations ran here are visible after running the system
+        ecs_add_pair(it->world, waiter, Plate, it->entities[i]);
+        ecs_add_pair(it->stage, it->entities[i], Waiter, waiter);
     }
 }
 ```
-</li>
-<li><b class="tab-title">C++</b>
 
-```cpp
-.run([](flecs::iter& it) {
-    while (it.next()) {
-        for (auto i : it) {
-            // ECS operations ran here are visible after running the system
-            it.world().defer_suspend();
-            // ECS operations ran here are immediately visible
-            it.world().defer_resume();
-            // ECS operations ran here are visible after running the system
-        }
-    }
-});
-```
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-.Iter((Iter it) =>
-{
-    foreach (int i in it)
-    {
-        // ECS operations ran here are visible after running the system
-        it.World().DeferSuspend();
-        // ECS operations ran here are immediately visible
-        it.World().DeferResume();
-        // ECS operations ran here are visible after running the system
-    }
-});
-```
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-.run(|mut it| {
-    while it.next() {
-        // ECS operations ran here are visible after running the system
-        it.world().defer_suspend();
-        // ECS operations ran here are immediately visible
-        it.world().defer_resume();
-        // ECS operations ran here are visible after running the system
-    }
-});
-```
-</li>
-</ul>
-</div>
-
-Note that `defer_suspend` and `defer_resume` may only be called from within a `immediate` system.
+The C++ equivalents are `it.stage()` and `it.world()`. Entity handles returned by the iterator use its stage; use `entity.mut(it.world())` for an immediate operation.
 
 ### Threading
 Systems in Flecs can be multithreaded. This requires both the system to be created as a multithreaded system, as well as configuring the world to have a number of worker threads. To create worker threads, use the `set_threads` function:

@@ -1897,7 +1897,7 @@ void SystemPeriodic_not_from_entity(void) {
 }
 
 static void TestContext(ecs_iter_t *it) {
-    void *world_ctx = ecs_get_ctx(it->world);
+    void *world_ctx = ecs_get_ctx(it->stage);
     test_assert(world_ctx == it->ctx);
     int32_t *ctx = it->ctx;
     (*ctx) ++;

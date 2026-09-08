@@ -27,10 +27,6 @@ void flecs_invoke_hook(
     ecs_iter_action_t hook,
     void *ptr)
 {
-    int32_t defer = world->stages[0]->defer;
-    if (defer < 0) {
-        world->stages[0]->defer *= -1;
-    }
 
     ecs_iter_t it = { .field_count = 1 };
     it.entities = entities;
@@ -42,8 +38,8 @@ void flecs_invoke_hook(
     const ecs_table_record_t *tr = NULL;
     ecs_entity_t dummy_src = 0;
 
+    it.stage = ecs_get_stage(world, 0);
     it.world = world;
-    it.real_world = world;
     it.table = table;
     it.trs = &tr;
     it.columns = &column;
@@ -62,7 +58,6 @@ void flecs_invoke_hook(
 
     hook(&it);
 
-    world->stages[0]->defer = defer;
 }
 
 void flecs_invoke_replace_hook(
@@ -74,10 +69,6 @@ void flecs_invoke_replace_hook(
     const void *new_ptr,
     const ecs_type_info_t *ti)
 {
-    int32_t defer = world->stages[0]->defer;
-    if (defer < 0) {
-        world->stages[0]->defer *= -1;
-    }
 
     ecs_iter_t it = { .field_count = 2 };
     it.entities = &entity;
@@ -88,8 +79,8 @@ void flecs_invoke_replace_hook(
     ecs_entity_t srcs[] = {0, 0};
     const void *ptrs[] = {old_ptr, new_ptr};
 
+    it.stage = ecs_get_stage(world, 0);
     it.world = world;
-    it.real_world = world;
     it.table = table;
     it.trs = trs;
     it.row_fields = 0;
@@ -108,7 +99,6 @@ void flecs_invoke_replace_hook(
 
     ti->hooks.on_replace(&it);
 
-    world->stages[0]->defer = defer;
 }
 
 static void flecs_on_reparent(

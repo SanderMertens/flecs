@@ -207,7 +207,7 @@ void Run_run_w_interrupt(void) {
 }
 
 static void AddVelocity(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
 
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
@@ -292,6 +292,33 @@ void Run_run_no_match(void) {
 
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Run_run_with_stage(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, AddVelocity, 0, Position, Velocity());
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    for (int32_t worker = 0; worker < 2; worker ++) {
+        ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+        ecs_readonly_begin(world, false);
+        if (worker) {
+            ecs_run_worker(stage, AddVelocity, 0, 1, 0, NULL);
+        } else {
+            ecs_run(stage, AddVelocity, 0, NULL);
+        }
+        test_assert(!ecs_has(world, e, Velocity));
+        ecs_readonly_end(world);
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+        ecs_delete(world, e);
+    }
 
     ecs_fini(world);
 }

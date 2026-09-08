@@ -6872,14 +6872,14 @@ void Template_deferred_updates_batched(void) {
     ecs_entity_t fx = ecs_lookup(world, "f.x");
     test_assert(t && e && f && g && ex && fx);
 
-    ecs_defer_begin(world);
-    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){10, 1});
-    ecs_set_id(world, f, t, sizeof(ReactionAB), &(ReactionAB){20, 2});
-    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){11, 1});
-    ecs_delete(world, g);
-    ecs_set_id(world, g, t, sizeof(ReactionAB), &(ReactionAB){30, 3});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set_id(stage_1, e, t, sizeof(ReactionAB), &(ReactionAB){10, 1});
+    ecs_set_id(stage_1, f, t, sizeof(ReactionAB), &(ReactionAB){20, 2});
+    ecs_set_id(stage_1, e, t, sizeof(ReactionAB), &(ReactionAB){11, 1});
+    ecs_delete(stage_1, g);
+    ecs_set_id(stage_1, g, t, sizeof(ReactionAB), &(ReactionAB){30, 3});
     test_int(on_position_count, 3);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, g));
     test_uint(ecs_lookup(world, "e.x"), ex);
@@ -6891,9 +6891,9 @@ void Template_deferred_updates_batched(void) {
         test_flt(p->x, 20);
     }
 
-    ecs_defer_begin(world);
-    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){12, 1});
-    ecs_defer_end(world);
+    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set_id(stage_2, e, t, sizeof(ReactionAB), &(ReactionAB){12, 1});
+    ecs_merge(stage_2);
     {
         const Position *p = ecs_get(world, ex, Position);
         test_flt(p->x, 12);
@@ -6928,10 +6928,10 @@ void Template_deferred_update_nested_template(void) {
     ecs_entity_t fleaf = ecs_lookup(world, "f.child.leaf");
     test_assert(t && e && f && eleaf && fleaf);
 
-    ecs_defer_begin(world);
-    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){10, 1});
-    ecs_set_id(world, f, t, sizeof(ReactionAB), &(ReactionAB){20, 2});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set_id(stage_1, e, t, sizeof(ReactionAB), &(ReactionAB){10, 1});
+    ecs_set_id(stage_1, f, t, sizeof(ReactionAB), &(ReactionAB){20, 2});
+    ecs_merge(stage_1);
 
     test_uint(ecs_lookup(world, "e.child.leaf"), eleaf);
     test_uint(ecs_lookup(world, "f.child.leaf"), fleaf);
@@ -6965,16 +6965,14 @@ void Template_deferred_update_from_system(void) {
     ecs_entity_t f = ecs_lookup(world, "f");
     test_assert(t && e && f);
 
-    ecs_defer_begin(world);
-    ecs_set_id(world, e, t, sizeof(ReactionAB), &(ReactionAB){5, 1});
-    ecs_defer_begin(world);
-    ecs_set_id(world, f, t, sizeof(ReactionAB), &(ReactionAB){6, 2});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set_id(stage_1, e, t, sizeof(ReactionAB), &(ReactionAB){5, 1});
+    ecs_set_id(stage_1, f, t, sizeof(ReactionAB), &(ReactionAB){6, 2});
     {
-        const Position *p = ecs_get(world, ecs_lookup(world, "e.x"), Position);
+        const Position *p = ecs_get(stage_1, ecs_lookup(stage_1, "e.x"), Position);
         test_flt(p->x, 1);
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     {
         const Position *p = ecs_get(world, ecs_lookup(world, "e.x"), Position);
         test_flt(p->x, 5);

@@ -986,6 +986,7 @@ ecs_misc_memory_t ecs_misc_memory_get(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
     
     ecs_misc_memory_t result = {0};
     
@@ -1033,8 +1034,10 @@ ecs_misc_memory_t ecs_misc_memory_get(
     /* Iterate through all stages to collect command memory usage */
     for (int32_t i = 0; i < stage_count; i++) {
         ecs_stage_t *stage = stages[i];
-        for (int32_t j = 0; j < 2; j++) {
-            ecs_commands_t *cmd = &stage->cmd_stack[j];
+        for (ecs_commands_t *cmd = &stage->cmd_root; cmd; cmd = cmd->next) {
+            if (cmd != &stage->cmd_root) {
+                result.bytes_commands += ECS_SIZEOF(ecs_commands_t);
+            }
             
             /* Calculate queue memory (ecs_vec_t) */
             result.bytes_commands += 

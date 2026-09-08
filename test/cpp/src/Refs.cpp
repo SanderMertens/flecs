@@ -144,6 +144,7 @@ void Refs_from_stage(void) {
     flecs::world world;
     flecs::world stage = world.get_stage(0); // get default stage
     flecs::entity e = stage.entity().set<Position>({10, 20});
+    stage.merge();
     auto ref = e.get_ref<Position>();
     test_int(ref->x, 10);
     test_int(ref->y, 20);

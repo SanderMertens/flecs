@@ -35,7 +35,7 @@ typedef struct {
 } ecs_aggregate_stats_ctx_t;
 
 static void MonitorStats(ecs_iter_t *it) {
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
     ecs_monitor_stats_ctx_t *ctx = it->ctx;
 
     EcsStatsHeader *hdr = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
@@ -60,7 +60,7 @@ static void MonitorStats(ecs_iter_t *it) {
 
     if (ctx->query) {
         /* Query results are stored in a map */
-        qit = ecs_query_iter(it->world, ctx->query);
+        qit = ecs_query_iter(it->stage, ctx->query);
         stats_map = ECS_OFFSET_T(hdr, EcsStatsHeader);
     } else {
         /* No query, so tracking stats for single element */

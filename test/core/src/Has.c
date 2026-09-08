@@ -73,7 +73,7 @@ void TestHas(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        test_assert( ecs_has(it->world, it->entities[i], Position));
+        test_assert( ecs_has(it->stage, it->entities[i], Position));
     }
 }
 

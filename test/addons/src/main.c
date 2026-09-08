@@ -360,9 +360,11 @@ void Run_run_w_param(void);
 void Run_run_no_match(void);
 void Run_run_w_interrupt(void);
 void Run_run_staging(void);
+void Run_run_with_stage(void);
 
 // Testsuite 'MultiThread'
 void MultiThread_setup(void);
+void MultiThread_create_query_from_stage(void);
 void MultiThread_2_thread_1_entity(void);
 void MultiThread_2_thread_2_entity(void);
 void MultiThread_2_thread_5_entity(void);
@@ -1917,10 +1919,18 @@ bake_test_case Run_testcases[] = {
     {
         "run_staging",
         Run_run_staging
+    },
+    {
+        "run_with_stage",
+        Run_run_with_stage
     }
 };
 
 bake_test_case MultiThread_testcases[] = {
+    {
+        "create_query_from_stage",
+        MultiThread_create_query_from_stage
+    },
     {
         "2_thread_1_entity",
         MultiThread_2_thread_1_entity
@@ -2917,14 +2927,14 @@ static bake_test_suite suites[] = {
         "Run",
         Run_setup,
         NULL,
-        5,
+        6,
         Run_testcases
     },
     {
         "MultiThread",
         MultiThread_setup,
         NULL,
-        50,
+        51,
         MultiThread_testcases,
         1,
         MultiThread_params

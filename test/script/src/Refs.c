@@ -743,9 +743,9 @@ void Refs_ref_assigned_to_component(void) {
 }
 
 static void SetMass(ecs_iter_t *it) {
-    ecs_entity_t e = ecs_lookup(it->world, "e");
-    ecs_entity_t mass = ecs_lookup(it->world, "Mass");
-    ecs_set_id(it->world, e, mass, sizeof(float), &(float){ 20 });
+    ecs_entity_t e = ecs_lookup(it->stage, "e");
+    ecs_entity_t mass = ecs_lookup(it->stage, "Mass");
+    ecs_set_id(it->stage, e, mass, sizeof(float), &(float){ 20 });
 }
 
 void Refs_reeval_hierarchy(void) {
@@ -1412,12 +1412,12 @@ void Refs_multiple_refs_in_template_const_dont_reeval_others_deferred(void) {
 
     ecs_set(world, other, Position, {999, 0});
 
-    ecs_defer_begin(world);
-    Mass *mass = ecs_get_mut(world, ecs_id(Mass), Mass);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    Mass *mass = ecs_get_mut(stage_1, ecs_id(Mass), Mass);
     test_assert(mass != NULL);
     mass->value = 20;
-    ecs_modified(world, ecs_id(Mass), Mass);
-    ecs_defer_end(world);
+    ecs_modified(stage_1, ecs_id(Mass), Mass);
+    ecs_merge(stage_1);
 
     test_assert(ecs_is_alive(world, other_instance));
     test_assert(ecs_is_alive(world, other));
@@ -6381,12 +6381,12 @@ void Refs_global_mut_var_declared_in_same_script_modified_deferred(void) {
         test_int(p->x, 10);
     }
 
-    ecs_defer_begin(world);
-    ecs_value_t value = ecs_mut_var_get(world, v);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_value_t value = ecs_mut_var_get(stage_1, v);
     test_assert(value.ptr != NULL);
     *(ecs_f32_t*)value.ptr = 20;
-    ecs_mut_var_modified(world, v);
-    ecs_defer_end(world);
+    ecs_mut_var_modified(stage_1, v);
+    ecs_merge(stage_1);
 
     test_int(*(ecs_f32_t*)ecs_mut_var_get(world, v).ptr, 20);
 
@@ -6400,11 +6400,11 @@ void Refs_global_mut_var_declared_in_same_script_modified_deferred(void) {
 }
 
 static void SetMutVar(ecs_iter_t *it) {
-    ecs_entity_t v = ecs_lookup(it->world, "v");
-    ecs_value_t value = ecs_mut_var_get(it->world, v);
+    ecs_entity_t v = ecs_lookup(it->stage, "v");
+    ecs_value_t value = ecs_mut_var_get(it->stage, v);
     test_assert(value.ptr != NULL);
     *(ecs_f32_t*)value.ptr = 20;
-    ecs_mut_var_modified(it->world, v);
+    ecs_mut_var_modified(it->stage, v);
 }
 
 void Refs_global_mut_var_declared_in_same_script_modified_in_system(void) {

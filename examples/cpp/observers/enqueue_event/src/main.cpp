@@ -31,11 +31,10 @@ int main(int, char *[]) {
     flecs::entity e = ecs.entity("e")
         .set<Position>({10, 20});
 
-    // We can only call enqueue events while the world is deferred mode.
-    ecs.defer_begin();
+    flecs::world stage_1 = ecs.get_stage(0);
 
     // Emit the custom event
-    ecs.event<MyEvent>()
+    stage_1.event<MyEvent>()
         .id<Position>()
         .entity(e)
         .enqueue();
@@ -43,7 +42,7 @@ int main(int, char *[]) {
     std::cout << "Event enqueued!\n";
 
     // Flushes the queue, and invokes the observer
-    ecs.defer_end();
+    stage_1.merge();
 
     // Output
     //  Event enqueued!

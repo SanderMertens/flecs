@@ -1160,9 +1160,9 @@ void StructInheritance_deferred_isa(void) {
         .entity = ecs_entity(world, {.name = "Derived"})
     });
 
-    ecs_defer_begin(world);
-    ecs_add_pair(world, derived, EcsIsA, base);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_pair(stage_1, derived, EcsIsA, base);
+    ecs_merge(stage_1);
 
     meta_test_struct(world, derived, Base2);
     meta_test_member(world, derived, Base2, x, ecs_id(ecs_i32_t), 0);

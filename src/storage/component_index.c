@@ -1101,7 +1101,7 @@ static void flecs_entities_update_childof_depth(
             ecs_table_t *table = r->table;
 
             if (table->flags & EcsTableHasParent) {
-                ecs_add_id(world, tgt, 
+                ecs_add_id(ecs_get_stage(world, 0), tgt,
                     ecs_value_pair(EcsParentDepth, cr->pair->depth));
             }
 

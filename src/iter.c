@@ -20,7 +20,7 @@ void* flecs_iter_calloc(
     ecs_size_t size,
     ecs_size_t align)
 {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_stage_t *stage = flecs_stage_from_world((ecs_world_t**)&world);
     ecs_stack_t *stack = &stage->allocators.iter_stack;
     return flecs_stack_calloc(stack, size, align); 
@@ -82,7 +82,7 @@ void ecs_iter_fini(
 
     ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
 
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     if (!world) {
         return;
     }
@@ -121,7 +121,7 @@ void* ecs_field_w_size(
             ECS_INVALID_PARAMETER, 
             "mismatching size for field %d (expected '%s')", 
             index,
-            flecs_errstr(ecs_id_str(it->world, it->ids[index])));
+            flecs_errstr(ecs_id_str(it->stage, it->ids[index])));
     (void)size;
 
     if (it->ptrs) {
@@ -149,11 +149,11 @@ void* flecs_field_shared(
     }
 
     ecs_entity_t src = it->sources[index];
-    ecs_record_t *r = flecs_entities_get(it->real_world, src);
+    ecs_record_t *r = flecs_entities_get(it->world, src);
     ecs_table_t *table = r->table;
 
     ecs_component_record_t *cr = flecs_components_get(
-        it->real_world, it->ids[index]);
+        it->world, it->ids[index]);
     const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
     int16_t column = tr->column;
 
@@ -174,10 +174,10 @@ static ecs_component_record_t* flecs_field_cr(
             cr = cr_cache[index];
             if (!cr || cr->id != it->ids[index]) {
                 cr = cr_cache[index] = flecs_components_get(
-                    it->real_world, it->ids[index]);
+                    it->world, it->ids[index]);
             }
         } else {
-            cr = flecs_components_get(it->real_world, it->ids[index]);
+            cr = flecs_components_get(it->world, it->ids[index]);
         }
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     } else {
@@ -361,11 +361,11 @@ int32_t ecs_field_column(
 
     ecs_entity_t src = it->sources[index];
     ecs_assert(src != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_record_t *r = flecs_entities_get(it->real_world, src);
+    ecs_record_t *r = flecs_entities_get(it->world, src);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_component_record_t *cr = flecs_components_get(
-        it->real_world, it->ids[index]);
+        it->world, it->ids[index]);
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_table_record_t *tr = flecs_component_get_table(cr, r->table);
     ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -493,7 +493,7 @@ ecs_entity_t ecs_iter_get_var(
             }
         }
     } else {
-        ecs_assert(ecs_is_valid(it->real_world, e), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_is_valid(it->world, e), ECS_INTERNAL_ERROR, NULL);
     }
 
     return e;
@@ -521,7 +521,7 @@ ecs_table_t* ecs_iter_get_var_as_table(
         /* If table is not set, try to get table from entity */
         ecs_entity_t e = var->entity;
         if (e) {
-            ecs_record_t *r = flecs_entities_get(it->real_world, e);
+            ecs_record_t *r = flecs_entities_get(it->world, e);
             if (r) {
                 table = r->table;
                 if (ecs_table_count(table) != 1) {
@@ -570,7 +570,7 @@ ecs_table_range_t ecs_iter_get_var_as_range(
     if (!table) {
         ecs_entity_t e = var->entity;
         if (e) {
-            ecs_record_t *r = flecs_entities_get(it->real_world, e);
+            ecs_record_t *r = flecs_entities_get(it->world, e);
             if (r) {
                 result.table = r->table;
                 result.offset = ECS_RECORD_TO_ROW(r->row);
@@ -682,7 +682,7 @@ void ecs_iter_set_var(
     ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     var->entity = entity;
 
-    ecs_record_t *r = flecs_entities_get(it->real_world, entity);
+    ecs_record_t *r = flecs_entities_get(it->world, entity);
     if (r) {
         var->range.table = r->table;
         var->range.offset = ECS_RECORD_TO_ROW(r->row);
@@ -704,7 +704,7 @@ void ecs_iter_set_var(
     qit->constrained_this = true;
     qit->entity = entity;
 
-    ecs_record_t *r = flecs_entities_get(it->real_world, entity);
+    ecs_record_t *r = flecs_entities_get(it->world, entity);
     if (r) {
         it->table = r->table;
         it->offset = ECS_RECORD_TO_ROW(r->row);

@@ -742,7 +742,7 @@ void New_w_Count_bulk_init_w_alive_entity(void) {
 
 static void hook_w_add(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], Velocity, {1, 2});
+        ecs_set(it->stage, it->entities[i], Velocity, {1, 2});
     }
 }
 

@@ -2331,7 +2331,7 @@ static void flecs_on_set_rest(ecs_iter_t *it) {
             rest[i].port = ECS_REST_DEFAULT_PORT;
         }
 
-        ecs_http_server_t *srv = ecs_rest_server_init(it->real_world,
+        ecs_http_server_t *srv = ecs_rest_server_init(it->world,
             &(ecs_http_server_desc_t){ 
                 .ipaddr = rest[i].ipaddr, 
                 .port = rest[i].port,
@@ -2360,7 +2360,7 @@ static void DequeueRest(ecs_iter_t *it) {
             (double)it->delta_system_time);
     }
 
-    const ecs_world_info_t *wi = ecs_get_world_info(it->world);
+    const ecs_world_info_t *wi = ecs_get_world_info(it->stage);
 
     int32_t i;
     for(i = 0; i < it->count; i ++) {

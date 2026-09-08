@@ -190,6 +190,7 @@ struct ecs_script_impl_t {
     bool entity_index_valid;
     int32_t input_count;
     int32_t visit;
+    uint64_t pending_inputs;
     bool evaluating;
     bool compiled;
     bool lenient;

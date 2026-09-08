@@ -893,7 +893,7 @@ void System_new_from_iter(void) {
             while (it.next()) {
                 for (auto i : it) {
                     it.entity(i).set<Entity>({
-                        it.world().entity().add<Velocity>()
+                        it.stage().entity().add<Velocity>()
                     });
                 }
             }
@@ -1780,7 +1780,7 @@ void System_multithread_system_w_query_each_w_world(void) {
     world.system<Position>()
         .multi_threaded()
         .each([&](flecs::iter& it, size_t, Position& p) {
-            q.iter(it.world()).each([&](Velocity& v) {
+            q.iter(it.stage()).each([&](Velocity& v) {
                 p.x += v.x;
                 p.y += v.y;
             });
@@ -1872,7 +1872,7 @@ void System_multithread_system_w_query_iter_w_world(void) {
     world.system<Position>()
         .multi_threaded()
         .each([&](flecs::iter& it, size_t, Position& p) {
-            q.iter(it.world()).run([&](flecs::iter& it) {
+            q.iter(it.stage()).run([&](flecs::iter& it) {
                 while (it.next()) {
                     auto v = it.field<Velocity>(0);
                     for (auto i : it) {

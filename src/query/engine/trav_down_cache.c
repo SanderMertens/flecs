@@ -292,7 +292,7 @@ ecs_trav_down_t* flecs_query_get_down_cache(
     bool self,
     bool empty)
 {
-    ecs_world_t *world = ctx->it->real_world;
+    ecs_world_t *world = ctx->it->world;
     ecs_assert(cache->dir != EcsTravUp, ECS_INTERNAL_ERROR, NULL);
     cache->dir = EcsTravDown;
 

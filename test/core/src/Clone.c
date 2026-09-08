@@ -549,10 +549,10 @@ void Clone_clone_after_delete_deferred(void) {
     ecs_set(world, src, Position, {10, 20});
     ecs_set(world, src, Velocity, {10, 20});
 
-    ecs_defer_begin(world);
-    ecs_delete(world, src);
-    ecs_entity_t dst = ecs_clone(world, 0, src, true);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, src);
+    ecs_entity_t dst = ecs_clone(stage_1, 0, src, true);
+    ecs_merge(stage_1);
 
     test_assert(dst != 0);
     test_assert(ecs_is_alive(world, dst));

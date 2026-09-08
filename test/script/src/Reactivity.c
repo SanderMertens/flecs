@@ -11,7 +11,7 @@ void Reactivity_setup(void) {
 
 static void reactivity_reentrant_set(ecs_iter_t *it) {
     ecs_entity_t *ctx = it->ctx;
-    ecs_set_id(it->world, ctx[0], ctx[1],
+    ecs_set_id(it->stage, ctx[0], ctx[1],
         sizeof(Mass), &(Mass){40});
 }
 
@@ -3026,7 +3026,7 @@ static void reactivity_delete_script(ecs_iter_t *it) {
         return;
     }
     reactivity_delete_script_target = 0;
-    ecs_delete(it->world, script);
+    ecs_delete(it->stage, script);
 }
 
 void Reactivity_script_deleted_while_evaluating(void) {
@@ -7523,10 +7523,10 @@ static void ReactivitySetFromSystem(ecs_iter_t *it) {
         return;
     }
     reactivity_sys_done = true;
-    ecs_f32_t *ptr = ecs_ensure_id(it->world, reactivity_sys_target,
+    ecs_f32_t *ptr = ecs_ensure_id(it->stage, reactivity_sys_target,
         reactivity_sys_component, sizeof(ecs_f32_t));
     ptr[0] = 30;
-    ecs_modified_id(it->world, reactivity_sys_target,
+    ecs_modified_id(it->stage, reactivity_sys_target,
         reactivity_sys_component);
 }
 
@@ -7536,7 +7536,7 @@ static void ReactivitySetValueFromSystem(ecs_iter_t *it) {
     }
     reactivity_sys_done = true;
     ecs_f32_t value = 30;
-    ecs_set_id(it->world, reactivity_sys_target, reactivity_sys_component,
+    ecs_set_id(it->stage, reactivity_sys_target, reactivity_sys_component,
         sizeof(ecs_f32_t), &value);
 }
 

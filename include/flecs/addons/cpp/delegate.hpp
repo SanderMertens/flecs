@@ -321,7 +321,7 @@ private:
     {
         ecs_assert(iter->entities != nullptr, ECS_INVALID_PARAMETER, 
             "query does not return entities ($this variable is not populated)");
-        func(flecs::entity(iter->world, iter->entities[i]),
+        func(flecs::entity(iter->stage, iter->entities[i]),
             (ColumnType< remove_reference_t<Components> >(iter, comps, i)
                 .get_row())...);
     }
@@ -361,7 +361,7 @@ private:
     static void invoke_unpack(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
-        ECS_TABLE_LOCK(iter->world, iter->table);
+        ECS_TABLE_LOCK(iter->stage, iter->table);
 
         size_t count = static_cast<size_t>(iter->count);
         if (count == 0 && !iter->table) {
@@ -374,7 +374,7 @@ private:
             invoke_callback<ColumnType>(iter, func, i, comps...);
         }
 
-        ECS_TABLE_UNLOCK(iter->world, iter->table);
+        ECS_TABLE_UNLOCK(iter->stage, iter->table);
     }
 
     template <template<typename X, typename = int> class ColumnType, 
@@ -455,9 +455,9 @@ private:
     static flecs::entity invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
-        ECS_TABLE_LOCK(iter->world, iter->table);
+        ECS_TABLE_LOCK(iter->stage, iter->table);
 
-        ecs_world_t *world = iter->world;
+        ecs_world_t *world = iter->stage;
         size_t count = static_cast<size_t>(iter->count);
         flecs::entity result;
 
@@ -471,7 +471,7 @@ private:
             }
         }
 
-        ECS_TABLE_UNLOCK(iter->world, iter->table);
+        ECS_TABLE_UNLOCK(iter->stage, iter->table);
 
         return result;
     }
@@ -499,19 +499,19 @@ private:
         flecs::iter it(iter);
         flecs::entity result;
 
-        ECS_TABLE_LOCK(iter->world, iter->table);
+        ECS_TABLE_LOCK(iter->stage, iter->table);
 
         for (size_t i = 0; i < count; i ++) {
             if (func(it, i, 
                 (ColumnType< remove_reference_t<Components> >(iter, comps, i)
                     .get_row())...))
             {
-                result = flecs::entity(iter->world, iter->entities[i]);
+                result = flecs::entity(iter->stage, iter->entities[i]);
                 break;
             }
         }
 
-        ECS_TABLE_UNLOCK(iter->world, iter->table);
+        ECS_TABLE_UNLOCK(iter->stage, iter->table);
 
         return result;
     }
@@ -536,19 +536,19 @@ private:
         flecs::iter it(iter);
         flecs::entity result;
 
-        ECS_TABLE_LOCK(iter->world, iter->table);
+        ECS_TABLE_LOCK(iter->stage, iter->table);
 
         for (size_t i = 0; i < count; i ++) {
             if (func(
                 (ColumnType< remove_reference_t<Components> >(iter, comps, i)
                     .get_row())...))
             {
-                result = flecs::entity(iter->world, iter->entities[i]);
+                result = flecs::entity(iter->stage, iter->entities[i]);
                 break;
             }
         }
 
-        ECS_TABLE_UNLOCK(iter->world, iter->table);
+        ECS_TABLE_UNLOCK(iter->stage, iter->table);
 
         return result;
     }
@@ -618,7 +618,7 @@ private:
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
-        self->func_(flecs::entity(iter->world, ecs_field_src(iter, 0)));
+        self->func_(flecs::entity(iter->stage, ecs_field_src(iter, 0)));
     }
 
     template <typename F,
@@ -669,7 +669,7 @@ private:
             "entity observer invoked without payload");
 
         Event *data = static_cast<Event*>(iter->param);
-        self->func_(flecs::entity(iter->world, ecs_field_src(iter, 0)), *data);
+        self->func_(flecs::entity(iter->stage, ecs_field_src(iter, 0)), *data);
     }
 
     Func func_;

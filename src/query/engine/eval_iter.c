@@ -11,7 +11,7 @@ static void flecs_query_iter_run_ctx_init(
 {
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
-    ctx->world = it->real_world;
+    ctx->world = it->world;
     ctx->query = impl;
     ctx->it = it;
 #ifdef FLECS_QUERY_PLANS
@@ -450,7 +450,7 @@ bool ecs_query_next(
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
-    ecs_os_linc(&it->real_world->info.queries_ran_total);
+    ecs_os_linc(&it->world->info.queries_ran_total);
     return false;
 
 #ifdef FLECS_CACHED_QUERIES
@@ -500,7 +500,7 @@ bool flecs_query_trivial_cached_next(
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
-    ecs_os_linc(&it->real_world->info.queries_ran_total);
+    ecs_os_linc(&it->world->info.queries_ran_total);
     return false;
 }
 
@@ -636,21 +636,21 @@ ecs_iter_t flecs_query_iter(
     ecs_query_impl_t *impl = flecs_query_impl(q);
 #endif
 
-    it.world = ECS_CONST_CAST(ecs_world_t*, world);
+    it.stage = ECS_CONST_CAST(ecs_world_t*, world);
 
     /* If world passed to iterator is the real world, but query was created from
      * a stage, stage takes precedence. */
-    if (flecs_poly_is(it.world, ecs_world_t) &&
+    if (flecs_poly_is(it.stage, ecs_world_t) &&
         flecs_poly_is(q->world, ecs_stage_t))
     {
-        it.world = ECS_CONST_CAST(ecs_world_t*, q->world);
+        it.stage = ECS_CONST_CAST(ecs_world_t*, q->world);
     }
 
-    it.real_world = q->real_world;
-    ecs_assert(flecs_poly_is(it.real_world, ecs_world_t),
+    it.world = q->real_world;
+    ecs_assert(flecs_poly_is(it.world, ecs_world_t),
         ECS_INTERNAL_ERROR, NULL);
-    ecs_check(!(it.real_world->flags & EcsWorldMultiThreaded) ||
-        it.world != it.real_world, ECS_INVALID_PARAMETER,
+    ecs_check(!(it.world->flags & EcsWorldMultiThreaded) ||
+        it.stage != it.world, ECS_INVALID_PARAMETER,
             "create iterator for stage when world is in multithreaded mode");
 
     it.query = q;
@@ -668,9 +668,9 @@ ecs_iter_t flecs_query_iter(
 #ifdef FLECS_CACHED_QUERIES
     bool fully_cached = (q->flags & EcsQueryIsCacheable) &&
         !(q->flags & EcsQueryCacheWithFilter);
-    flecs_iter_init(it.world, &it, !impl->cache || !fully_cached);
+    flecs_iter_init(it.stage, &it, !impl->cache || !fully_cached);
 #else
-    flecs_iter_init(it.world, &it, true);
+    flecs_iter_init(it.stage, &it, true);
 #endif
 
 #ifdef FLECS_QUERY_PLANS
@@ -849,8 +849,8 @@ int flecs_query_trivial_has_range(
     }
 
     ecs_iter_t lit = {0};
-    lit.world = ECS_CONST_CAST(ecs_world_t*, world);
-    lit.real_world = ECS_CONST_CAST(ecs_world_t*, real_world);
+    lit.stage = ECS_CONST_CAST(ecs_world_t*, world);
+    lit.world = ECS_CONST_CAST(ecs_world_t*, real_world);
     lit.query = q;
     lit.system = q->entity;
     lit.field_count = q->field_count;
@@ -860,7 +860,7 @@ int flecs_query_trivial_has_range(
     lit.offset = offset;
     lit.count = count;
 
-    flecs_iter_init(lit.world, &lit, true);
+    flecs_iter_init(lit.stage, &lit, true);
     lit.flags |= EcsIterIsValid;
 
     ecs_os_memcpy_n(ECS_CONST_CAST(ecs_id_t*, lit.ids), q->ids,

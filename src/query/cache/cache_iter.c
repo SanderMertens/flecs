@@ -26,7 +26,7 @@ void flecs_query_cache_iter_init(
     /* If query uses order_by, iterate the array with ordered table slices. */
     if (cache->order_by_callback) {
         /* Check if query needs sorting. */
-        flecs_query_cache_sort_tables(it->real_world, impl);
+        flecs_query_cache_sort_tables(it->world, impl);
         qit->tables = &cache->table_slices;
         qit->all_tables = qit->tables;
         qit->group = NULL;

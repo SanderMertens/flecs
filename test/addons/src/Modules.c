@@ -97,7 +97,7 @@ void Modules_simple_module(void) {
 static void AddVtoP(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Velocity);
+        ecs_add(it->stage, it->entities[i], Velocity);
     }
 }
 

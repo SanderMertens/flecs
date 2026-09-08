@@ -5,46 +5,31 @@ void Commands_is_deferred(void) {
 
     test_bool(false, ecs_is_deferred(world));
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    test_bool(true, ecs_is_deferred(world));
+    test_bool(true, ecs_is_deferred(stage_1));
 
-    ecs_defer_suspend(world);
 
     test_bool(false, ecs_is_deferred(world));
 
-    ecs_defer_resume(world);
 
-    test_bool(true, ecs_is_deferred(world));
+    test_bool(true, ecs_is_deferred(stage_1));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_bool(false, ecs_is_deferred(world));
 
     ecs_fini(world);
 }
 
-void Commands_is_defer_suspended(void) {
+void Commands_stage_always_deferred(void) {
     ecs_world_t *world = ecs_mini();
-
-    test_bool(false, ecs_is_defer_suspended(world));
-
-    ecs_defer_begin(world);
-
-    test_bool(false, ecs_is_defer_suspended(world));
-
-    ecs_defer_suspend(world);
-
-    test_bool(true, ecs_is_defer_suspended(world));
-
-    ecs_defer_resume(world);
-
-    test_bool(false, ecs_is_defer_suspended(world));
-
-    ecs_defer_end(world);
-
-    test_bool(false, ecs_is_defer_suspended(world));
-
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    test_assert(ecs_is_deferred(stage));
+    test_assert(!ecs_is_deferred(world));
+    ecs_merge(stage);
+    test_assert(ecs_is_deferred(stage));
+    test_assert(!ecs_is_deferred(world));
     ecs_fini(world);
 }
 
@@ -55,20 +40,18 @@ void Commands_defer_new(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
-    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_entity_t e = ecs_new_w(stage_1, Position);
     test_assert(e != 0);
 
-    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
 
-    test_assert(!ecs_has(world, e, Position));    
+    test_assert(!ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
 
@@ -86,25 +69,23 @@ void Commands_defer_bulk_new(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
-    const ecs_entity_t *temp_ids = ecs_bulk_new(world, Position, 3);
+    const ecs_entity_t *temp_ids = ecs_bulk_new(stage_1, Position, 3);
     ecs_entity_t ids[3];
     memcpy(ids, temp_ids, sizeof(ecs_entity_t) * 3);
 
-    test_assert(!ecs_has(world, ids[0], Position));
-    test_assert(!ecs_has(world, ids[1], Position));
-    test_assert(!ecs_has(world, ids[2], Position));   
+    test_assert(!ecs_has(stage_1, ids[0], Position));
+    test_assert(!ecs_has(stage_1, ids[1], Position));
+    test_assert(!ecs_has(stage_1, ids[2], Position));
 
-    ecs_defer_end(world);
 
-    test_assert(!ecs_has(world, ids[0], Position));
-    test_assert(!ecs_has(world, ids[1], Position));
-    test_assert(!ecs_has(world, ids[2], Position));
+    test_assert(!ecs_has(stage_1, ids[0], Position));
+    test_assert(!ecs_has(stage_1, ids[1], Position));
+    test_assert(!ecs_has(stage_1, ids[2], Position));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, ids[0], Position));
     test_assert(ecs_has(world, ids[1], Position));
@@ -128,19 +109,17 @@ void Commands_defer_add(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
-    ecs_add(world, e, Position);
+    ecs_add(stage_1, e, Position);
 
-    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
 
-    test_assert(!ecs_has(world, e, Position));    
+    test_assert(!ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
 
@@ -161,22 +140,20 @@ void Commands_defer_add_two(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
-    ecs_add(world, e, Position);
-    ecs_add(world, e, Velocity);
+    ecs_add(stage_1, e, Position);
+    ecs_add(stage_1, e, Velocity);
 
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
 
-    ecs_defer_end(world);
 
-    test_assert(!ecs_has(world, e, Position));    
-    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -198,19 +175,17 @@ void Commands_defer_remove(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
-    ecs_remove(world, e, Position);
+    ecs_remove(stage_1, e, Position);
 
-    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
 
-    test_assert(ecs_has(world, e, Position));    
+    test_assert(ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, Position));
 
@@ -233,22 +208,20 @@ void Commands_defer_remove_two(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
-    ecs_remove(world, e, Position);
-    ecs_remove(world, e, Velocity);
+    ecs_remove(stage_1, e, Position);
+    ecs_remove(stage_1, e, Velocity);
 
-    test_assert(ecs_has(world, e, Position));
-    test_assert(ecs_has(world, e, Velocity));
+    test_assert(ecs_has(stage_1, e, Position));
+    test_assert(ecs_has(stage_1, e, Velocity));
 
-    ecs_defer_end(world);
 
-    test_assert(ecs_has(world, e, Position));   
-    test_assert(ecs_has(world, e, Velocity)); 
+    test_assert(ecs_has(stage_1, e, Position));
+    test_assert(ecs_has(stage_1, e, Velocity));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
@@ -276,28 +249,26 @@ void Commands_defer_set(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
     /* set will not be deferred if the component exists */
-    ecs_set(world, e, Position, {3, 4});
+    ecs_set(stage_1, e, Position, {3, 4});
 
-    test_assert(ecs_has(world, e, Position));
-    p = ecs_get(world, e, Position);
+    test_assert(ecs_has(stage_1, e, Position));
+    p = ecs_get(stage_1, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
 
-    ecs_defer_end(world);
 
-    test_assert(ecs_has(world, e, Position));  
-    p = ecs_get(world, e, Position);
+    test_assert(ecs_has(stage_1, e, Position));
+    p = ecs_get(stage_1, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);  
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     p = ecs_get(world, e, Position);
@@ -333,17 +304,17 @@ void Commands_defer_set_large(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    Large *l = ecs_ensure(world, e, Large);
+    Large *l = ecs_ensure(stage_1, e, Large);
     test_assert(l != NULL);
     for (int i = 0; i < 2048; i ++) {
         l->largeArray[i] = i;
     }
-    ecs_modified(world, e, Large);
+    ecs_modified(stage_1, e, Large);
 
-    test_assert(!ecs_has(world, e, Large));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Large));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Large));
 
@@ -371,17 +342,17 @@ void Commands_defer_set_large_non_trivial(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    Large *l = ecs_ensure(world, e, Large);
+    Large *l = ecs_ensure(stage_1, e, Large);
     test_assert(l != NULL);
     for (int i = 0; i < 2048; i ++) {
         l->largeArray[i] = i;
     }
-    ecs_modified(world, e, Large);
+    ecs_modified(stage_1, e, Large);
 
-    test_assert(!ecs_has(world, e, Large));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Large));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Large));
 
     {
@@ -408,12 +379,12 @@ void Commands_defer_set_non_trivial(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set(world, e, Velocity, {1, 2});
+    ecs_set(stage_1, e, Velocity, {1, 2});
 
-    test_assert(!ecs_has(world, e, Velocity));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Velocity));
 
@@ -435,19 +406,19 @@ void Commands_defer_batched_set_large(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set(world, e, Position, {10, 20});
-    Large *l = ecs_ensure(world, e, Large);
+    ecs_set(stage_1, e, Position, {10, 20});
+    Large *l = ecs_ensure(stage_1, e, Large);
     test_assert(l != NULL);
     for (int i = 0; i < 2048; i ++) {
         l->largeArray[i] = i;
     }
-    ecs_modified(world, e, Large);
+    ecs_modified(stage_1, e, Large);
 
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Large));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Large));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Large));
@@ -482,19 +453,19 @@ void Commands_defer_batched_set_large_non_trivial(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set(world, e, Position, {10, 20});
-    Large *l = ecs_ensure(world, e, Large);
+    ecs_set(stage_1, e, Position, {10, 20});
+    Large *l = ecs_ensure(stage_1, e, Large);
     test_assert(l != NULL);
     for (int i = 0; i < 2048; i ++) {
         l->largeArray[i] = i;
     }
-    ecs_modified(world, e, Large);
+    ecs_modified(stage_1, e, Large);
 
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Large));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Large));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Large));
@@ -529,14 +500,14 @@ void Commands_defer_batched_set_non_trivial(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set(world, e, Position, {10, 20});
-    ecs_set(world, e, Velocity, {1, 2});
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_set(stage_1, e, Velocity, {1, 2});
 
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -565,19 +536,17 @@ void Commands_defer_delete(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
-    ecs_delete(world, e);
+    ecs_delete(stage_1, e);
 
-    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_is_alive(stage_1, e));
 
-    ecs_defer_end(world);
 
-    test_assert(ecs_is_alive(world, e));  
+    test_assert(ecs_is_alive(stage_1, e));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
 
@@ -596,14 +565,12 @@ void Commands_defer_twice(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_defer_begin(world);
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set(world, e, Velocity, {1, 2});
+    ecs_set(stage_1, e, Velocity, {1, 2});
 
-    ecs_defer_end(world);
-    test_assert(!ecs_has(world, e, Velocity));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Velocity));
 
     const Velocity *v = ecs_get(world, e, Velocity);
@@ -626,14 +593,11 @@ void Commands_defer_twice_in_progress(void) {
     ecs_readonly_begin(world, false);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_defer_begin(stage);
-    ecs_defer_begin(stage);
+    ecs_world_t *stage_1 = ecs_is_deferred(stage) ? stage : ecs_get_stage(stage, 0);
 
-    ecs_set(stage, e, Velocity, {1, 2});
+    ecs_set(stage_1, e, Velocity, {1, 2});
 
-    ecs_defer_end(stage);
-    test_assert(!ecs_has(stage, e, Velocity));
-    ecs_defer_end(stage);
+    test_assert(!ecs_has(stage_1, e, Velocity));
     test_assert(!ecs_has(stage, e, Velocity));
 
     ecs_readonly_end(world);
@@ -652,14 +616,13 @@ void Commands_defer_twice_in_progress(void) {
 static void AddVelocity(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
-    ecs_defer_begin(it->world);
+    ecs_world_t *stage_1 = ecs_is_deferred(it->stage) ? it->stage : ecs_get_stage(it->stage, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Velocity);
+        ecs_add(stage_1, it->entities[i], Velocity);
     }
 
-    ecs_defer_end(it->world);
 }
 
 void Commands_run_w_defer(void) {
@@ -703,14 +666,14 @@ void Commands_defer_ensure(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         Position *p = ecs_get_mut(world, e, Position);
@@ -729,20 +692,20 @@ void Commands_defer_ensure_twice(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        Position *p1 = ecs_ensure(world, e, Position);
+        Position *p1 = ecs_ensure(stage_1, e, Position);
         test_assert(p1 != NULL);
         p1->x = 10;
         p1->y = 20;
 
-        Position *p2 = ecs_ensure(world, e, Position);
+        Position *p2 = ecs_ensure(stage_1, e, Position);
         test_assert(p2 == p1);
         test_int(p2->x, 10);
         test_int(p2->y, 20);
         p2->x = 30;
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -761,22 +724,22 @@ void Commands_defer_ensure_twice_w_remove(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        Position *p1 = ecs_ensure(world, e, Position);
+        Position *p1 = ecs_ensure(stage_1, e, Position);
         test_assert(p1 != NULL);
         p1->x = 10;
         p1->y = 20;
 
-        ecs_remove(world, e, Position);
+        ecs_remove(stage_1, e, Position);
 
-        Position *p2 = ecs_ensure(world, e, Position);
+        Position *p2 = ecs_ensure(stage_1, e, Position);
         test_assert(p2 != NULL);
         test_assert(p2 != p1);
         p2->x = 30;
         p2->y = 40;
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -795,17 +758,17 @@ void Commands_defer_ensure_after_set(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        ecs_set(world, e, Position, {10, 20});
+        ecs_set(stage_1, e, Position, {10, 20});
 
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
         p->x = 30;
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -862,25 +825,25 @@ void Commands_defer_ensure_3x_vector_append(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        VectorComponent *v = ecs_ensure(world, e, VectorComponent);
+        VectorComponent *v = ecs_ensure(stage_1, e, VectorComponent);
         test_assert(v != NULL);
         test_int(ecs_vec_count(&v->values), 0);
         *ecs_vec_append_t(NULL, &v->values, int32_t) = 10;
 
-        v = ecs_ensure(world, e, VectorComponent);
+        v = ecs_ensure(stage_1, e, VectorComponent);
         test_assert(v != NULL);
         test_int(ecs_vec_count(&v->values), 1);
         *ecs_vec_append_t(NULL, &v->values, int32_t) = 20;
 
-        v = ecs_ensure(world, e, VectorComponent);
+        v = ecs_ensure(stage_1, e, VectorComponent);
         test_assert(v != NULL);
         test_int(ecs_vec_count(&v->values), 2);
         *ecs_vec_append_t(NULL, &v->values, int32_t) = 30;
     }
-    test_assert(!ecs_has(world, e, VectorComponent));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, VectorComponent));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, VectorComponent));
     {
@@ -910,24 +873,24 @@ void Commands_defer_ensure_3x_vector_append_existing(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, VectorComponent);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        VectorComponent *v = ecs_ensure(world, e, VectorComponent);
+        VectorComponent *v = ecs_ensure(stage_1, e, VectorComponent);
         test_assert(v != NULL);
         test_int(ecs_vec_count(&v->values), 0);
         *ecs_vec_append_t(NULL, &v->values, int32_t) = 10;
 
-        v = ecs_ensure(world, e, VectorComponent);
+        v = ecs_ensure(stage_1, e, VectorComponent);
         test_assert(v != NULL);
         test_int(ecs_vec_count(&v->values), 1);
         *ecs_vec_append_t(NULL, &v->values, int32_t) = 20;
 
-        v = ecs_ensure(world, e, VectorComponent);
+        v = ecs_ensure(stage_1, e, VectorComponent);
         test_assert(v != NULL);
         test_int(ecs_vec_count(&v->values), 2);
         *ecs_vec_append_t(NULL, &v->values, int32_t) = 30;
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const VectorComponent *v = ecs_get(world, e, VectorComponent);
@@ -957,15 +920,15 @@ void Commands_defer_ensure_no_modify(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    Velocity *v = ecs_ensure(world, e, Velocity);
+    Velocity *v = ecs_ensure(stage_1, e, Velocity);
     v->x = 1;
     v->y = 2;
 
     test_assert(!on_set_invoked);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!on_set_invoked);
 
@@ -987,18 +950,18 @@ void Commands_defer_ensure_w_modify(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    Velocity *v = ecs_ensure(world, e, Velocity);
+    Velocity *v = ecs_ensure(stage_1, e, Velocity);
     v->x = 1;
     v->y = 2;
     test_assert(!on_set_invoked);
 
-    ecs_modified(world, e, Velocity);
+    ecs_modified(stage_1, e, Velocity);
 
     test_assert(!on_set_invoked);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(on_set_invoked);
 
@@ -1019,13 +982,13 @@ void Commands_defer_modify(void) {
 
     ecs_entity_t e = ecs_new_w(world, Velocity);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_modified(world, e, Velocity);
+    ecs_modified(stage_1, e, Velocity);
 
     test_assert(!on_set_invoked);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(on_set_invoked);
 
@@ -1040,11 +1003,11 @@ void Commands_defer_set_pair(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set_pair(world, e, Velocity, ecs_id(Position), {1, 2});
+    ecs_set_pair(stage_1, e, Velocity, ecs_id(Position), {1, 2});
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_pair(world, e, ecs_id(Velocity), ecs_id(Position)));
 
@@ -1060,19 +1023,17 @@ void Commands_defer_clear(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
-    ecs_clear(world, e);
+    ecs_clear(stage_1, e);
 
-    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
 
-    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, Position));
 
@@ -1093,16 +1054,16 @@ void Commands_defer_add_after_delete(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, e);
-    ecs_add(world, e, Velocity);
+    ecs_delete(stage_1, e);
+    ecs_add(stage_1, e, Velocity);
 
-    test_assert(ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    test_assert(ecs_is_alive(stage_1, e));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
 
@@ -1126,16 +1087,16 @@ void Commands_defer_set_after_delete(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, e);
-    ecs_set(world, e, Velocity, {1, 2});
+    ecs_delete(stage_1, e);
+    ecs_set(stage_1, e, Velocity, {1, 2});
 
-    test_assert(ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    test_assert(ecs_is_alive(stage_1, e));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
 
@@ -1159,18 +1120,18 @@ void Commands_defer_ensure_after_delete(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, e);
-    Velocity *v = ecs_ensure(world, e, Velocity);
+    ecs_delete(stage_1, e);
+    Velocity *v = ecs_ensure(stage_1, e, Velocity);
     v->x = 1;
     v->y = 2;
 
-    test_assert(ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    test_assert(ecs_is_alive(stage_1, e));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
 
@@ -1198,18 +1159,18 @@ void Commands_defer_ensure_after_delete_2nd_to_last(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, e);
-    Velocity *v = ecs_ensure(world, e, Velocity);
+    ecs_delete(stage_1, e);
+    Velocity *v = ecs_ensure(stage_1, e, Velocity);
     v->x = 1;
     v->y = 2;
 
-    test_assert(ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    test_assert(ecs_is_alive(stage_1, e));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
 
@@ -1233,13 +1194,13 @@ void Commands_defer_add_child_to_deleted_parent(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
-    ecs_add(world, child, Velocity);
-    ecs_delete(world, parent);
+    ecs_entity_t child = ecs_new_w_pair(stage_1, EcsChildOf, parent);
+    ecs_add(stage_1, child, Velocity);
+    ecs_delete(stage_1, parent);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1262,22 +1223,20 @@ void Commands_recreate_deleted_entity_while_deferred(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
-    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_entity_t e = ecs_new_w(stage_1, Position);
     test_assert(e != 0);
     test_assert(e != e_old);
     test_assert((e & ECS_ENTITY_MASK) == (e_old & ECS_ENTITY_MASK));
 
-    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
 
-    test_assert(!ecs_has(world, e, Position));    
+    test_assert(!ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
 
@@ -1305,12 +1264,12 @@ void Commands_defer_add_to_recycled_id(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t child = ecs_new_w_id(world, id_2);
-    ecs_add(world, child, Velocity);
+    ecs_entity_t child = ecs_new_w_id(stage_1, id_2);
+    ecs_add(stage_1, child, Velocity);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1339,12 +1298,12 @@ void Commands_defer_add_to_recycled_id_w_role(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t child = ecs_new_w_id(world, ECS_TOGGLE | id_2);
-    ecs_add(world, child, Velocity);
+    ecs_entity_t child = ecs_new_w_id(stage_1, ECS_TOGGLE | id_2);
+    ecs_add(stage_1, child, Velocity);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1376,12 +1335,12 @@ void Commands_defer_add_to_recycled_relation(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t child = ecs_new_w_pair(world, rel_2, target);
-    ecs_add(world, child, Velocity);
+    ecs_entity_t child = ecs_new_w_pair(stage_1, rel_2, target);
+    ecs_add(stage_1, child, Velocity);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1412,12 +1371,12 @@ void Commands_defer_add_to_recycled_object(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t child = ecs_new_w_pair(world, Rel, object_2);
-    ecs_add(world, child, Velocity);
+    ecs_entity_t child = ecs_new_w_pair(stage_1, Rel, object_2);
+    ecs_add(stage_1, child, Velocity);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1446,12 +1405,12 @@ void Commands_defer_add_to_recycled_object_childof(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent_2);
-    ecs_add(world, child, Velocity);
+    ecs_entity_t child = ecs_new_w_pair(stage_1, EcsChildOf, parent_2);
+    ecs_add(stage_1, child, Velocity);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1473,13 +1432,13 @@ void Commands_defer_add_to_deleted_id(void) {
     test_assert(id != 0);
     
     ecs_frame_begin(world, 1);
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, id);
-    ecs_entity_t child = ecs_new_w_id(world, id);
-    ecs_add(world, child, Velocity);
+    ecs_delete(stage_1, id);
+    ecs_entity_t child = ecs_new_w_id(stage_1, id);
+    ecs_add(stage_1, child, Velocity);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     ecs_frame_end(world);    
 
     test_assert(!ecs_is_alive(world, id));
@@ -1500,13 +1459,13 @@ void Commands_defer_add_to_deleted_id_w_role(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, id);
-    ecs_entity_t child = ecs_new_w_id(world, ECS_TOGGLE | id);
-    ecs_add(world, child, Velocity);
+    ecs_delete(stage_1, id);
+    ecs_entity_t child = ecs_new_w_id(stage_1, ECS_TOGGLE | id);
+    ecs_add(stage_1, child, Velocity);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1531,13 +1490,13 @@ void Commands_defer_add_to_deleted_relation(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, rel);
-    ecs_entity_t child = ecs_new_w_pair(world, rel, target);
-    ecs_add(world, child, Velocity);
+    ecs_delete(stage_1, rel);
+    ecs_entity_t child = ecs_new_w_pair(stage_1, rel, target);
+    ecs_add(stage_1, child, Velocity);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1561,13 +1520,13 @@ void Commands_defer_add_to_deleted_object(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, target);
-    ecs_entity_t child = ecs_new_w_pair(world, Rel, target);
-    ecs_add(world, child, Velocity);
+    ecs_delete(stage_1, target);
+    ecs_entity_t child = ecs_new_w_pair(stage_1, Rel, target);
+    ecs_add(stage_1, child, Velocity);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1588,13 +1547,13 @@ void Commands_defer_add_to_deleted_object_childof(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, parent);
-    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
-    ecs_add(world, child, Velocity);
+    ecs_delete(stage_1, parent);
+    ecs_entity_t child = ecs_new_w_pair(stage_1, EcsChildOf, parent);
+    ecs_add(stage_1, child, Velocity);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1615,13 +1574,13 @@ void Commands_defer_delete_added_id(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t child = ecs_new_w_id(world, id);
-    ecs_add(world, child, Velocity);
-    ecs_delete(world, id);
+    ecs_entity_t child = ecs_new_w_id(stage_1, id);
+    ecs_add(stage_1, child, Velocity);
+    ecs_delete(stage_1, id);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);
 
@@ -1643,13 +1602,13 @@ void Commands_defer_delete_added_id_w_role(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t child = ecs_new_w_id(world, ECS_TOGGLE | id);
-    ecs_add(world, child, Velocity);
-    ecs_delete(world, id);
+    ecs_entity_t child = ecs_new_w_id(stage_1, ECS_TOGGLE | id);
+    ecs_add(stage_1, child, Velocity);
+    ecs_delete(stage_1, id);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1674,13 +1633,13 @@ void Commands_defer_delete_added_relation(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t child = ecs_new_w_pair(world, rel, target);
-    ecs_add(world, child, Velocity);
-    ecs_delete(world, rel);
+    ecs_entity_t child = ecs_new_w_pair(stage_1, rel, target);
+    ecs_add(stage_1, child, Velocity);
+    ecs_delete(stage_1, rel);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1704,13 +1663,13 @@ void Commands_defer_delete_added_object(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t child = ecs_new_w_pair(world, Rel, target);
-    ecs_add(world, child, Velocity);
-    ecs_delete(world, target);
+    ecs_entity_t child = ecs_new_w_pair(stage_1, Rel, target);
+    ecs_add(stage_1, child, Velocity);
+    ecs_delete(stage_1, target);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1731,13 +1690,13 @@ void Commands_defer_delete_added_object_childof(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
-    ecs_add(world, child, Velocity);
-    ecs_delete(world, parent);
+    ecs_entity_t child = ecs_new_w_pair(stage_1, EcsChildOf, parent);
+    ecs_add(stage_1, child, Velocity);
+    ecs_delete(stage_1, parent);
 
-    ecs_defer_end(world);  
+    ecs_merge(stage_1);
 
     ecs_frame_end(world);    
 
@@ -1756,24 +1715,22 @@ void Commands_discard_add(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
 
-    ecs_delete(world, e);
-    test_assert(ecs_is_alive(world, e));
+    ecs_delete(stage_1, e);
+    test_assert(ecs_is_alive(stage_1, e));
     
-    ecs_add(world, e, Position);
+    ecs_add(stage_1, e, Position);
 
-    test_assert(ecs_is_alive(world, e));
-    test_assert(!ecs_has(world, e, Position));
+    test_assert(ecs_is_alive(stage_1, e));
+    test_assert(!ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
 
-    test_assert(ecs_is_alive(world, e));
-    test_assert(!ecs_has(world, e, Position));    
+    test_assert(ecs_is_alive(stage_1, e));
+    test_assert(!ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
 
@@ -1793,24 +1750,22 @@ void Commands_discard_remove(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
 
-    ecs_delete(world, e);
-    test_assert(ecs_is_alive(world, e));
+    ecs_delete(stage_1, e);
+    test_assert(ecs_is_alive(stage_1, e));
     
-    ecs_remove(world, e, Position);
+    ecs_remove(stage_1, e, Position);
 
-    test_assert(ecs_is_alive(world, e));
-    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_is_alive(stage_1, e));
+    test_assert(ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
 
-    test_assert(ecs_is_alive(world, e));
-    test_assert(ecs_has(world, e, Position));    
+    test_assert(ecs_is_alive(stage_1, e));
+    test_assert(ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
 
@@ -1831,27 +1786,25 @@ void Commands_discard_add_two(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
 
-    ecs_delete(world, e);
-    test_assert(ecs_is_alive(world, e));
+    ecs_delete(stage_1, e);
+    test_assert(ecs_is_alive(stage_1, e));
     
-    ecs_add(world, e, Position);
-    ecs_add(world, e, Velocity);
+    ecs_add(stage_1, e, Position);
+    ecs_add(stage_1, e, Velocity);
 
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    test_assert(ecs_is_alive(world, e));
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    test_assert(ecs_is_alive(stage_1, e));
 
-    ecs_defer_end(world);
 
-    test_assert(!ecs_has(world, e, Position));    
-    test_assert(!ecs_has(world, e, Velocity));
-    test_assert(ecs_is_alive(world, e));
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    test_assert(ecs_is_alive(stage_1, e));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
 
@@ -1874,27 +1827,25 @@ void Commands_discard_remove_two(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
 
-    ecs_delete(world, e);
-    test_assert(ecs_is_alive(world, e));
+    ecs_delete(stage_1, e);
+    test_assert(ecs_is_alive(stage_1, e));
     
-    ecs_remove(world, e, Position);
-    ecs_remove(world, e, Velocity);
+    ecs_remove(stage_1, e, Position);
+    ecs_remove(stage_1, e, Velocity);
 
-    test_assert(ecs_is_alive(world, e));
-    test_assert(ecs_has(world, e, Position));
-    test_assert(ecs_has(world, e, Velocity));
+    test_assert(ecs_is_alive(stage_1, e));
+    test_assert(ecs_has(stage_1, e, Position));
+    test_assert(ecs_has(stage_1, e, Velocity));
 
-    ecs_defer_end(world);
 
-    test_assert(ecs_is_alive(world, e));
-    test_assert(ecs_has(world, e, Position));    
-    test_assert(ecs_has(world, e, Velocity));
+    test_assert(ecs_is_alive(stage_1, e));
+    test_assert(ecs_has(stage_1, e, Position));
+    test_assert(ecs_has(stage_1, e, Velocity));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
 
@@ -1912,28 +1863,26 @@ void Commands_discard_child(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
-    ecs_entity_t e = ecs_new(world);
+    ecs_entity_t e = ecs_new(stage_1);
     test_assert(e != 0);
-    test_assert(!ecs_has(world, e, Position));
-    ecs_delete(world, e);
-    test_assert(ecs_is_alive(world, e));    
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_delete(stage_1, e);
+    test_assert(ecs_is_alive(stage_1, e));
 
-    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, e);
+    ecs_entity_t child = ecs_new_w_pair(stage_1, EcsChildOf, e);
     test_assert(child != 0);
-    test_assert(!ecs_has_pair(world, child, EcsChildOf, e));
+    test_assert(!ecs_has_pair(stage_1, child, EcsChildOf, e));
 
-    ecs_defer_end(world);
 
-    test_assert(ecs_is_alive(world, e));
-    test_assert(ecs_is_alive(world, child));
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has_pair(world, child, EcsChildOf, e));
+    test_assert(ecs_is_alive(stage_1, e));
+    test_assert(ecs_is_alive(stage_1, child));
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has_pair(stage_1, child, EcsChildOf, e));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
     test_assert(!ecs_is_alive(world, child));
@@ -1953,28 +1902,26 @@ void Commands_discard_child_w_add(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
     
-    ecs_entity_t e = ecs_new(world);
+    ecs_entity_t e = ecs_new(stage_1);
     test_assert(e != 0);
-    test_assert(!ecs_has(world, e, Position));
-    ecs_delete(world, e);
-    test_assert(ecs_is_alive(world, e));    
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_delete(stage_1, e);
+    test_assert(ecs_is_alive(stage_1, e));
 
-    ecs_entity_t child = ecs_new(world);
+    ecs_entity_t child = ecs_new(stage_1);
     test_assert(child != 0);
 
-    ecs_add_pair(world, child, EcsChildOf, e);
-    test_assert(!ecs_has_pair(world, child, EcsChildOf, e));
+    ecs_add_pair(stage_1, child, EcsChildOf, e);
+    test_assert(!ecs_has_pair(stage_1, child, EcsChildOf, e));
 
-    ecs_defer_end(world);
 
-    test_assert(ecs_is_alive(world, e));
-    test_assert(ecs_is_alive(world, child));
+    test_assert(ecs_is_alive(stage_1, e));
+    test_assert(ecs_is_alive(stage_1, child));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
     test_assert(!ecs_is_alive(world, child));
@@ -1987,17 +1934,19 @@ void Commands_discard_child_w_add(void) {
     ecs_fini(world);
 }
 
-void Commands_defer_return_value(void) {
+void Commands_world_operations_with_pending_stage(void) {
     ecs_world_t *world = ecs_mini();
-
-    test_bool(ecs_defer_begin(world), true);
-
-    test_bool(ecs_defer_begin(world), false);
-
-    test_bool(ecs_defer_end(world), false);
-
-    test_bool(ecs_defer_end(world), true);
-
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ECS_TAG(world, Queued);
+    ECS_TAG(world, Immediate);
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(stage, e, Queued);
+    ecs_add(world, e, Immediate);
+    test_assert(!ecs_has(world, e, Queued));
+    test_assert(ecs_has(world, e, Immediate));
+    ecs_merge(stage);
+    test_assert(ecs_has(world, e, Queued));
+    test_assert(ecs_has(world, e, Immediate));
     ecs_fini(world);
 }
 
@@ -2009,14 +1958,14 @@ void Commands_defer_ensure_pair(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    Position *p = ecs_ensure_pair(world, e, Position, Pair);
+    Position *p = ecs_ensure_pair(stage_1, e, Position, Pair);
     test_assert(p != NULL);
     p->x = 10;
     p->y = 20;
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     const Position *pc = ecs_get_pair(world, e, Position, Pair);
     test_assert(pc != NULL);
@@ -2164,9 +2113,9 @@ void Commands_async_stage_readonly(void) {
 }
 
 static void RegisterComponent(ecs_iter_t *it) {
-    ecs_entity_t ecs_id(Position) = ecs_component_init(it->world, 
+    ecs_entity_t ecs_id(Position) = ecs_component_init(it->stage,
         &(ecs_component_desc_t){
-            .entity = ecs_entity(it->world, {.name = "Position"}),
+            .entity = ecs_entity(it->stage, {.name = "Position"}),
             .type.size = ECS_SIZEOF(Position),
             .type.alignment = ECS_ALIGNOF(Position)
         });    
@@ -2244,24 +2193,24 @@ void Commands_register_component_while_deferred(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_entity_t canary = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_add_id(world, canary, Tag);
+    ecs_add_id(stage_1, canary, Tag);
 
-    ecs_entity_t ecs_id(Position) = ecs_component_init(world, 
+    ecs_entity_t ecs_id(Position) = ecs_component_init(stage_1,
         &(ecs_component_desc_t){
-            .entity = ecs_entity(world, {.name = "Position"}),
+            .entity = ecs_entity(stage_1, {.name = "Position"}),
             .type.size = ECS_SIZEOF(Position),
             .type.alignment = ECS_ALIGNOF(Position)
         });
 
     test_assert(ecs_id(Position) != 0);
 
-    ecs_set(world, e, Position, {10, 20});
-    test_assert(!ecs_has_id(world, e, ecs_id(Position)));
-    test_assert(!ecs_has_id(world, canary, Tag));
+    ecs_set(stage_1, e, Position, {10, 20});
+    test_assert(!ecs_has_id(stage_1, e, ecs_id(Position)));
+    test_assert(!ecs_has_id(stage_1, canary, Tag));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     ecs_fini(world);
 }
@@ -2271,10 +2220,10 @@ void Commands_defer_enable(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_enable(world, e, false);
-    test_assert(!ecs_has_id(world, e, EcsDisabled));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_enable(stage_1, e, false);
+    test_assert(!ecs_has_id(stage_1, e, EcsDisabled));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_id(world, e, EcsDisabled));
 
@@ -2286,10 +2235,10 @@ void Commands_defer_disable(void) {
 
     ecs_entity_t e = ecs_new_w_id(world, EcsDisabled);
 
-    ecs_defer_begin(world);
-    ecs_enable(world, e, true);
-    test_assert(ecs_has_id(world, e, EcsDisabled));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_enable(stage_1, e, true);
+    test_assert(ecs_has_id(stage_1, e, EcsDisabled));
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has_id(world, e, EcsDisabled));
 
@@ -2303,10 +2252,10 @@ void Commands_defer_enable_from_stage(void) {
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_enable(stage, e, false);
-    test_assert(!ecs_has_id(world, e, EcsDisabled));
-    ecs_defer_end(world);
+    test_assert(!ecs_has_id(stage_1, e, EcsDisabled));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_id(world, e, EcsDisabled));
 
@@ -2321,10 +2270,10 @@ void Commands_defer_toggle(void) {
 
     ecs_entity_t e = ecs_new_w(world, Foo);
 
-    ecs_defer_begin(world);
-    ecs_enable_id(world, e, Foo, false);
-    test_assert(ecs_is_enabled_id(world, e, Foo));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_enable_id(stage_1, e, Foo, false);
+    test_assert(ecs_is_enabled_id(stage_1, e, Foo));
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_enabled_id(world, e, Foo));
 
@@ -2341,10 +2290,10 @@ void Commands_defer_toggle_from_stage(void) {
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_enable_id(stage, e, Foo, false);
     test_assert(ecs_is_enabled_id(stage, e, Foo));
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_enabled_id(world, e, Foo));
 
@@ -2362,12 +2311,12 @@ void Commands_defer_delete_with(void) {
     ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add(world, e_1, TagB);
 
-    ecs_defer_begin(world);
-    ecs_delete_with(world, TagA);
-    test_assert(ecs_is_alive(world, e_1));
-    test_assert(ecs_is_alive(world, e_2));
-    test_assert(ecs_is_alive(world, e_3));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete_with(stage_1, TagA);
+    test_assert(ecs_is_alive(stage_1, e_1));
+    test_assert(ecs_is_alive(stage_1, e_2));
+    test_assert(ecs_is_alive(stage_1, e_3));
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e_1));
     test_assert(!ecs_is_alive(world, e_2));
@@ -2387,12 +2336,12 @@ void Commands_defer_remove_all(void) {
     ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add(world, e_1, TagB);
 
-    ecs_defer_begin(world);
-    ecs_remove_all(world, TagA);
-    test_assert(ecs_is_alive(world, e_1));
-    test_assert(ecs_is_alive(world, e_2));
-    test_assert(ecs_is_alive(world, e_3));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove_all(stage_1, TagA);
+    test_assert(ecs_is_alive(stage_1, e_1));
+    test_assert(ecs_is_alive(stage_1, e_2));
+    test_assert(ecs_is_alive(stage_1, e_3));
+    ecs_merge(stage_1);
 
     test_assert(ecs_is_alive(world, e_1));
     test_assert(ecs_is_alive(world, e_2));
@@ -2424,13 +2373,13 @@ void Commands_deferred_modified_after_remove(void) {
     test_int(on_set_invoked, 1);
     on_set_invoked = 0;
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_remove(world, e, Position);
-    test_assert(ecs_has(world, e, Position));
+    ecs_remove(stage_1, e, Position);
+    test_assert(ecs_has(stage_1, e, Position));
 
-    ecs_modified(world, e, Position);
-    ecs_defer_end(world);
+    ecs_modified(stage_1, e, Position);
+    ecs_merge(stage_1);
 
     test_int(on_set_invoked, 0);
 
@@ -2447,7 +2396,7 @@ static int update_counter_invoked = 0;
 static int remove_counter_invoked = 0;
 
 static void update_counter(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -2577,20 +2526,18 @@ void Commands_defer_suspend_resume(void) {
 
     ecs_entity_t e = ecs_new(world);
     
-    ecs_defer_begin(world);
-    ecs_add(world, e, TagA);
-    test_assert(!ecs_has(world, e, TagA));
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, TagA);
+    test_assert(!ecs_has(stage_1, e, TagA));
 
-    ecs_defer_suspend(world);
     ecs_add(world, e, TagB);
     test_assert(!ecs_has(world, e, TagA));
     test_assert(ecs_has(world, e, TagB));
-    ecs_defer_resume(world);
 
-    test_assert(!ecs_has(world, e, TagA));
-    test_assert(ecs_has(world, e, TagB));
+    test_assert(!ecs_has(stage_1, e, TagA));
+    test_assert(ecs_has(stage_1, e, TagB));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, TagA));
     test_assert(ecs_has(world, e, TagB));
@@ -2614,7 +2561,7 @@ void Commands_create_observer_while_deferred(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     Probe ctx = {0};
     ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ .id = TagA }},
@@ -2622,7 +2569,7 @@ void Commands_create_observer_while_deferred(void) {
         .callback = System,
         .ctx = &ctx
     });
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_assert(observer != 0);
     test_int(ctx.invoked, 0);
 
@@ -2637,11 +2584,11 @@ void Commands_create_query_while_deferred(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_defer_begin(world);
-    ecs_query_t *query = ecs_query(world, {
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_query_t *query = ecs_query(stage_1, {
         .terms = {{ .id = TagA }}
     });
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_assert(query != 0);
 
     ecs_entity_t e = ecs_new_w(world, TagA);
@@ -2662,7 +2609,7 @@ void Commands_update_observer_while_deferred(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     Probe ctx = {0};
     ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ .id = TagA }},
@@ -2670,7 +2617,7 @@ void Commands_update_observer_while_deferred(void) {
         .callback = System,
         .ctx = &ctx
     });
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_assert(observer != 0);
     test_int(ctx.invoked, 0);
 
@@ -2679,11 +2626,11 @@ void Commands_update_observer_while_deferred(void) {
 
     test_int(system_2_invoked, 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_observer_update(world, observer, &(ecs_observer_desc_t){
         .callback = System2
     });
-    ecs_defer_end(world);
+    ecs_merge(stage_2);
 
     ecs_new_w(world, TagA);
     test_int(ctx.invoked, 2);
@@ -2703,14 +2650,14 @@ void Commands_defer_set_large_component(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    LargeComponent *ptr = ecs_ensure(world, e, LargeComponent);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    LargeComponent *ptr = ecs_ensure(stage_1, e, LargeComponent);
     test_assert(ptr != NULL);
     for (int i = 0; i < 8096; i ++) {
         ptr->arr[i] = i;
     }
-    test_assert(!ecs_has(world, e, LargeComponent));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, LargeComponent));
+    ecs_merge(stage_1);
 
     ptr = ecs_ensure(world, e, LargeComponent);
     test_assert(ptr != NULL);
@@ -2724,8 +2671,8 @@ void Commands_defer_set_large_component(void) {
 static ECS_COMPONENT_DECLARE(Position);
 
 static void CreatePosition(ecs_iter_t *it) {
-    ecs_entity_t e = ecs_new(it->world);
-    ecs_set(it->world, e, Position, {999, 1000});
+    ecs_entity_t e = ecs_new(it->stage);
+    ecs_set(it->stage, e, Position, {999, 1000});
 }
 
 void Commands_defer_while_suspend_readonly(void) {
@@ -2749,7 +2696,7 @@ void Commands_defer_while_suspend_readonly(void) {
      * after they have been registered */
     ECS_COMPONENT(s, Velocity);
 
-    ecs_entity_t e = ecs_insert(world, 
+    ecs_entity_t e = ecs_insert(s,
         ecs_value(Position, {10, 20}),
         ecs_value(Velocity, {1, 2}));
     test_assert(!ecs_has(s, e, Position));
@@ -2799,7 +2746,7 @@ void Commands_defer_while_suspend_readonly_w_existing_commands(void) {
      * after they have been registered */
     ECS_COMPONENT(s, Velocity);
 
-    ecs_entity_t e2 = ecs_insert(world,
+    ecs_entity_t e2 = ecs_insert(s,
         ecs_value(Position, {20, 30}),
         ecs_value(Velocity, {1, 2}));
     test_assert(!ecs_has(s, e2, Position));
@@ -2838,12 +2785,12 @@ void Commands_defer_remove_after_set(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    test_assert(!ecs_has(world, e, Position));
-    ecs_remove(world, e, Position);
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_remove(stage_1, e, Position);
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, Position));
 
@@ -2864,12 +2811,12 @@ void Commands_defer_remove_after_set_w_observer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    test_assert(!ecs_has(world, e, Position));
-    ecs_remove(world, e, Position);
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_remove(stage_1, e, Position);
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
 
     test_int(position_observer_invoked, 0);
     test_assert(!ecs_has(world, e, Position));
@@ -2888,10 +2835,10 @@ void Commands_defer_override_after_remove(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_defer_begin(world);
-    ecs_remove(world, inst, Position);
-    ecs_add(world, inst, Position);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, inst, Position);
+    ecs_add(stage_1, inst, Position);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, inst, Position);
     test_assert(p != NULL);
@@ -2915,10 +2862,10 @@ void Commands_defer_override_after_remove_3_ops(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_defer_begin(world);
-    ecs_remove(world, inst, Position);
-    ecs_add(world, inst, Position);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, inst, Position);
+    ecs_add(stage_1, inst, Position);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, inst, Position);
     test_assert(p != NULL);
@@ -2949,13 +2896,13 @@ void Commands_defer_override_after_remove_63_commands(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_defer_begin(world);
-    ecs_remove(world, inst, Position);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, inst, Position);
     for (int i = 0; i < 63; i ++) {
-        ecs_add_id(world, inst, components[i]);
+        ecs_add_id(stage_1, inst, components[i]);
     }
-    ecs_add(world, inst, Position);
-    ecs_defer_end(world);
+    ecs_add(stage_1, inst, Position);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, inst, Position);
     test_assert(p != NULL);
@@ -2986,13 +2933,13 @@ void Commands_defer_override_after_remove_64_commands(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_defer_begin(world);
-    ecs_remove(world, inst, Position);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, inst, Position);
     for (int i = 0; i < 64; i ++) {
-        ecs_add_id(world, inst, components[i]);
+        ecs_add_id(stage_1, inst, components[i]);
     }
-    ecs_add(world, inst, Position);
-    ecs_defer_end(world);
+    ecs_add(stage_1, inst, Position);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, inst, Position);
     test_assert(p != NULL);
@@ -3023,13 +2970,13 @@ void Commands_defer_override_after_remove_65_commands(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_defer_begin(world);
-    ecs_remove(world, inst, Position);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, inst, Position);
     for (int i = 0; i < 65; i ++) {
-        ecs_add_id(world, inst, components[i]);
+        ecs_add_id(stage_1, inst, components[i]);
     }
-    ecs_add(world, inst, Position);
-    ecs_defer_end(world);
+    ecs_add(stage_1, inst, Position);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, inst, Position);
     test_assert(p != NULL);
@@ -3060,13 +3007,13 @@ void Commands_defer_override_after_remove_96_commands(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_defer_begin(world);
-    ecs_remove(world, inst, Position);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, inst, Position);
     for (int i = 0; i < 96; i ++) {
-        ecs_add_id(world, inst, components[i]);
+        ecs_add_id(stage_1, inst, components[i]);
     }
-    ecs_add(world, inst, Position);
-    ecs_defer_end(world);
+    ecs_add(stage_1, inst, Position);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, inst, Position);
     test_assert(p != NULL);
@@ -3097,13 +3044,13 @@ void Commands_defer_override_after_remove_255_commands(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_defer_begin(world);
-    ecs_remove(world, inst, Position);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, inst, Position);
     for (int i = 0; i < 255; i ++) {
-        ecs_add_id(world, inst, components[i]);
+        ecs_add_id(stage_1, inst, components[i]);
     }
-    ecs_add(world, inst, Position);
-    ecs_defer_end(world);
+    ecs_add(stage_1, inst, Position);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, inst, Position);
     test_assert(p != NULL);
@@ -3126,10 +3073,10 @@ void Commands_flush_stage_to_deferred_world(void) {
     ecs_add(async, e, Tag);
     test_assert(!ecs_has(world, e, Tag));
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_merge(async);
-    test_assert(!ecs_has(world, e, Tag));
-    ecs_defer_end(world);
+    test_assert(ecs_has(stage_1, e, Tag));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Tag));
 
     ecs_stage_free(async);
@@ -3139,7 +3086,7 @@ void Commands_flush_stage_to_deferred_world(void) {
 
 static void AddPosition(ecs_iter_t *it) {
     test_int(it->count, 1);
-    ecs_set(it->world, it->entities[0], Position, {10, 20});
+    ecs_set(it->stage, it->entities[0], Position, {10, 20});
 }
 
 void Commands_add_in_observer_during_merge(void) {
@@ -3152,11 +3099,11 @@ void Commands_add_in_observer_during_merge(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, TagA);
-    test_assert(!ecs_has(world, e, TagA));
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, TagA);
+    test_assert(!ecs_has(stage_1, e, TagA));
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, TagA));
     test_assert(ecs_has(world, e, Position));
@@ -3180,13 +3127,13 @@ void Commands_add_in_observer_during_merge_2_commands(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, TagA);
-    ecs_add(world, e, TagB);
-    test_assert(!ecs_has(world, e, TagA));
-    test_assert(!ecs_has(world, e, TagB));
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, TagA);
+    ecs_add(stage_1, e, TagB);
+    test_assert(!ecs_has(stage_1, e, TagA));
+    test_assert(!ecs_has(stage_1, e, TagB));
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, TagA));
     test_assert(ecs_has(world, e, TagB));
@@ -3205,8 +3152,8 @@ static ECS_DECLARE(TagC);
 
 static void AddTwoTags(ecs_iter_t *it) {
     test_int(it->count, 1);
-    ecs_add(it->world, it->entities[0], TagB);
-    ecs_add(it->world, it->entities[0], TagC);
+    ecs_add(it->stage, it->entities[0], TagB);
+    ecs_add(it->stage, it->entities[0], TagC);
 }
 
 void Commands_add_2_in_observer_while_on_remove_for_delete(void) {
@@ -3276,9 +3223,9 @@ void Commands_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id(
     ecs_delete(world, ecs_new(world));
 
     ecs_entity_t e = ecs_new_w(world, TagA);
-    ecs_defer_begin(world);
-    ecs_delete(world, e);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, e);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
 
@@ -3293,10 +3240,10 @@ void Commands_defer_add_after_clear(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_clear(world, e);
-    ecs_add(world, e, Position);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_clear(stage_1, e);
+    ecs_add(stage_1, e, Position);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
 
@@ -3311,14 +3258,14 @@ void Commands_defer_cmd_after_modified(void) {
     ecs_entity_t e1 = ecs_new(world);
     ecs_entity_t e2 = ecs_new(world);
     
-    ecs_defer_begin(world);
-    ecs_set(world, e1, Position, {10, 20});
-    ecs_modified(world, e2, Position);
-    ecs_set(world, e2, Position, {20, 30});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e1, Position, {10, 20});
+    ecs_modified(stage_1, e2, Position);
+    ecs_set(stage_1, e2, Position, {20, 30});
 
-    test_assert(!ecs_has(world, e1, Position));
-    test_assert(!ecs_has(world, e2, Position));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e1, Position));
+    test_assert(!ecs_has(stage_1, e2, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e1, Position));
     test_assert(ecs_has(world, e2, Position));
 
@@ -3344,14 +3291,14 @@ void Commands_defer_remove_after_emplace_different_id(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Tag);
 
-    ecs_defer_begin(world);
-    Position *p = ecs_emplace(world, e, Position, NULL);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    Position *p = ecs_emplace(stage_1, e, Position, NULL);
     p->x = 10;
     p->y = 20;
-    ecs_remove(world, e, Tag);
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(ecs_has(world, e, Tag));
-    ecs_defer_end(world);
+    ecs_remove(stage_1, e, Tag);
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(ecs_has(stage_1, e, Tag));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Tag));
@@ -3374,16 +3321,16 @@ void Commands_defer_remove_after_set_and_emplace_different_id(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Tag);
 
-    ecs_defer_begin(world);
-    Position *p = ecs_emplace(world, e, Position, NULL);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    Position *p = ecs_emplace(stage_1, e, Position, NULL);
     p->x = 10;
     p->y = 20;
-    ecs_set(world, e, Velocity, {1, 2});
-    ecs_remove(world, e, Tag);
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    test_assert(ecs_has(world, e, Tag));
-    ecs_defer_end(world);
+    ecs_set(stage_1, e, Velocity, {1, 2});
+    ecs_remove(stage_1, e, Tag);
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    test_assert(ecs_has(stage_1, e, Tag));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -3410,13 +3357,13 @@ void Commands_clear_after_add_to_nonempty(void) {
 
     ecs_entity_t e = ecs_new_w(world, TagA);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, TagB);
-    ecs_clear(world, e);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, TagB);
+    ecs_clear(stage_1, e);
 
-    test_assert(ecs_has(world, e, TagA));
-    test_assert(!ecs_has(world, e, TagB));
-    ecs_defer_end(world);
+    test_assert(ecs_has(stage_1, e, TagA));
+    test_assert(!ecs_has(stage_1, e, TagB));
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, TagA));
     test_assert(!ecs_has(world, e, TagB));
@@ -3432,14 +3379,14 @@ void Commands_remove_after_add_to_nonempty(void) {
 
     ecs_entity_t e = ecs_new_w(world, TagA);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, TagB);
-    ecs_remove(world, e, TagA);
-    ecs_remove(world, e, TagB);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, TagB);
+    ecs_remove(stage_1, e, TagA);
+    ecs_remove(stage_1, e, TagB);
 
-    test_assert(ecs_has(world, e, TagA));
-    test_assert(!ecs_has(world, e, TagB));
-    ecs_defer_end(world);
+    test_assert(ecs_has(stage_1, e, TagA));
+    test_assert(!ecs_has(stage_1, e, TagB));
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, TagA));
     test_assert(!ecs_has(world, e, TagB));
@@ -3452,9 +3399,9 @@ void Commands_register_while_deferred_with_n_stages(void) {
 
     ecs_set_stage_count(world, 2);
 
-    ecs_defer_begin(world);
-    ECS_COMPONENT(world, Position);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ECS_COMPONENT(stage_1, Position);
+    ecs_merge(stage_1);
 
     test_assert(ecs_id(Position));
 
@@ -3494,10 +3441,10 @@ void Commands_defer_2_sets_w_multi_observer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_set(world, e, Velocity, {1, 2});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_set(stage_1, e, Velocity, {1, 2});
+    ecs_merge(stage_1);
 
     test_int(position_velocity_observer_invoked, 2);
 
@@ -3525,18 +3472,18 @@ void Commands_defer_2_ensures_w_multi_observer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         p->x = 10;
         p->y = 20;
-        ecs_modified(world, e, Position);
-        Velocity *v = ecs_ensure(world, e, Velocity);
+        ecs_modified(stage_1, e, Position);
+        Velocity *v = ecs_ensure(stage_1, e, Velocity);
         v->x = 1;
         v->y = 2;
-        ecs_modified(world, e, Velocity);
+        ecs_modified(stage_1, e, Velocity);
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(position_velocity_observer_invoked, 2);
 
@@ -3564,16 +3511,16 @@ void Commands_defer_2_ensures_no_modified_w_multi_observer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         p->x = 10;
         p->y = 20;
-        Velocity *v = ecs_ensure(world, e, Velocity);
+        Velocity *v = ecs_ensure(stage_1, e, Velocity);
         v->x = 1;
         v->y = 2;
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(position_velocity_observer_invoked, 0);
 
@@ -3595,10 +3542,10 @@ void Commands_exists_remove_set(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
-    ecs_defer_begin(world);
-    ecs_remove(world, e, Position);
-    ecs_set(world, e, Position, {5, 6});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, e, Position);
+    ecs_set(stage_1, e, Position, {5, 6});
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
@@ -3615,10 +3562,10 @@ void Commands_absent_remove_set(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_remove(world, e, Position);
-    ecs_set(world, e, Position, {5, 6});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, e, Position);
+    ecs_set(stage_1, e, Position, {5, 6});
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
@@ -3636,10 +3583,10 @@ void Commands_exists_set_remove(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {5, 6});
-    ecs_remove(world, e, Position);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {5, 6});
+    ecs_remove(stage_1, e, Position);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p == NULL);
@@ -3654,10 +3601,10 @@ void Commands_absent_set_remove(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {5, 6});
-    ecs_remove(world, e, Position);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {5, 6});
+    ecs_remove(stage_1, e, Position);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p == NULL);
@@ -3673,13 +3620,13 @@ void Commands_exists_set_w_ensure(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        ecs_set(world, e, Position, {5, 6});
-        Position *p = ecs_ensure(world, e, Position);
+        ecs_set(stage_1, e, Position, {5, 6});
+        Position *p = ecs_ensure(stage_1, e, Position);
         p->x = 11;
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
@@ -3697,15 +3644,15 @@ void Commands_exists_remove_ensure(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
-    ecs_defer_begin(world);
-    ecs_remove(world, e, Position);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, e, Position);
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 5;
         p->y = 6;
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
@@ -3722,16 +3669,16 @@ void Commands_absent_remove_ensure(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_remove(world, e, Position);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, e, Position);
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 5;
         p->y = 6;
     }
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
@@ -3749,15 +3696,15 @@ void Commands_exists_ensure_remove(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 5;
         p->y = 6;
     }
-    ecs_remove(world, e, Position);
-    ecs_defer_end(world);
+    ecs_remove(stage_1, e, Position);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p == NULL);
@@ -3772,16 +3719,16 @@ void Commands_absent_ensure_remove(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 5;
         p->y = 6;
     }
-    test_assert(!ecs_has(world, e, Position));
-    ecs_remove(world, e, Position);
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_remove(stage_1, e, Position);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p == NULL);
@@ -3799,12 +3746,12 @@ void Commands_absent_set_invoke_on_set(void) {
     ecs_entity_t e = ecs_new(world);
 
     /* create the component */
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {1, 2});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {1, 2});
 
     /* OnSet should not be run until defer has completed */
     test_int(on_set_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_int(on_set_invoked, 1);
@@ -3825,12 +3772,12 @@ void Commands_exists_set_invoke_on_set(void) {
     on_set_invoked = 0;
 
     /* create the component */
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {5, 6});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {5, 6});
 
     /* OnSet should not be run until defer has completed */
     test_int(on_set_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_int(on_set_invoked, 1);
@@ -3850,15 +3797,15 @@ void Commands_defer_ensure_no_on_set(void) {
     ecs_entity_t e = ecs_new(world);
 
     /* create the component */
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         p->x = 1;
         p->y = 2;
     }
-    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(stage_1, e, Position));
     test_int(on_set_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(on_set_invoked, 0);
 
     const Position *p = ecs_get(world, e, Position);
@@ -3878,15 +3825,15 @@ void Commands_defer_existing_ensure_no_on_set(void) {
     ecs_entity_t e = ecs_new_w(world, Position);
 
     /* create the component */
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         p->x = 1;
         p->y = 2;
     }
-    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(stage_1, e, Position));
     test_int(on_set_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(on_set_invoked, 0);
 
     const Position *p = ecs_get(world, e, Position);
@@ -3906,9 +3853,9 @@ void Commands_ensure_override(void) {
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         test_int(p->x, 1);
         test_int(p->y, 2);
@@ -3916,9 +3863,9 @@ void Commands_ensure_override(void) {
         p->y = 6;
     }
 
-    test_assert(ecs_has(world, e, Position));
-    test_assert(!ecs_owns(world, e, Position));
-    ecs_defer_end(world);
+    test_assert(ecs_has(stage_1, e, Position));
+    test_assert(!ecs_owns(stage_1, e, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_owns(world, e, Position));
 
@@ -3944,14 +3891,14 @@ void Commands_set_override(void) {
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        ecs_set(world, e, Position, {5, 6});
+        ecs_set(stage_1, e, Position, {5, 6});
     }
 
-    test_assert(ecs_has(world, e, Position));
-    test_assert(!ecs_owns(world, e, Position));
-    ecs_defer_end(world);
+    test_assert(ecs_has(stage_1, e, Position));
+    test_assert(!ecs_owns(stage_1, e, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_owns(world, e, Position));
 
@@ -3976,14 +3923,14 @@ void Commands_absent_ensure_for_entity_w_tag(void) {
     ecs_entity_t e = ecs_new_w(world, Tag);
     test_assert(e != 0);
     
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -4019,10 +3966,10 @@ void Commands_defer_2_sets_w_observer_same_component(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_set(world, e, Position, {20, 30});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_set(stage_1, e, Position, {20, 30});
+    ecs_merge(stage_1);
 
     test_assert(set_position_invoked != 0);
 
@@ -4054,10 +4001,10 @@ void Commands_defer_2_sets_w_observer_other_component(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_set(world, e, Velocity, {1, 2});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_set(stage_1, e, Velocity, {1, 2});
+    ecs_merge(stage_1);
 
     test_assert(set_position_invoked != 0);
     test_assert(set_velocity_invoked != 0);
@@ -4097,11 +4044,11 @@ void Commands_on_remove_after_deferred_clear_and_add(void) {
     ecs_add(world, e, TagA);
     ecs_add(world, e, TagB);
 
-    ecs_defer_begin(world);
-    ecs_clear(world, e);
-    ecs_add(world, e, TagC);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_clear(stage_1, e);
+    ecs_add(stage_1, e, TagC);
     test_int(remove_tag_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(remove_tag_invoked, 1);
 
     test_assert(!ecs_has(world, e, TagA));
@@ -4112,8 +4059,8 @@ void Commands_on_remove_after_deferred_clear_and_add(void) {
 }
 
 static void Recycle(ecs_iter_t *it) {
-    ecs_new(it->world);
-    *(ecs_entity_t*)it->ctx = ecs_new(it->world);
+    ecs_new(it->stage);
+    *(ecs_entity_t*)it->ctx = ecs_new(it->stage);
 }
 
 void Commands_defer_delete_recycle_same_id(void) {
@@ -4135,11 +4082,11 @@ void Commands_defer_delete_recycle_same_id(void) {
         .ctx = &e1
     });
 
-    ecs_defer_begin(world);
-    ecs_delete(world, parent);
-    ecs_add(world, e2, Foo);
-    ecs_add(world, e1, Bar);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, parent);
+    ecs_add(stage_1, e2, Foo);
+    ecs_add(stage_1, e1, Bar);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, parent));
     test_assert(ecs_is_alive(world, e2));
@@ -4154,7 +4101,7 @@ static ECS_COMPONENT_DECLARE(Velocity);
 
 static void AddWhileSuspended(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Velocity);
+        ecs_add(it->stage, it->entities[i], Velocity);
     }
 }
 
@@ -4172,16 +4119,14 @@ void Commands_observer_while_defer_suspended(void) {
         .callback = AddWhileSuspended,
     });
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(ecs_has(world, e, Velocity));
 
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -4199,16 +4144,14 @@ void Commands_on_add_hook_while_defer_suspended(void) {
         .on_add = AddWhileSuspended
     });
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(ecs_has(world, e, Velocity));
 
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -4226,16 +4169,14 @@ void Commands_on_set_hook_while_defer_suspended(void) {
         .on_set = AddWhileSuspended
     });
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(ecs_has(world, e, Velocity));
 
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -4258,16 +4199,14 @@ void Commands_on_remove_hook_while_defer_suspended(void) {
     test_assert(ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     test_assert(ecs_has(world, e, Position));
     ecs_remove(world, e, Position);
     test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(ecs_has(world, e, Velocity));
 
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -4283,10 +4222,10 @@ static ECS_TAG_DECLARE(Bar);
 static void OnSetIsDeferred(ecs_iter_t *it) {
     on_set_is_deferred_invoked ++;
     test_int(it->count, 1);
-    ecs_table_t *t = ecs_get_table(it->world, it->entities[0]);
-    ecs_add(it->world, it->entities[0], Bar);
-    ecs_remove(it->world, it->entities[0], Foo);
-    test_assert(t == ecs_get_table(it->world, it->entities[0]));
+    ecs_table_t *t = ecs_get_table(it->stage, it->entities[0]);
+    ecs_add(it->stage, it->entities[0], Bar);
+    ecs_remove(it->stage, it->entities[0], Foo);
+    test_assert(t == ecs_get_table(it->stage, it->entities[0]));
 }
 
 static void DummyObserver(ecs_iter_t *it) {
@@ -4313,12 +4252,12 @@ void Commands_on_set_hook_batched_is_deferred(void) {
     test_int(on_set_is_deferred_invoked, 0);
     test_int(dummy_observer_invoked, 0);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, Tag);
-    ecs_modified(world, e, Position);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, Tag);
+    ecs_modified(stage_1, e, Position);
     test_int(on_set_is_deferred_invoked, 0);
     test_int(dummy_observer_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(on_set_is_deferred_invoked, 1);
     test_int(dummy_observer_invoked, 1);
@@ -4337,9 +4276,9 @@ void Commands_add_path(void) {
     ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_defer_begin(world);
-    ecs_add_path(world, e, p, "foo");
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_path(stage_1, e, p, "foo");
+    ecs_merge(stage_1);
 
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo == e);
@@ -4358,10 +4297,10 @@ void Commands_add_path_to_deleted_parent(void) {
     ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_defer_begin(world);
-    ecs_delete(world, p);
-    ecs_add_path(world, e, p, "foo");
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, p);
+    ecs_add_path(stage_1, e, p, "foo");
+    ecs_merge(stage_1);
 
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo == 0);
@@ -4378,9 +4317,9 @@ void Commands_add_path_nested(void) {
     ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_defer_begin(world);
-    ecs_add_path(world, e, p, "foo.bar");
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_path(stage_1, e, p, "foo.bar");
+    ecs_merge(stage_1);
 
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo != 0);
@@ -4399,10 +4338,10 @@ void Commands_add_path_nested_to_deleted_parent(void) {
     ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_defer_begin(world);
-    ecs_delete(world, p);
-    ecs_add_path(world, e, p, "foo.bar");
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, p);
+    ecs_add_path(stage_1, e, p, "foo.bar");
+    ecs_merge(stage_1);
 
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo == 0);
@@ -4419,11 +4358,11 @@ void Commands_add_path_nested_to_created_deleted_parent(void) {
     ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_defer_begin(world);
-    ecs_entity_t foo = ecs_entity(world, { .name = "p.foo" });
-    ecs_delete(world, foo);
-    ecs_add_path(world, e, p, "foo.bar");
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_entity_t foo = ecs_entity(stage_1, { .name = "p.foo" });
+    ecs_delete(stage_1, foo);
+    ecs_add_path(stage_1, e, p, "foo.bar");
+    ecs_merge(stage_1);
 
     test_assert(ecs_is_alive(world, p));
     test_assert(!ecs_is_alive(world, e));
@@ -4440,9 +4379,9 @@ void Commands_add_path_w_stage(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_add_path(s, e, p, "foo");
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo == e);
@@ -4463,10 +4402,10 @@ void Commands_add_path_to_deleted_parent_w_stage(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
-    ecs_delete(world, p);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, p);
     ecs_add_path(s, e, p, "foo");
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo == 0);
@@ -4485,9 +4424,9 @@ void Commands_add_path_nested_w_stage(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_add_path(s, e, p, "foo.bar");
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo != 0);
@@ -4508,10 +4447,10 @@ void Commands_add_path_nested_to_deleted_parent_w_stage(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
-    ecs_delete(world, p);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, p);
     ecs_add_path(s, e, p, "foo.bar");
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo == 0);
@@ -4530,11 +4469,11 @@ void Commands_add_path_nested_to_created_deleted_parent_w_stage(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t foo = ecs_entity(s, { .name = "p.foo" });
     ecs_delete(s, foo);
     ecs_add_path(s, e, p, "foo.bar");
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_is_alive(world, p));
     test_assert(!ecs_is_alive(world, e));
@@ -4550,21 +4489,21 @@ void Commands_defer_emplace_w_arg(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         p->x = 1; p->y = 2;
         test_bool(is_new, true);
     }
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         p->x = 10; p->y = 20;
         test_bool(is_new, true); /* Might change after cmd queue temp storage refactor */
     }
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
 
     const Position *p = ecs_get(world, e, Position);
@@ -4582,21 +4521,21 @@ void Commands_defer_emplace_existing_w_arg(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         p->x = 1; p->y = 2;
         test_bool(is_new, false);
     }
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         p->x = 10; p->y = 20;
         test_bool(is_new, false); /* Might change after cmd queue temp storage refactor */
     }
-    test_assert(ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    test_assert(ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
 
     const Position *p = ecs_get(world, e, Position);
@@ -4642,10 +4581,10 @@ void Commands_mixed_on_add_on_set_w_set_w_batching(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, Foo);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, Foo);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_merge(stage_1);
 
     test_int(mixed_observer_invoked, 2);
     test_int(mixed_observer_on_add_invoked, 1);
@@ -4668,13 +4607,13 @@ void Commands_mixed_on_add_on_set_w_emplace(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, Foo);
-    Position *p = ecs_emplace(world, e, Position, NULL);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, Foo);
+    Position *p = ecs_emplace(stage_1, e, Position, NULL);
     p->x = 10;
     p->y = 20;
-    ecs_modified(world, e, Position);
-    ecs_defer_end(world);
+    ecs_modified(stage_1, e, Position);
+    ecs_merge(stage_1);
 
     test_int(mixed_observer_invoked, 1);
     test_int(mixed_observer_on_add_invoked, 0); /* Entity didn't have component yet */
@@ -4690,13 +4629,13 @@ void Commands_add_isa_set_w_override_batched(void) {
 
     ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
 
-    ecs_defer_begin(world);
-    ecs_entity_t i = ecs_new(world);
-    ecs_add_pair(world, i, EcsIsA, p);
-    ecs_set(world, i, Position, {20, 30});
-    test_assert(!ecs_has_pair(world, i, EcsIsA, p));
-    test_assert(!ecs_has(world, i, Position));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_entity_t i = ecs_new(stage_1);
+    ecs_add_pair(stage_1, i, EcsIsA, p);
+    ecs_set(stage_1, i, Position, {20, 30});
+    test_assert(!ecs_has_pair(stage_1, i, EcsIsA, p));
+    test_assert(!ecs_has(stage_1, i, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has_pair(world, i, EcsIsA, p));
     test_assert(ecs_has(world, i, Position));
     
@@ -4715,13 +4654,13 @@ void Commands_add_set_isa_w_override_batched(void) {
 
     ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
 
-    ecs_defer_begin(world);
-    ecs_entity_t i = ecs_new(world);
-    ecs_set(world, i, Position, {20, 30});
-    ecs_add_pair(world, i, EcsIsA, p);
-    test_assert(!ecs_has_pair(world, i, EcsIsA, p));
-    test_assert(!ecs_has(world, i, Position));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_entity_t i = ecs_new(stage_1);
+    ecs_set(stage_1, i, Position, {20, 30});
+    ecs_add_pair(stage_1, i, EcsIsA, p);
+    test_assert(!ecs_has_pair(stage_1, i, EcsIsA, p));
+    test_assert(!ecs_has(stage_1, i, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has_pair(world, i, EcsIsA, p));
     test_assert(ecs_has(world, i, Position));
     
@@ -4744,10 +4683,10 @@ void Commands_add_batched_set_with(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, Foo);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, Foo);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Foo));
     test_assert(ecs_has(world, e, Position));
@@ -4768,15 +4707,15 @@ void Commands_defer_emplace_after_remove(void) {
 
     ecs_entity_t e = ecs_insert(world, ecs_value(Position, {0, 0}));
 
-    ecs_defer_begin(world);
-    ecs_remove(world, e, Position);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, e, Position);
     {
-        Position *p = ecs_emplace(world, e, Position, NULL);
+        Position *p = ecs_emplace(stage_1, e, Position, NULL);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     
     test_assert(ecs_has(world, e, Position));
     {
@@ -4797,30 +4736,30 @@ void Commands_defer_emplace_2nd(void) {
     ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e1, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e1, Position, &is_new);
         test_bool(is_new, false);
         test_int(p->x, 10); test_int(p->y, 20);
     }
 
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e2, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e2, Position, &is_new);
         test_bool(is_new, false);
         test_int(p->x, 30); test_int(p->y, 40);
     }
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     ecs_fini(world);
 }
 
 static void RemoveVelocity(ecs_iter_t *it) {
     test_int(it->count, 1);
-    ecs_remove(it->world, it->entities[0], Velocity);
+    ecs_remove(it->stage, it->entities[0], Velocity);
 }
 
 void Commands_batched_w_table_change_in_observer(void) {
@@ -4846,10 +4785,10 @@ void Commands_batched_w_table_change_in_observer(void) {
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
 
-    ecs_defer_begin(world);
-    ecs_remove(world, e1, Position);
-    ecs_add(world, e1, Foo);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, e1, Position);
+    ecs_add(stage_1, e1, Foo);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e1, Foo));
     test_assert(!ecs_has(world, e1, Position));
@@ -4863,10 +4802,10 @@ void Commands_redefine_named_in_threaded_app(void) {
 
     ecs_set_threads(world, 2);
 
-    ecs_defer_begin(world);
-    ecs_entity_t c1 = ecs_entity(world, { .name = "parent.child_1" });
-    ecs_entity_t c2 = ecs_entity(world, { .name = "parent.child_2" });
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_entity_t c1 = ecs_entity(stage_1, { .name = "parent.child_1" });
+    ecs_entity_t c2 = ecs_entity(stage_1, { .name = "parent.child_2" });
+    ecs_merge(stage_1);
 
     ecs_entity_t p1 = ecs_get_target(world, c1, EcsChildOf, 0);
     test_assert(p1 != 0);
@@ -4884,12 +4823,12 @@ void Commands_batched_cmd_w_component_init(void) {
 
     ecs_entity_t parent = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_add(world, parent, Foo);
+    ecs_add(stage_1, parent, Foo);
 
-    ecs_entity_t comp = ecs_component(world, {
-        .entity = ecs_entity(world, {
+    ecs_entity_t comp = ecs_component(stage_1, {
+        .entity = ecs_entity(stage_1, {
             .parent = parent,
             .name = "Bar"
         }),
@@ -4898,15 +4837,15 @@ void Commands_batched_cmd_w_component_init(void) {
     });
 
     test_assert(comp != 0);
-    test_str(ecs_get_name(world, comp), "Bar");
+    test_str(ecs_get_name(stage_1, comp), "Bar");
     {
-        const EcsComponent *ptr = ecs_get(world, comp, EcsComponent);
+        const EcsComponent *ptr = ecs_get(stage_1, comp, EcsComponent);
         test_assert(ptr != NULL);
         test_int(ptr->size, 4);
         test_int(ptr->alignment, 4);
     }
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     ecs_fini(world);
 }
@@ -4927,7 +4866,7 @@ static void test_nest_observer(ecs_iter_t *it) {
     test_nest_invoked ++;
 
     if (param->depth) {
-        ecs_enqueue(it->world, &(ecs_event_desc_t) {
+        ecs_enqueue(it->stage, &(ecs_event_desc_t) {
             .event = ecs_id(TestNestEvent),
             .param = &evt,
             .entity = EcsAny
@@ -4992,7 +4931,7 @@ void Commands_ensure_from_2_stages(void) {
 static ECS_COMPONENT_DECLARE(Velocity);
 
 static void remove_velocity(ecs_iter_t *it) {
-    ecs_remove(it->world, it->entities[0], Velocity);
+    ecs_remove(it->stage, it->entities[0], Velocity);
 }
 
 void Commands_batch_w_old_and_recycled_id(void) {
@@ -5014,16 +4953,14 @@ void Commands_batch_w_old_and_recycled_id(void) {
     ecs_add_pair(world, grandchild, EcsChildOf, child);
     ecs_add(world, grandchild, Position);
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(world, child);
     ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
-    ecs_defer_resume(world);
-    ecs_entity_t e = ecs_new(world);
-    ecs_add(world, e, Position);
+    ecs_entity_t e = ecs_new(stage_1);
+    ecs_add(stage_1, e, Position);
 
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
 
     test_assert(ecs_is_alive(world, parent));
     test_assert(!ecs_is_alive(world, child));
@@ -5046,15 +4983,15 @@ void Commands_batch_w_two_named_entities_one_reparent(void) {
     ecs_entity_t e1 = ecs_entity(world, { .name = "a" });
     ecs_entity_t e2 = ecs_entity(world, { .name = "b" });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_add_pair(world, e1, EcsChildOf, parent); // to trigger reparenting
-    ecs_add(world, e1, Position); // to create batch
+    ecs_add_pair(stage_1, e1, EcsChildOf, parent); // to trigger reparenting
+    ecs_add(stage_1, e1, Position); // to create batch
 
-    ecs_add(world, e2, Position);
-    ecs_add(world, e2, Velocity); // to create batch
+    ecs_add(stage_1, e2, Position);
+    ecs_add(stage_1, e2, Velocity); // to create batch
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_pair(world, e1, EcsChildOf, parent));
     test_assert(ecs_has(world, e1, Position));
@@ -5077,15 +5014,15 @@ void Commands_batch_w_two_named_entities_one_reparent_w_remove(void) {
 
     ecs_add_pair(world, e1, EcsChildOf, parent);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_remove_pair(world, e1, EcsChildOf, parent); // to trigger reparenting
-    ecs_add(world, e1, Position); // to create batch
+    ecs_remove_pair(stage_1, e1, EcsChildOf, parent); // to trigger reparenting
+    ecs_add(stage_1, e1, Position); // to create batch
 
-    ecs_add(world, e2, Position);
-    ecs_add(world, e2, Velocity); // to create batch
+    ecs_add(stage_1, e2, Position);
+    ecs_add(stage_1, e2, Velocity); // to create batch
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has_pair(world, e1, EcsChildOf, parent));
     test_assert(ecs_has(world, e1, Position));
@@ -5101,15 +5038,15 @@ void Commands_batch_new_w_parent_w_name(void) {
 
     ecs_entity_t parent = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
-    ecs_set_name(world, e, "Foo");
+    ecs_entity_t e = ecs_new_w_pair(stage_1, EcsChildOf, parent);
+    ecs_set_name(stage_1, e, "Foo");
 
-    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
-    test_assert(ecs_get_name(world, e) == NULL);
+    test_assert(!ecs_has_pair(stage_1, e, EcsChildOf, parent));
+    test_assert(ecs_get_name(stage_1, e) == NULL);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_pair(world, e, EcsChildOf, parent));
     test_str(ecs_get_name(world, e), "Foo");
@@ -5131,13 +5068,13 @@ void Commands_enable_component_from_stage(void) {
 
     test_bool(true, ecs_is_enabled(world, e, Position));
 
-    ecs_defer_begin(s);
+    ecs_world_t *stage_1 = ecs_is_deferred(s) ? s : ecs_get_stage(s, 0);
 
-    ecs_enable_component(s, e, Position, false);
+    ecs_enable_component(stage_1, e, Position, false);
 
     test_bool(true, ecs_is_enabled(world, e, Position));
 
-    ecs_defer_end(s);
+    ecs_merge(stage_1);
 
     test_bool(false, ecs_is_enabled(world, e, Position));
 
@@ -5186,10 +5123,10 @@ void Commands_on_replace_w_set(void) {
     ecs_entity_t e = ecs_new(world);
     test_int(replace_Position_invoked, 0);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
     test_int(replace_Position_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(replace_Position_invoked, 1);
 
     {
@@ -5214,11 +5151,11 @@ void Commands_on_replace_w_set_twice(void) {
     ecs_entity_t e = ecs_new(world);
     test_int(replace_Position_invoked, 0);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_set(world, e, Position, {11, 21});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_set(stage_1, e, Position, {11, 21});
     test_int(replace_Position_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(replace_Position_invoked, 2);
 
     {
@@ -5246,10 +5183,10 @@ void Commands_on_replace_w_set_existing(void) {
     ecs_set(world, e, Position, {10, 20});
     test_int(replace_Position_invoked, 1);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {11, 21});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {11, 21});
     test_int(replace_Position_invoked, 2);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(replace_Position_invoked, 2);
 
     {
@@ -5277,11 +5214,11 @@ void Commands_on_replace_w_set_existing_twice(void) {
     ecs_set(world, e, Position, {10, 20});
     test_int(replace_Position_invoked, 1);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {11, 21});
-    ecs_set(world, e, Position, {12, 22});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {11, 21});
+    ecs_set(stage_1, e, Position, {12, 22});
     test_int(replace_Position_invoked, 3);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(replace_Position_invoked, 3);
 
     {
@@ -5307,11 +5244,11 @@ void Commands_on_replace_w_set_batched(void) {
     ecs_entity_t e = ecs_new(world);
     test_int(replace_Position_invoked, 0);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_set(world, e, Velocity, {1, 2});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_set(stage_1, e, Velocity, {1, 2});
     test_int(replace_Position_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(replace_Position_invoked, 1);
 
     {
@@ -5342,12 +5279,12 @@ void Commands_on_replace_w_set_batched_twice(void) {
     ecs_entity_t e = ecs_new(world);
     test_int(replace_Position_invoked, 0);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_set(world, e, Position, {11, 21});
-    ecs_set(world, e, Velocity, {1, 2});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_set(stage_1, e, Position, {11, 21});
+    ecs_set(stage_1, e, Velocity, {1, 2});
     test_int(replace_Position_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(replace_Position_invoked, 2);
 
     {
@@ -5381,11 +5318,11 @@ void Commands_on_replace_w_set_batched_existing(void) {
     ecs_set(world, e, Position, {10, 20});
     test_int(replace_Position_invoked, 1);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {11, 21});
-    ecs_set(world, e, Velocity, {1, 2});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {11, 21});
+    ecs_set(stage_1, e, Velocity, {1, 2});
     test_int(replace_Position_invoked, 2);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(replace_Position_invoked, 2);
 
     {
@@ -5419,12 +5356,12 @@ void Commands_on_replace_w_set_batched_existing_twice(void) {
     ecs_set(world, e, Position, {10, 20});
     test_int(replace_Position_invoked, 1);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {11, 21});
-    ecs_set(world, e, Position, {12, 22});
-    ecs_set(world, e, Velocity, {1, 2});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {11, 21});
+    ecs_set(stage_1, e, Position, {12, 22});
+    ecs_set(stage_1, e, Velocity, {1, 2});
     test_int(replace_Position_invoked, 3);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(replace_Position_invoked, 3);
 
     {
@@ -5449,10 +5386,10 @@ void Commands_set_existing_after_remove(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_defer_begin(world);
-        ecs_remove(world, e, EcsParent);
-        ecs_set(world, e, Position, {30, 40});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+        ecs_remove(stage_1, e, EcsParent);
+        ecs_set(stage_1, e, Position, {30, 40});
+    ecs_merge(stage_1);
 
     const Position *ptr = ecs_get(world, e, Position);
     test_assert(ptr != NULL);
@@ -5471,11 +5408,11 @@ void Commands_set_existing_after_remove_move_table(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_defer_begin(world);
-        ecs_add(world, e, Foo);
-        ecs_remove(world, e, Position);
-        ecs_set(world, e, Position, {30, 40});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+        ecs_add(stage_1, e, Foo);
+        ecs_remove(stage_1, e, Position);
+        ecs_set(stage_1, e, Position, {30, 40});
+    ecs_merge(stage_1);
 
     const Position *ptr = ecs_get(world, e, Position);
     test_assert(ptr != NULL);
@@ -5496,10 +5433,10 @@ void Commands_set_existing_after_remove_w_is_a(void) {
     ecs_add_pair(world, e, EcsIsA, p);
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_defer_begin(world);
-        ecs_remove(world, e, EcsParent);
-        ecs_set(world, e, Position, {30, 40});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+        ecs_remove(stage_1, e, EcsParent);
+        ecs_set(stage_1, e, Position, {30, 40});
+    ecs_merge(stage_1);
 
     const Position *ptr = ecs_get(world, e, Position);
     test_assert(ptr != NULL);
@@ -5521,11 +5458,11 @@ void Commands_set_existing_after_remove_w_is_a_move_table(void) {
     ecs_add_pair(world, e, EcsIsA, p);
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_defer_begin(world);
-        ecs_add(world, e, Foo);
-        ecs_remove(world, e, Position);
-        ecs_set(world, e, Position, {30, 40});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+        ecs_add(stage_1, e, Foo);
+        ecs_remove(stage_1, e, Position);
+        ecs_set(stage_1, e, Position, {30, 40});
+    ecs_merge(stage_1);
 
     const Position *ptr = ecs_get(world, e, Position);
     test_assert(ptr != NULL);
@@ -5575,9 +5512,9 @@ static void OnReplaceGrowTable(ecs_iter_t *it) {
     }
     int i;
     for (i = 0; i < 100; i++) {
-        ecs_entity_t x = ecs_new(it->world);
-        ecs_add_id(it->world, x, on_replace_grow_table_tag);
-        ecs_add_id(it->world, x, on_replace_grow_table_pos);
+        ecs_entity_t x = ecs_new(it->stage);
+        ecs_add_id(it->stage, x, on_replace_grow_table_tag);
+        ecs_add_id(it->stage, x, on_replace_grow_table_pos);
     }
 }
 
@@ -5598,11 +5535,11 @@ void Commands_on_replace_w_set_batched_grow_table_in_hook(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, Tag);
-    ecs_set(world, e, Position, {10, 20});
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, Tag);
+    ecs_set(stage_1, e, Position, {10, 20});
     test_int(on_replace_grow_table_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     test_int(on_replace_grow_table_invoked, 1);
 
     const Position *p = ecs_get(world, e, Position);
@@ -5633,11 +5570,11 @@ void Commands_defer_batched_add_after_delete(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, TagA);
-    ecs_delete(world, e);
-    ecs_add(world, e, TagB);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, TagA);
+    ecs_delete(stage_1, e);
+    ecs_add(stage_1, e, TagB);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e));
     test_int(defer_batched_add_after_delete_invoked, 0);
@@ -5654,12 +5591,12 @@ void Commands_defer_ensure_dont_fragment_w_set(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {1, 2});
-    Velocity *v = ecs_ensure_id(world, e, ecs_id(Velocity), sizeof(Velocity));
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {1, 2});
+    Velocity *v = ecs_ensure_id(stage_1, e, ecs_id(Velocity), sizeof(Velocity));
     v->x = 10;
     v->y = 20;
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has_id(world, e, ecs_id(Velocity)));
@@ -5682,10 +5619,10 @@ void Commands_defer_add_remove_childof_w_dont_fragment(void) {
     ecs_entity_t c = ecs_new(world);
     ecs_add_id(world, c, ecs_id(Velocity));
 
-    ecs_defer_begin(world);
-    ecs_add_pair(world, c, EcsChildOf, p);
-    ecs_remove_pair(world, c, EcsChildOf, EcsWildcard);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_pair(stage_1, c, EcsChildOf, p);
+    ecs_remove_pair(stage_1, c, EcsChildOf, EcsWildcard);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has_pair(world, c, EcsChildOf, EcsWildcard));
 
@@ -5702,14 +5639,113 @@ void Commands_defer_remove_dont_fragment_on_cascade_deleted_child(void) {
     ecs_entity_t child = ecs_new(world);
     ecs_entity_t other = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_delete(world, del);
-    ecs_add_id(world, other, ecs_id(Velocity));
-    ecs_remove_id(world, child, ecs_id(Velocity));
-    ecs_add_pair(world, child, EcsChildOf, del);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, del);
+    ecs_add_id(stage_1, other, ecs_id(Velocity));
+    ecs_remove_id(stage_1, child, ecs_id(Velocity));
+    ecs_add_pair(stage_1, child, EcsChildOf, del);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, child));
 
+    ecs_fini(world);
+}
+
+typedef struct CommandOrder {
+    ecs_entity_t tags[3];
+    ecs_entity_t entities[2];
+    int32_t values[6];
+    int32_t count;
+} CommandOrder;
+
+static void RecordCommandOrder(ecs_iter_t *it) {
+    CommandOrder *ctx = it->ctx;
+    test_assert(it->stage != it->world);
+    test_assert(ecs_get_world(it->stage) == it->world);
+    test_assert(ecs_is_deferred(it->stage));
+    test_assert(!ecs_is_deferred(it->world));
+    int32_t tag = 0;
+    while (ctx->tags[tag] != it->event_id) {
+        tag ++;
+        test_assert(tag < 3);
+    }
+    for (int32_t i = 0; i < it->count; i ++) {
+        test_assert(ctx->count < 6);
+        ctx->values[ctx->count ++] =
+            (it->entities[i] == ctx->entities[1] ? 3 : 0) + tag;
+        if (tag < 2) {
+            ecs_add_id(it->stage, it->entities[i], ctx->tags[tag + 1]);
+        }
+    }
+}
+
+void Commands_observer_commands_before_next_command(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_set_stage_count(world, 2);
+    ecs_world_t *stages[] = {
+        ecs_get_stage(world, 0), ecs_get_stage(world, 1), ecs_stage_new(world)
+    };
+    CommandOrder ctx = {0};
+    for (int32_t i = 0; i < 3; i ++) {
+        ctx.tags[i] = ecs_new(world);
+        ecs_observer(world, {
+            .query.terms = {{ .id = ctx.tags[i] }},
+            .events = { EcsOnAdd },
+            .callback = RecordCommandOrder,
+            .ctx = &ctx
+        });
+    }
+    for (int32_t s = 0; s < 3; s ++) {
+        ecs_world_t *stage = stages[s];
+        ctx.count = 0;
+        for (int32_t i = 0; i < 2; i ++) {
+            ctx.entities[i] = ecs_new(world);
+            ecs_add_id(stage, ctx.entities[i], ctx.tags[0]);
+        }
+        test_int(ctx.count, 0);
+        ecs_merge(stage);
+        test_int(ctx.count, 6);
+        for (int32_t i = 0; i < 6; i ++) {
+            test_int(ctx.values[i], i);
+        }
+    }
+    ecs_stage_free(stages[2]);
+    ecs_fini(world);
+}
+
+static void NestedCommandQueue(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 0);
+    int32_t *count = it->ctx;
+    for (int32_t i = 0; i < it->count; i ++) {
+        test_int(p[i].x, *count);
+        (*count) ++;
+        if (p[i].x < 31) {
+            ecs_set_id(it->stage, it->entities[i], it->event_id,
+                sizeof(Position), &(Position){p[i].x + 1, 0});
+        }
+    }
+}
+
+void Commands_nested_observer_command_queues(void) {
+    ecs_world_t *world = ecs_mini();
+    ECS_COMPONENT(world, Position);
+    int32_t count = 0;
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = NestedCommandQueue,
+        .ctx = &count
+    });
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(stage, e, Position, {0, 0});
+    test_int(count, 0);
+    ecs_merge(stage);
+    test_int(count, 32);
+    test_int(ecs_get(world, e, Position)->x, 31);
+    count = 0;
+    ecs_set(stage, e, Position, {0, 0});
+    ecs_merge(stage);
+    test_int(count, 32);
     ecs_fini(world);
 }

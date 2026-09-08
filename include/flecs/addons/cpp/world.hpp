@@ -33,7 +33,7 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
     }
 
     if (res.stage) {
-        flecs_defer_end(res.world, res.stage);
+        flecs_commands_end(res.world, res.stage);
     }
 
     if (res.call_modified) {
@@ -60,7 +60,7 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
     dst = value;
 
     if (res.stage) {
-        flecs_defer_end(res.world, res.stage);
+        flecs_commands_end(res.world, res.stage);
     }
 
     if (res.call_modified) {
@@ -121,7 +121,7 @@ inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_
     }
 
     if (res.stage) {
-        flecs_defer_end(res.world, res.stage);
+        flecs_commands_end(res.world, res.stage);
     }
 
     if (res.call_modified) {
@@ -150,7 +150,7 @@ inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs
     dst = value;
 
     if (res.stage) {
-        flecs_defer_end(res.world, res.stage);
+        flecs_commands_end(res.world, res.stage);
     }
 
     if (res.call_modified) {
@@ -381,75 +381,15 @@ struct world {
         ecs_readonly_end(world_);
     }
 
-    /** Defer operations until end of frame.
-     * When this operation is invoked while iterating, operations in between the
-     * defer_begin() and defer_end() operations are executed at the end of the frame.
-     *
-     * This operation is thread-safe.
-     *
-     * @return true if world changed from non-deferred mode to deferred mode.
-     *
-     * @see ecs_defer_begin()
-     * @see flecs::world::defer()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_resume()
-     * @see flecs::world::defer_suspend()
-     * @see flecs::world::is_defer_suspended()
-     */
-    bool defer_begin() const {
-        return ecs_defer_begin(world_);
-    }
-
-    /** End block of operations to defer.
-     * See defer_begin().
-     *
-     * This operation is thread-safe.
-     *
-     * @return true if world changed from deferred mode to non-deferred mode.
-     *
-     * @see ecs_defer_end()
-     * @see flecs::world::defer()
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_resume()
-     * @see flecs::world::defer_suspend()
-     * @see flecs::world::is_defer_suspended()
-     */
-    bool defer_end() const {
-        return ecs_defer_end(world_);
-    }
-
     /** Test whether deferring is enabled.
      *
      * @return True if deferred, false if not.
      *
      * @see ecs_is_deferred()
      * @see flecs::world::defer()
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::defer_resume()
-     * @see flecs::world::defer_suspend()
-     * @see flecs::world::is_defer_suspended()
      */
     bool is_deferred() const {
         return ecs_is_deferred(world_);
-    }
-
-    /** Test whether deferring is suspended.
-     *
-     * @return True if defer is suspended, false if not.
-     *
-     * @see ecs_is_defer_suspended()
-     * @see flecs::world::defer()
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_resume()
-     * @see flecs::world::defer_suspend()
-     */
-    bool is_defer_suspended() const {
-        return ecs_is_defer_suspended(world_);
     }
 
     /** Configure world to have N stages.
@@ -544,11 +484,6 @@ struct world {
      * An asynchronous stage can be used to asynchronously queue operations for
      * later merging with the world. An asynchronous stage is similar to a regular
      * stage, except that it does not allow reading from the world.
-     *
-     * Asynchronous stages are never merged automatically, and must therefore be
-     * manually merged with the ecs_merge() function. It is not necessary to call
-     * defer_begin() or defer_end() before and after enqueuing commands, as an
-     * asynchronous stage unconditionally defers operations.
      *
      * The application must ensure that no commands are added to the stage while the
      * stage is being merged.
@@ -1184,45 +1119,11 @@ struct world {
         remove_all(_::type<First>::id(world_), second);
     }
 
-    /** Defer all operations called in function.
-     *
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_resume()
-     * @see flecs::world::defer_suspend()
-     */
     template <typename Func>
     void defer(const Func& func) const {
-        ecs_defer_begin(world_);
-        func();
-        ecs_defer_end(world_);
-    }
-
-    /** Suspend deferring operations.
-     *
-     * @see ecs_defer_suspend()
-     * @see flecs::world::defer()
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_resume()
-     */
-    void defer_suspend() const {
-        ecs_defer_suspend(world_);
-    }
-
-    /** Resume deferring operations.
-     *
-     * @see ecs_defer_resume()
-     * @see flecs::world::defer()
-     * @see flecs::world::defer_begin()
-     * @see flecs::world::defer_end()
-     * @see flecs::world::is_deferred()
-     * @see flecs::world::defer_suspend()
-     */
-    void defer_resume() const {
-        ecs_defer_resume(world_);
+        flecs::world stage = get_stage(0);
+        func(stage);
+        stage.merge();
     }
 
     /** Check if entity ID exists in the world.

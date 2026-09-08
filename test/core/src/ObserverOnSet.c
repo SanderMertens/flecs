@@ -6,18 +6,18 @@ static void OnPosition(ecs_iter_t *it) {
 }
 
 static void Add_to_current(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_ctx(it->world);
+    IterData *ctx = ecs_get_ctx(it->stage);
 
     int i;
     for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_id(it->world, it->entities[i], ctx->component);
+            ecs_add_id(it->stage, it->entities[i], ctx->component);
 
-            test_assert( !!ecs_get_type(it->world, it->entities[i]));
+            test_assert( !!ecs_get_type(it->stage, it->entities[i]));
         }
 
         if (ctx->component_2) {
-            ecs_add_id(it->world, it->entities[i], ctx->component_2);
+            ecs_add_id(it->stage, it->entities[i], ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -25,18 +25,18 @@ static void Add_to_current(ecs_iter_t *it) {
 }
 
 static void Remove_from_current(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_ctx(it->world);
+    IterData *ctx = ecs_get_ctx(it->stage);
 
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
 
         if (ctx->component) {
-            ecs_remove_id(it->world, e, ctx->component);
+            ecs_remove_id(it->stage, e, ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_remove_id(it->world, e, ctx->component_2);
+            ecs_remove_id(it->stage, e, ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -976,7 +976,7 @@ static void Add0(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add_id(it->world, it->entities[i], 0);
+        ecs_add_id(it->stage, it->entities[i], 0);
     }
 }
 

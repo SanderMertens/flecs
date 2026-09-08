@@ -105,7 +105,7 @@ void flecs_query_get_trav_down_cache(
     ecs_entity_t entity)
 {
     if (cache->id != ecs_pair(trav, entity) || cache->up) {
-        ecs_world_t *world = ctx->it->real_world;
+        ecs_world_t *world = ctx->it->world;
         ecs_allocator_t *a = flecs_query_get_allocator(ctx->it);
         ecs_vec_reset_t(a, &cache->entities, ecs_trav_elem_t);
         flecs_query_build_down_cache(world, a, ctx, cache, trav, entity);
@@ -121,7 +121,7 @@ void flecs_query_get_trav_up_cache(
     ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_world_t *world = ctx->it->real_world;
+    ecs_world_t *world = ctx->it->world;
     ecs_allocator_t *a = flecs_query_get_allocator(ctx->it);
 
     ecs_component_record_t *cr = cache->cr;

@@ -391,7 +391,8 @@
                 "run_w_param",
                 "run_no_match",
                 "run_w_interrupt",
-                "run_staging"
+                "run_staging",
+                "run_with_stage"
             ]
         }, {
             "id": "MultiThread",
@@ -400,6 +401,7 @@
                 "worker_kind": ["thread", "task"]
             },
             "testcases": [
+                "create_query_from_stage",
                 "2_thread_1_entity",
                 "2_thread_2_entity",
                 "2_thread_5_entity",

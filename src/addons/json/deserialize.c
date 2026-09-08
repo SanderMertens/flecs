@@ -716,9 +716,9 @@ static const char* flecs_entity_from_json(
 
                     ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
                     diff.removed = removed;
-                    ecs_defer_begin(world);
+                    flecs_commands_begin(world, flecs_stage_from_readonly_world(world));
                     flecs_commit(world, e, r, dst_table, &diff, 0, 0);
-                    ecs_defer_end(world);
+                    flecs_commands_end(world, flecs_stage_from_readonly_world(world));
                 }
 
                 ecs_assert(ecs_get_table(world, e) == dst_table,

@@ -1468,7 +1468,7 @@ void World_run_post_frame(void) {
     ecs.system()
         .run([&](flecs::iter& it) {
             while (it.next()) {
-                it.world().run_post_frame([](flecs::world_t *w, void *ctx) {
+                it.stage().run_post_frame([](flecs::world_t *w, void *ctx) {
                     int *i = static_cast<int*>(ctx);
                     test_int(*i, 10);
                     i[0] ++;
@@ -1811,7 +1811,7 @@ void World_fini_reentrancy(void) {
             test_assert(hdr->refcount == 1);
 
             // obtain the entity's world. This increments the world's hdr refcount
-            flecs::world world_copy = e.world();
+            flecs::world world_copy = e.world().get_world();
 
             test_assert(hdr->refcount == 2);
             // here world_copy object wrapping c world is destroyed

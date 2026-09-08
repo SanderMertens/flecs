@@ -257,7 +257,7 @@ struct iter_iterable final : iterable<Components...> {
     flecs::entity first() {
         flecs::entity result;
         if (next_each_(&it_) && it_.count) {
-            result = flecs::entity(it_.world, it_.entities[0]);
+            result = flecs::entity(it_.stage, it_.entities[0]);
             ecs_iter_fini(&it_);
         }
         return result;
@@ -273,7 +273,7 @@ struct iter_iterable final : iterable<Components...> {
     /** Limit results to tables with the specified group type (grouped queries only). */
     template <typename Group>
     iter_iterable<Components...>& set_group() {
-        ecs_iter_set_group(&it_, _::type<Group>().id(it_.real_world));
+        ecs_iter_set_group(&it_, _::type<Group>().id(it_.world));
         return *this;
     }
 #endif
@@ -282,7 +282,7 @@ protected:
     ecs_iter_t get_iter(flecs::world_t *world) const override {
         if (world) {
             ecs_iter_t result = it_;
-            result.world = world;
+            result.stage = world;
             return result;
         }
         return it_;
@@ -307,7 +307,7 @@ iter_iterable<Components...> iterable<Components...>::iter(flecs::world_t *world
 template <typename ... Components>
 iter_iterable<Components...> iterable<Components...>::iter(flecs::iter& it) const
 {
-    return iter_iterable<Components...>(this, it.world());
+    return iter_iterable<Components...>(this, it.stage());
 }
 
 template <typename ... Components>

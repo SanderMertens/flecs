@@ -22,6 +22,7 @@ static void flecs_stage_merge(
 {
     bool is_stage = flecs_poly_is(world, ecs_stage_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
+    flecs_check_exclusive_world_access_write(world);
 
     bool measure_frame_time = ECS_BIT_IS_SET(ecs_world_get_flags(world), 
         EcsWorldMeasureFrameTime);
@@ -35,17 +36,14 @@ static void flecs_stage_merge(
     ecs_log_push_3();
 
     if (is_stage) {
-        /* Check for consistency when merging a single stage. */
-        ecs_assert(stage->defer == 1, ECS_INVALID_OPERATION, 
-            "mismatching defer_begin/defer_end detected");
-        flecs_defer_end(world, stage);
+        flecs_commands_flush(world, stage);
     } else {
         /* Merge all stages */
         int32_t i, count = ecs_get_stage_count(world);
         for (i = 0; i < count; i ++) {
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
             flecs_poly_assert(s, ecs_stage_t);
-            flecs_defer_end(world, s);
+            flecs_commands_flush(world, s);
         }
     }
 
@@ -55,10 +53,6 @@ static void flecs_stage_merge(
 
     world->info.merge_count_total ++; 
 
-    /* If stage is unmanaged, deferring is always enabled */
-    if (stage->id == -1) {
-        flecs_defer_begin(world, stage);
-    }
     
     ecs_log_pop_3();
 }
@@ -108,12 +102,8 @@ static ecs_stage_t* flecs_stage_new(
     ecs_allocator_t *a = &stage->allocator;
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
 
-    int32_t i;
-    for (i = 0; i < 2; i ++) {
-        flecs_commands_init(stage, &stage->cmd_stack[i]);
-    }
-
-    stage->cmd = &stage->cmd_stack[0];
+    flecs_commands_init(stage, &stage->cmd_root);
+    stage->cmd = &stage->cmd_root;
     return stage;
 }
 
@@ -133,9 +123,14 @@ static void flecs_stage_free(
     ecs_vec_fini(NULL, &stage->variables, 0);
     ecs_vec_fini(NULL, &stage->operations, 0);
 
-    int32_t i;
-    for (i = 0; i < 2; i ++) {
-        flecs_commands_fini(stage, &stage->cmd_stack[i]);
+    ecs_commands_t *cmd = &stage->cmd_root;
+    while (cmd) {
+        ecs_commands_t *next = cmd->next;
+        flecs_commands_fini(stage, cmd);
+        if (cmd != &stage->cmd_root) {
+            ecs_os_free(cmd);
+        }
+        cmd = next;
     }
 
 #ifdef FLECS_SCRIPT
@@ -177,7 +172,6 @@ ecs_world_t* ecs_stage_new(
     ecs_stage_t *stage = flecs_stage_new(world);
     stage->id = -1;
 
-    flecs_defer_begin(world, stage);
 
     return (ecs_world_t*)stage;
 }
@@ -304,9 +298,6 @@ bool ecs_readonly_begin(
     for (i = 0; i < count; i ++) {
         ecs_stage_t *stage = world->stages[i];
         stage->lookup_path = world->stages[0]->lookup_path;
-        ecs_assert(stage->defer == 0, ECS_INVALID_OPERATION, 
-            "deferred mode cannot be enabled when entering readonly mode");
-        flecs_defer_begin(world, stage);
     }
 
     bool is_readonly = ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
@@ -341,51 +332,13 @@ ecs_world_t* flecs_suspend_readonly(
     const ecs_world_t *stage_world,
     ecs_suspend_readonly_state_t *state)
 {
-    ecs_assert(stage_world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_world_t *world =
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
     flecs_poly_assert(world, ecs_world_t);
-
-    bool is_readonly = ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
-    ecs_world_t *temp_world = world;
-    ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
-
-    if (!is_readonly && !stage->defer) {
-        state->is_readonly = false;
-        state->is_deferred = false;
-        return world;
-    }
-
-    ecs_dbg_3("suspending readonly mode");
-
-    /* Cannot suspend when running with multiple threads */
-    ecs_assert(!(world->flags & EcsWorldReadonly) ||
-        !(world->flags & EcsWorldMultiThreaded), 
-            ECS_INVALID_WHILE_READONLY, NULL);
-
-    state->is_readonly = is_readonly;
-    state->is_deferred = stage->defer != 0;
-    state->cmd_flushing = stage->cmd_flushing;
-
-    /* Silence readonly checks */
-    world->flags &= ~EcsWorldReadonly;
-    stage->cmd_flushing = false;
-
-    /* Hack around safety checks (this ought to look ugly) */
-    state->defer_count = stage->defer;
-    state->cmd_stack[0] = stage->cmd_stack[0];
-    state->cmd_stack[1] = stage->cmd_stack[1];
-    state->cmd = stage->cmd;
-
-    flecs_commands_init(stage, &stage->cmd_stack[0]);
-    flecs_commands_init(stage, &stage->cmd_stack[1]);
-    stage->cmd = &stage->cmd_stack[0];
-
-    state->scope = stage->scope;
-    stage->defer = 0;
-
+    state->is_readonly = ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
+    state->scope = world->stages[0]->scope;
+    ecs_assert(!state->is_readonly || !(world->flags & EcsWorldMultiThreaded),
+        ECS_INVALID_WHILE_READONLY, NULL);
+    ECS_BIT_CLEAR(world->flags, EcsWorldReadonly);
     return world;
 }
 
@@ -394,28 +347,11 @@ void flecs_resume_readonly(
     ecs_suspend_readonly_state_t *state)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_world_t *temp_world = world;
-    ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
-
-    if (state->is_readonly || state->is_deferred) {
-        ecs_dbg_3("resuming readonly mode");
-
+    if (state->is_readonly) {
         ecs_run_aperiodic(world, 0);
-
-        /* Restore readonly state / defer count */
-        ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
-        stage->defer = state->defer_count;
-        stage->cmd_flushing = state->cmd_flushing;
-        flecs_commands_fini(stage, &stage->cmd_stack[0]);
-        flecs_commands_fini(stage, &stage->cmd_stack[1]);
-        stage->cmd_stack[0] = state->cmd_stack[0];
-        stage->cmd_stack[1] = state->cmd_stack[1];
-        stage->cmd = state->cmd;
-        
-        stage->scope = state->scope;
     }
+    ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
+    world->stages[0]->scope = state->scope;
 }
 
 void ecs_merge(
@@ -432,52 +368,24 @@ bool ecs_stage_is_readonly(
     const ecs_world_t *stage)
 {
     const ecs_world_t *world = ecs_get_world(stage);
-
-    if (flecs_poly_is(stage, ecs_stage_t)) {
-        if (((const ecs_stage_t*)stage)->id == -1) {
-            /* Stage is not owned by world, so never readonly */
-            return false;
-        }
-    }
-
-    if (world->flags & EcsWorldReadonly) {
-        if (flecs_poly_is(stage, ecs_world_t)) {
-            return true;
-        }
-    } else {
-        if (flecs_poly_is(stage, ecs_stage_t)) {
-            return true;
-        }
-    }
-
-    return false;
+    return flecs_poly_is(stage, ecs_world_t) &&
+        ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
 }
 
 void ecs_stage_shrink(
     ecs_stage_t *stage)
 {
-    flecs_sparse_shrink(&stage->cmd_stack[0].entries);
-    flecs_sparse_shrink(&stage->cmd_stack[1].entries);
-    ecs_vec_reclaim_t(&stage->allocator, &stage->cmd_stack[0].queue, ecs_cmd_t);
-    ecs_vec_reclaim_t(&stage->allocator, &stage->cmd_stack[1].queue, ecs_cmd_t);
+    for (ecs_commands_t *cmd = &stage->cmd_root; cmd; cmd = cmd->next) {
+        flecs_sparse_shrink(&cmd->entries);
+        ecs_vec_reclaim_t(&stage->allocator, &cmd->queue, ecs_cmd_t);
+    }
 }
 
 bool ecs_is_deferred(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
-    return stage->defer > 0;
-error:
-    return false;
-}
-
-bool ecs_is_defer_suspended(
-    const ecs_world_t *world)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
-    return stage->defer < 0;
+    return flecs_poly_is(world, ecs_stage_t);
 error:
     return false;
 }

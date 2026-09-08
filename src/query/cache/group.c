@@ -291,9 +291,7 @@ ecs_query_cache_match_t* flecs_query_cache_add_table(
     ecs_assert(ecs_map_get(&cache->tables, table->id) == NULL, 
         ECS_INTERNAL_ERROR, NULL);
 
-    if (!ecs_map_count(&cache->tables) && cache->entity) {
-        ecs_remove_id(cache->query->world, cache->entity, EcsEmpty);
-    }
+    bool was_empty = !ecs_map_count(&cache->tables);
 
     uint64_t group_id = flecs_query_cache_get_group_id(cache, table);
 
@@ -308,7 +306,13 @@ ecs_query_cache_match_t* flecs_query_cache_add_table(
     qt->index = ecs_vec_count(&group->tables);
     ecs_map_insert_ptr(&cache->tables, table->id, qt);
 
-    return flecs_query_cache_add_table_to_group(cache, group, qt, table);
+    ecs_query_cache_match_t *result = flecs_query_cache_add_table_to_group(
+        cache, group, qt, table);
+    if (was_empty && cache->entity) {
+        ecs_remove_id(ecs_get_stage(cache->query->real_world, 0),
+            cache->entity, EcsEmpty);
+    }
+    return result;
 }
 
 /* Move table to a different group. This can happen if the value returned by 

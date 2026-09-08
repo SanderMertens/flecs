@@ -11,7 +11,7 @@ typedef struct {
 } Position;
 
 void Observer(ecs_iter_t *it) {
-    ecs_world_t *ecs = it->world;
+    ecs_world_t *ecs = it->stage;
     
     // The event kind
     ecs_entity_t event = it->event;
@@ -48,11 +48,10 @@ int main(int argc, char *argv[]) {
     // trigger the observer yet.
     ecs_set(ecs, e, Position, {10, 20});
 
-    // We can only call enqueue events while the world is deferred mode.
-    ecs_defer_begin(ecs);
+    ecs_world_t *stage_1 = ecs_is_deferred(ecs) ? ecs : ecs_get_stage(ecs, 0);
 
     // Emit the custom event
-    ecs_enqueue(ecs, &(ecs_event_desc_t) {
+    ecs_enqueue(stage_1, &(ecs_event_desc_t) {
         .event = MyEvent,
         .ids = &(ecs_type_t){ (ecs_id_t[]){ ecs_id(Position) }, 1 }, // 1 id
         .entity = e
@@ -61,7 +60,7 @@ int main(int argc, char *argv[]) {
     printf("Event enqueued!\n");
 
     // Flushes the queue, and invokes the observer
-    ecs_defer_end(ecs);
+    ecs_merge(stage_1);
 
     ecs_fini(ecs);
 

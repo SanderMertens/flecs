@@ -158,7 +158,7 @@ static void CreateNewTable(ecs_iter_t *it) {
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Velocity);
+        ecs_add(it->stage, it->entities[i], Velocity);
     }
 }
 

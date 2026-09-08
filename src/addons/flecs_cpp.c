@@ -570,10 +570,11 @@ ecs_cpp_get_mut_t ecs_cpp_set(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
 
+    bool deferred = ecs_is_deferred(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_cpp_get_mut_t result;
 
-    if (flecs_defer_cmd(stage)) {
+    if (flecs_defer_cmd(stage, deferred)) {
         result.ptr = flecs_defer_cpp_set(world, stage, entity, id,
             flecs_utosize(size), new_ptr);
         /* Modified command is already inserted */
@@ -621,10 +622,11 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
 
+    bool deferred = ecs_is_deferred(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_cpp_get_mut_t result;
 
-    if (flecs_defer_cmd(stage)) {
+    if (flecs_defer_cmd(stage, deferred)) {
         result.ptr = flecs_defer_cpp_assign(
             world, stage, entity, id, flecs_uto(int32_t, size), new_ptr);
         /* Modified command is already inserted */

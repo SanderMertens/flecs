@@ -72,17 +72,14 @@ ecs_entity_t flecs_run_system(
         ecs_os_get_time(&time_start);
     }
 
-    ecs_world_t *thread_ctx = world;
-    if (stage) {
-        thread_ctx = stage->thread_ctx;
-    } else {
+    if (!stage) {
         stage = world->stages[0];
     }
 
     flecs_poly_assert(stage, ecs_stage_t);
 
-    /* Prepare the query iterator */
-    ecs_iter_t wit, qit = ecs_query_iter(thread_ctx, system_data->query);
+    ecs_iter_t wit, qit = ecs_query_iter(
+        (ecs_world_t*)stage, system_data->query);
     ecs_iter_t *it = &qit;
 
     qit.system = system;
@@ -173,14 +170,19 @@ ecs_entity_t ecs_run_worker(
     ecs_ftime_t delta_time,
     void *param)
 {
+    bool deferred = ecs_is_deferred(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
-    flecs_defer_begin(world, stage);
+    if (!deferred) {
+        flecs_commands_begin(world, stage);
+    }
     ecs_entity_t result = flecs_run_system(
         world, stage, system, system_data, stage_index, stage_count, 
         delta_time, param);
-    flecs_defer_end(world, stage);
+    if (!deferred) {
+        flecs_commands_end(world, stage);
+    }
     return result;
 }
 
@@ -190,13 +192,18 @@ ecs_entity_t ecs_run(
     ecs_ftime_t delta_time,
     void *param)
 {
+    bool deferred = ecs_is_deferred(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
-    flecs_defer_begin(world, stage);
+    if (!deferred) {
+        flecs_commands_begin(world, stage);
+    }
     ecs_entity_t result = flecs_run_system(
         world, stage, system, system_data, 0, 0, delta_time, param);
-    flecs_defer_end(world, stage);
+    if (!deferred) {
+        flecs_commands_end(world, stage);
+    }
     return result;
 }
 
@@ -306,7 +313,7 @@ ecs_entity_t ecs_system_init(
     }
 
     /* Prevent the system from moving while we're initializing */
-    flecs_defer_begin(world, world->stages[0]);
+    flecs_commands_begin(world, world->stages[0]);
 
     if (desc->phase) {
         ecs_add_id(world, entity, desc->phase);
@@ -335,7 +342,7 @@ ecs_entity_t ecs_system_init(
 
     if (flecs_system_init_timer(world, entity, desc)) {
         ecs_delete(world, entity);
-        ecs_defer_end(world);
+        flecs_commands_end(world, flecs_stage_from_readonly_world(world));
         goto error;
     }
 
@@ -344,7 +351,7 @@ ecs_entity_t ecs_system_init(
             ecs_get_name(world, entity));
     }
 
-    ecs_defer_end(world);
+    flecs_commands_end(world, flecs_stage_from_readonly_world(world));
 
     flecs_poly_modified(world, entity, ecs_system_t);
 

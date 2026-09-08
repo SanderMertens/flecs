@@ -241,7 +241,7 @@ static void flecs_register_tag(ecs_iter_t *it) {
     flecs_register_flag_for_trait(it, EcsPairIsTag, EcsIdPairIsTag, EcsIdPairIsTag, 0);
 
     /* Ensure that all id records for tag have type info set to NULL */
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -374,7 +374,7 @@ static void flecs_disable_module_observers(
 static void flecs_disable_observer(
     ecs_iter_t *it)
 {
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
     bool should_disable = it->event == EcsOnAdd;
 
     int32_t i, count = it->count;
@@ -403,7 +403,7 @@ static void flecs_register_ordered_children(ecs_iter_t *it) {
                 flecs_ordered_children_populate(it->world, cr);
             }
         }
-    } else if (!(it->real_world->flags & EcsWorldFini) && it->other_table) {
+    } else if (!(it->world->flags & EcsWorldFini) && it->other_table) {
         ecs_assert(it->event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
         for (i = 0; i < it->count; i ++) {
             ecs_entity_t parent = it->entities[i];

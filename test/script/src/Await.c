@@ -2122,12 +2122,12 @@ void Await_task_component_deferred_one_task(void) {
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_script_task_t *task = ecs_script_task_new(script,
         &(ecs_script_task_desc_t){ .entity = e });
     test_assert(task != NULL);
-    test_assert(!ecs_has(world, e, EcsScriptTask));
-    ecs_defer_end(world);
+    test_assert(ecs_has(stage_1, e, EcsScriptTask));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, EcsScriptTask));
     const EcsScriptTask *t = ecs_get(world, e, EcsScriptTask);
@@ -2169,7 +2169,7 @@ void Await_task_component_deferred_three_tasks(void) {
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_script_task_t *task_a = ecs_script_task_new(script,
         &(ecs_script_task_desc_t){ .entity = e });
     ecs_script_task_t *task_b = ecs_script_task_new(script,
@@ -2179,8 +2179,8 @@ void Await_task_component_deferred_three_tasks(void) {
     test_assert(task_a != NULL);
     test_assert(task_b != NULL);
     test_assert(task_c != NULL);
-    test_assert(!ecs_has(world, e, EcsScriptTask));
-    ecs_defer_end(world);
+    test_assert(ecs_has(stage_1, e, EcsScriptTask));
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, EcsScriptTask));
     const EcsScriptTask *t = ecs_get(world, e, EcsScriptTask);
@@ -2232,11 +2232,11 @@ void Await_task_component_deferred_w_existing_task(void) {
     test_assert(task_a != NULL);
     test_assert(ecs_has(world, e, EcsScriptTask));
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_script_task_t *task_b = ecs_script_task_new(script,
         &(ecs_script_task_desc_t){ .entity = e });
     test_assert(task_b != NULL);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     const EcsScriptTask *t = ecs_get(world, e, EcsScriptTask);
     test_assert(t != NULL);
@@ -2464,12 +2464,12 @@ void Await_task_component_deferred_new_then_free(void) {
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_script_task_t *task = ecs_script_task_new(script,
         &(ecs_script_task_desc_t){ .entity = e });
     test_assert(task != NULL);
     ecs_script_task_free(task);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, EcsScriptTask));
 
@@ -2633,8 +2633,6 @@ void Await_resume_from_async_callback(void) {
     test_expect_abort();
     ecs_script_task_resume(await_reentrant_task, NULL);
 }
-
-
 
 static ecs_script_task_t *await_free_task;
 

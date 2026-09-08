@@ -236,7 +236,7 @@ int ecs_iter_to_json_buf(
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
 
     /* Cache component record for flecs.doc ids */
     ecs_json_ser_ctx_t ser_ctx;

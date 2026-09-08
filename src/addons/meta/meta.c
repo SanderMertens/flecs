@@ -179,6 +179,8 @@ int flecs_init_type(
     ecs_size_t size,
     ecs_size_t alignment)
 {
+    ecs_world_t *stage = world;
+    world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -195,7 +197,7 @@ int flecs_init_type(
     }
 #endif
 
-    EcsType *meta_type = ecs_ensure(world, type, EcsType);
+    EcsType *meta_type = ecs_ensure(stage, type, EcsType);
     if (meta_type->kind == 0) {
         meta_type->kind = kind;
 
@@ -246,10 +248,10 @@ int flecs_init_type(
     }
 
     if (!meta_type->existing) {
-        EcsComponent *comp = ecs_ensure(world, type, EcsComponent);
+        EcsComponent *comp = ecs_ensure(stage, type, EcsComponent);
         comp->size = size;
         comp->alignment = alignment;
-        ecs_modified(world, type, EcsComponent);
+        ecs_modified(stage, type, EcsComponent);
     } else {
         const EcsComponent *comp = ecs_get(world, type, EcsComponent);
         if (comp->size) {
@@ -277,7 +279,7 @@ int flecs_init_type(
         }
     }
 
-    ecs_modified(world, type, EcsType);
+    ecs_modified(stage, type, EcsType);
 
     return 0;
 }

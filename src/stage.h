@@ -32,13 +32,8 @@ struct ecs_stage_t {
     /* Unique id that identifies the stage */
     int32_t id;
 
-    /* Zero if not deferred, positive if deferred, negative if suspended */
-    int32_t defer;
-
-    /* Command queue */
     ecs_commands_t *cmd;
-    ecs_commands_t cmd_stack[2];     /* Two so we can flush one & populate the other */
-    bool cmd_flushing;               /* Ensures only one defer_end call flushes */
+    ecs_commands_t cmd_root;
 
     /* Thread context */
     ecs_world_t *thread_ctx;         /* Points to stage when used as a thread stage */
@@ -69,6 +64,19 @@ struct ecs_stage_t {
     ecs_script_runtime_t *runtime;
 #endif
 };
+
+static inline
+bool flecs_commands_begin(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    (void)world;
+    if (!stage->cmd->next) {
+        flecs_commands_grow(stage);
+    }
+    stage->cmd = stage->cmd->next;
+    return true;
+}
 
 /* Post-frame merge actions. */
 void flecs_stage_merge_post_frame(

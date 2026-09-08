@@ -98,7 +98,7 @@ int flecs_add_non_fragmenting_child_w_records(
 #ifdef FLECS_PREFAB
     ecs_record_t *r_parent = flecs_entities_get(world, parent);
     if (r_parent->table->flags & EcsTableIsPrefab) {
-        ecs_add_id(world, entity, EcsPrefab);
+        ecs_add_id(ecs_get_stage(world, 0), entity, EcsPrefab);
     }
 #endif
 
@@ -210,7 +210,7 @@ static void flecs_on_replace_parent(ecs_iter_t *it) {
         if (!flecs_entities_is_alive(world, new_parent)) {
             /* So cleanup code can see this is a child of a deleted parent */
             old[i].value = new_parent;
-            ecs_delete(world, e);
+            ecs_delete(it->stage, e);
             continue;
         }
 
@@ -259,7 +259,7 @@ static void flecs_on_replace_parent(ecs_iter_t *it) {
          * is the same, the pair doesn't have to be updated and neither do the
          * cached depths for the entity's children. */
         if (!cr_old || cr_old->pair->depth != depth) {
-            ecs_add_id(world, e, ecs_value_pair(EcsParentDepth, depth));
+            ecs_add_id(it->stage, e, ecs_value_pair(EcsParentDepth, depth));
 
             ecs_component_record_t *cr = flecs_components_get(
                 world, ecs_childof(e));

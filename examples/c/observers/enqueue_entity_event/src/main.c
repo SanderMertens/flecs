@@ -19,7 +19,7 @@ ECS_COMPONENT_DECLARE(Resize);
 void OnClick(ecs_iter_t *it) {
     // The event source can be obtained with ecs_field_src(1). This allows the
     // same event function to be used for different entities.
-    char *path = ecs_get_path(it->world, ecs_field_src(it, 0));
+    char *path = ecs_get_path(it->stage, ecs_field_src(it, 0));
     printf("clicked on %s!\n", path);
     ecs_os_free(path);
 }
@@ -27,7 +27,7 @@ void OnClick(ecs_iter_t *it) {
 void OnResize(ecs_iter_t *it) {
     // Event payload can be obtained from the it->param member
     Resize *p = it->param;
-    char *path = ecs_get_path(it->world, ecs_field_src(it, 0));
+    char *path = ecs_get_path(it->stage, ecs_field_src(it, 0));
     printf("resized %s to {%.0f, %.0f}!\n", path, p->width, p->height);
     ecs_os_free(path);
 }
@@ -56,17 +56,16 @@ int main(int argc, char *argv[]) {
         .callback = OnResize
     });
 
-    // We can only call enqueue events while the world is deferred mode.
-    ecs_defer_begin(ecs);
+    ecs_world_t *stage_1 = ecs_is_deferred(ecs) ? ecs : ecs_get_stage(ecs, 0);
 
     // Emit the Click event
-    ecs_enqueue(ecs, &(ecs_event_desc_t) {
+    ecs_enqueue(stage_1, &(ecs_event_desc_t) {
         .event = Click,
         .entity = widget
     });
 
     // Emit the Resize event
-    ecs_enqueue(ecs, &(ecs_event_desc_t) {
+    ecs_enqueue(stage_1, &(ecs_event_desc_t) {
         .event = ecs_id(Resize),
         .entity = widget,
         .param = &(Resize){100, 200} // pass payload
@@ -75,7 +74,7 @@ int main(int argc, char *argv[]) {
     printf("Events enqueued\n");
 
     // Flushes the queue, and invokes the observer
-    ecs_defer_end(ecs);
+    ecs_merge(stage_1);
 
     ecs_fini(ecs);
 

@@ -230,7 +230,7 @@ static int flecs_add_constant_to_enum(
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, 
             "underlying type is not a type");
         void *cptr = ecs_ensure_id(
-            world, e, ecs_pair(EcsConstant, ut), flecs_ito(size_t, ti->size));
+            ecs_get_stage(world, 0), e, ecs_pair(EcsConstant, ut), flecs_ito(size_t, ti->size));
         ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, ut, cptr);
         if (ut_is_unsigned) {
@@ -300,7 +300,7 @@ static int flecs_add_constant_to_bitmask(
         }
 
         const uint32_t *value_ptr = ecs_get_pair_second(
-            world, e, EcsConstant, ecs_u32_t);
+            ecs_get_stage(world, 0), e, EcsConstant, ecs_u32_t);
         ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         value = *value_ptr;
     } else {
@@ -341,11 +341,11 @@ static int flecs_add_constant_to_bitmask(
     ordered_c->constant = c->constant;
 
     ecs_u32_t *cptr = ecs_ensure_pair_second(
-        world, e, EcsConstant, ecs_u32_t);
+        ecs_get_stage(world, 0), e, EcsConstant, ecs_u32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
 
-    cptr = ecs_ensure_id(world, e, type, sizeof(uint32_t));
+    cptr = ecs_ensure_id(ecs_get_stage(world, 0), e, type, sizeof(uint32_t));
     cptr[0] = value;
 
     return 0;
@@ -386,13 +386,12 @@ static void flecs_add_enum(ecs_iter_t *it) {
 }
 
 static void flecs_add_bitmask(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
 
-        if (flecs_init_type_t(world, e, EcsBitmaskType, ecs_u32_t)) {
+        if (flecs_init_type_t(it->stage, e, EcsBitmaskType, ecs_u32_t)) {
             continue;
         }
     }

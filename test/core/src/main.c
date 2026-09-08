@@ -3050,9 +3050,11 @@ void Type_role_owned_str(void);
 void Type_role_disabled_str(void);
 
 // Testsuite 'Commands'
+void Commands_observer_commands_before_next_command(void);
+void Commands_nested_observer_command_queues(void);
 void Commands_defer_ensure_dont_fragment_w_set(void);
 void Commands_is_deferred(void);
-void Commands_is_defer_suspended(void);
+void Commands_stage_always_deferred(void);
 void Commands_defer_new(void);
 void Commands_defer_bulk_new(void);
 void Commands_defer_add(void);
@@ -3109,7 +3111,7 @@ void Commands_discard_add_two(void);
 void Commands_discard_remove_two(void);
 void Commands_discard_child(void);
 void Commands_discard_child_w_add(void);
-void Commands_defer_return_value(void);
+void Commands_world_operations_with_pending_stage(void);
 void Commands_defer_ensure_pair(void);
 void Commands_async_stage_add(void);
 void Commands_async_stage_add_twice(void);
@@ -15362,6 +15364,14 @@ bake_test_case Type_testcases[] = {
 
 bake_test_case Commands_testcases[] = {
     {
+        "observer_commands_before_next_command",
+        Commands_observer_commands_before_next_command
+    },
+    {
+        "nested_observer_command_queues",
+        Commands_nested_observer_command_queues
+    },
+    {
         "defer_ensure_dont_fragment_w_set",
         Commands_defer_ensure_dont_fragment_w_set
     },
@@ -15370,8 +15380,8 @@ bake_test_case Commands_testcases[] = {
         Commands_is_deferred
     },
     {
-        "is_defer_suspended",
-        Commands_is_defer_suspended
+        "stage_always_deferred",
+        Commands_stage_always_deferred
     },
     {
         "defer_new",
@@ -15598,8 +15608,8 @@ bake_test_case Commands_testcases[] = {
         Commands_discard_child_w_add
     },
     {
-        "defer_return_value",
-        Commands_defer_return_value
+        "world_operations_with_pending_stage",
+        Commands_world_operations_with_pending_stage
     },
     {
         "defer_ensure_pair",
@@ -17149,7 +17159,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        185,
+        187,
         Commands_testcases
     },
     {

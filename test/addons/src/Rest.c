@@ -491,10 +491,10 @@ void Rest_request_commands(void) {
     ecs_entity_t e2 = ecs_new(world);
 
     ecs_frame_begin(world, 0);
-    ecs_defer_begin(world);
-    ecs_set(world, e1, Position, {10, 20});
-    ecs_set(world, e2, Position, {20, 30});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e1, Position, {10, 20});
+    ecs_set(stage_1, e2, Position, {20, 30});
+    ecs_merge(stage_1);
     ecs_frame_end(world);
 
     {
@@ -537,12 +537,12 @@ void Rest_request_commands_2_syncs(void) {
     ecs_entity_t e2 = ecs_new(world);
 
     ecs_frame_begin(world, 0);
-    ecs_defer_begin(world);
-    ecs_set(world, e1, Position, {10, 20});
-    ecs_defer_end(world);
-    ecs_defer_begin(world);
-    ecs_set(world, e2, Position, {20, 30});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e1, Position, {10, 20});
+    ecs_merge(stage_1);
+    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_2, e2, Position, {20, 30});
+    ecs_merge(stage_2);
     ecs_frame_end(world);
 
     {
@@ -606,8 +606,8 @@ void Rest_request_commands_no_commands(void) {
     }
 
     ecs_frame_begin(world, 0);
-    ecs_defer_begin(world);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_merge(stage_1);
     ecs_frame_end(world);
 
     {
@@ -650,10 +650,10 @@ void Rest_request_commands_garbage_collect(void) {
     ecs_entity_t e2 = ecs_new(world);
 
     ecs_frame_begin(world, 0);
-    ecs_defer_begin(world);
-    ecs_set(world, e1, Position, {10, 20});
-    ecs_set(world, e2, Position, {20, 30});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e1, Position, {10, 20});
+    ecs_set(stage_1, e2, Position, {20, 30});
+    ecs_merge(stage_1);
     ecs_frame_end(world);
 
     /* Retained for a minute at 60 FPS */
@@ -748,11 +748,11 @@ void Rest_script_error_new_script_deferred(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         ecs_log_set_level(-4);
-        ecs_defer_begin(world);
+        ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
         test_int(-1, ecs_http_server_request(srv, "PUT",
             "/script/main.flecs?code=foo%2B%7B",
             NULL, &reply));
-        ecs_defer_end(world);
+        ecs_merge(stage_1);
         test_int(reply.code, 400);
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);

@@ -857,11 +857,11 @@ void Observer_on_set_w_defer_set(void) {
     flecs::entity e = world.entity();
     test_int(count, 0);
 
-    world.defer_begin();
-    e.set<Position>({10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).set<Position>({10, 20});
 
     test_int(count, 0);
-    world.defer_end();
+    stage_1.merge();
 
     test_int(count, 1);
 }
@@ -993,7 +993,7 @@ void Observer_on_set_singleton_set_component_named_entity(void) {
         .write<MySingletonComponent>()
         .event(flecs::OnSet)
         .each([](flecs::iter &it, size_t, const MySingletonComponent &c1) {
-            it.world().entity("A").set<MyComponent>({c1.v});
+            it.stage().entity("A").set<MyComponent>({c1.v});
         });
 
     world.set<MySingletonComponent>({1});
@@ -1135,9 +1135,9 @@ void Observer_implicit_register_in_emit_for_named_entity_w_defer(void) {
         e2.set<Position>({10, 20});
     });
 
-    world.defer_begin();
+    flecs::world stage_1 = world.get_stage(0);
     e1.emit<MyEvent>({ 10 });
-    world.defer_end();
+    stage_1.merge();
 }
 
 void Observer_add_to_named_in_emit_for_named_entity_w_defer(void) {
@@ -1155,9 +1155,9 @@ void Observer_add_to_named_in_emit_for_named_entity_w_defer(void) {
         e2.set<Position>({10, 20});
     });
 
-    world.defer_begin();
+    flecs::world stage_1 = world.get_stage(0);
     e1.emit<MyEvent>({ 10 });
-    world.defer_end();
+    stage_1.merge();
 }
 
 void Observer_register_twice_w_each(void) {

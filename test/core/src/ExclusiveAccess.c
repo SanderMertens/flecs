@@ -33,15 +33,15 @@ void ExclusiveAccess_self(void) {
     ecs_delete(world, e);
     test_assert(!ecs_is_alive(world, e));
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    e = ecs_new(world);
-    test_assert(ecs_is_alive(world, e));
+    e = ecs_new(stage_1);
+    test_assert(ecs_is_alive(stage_1, e));
 
-    ecs_add(world, e, Position);
-    test_assert(!ecs_has(world, e, Position));
+    ecs_add(stage_1, e, Position);
+    test_assert(!ecs_has(stage_1, e, Position));
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Position));
 
@@ -505,7 +505,7 @@ void ExclusiveAccess_other_emplace_existing(void) {
 static void* thread_exclusive_access_other_defer_begin(void *arg) {
     ecs_world_t *world = arg;
     test_expect_abort();
-    ecs_defer_begin(world);
+    ecs_merge(ecs_get_stage(world, 0));
     return NULL;
 }
 
@@ -527,7 +527,7 @@ void ExclusiveAccess_other_defer_begin(void) {
 static void* thread_exclusive_access_other_defer_end(void *arg) {
     ecs_world_t *world = arg;
     test_expect_abort();
-    ecs_defer_end(world);
+    ecs_merge(world);
     return NULL;
 }
 
@@ -538,10 +538,10 @@ void ExclusiveAccess_other_defer_end(void) {
 
     ecs_exclusive_access_begin(world, NULL);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_defer_end, world);
+        ecs_os_thread_new(thread_exclusive_access_other_defer_end, stage_1);
 
     ecs_os_thread_join(thr);
 
@@ -1766,14 +1766,14 @@ void ExclusiveAccess_locked_defer_end(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     ecs_exclusive_access_begin(world, NULL);
-    ecs_exclusive_access_end(world, true); // lock world
+    ecs_exclusive_access_end(world, true); // lock stage_1
 
 
     ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_defer_end, world);
+        ecs_os_thread_new(thread_exclusive_access_other_defer_end, stage_1);
 
     ecs_os_thread_join(thr);
 

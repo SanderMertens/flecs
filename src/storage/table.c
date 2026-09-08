@@ -539,7 +539,7 @@ static void flecs_table_emit(
     ecs_table_t *table,
     ecs_entity_t event)
 {
-    ecs_defer_begin(world);
+    flecs_commands_begin(world, flecs_stage_from_readonly_world(world));
     flecs_emit(world, world, &(ecs_event_desc_t) {
         .ids = &table->type,
         .event = event,
@@ -547,7 +547,7 @@ static void flecs_table_emit(
         .flags = EcsEventTableOnly,
         .observable = world
     });
-    ecs_defer_end(world);
+    flecs_commands_end(world, flecs_stage_from_readonly_world(world));
 }
 
 /* Main table initialization function */
@@ -1150,7 +1150,7 @@ static void flecs_table_dtor_all(
 }
 
 #define FLECS_LOCKED_STORAGE_MSG(operation) \
-    "a " #operation " operation failed because the table is locked, fix by surrounding the operation with defer_begin()/defer_end()"
+    "a " #operation " operation failed because the table is locked, pass a stage to the operation and merge it after iteration"
 
 /* Cleanup table storage */
 static void flecs_table_fini_data(

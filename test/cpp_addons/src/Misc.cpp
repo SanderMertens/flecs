@@ -218,7 +218,7 @@ void Misc_app_run(void) {
     ecs.system().run([&](flecs::iter& it) {
         while (it.next()) {
             system_ran = true;
-            it.world().quit();
+            it.stage().quit();
         }
     });
 
@@ -233,8 +233,8 @@ void Misc_app_run_target_fps(void) {
     ecs.system().run([&](flecs::iter& it) {
         while (it.next()) {
             count ++;
-            test_int(it.world().get_info()->target_fps, 10);
-            it.world().quit();
+            test_int(it.stage().get_info()->target_fps, 10);
+            it.stage().quit();
         }
     });
 

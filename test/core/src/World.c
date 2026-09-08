@@ -667,10 +667,10 @@ void World_range_deferred_delete_across_ranges(void) {
     ecs_entity_t eb = ecs_new(world);
     test_uint((uint32_t)eb, 3000);
 
-    ecs_defer_begin(world);
-    ecs_delete(world, ea);
-    test_assert(ecs_is_alive(world, ea));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, ea);
+    test_assert(ecs_is_alive(stage_1, ea));
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, ea));
 
@@ -982,7 +982,7 @@ static void TMergeOnLoad(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 0);
-        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->stage, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
@@ -993,7 +993,7 @@ static void TMergePostLoad(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 1);
-        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->stage, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
@@ -1004,7 +1004,7 @@ static void TMergePreUpdate(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 2);
-        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->stage, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
@@ -1015,7 +1015,7 @@ static void TMergeOnUpdate(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 3);
-        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->stage, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
@@ -1026,7 +1026,7 @@ static void TMergeOnValidate(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 4);
-        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->stage, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
@@ -1037,7 +1037,7 @@ static void TMergePostUpdate(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 5);
-        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->stage, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
@@ -1048,7 +1048,7 @@ static void TMergePreStore(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 6);
-        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->stage, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
@@ -1059,7 +1059,7 @@ static void TMergeOnStore(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 7);
-        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->stage, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
@@ -1070,7 +1070,7 @@ static void TMergeManual(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 8);
-        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->stage, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 

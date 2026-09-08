@@ -385,7 +385,7 @@ static void flecs_on_set_symbol(
     ecs_iter_t *it) 
 {
     EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -412,7 +412,7 @@ void flecs_bootstrap_entity_name(
 void ecs_on_set(EcsIdentifier)(
     ecs_iter_t *it) 
 {
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
     EcsIdentifier *ptr = ecs_field(it, EcsIdentifier, 0);
 
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -945,6 +945,11 @@ static void flecs_add_path(
         ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
+    ecs_world_t *stage_world = world;
+    if (defer_suspend) {
+        world = real_world;
+    }
+
     if (parent) {
         ecs_add_pair(world, entity, EcsChildOf, parent);
     }
@@ -952,7 +957,7 @@ static void flecs_add_path(
     ecs_set_name(world, entity, name);
 
     if (defer_suspend) {
-        ecs_stage_t *stage = flecs_stage_from_world(&world);
+        ecs_stage_t *stage = flecs_stage_from_world(&stage_world);
         flecs_resume_readonly(real_world, &srs);
         flecs_defer_path(stage, parent, entity, name);
     }
@@ -1143,7 +1148,7 @@ ecs_entity_t flecs_set_identifier(
     EcsIdentifier *ptr = ecs_ensure_pair(world, entity, EcsIdentifier, tag);
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (tag == EcsName) {
+    if (tag == EcsName && stage) {
         /* Insert command after ensure, but before the name is potentially 
          * freed. Even though the name is a const char*, it is possible that the
          * application passed in the existing name of the entity which could 
@@ -1175,8 +1180,14 @@ ecs_entity_t ecs_set_name(
         });
     }
 
+    bool deferred = ecs_is_deferred(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    flecs_set_identifier(world, stage, entity, EcsName, name);
+    if (deferred && name) {
+        flecs_defer_path(stage, 0, entity, name);
+    } else {
+        flecs_set_identifier(deferred ? (ecs_world_t*)stage : world,
+            NULL, entity, EcsName, name);
+    }
 
     return entity;
 }

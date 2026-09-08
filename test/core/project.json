@@ -3137,9 +3137,11 @@
         }, {
             "id": "Commands",
             "testcases": [
+                "observer_commands_before_next_command",
+                "nested_observer_command_queues",
                 "defer_ensure_dont_fragment_w_set",
                 "is_deferred",
-                "is_defer_suspended",
+                "stage_always_deferred",
                 "defer_new",
                 "defer_bulk_new",
                 "defer_add",
@@ -3196,7 +3198,7 @@
                 "discard_remove_two",
                 "discard_child",
                 "discard_child_w_add",
-                "defer_return_value",
+                "world_operations_with_pending_stage",
                 "defer_ensure_pair",
                 "async_stage_add",
                 "async_stage_add_twice",

@@ -9,7 +9,7 @@ static void OnParentAdd(ecs_iter_t *it) {
         return;
     }
 
-    ecs_iter_t qit = ecs_query_iter(it->world, g_query);
+    ecs_iter_t qit = ecs_query_iter(it->stage, g_query);
     while (ecs_query_next(&qit)) {
     }
 }

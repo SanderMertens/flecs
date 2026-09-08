@@ -10,7 +10,7 @@ typedef struct {
 } Position;
 
 void Observer(ecs_iter_t *it) {
-    ecs_world_t *ecs = it->world;
+    ecs_world_t *ecs = it->stage;
 
     ecs_entity_t event = it->event;
     ecs_entity_t event_id = it->event_id;

@@ -17,6 +17,7 @@ ecs_ref_t ecs_ref_init_id(
 
     world = ecs_get_world(world);
 
+    world = ecs_get_world(world);
     flecs_check_exclusive_world_access_read(world);
 
     ecs_record_t *record = flecs_entities_get(world, entity);
@@ -58,6 +59,7 @@ void ecs_ref_update(
     ecs_check(id == ref->id, ECS_INVALID_PARAMETER, "id does not match ref");
 #endif
 
+    world = ecs_get_world(world);
     flecs_check_exclusive_world_access_read(world);
 
     if (ref->table_version_fast == flecs_get_table_version_fast(
