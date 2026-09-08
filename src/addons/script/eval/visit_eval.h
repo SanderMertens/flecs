@@ -426,12 +426,6 @@ bool flecs_script_scope_visited(
 
 /* Functions shared between type and eval visitor */
 
-void flecs_script_modified(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id,
-    const ecs_type_info_t *ti);
-
 ecs_script_computed_t* flecs_script_computed_get(
     ecs_script_eval_visitor_t *v,
     const ecs_script_var_node_t *node);

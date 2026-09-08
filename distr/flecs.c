@@ -48166,12 +48166,6 @@ bool flecs_script_scope_visited(
 
 /* Functions shared between type and eval visitor */
 
-void flecs_script_modified(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id,
-    const ecs_type_info_t *ti);
-
 ecs_script_computed_t* flecs_script_computed_get(
     ecs_script_eval_visitor_t *v,
     const ecs_script_var_node_t *node);
@@ -91136,7 +91130,7 @@ static int flecs_script_eval_component(
             void *dst = ecs_ensure_id(v->world, src, node->id.eval,
                 flecs_ito(size_t, ti->size));
             flecs_type_info_move_dtor(dst, value.ptr, 1, ti);
-            flecs_script_modified(v->world, src, node->id.eval, ti);
+            ecs_modified_id(v->world, src, node->id.eval);
         }
     } else if (node->id.interface) {
         const ecs_type_info_t *ti = flecs_script_get_type_info(
@@ -91323,74 +91317,6 @@ static int flecs_script_eval_module(
     v->module = node->eval;
     v->parent = node->eval;
     return 0;
-}
-
-void flecs_script_modified(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id,
-    const ecs_type_info_t *ti)
-{
-    if (ti->hooks.on_set || ti->hooks.on_validate ||
-        flecs_poly_is(world, ecs_stage_t) || ecs_is_deferred(world))
-    {
-        ecs_modified_id(world, entity, id);
-        return;
-    }
-
-    ecs_component_record_t *cr = flecs_components_get(world, id);
-    if (!cr || (cr->flags & (EcsIdHasOnSet|EcsIdHasUpNotify|
-        EcsIdDontFragment|EcsIdSparse)))
-    {
-        ecs_modified_id(world, entity, id);
-        return;
-    }
-
-    const ecs_event_record_t *er = flecs_event_record_get(
-        &world->observable, EcsOnSet);
-    if (er) {
-        ecs_event_id_record_t *ider = flecs_event_id_record_get(er, EcsAny);
-        if (ider && ider->observer_count) {
-            ecs_modified_id(world, entity, id);
-            return;
-        }
-        ider = flecs_event_id_record_get(er, EcsWildcard);
-        if (ider && ider->observer_count) {
-            ecs_modified_id(world, entity, id);
-            return;
-        }
-        if (ECS_IS_PAIR(id)) {
-            ecs_entity_t first = ECS_PAIR_FIRST(id);
-            ecs_entity_t second = ECS_PAIR_SECOND(id);
-            ider = flecs_event_id_record_get(er, id);
-            if (ider && ider->observer_count) {
-                ecs_modified_id(world, entity, id);
-                return;
-            }
-            ider = flecs_event_id_record_get(er,
-                ecs_pair(first, EcsWildcard));
-            if (ider && ider->observer_count) {
-                ecs_modified_id(world, entity, id);
-                return;
-            }
-            ider = flecs_event_id_record_get(er,
-                ecs_pair(EcsWildcard, second));
-            if (ider && ider->observer_count) {
-                ecs_modified_id(world, entity, id);
-                return;
-            }
-            ider = flecs_event_id_record_get(er,
-                ecs_pair(EcsWildcard, EcsWildcard));
-            if (ider && ider->observer_count) {
-                ecs_modified_id(world, entity, id);
-                return;
-            }
-        }
-    }
-
-    ecs_record_t *r = flecs_entities_get(world, entity);
-    ecs_assert(r != NULL && r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-    flecs_table_mark_dirty(world, r->table, id);
 }
 
 ecs_script_computed_t* flecs_script_computed_get(
@@ -107517,7 +107443,7 @@ static int flecs_ir_component_end(
         void *dst = ecs_ensure_id(v->world, src, id, flecs_itosize(ti->size));
         flecs_type_info_move_dtor(dst, value, 1, ti);
         tmp->owned = false;
-        flecs_script_modified(v->world, src, id, ti);
+        ecs_modified_id(v->world, src, id);
     }
 
     flecs_ir_track(v, desc->component_slot, id);
