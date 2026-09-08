@@ -152,7 +152,7 @@ static ECS_MOVE(EcsMetricCountTargets, dst, src, {
 
 /** Observer used for creating new instances of member metric */
 static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_member_metric_ctx_t *ctx = it->ctx;
     ecs_id_t id = ecs_field_id(it, 0);
 
@@ -176,7 +176,7 @@ static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
 
 /** Observer used for creating new instances of id metric */
 static void flecs_metrics_on_id_metric(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_id_metric_ctx_t *ctx = it->ctx;
 
     int32_t i, count = it->count;
@@ -202,7 +202,7 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
         return;
     }
 
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_oneof_metric_ctx_t *ctx = it->ctx;
 
     int32_t i, count = it->count;
@@ -225,7 +225,7 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
 /** Set doc name of metric instance to name of source entity */
 #ifdef FLECS_DOC
 static void SetMetricDocName(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     EcsMetricSource *src = ecs_field(it, EcsMetricSource, 0);
 
     int32_t i, count = it->count;
@@ -241,7 +241,7 @@ static void SetMetricDocName(ecs_iter_t *it) {
 
 /** Delete metric instances for entities that are no longer alive */
 static void ClearMetricInstance(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     EcsMetricSource *src = ecs_field(it, EcsMetricSource, 0);
 
     int32_t i, count = it->count;
@@ -255,7 +255,7 @@ static void ClearMetricInstance(ecs_iter_t *it) {
 
 /** Update member metric */
 static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->stage;
     EcsMetricValue *m = ecs_field(it, EcsMetricValue, 0);
     EcsMetricMemberInstance *mi = ecs_field(it, EcsMetricMemberInstance, 1);
     ecs_ftime_t dt = it->delta_time;
@@ -278,7 +278,7 @@ static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
                     ecs_meta_ptr_to_float(ctx->type_kind, ptr) * (double)dt;
             }
         } else {
-            ecs_delete(it->world, it->entities[i]);
+            ecs_delete(it->stage, it->entities[i]);
         }
     }
 }
@@ -297,7 +297,6 @@ static void UpdateCounterIncrementMemberInstance(ecs_iter_t *it) {
 
 /** Update id metric */
 static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
-    ecs_world_t *world = it->real_world;
     EcsMetricValue *m = ecs_field(it, EcsMetricValue, 0);
     EcsMetricIdInstance *mi = ecs_field(it, EcsMetricIdInstance, 1);
     ecs_ftime_t dt = it->delta_time;
@@ -311,20 +310,20 @@ static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
 
         ecs_table_t *table = r->table;
         if (!table) {
-            ecs_delete(it->world, it->entities[i]);
+            ecs_delete(it->stage, it->entities[i]);
             continue;
         }
 
         ecs_id_metric_ctx_t *ctx = mi[i].ctx;
         ecs_component_record_t *cr = ctx->cr;
-        if (ecs_search(world, table, cr->id, NULL) != -1) {
+        if (ecs_search(it->world, table, cr->id, NULL) != -1) {
             if (!counter) {
                 m[i].value = 1.0;
             } else {
                 m[i].value += 1.0 * (double)dt;
             }
         } else {
-            ecs_delete(it->world, it->entities[i]);
+            ecs_delete(it->stage, it->entities[i]);
         }
     }
 }
@@ -339,7 +338,6 @@ static void UpdateCounterIdInstance(ecs_iter_t *it) {
 
 /** Update oneof metric */
 static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
-    ecs_world_t *world = it->real_world;
     ecs_table_t *table = it->table;
     void *m = ecs_table_get_column(table, it->trs[0]->column, it->offset);
     EcsMetricOneOfInstance *mi = ecs_field(it, EcsMetricOneOfInstance, 1);
@@ -361,14 +359,14 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
         }
 
         if (!mtable) {
-            ecs_delete(it->world, it->entities[i]);
+            ecs_delete(it->stage, it->entities[i]);
             continue;
         }
 
         ecs_component_record_t *cr = ctx->cr;
         ecs_id_t id;
-        if (ecs_search(world, mtable, cr->id, &id) == -1) {
-            ecs_delete(it->world, it->entities[i]);
+        if (ecs_search(it->world, mtable, cr->id, &id) == -1) {
+            ecs_delete(it->stage, it->entities[i]);
             continue;
         }
 
@@ -398,7 +396,7 @@ static void UpdateCounterOneOfInstance(ecs_iter_t *it) {
 }
 
 static void UpdateCountTargets(ecs_iter_t *it) {
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->stage;
     EcsMetricCountTargets *m = ecs_field(it, EcsMetricCountTargets, 0);
 
     int32_t i, count = it->count;
@@ -429,7 +427,7 @@ static void UpdateCountTargets(ecs_iter_t *it) {
 }
 
 static void UpdateCountIds(ecs_iter_t *it) {
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->stage;
     EcsMetricCountIds *m = ecs_field(it, EcsMetricCountIds, 0);
     EcsMetricValue *v = ecs_field(it, EcsMetricValue, 1);
 

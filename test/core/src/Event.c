@@ -738,11 +738,11 @@ static void Nested1(ecs_iter_t *it) {
     test_int(it->count, 1);
 
     if (it->entities[0] != other) {
-        ecs_emit(it->world, &(ecs_event_desc_t) {
+        ecs_emit(it->stage, &(ecs_event_desc_t) {
             .event = it->event,
             .ids = &(ecs_type_t){ .count = 1, .array = &it->event_id },
             .entity = other,
-            .observable = it->real_world
+            .observable = it->world
         });
     }
 }
@@ -841,9 +841,9 @@ void Event_enqueue_event_1_id(void) {
         .ctx = &ctx
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e
@@ -851,7 +851,7 @@ void Event_enqueue_event_1_id(void) {
 
     test_int(ctx.invoked, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 1);
     test_assert(ctx.system == s);
@@ -889,9 +889,9 @@ void Event_enqueue_event_2_ids(void) {
         .ctx = ctx_b
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 2, .array = (ecs_id_t[]){ id_a, id_b }},
         .entity = e
@@ -900,7 +900,7 @@ void Event_enqueue_event_2_ids(void) {
     test_int(ctx_a->invoked, 0);
     test_int(ctx_b->invoked, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx_a->invoked, 1);
     test_assert(ctx_a->system == s_a);
@@ -932,15 +932,15 @@ void Event_enqueue_event_for_id_removed_before_merge(void) {
 
     test_assert(flecs_components_get(world, Tag) != NULL);
 
-    ecs_defer_begin(world);
-    ecs_remove(world, e, Tag);
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, e, Tag);
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ Tag }},
         .entity = e
     });
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     ecs_fini(world);
 }
@@ -955,15 +955,15 @@ void Event_enqueue_event_for_deleted_id_before_merge(void) {
 
     test_assert(flecs_components_get(world, Tag) != NULL);
 
-    ecs_defer_begin(world);
-    ecs_delete(world, Tag);
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, Tag);
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ Tag }},
         .entity = e
     });
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     ecs_fini(world);
 }
@@ -986,9 +986,9 @@ void Event_enqueue_event_w_data(void) {
         .ctx = &ctx
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = ecs_id(Position),
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e,
@@ -997,7 +997,7 @@ void Event_enqueue_event_w_data(void) {
 
     test_int(ctx.invoked, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 1);
     test_assert(ctx.system == s);
@@ -1055,9 +1055,9 @@ void Event_enqueue_event_w_data_move(void) {
         .ctx = &ctx
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = ecs_id(Position),
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e,
@@ -1069,7 +1069,7 @@ void Event_enqueue_event_w_data_move(void) {
     test_int(p.x, 0);
     test_int(p.y, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 1);
     test_assert(ctx.system == s);
@@ -1108,9 +1108,9 @@ void Event_enqueue_event_w_data_copy(void) {
         .ctx = &ctx
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = ecs_id(Position),
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e,
@@ -1123,7 +1123,7 @@ void Event_enqueue_event_w_data_copy(void) {
     test_int(p.y, 20);
     test_int(copy_position, 1);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 1);
     test_assert(ctx.system == s);
@@ -1156,9 +1156,9 @@ void Event_enqueue_event_w_const_data_no_copy(void) {
         .ctx = &ctx
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = ecs_id(Position),
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e,
@@ -1170,7 +1170,7 @@ void Event_enqueue_event_w_const_data_no_copy(void) {
     test_int(p.x, 10);
     test_int(p.y, 20);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 1);
     test_assert(ctx.system == s);
@@ -1200,11 +1200,11 @@ void Event_enqueue_event_not_alive(void) {
         .ctx = &ctx
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, e);
+    ecs_delete(stage_1, e);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e
@@ -1212,7 +1212,7 @@ void Event_enqueue_event_not_alive(void) {
 
     test_int(ctx.invoked, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 0);
     test_assert(!ecs_is_alive(world, e));
@@ -1243,11 +1243,11 @@ void Event_enqueue_event_not_alive_w_data_move(void) {
         .ctx = &ctx
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, e);
+    ecs_delete(stage_1, e);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = ecs_id(Position),
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e,
@@ -1256,7 +1256,7 @@ void Event_enqueue_event_not_alive_w_data_move(void) {
 
     test_int(ctx.invoked, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 0);
     test_int(dtor_position, 1);
@@ -1287,11 +1287,11 @@ void Event_enqueue_event_not_alive_w_data_copy(void) {
         .ctx = &ctx
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_delete(world, e);
+    ecs_delete(stage_1, e);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = ecs_id(Position),
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e,
@@ -1300,7 +1300,7 @@ void Event_enqueue_event_not_alive_w_data_copy(void) {
 
     test_int(ctx.invoked, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 0);
     test_int(copy_position, 1);
@@ -1310,11 +1310,9 @@ void Event_enqueue_event_not_alive_w_data_copy(void) {
 }
 
 static void system_delete_callback(ecs_iter_t *it) {
-    ecs_defer_suspend(it->world);
     for (int i = 0; i < it->count; i ++) {
-        ecs_delete(it->world, it->entities[i]);
+        ecs_delete(it->stage, it->entities[i]);
     }
-    ecs_defer_resume(it->world);
 }
 
 void Event_enqueue_event_not_alive_after_delete_during_merge(void) {
@@ -1340,15 +1338,15 @@ void Event_enqueue_event_not_alive_after_delete_during_merge(void) {
         .callback = system_delete_callback,
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = delete_evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e
     });
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e
@@ -1356,7 +1354,7 @@ void Event_enqueue_event_not_alive_after_delete_during_merge(void) {
 
     test_int(ctx.invoked, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 0);
     test_assert(!ecs_is_alive(world, e));
@@ -1394,15 +1392,15 @@ void Event_enqueue_event_not_alive_w_data_move_after_delete_during_merge(void) {
         .callback = system_delete_callback,
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = delete_evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e
     });
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = ecs_id(Position),
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e,
@@ -1414,7 +1412,7 @@ void Event_enqueue_event_not_alive_w_data_move_after_delete_during_merge(void) {
     test_int(p.x, 0);
     test_int(p.y, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 0);
     test_int(dtor_position, 1);
@@ -1452,15 +1450,15 @@ void Event_enqueue_event_not_alive_w_data_copy_after_delete_during_merge(void) {
         .callback = system_delete_callback,
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = delete_evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e
     });
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = ecs_id(Position),
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e,
@@ -1473,7 +1471,7 @@ void Event_enqueue_event_not_alive_w_data_copy_after_delete_during_merge(void) {
     test_int(p.x, 10);
     test_int(p.y, 20);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 0);
     test_int(dtor_position, 1);
@@ -1577,9 +1575,9 @@ void Event_enqueue_custom_implicit_any(void) {
         .callback = ObserverB
     });
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_enqueue(world, &(ecs_event_desc_t) {
+    ecs_enqueue(stage_1, &(ecs_event_desc_t) {
         .entity = e1,
         .event = MyEvent
     });
@@ -1587,14 +1585,14 @@ void Event_enqueue_custom_implicit_any(void) {
     test_int(ObserverA_invoked, 0);
     test_int(ObserverB_invoked, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     
     test_int(ObserverA_invoked, 1);
     test_int(ObserverB_invoked, 0);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_enqueue(world, &(ecs_event_desc_t) {
+    ecs_enqueue(stage_2, &(ecs_event_desc_t) {
         .entity = e2,
         .event = MyEvent
     });
@@ -1602,7 +1600,7 @@ void Event_enqueue_custom_implicit_any(void) {
     test_int(ObserverA_invoked, 1);
     test_int(ObserverB_invoked, 0);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_2);
 
     test_int(ObserverA_invoked, 1);
     test_int(ObserverB_invoked, 1);
@@ -1631,14 +1629,14 @@ void Event_enqueue_custom_after_large_cmd(void) {
 
     ECS_OBSERVER(world, OnPosition, ecs_id(Position), LargeType);
 
-    ecs_defer_begin(world);
-    ecs_entity_t e = ecs_insert(world, ecs_value(LargeType, {{0}}));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_entity_t e = ecs_insert(stage_1, ecs_value(LargeType, {{0}}));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, LargeType));
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     Position p = {10, 20};
-    ecs_enqueue(world, &(ecs_event_desc_t) {
+    ecs_enqueue(stage_2, &(ecs_event_desc_t) {
         .entity = e,
         .ids = &(ecs_type_t){ .count = 1, .array = (ecs_id_t[]){ ecs_id(LargeType) }},
         .event = ecs_id(Position),
@@ -1646,7 +1644,7 @@ void Event_enqueue_custom_after_large_cmd(void) {
     });
 
     test_int(on_position_invoked, 0);
-    ecs_defer_end(world);
+    ecs_merge(stage_2);
     test_int(on_position_invoked, 1);
 
     ecs_fini(world);
@@ -1670,7 +1668,7 @@ void Event_enqueue_on_readonly_world(void) {
 
     ecs_readonly_begin(world, false);
 
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_enqueue(ecs_get_stage(world, 0), &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e
@@ -1715,14 +1713,14 @@ void Event_enqueue_event_w_large_payload_no_leak(void) {
     LargeEvent payload = {0};
     payload.x = 10;
 
-    ecs_defer_begin(world);
-    ecs_enqueue(world, &(ecs_event_desc_t){
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_enqueue(stage_1, &(ecs_event_desc_t){
         .event = ecs_id(LargeEvent),
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .entity = e,
         .const_param = &payload
     });
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_int(ctx.invoked, 1);
 
@@ -1731,14 +1729,14 @@ void Event_enqueue_event_w_large_payload_no_leak(void) {
 
     int32_t i;
     for (i = 0; i < 100; i ++) {
-        ecs_defer_begin(world);
-        ecs_enqueue(world, &(ecs_event_desc_t){
+        ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+        ecs_enqueue(stage_2, &(ecs_event_desc_t){
             .event = ecs_id(LargeEvent),
             .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
             .entity = e,
             .const_param = &payload
         });
-        ecs_defer_end(world);
+        ecs_merge(stage_2);
     }
 
     int64_t balance_after = (ecs_os_api_malloc_count +

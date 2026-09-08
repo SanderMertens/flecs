@@ -4616,12 +4616,22 @@ void TemplateProp_string_prop_in_consts_deferred(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_defer_begin(world);
-    test_assert(ecs_script_run_w_desc(world, NULL,
-        HEAD "Sign a()"
-        LINE "Sign b(l1: \"AAA\", l2: \"BBB\")"
-        LINE "Sign c(l1: \"CCCCCCCCCCCCCCCC\")", &ir_desc, NULL) == 0);
-    ecs_defer_end(world);
+    ecs_entity_t sign = ecs_lookup(world, "Sign");
+    test_assert(sign != 0);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_entity_t c = ecs_entity(world, { .name = "c" });
+
+    char *sign_a[] = {"ONE", "TWO"};
+    char *sign_b[] = {"AAA", "BBB"};
+    char *sign_c[] = {"CCCCCCCCCCCCCCCC", "TWO"};
+
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_set_id(stage_1, a, sign, sizeof(sign_a), sign_a);
+    ecs_set_id(stage_1, b, sign, sizeof(sign_b), sign_b);
+    ecs_set_id(stage_1, c, sign, sizeof(sign_c), sign_c);
+    ecs_merge(stage_1);
 
     ecs_entity_t e = ecs_lookup(world, "a");
     test_assert(e != 0);

@@ -235,7 +235,7 @@ private:
         if constexpr (std::is_invocable_v<const Func&, flecs::entity, Args...>) {
             ecs_assert(iter->entities != nullptr, ECS_INVALID_PARAMETER,
                 "query does not return entities ($this variable is not populated)");
-            return func(flecs::entity(iter->world, iter->entities[i]),
+            return func(flecs::entity(iter->stage, iter->entities[i]),
                 FLECS_FWD(args)...);
         } else if constexpr (std::is_invocable_v<
             const Func&, flecs::iter&, size_t&, Args...>)
@@ -251,7 +251,7 @@ private:
     flecs::entity invoke_rows(ecs_iter_t *iter, Terms& terms,
         std::index_sequence<I...>) const
     {
-        ECS_TABLE_LOCK(iter->world, iter->table);
+        ECS_TABLE_LOCK(iter->stage, iter->table);
         size_t count = static_cast<size_t>(iter->count);
         if constexpr (Find) {
             if constexpr (!std::is_invocable_v<const Func&, flecs::entity,
@@ -273,7 +273,7 @@ private:
                     each_field<remove_reference_t<Components>, Ref>(
                         iter, terms[I], i).get_row()...))
                 {
-                    result = flecs::entity(iter->world, iter->entities[i]);
+                    result = flecs::entity(iter->stage, iter->entities[i]);
                     break;
                 }
             } else {
@@ -282,7 +282,7 @@ private:
                         iter, terms[I], i).get_row()...);
             }
         }
-        ECS_TABLE_UNLOCK(iter->world, iter->table);
+        ECS_TABLE_UNLOCK(iter->stage, iter->table);
         return result;
     }
 
@@ -382,7 +382,7 @@ private:
     template <typename... Args>
     void invoke(ecs_iter_t *iter, Args&... args) const {
         if constexpr (std::is_invocable_v<const Func&, flecs::entity, Args&...>) {
-            func_(flecs::entity(iter->world, ecs_field_src(iter, 0)), args...);
+            func_(flecs::entity(iter->stage, ecs_field_src(iter, 0)), args...);
         } else {
             func_(args...);
         }

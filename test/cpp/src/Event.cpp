@@ -682,16 +682,16 @@ void Event_enqueue_event(void) {
             count ++;
         });
 
-    ecs.defer_begin();
+    flecs::world stage_1 = ecs.get_stage(0);
 
-    ecs.event(evt)
+    stage_1.event(evt)
         .id(id_a)
         .entity(e1)
         .enqueue();
 
     test_int(count, 0);
 
-    ecs.defer_end();
+    stage_1.merge();
 
     test_int(count, 1);
 }
@@ -709,13 +709,13 @@ void Event_enqueue_entity_event(void) {
         count ++;
     });
 
-    ecs.defer_begin();
+    flecs::world stage_1 = ecs.get_stage(0);
 
-    e1.enqueue(evt);
+    e1.mut(stage_1).enqueue(evt);
 
     test_int(count, 0);
 
-    ecs.defer_end();
+    stage_1.merge();
 
     test_int(count, 1);
 }
@@ -738,9 +738,9 @@ void Event_enqueue_event_w_payload(void) {
             count ++;
         });
 
-    ecs.defer_begin();
+    flecs::world stage_1 = ecs.get_stage(0);
 
-    ecs.event<Position>()
+    stage_1.event<Position>()
         .id(id_a)
         .entity(e1)
         .ctx(Position{10, 20})
@@ -748,7 +748,7 @@ void Event_enqueue_event_w_payload(void) {
 
     test_int(count, 0);
 
-    ecs.defer_end();
+    stage_1.merge();
 
     test_int(count, 1);
 }
@@ -767,13 +767,13 @@ void Event_enqueue_entity_event_w_payload(void) {
         count ++;
     });
 
-    ecs.defer_begin();
+    flecs::world stage_1 = ecs.get_stage(0);
 
-    e1.enqueue<Position>({10, 20});
+    e1.mut(stage_1).enqueue<Position>({10, 20});
 
     test_int(count, 0);
 
-    ecs.defer_end();
+    stage_1.merge();
 
     test_int(count, 1);
 }
@@ -793,7 +793,7 @@ void Event_enqueue_entity_from_readonly_world(void) {
 
     ecs.readonly_begin();
 
-    e1.enqueue(evt);
+    e1.mut(ecs.get_stage(0)).enqueue(evt);
 
     test_int(count, 0);
 
@@ -818,7 +818,7 @@ void Event_enqueue_entity_w_payload_from_readonly_world(void) {
 
     ecs.readonly_begin();
 
-    e1.enqueue<Position>({10, 20});
+    e1.mut(ecs.get_stage(0)).enqueue<Position>({10, 20});
 
     test_int(count, 0);
 

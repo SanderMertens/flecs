@@ -25,7 +25,7 @@ void Move(ecs_iter_t *it) {
         for (int i = 0; i < it->count; i ++) {
             p[i].x += v[i].x;
             p[i].y += v[i].y;
-            printf("%s: {%f, %f}\n", ecs_get_name(it->world, it->entities[i]), 
+            printf("%s: {%f, %f}\n", ecs_get_name(it->stage, it->entities[i]),
                 p[i].x, p[i].y);
         }
     }

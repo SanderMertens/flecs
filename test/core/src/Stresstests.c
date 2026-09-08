@@ -37,19 +37,19 @@ static void Delete_above_1000(ecs_iter_t *it) {
 
     for (i = 0; i < it->count; i ++) {
         if ((i + it->frame_offset) > 1000) {
-            ecs_delete(it->world, it->entities[i]);
+            ecs_delete(it->stage, it->entities[i]);
         }
     }
 }
 
 static void Add_random(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_ctx(it->world);
+    IterData *ctx = ecs_get_ctx(it->stage);
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        add_random(it->world, 0, ctx->component);
-        add_random(it->world, it->entities[i], ctx->component_2);
-        add_random(it->world, it->entities[i], ctx->component_3);
+        add_random(it->stage, 0, ctx->component);
+        add_random(it->stage, it->entities[i], ctx->component_2);
+        add_random(it->stage, it->entities[i], ctx->component_3);
     }
 }
 
@@ -64,20 +64,20 @@ static void Set_velocity_callback(ecs_iter_t *it) {
 }
 
 static void Set_random(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_ctx(it->world);     
+    IterData *ctx = ecs_get_ctx(it->stage);
 
     int i;
     for (i = 0; i < it->count; i ++) {
         Position pos = {10, 20};
-        set_random(it->world, 0, ctx->component, &pos, &pos, sizeof(Position));
+        set_random(it->stage, 0, ctx->component, &pos, &pos, sizeof(Position));
 
         Velocity vel = {30, 40};
         Velocity vel_expect = {31, 41};
-        set_random(it->world, it->entities[i], ctx->component_2, &vel, &vel_expect,
+        set_random(it->stage, it->entities[i], ctx->component_2, &vel, &vel_expect,
             sizeof(Velocity));
 
         Rotation rot = {50};
-        set_random(it->world, it->entities[i], ctx->component_3, &rot, &rot,
+        set_random(it->stage, it->entities[i], ctx->component_3, &rot, &rot,
             sizeof(Rotation));
     }
 }

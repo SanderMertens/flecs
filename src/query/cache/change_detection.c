@@ -54,7 +54,7 @@ static void flecs_query_get_column_for_field(
         return;
     }
 
-    ecs_record_t *r = flecs_entities_get(q->real_world, src);
+    ecs_record_t *r = flecs_entities_get(q->world, src);
     if (!r || !r->table) {
         out->table = NULL;
         out->column = -1;
@@ -63,7 +63,7 @@ static void flecs_query_get_column_for_field(
 
     ecs_id_t id = match->_ids ? match->_ids[field] : q->ids[field];
     const ecs_table_record_t *tr = flecs_query_get_tr(
-        q->real_world, id, r->table);
+        q->world, id, r->table);
     if (!tr) {
         out->table = NULL;
         out->column = -1;
@@ -144,7 +144,7 @@ static bool flecs_query_get_fixed_monitor(
     bool check)
 {
     ecs_query_t *q = &impl->pub;
-    ecs_world_t *world = q->real_world;
+    ecs_world_t *world = q->world;
     ecs_term_t *terms = q->terms;
     int32_t i, term_count = q->term_count;
 
@@ -240,7 +240,7 @@ static bool flecs_query_check_match_monitor_term(
     ecs_table_t *table = match->base.table;
     if (table) {
         int32_t *dirty_state = flecs_table_get_dirty_state(
-            cache->query->world, table);
+            cache->query->stage, table);
         ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
         if (!field) {
             return monitor[0] != dirty_state[0];
@@ -255,7 +255,7 @@ static bool flecs_query_check_match_monitor_term(
     ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
 
     return monitor[field] != flecs_table_get_dirty_state(
-        cache->query->world, cur.table)[cur.column + 1];
+        cache->query->stage, cur.table)[cur.column + 1];
 }
 
 /* Check if any tables in the cache changed. */
@@ -347,7 +347,7 @@ static bool flecs_query_check_match_monitor(
     int32_t *dirty_state = NULL;
     if (table) {
         dirty_state = flecs_table_get_dirty_state(
-            cache->query->world, table);
+            cache->query->stage, table);
         ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
         if (monitor[0] != dirty_state[0]) {
             return true;
@@ -355,7 +355,7 @@ static bool flecs_query_check_match_monitor(
     }
 
     const ecs_query_t *query = cache->query;
-    ecs_world_t *world = query->world;
+    ecs_world_t *world = query->stage;
     int32_t i, field_count = query->field_count;
     ecs_flags64_t set_fields = 0;
     if (it) {
@@ -475,7 +475,7 @@ void flecs_query_mark_fields_dirty(
         return;
     }
 
-    ecs_world_t *world = q->real_world;
+    ecs_world_t *world = q->world;
     int16_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
         ecs_termset_t field_bit = (ecs_termset_t)(1u << i);
@@ -535,7 +535,7 @@ void flecs_query_mark_fixed_fields_dirty(
         return;
     }
 
-    ecs_world_t *world = q->real_world;
+    ecs_world_t *world = q->world;
     int32_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
         if (!(fixed_write_fields & flecs_ito(uint32_t, 1 << i))) {
@@ -594,7 +594,7 @@ void flecs_query_sync_match_monitor(
     ecs_table_t *table = match->base.table;
     if (table) {
         int32_t *dirty_state = flecs_table_get_dirty_state(
-            cache->query->world, table);
+            cache->query->stage, table);
         ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
         monitor[0] = dirty_state[0]; /* Did table gain/lose entities */
     }
@@ -615,10 +615,10 @@ void flecs_query_sync_match_monitor(
             }
 
             /* Query for cache should never point to stage */
-            ecs_assert(q->world == q->real_world, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(q->stage == q->world, ECS_INTERNAL_ERROR, NULL);
 
             monitor[field + 1] = flecs_table_get_dirty_state(
-                q->world, tc.table)[tc.column + 1];
+                q->stage, tc.table)[tc.column + 1];
         }
     }
 

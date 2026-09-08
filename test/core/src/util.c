@@ -31,7 +31,7 @@ void probe_system_w_ctx(
         if (ecs_field_is_set(it, i)) {
             if (it->trs && it->trs[i]) {
                 if (it->sources[i]) {
-                    ecs_table_t *table = ecs_get_table(it->world, it->sources[i]);
+                    ecs_table_t *table = ecs_get_table(it->stage, it->sources[i]);
                     test_assert(it->trs[i]->hdr.table == table);
                 } else {
                     test_assert(it->trs[i]->hdr.table == it->table);
@@ -56,7 +56,7 @@ void probe_system_w_ctx(
 void probe_iter(
     ecs_iter_t *it) 
 {
-    Probe *ctx = ecs_get_ctx(it->world);
+    Probe *ctx = ecs_get_ctx(it->stage);
     if (!ctx) {
         ctx = it->ctx;
     }

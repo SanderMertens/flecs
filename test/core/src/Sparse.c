@@ -44,7 +44,7 @@ static void Position_on_add(ecs_iter_t *it) {
     test_int(p->y, 20);
     test_uint(it->event, EcsOnAdd);
     test_assert(it->entities != NULL);
-    test_assert(ecs_is_alive(it->world, it->entities[0]));
+    test_assert(ecs_is_alive(it->stage, it->entities[0]));
 
     position_on_add_invoked ++;
 }
@@ -65,7 +65,7 @@ static void Position_on_remove(ecs_iter_t *it) {
     test_int(p->y, Position_y);
     test_uint(it->event, EcsOnRemove);
     test_assert(it->entities != NULL);
-    test_assert(ecs_is_alive(it->world, it->entities[0]));
+    test_assert(ecs_is_alive(it->stage, it->entities[0]));
 
     position_on_remove_invoked ++;
 }
@@ -78,7 +78,7 @@ static void Position_on_set(ecs_iter_t *it) {
     position_on_set_value = *p;
     test_uint(it->event, EcsOnSet);
     test_assert(it->entities != NULL);
-    test_assert(ecs_is_alive(it->world, it->entities[0]));
+    test_assert(ecs_is_alive(it->stage, it->entities[0]));
 
     position_on_set_invoked ++;
 }
@@ -91,7 +91,7 @@ static void Position_on_set_bulk(ecs_iter_t *it) {
     position_on_set_value = *p;
     test_uint(it->event, EcsOnSet);
     test_assert(it->entities != NULL);
-    test_assert(ecs_is_alive(it->world, it->entities[0]));
+    test_assert(ecs_is_alive(it->stage, it->entities[0]));
 
     position_on_set_invoked ++;
 }
@@ -4227,17 +4227,17 @@ void Sparse_defer_ensure(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
 
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
 
     {
@@ -4260,19 +4260,19 @@ void Sparse_defer_ensure_w_modified(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
 
-    ecs_modified(world, e, Position);
+    ecs_modified(stage_1, e, Position);
 
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
 
     {
@@ -4295,12 +4295,12 @@ void Sparse_defer_set(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set(world, e, Position, {10, 20});
+    ecs_set(stage_1, e, Position, {10, 20});
 
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
 
     const Position *p = ecs_get(world, e, Position);
@@ -4319,19 +4319,19 @@ void Sparse_defer_emplace(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, true);
         p->x = 10;
         p->y = 20;
     }
 
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
 
     {
@@ -4354,21 +4354,21 @@ void Sparse_defer_emplace_w_modified(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, true);
         p->x = 10;
         p->y = 20;
     }
 
-    ecs_modified(world, e, Position);
+    ecs_modified(stage_1, e, Position);
 
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
 
     {
@@ -4392,16 +4392,16 @@ void Sparse_defer_ensure_existing(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -4424,17 +4424,17 @@ void Sparse_defer_ensure_existing_twice(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
 
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
@@ -4442,7 +4442,7 @@ void Sparse_defer_ensure_existing_twice(void) {
         p->y = 40;
     }
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -4465,18 +4465,18 @@ void Sparse_defer_ensure_w_modified_existing(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
 
-    ecs_modified(world, e, Position);
+    ecs_modified(stage_1, e, Position);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -4499,11 +4499,11 @@ void Sparse_defer_set_existing(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set(world, e, Position, {10, 20});
+    ecs_set(stage_1, e, Position, {10, 20});
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
@@ -4522,18 +4522,18 @@ void Sparse_defer_emplace_existing(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, false);
         p->x = 10;
         p->y = 20;
     }
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -4556,20 +4556,20 @@ void Sparse_defer_emplace_w_modified_existing(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, false);
         p->x = 10;
         p->y = 20;
     }
 
-    ecs_modified(world, e, Position);
+    ecs_modified(stage_1, e, Position);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -4594,24 +4594,24 @@ void Sparse_defer_batched_ensure(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
     {
-        Velocity *p = ecs_ensure(world, e, Velocity);
+        Velocity *p = ecs_ensure(stage_1, e, Velocity);
         test_assert(p != NULL);
         p->x = 1;
         p->y = 2;
     }
 
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
 
@@ -4644,27 +4644,27 @@ void Sparse_defer_batched_ensure_w_modified(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
-    ecs_modified(world, e, Position);
+    ecs_modified(stage_1, e, Position);
 
     {
-        Velocity *p = ecs_ensure(world, e, Velocity);
+        Velocity *p = ecs_ensure(stage_1, e, Velocity);
         test_assert(p != NULL);
         p->x = 1;
         p->y = 2;
     }
-    ecs_modified(world, e, Velocity);
+    ecs_modified(stage_1, e, Velocity);
 
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
 
@@ -4697,11 +4697,11 @@ void Sparse_defer_batched_emplace(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, true);
         p->x = 10;
@@ -4710,16 +4710,16 @@ void Sparse_defer_batched_emplace(void) {
 
     {
         bool is_new = false;
-        Velocity *p = ecs_emplace(world, e, Velocity, &is_new);
+        Velocity *p = ecs_emplace(stage_1, e, Velocity, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, true);
         p->x = 1;
         p->y = 2;
     }
 
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
 
@@ -4752,31 +4752,31 @@ void Sparse_defer_batched_emplace_w_modified(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, true);
         p->x = 10;
         p->y = 20;
     }
-    ecs_modified(world, e, Position);
+    ecs_modified(stage_1, e, Position);
 
     {
         bool is_new = false;
-        Velocity *p = ecs_emplace(world, e, Velocity, &is_new);
+        Velocity *p = ecs_emplace(stage_1, e, Velocity, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, true);
         p->x = 1;
         p->y = 2;
     }
-    ecs_modified(world, e, Velocity);
+    ecs_modified(stage_1, e, Velocity);
 
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
 
@@ -4809,14 +4809,14 @@ void Sparse_defer_batched_set(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set(world, e, Position, {10, 20});
-    ecs_set(world, e, Velocity, {1, 2});
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_set(stage_1, e, Velocity, {1, 2});
 
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    ecs_defer_end(world);
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
 
@@ -4847,10 +4847,10 @@ void Sparse_defer_batched_set_w_fragmenting(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_set(world, e, Velocity, {1, 2});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_set(stage_1, e, Velocity, {1, 2});
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Velocity));
     test_assert(ecs_has(world, e, Position));
@@ -4886,22 +4886,22 @@ void Sparse_defer_batched_ensure_existing(void) {
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
     {
-        Velocity *p = ecs_ensure(world, e, Velocity);
+        Velocity *p = ecs_ensure(stage_1, e, Velocity);
         test_assert(p != NULL);
         p->x = 1;
         p->y = 2;
     }
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -4934,22 +4934,22 @@ void Sparse_defer_batched_ensure_existing_twice(void) {
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
     {
-        Velocity *p = ecs_ensure(world, e, Velocity);
+        Velocity *p = ecs_ensure(stage_1, e, Velocity);
         test_assert(p != NULL);
         p->x = 1;
         p->y = 2;
     }
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
@@ -4957,7 +4957,7 @@ void Sparse_defer_batched_ensure_existing_twice(void) {
         p->y = 40;
     }
     {
-        Velocity *p = ecs_ensure(world, e, Velocity);
+        Velocity *p = ecs_ensure(stage_1, e, Velocity);
         test_assert(p != NULL);
         test_int(p->x, 1);
         test_int(p->y, 2);
@@ -4965,7 +4965,7 @@ void Sparse_defer_batched_ensure_existing_twice(void) {
         p->y = 4;
     }
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -4998,25 +4998,25 @@ void Sparse_defer_batched_ensure_w_modified_existing(void) {
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
-        Position *p = ecs_ensure(world, e, Position);
+        Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;
     }
-    ecs_modified(world, e, Position);
+    ecs_modified(stage_1, e, Position);
 
     {
-        Velocity *p = ecs_ensure(world, e, Velocity);
+        Velocity *p = ecs_ensure(stage_1, e, Velocity);
         test_assert(p != NULL);
         p->x = 1;
         p->y = 2;
     }
-    ecs_modified(world, e, Velocity);
+    ecs_modified(stage_1, e, Velocity);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -5049,11 +5049,11 @@ void Sparse_defer_batched_emplace_existing(void) {
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, false);
         p->x = 10;
@@ -5062,14 +5062,14 @@ void Sparse_defer_batched_emplace_existing(void) {
 
     {
         bool is_new = false;
-        Velocity *p = ecs_emplace(world, e, Velocity, &is_new);
+        Velocity *p = ecs_emplace(stage_1, e, Velocity, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, false);
         p->x = 1;
         p->y = 2;
     }
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -5102,29 +5102,29 @@ void Sparse_defer_batched_emplace_w_modified_existing(void) {
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
-        Position *p = ecs_emplace(world, e, Position, &is_new);
+        Position *p = ecs_emplace(stage_1, e, Position, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, false);
         p->x = 10;
         p->y = 20;
     }
-    ecs_modified(world, e, Position);
+    ecs_modified(stage_1, e, Position);
 
     {
         bool is_new = false;
-        Velocity *p = ecs_emplace(world, e, Velocity, &is_new);
+        Velocity *p = ecs_emplace(stage_1, e, Velocity, &is_new);
         test_assert(p != NULL);
         test_bool(is_new, false);
         p->x = 1;
         p->y = 2;
     }
-    ecs_modified(world, e, Velocity);
+    ecs_modified(stage_1, e, Velocity);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -5157,12 +5157,12 @@ void Sparse_defer_batched_set_existing(void) {
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set(world, e, Position, {10, 20});
-    ecs_set(world, e, Velocity, {1, 2});
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_set(stage_1, e, Velocity, {1, 2});
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     {
         const Position *p = ecs_get(world, e, Position);
@@ -5191,12 +5191,12 @@ void Sparse_defer_batched_set_remove(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set(world, e, Position, {10, 20});
-    ecs_remove(world, e, Position);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_remove(stage_1, e, Position);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, Position));
 
@@ -5220,12 +5220,12 @@ void Sparse_defer_batched_set_remove_existing(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_set(world, e, Position, {10, 20});
-    ecs_remove(world, e, Position);
+    ecs_set(stage_1, e, Position, {10, 20});
+    ecs_remove(stage_1, e, Position);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, Position));
 
@@ -5250,12 +5250,12 @@ void Sparse_defer_batched_add(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, Position);
-    ecs_add(world, e, Velocity);
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, Position);
+    ecs_add(stage_1, e, Velocity);
+    test_assert(!ecs_has(stage_1, e, Position));
+    test_assert(!ecs_has(stage_1, e, Velocity));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
 
@@ -5284,14 +5284,14 @@ void Sparse_defer_batched_add_pair(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add_pair(world, e, ecs_id(Position), TgtA);
-    ecs_add_pair(world, e, ecs_id(Position), TgtB);
-    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
-    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtB));
-    test_assert(ecs_get_target(world, e, ecs_id(Position), 0) == 0);
-    test_assert(ecs_get_target(world, e, ecs_id(Position), 1) == 0);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_pair(stage_1, e, ecs_id(Position), TgtA);
+    ecs_add_pair(stage_1, e, ecs_id(Position), TgtB);
+    test_assert(!ecs_has_pair(stage_1, e, ecs_id(Position), TgtA));
+    test_assert(!ecs_has_pair(stage_1, e, ecs_id(Position), TgtB));
+    test_assert(ecs_get_target(stage_1, e, ecs_id(Position), 0) == 0);
+    test_assert(ecs_get_target(stage_1, e, ecs_id(Position), 1) == 0);
+    ecs_merge(stage_1);
     test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtA));
     test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtB));
 
@@ -5324,13 +5324,13 @@ void Sparse_defer_batched_add_exclusive_pair(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add_pair(world, e, ecs_id(Position), TgtA);
-    ecs_add_pair(world, e, ecs_id(Position), TgtB);
-    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
-    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtB));
-    test_assert(ecs_get_target(world, e, ecs_id(Position), 0) == 0);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_pair(stage_1, e, ecs_id(Position), TgtA);
+    ecs_add_pair(stage_1, e, ecs_id(Position), TgtB);
+    test_assert(!ecs_has_pair(stage_1, e, ecs_id(Position), TgtA));
+    test_assert(!ecs_has_pair(stage_1, e, ecs_id(Position), TgtB));
+    test_assert(ecs_get_target(stage_1, e, ecs_id(Position), 0) == 0);
+    ecs_merge(stage_1);
     test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
     test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtB));
 
@@ -5364,12 +5364,12 @@ void Sparse_defer_batched_add_tag(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add(world, e, Foo);
-    ecs_add(world, e, Bar);
-    test_assert(!ecs_has(world, e, Foo));
-    test_assert(!ecs_has(world, e, Bar));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add(stage_1, e, Foo);
+    ecs_add(stage_1, e, Bar);
+    test_assert(!ecs_has(stage_1, e, Foo));
+    test_assert(!ecs_has(stage_1, e, Bar));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Foo));
     test_assert(ecs_has(world, e, Bar));
 
@@ -5388,12 +5388,12 @@ void Sparse_defer_batched_add_pair_tag(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add_pair(world, e, Rel, TgtA);
-    ecs_add_pair(world, e, Rel, TgtB);
-    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
-    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_pair(stage_1, e, Rel, TgtA);
+    ecs_add_pair(stage_1, e, Rel, TgtB);
+    test_assert(!ecs_has_pair(stage_1, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(stage_1, e, Rel, TgtB));
+    ecs_merge(stage_1);
     test_assert(ecs_has_pair(world, e, Rel, TgtA));
     test_assert(ecs_has_pair(world, e, Rel, TgtB));
 
@@ -5413,12 +5413,12 @@ void Sparse_defer_batched_add_exclusive_pair_tag(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add_pair(world, e, Rel, TgtA);
-    ecs_add_pair(world, e, Rel, TgtB);
-    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
-    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_pair(stage_1, e, Rel, TgtA);
+    ecs_add_pair(stage_1, e, Rel, TgtB);
+    test_assert(!ecs_has_pair(stage_1, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(stage_1, e, Rel, TgtB));
+    ecs_merge(stage_1);
     test_assert(!ecs_has_pair(world, e, Rel, TgtA));
     test_assert(ecs_has_pair(world, e, Rel, TgtB));
 
@@ -5441,12 +5441,12 @@ void Sparse_defer_batched_remove(void) {
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_defer_begin(world);
-    ecs_remove(world, e, Position);
-    ecs_remove(world, e, Velocity);
-    test_assert(ecs_has(world, e, Position));
-    test_assert(ecs_has(world, e, Velocity));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, e, Position);
+    ecs_remove(stage_1, e, Velocity);
+    test_assert(ecs_has(stage_1, e, Position));
+    test_assert(ecs_has(stage_1, e, Velocity));
+    ecs_merge(stage_1);
     test_assert(!ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
 
@@ -5478,14 +5478,14 @@ void Sparse_defer_batched_remove_pair(void) {
     ecs_add_pair(world, e, ecs_id(Position), TgtA);
     ecs_add_pair(world, e, ecs_id(Position), TgtB);
 
-    ecs_defer_begin(world);
-    ecs_remove_pair(world, e, ecs_id(Position), TgtA);
-    ecs_remove_pair(world, e, ecs_id(Position), TgtB);
-    test_assert(ecs_get_target(world, e, ecs_id(Position), 0) == TgtA);
-    test_assert(ecs_get_target(world, e, ecs_id(Position), 1) == TgtB);
-    test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtA));
-    test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtB));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove_pair(stage_1, e, ecs_id(Position), TgtA);
+    ecs_remove_pair(stage_1, e, ecs_id(Position), TgtB);
+    test_assert(ecs_get_target(stage_1, e, ecs_id(Position), 0) == TgtA);
+    test_assert(ecs_get_target(stage_1, e, ecs_id(Position), 1) == TgtB);
+    test_assert(ecs_has_pair(stage_1, e, ecs_id(Position), TgtA));
+    test_assert(ecs_has_pair(stage_1, e, ecs_id(Position), TgtB));
+    ecs_merge(stage_1);
     test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
     test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtB));
 
@@ -5520,13 +5520,13 @@ void Sparse_defer_batched_remove_exclusive_pair(void) {
     ecs_add_pair(world, e, ecs_id(Position), TgtA);
     ecs_add_pair(world, e, ecs_id(Position), TgtB);
 
-    ecs_defer_begin(world);
-    ecs_remove_pair(world, e, ecs_id(Position), TgtB);
-    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
-    test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtB));
-    test_assert(ecs_get_target(world, e, ecs_id(Position), 0) == TgtB);
-    test_assert(ecs_get_target(world, e, ecs_id(Position), 1) == 0);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove_pair(stage_1, e, ecs_id(Position), TgtB);
+    test_assert(!ecs_has_pair(stage_1, e, ecs_id(Position), TgtA));
+    test_assert(ecs_has_pair(stage_1, e, ecs_id(Position), TgtB));
+    test_assert(ecs_get_target(stage_1, e, ecs_id(Position), 0) == TgtB);
+    test_assert(ecs_get_target(stage_1, e, ecs_id(Position), 1) == 0);
+    ecs_merge(stage_1);
     test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
     test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtB));
 
@@ -5560,12 +5560,12 @@ void Sparse_defer_batched_remove_tag(void) {
     ecs_add(world, e, Foo);
     ecs_add(world, e, Bar);
 
-    ecs_defer_begin(world);
-    ecs_remove(world, e, Foo);
-    ecs_remove(world, e, Bar);
-    test_assert(ecs_has(world, e, Foo));
-    test_assert(ecs_has(world, e, Bar));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, e, Foo);
+    ecs_remove(stage_1, e, Bar);
+    test_assert(ecs_has(stage_1, e, Foo));
+    test_assert(ecs_has(stage_1, e, Bar));
+    ecs_merge(stage_1);
     test_assert(!ecs_has(world, e, Foo));
     test_assert(!ecs_has(world, e, Bar));
 
@@ -5586,12 +5586,12 @@ void Sparse_defer_batched_remove_pair_tag(void) {
     ecs_add_pair(world, e, Rel, TgtA);
     ecs_add_pair(world, e, Rel, TgtB);
 
-    ecs_defer_begin(world);
-    ecs_remove_pair(world, e, Rel, TgtA);
-    ecs_remove_pair(world, e, Rel, TgtB);
-    test_assert(ecs_has_pair(world, e, Rel, TgtA));
-    test_assert(ecs_has_pair(world, e, Rel, TgtB));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove_pair(stage_1, e, Rel, TgtA);
+    ecs_remove_pair(stage_1, e, Rel, TgtB);
+    test_assert(ecs_has_pair(stage_1, e, Rel, TgtA));
+    test_assert(ecs_has_pair(stage_1, e, Rel, TgtB));
+    ecs_merge(stage_1);
     test_assert(!ecs_has_pair(world, e, Rel, TgtA));
     test_assert(!ecs_has_pair(world, e, Rel, TgtB));
 
@@ -5613,11 +5613,11 @@ void Sparse_defer_batched_remove_exclusive_pair_tag(void) {
     ecs_add_pair(world, e, Rel, TgtA);
     ecs_add_pair(world, e, Rel, TgtB);
 
-    ecs_defer_begin(world);
-    ecs_remove_pair(world, e, Rel, TgtB);
-    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
-    test_assert(ecs_has_pair(world, e, Rel, TgtB));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove_pair(stage_1, e, Rel, TgtB);
+    test_assert(!ecs_has_pair(stage_1, e, Rel, TgtA));
+    test_assert(ecs_has_pair(stage_1, e, Rel, TgtB));
+    ecs_merge(stage_1);
     test_assert(!ecs_has_pair(world, e, Rel, TgtA));
     test_assert(!ecs_has_pair(world, e, Rel, TgtB));
 
@@ -5657,10 +5657,10 @@ void Sparse_defer_change_exclusive(void) {
     ecs_add(world, e5, Position);
     ecs_add_pair(world, e5, Movement, Jumping);
 
-    ecs_defer_begin(world);
-    ecs_add_pair(world, e1, Movement, Jumping);
-    ecs_add_pair(world, e3, Movement, Jumping);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_pair(stage_1, e1, Movement, Jumping);
+    ecs_add_pair(stage_1, e3, Movement, Jumping);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_pair(world, e0, Movement, Jumping));
     test_assert(ecs_has_pair(world, e1, Movement, Jumping));
@@ -5683,12 +5683,12 @@ void Sparse_defer_add_pair_2_commands(void) {
     ECS_TAG(world, Tag);
 
     ecs_entity_t e = ecs_new(world);
-    ecs_defer_begin(world);
-    ecs_add_pair(world, e, Rel, Tgt);
-    ecs_add(world, e, Tag);
-    test_assert(!ecs_has_pair(world, e, Rel, Tgt));
-    test_assert(!ecs_has(world, e, Tag));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_pair(stage_1, e, Rel, Tgt);
+    ecs_add(stage_1, e, Tag);
+    test_assert(!ecs_has_pair(stage_1, e, Rel, Tgt));
+    test_assert(!ecs_has(stage_1, e, Tag));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Tag));
     test_assert(ecs_has_pair(world, e, Rel, Tgt));
 
@@ -5707,12 +5707,12 @@ void Sparse_defer_add_pair_exclusive_2_commands(void) {
     ECS_TAG(world, Tag);
 
     ecs_entity_t e = ecs_new(world);
-    ecs_defer_begin(world);
-    ecs_add_pair(world, e, Rel, Tgt);
-    ecs_add(world, e, Tag);
-    test_assert(!ecs_has_pair(world, e, Rel, Tgt));
-    test_assert(!ecs_has(world, e, Tag));
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_pair(stage_1, e, Rel, Tgt);
+    ecs_add(stage_1, e, Tag);
+    test_assert(!ecs_has_pair(stage_1, e, Rel, Tgt));
+    test_assert(!ecs_has(stage_1, e, Tag));
+    ecs_merge(stage_1);
     test_assert(ecs_has(world, e, Tag));
     test_assert(ecs_has_pair(world, e, Rel, Tgt));
 
@@ -5793,11 +5793,9 @@ void Sparse_component_delete_sparse_multiple_entities(void) {
     test_assert(ecs_has(world, e1, Position));
     test_assert(ecs_has(world, e2, Position));
 
-    ecs_defer_begin(world);
-    ecs_defer_suspend(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     ecs_delete_with(world, ecs_id(Position));
-    ecs_defer_resume(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_is_alive(world, e1));
     test_assert(!ecs_is_alive(world, e2));
@@ -6638,10 +6636,10 @@ void Sparse_deferred_delete_w_symmetric(void) {
     test_assert(ecs_has_pair(world, e, Rel, p1));
     test_assert(ecs_has_pair(world, e, Rel, p2));
 
-    ecs_defer_begin(world);
-    ecs_delete(world, p1);
-    ecs_delete(world, p2);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, p1);
+    ecs_delete(stage_1, p2);
+    ecs_merge(stage_1);
 
     ecs_fini(world);
 }
@@ -6945,7 +6943,7 @@ static void DummyHook(ecs_iter_t *it) {
     Position *p = ecs_field_at(it, Position, 0, 0);
     test_assert(p != NULL);
 
-    test_assert(ecs_has_id(it->world, it->entities[0], dummy_component_id));
+    test_assert(ecs_has_id(it->stage, it->entities[0], dummy_component_id));
 }
 
 static void DummyObserver(ecs_iter_t *it) {
@@ -6959,7 +6957,7 @@ static void DummyObserver(ecs_iter_t *it) {
     Position *p = ecs_field_at(it, Position, 0, 0);
     test_assert(p != NULL);
 
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_entity_t e = it->entities[0];
 
     test_assert(ecs_has_id(world, e, dummy_component_id));
@@ -6973,18 +6971,18 @@ static void DummyObserver(ecs_iter_t *it) {
 
 static void CheckObserver(ecs_iter_t *it) {
     check_observer_invoked ++;
-    test_assert(ecs_has_id(it->world, it->entities[0], dummy_component_id));
+    test_assert(ecs_has_id(it->stage, it->entities[0], dummy_component_id));
 }
 
 static void CheckTargetObserver(ecs_iter_t *it) {
     check_observer_invoked ++;
-    test_assert(ecs_has_id(it->world, it->entities[0], dummy_component_id));
+    test_assert(ecs_has_id(it->stage, it->entities[0], dummy_component_id));
 
-    ecs_entity_t rel = ecs_pair_first(it->world, dummy_component_id);
-    ecs_entity_t tgt = ecs_pair_second(it->world, dummy_component_id);
+    ecs_entity_t rel = ecs_pair_first(it->stage, dummy_component_id);
+    ecs_entity_t tgt = ecs_pair_second(it->stage, dummy_component_id);
     test_assert(tgt != 0);
 
-    test_assert(ecs_get_target(it->world, it->entities[0], rel, 0) == tgt);
+    test_assert(ecs_get_target(it->stage, it->entities[0], rel, 0) == tgt);
 }
 
 void Sparse_on_remove_before_hook_before_dtor(void) {
@@ -7272,7 +7270,7 @@ void Sparse_child_of_component_w_sparse_exclusive(void) {
 
 static void OnRemoveCreateEntity(ecs_iter_t *it)
 {
-    ecs_entity_t recycled = ecs_new(it->world);
+    ecs_entity_t recycled = ecs_new(it->stage);
     (void)recycled;
 }
 
@@ -7375,10 +7373,10 @@ void Sparse_defer_add_two_sparse_w_observer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_add_id(world, e, DontFragA);
-    ecs_add_id(world, e, DontFragB);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_id(stage_1, e, DontFragA);
+    ecs_add_id(stage_1, e, DontFragB);
+    ecs_merge(stage_1);
 
     test_int(OnAddTagA_invoked, 1);
     test_int(OnAddTagB_invoked, 1);
@@ -7414,10 +7412,10 @@ void Sparse_defer_remove_two_sparse_w_observer(void) {
     ecs_add_id(world, e, DontFragA);
     ecs_add_id(world, e, DontFragB);
 
-    ecs_defer_begin(world);
-    ecs_remove_id(world, e, DontFragA);
-    ecs_remove_id(world, e, DontFragB);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove_id(stage_1, e, DontFragA);
+    ecs_remove_id(stage_1, e, DontFragB);
+    ecs_merge(stage_1);
 
     test_int(OnRemoveTagA_invoked, 1);
     test_int(OnRemoveTagB_invoked, 1);
@@ -7454,10 +7452,10 @@ void Sparse_defer_set_batch_two_sparse_w_observer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-        ecs_set(world, e, Position, {42});
-        ecs_set(world, e, Velocity, {99});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+        ecs_set(stage_1, e, Position, {42});
+        ecs_set(stage_1, e, Velocity, {99});
+    ecs_merge(stage_1);
 
     test_int(RegularOnAdd_invoked, 1);
     test_int(DataOnAdd_invoked, 1);
@@ -7490,9 +7488,9 @@ void Sparse_defer_set_w_sparse_w_observer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_defer_begin(world);
-        ecs_set(world, e, Velocity, {77});
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+        ecs_set(stage_1, e, Velocity, {77});
+    ecs_merge(stage_1);
 
     test_int(DataOnAdd_invoked, 1);
     test_int(DataOnSet_invoked, 1);
@@ -7523,11 +7521,11 @@ void Sparse_defer_ensure_modified_w_sparse_w_observer(void) {
 
     DataOnSet_invoked = 0;
 
-    ecs_defer_begin(world);
-    Position *ptr = ecs_ensure(world, e, Position);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    Position *ptr = ecs_ensure(stage_1, e, Position);
     ptr->x = 77;
-    ecs_modified(world, e, Position);
-    ecs_defer_end(world);
+    ecs_modified(stage_1, e, Position);
+    ecs_merge(stage_1);
 
     test_int(DataOnSet_invoked, 1);
     test_int(DataOnSet_value, 77);
@@ -7552,19 +7550,19 @@ void Sparse_defer_remove_override(void) {
     test_assert(ecs_has(world, e, Velocity));
     ecs_set(world, e, Velocity, {2, 4});
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        const Velocity *v = ecs_get(world, e, Velocity);
+        const Velocity *v = ecs_get(stage_1, e, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 2); test_int(v->y, 4);
     }
-    ecs_remove(world, e, Velocity);
+    ecs_remove(stage_1, e, Velocity);
     {
-        const Velocity *v = ecs_get(world, e, Velocity);
+        const Velocity *v = ecs_get(stage_1, e, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 1); test_int(v->y, 2);
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, Velocity));
 
@@ -7588,20 +7586,20 @@ void Sparse_defer_remove_add_override(void) {
     test_assert(ecs_has(world, e, Velocity));
     ecs_set(world, e, Velocity, {2, 4});
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     {
-        const Velocity *v = ecs_get(world, e, Velocity);
+        const Velocity *v = ecs_get(stage_1, e, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 2); test_int(v->y, 4);
     }
-    ecs_remove(world, e, Velocity);
-    ecs_add(world, e, Velocity);
+    ecs_remove(stage_1, e, Velocity);
+    ecs_add(stage_1, e, Velocity);
     {
-        const Velocity *v = ecs_get(world, e, Velocity);
+        const Velocity *v = ecs_get(stage_1, e, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 1); test_int(v->y, 2);
     }
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has(world, e, Velocity));
 

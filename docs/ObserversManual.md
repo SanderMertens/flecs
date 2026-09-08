@@ -2150,7 +2150,7 @@ height: 200,
 </div>
 
 ### Enqueue vs. Emit
-Events can be emitted with either the `emit` or `enqueue` operation. The `emit` operation invokes observers directly, whereas `enqueue` will enqueue the event in the command queue if the world is in deferred mode. When the world is not in deferred mode, `enqueue` defaults to the behavior of `emit`.
+Events can be emitted with either the `emit` or `enqueue` operation. The `emit` operation invokes observers directly, whereas `enqueue` adds the event to the command queue when passed a stage. When passed the actual world, `enqueue` behaves like `emit`.
 
 When `enqueue` adds an event to the command queue, the event data is copied in, meaning that the application does not need to keep the event data alive. This is done using the regular `copy` hook that can be registered using `ecs_set_hooks`. In C++ the copy assignment operator is used. Note that as a result, for an event with data to be enqueued in C++, the type has to be copyable. If no copy hook is registered, the behavior defaults to a `memcpy`.
 
@@ -2173,10 +2173,10 @@ ecs_observer(world, {
 // Observer is invoked as part of operation
 ecs_set(world, e, Position, {10, 20});
 
-ecs_defer_begin(world);
-ecs_add(world, e, Position, {30, 40});
+ecs_world_t *stage = ecs_get_stage(world, 0);
+ecs_set(stage, e, Position, {30, 40});
 // Operation is delayed until here, observer is also invoked here
-ecs_defer_end(world);
+ecs_merge(stage);
 ```
 
 </li>
@@ -2192,10 +2192,10 @@ world.observer<Position>()
 // Observer is invoked as part of operation
 e.set(Position{10, 20});
 
-world.defer_begin();
-e.set(Position{20, 30});
+auto stage = world.get_stage(0);
+e.mut(stage).set(Position{20, 30});
 // Operation is delayed until here, observer is also invoked here
-world.defer_end();
+stage.merge();
 ```
 
 </li>
@@ -2212,10 +2212,6 @@ world.Observer<Position>()
 // Observer is invoked as part of operation
 e.Set(new Position(10, 20));
 
-world.DeferBegin();
-e.Set(new Position(20, 30));
-// Operation is delayed until here, observer is also invoked here
-world.DeferEnd();
 ```
 
 </li>
@@ -2231,10 +2227,6 @@ world
 // Observer is invoked as part of operation
 e.set(Position { x: 10.0, y: 20.0 });
 
-world.defer_begin();
-e.set(Position { x: 20.0, y: 30.0 });
-// Operation is delayed until here, observer is also invoked here
-world.defer_end();
 ```
 
 </li>

@@ -160,12 +160,12 @@ void transfer_items(flecs::entity dst, flecs::entity src) {
         << src.name() << " to " << dst.name() << "\n\n";
 
     // Defer, because we're adding/removing components while we're iterating
-    dst.world().defer([&] {
+    dst.world().defer([&](flecs::world& stage) {
         dst = get_container(dst); // Make sure to replace players with container
         src = get_container(src);
 
         for_each_item(src, [&](flecs::entity item) {
-            transfer_item(dst, item);
+            transfer_item(dst.mut(stage), item.mut(stage));
         });
     });
 }

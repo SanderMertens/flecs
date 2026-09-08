@@ -1636,10 +1636,10 @@ void Entity_defer_assign_w_on_set_hook(void) {
 
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.assign(Position{10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).assign(Position{10, 20});
     test_int(invoked, 0);
-    world.defer_end();
+    stage_1.merge();
 
     test_int(invoked, 1);
 
@@ -1665,10 +1665,10 @@ void Entity_defer_assign_w_on_set_observer(void) {
 
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.assign(Position{10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).assign(Position{10, 20});
     test_int(invoked, 0);
-    world.defer_end();
+    stage_1.merge();
 
     test_int(invoked, 1);
 
@@ -1694,10 +1694,10 @@ void Entity_defer_assign_w_change_detect(void) {
     q.each([](const Position& p) {});
     test_bool(false, q.changed());
 
-    world.defer_begin();
-    e.assign(Position{10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).assign(Position{10, 20});
     test_bool(false, q.changed());
-    world.defer_end();
+    stage_1.merge();
 
     test_bool(true, q.changed());
     q.each([](const Position& p) {});
@@ -3152,9 +3152,9 @@ void Entity_set_3_components_w_callback(void) {
 void Entity_defer_set_1_component(void) {
     flecs::world ecs;
 
-    ecs.defer_begin();
+    flecs::world stage_1 = ecs.get_stage(0);
 
-    auto e = ecs.entity()
+    auto e = stage_1.entity()
         .insert([](Position& p){
             p.x = 10;
             p.y = 20;
@@ -3162,7 +3162,7 @@ void Entity_defer_set_1_component(void) {
 
     test_assert(!e.has<Position>());
 
-    ecs.defer_end();
+    stage_1.merge();
 
     test_assert(e.has<Position>());
 
@@ -3175,9 +3175,9 @@ void Entity_defer_set_1_component(void) {
 void Entity_defer_set_2_components(void) {
     flecs::world ecs;
 
-    ecs.defer_begin();
+    flecs::world stage_1 = ecs.get_stage(0);
 
-    auto e = ecs.entity()
+    auto e = stage_1.entity()
         .insert([](Position& p, Velocity& v){
             p = {10, 20};
             v = {1, 2};
@@ -3186,7 +3186,7 @@ void Entity_defer_set_2_components(void) {
     test_assert(!e.has<Position>());
     test_assert(!e.has<Velocity>());
 
-    ecs.defer_end();
+    stage_1.merge();
 
     test_assert(e.has<Position>());
     test_assert(e.has<Velocity>());
@@ -3203,9 +3203,9 @@ void Entity_defer_set_2_components(void) {
 void Entity_defer_set_3_components(void) {
     flecs::world ecs;
 
-    ecs.defer_begin();
+    flecs::world stage_1 = ecs.get_stage(0);
 
-    auto e = ecs.entity()
+    auto e = stage_1.entity()
         .insert([](Position& p, Velocity& v, Mass& m){
             p = {10, 20};
             v = {1, 2};
@@ -3216,7 +3216,7 @@ void Entity_defer_set_3_components(void) {
     test_assert(!e.has<Velocity>());
     test_assert(!e.has<Mass>());
 
-    ecs.defer_end();
+    stage_1.merge();
 
     test_assert(e.has<Position>());
     test_assert(e.has<Velocity>());
@@ -3295,9 +3295,9 @@ void Entity_defer_set_2_w_on_set(void) {
             test_int(v.y, 2);
         });
 
-    ecs.defer_begin();   
+    flecs::world stage_1 = ecs.get_stage(0);
 
-    auto e = ecs.entity()
+    auto e = stage_1.entity()
         .insert([](Position& p, Velocity& v){
             p = {10, 20};
             v = {1, 2};
@@ -3306,7 +3306,7 @@ void Entity_defer_set_2_w_on_set(void) {
     test_int(position_set, 0);
     test_int(velocity_set, 0);
 
-    ecs.defer_end();
+    stage_1.merge();
 
     test_int(position_set, 1);
     test_int(velocity_set, 1);
@@ -3573,8 +3573,8 @@ void Entity_defer_new_w_name(void) {
 
     flecs::entity e;
 
-    ecs.defer([&]{
-        e = ecs.entity("Foo");
+    ecs.defer([&](flecs::world& stage_1) {
+        e = stage_1.entity("Foo");
         test_assert(e != 0);
     });
 
@@ -3587,8 +3587,8 @@ void Entity_defer_new_w_nested_name(void) {
 
     flecs::entity e;
 
-    ecs.defer([&]{
-        e = ecs.entity("Foo::Bar");
+    ecs.defer([&](flecs::world& stage_1) {
+        e = stage_1.entity("Foo::Bar");
         test_assert(e != 0);
     });
 
@@ -3603,9 +3603,9 @@ void Entity_defer_new_w_scope_name(void) {
 
     flecs::entity e, parent = ecs.entity("Parent");
 
-    ecs.defer([&]{
+    ecs.defer([&](flecs::world& stage_1) {
         parent.scope([&]{
-            e = ecs.entity("Foo");
+            e = stage_1.entity("Foo");
             test_assert(e != 0);
         });
     });
@@ -3620,9 +3620,9 @@ void Entity_defer_new_w_scope_nested_name(void) {
 
     flecs::entity e, parent = ecs.entity("Parent");
 
-    ecs.defer([&]{
+    ecs.defer([&](flecs::world& stage_1) {
         parent.scope([&]{
-            e = ecs.entity("Foo::Bar");
+            e = stage_1.entity("Foo::Bar");
             test_assert(e != 0);
         });
     });
@@ -3637,9 +3637,9 @@ void Entity_defer_new_w_deferred_scope_nested_name(void) {
 
     flecs::entity e, parent;
 
-    ecs.defer([&]{
-        parent = ecs.entity("Parent").scope([&]{
-            e = ecs.entity("Foo::Bar");
+    ecs.defer([&](flecs::world& stage_1) {
+        parent = stage_1.entity("Parent").scope([&]{
+            e = stage_1.entity("Foo::Bar");
             test_assert(e != 0);
         });
     });
@@ -3658,9 +3658,9 @@ void Entity_defer_new_w_scope(void) {
 
     flecs::entity e, parent = ecs.entity();
 
-    ecs.defer([&]{
+    ecs.defer([&](flecs::world& stage_1) {
         parent.scope([&]{
-            e = ecs.entity();
+            e = stage_1.entity();
             test_assert(e != 0);
         });
     });
@@ -3676,15 +3676,13 @@ void Entity_defer_suspend_resume(void) {
 
     flecs::entity e = ecs.entity();
 
-    ecs.defer([&]{
-        e.add<TagA>();
+    ecs.defer([&](flecs::world& stage_1) {
+        e.mut(stage_1).add<TagA>();
         test_assert(!e.has<TagA>());
 
-        ecs.defer_suspend();
         e.add<TagB>();
         test_assert(!e.has<TagA>());
         test_assert(e.has<TagB>());
-        ecs.defer_resume();
 
         test_assert(!e.has<TagA>());
         test_assert(e.has<TagB>());
@@ -3700,11 +3698,11 @@ void Entity_defer_ensure(void) {
     flecs::entity e = world.entity();
 
     {
-        world.defer_begin();
-        Position& p = e.ensure<Position>();
+        flecs::world stage_1 = world.get_stage(0);
+        Position& p = e.mut(stage_1).ensure<Position>();
         p.x = 10;
         p.y = 20;
-        world.defer_end();
+        stage_1.merge();
     }
 
     Position* p = e.try_get_mut<Position>();
@@ -4831,18 +4829,18 @@ void Entity_get_obj_by_template(void) {
 void Entity_create_named_twice_deferred(void) {
     flecs::world ecs;
 
-    ecs.defer_begin();
+    flecs::world stage_1 = ecs.get_stage(0);
 
-    auto e1 = ecs.entity("e");
-    auto e2 = ecs.entity("e");
+    auto e1 = stage_1.entity("e");
+    auto e2 = stage_1.entity("e");
 
-    auto f1 = ecs.entity("p::f");
-    auto f2 = ecs.entity("p::f");
+    auto f1 = stage_1.entity("p::f");
+    auto f2 = stage_1.entity("p::f");
 
-    auto g1 = ecs.entity(ecs.entity("q"), "g");
-    auto g2 = ecs.entity(ecs.entity("q"), "g");
+    auto g1 = stage_1.entity(stage_1.entity("q"), "g");
+    auto g2 = stage_1.entity(stage_1.entity("q"), "g");
 
-    ecs.defer_end();
+    stage_1.merge();
 
     test_str(e1.path().c_str(), "::e");
     test_str(f1.path().c_str(), "::p::f");
@@ -5146,9 +5144,9 @@ void Entity_entity_array(void) {
 void Entity_entity_w_type_defer(void) {
     flecs::world ecs;
 
-    ecs.defer_begin();
-    auto e = ecs.entity<Tag>();
-    ecs.defer_end();
+    flecs::world stage_1 = ecs.get_stage(0);
+    auto e = stage_1.entity<Tag>();
+    stage_1.merge();
 
     test_str(e.name(), "Tag");
     test_str(e.symbol(), "Tag");
@@ -6216,10 +6214,10 @@ void Entity_defer_on_replace_w_set(void) {
     flecs::entity e = world.entity();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.set(Position{10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).set(Position{10, 20});
     test_int(invoked, 0);
-    world.defer_end();
+    stage_1.merge();
     test_int(invoked, 1);
 
     const Position& p = e.get<Position>();
@@ -6253,12 +6251,12 @@ void Entity_defer_on_replace_w_set_twice(void) {
     flecs::entity e = world.entity();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.set(Position{10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).set(Position{10, 20});
     test_int(invoked, 0);
-    e.set(Position{11, 21});
+    e.mut(stage_1).set(Position{11, 21});
     test_int(invoked, 0);
-    world.defer_end();
+    stage_1.merge();
     test_int(invoked, 2);
 
     const Position& p = e.get<Position>();
@@ -6292,10 +6290,10 @@ void Entity_defer_on_replace_w_set_existing(void) {
     flecs::entity e = world.entity().add<Position>();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.set(Position{10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).set(Position{10, 20});
     test_int(invoked, 1);
-    world.defer_end();
+    stage_1.merge();
     test_int(invoked, 1);
 
     const Position& p = e.get<Position>();
@@ -6329,12 +6327,12 @@ void Entity_defer_on_replace_w_set_existing_twice(void) {
     flecs::entity e = world.entity().add<Position>();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.set(Position{10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).set(Position{10, 20});
     test_int(invoked, 1);
-    e.set(Position{11, 21});
+    e.mut(stage_1).set(Position{11, 21});
     test_int(invoked, 2);
-    world.defer_end();
+    stage_1.merge();
     test_int(invoked, 2);
 
     const Position& p = e.get<Position>();
@@ -6368,11 +6366,11 @@ void Entity_defer_on_replace_w_set_batched(void) {
     flecs::entity e = world.entity();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.set(Position{10, 20});
-    e.add<Velocity>();
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).set(Position{10, 20});
+    e.mut(stage_1).add<Velocity>();
     test_int(invoked, 0);
-    world.defer_end();
+    stage_1.merge();
     test_int(invoked, 1);
 
     const Position& p = e.get<Position>();
@@ -6408,12 +6406,12 @@ void Entity_defer_on_replace_w_set_batched_twice(void) {
     flecs::entity e = world.entity();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.set(Position{10, 20});
-    e.set(Position{11, 21});
-    e.add<Velocity>();
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).set(Position{10, 20});
+    e.mut(stage_1).set(Position{11, 21});
+    e.mut(stage_1).add<Velocity>();
     test_int(invoked, 0);
-    world.defer_end();
+    stage_1.merge();
     test_int(invoked, 2);
 
     const Position& p = e.get<Position>();
@@ -6449,11 +6447,11 @@ void Entity_defer_on_replace_w_set_batched_existing(void) {
     flecs::entity e = world.entity().add<Position>();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.set(Position{10, 20});
-    e.add<Velocity>();
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).set(Position{10, 20});
+    e.mut(stage_1).add<Velocity>();
     test_int(invoked, 1);
-    world.defer_end();
+    stage_1.merge();
     test_int(invoked, 1);
 
     const Position& p = e.get<Position>();
@@ -6489,13 +6487,13 @@ void Entity_defer_on_replace_w_set_batched_existing_twice(void) {
     flecs::entity e = world.entity().add<Position>();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.set(Position{10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).set(Position{10, 20});
     test_int(invoked, 1);
-    e.set(Position{11, 21});
+    e.mut(stage_1).set(Position{11, 21});
     test_int(invoked, 2);
-    e.add<Velocity>();
-    world.defer_end();
+    e.mut(stage_1).add<Velocity>();
+    stage_1.merge();
     test_int(invoked, 2);
 
     const Position& p = e.get<Position>();
@@ -6533,10 +6531,10 @@ void Entity_defer_on_replace_w_assign(void) {
     flecs::entity e = world.entity();
     test_int(invoked, 0);
 
-    world.defer_begin();
+    flecs::world stage_1 = world.get_stage(0);
 
     test_expect_abort();
-    e.assign(Position{10, 20});
+    e.mut(stage_1).assign(Position{10, 20});
 }
 
 void Entity_defer_on_replace_w_assign_existing(void) {
@@ -6565,10 +6563,10 @@ void Entity_defer_on_replace_w_assign_existing(void) {
     flecs::entity e = world.entity().add<Position>();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.assign(Position{10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).assign(Position{10, 20});
     test_int(invoked, 1);
-    world.defer_end();
+    stage_1.merge();
     test_int(invoked, 1);
 
     const Position& p = e.get<Position>();
@@ -6602,12 +6600,12 @@ void Entity_defer_on_replace_w_assign_existing_twice(void) {
     flecs::entity e = world.entity().add<Position>();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.assign(Position{10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).assign(Position{10, 20});
     test_int(invoked, 1);
-    e.assign(Position{11, 21});
+    e.mut(stage_1).assign(Position{11, 21});
     test_int(invoked, 2);
-    world.defer_end();
+    stage_1.merge();
     test_int(invoked, 2);
 
     const Position& p = e.get<Position>();
@@ -6641,11 +6639,11 @@ void Entity_defer_on_replace_w_assign_batched_existing(void) {
     flecs::entity e = world.entity().add<Position>();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.assign(Position{10, 20});
-    e.add<Velocity>();
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).assign(Position{10, 20});
+    e.mut(stage_1).add<Velocity>();
     test_int(invoked, 1);
-    world.defer_end();
+    stage_1.merge();
     test_int(invoked, 1);
 
     const Position& p = e.get<Position>();
@@ -6681,13 +6679,13 @@ void Entity_defer_on_replace_w_assign_batched_existing_twice(void) {
     flecs::entity e = world.entity().add<Position>();
     test_int(invoked, 0);
 
-    world.defer_begin();
-    e.assign(Position{10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).assign(Position{10, 20});
     test_int(invoked, 1);
-    e.assign(Position{11, 21});
+    e.mut(stage_1).assign(Position{11, 21});
     test_int(invoked, 2);
-    e.add<Velocity>();
-    world.defer_end();
+    e.mut(stage_1).add<Velocity>();
+    stage_1.merge();
     test_int(invoked, 2);
 
     const Position& p = e.get<Position>();
@@ -6913,12 +6911,12 @@ void Entity_defer_set_parent(void) {
 
     flecs::entity parent = world.entity();
 
-    world.defer_begin();
-    flecs::entity child = world.entity().set(flecs::Parent{parent});
+    flecs::world stage_1 = world.get_stage(0);
+    flecs::entity child = stage_1.entity().set(flecs::Parent{parent});
 
     test_assert(!child.has<flecs::Parent>());
     test_assert(!child.has(ecs_value_pair(flecs::ParentDepth, 1)));
-    world.defer_end();
+    stage_1.merge();
 
     test_assert(child.has<flecs::Parent>());
     test_assert(child.has(ecs_value_pair(flecs::ParentDepth, 1)));
@@ -6968,13 +6966,13 @@ void Entity_defer_set_change_parent(void) {
         test_assert(p.value == parent);
     }
 
-    world.defer_begin();
-    child.set(flecs::Parent{parent_2});
+    flecs::world stage_1 = world.get_stage(0);
+    child.mut(stage_1).set(flecs::Parent{parent_2});
 
     test_assert(child.has<flecs::Parent>());
     test_assert(child.has(ecs_value_pair(flecs::ParentDepth, 1)));
     test_assert(!child.has(ecs_value_pair(flecs::ParentDepth, 2)));
-    world.defer_end();
+    stage_1.merge();
 
     test_assert(child.has<flecs::Parent>());
     test_assert(child.has(ecs_value_pair(flecs::ParentDepth, 2)));
@@ -7026,13 +7024,13 @@ void Entity_defer_assign_parent(void) {
         test_assert(p.value == parent);
     }
 
-    world.defer_begin();
-    child.assign(flecs::Parent{parent_2});
+    flecs::world stage_1 = world.get_stage(0);
+    child.mut(stage_1).assign(flecs::Parent{parent_2});
 
     test_assert(child.has<flecs::Parent>());
     test_assert(child.has(ecs_value_pair(flecs::ParentDepth, 1)));
     test_assert(!child.has(ecs_value_pair(flecs::ParentDepth, 2)));
-    world.defer_end();
+    stage_1.merge();
 
     test_assert(child.has<flecs::Parent>());
     test_assert(child.has(ecs_value_pair(flecs::ParentDepth, 2)));
@@ -7285,10 +7283,10 @@ void Entity_defer_set_parent_to_deleted(void) {
     flecs::entity parent = world.entity();
     flecs::entity child = world.entity();
 
-    world.defer_begin();
-    parent.destruct();
-    child.set(flecs::Parent{parent});
-    world.defer_end();
+    flecs::world stage_1 = world.get_stage(0);
+    parent.mut(stage_1).destruct();
+    child.mut(stage_1).set(flecs::Parent{parent});
+    stage_1.merge();
 
     test_assert(!parent.is_alive());
     test_assert(!child.is_alive());
@@ -7300,12 +7298,12 @@ void Entity_defer_set_parent_to_deleted_batched(void) {
     flecs::entity parent = world.entity();
     flecs::entity child = world.entity();
 
-    world.defer_begin();
-    parent.destruct();
-    child.set(Position{10, 20});
-    child.set(flecs::Parent{parent});
-    child.set(Velocity{1, 2});
-    world.defer_end();
+    flecs::world stage_1 = world.get_stage(0);
+    parent.mut(stage_1).destruct();
+    child.mut(stage_1).set(Position{10, 20});
+    child.mut(stage_1).set(flecs::Parent{parent});
+    child.mut(stage_1).set(Velocity{1, 2});
+    stage_1.merge();
 
     test_assert(!parent.is_alive());
     test_assert(!child.is_alive());
@@ -7318,10 +7316,10 @@ void Entity_defer_set_existing_parent_to_deleted(void) {
     flecs::entity parent_b = world.entity();
     flecs::entity child = world.entity(flecs::Parent{parent_a}, nullptr);
 
-    world.defer_begin();
-    parent_b.destruct();
-    child.set(flecs::Parent{parent_b});
-    world.defer_end();
+    flecs::world stage_1 = world.get_stage(0);
+    parent_b.mut(stage_1).destruct();
+    child.mut(stage_1).set(flecs::Parent{parent_b});
+    stage_1.merge();
 
     test_assert(parent_a.is_alive());
     test_assert(!parent_b.is_alive());
@@ -7335,12 +7333,12 @@ void Entity_defer_set_existing_parent_to_deleted_batched(void) {
     flecs::entity parent_b = world.entity();
     flecs::entity child = world.entity(flecs::Parent{parent_a}, nullptr);
 
-    world.defer_begin();
-    parent_b.destruct();
-    child.set(Position{10, 20});
-    child.set(flecs::Parent{parent_b});
-    child.set(Velocity{1, 2});
-    world.defer_end();
+    flecs::world stage_1 = world.get_stage(0);
+    parent_b.mut(stage_1).destruct();
+    child.mut(stage_1).set(Position{10, 20});
+    child.mut(stage_1).set(flecs::Parent{parent_b});
+    child.mut(stage_1).set(Velocity{1, 2});
+    stage_1.merge();
 
     test_assert(parent_a.is_alive());
     test_assert(!parent_b.is_alive());
@@ -7354,10 +7352,10 @@ void Entity_defer_assign_parent_to_deleted(void) {
     flecs::entity parent_b = world.entity();
     flecs::entity child = world.entity(flecs::Parent{parent_a}, nullptr);
 
-    world.defer_begin();
-    parent_b.destruct();
-    child.assign(flecs::Parent{parent_b});
-    world.defer_end();
+    flecs::world stage_1 = world.get_stage(0);
+    parent_b.mut(stage_1).destruct();
+    child.mut(stage_1).assign(flecs::Parent{parent_b});
+    stage_1.merge();
 
     test_assert(parent_a.is_alive());
     test_assert(!parent_b.is_alive());
@@ -7371,12 +7369,12 @@ void Entity_defer_assign_parent_to_deleted_batched(void) {
     flecs::entity parent_b = world.entity();
     flecs::entity child = world.entity(flecs::Parent{parent_a}, nullptr);
 
-    world.defer_begin();
-    parent_b.destruct();
-    child.set(Position{10, 20});
-    child.assign(flecs::Parent{parent_b});
-    child.set(Velocity{1, 2});
-    world.defer_end();
+    flecs::world stage_1 = world.get_stage(0);
+    parent_b.mut(stage_1).destruct();
+    child.mut(stage_1).set(Position{10, 20});
+    child.mut(stage_1).assign(flecs::Parent{parent_b});
+    child.mut(stage_1).set(Velocity{1, 2});
+    stage_1.merge();
 
     test_assert(parent_a.is_alive());
     test_assert(!parent_b.is_alive());

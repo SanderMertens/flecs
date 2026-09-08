@@ -22,7 +22,6 @@ struct Health { int amount; };
 
 // Removes all entities who are children of
 // the current scene root.
-// (NOTE: should use defer_begin() / defer_end())
 void reset_scene(flecs::world& ecs) {
     ecs.delete_with(flecs::ChildOf, ecs.entity<SceneRoot>());
 }
@@ -30,7 +29,7 @@ void reset_scene(flecs::world& ecs) {
 void menu_scene(flecs::iter& it, size_t, ActiveScene) {
     std::cout << "\n>> ActiveScene has changed to `MenuScene`\n\n";
 
-    flecs::world ecs = it.world();
+    flecs::world ecs = it.stage();
     flecs::entity scene = ecs.component<SceneRoot>();
     
     reset_scene(ecs);
@@ -48,7 +47,7 @@ void menu_scene(flecs::iter& it, size_t, ActiveScene) {
 void game_scene(flecs::iter& it, size_t, ActiveScene) {
     std::cout << "\n>> ActiveScene has changed to `GameScene`\n\n";
 
-    flecs::world ecs = it.world();
+    flecs::world ecs = it.stage();
     flecs::entity scene = ecs.component<SceneRoot>();
     
     reset_scene(ecs);

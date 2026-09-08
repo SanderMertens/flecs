@@ -98,6 +98,7 @@ public:
 
     /** Get the world associated with the iterator. */
     flecs::world world() const;
+    flecs::world stage() const;
 
     /** Get a pointer to the underlying C iterator object. */
     const flecs::iter_t* c_ptr() const {
@@ -455,12 +456,12 @@ public:
      */
     bool next() {
         if (iter_->flags & EcsIterIsValid && iter_->table) {
-            ECS_TABLE_UNLOCK(iter_->world, iter_->table);
+            ECS_TABLE_UNLOCK(iter_->stage, iter_->table);
         }
         bool result = iter_->next(iter_);
         iter_->flags |= EcsIterIsValid;
         if (result && iter_->table) {
-            ECS_TABLE_LOCK(iter_->world, iter_->table);
+            ECS_TABLE_LOCK(iter_->stage, iter_->table);
         }
         return result;
     }
@@ -492,7 +493,7 @@ public:
      */
     void fini() {
         if (iter_->flags & EcsIterIsValid && iter_->table) {
-            ECS_TABLE_UNLOCK(iter_->world, iter_->table);
+            ECS_TABLE_UNLOCK(iter_->stage, iter_->table);
         }
         ecs_iter_fini(iter_);
     }
@@ -505,7 +506,7 @@ private:
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_field_id(iter_, index);
         ecs_assert(ECS_HAS_ID_FLAG(term_id, PAIR) ||
-            term_id == _::type<T>::id(iter_->world),
+            term_id == _::type<T>::id(iter_->stage),
             ECS_COLUMN_TYPE_MISMATCH, nullptr);
 #endif
 
@@ -560,7 +561,7 @@ private:
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_field_id(iter_, index);
         ecs_assert(ECS_HAS_ID_FLAG(term_id, PAIR) ||
-            term_id == _::type<T>::id(iter_->world),
+            term_id == _::type<T>::id(iter_->stage),
             ECS_COLUMN_TYPE_MISMATCH, nullptr);
 #endif
 

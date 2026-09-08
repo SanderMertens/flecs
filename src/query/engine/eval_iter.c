@@ -11,7 +11,7 @@ static void flecs_query_iter_run_ctx_init(
 {
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
-    ctx->world = it->real_world;
+    ctx->world = it->world;
     ctx->query = impl;
     ctx->it = it;
 #ifdef FLECS_QUERY_PLANS
@@ -334,11 +334,26 @@ bool ecs_query_next(
         ECS_INVALID_PARAMETER, NULL);
 #endif
 
+#ifdef FLECS_CACHED_QUERIES
+    if ((it->flags & (EcsIterTrivialCached|EcsIterTrivialSearch)) ==
+        (EcsIterTrivialCached|EcsIterTrivialSearch))
+    {
+        return flecs_query_trivial_cached_next(it);
+    }
+#endif
+
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
     (void)impl;
     ecs_assert(impl != NULL, ECS_INVALID_OPERATION,
         "cannot call ecs_query_next on invalid iterator");
+
+    if (!impl->pub.term_count) {
+        it->flags |= EcsIterSkip;
+        ecs_iter_fini(it);
+        ecs_os_linc(&it->world->info.queries_ran_total);
+        return false;
+    }
 
     ecs_query_run_ctx_t ctx;
     flecs_query_iter_run_ctx_init(it, &ctx);
@@ -451,7 +466,7 @@ bool ecs_query_next(
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
-    ecs_os_linc(&it->real_world->info.queries_ran_total);
+    ecs_os_linc(&it->world->info.queries_ran_total);
     return false;
 
 #ifdef FLECS_CACHED_QUERIES
@@ -501,7 +516,7 @@ bool flecs_query_trivial_cached_next(
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
-    ecs_os_linc(&it->real_world->info.queries_ran_total);
+    ecs_os_linc(&it->world->info.queries_ran_total);
     return false;
 }
 
@@ -526,7 +541,6 @@ static void flecs_query_iter_fini(
 
 #ifdef FLECS_QUERY_PLANS
     int32_t op_count = flecs_query_impl(q)->op_count;
-    int32_t var_count = flecs_query_impl(q)->var_count;
 
 #ifdef FLECS_DEBUG
     if (it->flags & EcsIterProfile) {
@@ -537,6 +551,13 @@ static void flecs_query_iter_fini(
 
     flecs_iter_free_n(qit->profile, ecs_query_op_profile_t, op_count);
 #endif
+
+    if (!q->term_count) {
+        it->query = NULL;
+        return;
+    }
+
+    int32_t var_count = flecs_query_impl(q)->var_count;
 
     if ((it->flags & EcsIterTrivialSparse) && qit->op_ctx) {
         ecs_query_sparse_trivial_ctx_t *op_ctx =
@@ -567,7 +588,7 @@ static void flecs_query_validate_final_fields(
     (void)q;
 #ifdef FLECS_DEBUG
     ecs_query_impl_t *impl = flecs_query_impl(q);
-    ecs_world_t *world = q->real_world;
+    ecs_world_t *world = q->world;
 
     if (!impl->final_terms) {
         return;
@@ -625,7 +646,7 @@ ecs_iter_t flecs_query_iter(
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
 
 #ifdef FLECS_DEBUG
-    flecs_check_exclusive_world_access_write(q->real_world);
+    flecs_check_exclusive_world_access_write(q->world);
 #endif
 
 #ifdef FLECS_QUERY_PLANS
@@ -637,21 +658,21 @@ ecs_iter_t flecs_query_iter(
     ecs_query_impl_t *impl = flecs_query_impl(q);
 #endif
 
-    it.world = ECS_CONST_CAST(ecs_world_t*, world);
+    it.stage = ECS_CONST_CAST(ecs_world_t*, world);
 
     /* If world passed to iterator is the real world, but query was created from
      * a stage, stage takes precedence. */
-    if (flecs_poly_is(it.world, ecs_world_t) &&
-        flecs_poly_is(q->world, ecs_stage_t))
+    if (flecs_poly_is(it.stage, ecs_world_t) &&
+        flecs_poly_is(q->stage, ecs_stage_t))
     {
-        it.world = ECS_CONST_CAST(ecs_world_t*, q->world);
+        it.stage = ECS_CONST_CAST(ecs_world_t*, q->stage);
     }
 
-    it.real_world = q->real_world;
-    ecs_assert(flecs_poly_is(it.real_world, ecs_world_t),
+    it.world = q->world;
+    ecs_assert(flecs_poly_is(it.world, ecs_world_t),
         ECS_INTERNAL_ERROR, NULL);
-    ecs_check(!(it.real_world->flags & EcsWorldMultiThreaded) ||
-        it.world != it.real_world, ECS_INVALID_PARAMETER,
+    ecs_check(!(it.world->flags & EcsWorldMultiThreaded) ||
+        it.stage != it.world, ECS_INVALID_PARAMETER,
             "create iterator for stage when world is in multithreaded mode");
 
     it.query = q;
@@ -669,9 +690,9 @@ ecs_iter_t flecs_query_iter(
 #ifdef FLECS_CACHED_QUERIES
     bool fully_cached = (q->flags & EcsQueryIsCacheable) &&
         !(q->flags & EcsQueryCacheWithFilter);
-    flecs_iter_init(it.world, &it, !impl->cache || !fully_cached);
+    flecs_iter_init(it.stage, &it, !impl->cache || !fully_cached);
 #else
-    flecs_iter_init(it.world, &it, true);
+    flecs_iter_init(it.stage, &it, true);
 #endif
 
 #ifdef FLECS_QUERY_PLANS
@@ -688,6 +709,15 @@ ecs_iter_t flecs_query_iter(
 #endif
 
 #ifdef FLECS_QUERY_PLANS
+    if (!q->term_count) {
+#ifdef FLECS_DEBUG
+        int32_t op_count = impl->op_count ? impl->op_count : 1;
+        qit->profile = flecs_iter_calloc_n(
+            &it, ecs_query_op_profile_t, op_count);
+#endif
+        return it;
+    }
+
     int32_t i, var_count = impl->var_count;
     int32_t op_count = impl->op_count ? impl->op_count : 1;
     if (var_count) {
@@ -764,7 +794,7 @@ int flecs_query_trivial_has_range(
         return 0;
     }
 
-    const ecs_world_t *real_world = q->real_world;
+    const ecs_world_t *real_world = q->world;
     const ecs_term_t *terms = q->terms;
     const ecs_table_record_t *term_trs[FLECS_TERM_COUNT_MAX];
     ecs_entity_t term_srcs[FLECS_TERM_COUNT_MAX] = {0};
@@ -838,8 +868,8 @@ int flecs_query_trivial_has_range(
     }
 
     ecs_iter_t lit = {0};
-    lit.world = ECS_CONST_CAST(ecs_world_t*, world);
-    lit.real_world = ECS_CONST_CAST(ecs_world_t*, real_world);
+    lit.stage = ECS_CONST_CAST(ecs_world_t*, world);
+    lit.world = ECS_CONST_CAST(ecs_world_t*, real_world);
     lit.query = q;
     lit.system = q->entity;
     lit.field_count = q->field_count;
@@ -849,7 +879,7 @@ int flecs_query_trivial_has_range(
     lit.offset = offset;
     lit.count = count;
 
-    flecs_iter_init(lit.world, &lit, true);
+    flecs_iter_init(lit.stage, &lit, true);
     lit.flags |= EcsIterIsValid;
     ECS_BIT_COND(lit.flags, EcsIterComponentInheritance,
         ECS_BIT_IS_SET(flags, EcsQueryHasComponentInheritance));
