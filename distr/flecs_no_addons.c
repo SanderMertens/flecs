@@ -22519,55 +22519,23 @@ void ecs_vec_set_count_w_type_info(
         return;
     }
 
-    /* If array is large enough, we don't need to realloc. */
-    if (v->size > elem_count) {
-        if (elem_count > v->count) {
-            void *ptr = ECS_ELEM(v->array, size, v->count);
-            flecs_type_info_ctor(ptr, elem_count - v->count, ti);
+    int32_t old_count = v->count;
+    if (elem_count < old_count) {
+        flecs_type_info_dtor(ECS_ELEM(v->array, size, elem_count),
+            old_count - elem_count, ti);
+    } else {
+        if (elem_count > v->size) {
+            int32_t new_size = flecs_next_pow_of_2(elem_count);
+            const char *type_name = NULL;
+            void *array = flecs_vec_alloc(allocator, size, new_size, type_name);
+            flecs_type_info_ctor_move_dtor(array, v->array, old_count, ti);
+            flecs_vec_free(allocator, size, v->size, v->array);
+            v->array = array;
+            v->size = new_size;
         }
-
-        if (elem_count < v->count) {
-            void *ptr = ECS_ELEM(v->array, size, elem_count);
-            flecs_type_info_dtor(ptr, v->count - elem_count, ti);
-        }
-
-        v->count = elem_count;
-        return;
+        flecs_type_info_ctor(ECS_ELEM(v->array, size, old_count),
+            elem_count - old_count, ti);
     }
-
-    /* Resize array. We can't use realloc because we need to call the move hook
-     * from the old to the new memory. */
-
-    /* Round up to next power of 2 so we don't allocate for each new element */
-    ecs_size_t new_size = flecs_next_pow_of_2(elem_count);
-
-    void *array = NULL;
-    array = flecs_vec_alloc(allocator, size, new_size, NULL);
-
-    int32_t move_count = elem_count;
-    if (move_count > v->count) {
-        move_count = v->count;
-    }
-
-    /* Move elements over to new array */
-    flecs_type_info_ctor_move_dtor(array, v->array, move_count, ti);
-
-    /* Destruct remaining elements in old array, if any */
-    if (move_count < v->count) {
-        void *ptr = ECS_ELEM(v->array, size, move_count);
-        flecs_type_info_dtor(ptr, v->count - move_count, ti);
-    }
-
-    /* Construct new elements, if any */
-    if (move_count < elem_count) {
-        void *ptr = ECS_ELEM(array, size, move_count);
-        flecs_type_info_ctor(ptr, elem_count - move_count, ti);
-    }
-
-    flecs_vec_free(allocator, size, v->size, v->array);
-
-    v->array = array;
-    v->size = new_size;
     v->count = elem_count;
 }
 
