@@ -1091,19 +1091,18 @@ static void http_purge_request_cache(
     ecs_map_iter_t it = ecs_map_iter(&srv->request_cache.impl);
     while (ecs_map_next(&it)) {
         ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
-        int32_t i, count = ecs_vec_count(&bucket->values);
-        ecs_http_request_key_t *keys = ecs_vec_first(&bucket->keys);
-        ecs_http_request_entry_t *entries = ecs_vec_first(&bucket->values);
-        for (i = count - 1; i >= 0; i --) {
-            ecs_http_request_entry_t *entry = &entries[i];
+        while (bucket) {
+            ecs_hm_bucket_t *next = bucket->next;
+            ecs_http_request_entry_t *entry = flecs_hm_bucket_value(
+                &srv->request_cache, bucket);
             if (fini || ((time - entry->time) > srv->cache_purge_timeout)) {
-                ecs_http_request_key_t *key = &keys[i];
-                /* Safe, code owns the value */
+                ecs_http_request_key_t *key = flecs_hm_bucket_key(bucket);
                 ecs_os_free(ECS_CONST_CAST(char*, key->array));
                 ecs_os_free(entry->content);
-                flecs_hm_bucket_remove(&srv->request_cache, bucket, 
-                    ecs_map_key(&it), i);
+                flecs_hm_bucket_remove(&srv->request_cache, bucket,
+                    ecs_map_key(&it));
             }
+            bucket = next;
         }
     }
 

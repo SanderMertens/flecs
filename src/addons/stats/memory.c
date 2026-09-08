@@ -60,15 +60,14 @@ static ecs_size_t flecs_hashmap_memory_get(
 {
     const ecs_map_t *map = &name_index->impl;
 
-    ecs_size_t key_size = name_index->key_size;
-    ecs_size_t value_size = name_index->value_size;
-    ecs_size_t result = flecs_map_memory_get(map, ECS_SIZEOF(ecs_hm_bucket_t));
+    ecs_size_t result = flecs_map_memory_get(map, 0);
 
     ecs_map_iter_t it = ecs_map_iter(map);
     while (ecs_map_next(&it)) {
         ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
-        result += ecs_vec_size(&bucket->keys) * key_size;
-        result += ecs_vec_size(&bucket->values) * value_size;
+        for (; bucket; bucket = bucket->next) {
+            result += name_index->bucket_size;
+        }
     }
 
     return result;
@@ -915,20 +914,15 @@ static void flecs_http_memory_get(
 
     result->bytes_rest += flecs_hashmap_memory_get(&srv->request_cache);
 
-    ecs_map_iter_t it = ecs_map_iter(&srv->request_cache.impl);
-    while (ecs_map_next(&it)) {
-        ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
-        int32_t i, count = ecs_vec_count(&bucket->values);
-        ecs_http_request_key_t *keys = ecs_vec_first(&bucket->keys);
-        ecs_http_request_entry_t *entries = ecs_vec_first(&bucket->values);
-        for (i = count - 1; i >= 0; i --) {
-            ecs_http_request_entry_t *entry = &entries[i];
-            ecs_http_request_key_t *key = &keys[i];
-
-            result->bytes_rest += key->count;
-            if (entry->content) {
-                result->bytes_rest += ecs_os_strlen(entry->content);
-            }
+    flecs_hashmap_iter_t it = flecs_hashmap_iter(&srv->request_cache);
+    ecs_http_request_key_t *key;
+    ecs_http_request_entry_t *entry;
+    while ((entry = flecs_hashmap_next_w_key(
+        &it, ecs_http_request_key_t, &key, ecs_http_request_entry_t)))
+    {
+        result->bytes_rest += key->count;
+        if (entry->content) {
+            result->bytes_rest += ecs_os_strlen(entry->content);
         }
     }
 }

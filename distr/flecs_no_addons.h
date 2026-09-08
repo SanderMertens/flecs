@@ -5009,11 +5009,13 @@ bool flecs_defer_end(
 extern "C" {
 #endif
 
-/** A bucket in the hashmap, storing parallel key and value vectors. */
-typedef struct {
-    ecs_vec_t keys; /**< Vector of keys. */
-    ecs_vec_t values; /**< Vector of values. */
+typedef struct ecs_hm_bucket_t {
+    struct ecs_hm_bucket_t *next;
 } ecs_hm_bucket_t;
+
+#define flecs_hm_bucket_key(bucket) ECS_OFFSET(bucket, 16)
+#define flecs_hm_bucket_value(map, bucket) \
+    ECS_OFFSET(bucket, (map)->value_offset)
 
 /** A hashmap that supports variable-sized keys and values. */
 typedef struct {
@@ -5021,6 +5023,8 @@ typedef struct {
     ecs_compare_action_t compare; /**< Compare function for keys. */
     ecs_size_t key_size; /**< Size of key type. */
     ecs_size_t value_size; /**< Size of value type. */
+    ecs_size_t value_offset;
+    ecs_size_t bucket_size;
     ecs_map_t impl; /**< Underlying map implementation. */
 } ecs_hashmap_t;
 
@@ -5028,7 +5032,7 @@ typedef struct {
 typedef struct {
     ecs_map_iter_t it; /**< Underlying map iterator. */
     ecs_hm_bucket_t *bucket; /**< Current bucket. */
-    int32_t index; /**< Current index within the bucket. */
+    const ecs_hashmap_t *map;
 } flecs_hashmap_iter_t;
 
 /** Result of a hashmap ensure operation. */
@@ -5137,19 +5141,11 @@ ecs_hm_bucket_t* flecs_hashmap_get_bucket(
     const ecs_hashmap_t *map,
     uint64_t hash);
 
-/** Remove an entry from a hashmap bucket by index.
- *
- * @param map The hashmap.
- * @param bucket The bucket.
- * @param hash The hash value.
- * @param index The index within the bucket to remove.
- */
 FLECS_DBG_API
 void flecs_hm_bucket_remove(
     ecs_hashmap_t *map,
     ecs_hm_bucket_t *bucket,
-    uint64_t hash,
-    int32_t index);
+    uint64_t hash);
 
 /** Copy a hashmap.
  *

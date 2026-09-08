@@ -139,11 +139,8 @@ const uint64_t* flecs_name_index_find_ptr(
         return NULL;
     }
 
-    ecs_hashed_string_t *keys = ecs_vec_first(&b->keys);
-    int32_t i, count = ecs_vec_count(&b->keys);
-
-    for (i = 0; i < count; i ++) {
-        ecs_hashed_string_t *key = &keys[i];
+    for (; b; b = b->next) {
+        ecs_hashed_string_t *key = flecs_hm_bucket_key(b);
         ecs_assert(key->hash == hs.hash, ECS_INTERNAL_ERROR, NULL);
 
         if (hs.length != key->length) {
@@ -151,7 +148,7 @@ const uint64_t* flecs_name_index_find_ptr(
         }
 
         if (!ecs_os_memcmp(name, key->value, hs.length)) {
-            uint64_t *e = ecs_vec_get_t(&b->values, uint64_t, i);
+            uint64_t *e = flecs_hm_bucket_value(map, b);
             ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
             return e;
         }
@@ -183,11 +180,9 @@ void flecs_name_index_remove(
         return;
     }
 
-    uint64_t *ids = ecs_vec_first(&b->values);
-    int32_t i, count = ecs_vec_count(&b->values);
-    for (i = 0; i < count; i ++) {
-        if (ids[i] == e) {
-            flecs_hm_bucket_remove(map, b, hash, i);
+    for (; b; b = b->next) {
+        if (*(uint64_t*)flecs_hm_bucket_value(map, b) == e) {
+            flecs_hm_bucket_remove(map, b, hash);
             break;
         }
     }
@@ -204,12 +199,9 @@ bool flecs_name_index_update_name(
         return false;
     }
 
-    uint64_t *ids = ecs_vec_first(&b->values);
-    int32_t i, count = ecs_vec_count(&b->values);
-    for (i = 0; i < count; i ++) {
-        if (ids[i] == e) {
-            ecs_hashed_string_t *key = ecs_vec_get_t(
-                &b->keys, ecs_hashed_string_t, i);
+    for (; b; b = b->next) {
+        if (*(uint64_t*)flecs_hm_bucket_value(map, b) == e) {
+            ecs_hashed_string_t *key = flecs_hm_bucket_key(b);
             key->value = ECS_CONST_CAST(char*, name);
             ecs_assert(ecs_os_strlen(name) == key->length,
                 ECS_INTERNAL_ERROR, NULL);
