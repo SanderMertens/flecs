@@ -898,7 +898,11 @@ Functions can be defined in scripts or by using the C/C++ API. Flecs also comes 
 
 A function can be created in code by doing:
 
-```cpp
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
 ecs_function(world, {
     .name = "sum",
     .return_type = ecs_id(ecs_i64_t),
@@ -909,8 +913,41 @@ ecs_function(world, {
     .callback = sum
 });
 ```
+</li>
+<li><b class="tab-title">C++</b>
 
-Function implementations looks like this:
+```cpp
+world.function("sum")
+  .return_type<int64_t>()
+  .param<int64_t>("a")
+  .param<int64_t>("b")
+  .callback(sum)
+  .build();
+```
+</li>
+</ul>
+</div>
+
+Define the callback before registering the function:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+void sum(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    const int64_t *a = argv[0].ptr;
+    const int64_t *b = argv[1].ptr;
+    *(int64_t*)result->ptr = *a + *b;
+}
+```
+</li>
+<li><b class="tab-title">C++</b>
 
 ```cpp
 void sum(
@@ -919,11 +956,14 @@ void sum(
     const ecs_value_t *argv,
     ecs_value_t *result)
 {
-    int64_t *a = argv[0].ptr;
-    int64_t *b = argv[1].ptr;
-    *(int64_t*)result->ptr = *a + *b;
+    const int64_t *a = static_cast<const int64_t*>(argv[0].ptr);
+    const int64_t *b = static_cast<const int64_t*>(argv[1].ptr);
+    *static_cast<int64_t*>(result->ptr) = *a + *b;
 }
 ```
+</li>
+</ul>
+</div>
 
 The following syntax can be used to define a function in a script:
 
@@ -966,14 +1006,18 @@ const x = v.length()
 const x = v1.add(v2)
 ```
 
-Just like functions, methods can currently only be defined outside of scripts by using the Flecs Script API.
+Methods are defined outside of scripts by using the Flecs Script API.
 
 A method can be created in code by doing:
 
-```cpp
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
 ecs_method(world, {
     .name = "add",
-    .parent = ecs_id(ecs_i64_t), // Add method to i64
+    .parent = ecs_id(ecs_i64_t),
     .return_type = ecs_id(ecs_i64_t),
     .params = {
         { .name = "a", .type = ecs_id(ecs_i64_t) }
@@ -981,6 +1025,19 @@ ecs_method(world, {
     .callback = sum
 });
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+world.method<int64_t>("add")
+  .return_type<int64_t>()
+  .param<int64_t>("a")
+  .callback(sum)
+  .build();
+```
+</li>
+</ul>
+</div>
 
 ### Vector functions
 Vector functions are functions that accept arguments of a builtin `ScriptVectorType` type. This allows these functions to accept any type that is a valid vector type (see Vector operations).
@@ -1003,14 +1060,18 @@ const red_p = lerp(red, p, 0.5) // Illegal: red and p are of different types
 
 Vector functions are registered like normal functions, but instead of specifying a `callback`, the application sets `vector_callbacks`. An example:
 
-```cpp
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
 ecs_function(world, {
     .name = "lerp",
     .return_type = EcsScriptVectorType,
     .params = {
         { "a", EcsScriptVectorType },
         { "b", EcsScriptVectorType },
-        { "t", ecs_id(ecs_f64_t) },
+        { "t", ecs_id(ecs_f64_t) }
     },
     .vector_callbacks = {
         [EcsF32] = lerp_f32,
@@ -1018,8 +1079,48 @@ ecs_function(world, {
     }
 });
 ```
+</li>
+<li><b class="tab-title">C++</b>
 
-The signature for vector functions accepts an additional argument for the number of elements in the vector type:
+```cpp
+world.function("lerp")
+  .return_type(EcsScriptVectorType)
+  .param("a", EcsScriptVectorType)
+  .param("b", EcsScriptVectorType)
+  .param<double>("t")
+  .vector_callback(flecs::F32, lerp_f32)
+  .vector_callback(flecs::F64, lerp_f64)
+  .build();
+```
+</li>
+</ul>
+</div>
+
+The signature for vector functions accepts an additional argument for the number of elements in the vector type. Define these callbacks before registering the function. The `f32` implementation is shown below; use `double` for the vector elements in `lerp_f64`:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+void lerp_f32(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result,
+    int32_t elem_count)
+{
+    const float *a = argv[0].ptr;
+    const float *b = argv[1].ptr;
+    double t = *(double*)argv[2].ptr;
+    float *r = result->ptr;
+    for (int i = 0; i < elem_count; i ++) {
+        r[i] = a[i] + t * (b[i] - a[i]);
+    }
+}
+```
+</li>
+<li><b class="tab-title">C++</b>
 
 ```cpp
 void lerp_f32(
@@ -1029,15 +1130,18 @@ void lerp_f32(
     ecs_value_t *result,
     int32_t elem_count)
 {
-    float *a = argv[0].ptr;
-    float *b = argv[1].ptr;
-    double t = *(double*)argv[2].ptr;
-    float *r = result->ptr;
+    const float *a = static_cast<const float*>(argv[0].ptr);
+    const float *b = static_cast<const float*>(argv[1].ptr);
+    double t = *static_cast<const double*>(argv[2].ptr);
+    float *r = static_cast<float*>(result->ptr);
     for (int i = 0; i < elem_count; i ++) {
         r[i] = a[i] + t * (b[i] - a[i]);
     }
 }
 ```
+</li>
+</ul>
+</div>
 
 In the function documentation below the type of vector parameters is written as `[]`.
 
@@ -1260,9 +1364,13 @@ math {
 
 This will make the variable available to other scripts as `math.pi`.
 
-The `ecs_const_var_init` function is used to create exported variables. The following example shows how the same variable can be created from C code:
+The `ecs_const_var_init` function is used to create exported variables. The following example shows how the same variable can be created from native code:
 
-```cpp
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
 double pi_value = 3.1415926;
 
 ecs_const_var(world, {
@@ -1272,40 +1380,95 @@ ecs_const_var(world, {
   .value = &pi_value
 });
 ```
-
-Exported variables can be used as configuration that is loaded into an application from a script. The following example shows how to load an exported variable from C after it has been defined in a script or has been created with `ecs_const_var_init`:
+</li>
+<li><b class="tab-title">C++</b>
 
 ```cpp
+world.const_var("pi", 3.1415926, world.lookup("math"));
+```
+</li>
+</ul>
+</div>
+
+Exported variables can be used as configuration that is loaded into an application from a script. The following example shows how to load an exported variable from native code after it has been defined in a script or has been created with `ecs_const_var_init`:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
 ecs_entity_t pi = ecs_lookup(world, "math.pi");
 ecs_value_t v = ecs_const_var_get(world, pi);
-double *value = v.ptr;
+const double *value = v.ptr;
 if (value) {
-  // Use value
+  printf("pi = %f\n", *value);
 }
 ```
+</li>
+<li><b class="tab-title">C++</b>
 
-The following example shows how exported variables can be used in combination with modules in C++:
+```cpp
+double pi = world.get_const_var<double>("math::pi");
+printf("pi = %f\n", pi);
+```
+</li>
+</ul>
+</div>
+
+The following example loads `math.flecs` from a native module. The file defines `export const pi = 3.1415926` in the module scope:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+double math_pi;
+
+void MathImport(ecs_world_t *world) {
+  ECS_MODULE(world, Math);
+
+  ecs_script(world, { .filename = "math.flecs" });
+
+  ecs_entity_t pi = ecs_lookup(world, "math.pi");
+  ecs_value_t v = ecs_const_var_get(world, pi);
+  math_pi = *(double*)v.ptr;
+}
+
+int main(void) {
+  ecs_world_t *world = ecs_init();
+  ECS_IMPORT(world, Math);
+  double pi_2 = math_pi * 2;
+  printf("2 * pi = %f\n", pi_2);
+  return ecs_fini(world);
+}
+```
+</li>
+<li><b class="tab-title">C++</b>
 
 ```cpp
 struct math {
   inline static double pi;
 
   math(flecs::world& world) {
+    world.module<math>();
     world.script()
       .filename("math.flecs")
       .run();
 
-    world.const_var("pi", pi);
+    pi = world.get_const_var<double>("::math::pi");
   }
+};
+
+int main() {
+  flecs::world world;
+  world.import<math>();
+  double pi_2 = math::pi * 2;
+  printf("2 * pi = %f\n", pi_2);
 }
-
-// Import module
-world.import<math>();
-
-
-// Use value
-double pi_2 = math::pi * 2;
 ```
+</li>
+</ul>
+</div>
 
 An `export const` variable may not be modified over its lifetime. To create a variable that is allowed to be changed, use `export mut`:
 
@@ -1314,9 +1477,13 @@ export mut speed = 10
 ```
 
 The `ecs_mut_var_init` function is used to create mutable exported variables from
-C code:
+native code:
 
-```cpp
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
 float difficulty_value = 1.0;
 
 ecs_entity_t difficulty = ecs_mut_var(world, {
@@ -1325,15 +1492,37 @@ ecs_entity_t difficulty = ecs_mut_var(world, {
   .value = &difficulty_value
 });
 ```
-
-The mut variable can be modified with
+</li>
+<li><b class="tab-title">C++</b>
 
 ```cpp
+flecs::entity difficulty = world.mut_var("difficulty", 1.0f);
+```
+</li>
+</ul>
+</div>
+
+Updating a mut variable notifies reactive scripts that depend on it:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
 ecs_entity_t difficulty = ecs_lookup(world, "difficulty");
 ecs_value_t v = ecs_mut_var_get(world, difficulty);
 *(float*)v.ptr = 2.0;
 ecs_mut_var_modified(world, difficulty);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+world.set_mut_var("difficulty", 2.0f);
+```
+</li>
+</ul>
+</div>
 
 ## Control flow
 
@@ -1544,11 +1733,26 @@ my_engine {
 ## Reactivity
 Managed scripts are reactive, which means they will be reevaluated when the data that they depend on changes. A managed script is one that uses the following API:
 
-```cpp
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
 ecs_entity_t s = ecs_script(world, {
   .code = "e {}"
 });
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity s = world.script()
+  .code("e {}")
+  .run();
+```
+</li>
+</ul>
+</div>
 
 See "Managed scripts" for more details. The following sections go over the reactivity features of flecs script.
 
@@ -1944,8 +2148,26 @@ template Tree {
   }
 }
 ```
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+typedef struct Tree {
+  int32_t width;
+  int32_t height;
+} Tree;
+
+ecs_script(world, { .filename = "script.flecs" });
+ECS_COMPONENT(world, Tree);
+
+ecs_entity_t tree = ecs_new(world);
+ecs_set(world, tree, Tree, {5, 10});
+```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
-// main.cpp
 struct Tree {
   int32_t width;
   int32_t height;
@@ -1956,8 +2178,11 @@ world.script()
   .run();
 
 world.entity()
-  .set(Tree{5, 10}); // Instantiates template
+  .set(Tree{5, 10});
 ```
+</li>
+</ul>
+</div>
 
 Setting `mut` variables works in a similar way, but with a type called `mut` that is in the scope of the template:
 
@@ -1979,11 +2204,39 @@ template Button {
 }
 ```
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+typedef struct Button {
+  char *text;
+} Button;
+
+typedef struct ButtonMut {
+  bool hover;
+  bool active;
+} ButtonMut;
+
+ecs_script(world, { .filename = "script.flecs" });
+ECS_COMPONENT(world, Button);
+
+ecs_entity_t ecs_id(ButtonMut) = ecs_component(world, {
+  .entity = ecs_entity(world, { .name = "Button.mut" }),
+  .type = { .size = sizeof(ButtonMut), .alignment = ECS_ALIGNOF(ButtonMut) }
+});
+
+ecs_entity_t button = ecs_new(world);
+ecs_set(world, button, Button, {"Howdy"});
+ecs_set(world, button, ButtonMut, {true, false});
+```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
-// main.cpp
 struct Button {
   char *text;
-  
+
   struct mut {
     bool hover;
     bool active;
@@ -1995,10 +2248,15 @@ world.script()
   .run();
 
 flecs::entity button = world.entity()
-  .set(Button{"Howdy"}); // Instantiates template
+  .set(Button{ecs_os_strdup("Howdy")});
 
 button.set(Button::mut{true, false});
 ```
+</li>
+</ul>
+</div>
+
+The C++ example allocates the string because setting an rvalue transfers its ownership to the reflected component.
 
 #### Example
 The following code shows a  more complex example with templates that create children and uses nested templates:
@@ -2193,82 +2451,188 @@ Bitmask constants are stored as `u32`, which cannot be overridden.
 This section goes over how to run scripts in an application.
 
 ### Run once
-To run a script once, use the `ecs_script_run` function. Example:
+To run a script once, use `ecs_script_run` in C or `world.script_run` in C++:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+const char *code = "my_spaceship {}";
+
+if (ecs_script_run(world, "my_script_name", code, NULL)) {
+  ecs_err("script failed");
+}
+```
+</li>
+<li><b class="tab-title">C++</b>
 
 ```cpp
 const char *code = "my_spaceship {}";
 
-if (ecs_script_run(world, "my_script_name", code)) {
-  // error
+if (world.script_run("my_script_name", code)) {
+  ecs_err("script failed");
 }
 ```
+</li>
+</ul>
+</div>
 
-Alternatively a script can be ran directly from a file:
+Alternatively a script can be run directly from a file:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+if (ecs_script_run_file(world, "my_script.flecs")) {
+  ecs_err("script failed");
+}
+```
+</li>
+<li><b class="tab-title">C++</b>
 
 ```cpp
-if (ecs_script_run_file(world, "my_script.flecs")) {
-  // error
+if (world.script_run_file("my_script.flecs")) {
+  ecs_err("script failed");
 }
 ```
+</li>
+</ul>
+</div>
 
 If a script fails, the entities created by the script will not be automatically deleted. When a script contains templates, script resources will not get cleaned up until the entities associated with the templates are deleted.
 
 ### Run multiple times
-A script can be ran multiple times by using the `ecs_script_parse` and `ecs_script_eval` functions. Example:
+A script can be run multiple times by parsing it once and evaluating it repeatedly. In C++, the returned `flecs::parsed_script` owns the parsed script and frees it when it goes out of scope. It can be moved, and must be destroyed before its world.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+const char *code = "my_spaceship {}";
+
+ecs_script_t *script = ecs_script_parse(
+  world, "my_script_name", code, NULL, NULL);
+if (script) {
+  if (ecs_script_eval(script, NULL, NULL)) {
+    ecs_err("script failed");
+  }
+  if (ecs_script_eval(script, NULL, NULL)) {
+    ecs_err("script failed");
+  }
+  ecs_script_free(script);
+} else {
+  ecs_err("script parsing failed");
+}
+```
+</li>
+<li><b class="tab-title">C++</b>
 
 ```cpp
 const char *code = "my_spaceship {}";
 
-ecs_script_t *script = ecs_script_parse(
-  world, "my_script_name", code); 
-if (!script) {
-  // error
+auto script = world.script_parse("my_script_name", code);
+if (script) {
+  if (script.eval()) {
+    ecs_err("script failed");
+  }
+  if (script.eval()) {
+    ecs_err("script failed");
+  }
+} else {
+  ecs_err("script parsing failed");
 }
-
-if (ecs_script_eval(script)) {
-  // error
-}
-
-// Run again
-if (ecs_script_eval(script)) {
-}
-
-// Free script resources
-ecs_script_free(script);
 ```
+</li>
+</ul>
+</div>
 
 If a script fails, the entities created by the script will not be automatically deleted. When a script contains templates, script resources will not get cleaned up until the entities associated with the templates are deleted.
 
 ### Managed script
 Managed scripts are scripts that are discoverable and modifiable in the world. A managed script is associated with an entity. To create a managed script, do:
 
-```cpp
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
 const char *code = "my_spaceship {}";
 
 ecs_entity_t s = ecs_script(world, {
   .code = code
-  // .filename = "game.flecs"
 });
 
 if (!s) {
-  // The script entity could not be created. Typically happens when the file
-  // provided for script creation doesn't exist.
+  ecs_err("could not create script entity");
 }
 ```
-
-To update the code of a managed script, use the `ecs_script_update` function:
+</li>
+<li><b class="tab-title">C++</b>
 
 ```cpp
-if (ecs_script_update(world, s, 0, new_code)) {
-  // error
+const char *code = "my_spaceship {}";
+
+flecs::entity s = world.script()
+  .code(code)
+  .run();
+
+if (!s) {
+  ecs_err("could not create script entity");
 }
 ```
+</li>
+</ul>
+</div>
+
+To load a managed script from a file, set `.filename = "game.flecs"` in C or use `.filename("game.flecs")` in C++ instead of setting the code. A missing file can prevent the script entity from being created.
+
+To update the code of a managed script, use `ecs_script_update` in C or `world.script_update` in C++:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+if (ecs_script_update(world, s, 0, new_code)) {
+  ecs_err("script update failed");
+}
+```
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+if (world.script_update(s, new_code)) {
+  ecs_err("script update failed");
+}
+```
+</li>
+</ul>
+</div>
 
 When a managed script contains code that has errors, the managed script will still exist in the world. To discover whether a managed script has errors, use the following code:
 
-```cpp
-const EcsScript *s = ecs_get(world, s, EcsScript);
-if (s->error) {
-  ecs_err("error: %s", s->error);
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+const EcsScript *script = ecs_get(world, s, EcsScript);
+if (script->error) {
+  ecs_err("error: %s", script->error);
 }
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+const flecs::Script& script = s.get<flecs::Script>();
+if (script.error) {
+  ecs_err("error: %s", script.error);
+}
+```
+</li>
+</ul>
+</div>

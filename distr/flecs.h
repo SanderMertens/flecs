@@ -24696,6 +24696,82 @@ private:
 
 namespace flecs {
 
+struct function_builder {
+    function_builder(flecs::world_t *world, const char *name,
+        flecs::entity_t parent = 0, bool is_method = false)
+        : world_(world)
+        , desc_{}
+        , param_count_(0)
+        , is_method_(is_method)
+    {
+        desc_.name = name;
+        desc_.parent = parent ? parent : ecs_get_scope(world);
+    }
+
+    function_builder& parent(flecs::entity_t value) {
+        desc_.parent = value;
+        return *this;
+    }
+
+    function_builder& return_type(flecs::entity_t type) {
+        desc_.return_type = type;
+        return *this;
+    }
+
+    template <typename T>
+    function_builder& return_type() {
+        return return_type(_::type<T>::id(world_));
+    }
+
+    function_builder& param(const char *name, flecs::entity_t type) {
+        ecs_assert(param_count_ < FLECS_SCRIPT_FUNCTION_ARGS_MAX - is_method_,
+            ECS_INVALID_PARAMETER, "too many function parameters");
+        desc_.params[param_count_++] = {name, type};
+        return *this;
+    }
+
+    template <typename T>
+    function_builder& param(const char *name) {
+        return param(name, _::type<T>::id(world_));
+    }
+
+    function_builder& callback(ecs_function_callback_t value) {
+        desc_.callback = value;
+        return *this;
+    }
+
+    function_builder& vector_callback(ecs_primitive_kind_t kind,
+        ecs_vector_function_callback_t value)
+    {
+        ecs_assert(kind > 0 && kind < FLECS_SCRIPT_VECTOR_FUNCTION_COUNT,
+            ECS_INVALID_PARAMETER, "invalid vector element kind");
+        desc_.vector_callbacks[kind] = value;
+        return *this;
+    }
+
+    function_builder& vector_callback(flecs::entity_t type,
+        ecs_vector_function_callback_t value)
+    {
+        const EcsPrimitive *primitive = ecs_get(world_, type, EcsPrimitive);
+        ecs_assert(primitive != nullptr, ECS_INVALID_PARAMETER,
+            "vector element type is not a primitive");
+        return vector_callback(primitive->kind, value);
+    }
+
+    function_builder& ctx(void *value) {
+        desc_.ctx = value;
+        return *this;
+    }
+
+    flecs::entity build() const;
+
+private:
+    flecs::world_t *world_;
+    ecs_function_desc_t desc_;
+    int32_t param_count_;
+    bool is_method_;
+};
+
 /**
  * @ingroup cpp_addons_script
  * @{
@@ -24754,6 +24830,53 @@ namespace flecs {
 struct script_builder;
 
 using Script = EcsScript;
+
+struct parsed_script {
+    explicit parsed_script(ecs_script_t *script = nullptr)
+        : script_(script) { }
+
+    parsed_script(const parsed_script&) = delete;
+    parsed_script& operator=(const parsed_script&) = delete;
+
+    parsed_script(parsed_script&& other) noexcept
+        : script_(other.script_)
+    {
+        other.script_ = nullptr;
+    }
+
+    parsed_script& operator=(parsed_script&& other) noexcept {
+        if (this != &other) {
+            if (script_) {
+                ecs_script_free(script_);
+            }
+            script_ = other.script_;
+            other.script_ = nullptr;
+        }
+        return *this;
+    }
+
+    ~parsed_script() {
+        if (script_) {
+            ecs_script_free(script_);
+        }
+    }
+
+    explicit operator bool() const {
+        return script_ != nullptr;
+    }
+
+    int eval(const ecs_script_eval_desc_t *desc = nullptr,
+        ecs_script_eval_result_t *result = nullptr) const
+    {
+        if (!script_) {
+            return -1;
+        }
+        return ecs_script_eval(script_, desc, result);
+    }
+
+private:
+    ecs_script_t *script_;
+};
 
 namespace script {
 namespace _ {
@@ -27123,6 +27246,43 @@ int script_run_file(const char *filename) const {
 script_builder script(const char *name = nullptr) const {
     return script_builder(world_, name);
 }
+
+parsed_script script_parse(const char *name, const char *code,
+    const ecs_script_eval_desc_t *desc = nullptr,
+    ecs_script_eval_result_t *result = nullptr) const
+{
+    return parsed_script(ecs_script_parse(world_, name, code, desc, result));
+}
+
+int script_update(flecs::entity_t script, const char *code,
+    flecs::entity_t instance = 0) const
+{
+    return ecs_script_update(world_, script, instance, code);
+}
+
+function_builder function(const char *name) const {
+    return function_builder(world_, name);
+}
+
+function_builder method(flecs::entity_t type, const char *name) const {
+    return function_builder(world_, name, type, true);
+}
+
+template <typename T>
+function_builder method(const char *name) const {
+    return method(_::type<T>::id(world_), name);
+}
+
+template <typename T>
+flecs::entity const_var(const char *name, const T& value,
+    flecs::entity_t parent = 0) const;
+
+template <typename T>
+flecs::entity mut_var(const char *name, const T& value,
+    flecs::entity_t parent = 0) const;
+
+template <typename T>
+int set_mut_var(const char *name, const T& value) const;
 
 /** Convert a value to a string. */
 flecs::string to_expr(flecs::entity_t tid, const void* value) {
@@ -36341,6 +36501,51 @@ namespace flecs
 inline flecs::entity script_builder::run() const {
     ecs_entity_t e = ecs_script_init(world_, &desc_);
     return flecs::entity(world_, e);
+}
+
+inline flecs::entity function_builder::build() const {
+    ecs_entity_t e = is_method_
+        ? ecs_method_init(world_, &desc_)
+        : ecs_function_init(world_, &desc_);
+    return flecs::entity(world_, e);
+}
+
+template <typename T>
+inline flecs::entity world::const_var(const char *name, const T& value,
+    flecs::entity_t parent) const
+{
+    ecs_const_var_desc_t desc = {};
+    desc.name = name;
+    desc.parent = parent ? parent : ecs_get_scope(world_);
+    desc.type = _::type<T>::id(world_);
+    desc.value = const_cast<T*>(&value);
+    return flecs::entity(world_, ecs_const_var_init(world_, &desc));
+}
+
+template <typename T>
+inline flecs::entity world::mut_var(const char *name, const T& value,
+    flecs::entity_t parent) const
+{
+    ecs_mut_var_desc_t desc = {};
+    desc.name = name;
+    desc.parent = parent ? parent : ecs_get_scope(world_);
+    desc.type = _::type<T>::id(world_);
+    desc.value = const_cast<T*>(&value);
+    return flecs::entity(world_, ecs_mut_var_init(world_, &desc));
+}
+
+template <typename T>
+inline int world::set_mut_var(const char *name, const T& value) const {
+    flecs::entity_t var = ecs_lookup_path_w_sep(
+        world_, 0, name, "::", "::", false);
+    if (!var) {
+        return -1;
+    }
+    char *path = ecs_get_path(world_, var);
+    int result = ecs_mut_var_set_w_type(world_, path,
+        _::type<T>::id(world_), ECS_SIZEOF(T), &value);
+    ecs_os_free(path);
+    return result;
 }
 
 namespace _ {

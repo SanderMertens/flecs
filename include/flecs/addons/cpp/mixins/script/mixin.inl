@@ -32,6 +32,43 @@ script_builder script(const char *name = nullptr) const {
     return script_builder(world_, name);
 }
 
+parsed_script script_parse(const char *name, const char *code,
+    const ecs_script_eval_desc_t *desc = nullptr,
+    ecs_script_eval_result_t *result = nullptr) const
+{
+    return parsed_script(ecs_script_parse(world_, name, code, desc, result));
+}
+
+int script_update(flecs::entity_t script, const char *code,
+    flecs::entity_t instance = 0) const
+{
+    return ecs_script_update(world_, script, instance, code);
+}
+
+function_builder function(const char *name) const {
+    return function_builder(world_, name);
+}
+
+function_builder method(flecs::entity_t type, const char *name) const {
+    return function_builder(world_, name, type, true);
+}
+
+template <typename T>
+function_builder method(const char *name) const {
+    return method(_::type<T>::id(world_), name);
+}
+
+template <typename T>
+flecs::entity const_var(const char *name, const T& value,
+    flecs::entity_t parent = 0) const;
+
+template <typename T>
+flecs::entity mut_var(const char *name, const T& value,
+    flecs::entity_t parent = 0) const;
+
+template <typename T>
+int set_mut_var(const char *name, const T& value) const;
+
 /** Convert a value to a string. */
 flecs::string to_expr(flecs::entity_t tid, const void* value) {
     char *expr = ecs_ptr_to_expr(world_, tid, value);

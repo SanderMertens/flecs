@@ -15,6 +15,51 @@ inline flecs::entity script_builder::run() const {
     return flecs::entity(world_, e);
 }
 
+inline flecs::entity function_builder::build() const {
+    ecs_entity_t e = is_method_
+        ? ecs_method_init(world_, &desc_)
+        : ecs_function_init(world_, &desc_);
+    return flecs::entity(world_, e);
+}
+
+template <typename T>
+inline flecs::entity world::const_var(const char *name, const T& value,
+    flecs::entity_t parent) const
+{
+    ecs_const_var_desc_t desc = {};
+    desc.name = name;
+    desc.parent = parent ? parent : ecs_get_scope(world_);
+    desc.type = _::type<T>::id(world_);
+    desc.value = const_cast<T*>(&value);
+    return flecs::entity(world_, ecs_const_var_init(world_, &desc));
+}
+
+template <typename T>
+inline flecs::entity world::mut_var(const char *name, const T& value,
+    flecs::entity_t parent) const
+{
+    ecs_mut_var_desc_t desc = {};
+    desc.name = name;
+    desc.parent = parent ? parent : ecs_get_scope(world_);
+    desc.type = _::type<T>::id(world_);
+    desc.value = const_cast<T*>(&value);
+    return flecs::entity(world_, ecs_mut_var_init(world_, &desc));
+}
+
+template <typename T>
+inline int world::set_mut_var(const char *name, const T& value) const {
+    flecs::entity_t var = ecs_lookup_path_w_sep(
+        world_, 0, name, "::", "::", false);
+    if (!var) {
+        return -1;
+    }
+    char *path = ecs_get_path(world_, var);
+    int result = ecs_mut_var_set_w_type(world_, path,
+        _::type<T>::id(world_), ECS_SIZEOF(T), &value);
+    ecs_os_free(path);
+    return result;
+}
+
 namespace _ {
 
     inline ecs_value_t get_const_var(const flecs::world_t *world, const char *name) {
