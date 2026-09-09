@@ -16,6 +16,23 @@
     },
     "test": {
         "testsuites": [{
+            "id": "Script",
+            "testcases": [
+                "function",
+                "function_scope_and_ctx",
+                "method",
+                "vector_function",
+                "const_var",
+                "vars_scope",
+                "mut_var_reactive",
+                "set_mut_var_invalid",
+                "parse_eval",
+                "parse_error",
+                "eval_error",
+                "parse_move",
+                "update"
+            ]
+        }, {
             "id": "PrettyFunction",
             "testcases": [
                 "component",

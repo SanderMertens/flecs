@@ -8,6 +8,20 @@
 
 #include <cpp.h>
 
+void Script_function(void);
+void Script_function_scope_and_ctx(void);
+void Script_method(void);
+void Script_vector_function(void);
+void Script_const_var(void);
+void Script_vars_scope(void);
+void Script_mut_var_reactive(void);
+void Script_set_mut_var_invalid(void);
+void Script_parse_eval(void);
+void Script_parse_error(void);
+void Script_eval_error(void);
+void Script_parse_move(void);
+void Script_update(void);
+
 // Testsuite 'PrettyFunction'
 void PrettyFunction_component(void);
 void PrettyFunction_enum(void);
@@ -1735,6 +1749,61 @@ void ComponentTraits_static_inherit_sparse_owned(void);
 void ComponentTraits_static_inherit_sparse_inherited(void);
 void ComponentTraits_static_inherit_dont_fragment_owned(void);
 void ComponentTraits_static_inherit_dont_fragment_inherited(void);
+
+bake_test_case Script_testcases[] = {
+    {
+        "function",
+        Script_function
+    },
+    {
+        "function_scope_and_ctx",
+        Script_function_scope_and_ctx
+    },
+    {
+        "method",
+        Script_method
+    },
+    {
+        "vector_function",
+        Script_vector_function
+    },
+    {
+        "const_var",
+        Script_const_var
+    },
+    {
+        "vars_scope",
+        Script_vars_scope
+    },
+    {
+        "mut_var_reactive",
+        Script_mut_var_reactive
+    },
+    {
+        "set_mut_var_invalid",
+        Script_set_mut_var_invalid
+    },
+    {
+        "parse_eval",
+        Script_parse_eval
+    },
+    {
+        "parse_error",
+        Script_parse_error
+    },
+    {
+        "eval_error",
+        Script_eval_error
+    },
+    {
+        "parse_move",
+        Script_parse_move
+    },
+    {
+        "update",
+        Script_update
+    }
+};
 
 bake_test_case PrettyFunction_testcases[] = {
     {
@@ -8531,6 +8600,13 @@ bake_test_param QueryBuilder_params[] = {
 
 static bake_test_suite suites[] = {
     {
+        "Script",
+        NULL,
+        NULL,
+        13,
+        Script_testcases
+    },
+    {
         "PrettyFunction",
         NULL,
         NULL,
@@ -8703,5 +8779,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp", argc, argv, suites, 24);
+    return bake_test_run("cpp", argc, argv, suites, 25);
 }
