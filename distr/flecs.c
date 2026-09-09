@@ -10870,7 +10870,7 @@ static ecs_entity_t flecs_lookup_child_n(
         ecs_size_t i;
         for (i = 1; i < length; i ++) {
             char ch = name[i];
-            if (!isdigit(ch)) {
+            if (ch < '0' || ch > '9') {
                 break;
             }
             if (value < UINT32_MAX) {
@@ -46118,7 +46118,7 @@ struct ecs_script_impl_t {
     ecs_vec_t regions;
     ecs_vec_t unresolved_refs;
     ecs_vec_t unresolved_component_refs;
-    ecs_vec_t lenient_warned; /* vec<const char*> */
+    ecs_vec_t skip_unknown_warned; /* vec<const char*> */
     ecs_script_ir_t *ir;
     ecs_map_t entity_index;
     int32_t entity_index_visit;
@@ -46126,14 +46126,14 @@ struct ecs_script_impl_t {
     int32_t input_count;
     bool evaluating;
     bool compiled;
-    bool lenient;
+    bool skip_unknown;
     bool ir_enabled;
 };
 
-#define flecs_script_is_lenient(script)\
-    (flecs_script_impl(script)->lenient)
+#define flecs_script_is_skip_unknown(script)\
+    (flecs_script_impl(script)->skip_unknown)
 
-void flecs_script_lenient_warn(
+void flecs_script_skip_unknown_warn(
     ecs_script_t *script,
     const char *name,
     const char *msg);
@@ -67765,8 +67765,8 @@ ecs_script_t* ecs_script_parse(
         world, name, code, &parser);
     ecs_script_impl_t *impl = flecs_script_impl(script);
 
-    if (desc && desc->lenient) {
-        impl->lenient = true;
+    if (desc && desc->skip_unknown) {
+        impl->skip_unknown = true;
     }
     if (desc && desc->ir) {
         impl->ir_enabled = true;
@@ -67816,7 +67816,6 @@ ECS_COMPONENT_DECLARE(EcsScriptMutVar);
 ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
 ECS_DECLARE(EcsScriptVectorType);
-ECS_DECLARE(EcsScriptError);
 
 static void flecs_script_component_fini(
     EcsScript *ptr,
@@ -67854,7 +67853,7 @@ static ECS_MOVE(EcsScript, dst, src, {
     dst->template_ = src->template_;
     dst->observers = src->observers;
     dst->dyn_observers = src->dyn_observers;
-    dst->lenient = src->lenient;
+    dst->skip_unknown = src->skip_unknown;
     dst->ir = src->ir;
 
     src->filename = NULL;
@@ -67898,8 +67897,7 @@ ecs_script_t* flecs_script_new(
         ecs_script_unresolved_ref_t, 0);
     ecs_vec_init_t(NULL, &result->unresolved_component_refs,
         ecs_script_unresolved_component_ref_t, 0);
-    ecs_vec_init_t(NULL, &result->lenient_warned, char*, 0);
-    result->lenient = ecs_script_get_lenient(world);
+    ecs_vec_init_t(NULL, &result->skip_unknown_warned, char*, 0);
     return &result->pub;
 }
 
@@ -67920,46 +67918,21 @@ error:
     return NULL;
 }
 
-void ecs_script_set_lenient(
-    ecs_world_t *world,
-    bool lenient)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_world_t *w = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
-    if (lenient) {
-        w->flags |= EcsWorldScriptLenient;
-    } else {
-        w->flags &= ~(ecs_flags32_t)EcsWorldScriptLenient;
-    }
-error:
-    return;
-}
-
-bool ecs_script_get_lenient(
-    const ecs_world_t *world)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    const ecs_world_t *w = ecs_get_world(world);
-    return (w->flags & EcsWorldScriptLenient) != 0;
-error:
-    return false;
-}
-
-void flecs_script_lenient_warn(
+void flecs_script_skip_unknown_warn(
     ecs_script_t *script,
     const char *name,
     const char *msg)
 {
     ecs_script_impl_t *impl = flecs_script_impl(script);
-    char **names = ecs_vec_first(&impl->lenient_warned);
-    int32_t i, count = ecs_vec_count(&impl->lenient_warned);
+    char **names = ecs_vec_first(&impl->skip_unknown_warned);
+    int32_t i, count = ecs_vec_count(&impl->skip_unknown_warned);
     for (i = 0; i < count; i ++) {
         if (!ecs_os_strcmp(names[i], name)) {
             return;
         }
     }
 
-    ecs_vec_append_t(NULL, &impl->lenient_warned, char*)[0] =
+    ecs_vec_append_t(NULL, &impl->skip_unknown_warned, char*)[0] =
         ecs_os_strdup(name);
 
     ecs_warn("%s: %s '%s'", impl->pub.name ? impl->pub.name : "script",
@@ -68111,12 +68084,12 @@ void ecs_script_free(
         ecs_vec_fini_t(NULL, &impl->unresolved_component_refs,
             ecs_script_unresolved_component_ref_t);
         {
-            char **warned = ecs_vec_first(&impl->lenient_warned);
-            int32_t wi, wcount = ecs_vec_count(&impl->lenient_warned);
+            char **warned = ecs_vec_first(&impl->skip_unknown_warned);
+            int32_t wi, wcount = ecs_vec_count(&impl->skip_unknown_warned);
             for (wi = 0; wi < wcount; wi ++) {
                 ecs_os_free(warned[wi]);
             }
-            ecs_vec_fini_t(NULL, &impl->lenient_warned, char*);
+            ecs_vec_fini_t(NULL, &impl->skip_unknown_warned, char*);
         }
         flecs_free(&impl->allocator,
             impl->token_buffer_size, impl->token_buffer);
@@ -68127,6 +68100,132 @@ void ecs_script_free(
     }
 error:
     return;
+}
+
+static int flecs_script_update_parse(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t instance,
+    const char *code)
+{
+    const char *name = ecs_get_name(world, e);
+    EcsScript *s = ecs_ensure(world, e, EcsScript);
+    if (s->template_) {
+        char *template_name = ecs_get_path(world, s->template_->props.type);
+        ecs_err("cannot update scripts for individual templates, "
+            "update parent script instead (tried to update '%s')",
+                template_name);
+        ecs_os_free(s->error);
+        s->error = flecs_asprintf(
+            "cannot update scripts for individual templates, "
+            "update parent script instead (tried to update '%s')",
+                template_name);
+        ecs_os_free(template_name);
+        return -1;
+    }
+
+    if (s->code) {
+        ecs_os_free(s->code);
+    }
+
+    s->code = ecs_os_strdup(code);
+
+    if (s->error) {
+        ecs_os_free(s->error);
+        s->error = NULL;
+    }
+
+    if (s->script) {
+        ecs_script_free(s->script);
+    }
+
+    ecs_script_eval_result_t eval_result = {0};
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    flecs_script_runtime_error_reset(runtime);
+
+    ecs_script_eval_desc_t parse_desc = {
+        .skip_unknown = s->skip_unknown,
+        .ir = s->ir
+    };
+    s->script = ecs_script_parse(world, name, code, &parse_desc, &eval_result);
+    if (s->script != NULL) {
+        flecs_script_impl(s->script)->entity = e;
+    } else {
+        s->error = eval_result.error;
+        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
+        if (!instance) {
+            flecs_script_ref_observers_clear(world, &s->observers);
+            flecs_script_ref_observers_clear(world, &s->dyn_observers);
+        }
+        return -1;
+    }
+
+    return 0;
+}
+
+static void flecs_script_update_error(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t instance,
+    ecs_script_t *parsed,
+    const char *name,
+    char *error)
+{
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    EcsScript *s = ecs_ensure(world, e, EcsScript);
+    s->error = error;
+    if (!s->error) {
+        s->error = ecs_os_strdup("failed to evaluate script");
+    }
+    if (runtime->error_name && runtime->include_depth) {
+        ecs_log_(-3, NULL, 0, "%s: %s: %s",
+            name ? name : "script", runtime->error_name, s->error);
+    } else {
+        ecs_log_(-3, NULL, 0, "%s: %s",
+            runtime->error_name ? runtime->error_name :
+                (name ? name : "script"),
+            s->error);
+    }
+    flecs_script_runtime_error_reset(runtime);
+    if (!instance) {
+        flecs_script_update_resolve_observers(world, e,
+            flecs_script_impl(parsed), &s->observers);
+        s = ecs_ensure(world, e, EcsScript);
+        flecs_script_ref_observers_clear(world, &s->dyn_observers);
+        s = ecs_ensure(world, e, EcsScript);
+    }
+    ecs_script_free(parsed);
+    s->script = NULL;
+    ecs_delete_with(world, ecs_pair_t(EcsScript, e));
+}
+
+static void flecs_script_update_observers(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_script_t *parsed)
+{
+    EcsScript *s = ecs_ensure(world, e, EcsScript);
+    ecs_vec_t *script_refs = &flecs_script_impl(s->script)->refs;
+    ecs_script_ref_t *refs = ecs_vec_first(script_refs);
+    int32_t i;
+    for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
+        if (refs[i].component == ecs_id(EcsScriptMutVar)) {
+            continue;
+        }
+        if (refs[i].entity && ecs_has_pair(
+            world, refs[i].entity, ecs_id(EcsScript), e))
+        {
+            ecs_vec_remove_t(script_refs, ecs_script_ref_t, i);
+        }
+    }
+    flecs_script_ref_observers_clear(world, &s->observers);
+    flecs_script_update_ref_observers(world, e, 0,
+        script_refs, &s->observers, flecs_script_ref_on_set);
+    ecs_vec_clear(script_refs);
+    s = ecs_ensure(world, e, EcsScript);
+    flecs_script_update_dyn_observers(world, e,
+        flecs_script_impl(parsed), &s->dyn_observers, UINT64_MAX);
+    ecs_vec_clear(&flecs_script_impl(parsed)->run_refs);
 }
 
 int flecs_script_update(
@@ -68150,52 +68249,7 @@ int flecs_script_update(
     }
 
     const char *name = ecs_get_name(world, e);
-    EcsScript *s = ecs_ensure(world, e, EcsScript);
-    if (s->template_) {
-        char *template_name = ecs_get_path(world, s->template_->props.type);
-        ecs_err("cannot update scripts for individual templates, "
-            "update parent script instead (tried to update '%s')",
-                template_name);
-        ecs_os_free(s->error);
-        s->error = flecs_asprintf(
-            "cannot update scripts for individual templates, "
-            "update parent script instead (tried to update '%s')",
-                template_name);
-        ecs_os_free(template_name);
-        result = -1;
-        goto done;
-    }
-
-    if (s->code) {
-        ecs_os_free(s->code);
-    }
-
-    s->code = ecs_os_strdup(code);
-
-    if (s->error) {
-        ecs_os_free(s->error);
-        s->error = NULL;
-    }
-
-    if (s->script) {
-        ecs_script_free(s->script);
-    }
-
-    ecs_script_eval_result_t eval_result = {0};
-    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
-    flecs_script_runtime_error_reset(runtime);
-
-    ecs_script_eval_desc_t parse_desc = { .lenient = s->lenient, .ir = s->ir };
-    s->script = ecs_script_parse(world, name, code, &parse_desc, &eval_result);
-    if (s->script != NULL) {
-        flecs_script_impl(s->script)->entity = e;
-    } else {
-        s->error = eval_result.error;
-        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
-        if (!instance) {
-            flecs_script_ref_observers_clear(world, &s->observers);
-            flecs_script_ref_observers_clear(world, &s->dyn_observers);
-        }
+    if (flecs_script_update_parse(world, e, instance, code)) {
         result = -1;
         goto done;
     }
@@ -68209,100 +68263,41 @@ int flecs_script_update(
     }
 #endif
 
-    /* Clearing the script can move the script entity, which invalidates the
-     * component pointer. */
-    s = ecs_ensure(world, e, EcsScript);
+    EcsScript *s = ecs_ensure(world, e, EcsScript);
 
     ecs_script_t *parsed = s->script;
     ecs_script_impl_t *parsed_impl = flecs_script_impl(parsed);
     parsed_impl->evaluating = true;
-
-    /* Keep the parsed script alive for the duration of the evaluation, so that
-     * code that runs while the script is evaluated (such as a component hook)
-     * can't free the AST that is being evaluated by deleting the script. */
     parsed_impl->refcount ++;
 
+    ecs_script_eval_result_t eval_result = {0};
     ecs_script_eval_desc_t eval_desc = { .runtime = eval_runtime, .ir = s->ir };
     int eval_result_code = flecs_script_eval(parsed, &eval_desc,
         flecs_script_tag(e, instance), UINT64_MAX, &eval_result);
 
     if (!ecs_is_alive(world, e)) {
-        /* Script entity was deleted while it was being evaluated. */
         parsed_impl->evaluating = false;
-        flecs_script_runtime_error_reset(runtime);
+        flecs_script_runtime_error_reset(flecs_script_runtime_get(world));
         ecs_os_free(eval_result.error);
-        ecs_script_free(parsed);
-        if (is_defer) {
-            flecs_resume_readonly(real_world, &srs);
-        }
-        return -1;
+        result = -1;
+        goto done_free;
     }
 
     if (eval_result_code) {
-        s = ecs_ensure(world, e, EcsScript);
-        s->error = eval_result.error;
-        if (!s->error) {
-            /* A failed evaluation must never go unreported. */
-            s->error = ecs_os_strdup("failed to evaluate script");
-        }
-        if (runtime->error_name && runtime->include_depth) {
-            ecs_log_(-3, NULL, 0, "%s: %s: %s",
-                name ? name : "script", runtime->error_name, s->error);
-        } else {
-            ecs_log_(-3, NULL, 0, "%s: %s",
-                runtime->error_name ? runtime->error_name :
-                    (name ? name : "script"),
-                s->error);
-        }
-        flecs_script_runtime_error_reset(runtime);
-        if (!instance) {
-            flecs_script_update_resolve_observers(world, e,
-                flecs_script_impl(parsed), &s->observers);
-            s = ecs_ensure(world, e, EcsScript);
-            flecs_script_ref_observers_clear(world, &s->dyn_observers);
-            s = ecs_ensure(world, e, EcsScript);
-        }
-        ecs_script_free(parsed);
-        s->script = NULL;
-        ecs_delete_with(world, ecs_pair_t(EcsScript, e));
+        flecs_script_update_error(world, e, instance, parsed, name,
+            eval_result.error);
         result = -1;
     } else {
-        flecs_script_impl(parsed)->evaluating = false;
+        parsed_impl->evaluating = false;
         if (!instance) {
-            s = ecs_ensure(world, e, EcsScript);
-            ecs_vec_t *script_refs = &flecs_script_impl(s->script)->refs;
-            ecs_script_ref_t *refs = ecs_vec_first(script_refs);
-            int32_t i;
-            for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
-                if (refs[i].component == ecs_id(EcsScriptMutVar)) {
-                    continue;
-                }
-                if (refs[i].entity && ecs_has_pair(
-                    world, refs[i].entity, ecs_id(EcsScript), e))
-                {
-                    ecs_vec_remove_t(script_refs, ecs_script_ref_t, i);
-                }
-            }
-            flecs_script_ref_observers_clear(world, &s->observers);
-            flecs_script_update_ref_observers(world, e, 0,
-                script_refs, &s->observers, flecs_script_ref_on_set);
-            ecs_vec_clear(script_refs);
-            s = ecs_ensure(world, e, EcsScript);
-            flecs_script_update_dyn_observers(world, e,
-                flecs_script_impl(parsed), &s->dyn_observers, UINT64_MAX);
-            ecs_vec_clear(&flecs_script_impl(parsed)->run_refs);
+            flecs_script_update_observers(world, e, parsed);
         }
     }
 
+done_free:
     ecs_script_free(parsed);
 
 done:
-    if (result) {
-        ecs_add_id(world, e, EcsScriptError);
-    } else {
-        ecs_remove_id(world, e, EcsScriptError);
-    }
-
     if (is_defer) {
         flecs_resume_readonly(real_world, &srs);
     }
@@ -68337,9 +68332,9 @@ ecs_entity_t ecs_script_init(
         }
     }
 
-    if (desc->lenient || desc->ir) {
+    if (desc->skip_unknown || desc->ir) {
         EcsScript *comp = ecs_ensure(world, e, EcsScript);
-        comp->lenient = desc->lenient;
+        comp->skip_unknown = desc->skip_unknown;
         comp->ir = desc->ir;
     }
 
@@ -68411,10 +68406,6 @@ void FlecsScriptImport(
     ECS_COMPONENT_DEFINE(world, EcsScript);
     ECS_COMPONENT_DEFINE(world, EcsScriptVisitor);
     ECS_TAG_DEFINE(world, EcsScriptVectorType);
-    ECS_TAG_DEFINE(world, EcsScriptError);
-
-    ecs_add_pair(world, EcsScriptError, EcsOnInstantiate, EcsDontInherit);
-
     ecs_add_pair(world, ecs_id(EcsScriptVisitor), EcsOnInstantiate,
         EcsDontInherit);
 
@@ -93517,7 +93508,7 @@ static int flecs_script_type_resolve_type(
     return 0;
 }
 
-static void flecs_script_lenient_skip_refs(
+static void flecs_script_skip_unknown_skip_refs(
     ecs_script_type_visitor_t *t,
     int32_t prev_unresolved)
 {
@@ -93525,7 +93516,7 @@ static void flecs_script_lenient_skip_refs(
     int32_t i, count = ecs_vec_count(&impl->unresolved_refs);
     ecs_script_unresolved_ref_t *refs = ecs_vec_first(&impl->unresolved_refs);
     for (i = prev_unresolved; i < count; i ++) {
-        flecs_script_lenient_warn(&impl->pub, refs[i].name,
+        flecs_script_skip_unknown_warn(&impl->pub, refs[i].name,
             "skipped expression with unresolved reference");
     }
 
@@ -93617,8 +93608,8 @@ static int flecs_script_type_check_expr(
                 prev_unresolved)
             {
                 flecs_script_type_prune_skipped_refs(t, prev_unresolved);
-                if (v->base.script->lenient) {
-                    flecs_script_lenient_skip_refs(t, prev_unresolved);
+                if (v->base.script->skip_unknown) {
+                    flecs_script_skip_unknown_skip_refs(t, prev_unresolved);
                 }
                 return 1;
             }
@@ -93649,14 +93640,14 @@ static int flecs_script_type_check_expr(
     return 0;
 }
 
-static bool flecs_script_lenient_can_skip(
+static bool flecs_script_skip_unknown_can_skip(
     ecs_script_node_kind_t kind)
 {
     return kind == EcsAstTag || kind == EcsAstComponent ||
         kind == EcsAstWithTag || kind == EcsAstWithComponent;
 }
 
-static void flecs_script_lenient_drop_expr(
+static void flecs_script_skip_unknown_drop_expr(
     ecs_script_type_visitor_t *t,
     ecs_expr_node_t **expr)
 {
@@ -93664,21 +93655,21 @@ static void flecs_script_lenient_drop_expr(
     *expr = NULL;
 }
 
-static bool flecs_script_lenient_drop_var(
+static bool flecs_script_skip_unknown_drop_var(
     ecs_script_type_visitor_t *t,
     ecs_script_var_node_t *node)
 {
-    if (!flecs_script_is_lenient(&t->v->base.script->pub)) {
+    if (!flecs_script_is_skip_unknown(&t->v->base.script->pub)) {
         return false;
     }
 
-    flecs_script_lenient_warn(&t->v->base.script->pub, node->type,
+    flecs_script_skip_unknown_warn(&t->v->base.script->pub, node->type,
         "skipped variable with unresolved type");
 
     flecs_script_type_skip_var(t, node->name);
 
     if (node->expr) {
-        flecs_script_lenient_drop_expr(t, &node->expr);
+        flecs_script_skip_unknown_drop_expr(t, &node->expr);
     }
 
     node->eval_type = 0;
@@ -93687,16 +93678,16 @@ static bool flecs_script_lenient_drop_var(
     return true;
 }
 
-static bool flecs_script_lenient_drop_fn(
+static bool flecs_script_skip_unknown_drop_fn(
     ecs_script_type_visitor_t *t,
     ecs_script_function_node_t *node,
     const char *type)
 {
-    if (!flecs_script_is_lenient(&t->v->base.script->pub)) {
+    if (!flecs_script_is_skip_unknown(&t->v->base.script->pub)) {
         return false;
     }
 
-    flecs_script_lenient_warn(&t->v->base.script->pub, type,
+    flecs_script_skip_unknown_warn(&t->v->base.script->pub, type,
         "skipped function with unresolved type");
 
     node->node.skip = true;
@@ -93774,11 +93765,11 @@ static int flecs_script_type_id_elem(
             return -1;
         }
         ecs_script_node_kind_t node_kind = ((ecs_script_node_t*)node)->kind;
-        if (flecs_script_is_lenient(&t->v->base.script->pub) &&
-            flecs_script_lenient_can_skip(node_kind) &&
+        if (flecs_script_is_skip_unknown(&t->v->base.script->pub) &&
+            flecs_script_skip_unknown_can_skip(node_kind) &&
             first != EcsIsA && id->first_eval != EcsIsA)
         {
-            flecs_script_lenient_warn(&t->v->base.script->pub, name,
+            flecs_script_skip_unknown_warn(&t->v->base.script->pub, name,
                 "skipped statement with unresolved component");
             ((ecs_script_node_t*)node)->skip = true;
             return 1;
@@ -94277,14 +94268,14 @@ static int flecs_script_type_component(
         return result == 1 ? 0 : result;
     }
 
-    bool lenient = t->v->base.script->lenient;
+    bool skip_unknown = t->v->base.script->skip_unknown;
 
     ecs_entity_t component_type = flecs_script_type_component_type(t, node);
     if (!component_type) {
-        if (lenient) {
-            flecs_script_lenient_warn(&t->v->base.script->pub, node->id.first,
+        if (skip_unknown) {
+            flecs_script_skip_unknown_warn(&t->v->base.script->pub, node->id.first,
                 "skipped value for component without reflection data");
-            flecs_script_lenient_drop_expr(t, &node->expr);
+            flecs_script_skip_unknown_drop_expr(t, &node->expr);
             return 0;
         }
         flecs_script_eval_error(t->v, node,
@@ -94294,10 +94285,10 @@ static int flecs_script_type_component(
     const ecs_type_info_t *ti = ecs_get_type_info(
         t->v->world, component_type);
     if (!ti) {
-        if (lenient) {
-            flecs_script_lenient_warn(&t->v->base.script->pub, node->id.first,
+        if (skip_unknown) {
+            flecs_script_skip_unknown_warn(&t->v->base.script->pub, node->id.first,
                 "skipped value for component without reflection data");
-            flecs_script_lenient_drop_expr(t, &node->expr);
+            flecs_script_skip_unknown_drop_expr(t, &node->expr);
             return 0;
         }
         flecs_script_eval_error(t->v, node,
@@ -94394,7 +94385,7 @@ static int flecs_script_type_const(
     if (node->type && flecs_script_type_resolve_type(
         t, node->type, &expected_type))
     {
-        if (flecs_script_lenient_drop_var(t, node)) {
+        if (flecs_script_skip_unknown_drop_var(t, node)) {
             return 0;
         }
         flecs_script_type_unresolved_ref(t, node, node->type,
@@ -94520,7 +94511,7 @@ static int flecs_script_type_template_var(
     if (node->type && flecs_script_type_resolve_type(
         t, node->type, &type))
     {
-        if (flecs_script_lenient_drop_var(t, node)) {
+        if (flecs_script_skip_unknown_drop_var(t, node)) {
             return 0;
         }
         flecs_script_type_unresolved_ref(t, node, node->type,
@@ -94770,7 +94761,7 @@ static int flecs_script_type_function(
     if (flecs_script_type_resolve_type(
         t, node->return_type, &node->eval_return_type))
     {
-        if (flecs_script_lenient_drop_fn(t, node, node->return_type)) {
+        if (flecs_script_skip_unknown_drop_fn(t, node, node->return_type)) {
             return 0;
         }
         flecs_script_type_unresolved_ref(
@@ -94795,7 +94786,7 @@ static int flecs_script_type_function(
         if (flecs_script_type_resolve_type(
             t, params[i].type, &params[i].eval_type))
         {
-            if (!flecs_script_lenient_drop_fn(t, node, params[i].type)) {
+            if (!flecs_script_skip_unknown_drop_fn(t, node, params[i].type)) {
                 flecs_script_type_unresolved_ref(
                     t, &params[i].node, params[i].type,
                     FlecsScriptUnresolvedComponent);
@@ -95117,8 +95108,8 @@ static int flecs_script_type_using(
         flecs_strfree(a, path);
     }
     if (result || !symbol.entity) {
-        if (flecs_script_is_lenient(&t->v->base.script->pub)) {
-            flecs_script_lenient_warn(&t->v->base.script->pub, node->name,
+        if (flecs_script_is_skip_unknown(&t->v->base.script->pub)) {
+            flecs_script_skip_unknown_warn(&t->v->base.script->pub, node->name,
                 "skipped using with unresolved identifier");
             node->node.skip = true;
             return 0;
@@ -100530,14 +100521,14 @@ static void flecs_expr_unresolved_component_ref(
     }
 }
 
-static bool flecs_expr_lenient_unresolved_ref(
+static bool flecs_expr_skip_unknown_unresolved_ref(
     ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
     ecs_expr_node_t *node,
     const char *name,
     flecs_script_unresolved_kind_t kind)
 {
-    if (!flecs_script_is_lenient(script)) {
+    if (!flecs_script_is_skip_unknown(script)) {
         return false;
     }
     return flecs_expr_unresolved_ref(script, desc, node, name, kind);
@@ -100548,7 +100539,7 @@ static bool flecs_expr_is_skipped_var(
     const ecs_expr_eval_desc_t *desc,
     const char *name)
 {
-    if (!flecs_script_is_lenient(script)) {
+    if (!flecs_script_is_skip_unknown(script)) {
         return false;
     }
 
@@ -101704,22 +101695,22 @@ static int flecs_expr_initializer_visit_type(
         }
 
         if (elem->member) {
-            bool lenient = flecs_script_is_lenient(script);
+            bool skip_unknown = flecs_script_is_skip_unknown(script);
             ecs_meta_cursor_t member_cur = *cur;
-            int prev_log = lenient ? ecs_log_set_level(-4) : 0;
+            int prev_log = skip_unknown ? ecs_log_set_level(-4) : 0;
             int dotmember_result = ecs_meta_dotmember(cur, elem->member);
-            if (lenient) {
+            if (skip_unknown) {
                 ecs_log_set_level(prev_log);
             }
             if (dotmember_result) { /* x: */
-                if (!lenient) {
+                if (!skip_unknown) {
                     flecs_expr_visit_error(script, node,
                         "cannot resolve member");
                     goto error;
                 }
 
                 *cur = member_cur;
-                flecs_script_lenient_warn(script, elem->member,
+                flecs_script_skip_unknown_warn(script, elem->member,
                     "skipped value for unresolved member");
                 flecs_expr_visit_free(script, elem->key);
                 flecs_expr_visit_free(script, elem->value);
@@ -102719,7 +102710,7 @@ static int flecs_expr_function_visit_type(
                 goto try_function;
             }
 
-            if (flecs_script_is_lenient(script) &&
+            if (flecs_script_is_skip_unknown(script) &&
                 flecs_expr_unresolved_ref(script, desc,
                     (ecs_expr_node_t*)node, node->function_name,
                     FlecsScriptUnresolvedEntity))
@@ -102763,7 +102754,7 @@ try_function:
             node->function_name, FlecsScriptLookupEntity, &symbol) ||
             !symbol.entity)
         {
-            if (!flecs_script_is_lenient(script) ||
+            if (!flecs_script_is_skip_unknown(script) ||
                 !flecs_expr_unresolved_ref(script, desc,
                     (ecs_expr_node_t*)node, node->function_name,
                     FlecsScriptUnresolvedEntity))
@@ -103017,7 +103008,7 @@ static int flecs_expr_member_visit_type(
             return swizzle;
         }
 
-        if (flecs_expr_lenient_unresolved_ref(script, desc,
+        if (flecs_expr_skip_unknown_unresolved_ref(script, desc,
             (ecs_expr_node_t*)node, node->member_name,
             FlecsScriptUnresolvedEntity))
         {
@@ -103119,7 +103110,7 @@ static int flecs_expr_element_visit_type(
             if (flecs_script_symbol_lookup(script, desc, 0, ident->value,
                 FlecsScriptLookupEntity, &symbol))
             {
-                if (!flecs_expr_lenient_unresolved_ref(script, desc,
+                if (!flecs_expr_skip_unknown_unresolved_ref(script, desc,
                     (ecs_expr_node_t*)node, ident->value,
                     FlecsScriptUnresolvedEntity))
                 {
@@ -103131,7 +103122,7 @@ static int flecs_expr_element_visit_type(
             }
             node->node.type = symbol.entity;
             if (!node->node.type) {
-                if (!flecs_expr_lenient_unresolved_ref(script, desc,
+                if (!flecs_expr_skip_unknown_unresolved_ref(script, desc,
                     (ecs_expr_node_t*)node, ident->value,
                     FlecsScriptUnresolvedEntity))
                 {
@@ -103143,7 +103134,7 @@ static int flecs_expr_element_visit_type(
             }
 
             if (!ecs_get_type_info(world, node->node.type)) {
-                if (flecs_expr_lenient_unresolved_ref(script, desc,
+                if (flecs_expr_skip_unknown_unresolved_ref(script, desc,
                     (ecs_expr_node_t*)node, ident->value,
                     FlecsScriptUnresolvedEntity))
                 {

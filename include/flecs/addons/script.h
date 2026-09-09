@@ -64,12 +64,6 @@ int ecs_script_template_update(
     ecs_entity_t instance,
     ecs_entity_t template_entity);
 
-/* Tag added to a managed script entity when the script failed to parse or
- * evaluate. The tag is removed when the script evaluates successfully. The
- * error message is stored in the error member of the EcsScript component. */
-FLECS_API
-extern ECS_DECLARE(EcsScriptError);
-
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 
@@ -133,7 +127,7 @@ typedef struct EcsScript {
     ecs_script_template_t *template_;   /**< Only set for template scripts. */
     ecs_vec_t observers;                /**< Observers for referenced components. */
     ecs_vec_t dyn_observers;            /**< Observers for refs resolved at runtime. */
-    bool lenient;                       /**< Load script in lenient mode. */
+    bool skip_unknown;                  /**< Skip unknown components when loading. */
     bool ir;                            /**< Evaluate script with IR runtime. */
 } EcsScript;
 
@@ -170,10 +164,30 @@ typedef struct ecs_script_parameter_t {
 typedef struct ecs_script_eval_desc_t {
     ecs_script_runtime_t *runtime; /**< Reusable runtime (optional). */
 
-    /** Load script in lenient mode. Unknown components, members and functions
-     * are tolerated instead of failing the script. See
-     * ecs_script_set_lenient(). */
-    bool lenient;
+    /** Skip unknown identifiers. When enabled, scripts that reference unknown
+     * components, component members or functions will still load. This makes
+     * it possible to load scripts for an application without having to load
+     * the application code that registers the components used by the script.
+     *
+     * When skip_unknown is enabled:
+     * - An unresolved identifier that is used as a component or tag creates a
+     *   placeholder tag entity with that (scoped) name.
+     * - A value assigned to a placeholder, to a component without reflection
+     *   data, or to an unknown member is parsed and discarded.
+     * - An expression that uses an unresolved function or identifier is
+     *   discarded. This includes expressions that read an unknown component
+     *   (`e[Unknown]`) or an unknown member (`e[Position].unknown`), and
+     *   expressions that use a variable that was itself skipped, both directly
+     *   and in an interpolated string. When the expression is the condition or
+     *   collection of a statement (such as `for`), the statement is skipped.
+     * - A `using` statement with an unresolved identifier is skipped.
+     * - A function with an unresolved parameter or return type is skipped,
+     *   which makes calls to that function unresolved expressions.
+     * - Unresolved references in `IsA` expressions, template base types and
+     *   template instantiations are still errors, as those are structural.
+     *
+     * Every skipped name is reported once with ecs_warn(). */
+    bool skip_unknown;
 
     /** Evaluate script with the IR runtime instead of the AST interpreter. */
     bool ir;
@@ -316,7 +330,7 @@ int ecs_script_run(
 
 /** Parse script and evaluate with options.
  * Same as ecs_script_run(), but accepts a descriptor that configures parsing
- * and evaluation, such as lenient mode or the runtime (AST or IR) to use.
+ * and evaluation, such as skip_unknown or the runtime (AST or IR) to use.
  *
  * @param world The world.
  * @param name The script name (typically the file).
@@ -361,51 +375,6 @@ int ecs_script_run_file_w_desc(
     ecs_world_t *world,
     const char *filename,
     const ecs_script_eval_desc_t *desc);
-
-/** Enable or disable lenient script loading for a world.
- * When lenient loading is enabled, scripts that reference unknown components,
- * component members or functions will still load. This makes it possible to
- * load scripts for an application without having to load the application code
- * that registers the components used by the script.
- *
- * In lenient mode:
- * - An unresolved identifier that is used as a component or tag creates a
- *   placeholder tag entity with that (scoped) name.
- * - A value assigned to a placeholder, to a component without reflection data,
- *   or to an unknown member is parsed and discarded.
- * - An expression that uses an unresolved function or identifier is discarded.
- *   This includes expressions that read an unknown component (`e[Unknown]`) or
- *   an unknown member (`e[Position].unknown`), and expressions that use a
- *   variable that was itself skipped, both directly and in an interpolated
- *   string. When the expression is the condition or collection of a statement
- *   (such as `for`), the statement is skipped.
- * - A `using` statement with an unresolved identifier is skipped.
- * - A function with an unresolved parameter or return type is skipped, which
- *   makes calls to that function unresolved expressions.
- * - Unresolved references in `IsA` expressions, template base types and
- *   template instantiations are still errors, as those are structural.
- *
- * Every skipped name is reported once with ecs_warn().
- *
- * Lenient mode can also be enabled per script with
- * ecs_script_eval_desc_t::lenient and ecs_script_desc_t::lenient.
- *
- * @param world The world.
- * @param lenient Whether to enable lenient script loading.
- */
-FLECS_API
-void ecs_script_set_lenient(
-    ecs_world_t *world,
-    bool lenient);
-
-/** Return whether lenient script loading is enabled for a world.
- *
- * @param world The world.
- * @return Whether lenient script loading is enabled.
- */
-FLECS_API
-bool ecs_script_get_lenient(
-    const ecs_world_t *world);
 
 /** Convert script IR to string.
  * Compiles the script to IR if it hasn't been compiled yet, and returns a
@@ -815,7 +784,7 @@ typedef struct ecs_script_desc_t {
     ecs_entity_t entity;   /**< Set to customize entity handle associated with script. */
     const char *filename;  /**< Set to load script from file. */
     const char *code;      /**< Set to parse script from string. */
-    bool lenient;          /**< Load script in lenient mode (see ecs_script_set_lenient()). */
+    bool skip_unknown;     /**< Skip unknown identifiers (see ecs_script_eval_desc_t::skip_unknown). */
     bool ir;               /**< Evaluate script with IR runtime. */
 } ecs_script_desc_t;
 

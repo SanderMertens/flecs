@@ -4835,7 +4835,7 @@ void Error_failing_script_does_not_delete_shared_scope(void) {
     ecs_fini(world);
 }
 
-void Error_script_init_eval_error_adds_error_tag(void) {
+void Error_script_init_eval_error_sets_error(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_log_set_level(-4);
@@ -4845,7 +4845,6 @@ void Error_script_init_eval_error_adds_error_tag(void) {
     });
 
     test_assert(script != 0);
-    test_assert(ecs_has_id(world, script, EcsScriptError));
 
     const EcsScript *s = ecs_get(world, script, EcsScript);
     test_assert(s != NULL);
@@ -4854,7 +4853,7 @@ void Error_script_init_eval_error_adds_error_tag(void) {
     ecs_fini(world);
 }
 
-void Error_script_init_parse_error_adds_error_tag(void) {
+void Error_script_init_parse_error_sets_error(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_log_set_level(-4);
@@ -4864,7 +4863,6 @@ void Error_script_init_parse_error_adds_error_tag(void) {
     });
 
     test_assert(script != 0);
-    test_assert(ecs_has_id(world, script, EcsScriptError));
 
     const EcsScript *s = ecs_get(world, script, EcsScript);
     test_assert(s != NULL);
@@ -4888,7 +4886,7 @@ void Error_script_init_from_missing_file_returns_0(void) {
     ecs_fini(world);
 }
 
-void Error_script_update_clears_error_tag(void) {
+void Error_script_update_clears_error(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_log_set_level(-4);
@@ -4899,26 +4897,31 @@ void Error_script_update_clears_error_tag(void) {
     });
 
     test_assert(script != 0);
-    test_assert(ecs_has_id(world, script, EcsScriptError));
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
 
     ecs_log_set_level(-1);
 
     test_assert(ecs_script_update(world, script, 0, "e {}") == 0);
-    test_assert(!ecs_has_id(world, script, EcsScriptError));
 
-    const EcsScript *s = ecs_get(world, script, EcsScript);
+    s = ecs_get(world, script, EcsScript);
     test_assert(s != NULL);
     test_assert(s->error == NULL);
 
     ecs_log_set_level(-4);
 
     test_assert(ecs_script_update(world, script, 0, "e { NoSuchTag }") != 0);
-    test_assert(ecs_has_id(world, script, EcsScriptError));
+
+    s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
 
     ecs_fini(world);
 }
 
-void Error_script_init_success_has_no_error_tag(void) {
+void Error_script_init_success_has_no_error(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
@@ -4926,7 +4929,6 @@ void Error_script_init_success_has_no_error_tag(void) {
     });
 
     test_assert(script != 0);
-    test_assert(!ecs_has_id(world, script, EcsScriptError));
 
     const EcsScript *s = ecs_get(world, script, EcsScript);
     test_assert(s != NULL);
@@ -4953,7 +4955,6 @@ void Error_parse_error_in_large_script_reports_position(void) {
     });
 
     test_assert(script != 0);
-    test_assert(ecs_has_id(world, script, EcsScriptError));
 
     const EcsScript *s = ecs_get(world, script, EcsScript);
     test_assert(s != NULL);

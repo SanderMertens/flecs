@@ -9181,7 +9181,7 @@ static ecs_entity_t flecs_lookup_child_n(
         ecs_size_t i;
         for (i = 1; i < length; i ++) {
             char ch = name[i];
-            if (!isdigit(ch)) {
+            if (ch < '0' || ch > '9') {
                 break;
             }
             if (value < UINT32_MAX) {

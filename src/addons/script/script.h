@@ -216,7 +216,7 @@ struct ecs_script_impl_t {
     ecs_vec_t regions;
     ecs_vec_t unresolved_refs;
     ecs_vec_t unresolved_component_refs;
-    ecs_vec_t lenient_warned; /* vec<const char*> */
+    ecs_vec_t skip_unknown_warned; /* vec<const char*> */
     ecs_script_ir_t *ir;
     ecs_map_t entity_index;
     int32_t entity_index_visit;
@@ -224,14 +224,14 @@ struct ecs_script_impl_t {
     int32_t input_count;
     bool evaluating;
     bool compiled;
-    bool lenient;
+    bool skip_unknown;
     bool ir_enabled;
 };
 
-#define flecs_script_is_lenient(script)\
-    (flecs_script_impl(script)->lenient)
+#define flecs_script_is_skip_unknown(script)\
+    (flecs_script_impl(script)->skip_unknown)
 
-void flecs_script_lenient_warn(
+void flecs_script_skip_unknown_warn(
     ecs_script_t *script,
     const char *name,
     const char *msg);

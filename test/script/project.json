@@ -1481,11 +1481,11 @@
                 "has_pair_missing_paren_close",
                 "has_pair_missing_second",
                 "script_update_failure_is_reported",
-                "script_init_eval_error_adds_error_tag",
-                "script_init_parse_error_adds_error_tag",
+                "script_init_eval_error_sets_error",
+                "script_init_parse_error_sets_error",
                 "script_init_from_missing_file_returns_0",
-                "script_update_clears_error_tag",
-                "script_init_success_has_no_error_tag",
+                "script_update_clears_error",
+                "script_init_success_has_no_error",
                 "script_declares_entity_named_after_script",
                 "if_component_presence_check_on_non_singleton",
                 "this_at_plain_scope_kills_file",
@@ -2955,7 +2955,7 @@
                 "get_struct_from_stage"
             ]
         }, {
-            "id": "Lenient",
+            "id": "SkipUnknown",
             "params": {
                 "ir": ["disabled", "enabled"]
             },
@@ -2975,7 +2975,7 @@
                 "warn_per_distinct_name",
                 "strict_unknown_tag_errors",
                 "strict_unknown_member_errors",
-                "lenient_disabled_after_enable",
+                "skip_unknown_disabled_after_enable",
                 "no_placeholder_then_strict_load",
                 "template_w_unknown_component",
                 "template_child_w_unknown_component",
@@ -2992,7 +2992,7 @@
                 "template_w_unknown_const_type",
                 "const_w_unresolved_function_initializer",
                 "strict_unknown_prop_type_errors",
-                "managed_script_lenient_after_table_change",
+                "managed_script_skip_unknown_after_table_change",
                 "unknown_using",
                 "strict_unknown_using_errors",
                 "unknown_fn_param_type",
