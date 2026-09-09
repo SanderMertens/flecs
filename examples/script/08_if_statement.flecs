@@ -1,0 +1,16 @@
+// This example shows how to use if statements in script
+
+// Create a few component types
+struct Rgb(r: u8, g: u8, b: u8)
+struct Emissive(value: f32)
+
+const isDark = false
+
+light {
+    Rgb: {25, 50, 0}
+
+    // If it's dark set Emissive to 2 (light is on)
+    if (isDark) {
+        Emissive: {2}
+    }
+}

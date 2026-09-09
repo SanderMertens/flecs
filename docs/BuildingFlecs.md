@@ -421,14 +421,14 @@ The following addons can be configured:
 Addon         | Description                                      | Define              |
 --------------|--------------------------------------------------|---------------------|
 [Cpp](/flecs/group__cpp.html)                              | C++17 API                                        | FLECS_CPP           |
-[Cached Queries](/flecs/md_docs_2Queries.html)             | Cached query support                             | FLECS_CACHED_QUERIES |
+[Cached Queries](/flecs/Queries.html)             | Cached query support                             | FLECS_CACHED_QUERIES |
 [Constraint Traits](/flecs/group__c__addons__constraint__traits.html) | Constraint trait support              | FLECS_CONSTRAINT_TRAITS |
 [Entity Ranges](/flecs/group__c__addons__entity__ranges.html) | Entity id range management                    | FLECS_ENTITY_RANGES |
 [Frame](/flecs/group__c__addons__frame.html)               | Frame management                                 | FLECS_FRAME         |
 [Module](/flecs/group__c__addons__module.html)             | Organize game logic into reusable modules        | FLECS_MODULE        |
 [Multi World](/flecs/group__c__addons.html)                | Support C++ component IDs across multiple worlds | FLECS_MULTI_WORLD   |
-[Prefab](/flecs/md_docs_2PrefabsManual.html)               | Prefab inheritance and instantiation             | FLECS_PREFAB        |
-[Query Plans](/flecs/md_docs_2Queries.html)                | Nontrivial query compilation and inspection      | FLECS_QUERY_PLANS   |
+[Prefab](/flecs/PrefabsManual.html)               | Prefab inheritance and instantiation             | FLECS_PREFAB        |
+[Query Plans](/flecs/Queries.html)                | Nontrivial query compilation and inspection      | FLECS_QUERY_PLANS   |
 [System](/flecs/group__c__addons__system.html)             | Create & run systems                             | FLECS_SYSTEM        |
 [Pipeline](/flecs/group__c__addons__pipeline.html)         | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
 [Timer](/flecs/group__c__addons__timer.html)               | Run systems at time intervals or at a rate       | FLECS_TIMER         |
@@ -439,7 +439,7 @@ Addon         | Description                                      | Define       
 [Http](/flecs/group__c__addons__http.html)                 | Tiny HTTP server for processing simple requests  | FLECS_HTTP          |
 [Rest](/flecs/group__c__addons__rest.html)                 | REST API for showing entities in the browser     | FLECS_REST          |
 Parser                                                     | Parser utilities used by meta, script & query DSL | FLECS_PARSER       |
-[Query DSL](https://www.flecs.dev/flecs/md_docs_2FlecsQueryLanguage.html) | Query DSL parser                  | FLECS_QUERY_DSL     |
+[Query DSL](https://www.flecs.dev/flecs/FlecsQueryLanguage.html) | Query DSL parser                  | FLECS_QUERY_DSL     |
 [Script](/flecs/group__c__addons__script.html)             | DSL for scenes, assets and configuration         | FLECS_SCRIPT        |
 [Script Platform](/flecs/group__c__addons__script__platform.html) | Expose platform constants to scripts      | FLECS_SCRIPT_PLATFORM |
 [Stats](/flecs/group__c__addons__stats.html)               | Functions for collecting statistics              | FLECS_STATS         |

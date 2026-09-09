@@ -76,12 +76,12 @@ world.system<Position, Velocity>("Move")
   });
 ```
 
-For more information, see [the query manual](https://www.flecs.dev/flecs/md_docs_2Queries.html#performance-and-caching) for more details.
+For more information, see [the query manual](https://www.flecs.dev/flecs/Queries.html#performance-and-caching) for more details.
 
 ### Use in/inout/out annotations
 Flecs analyzes how components are read and written by queries and uses this for things like change tracking and deciding when to merge command buffers. By default components are marked as `inout`. If a system only reads a component, make sure to mark it as `in`, as this can reduce the time spent by other parts of the application that rely on change detection and sync points.
 
-For more information, see [the query manual](https://www.flecs.dev/flecs/md_docs_2Queries.html#access-modifiers).
+For more information, see [the query manual](https://www.flecs.dev/flecs/Queries.html#access-modifiers).
 
 ### Annotations
 You can further annotate queries with components that are not matched with the query, but that are written using ECS operations (like add, remove, set etc.). Such operations are automatically deferred and merged at the end of the frame. With annotations you can enforce merging at an earlier point, by specifying that a component modification has been queued. When Flecs sees this, it will merge back the modifications before the next read.
@@ -200,4 +200,4 @@ In many cases you might want to use your own relationships. Here are a few signs
 - You are looking to group entities by something like world cells or layers, and want to be able to lookup all entities for a cell.
 - You're adding an enumeration type as component, but want to query for enumeration constants.
 
-See the [relationships blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c) and [relationships manual](https://www.flecs.dev/flecs/md_docs_2Relationships.html) for more information.
+See the [relationships blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c) and [relationships manual](https://www.flecs.dev/flecs/Relationships.html) for more information.

@@ -1,10 +1,4 @@
-// To see what the result of parsing this file looks like, copy the code and
-// paste it into the editor at https://flecs.dev/explorer
-//
-// To load this file yourself, call ecs_script_run_file("strings.flecs");
-
-// Flecs script component values can be populated with strings. To see how this works,
-// we first need to create a component type (see reflection example).
+// This script shows how to use regular and multiline strings.
 
 // Create tags
 Vertex { }

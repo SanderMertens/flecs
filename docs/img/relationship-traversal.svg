@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="fl-svg-relationship-traversal" viewBox="0 0 560 240" width="560" height="240" role="img" aria-labelledby="fl-svg-relationship-traversal-title">
+<title id="fl-svg-relationship-traversal-title">Query traversal from a child entity to a parent that has Position</title>
+<style>
+svg.fl-svg-relationship-traversal {
+  --d-node: #f6f7f9;
+  --d-node-stroke: #c9d0d8;
+  --d-text: #1c2128;
+  --d-muted: #6b7280;
+  --d-line: #8b95a1;
+  --d-accent: #42b983;
+  --d-accent-bg: #e6f6ee;
+  --d-blue: #3b82f6;
+  --d-blue-bg: #e8f0fe;
+  --d-canvas: transparent;
+}
+@media (prefers-color-scheme: dark) {
+  svg.fl-svg-relationship-traversal {
+    --d-node: #1e232b;
+    --d-node-stroke: #3a424d;
+    --d-text: #d9dee5;
+    --d-muted: #8b95a1;
+    --d-line: #7d8590;
+    --d-accent-bg: #16302a;
+    --d-blue-bg: #17233a;
+  }
+}
+svg.fl-svg-relationship-traversal .bg { fill: var(--d-canvas); }
+svg.fl-svg-relationship-traversal .node { fill: var(--d-node); stroke: var(--d-node-stroke); stroke-width: 1.5; }
+svg.fl-svg-relationship-traversal .node.accent { fill: var(--d-accent-bg); stroke: var(--d-accent); }
+svg.fl-svg-relationship-traversal .node.blue { fill: var(--d-blue-bg); stroke: var(--d-blue); }
+svg.fl-svg-relationship-traversal .label { fill: var(--d-text); font: 500 14px Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-anchor: middle; dominant-baseline: central; }
+svg.fl-svg-relationship-traversal .label.mono { font: 500 13px 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+svg.fl-svg-relationship-traversal .label .b { font-weight: 700; }
+svg.fl-svg-relationship-traversal .note { fill: var(--d-muted); font: italic 12px Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; dominant-baseline: central; }
+svg.fl-svg-relationship-traversal .note.center { text-anchor: middle; }
+svg.fl-svg-relationship-traversal .note.right { text-anchor: start; }
+svg.fl-svg-relationship-traversal .note.left { text-anchor: end; }
+svg.fl-svg-relationship-traversal .edge { fill: none; stroke: var(--d-line); stroke-width: 1.5; marker-end: url(#fl-svg-relationship-traversal-arrow); }
+svg.fl-svg-relationship-traversal .edge.plain { marker-end: none; }
+svg.fl-svg-relationship-traversal .arrow { fill: var(--d-line); }
+svg.fl-svg-relationship-traversal .edgelabel { fill: var(--d-muted); font: italic 12px Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-anchor: middle; dominant-baseline: central; }
+</style>
+<defs><marker id="fl-svg-relationship-traversal-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="bg" width="560" height="240"/>
+
+<rect class="node accent" x="145.0" y="181.0" width="110" height="38" rx="7"/>
+<text class="label" x="200" y="200">child</text>
+<rect class="node blue" x="145.0" y="101.0" width="110" height="38" rx="7"/>
+<text class="label" x="200" y="120">ChildOf</text>
+<rect class="node accent" x="145.0" y="21.0" width="110" height="38" rx="7"/>
+<text class="label" x="200" y="40">parent</text>
+<rect class="node blue" x="365.0" y="21.0" width="110" height="38" rx="7"/>
+<text class="label" x="420" y="40">Position</text>
+<path class="edge" d="M200,181.0 L200,139.0"/>
+<path class="edge" d="M200,101.0 L200,59.0"/>
+<path class="edge" d="M255.0,40 L365.0,40"/>
+<text class="note right" x="275" y="120.0">child has (ChildOf, parent)</text>
+<text class="note center" x="420" y="80.0">parent has Position</text>
+</svg>

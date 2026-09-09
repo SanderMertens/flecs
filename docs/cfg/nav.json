@@ -1,0 +1,63 @@
+{
+  "sections": [
+    {
+      "title": "",
+      "items": [
+        { "page": "docs/Playground.md", "title": "Try it out!" }
+      ]
+    },
+    {
+      "title": "Get started",
+      "items": [
+        { "page": "docs/Quickstart.md" },
+        { "page": "docs/BuildingFlecs.md" },
+        { "page": "docs/DesignWithFlecs.md" },
+        { "page": "docs/FAQ.md" },
+        { "page": "docs/Docs.md", "title": "Resources" }
+      ]
+    },
+    {
+      "title": "Core",
+      "items": [
+        { "page": "docs/EntitiesComponents.md" },
+        { "page": "docs/Queries.md" },
+        { "page": "docs/ObserversManual.md" },
+        { "page": "docs/HierarchiesManual.md" },
+        { "page": "docs/Relationships.md" },
+        { "page": "docs/ComponentTraits.md" }
+      ]
+    },
+    {
+      "title": "Addons",
+      "items": [
+        { "page": "docs/Systems.md" },
+        { "page": "docs/PrefabsManual.md" },
+        { "page": "docs/FlecsScript.md" },
+        { "page": "docs/FlecsQueryLanguage.md", "title": "Query Language" },
+        { "page": "docs/FlecsRemoteApi.md", "title": "Remote API" }
+      ]
+    },
+    {
+      "title": "Examples",
+      "items": [
+        { "examples": "docs/examples/manifest.json" }
+      ]
+    },
+    {
+      "title": "Reference",
+      "items": [
+        { "group": "c" },
+        { "group": "cpp" },
+        { "link": "annotated.html", "title": "Data structures" },
+        { "link": "files.html", "title": "Header files" }
+      ]
+    },
+    {
+      "title": "Other",
+      "items": [
+        { "page": "docs/Manual.md", "title": "Manual" },
+        { "page": "docs/MigrationGuide.md", "title": "Migrating from v3" }
+      ] 
+    }
+  ]
+}

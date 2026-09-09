@@ -1,11 +1,7 @@
-// To see what the result of parsing this file looks like, copy the code and
-// paste it into the editor at https://flecs.dev/explorer
-//
-// To load this file yourself, call ecs_script_run_file("prefabs.flecs");
+// A script that shows how to use prefabs and inheritance.
 
-// Create component types (see reflection.flecs example)
+// Create a few component types
 struct Attack(value: f32)
-
 struct Defense(value: f32)
 
 // To create a prefab, you can create an entity with the Prefab tag:

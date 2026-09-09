@@ -1,0 +1,20 @@
+// This script shows how to define types in script. Types are registered
+// using the meta addon, and follow the same memory layout as C types. Any type
+// registered with the meta addon can be used with script, so not just the
+// types that are defined in scripts!
+//
+// All types registered with the meta addon can be used as component.
+struct Position(x: f32, y: f32)
+
+// Another struct type
+struct Mass(value: f32)
+
+// Constants in enums are assigned with increasing constant values.
+enum Color(Red, Green, Blue)
+
+// Components can be used directly from the script that defines them.
+my_entity {
+  Position: {x: 10, y: 20}
+  Mass: {100} // Member names are optional
+  Color: {Green} // Green will be automatically looked up in the Color scope
+}
