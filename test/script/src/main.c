@@ -998,6 +998,8 @@ void Template_manual_managed_script_clear(void);
 void Template_instantiate_w_string_prop_no_leak(void);
 void Template_template_no_scope(void);
 void Template_template_no_props(void);
+void Template_template_no_props_as_tag(void);
+void Template_template_no_props_add_deferred(void);
 void Template_template_newline_before_scope(void);
 void Template_template_prop(void);
 void Template_template_prop_space_colon(void);
@@ -7198,6 +7200,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_no_props",
         Template_template_no_props
+    },
+    {
+        "template_no_props_as_tag",
+        Template_template_no_props_as_tag
+    },
+    {
+        "template_no_props_add_deferred",
+        Template_template_no_props_add_deferred
     },
     {
         "template_newline_before_scope",
@@ -16369,7 +16379,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        174,
+        176,
         Template_testcases,
         1,
         Template_params
