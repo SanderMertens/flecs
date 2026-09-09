@@ -1439,11 +1439,11 @@ void Error_has_unterminated(void);
 void Error_has_pair_missing_paren_close(void);
 void Error_has_pair_missing_second(void);
 void Error_script_update_failure_is_reported(void);
-void Error_script_init_eval_error_adds_error_tag(void);
-void Error_script_init_parse_error_adds_error_tag(void);
+void Error_script_init_eval_error_sets_error(void);
+void Error_script_init_parse_error_sets_error(void);
 void Error_script_init_from_missing_file_returns_0(void);
-void Error_script_update_clears_error_tag(void);
-void Error_script_init_success_has_no_error_tag(void);
+void Error_script_update_clears_error(void);
+void Error_script_init_success_has_no_error(void);
 void Error_script_declares_entity_named_after_script(void);
 void Error_if_component_presence_check_on_non_singleton(void);
 void Error_this_at_plain_scope_kills_file(void);
@@ -2862,61 +2862,61 @@ void ConstVar_nested_const_shadows_export_const(void);
 void ConstVar_get_from_stage(void);
 void ConstVar_get_struct_from_stage(void);
 
-// Testsuite 'Lenient'
-void Lenient_setup(void);
-void Lenient_unknown_tag(void);
-void Lenient_unknown_component_w_value(void);
-void Lenient_unknown_component_w_nested_value(void);
-void Lenient_unknown_component_in_scope(void);
-void Lenient_unknown_pair(void);
-void Lenient_unknown_member_on_known_component(void);
-void Lenient_unknown_nested_member_on_known_component(void);
-void Lenient_unknown_function_in_expr(void);
-void Lenient_unknown_vector_in_for(void);
-void Lenient_unknown_function_in_for(void);
-void Lenient_warn_once_per_name(void);
-void Lenient_warn_per_distinct_name(void);
-void Lenient_strict_unknown_tag_errors(void);
-void Lenient_strict_unknown_member_errors(void);
-void Lenient_lenient_disabled_after_enable(void);
-void Lenient_no_placeholder_then_strict_load(void);
-void Lenient_template_w_unknown_component(void);
-void Lenient_template_child_w_unknown_component(void);
-void Lenient_isa_unresolved_errors(void);
-void Lenient_eval_desc(void);
-void Lenient_managed_script_desc(void);
-void Lenient_managed_script_strict_errors(void);
-void Lenient_unknown_with_tag(void);
-void Lenient_template_w_unknown_prop_type_w_default(void);
-void Lenient_template_w_unknown_prop_type_no_default(void);
-void Lenient_template_w_unknown_prop_type_in_for(void);
-void Lenient_template_w_unknown_prop_type_in_expr(void);
-void Lenient_template_w_unknown_prop_type_set_at_instantiate(void);
-void Lenient_template_w_unknown_const_type(void);
-void Lenient_const_w_unresolved_function_initializer(void);
-void Lenient_strict_unknown_prop_type_errors(void);
-void Lenient_managed_script_lenient_after_table_change(void);
-void Lenient_unknown_using(void);
-void Lenient_strict_unknown_using_errors(void);
-void Lenient_unknown_fn_param_type(void);
-void Lenient_unknown_fn_return_type(void);
-void Lenient_strict_unknown_fn_param_type_errors(void);
-void Lenient_unknown_component_read_member_in_expr(void);
-void Lenient_unknown_component_read_member_in_interpolated_string(void);
-void Lenient_unknown_component_read_member_in_binary_expr(void);
-void Lenient_unknown_component_read_member_in_fn_arg(void);
-void Lenient_unknown_component_read_member_in_if(void);
-void Lenient_unknown_component_read_member_in_for(void);
-void Lenient_unknown_component_read_member_in_template(void);
-void Lenient_template_w_unknown_prop_type_member_in_interpolated_string(void);
-void Lenient_unknown_component_on_known_entity_member(void);
-void Lenient_unknown_component_on_known_entity_member_in_string(void);
-void Lenient_unknown_member_on_known_component_read(void);
-void Lenient_unknown_member_on_known_component_read_in_string(void);
-void Lenient_known_component_read_member_in_string(void);
-void Lenient_strict_unknown_member_on_known_component_read_errors(void);
-void Lenient_template_unresolved_base_errors(void);
-void Lenient_warn_once_for_unknown_using(void);
+// Testsuite 'SkipUnknown'
+void SkipUnknown_setup(void);
+void SkipUnknown_unknown_tag(void);
+void SkipUnknown_unknown_component_w_value(void);
+void SkipUnknown_unknown_component_w_nested_value(void);
+void SkipUnknown_unknown_component_in_scope(void);
+void SkipUnknown_unknown_pair(void);
+void SkipUnknown_unknown_member_on_known_component(void);
+void SkipUnknown_unknown_nested_member_on_known_component(void);
+void SkipUnknown_unknown_function_in_expr(void);
+void SkipUnknown_unknown_vector_in_for(void);
+void SkipUnknown_unknown_function_in_for(void);
+void SkipUnknown_warn_once_per_name(void);
+void SkipUnknown_warn_per_distinct_name(void);
+void SkipUnknown_strict_unknown_tag_errors(void);
+void SkipUnknown_strict_unknown_member_errors(void);
+void SkipUnknown_skip_unknown_disabled_after_enable(void);
+void SkipUnknown_no_placeholder_then_strict_load(void);
+void SkipUnknown_template_w_unknown_component(void);
+void SkipUnknown_template_child_w_unknown_component(void);
+void SkipUnknown_isa_unresolved_errors(void);
+void SkipUnknown_eval_desc(void);
+void SkipUnknown_managed_script_desc(void);
+void SkipUnknown_managed_script_strict_errors(void);
+void SkipUnknown_unknown_with_tag(void);
+void SkipUnknown_template_w_unknown_prop_type_w_default(void);
+void SkipUnknown_template_w_unknown_prop_type_no_default(void);
+void SkipUnknown_template_w_unknown_prop_type_in_for(void);
+void SkipUnknown_template_w_unknown_prop_type_in_expr(void);
+void SkipUnknown_template_w_unknown_prop_type_set_at_instantiate(void);
+void SkipUnknown_template_w_unknown_const_type(void);
+void SkipUnknown_const_w_unresolved_function_initializer(void);
+void SkipUnknown_strict_unknown_prop_type_errors(void);
+void SkipUnknown_managed_script_skip_unknown_after_table_change(void);
+void SkipUnknown_unknown_using(void);
+void SkipUnknown_strict_unknown_using_errors(void);
+void SkipUnknown_unknown_fn_param_type(void);
+void SkipUnknown_unknown_fn_return_type(void);
+void SkipUnknown_strict_unknown_fn_param_type_errors(void);
+void SkipUnknown_unknown_component_read_member_in_expr(void);
+void SkipUnknown_unknown_component_read_member_in_interpolated_string(void);
+void SkipUnknown_unknown_component_read_member_in_binary_expr(void);
+void SkipUnknown_unknown_component_read_member_in_fn_arg(void);
+void SkipUnknown_unknown_component_read_member_in_if(void);
+void SkipUnknown_unknown_component_read_member_in_for(void);
+void SkipUnknown_unknown_component_read_member_in_template(void);
+void SkipUnknown_template_w_unknown_prop_type_member_in_interpolated_string(void);
+void SkipUnknown_unknown_component_on_known_entity_member(void);
+void SkipUnknown_unknown_component_on_known_entity_member_in_string(void);
+void SkipUnknown_unknown_member_on_known_component_read(void);
+void SkipUnknown_unknown_member_on_known_component_read_in_string(void);
+void SkipUnknown_known_component_read_member_in_string(void);
+void SkipUnknown_strict_unknown_member_on_known_component_read_errors(void);
+void SkipUnknown_template_unresolved_base_errors(void);
+void SkipUnknown_warn_once_for_unknown_using(void);
 
 // Testsuite 'StructInheritance'
 void StructInheritance_setup(void);
@@ -8943,24 +8943,24 @@ bake_test_case Error_testcases[] = {
         Error_script_update_failure_is_reported
     },
     {
-        "script_init_eval_error_adds_error_tag",
-        Error_script_init_eval_error_adds_error_tag
+        "script_init_eval_error_sets_error",
+        Error_script_init_eval_error_sets_error
     },
     {
-        "script_init_parse_error_adds_error_tag",
-        Error_script_init_parse_error_adds_error_tag
+        "script_init_parse_error_sets_error",
+        Error_script_init_parse_error_sets_error
     },
     {
         "script_init_from_missing_file_returns_0",
         Error_script_init_from_missing_file_returns_0
     },
     {
-        "script_update_clears_error_tag",
-        Error_script_update_clears_error_tag
+        "script_update_clears_error",
+        Error_script_update_clears_error
     },
     {
-        "script_init_success_has_no_error_tag",
-        Error_script_init_success_has_no_error_tag
+        "script_init_success_has_no_error",
+        Error_script_init_success_has_no_error
     },
     {
         "script_declares_entity_named_after_script",
@@ -14541,218 +14541,218 @@ bake_test_case ConstVar_testcases[] = {
     }
 };
 
-bake_test_case Lenient_testcases[] = {
+bake_test_case SkipUnknown_testcases[] = {
     {
         "unknown_tag",
-        Lenient_unknown_tag
+        SkipUnknown_unknown_tag
     },
     {
         "unknown_component_w_value",
-        Lenient_unknown_component_w_value
+        SkipUnknown_unknown_component_w_value
     },
     {
         "unknown_component_w_nested_value",
-        Lenient_unknown_component_w_nested_value
+        SkipUnknown_unknown_component_w_nested_value
     },
     {
         "unknown_component_in_scope",
-        Lenient_unknown_component_in_scope
+        SkipUnknown_unknown_component_in_scope
     },
     {
         "unknown_pair",
-        Lenient_unknown_pair
+        SkipUnknown_unknown_pair
     },
     {
         "unknown_member_on_known_component",
-        Lenient_unknown_member_on_known_component
+        SkipUnknown_unknown_member_on_known_component
     },
     {
         "unknown_nested_member_on_known_component",
-        Lenient_unknown_nested_member_on_known_component
+        SkipUnknown_unknown_nested_member_on_known_component
     },
     {
         "unknown_function_in_expr",
-        Lenient_unknown_function_in_expr
+        SkipUnknown_unknown_function_in_expr
     },
     {
         "unknown_vector_in_for",
-        Lenient_unknown_vector_in_for
+        SkipUnknown_unknown_vector_in_for
     },
     {
         "unknown_function_in_for",
-        Lenient_unknown_function_in_for
+        SkipUnknown_unknown_function_in_for
     },
     {
         "warn_once_per_name",
-        Lenient_warn_once_per_name
+        SkipUnknown_warn_once_per_name
     },
     {
         "warn_per_distinct_name",
-        Lenient_warn_per_distinct_name
+        SkipUnknown_warn_per_distinct_name
     },
     {
         "strict_unknown_tag_errors",
-        Lenient_strict_unknown_tag_errors
+        SkipUnknown_strict_unknown_tag_errors
     },
     {
         "strict_unknown_member_errors",
-        Lenient_strict_unknown_member_errors
+        SkipUnknown_strict_unknown_member_errors
     },
     {
-        "lenient_disabled_after_enable",
-        Lenient_lenient_disabled_after_enable
+        "skip_unknown_disabled_after_enable",
+        SkipUnknown_skip_unknown_disabled_after_enable
     },
     {
         "no_placeholder_then_strict_load",
-        Lenient_no_placeholder_then_strict_load
+        SkipUnknown_no_placeholder_then_strict_load
     },
     {
         "template_w_unknown_component",
-        Lenient_template_w_unknown_component
+        SkipUnknown_template_w_unknown_component
     },
     {
         "template_child_w_unknown_component",
-        Lenient_template_child_w_unknown_component
+        SkipUnknown_template_child_w_unknown_component
     },
     {
         "isa_unresolved_errors",
-        Lenient_isa_unresolved_errors
+        SkipUnknown_isa_unresolved_errors
     },
     {
         "eval_desc",
-        Lenient_eval_desc
+        SkipUnknown_eval_desc
     },
     {
         "managed_script_desc",
-        Lenient_managed_script_desc
+        SkipUnknown_managed_script_desc
     },
     {
         "managed_script_strict_errors",
-        Lenient_managed_script_strict_errors
+        SkipUnknown_managed_script_strict_errors
     },
     {
         "unknown_with_tag",
-        Lenient_unknown_with_tag
+        SkipUnknown_unknown_with_tag
     },
     {
         "template_w_unknown_prop_type_w_default",
-        Lenient_template_w_unknown_prop_type_w_default
+        SkipUnknown_template_w_unknown_prop_type_w_default
     },
     {
         "template_w_unknown_prop_type_no_default",
-        Lenient_template_w_unknown_prop_type_no_default
+        SkipUnknown_template_w_unknown_prop_type_no_default
     },
     {
         "template_w_unknown_prop_type_in_for",
-        Lenient_template_w_unknown_prop_type_in_for
+        SkipUnknown_template_w_unknown_prop_type_in_for
     },
     {
         "template_w_unknown_prop_type_in_expr",
-        Lenient_template_w_unknown_prop_type_in_expr
+        SkipUnknown_template_w_unknown_prop_type_in_expr
     },
     {
         "template_w_unknown_prop_type_set_at_instantiate",
-        Lenient_template_w_unknown_prop_type_set_at_instantiate
+        SkipUnknown_template_w_unknown_prop_type_set_at_instantiate
     },
     {
         "template_w_unknown_const_type",
-        Lenient_template_w_unknown_const_type
+        SkipUnknown_template_w_unknown_const_type
     },
     {
         "const_w_unresolved_function_initializer",
-        Lenient_const_w_unresolved_function_initializer
+        SkipUnknown_const_w_unresolved_function_initializer
     },
     {
         "strict_unknown_prop_type_errors",
-        Lenient_strict_unknown_prop_type_errors
+        SkipUnknown_strict_unknown_prop_type_errors
     },
     {
-        "managed_script_lenient_after_table_change",
-        Lenient_managed_script_lenient_after_table_change
+        "managed_script_skip_unknown_after_table_change",
+        SkipUnknown_managed_script_skip_unknown_after_table_change
     },
     {
         "unknown_using",
-        Lenient_unknown_using
+        SkipUnknown_unknown_using
     },
     {
         "strict_unknown_using_errors",
-        Lenient_strict_unknown_using_errors
+        SkipUnknown_strict_unknown_using_errors
     },
     {
         "unknown_fn_param_type",
-        Lenient_unknown_fn_param_type
+        SkipUnknown_unknown_fn_param_type
     },
     {
         "unknown_fn_return_type",
-        Lenient_unknown_fn_return_type
+        SkipUnknown_unknown_fn_return_type
     },
     {
         "strict_unknown_fn_param_type_errors",
-        Lenient_strict_unknown_fn_param_type_errors
+        SkipUnknown_strict_unknown_fn_param_type_errors
     },
     {
         "unknown_component_read_member_in_expr",
-        Lenient_unknown_component_read_member_in_expr
+        SkipUnknown_unknown_component_read_member_in_expr
     },
     {
         "unknown_component_read_member_in_interpolated_string",
-        Lenient_unknown_component_read_member_in_interpolated_string
+        SkipUnknown_unknown_component_read_member_in_interpolated_string
     },
     {
         "unknown_component_read_member_in_binary_expr",
-        Lenient_unknown_component_read_member_in_binary_expr
+        SkipUnknown_unknown_component_read_member_in_binary_expr
     },
     {
         "unknown_component_read_member_in_fn_arg",
-        Lenient_unknown_component_read_member_in_fn_arg
+        SkipUnknown_unknown_component_read_member_in_fn_arg
     },
     {
         "unknown_component_read_member_in_if",
-        Lenient_unknown_component_read_member_in_if
+        SkipUnknown_unknown_component_read_member_in_if
     },
     {
         "unknown_component_read_member_in_for",
-        Lenient_unknown_component_read_member_in_for
+        SkipUnknown_unknown_component_read_member_in_for
     },
     {
         "unknown_component_read_member_in_template",
-        Lenient_unknown_component_read_member_in_template
+        SkipUnknown_unknown_component_read_member_in_template
     },
     {
         "template_w_unknown_prop_type_member_in_interpolated_string",
-        Lenient_template_w_unknown_prop_type_member_in_interpolated_string
+        SkipUnknown_template_w_unknown_prop_type_member_in_interpolated_string
     },
     {
         "unknown_component_on_known_entity_member",
-        Lenient_unknown_component_on_known_entity_member
+        SkipUnknown_unknown_component_on_known_entity_member
     },
     {
         "unknown_component_on_known_entity_member_in_string",
-        Lenient_unknown_component_on_known_entity_member_in_string
+        SkipUnknown_unknown_component_on_known_entity_member_in_string
     },
     {
         "unknown_member_on_known_component_read",
-        Lenient_unknown_member_on_known_component_read
+        SkipUnknown_unknown_member_on_known_component_read
     },
     {
         "unknown_member_on_known_component_read_in_string",
-        Lenient_unknown_member_on_known_component_read_in_string
+        SkipUnknown_unknown_member_on_known_component_read_in_string
     },
     {
         "known_component_read_member_in_string",
-        Lenient_known_component_read_member_in_string
+        SkipUnknown_known_component_read_member_in_string
     },
     {
         "strict_unknown_member_on_known_component_read_errors",
-        Lenient_strict_unknown_member_on_known_component_read_errors
+        SkipUnknown_strict_unknown_member_on_known_component_read_errors
     },
     {
         "template_unresolved_base_errors",
-        Lenient_template_unresolved_base_errors
+        SkipUnknown_template_unresolved_base_errors
     },
     {
         "warn_once_for_unknown_using",
-        Lenient_warn_once_for_unknown_using
+        SkipUnknown_warn_once_for_unknown_using
     }
 };
 
@@ -16269,9 +16269,9 @@ bake_test_param ConstVar_params[] = {
     {"ir", (char**)ConstVar_ir_param, 2}
 };
 
-const char* Lenient_ir_param[] = {"disabled", "enabled"};
-bake_test_param Lenient_params[] = {
-    {"ir", (char**)Lenient_ir_param, 2}
+const char* SkipUnknown_ir_param[] = {"disabled", "enabled"};
+bake_test_param SkipUnknown_params[] = {
+    {"ir", (char**)SkipUnknown_ir_param, 2}
 };
 
 const char* StructInheritance_ir_param[] = {"disabled", "enabled"};
@@ -16473,13 +16473,13 @@ static bake_test_suite suites[] = {
         ConstVar_params
     },
     {
-        "Lenient",
-        Lenient_setup,
+        "SkipUnknown",
+        SkipUnknown_setup,
         NULL,
         53,
-        Lenient_testcases,
+        SkipUnknown_testcases,
         1,
-        Lenient_params
+        SkipUnknown_params
     },
     {
         "StructInheritance",

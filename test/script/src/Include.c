@@ -1341,8 +1341,6 @@ void Include_include_parse_error_sets_error_on_parent(void) {
     });
 
     if (script) {
-        test_assert(ecs_has_id(world, script, EcsScriptError));
-
         const EcsScript *s = ecs_get(world, script, EcsScript);
         test_assert(s != NULL);
         test_assert(s->error != NULL);
@@ -1392,8 +1390,6 @@ void Include_include_eval_error_sets_error_on_parent(void) {
     });
 
     if (script) {
-        test_assert(ecs_has_id(world, script, EcsScriptError));
-
         const EcsScript *s = ecs_get(world, script, EcsScript);
         test_assert(s != NULL);
         test_assert(s->error != NULL);
@@ -1419,8 +1415,6 @@ void Include_include_nested_parse_error_sets_error_on_parent(void) {
     });
 
     if (script) {
-        test_assert(ecs_has_id(world, script, EcsScriptError));
-
         const EcsScript *s = ecs_get(world, script, EcsScript);
         test_assert(s != NULL);
         test_assert(s->error != NULL);
@@ -1468,8 +1462,6 @@ void Include_include_nested_index_parse_error_sets_error_on_parent(void) {
     });
 
     if (script) {
-        test_assert(ecs_has_id(world, script, EcsScriptError));
-
         const EcsScript *s = ecs_get(world, script, EcsScript);
         test_assert(s != NULL);
         test_assert(s->error != NULL);
@@ -1565,8 +1557,6 @@ void Include_include_missing_file_managed_sets_error_on_parent(void) {
     });
 
     if (script) {
-        test_assert(ecs_has_id(world, script, EcsScriptError));
-
         const EcsScript *s = ecs_get(world, script, EcsScript);
         test_assert(s != NULL);
         test_assert(s->error != NULL);

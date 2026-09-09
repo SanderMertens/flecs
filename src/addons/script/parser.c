@@ -1683,8 +1683,8 @@ ecs_script_t* ecs_script_parse(
         world, name, code, &parser);
     ecs_script_impl_t *impl = flecs_script_impl(script);
 
-    if (desc && desc->lenient) {
-        impl->lenient = true;
+    if (desc && desc->skip_unknown) {
+        impl->skip_unknown = true;
     }
     if (desc && desc->ir) {
         impl->ir_enabled = true;

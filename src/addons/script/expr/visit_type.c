@@ -82,14 +82,14 @@ static void flecs_expr_unresolved_component_ref(
     }
 }
 
-static bool flecs_expr_lenient_unresolved_ref(
+static bool flecs_expr_skip_unknown_unresolved_ref(
     ecs_script_t *script,
     const ecs_expr_eval_desc_t *desc,
     ecs_expr_node_t *node,
     const char *name,
     flecs_script_unresolved_kind_t kind)
 {
-    if (!flecs_script_is_lenient(script)) {
+    if (!flecs_script_is_skip_unknown(script)) {
         return false;
     }
     return flecs_expr_unresolved_ref(script, desc, node, name, kind);
@@ -100,7 +100,7 @@ static bool flecs_expr_is_skipped_var(
     const ecs_expr_eval_desc_t *desc,
     const char *name)
 {
-    if (!flecs_script_is_lenient(script)) {
+    if (!flecs_script_is_skip_unknown(script)) {
         return false;
     }
 
@@ -1256,22 +1256,22 @@ static int flecs_expr_initializer_visit_type(
         }
 
         if (elem->member) {
-            bool lenient = flecs_script_is_lenient(script);
+            bool skip_unknown = flecs_script_is_skip_unknown(script);
             ecs_meta_cursor_t member_cur = *cur;
-            int prev_log = lenient ? ecs_log_set_level(-4) : 0;
+            int prev_log = skip_unknown ? ecs_log_set_level(-4) : 0;
             int dotmember_result = ecs_meta_dotmember(cur, elem->member);
-            if (lenient) {
+            if (skip_unknown) {
                 ecs_log_set_level(prev_log);
             }
             if (dotmember_result) { /* x: */
-                if (!lenient) {
+                if (!skip_unknown) {
                     flecs_expr_visit_error(script, node,
                         "cannot resolve member");
                     goto error;
                 }
 
                 *cur = member_cur;
-                flecs_script_lenient_warn(script, elem->member,
+                flecs_script_skip_unknown_warn(script, elem->member,
                     "skipped value for unresolved member");
                 flecs_expr_visit_free(script, elem->key);
                 flecs_expr_visit_free(script, elem->value);
@@ -2271,7 +2271,7 @@ static int flecs_expr_function_visit_type(
                 goto try_function;
             }
 
-            if (flecs_script_is_lenient(script) &&
+            if (flecs_script_is_skip_unknown(script) &&
                 flecs_expr_unresolved_ref(script, desc,
                     (ecs_expr_node_t*)node, node->function_name,
                     FlecsScriptUnresolvedEntity))
@@ -2315,7 +2315,7 @@ try_function:
             node->function_name, FlecsScriptLookupEntity, &symbol) ||
             !symbol.entity)
         {
-            if (!flecs_script_is_lenient(script) ||
+            if (!flecs_script_is_skip_unknown(script) ||
                 !flecs_expr_unresolved_ref(script, desc,
                     (ecs_expr_node_t*)node, node->function_name,
                     FlecsScriptUnresolvedEntity))
@@ -2569,7 +2569,7 @@ static int flecs_expr_member_visit_type(
             return swizzle;
         }
 
-        if (flecs_expr_lenient_unresolved_ref(script, desc,
+        if (flecs_expr_skip_unknown_unresolved_ref(script, desc,
             (ecs_expr_node_t*)node, node->member_name,
             FlecsScriptUnresolvedEntity))
         {
@@ -2671,7 +2671,7 @@ static int flecs_expr_element_visit_type(
             if (flecs_script_symbol_lookup(script, desc, 0, ident->value,
                 FlecsScriptLookupEntity, &symbol))
             {
-                if (!flecs_expr_lenient_unresolved_ref(script, desc,
+                if (!flecs_expr_skip_unknown_unresolved_ref(script, desc,
                     (ecs_expr_node_t*)node, ident->value,
                     FlecsScriptUnresolvedEntity))
                 {
@@ -2683,7 +2683,7 @@ static int flecs_expr_element_visit_type(
             }
             node->node.type = symbol.entity;
             if (!node->node.type) {
-                if (!flecs_expr_lenient_unresolved_ref(script, desc,
+                if (!flecs_expr_skip_unknown_unresolved_ref(script, desc,
                     (ecs_expr_node_t*)node, ident->value,
                     FlecsScriptUnresolvedEntity))
                 {
@@ -2695,7 +2695,7 @@ static int flecs_expr_element_visit_type(
             }
 
             if (!ecs_get_type_info(world, node->node.type)) {
-                if (flecs_expr_lenient_unresolved_ref(script, desc,
+                if (flecs_expr_skip_unknown_unresolved_ref(script, desc,
                     (ecs_expr_node_t*)node, ident->value,
                     FlecsScriptUnresolvedEntity))
                 {

@@ -7459,10 +7459,10 @@ void Reactivity_same_entity_in_two_non_exclusive_scopes(void) {
     });
 
     test_assert(script != 0);
-    test_assert(!ecs_has_id(world, script, EcsScriptError));
 
     const EcsScript *s = ecs_get(world, script, EcsScript);
     test_assert(s != NULL);
+    test_assert(s->error == NULL);
     test_assert(s->error == NULL);
 
     ecs_entity_t item = ecs_lookup(world, "item");
@@ -7501,7 +7501,10 @@ void Reactivity_partial_component_in_two_non_exclusive_scopes(void) {
     });
 
     test_assert(script != 0);
-    test_assert(!ecs_has_id(world, script, EcsScriptError));
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t item = ecs_lookup(world, "item");
     test_assert(item != 0);

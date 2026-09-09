@@ -20638,7 +20638,10 @@ void Eval_for_continue_updates_managed_script(void) {
     });
 
     test_assert(script != 0);
-    test_assert(!ecs_has_id(world, script, EcsScriptError));
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     test_assert(ecs_lookup(world, "e_0") != 0);
     test_assert(ecs_lookup(world, "e_1") == 0);
