@@ -8301,3 +8301,122 @@ void Reactivity_sparse_blocks_restore_cached_constants(void) {
     }
     ecs_fini(world);
 }
+
+static void reactivity_const_on_set(ecs_iter_t *it) {
+    int32_t *count = it->ctx;
+    *count += it->count;
+}
+
+static void reactivity_const_threshold(bool capture) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Mass"}),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+    int32_t count = 0;
+    ecs_observer(world, {
+        .query.terms = {{ecs_id(Position)}},
+        .events = {EcsOnSet},
+        .callback = reactivity_const_on_set,
+        .ctx = &count
+    });
+    ecs_entity_t source = ecs_entity(world, {.name = "source"});
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
+
+    const char *code = capture
+        ? HEAD "const x: bool = source[Mass].value < 0.5"
+          LINE "template Panel {"
+          LINE "  const lit = x * 2"
+          LINE "  child { Position: {lit, 1} }"
+          LINE "}"
+          LINE "Panel output()"
+        : HEAD "const x: bool = source[Mass].value < 0.5"
+          LINE "const lit = x * 2"
+          LINE "@brief Computed output"
+          LINE "output { Position: {lit, 1} }";
+    ecs_entity_t script = ecs_script(world, {.ir = ir_enabled, .code = code});
+    test_assert(script != 0);
+    const EcsScript *sc = ecs_get(world, script, EcsScript);
+    test_assert(sc != NULL);
+    test_assert(sc->error == NULL);
+    ecs_entity_t output = ecs_lookup(world, capture ? "output.child" : "output");
+    test_assert(output != 0);
+    test_int(count, 1);
+    test_flt(ecs_get(world, output, Position)->x, 2);
+
+    for (int32_t i = 2; i <= 4; i ++) {
+        ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){i * 0.1f});
+        test_int(count, 1);
+    }
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.6});
+    test_int(count, 2);
+    test_flt(ecs_get(world, output, Position)->x, 0);
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.7});
+    test_int(count, 2);
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
+    test_int(count, 3);
+    test_flt(ecs_get(world, output, Position)->x, 2);
+    test_uint(ecs_lookup(world, capture ? "output.child" : "output"), output);
+    if (!capture) {
+        test_str(ecs_doc_get_brief(world, output), "Computed output");
+    }
+    ecs_fini(world);
+}
+
+void Reactivity_computed_const_skips_unchanged(void) {
+    reactivity_const_threshold(false);
+}
+
+void Reactivity_computed_const_capture_skips_unchanged(void) {
+    reactivity_const_threshold(true);
+}
+
+void Reactivity_computed_const_cache_restored_and_reset(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Mass"}),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+    ecs_entity_t source = ecs_entity(world, {.name = "source"});
+    ecs_entity_t other = ecs_entity(world, {.name = "other"});
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
+    ecs_set_id(world, other, mass, sizeof(Mass), &(Mass){10});
+    ecs_entity_t script = ecs_script(world, {.ir = ir_enabled, .code =
+        HEAD "const x: bool = source[Mass].value < 0.5"
+        LINE "output { Position: {x * 2, other[Mass].value} }"
+    });
+    test_assert(script != 0);
+    ecs_entity_t output = ecs_lookup(world, "output");
+    test_assert(output != 0);
+    ecs_set_id(world, other, mass, sizeof(Mass), &(Mass){20});
+    const Position *p = ecs_get(world, output, Position);
+    test_assert(p != NULL);
+    test_flt(p->x, 2);
+    test_flt(p->y, 20);
+
+    test_int(ecs_script_update(world, script, 0,
+        HEAD "const x: bool = source[Mass].value > 0.5"
+        LINE "output { Position: {x * 2, other[Mass].value} }"), 0);
+    output = ecs_lookup(world, "output");
+    ecs_set_id(world, other, mass, sizeof(Mass), &(Mass){30});
+    p = ecs_get(world, output, Position);
+    test_assert(p != NULL);
+    test_flt(p->x, 0);
+    test_flt(p->y, 30);
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.6});
+    p = ecs_get(world, output, Position);
+    test_assert(p != NULL);
+    test_flt(p->x, 2);
+    test_flt(p->y, 30);
+    ecs_fini(world);
+}

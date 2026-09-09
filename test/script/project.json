@@ -2902,7 +2902,10 @@
                 "conditional_component_w_named_initializer_on_entity",
                 "branch_cleanup_deletes_entity_w_child",
                 "sparse_blocks_preserve_ownership",
-                "sparse_blocks_restore_cached_constants"
+                "sparse_blocks_restore_cached_constants",
+                "computed_const_skips_unchanged",
+                "computed_const_capture_skips_unchanged",
+                "computed_const_cache_restored_and_reset"
             ]
         }, {
             "id": "ConstVar",

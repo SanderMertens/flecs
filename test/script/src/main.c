@@ -2816,6 +2816,9 @@ void Reactivity_conditional_component_w_named_initializer_on_entity(void);
 void Reactivity_branch_cleanup_deletes_entity_w_child(void);
 void Reactivity_sparse_blocks_preserve_ownership(void);
 void Reactivity_sparse_blocks_restore_cached_constants(void);
+void Reactivity_computed_const_skips_unchanged(void);
+void Reactivity_computed_const_capture_skips_unchanged(void);
+void Reactivity_computed_const_cache_restored_and_reset(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -14367,6 +14370,18 @@ bake_test_case Reactivity_testcases[] = {
     {
         "sparse_blocks_restore_cached_constants",
         Reactivity_sparse_blocks_restore_cached_constants
+    },
+    {
+        "computed_const_skips_unchanged",
+        Reactivity_computed_const_skips_unchanged
+    },
+    {
+        "computed_const_capture_skips_unchanged",
+        Reactivity_computed_const_capture_skips_unchanged
+    },
+    {
+        "computed_const_cache_restored_and_reset",
+        Reactivity_computed_const_cache_restored_and_reset
     }
 };
 
@@ -16458,7 +16473,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        140,
+        143,
         Reactivity_testcases,
         1,
         Reactivity_params
