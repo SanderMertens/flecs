@@ -1,0 +1,69 @@
+// This script shows how to use template inheritance to create a Building asset
+// with a configurable facade.
+
+// Define a few components
+struct Position3(x: f32, y: f32, z: f32)
+struct Rgb(r: f32, g: f32, b: f32)
+struct Box(width: f32, height: f32, depth: f32)
+
+// Create a Facade type that will act as the "interface" for building facades.
+struct Facade(height: f32)
+
+// A brick facade that inherits from Facade.
+template BrickFacade : Facade {
+  prop color: Rgb = {0.55, 0.25, 0.15}
+
+  {
+    Position3: {0, height / 2, 0} // "height" is inherited from Facade
+    Rgb: color
+    Box: {4, height, 4}
+  }
+}
+
+// A glass facade that inherits from Facade.
+template GlassFacade : Facade {
+  prop panes: i32 = 3
+
+  const paneWidth = 4 / panes
+
+  // Window frame
+  {
+    Position3: {0, height / 2, 0}
+    Rgb: {0.2, 0.2, 0.2}
+    Box: {4, height, 4}
+  }
+
+  // Window panes
+  for i in 0..panes {
+    {
+      Position3: {-2 + paneWidth * (i + 0.5), height / 2, 2.1}
+      Rgb: {0.5, 0.7, 0.9}
+      Box: {paneWidth - 0.2, height - 0.4, 0.1}
+    }
+  }
+}
+
+// The building template.
+template Building {
+  prop facade: template Facade // Accepts any type that inherits from Facade
+  prop floors: i32 = 3
+  prop floorHeight: f32 = 3
+
+  // Instantiate a facade for each floor.
+  for i in 0..floors {
+    {
+      Position3: {0, i * floorHeight, 0}
+      facade: {height: floorHeight} // Instantiate facade as normal component
+    }
+  }
+}
+
+// A two-story building with a brick facade
+Building brick_house(facade: BrickFacade, floors: 2) {
+  Position3: {-5, 0, 0}
+}
+
+// A ten-story building with a glass facade
+Building glass_tower(facade: GlassFacade, floors: 10, floorHeight: 4) {
+  Position3: {5, 0, 0}
+}

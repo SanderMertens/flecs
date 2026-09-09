@@ -1,0 +1,16 @@
+// Scripts can contain variables that can be used in expressions.
+
+// Create a few component types
+struct Position(x: f32, y: f32)
+struct Rectangle(width: f32, height: f32)
+
+// A variable. 
+const width: i32 = 5
+
+// If no type is specified, it will be inferred from the expression.
+const height = width * 2
+
+e {
+  Position: {0, height / 2}
+  Rectangle: {width, height}
+}

@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="fl-svg-component-lifecycle" viewBox="0 0 1000 640" width="1000" height="640" role="img" aria-labelledby="fl-svg-component-lifecycle-title">
+<title id="fl-svg-component-lifecycle-title">Component lifecycle: which hooks and observers run on add, set and remove</title>
+<style>
+svg.fl-svg-component-lifecycle {
+  --d-node: #f6f7f9;
+  --d-node-stroke: #c9d0d8;
+  --d-text: #1c2128;
+  --d-muted: #6b7280;
+  --d-line: #8b95a1;
+  --d-accent: #42b983;
+  --d-accent-bg: #e6f6ee;
+  --d-blue: #3b82f6;
+  --d-blue-bg: #e8f0fe;
+  --d-canvas: transparent;
+}
+@media (prefers-color-scheme: dark) {
+  svg.fl-svg-component-lifecycle {
+    --d-node: #1e232b;
+    --d-node-stroke: #3a424d;
+    --d-text: #d9dee5;
+    --d-muted: #8b95a1;
+    --d-line: #7d8590;
+    --d-accent-bg: #16302a;
+    --d-blue-bg: #17233a;
+  }
+}
+svg.fl-svg-component-lifecycle .bg { fill: var(--d-canvas); }
+svg.fl-svg-component-lifecycle .node { fill: var(--d-node); stroke: var(--d-node-stroke); stroke-width: 1.5; }
+svg.fl-svg-component-lifecycle .node.accent { fill: var(--d-accent-bg); stroke: var(--d-accent); }
+svg.fl-svg-component-lifecycle .node.blue { fill: var(--d-blue-bg); stroke: var(--d-blue); }
+svg.fl-svg-component-lifecycle .label { fill: var(--d-text); font: 500 14px Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-anchor: middle; dominant-baseline: central; }
+svg.fl-svg-component-lifecycle .label.mono { font: 500 13px 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+svg.fl-svg-component-lifecycle .label .b { font-weight: 700; }
+svg.fl-svg-component-lifecycle .note { fill: var(--d-muted); font: italic 12px Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; dominant-baseline: central; }
+svg.fl-svg-component-lifecycle .note.center { text-anchor: middle; }
+svg.fl-svg-component-lifecycle .note.right { text-anchor: start; }
+svg.fl-svg-component-lifecycle .note.left { text-anchor: end; }
+svg.fl-svg-component-lifecycle .edge { fill: none; stroke: var(--d-line); stroke-width: 1.5; marker-end: url(#fl-svg-component-lifecycle-arrow); }
+svg.fl-svg-component-lifecycle .edge.plain { marker-end: none; }
+svg.fl-svg-component-lifecycle .arrow { fill: var(--d-line); }
+svg.fl-svg-component-lifecycle .edgelabel { fill: var(--d-muted); font: italic 12px Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-anchor: middle; dominant-baseline: central; }
+</style>
+<defs><marker id="fl-svg-component-lifecycle-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="bg" width="1000" height="640"/>
+
+<rect class="node " x="40.0" y="22.0" width="100" height="36" rx="7"/>
+<text class="label mono" x="90" y="40">modified(c)</text>
+<rect class="node " x="180.0" y="22.0" width="100" height="36" rx="7"/>
+<text class="label mono" x="230" y="40">add(c)</text>
+<rect class="node " x="285.0" y="22.0" width="100" height="36" rx="7"/>
+<text class="label mono" x="335" y="40">ensure(c)</text>
+<rect class="node " x="390.0" y="22.0" width="100" height="36" rx="7"/>
+<text class="label mono" x="440" y="40">emplace(c)</text>
+<rect class="node " x="495.0" y="22.0" width="100" height="36" rx="7"/>
+<text class="label mono" x="545" y="40">set(c)</text>
+<rect class="node " x="650.0" y="22.0" width="100" height="36" rx="7"/>
+<text class="label mono" x="700" y="40">remove(c)</text>
+<rect class="node " x="755.0" y="22.0" width="100" height="36" rx="7"/>
+<text class="label mono" x="805" y="40">clear</text>
+<rect class="node " x="860.0" y="22.0" width="100" height="36" rx="7"/>
+<text class="label mono" x="910" y="40">delete</text>
+<rect class="node " x="180.0" y="132.0" width="100" height="36" rx="7"/>
+<text class="label" x="230" y="150">has(c)?</text>
+<rect class="node " x="385.0" y="132.0" width="110" height="36" rx="7"/>
+<text class="label" x="440" y="150">table move</text>
+<rect class="node blue" x="385.0" y="222.0" width="110" height="36" rx="7"/>
+<text class="label" x="440" y="240">ctor</text>
+<rect class="node blue" x="385.0" y="312.0" width="110" height="36" rx="7"/>
+<text class="label mono" x="440" y="330">on_add hook</text>
+<rect class="node accent" x="370.0" y="402.0" width="140" height="36" rx="7"/>
+<text class="label" x="440" y="420">OnAdd observers</text>
+<rect class="node " x="180.0" y="402.0" width="100" height="36" rx="7"/>
+<text class="label" x="230" y="420">is set?</text>
+<rect class="node blue" x="175.0" y="492.0" width="110" height="36" rx="7"/>
+<text class="label mono" x="230" y="510">on_set hook</text>
+<rect class="node accent" x="160.0" y="572.0" width="140" height="36" rx="7"/>
+<text class="label" x="230" y="590">OnSet observers</text>
+<rect class="node " x="755.0" y="132.0" width="100" height="36" rx="7"/>
+<text class="label" x="805" y="150">has(c)?</text>
+<rect class="node accent" x="725.0" y="222.0" width="160" height="36" rx="7"/>
+<text class="label" x="805" y="240">OnRemove observers</text>
+<rect class="node blue" x="740.0" y="312.0" width="130" height="36" rx="7"/>
+<text class="label mono" x="805" y="330">on_remove hook</text>
+<rect class="node blue" x="750.0" y="402.0" width="110" height="36" rx="7"/>
+<text class="label" x="805" y="420">dtor</text>
+<rect class="node " x="700.0" y="486.0" width="210" height="48" rx="7"/>
+<text class="label" x="805" y="502.0">is clear/delete or</text>
+<text class="label" x="805" y="518.0">last component?</text>
+<rect class="node " x="645.0" y="582.0" width="110" height="36" rx="7"/>
+<text class="label" x="700" y="600">table move</text>
+<rect class="node " x="855.0" y="582.0" width="110" height="36" rx="7"/>
+<text class="label" x="910" y="600">table delete</text>
+<path class="edge plain" d="M230,58 L230,90"/>
+<path class="edge plain" d="M335,58 L335,90"/>
+<path class="edge plain" d="M440,58 L440,90"/>
+<path class="edge plain" d="M545,58 L545,90"/>
+<path class="edge plain" d="M230,90 L545,90"/>
+<path class="edge" d="M230,58.0 L230,90 L230,132.0"/>
+<path class="edge" d="M90,58.0 L90,510 L175.0,510"/>
+<path class="edge" d="M280.0,150 L385.0,150"/>
+<text class="edgelabel" x="300" y="138">no</text>
+<path class="edge" d="M230,168.0 L230,402.0"/>
+<text class="edgelabel" x="250" y="200">yes</text>
+<path class="edge" d="M440,168.0 L440,222.0"/>
+<path class="edge" d="M440,258.0 L440,312.0"/>
+<path class="edge" d="M440,348.0 L440,402.0"/>
+<path class="edge" d="M370.0,420 L280.0,420"/>
+<path class="edge" d="M230,438.0 L230,492.0"/>
+<text class="edgelabel" x="250" y="465">yes</text>
+<path class="edge" d="M230,528.0 L230,572.0"/>
+<text class="note right" x="505" y="150.0">insert if first component</text>
+<text class="note right" x="505" y="240.0">skipped by emplace</text>
+<path class="edge plain" d="M700,58 L700,90"/>
+<path class="edge plain" d="M805,58 L805,90"/>
+<path class="edge plain" d="M910,58 L910,90"/>
+<path class="edge plain" d="M700,90 L910,90"/>
+<path class="edge" d="M805,58.0 L805,90 L805,132.0"/>
+<path class="edge" d="M805,168.0 L805,222.0"/>
+<text class="edgelabel" x="825" y="200">yes</text>
+<path class="edge" d="M805,258.0 L805,312.0"/>
+<path class="edge" d="M805,348.0 L805,402.0"/>
+<path class="edge" d="M805,438.0 L805,486.0"/>
+<path class="edge" d="M700.0,510 L700,510 L700,582.0"/>
+<text class="edgelabel" x="688" y="495">no</text>
+<path class="edge" d="M910.0,510 L910,510 L910,582.0"/>
+<text class="edgelabel" x="925" y="495">yes</text>
+</svg>

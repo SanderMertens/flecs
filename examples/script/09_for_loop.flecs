@@ -1,0 +1,12 @@
+// This example shows how to use for loops.
+
+// Create a component type
+struct Position(x: i32, y: i32)
+
+// Create 10 entities with a Position component
+for i in 0..10 {
+  // Give each entity a unique name
+  "e_{i}" {
+    Position: {i, i * 2} 
+  }
+}

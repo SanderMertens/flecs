@@ -1005,7 +1005,7 @@ The following table provides the base set of operations that Flecs offers for co
 
 The following component lifecycle diagram shows how the different operations mutate the storage and cause hooks and observers to be invoked:
 
-![Component Lifecycle](img/component_lifecycle_flow.png)
+![Component Lifecycle](img/component-lifecycle.svg)
 
 ### Hooks
 Hooks are callbacks that are invoked for various lifecycle stages of a component. Hooks come in two kinds: type hooks and component hooks. Type hooks apply to all instances of a type (for example: a constructor). Component hooks only apply when that type is used as a component (for example: it is added to an entity).

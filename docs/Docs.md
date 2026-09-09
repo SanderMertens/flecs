@@ -1,9 +1,6 @@
 # Documentation
 
-## Getting Started
-- [FAQ](FAQ.md)
-- [Quickstart](Quickstart.md)
-- [Designing with Flecs](DesignWithFlecs.md)
+### Engine integrations
 - [Getting Started with Unreal Engine](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
 - [Unreal-Flecs (Unreal Engine Flecs plugin)](https://github.com/Reddy-dev/Unreal-Flecs)
 - [Godot-flecs-sample (example)](https://github.com/paulfigiel/godot-flecs-sample)
@@ -13,31 +10,6 @@
 - [Getting Started with SDL3, ImGui, Sqlite](https://github.com/ilyas-taouaou/CodotakuCMakeRepo) ([video](https://www.youtube.com/watch?v=T32B7nf6B-8))
 - [Getting Started with SDL3, Blend2D](https://github.com/james-j-obrien/flecs-sdl3-blend2d)
 - [Flecs an Raylib template](https://github.com/aog05/Raylib-and-Flecs-Template)
-
-## Manuals
-- [Manual](Manual.md)
-- [Entities and Components Manual](EntitiesComponents.md)
-- [Query Manual](Queries.md)
-- [Query Language Manual](FlecsQueryLanguage.md)
-- [Systems Manual](Systems.md)
-- [Observers Manual](ObserversManual.md)
-- [Hierarchies Manual](HierarchiesManual.md)
-- [Prefabs Manual](PrefabsManual.md)
-- [Component Traits Manual](ComponentTraits.md)
-- [Relationships Manual](Relationships.md)
-- [Flecs Script Manual](FlecsScript.md)
-- [Flecs Remote API Manual](FlecsRemoteApi.md)
-- [v3 Migration Guide](MigrationGuide.md)
-
-## API reference
- - [C API](@ref c)
- - [C++ API](@ref cpp)
-
-## Examples
-- [C examples](https://github.com/SanderMertens/flecs/tree/master/examples/c)
-- [C++ examples](https://github.com/SanderMertens/flecs/tree/master/examples/cpp)
-- [C# examples](https://github.com/BeanCheeseBurrito/Flecs.NET/tree/main/src/Flecs.NET.Examples)
-- [Rust examples](https://github.com/Indra-db/Flecs-Rust/tree/main/flecs_ecs/examples/flecs)
 
 ## Videos
 - [Setting Up The Project (E1)](https://www.youtube.com/watch?v=O632xG7ItL8)

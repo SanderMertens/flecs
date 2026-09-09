@@ -1,0 +1,46 @@
+// This script shows you the basics of how to create entities in Flecs script!
+
+// Create 'Planet', 'SpaceShip' and 'Engine' entities. We'll use these entities
+// as tags.
+Planet { }
+SpaceShip { }
+Engine { }
+
+// An entity called "my_spaceship" with the SpaceShip tag.
+millennium_falcon { SpaceShip }
+
+// An anonymous entity with the SpaceShip tag
+{ SpaceShip }
+
+// Create a few planets. The "with" statement lets us apply the same tags or
+// components to all the entities in the scope.
+with Planet {
+  Mercury {}
+  Venus {}
+  Earth {}
+  Mars {}
+  Jupiter {}
+  Saturn {}
+  Nepture {}
+  Uranus {}
+  Pluto {}
+}
+
+// Create a Faction relationship. The Relationship tag is a constraint that 
+// makes sure that Faction can only be added to entities as relationship.
+Faction { Relationship }
+
+// Create a spaceship with a Faction relationship to Earth
+enterprise {
+  SpaceShip
+  (Faction, Earth)
+
+  // Create two child entities for the engines
+  left_nacelle {
+    Engine
+  }
+
+  right_nacelle {
+    Engine
+  }
+}

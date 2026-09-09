@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/github/v/release/sandermertens/flecs?include_prereleases&style=for-the-badge)](https://github.com/SanderMertens/flecs/releases)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](https://github.com/SanderMertens/flecs/blob/master/LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-flecs-blue?style=for-the-badge&color=blue)](https://www.flecs.dev/flecs/md_docs_2Docs.html)
+[![Documentation](https://img.shields.io/badge/docs-flecs-blue?style=for-the-badge&color=blue)](https://www.flecs.dev/flecs/Docs.html)
 [![actions](https://img.shields.io/github/actions/workflow/status/SanderMertens/flecs/ci.yml?branch=master&style=for-the-badge)](https://github.com/SanderMertens/flecs/actions?query=workflow%3ACI)
 [![Discord Chat](https://img.shields.io/discord/633826290415435777.svg?style=for-the-badge&color=%235a64f6)](https://discord.gg/BEzP5Rgrrp)
 
@@ -10,8 +10,8 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 
 - Fast and [portable](#language-bindings) zero dependency [C99 API](https://www.flecs.dev/flecs/group__c.html)
 - Modern type-safe [C++17 API](https://www.flecs.dev/flecs/group__cpp.html) that doesn't use STL containers
-- First open source ECS with full support for [Entity Relationships](https://www.flecs.dev/flecs/md_docs_2Relationships.html)!
-- Fast native support for [hierarchies](https://www.flecs.dev/flecs/md_docs_2HierarchiesManual.html) and [prefabs](https://www.flecs.dev/flecs/md_docs_2PrefabsManual.html)
+- First open source ECS with full support for [Entity Relationships](https://www.flecs.dev/flecs/Relationships.html)!
+- Fast native support for [hierarchies](https://www.flecs.dev/flecs/HierarchiesManual.html) and [prefabs](https://www.flecs.dev/flecs/PrefabsManual.html)
 - Code base that builds in less than 5 seconds
 - Runs [in the browser](https://flecs.dev/city) without modifications with emscripten
 - Cache friendly [archetype/SoA storage](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9) that can process millions of entities every frame

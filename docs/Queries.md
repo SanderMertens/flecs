@@ -2588,7 +2588,7 @@ Color($this, Diffuse), Color(Game, Sky)
 ### Relationship Traversal
 Relationship traversal enables a query to search for a component by traversing a relationship. One of the most common examples of where this is useful is a Transform system, which matches `Position` on an entity and the entity's parent. To find the `Position` component on a parent entity, a query traverses the `ChildOf` relationship upwards:
 
-![filter diagram](img/relationship_traversal.png)
+![Relationship traversal](img/relationship-traversal.svg)
 
 The arrows in this diagram indicate the direction in which the query is traversing the `ChildOf` relationship to find the component. A query will continue traversing until it has found an entity with the component, or until a root (an entity without the relationship) has been found. The traversal is depth-first. If an entity has multiple instances of a relationship a query will first traverse the first instance until its root entity before continuing with the second instance.
 

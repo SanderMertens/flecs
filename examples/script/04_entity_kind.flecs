@@ -1,0 +1,31 @@
+// This script shows how to use the entity kind syntax, which provides a more
+// natural way for describing entities where one of the components clearly
+// describes the "kind" of the entity.
+
+// Create a few component types
+struct Dropdown(label: string)
+struct Item(label: string)
+
+// Create anonymous entities with Dropdown/Item components
+Dropdown("Select fruit") {
+    Item("Apple")
+    Item("Banana")
+    Item("Pear")
+}
+
+// This is equivalent to doing:
+// {
+//   Dropdown: {"Select fruit"}
+//
+//   { Item: {"Apple"} }
+//   { Item: {"Banana"} }
+//   { Item: {"Pear"} }
+// }
+
+// Named entities with kinds
+Dropdown dropdown_drinks("Select drink") {
+    Item item_soda("Soda")
+    Item item_water("Water")
+    Item item_coffee("Coffee")
+    Item item_tea("Tea")
+}

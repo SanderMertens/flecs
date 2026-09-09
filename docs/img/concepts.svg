@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="fl-svg-concepts" viewBox="0 0 1000 660" width="1000" height="660" role="img" aria-labelledby="fl-svg-concepts-title">
+<title id="fl-svg-concepts-title">Overview of the Flecs concepts and how they relate</title>
+<style>
+svg.fl-svg-concepts {
+  --d-node: #f6f7f9;
+  --d-node-stroke: #c9d0d8;
+  --d-text: #1c2128;
+  --d-muted: #6b7280;
+  --d-line: #8b95a1;
+  --d-accent: #42b983;
+  --d-accent-bg: #e6f6ee;
+  --d-blue: #3b82f6;
+  --d-blue-bg: #e8f0fe;
+  --d-canvas: transparent;
+}
+@media (prefers-color-scheme: dark) {
+  svg.fl-svg-concepts {
+    --d-node: #1e232b;
+    --d-node-stroke: #3a424d;
+    --d-text: #d9dee5;
+    --d-muted: #8b95a1;
+    --d-line: #7d8590;
+    --d-accent-bg: #16302a;
+    --d-blue-bg: #17233a;
+  }
+}
+svg.fl-svg-concepts .bg { fill: var(--d-canvas); }
+svg.fl-svg-concepts .node { fill: var(--d-node); stroke: var(--d-node-stroke); stroke-width: 1.5; }
+svg.fl-svg-concepts .node.accent { fill: var(--d-accent-bg); stroke: var(--d-accent); }
+svg.fl-svg-concepts .node.blue { fill: var(--d-blue-bg); stroke: var(--d-blue); }
+svg.fl-svg-concepts .label { fill: var(--d-text); font: 500 14px Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-anchor: middle; dominant-baseline: central; }
+svg.fl-svg-concepts .label.mono { font: 500 13px 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+svg.fl-svg-concepts .label .b { font-weight: 700; }
+svg.fl-svg-concepts .note { fill: var(--d-muted); font: italic 12px Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; dominant-baseline: central; }
+svg.fl-svg-concepts .note.center { text-anchor: middle; }
+svg.fl-svg-concepts .note.right { text-anchor: start; }
+svg.fl-svg-concepts .note.left { text-anchor: end; }
+svg.fl-svg-concepts .edge { fill: none; stroke: var(--d-line); stroke-width: 1.5; marker-end: url(#fl-svg-concepts-arrow); }
+svg.fl-svg-concepts .edge.plain { marker-end: none; }
+svg.fl-svg-concepts .arrow { fill: var(--d-line); }
+svg.fl-svg-concepts .edgelabel { fill: var(--d-muted); font: italic 12px Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-anchor: middle; dominant-baseline: central; }
+</style>
+<defs><marker id="fl-svg-concepts-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="bg" width="1000" height="660"/>
+
+<rect class="node " x="345.0" y="31.0" width="110" height="38" rx="7"/>
+<text class="label" x="400" y="50">Table</text>
+<rect class="node accent" x="535.0" y="76.0" width="110" height="38" rx="7"/>
+<text class="label" x="590" y="95">Entity</text>
+<rect class="node accent" x="725.0" y="31.0" width="110" height="38" rx="7"/>
+<text class="label" x="780" y="50">Tag</text>
+<rect class="node accent" x="725.0" y="131.0" width="110" height="38" rx="7"/>
+<text class="label" x="780" y="150">Component</text>
+<rect class="node " x="345.0" y="131.0" width="110" height="38" rx="7"/>
+<text class="label" x="400" y="150">Type</text>
+<rect class="node " x="345.0" y="231.0" width="110" height="38" rx="7"/>
+<text class="label" x="400" y="250">Id</text>
+<rect class="node " x="535.0" y="231.0" width="110" height="38" rx="7"/>
+<text class="label" x="590" y="250">Pair</text>
+<rect class="node accent" x="725.0" y="231.0" width="110" height="38" rx="7"/>
+<text class="label" x="780" y="250">Relationship</text>
+<rect class="node " x="535.0" y="331.0" width="110" height="38" rx="7"/>
+<text class="label" x="590" y="350">Id flag</text>
+<rect class="node accent" x="725.0" y="331.0" width="110" height="38" rx="7"/>
+<text class="label" x="780" y="350">Target</text>
+<rect class="node " x="345.0" y="331.0" width="110" height="38" rx="7"/>
+<text class="label" x="400" y="350">Term</text>
+<rect class="node " x="345.0" y="451.0" width="110" height="38" rx="7"/>
+<text class="label" x="400" y="470">Query</text>
+<rect class="node accent" x="535.0" y="451.0" width="110" height="38" rx="7"/>
+<text class="label" x="590" y="470">System</text>
+<rect class="node accent" x="725.0" y="451.0" width="110" height="38" rx="7"/>
+<text class="label" x="780" y="470">Phase</text>
+<rect class="node accent" x="345.0" y="551.0" width="110" height="38" rx="7"/>
+<text class="label" x="400" y="570">Observer</text>
+<rect class="node accent" x="535.0" y="551.0" width="110" height="38" rx="7"/>
+<text class="label" x="590" y="570">Event</text>
+<rect class="node accent" x="725.0" y="551.0" width="110" height="38" rx="7"/>
+<text class="label" x="780" y="570">Pipeline</text>
+<path class="edge" d="M400,131.0 L400,69.0"/>
+<path class="edge" d="M400,231.0 L400,169.0"/>
+<path class="edge" d="M455.0,250 L535.0,250"/>
+<path class="edge" d="M400,269.0 L400,331.0"/>
+<path class="edge" d="M645.0,250 L725.0,250"/>
+<path class="edge" d="M590,269.0 L590,295 L780,295 L780,331.0"/>
+<path class="edge" d="M400,269.0 L400,295 L590,295 L590,331.0"/>
+<path class="edge" d="M445,231 L545,114"/>
+<path class="edge" d="M645.0,95 L680,95 L680,50 L725.0,50"/>
+<path class="edge" d="M645.0,95 L680,95 L680,150 L725.0,150"/>
+<path class="edge" d="M400,369.0 L400,451.0"/>
+<path class="edge" d="M455.0,470 L535.0,470"/>
+<path class="edge" d="M645.0,470 L725.0,470"/>
+<path class="edge" d="M780,551.0 L780,489.0"/>
+<path class="edge" d="M400,489.0 L400,551.0"/>
+<path class="edge" d="M455.0,570 L535.0,570"/>
+<text class="note left" x="330" y="42.5">All entities of the same type</text>
+<text class="note left" x="330" y="57.5">are stored in the same table</text>
+<text class="note left" x="330" y="142.5">A type is the list of ids</text>
+<text class="note left" x="330" y="157.5">an entity has</text>
+<text class="note left" x="330" y="235.0">An id is anything that can be</text>
+<text class="note left" x="330" y="250.0">added to an entity, including</text>
+<text class="note left" x="330" y="265.0">other entities</text>
+<text class="note left" x="330" y="342.5">A term is a single condition</text>
+<text class="note left" x="330" y="357.5">in a query</text>
+<text class="note left" x="330" y="462.5">A query finds all entities</text>
+<text class="note left" x="330" y="477.5">that match a list of terms</text>
+<text class="note left" x="330" y="555.0">An observer is a callback that</text>
+<text class="note left" x="330" y="570.0">runs when an event matches</text>
+<text class="note left" x="330" y="585.0">its query</text>
+<text class="note right" x="850" y="42.5">A tag is an entity without</text>
+<text class="note right" x="850" y="57.5">a datatype</text>
+<text class="note right" x="850" y="142.5">A component is an entity</text>
+<text class="note right" x="850" y="157.5">with a datatype</text>
+<text class="note right" x="850" y="242.5">A relationship is the first</text>
+<text class="note right" x="850" y="257.5">element of a pair</text>
+<text class="note right" x="850" y="342.5">A target is the second</text>
+<text class="note right" x="850" y="357.5">element of a pair</text>
+<text class="note right" x="850" y="462.5">A phase determines when</text>
+<text class="note right" x="850" y="477.5">a system runs</text>
+<text class="note right" x="850" y="562.5">A pipeline schedules</text>
+<text class="note right" x="850" y="577.5">and runs systems</text>
+<text class="note center" x="590" y="37.5">An entity is a unique identifier</text>
+<text class="note center" x="590" y="52.5">to which ids can be added</text>
+<text class="note center" x="615" y="218.0">A pair is an id made of two entities</text>
+<text class="note center" x="590" y="382.5">An id flag is a bit set on an id</text>
+<text class="note center" x="590" y="397.5">to enable storage features</text>
+<text class="note center" x="590" y="428.5">A system is a callback that runs</text>
+<text class="note center" x="590" y="443.5">periodically for matching entities</text>
+<text class="note center" x="590" y="602.5">An event determines when</text>
+<text class="note center" x="590" y="617.5">an observer runs</text>
+</svg>

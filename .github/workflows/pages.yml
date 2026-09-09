@@ -1,4 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Builds the documentation website and deploys it to GitHub Pages
 name: Pages deployment
 
 on:
@@ -20,8 +20,11 @@ concurrency:
   group: "pages"
   cancel-in-progress: true
 
+env:
+  DOXYGEN_VERSION: 1.18.0
+  EMSDK_VERSION: latest
+
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
     environment:
       name: github-pages
@@ -34,20 +37,23 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Install Dependencies
+      - name: Install Doxygen
         run: |
-          sudo apt install --yes graphviz
-          wget https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz
-          tar -xzf ./doxygen-1.10.0.linux.bin.tar.gz
+          wget -q https://github.com/doxygen/doxygen/releases/download/Release_${DOXYGEN_VERSION//./_}/doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz
+          tar -xzf ./doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz
 
-      - name: Doxygen
+      - name: Install Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: ${{ env.EMSDK_VERSION }}
+
+      - name: Build documentation
         run: |
-          ./doxygen-1.10.0/bin/doxygen docs/cfg/Doxyfile
+          DOXYGEN=./doxygen-${DOXYGEN_VERSION}/bin/doxygen ./docs/build.sh
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
           path: 'docs/html'
 
       - name: Deploy to GitHub Pages
