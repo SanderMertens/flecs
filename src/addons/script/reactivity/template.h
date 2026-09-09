@@ -38,6 +38,7 @@ typedef struct {
 
 typedef struct ecs_script_template_capture_t {
     uint64_t outer_input;
+    uint64_t outer_internal;
     uint64_t input;
 } ecs_script_template_capture_t;
 

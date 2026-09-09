@@ -248,6 +248,21 @@ my_checkbox {
 }
 ```
 
+### Newlines
+Newlines function as statement separators. Multiple statements can be combined on a single line with the semicolon (`;`) operator:
+
+```cpp
+e {
+  Position: {10, 20}; Velocity: {1, 2}
+}
+```
+
+Newlines after opening a scope (`{`) or before closing a scope (`}`) are not mandatory:
+
+```cpp
+e { Position: {10, 20}; Velocity: {1, 2} }
+```
+
 #### Builtin kinds
 Applications can specify the following builtin kinds which provide convenience shortcuts to commonly used features:
 
@@ -1806,15 +1821,6 @@ bitmask Flags(A: 1, B: 2, Both: 3)
 ```
 
 Bitmask constants are stored as `u32`, which cannot be overridden.
-
-## Semicolon operator
-Multiple statements can be combined on a single line when using the semicolon operator. Example:
-
-```cpp
-my_spaceship {
-  SpaceShip; HasFtl
-}
-```
 
 ## API
 This section goes over how to run scripts in an application.

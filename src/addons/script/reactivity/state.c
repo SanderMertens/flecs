@@ -41,6 +41,18 @@ void flecs_script_state_fini(
     flecs_script_for_slots_fini(&state->for_slots);
 }
 
+void flecs_script_state_resize_computed(
+    ecs_script_state_t *state,
+    int32_t count)
+{
+    flecs_script_state_clear_computed(state);
+    ecs_vec_set_count_t(NULL, &state->computed, ecs_script_computed_t, count);
+    if (count) {
+        ecs_os_memset(ecs_vec_first(&state->computed), 0,
+            count * ECS_SIZEOF(ecs_script_computed_t));
+    }
+}
+
 void flecs_script_state_resize(
     ecs_script_state_t *state,
     int32_t scope_count,

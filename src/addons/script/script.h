@@ -99,7 +99,6 @@ typedef struct ecs_script_component_slot_t {
     int32_t scope_slot;
 } ecs_script_component_slot_t;
 
-/* Cached value of a computed template const, stored on the instance root */
 typedef struct ecs_script_computed_t {
     void *ptr;
     const ecs_type_info_t *ti;
@@ -183,6 +182,10 @@ void flecs_script_state_fini(
 
 void flecs_script_state_clear_computed(
     ecs_script_state_t *state);
+
+void flecs_script_state_resize_computed(
+    ecs_script_state_t *state,
+    int32_t count);
 
 void flecs_script_state_resize(
     ecs_script_state_t *state,
