@@ -1180,270 +1180,6 @@ To use the platform constants, make sure to use a Flecs build compiled with the 
 ECS_IMPORT(world, FlecsScriptPlatform);
 ```
 
-## Templates
-Templates are parameterized scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. Example:
-
-```cpp
-template Square {
-  Color: {255, 0, 0}
-  Rectangle: {width: 100, height: 100}
-}
-```
-
-The script contents of an template are not ran immediately. Instead they are ran whenever an template is _instantiated_. To instantiate an template, add it as a regular component to an entity:
-
-```cpp
-my_entity {
-  Square
-}
-
-// is equivalent to
-
-my_entity {
-  Color: {255, 0, 0}
-  Rectangle: {width: 100, height: 100}
-}
-```
-
-Templates are commonly used in combination with the kind syntax:
-
-```cpp
-Square my_entity
-```
-
-Templates can be parameterized with properties. Properties are variables that are exposed as component members. When the component is updated with a new value, the template is reevaluated. To create a property, use the `prop` keyword. Example:
-
-```cpp
-template Square {
-  prop size = 10
-  prop color: Color = {255, 0, 0}
-
-  Color: color
-  Rectangle: {width: size, height: size}
-}
-
-Square my_entity(size: 20, color: {38, 25, 13})
-```
-
-Just like `const` variables, `prop` variables can explicitly specify a type or implicitly derive their type from the assigned (default) value.
-
-An explicitly typed property can omit its default value, as in `prop color: Color`. The property is then initialized with the type's default constructor. This is only supported for properties; `const` and `mut` variables require an initializer.
-
-In addition to property variables, templates can also contain mutables. Mutables that are exposed as component members on a `TemplateComponent::mut` component. To create a mutable, use the `mut` keyword. For example the `hover` mutable variable ends up on a `Button::mut` component:
-
-```cpp
-template Button {
-  prop text = "Howdy"
-  mut hover = false
-
-  // ...
-}
-```
-
-Template scripts can do anything a regular script can do, including creating child entities. The following example shows how to create an template that uses a nested template to create children:
-
-```cpp
-template Tree {
-  prop height = 10
-
-  const wood_color: Color = {38, 25, 13}
-  const leaves_color: Color = {51, 76, 38}
-
-  const canopy_height = 2
-  const trunk_height = height - canopy_height
-  const trunk_width = 2
-
-  Trunk {
-    Position: {0, (height / 2), 0}
-    Rectangle: {trunk_width, trunk_height}
-    Color: wood_color
-  }
-
-  Canopy {
-    const canopy_y = trunk_height + (canopy_height / 2)
-
-    Position3: {0, canopy_y, 0}
-    Box: {canopy_width, canopy_height}
-    Color: leaves_color
-  }
-}
-
-template Forest {
-  Tree(height: 5) {
-    Position: {x: -10}
-  }
-
-  Tree(height: 10) {
-    Position: {x: 0}
-  }
-
-  Tree(height: 7) {
-    Position: {x: 10}
-  }
-}
-
-Forest my_forest
-```
-
-### Template inheritance
-Templates can inherit from each other. This can be used to create templates that accept and instantiate other templates. For example, consider we want to create a `Building` template with a customizable facade. We could build a template like this, but we would have no way to instantiate the facade because we do not know its type:
-
-```cpp
-template Building {
-  prop facade: entity = 0
-  prop floors: i32
-  prop floorHeight: f32
-
-  for i in 0..floors {
-    // ??
-  }
-}
-```
-
-Instead, what we can do is define a `Facade` base type and have a template inherit from it:
-
-```cpp
-struct Facade(height: f32)
-
-template VictorianFacade : Facade {
-  prop height: f32
-
-  // ...
-}
-```
-
-We can then use the `Facade` type in the prop definition, and instantiate the template-specific facade:
-
-```cpp
-template Building {
-  prop facade: template Facade
-  prop floors: i32
-  prop floorHeight: f32
-
-  for i in 0..floors {
-    facade: {floorHeight} // provide value of type FAcade
-  }
-}
-```
-
-This makes it possible to use templates as primitive for procedural generation templates, where a generic template specifies the "grammar" of an object (for example a building), with a set of derived templates that implement the style and/or content.
-
-## Include statement
-The `include` statement loads another script file. Example:
-
-```cpp
-include components
-include scenes/level_1.flecs
-```
-
-The path is resolved relative to the directory of the current script. Paths containing `..` and absolute paths are not allowed.
-
-If the included path does not end in `.flecs`, the extension is appended automatically.
-
-When `include` is used from a managed script (see [Managed script](#managed-script)), the included script is also loaded as a managed script. If a managed script at that path already exists, it is not loaded again. When used from a non-managed script, the included script is executed in place and no script entity is created.
-
-The `include` statement is only allowed at the root scope of a script, and cannot appear inside a template. It must appear before any statement other than `module` and other `include` statements.
-
-## Using statement
-The `using` keyword imports a namespace into the current namespace. Example:
-
-```cpp
-// Without using
-my_engine {
-  game.engines.FtlEngine: {active: true}
-}
-```
-```cpp
-// With using
-using game.engines
-
-my_engine {
-  FtlEngine: {active: true}
-}
-```
-
-A `using` statement must appear at the top of a script, after any `module` and `include` statements, and before any other statement. It is not allowed inside scopes or templates. Example:
-
-```cpp
-// OK
-using game.engines
-
-my_spaceship {
-  FtlEngine: {active: true}
-}
-```
-```cpp
-// Not OK: using may not appear inside a scope
-my_spaceship {
-  using game.engines
-
-  FtlEngine: {active: true}
-}
-```
-
-A `using` statement may end with a wildcard (`*`). This will import all namespaces matching the path. Example:
-
-```cpp
-using game.*
-
-my_engine {
-  FtlEngine: {active: true}
-}
-```
-
-## With statement
-When you're building a scene or asset you may find yourself often repeating the same components for multiple entities. To avoid this, a `with` statement can be used. For example:
-
-```cpp
-with SpaceShip {
-  MillenniumFalcon {}
-  UssEnterprise {}
-  UssVoyager {}
-  Rocinante {}
-}
-```
-
-This is equivalent to doing:
-
-```cpp
-MillenniumFalcon {
-  SpaceShip
-}
-
-UssEnterprise {
-  SpaceShip
-}
-
-UssVoyager {
-  SpaceShip
-}
-
-Rocinante {
-  SpaceShip
-}
-```
-
-With statements can contain multiple tags:
-
-```cpp
-with SpaceShip, HasWeapons {
-  MillenniumFalcon {}
-  UssEnterprise {}
-  UssVoyager {}
-  Rocinante {}
-}
-```
-
-With statements can contain component values, specified between parentheses:
-
-```cpp
-with Color(38, 25, 13) {
-  pillar_1 {}
-  pillar_2 {}
-  pillar_3 {}
-}
-```
-
 ## Variables
 Scripts can contain variables, which are useful for often repeated values. Variables are created with the `const` keyword. Example:
 
@@ -1499,7 +1235,7 @@ my_entity {
 }
 ```
 
-#### Exported variables
+### Exported variables
 Variables can be exported by prefixing a variable declaration with the `export` keyword. Exported variables can be accessed by the application and from other scripts. The following example shows an exported variable:
 
 ```cpp
@@ -1599,7 +1335,9 @@ ecs_value_t v = ecs_mut_var_get(world, difficulty);
 ecs_mut_var_modified(world, difficulty);
 ```
 
-## If statement
+## Control flow
+
+### If statement
 Parts of a script can be conditionally executed with an if statement. Example:
 
 ```cpp
@@ -1632,7 +1370,7 @@ traffic_light {
 }
 ```
 
-## For statement
+### For statement
 Parts of a script can be repeated with a for loop. Example:
 
 ```cpp
@@ -1718,8 +1456,7 @@ for (key, index, elem) in mapExpr {
 }
 ```
 
-### Continue statement
-The `continue` statement skips the remaining statements of the current iteration and moves the loop to the next iteration:
+A `continue` statement skips the remaining statements of the current iteration and moves the loop to the next iteration:
 
 ```cpp
 for i in 0..5 {
@@ -1729,6 +1466,526 @@ for i in 0..5 {
 
   // creates entities e_0, e_1, e_3 and e_4
   "e_{i}" {}
+}
+```
+
+## Script header
+The header of a script may contain `module`, `include` and `using` statements. After the first non-header statement, no more header statements may occur. Header statements must always be created in the root scope.
+
+### Module statement
+The module statement will create a module entity with the specified name, and create all script contents in that module. A script may only contain a single module statement. Example:
+
+```cpp
+module game
+
+spaceship { // game.spaceship
+  Ftl: {true}
+}
+```
+
+The `game` module will be created with the `flecs.core.Module` tag.
+
+Module statements may be specified as paths:
+
+```cpp
+module game.infinity_and_beyond
+
+spaceship { // game.infinity_and_beyond.spaceship
+  Ftl: {true}
+}
+```
+
+### Include statement
+The `include` statement loads another script file. Example:
+
+```cpp
+include components
+include scenes/level_1.flecs
+```
+
+The path is resolved relative to the directory of the current script. Paths containing `..` and absolute paths are not allowed.
+
+If the included path does not end in `.flecs`, the extension is appended automatically.
+
+When `include` is used from a managed script (see [Managed script](#managed-script)), the included script is also loaded as a managed script. If a managed script at that path already exists, it is not loaded again. When used from a non-managed script, the included script is executed in place and no script entity is created.
+
+If a script contains a `module` statement, `include` statements must appear after the `module` statement.
+
+### Using statement
+The `using` keyword imports a namespace into the current namespace. Example:
+
+```cpp
+// Without using
+my_engine {
+  game.engines.FtlEngine: {active: true}
+}
+```
+```cpp
+// With using
+using game.engines
+
+my_engine {
+  FtlEngine: {active: true}
+}
+```
+
+If a script contains `module` or `include` statements, `using` statements must be placed after both.
+
+A `using` statement may end with a wildcard (`*`). This will import all namespaces matching the path. Example:
+
+```cpp
+using game.*
+
+my_engine {
+  FtlEngine: {active: true}
+}
+```
+
+## Reactivity
+Managed scripts are reactive, which means they will be reevaluated when the data that they depend on changes. A managed script is one that uses the following API:
+
+```cpp
+ecs_entity_t s = ecs_script(world, {
+  .code = "e {}"
+});
+```
+
+See "Managed scripts" for more details. The following sections go over the reactivity features of flecs script.
+
+### Reactivity basics
+The following example illustrates a simple reactive script:
+
+```cpp
+const t = game[TimeOfDay]
+
+light {
+  Position: {10, 20}
+
+  if t.daylight < 0.5{
+    Emissive: {1}
+  } else {
+    Emissive: {0}
+  }
+}
+```
+
+The value of the `Emissive` component depends on whether `game[TimeOfDay].value` is smaller than 0.5. This condition is not just evaluated when the script runs. It will be treated as an invariant, meaning that if `game[TimeOfDay].value` changes, the value of `Emissive` must change as well.
+
+The script runtime implements "fine grained reactivity". In short this means that flecs tracks which parts of a script depend on which inputs, and that when an input changes, only the code that depends on that input is ran. For this example that means it will only set `Emissive` and not `Position`.
+
+Value dependencies are tracked recursively. An input can be assigned, modified and stored through many indirections. The script runtime will still pick it up as dependency. For example, in the following code example `Emmissive` will still change when `TimeOfDay` changes:
+
+```cpp
+const t = game[TimeOfDay]
+const isDay = t.daylight > 0.5
+
+light {
+  Position: {10, 20}
+
+  if !isDay {
+    Emissive: {1}
+  } else {
+    Emissive: {0}
+  }
+}
+```
+
+Reactive updates are non-destructive. This means that entity handles remain valid before and after the update. For this example it means that `light` will still be the same entity before and after `TimeOfDay` changes. This is useful, as it means that we can safely add components to entities defined in scripts.
+
+Scripts responds to the following reactive inputs:
+- Component values (e.g. `game[TimeOfDay]`)
+- Component presence (e.g. `game?[TimeOfDay]`)
+- Mutable variable changes (e.g. `export mut speed = 10`)
+- Template properties (`prop height: i32 = 3`, see below)
+- Components resolved on variables (e.g. `$var[TimeOfDay]`)
+
+Scripts additionally respond to entities or components not yet existing by deferring their execution. For example, when a script refers to `game[TimeOfDay]` but the `game` entity doesn't exist yet, or it doesn't have `TimeOfDay` yet, the script will monitor the world for those entities to become available.
+
+Scripts subscribe to `OnSet` events to get notified of component changes. This works out of the box with operations such as `set()` or `assign()`, but if a component reference returned by `ensure()` or `get_mut()` is assigned, it needs a separate call to `modified()` for the script to see it. Additionally, if a system modifies a component directly, it will also have to call `modified()` on the component:
+
+```cpp
+game.set(TimeOfDay{0.6}); // Emits OnSet, will get picked up by script
+
+TimeOfDay& t = game.ensure<TimeOfDay>();
+t.daylight = 0.6; // Script can't see this yet
+game.modified<TimeOfDay>(); // Script can see update
+```
+
+### Conditional entities
+Scripts can have entities whose existence depends on a reactive value. For example:
+
+```cpp
+if game[TimeOfDay].daylight < 0.5 {
+  light {
+    Position: {10, 20}
+    Emissive: {1}
+  }
+}
+```
+
+This script has a different kind of invariant: the `light` entity must only exist when `daylight` is lower than 0.5. When `TimeOfDay` is modified with a `daylight` value higher or equal to 0.5, the script will delete the `light` entity.
+
+### Conditional components
+Scripts can have components whose existence depends on a reactive value. For example:
+
+```cpp
+light {
+  Position: {10, 20}
+
+  if game[TimeOfDay].daylight < 0.5 {
+    Emissive: {1}
+  }
+}
+```
+
+The invariant in this script is that the `light` entity must only have the `Emissive` component when the value of `daylight` is below 0.5. If the value is higher or equal to 0.5, the script will remove the `Emissive` component from the `light` entity.
+
+A challenge with deciding whether a component has to be removed is that it could be defined in more than one scope, for example:
+
+```cpp
+light {
+  Position: {10, 20}
+
+  Emissive: {0}
+
+  if game[TimeOfDay].daylight < 0.5 {
+    Emissive: {1}
+  }
+}
+```
+
+To satisfy this script, when the value of `daylight` becomes lower than 0.5, `Emissive` should not be removed. Its value should instead be changed to `{0}`. This turns a local decision ("branch not taken, remove component") into a global decision ("was there any other scope that assigned `Emissive`"). Things get more complex with multiple conditional assignments:
+
+```cpp
+light {
+  Position: {10, 20}
+
+  if game?[Lights] {
+    Emissive: {game[Lights].value}
+  }
+
+  if game[TimeOfDay].daylight < 0.5 {
+    Emissive: {1}
+  }
+}
+```
+
+To handle these cases correctly, a script would have to build a table of all conditions affecting a component, and assign an action based on which conditions are true. To avoid this complexity, scripts enforce a simple rule that sidesteps this problem: **components must be owned by a single scope**. This means that the above two examples will throw an error.
+
+A componeny may be assigned in two mutually exclusive scopes:
+
+```cpp
+light {
+  Position: {10, 20}
+
+  if game[TimeOfDay].daylight < 0.5 {
+    Emissive: {1}
+  } else {
+    Emissive: {0}
+  }
+}
+```
+
+Scopes are currently only considered mutually exclusive when they are in the `if`, `else` or `else if` branches of a single if chain. The following example will not parse, even though strictly speaking the scopes are mutually exclusive:
+
+```cpp
+light {
+  Position: {10, 20}
+
+  if game[TimeOfDay].daylight < 0.5 {
+    Emissive: {1}
+  }
+  if game[TimeOfDay].daylight >= 0.5 {
+    Emissive: {0}
+  }
+}
+```
+
+Additionally, components may be _partially_ assigned in multiple scopes, as long as there is one scope that owns the component:
+
+```cpp
+light {
+  Position: {10, 20}
+
+  Emissive: {0} // scope that owns the component
+
+  if game?[Lights] {
+    Emissive: {daylight: game[Lights].value} // partial assignment
+  }
+
+  if game[TimeOfDay].daylight < 0.5 {
+    Emissive: {daylight: 1} // partial assignment
+  }
+}
+```
+
+### Loops
+Entities created in a loop do not survive a reactive update, unless they are named. For example, here is an example of a loop that creates `count` anonymous entities:
+
+```cpp
+const count = game[Count].value
+
+for i in 0..count {
+  { Position: {i, i * 2 } }
+}
+```
+
+When `count` changes, all previous anonymous entities will be deleted before the for loop is reevaluated. To prevent this from happening, entities in a loop must be named:
+
+```cpp
+for i in 0..count {
+  "e_{i}" { Position: {i, i * 2} }
+}
+```
+
+This will create a named slot for each entity that is tracked across reactive updates, which prevents deleting the entities on each update.
+
+While somewhat wasteful, this following example also work as expected:
+
+```cpp
+for i in 0..count {
+  e { Position: {i, i * 2} }
+}
+```
+
+This will create a single entity named `e` with `Position: {count, count * 2}`. When `count` is 0, `e` will be deleted. Similarly, this also works:
+
+```cpp
+e {
+  for i in 0..count {
+    Position: {i, i * 2}
+  }
+}
+```
+
+This also creates a single entity named `e` with `Position: {count, count * 2}`. When `count` is 0, `Position` will be removed.
+
+### Computed values
+Consider the following script:
+
+```cpp
+const t = game[TimeOfDay]
+const isDay = t.daylight > 0.5
+
+if !isDay {
+  for i in 0..lightCount {
+    "light_{i}" {
+      Emissive: {1}
+    }
+  }
+}
+```
+
+Now imagine that `TimeOfDay` is assigned many times, from 0.1 to 0.11, 0.12, 0.13, 0.14, ... We would be doing a lot of redundant work, essentially assigning the `Emissive` component to the same value on each update, unless the value changes to above 0.5, at which point `Emissive` changes value.
+
+To avoid this kind of overhead, `isDay` is treated as a _computed value_. Computed values are cached between updates, so that subsequent updates can tell whether code actually needs to be reran. This happens automatically to significantly reduce the amount of redundant work that reactive updates do.
+
+### Templates
+Templates are reactive parameterized scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. A simple example:
+
+```cpp
+template Square {
+  Color: {255, 0, 0}
+  Rectangle: {width: 100, height: 100}
+}
+```
+
+The script contents of an template are not ran immediately. Instead they are ran whenever an template is _instantiated_. To instantiate an template, add it as a regular component to an entity:
+
+```cpp
+my_entity {
+  Square
+}
+
+// is equivalent to
+
+my_entity {
+  Color: {255, 0, 0}
+  Rectangle: {width: 100, height: 100}
+}
+```
+
+Templates are commonly used in combination with the kind syntax:
+
+```cpp
+Square my_entity
+```
+
+Templates can be parameterized with prop variables. To create a prop variable, use the `prop` keyword. Example:
+
+```cpp
+template Square {
+  prop size = 10
+  prop color: Color = {255, 0, 0}
+
+  Color: color
+  Rectangle: {width: size, height: size}
+}
+
+Square my_entity(size: 20, color: {38, 25, 13})
+```
+
+Prop variables are reactive, just like how a component value (`game[TimeOfDay]`) is reactive. This means that when the value of a prop changes, the template is reevaluated, following the same rules as described above.
+
+Templates can also contain mut variables. `mut` variables can be used as reactive state that is not exposed as a prop. For example, a button may have a `hover` mut variable, which is reactive, but should not be passed in from the outside. For example:
+
+```cpp
+template Button {
+  prop text = "Howdy"
+  mut hover = false
+
+  // ...
+}
+```
+
+Code outside of a template can access mut variables:
+
+```cpp
+Button b("So long")
+
+if (b[Button.mut].hover) {
+  // ...
+}
+```
+
+Template scripts can do anything a regular script can do, including creating child entities. The following example shows how to create an template that uses a nested template to create children:
+
+```cpp
+template Tree {
+  prop height = 10
+
+  const wood_color: Color = {38, 25, 13}
+  const leaves_color: Color = {51, 76, 38}
+
+  const canopy_height = 2
+  const trunk_height = height - canopy_height
+  const trunk_width = 2
+
+  Trunk {
+    Position: {0, (height / 2), 0}
+    Rectangle: {trunk_width, trunk_height}
+    Color: wood_color
+  }
+
+  Canopy {
+    const canopy_y = trunk_height + (canopy_height / 2)
+
+    Position3: {0, canopy_y, 0}
+    Box: {canopy_width, canopy_height}
+    Color: leaves_color
+  }
+}
+
+template Forest {
+  Tree(height: 5) {
+    Position: {x: -10}
+  }
+
+  Tree(height: 10) {
+    Position: {x: 0}
+  }
+
+  Tree(height: 7) {
+    Position: {x: 10}
+  }
+}
+
+Forest my_forest
+```
+
+### Template inheritance
+Templates can inherit from each other. This can be used to create templates that accept and instantiate other templates. For example, consider we want to create a `Building` template with a customizable facade. We could build a template like this, but we would have no way to instantiate the facade because we do not know its type:
+
+```cpp
+template Building {
+  prop facade: entity = 0
+  prop floors: i32
+  prop floorHeight: f32
+
+  for i in 0..floors {
+    // ??
+  }
+}
+```
+
+Instead, what we can do is define a `Facade` base type and have a template inherit from it:
+
+```cpp
+struct Facade(height: f32)
+
+template VictorianFacade : Facade {
+  prop height: f32
+
+  // ...
+}
+```
+
+We can then use the `Facade` type in the prop definition, and instantiate the template-specific facade:
+
+```cpp
+template Building {
+  prop facade: template Facade
+  prop floors: i32
+  prop floorHeight: f32
+
+  for i in 0..floors {
+    facade: {floorHeight} // provide value of type FAcade
+  }
+}
+```
+
+This makes it possible to use templates as primitive for procedural generation templates, where a generic template specifies the "grammar" of an object (for example a building), with a set of derived templates that implement the style and/or content.
+
+## With statement
+When you're building a scene or asset you may find yourself often repeating the same components for multiple entities. To avoid this, a `with` statement can be used. For example:
+
+```cpp
+with SpaceShip {
+  MillenniumFalcon {}
+  UssEnterprise {}
+  UssVoyager {}
+  Rocinante {}
+}
+```
+
+This is equivalent to doing:
+
+```cpp
+MillenniumFalcon {
+  SpaceShip
+}
+
+UssEnterprise {
+  SpaceShip
+}
+
+UssVoyager {
+  SpaceShip
+}
+
+Rocinante {
+  SpaceShip
+}
+```
+
+With statements can contain multiple tags:
+
+```cpp
+with SpaceShip, HasWeapons {
+  MillenniumFalcon {}
+  UssEnterprise {}
+  UssVoyager {}
+  Rocinante {}
+}
+```
+
+With statements can contain component values, specified between parentheses:
+
+```cpp
+with Color(38, 25, 13) {
+  pillar_1 {}
+  pillar_2 {}
+  pillar_3 {}
 }
 ```
 
