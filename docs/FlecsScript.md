@@ -1569,7 +1569,7 @@ light {
 }
 ```
 
-The value of the `Emissive` component depends on whether `game[TimeOfDay].value` is smaller than 0.5. This condition is not just evaluated when the script runs. It will be treated as an invariant, meaning that if `game[TimeOfDay].value` changes, the value of `Emissive` must change as well.
+The value of the `Emissive` component depends on whether `game[TimeOfDay].daylight` is smaller than 0.5. This condition is not just evaluated when the script runs. It will be treated as an invariant, meaning that if `game[TimeOfDay].daylight` changes, the value of `Emissive` must change as well.
 
 The script runtime implements "fine grained reactivity". In short this means that flecs tracks which parts of a script depend on which inputs, and that when an input changes, only the code that depends on that input is ran. For this example that means it will only set `Emissive` and not `Position`.
 
@@ -1672,7 +1672,7 @@ light {
 
 To handle these cases correctly, a script would have to build a table of all conditions affecting a component, and assign an action based on which conditions are true. To avoid this complexity, scripts enforce a simple rule that sidesteps this problem: **components must be owned by a single scope**. This means that the above two examples will throw an error.
 
-A componeny may be assigned in two mutually exclusive scopes:
+A component may be assigned in two mutually exclusive scopes:
 
 ```cpp
 light {
@@ -1811,6 +1811,7 @@ Templates are commonly used in combination with the kind syntax:
 Square my_entity
 ```
 
+#### Prop variables
 Templates can be parameterized with prop variables. To create a prop variable, use the `prop` keyword. Example:
 
 ```cpp
@@ -1827,12 +1828,19 @@ Square my_entity(size: 20, color: {38, 25, 13})
 
 Prop variables are reactive, just like how a component value (`game[TimeOfDay]`) is reactive. This means that when the value of a prop changes, the template is reevaluated, following the same rules as described above.
 
-Templates can also contain mut variables. `mut` variables can be used as reactive state that is not exposed as a prop. For example, a button may have a `hover` mut variable, which is reactive, but should not be passed in from the outside. For example:
+#### Mut variables
+Templates can have `mut` variables. A `mut` variable is reactive state that is not exposed as a `prop`. For example, a button may have a `hover` `mut` variable. Changes to the `mut` variable will cause the template to update (just like with props), but unlike props, `hover` is not passed to the template.
 
 ```cpp
 template Button {
   prop text = "Howdy"
   mut hover = false
+
+  if hover {
+    BackgroundColor: {255, 0, 0}
+  } else {
+    BackgroundColor: {128, 0, 0}
+  }
 
   // ...
 }
@@ -1848,7 +1856,152 @@ if (b[Button.mut].hover) {
 }
 ```
 
-Template scripts can do anything a regular script can do, including creating child entities. The following example shows how to create an template that uses a nested template to create children:
+#### This variable
+Templates can use the `this` variable to refer to the current instance. For example, the following code:
+
+```cpp
+template LikesSelf {
+  (Likes, this)
+}
+
+Bob {
+  LikesSelf
+}
+```
+
+will cause `Bob` to end up with `(Likes, Bob)`.
+
+The `this` variable can be used to read other components of the template instance:
+
+```cpp
+template Building {
+  Rgb: {100, 50, 10}
+
+  if this?[Damaged] {
+    Tint: {0, 0, 0, 0.5}
+  }
+}
+```
+
+#### Inheritance
+Templates can inherit from each other. This can be used to create templates that accept and instantiate other templates. For example, consider we want to create a `Building` template with a customizable facade. We could build a template like this, but we would have no way to instantiate the facade because we do not know its type:
+
+```cpp
+template Building {
+  prop facade: entity = 0
+  prop floors: i32
+  prop floorHeight: f32
+
+  for i in 0..floors {
+    // ??
+  }
+}
+```
+
+Instead, what we can do is define a `Facade` base type and have a template inherit from it:
+
+```cpp
+struct Facade(height: f32)
+
+template VictorianFacade : Facade {
+  prop height: f32
+
+  Rgb: {120, 170, 120}
+  Box: {1, height, 1}
+}
+```
+
+We can then use the `Facade` type in the prop definition, and instantiate the template-specific facade:
+
+```cpp
+template Building {
+  prop facade: template Facade
+  prop floors: i32
+  prop floorHeight: f32
+
+  for i in 0..floors {
+    facade: {floorHeight} // provide value of type FAcade
+  }
+}
+```
+
+This makes it possible to use templates as primitive for procedural generation templates, where a generic template specifies the "grammar" of an object (for example a building), with a set of derived templates that implement the style and/or content.
+
+#### Setting props from native code
+To update template props from native code, mirror the template type with a native type that has the same name, namespace and members. An example:
+
+```cpp
+// script.flecs
+template Tree {
+  prop width: i32 = 1
+  prop height: i32 = 3
+  
+  trunk {
+    Box: {1, 1, 1}
+  }
+  canopy {
+    Box: {width, height - 1, width}
+  }
+}
+```
+```cpp
+// main.cpp
+struct Tree {
+  int32_t width;
+  int32_t height;
+};
+
+world.script()
+  .filename("script.flecs")
+  .run();
+
+world.entity()
+  .set(Tree{5, 10}); // Instantiates template
+```
+
+Setting `mut` variables works in a similar way, but with a type called `mut` that is in the scope of the template:
+
+```cpp
+// script.flecs
+template Button {
+  prop text = "Hello World"
+  mut hover = false
+  mut active = false
+
+  Panel(text) {
+    if hover {
+      BackgroundColor: {255, 0, 0}
+    }
+    if active {
+      BorderColor: {0, 255, 0}
+    }
+  }
+}
+```
+
+```cpp
+// main.cpp
+struct Button {
+  char *text;
+  
+  struct mut {
+    bool hover;
+    bool active;
+  };
+};
+
+world.script()
+  .filename("script.flecs")
+  .run();
+
+flecs::entity button = world.entity()
+  .set(Button{"Howdy"}); // Instantiates template
+
+button.set(Button::mut{true, false});
+```
+
+#### Example
+The following code shows a  more complex example with templates that create children and uses nested templates:
 
 ```cpp
 template Tree {
@@ -1892,49 +2045,6 @@ template Forest {
 
 Forest my_forest
 ```
-
-### Template inheritance
-Templates can inherit from each other. This can be used to create templates that accept and instantiate other templates. For example, consider we want to create a `Building` template with a customizable facade. We could build a template like this, but we would have no way to instantiate the facade because we do not know its type:
-
-```cpp
-template Building {
-  prop facade: entity = 0
-  prop floors: i32
-  prop floorHeight: f32
-
-  for i in 0..floors {
-    // ??
-  }
-}
-```
-
-Instead, what we can do is define a `Facade` base type and have a template inherit from it:
-
-```cpp
-struct Facade(height: f32)
-
-template VictorianFacade : Facade {
-  prop height: f32
-
-  // ...
-}
-```
-
-We can then use the `Facade` type in the prop definition, and instantiate the template-specific facade:
-
-```cpp
-template Building {
-  prop facade: template Facade
-  prop floors: i32
-  prop floorHeight: f32
-
-  for i in 0..floors {
-    facade: {floorHeight} // provide value of type FAcade
-  }
-}
-```
-
-This makes it possible to use templates as primitive for procedural generation templates, where a generic template specifies the "grammar" of an object (for example a building), with a set of derived templates that implement the style and/or content.
 
 ## With statement
 When you're building a scene or asset you may find yourself often repeating the same components for multiple entities. To avoid this, a `with` statement can be used. For example:
