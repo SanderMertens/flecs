@@ -85,6 +85,59 @@ void Template_template_no_props(void) {
     ecs_fini(world);
 }
 
+void Template_template_no_props_as_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "template LikesSelf {"
+    LINE "  (Likes, this)"
+    LINE "}"
+    LINE "Bob {"
+    LINE "  LikesSelf"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t likes = ecs_lookup(world, "Likes");
+    ecs_entity_t likes_self = ecs_lookup(world, "LikesSelf");
+    ecs_entity_t bob = ecs_lookup(world, "Bob");
+    test_assert(likes != 0);
+    test_assert(likes_self != 0);
+    test_assert(bob != 0);
+    test_assert(ecs_has_id(world, bob, likes_self));
+    test_assert(ecs_has_pair(world, bob, likes, bob));
+
+    ecs_fini(world);
+}
+
+void Template_template_no_props_add_deferred(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "template LikesSelf {"
+    LINE "  (Likes, this)"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t likes = ecs_lookup(world, "Likes");
+    ecs_entity_t likes_self = ecs_lookup(world, "LikesSelf");
+    ecs_entity_t bob = ecs_new(world);
+    test_assert(likes != 0);
+    test_assert(likes_self != 0);
+
+    ecs_defer_begin(world);
+    ecs_add_id(world, bob, likes_self);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_id(world, bob, likes_self));
+    test_assert(ecs_has_pair(world, bob, likes, bob));
+
+    ecs_fini(world);
+}
+
 void Template_template_newline_before_scope(void) {
     ecs_world_t *world = ecs_init();
 

@@ -158,24 +158,6 @@ static void flecs_script_template_root_remove(
     }
 }
 
-static void flecs_script_template_on_add(
-    ecs_iter_t *it)
-{
-    ecs_world_t *world = it->world;
-    ecs_entity_t template_entity = ecs_field_id(it, 0);
-
-    if (!ecs_is_alive(world, template_entity)) {
-        return;
-    }
-
-    const EcsScript *script = ecs_get(world, template_entity, EcsScript);
-    if (!script || !script->template_) {
-        return;
-    }
-
-    script->template_->refcount += it->count;
-}
-
 /* Template component ctor to initialize prop or mut default values */
 static void flecs_script_template_ctor(
     void *ptr,
@@ -1030,6 +1012,28 @@ static void flecs_script_template_on_set(
         flecs_script_template_instantiate(
             world, template_entity, component,
             it->entities[i], ECS_OFFSET(data, ti->size * i), input);
+    }
+}
+
+static void flecs_script_template_on_add(
+    ecs_iter_t *it)
+{
+    ecs_world_t *world = it->world;
+    ecs_entity_t template_entity = ecs_field_id(it, 0);
+
+    if (!ecs_is_alive(world, template_entity)) {
+        return;
+    }
+
+    const EcsScript *script = ecs_get(world, template_entity, EcsScript);
+    if (!script || !script->template_) {
+        return;
+    }
+
+    script->template_->refcount += it->count;
+
+    if (!ecs_vec_count(&script->template_->props.defaults)) {
+        flecs_script_template_on_set(it, template_entity);
     }
 }
 
