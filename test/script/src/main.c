@@ -307,6 +307,7 @@ void Eval_const_bool_and_short_circuit(void);
 void Eval_const_bool_or_short_circuit(void);
 void Eval_if_true_in_scope(void);
 void Eval_if_false_in_scope(void);
+void Eval_if_false_var_in_scope_after_component(void);
 void Eval_if_lt(void);
 void Eval_if_lt_const(void);
 void Eval_if_f64_eq_f64(void);
@@ -4486,6 +4487,10 @@ bake_test_case Eval_testcases[] = {
     {
         "if_false_in_scope",
         Eval_if_false_in_scope
+    },
+    {
+        "if_false_var_in_scope_after_component",
+        Eval_if_false_var_in_scope_after_component
     },
     {
         "if_lt",
@@ -16359,7 +16364,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        684,
+        685,
         Eval_testcases,
         1,
         Eval_params

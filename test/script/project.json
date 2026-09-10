@@ -314,6 +314,7 @@
                 "const_bool_or_short_circuit",
                 "if_true_in_scope",
                 "if_false_in_scope",
+                "if_false_var_in_scope_after_component",
                 "if_lt",
                 "if_lt_const",
                 "if_f64_eq_f64",
