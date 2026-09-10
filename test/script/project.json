@@ -104,6 +104,8 @@
                 "scope_inside_with_inside_scope",
                 "with_inside_scope",
                 "with_tag_core_name",
+                "pair_w_target_from_with",
+                "pair_w_target_from_with_in_scope",
                 "inherit",
                 "inherit_newline",
                 "inherit_w_colon",
