@@ -1861,6 +1861,74 @@ void Eval_with_inside_scope(void) {
     ecs_fini(world);
 }
 
+void Eval_pair_w_target_from_with(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "Person {}"
+    LINE ""
+    LINE "with Person {"
+    LINE "  bob {}"
+    LINE "}"
+    LINE ""
+    LINE "alice {"
+    LINE "  (Likes, bob)"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t likes = ecs_lookup(world, "Likes");
+    ecs_entity_t person = ecs_lookup(world, "Person");
+    ecs_entity_t bob = ecs_lookup(world, "bob");
+    ecs_entity_t alice = ecs_lookup(world, "alice");
+
+    test_assert(likes != 0);
+    test_assert(person != 0);
+    test_assert(bob != 0);
+    test_assert(alice != 0);
+
+    test_assert(ecs_has_id(world, bob, person));
+    test_assert(ecs_has_pair(world, alice, likes, bob));
+
+    ecs_fini(world);
+}
+
+void Eval_pair_w_target_from_with_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Likes {}"
+    LINE "Person {}"
+    LINE ""
+    LINE "parent {"
+    LINE "  with Person {"
+    LINE "    bob {}"
+    LINE "  }"
+    LINE ""
+    LINE "  alice {"
+    LINE "    (Likes, bob)"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t likes = ecs_lookup(world, "Likes");
+    ecs_entity_t person = ecs_lookup(world, "Person");
+    ecs_entity_t bob = ecs_lookup(world, "parent.bob");
+    ecs_entity_t alice = ecs_lookup(world, "parent.alice");
+
+    test_assert(likes != 0);
+    test_assert(person != 0);
+    test_assert(bob != 0);
+    test_assert(alice != 0);
+
+    test_assert(ecs_has_id(world, bob, person));
+    test_assert(ecs_has_pair(world, alice, likes, bob));
+
+    ecs_fini(world);
+}
+
 void Eval_inherit(void) {    
     ecs_world_t *world = ecs_init();
 

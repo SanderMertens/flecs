@@ -1166,7 +1166,10 @@ static int flecs_script_type_with(
 
     bool old_with = t->v->is_with_scope;
     t->v->is_with_scope = true;
-    int result = flecs_script_type_control_scope(t, node->scope);
+    t->control_depth ++;
+    int result = flecs_script_type_scope(
+        t, node->scope, t->table, true, false);
+    t->control_depth --;
     t->v->is_with_scope = old_with;
     return result;
 }

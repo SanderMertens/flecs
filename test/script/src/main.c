@@ -97,6 +97,8 @@ void Eval_with_after_with(void);
 void Eval_scope_inside_with_inside_scope(void);
 void Eval_with_inside_scope(void);
 void Eval_with_tag_core_name(void);
+void Eval_pair_w_target_from_with(void);
+void Eval_pair_w_target_from_with_in_scope(void);
 void Eval_inherit(void);
 void Eval_inherit_newline(void);
 void Eval_inherit_w_colon(void);
@@ -3641,6 +3643,14 @@ bake_test_case Eval_testcases[] = {
     {
         "with_tag_core_name",
         Eval_with_tag_core_name
+    },
+    {
+        "pair_w_target_from_with",
+        Eval_pair_w_target_from_with
+    },
+    {
+        "pair_w_target_from_with_in_scope",
+        Eval_pair_w_target_from_with_in_scope
     },
     {
         "inherit",
@@ -16334,7 +16344,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        682,
+        684,
         Eval_testcases,
         1,
         Eval_params
