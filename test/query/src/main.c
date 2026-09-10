@@ -2781,6 +2781,7 @@ void NonFragmentingChildOf_fixed_src_self_up_childof_wildcard_expr(void);
 void NonFragmentingChildOf_fixed_src_self_up_childof_any_expr(void);
 void NonFragmentingChildOf_var_src_childof_parent_ordered_children(void);
 void NonFragmentingChildOf_var_src_childof_wildcard_ordered_children(void);
+void NonFragmentingChildOf_this_src_not_childof_self_up_w_not_self_up(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -13861,6 +13862,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "var_src_childof_wildcard_ordered_children",
         NonFragmentingChildOf_var_src_childof_wildcard_ordered_children
+    },
+    {
+        "this_src_not_childof_self_up_w_not_self_up",
+        NonFragmentingChildOf_this_src_not_childof_self_up_w_not_self_up
     }
 };
 
@@ -14681,7 +14686,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        345,
+        346,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

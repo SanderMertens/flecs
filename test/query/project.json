@@ -2868,7 +2868,8 @@
                 "fixed_src_self_up_childof_wildcard_expr",
                 "fixed_src_self_up_childof_any_expr",
                 "var_src_childof_parent_ordered_children",
-                "var_src_childof_wildcard_ordered_children"
+                "var_src_childof_wildcard_ordered_children",
+                "this_src_not_childof_self_up_w_not_self_up"
             ]
         }, {
             "id": "OrderBy",
