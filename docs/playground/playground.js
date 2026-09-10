@@ -1,4 +1,4 @@
-/* "Try it out!" page: a Flecs Script editor backed by a Flecs wasm image, with
+/* "Flecs playground" page: a Flecs Script editor backed by a Flecs wasm image, with
  * an entity tree in the sidebar and an inspector in the right pane that update
  * as you type. The editor is the Ace-based editor from the Flecs Explorer; the
  * wasm image is accessed through the explorer's flecs.js client. */
@@ -7,9 +7,9 @@
 
   var WASM_IMAGE = "flecs_playground.wasm";
   var SCRIPT_ENTITY = "playground";
-  var STORAGE_KEY = "flecs-playground-code";
-  var EXAMPLE_KEY = "flecs-playground-example";
   var EDITOR_LATENCY_BUDGET_MS = 250;
+  var QUERY_LATENCY_BUDGET_MS = 250;
+  var HEAD_H = 44;
   var WIDE_QUERY = "(min-width: 1024px)";
 
   var CHEVRON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -28,15 +28,35 @@
     return node;
   }
 
-  function store(key, value) {
-    try {
-      if (value === null) localStorage.removeItem(key);
-      else localStorage.setItem(key, value);
-    } catch (e) {}
-  }
+  /* Splitters */
 
-  function load(key) {
-    try { return localStorage.getItem(key); } catch (e) { return null; }
+  function createSplitter(horizontal, handlers) {
+    var bar = el("div", { class: "pg-splitter " + (horizontal ? "pg-splitter-h" : "pg-splitter-v"), role: "separator", "aria-orientation": horizontal ? "horizontal" : "vertical" });
+    var drag = null;
+    bar.addEventListener("pointerdown", function (e) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      drag = { start: horizontal ? e.clientY : e.clientX, value: handlers.get() };
+      bar.setPointerCapture(e.pointerId);
+      bar.classList.add("pg-active");
+      document.body.classList.add("pg-resizing", horizontal ? "pg-resizing-h" : "pg-resizing-v");
+    });
+    bar.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      var delta = (horizontal ? e.clientY : e.clientX) - drag.start;
+      handlers.set(drag.value + delta * (handlers.invert ? -1 : 1));
+    });
+    function end(e) {
+      if (!drag) return;
+      drag = null;
+      try { bar.releasePointerCapture(e.pointerId); } catch (err) {}
+      bar.classList.remove("pg-active");
+      document.body.classList.remove("pg-resizing", "pg-resizing-h", "pg-resizing-v");
+      if (handlers.done) handlers.done();
+    }
+    bar.addEventListener("pointerup", end);
+    bar.addEventListener("pointercancel", end);
+    return bar;
   }
 
   /* Editor (Ace, as used by the Flecs Explorer) */
@@ -153,6 +173,20 @@
         nodes[path] = { name: e.name, path: path, parent: e.parent || null, kind: info.kind,
           hint: info.hint, children: [], id: e.id || 0 };
       });
+      var byId = {};
+      Object.keys(nodes).forEach(function (path) {
+        if (nodes[path].id) byId["#" + nodes[path].id] = path;
+      });
+      Object.keys(nodes).forEach(function (path) {
+        var n = nodes[path];
+        if (n.parent && !nodes[n.parent] && byId[n.parent]) {
+          n.parent = byId[n.parent];
+          n.path = n.parent + "." + n.name;
+        }
+      });
+      var resolved = {};
+      Object.keys(nodes).forEach(function (path) { resolved[nodes[path].path] = nodes[path]; });
+      nodes = resolved;
       Object.keys(nodes).forEach(function (path) {
         var n = nodes[path];
         if (n.parent && nodes[n.parent]) nodes[n.parent].children.push(n);
@@ -198,8 +232,26 @@
       return li;
     }
 
-    function select(path) {
+    function reveal(path) {
+      var parts = path.split(".");
+      for (var i = 1; i < parts.length; i++) {
+        var anc = parts.slice(0, i).join(".");
+        var row = list.querySelector('.pg-node[data-path="' + anc.replace(/"/g, '\\"') + '"]');
+        if (!row) continue;
+        var ul = row.nextElementSibling;
+        if (ul && ul.tagName === "UL") {
+          expanded[anc] = true;
+          ul.hidden = false;
+          row.classList.add("pg-open");
+        }
+      }
+      var target = list.querySelector('.pg-node[data-path="' + path.replace(/"/g, '\\"') + '"]');
+      if (target && target.scrollIntoView) target.scrollIntoView({ block: "nearest" });
+    }
+
+    function select(path, show) {
       selected = path;
+      if (show && path) reveal(path);
       list.querySelectorAll(".pg-node").forEach(function (r) {
         r.classList.toggle("pg-selected", r.getAttribute("data-path") === path);
       });
@@ -441,7 +493,7 @@
     }
 
     return {
-      clear: function () { empty("Select an entity in the tree to inspect it."); },
+      clear: function () { empty("Select an entity to inspect."); },
       error: function (text) { empty(text); },
       show: function (path, e) {
         body.innerHTML = "";
@@ -497,8 +549,8 @@
     var root = document.getElementById("fl-playground");
     if (!root) return;
 
-    if (typeof ace === "undefined" || typeof flecs === "undefined") {
-      unavailable(root, "The playground could not be loaded because a script dependency (ace.js or flecs.js) is unavailable.");
+    if (typeof ace === "undefined" || typeof flecs === "undefined" || !window.flecsPlaygroundQuery) {
+      unavailable(root, "The playground could not be loaded because a script dependency (ace.js, flecs.js or playground-query.js) is unavailable.");
       return;
     }
 
@@ -542,24 +594,89 @@
     var runPending = false;
     var pendingRequest = null;
 
-    var inspector = createInspector(inspectorPane, function (path) {
-      if (tree.has(path)) tree.select(path);
-    });
-    inspector.clear();
-
-    var tree = createTree(treePane, function (path) {
+    function inspect(path) {
       if (!path) { inspector.clear(); return; }
       conn.entity(path, { values: true, type_info: true, inherited: true, doc: true, entity_id: true },
         function (e) { inspector.show(path, e); },
         function (err) { inspector.error(err && err.error ? err.error : "Failed to load entity"); });
+    }
+
+    function navigate(path) {
+      if (!path) tree.select(null);
+      else if (tree.has(path)) tree.select(path, true);
+      else { queryPanel.setSelected(path); inspect(path); }
+    }
+
+    var inspector = createInspector(inspectorPane, navigate);
+    inspector.clear();
+
+    var tree = createTree(treePane, function (path) {
+      queryPanel.setSelected(path);
+      inspect(path);
     });
 
-    var editor = createEditor(editorPanel, function (value) {
-      store(STORAGE_KEY, value);
+    var editor = createEditor(editorPanel, function () {
       run(false);
     });
     editorPanel.appendChild(errorBox);
     editor.addCommand("run", { win: "Ctrl-Enter", mac: "Command-Enter" }, function () { run(true); });
+
+    var queryPanel = window.flecsPlaygroundQuery.createPanel({
+      conn: function () { return connected ? conn : null; },
+      latencyBudget: QUERY_LATENCY_BUDGET_MS,
+      onSelect: navigate,
+      onExpandChange: function () { editor.resize(); }
+    });
+    queryPanel.setQuery("");
+    root.insertBefore(queryPanel.root, stack);
+
+    /* Resizable panels: the tree and inspector widths are the sidebar and
+     * right pane widths of the documentation layout, the query panel height
+     * is the height of its body. */
+    var layoutState = {};
+    var docRoot = document.documentElement;
+
+    function applyLayout() {
+      var maxSide = Math.max(window.innerWidth * 0.4, 180);
+      if (layoutState.sidebar) docRoot.style.setProperty("--fl-sidebar-w", Math.min(layoutState.sidebar, maxSide) + "px");
+      if (layoutState.toc) docRoot.style.setProperty("--fl-toc-w", Math.min(layoutState.toc, maxSide) + "px");
+      var maxQuery = Math.max(root.clientHeight - HEAD_H * 2 - 160, 120);
+      if (layoutState.query) root.style.setProperty("--pg-query-h", Math.min(layoutState.query, maxQuery) + "px");
+    }
+
+    function afterResize() {
+      editor.resize();
+      queryPanel.resize();
+    }
+
+    treePane.appendChild(createSplitter(false, {
+      get: function () { return treePane.getBoundingClientRect().width; },
+      set: function (v) {
+        layoutState.sidebar = Math.round(Math.max(180, Math.min(v, window.innerWidth * 0.4)));
+        applyLayout();
+        afterResize();
+      }
+    }));
+    inspectorPane.appendChild(createSplitter(false, {
+      get: function () { return inspectorPane.getBoundingClientRect().width; },
+      set: function (v) {
+        layoutState.toc = Math.round(Math.max(220, Math.min(v, window.innerWidth * 0.4)));
+        applyLayout();
+        afterResize();
+      },
+      invert: true
+    }));
+    queryPanel.root.insertBefore(createSplitter(true, {
+      get: function () { return queryPanel.body.getBoundingClientRect().height; },
+      set: function (v) {
+        layoutState.query = Math.round(Math.max(120, v));
+        applyLayout();
+        afterResize();
+      },
+      invert: true
+    }), queryPanel.root.firstChild);
+    applyLayout();
+    window.addEventListener("resize", function () { applyLayout(); afterResize(); });
 
     function setStatus(cls, text) {
       status.className = "pg-status " + cls;
@@ -590,6 +707,7 @@
         var data = JSON.parse(msg);
         var n = tree.update(data.results || []);
         count.textContent = n ? n + (n === 1 ? " entity" : " entities") : "";
+        queryPanel.setWorld(data.results || []);
       }, function () {});
     }
 
@@ -605,18 +723,19 @@
         if (reply && reply.error) showError(reply.error);
         else clearError();
         refreshTree();
+        queryPanel.refresh();
       }, function (reply) {
         pendingRequest = null;
         showError(reply && reply.error ? reply.error : "Failed to run script");
         refreshTree();
+        queryPanel.refresh();
       });
     }
 
     function loadExample(title, code) {
+      queryPanel.refit();
       editor.set(code);
       examples.value = title;
-      store(STORAGE_KEY, code);
-      store(EXAMPLE_KEY, title);
       run(true);
       editor.focus();
     }
@@ -634,10 +753,8 @@
       loadExample(defaultExample.title, defaultExample.code);
     });
 
-    var savedCode = load(STORAGE_KEY);
-    var savedExample = load(EXAMPLE_KEY);
-    editor.set(savedCode !== null ? savedCode : defaultExample.code);
-    examples.value = savedCode !== null ? (savedExample || "") : defaultExample.title;
+    editor.set(defaultExample.code);
+    examples.value = defaultExample.title;
 
     /* On wide screens the tree lives in the sidebar and the inspector in the
      * right pane; on narrow screens both stack below the editor and the
@@ -653,7 +770,8 @@
         stack.appendChild(treePane);
         stack.appendChild(inspectorPane);
       }
-      editor.resize();
+      applyLayout();
+      afterResize();
     }
     if (wide.addEventListener) wide.addEventListener("change", layout);
     else wide.addListener(layout);

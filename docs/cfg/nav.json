@@ -3,7 +3,7 @@
     {
       "title": "",
       "items": [
-        { "page": "docs/Playground.md", "title": "Try it out!" }
+        { "page": "docs/Playground.md", "title": "Flecs playground" }
       ]
     },
     {

@@ -9,7 +9,7 @@ links identifiers to the API reference.
 
 Also writes docs/examples/manifest.json, which postprocess.py uses to build the
 Examples section of the sidebar, and docs/examples/playground-examples.js, which
-lists the script examples for the "Try it out!" page.
+lists the script examples for the "Flecs playground" page.
 
 Usage: examples.py [repo_root]
 """
@@ -188,7 +188,7 @@ def playground_code(path):
     return code.rstrip("\n") + "\n"
 
 
-def write_playground_examples(examples, out_dir):
+def write_playground_examples(root, examples, out_dir):
     items = []
     for (category, name), entry in sorted(examples.items()):
         script = entry["languages"].get("script")
@@ -235,7 +235,7 @@ def main():
         f.write(render_index(examples))
     with open(os.path.join(out_dir, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
-    scripts = write_playground_examples(examples, out_dir)
+    scripts = write_playground_examples(root, examples, out_dir)
     print(f"examples: {len(examples)} pages in {len(categories)} categories, "
           f"{scripts} playground scripts")
 
