@@ -136,6 +136,11 @@ ecs_entity_t flecs_script_template_member_interface(
     const ecs_script_template_t *template,
     int32_t sp);
 
+bool flecs_script_template_interface_accepts(
+    const ecs_world_t *world,
+    ecs_entity_t value,
+    ecs_entity_t interface);
+
 bool flecs_script_template_member_is_template(
     const ecs_script_template_t *template,
     int32_t sp);

@@ -473,9 +473,8 @@ static int flecs_script_template_validate_interfaces(
             return -1;
         }
 
-        const EcsScript *value_script = ecs_get(world, value, EcsScript);
-        if (!value_script || !value_script->template_ ||
-            !flecs_struct_is_derived_from(world, value, tm->interface))
+        if (!flecs_script_template_interface_accepts(
+            world, value, tm->interface))
         {
             char *value_path = ecs_get_path(world, value);
             ecs_err("invalid value '%s' for prop '%s' of template '%s': "
@@ -1261,8 +1260,12 @@ int flecs_script_template_eval_var(
     node->sp = var->sp;
     flecs_type_info_ctor(var->value.ptr, 1, ti);
 
-    if (node->expr && flecs_script_eval_expr(v, &node->expr, &var->value)) {
-        return -1;
+    if (node->expr) {
+        if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
+            return -1;
+        }
+    } else if (node->eval_interface) {
+        *(ecs_entity_t*)var->value.ptr = node->eval_interface;
     }
 
     ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator,
@@ -1482,6 +1485,21 @@ static int flecs_script_template_inherit(
     }
 
     return 0;
+}
+
+bool flecs_script_template_interface_accepts(
+    const ecs_world_t *world,
+    ecs_entity_t value,
+    ecs_entity_t interface)
+{
+    if (value == interface) {
+        return true;
+    }
+    const EcsScript *script = ecs_get(world, value, EcsScript);
+    if (!script || !script->template_) {
+        return false;
+    }
+    return flecs_struct_is_derived_from(world, value, interface);
 }
 
 ecs_entity_t flecs_script_template_member_interface(

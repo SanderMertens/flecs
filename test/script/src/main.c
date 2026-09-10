@@ -3067,6 +3067,9 @@ void TemplateProp_inherited_template_prop(void);
 void TemplateProp_inherited_template_prop_dollar(void);
 void TemplateProp_inherited_template_prop_chain(void);
 void TemplateProp_prop_of_derived_template_type(void);
+void TemplateProp_struct_prop_default_to_struct(void);
+void TemplateProp_struct_prop_explicit_struct_default(void);
+void TemplateProp_struct_prop_default_and_derived_template(void);
 void TemplateProp_nested_template_instantiation(void);
 void TemplateProp_template_prop_in_for_loop(void);
 void TemplateProp_template_prop_in_if(void);
@@ -3109,7 +3112,7 @@ void TemplateProp_pass_base_to_child_template_derived_fails(void);
 void TemplateProp_pass_unrelated_to_child_template_fails(void);
 void TemplateProp_interface_prop_invalid_value(void);
 void TemplateProp_interface_prop_unrelated_template(void);
-void TemplateProp_interface_prop_missing_value(void);
+void TemplateProp_interface_prop_missing_value_defaults_to_interface(void);
 void TemplateProp_interface_prop_empty_initializer_fails(void);
 void TemplateProp_interface_prop_in_with_w_initializer_fails(void);
 void TemplateProp_interface_prop_dollar_initializer(void);
@@ -3126,7 +3129,7 @@ void TemplateProp_interface_prop_from_c(void);
 void TemplateProp_interface_prop_change_template(void);
 void TemplateProp_interface_prop_not_derived_fails(void);
 void TemplateProp_interface_prop_not_template_fails(void);
-void TemplateProp_interface_prop_unset_fails(void);
+void TemplateProp_interface_prop_unset_defaults_to_interface(void);
 void TemplateProp_interface_prop_unknown_member_fails(void);
 void TemplateProp_bool_prop_mul_flt_member(void);
 void TemplateProp_bool_prop_in_flt_member_initializer(void);
@@ -15335,6 +15338,18 @@ bake_test_case TemplateProp_testcases[] = {
         TemplateProp_prop_of_derived_template_type
     },
     {
+        "struct_prop_default_to_struct",
+        TemplateProp_struct_prop_default_to_struct
+    },
+    {
+        "struct_prop_explicit_struct_default",
+        TemplateProp_struct_prop_explicit_struct_default
+    },
+    {
+        "struct_prop_default_and_derived_template",
+        TemplateProp_struct_prop_default_and_derived_template
+    },
+    {
         "nested_template_instantiation",
         TemplateProp_nested_template_instantiation
     },
@@ -15503,8 +15518,8 @@ bake_test_case TemplateProp_testcases[] = {
         TemplateProp_interface_prop_unrelated_template
     },
     {
-        "interface_prop_missing_value",
-        TemplateProp_interface_prop_missing_value
+        "interface_prop_missing_value_defaults_to_interface",
+        TemplateProp_interface_prop_missing_value_defaults_to_interface
     },
     {
         "interface_prop_empty_initializer_fails",
@@ -15571,8 +15586,8 @@ bake_test_case TemplateProp_testcases[] = {
         TemplateProp_interface_prop_not_template_fails
     },
     {
-        "interface_prop_unset_fails",
-        TemplateProp_interface_prop_unset_fails
+        "interface_prop_unset_defaults_to_interface",
+        TemplateProp_interface_prop_unset_defaults_to_interface
     },
     {
         "interface_prop_unknown_member_fails",
@@ -16538,7 +16553,7 @@ static bake_test_suite suites[] = {
         "TemplateProp",
         TemplateProp_setup,
         NULL,
-        92,
+        95,
         TemplateProp_testcases,
         1,
         TemplateProp_params

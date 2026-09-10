@@ -835,9 +835,8 @@ static int flecs_ir_interface_check(
         return -1;
     }
 
-    const EcsScript *script = ecs_get(v->world, tmpl, EcsScript);
-    if (!script || !script->template_ ||
-        !flecs_struct_is_derived_from(v->world, tmpl, desc->interface))
+    if (!flecs_script_template_interface_accepts(
+        v->world, tmpl, desc->interface))
     {
         char *tmpl_str = ecs_get_path(v->world, tmpl);
         flecs_ir_error(vm, node,
