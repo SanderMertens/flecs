@@ -80,10 +80,38 @@ static bool flecs_script_dep_scopes_exclusive(
 
 static bool flecs_script_dep_id_elem_static(
     ecs_expr_node_t *expr,
-    int32_t symbol,
     int32_t sp)
 {
-    return !expr && symbol == -1 && sp == -1;
+    return !expr && sp == -1;
+}
+
+static const char* flecs_script_dep_name_last_elem(
+    const char *name)
+{
+    const char *last = strrchr(name, '.');
+    return last ? last + 1 : name;
+}
+
+static bool flecs_script_dep_static_elems_differ(
+    const char *first_name,
+    ecs_entity_t first_eval,
+    int32_t first_symbol,
+    const char *second_name,
+    ecs_entity_t second_eval,
+    int32_t second_symbol)
+{
+    if (first_symbol != -1 && second_symbol != -1) {
+        return first_symbol != second_symbol;
+    }
+    if (first_eval && second_eval) {
+        return first_eval != second_eval;
+    }
+    if (!first_name || !second_name) {
+        return false;
+    }
+    return ecs_os_strcmp(
+        flecs_script_dep_name_last_elem(first_name),
+        flecs_script_dep_name_last_elem(second_name)) != 0;
 }
 
 static bool flecs_script_dep_ids_may_match(
@@ -101,20 +129,22 @@ static bool flecs_script_dep_ids_may_match(
         return first->eval == second->eval;
     }
     if (flecs_script_dep_id_elem_static(
-            first->first_expr, first->first_symbol, first->first_sp) &&
+            first->first_expr, first->first_sp) &&
         flecs_script_dep_id_elem_static(
-            second->first_expr, second->first_symbol, second->first_sp) &&
-        first->first_eval && second->first_eval &&
-        first->first_eval != second->first_eval)
+            second->first_expr, second->first_sp) &&
+        flecs_script_dep_static_elems_differ(
+            first->first, first->first_eval, first->first_symbol,
+            second->first, second->first_eval, second->first_symbol))
     {
         return false;
     }
     if (first->second && flecs_script_dep_id_elem_static(
-            first->second_expr, first->second_symbol, first->second_sp) &&
+            first->second_expr, first->second_sp) &&
         flecs_script_dep_id_elem_static(
-            second->second_expr, second->second_symbol, second->second_sp) &&
-        first->second_eval && second->second_eval &&
-        first->second_eval != second->second_eval)
+            second->second_expr, second->second_sp) &&
+        flecs_script_dep_static_elems_differ(
+            first->second, first->second_eval, first->second_symbol,
+            second->second, second->second_eval, second->second_symbol))
     {
         return false;
     }

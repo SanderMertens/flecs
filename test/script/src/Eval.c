@@ -8497,6 +8497,38 @@ void Eval_if_false_in_scope(void) {
     ecs_fini(world);
 }
 
+void Eval_if_false_var_in_scope_after_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Rgb(r: u8, g: u8, b: u8)"
+    LINE "struct Emissive(value: f32)"
+    LINE ""
+    LINE "const isDark = false"
+    LINE ""
+    LINE "light {"
+    LINE "    Rgb: {25, 50, 0}"
+    LINE ""
+    LINE "    if isDark {"
+    LINE "        Emissive: {2}"
+    LINE "    }"
+    LINE "}";
+
+    ecs_entity_t s = ecs_entity(world, { .name = "main" });
+    test_assert(ecs_script_update(world, s, 0, expr) == 0);
+
+    ecs_entity_t light = ecs_lookup(world, "light");
+    test_assert(light != 0);
+    ecs_entity_t rgb = ecs_lookup(world, "Rgb");
+    test_assert(rgb != 0);
+    ecs_entity_t emissive = ecs_lookup(world, "Emissive");
+    test_assert(emissive != 0);
+    test_assert(ecs_has_id(world, light, rgb));
+    test_assert(!ecs_has_id(world, light, emissive));
+
+    ecs_fini(world);
+}
+
 void Eval_if_lt(void) {
     ecs_world_t *world = ecs_init();
 
