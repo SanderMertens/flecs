@@ -1187,6 +1187,8 @@
                 "serialize_field_w_escaped_sep",
                 "serialize_children_w_parent_component",
                 "serialize_children_w_parent_component_table",
+                "serialize_children_w_parent_component_parents_before_children",
+                "serialize_world_w_parent_component",
                 "serialize_children_w_tag_w_parent_component",
                 "serialize_children_w_tag_w_parent_component_table",
                 "serialize_childof_var_w_parent",

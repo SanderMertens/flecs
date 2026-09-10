@@ -299,6 +299,17 @@ typedef struct {
     ecs_query_tree_iter_state_t state;
 } ecs_query_tree_pre_ctx_t;
 
+typedef struct {
+    union {
+        ecs_query_table_iter_ctx_t and_;
+        ecs_query_up_ctx_t up_;
+        ecs_query_tree_ctx_t tree_;
+    } is;
+    ecs_entity_t tgt;
+    ecs_table_range_t range;
+    int32_t cur;
+} ecs_query_tree_up_ctx_t;
+
 /* Cache for storing results of upward/downward "all" traversal. This type of 
  * traversal iterates and caches the entire tree. */
 typedef struct {
@@ -415,6 +426,7 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_sparse_ctx_t sparse;
         ecs_query_tree_ctx_t tree;
         ecs_query_tree_pre_ctx_t tree_pre;
+        ecs_query_tree_up_ctx_t tree_up;
         ecs_query_tree_wildcard_ctx_t tree_wildcard;
         ecs_query_optional_ctx_t optional;
     } is;

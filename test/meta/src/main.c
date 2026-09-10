@@ -1152,6 +1152,8 @@ void SerializeIterToJson_serialize_32_fields(void);
 void SerializeIterToJson_serialize_field_w_escaped_sep(void);
 void SerializeIterToJson_serialize_children_w_parent_component(void);
 void SerializeIterToJson_serialize_children_w_parent_component_table(void);
+void SerializeIterToJson_serialize_children_w_parent_component_parents_before_children(void);
+void SerializeIterToJson_serialize_world_w_parent_component(void);
 void SerializeIterToJson_serialize_children_w_tag_w_parent_component(void);
 void SerializeIterToJson_serialize_children_w_tag_w_parent_component_table(void);
 void SerializeIterToJson_serialize_childof_var_w_parent(void);
@@ -6036,6 +6038,14 @@ bake_test_case SerializeIterToJson_testcases[] = {
         SerializeIterToJson_serialize_children_w_parent_component_table
     },
     {
+        "serialize_children_w_parent_component_parents_before_children",
+        SerializeIterToJson_serialize_children_w_parent_component_parents_before_children
+    },
+    {
+        "serialize_world_w_parent_component",
+        SerializeIterToJson_serialize_world_w_parent_component
+    },
+    {
         "serialize_children_w_tag_w_parent_component",
         SerializeIterToJson_serialize_children_w_tag_w_parent_component
     },
@@ -7633,7 +7643,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        88,
+        90,
         SerializeIterToJson_testcases
     },
     {

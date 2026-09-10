@@ -2953,6 +2953,80 @@ void SerializeIterToJson_serialize_children_w_parent_component_table(void) {
     ecs_fini(world);
 }
 
+void SerializeIterToJson_serialize_children_w_parent_component_parents_before_children(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2" });
+    ecs_new_w_parent(world, p1, "a");
+    ecs_new_w_parent(world, p1, "b");
+    ecs_new_w_parent(world, p2, "c");
+    ecs_new_w_parent(world, p2, "d");
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(EcsParent) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_to_json_desc_t desc = {
+        .serialize_table = true,
+        .serialize_parents_before_children = true
+    };
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(&it, &desc);
+    test_json(json, "{\"results\":[{\"name\":\"p1\"}, {\"parent\":\"p1\", \"name\":\"a\", \"pairs\":{\"ParentDepth\":\"@1\"}, \"components\":{\"Parent\":null}}, {\"parent\":\"p1\", \"name\":\"b\", \"pairs\":{\"ParentDepth\":\"@1\"}, \"components\":{\"Parent\":null}}, {\"name\":\"p2\"}, {\"parent\":\"p2\", \"name\":\"c\", \"pairs\":{\"ParentDepth\":\"@1\"}, \"components\":{\"Parent\":null}}, {\"parent\":\"p2\", \"name\":\"d\", \"pairs\":{\"ParentDepth\":\"@1\"}, \"components\":{\"Parent\":null}}]}");
+    ecs_os_free(json);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_world_w_parent_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2" });
+    ecs_new_w_parent(world, p1, "a");
+    ecs_new_w_parent(world, p1, "b");
+    ecs_new_w_parent(world, p2, "c");
+    ecs_new_w_parent(world, p2, "d");
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+
+    const char *p1_str = strstr(json, "\"name\":\"p1\"");
+    const char *p2_str = strstr(json, "\"name\":\"p2\"");
+    const char *a_str = strstr(json, "\"parent\":\"p1\", \"name\":\"a\"");
+    const char *b_str = strstr(json, "\"parent\":\"p1\", \"name\":\"b\"");
+    const char *c_str = strstr(json, "\"parent\":\"p2\", \"name\":\"c\"");
+    const char *d_str = strstr(json, "\"parent\":\"p2\", \"name\":\"d\"");
+    test_assert(p1_str != NULL);
+    test_assert(p2_str != NULL);
+    test_assert(a_str != NULL);
+    test_assert(b_str != NULL);
+    test_assert(c_str != NULL);
+    test_assert(d_str != NULL);
+    test_assert(p1_str < a_str);
+    test_assert(p1_str < b_str);
+    test_assert(p2_str < c_str);
+    test_assert(p2_str < d_str);
+
+    int32_t count = 0;
+    const char *ptr = json;
+    while ((ptr = strstr(ptr, "\"name\":\""))) {
+        count ++;
+        ptr ++;
+    }
+    test_int(count, 6);
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeIterToJson_serialize_children_w_tag_w_parent_component(void) {
     ecs_world_t *world = ecs_init();
 

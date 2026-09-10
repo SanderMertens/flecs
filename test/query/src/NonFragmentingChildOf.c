@@ -24799,3 +24799,56 @@ void NonFragmentingChildOf_var_src_childof_wildcard_ordered_children(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_this_src_not_childof_self_up_w_not_self_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world);
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p1}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p1}));
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {p2}));
+    ecs_entity_t c4 = ecs_insert(world, ecs_value(EcsParent, {p2}));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_childof(EcsFlecs), .oper = EcsNot, .src.id = EcsSelf|EcsUp },
+            { EcsModule, .oper = EcsNot, .src.id = EcsSelf|EcsUp }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t p1_count = 0, p2_count = 0;
+    int32_t c1_count = 0, c2_count = 0, c3_count = 0, c4_count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            ecs_entity_t e = it.entities[i];
+            test_uint(ecs_childof(EcsFlecs), ecs_field_id(&it, 0));
+            test_uint(EcsModule, ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            if (e == p1) p1_count ++;
+            if (e == p2) p2_count ++;
+            if (e == c1) c1_count ++;
+            if (e == c2) c2_count ++;
+            if (e == c3) c3_count ++;
+            if (e == c4) c4_count ++;
+        }
+    }
+
+    test_int(1, p1_count);
+    test_int(1, p2_count);
+    test_int(1, c1_count);
+    test_int(1, c2_count);
+    test_int(1, c3_count);
+    test_int(1, c4_count);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

@@ -752,7 +752,7 @@ bool flecs_query_tree_up_post(
     const ecs_query_run_ctx_t *ctx,
     bool self)
 {
-    ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
+    ecs_query_tree_up_ctx_t *op_ctx = flecs_op_ctx(ctx, tree_up);
 
     /* Source should have been written as this instruction can only be inserted
      * after a cache instruction has been evaluated. */
@@ -857,7 +857,7 @@ bool flecs_query_tree_up_not(
     const ecs_query_run_ctx_t *ctx,
     bool self)
 {
-    ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
+    ecs_query_tree_up_ctx_t *op_ctx = flecs_op_ctx(ctx, tree_up);
     ecs_iter_t *it = ctx->it;
 
     ecs_table_range_t range = flecs_query_get_range(
