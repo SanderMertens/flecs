@@ -1,4 +1,4 @@
-// Ace theme for the "Try it out!" page. Adapted from the Flecs Explorer's
+// Ace theme for the "Flecs playground" page. Adapted from the Flecs Explorer's
 // flecs-script theme, mapped onto the documentation theme variables so it
 // follows light and dark mode.
 ace.define("ace/theme/flecs-docs", ["require", "exports", "module", "ace/lib/dom"],

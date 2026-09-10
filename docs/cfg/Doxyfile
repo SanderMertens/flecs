@@ -84,6 +84,8 @@ HTML_EXTRA_FILES       = docs/cfg/flecs.js \
                          docs/playground/playground.css \
                          docs/playground/ace-flecs-script.js \
                          docs/playground/ace-flecs-script-theme.js \
+                         docs/playground/ace-flecs-query.js \
+                         docs/playground/playground-query.js \
                          docs/examples/playground-examples.js \
                          docs/img/logo_small.png \
                          docs/img/logo_small_dark.png

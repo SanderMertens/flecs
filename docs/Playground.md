@@ -1,4 +1,4 @@
-# Try it out!
+# Flecs playground
 
 \htmlonly
 <script>document.documentElement.classList.add("fl-playground");</script>
@@ -8,6 +8,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
 <script src="ace-flecs-script.js"></script>
 <script src="ace-flecs-script-theme.js"></script>
+<script src="ace-flecs-query.js"></script>
 <script src="playground-examples.js"></script>
+<script src="playground-query.js"></script>
 <script src="playground.js"></script>
 \endhtmlonly

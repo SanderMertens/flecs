@@ -4,52 +4,63 @@
 using flecs.script
 
 // Define a few components
-struct Position(x: i32, y: i32, z: i32)
-struct Box(x: i32, y: i32, z: i32)
-struct Rgb(r: u8, b: u8, g: u8)
+struct Position(x: f32, y: f32, z: f32)
+struct Box(x: f32, y: f32, z: f32)
+struct Rgb(r: u8, g: u8, b: u8)
 
 // Rng for random placement of trees
 const rng: math.Rng = {}
 
+template Trunk {
+  prop height = 1
+
+  Rgb: {50, 25, 0}
+  Box: {0.5, height, 0.5}
+}
+
+template Canopy {
+  prop height = 3
+  
+  Rgb: {50, 100, 20}
+  Box: {1, height, 1}
+}
+
 // A template for a tree with a configurable height
-@tree Parent
 template Tree {
   prop height = 1
 
-  const trunkY = 0.5
+  const trunkY = 1
   const canopyY = height - trunkY
 
-  {
+  Trunk(height: trunkY) {
     Position: {0, trunkY / 2, 0}
-    Rgb: {50, 25, 0}
-    Box: {0.1, trunkY, 0.1}
   }
-  
-  {
-    Position: {0, trunkY + canopyY / 2, 0}
-    Rgb: {50, 100, 20}
-    Box: {0.5, canopyY, 0.5}
+  Canopy(height: canopyY) {
+    Position: {y: trunkY + canopyY / 2}
   }
 }
 
 // A template for a forest with a configurable tree count and size
 template Forest {
-  prop treeCount = 50
+  prop treeCount = 5
   prop width = 10
   prop height = 10
   
-  {
-    Position: {width / 2, 0, height / 2}
-    Rgb: {}
-    Box: {width, 1, height}
+  ground {
+    Position: {0, -0.05, 0}
+    Rgb: {20, 15}
+    Box: {width * 1.1, 0.1, height * 1.1}
   }
   
-  for i in 0..treeCount {
-    Tree(rng.f(3) + 1) {
-      Position: {rng.f(width), 0, rng.f(height)}
+  trees {
+    Position: {-width / 2, -0.05, -height / 2}
+    for i in 0..treeCount {
+      Tree(rng.f(3) + 2) {
+        Position: {rng.f(width), 0, rng.f(height)}
+      }
     }
   }
 }
 
 // Instantiate the forest with 100 trees
-Forest my_forest(treeCount: 100)
+Forest my_forest(treeCount: 20)

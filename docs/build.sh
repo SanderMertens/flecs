@@ -2,7 +2,7 @@
 # Builds the Flecs documentation website into docs/html.
 #
 # Requires Doxygen 1.18 or newer, Python 3 and Emscripten (for the wasm image
-# behind the "Try it out!" page, see docs/playground). Set DOXYGEN to use a
+# behind the "Flecs playground" page, see docs/playground). Set DOXYGEN to use a
 # specific doxygen binary. Run from any directory.
 
 set -e

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds the Flecs wasm image used by the "Try it out!" page of the
+# Builds the Flecs wasm image used by the "Flecs playground" page of the
 # documentation website. The image bundles the full Flecs distribution
 # (distr/flecs.c) with a small host application (main.c) that serves the REST
 # API through the flecs_explorer_request export, which is what the explorer's
