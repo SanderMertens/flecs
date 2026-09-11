@@ -7365,3 +7365,159 @@ void DontFragment_trivial_sparse_desc_terms(void) {
 
     ecs_fini(world);
 }
+
+void DontFragment_pair_tgt_var_src_w_dont_fragment_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tag);
+
+    ecs_add_id(world, Rel, EcsRelationship);
+    ecs_add_id(world, Tag, EcsDontFragment);
+
+    ecs_entity_t t1 = ecs_entity(world, { .name = "t1" });
+    ecs_add_id(world, t1, Tag);
+    ecs_entity_t t2 = ecs_entity(world, { .name = "t2" });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add_pair(world, e1, Rel, t1);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add_pair(world, e2, Rel, t2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(Rel, $Tgt), Tag($Tgt)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int tgt_var = ecs_query_find_var(q, "Tgt");
+    test_assert(tgt_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(t1, ecs_iter_get_var(&it, tgt_var));
+    test_uint(ecs_pair(Rel, t1), ecs_field_id(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(t1, ecs_field_src(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    test_assert(e2 != 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_pair_tgt_var_src_w_dont_fragment_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, Rel, EcsRelationship);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t t1 = ecs_entity(world, { .name = "t1" });
+    ecs_set(world, t1, Position, {10, 20});
+    ecs_entity_t t2 = ecs_entity(world, { .name = "t2" });
+    ecs_set(world, t2, Position, {30, 40});
+    ecs_entity_t t3 = ecs_entity(world, { .name = "t3" });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add_pair(world, e1, Rel, t1);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add_pair(world, e2, Rel, t2);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add_pair(world, e3, Rel, t3);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(Rel, $Tgt), Position($Tgt)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 1)));
+
+    int tgt_var = ecs_query_find_var(q, "Tgt");
+    test_assert(tgt_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(t1, ecs_iter_get_var(&it, tgt_var));
+    test_uint(t1, ecs_field_src(&it, 1));
+    {
+        Position *p = ecs_field_at(&it, Position, 1, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(t2, ecs_iter_get_var(&it, tgt_var));
+    test_uint(t2, ecs_field_src(&it, 1));
+    {
+        Position *p = ecs_field_at(&it, Position, 1, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 30); test_int(p->y, 40);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    test_assert(e3 != 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_pair_tgt_var_src_w_not_dont_fragment_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tag);
+
+    ecs_add_id(world, Rel, EcsRelationship);
+    ecs_add_id(world, Tag, EcsDontFragment);
+
+    ecs_entity_t t1 = ecs_entity(world, { .name = "t1" });
+    ecs_add_id(world, t1, Tag);
+    ecs_entity_t t2 = ecs_entity(world, { .name = "t2" });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add_pair(world, e1, Rel, t1);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add_pair(world, e2, Rel, t2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(Rel, $Tgt), !Tag($Tgt)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int tgt_var = ecs_query_find_var(q, "Tgt");
+    test_assert(tgt_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(t2, ecs_iter_get_var(&it, tgt_var));
+    test_uint(t2, ecs_field_src(&it, 1));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    test_assert(e1 != 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
