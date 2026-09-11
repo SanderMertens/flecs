@@ -175,15 +175,19 @@
       });
       var byId = {};
       Object.keys(nodes).forEach(function (path) {
-        if (nodes[path].id) byId["#" + nodes[path].id] = path;
+        if (nodes[path].id) byId["#" + nodes[path].id] = nodes[path];
       });
-      Object.keys(nodes).forEach(function (path) {
-        var n = nodes[path];
-        if (n.parent && !nodes[n.parent] && byId[n.parent]) {
-          n.parent = byId[n.parent];
+      function resolvePath(n) {
+        if (n.resolved) return;
+        var parent = n.parent && (nodes[n.parent] || byId[n.parent]);
+        if (parent) {
+          resolvePath(parent);
+          n.parent = parent.path;
           n.path = n.parent + "." + n.name;
         }
-      });
+        n.resolved = true;
+      }
+      Object.keys(nodes).forEach(function (path) { resolvePath(nodes[path]); });
       var resolved = {};
       Object.keys(nodes).forEach(function (path) { resolved[nodes[path].path] = nodes[path]; });
       nodes = resolved;
@@ -235,12 +239,12 @@
     function reveal(path) {
       var parts = path.split(".");
       for (var i = 1; i < parts.length; i++) {
-        var anc = parts.slice(0, i).join(".");
-        var row = list.querySelector('.pg-node[data-path="' + anc.replace(/"/g, '\\"') + '"]');
+        var slice = parts.slice(0, i).join(".");
+        var row = list.querySelector('.pg-node[data-path="' + slice.replace(/"/g, '\\"') + '"]');
         if (!row) continue;
         var ul = row.nextElementSibling;
         if (ul && ul.tagName === "UL") {
-          expanded[anc] = true;
+          expanded[slice] = true;
           ul.hidden = false;
           row.classList.add("pg-open");
         }
@@ -558,18 +562,13 @@
     var version = el("span", { class: "pg-version", text: "" });
     version.hidden = true;
     var exampleList = window.FLECS_PLAYGROUND_EXAMPLES || [];
-    var defaultExample = exampleList[0] || { title: "", code: "" };
-    var examples = el("select", { class: "pg-select", "aria-label": "Load example" });
-    examples.appendChild(el("option", { value: "", text: "", hidden: "" }));
-    exampleList.forEach(function (ex) {
-      examples.appendChild(el("option", { value: ex.title, text: ex.title }));
-    });
+    var defaultExample = exampleList[0] || { name: "", title: "", code: "" };
     var create = el("button", { class: "pg-btn", type: "button", text: "New" });
     var reset = el("button", { class: "pg-btn", type: "button", text: "Reset" });
 
     var editorPanel = el("div", { class: "pg-editor-panel" }, [
       el("div", { class: "pg-head" }, [
-        version, status, el("span", { class: "pg-spacer" }), examples, create, reset
+        version, status, el("span", { class: "pg-spacer" }), create, reset
       ])
     ]);
     var errorBox = el("pre", { class: "pg-error" });
@@ -581,6 +580,46 @@
         el("span", { class: "pg-title", text: "Entities" }), el("span", { class: "pg-spacer" }), count
       ])
     ]);
+    var examplesToggle = el("button", { class: "pg-toggle pg-examples-toggle", type: "button", html: CHEVRON, "aria-label": "Toggle examples panel", "aria-expanded": "true" });
+    var examplesList = el("ul", { class: "pg-examples", role: "listbox", "aria-label": "Examples" });
+    var exampleRows = {};
+    exampleList.forEach(function (ex) {
+      var row = el("li", { class: "pg-example", role: "option", tabindex: "0", text: ex.title });
+      row.addEventListener("click", function () { loadExample(ex); });
+      row.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); loadExample(ex); }
+      });
+      exampleRows[ex.name] = row;
+      examplesList.appendChild(row);
+    });
+    var examplesBody = el("div", { class: "pg-examples-body" }, [examplesList]);
+    var examplesPane = el("div", { class: "pg-pane pg-examples-pane" }, [
+      el("div", { class: "pg-head pg-examples-head" }, [
+        examplesToggle, el("span", { class: "pg-title", text: "Examples" })
+      ]),
+      examplesBody
+    ]);
+    var examplesExpanded = true;
+    function setExamplesExpanded(v) {
+      if (examplesExpanded === v) return;
+      examplesExpanded = v;
+      examplesPane.classList.toggle("pg-collapsed", !v);
+      examplesToggle.setAttribute("aria-expanded", v ? "true" : "false");
+    }
+    examplesToggle.addEventListener("click", function () { setExamplesExpanded(!examplesExpanded); });
+    var currentExample = null;
+    function scrollExampleIntoView() {
+      var row = currentExample && exampleRows[currentExample.name];
+      if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
+    }
+    function selectExample(ex) {
+      currentExample = ex || null;
+      Object.keys(exampleRows).forEach(function (k) {
+        exampleRows[k].classList.toggle("pg-selected", !!ex && ex.name === k);
+        exampleRows[k].setAttribute("aria-selected", !!ex && ex.name === k ? "true" : "false");
+      });
+      scrollExampleIntoView();
+    }
     var inspectorPane = el("div", { class: "pg-pane pg-inspector-pane" }, [
       el("div", { class: "pg-head" }, [el("span", { class: "pg-title", text: "Inspector" })])
     ]);
@@ -621,10 +660,45 @@
     editorPanel.appendChild(errorBox);
     editor.addCommand("run", { win: "Ctrl-Enter", mac: "Command-Enter" }, function () { run(true); });
 
+    /* Mouse and keyboard events on the 2D/3D views go to the wasm image, where
+     * the flecs.script.event module delivers them to the async blocks of the
+     * script (on.press, on.drag, on.key_down, ...). The tree and views are
+     * refreshed once per frame while events come in. */
+    var refreshQueued = false;
+    function queueRefresh() {
+      if (refreshQueued) return;
+      refreshQueued = true;
+      requestAnimationFrame(function () {
+        refreshQueued = false;
+        refreshTree();
+        queryPanel.refresh();
+      });
+    }
+
+    function mouseEvent(e, target, x, y) {
+      var bridge = window.flecsPlayground;
+      if (!connected || !bridge || !bridge.mouse) return false;
+      var propagate = bridge.mouse(target || "", e.clientX, e.clientY, x, y,
+        e.button >= 0 ? e.button : 0, e.buttons || 0,
+        e.ctrlKey ? 1 : 0, e.shiftKey ? 1 : 0, e.altKey ? 1 : 0, e.metaKey ? 1 : 0);
+      queueRefresh();
+      return !!propagate;
+    }
+
+    function keyEvent(e, down) {
+      var bridge = window.flecsPlayground;
+      if (!connected || !bridge || !bridge.key) return;
+      bridge.key(e.key, down ? 1 : 0, e.repeat ? 1 : 0,
+        e.ctrlKey ? 1 : 0, e.shiftKey ? 1 : 0, e.altKey ? 1 : 0, e.metaKey ? 1 : 0);
+      queueRefresh();
+    }
+
     var queryPanel = window.flecsPlaygroundQuery.createPanel({
       conn: function () { return connected ? conn : null; },
       latencyBudget: QUERY_LATENCY_BUDGET_MS,
       onSelect: navigate,
+      onMouse: mouseEvent,
+      onKey: keyEvent,
       onExpandChange: function () { editor.resize(); }
     });
     queryPanel.setQuery("");
@@ -642,6 +716,9 @@
       if (layoutState.toc) docRoot.style.setProperty("--fl-toc-w", Math.min(layoutState.toc, maxSide) + "px");
       var maxQuery = Math.max(root.clientHeight - HEAD_H * 2 - 160, 120);
       if (layoutState.query) root.style.setProperty("--pg-query-h", Math.min(layoutState.query, maxQuery) + "px");
+      var side = document.getElementById("fl-sidebar");
+      var maxExamples = Math.max((side ? side.clientHeight : root.clientHeight) - HEAD_H * 2 - 120, 100);
+      if (layoutState.examples) docRoot.style.setProperty("--pg-examples-h", Math.min(layoutState.examples, maxExamples) + "px");
     }
 
     function afterResize() {
@@ -666,6 +743,14 @@
       },
       invert: true
     }));
+    examplesPane.insertBefore(createSplitter(true, {
+      get: function () { return examplesBody.getBoundingClientRect().height; },
+      set: function (v) {
+        layoutState.examples = Math.round(Math.max(100, v));
+        applyLayout();
+      },
+      invert: true
+    }), examplesPane.firstChild);
     queryPanel.root.insertBefore(createSplitter(true, {
       get: function () { return queryPanel.body.getBoundingClientRect().height; },
       set: function (v) {
@@ -732,29 +817,47 @@
       });
     }
 
-    function loadExample(title, code) {
+    function findExample(key) {
+      return exampleList.filter(function (e) {
+        return e.name === key || e.title === key;
+      })[0];
+    }
+
+    function exampleFromUrl() {
+      var m = /[?&]example=([^&#]*)/.exec(window.location.search);
+      return m ? findExample(decodeURIComponent(m[1].replace(/\+/g, " "))) : null;
+    }
+
+    function setUrlExample(ex) {
+      if (!window.history || !window.history.replaceState) return;
+      var search = window.location.search.replace(/([?&])example=[^&#]*&?/, "$1").replace(/[?&]$/, "");
+      if (ex && ex.name) {
+        search += (search ? "&" : "?") + "example=" + encodeURIComponent(ex.name);
+      }
+      var url = window.location.pathname + search + window.location.hash;
+      window.history.replaceState(window.history.state, "", url);
+    }
+
+    function loadExample(ex) {
       queryPanel.refit();
-      editor.set(code);
-      examples.value = title;
+      editor.set(ex ? ex.code : "");
+      selectExample(ex);
+      setUrlExample(ex);
       run(true);
       editor.focus();
     }
 
-    examples.addEventListener("change", function () {
-      var ex = exampleList.filter(function (e) { return e.title === examples.value; })[0];
-      if (ex) loadExample(ex.title, ex.code);
-    });
-
     create.addEventListener("click", function () {
-      loadExample("", "");
+      loadExample(null);
     });
 
     reset.addEventListener("click", function () {
-      loadExample(defaultExample.title, defaultExample.code);
+      loadExample(defaultExample);
     });
 
-    editor.set(defaultExample.code);
-    examples.value = defaultExample.title;
+    var initialExample = exampleFromUrl() || defaultExample;
+    editor.set(initialExample.code);
+    selectExample(initialExample);
 
     /* On wide screens the tree lives in the sidebar and the inspector in the
      * right pane; on narrow screens both stack below the editor and the
@@ -765,13 +868,16 @@
     function layout() {
       if (wide.matches && sidebar && rightPane) {
         sidebar.appendChild(treePane);
+        sidebar.appendChild(examplesPane);
         rightPane.appendChild(inspectorPane);
       } else {
         stack.appendChild(treePane);
+        stack.appendChild(examplesPane);
         stack.appendChild(inspectorPane);
       }
       applyLayout();
       afterResize();
+      scrollExampleIntoView();
     }
     if (wide.addEventListener) wide.addEventListener("change", layout);
     else wide.addListener(layout);

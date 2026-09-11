@@ -1985,12 +1985,21 @@ static int flecs_script_type_async(
         ? (ecs_script_scope_t*)v->base.nodes[v->base.depth - 2]
         : NULL;
     bool in_root = parent == v->base.script->root;
-    bool in_template = v->template && parent == v->template->node->scope;
+    bool in_template = v->template && !t->function_scope &&
+        (parent == v->template->node->scope ||
+            (v->entity && parent == v->entity->node->scope));
     if (!in_root && !in_template) {
         flecs_script_eval_error(v, node,
             "async blocks are only allowed in the root scope of a script or "
-            "template");
+            "in template entity scopes");
         return -1;
+    }
+
+    if (in_template) {
+        v->vars = flecs_script_vars_push(
+            v->vars, &v->r->stack, &v->r->allocator);
+        ecs_script_var_t *this_var = ecs_script_vars_declare(v->vars, "this");
+        this_var->value.type = ecs_id(ecs_entity_t);
     }
 
     int32_t old_for_depth = t->for_depth;
@@ -1999,6 +2008,9 @@ static int flecs_script_type_async(
     int result = flecs_script_type_control_scope(t, node->scope);
     t->async_scope = false;
     t->for_depth = old_for_depth;
+    if (in_template) {
+        v->vars = ecs_script_vars_pop(v->vars);
+    }
     return result;
 #endif
 }
@@ -2129,15 +2141,12 @@ static int flecs_script_type_assign(
     }
     type = var_type;
 
-    ecs_script_var_t *this_var = ecs_script_vars_lookup(v->vars, "this");
-    ecs_assert(this_var != NULL, ECS_INTERNAL_ERROR, NULL);
     const EcsStruct *st = ecs_get(v->world, template->muts.type, EcsStruct);
     ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_member_t *m = ecs_vec_get_t(
         &st->members, ecs_member_t, member->index);
     node->eval_type = type;
     node->sp = var->sp;
-    node->this_sp = this_var->sp;
     node->component = template->muts.type;
     node->offset = m->offset;
     return 0;

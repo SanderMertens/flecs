@@ -1,0 +1,68 @@
+// Script that shows how to implement a checkbox widget
+using flecs.script
+
+struct Position(x: f32, y: f32)
+struct Rect(width: f32, height: f32)
+struct Rgb(r: u8, g: u8, b: u8)
+struct Text(value: string, size: i32, align: string)
+
+const panelColor: Rgb = {46, 50, 58}
+const panelDarkColor: Rgb = {32, 35, 41}
+const accentColor: Rgb = {98, 168, 122}
+const textColor: Rgb = {214, 218, 224}
+const hoverColor: Rgb = {60, 65, 75}
+const fontSize = 12
+
+template Checkbox {
+  prop label: string = "Enable sound"
+  prop value: bool = false
+  prop width = 180
+  prop height = 28
+
+  mut checked = value
+  mut hover = false
+
+  const pad = 8
+  const boxSize = 16
+  const boxX = -width / 2 + pad + boxSize / 2
+
+  bg {
+    Position: {}
+    Rect: {width, height}
+    Rgb: panelColor
+  }
+
+  box {
+    Position: {x: boxX}
+    Rect: {boxSize, boxSize}
+    
+    if !hover {
+      Rgb: panelDarkColor
+    } else {
+      Rgb: hoverColor
+    }
+
+    if checked {
+      mark {
+        Position: {}
+        Rect: {boxSize - 6, boxSize - 6}
+        Rgb: accentColor
+      }
+    }
+  }
+
+  caption {
+    Position: {x: boxX + boxSize / 2 + pad, y: -1}
+    Text: {label, fontSize, "left"}
+    Rgb: textColor
+  }
+
+  async {
+    while true {
+      await on.click(this)
+      checked = !checked
+    }
+  }
+}
+
+Checkbox my_checkbox

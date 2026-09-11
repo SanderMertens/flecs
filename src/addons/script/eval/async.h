@@ -87,5 +87,8 @@ int flecs_script_async_spawn(
 void flecs_script_async_tasks_free(
     ecs_vec_t *tasks);
 
+void flecs_script_async_cleanup(
+    ecs_script_eval_visitor_t *v);
+
 #endif // FLECS_SCRIPT_ASYNC
 #endif // FLECS_SCRIPT_ASYNC_PRIVATE_H

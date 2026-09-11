@@ -1914,15 +1914,7 @@ int flecs_script_assign_value(
     const void *src)
 {
     ecs_world_t *world = v->world;
-    ecs_script_var_t *this_var = ecs_script_vars_from_sp(
-        v->vars, node->this_sp);
-    if (!this_var || !this_var->value.ptr) {
-        flecs_script_eval_error(v, node,
-            "cannot assign to '%s': no template instance", node->name);
-        return -1;
-    }
-
-    ecs_entity_t instance = *(ecs_entity_t*)this_var->value.ptr;
+    ecs_entity_t instance = v->template_instance;
     if (!instance || !ecs_is_alive(world, instance) ||
         !ecs_has_id(world, instance, node->component))
     {
@@ -1945,11 +1937,6 @@ int flecs_script_assign_value(
     ecs_set_id(world, instance, node->component,
         flecs_ito(size_t, comp_ti->size), copy);
     ecs_ptr_free_w_type_info(world, comp_ti, copy);
-
-    ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
-    if (var && var->value.ptr && var->value.type == node->eval_type) {
-        ecs_ptr_copy_w_type_info(world, ti, var->value.ptr, src);
-    }
 
     return 0;
 }

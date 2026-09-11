@@ -1,0 +1,313 @@
+// Script that shows how to create a mixer panel UI
+using flecs.script
+
+struct Position(x: f32, y: f32)
+struct Rect(width: f32, height: f32)
+struct Circle(radius: f32)
+struct Rgb(r: u8, g: u8, b: u8)
+struct Text(value: string, size: i32, align: string)
+
+const panelColor: Rgb = {46, 50, 58}
+const panelDarkColor: Rgb = {32, 35, 41}
+const panelLightColor: Rgb = {182, 188, 198}
+const accentColor: Rgb = {98, 168, 122}
+const textColor: Rgb = {214, 218, 224}
+const mutedColor: Rgb = {210, 104, 91}
+const soloColor: Rgb = {220, 181, 95}
+const hoverColor: Rgb = {60, 65, 75}
+const fontSize = 12
+
+template Toggle {
+  prop label: string = "M"
+  prop color: Rgb = mutedColor
+  prop value: bool = false
+  prop width = 34
+  prop height = 24
+
+  mut active = value
+  mut hover = false
+
+  bg {
+    Position: {}
+    Rect: {width, height}
+    if active {
+      Rgb: color
+    } else if hover {
+      Rgb: hoverColor
+    } else {
+      Rgb: panelDarkColor
+    }
+  }
+
+  caption {
+    Position: {y: 1}
+    Text: {label, fontSize, "center"}
+    if active && !hover {
+      Rgb: panelDarkColor
+    } else {
+      Rgb: textColor
+    }
+  }
+
+  async {
+    while true {
+      await on.enter(this)
+      hover = true
+      await on.leave(this)
+      hover = false
+    }
+  }
+
+  async {
+    while true {
+      await on.click(this)
+      active = !active
+    }
+  }
+}
+
+template Fader {
+  prop value: f32 = -6
+  prop min: f32 = -60
+  prop max: f32 = 6
+  prop height = 150
+  prop color: Rgb = accentColor
+
+  mut level: f32 = math.clamp(value, min, max)
+  mut hover = false
+
+  const ratio = (level - min) / (max - min)
+  const handleY = -height / 2 + ratio * height
+
+  const padTop = 8
+  const padBottom = 32
+
+  bg {
+    Position: {y: (padTop - padBottom) / 2}
+    Rect: {60, height + padTop + padBottom}
+    if hover {
+      Rgb: hoverColor
+    } else {
+      Rgb: panelColor
+    }
+  }
+
+  track {
+    Position: {}
+    Rect: {6, height}
+    Rgb: panelDarkColor
+  }
+
+  fill {
+    Position: {y: -height / 2 + ratio * height / 2}
+    Rect: {6, ratio * height}
+    Rgb: color
+  }
+
+  for i in 0..7 {
+    {
+      Position: {x: 23, y: -height / 2 + i * height / 6}
+      Rect: {8, 1}
+      Rgb: panelLightColor
+    }
+  }
+
+  unity {
+    Position: {x: -23, y: -height / 2 + (0 - min) / (max - min) * height}
+    Text: {"0", 10, "center"}
+    Rgb: textColor
+  }
+
+  handle {
+    Position: {y: handleY}
+    Rect: {30, 14}
+    Rgb: panelLightColor
+
+    line {
+      Position: {}
+      Rect: {24, 2}
+      Rgb: panelDarkColor
+    }
+  }
+
+  readout {
+    Position: {y: -height / 2 - 24}
+    Text: {"{level:.1} dB", fontSize, "center"}
+    Rgb: textColor
+  }
+
+  async {
+    while true {
+      await on.enter(this)
+      hover = true
+      await on.leave(this)
+      hover = false
+    }
+  }
+
+  async {
+    while true {
+      const e = await on.drag(this)
+      const trackY = e.local_y - padBottom
+      const newRatio = math.clamp(trackY / height, 0, 1)
+      level = min + newRatio * (max - min)
+    }
+  }
+}
+
+template Pan {
+  prop value: f32 = 0
+  prop width = 64
+
+  mut pan: f32 = math.clamp(value, -1, 1)
+  mut hover = false
+
+  const pad = 6
+
+  bg {
+    Position: {}
+    Rect: {width + pad * 2, 24}
+    if hover {
+      Rgb: hoverColor
+    } else {
+      Rgb: panelColor
+    }
+  }
+
+  track {
+    Position: {}
+    Rect: {width, 3}
+    Rgb: panelDarkColor
+  }
+
+  center {
+    Position: {}
+    Rect: {2, 10}
+    Rgb: panelLightColor
+  }
+
+  handle {
+    Position: {x: pan * width / 2}
+    Circle: {5}
+    Rgb: accentColor
+  }
+
+  left {
+    Position: {x: -width / 2, y: 17}
+    Text: {"L", 10, "center"}
+    Rgb: textColor
+  }
+
+  right {
+    Position: {x: width / 2, y: 17}
+    Text: {"R", 10, "center"}
+    Rgb: textColor
+  }
+
+  async {
+    while true {
+      await on.enter(this)
+      hover = true
+      await on.leave(this)
+      hover = false
+    }
+  }
+
+  async {
+    while true {
+      const e = await on.drag(this)
+      const trackX = e.local_x - pad
+      pan = math.clamp(trackX / width * 2 - 1, -1, 1)
+    }
+  }
+}
+
+template ChannelStrip {
+  prop label: string = "INPUT"
+  prop level: f32 = -6
+  prop pan: f32 = 0
+  prop master: bool = false
+  prop color: Rgb = accentColor
+
+  bg {
+    Position: {}
+    Rect: {100, 320}
+    Rgb: panelColor
+  }
+
+  accent {
+    Position: {y: 157}
+    Rect: {100, 6}
+    Rgb: color
+  }
+
+  name {
+    Position: {y: 134}
+    Text: {label, fontSize, "center"}
+    Rgb: textColor
+  }
+
+  if master {
+    stereo {
+      Position: {y: 96}
+      Text: {"STEREO OUT", 10, "center"}
+      Rgb: panelLightColor
+    }
+  } else {
+    Pan balance(value: pan) {
+      Position: {y: 93}
+    }
+  }
+
+  Fader gain(value: level, color: color) {
+    Position: {y: -5}
+  }
+
+  if master {
+    Toggle mute(label: "MUTE", width: 76) {
+      Position: {y: -135}
+    }
+  } else {
+    Toggle mute {
+      Position: {x: -21, y: -135}
+    }
+
+    Toggle solo(label: "S", color: soloColor) {
+      Position: {x: 21, y: -135}
+    }
+  }
+}
+
+template Mixer {
+  prop title: string = "MIXER"
+
+  bg {
+    Position: {}
+    Rect: {464, 384}
+    Rgb: panelDarkColor
+  }
+
+  heading {
+    Position: {x: -214, y: 171}
+    Text: {title, 14, "left"}
+    Rgb: textColor
+  }
+
+  ChannelStrip drums(label: "DRUMS", level: -6) {
+    Position: {x: -162, y: -18}
+  }
+
+  ChannelStrip bass(label: "BASS", level: -9, pan: -0.15) {
+    Position: {x: -54, y: -18}
+  }
+
+  ChannelStrip keys(label: "KEYS", level: -12, pan: 0.3) {
+    Position: {x: 54, y: -18}
+  }
+
+  ChannelStrip master(label: "MASTER", level: 0, master: true, color: soloColor) {
+    Position: {x: 162, y: -18}
+  }
+}
+
+Mixer mixing_panel

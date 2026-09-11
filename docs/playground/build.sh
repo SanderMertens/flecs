@@ -20,13 +20,13 @@ if ! command -v emcc >/dev/null 2>&1; then
 fi
 
 mkdir -p "$OUT"
-emcc -O2 -DNDEBUG -DFLECS_SCRIPT_MATH -DFLECS_SCRIPT_PLATFORM \
+emcc -O2 -DNDEBUG -DFLECS_SCRIPT_MATH -DFLECS_SCRIPT_PLATFORM -DFLECS_SCRIPT_EVENT \
     -I distr \
     distr/flecs.c docs/playground/main.c \
     -s ALLOW_MEMORY_GROWTH=1 \
     -s STACK_SIZE=1mb \
     -s EXPORTED_RUNTIME_METHODS=cwrap \
-    -s EXPORTED_FUNCTIONS=_main,_flecs_explorer_request \
+    -s EXPORTED_FUNCTIONS=_main,_flecs_explorer_request,_flecs_playground_mouse,_flecs_playground_key \
     -s MODULARIZE=1 \
     -s EXPORT_NAME=$NAME \
     -s ENVIRONMENT=web \

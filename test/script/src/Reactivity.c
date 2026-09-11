@@ -8420,3 +8420,199 @@ void Reactivity_computed_const_cache_restored_and_reset(void) {
     test_flt(p->y, 30);
     ecs_fini(world);
 }
+
+void Reactivity_count_vector_is_reactive(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t type = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Values" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_add_id(world, source, type);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .code =
+            HEAD "const values = source[Values]"
+            LINE "const count = values.count()"
+            LINE "item { i32: {count} }"
+            LINE "if count > 0 { nonempty {} }"
+            LINE "for i in 0..count { \"element_{i}\" {} }"
+    });
+    test_assert(script != 0);
+
+    int32_t counts[] = {0, 3, 1, 0, 2};
+    for (int32_t i = 0; i < 5; i ++) {
+        ecs_vec_t *values = ecs_get_mut_id(world, source, type);
+        ecs_vec_set_count_t(NULL, values, int32_t, counts[i]);
+        ecs_modified_id(world, source, type);
+
+        ecs_entity_t item = ecs_lookup(world, "item");
+        test_assert(item != 0);
+        const int32_t *count = ecs_get(world, item, ecs_i32_t);
+        test_assert(count != NULL);
+        test_int(*count, counts[i]);
+        test_bool(ecs_lookup(world, "nonempty") != 0, counts[i] != 0);
+        test_bool(ecs_lookup(world, "element_0") != 0, counts[i] > 0);
+        test_bool(ecs_lookup(world, "element_1") != 0, counts[i] > 1);
+        test_bool(ecs_lookup(world, "element_2") != 0, counts[i] > 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Reactivity_count_map_is_reactive(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t type = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Values" }),
+        .key_type = ecs_id(ecs_i64_t), .type = ecs_id(ecs_i32_t)
+    });
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_add_id(world, source, type);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .code = HEAD "item { i32: {source[Values].count()} }"
+    });
+    test_assert(script != 0);
+    ecs_entity_t item = ecs_lookup(world, "item");
+    test_assert(item != 0);
+    const int32_t *count = ecs_get(world, item, ecs_i32_t);
+    test_assert(count != NULL);
+    test_int(*count, 0);
+
+    for (int32_t i = 1; i <= 3; i ++) {
+        ecs_map_t *values = ecs_get_mut_id(world, source, type);
+        ecs_map_init_if(values, NULL);
+        ecs_map_ensure(values, i);
+        ecs_modified_id(world, source, type);
+        count = ecs_get(world, item, ecs_i32_t);
+        test_assert(count != NULL);
+        test_int(*count, i);
+    }
+
+    ecs_map_t *values = ecs_get_mut_id(world, source, type);
+    ecs_map_clear(values);
+    ecs_modified_id(world, source, type);
+    count = ecs_get(world, item, ecs_i32_t);
+    test_assert(count != NULL);
+    test_int(*count, 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_count_template_prop_is_reactive(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .code =
+            HEAD "template Dropdown {"
+            LINE "  prop labels = [\"Apple\", \"Banana\", \"Pear\"]"
+            LINE "  const count = labels.count()"
+            LINE "  i32: {count}"
+            LINE "  for i in 0..count { \"option_{i}\" {} }"
+            LINE "}"
+            LINE "Dropdown dropdown()"
+    });
+    test_assert(script != 0);
+    ecs_entity_t dropdown = ecs_lookup(world, "dropdown");
+    ecs_entity_t type = ecs_lookup(world, "Dropdown");
+    test_assert(dropdown != 0);
+    test_assert(type != 0);
+    const int32_t *count = ecs_get(world, dropdown, ecs_i32_t);
+    test_assert(count != NULL);
+    test_int(*count, 3);
+    test_assert(ecs_lookup(world, "dropdown.option_2") != 0);
+
+    ecs_vec_t labels = {0};
+    ecs_vec_init_t(NULL, &labels, char*, 0);
+    ecs_set_id(world, dropdown, type, sizeof(labels), &labels);
+    count = ecs_get(world, dropdown, ecs_i32_t);
+    test_assert(count != NULL);
+    test_int(*count, 0);
+    test_assert(ecs_lookup(world, "dropdown.option_0") == 0);
+    test_assert(ecs_lookup(world, "dropdown.option_2") == 0);
+
+    ecs_vec_set_count_t(NULL, &labels, char*, 2);
+    char **elems = ecs_vec_first(&labels);
+    elems[0] = "Orange";
+    elems[1] = "Lemon";
+    ecs_set_id(world, dropdown, type, sizeof(labels), &labels);
+    ecs_vec_fini_t(NULL, &labels, char*);
+    count = ecs_get(world, dropdown, ecs_i32_t);
+    test_assert(count != NULL);
+    test_int(*count, 2);
+    test_assert(ecs_lookup(world, "dropdown.option_0") != 0);
+    test_assert(ecs_lookup(world, "dropdown.option_1") != 0);
+    test_assert(ecs_lookup(world, "dropdown.option_2") == 0);
+
+    ecs_fini(world);
+}
+
+static void reactivity_count_array(bool inline_array) {
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t type = ecs_entity(world, { .name = "Values" });
+    if (inline_array) {
+        ecs_struct(world, {
+            .entity = type,
+            .members = {{"values", ecs_id(ecs_i32_t), .count = 3}}
+        });
+    } else {
+        ecs_array(world, {
+            .entity = type, .type = ecs_id(ecs_i32_t), .count = 3
+        });
+    }
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    int32_t values[3] = {10, 20, 30};
+    ecs_set_id(world, source, type, sizeof(values), values);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .code = inline_array
+            ? HEAD "const values = source[Values].values"
+              LINE "item { i32: {values[values.count() - 1]} }"
+            : HEAD "const values = source[Values]"
+              LINE "item { i32: {values[values.count() - 1]} }"
+    });
+    test_assert(script != 0);
+    ecs_entity_t item = ecs_lookup(world, "item");
+    test_assert(item != 0);
+    const int32_t *value = ecs_get(world, item, ecs_i32_t);
+    test_assert(value != NULL);
+    test_int(*value, 30);
+
+    values[2] = 60;
+    ecs_set_id(world, source, type, sizeof(values), values);
+    value = ecs_get(world, item, ecs_i32_t);
+    test_assert(value != NULL);
+    test_int(*value, 60);
+
+    ecs_fini(world);
+}
+
+void Reactivity_count_array_is_reactive(void) {
+    reactivity_count_array(false);
+}
+
+void Reactivity_count_inline_array_is_reactive(void) {
+    reactivity_count_array(true);
+}
+
+void Reactivity_count_range_is_reactive(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set(world, source, ecs_i32_t, {0});
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .code = HEAD "item { i32: {[0..source[i32]].count()} }"
+    });
+    test_assert(script != 0);
+    ecs_entity_t item = ecs_lookup(world, "item");
+    test_assert(item != 0);
+    int32_t counts[] = {0, 3, 1, 0};
+    for (int32_t i = 0; i < 4; i ++) {
+        ecs_set(world, source, ecs_i32_t, {counts[i]});
+        const int32_t *count = ecs_get(world, item, ecs_i32_t);
+        test_assert(count != NULL);
+        test_int(*count, counts[i]);
+    }
+
+    ecs_fini(world);
+}

@@ -937,6 +937,18 @@ void Await_many_live_strings_resume_and_cancel(void);
 
 // Testsuite 'AsyncBlock'
 void AsyncBlock_setup(void);
+void AsyncBlock_template_outer_capture_restarts_block(void);
+void AsyncBlock_template_mut_string_external_update(void);
+void AsyncBlock_template_sixty_four_muts_manual_restart(void);
+void AsyncBlock_template_unrelated_prop_restarts_all_blocks(void);
+void AsyncBlock_template_prop_change_before_progress(void);
+void AsyncBlock_template_static_ref_restarts_block(void);
+void AsyncBlock_template_dynamic_ref_restarts_block(void);
+void AsyncBlock_template_mut_shared_between_blocks(void);
+void AsyncBlock_template_mut_incremented_by_two_blocks(void);
+void AsyncBlock_template_child_mut_after_reset(void);
+void AsyncBlock_template_mut_sparse_external_update(void);
+void AsyncBlock_template_resolved_block_cancelled_before_resume(void);
 void AsyncBlock_parse_async_block(void);
 void AsyncBlock_parse_while(void);
 void AsyncBlock_script_block_runs_on_progress(void);
@@ -954,6 +966,26 @@ void AsyncBlock_script_run_frees_block(void);
 void AsyncBlock_script_progress_from_pipeline(void);
 void AsyncBlock_template_block_assign_mut(void);
 void AsyncBlock_template_block_this(void);
+void AsyncBlock_template_child_this(void);
+void AsyncBlock_template_child_scopes_and_instances(void);
+void AsyncBlock_template_child_assign_mut(void);
+void AsyncBlock_template_child_delete_cancels(void);
+void AsyncBlock_template_child_instance_delete_cancels(void);
+void AsyncBlock_template_child_remove_cancels(void);
+void AsyncBlock_template_child_update_cancels(void);
+void AsyncBlock_template_child_delete_before_progress(void);
+void AsyncBlock_template_child_prop_change_restarts_block(void);
+void AsyncBlock_template_child_condition(void);
+void AsyncBlock_template_child_loop(void);
+void AsyncBlock_template_child_completed_block_restarts(void);
+void AsyncBlock_template_child_nested_template_owner(void);
+void AsyncBlock_template_child_anonymous(void);
+void AsyncBlock_template_child_branch_keeps_entity(void);
+void AsyncBlock_template_child_delete_from_callback(void);
+void AsyncBlock_template_child_script_update_cancels(void);
+void AsyncBlock_template_child_computed_name(void);
+void AsyncBlock_template_child_this_shadows_local(void);
+void AsyncBlock_template_child_assign_removes_self(void);
 void AsyncBlock_template_block_reads_component_via_this(void);
 void AsyncBlock_template_block_captures_consts(void);
 void AsyncBlock_template_two_blocks(void);
@@ -963,7 +995,7 @@ void AsyncBlock_template_instance_delete_cancels(void);
 void AsyncBlock_template_remove_cancels(void);
 void AsyncBlock_template_script_update_cancels(void);
 void AsyncBlock_template_update_restarts_block(void);
-void AsyncBlock_template_prop_change_keeps_block(void);
+void AsyncBlock_template_prop_change_restarts_block(void);
 void AsyncBlock_template_block_while(void);
 void AsyncBlock_template_block_while_no_await(void);
 void AsyncBlock_template_block_while_continue(void);
@@ -984,12 +1016,54 @@ void AsyncBlock_error_assign_type_mismatch(void);
 void AsyncBlock_error_nested_async(void);
 void AsyncBlock_error_async_in_entity_scope(void);
 void AsyncBlock_error_async_in_if(void);
-void AsyncBlock_error_async_in_template_child(void);
 void AsyncBlock_error_entity_in_async(void);
 void AsyncBlock_error_component_in_async(void);
 void AsyncBlock_error_mut_in_async(void);
 void AsyncBlock_error_parse_async_missing_scope(void);
 void AsyncBlock_error_parse_while_missing_scope(void);
+
+// Testsuite 'Event'
+void Event_setup(void);
+void Event_import(void);
+void Event_press(void);
+void Event_press_other_target(void);
+void Event_press_no_target(void);
+void Event_press_bubbles_to_parent(void);
+void Event_press_two_listeners(void);
+void Event_press_two_widgets(void);
+void Event_press_while_other_button_held(void);
+void Event_drag(void);
+void Event_no_drag_without_button(void);
+void Event_release(void);
+void Event_click(void);
+void Event_no_click_when_released_elsewhere(void);
+void Event_move(void);
+void Event_delta_from_event(void);
+void Event_button_and_modifiers(void);
+void Event_key_down_up(void);
+void Event_key_modifiers(void);
+void Event_key_focus_follows_press(void);
+void Event_key_bubbles_to_parent(void);
+void Event_slider(void);
+void Event_wrong_arg_fails(void);
+void Event_delete_listener(void);
+void Event_delete_listener_while_pressed(void);
+void Event_fini_w_pending_listener(void);
+void Event_script_update_w_pending_listener(void);
+void Event_mouse_event_w_stage(void);
+void Event_mouse_event_in_progress(void);
+void Event_import_enter_leave(void);
+void Event_enter_leave(void);
+void Event_enter_leave_between_children(void);
+void Event_enter_leave_children_listen(void);
+void Event_enter_leave_while_dragging(void);
+void Event_leave_deleted_hover_target(void);
+void Event_returns_true(void);
+void Event_no_propagation_without_host(void);
+void Event_propagation_translates_coordinates(void);
+void Event_propagation_keeps_deltas(void);
+void Event_propagation_press_once_per_level(void);
+void Event_drag_not_propagated_to_unrelated_target(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_setup(void);
@@ -1761,6 +1835,15 @@ void Format_min_width_char_variable(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
+void Expr_count_w_arguments(void);
+void Expr_count_non_collection(void);
+void Expr_count_array(void);
+void Expr_count_inline_array(void);
+void Expr_count_vector_empty(void);
+void Expr_count_vector(void);
+void Expr_count_collection_literal(void);
+void Expr_count_map_empty(void);
+void Expr_count_map(void);
 void Expr_add_2_int_literals(void);
 void Expr_add_2_int_literals_twice(void);
 void Expr_sub_2_int_literals(void);
@@ -2806,6 +2889,12 @@ void Refs_has_ref_resolve_observer_on_add(void);
 
 // Testsuite 'Reactivity'
 void Reactivity_setup(void);
+void Reactivity_count_array_is_reactive(void);
+void Reactivity_count_inline_array_is_reactive(void);
+void Reactivity_count_range_is_reactive(void);
+void Reactivity_count_vector_is_reactive(void);
+void Reactivity_count_map_is_reactive(void);
+void Reactivity_count_template_prop_is_reactive(void);
 void Reactivity_external_inputs_are_isolated(void);
 void Reactivity_script_update_recreates_observers(void);
 void Reactivity_annotation_follows_dependent_statement(void);
@@ -7107,6 +7196,54 @@ bake_test_case Await_testcases[] = {
 
 bake_test_case AsyncBlock_testcases[] = {
     {
+        "template_outer_capture_restarts_block",
+        AsyncBlock_template_outer_capture_restarts_block
+    },
+    {
+        "template_mut_string_external_update",
+        AsyncBlock_template_mut_string_external_update
+    },
+    {
+        "template_sixty_four_muts_manual_restart",
+        AsyncBlock_template_sixty_four_muts_manual_restart
+    },
+    {
+        "template_unrelated_prop_restarts_all_blocks",
+        AsyncBlock_template_unrelated_prop_restarts_all_blocks
+    },
+    {
+        "template_prop_change_before_progress",
+        AsyncBlock_template_prop_change_before_progress
+    },
+    {
+        "template_static_ref_restarts_block",
+        AsyncBlock_template_static_ref_restarts_block
+    },
+    {
+        "template_dynamic_ref_restarts_block",
+        AsyncBlock_template_dynamic_ref_restarts_block
+    },
+    {
+        "template_mut_shared_between_blocks",
+        AsyncBlock_template_mut_shared_between_blocks
+    },
+    {
+        "template_mut_incremented_by_two_blocks",
+        AsyncBlock_template_mut_incremented_by_two_blocks
+    },
+    {
+        "template_child_mut_after_reset",
+        AsyncBlock_template_child_mut_after_reset
+    },
+    {
+        "template_mut_sparse_external_update",
+        AsyncBlock_template_mut_sparse_external_update
+    },
+    {
+        "template_resolved_block_cancelled_before_resume",
+        AsyncBlock_template_resolved_block_cancelled_before_resume
+    },
+    {
         "parse_async_block",
         AsyncBlock_parse_async_block
     },
@@ -7175,6 +7312,86 @@ bake_test_case AsyncBlock_testcases[] = {
         AsyncBlock_template_block_this
     },
     {
+        "template_child_this",
+        AsyncBlock_template_child_this
+    },
+    {
+        "template_child_scopes_and_instances",
+        AsyncBlock_template_child_scopes_and_instances
+    },
+    {
+        "template_child_assign_mut",
+        AsyncBlock_template_child_assign_mut
+    },
+    {
+        "template_child_delete_cancels",
+        AsyncBlock_template_child_delete_cancels
+    },
+    {
+        "template_child_instance_delete_cancels",
+        AsyncBlock_template_child_instance_delete_cancels
+    },
+    {
+        "template_child_remove_cancels",
+        AsyncBlock_template_child_remove_cancels
+    },
+    {
+        "template_child_update_cancels",
+        AsyncBlock_template_child_update_cancels
+    },
+    {
+        "template_child_delete_before_progress",
+        AsyncBlock_template_child_delete_before_progress
+    },
+    {
+        "template_child_prop_change_restarts_block",
+        AsyncBlock_template_child_prop_change_restarts_block
+    },
+    {
+        "template_child_condition",
+        AsyncBlock_template_child_condition
+    },
+    {
+        "template_child_loop",
+        AsyncBlock_template_child_loop
+    },
+    {
+        "template_child_completed_block_restarts",
+        AsyncBlock_template_child_completed_block_restarts
+    },
+    {
+        "template_child_nested_template_owner",
+        AsyncBlock_template_child_nested_template_owner
+    },
+    {
+        "template_child_anonymous",
+        AsyncBlock_template_child_anonymous
+    },
+    {
+        "template_child_branch_keeps_entity",
+        AsyncBlock_template_child_branch_keeps_entity
+    },
+    {
+        "template_child_delete_from_callback",
+        AsyncBlock_template_child_delete_from_callback
+    },
+    {
+        "template_child_script_update_cancels",
+        AsyncBlock_template_child_script_update_cancels
+    },
+    {
+        "template_child_computed_name",
+        AsyncBlock_template_child_computed_name
+    },
+    {
+        "template_child_this_shadows_local",
+        AsyncBlock_template_child_this_shadows_local
+    },
+    {
+        "template_child_assign_removes_self",
+        AsyncBlock_template_child_assign_removes_self
+    },
+    {
         "template_block_reads_component_via_this",
         AsyncBlock_template_block_reads_component_via_this
     },
@@ -7211,8 +7428,8 @@ bake_test_case AsyncBlock_testcases[] = {
         AsyncBlock_template_update_restarts_block
     },
     {
-        "template_prop_change_keeps_block",
-        AsyncBlock_template_prop_change_keeps_block
+        "template_prop_change_restarts_block",
+        AsyncBlock_template_prop_change_restarts_block
     },
     {
         "template_block_while",
@@ -7295,10 +7512,6 @@ bake_test_case AsyncBlock_testcases[] = {
         AsyncBlock_error_async_in_if
     },
     {
-        "error_async_in_template_child",
-        AsyncBlock_error_async_in_template_child
-    },
-    {
         "error_entity_in_async",
         AsyncBlock_error_entity_in_async
     },
@@ -7317,6 +7530,169 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "error_parse_while_missing_scope",
         AsyncBlock_error_parse_while_missing_scope
+    }
+};
+
+bake_test_case Event_testcases[] = {
+    {
+        "import",
+        Event_import
+    },
+    {
+        "press",
+        Event_press
+    },
+    {
+        "press_other_target",
+        Event_press_other_target
+    },
+    {
+        "press_no_target",
+        Event_press_no_target
+    },
+    {
+        "press_bubbles_to_parent",
+        Event_press_bubbles_to_parent
+    },
+    {
+        "press_two_listeners",
+        Event_press_two_listeners
+    },
+    {
+        "press_two_widgets",
+        Event_press_two_widgets
+    },
+    {
+        "press_while_other_button_held",
+        Event_press_while_other_button_held
+    },
+    {
+        "drag",
+        Event_drag
+    },
+    {
+        "no_drag_without_button",
+        Event_no_drag_without_button
+    },
+    {
+        "release",
+        Event_release
+    },
+    {
+        "click",
+        Event_click
+    },
+    {
+        "no_click_when_released_elsewhere",
+        Event_no_click_when_released_elsewhere
+    },
+    {
+        "move",
+        Event_move
+    },
+    {
+        "delta_from_event",
+        Event_delta_from_event
+    },
+    {
+        "button_and_modifiers",
+        Event_button_and_modifiers
+    },
+    {
+        "key_down_up",
+        Event_key_down_up
+    },
+    {
+        "key_modifiers",
+        Event_key_modifiers
+    },
+    {
+        "key_focus_follows_press",
+        Event_key_focus_follows_press
+    },
+    {
+        "key_bubbles_to_parent",
+        Event_key_bubbles_to_parent
+    },
+    {
+        "slider",
+        Event_slider
+    },
+    {
+        "wrong_arg_fails",
+        Event_wrong_arg_fails
+    },
+    {
+        "delete_listener",
+        Event_delete_listener
+    },
+    {
+        "delete_listener_while_pressed",
+        Event_delete_listener_while_pressed
+    },
+    {
+        "fini_w_pending_listener",
+        Event_fini_w_pending_listener
+    },
+    {
+        "script_update_w_pending_listener",
+        Event_script_update_w_pending_listener
+    },
+    {
+        "mouse_event_w_stage",
+        Event_mouse_event_w_stage
+    },
+    {
+        "mouse_event_in_progress",
+        Event_mouse_event_in_progress
+    },
+    {
+        "import_enter_leave",
+        Event_import_enter_leave
+    },
+    {
+        "enter_leave",
+        Event_enter_leave
+    },
+    {
+        "enter_leave_between_children",
+        Event_enter_leave_between_children
+    },
+    {
+        "enter_leave_children_listen",
+        Event_enter_leave_children_listen
+    },
+    {
+        "enter_leave_while_dragging",
+        Event_enter_leave_while_dragging
+    },
+    {
+        "leave_deleted_hover_target",
+        Event_leave_deleted_hover_target
+    },
+    {
+        "returns_true",
+        Event_returns_true
+    },
+    {
+        "no_propagation_without_host",
+        Event_no_propagation_without_host
+    },
+    {
+        "propagation_translates_coordinates",
+        Event_propagation_translates_coordinates
+    },
+    {
+        "propagation_keeps_deltas",
+        Event_propagation_keeps_deltas
+    },
+    {
+        "propagation_press_once_per_level",
+        Event_propagation_press_once_per_level
+    },
+    {
+        "drag_not_propagated_to_unrelated_target",
+        Event_drag_not_propagated_to_unrelated_target
     }
 };
 
@@ -10339,6 +10715,42 @@ bake_test_case Format_testcases[] = {
 };
 
 bake_test_case Expr_testcases[] = {
+    {
+        "count_w_arguments",
+        Expr_count_w_arguments
+    },
+    {
+        "count_non_collection",
+        Expr_count_non_collection
+    },
+    {
+        "count_array",
+        Expr_count_array
+    },
+    {
+        "count_inline_array",
+        Expr_count_inline_array
+    },
+    {
+        "count_vector_empty",
+        Expr_count_vector_empty
+    },
+    {
+        "count_vector",
+        Expr_count_vector
+    },
+    {
+        "count_collection_literal",
+        Expr_count_collection_literal
+    },
+    {
+        "count_map_empty",
+        Expr_count_map_empty
+    },
+    {
+        "count_map",
+        Expr_count_map
+    },
     {
         "add_2_int_literals",
         Expr_add_2_int_literals
@@ -14456,6 +14868,30 @@ bake_test_case Refs_testcases[] = {
 
 bake_test_case Reactivity_testcases[] = {
     {
+        "count_array_is_reactive",
+        Reactivity_count_array_is_reactive
+    },
+    {
+        "count_inline_array_is_reactive",
+        Reactivity_count_inline_array_is_reactive
+    },
+    {
+        "count_range_is_reactive",
+        Reactivity_count_range_is_reactive
+    },
+    {
+        "count_vector_is_reactive",
+        Reactivity_count_vector_is_reactive
+    },
+    {
+        "count_map_is_reactive",
+        Reactivity_count_map_is_reactive
+    },
+    {
+        "count_template_prop_is_reactive",
+        Reactivity_count_template_prop_is_reactive
+    },
+    {
         "external_inputs_are_isolated",
         Reactivity_external_inputs_are_isolated
     },
@@ -16873,6 +17309,11 @@ bake_test_param AsyncBlock_params[] = {
     {"ir", (char**)AsyncBlock_ir_param, 2}
 };
 
+const char* Event_ir_param[] = {"disabled", "enabled"};
+bake_test_param Event_params[] = {
+    {"ir", (char**)Event_ir_param, 2}
+};
+
 const char* TryCatch_ir_param[] = {"disabled", "enabled"};
 bake_test_param TryCatch_params[] = {
     {"ir", (char**)TryCatch_ir_param, 2}
@@ -17012,10 +17453,19 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        53,
+        84,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params
+    },
+    {
+        "Event",
+        Event_setup,
+        NULL,
+        40,
+        Event_testcases,
+        1,
+        Event_params
     },
     {
         "TryCatch",
@@ -17075,7 +17525,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        409,
+        418,
         Expr_testcases,
         2,
         Expr_params
@@ -17143,7 +17593,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        143,
+        149,
         Reactivity_testcases,
         1,
         Reactivity_params
@@ -17223,5 +17673,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 27);
+    return bake_test_run("script", argc, argv, suites, 28);
 }

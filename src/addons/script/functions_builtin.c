@@ -8,6 +8,31 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+static void flecs_meta_collection_count(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)argc;
+    const EcsType *type = ecs_get(ctx->world, argv[0].type, EcsType);
+    int32_t count = 0;
+    switch (type->kind) {
+    case EcsArrayType:
+        count = ecs_get(ctx->world, argv[0].type, EcsArray)->count;
+        break;
+    case EcsVectorType:
+        count = ecs_vec_count(argv[0].ptr);
+        break;
+    case EcsMapType:
+        count = ecs_map_count((ecs_map_t*)argv[0].ptr);
+        break;
+    default:
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    }
+    *(ecs_i32_t*)result->ptr = count;
+}
+
 static void flecs_meta_entity_name(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -169,6 +194,13 @@ static void flecs_script_register_builtin_doc_functions(
 void flecs_script_register_builtin_functions(
     ecs_world_t *world)
 {
+    ecs_method(world, {
+        .name = "count",
+        .parent = ecs_entity(world, { .name = "collection" }),
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = flecs_meta_collection_count
+    });
+
     ecs_method(world, {
         .name = "name",
         .parent = ecs_id(ecs_entity_t),

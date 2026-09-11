@@ -1,0 +1,94 @@
+// Script that shows how to implement a slider widget
+using flecs.script
+
+struct Position(x: f32, y: f32)
+struct Rect(width: f32, height: f32)
+struct Circle(radius: f32)
+struct Rgb(r: u8, g: u8, b: u8)
+struct Text(value: string, size: i32, align: string)
+
+const panelColor: Rgb= {46, 50, 58}
+const panelDarkColor: Rgb= {32, 35, 41}
+const panelLightColor: Rgb= {182, 188, 198}
+const accentColor: Rgb= {98, 168, 122}
+const textColor: Rgb= {214, 218, 224}
+const hoverColor: Rgb = {60, 65, 75}
+const fontSize = 12
+
+template Slider {
+  prop value: f32 = 25
+  prop max: f32 = 100
+  prop width = 250
+  prop height = 25
+  
+  mut actualValue: f32 = math.min(value, max)
+  mut hover = false
+  
+  const buttonRadius = 5
+  const trackHeight = 4
+  const pad = 6
+  const textWidth = 60
+  const ratio = actualValue / max
+
+  const trackWidth = width - textWidth - pad * 2
+  const trackOffsetX = -width / 2 + pad
+  const trackAccentWidth = trackWidth * ratio
+  
+  const textY = (height / 2) + trackHeight / 2 + pad
+  const buttonX = trackOffsetX + trackAccentWidth
+  
+  bg {
+    Position: {}
+    Rect: {width, height}
+    Rgb: panelColor
+  }
+
+  track {
+    Position: {x: trackOffsetX + trackWidth / 2}
+    Rect: {trackWidth, trackHeight}
+    Rgb: panelDarkColor
+  }
+  
+  trackAccent {
+    Position: {x: trackOffsetX + trackAccentWidth / 2}
+    Rect: {trackAccentWidth, trackHeight}
+    Rgb: accentColor
+  }
+  
+  button {
+    Position: {x: buttonX}
+    Circle: {radius: buttonRadius}
+    
+    if !hover {
+      Rgb: panelLightColor
+    } else {
+      Rgb: {255, 255, 255}
+    }
+    
+    async {
+      while true {
+        await on.enter(this)
+        hover = true
+        await on.leave(this)
+        hover = false
+      }
+    }
+  }
+  
+  label {
+    Position: {x: width / 2 - pad, y: -1}
+    Text: {value: "{actualValue:.2}", size: fontSize, align: "right"}
+    Rgb: {255, 255, 255}
+  }
+
+  async {
+    while true {
+      const e = await on.drag(this)
+      const trackX = e.local_x - pad
+      const newRatio = math.clamp(trackX / trackWidth, 0, 1)
+      actualValue = newRatio * max
+    }
+  }
+}
+
+Slider my_slider

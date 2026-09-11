@@ -32,8 +32,10 @@ static void flecs_script_delete_observers(
 static void flecs_script_template_root_tasks_free(
     EcsScriptTemplateRoot *root)
 {
+    (void)root;
 #ifdef FLECS_SCRIPT_ASYNC
     flecs_script_async_tasks_free(&root->tasks);
+    ecs_vec_clear(&root->async_blocks);
 #endif
 }
 
@@ -42,6 +44,7 @@ static void flecs_script_template_root_fini(
 {
     flecs_script_template_root_tasks_free(root);
     ecs_vec_fini_t(NULL, &root->tasks, void*);
+    ecs_vec_fini_t(NULL, &root->async_blocks, ecs_script_async_block_t);
     flecs_script_state_fini(&root->state);
     ecs_vec_fini_t(NULL, &root->observers, ecs_script_ref_t);
 }
@@ -49,6 +52,7 @@ static void flecs_script_template_root_fini(
 static ECS_CTOR(EcsScriptTemplateRoot, ptr, {
     ecs_vec_init_t(NULL, &ptr->observers, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &ptr->tasks, void*, 0);
+    ecs_vec_init_t(NULL, &ptr->async_blocks, ecs_script_async_block_t, 0);
     flecs_script_state_init(&ptr->state);
     ptr->changed = 0;
 })
@@ -59,6 +63,7 @@ static ECS_MOVE(EcsScriptTemplateRoot, dst, src, {
     flecs_script_state_init(&src->state);
     ecs_vec_init_t(NULL, &src->observers, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &src->tasks, void*, 0);
+    ecs_vec_init_t(NULL, &src->async_blocks, ecs_script_async_block_t, 0);
     src->changed = 0;
 })
 
@@ -539,9 +544,6 @@ static int flecs_script_template_instantiate_now(
     const EcsStruct *muts_st = template->muts.type
         ? ecs_get(world, template->muts.type, EcsStruct)
         : NULL;
-    const ecs_type_info_t *muts_ti = template->muts.type
-        ? ecs_get_type_info(world, template->muts.type)
-        : NULL;
 
     ecs_script_runner_t runner;
     ecs_script_ir_vm_t *vm = NULL;
@@ -569,6 +571,7 @@ static int flecs_script_template_instantiate_now(
     v->r->using = template->using_;
     v->template_entity = template_entity;
     v->body_template = template_entity;
+    v->template_instance = instance;
     v->instance_template = template;
     v->symbol_offset = template->symbol_offset;
     ecs_vec_init_t(NULL, &desc.runtime->with, ecs_script_with_value_t, 0);
@@ -617,7 +620,9 @@ static int flecs_script_template_instantiate_now(
     if (!run_input) {
         goto done;
     }
-    if (run_input == UINT64_MAX && ecs_vec_count(&root->tasks)) {
+    if ((run_input == UINT64_MAX || (run_input & template->async_input)) &&
+        ecs_vec_count(&root->async_blocks))
+    {
         flecs_script_template_root_tasks_free(root);
         root = ecs_ensure_pair(
             world, instance, EcsScriptTemplateRoot, template_entity);
@@ -661,15 +666,13 @@ static int flecs_script_template_instantiate_now(
         ? data
         : ECS_CONST_CAST(void*,
             ecs_get_id(world, instance, template->props.type));
-    void *muts_data = component == template->muts.type
-        ? data
-        : (template->muts.type
-            ? ECS_CONST_CAST(void*,
-                ecs_get_id(world, instance, template->muts.type))
-            : NULL);
+    void *muts_data = template->muts.type
+        ? ECS_CONST_CAST(void*,
+            ecs_get_id(world, instance, template->muts.type))
+        : NULL;
 
     bool run_ok;
-    void *props_copy = NULL, *muts_copy = NULL;
+    void *props_copy = NULL;
     if (template->has_interface_members) {
         if (flecs_script_template_validate_interfaces(world,
             template_entity, template, props_st, props_data,
@@ -684,12 +687,6 @@ static int flecs_script_template_instantiate_now(
         v, template->type_info, props_data);
     if (props_copy) {
         props_data = props_copy;
-    }
-
-    muts_copy = flecs_script_template_copy_data(
-        v, muts_ti, muts_data);
-    if (muts_copy) {
-        muts_data = muts_copy;
     }
 
     flecs_script_template_instantiate_vars(world, vars, template,
@@ -710,6 +707,11 @@ static int flecs_script_template_instantiate_now(
     }
 
     flecs_script_eval_cleanup(v, vm ? vm->dirty : true);
+#ifdef FLECS_SCRIPT_ASYNC
+    if (!vm || vm->dirty) {
+        flecs_script_async_cleanup(v);
+    }
+#endif
     root = ecs_ensure_pair(
         world, instance, EcsScriptTemplateRoot, template_entity);
     root->state.initialized = true;
@@ -722,7 +724,6 @@ static int flecs_script_template_instantiate_now(
 
 done_vars:
     flecs_script_template_free_data(template->type_info, props_copy);
-    flecs_script_template_free_data(muts_ti, muts_copy);
 
     ecs_script_vars_pop(vars);
 
@@ -1722,6 +1723,7 @@ static ecs_script_template_t* flecs_script_template_init(
     ecs_vec_init_t(NULL, &result->capture_input,
         ecs_script_template_capture_t, 0);
     result->symbol_offset = 0;
+    result->async_input = UINT64_MAX;
     result->symbol_count = 0;
     result->root_symbol = -1;
     result->input_count = 0;
@@ -1832,6 +1834,7 @@ int flecs_script_eval_template(
 
     /* If template has mut properties, add those when the template is added */
     if (template->muts.type) {
+        ecs_add_id(v->world, template->muts.type, EcsSparse);
         ecs_add_pair(v->world, template_entity, EcsWith, template->muts.type);
     }
 

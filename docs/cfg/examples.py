@@ -194,7 +194,7 @@ def write_playground_examples(root, examples, out_dir):
         script = entry["languages"].get("script")
         if not script:
             continue
-        items.append({"title": display_name(name), "code": playground_code(script["files"][0])})
+        items.append({"name": name, "title": display_name(name), "code": playground_code(script["files"][0])})
     with open(os.path.join(out_dir, "playground-examples.js"), "w", encoding="utf-8") as f:
         f.write("window.FLECS_PLAYGROUND_EXAMPLES = " + json.dumps(items, ensure_ascii=False) + ";\n")
     return len(items)

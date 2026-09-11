@@ -1,0 +1,133 @@
+// Script that shows how to implement a dropdown widget
+using flecs.script
+
+struct Position(x: f32, y: f32)
+struct Rect(width: f32, height: f32)
+struct Rgb(r: u8, g: u8, b: u8)
+struct Text(value: string, size: i32, align: string)
+
+const panelColor: Rgb = {46, 50, 58}
+const panelDarkColor: Rgb = {32, 35, 41}
+const accentColor: Rgb = {98, 168, 122}
+const textColor: Rgb = {214, 218, 224}
+const hoverColor: Rgb = {60, 65, 75}
+const fontSize = 12
+
+template DropdownItem {
+  prop label: string = ""
+  prop selected: bool = false
+  prop width = 180
+  prop height = 28
+
+  mut hover = false
+
+  const pad = 8
+
+  Rect: {width, height}
+  if selected {
+    Rgb: accentColor
+  } else if hover {
+    Rgb: hoverColor
+  } else {
+    Rgb: panelDarkColor
+  }
+
+  caption {
+    Position: {x: -width / 2 + pad, y: -1}
+    Text: {label, fontSize, "left"}
+    if selected && !hover {
+      Rgb: panelDarkColor
+    } else {
+      Rgb: textColor
+    }
+  }
+
+  async {
+    while true {
+      await on.enter(this)
+      hover = true
+      await on.leave(this)
+      hover = false
+    }
+  }
+}
+
+template Dropdown {
+  prop labels = ["Apple", "Banana", "Pear"]
+  prop value: i32 = 0
+  prop width = 180
+  prop height = 28
+
+  mut selected: i32 = math.clamp(value, 0, labels.count() - 1)
+  mut expanded = false
+  mut hover = false
+
+  const optionCount = labels.count()
+  const pad = 8
+
+  bg {
+    Position: {}
+    Rect: {width, height}
+    if hover {
+      Rgb: hoverColor
+    } else {
+      Rgb: panelColor
+    }
+  }
+
+  caption {
+    Position: {x: -width / 2 + pad, y: -1}
+    Text: {labels[selected], fontSize, "left"}
+    Rgb: textColor
+  }
+
+  arrow {
+    Position: {x: width / 2 - pad, y: -1}
+    if expanded {
+      Text: {"-", fontSize, "right"}
+    } else {
+      Text: {"+", fontSize, "right"}
+    }
+    Rgb: textColor
+  }
+
+  if expanded {
+    for i in 0..optionCount {
+      DropdownItem "option_{i}"(label: labels[i], selected: selected == i, width: width, height: height) {
+        Position: {y: -(i + 1) * height}
+      }
+    }
+  }
+
+  async {
+    while true {
+      await on.enter(this)
+      hover = true
+      await on.leave(this)
+      hover = false
+    }
+  }
+
+  async {
+    while true {
+      const e = await on.click(this)
+      if expanded {
+        if e.local_y < optionCount * height {
+          const row: i32 = e.local_y / height
+          selected = math.clamp(optionCount - 1 - row, 0, optionCount - 1)
+        }
+        expanded = false
+      } else {
+        expanded = true
+      }
+    }
+  }
+}
+
+backdrop {
+  Position: {y: -42}
+  Rect: {220, 152}
+  Rgb: {22, 24, 28}
+}
+
+Dropdown my_dropdown(labels: ["Apple", "Banana", "Pear"])
