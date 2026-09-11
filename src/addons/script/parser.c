@@ -777,6 +777,8 @@ static const char* flecs_script_stmt_parse(
         case EcsTokKeywordAwait:      goto await_stmt;
         case EcsTokKeywordTry:        goto try_stmt;
         case EcsTokKeywordContinue:   goto continue_stmt;
+        case EcsTokKeywordAsync:      goto async_stmt;
+        case EcsTokKeywordWhile:      goto while_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
 
@@ -829,6 +831,11 @@ identifier: {
         // SpaceShip(
         case '(': {
             goto identifier_paren;
+        }
+
+        // value =
+        case '=': {
+            goto identifier_assign;
         }
 
         // Spaceship enterprise
@@ -1079,6 +1086,41 @@ await_stmt: {
     Expr('\n', {
         ecs_script_await_t *await = flecs_script_insert_await(parser);
         await->expr = EXPR;
+        EndOfRule;
+    })
+}
+
+// async
+async_stmt: {
+    // async {
+    Parse_1('{', {
+        ecs_script_async_t *stmt = flecs_script_insert_async(parser);
+        return flecs_script_scope(parser, stmt->scope, pos);
+    })
+}
+
+// while
+while_stmt: {
+    // while expr
+    Expr('\0',
+        pos = flecs_script_skip_newlines(parser, pos);
+
+        // while expr {
+        Parse_1('{', {
+            ecs_script_while_t *stmt = flecs_script_insert_while(parser);
+            stmt->expr = EXPR;
+            return flecs_script_scope(parser, stmt->scope, pos);
+        })
+    )
+}
+
+// value =
+identifier_assign: {
+    ecs_script_assign_t *stmt = flecs_script_insert_assign(parser, Token(0));
+
+    // value = expr\n
+    Expr('\n', {
+        stmt->expr = EXPR;
         EndOfRule;
     })
 }

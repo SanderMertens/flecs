@@ -417,6 +417,7 @@ static void flecs_ir_frame_leave(
         flecs_ir_for_leave(vm, frame);
         break;
     case EcsIrFrameTry:
+    case EcsIrFrameWhile:
         break;
     case EcsIrFrameBlock:
         flecs_ir_block_leave(vm, frame);
@@ -1815,6 +1816,38 @@ static int flecs_ir_load_symbol(
     return 0;
 }
 
+static int flecs_ir_assign(
+    ecs_script_ir_vm_t *vm,
+    const ecs_script_ir_op_t *op)
+{
+    ecs_script_eval_visitor_t *v = &vm->v;
+    ecs_script_assign_t *node = ECS_CONST_CAST(
+        ecs_script_assign_t*, (const void*)op->node);
+    ecs_script_ir_reg_t *reg = flecs_ir_reg(vm, op->a);
+    const ecs_type_info_t *ti = ecs_get_type_info(v->world, node->eval_type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const void *src = reg->value.ptr;
+    void *tmp = NULL;
+    if (reg->value.type != node->eval_type) {
+        tmp = ecs_ptr_new_w_type_info(v->world, ti);
+        if (flecs_ir_value_to(vm, reg, node->eval_type, tmp, ti)) {
+            flecs_ir_expr_error(vm, node->expr,
+                "failed to evaluate expression for assignment to '%s'",
+                node->name);
+            ecs_ptr_free_w_type_info(v->world, ti, tmp);
+            return -1;
+        }
+        src = tmp;
+    }
+
+    int result = flecs_script_assign_value(v, node, src);
+    if (tmp) {
+        ecs_ptr_free_w_type_info(v->world, ti, tmp);
+    }
+    return result;
+}
+
 static int flecs_ir_load_var(
     ecs_script_ir_vm_t *vm,
     const ecs_script_ir_op_t *op)
@@ -2560,10 +2593,11 @@ static bool flecs_ir_continue(
 {
     int32_t i;
     for (i = vm->frame_count - 1; i >= 0; i --) {
-        if (flecs_ir_frame_at(vm, i)->kind == EcsIrFrameFor) {
+        int16_t kind = flecs_ir_frame_at(vm, i)->kind;
+        if (kind == EcsIrFrameFor || kind == EcsIrFrameWhile) {
             break;
         }
-        if (flecs_ir_frame_at(vm, i)->kind == EcsIrFrameBlock) {
+        if (kind == EcsIrFrameBlock) {
             return false;
         }
     }
@@ -2908,9 +2942,30 @@ static flecs_script_run_status_t flecs_ir_exec(
         case EcsIrContinue:
             if (!flecs_ir_continue(vm)) {
                 flecs_ir_error(vm, op->node,
-                    "continue is only allowed inside a for loop");
+                    "continue is only allowed inside a loop");
                 res = -1;
             }
+            break;
+        case EcsIrWhileEnter:
+            flecs_ir_frame_push(vm, EcsIrFrameWhile, vm->pc);
+            break;
+        case EcsIrWhileNext:
+            if (!vm->cond) {
+                vm->pc = op->a;
+            }
+            break;
+        case EcsIrAsync:
+#ifdef FLECS_SCRIPT_ASYNC
+            res = flecs_script_async_spawn(v, ECS_CONST_CAST(
+                ecs_script_async_t*, (const void*)op->node));
+#else
+            flecs_ir_error(vm, op->node,
+                "async blocks require FLECS_SCRIPT_ASYNC");
+            res = -1;
+#endif
+            break;
+        case EcsIrAssign:
+            res = flecs_ir_assign(vm, op);
             break;
         case EcsIrTryEnter: {
 #ifdef FLECS_SCRIPT_ASYNC

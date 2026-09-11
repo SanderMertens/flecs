@@ -26,6 +26,8 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrForEnter,
     EcsIrForNext,
     EcsIrContinue,
+    EcsIrWhileEnter,
+    EcsIrWhileNext,
     EcsIrTryEnter,
     EcsIrAwaitStart,
     EcsIrAwaitLaunch,
@@ -39,6 +41,8 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrAnnot,
     EcsIrTemplate,
     EcsIrMutCheck,
+    EcsIrAsync,
+    EcsIrAssign,
     EcsIrConstEnd,
     EcsIrConstCached,
     EcsIrExprBegin,
@@ -190,7 +194,8 @@ typedef enum ecs_script_ir_entry_kind_t {
     EcsIrEntryRoot,
     EcsIrEntryTemplate,
     EcsIrEntryEntity,
-    EcsIrEntryFunction
+    EcsIrEntryFunction,
+    EcsIrEntryAsync
 } ecs_script_ir_entry_kind_t;
 
 typedef struct ecs_script_ir_entry_t {
@@ -225,6 +230,7 @@ typedef enum ecs_script_ir_frame_kind_t {
     EcsIrFrameIf,
     EcsIrFrameFor,
     EcsIrFrameTry,
+    EcsIrFrameWhile,
     EcsIrFrameExpr
 } ecs_script_ir_frame_kind_t;
 

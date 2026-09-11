@@ -1908,6 +1908,119 @@ int flecs_script_eval_function(
     return 0;
 }
 
+int flecs_script_assign_value(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assign_t *node,
+    const void *src)
+{
+    ecs_world_t *world = v->world;
+    ecs_script_var_t *this_var = ecs_script_vars_from_sp(
+        v->vars, node->this_sp);
+    if (!this_var || !this_var->value.ptr) {
+        flecs_script_eval_error(v, node,
+            "cannot assign to '%s': no template instance", node->name);
+        return -1;
+    }
+
+    ecs_entity_t instance = *(ecs_entity_t*)this_var->value.ptr;
+    if (!instance || !ecs_is_alive(world, instance) ||
+        !ecs_has_id(world, instance, node->component))
+    {
+        flecs_script_eval_error(v, node,
+            "cannot assign to '%s': template instance is no longer alive",
+            node->name);
+        return -1;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_type_info_t *comp_ti = ecs_get_type_info(world, node->component);
+    ecs_assert(comp_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const void *cur = ecs_get_id(world, instance, node->component);
+    ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
+    void *copy = ecs_ptr_new_w_type_info(world, comp_ti);
+    ecs_ptr_copy_w_type_info(world, comp_ti, copy, cur);
+    ecs_ptr_copy_w_type_info(world, ti, ECS_OFFSET(copy, node->offset), src);
+    ecs_set_id(world, instance, node->component,
+        flecs_ito(size_t, comp_ti->size), copy);
+    ecs_ptr_free_w_type_info(world, comp_ti, copy);
+
+    ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
+    if (var && var->value.ptr && var->value.type == node->eval_type) {
+        ecs_ptr_copy_w_type_info(world, ti, var->value.ptr, src);
+    }
+
+    return 0;
+}
+
+static int flecs_script_eval_assign(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assign_t *node)
+{
+    ecs_entity_t type = node->eval_type;
+    ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
+    const ecs_type_info_t *ti = ecs_get_type_info(v->world, type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_value_t value = { .type = type };
+    value.ptr = flecs_stack_calloc(&v->r->stack, ti->size, ti->alignment);
+    flecs_type_info_ctor(value.ptr, 1, ti);
+
+    int result = 0;
+    if (flecs_script_eval_expr(v, &node->expr, &value)) {
+        flecs_script_eval_error(v, node,
+            "failed to evaluate expression for assignment to '%s'",
+            node->name);
+        result = -1;
+    } else {
+        result = flecs_script_assign_value(v, node, value.ptr);
+    }
+
+    if (ti->hooks.dtor) {
+        flecs_type_info_dtor(value.ptr, 1, ti);
+    }
+    flecs_stack_free(value.ptr, ti->size);
+    return result;
+}
+
+static int flecs_script_eval_cond(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_node_t *node,
+    ecs_expr_node_t **expr,
+    bool *cond_out)
+{
+    ecs_value_t condval = { .type = 0, .ptr = NULL };
+    if (flecs_script_eval_expr(v, expr, &condval)) {
+        return -1;
+    }
+
+    bool cond;
+    if (condval.type == ecs_id(ecs_bool_t)) {
+        cond = *(bool*)(condval.ptr);
+    } else {
+        const EcsType *type = ecs_get(v->world, condval.type, EcsType);
+        if (!type || (type->kind != EcsPrimitiveType &&
+            type->kind != EcsEnumType && type->kind != EcsBitmaskType))
+        {
+            char *type_str = ecs_get_path(v->world, condval.type);
+            flecs_script_eval_error(v, node,
+                "value of type '%s' cannot be used as condition", type_str);
+            ecs_os_free(type_str);
+            ecs_ptr_free(v->world, condval.type, condval.ptr);
+            return -1;
+        }
+
+        ecs_meta_cursor_t cur = ecs_meta_cursor(
+            v->world, condval.type, condval.ptr);
+        cond = ecs_meta_get_bool(&cur);
+    }
+
+    ecs_ptr_free(v->world, condval.type, condval.ptr);
+    *cond_out = cond;
+    return 0;
+}
+
 int flecs_script_eval_node(
     ecs_script_visit_t *_v,
     ecs_script_node_t *node)
@@ -1972,6 +2085,7 @@ int flecs_script_eval_node(
     case EcsAstPairScope:
     case EcsAstIf:
     case EcsAstFor:
+    case EcsAstWhile:
     case EcsAstTry:
     case EcsAstContinue:
         /* Compound statements are evaluated by the script runner */
@@ -1982,6 +2096,16 @@ int flecs_script_eval_node(
         flecs_script_eval_error(v, node,
             "await requires resumable script execution");
         return -1;
+    case EcsAstAsync:
+#ifdef FLECS_SCRIPT_ASYNC
+        return flecs_script_async_spawn(v, (ecs_script_async_t*)node);
+#else
+        flecs_script_eval_error(v, node,
+            "async blocks require FLECS_SCRIPT_ASYNC");
+        return -1;
+#endif
+    case EcsAstAssign:
+        return flecs_script_eval_assign(v, (ecs_script_assign_t*)node);
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
@@ -2071,6 +2195,7 @@ static void flecs_script_frame_leave(
         }
         break;
     case EcsAstTry:
+    case EcsAstWhile:
         break;
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "corrupt script frame node");
@@ -2210,7 +2335,7 @@ static int flecs_script_step_scope(
             frame->pc ++;
         } else if (stmt->kind == EcsAstEntity || stmt->kind == EcsAstIf ||
             stmt->kind == EcsAstFor || stmt->kind == EcsAstWith ||
-            stmt->kind == EcsAstPairScope)
+            stmt->kind == EcsAstPairScope || stmt->kind == EcsAstWhile)
         {
             frame->pc ++;
             flecs_script_frame_push(r, stmt);
@@ -2279,33 +2404,10 @@ static int flecs_script_control_enter(
     case EcsAstIf: {
         ecs_script_if_t *node = (ecs_script_if_t*)frame->node;
         frame->state.if_.force = v->force;
-        ecs_value_t condval = { .type = 0, .ptr = NULL };
-        if (flecs_script_eval_expr(v, &node->expr, &condval)) {
+        bool cond;
+        if (flecs_script_eval_cond(v, &node->node, &node->expr, &cond)) {
             return -1;
         }
-
-        bool cond;
-        if (condval.type == ecs_id(ecs_bool_t)) {
-            cond = *(bool*)(condval.ptr);
-        } else {
-            const EcsType *type = ecs_get(v->world, condval.type, EcsType);
-            if (!type || (type->kind != EcsPrimitiveType &&
-                type->kind != EcsEnumType && type->kind != EcsBitmaskType))
-            {
-                char *type_str = ecs_get_path(v->world, condval.type);
-                flecs_script_eval_error(v, node,
-                    "value of type '%s' cannot be used as condition", type_str);
-                ecs_os_free(type_str);
-                ecs_ptr_free(v->world, condval.type, condval.ptr);
-                return -1;
-            }
-
-            ecs_meta_cursor_t cur = ecs_meta_cursor(
-                v->world, condval.type, condval.ptr);
-            cond = ecs_meta_get_bool(&cur);
-        }
-
-        ecs_ptr_free(v->world, condval.type, condval.ptr);
 
         v->force = frame->state.if_.force ||
             ((node->node.direct_input & v->input) != 0) ||
@@ -2360,7 +2462,9 @@ static bool flecs_script_runner_continue(
 {
     int32_t frame = r->frame_count;
     while (frame > 0) {
-        if (flecs_script_frame_at(r, frame - 1)->node->kind == EcsAstFor) {
+        ecs_script_node_kind_t kind =
+            flecs_script_frame_at(r, frame - 1)->node->kind;
+        if (kind == EcsAstFor || kind == EcsAstWhile) {
             break;
         }
         frame --;
@@ -2404,6 +2508,27 @@ static bool flecs_script_runner_unwind(
     return false;
 }
 
+static int flecs_script_step_while(
+    ecs_script_runner_t *r,
+    flecs_script_frame_t *frame)
+{
+    ecs_script_eval_visitor_t *v = &r->v;
+    ecs_script_while_t *node = (ecs_script_while_t*)frame->node;
+    bool cond;
+    if (flecs_script_eval_cond(v, &node->node, &node->expr, &cond)) {
+        return -1;
+    }
+
+    if (cond) {
+        frame->pc = 1;
+        flecs_script_scope_push(r, node->scope);
+        return 0;
+    }
+
+    flecs_script_frame_leave(r, frame);
+    return 0;
+}
+
 static flecs_script_run_status_t flecs_script_runner_exec(
     ecs_script_runner_t *r)
 {
@@ -2430,6 +2555,9 @@ static flecs_script_run_status_t flecs_script_runner_exec(
         case EcsAstFor:
             res = flecs_script_step_for(r, frame);
             break;
+        case EcsAstWhile:
+            res = flecs_script_step_while(r, frame);
+            break;
         default:
             if (!frame->pc) {
                 res = flecs_script_control_enter(r, frame);
@@ -2449,7 +2577,7 @@ static flecs_script_run_status_t flecs_script_runner_exec(
         } else if (res == 2) {
             if (!flecs_script_runner_continue(r)) {
                 flecs_script_eval_error(&r->v, frame->node,
-                    "continue is only allowed inside a for loop");
+                    "continue is only allowed inside a loop");
                 if (!flecs_script_runner_unwind(r)) {
                     return FlecsScriptRunError;
                 }

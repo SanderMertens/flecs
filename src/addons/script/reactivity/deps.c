@@ -836,6 +836,46 @@ static int flecs_script_dep_node_impl(
         node->internal = node->direct_internal;
         break;
     }
+    case EcsAstAsync: {
+        ecs_script_async_t *n = (ecs_script_async_t*)node;
+        ctx->conditional ++;
+        if (flecs_script_dep_scope(ctx, n->scope)) {
+            ctx->conditional --;
+            return -1;
+        }
+        ctx->conditional --;
+        node->input = 0;
+        node->internal = 0;
+        break;
+    }
+    case EcsAstWhile: {
+        ecs_script_while_t *n = (ecs_script_while_t*)node;
+        if (flecs_script_dep_expr(ctx, n->expr, &node->direct_input,
+            &node->direct_internal))
+        {
+            return -1;
+        }
+        ctx->conditional ++;
+        if (flecs_script_dep_scope(ctx, n->scope)) {
+            ctx->conditional --;
+            return -1;
+        }
+        ctx->conditional --;
+        node->input = node->direct_input | n->scope->node.input;
+        node->internal = node->direct_internal | n->scope->node.internal;
+        break;
+    }
+    case EcsAstAssign: {
+        ecs_script_assign_t *n = (ecs_script_assign_t*)node;
+        if (flecs_script_dep_expr(ctx, n->expr, &node->direct_input,
+            &node->direct_internal))
+        {
+            return -1;
+        }
+        node->input = node->direct_input;
+        node->internal = node->direct_internal;
+        break;
+    }
     case EcsAstTry: {
         ecs_script_try_t *n = (ecs_script_try_t*)node;
         ctx->conditional ++;

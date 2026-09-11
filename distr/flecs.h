@@ -17099,6 +17099,29 @@ FLECS_API
 void ecs_script_task_free(
     ecs_script_task_t *task);
 
+/** Progress async block tasks.
+ * Scripts and templates can contain async blocks:
+ *
+ * @code
+ * async {
+ *   const value = await fetch()
+ *   // ...
+ * }
+ * @endcode
+ *
+ * An async block creates a task when the script is evaluated or the template
+ * is instantiated. This operation resumes all async block tasks that are ready
+ * to make progress, and frees tasks that completed. When the pipeline addon is
+ * enabled, this operation is invoked by the flecs.script.ProgressTasks system
+ * in the EcsPreUpdate phase.
+ *
+ * @param world The world.
+ * @return The number of tasks that were resumed.
+ */
+FLECS_API
+int32_t ecs_script_tasks_progress(
+    ecs_world_t *world);
+
 /** Resolve future.
  * This operation completes a future with a result value. The value must be of
  * the return type of the async function, and is copied into the future. The

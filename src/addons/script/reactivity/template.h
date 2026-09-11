@@ -114,6 +114,7 @@ void flecs_script_template_pending_fini(
 typedef struct EcsScriptTemplateRoot {
     ecs_script_state_t state;
     ecs_vec_t observers;
+    ecs_vec_t tasks; /* vec<ecs_script_task_t*>, owned. Created by async blocks */
     uint64_t changed;
 } EcsScriptTemplateRoot;
 

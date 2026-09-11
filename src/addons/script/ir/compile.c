@@ -1369,6 +1369,53 @@ static bool flecs_irc_stmt_always(
         node->kind == EcsAstModule;
 }
 
+static int flecs_irc_compile_while(
+    ecs_script_ir_compiler_t *c,
+    ecs_script_while_t *node)
+{
+    flecs_irc_emit(c, EcsIrWhileEnter, 0, 0, 0, node);
+    int32_t cond_pc = flecs_irc_pc(c);
+
+    int32_t begin = flecs_irc_expr_begin(c, node);
+    int32_t cond = flecs_irc_reg(c);
+    if (flecs_irc_compile_expr(c, node->expr, cond, false)) {
+        return -1;
+    }
+    flecs_irc_emit(c, EcsIrToBool, cond, 0, 0, node);
+    flecs_irc_expr_end(c, begin, true);
+
+    int32_t next = flecs_irc_emit(c, EcsIrWhileNext, 0, 0, 0, node);
+
+    int32_t floor = c->reg_floor;
+    c->reg_floor = c->reg_count;
+    c->force_depth ++;
+    int result = flecs_irc_compile_scope(c, node->scope, 0);
+    c->force_depth --;
+    c->reg_floor = floor;
+    if (result) {
+        return -1;
+    }
+
+    flecs_irc_emit(c, EcsIrJump, cond_pc, 0, 0, node);
+    flecs_irc_op(c, next)->a = flecs_irc_pc(c);
+    flecs_irc_emit(c, EcsIrLeave, EcsIrFrameWhile, 0, 0, node);
+    return 0;
+}
+
+static int flecs_irc_compile_assign(
+    ecs_script_ir_compiler_t *c,
+    ecs_script_assign_t *node)
+{
+    int32_t begin = flecs_irc_expr_begin(c, node);
+    int32_t value = flecs_irc_reg(c);
+    if (flecs_irc_compile_expr(c, node->expr, value, false)) {
+        return -1;
+    }
+    flecs_irc_emit(c, EcsIrAssign, value, 0, 0, node);
+    flecs_irc_expr_end(c, begin, true);
+    return 0;
+}
+
 static int flecs_irc_compile_stmt(
     ecs_script_ir_compiler_t *c,
     ecs_script_scope_t *scope,
@@ -1502,6 +1549,16 @@ static int flecs_irc_compile_stmt(
         break;
     case EcsAstContinue:
         flecs_irc_emit(c, EcsIrContinue, 0, 0, 0, node);
+        break;
+    case EcsAstAsync:
+        flecs_irc_entry_add(c, node, EcsIrEntryAsync);
+        flecs_irc_emit(c, EcsIrAsync, 0, 0, 0, node);
+        break;
+    case EcsAstWhile:
+        result = flecs_irc_compile_while(c, (ecs_script_while_t*)node);
+        break;
+    case EcsAstAssign:
+        result = flecs_irc_compile_assign(c, (ecs_script_assign_t*)node);
         break;
     }
 
@@ -1658,6 +1715,11 @@ static int flecs_irc_compile_entry(
         result = flecs_irc_compile_function(
             c, ECS_CONST_CAST(ecs_script_function_node_t*, node));
         break;
+    case EcsIrEntryAsync: {
+        ecs_script_async_t *n = ECS_CONST_CAST(ecs_script_async_t*, node);
+        result = flecs_irc_compile_scope(c, n->scope, 0);
+        break;
+    }
     }
 
     flecs_irc_emit(c, EcsIrEnd, 0, 0, 0, node);

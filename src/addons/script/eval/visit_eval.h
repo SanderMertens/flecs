@@ -257,6 +257,11 @@ int flecs_script_eval_expr(
     ecs_expr_node_t **expr_ptr,
     ecs_value_t *value);
 
+int flecs_script_assign_value(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assign_t *node,
+    const void *src);
+
 int flecs_script_eval_id_elem(
     ecs_script_eval_visitor_t *v,
     void *node,

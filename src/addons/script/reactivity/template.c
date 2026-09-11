@@ -29,15 +29,26 @@ static void flecs_script_delete_observers(
     }
 }
 
+static void flecs_script_template_root_tasks_free(
+    EcsScriptTemplateRoot *root)
+{
+#ifdef FLECS_SCRIPT_ASYNC
+    flecs_script_async_tasks_free(&root->tasks);
+#endif
+}
+
 static void flecs_script_template_root_fini(
     EcsScriptTemplateRoot *root)
 {
+    flecs_script_template_root_tasks_free(root);
+    ecs_vec_fini_t(NULL, &root->tasks, void*);
     flecs_script_state_fini(&root->state);
     ecs_vec_fini_t(NULL, &root->observers, ecs_script_ref_t);
 }
 
 static ECS_CTOR(EcsScriptTemplateRoot, ptr, {
     ecs_vec_init_t(NULL, &ptr->observers, ecs_script_ref_t, 0);
+    ecs_vec_init_t(NULL, &ptr->tasks, void*, 0);
     flecs_script_state_init(&ptr->state);
     ptr->changed = 0;
 })
@@ -47,6 +58,7 @@ static ECS_MOVE(EcsScriptTemplateRoot, dst, src, {
     *dst = *src;
     flecs_script_state_init(&src->state);
     ecs_vec_init_t(NULL, &src->observers, ecs_script_ref_t, 0);
+    ecs_vec_init_t(NULL, &src->tasks, void*, 0);
     src->changed = 0;
 })
 
@@ -102,6 +114,7 @@ static void flecs_script_template_root_clear(
 {
     ecs_script_state_t state = root->state;
 
+    flecs_script_template_root_tasks_free(root);
     flecs_script_state_clear_computed(&root->state);
 
     ecs_script_for_slot_t *for_slot_array = ecs_vec_first(&state.for_slots);
@@ -603,6 +616,11 @@ static int flecs_script_template_instantiate_now(
     uint64_t run_input = root->state.initialized ? input : UINT64_MAX;
     if (!run_input) {
         goto done;
+    }
+    if (run_input == UINT64_MAX && ecs_vec_count(&root->tasks)) {
+        flecs_script_template_root_tasks_free(root);
+        root = ecs_ensure_pair(
+            world, instance, EcsScriptTemplateRoot, template_entity);
     }
     flecs_script_eval_begin(v, run_input, flecs_script_state_next(&root->state));
     int32_t root_symbol = template->root_symbol - template->symbol_offset;

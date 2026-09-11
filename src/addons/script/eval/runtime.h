@@ -29,6 +29,11 @@ struct ecs_script_runtime_t {
     bool template_pending_marker;
     bool template_pending_active;
 
+    /* Tasks created by async blocks. Only used by the world runtime, and
+     * advanced by ecs_script_tasks_progress(). */
+    ecs_vec_t async_tasks;
+    bool async_progressing;
+
     /* Tag added to entities created by the currently evaluating managed
      * script. Carried on the world runtime so evaluation triggered from hooks
      * (such as template instantiation) inherits it. */

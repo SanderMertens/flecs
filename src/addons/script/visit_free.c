@@ -81,6 +81,12 @@ int flecs_script_visit_free_node(
     case EcsAstAwait:
         flecs_expr_visit_free(script, ((ecs_script_await_t*)node)->expr);
         break;
+    case EcsAstWhile:
+        flecs_expr_visit_free(script, ((ecs_script_while_t*)node)->expr);
+        break;
+    case EcsAstAssign:
+        flecs_expr_visit_free(script, ((ecs_script_assign_t*)node)->expr);
+        break;
     case EcsAstTry:
         ecs_vec_fini_t(a, &((ecs_script_try_t*)node)->catches, ecs_script_catch_t);
         break;

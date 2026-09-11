@@ -26,6 +26,12 @@ static void flecs_script_component_fini(
     }
 
     if (ptr->script) {
+#ifdef FLECS_SCRIPT_ASYNC
+        if (!ptr->template_ && (!next || ptr->script != next->script)) {
+            flecs_script_async_tasks_free(
+                &flecs_script_impl(ptr->script)->async_tasks);
+        }
+#endif
         ecs_script_free(ptr->script);
     }
 
@@ -88,6 +94,7 @@ ecs_script_t* flecs_script_new(
     result->root = flecs_script_scope_new(&parser);
     result->pub.world = world;
     result->refcount = 1;
+    ecs_vec_init_t(NULL, &result->async_tasks, void*, 0);
     ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &result->run_refs, ecs_script_ref_t, 0);
     flecs_script_state_init(&result->state);
@@ -267,6 +274,10 @@ void ecs_script_free(
     ecs_script_impl_t *impl = flecs_script_impl(script);
     ecs_check(impl->refcount > 0, ECS_INVALID_OPERATION, NULL);
     if (!--impl->refcount) {
+#ifdef FLECS_SCRIPT_ASYNC
+        flecs_script_async_tasks_free(&impl->async_tasks);
+#endif
+        ecs_vec_fini_t(NULL, &impl->async_tasks, void*);
         ecs_assert(impl->task_refcount == 0, ECS_INVALID_OPERATION,
             "script freed while tasks are still alive");
         flecs_script_ir_free(impl->ir);
@@ -335,6 +346,10 @@ static int flecs_script_update_parse(
     }
 
     if (s->script) {
+#ifdef FLECS_SCRIPT_ASYNC
+        flecs_script_async_tasks_free(
+            &flecs_script_impl(s->script)->async_tasks);
+#endif
         ecs_script_free(s->script);
     }
 
