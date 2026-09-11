@@ -131,6 +131,13 @@
 #include "../addons/script_platform.h"
 #endif
 
+#ifdef FLECS_SCRIPT_EVENT
+#ifdef FLECS_NO_SCRIPT_EVENT
+#error "FLECS_NO_SCRIPT_EVENT failed: SCRIPT_EVENT is required by other addons"
+#endif
+#include "../addons/script_event.h"
+#endif
+
 #ifdef FLECS_PARSER
 #ifdef FLECS_NO_PARSER
 #error "FLECS_NO_PARSER failed: PARSER is required by other addons"

@@ -7,7 +7,7 @@
 struct Position(x: f32, y: f32)
 
 // Another struct type
-struct Mass(value: f32)
+struct Rect(width: f32, height: f32)
 
 // Constants in enums are assigned with increasing constant values.
 enum Color(Red, Green, Blue)
@@ -15,6 +15,6 @@ enum Color(Red, Green, Blue)
 // Components can be used directly from the script that defines them.
 my_entity {
   Position: {x: 10, y: 20}
-  Mass: {100} // Member names are optional
-  Color: {Green} // Green will be automatically looked up in the Color scope
+  Rect: {200, 100} // Member names are optional
+  Color: {Blue} // Blue will be automatically looked up in the Color scope
 }

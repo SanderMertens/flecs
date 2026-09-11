@@ -2262,6 +2262,16 @@ static int flecs_expr_function_visit_type(
             func = symbol.entity;
         }
         if (!func) {
+            const EcsType *type = ecs_get(world, node->left->type, EcsType);
+            if (type && (type->kind == EcsArrayType ||
+                type->kind == EcsVectorType || type->kind == EcsMapType))
+            {
+                ecs_entity_t collection = ecs_lookup(
+                    world, "flecs.script.collection");
+                func = ecs_lookup_child(world, collection, node->function_name);
+            }
+        }
+        if (!func) {
             /* If identifier could be a function (not a method), try that */
             if (func_identifier) {
                 is_method = false;

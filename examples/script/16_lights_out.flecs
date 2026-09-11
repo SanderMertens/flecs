@@ -1,0 +1,163 @@
+using flecs.script
+
+struct Position(x: f32, y: f32)
+struct Rect(width: f32, height: f32)
+struct Circle(radius: f32)
+struct Rgb(r: u8, g: u8, b: u8)
+struct Text(value: string, size: i32, align: string)
+
+const textColor: Rgb = {225, 233, 242}
+const dimColor: Rgb = {134, 152, 174}
+const accentColor: Rgb = {255, 202, 98}
+
+template Heading {
+  prop level = 0
+  prop moves = 0
+
+  title {
+    Position: {y: 210}
+    Text: {"LIGHTS OUT", 28, "center"}
+    Rgb: accentColor
+  }
+
+  instructions {
+    Position: {y: 174}
+    Text: {"Click a tile to flip its light\nand its neighbors. Turn them all off!", 12, "center"}
+    Rgb: dimColor
+  }
+
+  score {
+    Position: {y: 141}
+    Text: {"Puzzle {level + 1}/3     Moves {moves}", 13, "center"}
+    Rgb: textColor
+  }
+}
+
+template Light {
+  prop lit = false
+
+  if lit {
+    Circle: {12}
+    Rgb: {255, 242, 205}
+  } else {
+    Circle: {5}
+    Rgb: {65, 83, 105}
+  }
+}
+
+template Tile {
+  prop lit = false
+  prop size = 64
+
+  Rect: {size, size}
+  if lit {
+    Rgb: accentColor
+  } else {
+    Rgb: {38, 50, 68}
+  }
+
+  Light light(lit: lit) { Position: {} }
+}
+
+template Status {
+  prop solved = false
+  prop moves = 0
+
+  if solved {
+    Text: {"Solved in {moves} moves!", 15, "center"}
+    Rgb: {120, 224, 173}
+  } else {
+    Text: {"Can you find the fewest moves?", 12, "center"}
+    Rgb: dimColor
+  }
+}
+
+template Button {
+  prop solved = false
+  prop level = 0
+
+  Rect: {180, 34}
+  Rgb: {49, 67, 89}
+
+  label {
+    Position: {}
+    if solved {
+      if level == 2 {
+        Text: {"PLAY AGAIN", 13, "center"}
+      } else {
+        Text: {"NEXT PUZZLE", 13, "center"}
+      }
+    } else {
+      Text: {"RESTART", 13, "center"}
+    }
+    Rgb: textColor
+  }
+}
+
+template LightsOut {
+  mut level = 0
+  mut board = 19489
+  mut moves = 0
+
+  const puzzles = [19489, 28018, 60855]
+  const cellSize = 72
+  const gridY = -18
+
+  Position: {}
+  Rect: {360, 500}
+  Rgb: {22, 29, 42}
+
+  Heading heading(level: level, moves: moves) { Position: {} }
+
+  for row in 0..4 {
+    for col in 0..4 {
+      const index = row * 4 + col
+      const lit = ((board >> index) & 1) != 0
+
+      Tile "tile_{index}" (lit: lit, size: cellSize - 8) {
+        Position: {x: (col - 1.5) * cellSize, y: gridY + (row - 1.5) * cellSize}
+
+        async {
+          while true {
+            await on.click(this)
+            if board != 0 {
+              for i in 0..16 {
+                const neighborRow: i32 = i / 4
+                if math.abs(i % 4 - col) + math.abs(neighborRow - row) <= 1 {
+                  const bit = 1 << i
+                  if (board & bit) != 0 {
+                    board = board - bit
+                  } else {
+                    board = board + bit
+                  }
+                }
+              }
+              moves = moves + 1
+            }
+          }
+        }
+      }
+    }
+  }
+
+  Status status(solved: board == 0, moves: moves) {
+    Position: {y: -183}
+  }
+
+  Button button(solved: board == 0, level: level) {
+    Position: {y: -220}
+
+    async {
+      while true {
+        await on.click(this)
+        if board == 0 {
+          level = (level + 1) % 3
+        }
+        board = puzzles[level]
+        moves = 0
+      }
+    }
+  }
+}
+
+LightsOut game

@@ -407,7 +407,6 @@ ecs_script_assign_t* flecs_script_insert_assign(
         parser, ecs_script_assign_t, EcsAstAssign);
     result->name = name;
     result->sp = -1;
-    result->this_sp = -1;
     flecs_ast_append(parser, scope->stmts, ecs_script_assign_t, result);
     return result;
 }

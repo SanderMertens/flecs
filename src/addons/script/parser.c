@@ -1103,12 +1103,12 @@ async_stmt: {
 while_stmt: {
     // while expr
     Expr('\0',
+        ecs_script_while_t *stmt = flecs_script_insert_while(parser);
+        stmt->expr = EXPR;
         pos = flecs_script_skip_newlines(parser, pos);
 
         // while expr {
         Parse_1('{', {
-            ecs_script_while_t *stmt = flecs_script_insert_while(parser);
-            stmt->expr = EXPR;
             return flecs_script_scope(parser, stmt->scope, pos);
         })
     )

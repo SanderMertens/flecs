@@ -250,6 +250,7 @@
 #define FLECS_SCRIPT_ASYNC   /**< Async/await support for Flecs script. */
 // #define FLECS_SCRIPT_MATH /**< Math functions for Flecs script (may require linking with libm). */
 // #define FLECS_SCRIPT_PLATFORM /**< Platform constants for Flecs script. */
+#define FLECS_SCRIPT_EVENT   /**< Mouse and keyboard events for Flecs script. */
 #define FLECS_SYSTEM         /**< System support. */
 #define FLECS_STATS          /**< Track runtime statistics. */
 #define FLECS_TIMER          /**< Timer support. */

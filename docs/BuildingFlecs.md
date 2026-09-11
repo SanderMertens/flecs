@@ -442,6 +442,7 @@ Parser                                                     | Parser utilities us
 [Query DSL](https://www.flecs.dev/flecs/FlecsQueryLanguage.html) | Query DSL parser                  | FLECS_QUERY_DSL     |
 [Script](/flecs/group__c__addons__script.html)             | DSL for scenes, assets and configuration         | FLECS_SCRIPT        |
 [Script Platform](/flecs/group__c__addons__script__platform.html) | Expose platform constants to scripts      | FLECS_SCRIPT_PLATFORM |
+[Script Event](/flecs/group__c__addons__script__event.html) | Mouse and keyboard events for scripts          | FLECS_SCRIPT_EVENT  |
 [Stats](/flecs/group__c__addons__stats.html)               | Functions for collecting statistics              | FLECS_STATS         |
 [Metrics](/flecs/group__c__addons__metrics.html)           | Create metrics from user-defined components      | FLECS_METRICS       |
 [Alerts](/flecs/group__c__addons__alerts.html)             | Create alerts from user-defined queries          | FLECS_ALERTS        |

@@ -844,7 +844,7 @@ static int flecs_script_dep_node_impl(
             return -1;
         }
         ctx->conditional --;
-        node->input = 0;
+        node->input = ctx->template ? ctx->template->async_input : 0;
         node->internal = 0;
         break;
     }
@@ -979,6 +979,7 @@ static int flecs_script_dep_template_init(
     flecs_script_dep_ctx_t *outer)
 {
     template->input_count = 0;
+    template->async_input = UINT64_MAX;
     ctx->input_count = &template->input_count;
     ecs_script_template_member_t *members = ecs_vec_first(&template->members);
     int32_t i, count = ecs_vec_count(&template->members);
@@ -986,6 +987,9 @@ static int flecs_script_dep_template_init(
         members[i].input = 0;
         if (flecs_script_dep_input_new(ctx, &members[i].input)) {
             return -1;
+        }
+        if (members[i].is_mut) {
+            template->async_input &= ~members[i].input;
         }
     }
     if (flecs_script_dep_assign_refs(ctx, &template->refs) ||

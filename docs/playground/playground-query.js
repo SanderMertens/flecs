@@ -2,8 +2,8 @@
  * query editor (Ace, flecs-query mode from the Flecs Explorer); the body shows
  * the matched entities as a table, in a 2D canvas or in a 3D scene (three.js,
  * loaded on demand). The 2D/3D views draw all entities that have a Position
- * and a Rect, Box, Circle or Sphere component (colored by Rgb, Rgba and
- * Emissive) and grey out the ones the query does not match. */
+ * and a Rect, Box, Circle, Sphere or Text component (colored by Color, Rgb,
+ * Rgba and Emissive) and grey out the ones the query does not match. */
 (function () {
   "use strict";
 
@@ -17,7 +17,6 @@
     "examples/js/postprocessing/ShaderPass.js",
     "examples/js/postprocessing/UnrealBloomPass.js"
   ];
-  var LABEL_LIMIT = 100;
   var CHEVRON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   function el(tag, attrs, children) {
@@ -49,7 +48,6 @@
       grid: cssVar("--fl-border", "#e3e6ea"),
       axis: cssVar("--fl-border-strong", "#cfd4da"),
       text: cssVar("--fl-text-2", "#4b5563"),
-      muted: cssVar("--fl-text-3", "#6b7280"),
       accent: cssVar("--fl-accent", "#42b983"),
       accentStrong: cssVar("--fl-accent-strong", "#1f8a5a"),
       mono: cssVar("--fl-mono", "monospace"),
@@ -58,10 +56,19 @@
   }
 
   /* Shapes: Position (x, y, z), Rect (width, height), Box (width, height,
-   * depth), Circle/Sphere (radius), Rgb/Rgba (u8) and Emissive (r, g, b,
-   * intensity) of the entities in the world (GET /world). Entities without
-   * geometry are not drawn. Positions of children are relative to their
-   * parents. */
+   * depth), Circle/Sphere (radius), Text (value, size, width, align), Color,
+   * Rgb/Rgba (u8) and Emissive (r, g, b, intensity) of the entities in the
+   * world (GET /world). Entities without geometry or text are not drawn.
+   * Positions of children are relative to their parents. Text wraps at width
+   * (world units) and align (Left, Center, Right) both anchors the text box at
+   * the position and aligns the lines inside it. Color is either a struct with
+   * r, g, b (a) members, or a color name (an enum constant or a string, case
+   * insensitive: any CSS color name or a #rgb, #rgba, #rrggbb or #rrggbbaa
+   * hex value). */
+
+  var TEXT_ADVANCE = 0.6;
+  var TEXT_LINE = 1.2;
+  var TEXT_ALIGN = { left: -1, center: 0, right: 1 };
 
   function component(comps, name) {
     if (Object.prototype.hasOwnProperty.call(comps, name)) return comps[name];
@@ -89,8 +96,116 @@
     return index >= 0 && index < nums.length ? nums[index] : fallback;
   }
 
+  function stringMember(obj, names, index, fallback, skip) {
+    if (typeof obj === "string") return obj;
+    if (!obj || typeof obj !== "object") return fallback;
+    for (var i = 0; i < names.length; i++) {
+      if (typeof obj[names[i]] === "string") return obj[names[i]];
+    }
+    var strs = Object.keys(obj).filter(function (k) { return (skip || []).indexOf(k) === -1; }).map(function (k) {
+      return obj[k];
+    }).filter(function (v) { return typeof v === "string"; });
+    return index >= 0 && index < strs.length ? strs[index] : fallback;
+  }
+
+  function textWidth(text, size) {
+    return text.length * size * TEXT_ADVANCE;
+  }
+
+  function textAlign(v) {
+    if (typeof v === "number") return v < 0 ? -1 : v > 0 ? 1 : 0;
+    var a = typeof v === "string" ? TEXT_ALIGN[v.toLowerCase()] : undefined;
+    return a === undefined ? 0 : a;
+  }
+
+  function wrapText(text, size, width) {
+    var lines = [];
+    var max = width > 0 ? Math.max(Math.floor(width / (size * TEXT_ADVANCE)), 1) : 0;
+    text.split("\n").forEach(function (para) {
+      if (!max) { lines.push(para); return; }
+      var start = lines.length, line = "";
+      para.split(" ").forEach(function (word) {
+        while (word.length > max) {
+          if (line) { lines.push(line); line = ""; }
+          lines.push(word.slice(0, max));
+          word = word.slice(max);
+        }
+        var cand = line ? line + " " + word : word;
+        if (cand.length <= max) line = cand;
+        else { lines.push(line); line = word; }
+      });
+      if (line || lines.length === start) lines.push(line);
+    });
+    return lines;
+  }
+
+  function textLineY(s, i) {
+    return s.h / 2 - s.size / 2 - i * s.size * TEXT_LINE;
+  }
+
+  function textLineX(s) {
+    return s.align * s.w / 2;
+  }
+
   function channel(v) {
     return clamp(Math.round(v), 0, 255);
+  }
+
+  var colorCache = {};
+  var colorCtx = null;
+
+  function cssColor(name) {
+    if (!colorCtx) {
+      var canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      colorCtx = canvas.getContext("2d");
+    }
+    colorCtx.fillStyle = "#000000";
+    colorCtx.fillStyle = name;
+    var dark = colorCtx.fillStyle;
+    colorCtx.fillStyle = "#ffffff";
+    colorCtx.fillStyle = name;
+    if (dark !== colorCtx.fillStyle) return null;
+    var m = /^#([0-9a-f]{6})$/.exec(dark);
+    if (m) return { r: parseInt(m[1].slice(0, 2), 16), g: parseInt(m[1].slice(2, 4), 16), b: parseInt(m[1].slice(4, 6), 16), a: 1 };
+    m = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)$/.exec(dark);
+    if (m) return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== undefined ? +m[4] : 1 };
+    return null;
+  }
+
+  function parseColor(v) {
+    if (typeof v !== "string") return null;
+    var name = v.trim().toLowerCase();
+    if (!name) return null;
+    if (Object.prototype.hasOwnProperty.call(colorCache, name)) return colorCache[name];
+    var c = null;
+    var hex = /^#?([0-9a-f]{3,8})$/.exec(name);
+    if (hex && (hex[1].length === 3 || hex[1].length === 4 || hex[1].length === 6 || hex[1].length === 8)) {
+      var h = hex[1];
+      if (h.length <= 4) h = h.split("").map(function (ch) { return ch + ch; }).join("");
+      c = {
+        r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16),
+        a: h.length === 8 ? parseInt(h.slice(6, 8), 16) / 255 : 1
+      };
+    } else {
+      c = cssColor(name) || cssColor(name.replace(/[\s_-]+/g, ""));
+    }
+    colorCache[name] = c;
+    return c;
+  }
+
+  function colorOf(v) {
+    if (typeof v === "string") return parseColor(v);
+    if (!v || typeof v !== "object") return null;
+    var hasRgb = typeof v.r === "number" || typeof v.g === "number" || typeof v.b === "number";
+    var nums = Object.keys(v).filter(function (k) { return typeof v[k] === "number" && isFinite(v[k]); });
+    if (hasRgb || nums.length >= 3) {
+      return {
+        r: channel(member(v, ["r", "red"], 0, 0)), g: channel(member(v, ["g", "green"], 1, 0)),
+        b: channel(member(v, ["b", "blue"], 2, 0)), a: channel(member(v, ["a", "alpha"], 3, 255)) / 255
+      };
+    }
+    return parseColor(stringMember(v, ["value", "name", "color"], 0, null));
   }
 
   function resultPath(r) {
@@ -107,8 +222,16 @@
     var shape = {
       path: path, name: r.name, key: r.id !== undefined ? "#" + r.id : path,
       x: member(pos, ["x"], 0, 0), y: member(pos, ["y"], 1, 0), z: member(pos, ["z"], 2, 0),
-      r: 66, g: 185, b: 131, a: 1, kind: null, w: 0, h: 0, d: 0, radius: 0, emissive: null, dim: false
+      r: 66, g: 185, b: 131, a: 1, kind: null, w: 0, h: 0, d: 0, radius: 0, text: "", size: 0,
+      lines: null, align: 0, ox: 0, emissive: null, dim: false
     };
+    var color = colorOf(component(comps, "Color"));
+    if (color) {
+      shape.r = color.r;
+      shape.g = color.g;
+      shape.b = color.b;
+      shape.a = clamp(color.a, 0, 1);
+    }
     var rgba = struct(comps, "Rgba");
     var rgb = rgba || struct(comps, "Rgb");
     if (rgb) {
@@ -119,6 +242,9 @@
     }
     var box = struct(comps, "Box"), rect = struct(comps, "Rect");
     var sphere = struct(comps, "Sphere"), circle = struct(comps, "Circle");
+    var cylinder = struct(comps, "Cylinder"), cone = struct(comps, "Cone");
+    var torus = struct(comps, "Torus"), prism = struct(comps, "TrianglePrism");
+    var text = component(comps, "Text");
     if (box) {
       shape.kind = "box";
       shape.w = member(box, ["width", "w"], 0, 0);
@@ -134,11 +260,46 @@
     } else if (circle) {
       shape.kind = "circle";
       shape.radius = member(circle, ["radius", "r"], 0, 0);
+    } else if (cylinder || cone) {
+      var round = cylinder || cone;
+      shape.kind = cylinder ? "cylinder" : "cone";
+      shape.radius = member(round, ["radius", "r"], -1, 0.5);
+      shape.h = member(round, ["length", "height"], -1, 1);
+      shape.w = shape.d = shape.radius * 2;
+      shape.segments = clamp(Math.round(member(round, ["segments"], -1, 24)), 3, 128);
+    } else if (torus) {
+      shape.kind = "torus";
+      shape.radius = member(torus, ["radius"], -1, 1);
+      shape.tube = member(torus, ["tube"], -1, 0.1);
+      shape.w = shape.d = (shape.radius + shape.tube) * 2;
+      shape.h = shape.tube * 2;
+      shape.segments = clamp(Math.round(member(torus, ["segments"], -1, 32)), 3, 128);
+      shape.rings = clamp(Math.round(member(torus, ["rings"], -1, 12)), 3, 64);
+    } else if (prism) {
+      shape.kind = "prism";
+      shape.w = member(prism, ["x", "width"], 0, 1);
+      shape.h = member(prism, ["y", "height"], 1, 1);
+      shape.d = member(prism, ["z", "depth"], 2, 1);
+    } else if (text !== undefined) {
+      shape.kind = "text";
+      shape.text = stringMember(text, ["value", "text"], 0, "", ["align"]);
+      shape.size = member(text, ["size", "height"], -1, 1);
+      if (!(shape.size > 0)) shape.size = 1;
+      var width = member(text, ["width"], -1, 0);
+      shape.align = textAlign(typeof text === "object" ? text.align : undefined);
+      shape.lines = wrapText(shape.text, shape.size, width);
+      shape.w = width > 0 ? width : Math.max.apply(null, shape.lines.map(function (l) { return textWidth(l, shape.size); }));
+      shape.h = shape.size * (1 + (shape.lines.length - 1) * TEXT_LINE);
+      shape.ox = -shape.align * shape.w / 2;
     }
     if (!shape.kind) return null;
     if ((shape.kind === "box" || shape.kind === "rect") && !(shape.w > 0 && shape.h > 0)) return null;
     if ((shape.kind === "sphere" || shape.kind === "circle") && !(shape.radius > 0)) return null;
+    if (shape.kind === "text" && !shape.text.length) return null;
     if (shape.kind === "box" && !(shape.d > 0)) shape.d = (shape.w + shape.h) / 2;
+    if (["cylinder", "cone", "torus", "prism"].indexOf(shape.kind) !== -1 &&
+        !(shape.w > 0 && shape.h > 0 && shape.d > 0)) return null;
+    if (shape.kind === "torus" && !(shape.radius > 0 && shape.tube > 0)) return null;
     var em = struct(comps, "Emissive");
     if (em) {
       var hasColor = typeof em.r === "number" || typeof em.g === "number" || typeof em.b === "number";
@@ -160,30 +321,62 @@
       if (r.id !== undefined) byPath["#" + r.id] = r;
     });
     var memo = {};
-    function worldPosition(path) {
+    function worldTransform(path) {
       if (memo[path]) return memo[path];
       var r = byPath[path];
-      var base = r && r.parent ? worldPosition(r.parent) : { x: 0, y: 0, z: 0 };
-      var pos = r ? struct(r.components || {}, "Position") : null;
-      var wp = pos ? {
-        x: base.x + member(pos, ["x"], 0, 0),
-        y: base.y + member(pos, ["y"], 1, 0),
-        z: base.z + member(pos, ["z"], 2, 0)
-      } : base;
-      memo[path] = wp;
-      return wp;
+      var base = r && r.parent ? worldTransform(r.parent) : {
+        x: 0, y: 0, z: 0, rotation: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+      };
+      var comps = r ? r.components || {} : {};
+      var pos = struct(comps, "Position"), rot = struct(comps, "Rotation");
+      var offset = rotatePoint(base.rotation, {
+        x: member(pos, ["x"], 0, 0), y: member(pos, ["y"], 1, 0), z: member(pos, ["z"], 2, 0)
+      });
+      var rx = member(rot, ["x"], -1, 0), ry = member(rot, ["y"], -1, 0), rz = member(rot, ["z"], -1, 0);
+      var a = Math.cos(rx), b = Math.sin(rx), c = Math.cos(ry), d = Math.sin(ry), e = Math.cos(rz), f = Math.sin(rz);
+      var local = [c * e, -c * f, d, a * f + b * e * d, a * e - b * f * d, -b * c,
+        b * f - a * e * d, b * e + a * f * d, a * c];
+      var rotation = [];
+      for (var i = 0; i < 3; i++) {
+        for (var j = 0; j < 3; j++) {
+          rotation[i * 3 + j] = 0;
+          for (var k = 0; k < 3; k++) rotation[i * 3 + j] += base.rotation[i * 3 + k] * local[k * 3 + j];
+        }
+      }
+      return memo[path] = { x: base.x + offset.x, y: base.y + offset.y, z: base.z + offset.z, rotation: rotation };
     }
     var shapes = [];
     results.forEach(function (r) {
       if ((r.tags || []).indexOf("flecs.core.Prefab") !== -1) return;
       var s = shapeOf(r);
       if (!s) return;
-      if (s.path) {
-        var wp = worldPosition(s.path);
-        s.x = wp.x; s.y = wp.y; s.z = wp.z;
-      }
+      var wp = worldTransform(s.path || s.key);
+      s.rotation = wp.rotation;
+      var offset = rotatePoint(s.rotation, { x: s.ox, y: 0, z: 0 });
+      s.x = wp.x + offset.x; s.y = wp.y + offset.y; s.z = wp.z + offset.z;
       shapes.push(s);
     });
+
+    /* Bounds of every entity that has shapes in its subtree, and the parent
+     * of every entity, for propagating pointer events up the tree with
+     * coordinates relative to each parent. */
+    var entities = {};
+    function entity(key) {
+      if (!entities[key]) {
+        var r = byPath[key];
+        entities[key] = { parent: r && r.parent ? r.parent : null, minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+      }
+      return entities[key];
+    }
+    shapes.forEach(function (s) {
+      var e = halfExtent(s);
+      for (var key = s.path || s.key; key; key = entity(key).parent) {
+        var b = entity(key);
+        b.minX = Math.min(b.minX, s.x - e.x); b.maxX = Math.max(b.maxX, s.x + e.x);
+        b.minY = Math.min(b.minY, s.y - e.y); b.maxY = Math.max(b.maxY, s.y + e.y);
+      }
+    });
+    shapes.entities = entities;
     return shapes;
   }
 
@@ -191,10 +384,21 @@
     return s.kind === "circle" || s.kind === "sphere";
   }
 
+  function rotatePoint(r, p) {
+    return {
+      x: r[0] * p.x + r[1] * p.y + r[2] * p.z,
+      y: r[3] * p.x + r[4] * p.y + r[5] * p.z,
+      z: r[6] * p.x + r[7] * p.y + r[8] * p.z
+    };
+  }
+
   function halfExtent(s) {
     if (s.kind === "sphere") return { x: s.radius, y: s.radius, z: s.radius };
-    if (s.kind === "circle") return { x: s.radius, y: s.radius, z: 0 };
-    return { x: s.w / 2, y: s.h / 2, z: s.kind === "box" ? s.d / 2 : 0 };
+    var e = s.kind === "circle" ? { x: s.radius, y: s.radius, z: 0 } : {
+      x: s.w / 2, y: s.h / 2, z: s.d / 2
+    };
+    if (!s.rotation || s.kind === "text") return e;
+    return rotatePoint(s.rotation.map(Math.abs), e);
   }
 
   function bounds(shapes) {
@@ -221,10 +425,42 @@
     return "rgba(" + c.r + "," + c.g + "," + c.b + "," + (alpha !== undefined ? alpha : c.a) + ")";
   }
 
+  function isEmissive(s) {
+    return !s.dim && s.emissive && s.emissive.intensity > 0 &&
+      (s.emissive.r > 0 || s.emissive.g > 0 || s.emissive.b > 0);
+  }
+
+  function linearChannel(v) {
+    v /= 255;
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  }
+
+  function linearShapeColor(s) {
+    var em = isEmissive(s) ? s.emissive : { r: 0, g: 0, b: 0, intensity: 0 };
+    return {
+      r: linearChannel(s.r) + linearChannel(em.r) * em.intensity,
+      g: linearChannel(s.g) + linearChannel(em.g) * em.intensity,
+      b: linearChannel(s.b) + linearChannel(em.b) * em.intensity,
+      a: s.a
+    };
+  }
+
+  function displayColor(c, scale) {
+    function encode(v) {
+      v /= scale;
+      return channel(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055));
+    }
+    return { r: encode(c.r), g: encode(c.g), b: encode(c.b), a: c.a };
+  }
+
+  function emissiveColor(s) {
+    return isEmissive(s) ? displayColor(linearShapeColor(s), 1) : s;
+  }
+
   function canvasChrome(host) {
     var tip = el("div", { class: "pg-canvas-tip" });
     tip.hidden = true;
-    var empty = el("div", { class: "pg-canvas-empty", text: "No entities with a Position and a Rect, Box, Circle or Sphere component." });
+    var empty = el("div", { class: "pg-canvas-empty", text: "No drawable entities" });
     empty.hidden = true;
     host.appendChild(tip);
     host.appendChild(empty);
@@ -362,7 +598,40 @@
 
   /* 2D view */
 
-  function createView2D(container, onSelect) {
+  /* Pointer events are sent to the script event module with the shape under
+   * the pointer as target and the pointer position relative to the lower left
+   * corner of that shape; the module derives press, drag, release and click
+   * from the button state. A gesture that starts on a shape captures the
+   * pointer: the shape stays the target until the button is released. A
+   * gesture that starts on empty space pans the camera. */
+  function shapeKey(s) {
+    return s ? (s.path || s.key) : null;
+  }
+
+  /* Emit a pointer event for the shape under the pointer and propagate it to
+   * the parents of the shape's entity for as long as the module asks for it,
+   * with the pointer position relative to the bounds of each entity. */
+  function emitPointer(onMouse, entities, s, e, w) {
+    if (!s) {
+      onMouse(e, null, w ? w.x : 0, w ? w.y : 0);
+      return;
+    }
+    for (var key = s.path || s.key; key; ) {
+      var b = entities[key];
+      var x = w.x, y = w.y;
+      if (b && b.minX !== Infinity) { x -= b.minX; y -= b.minY; }
+      if (!onMouse(e, key, x, y)) return;
+      key = b ? b.parent : null;
+    }
+  }
+
+  function listenKeys(host, input) {
+    host.tabIndex = 0;
+    host.addEventListener("keydown", function (e) { input.key(e, true); });
+    host.addEventListener("keyup", function (e) { input.key(e, false); });
+  }
+
+  function createView2D(container, onSelect, input) {
     var host = el("div", { class: "pg-view pg-view-canvas pg-view-2d" });
     var canvas = el("canvas", { class: "pg-canvas" });
     host.appendChild(canvas);
@@ -372,6 +641,23 @@
     var cam = { x: 0, y: 0, zoom: 20 };
     var shapes = [], selected = null, hover = null, fitted = false;
     var width = 0, height = 0, dpr = 1, drag = null;
+    var bloom = null, bloomLoading = false, bloomFailed = false;
+
+    function ensureBloom() {
+      if (bloom || bloomLoading || bloomFailed) return;
+      bloomLoading = true;
+      loadThree(function (ok) {
+        bloomLoading = false;
+        if (!ok) { bloomFailed = true; return; }
+        try {
+          bloom = createCanvasBloom(canvas, host);
+        } catch (err) {
+          bloomFailed = true;
+          return;
+        }
+        render();
+      });
+    }
 
     function toScreen(x, y) {
       return { x: width / 2 + (x - cam.x) * cam.zoom, y: height / 2 - (y - cam.y) * cam.zoom };
@@ -402,8 +688,23 @@
       else ctx.rect(p.x - s.w / 2 * cam.zoom, p.y - s.h / 2 * cam.zoom, s.w * cam.zoom, s.h * cam.zoom);
     }
 
+    function fillShape(s, p, mono) {
+      if (s.kind !== "text") {
+        tracePath(s, p);
+        ctx.fill();
+        return;
+      }
+      ctx.font = s.size * cam.zoom + "px " + mono;
+      ctx.textAlign = s.align < 0 ? "left" : s.align > 0 ? "right" : "center";
+      ctx.textBaseline = "middle";
+      var lx = p.x + textLineX(s) * cam.zoom;
+      s.lines.forEach(function (line, i) {
+        ctx.fillText(line, lx, p.y - textLineY(s, i) * cam.zoom);
+      });
+    }
+
     function render() {
-      if (!width || !height) return;
+      if (!width || !height || host.hidden) return;
       var c = theme();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.fillStyle = c.bg;
@@ -431,66 +732,68 @@
       ctx.stroke();
 
       shapes.forEach(function (s) {
-        if (!s.emissive || s.dim) return;
+        if (!s.dim) return;
         var p = toScreen(s.x, s.y);
-        ctx.save();
-        ctx.shadowColor = rgba(s.emissive, Math.min(0.5 + 0.4 * s.emissive.intensity, 1));
-        ctx.shadowBlur = Math.min(12 + 24 * s.emissive.intensity, 80);
-        ctx.fillStyle = rgba(s.emissive, 0.9);
-        tracePath(s, p);
-        ctx.fill();
-        ctx.fill();
-        ctx.restore();
+        if (s.kind === "text") {
+          ctx.fillStyle = rgba(DIM_COLOR, s.a * 0.35);
+          fillShape(s, p, c.mono);
+        } else {
+          ctx.strokeStyle = rgba(DIM_COLOR, s.a * 0.35);
+          tracePath(s, p);
+          ctx.stroke();
+        }
       });
-
       shapes.forEach(function (s) {
-        var p = toScreen(s.x, s.y);
-        var active = s.path === selected || s === hover;
-        ctx.fillStyle = s.dim ? rgba(DIM_COLOR, s.a * 0.25) : rgba(s);
-        ctx.strokeStyle = active ? c.accentStrong : s.dim ? "rgba(0,0,0,0.12)" : "rgba(0,0,0,0.3)";
-        ctx.lineWidth = active ? 2 : 1;
-        tracePath(s, p);
-        ctx.fill();
-        ctx.stroke();
+        if (s.dim) return;
+        ctx.fillStyle = rgba(emissiveColor(s));
+        fillShape(s, toScreen(s.x, s.y), c.mono);
       });
 
-      if (shapes.length <= LABEL_LIMIT) {
-        ctx.font = "12px " + c.mono;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        shapes.forEach(function (s) {
-          if (!s.name) return;
-          var tw = ctx.measureText(s.name).width + 10;
-          var fitsW = isRound(s) ? radiusPx(s) * 2 : s.w * cam.zoom;
-          var fitsH = isRound(s) ? radiusPx(s) * 2 : s.h * cam.zoom;
-          if (fitsW < tw || fitsH < 18) return;
-          var p = toScreen(s.x, s.y);
-          var bright = s.dim || (s.r * 299 + s.g * 587 + s.b * 114) / 1000 > 140 || s.a < 0.5;
-          ctx.fillStyle = s.dim ? "rgba(0,0,0,0.35)" : bright ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.9)";
-          ctx.fillText(s.name, p.x, p.y);
-        });
-      }
-
-      ctx.font = "11px " + c.mono;
-      ctx.fillStyle = c.muted;
-      ctx.textAlign = "right";
-      ctx.textBaseline = "bottom";
-      ctx.fillText("grid " + step, width - 10, height - 8);
+      var active = shapes.some(function (s) { return isEmissive(s) && s.a > 0; });
+      if (active) ensureBloom();
+      if (!bloom) return;
+      bloom.setVisible(active);
+      if (!active) return;
+      bloom.resize();
+      var baseCtx = ctx, scale = 1;
+      shapes.forEach(function (s) {
+        if (!isEmissive(s)) return;
+        var color = linearShapeColor(s);
+        scale = Math.max(scale, color.r, color.g, color.b);
+      });
+      ctx = bloom.context;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, width, height);
+      shapes.forEach(function (s) {
+        if (s.dim) return;
+        ctx.fillStyle = isEmissive(s) ? rgba(displayColor(linearShapeColor(s), scale)) : rgba({ r: 0, g: 0, b: 0, a: s.a });
+        fillShape(s, toScreen(s.x, s.y), c.mono);
+      });
+      ctx = baseCtx;
+      bloom.render(scale);
     }
 
     function hitTest(lx, ly) {
       var w = toWorld(lx, ly);
+      var dimmed = null;
       for (var i = shapes.length - 1; i >= 0; i--) {
         var s = shapes[i];
+        var hit;
         if (isRound(s)) {
           var dx = w.x - s.x, dy = w.y - s.y;
           var r = radiusPx(s) / cam.zoom;
-          if (dx * dx + dy * dy <= r * r) return s;
-        } else if (Math.abs(w.x - s.x) <= s.w / 2 && Math.abs(w.y - s.y) <= s.h / 2) {
+          hit = dx * dx + dy * dy <= r * r;
+        } else {
+          hit = Math.abs(w.x - s.x) <= s.w / 2 && Math.abs(w.y - s.y) <= s.h / 2;
+        }
+        if (!hit) continue;
+        if (!s.dim) {
           return s;
         }
+        if (!dimmed) dimmed = s;
       }
-      return null;
+      return dimmed;
     }
 
     function setCursor() {
@@ -499,8 +802,13 @@
 
     host.addEventListener("pointerdown", function (e) {
       if (e.button !== 0) return;
-      drag = { sx: e.clientX, sy: e.clientY, cx: cam.x, cy: cam.y, moved: false };
+      var p = localPoint(host, e);
+      drag = { sx: e.clientX, sy: e.clientY, cx: cam.x, cy: cam.y, moved: false, gesture: null };
+      var s = hitTest(p.x, p.y);
+      drag.gesture = s;
+      input.mouse(e, s, toWorld(p.x, p.y));
       host.setPointerCapture(e.pointerId);
+      host.focus({ preventScroll: true });
       setCursor();
     });
 
@@ -509,6 +817,11 @@
       if (drag) {
         var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
         if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+        if (drag.gesture) {
+          input.mouse(e, drag.gesture, toWorld(p.x, p.y));
+          chrome.hideTip();
+          return;
+        }
         cam.x = drag.cx - dx / cam.zoom;
         cam.y = drag.cy + dy / cam.zoom;
         chrome.hideTip();
@@ -516,6 +829,7 @@
         return;
       }
       var s = hitTest(p.x, p.y);
+      input.mouse(e, s, toWorld(p.x, p.y));
       if (s !== hover) { hover = s; render(); setCursor(); }
       if (s) chrome.showTip(s.path || s.name || "", p.x, p.y);
       else chrome.hideTip();
@@ -523,20 +837,22 @@
 
     function endDrag(e) {
       if (!drag) return;
-      var moved = drag.moved;
+      var moved = drag.moved, gesture = drag.gesture;
       drag = null;
       try { host.releasePointerCapture(e.pointerId); } catch (err) {}
       setCursor();
+      var p = localPoint(host, e);
+      var s = hitTest(p.x, p.y);
+      if (gesture) input.mouse(e, gesture, toWorld(p.x, p.y));
       if (!moved) {
-        var p = localPoint(host, e);
-        var s = hitTest(p.x, p.y);
         onSelect(s && s.path ? s.path : null);
       }
     }
 
     host.addEventListener("pointerup", endDrag);
     host.addEventListener("pointercancel", endDrag);
-    host.addEventListener("pointerleave", function () {
+    host.addEventListener("pointerleave", function (e) {
+      if (!drag) input.mouse(e, null, null);
       if (hover) { hover = null; render(); }
       chrome.hideTip();
       setCursor();
@@ -552,6 +868,7 @@
       render();
     }, { passive: false });
 
+    listenKeys(host, input);
     setCursor();
 
     return {
@@ -570,12 +887,13 @@
       resize: function () {
         var r = host.getBoundingClientRect();
         if (!r.width || !r.height) return;
+        var changed = width !== r.width || height !== r.height;
         dpr = window.devicePixelRatio || 1;
         width = r.width;
         height = r.height;
         canvas.width = Math.round(width * dpr);
         canvas.height = Math.round(height * dpr);
-        if (!fitted) fit();
+        if (!fitted || changed) fit();
         render();
       },
       render: render
@@ -615,16 +933,108 @@
   ].join("\n");
 
   var COMPOSITE_FRAGMENT = [
+    "#include <common>",
+    "#include <dithering_pars_fragment>",
     "uniform sampler2D baseTexture;",
     "uniform sampler2D bloomTexture;",
     "varying vec2 vUv;",
     "void main() {",
-    "  gl_FragColor = texture2D(baseTexture, vUv) + vec4(texture2D(bloomTexture, vUv).rgb, 0.0);",
+    "  gl_FragColor = sRGBToLinear(texture2D(baseTexture, vUv)) + vec4(texture2D(bloomTexture, vUv).rgb, 0.0);",
     "  #include <encodings_fragment>",
+    "  #include <dithering_fragment>",
     "}"
   ].join("\n");
 
-  function createView3D(container, onSelect) {
+  function createBloomPipeline(renderer, scene, camera) {
+    var T = window.THREE;
+    var renderPass = new T.RenderPass(scene, camera);
+    var bloomComposer = new T.EffectComposer(renderer);
+    bloomComposer.renderToScreen = false;
+    bloomComposer.addPass(renderPass);
+    var bloom = new T.UnrealBloomPass(new T.Vector2(1, 1), 1.2, 0.5, 0);
+    bloomComposer.addPass(bloom);
+    var composite = new T.ShaderPass(new T.ShaderMaterial({
+      uniforms: {
+        baseTexture: { value: null },
+        bloomTexture: { value: bloomComposer.renderTarget2.texture }
+      },
+      vertexShader: COMPOSITE_VERTEX,
+      fragmentShader: COMPOSITE_FRAGMENT,
+      dithering: true
+    }), "baseTexture");
+    composite.needsSwap = true;
+    var composer = new T.EffectComposer(renderer);
+    composer.renderTarget1.texture.encoding = T.sRGBEncoding;
+    composer.renderTarget2.texture.encoding = T.sRGBEncoding;
+    composer.addPass(renderPass);
+    composer.addPass(composite);
+    var halfFloat = renderer.capabilities.isWebGL2
+      ? renderer.extensions.has("EXT_color_buffer_float")
+      : renderer.extensions.has("OES_texture_half_float") &&
+        renderer.extensions.has("OES_texture_half_float_linear") &&
+        renderer.extensions.has("EXT_color_buffer_half_float");
+    if (halfFloat) {
+      [composer.renderTarget1, composer.renderTarget2,
+        bloomComposer.renderTarget1, bloomComposer.renderTarget2,
+        bloom.renderTargetBright].concat(bloom.renderTargetsHorizontal, bloom.renderTargetsVertical).forEach(function (target) {
+        target.texture.type = T.HalfFloatType;
+      });
+    }
+    return { composer: composer, bloomComposer: bloomComposer };
+  }
+
+  function createCanvasBloom(canvas, host) {
+    var T = window.THREE;
+    var renderer = new T.WebGLRenderer();
+    renderer.outputEncoding = T.sRGBEncoding;
+    renderer.domElement.className = "pg-canvas";
+    renderer.domElement.style.position = "absolute";
+    renderer.domElement.style.inset = "0";
+    renderer.domElement.style.pointerEvents = "none";
+    renderer.domElement.style.display = "none";
+    var emission = document.createElement("canvas");
+    var context = emission.getContext("2d");
+    var baseTexture = new T.CanvasTexture(canvas);
+    var emissionTexture = new T.CanvasTexture(emission);
+    [baseTexture, emissionTexture].forEach(function (texture) {
+      texture.encoding = T.sRGBEncoding;
+      texture.minFilter = T.LinearFilter;
+      texture.generateMipmaps = false;
+    });
+    var scene = new T.Scene();
+    var camera = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    var material = new T.MeshBasicMaterial({ map: baseTexture, depthTest: false, depthWrite: false });
+    scene.add(new T.Mesh(new T.PlaneGeometry(2, 2), material));
+    var pipeline = createBloomPipeline(renderer, scene, camera);
+    host.insertBefore(renderer.domElement, canvas);
+    return {
+      context: context,
+      setVisible: function (visible) {
+        canvas.style.visibility = visible ? "hidden" : "";
+        renderer.domElement.style.display = visible ? "block" : "none";
+      },
+      resize: function () {
+        if (emission.width === canvas.width && emission.height === canvas.height) return;
+        emission.width = canvas.width;
+        emission.height = canvas.height;
+        renderer.setSize(canvas.width, canvas.height, false);
+        pipeline.composer.setSize(canvas.width, canvas.height);
+        pipeline.bloomComposer.setSize(canvas.width, canvas.height);
+      },
+      render: function (scale) {
+        emissionTexture.needsUpdate = true;
+        material.map = emissionTexture;
+        material.color.setScalar(scale);
+        pipeline.bloomComposer.render();
+        baseTexture.needsUpdate = true;
+        material.map = baseTexture;
+        material.color.setScalar(1);
+        pipeline.composer.render();
+      }
+    };
+  }
+
+  function createView3D(container, onSelect, input) {
     var host = el("div", { class: "pg-view pg-view-canvas pg-view-3d" });
     var chrome = canvasChrome(host);
     var status = el("div", { class: "pg-canvas-status", text: "Loading three.js…" });
@@ -635,6 +1045,7 @@
     var composer, bloomComposer, darkMaterial, blackBg;
     var meshes = {};
     var shapes = [], selected = null, hover = null, fitted = false, hasEmissive = false;
+    var viewW = 0, viewH = 0;
     var orbit = { target: null, radius: 40, theta: 0.7, phi: 1.05 };
     var drag = null, pendingFrame = false, failed = false, visible = false;
 
@@ -683,28 +1094,14 @@
       setupBloom();
       status.hidden = true;
       applyTheme();
-      resize();
       applyShapes();
+      resize();
     }
 
     function setupBloom() {
-      var renderPass = new T.RenderPass(scene, camera);
-      bloomComposer = new T.EffectComposer(renderer);
-      bloomComposer.renderToScreen = false;
-      bloomComposer.addPass(renderPass);
-      bloomComposer.addPass(new T.UnrealBloomPass(new T.Vector2(1, 1), 1.2, 0.5, 0));
-      var composite = new T.ShaderPass(new T.ShaderMaterial({
-        uniforms: {
-          baseTexture: { value: null },
-          bloomTexture: { value: bloomComposer.renderTarget2.texture }
-        },
-        vertexShader: COMPOSITE_VERTEX,
-        fragmentShader: COMPOSITE_FRAGMENT
-      }), "baseTexture");
-      composite.needsSwap = true;
-      composer = new T.EffectComposer(renderer);
-      composer.addPass(renderPass);
-      composer.addPass(composite);
+      var pipeline = createBloomPipeline(renderer, scene, camera);
+      composer = pipeline.composer;
+      bloomComposer = pipeline.bloomComposer;
       darkMaterial = new T.MeshBasicMaterial({ color: 0x000000 });
       blackBg = new T.Color(0x000000);
     }
@@ -755,18 +1152,81 @@
       if (s.kind === "box") return new T.BoxGeometry(s.w, s.h, s.d);
       if (s.kind === "rect") return new T.PlaneGeometry(s.w, s.h);
       if (s.kind === "circle") return new T.CircleGeometry(s.radius, 48);
+      if (s.kind === "cylinder" || s.kind === "cone") {
+        return new T.CylinderGeometry(s.kind === "cone" ? 0 : s.radius, s.radius, s.h, s.segments);
+      }
+      if (s.kind === "torus") {
+        return new T.TorusGeometry(s.radius, s.tube, s.rings, s.segments).rotateX(Math.PI / 2);
+      }
+      if (s.kind === "prism") {
+        var triangle = new T.Shape();
+        triangle.moveTo(-s.w / 2, -s.h / 2);
+        triangle.lineTo(s.w / 2, -s.h / 2);
+        triangle.lineTo(0, s.h / 2);
+        triangle.closePath();
+        return new T.ExtrudeGeometry(triangle, { depth: s.d, bevelEnabled: false, steps: 1 }).translate(0, 0, -s.d / 2);
+      }
       return new T.SphereGeometry(s.radius, 32, 24);
     }
 
+    function makeTextTexture(s) {
+      var px = 64, scale = px / s.size;
+      var canvas = document.createElement("canvas");
+      canvas.width = Math.max(Math.ceil(s.w * scale), 1);
+      canvas.height = Math.max(Math.ceil(s.h * scale), 1);
+      var tctx = canvas.getContext("2d");
+      tctx.font = px + "px " + theme().mono;
+      tctx.textAlign = s.align < 0 ? "left" : s.align > 0 ? "right" : "center";
+      tctx.textBaseline = "middle";
+      tctx.fillStyle = "#ffffff";
+      var lx = canvas.width / 2 + textLineX(s) * scale;
+      s.lines.forEach(function (line, i) {
+        tctx.fillText(line, lx, canvas.height / 2 - textLineY(s, i) * scale);
+      });
+      var tex = new T.CanvasTexture(canvas);
+      tex.minFilter = T.LinearFilter;
+      tex.encoding = T.sRGBEncoding;
+      return tex;
+    }
+
+    function makeObject(s) {
+      if (s.kind !== "text") {
+        var m = new T.Mesh(makeGeometry(s), new T.MeshLambertMaterial());
+        m.castShadow = true;
+        m.receiveShadow = true;
+        return m;
+      }
+      var sprite = new T.Sprite(new T.SpriteMaterial({ map: makeTextTexture(s), transparent: true }));
+      sprite.scale.set(s.w, s.h, 1);
+      return sprite;
+    }
+
+    function disposeObject(m) {
+      if (m.geometry) m.geometry.dispose();
+      if (m.material.map) m.material.map.dispose();
+      m.material.dispose();
+    }
+
     function geometryKey(s) {
-      return s.kind + ":" + s.w + ":" + s.h + ":" + s.d + ":" + s.radius;
+      return s.kind + ":" + s.w + ":" + s.h + ":" + s.d + ":" + s.radius + ":" + s.tube + ":" + s.segments + ":" + s.rings + ":" + s.align + ":" + s.text;
     }
 
     function applyMaterial(m) {
       var s = m.userData.shape;
       var mat = m.material;
       var c = theme();
+      mat.depthWrite = !s.dim;
+      if (s.kind === "text") {
+        if (s.dim) mat.color.setRGB(DIM_COLOR.r / 255, DIM_COLOR.g / 255, DIM_COLOR.b / 255);
+        else mat.color.setRGB(s.r / 255, s.g / 255, s.b / 255);
+        if (s.path && s.path === selected) mat.color.lerp(new T.Color(c.accentStrong), 0.6);
+        else if (s === hover) mat.color.lerp(new T.Color(c.accent), 0.35);
+        mat.color.convertSRGBToLinear();
+        mat.opacity = s.dim ? s.a * 0.25 : s.a;
+        return;
+      }
       mat.side = s.kind === "rect" || s.kind === "circle" ? T.DoubleSide : T.FrontSide;
+      mat.wireframe = s.dim;
       if (s.dim) mat.color.setRGB(DIM_COLOR.r / 255, DIM_COLOR.g / 255, DIM_COLOR.b / 255).convertSRGBToLinear();
       else mat.color.setRGB(s.r / 255, s.g / 255, s.b / 255).convertSRGBToLinear();
       var opacity = s.dim ? s.a * 0.25 : s.a;
@@ -794,31 +1254,44 @@
       hasEmissive = false;
       shapes.forEach(function (s) {
         seen[s.key] = true;
-        if (s.emissive && !s.dim) hasEmissive = true;
+        if (isEmissive(s)) hasEmissive = true;
         var m = meshes[s.key];
         var gk = geometryKey(s);
+        if (m && m.userData.gk !== gk && (s.kind === "text") !== (m.userData.shape.kind === "text")) {
+          group.remove(m);
+          disposeObject(m);
+          m = null;
+        }
         if (!m) {
-          m = new T.Mesh(makeGeometry(s), new T.MeshLambertMaterial());
-          m.castShadow = true;
-          m.receiveShadow = true;
+          m = makeObject(s);
           m.userData.gk = gk;
           group.add(m);
           meshes[s.key] = m;
         } else if (m.userData.gk !== gk) {
-          m.geometry.dispose();
-          m.geometry = makeGeometry(s);
+          if (s.kind === "text") {
+            m.material.map.dispose();
+            m.material.map = makeTextTexture(s);
+            m.scale.set(s.w, s.h, 1);
+          } else {
+            m.geometry.dispose();
+            m.geometry = makeGeometry(s);
+          }
           m.userData.gk = gk;
         }
         m.userData.shape = s;
         m.position.set(s.x, s.y, s.z);
+        if (s.kind !== "text") {
+          var r = s.rotation;
+          m.quaternion.setFromRotationMatrix(new T.Matrix4().set(
+            r[0], r[1], r[2], 0, r[3], r[4], r[5], 0, r[6], r[7], r[8], 0, 0, 0, 0, 1));
+        }
         applyMaterial(m);
       });
       Object.keys(meshes).forEach(function (k) {
         if (seen[k]) return;
         var m = meshes[k];
         group.remove(m);
-        m.geometry.dispose();
-        m.material.dispose();
+        disposeObject(m);
         delete meshes[k];
       });
       if (hover && shapes.indexOf(hover) === -1) hover = null;
@@ -845,11 +1318,44 @@
       if (!T || !shapes.length) return;
       var b = bounds(shapes);
       orbit.target.set((b.minX + b.maxX) / 2, (b.minY + b.maxY) / 2, (b.minZ + b.maxZ) / 2);
-      var dx = b.maxX - b.minX, dy = b.maxY - b.minY, dz = b.maxZ - b.minZ;
-      var r = Math.max(Math.sqrt(dx * dx + dy * dy + dz * dz) / 2, 1e-3);
-      var vfov = camera.fov * Math.PI / 180;
-      var hfov = 2 * Math.atan(Math.tan(vfov / 2) * camera.aspect);
-      orbit.radius = r / Math.sin(Math.min(vfov, hfov) / 2) * 1.1;
+      var st = Math.sin(orbit.theta), ct = Math.cos(orbit.theta);
+      var sp = Math.sin(orbit.phi), cp = Math.cos(orbit.phi);
+      var right = new T.Vector3(ct, 0, -st);
+      var up = new T.Vector3(-cp * st, sp, -cp * ct);
+      var back = new T.Vector3(sp * st, cp, sp * ct);
+      var tanY = Math.tan(camera.fov * Math.PI / 360) * 0.9;
+      var tanX = tanY * camera.aspect;
+      var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, maxZ = -Infinity;
+      var point = new T.Vector3();
+      shapes.forEach(function (s) {
+        var m = meshes[s.key];
+        var box;
+        if (s.kind !== "text") {
+          if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+          box = m.geometry.boundingBox;
+        }
+        for (var i = 0; i < 8; i++) {
+          if (s.kind === "text") {
+            point.copy(right).multiplyScalar((i & 1 ? 1 : -1) * s.w / 2);
+            point.addScaledVector(up, (i & 2 ? 1 : -1) * s.h / 2);
+          } else {
+            point.set(i & 1 ? box.max.x : box.min.x,
+              i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z);
+            point.applyQuaternion(m.quaternion);
+          }
+          point.add(m.position).sub(orbit.target);
+          var x = point.dot(right), y = point.dot(up), z = point.dot(back);
+          minX = Math.min(minX, x - z * tanX);
+          maxX = Math.max(maxX, x + z * tanX);
+          minY = Math.min(minY, y - z * tanY);
+          maxY = Math.max(maxY, y + z * tanY);
+          maxZ = Math.max(maxZ, z);
+        }
+      });
+      orbit.radius = Math.max((maxX - minX) / (2 * tanX),
+        (maxY - minY) / (2 * tanY), (maxZ + 0.001) / 0.999, 0.001);
+      orbit.target.addScaledVector(right, (minX + maxX) / 2);
+      orbit.target.addScaledVector(up, (minY + maxY) / 2);
       fitted = true;
       requestRender();
     }
@@ -865,14 +1371,16 @@
       scene.background = blackBg;
       grid.visible = false;
       shadowPlane.visible = false;
-      var swapped = [];
+      var swapped = [], hidden = [];
       group.children.forEach(function (m) {
-        if (m.userData.shape.emissive && !m.userData.shape.dim) return;
+        if (isEmissive(m.userData.shape)) return;
+        if (m.userData.shape.dim || m.userData.shape.kind === "text") { hidden.push(m); m.visible = false; return; }
         swapped.push([m, m.material]);
         m.material = darkMaterial;
       });
       bloomComposer.render();
       swapped.forEach(function (p) { p[0].material = p[1]; });
+      hidden.forEach(function (m) { m.visible = true; });
       grid.visible = true;
       shadowPlane.visible = true;
       scene.background = bg;
@@ -892,6 +1400,9 @@
       if (!T) return;
       var r = host.getBoundingClientRect();
       if (!r.width || !r.height) return;
+      var changed = viewW !== r.width || viewH !== r.height;
+      viewW = r.width;
+      viewH = r.height;
       var dpr = window.devicePixelRatio || 1;
       renderer.setPixelRatio(dpr);
       renderer.setSize(r.width, r.height, false);
@@ -901,18 +1412,38 @@
       bloomComposer.setSize(r.width, r.height);
       camera.aspect = r.width / r.height;
       camera.updateProjectionMatrix();
-      if (!fitted && shapes.length) fit();
+      if ((!fitted || changed) && shapes.length) fit();
       requestRender();
     }
 
-    function pick(lx, ly) {
+    function pickHit(lx, ly) {
       if (!T) return null;
       var w = host.clientWidth, h = host.clientHeight;
       if (!w || !h) return null;
       mouse.set((lx / w) * 2 - 1, -(ly / h) * 2 + 1);
       raycaster.setFromCamera(mouse, camera);
       var hits = raycaster.intersectObjects(group.children, false);
-      return hits.length ? hits[0].object.userData.shape : null;
+      var hit = hits.find(function (h) { return !h.object.userData.shape.dim; }) || hits[0];
+      return hit ? { shape: hit.object.userData.shape, point: hit.point } : null;
+    }
+
+    function pick(lx, ly) {
+      var hit = pickHit(lx, ly);
+      return hit ? hit.shape : null;
+    }
+
+    /* World point of the pointer for drag events: the ray's intersection
+     * with the plane through the pressed shape that faces the camera. */
+    function pointOnShapePlane(lx, ly, shape) {
+      var w = host.clientWidth, h = host.clientHeight;
+      if (!w || !h) return null;
+      mouse.set((lx / w) * 2 - 1, -(ly / h) * 2 + 1);
+      raycaster.setFromCamera(mouse, camera);
+      var normal = new T.Vector3();
+      camera.getWorldDirection(normal);
+      var plane = new T.Plane().setFromNormalAndCoplanarPoint(normal, new T.Vector3(shape.x, shape.y, shape.z));
+      var out = new T.Vector3();
+      return raycaster.ray.intersectPlane(plane, out) ? out : null;
     }
 
     function refreshHighlights() {
@@ -925,11 +1456,21 @@
     }
 
     host.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    listenKeys(host, input);
 
     host.addEventListener("pointerdown", function (e) {
       if (!T || (e.button !== 0 && e.button !== 2)) return;
-      drag = { sx: e.clientX, sy: e.clientY, moved: false, pan: e.button === 2 || e.shiftKey };
+      var p = localPoint(host, e);
+      drag = { sx: e.clientX, sy: e.clientY, moved: false, pan: e.button === 2 || e.shiftKey, gesture: null };
+      if (e.button === 0) {
+        var hit = pickHit(p.x, p.y);
+        if (hit) {
+          drag.gesture = hit.shape;
+          input.mouse(e, hit.shape, hit.point);
+        }
+      }
       host.setPointerCapture(e.pointerId);
+      host.focus({ preventScroll: true });
       setCursor();
     });
 
@@ -941,6 +1482,12 @@
         drag.sx = e.clientX;
         drag.sy = e.clientY;
         if (Math.abs(dx) + Math.abs(dy) > 0) drag.moved = true;
+        if (drag.gesture) {
+          var wp = pointOnShapePlane(p.x, p.y, drag.gesture);
+          if (wp) input.mouse(e, drag.gesture, wp);
+          chrome.hideTip();
+          return;
+        }
         if (drag.pan) {
           var scale = 2 * orbit.radius * Math.tan(camera.fov * Math.PI / 360) / Math.max(host.clientHeight, 1);
           var right = new T.Vector3(), up = new T.Vector3();
@@ -954,7 +1501,9 @@
         requestRender();
         return;
       }
-      var s = pick(p.x, p.y);
+      var hit = pickHit(p.x, p.y);
+      var s = hit ? hit.shape : null;
+      input.mouse(e, s, hit ? hit.point : null);
       if (s !== hover) { hover = s; refreshHighlights(); setCursor(); }
       if (s) chrome.showTip(s.path || s.name || "", p.x, p.y);
       else chrome.hideTip();
@@ -962,12 +1511,16 @@
 
     function endDrag(e) {
       if (!drag) return;
-      var moved = drag.moved;
+      var moved = drag.moved, gesture = drag.gesture;
       drag = null;
       try { host.releasePointerCapture(e.pointerId); } catch (err) {}
       setCursor();
+      var p = localPoint(host, e);
+      if (gesture) {
+        var wp = pointOnShapePlane(p.x, p.y, gesture);
+        if (wp) input.mouse(e, gesture, wp);
+      }
       if (!moved && e.button === 0) {
-        var p = localPoint(host, e);
         var s = pick(p.x, p.y);
         onSelect(s && s.path ? s.path : null);
       }
@@ -975,7 +1528,8 @@
 
     host.addEventListener("pointerup", endDrag);
     host.addEventListener("pointercancel", endDrag);
-    host.addEventListener("pointerleave", function () {
+    host.addEventListener("pointerleave", function (e) {
+      if (!drag) input.mouse(e, null, null);
       if (hover) { hover = null; refreshHighlights(); }
       chrome.hideTip();
       setCursor();
@@ -988,6 +1542,7 @@
       requestRender();
     }, { passive: false });
 
+    listenKeys(host, input);
     setCursor();
 
     return {
@@ -999,7 +1554,11 @@
       },
       setSelected: function (path) { selected = path; if (T) refreshHighlights(); },
       fit: function () { if (T) fit(); },
-      reset: function () { fitted = false; },
+      reset: function () {
+        fitted = false;
+        orbit.theta = 0.7;
+        orbit.phi = 1.05;
+      },
       resize: function () { if (T) resize(); },
       show: function () {
         visible = true;
@@ -1013,10 +1572,11 @@
   /* Panel */
 
   var TABS = [
-    { id: "table", label: "Table" },
     { id: "2d", label: "2D" },
-    { id: "3d", label: "3D" }
+    { id: "3d", label: "3D" },
+    { id: "table", label: "Table" }
   ];
+  var DEFAULT_TAB = "2d";
 
   function createPanel(opts) {
     var root = el("div", { class: "pg-query-panel" });
@@ -1037,9 +1597,6 @@
       tabButtons[t.id] = b;
       tabbar.appendChild(b);
     });
-    tabbar.appendChild(el("span", { class: "pg-spacer" }));
-    var fitBtn = el("button", { class: "pg-btn pg-btn-small", type: "button", text: "Fit" });
-    tabbar.appendChild(fitBtn);
     var views = el("div", { class: "pg-query-views" });
     var errorBox = el("pre", { class: "pg-error" });
     errorBox.hidden = true;
@@ -1048,10 +1605,21 @@
     root.appendChild(body);
 
     var onSelect = function (path) { if (opts.onSelect) opts.onSelect(path); };
+    /* Pointer and keyboard events on the views are forwarded to the scripts
+     * through the playground's input bridge. The mouse callback takes the
+     * pointer position in world coordinates and returns true when a script
+     * was waiting for the event. */
+    var input = {
+      mouse: function (e, shape, w) {
+        if (!opts.onMouse) return;
+        emitPointer(opts.onMouse, shapes.entities || {}, shape, e, w);
+      },
+      key: function (e, down) { if (opts.onKey) opts.onKey(e, down); }
+    };
     var view = {
       table: createTableView(views, onSelect),
-      "2d": createView2D(views, onSelect),
-      "3d": createView3D(views, onSelect)
+      "2d": createView2D(views, onSelect, input),
+      "3d": createView3D(views, onSelect, input)
     };
 
     var activeTab = null;
@@ -1061,7 +1629,7 @@
     var world = [];
     var shapes = [];
     var matched = null;
-    var refitPending = false;
+    var refitPending = true;
 
     var editor = ace.edit(editorHost);
     editor.setOptions({
@@ -1088,12 +1656,19 @@
     editor.session.on("change", function () {
       if (loading) return;
       if (opts.onChange) opts.onChange(editor.getValue());
+      updateTabs();
       setExpanded(true);
       refresh(false);
     });
 
     function query() {
       return editor.getValue().trim();
+    }
+
+    function updateTabs() {
+      var hasQuery = !!query();
+      tabButtons.table.hidden = !hasQuery;
+      if (!hasQuery && activeTab === "table") setTab(DEFAULT_TAB);
     }
 
     function setCount(text) {
@@ -1187,6 +1762,7 @@
     }
 
     function setTab(id) {
+      if (id === "table" && !query()) id = DEFAULT_TAB;
       if (activeTab === id) return;
       var previous = activeTab;
       activeTab = id;
@@ -1196,7 +1772,6 @@
         tabButtons[t.id].setAttribute("aria-selected", active ? "true" : "false");
         view[t.id].host.hidden = !active;
       });
-      fitBtn.hidden = id === "table";
       if (previous === "3d") view["3d"].hide();
       if (id === "3d") view["3d"].show();
       if (opts.onTabChange) opts.onTabChange(id);
@@ -1222,7 +1797,6 @@
     }
 
     toggle.addEventListener("click", function () { setExpanded(!expanded); });
-    fitBtn.addEventListener("click", function () { if (activeTab !== "table") view[activeTab].fit(); });
 
     if (window.ResizeObserver) {
       new ResizeObserver(function () { resizeViews(); }).observe(views);
@@ -1237,7 +1811,8 @@
 
     root.classList.toggle("pg-collapsed", !expanded);
     toggle.setAttribute("aria-expanded", "true");
-    setTab(opts.tab && view[opts.tab] ? opts.tab : "table");
+    setTab(opts.tab && view[opts.tab] ? opts.tab : DEFAULT_TAB);
+    updateTabs();
     if (opts.expanded === false) setExpanded(false);
 
     return {
@@ -1248,8 +1823,11 @@
       setWorld: function (results) {
         world = results || [];
         shapes = worldShapes(world);
-        if (refitPending) {
+        if (refitPending && shapes.length) {
           refitPending = false;
+          if (!query()) {
+            setTab(shapes.some(function (s) { return s.d > 0 || s.kind === "sphere"; }) ? "3d" : "2d");
+          }
           view["2d"].reset();
           view["3d"].reset();
         }
@@ -1261,6 +1839,7 @@
         editor.setValue(text || "", -1);
         editor.session.getUndoManager().reset();
         loading = false;
+        updateTabs();
       },
       getQuery: query,
       setSelected: function (path) {

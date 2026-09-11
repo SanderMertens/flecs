@@ -230,7 +230,6 @@ typedef struct ecs_script_assign_t {
     ecs_entity_t component;
     int32_t offset;
     int32_t sp;
-    int32_t this_sp;
 } ecs_script_assign_t;
 
 typedef struct ecs_script_if_t {

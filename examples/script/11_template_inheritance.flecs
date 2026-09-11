@@ -2,7 +2,7 @@
 // with a configurable facade.
 
 // Define a few components
-struct Position3(x: f32, y: f32, z: f32)
+struct Position(x: f32, y: f32, z: f32)
 struct Rgb(r: f32, g: f32, b: f32)
 struct Box(width: f32, height: f32, depth: f32)
 
@@ -11,12 +11,18 @@ struct Facade(height: f32)
 
 // A brick facade that inherits from Facade.
 template BrickFacade : Facade {
-  prop color: Rgb = {0.55, 0.25, 0.15}
+  prop color: Rgb = {55, 25, 15}
 
   {
-    Position3: {0, height / 2, 0} // "height" is inherited from Facade
+    Position: {0, height / 2, 0} // "height" is inherited from Facade
     Rgb: color
-    Box: {4, height, 4}
+    Box: {4, height - 0.1, 4}
+  }
+
+  {
+    Position: {0, height, 0}
+    Rgb: {75, 70, 60}
+    Box: {4.1, 0.2, 4.1}
   }
 }
 
@@ -28,16 +34,16 @@ template GlassFacade : Facade {
 
   // Window frame
   {
-    Position3: {0, height / 2, 0}
-    Rgb: {0.2, 0.2, 0.2}
+    Position: {0, height / 2, 0}
+    Rgb: {20, 20, 20}
     Box: {4, height, 4}
   }
 
   // Window panes
   for i in 0..panes {
     {
-      Position3: {-2 + paneWidth * (i + 0.5), height / 2, 2.1}
-      Rgb: {0.5, 0.7, 0.9}
+      Position: {-2 + paneWidth * (i + 0.5), height / 2, 2.1}
+      Rgb: {50, 70, 90}
       Box: {paneWidth - 0.2, height - 0.4, 0.1}
     }
   }
@@ -52,18 +58,18 @@ template Building {
   // Instantiate a facade for each floor.
   for i in 0..floors {
     {
-      Position3: {0, i * floorHeight, 0}
+      Position: {0, i * floorHeight, 0}
       facade: {height: floorHeight} // Instantiate facade as normal component
     }
   }
 }
 
 // A two-story building with a brick facade
-Building brick_house(facade: BrickFacade, floors: 2) {
-  Position3: {-5, 0, 0}
+Building brick_house(facade: BrickFacade, floors: 2, floorHeight: 2) {
+  Position: {-2.5, 0, 0}
 }
 
 // A ten-story building with a glass facade
-Building glass_tower(facade: GlassFacade, floors: 10, floorHeight: 4) {
-  Position3: {5, 0, 0}
+Building glass_tower(facade: GlassFacade, floors: 3, floorHeight: 2.5) {
+  Position: {2.5, 0, 0}
 }

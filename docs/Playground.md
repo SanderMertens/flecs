@@ -1,4 +1,4 @@
-# Flecs playground
+# Playground
 
 \htmlonly
 <script>document.documentElement.classList.add("fl-playground");</script>

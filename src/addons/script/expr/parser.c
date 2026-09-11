@@ -782,7 +782,7 @@ static const char* flecs_script_parse_lhs(
                     }
                     break;
             )
-            can_have_rhs = false;
+            can_have_rhs = until == ']';
             break;
         }
     )
