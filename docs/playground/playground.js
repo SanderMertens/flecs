@@ -670,8 +670,8 @@
       refreshQueued = true;
       requestAnimationFrame(function () {
         refreshQueued = false;
-        refreshTree();
-        queryPanel.refresh();
+        refreshTree(true);
+        if (queryPanel.getQuery().trim()) queryPanel.refresh();
       });
     }
 
@@ -787,12 +787,15 @@
       if (wasShown) editor.resize(true);
     }
 
-    function refreshTree() {
+    var lastWorld = null;
+    function refreshTree(skipUnchanged) {
       conn.world(function (msg) {
+        if (skipUnchanged && msg === lastWorld) return;
         var data = JSON.parse(msg);
         var n = tree.update(data.results || []);
         count.textContent = n ? n + (n === 1 ? " entity" : " entities") : "";
         queryPanel.setWorld(data.results || []);
+        lastWorld = msg;
       }, function () {});
     }
 

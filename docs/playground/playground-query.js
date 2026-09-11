@@ -1211,10 +1211,9 @@
       return s.kind + ":" + s.w + ":" + s.h + ":" + s.d + ":" + s.radius + ":" + s.tube + ":" + s.segments + ":" + s.rings + ":" + s.align + ":" + s.text;
     }
 
-    function applyMaterial(m) {
+    function applyMaterial(m, c) {
       var s = m.userData.shape;
       var mat = m.material;
-      var c = theme();
       mat.depthWrite = !s.dim;
       if (s.kind === "text") {
         if (s.dim) mat.color.setRGB(DIM_COLOR.r / 255, DIM_COLOR.g / 255, DIM_COLOR.b / 255);
@@ -1251,6 +1250,7 @@
     function applyShapes() {
       if (!T) return;
       var seen = {};
+      var c = theme();
       hasEmissive = false;
       shapes.forEach(function (s) {
         seen[s.key] = true;
@@ -1285,7 +1285,7 @@
           m.quaternion.setFromRotationMatrix(new T.Matrix4().set(
             r[0], r[1], r[2], 0, r[3], r[4], r[5], 0, r[6], r[7], r[8], 0, 0, 0, 0, 1));
         }
-        applyMaterial(m);
+        applyMaterial(m, c);
       });
       Object.keys(meshes).forEach(function (k) {
         if (seen[k]) return;
@@ -1447,8 +1447,20 @@
     }
 
     function refreshHighlights() {
-      Object.keys(meshes).forEach(function (k) { applyMaterial(meshes[k]); });
+      var c = theme();
+      Object.keys(meshes).forEach(function (k) { applyMaterial(meshes[k], c); });
       requestRender();
+    }
+
+    function setHover(s) {
+      if (s === hover) return;
+      var previous = hover;
+      hover = s;
+      var c = theme();
+      if (previous && meshes[previous.key]) applyMaterial(meshes[previous.key], c);
+      if (hover && meshes[hover.key]) applyMaterial(meshes[hover.key], c);
+      requestRender();
+      setCursor();
     }
 
     function setCursor() {
@@ -1504,7 +1516,7 @@
       var hit = pickHit(p.x, p.y);
       var s = hit ? hit.shape : null;
       input.mouse(e, s, hit ? hit.point : null);
-      if (s !== hover) { hover = s; refreshHighlights(); setCursor(); }
+      setHover(s);
       if (s) chrome.showTip(s.path || s.name || "", p.x, p.y);
       else chrome.hideTip();
     });
@@ -1530,7 +1542,7 @@
     host.addEventListener("pointercancel", endDrag);
     host.addEventListener("pointerleave", function (e) {
       if (!drag) input.mouse(e, null, null);
-      if (hover) { hover = null; refreshHighlights(); }
+      setHover(null);
       chrome.hideTip();
       setCursor();
     });

@@ -22361,20 +22361,19 @@ char* flecs_explorer_request(const char *method, char *request, char *body) {
     ecs_assert(flecs_wasm_rest_server != NULL, ECS_INVALID_OPERATION,
         "wasm REST server is not initialized yet");
 
+    static char *reply_body;
+    ecs_os_free(reply_body);
+
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
     ecs_http_server_request(
         flecs_wasm_rest_server, method, request, body, &reply);
-    if (reply.code == 200) {
-        return ecs_strbuf_get(&reply.body);
-    } else {
-        char *body = ecs_strbuf_get(&reply.body);
-        if (body) {
-            return body;
-        } else {
-            return flecs_asprintf(
-                "{\"error\": \"bad request\", \"status\": %d}", reply.code);
-        }
+    reply_body = ecs_strbuf_get(&reply.body);
+    ecs_strbuf_reset(&reply.headers);
+    if (!reply_body && reply.code != 200) {
+        reply_body = flecs_asprintf(
+            "{\"error\": \"bad request\", \"status\": %d}", reply.code);
     }
+    return reply_body;
 }
 #endif
 

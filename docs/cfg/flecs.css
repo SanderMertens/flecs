@@ -577,6 +577,17 @@ html.dark-mode .fl-theme-btn .fl-icon-sun {
   border-left: 1px solid var(--fl-border);
 }
 
+.fl-nav-pill {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #facc15;
+  color: #422006;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .fl-nav li {
   margin: 0;
 }
@@ -601,6 +612,13 @@ html.dark-mode .fl-theme-btn .fl-icon-sun {
   color: var(--fl-accent-strong);
   background: var(--fl-accent-soft);
   font-weight: 600;
+}
+
+.fl-nav a.fl-nav-playground {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
 }
 
 .fl-nav a.fl-external::after {

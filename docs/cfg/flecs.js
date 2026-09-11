@@ -76,6 +76,10 @@
       }
       var a = el("a", attrs);
       a.textContent = item.title;
+      if (item.href === "Playground.html") {
+        a.classList.add("fl-nav-playground");
+        a.appendChild(el("span", { class: "fl-nav-pill", text: "Try it out!" }));
+      }
       if (!item.external && item.href === page) {
         a.classList.add("fl-active");
         a.setAttribute("aria-current", "page");
