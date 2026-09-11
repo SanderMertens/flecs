@@ -76,5 +76,16 @@ void flecs_script_report_throw(
 void flecs_script_async_import(
     ecs_world_t *world);
 
+/* Create a task for an async block. Invoked when the async statement is
+ * evaluated. The task captures the variables visible at the statement and is
+ * owned by the template instance (for templates) or the script. */
+int flecs_script_async_spawn(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_async_t *node);
+
+/* Free all tasks in a vector of async block tasks. */
+void flecs_script_async_tasks_free(
+    ecs_vec_t *tasks);
+
 #endif // FLECS_SCRIPT_ASYNC
 #endif // FLECS_SCRIPT_ASYNC_PRIVATE_H

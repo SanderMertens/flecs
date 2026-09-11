@@ -370,6 +370,48 @@ ecs_script_await_t* flecs_script_insert_await(
     return result;
 }
 
+ecs_script_async_t* flecs_script_insert_async(
+    ecs_parser_t *parser)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_async_t *result = flecs_ast_new(
+        parser, ecs_script_async_t, EcsAstAsync);
+    result->scope = flecs_script_scope_new(parser);
+    flecs_ast_append(parser, scope->stmts, ecs_script_async_t, result);
+    return result;
+}
+
+ecs_script_while_t* flecs_script_insert_while(
+    ecs_parser_t *parser)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_while_t *result = flecs_ast_new(
+        parser, ecs_script_while_t, EcsAstWhile);
+    result->scope = flecs_script_scope_new(parser);
+    flecs_ast_append(parser, scope->stmts, ecs_script_while_t, result);
+    return result;
+}
+
+ecs_script_assign_t* flecs_script_insert_assign(
+    ecs_parser_t *parser,
+    const char *name)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_assign_t *result = flecs_ast_new(
+        parser, ecs_script_assign_t, EcsAstAssign);
+    result->name = name;
+    result->sp = -1;
+    result->this_sp = -1;
+    flecs_ast_append(parser, scope->stmts, ecs_script_assign_t, result);
+    return result;
+}
+
 ecs_script_continue_t* flecs_script_insert_continue(
     ecs_parser_t *parser)
 {
@@ -506,6 +548,12 @@ int flecs_script_visit_scopes(
         break;
     case EcsAstFunction:
         scopes[0] = ((ecs_script_function_node_t*)node)->body;
+        break;
+    case EcsAstAsync:
+        scopes[0] = ((ecs_script_async_t*)node)->scope;
+        break;
+    case EcsAstWhile:
+        scopes[0] = ((ecs_script_while_t*)node)->scope;
         break;
     case EcsAstTry: {
         ecs_script_try_t *stmt = (ecs_script_try_t*)node;

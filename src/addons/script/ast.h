@@ -30,7 +30,10 @@ typedef enum ecs_script_node_kind_t {
     EcsAstFunction,
     EcsAstAwait,
     EcsAstTry,
-    EcsAstContinue
+    EcsAstContinue,
+    EcsAstAsync,
+    EcsAstWhile,
+    EcsAstAssign
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -208,6 +211,28 @@ typedef struct ecs_script_try_t {
     ecs_vec_t catches; /* vec<ecs_script_catch_t> */
 } ecs_script_try_t;
 
+typedef struct ecs_script_async_t {
+    ecs_script_node_t node;
+    ecs_script_scope_t *scope;
+} ecs_script_async_t;
+
+typedef struct ecs_script_while_t {
+    ecs_script_node_t node;
+    ecs_expr_node_t *expr;
+    ecs_script_scope_t *scope;
+} ecs_script_while_t;
+
+typedef struct ecs_script_assign_t {
+    ecs_script_node_t node;
+    const char *name;
+    ecs_expr_node_t *expr;
+    ecs_entity_t eval_type;
+    ecs_entity_t component;
+    int32_t offset;
+    int32_t sp;
+    int32_t this_sp;
+} ecs_script_assign_t;
+
 typedef struct ecs_script_if_t {
     ecs_script_node_t node;
     ecs_script_scope_t *if_true;
@@ -257,6 +282,9 @@ typedef struct ecs_script_function_node_t {
 
 bool flecs_scope_is_empty(
     ecs_script_scope_t *scope);
+
+const char* flecs_script_node_kind_str(
+    const ecs_script_node_t *node);
 
 ecs_script_entity_t* flecs_script_insert_entity(
     ecs_parser_t *parser,
@@ -324,6 +352,16 @@ ecs_script_component_t* flecs_script_insert_pair_component(
 
 ecs_script_if_t* flecs_script_insert_if(
     ecs_parser_t *parser);
+
+ecs_script_async_t* flecs_script_insert_async(
+    ecs_parser_t *parser);
+
+ecs_script_while_t* flecs_script_insert_while(
+    ecs_parser_t *parser);
+
+ecs_script_assign_t* flecs_script_insert_assign(
+    ecs_parser_t *parser,
+    const char *name);
 
 ecs_script_for_t* flecs_script_insert_for(
     ecs_parser_t *parser);

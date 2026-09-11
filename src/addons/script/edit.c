@@ -88,7 +88,7 @@ static int flecs_script_edit_walk(
     for (int32_t i = 0; i < ecs_vec_count(&scope->stmts); i ++) {
         ecs_script_node_t *node = stmts[i];
         if (node->kind == EcsAstTemplate || node->kind == EcsAstFor ||
-            node->kind == EcsAstFunction)
+            node->kind == EcsAstFunction || node->kind == EcsAstAsync)
         {
             continue;
         }

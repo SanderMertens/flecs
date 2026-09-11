@@ -1964,6 +1964,185 @@ static int flecs_script_type_using(
     return flecs_script_eval_node(&t->v->base, (ecs_script_node_t*)node);
 }
 
+static int flecs_script_type_async(
+    ecs_script_type_visitor_t *t,
+    ecs_script_async_t *node)
+{
+#ifndef FLECS_SCRIPT_ASYNC
+    (void)t;
+    flecs_script_eval_error(t->v, node,
+        "async blocks require FLECS_SCRIPT_ASYNC");
+    return -1;
+#else
+    ecs_script_eval_visitor_t *v = t->v;
+    if (t->async_scope) {
+        flecs_script_eval_error(v, node,
+            "async blocks cannot be nested");
+        return -1;
+    }
+
+    ecs_script_scope_t *parent = v->base.depth >= 2
+        ? (ecs_script_scope_t*)v->base.nodes[v->base.depth - 2]
+        : NULL;
+    bool in_root = parent == v->base.script->root;
+    bool in_template = v->template && parent == v->template->node->scope;
+    if (!in_root && !in_template) {
+        flecs_script_eval_error(v, node,
+            "async blocks are only allowed in the root scope of a script or "
+            "template");
+        return -1;
+    }
+
+    int32_t old_for_depth = t->for_depth;
+    t->for_depth = 0;
+    t->async_scope = true;
+    int result = flecs_script_type_control_scope(t, node->scope);
+    t->async_scope = false;
+    t->for_depth = old_for_depth;
+    return result;
+#endif
+}
+
+static int flecs_script_type_while(
+    ecs_script_type_visitor_t *t,
+    ecs_script_while_t *node)
+{
+    if (!t->async_scope) {
+        flecs_script_eval_error(t->v, node,
+            "while is only allowed in async blocks");
+        return -1;
+    }
+    ecs_entity_t type = 0;
+    int expr_result = flecs_script_type_check_expr(t, &node->expr, &type);
+    if (expr_result == -1) {
+        return -1;
+    }
+    if (!expr_result && type) {
+        const EcsType *type_ptr = ecs_get(t->v->world, type, EcsType);
+        if (!type_ptr || (type_ptr->kind != EcsPrimitiveType &&
+            type_ptr->kind != EcsEnumType && type_ptr->kind != EcsBitmaskType))
+        {
+            flecs_script_eval_error(t->v, node,
+                "value of type %s cannot be used as while condition",
+                flecs_errstr(ecs_get_path(t->v->world, type)));
+            return -1;
+        }
+    }
+    t->for_depth ++;
+    int result = flecs_script_type_control_scope(t, node->scope);
+    t->for_depth --;
+    return result;
+}
+
+static bool flecs_script_type_is_number(
+    const ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsPrimitive *p = ecs_get(world, type, EcsPrimitive);
+    if (!p) {
+        return false;
+    }
+    switch(p->kind) {
+    case EcsBool:
+    case EcsChar:
+    case EcsByte:
+    case EcsU8:
+    case EcsU16:
+    case EcsU32:
+    case EcsU64:
+    case EcsI8:
+    case EcsI16:
+    case EcsI32:
+    case EcsI64:
+    case EcsF32:
+    case EcsF64:
+    case EcsUPtr:
+    case EcsIPtr:
+        return true;
+    case EcsString:
+    case EcsEntity:
+    case EcsId:
+    default:
+        return false;
+    }
+}
+
+static int flecs_script_type_assign(
+    ecs_script_type_visitor_t *t,
+    ecs_script_assign_t *node)
+{
+    ecs_script_eval_visitor_t *v = t->v;
+    if (!t->async_scope) {
+        flecs_script_eval_error(v, node,
+            "assignment is only allowed in async blocks");
+        return -1;
+    }
+
+    ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
+    if (!var) {
+        flecs_script_eval_error(v, node,
+            "unresolved variable '%s'", node->name);
+        return -1;
+    }
+
+    ecs_script_template_t *template = v->template;
+    ecs_script_template_member_t *member = NULL;
+    if (template) {
+        ecs_script_template_member_t *members = ecs_vec_first(
+            &template->members);
+        int32_t i, count = ecs_vec_count(&template->members);
+        for (i = 0; i < count; i ++) {
+            if (members[i].sp == var->sp) {
+                member = &members[i];
+                break;
+            }
+        }
+    }
+
+    if (!member || !member->is_mut) {
+        flecs_script_eval_error(v, node,
+            "cannot assign to '%s': only mut variables of a template can be "
+            "assigned", node->name);
+        return -1;
+    }
+
+    ecs_entity_t var_type = var->value.type;
+    ecs_entity_t type = var_type;
+    int result = flecs_script_type_check_expr(t, &node->expr, &type);
+    if (result) {
+        if (result == 1) {
+            node->node.skip = true;
+            return 0;
+        }
+        return -1;
+    }
+
+    if (type != var_type && (!flecs_script_type_is_number(v->world, var_type) ||
+        !flecs_script_type_is_number(v->world, type)))
+    {
+        flecs_script_eval_error(v, node,
+            "expression of type %s is incompatible with type %s of "
+            "variable '%s'",
+            flecs_errstr(ecs_get_path(v->world, type)),
+            flecs_errstr_1(ecs_get_path(v->world, var_type)), node->name);
+        return -1;
+    }
+    type = var_type;
+
+    ecs_script_var_t *this_var = ecs_script_vars_lookup(v->vars, "this");
+    ecs_assert(this_var != NULL, ECS_INTERNAL_ERROR, NULL);
+    const EcsStruct *st = ecs_get(v->world, template->muts.type, EcsStruct);
+    ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_member_t *m = ecs_vec_get_t(
+        &st->members, ecs_member_t, member->index);
+    node->eval_type = type;
+    node->sp = var->sp;
+    node->this_sp = this_var->sp;
+    node->component = template->muts.type;
+    node->offset = m->offset;
+    return 0;
+}
+
 static int flecs_script_type_node(
     ecs_script_type_visitor_t *t,
     ecs_script_node_t *node,
@@ -1973,6 +2152,26 @@ static int flecs_script_type_node(
         flecs_script_eval_error(t->v, node,
             "only const declarations are allowed in fn body");
         return -1;
+    }
+
+    if (t->async_scope) {
+        switch(node->kind) {
+        case EcsAstScope:
+        case EcsAstConst:
+        case EcsAstAwait:
+        case EcsAstTry:
+        case EcsAstIf:
+        case EcsAstFor:
+        case EcsAstWhile:
+        case EcsAstContinue:
+        case EcsAstAssign:
+            break;
+        default:
+            flecs_script_eval_error(t->v, node,
+                "%s statement is not allowed in async block",
+                flecs_script_node_kind_str(node));
+            return -1;
+        }
     }
 
     switch (node->kind) {
@@ -2059,10 +2258,16 @@ static int flecs_script_type_node(
     case EcsAstContinue:
         if (!t->for_depth) {
             flecs_script_eval_error(t->v, node,
-                "continue is only allowed inside a for loop");
+                "continue is only allowed inside a loop");
             return -1;
         }
         return 0;
+    case EcsAstAsync:
+        return flecs_script_type_async(t, (ecs_script_async_t*)node);
+    case EcsAstWhile:
+        return flecs_script_type_while(t, (ecs_script_while_t*)node);
+    case EcsAstAssign:
+        return flecs_script_type_assign(t, (ecs_script_assign_t*)node);
     }
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
 }

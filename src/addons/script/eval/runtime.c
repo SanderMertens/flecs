@@ -22,6 +22,7 @@ ecs_script_runtime_t* ecs_script_runtime_new(void)
     ecs_vec_init_t(NULL, &r->call_runtimes, ecs_script_runtime_t*, 0);
     ecs_vec_init_t(NULL, &r->template_pending,
         ecs_script_template_pending_t, 0);
+    ecs_vec_init_t(NULL, &r->async_tasks, void*, 0);
     return r;
 }
 
@@ -37,6 +38,7 @@ void ecs_script_runtime_free(
     flecs_expr_stack_fini(&r->expr_stack);
     flecs_script_ir_vm_pool_fini(r);
     flecs_script_template_pending_fini(&r->template_pending);
+    ecs_vec_fini_t(NULL, &r->async_tasks, void*);
     ecs_vec_fini_t(&r->allocator, &r->pending_resolves, ecs_entity_t);
     ecs_vec_fini_t(&r->allocator, &r->annot, ecs_script_annot_t*);
     ecs_vec_fini_t(&r->allocator, &r->with, ecs_script_with_value_t);

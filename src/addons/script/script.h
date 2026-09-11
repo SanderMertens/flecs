@@ -213,6 +213,7 @@ struct ecs_script_impl_t {
     int32_t token_buffer_size;
     int32_t refcount;
     int32_t task_refcount;
+    ecs_vec_t async_tasks; /* vec<ecs_script_task_t*>, owned */
     ecs_vec_t refs;
     ecs_vec_t run_refs;
     ecs_script_state_t state;

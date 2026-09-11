@@ -99,8 +99,8 @@ static void flecs_expr_to_str(
     }
 }
 
-static const char* flecs_script_node_to_str(
-    ecs_script_node_t *node)
+const char* flecs_script_node_kind_str(
+    const ecs_script_node_t *node)
 {
     switch(node->kind) {
     case EcsAstScope:              return "scope";
@@ -127,6 +127,9 @@ static const char* flecs_script_node_to_str(
     case EcsAstAwait:              return "await";
     case EcsAstTry:                return "try";
     case EcsAstContinue:           return "continue";
+    case EcsAstAsync:              return "async";
+    case EcsAstWhile:              return "while";
+    case EcsAstAssign:             return "assign";
     }
     return "???";
 }
@@ -174,7 +177,7 @@ static void flecs_script_stmt_to_str(
 {
     if (node->kind != EcsAstScope) {
         flecs_script_color_to_str(v, ECS_BLUE);
-        flecs_scriptbuf_append(v, "%s: ", flecs_script_node_to_str(node));
+        flecs_scriptbuf_append(v, "%s: ", flecs_script_node_kind_str(node));
         flecs_script_color_to_str(v, ECS_NORMAL);
     }
     ecs_script_scope_t *scope = NULL;
@@ -334,6 +337,24 @@ static void flecs_script_stmt_to_str(
     }
     case EcsAstContinue:
         break;
+    case EcsAstAsync: {
+        ecs_script_async_t *stmt = (ecs_script_async_t*)node;
+        scope = stmt->scope;
+        break;
+    }
+    case EcsAstWhile: {
+        ecs_script_while_t *stmt = (ecs_script_while_t*)node;
+        flecs_expr_to_str(v, stmt->expr);
+        scope = stmt->scope;
+        wrap = true;
+        break;
+    }
+    case EcsAstAssign: {
+        ecs_script_assign_t *stmt = (ecs_script_assign_t*)node;
+        flecs_scriptbuf_append(v, "%s = ", stmt->name);
+        flecs_expr_to_str(v, stmt->expr);
+        break;
+    }
     case EcsAstTry: {
         ecs_script_try_t *try_stmt = (ecs_script_try_t*)node;
         flecs_scriptbuf_appendstr(v, "{\n");

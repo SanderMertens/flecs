@@ -2304,6 +2304,87 @@ template Forest {
 Forest my_forest
 ```
 
+## Async blocks
+Scripts and templates can contain `async` blocks. An `async` block is a piece of code that runs asynchronously from the rest of the script: it is started when the script is evaluated (or when the template is instantiated) and can suspend on `await` statements without blocking the application. This makes it possible to write logic that reacts to events over time, such as a slider that waits for drag events.
+
+```cpp
+template Slider {
+  prop value: f32 = 35
+  mut actualValue: f32 = value
+
+  bg {
+    Rect: {250, 40}
+  }
+
+  async {
+    const e = await on.drag(this)
+    actualValue = e.value
+  }
+}
+
+Slider slider
+```
+
+The following rules apply to `async` blocks:
+
+- A script or template can have any number of `async` blocks.
+- An `async` block must be declared in the root scope of a script or template.
+- An `async` block runs once. It is started when the script is evaluated or the template is instantiated, and stops when it reaches the end of the block.
+- An `async` block can contain `const` declarations, `await` statements, `try`/`catch`, `if`, `for` and `while` statements, and assignments to `mut` variables. It cannot create entities or add components.
+- Variables that are visible at the location of the `async` block (such as props, muts and consts of a template) are captured by value when the block is started. To read the current value of a component, use the `this` variable (for example `this[Slider].value`).
+- When a template instance is deleted, the template is removed from the instance, or the script is updated, the `async` blocks of the instance are cancelled.
+- An `async` block requires the `FLECS_SCRIPT_ASYNC` addon.
+
+### Progressing async blocks
+An `async` block is only advanced when the application calls `ecs_script_tasks_progress()`. When the pipeline addon is enabled this happens automatically in the `EcsPreUpdate` phase by the `flecs.script.ProgressTasks` system, so applications that call `ecs_progress()` don't need to do anything.
+
+```c
+// Advance all async blocks that are ready to make progress
+ecs_script_tasks_progress(world);
+```
+
+### Assigning mut variables
+Code in an `async` block of a template can assign values to the `mut` variables of the template. This updates the `mut` component of the template instance, which causes the template to update just like when the value is set from native code:
+
+```cpp
+template Button {
+  mut hover = false
+
+  if hover {
+    BackgroundColor: {255, 0, 0}
+  } else {
+    BackgroundColor: {128, 0, 0}
+  }
+
+  async {
+    await on.hover(this)
+    hover = true
+  }
+}
+```
+
+Assignments are only allowed in `async` blocks, and only to `mut` variables.
+
+### While statement
+An `async` block can use a `while` statement to keep running for as long as a condition is true:
+
+```cpp
+template Counter {
+  mut count = 0
+
+  Text: {"{count}"}
+
+  async {
+    while count < 10 {
+      await on.click(this)
+      count = count + 1
+    }
+  }
+}
+```
+
+The `continue` statement can be used inside a `while` loop to skip to the next evaluation of the condition. The `while` statement is only allowed inside `async` blocks.
+
 ## With statement
 When you're building a scene or asset you may find yourself often repeating the same components for multiple entities. To avoid this, a `with` statement can be used. For example:
 

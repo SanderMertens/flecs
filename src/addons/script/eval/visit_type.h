@@ -33,6 +33,7 @@ typedef struct ecs_script_type_visitor_t {
     int32_t for_depth;
     bool template_scope;
     bool function_scope;
+    bool async_scope;
 } ecs_script_type_visitor_t;
 
 int flecs_script_type_scope(
