@@ -1,0 +1,47 @@
+using flecs.script
+
+struct Position(x: f32, y: f32)
+struct Rect(width: f32, height: f32)
+struct Rgb(r: u8, g: u8, b: u8)
+struct Text(value: string, size: i32, align: string)
+
+template RadioGroup {
+  mut active: string = "Oak"
+}
+
+template RadioButton : parent RadioGroup {
+  prop label = ""
+  prop width = 180
+
+  Rect: {width, 28}
+  Rgb: {46, 50, 58}
+
+  indicator {
+    Position: {x: -width / 2 + 16}
+    Rect: {16, 16}
+    if active == label {
+      Rgb: {98, 168, 122}
+    } else {
+      Rgb: {32, 35, 41}
+    }
+  }
+
+  caption {
+    Position: {x: -width / 2 + 32, y: -1}
+    Text: {label, 12, "left"}
+    Rgb: {214, 218, 224}
+  }
+
+  async {
+    while true {
+      await on.click(this)
+      active = label
+    }
+  }
+}
+
+RadioGroup options() {
+  RadioButton("Oak") { Position: {y: 20} }
+  RadioButton("Maple") { Position: {y: -20} }
+  RadioButton("Pine") { Position: {y: -60} }
+}

@@ -1716,6 +1716,70 @@ error:
     return -1;
 }
 
+static int flecs_expr_parent_member_visit_type(
+    ecs_script_t *script,
+    ecs_expr_identifier_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_script_eval_visitor_t *v = desc->script_visitor;
+    ecs_script_template_t *template = v ? v->template : NULL;
+    if (!template || !template->parent_type) {
+        return 1;
+    }
+    const char *name = node->value;
+    bool qualified = !ecs_os_strncmp(name, "parent.", 7);
+    if (qualified) {
+        name += 7;
+    } else {
+        const char *dot = strchr(name, '.');
+        if (dot) {
+            char *root = flecs_strdup(&flecs_script_impl(script)->allocator, name);
+            root[dot - name] = '\0';
+            bool masked = ecs_script_vars_lookup(desc->vars, root) != NULL;
+            root[dot - name] = '.';
+            flecs_strfree(&flecs_script_impl(script)->allocator, root);
+            if (masked) {
+                return 1;
+            }
+        }
+    }
+    ecs_entity_t component = 0;
+    if (!flecs_script_template_parent_member(
+        script->world, template, name, &component))
+    {
+        return 1;
+    }
+
+    ecs_expr_variable_t *parent = flecs_expr_variable_from(
+        script, &node->node, "#parent");
+    parent->sp = template->parent_sp;
+    parent->node.type = ecs_id(ecs_entity_t);
+    parent->node.type_info = ecs_get_type_info(script->world, parent->node.type);
+    ecs_expr_element_t *ref = flecs_calloc_t(
+        &flecs_script_impl(script)->allocator, ecs_expr_element_t);
+    ref->node.kind = EcsExprComponent;
+    ref->node.alloc_size = ECS_SIZEOF(ecs_expr_element_t);
+    ref->node.pos = node->node.pos;
+    ref->node.end = node->node.end;
+    ref->node.type = component;
+    ref->left = &parent->node;
+    ecs_expr_value_node_t *index = flecs_expr_value_from(
+        script, &node->node, ecs_id(ecs_entity_t));
+    index->storage.entity = component;
+    ref->index = &index->node;
+    node->expr = &flecs_expr_member_from(script, &ref->node, name)->node;
+    if (flecs_expr_visit_type_priv(script, &node->expr, cur, desc)) {
+        return -1;
+    }
+    node->node.type = node->expr->type;
+    flecs_script_ref_ensure(&template->dynamic_refs, &(ecs_script_ref_t){
+        .name = "#parent",
+        .component = component
+    });
+    return 0;
+}
+
 static int flecs_expr_identifier_visit_type(
     ecs_script_t *script,
     ecs_expr_identifier_t *node,
@@ -1778,6 +1842,12 @@ static int flecs_expr_identifier_visit_type(
             }
 
             return 0;
+        }
+
+        int parent_result = flecs_expr_parent_member_visit_type(
+            script, node, cur, desc);
+        if (parent_result != 1) {
+            return parent_result;
         }
 
         if (!lookup_result || !ecs_os_strcmp(node->value, "#0")) {

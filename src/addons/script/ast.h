@@ -167,6 +167,8 @@ typedef struct ecs_script_template_node_t {
     const char *name;
     const char *base;
     ecs_entity_t eval_base;
+    const char *parent;
+    ecs_entity_t eval_parent;
     ecs_script_scope_t* scope;
     int32_t symbol;
     int32_t symbol_offset;
@@ -230,6 +232,7 @@ typedef struct ecs_script_assign_t {
     ecs_entity_t component;
     int32_t offset;
     int32_t sp;
+    bool parent;
 } ecs_script_assign_t;
 
 typedef struct ecs_script_if_t {

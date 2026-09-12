@@ -3315,6 +3315,40 @@
                 "assign_unrelated_struct_prop_fails"
             ]
         }, {
+            "id": "TemplateParent",
+            "params": {"ir": ["disabled", "enabled"]},
+            "setup": true,
+            "testcases": [
+                "props",
+                "muts",
+                "masking",
+                "inheritance",
+                "inherited_constraint",
+                "radio_group",
+                "missing_parent",
+                "wrong_parent",
+                "invalid_constraint",
+                "duplicate_constraint",
+                "empty_base",
+                "parent_before_base",
+                "nested_members",
+                "multiple_instances",
+                "qualified_assignment",
+                "async_mut_read",
+                "assign_prop",
+                "assign_masked_const",
+                "conflicting_constraint",
+                "unknown_constraint",
+                "parent_is_immediate",
+                "radio_events",
+                "anonymous_instances",
+                "native_instantiation",
+                "non_fragmenting_parent",
+                "missing_constraint_name",
+                "unknown_member",
+                "assign_unknown_member"
+            ]
+        }, {
             "id": "TemplateInheritance",
             "params": {
                 "ir": ["disabled", "enabled"]

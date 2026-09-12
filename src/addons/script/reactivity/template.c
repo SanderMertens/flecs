@@ -423,6 +423,41 @@ static ecs_entity_t flecs_script_template_member_type(
     return member->type;
 }
 
+const ecs_member_t* flecs_script_template_parent_member(
+    ecs_world_t *world,
+    const ecs_script_template_t *template,
+    const char *name,
+    ecs_entity_t *component)
+{
+    if (!template || !template->parent_type) {
+        return NULL;
+    }
+    const EcsScript *script = ecs_get(world, template->parent_type, EcsScript);
+    if (!script || !script->template_) {
+        return NULL;
+    }
+    const ecs_script_template_t *parent = script->template_;
+    ecs_entity_t types[2] = {parent->props.type, parent->muts.type};
+    const char *dot = strchr(name, '.');
+    ecs_size_t len = dot ? flecs_ito(ecs_size_t, dot - name) : ecs_os_strlen(name);
+    for (int32_t i = 0; i < 2; i ++) {
+        const EcsStruct *st = types[i] ? ecs_get(world, types[i], EcsStruct) : NULL;
+        if (!st) {
+            continue;
+        }
+        const ecs_member_t *members = ecs_vec_first(&st->members);
+        for (int32_t m = 0; m < ecs_vec_count(&st->members); m ++) {
+            if (ecs_os_strlen(members[m].name) == len &&
+                !ecs_os_strncmp(members[m].name, name, len))
+            {
+                *component = types[i];
+                return &members[m];
+            }
+        }
+    }
+    return NULL;
+}
+
 static void flecs_script_template_instantiate_vars(
     ecs_world_t *world,
     ecs_script_vars_t *vars,
@@ -610,6 +645,18 @@ static int flecs_script_template_instantiate_now(
         goto done;
     }
 
+    ecs_entity_t parent = template->parent_type
+        ? ecs_get_parent(world, instance) : 0;
+    if (template->parent_type &&
+        (!parent || !ecs_has_id(world, parent, template->parent_type)))
+    {
+        ecs_err("template '%s' requires a parent with template '%s'",
+            ecs_get_name(world, template_entity),
+            ecs_get_name(world, template->parent_type));
+        result = -1;
+        goto done;
+    }
+
     EcsScriptTemplateRoot *root = ecs_ensure_pair(
         world, instance, EcsScriptTemplateRoot, template_entity);
     flecs_script_template_root_init(
@@ -654,13 +701,20 @@ static int flecs_script_template_instantiate_now(
     vars->sp = ecs_vec_count(&template->vars->vars);
 
     ecs_script_vars_set_size(vars,
-        ecs_vec_count(&template->members) + 1);
+        ecs_vec_count(&template->members) + 1 + (template->parent_type != 0));
 
     ecs_script_var_t *this_var = ecs_script_vars_declare(
         vars, ecs_vec_count(&template->dynamic_refs) ? "this" : NULL);
     this_var->value.type = ecs_id(ecs_entity_t);
     this_var->value.ptr = &instance;
     this_var->owned = false;
+
+    if (template->parent_type) {
+        ecs_script_var_t *parent_var = ecs_script_vars_declare(vars, "#parent");
+        parent_var->value.type = ecs_id(ecs_entity_t);
+        parent_var->value.ptr = &parent;
+        parent_var->owned = false;
+    }
 
     void *props_data = component == template->props.type
         ? data
@@ -1410,7 +1464,11 @@ static int flecs_script_template_inherit(
     ecs_entity_t template_entity = template->props.type;
     ecs_allocator_t *a = &v->base.script->allocator;
 
-    if (!ecs_has(world, base, EcsStruct)) {
+    const EcsScript *base_script = ecs_get(world, base, EcsScript);
+    ecs_script_template_t *base_template = base_script
+        ? base_script->template_ : NULL;
+    bool has_members = ecs_has(world, base, EcsStruct);
+    if (!has_members && !base_template) {
         flecs_script_eval_error(v, node,
             "base '%s' of template '%s' is not a struct type",
             node->base, node->name);
@@ -1425,13 +1483,13 @@ static int flecs_script_template_inherit(
 
     ecs_add_pair(world, template_entity, EcsIsA, base);
 
-    const EcsScript *base_script = ecs_get(world, base, EcsScript);
-    ecs_script_template_t *base_template = base_script
-        ? base_script->template_
-        : NULL;
     if (base_template && base_template->muts.type) {
         ecs_remove_pair(world, template_entity, EcsWith,
             base_template->muts.type);
+    }
+
+    if (!has_members) {
+        return 0;
     }
 
     if (!ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1490,7 +1548,8 @@ static int flecs_script_template_inherit(
         ecs_script_template_member_t *member = ecs_vec_append_t(
             a, &template->members, ecs_script_template_member_t);
         member->index = i;
-        member->sp = ecs_vec_count(&template->vars->vars) + 1 + i;
+        member->sp = ecs_vec_count(&template->vars->vars) + 1 +
+            (template->parent_type != 0) + i;
         member->input = 0;
         member->is_mut = false;
         member->is_template = flecs_script_template_prop_is_template(
@@ -1610,6 +1669,12 @@ static int flecs_script_visit_type_template(
     v->vars = ecs_script_vars_push(type_vars);
     ecs_script_var_t *this_var = ecs_script_vars_declare(v->vars, "this");
     this_var->value.type = ecs_id(ecs_entity_t);
+
+    if (template->parent_type) {
+        ecs_script_var_t *parent_var = ecs_script_vars_declare(v->vars, "#parent");
+        parent_var->value.type = ecs_id(ecs_entity_t);
+        template->parent_sp = parent_var->sp;
+    }
 
     flecs_script_template_declare_inherited_vars(v, template);
 
@@ -1732,6 +1797,8 @@ static ecs_script_template_t* flecs_script_template_init(
     result->component_count = 0;
     result->for_count = 0;
     result->inherited_count = 0;
+    result->parent_type = 0;
+    result->parent_sp = -1;
     result->refcount = 0;
     result->non_fragmenting_parent = false;
     result->has_interface_members = false;
@@ -1807,6 +1874,35 @@ int flecs_script_eval_template(
 
     if (flecs_script_template_hoist_vars(v, template, v->vars)) {
         goto error;
+    }
+
+    template->parent_type = node->eval_parent;
+    if (node->base) {
+        const EcsScript *base_script = ecs_get(
+            v->world, node->eval_base, EcsScript);
+        if (base_script && base_script->template_) {
+            ecs_entity_t inherited_parent = base_script->template_->parent_type;
+            if (inherited_parent && template->parent_type &&
+                inherited_parent != template->parent_type)
+            {
+                flecs_script_eval_error(v, node,
+                    "parent constraint conflicts with base template '%s'",
+                    node->base);
+                goto error;
+            }
+            if (!template->parent_type) {
+                template->parent_type = inherited_parent;
+            }
+        }
+    }
+    if (template->parent_type) {
+        const EcsScript *parent_script = ecs_get(
+            v->world, template->parent_type, EcsScript);
+        if (!parent_script || !parent_script->template_) {
+            flecs_script_eval_error(v, node,
+                "parent constraint must name a template");
+            goto error;
+        }
     }
 
     if (node->base && flecs_script_template_inherit(v, template, node)) {

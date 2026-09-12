@@ -3202,6 +3202,36 @@ void StructInheritance_assign_base_to_derived_component_fails(void);
 void StructInheritance_assign_unrelated_struct_fails(void);
 void StructInheritance_assign_unrelated_struct_prop_fails(void);
 
+void TemplateParent_setup(void);
+void TemplateParent_props(void);
+void TemplateParent_muts(void);
+void TemplateParent_masking(void);
+void TemplateParent_inheritance(void);
+void TemplateParent_inherited_constraint(void);
+void TemplateParent_radio_group(void);
+void TemplateParent_missing_parent(void);
+void TemplateParent_wrong_parent(void);
+void TemplateParent_invalid_constraint(void);
+void TemplateParent_duplicate_constraint(void);
+void TemplateParent_empty_base(void);
+void TemplateParent_parent_before_base(void);
+void TemplateParent_nested_members(void);
+void TemplateParent_multiple_instances(void);
+void TemplateParent_qualified_assignment(void);
+void TemplateParent_async_mut_read(void);
+void TemplateParent_assign_prop(void);
+void TemplateParent_assign_masked_const(void);
+void TemplateParent_conflicting_constraint(void);
+void TemplateParent_unknown_constraint(void);
+void TemplateParent_parent_is_immediate(void);
+void TemplateParent_radio_events(void);
+void TemplateParent_anonymous_instances(void);
+void TemplateParent_native_instantiation(void);
+void TemplateParent_non_fragmenting_parent(void);
+void TemplateParent_missing_constraint_name(void);
+void TemplateParent_unknown_member(void);
+void TemplateParent_assign_unknown_member(void);
+
 // Testsuite 'TemplateInheritance'
 void TemplateInheritance_setup(void);
 void TemplateInheritance_base_template_prop(void);
@@ -16090,6 +16120,121 @@ bake_test_case StructInheritance_testcases[] = {
     }
 };
 
+bake_test_case TemplateParent_testcases[] = {
+    {
+        "props",
+        TemplateParent_props
+    },
+    {
+        "muts",
+        TemplateParent_muts
+    },
+    {
+        "masking",
+        TemplateParent_masking
+    },
+    {
+        "inheritance",
+        TemplateParent_inheritance
+    },
+    {
+        "inherited_constraint",
+        TemplateParent_inherited_constraint
+    },
+    {
+        "radio_group",
+        TemplateParent_radio_group
+    },
+    {
+        "missing_parent",
+        TemplateParent_missing_parent
+    },
+    {
+        "wrong_parent",
+        TemplateParent_wrong_parent
+    },
+    {
+        "invalid_constraint",
+        TemplateParent_invalid_constraint
+    },
+    {
+        "duplicate_constraint",
+        TemplateParent_duplicate_constraint
+    },
+    {
+        "empty_base",
+        TemplateParent_empty_base
+    },
+    {
+        "parent_before_base",
+        TemplateParent_parent_before_base
+    },
+    {
+        "nested_members",
+        TemplateParent_nested_members
+    },
+    {
+        "multiple_instances",
+        TemplateParent_multiple_instances
+    },
+    {
+        "qualified_assignment",
+        TemplateParent_qualified_assignment
+    },
+    {
+        "async_mut_read",
+        TemplateParent_async_mut_read
+    },
+    {
+        "assign_prop",
+        TemplateParent_assign_prop
+    },
+    {
+        "assign_masked_const",
+        TemplateParent_assign_masked_const
+    },
+    {
+        "conflicting_constraint",
+        TemplateParent_conflicting_constraint
+    },
+    {
+        "unknown_constraint",
+        TemplateParent_unknown_constraint
+    },
+    {
+        "parent_is_immediate",
+        TemplateParent_parent_is_immediate
+    },
+    {
+        "radio_events",
+        TemplateParent_radio_events
+    },
+    {
+        "anonymous_instances",
+        TemplateParent_anonymous_instances
+    },
+    {
+        "native_instantiation",
+        TemplateParent_native_instantiation
+    },
+    {
+        "non_fragmenting_parent",
+        TemplateParent_non_fragmenting_parent
+    },
+    {
+        "missing_constraint_name",
+        TemplateParent_missing_constraint_name
+    },
+    {
+        "unknown_member",
+        TemplateParent_unknown_member
+    },
+    {
+        "assign_unknown_member",
+        TemplateParent_assign_unknown_member
+    }
+};
+
 bake_test_case TemplateInheritance_testcases[] = {
     {
         "base_template_prop",
@@ -17396,6 +17541,11 @@ bake_test_param StructInheritance_params[] = {
     {"ir", (char**)StructInheritance_ir_param, 2}
 };
 
+const char* TemplateParent_ir_param[] = {"disabled", "enabled"};
+bake_test_param TemplateParent_params[] = {
+    {"ir", (char**)TemplateParent_ir_param, 2}
+};
+
 const char* TemplateInheritance_ir_param[] = {"disabled", "enabled"};
 bake_test_param TemplateInheritance_params[] = {
     {"ir", (char**)TemplateInheritance_ir_param, 2}
@@ -17626,6 +17776,15 @@ static bake_test_suite suites[] = {
         StructInheritance_params
     },
     {
+        "TemplateParent",
+        TemplateParent_setup,
+        NULL,
+        28,
+        TemplateParent_testcases,
+        1,
+        TemplateParent_params
+    },
+    {
         "TemplateInheritance",
         TemplateInheritance_setup,
         NULL,
@@ -17673,5 +17832,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 28);
+    return bake_test_run("script", argc, argv, suites, 29);
 }

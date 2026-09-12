@@ -997,6 +997,21 @@ static int flecs_script_dep_template_init(
     {
         return -1;
     }
+    if (template->parent_type) {
+        const EcsScript *parent = ecs_get(ctx->v->world,
+            template->parent_type, EcsScript);
+        ecs_assert(parent != NULL && parent->template_ != NULL,
+            ECS_INTERNAL_ERROR, NULL);
+        ecs_script_ref_t *refs = ecs_vec_first(&template->dynamic_refs);
+        int32_t ref_count = ecs_vec_count(&template->dynamic_refs);
+        for (i = 0; i < ref_count; i ++) {
+            if (refs[i].name && !ecs_os_strcmp(refs[i].name, "#parent") &&
+                refs[i].component == parent->template_->muts.type)
+            {
+                template->async_input &= ~refs[i].input;
+            }
+        }
+    }
     int32_t *capture_sp = ecs_vec_first(&template->capture_sp);
     count = ecs_vec_count(&template->capture_sp);
     ecs_vec_set_count_t(NULL, &template->capture_input,
@@ -1025,7 +1040,7 @@ static int flecs_script_dep_template_init(
 
     members = ecs_vec_first(&template->members);
     for (i = 0; i < template->inherited_count; i ++) {
-        flecs_script_dep_var_set(ctx, count + 1 + i, members[i].input, 0);
+        flecs_script_dep_var_set(ctx, members[i].sp, members[i].input, 0);
     }
     ctx->member = template->inherited_count;
     return 0;

@@ -233,7 +233,12 @@ static void flecs_script_stmt_to_str(
         ecs_script_template_node_t *stmt = (ecs_script_template_node_t*)node;
         flecs_scriptbuf_append(v, "%s ", stmt->name);
         if (stmt->base) {
-            flecs_scriptbuf_append(v, ": %s ", stmt->base);
+            flecs_scriptbuf_append(v, ": %s%s",
+                stmt->base, stmt->parent ? "" : " ");
+        }
+        if (stmt->parent) {
+            flecs_scriptbuf_append(v, "%sparent %s ",
+                stmt->base ? ", " : ": ", stmt->parent);
         }
         scope = stmt->scope;
         break;

@@ -936,10 +936,44 @@ template_stmt: {
         {
             LookAhead_1(':',
                 pos = lookahead;
-                Parse_1(EcsTokIdentifier,
-                    template->base = Token(3);
-                    goto template_scope;
-                )
+                ecs_token_t token;
+                do {
+                    pos = flecs_script_skip_newlines(parser, pos);
+                    pos = flecs_token(parser, pos, &token, false);
+                    if (!pos) {
+                        goto error;
+                    }
+                    if (token.kind != EcsTokIdentifier) {
+                        Error("expected template base or parent constraint");
+                    }
+                    if (!ecs_os_strcmp(token.value, "parent")) {
+                        if (template->parent) {
+                            Error("duplicate parent constraint");
+                        }
+                        pos = flecs_token(parser, pos, &token, false);
+                        if (!pos) {
+                            goto error;
+                        }
+                        if (token.kind != EcsTokIdentifier) {
+                            Error("expected parent template name");
+                        }
+                        template->parent = token.value;
+                    } else {
+                        if (template->base) {
+                            Error("multiple template bases are not supported");
+                        }
+                        template->base = token.value;
+                    }
+                    const char *next = flecs_token(parser, pos, &token, true);
+                    if (!next) {
+                        goto error;
+                    }
+                    if (token.kind != ',') {
+                        break;
+                    }
+                    pos = next;
+                } while (true);
+                goto template_scope;
             )
         }
 

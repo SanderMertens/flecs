@@ -335,6 +335,8 @@ ecs_script_template_node_t* flecs_script_insert_template(
     result->name = name;
     result->base = NULL;
     result->eval_base = 0;
+    result->parent = NULL;
+    result->eval_parent = 0;
     result->scope = flecs_script_scope_new(parser);
 
     flecs_ast_append(parser, scope->stmts, ecs_script_template_node_t, result);
