@@ -1899,6 +1899,16 @@ static int flecs_script_type_template(
         }
     }
 
+    node->eval_parent = 0;
+    if (node->parent && flecs_script_type_resolve_type(
+        t, node->parent, &node->eval_parent))
+    {
+        flecs_script_eval_error(t->v, node,
+            "unresolved parent template '%s'", node->parent);
+        t->v->parent = old_parent;
+        return -1;
+    }
+
     int result = flecs_script_eval_template(t->v, node);
     t->v->parent = old_parent;
     return result;
@@ -2090,35 +2100,47 @@ static int flecs_script_type_assign(
         return -1;
     }
 
-    ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
-    if (!var) {
-        flecs_script_eval_error(v, node,
-            "unresolved variable '%s'", node->name);
-        return -1;
-    }
-
     ecs_script_template_t *template = v->template;
-    ecs_script_template_member_t *member = NULL;
-    if (template) {
-        ecs_script_template_member_t *members = ecs_vec_first(
-            &template->members);
-        int32_t i, count = ecs_vec_count(&template->members);
-        for (i = 0; i < count; i ++) {
-            if (members[i].sp == var->sp) {
-                member = &members[i];
+    ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
+    bool qualified = !ecs_os_strncmp(node->name, "parent.", 7);
+    ecs_entity_t component = 0;
+    const ecs_member_t *m = NULL;
+    node->parent = false;
+    if ((!var || qualified) && template && template->parent_type) {
+        const char *name = qualified ? node->name + 7 : node->name;
+        if (strchr(name, '.')) {
+            flecs_script_eval_error(v, node,
+                "assignment requires a mut variable name");
+            return -1;
+        }
+        m = flecs_script_template_parent_member(
+            v->world, template, name, &component);
+        if (m && component != template->parent_type) {
+            node->parent = true;
+        } else {
+            m = NULL;
+        }
+    }
+    if (!node->parent && var && template) {
+        ecs_script_template_member_t *members = ecs_vec_first(&template->members);
+        int32_t count = ecs_vec_count(&template->members);
+        for (int32_t i = 0; i < count; i ++) {
+            if (members[i].sp == var->sp && members[i].is_mut) {
+                component = template->muts.type;
+                const EcsStruct *st = ecs_get(v->world, component, EcsStruct);
+                m = ecs_vec_get_t(&st->members, ecs_member_t, members[i].index);
                 break;
             }
         }
     }
-
-    if (!member || !member->is_mut) {
+    if (!m) {
         flecs_script_eval_error(v, node,
             "cannot assign to '%s': only mut variables of a template can be "
             "assigned", node->name);
         return -1;
     }
 
-    ecs_entity_t var_type = var->value.type;
+    ecs_entity_t var_type = node->parent ? m->type : var->value.type;
     ecs_entity_t type = var_type;
     int result = flecs_script_type_check_expr(t, &node->expr, &type);
     if (result) {
@@ -2141,13 +2163,9 @@ static int flecs_script_type_assign(
     }
     type = var_type;
 
-    const EcsStruct *st = ecs_get(v->world, template->muts.type, EcsStruct);
-    ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
-    const ecs_member_t *m = ecs_vec_get_t(
-        &st->members, ecs_member_t, member->index);
     node->eval_type = type;
-    node->sp = var->sp;
-    node->component = template->muts.type;
+    node->sp = node->parent ? template->parent_sp : var->sp;
+    node->component = component;
     node->offset = m->offset;
     return 0;
 }

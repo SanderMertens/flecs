@@ -84,6 +84,8 @@ struct ecs_script_template_t {
     int32_t component_count;
     int32_t for_count;
     int32_t inherited_count;
+    ecs_entity_t parent_type;
+    int32_t parent_sp;
 
     int32_t refcount;
 
@@ -131,6 +133,12 @@ typedef struct EcsScriptTemplateInstanceUpdateEvent {
     ecs_entity_t instance;
     uint64_t input;
 } EcsScriptTemplateInstanceUpdateEvent;
+
+const ecs_member_t* flecs_script_template_parent_member(
+    ecs_world_t *world,
+    const ecs_script_template_t *template,
+    const char *name,
+    ecs_entity_t *component);
 
 int flecs_script_eval_template(
     ecs_script_eval_visitor_t *v,

@@ -1915,6 +1915,9 @@ int flecs_script_assign_value(
 {
     ecs_world_t *world = v->world;
     ecs_entity_t instance = v->template_instance;
+    if (node->parent && instance && ecs_is_alive(world, instance)) {
+        instance = ecs_get_parent(world, instance);
+    }
     if (!instance || !ecs_is_alive(world, instance) ||
         !ecs_has_id(world, instance, node->component))
     {

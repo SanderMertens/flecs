@@ -2131,6 +2131,69 @@ template Building {
 
 This makes it possible to use templates as primitive for procedural generation templates, where a generic template specifies the "grammar" of an object (for example a building), with a set of derived templates that implement the style and/or content.
 
+#### Parent constraints
+A template can require its immediate parent to be an instance of another template:
+
+```cpp
+template Building {
+  prop height: f32 = 10
+  mut occupied = false
+}
+
+template Facade : parent Building {
+  flecs.meta.f32: {height}
+}
+
+Building house() {
+  Facade facade()
+}
+```
+
+The parent template must be defined before the constrained template. Instantiating `Facade` without a parent that has `Building` produces an error.
+
+A constrained template can read the parent's props and muts as ordinary variables. Local variables, props, and muts mask parent members with the same name. Use `parent.height` to explicitly access a parent member. Reads are reactive: changing the parent's props or muts updates dependent children.
+
+Parent constraints compose with inheritance:
+
+```cpp
+template BrickFacade : Facade, parent Building {
+  prop height: f32 = 2
+  flecs.meta.f32: {height + parent.height}
+}
+```
+
+Derived templates inherit the base template's parent constraint, so `: Facade` also suffices here. An explicit constraint must agree with the inherited constraint.
+
+Children can assign parent muts in async blocks. Parent props remain read-only. This lets a group own shared state while its children handle input:
+
+```cpp
+using flecs.script
+
+template RadioGroup {
+  mut active: string = "a"
+}
+
+template RadioButton : parent RadioGroup {
+  prop label: string = ""
+
+  flecs.meta.bool: {active == label}
+
+  async {
+    while true {
+      await on.click(this)
+      active = label
+    }
+  }
+}
+
+RadioGroup() {
+  RadioButton("a")
+  RadioButton("b")
+}
+```
+
+Use `parent.active = label` if a local variable masks `active`. Changes to parent muts update reactive output without restarting the child's async blocks; subsequent reads in those blocks use the current parent state.
+
 #### Setting props from native code
 To update template props from native code, mirror the template type with a native type that has the same name, namespace and members. An example:
 
