@@ -311,6 +311,7 @@ html.fl-playground .contents pre.pg-error[hidden] {
 
 .pg-icon.pg-kind-prefab { background: #a371f7; opacity: 1; }
 .pg-icon.pg-kind-component { background: #58a6ff; opacity: 1; }
+.pg-icon.pg-kind-template { background: #d2a8ff; opacity: 1; transform: rotate(45deg); }
 .pg-icon.pg-kind-tag { background: var(--fl-accent); opacity: 1; }
 .pg-icon.pg-kind-module { background: #f59e0b; opacity: 1; }
 .pg-icon.pg-kind-disabled { background: var(--fl-border-strong); opacity: 1; }

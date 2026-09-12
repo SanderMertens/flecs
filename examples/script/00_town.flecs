@@ -21,57 +21,59 @@ const pink: Rgb = {242, 178, 191}
 struct Facade(width: f32, height: f32, color: Rgb)
 struct Roof(width: f32, depth: f32, color: Rgb)
 
+@tree Parent
 template Window {
   prop width: f32 = 1.2
   prop height: f32 = 1.2
   prop frame: Rgb = {91, 65, 57}
   prop panes: i32 = 2
 
-  surround {
+  {
     Position: {}
     Box: {width, height, 0.13}
     Rgb: frame
   }
-  pane {
+  {
     Position: {0, 0, 0.08}
     Box: {width - 0.12, height - 0.12, 0.04}
     Rgb: glass
   }
   for i in 1..panes {
-    "mullion_{i}" {
+    {
       Position: {-width / 2 + width * i / panes, 0, 0.12}
       Box: {0.045, height, 0.04}
       Rgb: frame
     }
   }
-  sill {
+  {
     Position: {0, -height / 2, 0.12}
     Box: {width + 0.16, 0.09, 0.24}
     Rgb: frame
   }
 }
 
+@tree Parent
 template Planter {
   prop blossoms: bool = false
 
-  pot {
+  {
     Position: {0, 0.16, 0}
     Cylinder: {0.21, 0.32, 10}
     Rgb: {186, 116, 89}
   }
-  rim {
+  {
     Position: {0, 0.31, 0}
     Torus: {0.2, 0.035, 12, 6}
     Rgb: {214, 145, 112}
   }
-  bush {
+  {
     Position: {0, 0.46, 0}
     Sphere: {0.28}
     Rgb: leaf
   }
   if blossoms {
     for i in 0..5 {
-      "flower_{i}" {
+      {
         Position: {math.cos(i * 1.26) * 0.19, 0.64, math.sin(i * 1.26) * 0.19}
         Sphere: {0.07}
         Rgb: pink
@@ -80,85 +82,88 @@ template Planter {
   }
 }
 
+@tree Parent
 template AirConditioner {
-  casing {
+  {
     Position: {}
     Box: {0.95, 0.58, 0.4}
     Rgb: {232, 231, 215}
   }
-  fan {
+  {
     Position: {-0.17, 0, 0.215}
     Rotation: {math.PI / 2, 0, 0}
     Cylinder: {0.21, 0.035, 20}
     Rgb: iron
   }
-  guard {
+  {
     Position: {-0.17, 0, 0.24}
     Rotation: {math.PI / 2, 0, 0}
     Torus: {0.16, 0.025, 20, 6}
     Rgb: {173, 184, 177}
   }
   for i in 0..5 {
-    "vent_{i}" {
+    {
       Position: {0.29, -0.17 + i * 0.08, 0.22}
       Box: {0.2, 0.025, 0.025}
       Rgb: iron
     }
   }
   for i in 0..2 {
-    "bracket_{i}" {
+    {
       Position: {-0.32 + i * 0.64, -0.35, -0.05}
       Box: {0.07, 0.12, 0.62}
       Rgb: iron
     }
   }
-  drain {
+  {
     Position: {0.55, -0.35, -0.1}
     Cylinder: {0.035, 1.05, 8}
     Rgb: cream
   }
 }
 
+@tree Parent
 template Lantern {
-  hanger {
+  {
     Position: {0, 0.31, 0}
     Cylinder: {0.025, 0.26, 8}
     Rgb: iron
   }
-  paper {
+  {
     Position: {}
     Sphere: {0.25}
     Rgb: {241, 116, 91}
   }
   for i in 0..3 {
-    "rib_{i}" {
+    {
       Position: {0, (i - 1) * 0.12, 0}
       Torus: {0.22 - math.abs(i - 1) * 0.035, 0.014, 16, 4}
       Rgb: {182, 67, 58}
     }
   }
-  cap {
+  {
     Position: {0, -0.23, 0}
     Cylinder: {0.1, 0.07, 12}
     Rgb: timber
   }
 }
 
+@tree Parent
 template TimberFacade : Facade {
-  panel {
+  {
     Position: {0, height / 2, 0}
     Box: {width, height - 0.08, 0.18}
     Rgb: color
   }
   for i in 0..3 {
-    "beam_{i}" {
+    {
       Position: {(i - 1) * (width / 2 - 0.1), height / 2, 0.13}
       Box: {0.13, height, 0.14}
       Rgb: timber
     }
   }
   for i in 0..2 {
-    "rail_{i}" {
+    {
       Position: {0, 0.15 + i * (height - 0.3), 0.13}
       Box: {width, 0.15, 0.17}
       Rgb: timber
@@ -168,7 +173,7 @@ template TimberFacade : Facade {
     }
   }
   for i in 0..12 {
-    "slat_{i}" {
+    {
       Position: {-width / 2 + (i + 0.5) * width / 12, 0.42, 0.14}
       Box: {0.06, 0.44, 0.1}
       Rgb: timber
@@ -176,13 +181,14 @@ template TimberFacade : Facade {
   }
 }
 
+@tree Parent
 template StuccoFacade : Facade {
-  panel {
+  {
     Position: {0, height / 2, 0}
     Box: {width, height - 0.08, 0.18}
     Rgb: color
   }
-  band {
+  {
     Position: {0, height - 0.13, 0.13}
     Box: {width + 0.12, 0.17, 0.24}
     Rgb: cream
@@ -192,18 +198,18 @@ template StuccoFacade : Facade {
       Position: {(i - 0.5) * width * 0.5, height * 0.56, 0.18}
     }
   }
-  balcony {
+  {
     Position: {0, 0.32, 0.43}
     Box: {width * 0.85, 0.13, 0.85}
     Rgb: cream
   }
-  handrail {
+  {
     Position: {0, 0.98, 0.83}
     Box: {width * 0.85, 0.06, 0.07}
     Rgb: iron
   }
   for i in 0..9 {
-    "railing_{i}" {
+    {
       Position: {(i - 4) * width * 0.1, 0.65, 0.83}
       Box: {0.035, 0.63, 0.035}
       Rgb: iron
@@ -212,14 +218,15 @@ template StuccoFacade : Facade {
   Planter(blossoms: true) { Position: {-width * 0.3, 0.39, 0.46} }
 }
 
+@tree Parent
 template ShutterFacade : Facade {
-  panel {
+  {
     Position: {0, height / 2, 0}
     Box: {width, height - 0.08, 0.18}
     Rgb: color
   }
   for i in 0..9 {
-    "siding_{i}" {
+    {
       Position: {0, (i + 0.5) * height / 9, 0.11}
       Box: {width, 0.035, 0.055}
       Rgb: cream
@@ -230,12 +237,12 @@ template ShutterFacade : Facade {
       Position: {(i - 0.5) * width * 0.51, height * 0.57, 0.18}
     }
     for side in 0..2 {
-      "shutter_{i}_{side}" {
+      {
         Position: {(i - 0.5) * width * 0.51 + (side * 2 - 1) * width * 0.165, height * 0.57, 0.2}
         Box: {width * 0.08, height * 0.48, 0.12}
         Rgb: {107, 141, 134}
         for slat in 0..6 {
-          "louver_{slat}" {
+          {
             Position: {0, (slat - 2.5) * height * 0.065, 0.08}
             Box: {width * 0.065, 0.035, 0.04}
             Rgb: cream
@@ -244,7 +251,7 @@ template ShutterFacade : Facade {
       }
     }
   }
-  flower_box {
+  {
     Position: {0, 0.45, 0.28}
     Box: {width * 0.5, 0.23, 0.36}
     Rgb: timber
@@ -254,8 +261,9 @@ template ShutterFacade : Facade {
   }
 }
 
+@tree Parent
 template LatticeFacade : Facade {
-  panel {
+  {
     Position: {0, height / 2, 0}
     Box: {width, height - 0.08, 0.18}
     Rgb: color
@@ -264,20 +272,20 @@ template LatticeFacade : Facade {
     Position: {0, height * 0.54, 0.14}
   }
   for i in 0..15 {
-    "screen_{i}" {
+    {
       Position: {(i - 7) * width * 0.059, height * 0.54, 0.36}
       Box: {0.065, height * 0.66, 0.09}
       Rgb: timber
     }
   }
   for i in 0..3 {
-    "screen_rail_{i}" {
+    {
       Position: {0, height * (0.22 + i * 0.32), 0.35}
       Box: {width * 0.9, 0.09, 0.13}
       Rgb: timber
     }
   }
-  canopy {
+  {
     Position: {0, height - 0.08, 0.32}
     Rotation: {0.15, 0, 0}
     Box: {width + 0.16, 0.12, 0.72}
@@ -285,13 +293,14 @@ template LatticeFacade : Facade {
   }
 }
 
+@tree Parent
 template BayFacade : Facade {
-  panel {
+  {
     Position: {0, height / 2, 0}
     Box: {width, height - 0.08, 0.18}
     Rgb: color
   }
-  bay {
+  {
     Position: {0, height * 0.56, 0.38}
     Box: {width * 0.66, height * 0.64, 0.65}
     Rgb: cream
@@ -305,14 +314,14 @@ template BayFacade : Facade {
       }
     }
   }
-  copper_cap {
+  {
     Position: {0, height * 0.9, 0.46}
     Rotation: {0.12, 0, 0}
     Box: {width * 0.72, 0.13, 1.02}
     Rgb: {115, 145, 133}
   }
   for side in 0..2 {
-    "corbel_{side}" {
+    {
       Position: {(side * 2 - 1) * width * 0.25, height * 0.2, 0.34}
       Box: {0.12, 0.25, 0.45}
       Rgb: timber
@@ -320,11 +329,12 @@ template BayFacade : Facade {
   }
 }
 
+@tree Parent
 template TiledRoof : Roof {
   const span = width + 0.6
   const run = depth + 0.65
 
-  gable {
+  {
     Position: {0, 0.58, 0}
     TrianglePrism: {span, 1.16, run}
     Rgb: color
@@ -332,7 +342,7 @@ template TiledRoof : Roof {
   for side in 0..2 {
     for course in 0..5 {
       const distance = (course + 0.5) * span / 10
-      "tiles_{side}_{course}" {
+      {
         Position: {(side * 2 - 1) * distance, 1.2 - distance * 2.32 / span, 0}
         Rotation: {0, 0, (1 - side * 2) * math.atan(2.32 / span)}
         Box: {span / 10 + 0.12, 0.1, run + 0.24}
@@ -341,10 +351,10 @@ template TiledRoof : Roof {
     }
   }
   for i in 0..16 {
-    "seam_{i}" {
+    {
       Position: {0, 0, -run / 2 + (i + 0.5) * run / 16}
       for side in 0..2 {
-        "tile_edge_{side}" {
+        {
           Position: {(side * 2 - 1) * span / 4, 0.66, 0}
           Rotation: {0, 0, (1 - side * 2) * math.atan(2.32 / span)}
           Box: {math.sqrt(span * span / 4 + 1.3456), 0.04, 0.035}
@@ -353,7 +363,7 @@ template TiledRoof : Roof {
       }
     }
   }
-  ridge {
+  {
     Position: {0, 1.24, 0}
     Rotation: {math.PI / 2, 0, 0}
     Cylinder: {0.13, run + 0.42, 12}
@@ -361,46 +371,47 @@ template TiledRoof : Roof {
   }
 }
 
+@tree Parent
 template FlatRoof : Roof {
-  roof {
+  {
     Position: {0, 0, 0}
     Box: {width + 0.35, 0.2, depth + 0.35}
     Rgb: cream
   }
   for side in 0..2 {
-    "parapet_{side}" {
+    {
       Position: {(side * 2 - 1) * width / 2, 0.22, 0}
       Box: {0.13, 0.4, depth}
       Rgb: color
     }
   }
-  tank {
+  {
     Position: {-width * 0.22, 0.6, -depth * 0.22}
     Cylinder: {0.5, 1.05, 16}
     Rgb: {184, 200, 195}
   }
-  tank_lid {
+  {
     Position: {-width * 0.22, 1.15, -depth * 0.22}
     Cone: {0.55, 0.18, 16}
     Rgb: iron
   }
   AirConditioner() { Position: {width * 0.23, 0.45, 0} }
-  laundry {
+  {
     Position: {0, 0, depth * 0.28}
     for i in 0..2 {
-      "post_{i}" {
+      {
         Position: {(i - 0.5) * width * 0.7, 0.75, 0}
         Cylinder: {0.025, 1.5, 8}
         Rgb: iron
       }
     }
-    line {
+    {
       Position: {0, 1.4, 0}
       Box: {width * 0.7, 0.025, 0.025}
       Rgb: iron
     }
     for i in 0..3 {
-      "towel_{i}" {
+      {
         Position: {(i - 1) * width * 0.2, 1.08, 0}
         Box: {width * 0.15, 0.64, 0.035}
         if i == 1 { Rgb: pink } else { Rgb: cream }
@@ -409,6 +420,7 @@ template FlatRoof : Roof {
   }
 }
 
+@tree Parent
 template ShedRoof : Roof {
   const slope = 0.16
   const length = depth + 0.65
@@ -416,27 +428,27 @@ template ShedRoof : Roof {
   for i in 0..12 {
     const z = -depth / 2 + (i + 0.5) * depth / 12
     const rise = 0.55 + z * slope
-    "infill_{i}" {
+    {
       Position: {0, rise / 2, z}
       Box: {width, rise, depth / 12 + 0.015}
       Rgb: cream
     }
   }
-  metal {
+  {
     Position: {0, 0.59, 0}
     Rotation: {-math.atan(slope), 0, 0}
     Box: {width + 0.6, 0.1, length * math.sqrt(1 + slope * slope)}
     Rgb: color
   }
   for i in 0..11 {
-    "standing_seam_{i}" {
+    {
       Position: {(i - 5) * (width + 0.5) / 10, 0.66, 0}
       Rotation: {-math.atan(slope), 0, 0}
       Box: {0.035, 0.045, length * math.sqrt(1 + slope * slope)}
       Rgb: iron
     }
   }
-  gutter {
+  {
     Position: {0, 0.54 - length * slope / 2, -length / 2}
     Rotation: {0, 0, math.PI / 2}
     Cylinder: {0.08, width + 0.7, 10}
@@ -449,22 +461,23 @@ template ShedRoof : Roof {
   }
 }
 
+@tree Parent
 template DormerRoof : Roof {
   TiledRoof(width: width, depth: depth, color: color) { Position: {} }
 
-  dormer {
+  {
     Position: {0, 1.08, depth / 2 - 0.48}
     Box: {1.5, 0.86, 1.2}
     Rgb: cream
     Window(width: 1.18, height: 0.6, panes: 3) {
       Position: {0, 0.04, 0.64}
     }
-    cap {
+    {
       Position: {0, 0.65, 0}
       TrianglePrism: {1.85, 0.5, 1.55}
       Rgb: color
     }
-    ridge {
+    {
       Position: {0, 0.93, 0}
       Rotation: {math.PI / 2, 0, 0}
       Cylinder: {0.07, 1.7, 10}
@@ -473,26 +486,27 @@ template DormerRoof : Roof {
   }
 }
 
+@tree Parent
 template GardenRoof : Roof {
-  deck {
+  {
     Position: {}
     Box: {width + 0.35, 0.2, depth + 0.35}
     Rgb: cream
   }
   for side in 0..2 {
-    "parapet_{side}" {
+    {
       Position: {(side * 2 - 1) * width / 2, 0.25, 0}
       Box: {0.13, 0.4, depth}
       Rgb: color
     }
     for end in 0..2 {
-      "pergola_post_{side}_{end}" {
+      {
         Position: {(side * 2 - 1) * width * 0.32, 0.78, -depth * 0.12 + (end * 2 - 1) * depth * 0.25}
         Box: {0.09, 1.4, 0.09}
         Rgb: timber
       }
     }
-    "pergola_beam_{side}" {
+    {
       Position: {(side * 2 - 1) * width * 0.32, 1.5, -depth * 0.12}
       Box: {0.1, 0.12, depth * 0.65}
       Rgb: timber
@@ -502,43 +516,44 @@ template GardenRoof : Roof {
     }
   }
   for i in 0..7 {
-    "pergola_slat_{i}" {
+    {
       Position: {0, 1.6, -depth * 0.12 + (i - 3) * depth * 0.09}
       Box: {width * 0.76, 0.09, 0.09}
       Rgb: timber
     }
   }
   for i in 0..3 {
-    "vine_{i}" {
+    {
       Position: {(i - 1) * width * 0.22, 1.63, -depth * 0.15}
       Sphere: {0.3}
       Rgb: leaf
     }
     Planter() { Position: {(i - 1) * width * 0.24, 0.12, -depth * 0.32} }
   }
-  roof_access {
+  {
     Position: {width * 0.25, 0.42, depth * 0.12}
     Box: {0.8, 0.65, 0.9}
     Rgb: color
   }
 }
 
+@tree Parent
 template VendingMachine {
   prop color: Rgb = {206, 71, 70}
 
-  cabinet {
+  {
     Position: {0, 0.93, 0}
     Box: {1.05, 1.86, 0.72}
     Rgb: color
   }
-  display {
+  {
     Position: {-0.09, 1.22, 0.38}
     Box: {0.74, 0.91, 0.05}
     Rgb: {220, 242, 234}
   }
   for row in 0..3 {
     for col in 0..4 {
-      "drink_{row}_{col}" {
+      {
         Position: {-0.36 + col * 0.18, 0.95 + row * 0.28, 0.43}
         Cylinder: {0.055, 0.17, 8}
         if (row + col) % 2 == 0 {
@@ -547,30 +562,31 @@ template VendingMachine {
           Rgb: {81, 159, 158}
         }
       }
-      "button_{row}_{col}" {
+      {
         Position: {-0.36 + col * 0.18, 0.83 + row * 0.28, 0.44}
         Box: {0.07, 0.035, 0.02}
         Rgb: cream
       }
     }
   }
-  payment {
+  {
     Position: {0.39, 1.07, 0.39}
     Box: {0.13, 0.39, 0.045}
     Rgb: iron
   }
-  collection {
+  {
     Position: {0, 0.35, 0.38}
     Box: {0.67, 0.24, 0.055}
     Rgb: iron
   }
-  header {
+  {
     Position: {0, 1.77, 0.39}
     Box: {0.86, 0.1, 0.04}
     Rgb: cream
   }
 }
 
+@tree Parent
 template Shopfront {
   prop width: f32 = 4.4
   prop accent: Rgb = {181, 81, 72}
@@ -581,46 +597,46 @@ template Shopfront {
   Window(width: width * 0.28, height: 1.9, panes: 2) {
     Position: {width * 0.2, 1.02, 0.15}
   }
-  step {
+  {
     Position: {width * 0.2, 0.08, 0.34}
     Box: {width * 0.34, 0.16, 0.8}
     Rgb: {184, 182, 165}
   }
-  sign {
+  {
     Position: {0, 2.17, 0.24}
     Box: {width - 0.25, 0.42, 0.24}
     Rgb: timber
   }
   for i in 0..5 {
-    "plaque_{i}" {
+    {
       Position: {(i - 2) * 0.43, 2.18, 0.38}
       Box: {0.31, 0.28, 0.04}
       Rgb: cream
     }
-    "mark_{i}" {
+    {
       Position: {(i - 2) * 0.43, 2.18, 0.41}
       Box: {0.05, 0.18, 0.03}
       Rgb: accent
     }
-    "crossbar_{i}" {
+    {
       Position: {(i - 2) * 0.43, 2.22, 0.42}
       Box: {0.18, 0.04, 0.025}
       Rgb: accent
     }
   }
-  awning {
+  {
     Position: {0, 1.91, 0.57}
     Rotation: {0.18, 0, 0}
     Box: {width + 0.18, 0.1, 0.95}
     Rgb: accent
   }
   for i in 0..6 {
-    "curtain_{i}" {
+    {
       Position: {-width / 2 + (i + 0.5) * width / 6, 1.68, 0.99}
       Box: {width / 6 - 0.035, 0.38, 0.045}
       Rgb: accent
     }
-    "crest_{i}" {
+    {
       Position: {-width / 2 + (i + 0.5) * width / 6, 1.69, 1.02}
       Rotation: {math.PI / 2, 0, 0}
       Cylinder: {0.065, 0.016, 12}
@@ -631,6 +647,7 @@ template Shopfront {
   Planter(blossoms: true) { Position: {-width * 0.34, 0, 0.7} }
 }
 
+@tree Parent
 template Building {
   prop facade: template Facade = TimberFacade
   prop floors: i32 = 2
@@ -645,12 +662,12 @@ template Building {
 
   const height = floors * floorHeight
 
-  walls {
+  {
     Position: {0, height / 2, 0}
     Box: {width, height, depth}
     Rgb: color
   }
-  foundation {
+  {
     Position: {0, 0.12, 0}
     Box: {width + 0.16, 0.24, depth + 0.16}
     Rgb: {178, 176, 158}
@@ -659,7 +676,7 @@ template Building {
     if floor == 0 && shop {
       Shopfront(width: width, accent: accent) { Position: {0, 0, depth / 2} }
     } else if floor == 0 {
-      entrance {
+      {
         Position: {0, 0, depth / 2}
         Window(width: 0.95, height: 1.9, frame: timber) {
           Position: {width * 0.23, 1.04, 0.15}
@@ -667,12 +684,12 @@ template Building {
         Window(width: width * 0.36, height: 1.05, frame: cream) {
           Position: {-width * 0.22, 1.4, 0.15}
         }
-        step {
+        {
           Position: {width * 0.23, 0.08, 0.38}
           Box: {1.18, 0.16, 0.75}
           Rgb: cream
         }
-        canopy {
+        {
           Position: {width * 0.23, 2.12, 0.35}
           Box: {1.35, 0.1, 0.85}
           Rgb: accent
@@ -680,13 +697,13 @@ template Building {
         Planter(blossoms: true) { Position: {-width * 0.3, 0, 0.5} }
       }
     } else {
-      "front_{floor}" {
+      {
         Position: {0, floor * floorHeight, depth / 2}
         facade: {width: width, height: floorHeight, color: color}
       }
     }
     for side in 0..2 {
-      "side_wall_{floor}_{side}" {
+      {
         Position: {(side * 2 - 1) * width / 2, floor * floorHeight, 0}
         Rotation: {0, (side * 2 - 1) * math.PI / 2, 0}
         Window(width: depth * 0.36, height: 1.1, frame: cream) {
@@ -695,7 +712,7 @@ template Building {
         AirConditioner() { Position: {-0.4, 0.56, 0.25} }
       }
     }
-    "back_{floor}" {
+    {
       Position: {0, floor * floorHeight, -depth / 2}
       Rotation: {0, math.PI, 0}
       Window(width: width * 0.45, height: 1.1, frame: cream) {
@@ -704,70 +721,72 @@ template Building {
     }
   }
   for side in 0..2 {
-    "drainpipe_{side}" {
+    {
       Position: {(side * 2 - 1) * (width / 2 + 0.07), height / 2, -depth / 2}
       Cylinder: {0.055, height, 8}
       Rgb: iron
     }
   }
-  roof_asset {
+  {
     Position: {0, height, 0}
     roof: {width: width, depth: depth, color: roofColor}
   }
 }
 
+@tree Parent
 template CherryTree {
-  trunk {
+  {
     Position: {0, 0.95, 0}
     Cylinder: {0.12, 1.9, 9}
     Rgb: timber
   }
   for i in 0..5 {
-    "crown_{i}" {
+    {
       Position: {math.cos(i * 1.26) * 0.48, 2.05 + (i % 2) * 0.3, math.sin(i * 1.26) * 0.48}
       Sphere: {0.66}
       Rgb: {243, 179 + i * 5, 196 + i * 4}
     }
   }
-  bed {
+  {
     Position: {0, 0.07, 0}
     Cylinder: {0.66, 0.14, 12}
     Rgb: {159, 177, 139}
   }
 }
 
+@tree Parent
 template PowerPole {
-  pole {
+  {
     Position: {0, 3.6, 0}
     Cylinder: {0.11, 7.2, 12}
     Rgb: {149, 151, 140}
   }
-  foot {
+  {
     Position: {0, 0.32, 0}
     Cylinder: {0.17, 0.64, 12}
     Rgb: iron
   }
   for i in 0..2 {
-    "crossarm_{i}" {
+    {
       Position: {0, 6.45 + i * 0.5, 0}
       Box: {0.14, 0.12, 1.35}
       Rgb: iron
     }
   }
   for i in 0..3 {
-    "insulator_{i}" {
+    {
       Position: {0, 7.06, (i - 1) * 0.53}
       Cylinder: {0.085, 0.2, 10}
       Rgb: cream
     }
   }
-  transformer {
+  {
     Position: {0.26, 5.8, 0}
     Cylinder: {0.23, 0.65, 12}
     Rgb: {187, 199, 188}
   }
   for i in 0..4 {
-    "hazard_stripe_{i}" {
+    {
       Position: {0, 0.85 + i * 0.2, 0}
       Cylinder: {0.115, 0.1, 12}
       Rgb: {233, 191, 85}
@@ -775,6 +794,7 @@ template PowerPole {
   }
 }
 
+@tree Parent
 template PowerSpan {
   prop length: f32 = 8
 
@@ -784,7 +804,7 @@ template PowerSpan {
       const x1 = length * (i + 1) / 16
       const y0 = 7.16 - 0.65 * 4 * (x0 / length) * (1 - x0 / length)
       const y1 = 7.16 - 0.65 * 4 * (x1 / length) * (1 - x1 / length)
-      "cable_{wire}_{i}" {
+      {
         Position: {(x0 + x1) / 2, (y0 + y1) / 2, (wire - 1) * 0.53}
         Rotation: {0, 0, math.atan((y1 - y0) / (x1 - x0)) - math.PI / 2}
         Cylinder: {0.018, math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)), 6}
@@ -794,21 +814,35 @@ template PowerSpan {
   }
 }
 
+@tree Parent
+template UtilityLine {
+  prop poles: i32 = 3
+  prop spacing: f32 = 8
+
+  for i in 0..poles {
+    PowerPole() { Position: {i * spacing, 0, 0} }
+    if i < poles - 1 {
+      PowerSpan(length: spacing) { Position: {i * spacing, 0, 0} }
+    }
+  }
+}
+
+@tree Parent
 template Bench {
   for i in 0..3 {
-    "slat_{i}" {
+    {
       Position: {0, 0.46, (i - 1) * 0.16}
       Box: {1.6, 0.09, 0.13}
       Rgb: {171, 121, 80}
     }
   }
-  back {
+  {
     Position: {0, 0.81, -0.24}
     Box: {1.6, 0.3, 0.09}
     Rgb: {171, 121, 80}
   }
   for i in 0..2 {
-    "leg_{i}" {
+    {
       Position: {(i - 0.5) * 1.15, 0.22, 0}
       Box: {0.09, 0.44, 0.42}
       Rgb: iron
@@ -816,6 +850,94 @@ template Bench {
   }
 }
 
+@tree Parent
+template Bollard {
+  prop radius: f32 = 0.075
+  prop height: f32 = 0.52
+  prop color: Rgb = iron
+
+  Cylinder: {radius, height, 10}
+  Rgb: color
+}
+
+@tree Parent
+template TrafficCone {
+  {
+    Position: {}
+    Box: {0.38, 0.07, 0.38}
+    Rgb: iron
+  }
+  {
+    Position: {0, 0.24, 0}
+    Cone: {0.16, 0.48, 12}
+    Rgb: {231, 127, 88}
+  }
+  {
+    Position: {0, 0.23, 0}
+    Cylinder: {0.089, 0.07, 12}
+    Rgb: cream
+  }
+}
+
+@tree Parent
+template Pavement {
+  {
+    Position: {}
+    Box: {6.4, 0.2, 6.4}
+    Rgb: {215, 210, 190}
+  }
+  for i in 0..8 {
+    {
+      Position: {(i - 3.5) * 0.8, 0.105, 2.83}
+      Box: {0.018, 0.012, 0.72}
+      Rgb: {177, 181, 165}
+    }
+  }
+}
+
+@tree Parent
+template RoadMarkings {
+  prop rows: i32 = 3
+  prop columns: i32 = 3
+
+  const halfRows = (rows - 1) / 2.0
+  const halfColumns = (columns - 1) / 2.0
+
+  for road in 0..(rows + 1) {
+    for dash in 0..(columns * 4) {
+      {
+        Position: {(dash - (columns * 4 - 1) / 2.0) * 2, 0.048, (road - rows / 2.0) * 8}
+        Box: {0.85, 0.012, 0.055}
+        Rgb: cream
+      }
+    }
+  }
+  for road in 0..(columns + 1) {
+    for dash in 0..(rows * 4) {
+      {
+        Position: {(road - columns / 2.0) * 8, 0.048, (dash - (rows * 4 - 1) / 2.0) * 2}
+        Box: {0.055, 0.012, 0.85}
+        Rgb: cream
+      }
+    }
+  }
+  for row in 0..(rows - 1) {
+    for col in 0..(columns - 1) {
+      {
+        Position: {(col - halfColumns + 0.5) * 8 + 1.25, 0.052, (row - halfRows + 0.5) * 8}
+        for i in 0..5 {
+          {
+            Position: {0, 0, (i - 2) * 0.29}
+            Box: {0.65, 0.014, 0.16}
+            Rgb: cream
+          }
+        }
+      }
+    }
+  }
+}
+
+@tree Parent
 template Town {
   prop rows: i32 = 3
   prop columns: i32 = 3
@@ -858,18 +980,7 @@ template Town {
     for col in 0..columns {
       "lot_{row}_{col}" {
         Position: {(col - halfColumns) * 8, 0.12, (row - halfRows) * 8}
-        pavement {
-          Position: {}
-          Box: {6.4, 0.2, 6.4}
-          Rgb: {215, 210, 190}
-        }
-        for i in 0..8 {
-          "paving_joint_{i}" {
-            Position: {(i - 3.5) * 0.8, 0.105, 2.83}
-            Box: {0.018, 0.012, 0.72}
-            Rgb: {177, 181, 165}
-          }
-        }
+        Pavement() { Position: {} }
         const rng: math.Rng = {seed: seed + row * 92821 + col * 68917}
         const facadeKind = facades[rng.u(5)]
         const roofKind = roofs[rng.u(6)]
@@ -892,47 +1003,10 @@ template Town {
       }
     }
   }
-  for road in 0..(rows + 1) {
-    for dash in 0..(columns * 4) {
-      "marking_x_{road}_{dash}" {
-        Position: {(dash - (columns * 4 - 1) / 2.0) * 2, 0.048, (road - rows / 2.0) * 8}
-        Box: {0.85, 0.012, 0.055}
-        Rgb: cream
-      }
-    }
-  }
-  for road in 0..(columns + 1) {
-    for dash in 0..(rows * 4) {
-      "marking_z_{road}_{dash}" {
-        Position: {(road - columns / 2.0) * 8, 0.048, (dash - (rows * 4 - 1) / 2.0) * 2}
-        Box: {0.055, 0.012, 0.85}
-        Rgb: cream
-      }
-    }
-  }
-  for row in 0..(rows - 1) {
-    for col in 0..(columns - 1) {
-      "crossing_{row}_{col}" {
-        Position: {(col - halfColumns + 0.5) * 8 + 1.25, 0.052, (row - halfRows + 0.5) * 8}
-        for i in 0..5 {
-          "stripe_{i}" {
-            Position: {0, 0, (i - 2) * 0.29}
-            Box: {0.65, 0.014, 0.16}
-            Rgb: cream
-          }
-        }
-      }
-    }
-  }
+  RoadMarkings markings(rows: rows, columns: columns) { Position: {} }
   for row in 0..rows {
-    "utility_line_{row}" {
+    UtilityLine(poles: columns) {
       Position: {-halfColumns * 8 - 2.85, 0.22, (row - halfRows) * 8 + 2.8}
-      for col in 0..columns {
-        PowerPole() { Position: {col * 8, 0, 0} }
-        if col < columns - 1 {
-          PowerSpan() { Position: {col * 8, 0, 0} }
-        }
-      }
     }
   }
   for col in 0..columns {
@@ -941,30 +1015,13 @@ template Town {
     }
   }
   for i in 0..3 {
-    "bollard_{i}" {
+    Bollard() {
       Position: {(middleColumn - halfColumns) * 8 - 1 + i, 0.46, halfRows * 8 + 3.08}
-      Cylinder: {0.075, 0.52, 10}
-      Rgb: iron
     }
   }
   for i in 0..2 {
-    "traffic_cone_{i}" {
+    TrafficCone() {
       Position: {halfColumns * 8 + 3.15, 0.2, (middleRow - halfRows) * 8 - 0.5 + i * 0.8}
-      base {
-        Position: {}
-        Box: {0.38, 0.07, 0.38}
-        Rgb: iron
-      }
-      cone {
-        Position: {0, 0.24, 0}
-        Cone: {0.16, 0.48, 12}
-        Rgb: {231, 127, 88}
-      }
-      band {
-        Position: {0, 0.23, 0}
-        Cylinder: {0.089, 0.07, 12}
-        Rgb: cream
-      }
     }
   }
 }

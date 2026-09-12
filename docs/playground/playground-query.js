@@ -50,7 +50,7 @@
       text: cssVar("--fl-text-2", "#4b5563"),
       accent: cssVar("--fl-accent", "#42b983"),
       accentStrong: cssVar("--fl-accent-strong", "#1f8a5a"),
-      mono: cssVar("--fl-mono", "monospace"),
+      font: "Inter, Helvetica, sans-serif",
       dark: document.documentElement.classList.contains("dark-mode")
     };
   }
@@ -688,13 +688,13 @@
       else ctx.rect(p.x - s.w / 2 * cam.zoom, p.y - s.h / 2 * cam.zoom, s.w * cam.zoom, s.h * cam.zoom);
     }
 
-    function fillShape(s, p, mono) {
+    function fillShape(s, p, font) {
       if (s.kind !== "text") {
         tracePath(s, p);
         ctx.fill();
         return;
       }
-      ctx.font = s.size * cam.zoom + "px " + mono;
+      ctx.font = s.size * cam.zoom + "px " + font;
       ctx.textAlign = s.align < 0 ? "left" : s.align > 0 ? "right" : "center";
       ctx.textBaseline = "middle";
       var lx = p.x + textLineX(s) * cam.zoom;
@@ -736,7 +736,7 @@
         var p = toScreen(s.x, s.y);
         if (s.kind === "text") {
           ctx.fillStyle = rgba(DIM_COLOR, s.a * 0.35);
-          fillShape(s, p, c.mono);
+          fillShape(s, p, c.font);
         } else {
           ctx.strokeStyle = rgba(DIM_COLOR, s.a * 0.35);
           tracePath(s, p);
@@ -746,7 +746,7 @@
       shapes.forEach(function (s) {
         if (s.dim) return;
         ctx.fillStyle = rgba(emissiveColor(s));
-        fillShape(s, toScreen(s.x, s.y), c.mono);
+        fillShape(s, toScreen(s.x, s.y), c.font);
       });
 
       var active = shapes.some(function (s) { return isEmissive(s) && s.a > 0; });
@@ -768,7 +768,7 @@
       shapes.forEach(function (s) {
         if (s.dim) return;
         ctx.fillStyle = isEmissive(s) ? rgba(displayColor(linearShapeColor(s), scale)) : rgba({ r: 0, g: 0, b: 0, a: s.a });
-        fillShape(s, toScreen(s.x, s.y), c.mono);
+        fillShape(s, toScreen(s.x, s.y), c.font);
       });
       ctx = baseCtx;
       bloom.render(scale);
@@ -1175,7 +1175,7 @@
       canvas.width = Math.max(Math.ceil(s.w * scale), 1);
       canvas.height = Math.max(Math.ceil(s.h * scale), 1);
       var tctx = canvas.getContext("2d");
-      tctx.font = px + "px " + theme().mono;
+      tctx.font = px + "px " + theme().font;
       tctx.textAlign = s.align < 0 ? "left" : s.align > 0 ? "right" : "center";
       tctx.textBaseline = "middle";
       tctx.fillStyle = "#ffffff";

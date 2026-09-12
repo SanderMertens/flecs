@@ -135,12 +135,18 @@
 
   /* Entity tree */
 
+  function isTemplate(e) {
+    var comps = e.components || {};
+    return !!comps["flecs.core.Component"] && Object.prototype.hasOwnProperty.call(comps, "flecs.script.Script");
+  }
+
   function kindOf(e, usedAsTag) {
     var tags = e.tags || [];
     var comps = e.components || {};
     if (tags.indexOf("flecs.core.Disabled") !== -1) return { kind: "disabled", hint: "disabled" };
     if (tags.indexOf("flecs.core.Module") !== -1) return { kind: "module", hint: "module" };
     if (tags.indexOf("flecs.core.Prefab") !== -1) return { kind: "prefab", hint: "prefab" };
+    if (isTemplate(e)) return { kind: "template", hint: "template" };
     if (comps["flecs.core.Component"]) {
       var type = comps["flecs.meta.type"];
       var kind = type && type.kind ? type.kind.replace(/Type$/, "").toLowerCase() : "component";
@@ -159,7 +165,12 @@
 
     function build(results) {
       var used = {};
+      var templates = Object.create(null);
       results.forEach(function (e) {
+        if (isTemplate(e)) {
+          var path = e.parent ? e.parent + "." + e.name : e.name;
+          templates[path] = true;
+        }
         (e.tags || []).forEach(function (t) { used[t] = true; });
         Object.keys(e.pairs || {}).forEach(function (r) { used[r] = true; });
       });
@@ -170,8 +181,14 @@
         if (e.parent && (e.parent === SCRIPT_ENTITY || e.parent.indexOf(SCRIPT_ENTITY + ".") === 0)) return;
         var path = e.parent ? e.parent + "." + e.name : e.name;
         var info = kindOf(e, used[path]);
+        var instances = Object.keys(e.components || {}).concat(e.tags || []).filter(function (id) {
+          return templates[id];
+        });
+        var hints = info.hint ? [info.hint] : [];
+        if (isTemplate(e) && info.kind !== "template") hints.push("template");
+        if (instances.length) hints.push(instances.join(", "));
         nodes[path] = { name: e.name, path: path, parent: e.parent || null, kind: info.kind,
-          hint: info.hint, children: [], id: e.id || 0 };
+          hint: hints.join(" · "), children: [], id: e.id || 0 };
       });
       var byId = {};
       Object.keys(nodes).forEach(function (path) {
@@ -214,7 +231,7 @@
       row.appendChild(toggle);
       row.appendChild(el("span", { class: "pg-icon pg-kind-" + n.kind }));
       row.appendChild(el("span", { class: "pg-node-name", text: n.name }));
-      if (n.hint) row.appendChild(el("span", { class: "pg-node-hint", text: n.hint }));
+      if (n.hint) row.appendChild(el("span", { class: "pg-node-hint", text: n.hint, title: n.hint }));
       if (n.path === selected) row.classList.add("pg-selected");
       li.appendChild(row);
       var open = isOpen(n);
