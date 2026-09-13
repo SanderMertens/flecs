@@ -489,6 +489,30 @@ static void flecs_script_template_instantiate_vars(
     }
 }
 
+static int flecs_script_template_init_muts(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_template_t *template)
+{
+    ecs_script_scope_t *scope = template->node->scope;
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+    for (i = 0; i < count; i ++) {
+        ecs_script_node_t *stmt = ecs_vec_get_t(
+            &scope->stmts, ecs_script_node_t*, i)[0];
+        if (stmt->kind != EcsAstMut || stmt->skip) {
+            continue;
+        }
+
+        ecs_script_var_node_t *node = (ecs_script_var_node_t*)stmt;
+        ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, node->sp);
+        ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 static int flecs_script_template_validate_interfaces(
     ecs_world_t *world,
     ecs_entity_t template_entity,
@@ -727,16 +751,6 @@ static int flecs_script_template_instantiate_now(
 
     bool run_ok;
     void *props_copy = NULL;
-    if (template->has_interface_members) {
-        if (flecs_script_template_validate_interfaces(world,
-            template_entity, template, props_st, props_data,
-            muts_st, muts_data))
-        {
-            result = -1;
-            goto done_vars;
-        }
-    }
-
     props_copy = flecs_script_template_copy_data(
         v, template->type_info, props_data);
     if (props_copy) {
@@ -747,6 +761,23 @@ static int flecs_script_template_instantiate_now(
         props_st, props_data, muts_st, muts_data);
 
     v->vars = vars;
+
+    if (!state.initialized && template->muts.type) {
+        if (flecs_script_template_init_muts(v, template)) {
+            result = -1;
+            goto done_vars;
+        }
+    }
+
+    if (template->has_interface_members) {
+        if (flecs_script_template_validate_interfaces(world,
+            template_entity, template, props_st, props_data,
+            muts_st, muts_data))
+        {
+            result = -1;
+            goto done_vars;
+        }
+    }
 
     if (vm) {
         run_ok = entry && flecs_script_ir_vm_run(vm, entry) ==

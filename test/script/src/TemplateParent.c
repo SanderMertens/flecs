@@ -51,6 +51,35 @@ void TemplateParent_muts(void) {
     ecs_fini(world);
 }
 
+void TemplateParent_mut_from_prop(void) {
+    ecs_world_t *world = ecs_init();
+    test_int(ecs_script_run_w_desc(world, NULL,
+        HEAD "template RadioGroup {"
+        LINE "  prop default = \"Oak\""
+        LINE "  mut active: string = default"
+        LINE "}"
+        LINE "template RadioButton : parent RadioGroup {"
+        LINE "  prop label = \"\""
+        LINE "  flecs.meta.i32: {active == label}"
+        LINE "}"
+        LINE "RadioGroup options(\"Maple\") {"
+        LINE "  RadioButton oak(\"Oak\")"
+        LINE "  RadioButton maple(\"Maple\")"
+        LINE "}",
+        &ir_desc, NULL), 0);
+
+    ecs_entity_t group = ecs_lookup(world, "RadioGroup");
+    ecs_entity_t options = ecs_lookup(world, "options");
+    test_assert(group != 0);
+    test_assert(options != 0);
+    const ecs_string_t *default_value = ecs_get_id(world, options, group);
+    test_assert(default_value != NULL);
+    test_str(*default_value, "Maple");
+    test_int(value(world, "options.oak"), 0);
+    test_int(value(world, "options.maple"), 1);
+    ecs_fini(world);
+}
+
 void TemplateParent_masking(void) {
     ecs_world_t *world = ecs_init();
     test_int(ecs_script_run_w_desc(world, NULL,
