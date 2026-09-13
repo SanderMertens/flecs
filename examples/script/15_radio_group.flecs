@@ -6,7 +6,8 @@ struct Rgb(r: u8, g: u8, b: u8)
 struct Text(value: string, size: i32, align: string)
 
 template RadioGroup {
-  mut active: string = "Oak"
+  prop default = "Oak"
+  mut active: string = default
 }
 
 template RadioButton : parent RadioGroup {
@@ -40,7 +41,7 @@ template RadioButton : parent RadioGroup {
   }
 }
 
-RadioGroup options() {
+RadioGroup options("Maple") {
   RadioButton("Oak") { Position: {y: 20} }
   RadioButton("Maple") { Position: {y: -20} }
   RadioButton("Pine") { Position: {y: -60} }

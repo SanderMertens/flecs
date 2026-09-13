@@ -3321,6 +3321,7 @@
             "testcases": [
                 "props",
                 "muts",
+                "mut_from_prop",
                 "masking",
                 "inheritance",
                 "inherited_constraint",

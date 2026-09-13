@@ -1,8 +1,11 @@
 // This script shows how to use template inheritance to create a Building asset
 // with a configurable facade.
 
+using flecs.script
+
 // Define a few components
 struct Position(x: f32, y: f32, z: f32)
+struct Rotation(x: f32, y: f32, z: f32)
 struct Rgb(r: f32, g: f32, b: f32)
 struct Box(width: f32, height: f32, depth: f32)
 
@@ -11,7 +14,7 @@ struct Facade(height: f32)
 
 // A brick facade that inherits from Facade.
 template BrickFacade : Facade {
-  prop color: Rgb = {55, 25, 15}
+  prop color: Rgb = {145, 76, 56}
 
   {
     Position: {0, height / 2, 0} // "height" is inherited from Facade
@@ -21,8 +24,32 @@ template BrickFacade : Facade {
 
   {
     Position: {0, height, 0}
-    Rgb: {75, 70, 60}
+    Rgb: {195, 180, 155}
     Box: {4.1, 0.2, 4.1}
+  }
+
+  for side in 0..4 {
+    {
+      Rotation: {0, side * math.PI / 2, 0}
+      for i in 0..2 {
+        {
+          Position: {-1 + i * 2, height * 0.55, 2.04}
+          Rgb: {195, 180, 155}
+          Box: {1, height * 0.55, 0.16}
+
+          {
+            Position: {0, 0, 0.1}
+            Rgb: {75, 115, 140}
+            Box: {0.8, height * 0.55 - 0.2, 0.06}
+          }
+          {
+            Position: {0, 0, 0.15}
+            Rgb: {195, 180, 155}
+            Box: {0.06, height * 0.55 - 0.2, 0.06}
+          }
+        }
+      }
+    }
   }
 }
 
@@ -35,16 +62,47 @@ template GlassFacade : Facade {
   // Window frame
   {
     Position: {0, height / 2, 0}
-    Rgb: {20, 20, 20}
+    Rgb: {55, 65, 75}
     Box: {4, height, 4}
   }
 
   // Window panes
-  for i in 0..panes {
+  for side in 0..4 {
     {
-      Position: {-2 + paneWidth * (i + 0.5), height / 2, 2.1}
-      Rgb: {50, 70, 90}
-      Box: {paneWidth - 0.2, height - 0.4, 0.1}
+      Rotation: {0, side * math.PI / 2, 0}
+      for i in 0..panes {
+        {
+          Position: {-2 + paneWidth * (i + 0.5), height / 2, 2.04}
+          Rgb: {90, 150, 180}
+          Box: {paneWidth - 0.16, height - 0.3, 0.1}
+        }
+      }
+    }
+  }
+
+  {
+    Position: {0, height, 0}
+    Rgb: {155, 170, 180}
+    Box: {4.12, 0.12, 4.12}
+  }
+}
+
+template RoofFacade : Facade {
+  prop color: Rgb = {155, 170, 180}
+
+  {
+    Position: {0, 0.1, 0}
+    Rgb: {65, 75, 85}
+    Box: {4.3, 0.2, 4.3}
+  }
+  for side in 0..4 {
+    {
+      Rotation: {0, side * math.PI / 2, 0}
+      {
+        Position: {0, 0.2 + height / 2, 2}
+        Rgb: color
+        Box: {4.16, height, 0.16}
+      }
     }
   }
 }
@@ -52,6 +110,7 @@ template GlassFacade : Facade {
 // The building template.
 template Building {
   prop facade: template Facade // Accepts any type that inherits from Facade
+  prop roof: template Facade = RoofFacade
   prop floors: i32 = 3
   prop floorHeight: f32 = 3
 
@@ -62,6 +121,33 @@ template Building {
       facade: {height: floorHeight} // Instantiate facade as normal component
     }
   }
+
+  {
+    Position: {0, floors * floorHeight, 0}
+    roof: {height: 0.35}
+  }
+
+  entrance {
+    Position: {0, floorHeight * 0.35, 2.15}
+    Rgb: {195, 180, 155}
+    Box: {1, floorHeight * 0.7, 0.2}
+
+    {
+      Position: {0, -0.04, 0.13}
+      Rgb: {40, 60, 70}
+      Box: {0.8, floorHeight * 0.7 - 0.12, 0.08}
+    }
+    {
+      Position: {0.25, -0.08, 0.2}
+      Rgb: {195, 180, 155}
+      Box: {0.05, 0.2, 0.05}
+    }
+  }
+  {
+    Position: {0, 0.06, 2.4}
+    Rgb: {155, 150, 140}
+    Box: {1.4, 0.12, 0.8}
+  }
 }
 
 // A two-story building with a brick facade
@@ -69,7 +155,6 @@ Building brick_house(facade: BrickFacade, floors: 2, floorHeight: 2) {
   Position: {-2.5, 0, 0}
 }
 
-// A ten-story building with a glass facade
 Building glass_tower(facade: GlassFacade, floors: 3, floorHeight: 2.5) {
   Position: {2.5, 0, 0}
 }

@@ -3202,9 +3202,11 @@ void StructInheritance_assign_base_to_derived_component_fails(void);
 void StructInheritance_assign_unrelated_struct_fails(void);
 void StructInheritance_assign_unrelated_struct_prop_fails(void);
 
+// Testsuite 'TemplateParent'
 void TemplateParent_setup(void);
 void TemplateParent_props(void);
 void TemplateParent_muts(void);
+void TemplateParent_mut_from_prop(void);
 void TemplateParent_masking(void);
 void TemplateParent_inheritance(void);
 void TemplateParent_inherited_constraint(void);
@@ -16130,6 +16132,10 @@ bake_test_case TemplateParent_testcases[] = {
         TemplateParent_muts
     },
     {
+        "mut_from_prop",
+        TemplateParent_mut_from_prop
+    },
+    {
         "masking",
         TemplateParent_masking
     },
@@ -17779,7 +17785,7 @@ static bake_test_suite suites[] = {
         "TemplateParent",
         TemplateParent_setup,
         NULL,
-        28,
+        29,
         TemplateParent_testcases,
         1,
         TemplateParent_params

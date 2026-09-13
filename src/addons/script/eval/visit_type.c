@@ -2141,6 +2141,7 @@ static int flecs_script_type_assign(
     }
 
     ecs_entity_t var_type = node->parent ? m->type : var->value.type;
+    int32_t sp = node->parent ? template->parent_sp : var->sp;
     ecs_entity_t type = var_type;
     int result = flecs_script_type_check_expr(t, &node->expr, &type);
     if (result) {
@@ -2164,7 +2165,7 @@ static int flecs_script_type_assign(
     type = var_type;
 
     node->eval_type = type;
-    node->sp = node->parent ? template->parent_sp : var->sp;
+    node->sp = sp;
     node->component = component;
     node->offset = m->offset;
     return 0;
