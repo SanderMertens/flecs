@@ -82,6 +82,22 @@ assert!(e.enabled::<Position>());
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long positionId = world.component(Position.class);
+world.obtainEntity(positionId).add(Flecs.CanToggle);
+
+Entity e = world.obtainEntity(world.entity()).set(new Position(10, 20));
+
+e.disable(Position.class); // Disable component
+assert !e.enabled(Position.class);
+
+e.enable(Position.class); // Enable component
+assert e.enabled(Position.class);
+```
+
+</li>
 </ul>
 </div>
 
@@ -120,6 +136,15 @@ auto q = world.query_builder()
 
 ```rust
 // TODO
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.queryBuilder()
+    .with(Position.class).idFlags(Flecs.Toggle)
+    .build();
 ```
 
 </li>
@@ -180,6 +205,16 @@ e.child_of_id(parent); // Covered by cleanup traits
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+@Component
+public record MyComponent(long e) { } // Not covered by cleanup traits
+
+e.add(Flecs.ChildOf, parent); // Covered by cleanup traits
+```
+
+</li>
 </ul>
 </div>
 
@@ -212,6 +247,13 @@ world.RemoveAll(archer);
 
 ```rust
 world.remove_all_id(archer);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.removeAll(archer);
 ```
 
 </li>
@@ -255,6 +297,15 @@ world.RemoveAll(Ecs.Wildcard, archer);
 world.remove_all_id(archer);
 world.remove_all_id((archer, flecs::Wildcard::ID));
 world.remove_all_id((flecs::Wildcard::ID, archer));
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.removeAll(archer);
+world.removeAll(world.pair(archer, Flecs.Wildcard).id());
+world.removeAll(world.pair(Flecs.Wildcard, archer).id());
 ```
 
 </li>
@@ -341,6 +392,22 @@ world
 
 let e = world.entity().add::<Archer>();
 ```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Remove Archer from entities when Archer is deleted
+Entity archer = world.obtainEntity(world.component(Archer.class));
+archer.add(Flecs.OnDelete, Flecs.Remove);
+
+Entity e = world.obtainEntity(world.entity()).add(Archer.class);
+
+// This will remove Archer from e
+archer.destruct();
+```
+
+</li>
 </ul>
 </div>
 
@@ -402,6 +469,20 @@ let e = world.entity().add::<Archer>();
 
 // This will remove Archer from e
 world.component::<Archer>().destruct();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Delete entities with Archer when Archer is deleted
+Entity archer = world.obtainEntity(world.component(Archer.class));
+archer.add(Flecs.OnDelete, Flecs.Delete);
+
+Entity e = world.obtainEntity(world.entity()).add(Archer.class);
+
+// This will delete e
+archer.destruct();
 ```
 
 </li>
@@ -473,6 +554,20 @@ p.destruct();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Delete children when deleting parent
+world.obtainEntity(Flecs.ChildOf).add(Flecs.OnDeleteTarget, Flecs.Delete);
+
+Entity p = world.obtainEntity(world.entity());
+Entity e = world.obtainEntity(world.entity()).add(Flecs.ChildOf, p.id());
+
+// This will delete both p and e
+p.destruct();
+```
+
+</li>
 </ul>
 </div>
 
@@ -535,6 +630,18 @@ world
 
 let p = world.entity().add::<Node>();
 let c = world.entity().add::<Node>().child_of_id(p);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.observer(Node.class)
+    .event(Flecs.OnRemove)
+    .each(Node.class, (entityId, node) -> { });
+
+Entity p = world.obtainEntity(world.entity()).add(Node.class);
+Entity c = world.obtainEntity(world.entity()).add(Node.class).childOf(p);
 ```
 
 </li>
@@ -607,6 +714,14 @@ ecs.Component<Position>().Entity
 
 ```rust
 world.component::<Position>().add_trait::<flecs::DontFragment>();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long positionId = world.component(Position.class);
+world.obtainEntity(positionId).add(Flecs.DontFragment);
 ```
 
 </li>
@@ -727,6 +842,14 @@ e.child_of_id(parent_b); // replaces (ChildOf, parent_a)
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+e.childOf(parentA);
+e.childOf(parentB); // replaces (ChildOf, parentA)
+```
+
+</li>
 </ul>
 </div>
 
@@ -762,6 +885,14 @@ Entity marriedTo = world.Entity()
 
 ```rust
 let married_to = world.entity().add_trait::<flecs::Exclusive>();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long marriedTo = world.entity();
+world.obtainEntity(marriedTo).add(Flecs.Exclusive);
 ```
 
 </li>
@@ -814,6 +945,15 @@ Entity i = ecs.Entity()
 let e = world.entity().add_trait::<flecs::Final>();
 
 let i = world.entity().is_a_id(e); // not allowed
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity()).add(Flecs.Final);
+
+Entity i = world.obtainEntity(world.entity()).isA(e); // not allowed
 ```
 
 </li>
@@ -889,6 +1029,24 @@ auto q = world.query()
 world.component<Warrior>().is_a<Unit>();
 
 q.each_entity(|e|  {
+    // ...
+});
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long unitId = world.component(Unit.class);
+world.obtainEntity(unitId).add(Flecs.Inheritable);
+
+Query q = world.query()
+    .with(Unit.class)
+    .build();
+
+world.obtainEntity(world.component(Warrior.class)).isA(unitId);
+
+q.each(entityId -> {
     // ...
 });
 ```
@@ -980,6 +1138,23 @@ let b = world.entity().add_id((food, fork));
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Enforce that target of relationship is child of Food
+long food = world.entity();
+world.obtainEntity(food).add(Flecs.OneOf);
+Entity apples = world.obtainEntity(world.entity()).childOf(food);
+Entity fork = world.obtainEntity(world.entity());
+
+// This is ok, Apples is a child of Food
+Entity a = world.obtainEntity(world.entity()).add(food, apples);
+
+// This is not ok, Fork is not a child of Food
+Entity b = world.obtainEntity(world.entity()).add(food, fork);
+```
+
+</li>
 </ul>
 </div>
 
@@ -1055,6 +1230,24 @@ let a = world.entity().add_id((eats, apples));
 
 // This is not ok, Fork is not a child of Food
 let b = world.entity().add_id((eats, fork));
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Enforce that target of relationship is child of Food
+long food = world.entity();
+long eats = world.entity();
+world.obtainEntity(eats).add(Flecs.OneOf, food);
+Entity apples = world.obtainEntity(world.entity()).childOf(food);
+Entity fork = world.obtainEntity(world.entity());
+
+// This is ok, Apples is a child of Food
+Entity a = world.obtainEntity(world.entity()).add(eats, apples);
+
+// This is not ok, Fork is not a child of Food
+Entity b = world.obtainEntity(world.entity()).add(eats, fork);
 ```
 
 </li>
@@ -1144,6 +1337,21 @@ assert!(base.cloned::<&Mass>() != inst.cloned::<&Mass>());
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Register component with trait. Optional, since this is the default behavior.
+long massId = world.component(Mass.class);
+world.obtainEntity(massId).add(Flecs.OnInstantiate, Flecs.Override);
+
+Entity base = world.obtainEntity(world.entity()).set(new Mass(100));
+Entity inst = world.obtainEntity(world.entity()).isA(base); // Mass is copied to inst
+
+assert inst.owns(Mass.class);
+assert base.get(Mass.class) != inst.get(Mass.class);
+```
+
+</li>
 </ul>
 </div>
 
@@ -1223,6 +1431,23 @@ assert!(base.cloned::<&Mass>() != inst.cloned::<&Mass>());
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Register component with trait
+long massId = world.component(Mass.class);
+world.obtainEntity(massId).add(Flecs.OnInstantiate, Flecs.Inherit);
+
+Entity base = world.obtainEntity(world.entity()).set(new Mass(100));
+Entity inst = world.obtainEntity(world.entity()).isA(base);
+
+assert inst.has(Mass.class);
+assert !inst.owns(Mass.class);
+// Storage is shared (can't be observed by identity in Java), values are equal
+assert base.get(Mass.class).equals(inst.get(Mass.class));
+```
+
+</li>
 </ul>
 </div>
 
@@ -1299,6 +1524,22 @@ let inst = world.entity().is_a_id(base);
 assert!(!inst.has::<Mass>());
 assert!(!inst.owns::<Mass>());
 assert!(!inst.try_get::<&Mass>(|mass| {}));
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Register component with trait
+long massId = world.component(Mass.class);
+world.obtainEntity(massId).add(Flecs.OnInstantiate, Flecs.DontInherit);
+
+Entity base = world.obtainEntity(world.entity()).set(new Mass(100));
+Entity inst = world.obtainEntity(world.entity()).isA(base);
+
+assert !inst.has(Mass.class);
+assert !inst.owns(Mass.class);
+assert inst.get(Mass.class) == null;
 ```
 
 </li>
@@ -1427,6 +1668,26 @@ e.get::<&(Serializable, Position)>(|pos| {
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Serializable is a tag, Position is a component
+@Component
+public record Serializable() { }
+
+Entity e = world.obtainEntity(world.entity())
+    .set(new Position(10, 20))
+    .add(Serializable.class, Position.class); // Because Serializable is a tag, the pair
+                                              // has a value of type Position
+
+// Gets value from Position component
+Position p = e.get(Position.class);
+
+// Gets (unintended) value from (Serializable, Position) pair
+Position p2 = e.getSecond(Position.class, Serializable.class);
+```
+
+</li>
 </ul>
 </div>
 
@@ -1498,6 +1759,24 @@ ref readonly Position p = ref e.GetSecond<Serializable, Position>();
 
 ```rust
 // This is currently not supported in Rust due to safety concerns.
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Ensure that Serializable never contains data
+world.obtainEntity(world.component(Serializable.class)).add(Flecs.PairIsTag);
+
+// Because Serializable is marked as a Tag, no data is added for the pair
+// even though Position is a component
+world.obtainEntity(e).add(serializable, world.component(Position.class));
+
+// This is still OK
+Position p = e.get(Position.class);
+
+// This no longer works, the pair has no data
+Position p2 = e.getSecond(Position.class, serializable);
 ```
 
 </li>
@@ -1579,6 +1858,21 @@ let e = world
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long likes = world.entity();
+long apples = world.entity();
+
+world.obtainEntity(likes).add(Flecs.Relationship);
+
+Entity e = world.obtainEntity(world.entity())
+    .add(likes)            // Panic, 'Likes' is not used as relationship
+    .add(apples, likes)    // Panic, 'Likes' is not used as relationship, but as target
+    .add(likes, apples);   // OK
+```
+
+</li>
 </ul>
 </div>
 
@@ -1644,6 +1938,18 @@ world
 world
     .component::<Loves>()
     .add_trait::<(flecs::With, Likes)>();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long likes = world.component(Likes.class);
+world.obtainEntity(likes).add(Flecs.Relationship);
+
+// Even though Likes is marked as relationship and used as target here, this
+// won't panic as With is marked as trait.
+world.obtainEntity(world.component(Loves.class)).add(Flecs.With, likes);
 ```
 
 </li>
@@ -1739,6 +2045,19 @@ world.set(TimeOfDay{0});
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity timeOfDay = world.obtainEntity(world.component(TimeOfDay.class));
+timeOfDay.add(Flecs.Singleton);
+
+timeOfDay.set(new TimeOfDay(0));
+
+// This is the same as adding TimeOfDay to itself:
+world.singleton(TimeOfDay.class).set(new TimeOfDay(0));
+```
+
+</li>
 </ul>
 </div>
 
@@ -1822,6 +2141,23 @@ Position, Velocity, TimeOfDay(TimeOfDay)
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+A singleton query can be created by specifying the same id as component and source:
+
+```java
+world.obtainEntity(world.component(TimeOfDay.class)).add(Flecs.Singleton);
+
+// Automatically matches TimeOfDay as singleton
+Query q = world.query(Position.class, Velocity.class, TimeOfDay.class);
+
+// Is the same as
+Query q2 = world.queryBuilder(Position.class, Velocity.class, TimeOfDay.class)
+    .termAt(2).src(world.component(TimeOfDay.class))
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -1865,6 +2201,14 @@ ecs.Component<Position>().Entity
 
 ```rust
 world.component::<Position>().add_trait::<flecs::Sparse>();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long positionId = world.component(Position.class);
+world.obtainEntity(positionId).add(Flecs.Sparse);
 ```
 
 </li>
@@ -1917,6 +2261,17 @@ let married_to = world.entity().add_trait::<flecs::Symmetric>();
 let bob = world.entity();
 let alice = world.entity();
 bob.add_id((married_to, alice)); // Also adds (MarriedTo, Bob) to Alice
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long marriedTo = world.entity();
+world.obtainEntity(marriedTo).add(Flecs.Symmetric);
+Entity bob = world.obtainEntity(world.entity());
+Entity alice = world.obtainEntity(world.entity());
+bob.add(marriedTo, alice); // Also adds (MarriedTo, Bob) to Alice
 ```
 
 </li>
@@ -1994,6 +2349,21 @@ let e = world
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long likes = world.entity();
+long apples = world.entity();
+
+world.obtainEntity(apples).add(Flecs.Target);
+
+Entity e = world.obtainEntity(world.entity())
+    .add(apples)           // Panic, 'Apples' is not used as target
+    .add(apples, likes)    // Panic, 'Apples' is not used as target, but as relationship
+    .add(likes, apples);   // OK
+```
+
+</li>
 </ul>
 </div>
 
@@ -2042,6 +2412,13 @@ world
     .add_trait::<flecs::Trait>();
 ```
 }
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.obtainEntity(world.component(Serializable.class)).add(Flecs.Trait);
+```
+
 </li>
 </ul>
 </div>
@@ -2121,6 +2498,19 @@ newyork.add_id((locatedin, usa));
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long locatedIn = world.entity();
+long manhattan = world.entity();
+long newyork = world.entity();
+long usa = world.entity();
+
+world.obtainEntity(manhattan).add(locatedIn, newyork);
+world.obtainEntity(newyork).add(locatedIn, usa);
+```
+
+</li>
 </ul>
 </div>
 
@@ -2153,6 +2543,13 @@ locatedIn.Add(Ecs.Transitive);
 
 ```rust
 locatedin.add_trait::<flecs::Transitive>();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.obtainEntity(locatedIn).add(Flecs.Transitive);
 ```
 
 </li>
@@ -2215,6 +2612,17 @@ let e = world.entity().add_id(power);
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long responsibility = world.entity();
+Entity power = world.obtainEntity(world.entity()).add(Flecs.With, responsibility);
+
+// Create new entity that has both Power and Responsibility
+Entity e = world.obtainEntity(world.entity()).add(power);
+```
+
+</li>
 </ul>
 </div>
 
@@ -2267,6 +2675,18 @@ let pears = world.entity();
 
 // Create new entity with both (Loves, Pears) and (Likes, Pears)
 let e = world.entity().add_id((loves, pears));
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long likes = world.entity();
+Entity loves = world.obtainEntity(world.entity()).add(Flecs.With, likes);
+long pears = world.entity();
+
+// Create new entity with both (Loves, Pears) and (Likes, Pears)
+Entity e = world.obtainEntity(world.entity()).add(loves, pears);
 ```
 
 </li>

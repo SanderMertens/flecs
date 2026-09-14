@@ -50,6 +50,13 @@ Entity myEntity world.Entity();
 let my_entity = world.entity();
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long myEntity = world.entity();
+```
+
+</li>
 </ul>
 </div>
 
@@ -88,6 +95,13 @@ myEntity.Destruct();
 ```rust
 my_entity.destruct();
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.obtainEntity(myEntity).destruct();
+```
+
 </li>
 </ul>
 </div>
@@ -151,6 +165,19 @@ e1.add::<Npc>();
 e2.add::<Npc>();
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e1 = world.obtainEntity(world.entity()); // Returns 500v0
+e1.destruct(); // Recycles 500
+
+Entity e2 = world.obtainEntity(world.entity()); // Returns 500v1
+
+e1.add(Npc.class); // Fails, 500v0 is not alive
+e2.add(Npc.class); // OK, 500v1 is alive
+```
+
+</li>
 </ul>
 </div>
 
@@ -193,6 +220,15 @@ e1.destruct();
 e1.destruct(); // OK: post condition is satisfied
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e1 = world.obtainEntity(world.entity());
+e1.destruct();
+e1.destruct(); // OK: post condition is satisfied
+```
+
+</li>
 </ul>
 </div>
 
@@ -227,6 +263,13 @@ myEntity.Clear();
 ```rust
 my_entity.clear();
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.obtainEntity(myEntity).clear();
+```
+
 </li>
 </ul>
 </div>
@@ -281,6 +324,18 @@ e1.destruct();
 e1.is_alive(); // False
 e2.is_alive(); // True
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e1 = world.obtainEntity(world.entity());
+Entity e2 = world.obtainEntity(world.entity());
+e1.destruct();
+
+e1.isAlive(); // False
+e2.isAlive(); // True
+```
+
 </li>
 </ul>
 </div>
@@ -337,6 +392,19 @@ e1.is_valid(); // False
 world.entity_from_id(0).is_valid(); // False
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e1 = world.obtainEntity(world.entity());
+Entity e2 = world.obtainEntity(world.entity());
+e1.destruct();
+
+e1.isValid(); // False
+e2.isValid(); // True
+world.obtainEntity(0).isValid(); // False
+```
+
+</li>
 </ul>
 </div>
 
@@ -371,6 +439,13 @@ Entity e = world.MakeAlive(1000);
 ```rust
 let e = world.make_alive(1000);
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long e = world.makeAlive(1000);
+```
+
 </li>
 </ul>
 </div>
@@ -410,6 +485,13 @@ world.SetVersion(versionedId);
 //world.set_version(versioned_id);
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.setVersion(versionedId);
+```
+
+</li>
 </ul>
 </div>
 
@@ -438,6 +520,16 @@ auto range = world.range_new(5000, 10000);
 world.range_set(range);
 
 flecs::entity e = world.entity(); // 5000
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+EntityRange range = world.rangeNew(5000, 10000);
+world.rangeSet(range);
+
+long e = world.entity(); // 5000
 ```
 
 </li>
@@ -486,6 +578,24 @@ auto e3 = world.entity();     // recycles 1000 from range_a
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+EntityRange rangeA = world.rangeNew(1000, 2000);
+EntityRange rangeB = world.rangeNew(3000, 4000);
+
+world.rangeSet(rangeA);
+long e1 = world.entity(); // 1000
+world.obtainEntity(e1).destruct();
+
+world.rangeSet(rangeB);
+long e2 = world.entity(); // 3000, not a recycled 1000
+
+world.rangeSet(rangeA);
+long e3 = world.entity(); // recycles 1000 from range_a
+```
+
+</li>
 </ul>
 </div>
 
@@ -504,6 +614,13 @@ const ecs_entity_range_t *active = ecs_entity_range_get(world);
 
 ```cpp
 auto active = world.range_get();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+EntityRange active = world.rangeGet();
 ```
 
 </li>
@@ -566,6 +683,19 @@ if e == world.lookup("MyEntity") {
 println!("{}", e.name());
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long e = world.entity("MyEntity");
+
+if (e == world.lookup("MyEntity")) {
+    // true
+}
+
+System.out.println(world.obtainEntity(e).name());
+```
+
+</li>
 </ul>
 </div>
 
@@ -619,6 +749,18 @@ if e == world.lookup("Parent::Child") {
 }
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long p = world.entity("Parent");
+Entity e = world.obtainEntity(world.entity("Child")).childOf(p);
+
+if (e.id() == world.lookup("Parent::Child")) {
+    // true
+}
+```
+
+</li>
 </ul>
 </div>
 
@@ -671,6 +813,18 @@ if e == p.lookup("Child") {
     // true
 }
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity p = world.obtainEntity(world.entity("Parent"));
+Entity e = world.obtainEntity(world.entity("Child")).childOf(p);
+
+if (e.id() == p.lookup("Child")) {
+    // true
+}
+```
+
 </li>
 </ul>
 </div>
@@ -735,6 +889,20 @@ println!("{}", e.name()); // Child
 println!("{}", e.path().unwrap()); // Parent.Child
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long p = world.entity("Parent");
+Entity e = world.obtainEntity(world.entity("Child")).childOf(p);
+
+// Returns entity name
+System.out.println(e.name()); // Child
+
+// Returns entity path
+System.out.println(e.path()); // Parent::Child
+```
+
+</li>
 </ul>
 </div>
 
@@ -790,6 +958,18 @@ if e1 == e2 {
 }
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long e1 = world.entity("Parent::Child");
+long e2 = world.entity("Parent::Child");
+
+if (e1 == e2) {
+    // true
+}
+```
+
+</li>
 </ul>
 </div>
 
@@ -834,6 +1014,16 @@ let e = world.entity_named("Foo");
 e.set_name("Bar");
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long e = world.entity("Foo");
+
+// Change name
+world.obtainEntity(e).name("Bar");
+```
+
+</li>
 </ul>
 </div>
 
@@ -871,6 +1061,14 @@ Entity twenty = world.Entity("20");
 let ten = world.entity_named("10");
 let twenty = world.entity_named("20");
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long ten = world.entity("10");
+long twenty = world.entity("20");
+```
+
 </li>
 </ul>
 </div>
@@ -931,6 +1129,19 @@ e.enable_self();
 e.disable_self();
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity());
+
+// Enable entity
+e.enable();
+
+// Disable entity
+e.disable();
+```
+
+</li>
 </ul>
 </div>
 
@@ -968,6 +1179,13 @@ e.Add(Ecs.Disabled);
 ```rust
 e.add::<flecs::Disabled>();
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.obtainEntity(e).add(Flecs.Disabled);
+```
+
 </li>
 </ul>
 </div>
@@ -1130,6 +1348,16 @@ world
     });
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.component(Position.class, hooks -> {
+    hooks.onSet(components ->
+    System.out.println("{" + components[0].x() + ", " + components[0].y() + "}"));
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -1187,6 +1415,18 @@ world
     });
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.component(Position.class, hooks -> {
+    hooks.onReplace((prev, next) -> {
+        System.out.println("prev = {" + prev[0].x() + ", " + prev[0].y() + "}");
+        System.out.println("next = {" + next[0].x() + ", " + next[0].y() + "}");
+    });
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -1232,6 +1472,13 @@ world.component<Position>()
 ```rust
 // TODO
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// TODO
+```
+
 </li>
 </ul>
 </div>
@@ -1300,6 +1547,18 @@ pos.get::<&flecs::Component>(|comp_data| {
 });
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Get the entity for the Position component
+Entity pos = world.obtainEntity(world.component(Position.class));
+
+// Component entities have the FlecsComponent component
+FlecsComponent c = pos.get(FlecsComponent.class);
+System.out.println("{size: " + c.size() + ", alignment: " + c.alignment() + "}");
+```
+
+</li>
 </ul>
 </div>
 
@@ -1339,6 +1598,14 @@ world.Component<Position>().Entity.add(Ecs.Sparse);
 // Register a sparse component
 world.component::<Position>().add_trait::<flecs::Sparse>();
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Register a sparse component
+world.obtainEntity(world.component(Position.class)).add(Flecs.Sparse);
+```
+
 </li>
 </ul>
 </div>
@@ -1599,6 +1866,54 @@ world.import::<Movement>();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+In Java applications components are records annotated with `@Component` and are automatically registered upon first usage. The following example shows how:
+
+```java
+World world = new World();
+
+Entity e1 = world.obtainEntity(world.entity())
+        .set(new Position(10, 20)) // Position registered here
+        .set(new Velocity(1, 2)); // Velocity registered here
+
+Entity e2 = world.obtainEntity(world.entity())
+        .set(new Position(10, 20)) // Position already registered
+        .set(new Velocity(1, 2)); // Velocity already registered
+```
+
+Components can be registered in advance, which can be done for several reasons:
+
+- Makes it easier to see which components are used by an application
+- No unexpected registration code that suddenly runs in the middle of a frame
+- Component needs to be setup with traits, reflection data, hooks etc.
+
+To register a component in advance, do:
+
+```java
+world.component(Position.class);
+```
+
+In general it is recommended to register components in advance, and to only use automatic registration during prototyping.
+
+A convenient way to organize component registration code is to use Flecs modules. An example:
+
+```java
+public class MovementModule implements FlecsModule {
+    @Override
+    public void initModule(World world) {
+        world.module(this);
+
+        world.component(Position.class);
+        world.component(Velocity.class);
+    }
+}
+
+World world = new World();
+world.importModule(new MovementModule());
+```
+
+</li>
 </ul>
 </div>
 
@@ -1657,6 +1972,13 @@ TODO
 
 ```rust
 TODO
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// TODO
 ```
 
 </li>
@@ -1721,6 +2043,13 @@ TODO
 
 ```rust
 TODO
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// TODO
 ```
 
 </li>
@@ -1796,6 +2125,21 @@ pos.destruct();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long pos = world.component(Position.class);
+
+// Create entity with Position
+Entity e = world.obtainEntity(world.entity()).add(Position.class);
+
+// Unregister the component
+world.obtainEntity(pos).destruct();
+
+// Position is removed from e
+```
+
+</li>
 </ul>
 </div>
 
@@ -1850,6 +2194,17 @@ world.get::<&TimeOfDay>(|time| println!("{}", time.value));
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Set singleton
+world.singleton(TimeOfDay.class).set(new TimeOfDay(0.5));
+
+// Get singleton
+TimeOfDay t = world.singleton(TimeOfDay.class).get(TimeOfDay.class);
+```
+
+</li>
 </ul>
 </div>
 
@@ -1900,6 +2255,17 @@ world.set(TimeOfDay { value: 0.5 });
 
 // Equivalent to:
 world.component::<TimeOfDay>().set(TimeOfDay { value: 0.5 });
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Set singleton
+world.singleton(TimeOfDay.class).set(new TimeOfDay(0.5));
+
+// Equivalent to:
+world.obtainEntity(world.component(TimeOfDay.class)).set(new TimeOfDay(0.5));
 ```
 
 </li>
@@ -1987,6 +2353,24 @@ e.enable::<Position>();
 
 e.enabled::<Position>(); // True
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Register toggle-able component
+world.obtainEntity(world.component(Position.class)).add(Flecs.CanToggle);
+
+Entity e = world.obtainEntity(world.entity()).set(new Position(10, 20));
+
+// Disable component
+e.disable(Position.class);
+e.enabled(Position.class); // False
+
+// Enable component
+e.enable(Position.class);
+e.enabled(Position.class); // True
+```
+
 </li>
 </ul>
 </div>
