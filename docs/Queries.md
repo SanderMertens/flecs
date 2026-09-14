@@ -188,6 +188,20 @@ world.delete_empty_tables(0, 0, 10, 0, 0.0);
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Create Position, Velocity query that matches empty archetypes.
+Query q = world.queryBuilder(Position.class, Velocity.class)
+    .cached()
+    .queryFlags(Flecs.QueryMatchEmptyTables)
+    .build();
+
+// Delete empty archetypes that have been empty for 10 calls to this function.
+world.deleteEmptyTables(0, 10, 0.0, 0);
+```
+
+</li>
 </ul>
 </div>
 
@@ -346,6 +360,37 @@ flecs::query<> q = world.query_builder()
 ```
 
 For more details on the syntax, see the Flecs Query Language manual.
+
+</li>
+<li><b class="tab-title">Java</b>
+
+Query builders are the Java API for creating queries. The builder API is built on top of the term builder API, and adds a layer of convenience and type safety. An example of a simple query:
+
+```java
+Query q = world.query(Position.class, Velocity.class);
+```
+
+Queries provide a type safe way to iterate components:
+
+```java
+q.eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> {
+    p.x(p.x() + v.dx());
+    p.y(p.y() + v.dy());
+});
+```
+
+The builder API allows for incrementally constructing queries:
+
+```java
+QueryBuilder q = world.queryBuilder(Position.class);
+q.with(Velocity.class).in(); // const Velocity -> in modifier
+
+if (addNpc) {
+    q.with(Npc.class); // Conditionally add
+}
+
+Query query = q.build(); // Create query
+```
 
 </li>
 </ul>
@@ -647,6 +692,144 @@ world.defer_end(); // operations are executed here
 Code ran by a system is deferred by default.
 
 </li>
+<li><b class="tab-title">Java</b>
+
+Java has two main iteration functions, `each` and `iter`. The `each` function is the default and most convenient approach for iterating a query in Java. Both `each` and `iter` have several overloads that offer slightly different functionality.
+
+`each` passes immutable component records and is read-only, while `eachView` passes mutable component views (`ComponentView`), which allow updating component values in place. In `run`/`iter` callbacks the same distinction applies between `Field.get(i)` (record) and `Field.getMutView(i)` (view).
+
+An example:
+
+```java
+Query q = world.query(Position.class, Velocity.class);
+
+q.eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> {
+    p.x(p.x() + v.dx());
+    p.y(p.y() + v.dy());
+});
+```
+
+An entity id can be added as first argument:
+
+```java
+Query q = world.query(Position.class);
+
+q.each(Position.class, (entityId, p) -> {
+    EntityView entity = world.obtainEntityView(entityId);
+    System.out.println(entity.name() + ": " + p.x() + ", " + p.y());
+});
+```
+
+An `Iter` and index argument can be added as first arguments. This variant of `each` provides access to the `Iter` object, which contains more information about the object being iterated. The index argument contains the index of the entity being iterated, which can be used to obtain entity-specific data from the `Iter` object. An example:
+
+```java
+@Component
+record Likes() { }
+
+Query q = world.queryBuilder(Position.class)
+    .with(Likes.class, Flecs.Wildcard)
+    .build();
+
+q.each(Position.class, (Iter it, int index, Position p) -> {
+    EntityView e = world.obtainEntityView(it.entity(index));
+    System.out.println(e.name() + ": " + world.obtainId(it.id(1)).toString()); // prints pair
+});
+```
+
+When a query contains an empty record (a record without members), it should be passed by value instead of by reference:
+
+```java
+@Component
+record Tag() { }
+
+Query q = world.query(Tag.class);
+
+q.each(Tag.class, (entityId, tag) -> {
+    EntityView e = world.obtainEntityView(entityId);
+    System.out.println(e.name());
+});
+```
+
+Alternatively an empty record can be specified outside of the query type, which removes it from the signature of `each`:
+
+```java
+@Component
+record Tag() { }
+
+Query q = world.queryBuilder()
+    .with(Tag.class)
+    .build();
+
+q.each(entityId -> {
+    EntityView e = world.obtainEntityView(entityId);
+    System.out.println(e.name());
+});
+```
+
+The `run` function provides an iterator to a callback, and leaves iteration up to the callback implementation. It provides access to the `Iter` object, which contains more information about the data being iterated. An example:
+
+```java
+Query q = world.query(Position.class, Velocity.class);
+
+q.run(it -> {
+    // Outer loop
+    while (it.next()) {
+        Field<Position> positions = it.field(Position.class, 0);
+        Field<Velocity> velocities = it.field(Velocity.class, 1);
+
+        // Inner loop
+        for (int i = 0; i < it.count(); i++) {
+            PositionView p = positions.getMutView(i);
+            Velocity v = velocities.get(i);
+            p.x(p.x() + v.dx());
+            p.y(p.y() + v.dy());
+            System.out.println(world.obtainEntityView(it.entity(i)).name());
+        }
+    }
+});
+```
+
+Entities can be moved between tables when components are added or removed. This can cause unwanted side effects while iterating a table, like iterating an entity twice, or missing an entity. To prevent this from happening, a table is locked while it is being iterated, meaning no entities can be moved from or to it.
+
+When an application attempts to add or remove components to an entity in a table being iterated over, this can throw a runtime assert. An example:
+
+```java
+Query q = world.query(Position.class);
+
+q.each(Position.class, (entityId, p) -> {
+    world.obtainEntityView(entityId).add(Velocity.class); // throws locked table assert
+});
+```
+
+This can be addressed by deferring operations while the query is being iterated:
+
+```java
+Query q = world.query(Position.class);
+
+world.defer(() -> {
+    q.each(Position.class, (entityId, p) -> {
+        world.obtainEntityView(entityId).add(Velocity.class); // OK
+    });
+}); // operations are executed here
+```
+
+An application can also use the `deferBegin` and `deferEnd` functions which achieve the same goal:
+
+```java
+Query q = world.query(Position.class);
+
+world.deferBegin();
+
+q.each(Position.class, (entityId, p) -> {
+    world.obtainEntityView(entityId).add(Velocity.class); // OK
+});
+
+world.deferEnd(); // operations are executed here
+```
+
+Code ran by a system is deferred by default.
+
+</li>
 </ul>
 </div>
 
@@ -875,6 +1058,58 @@ When an identifier in the Flecs Query Language consists purely out of numeric ch
 The `,` symbol in the Flecs Query Language is referred to as the `and` operator, as an entity must have all comma-separated components in order to match the query.
 
 </li>
+<li><b class="tab-title">Java</b>
+
+An easy way to query for components in Java is to pass them as arguments to the `query` method:
+
+```java
+Query q = world.query(Position.class, Velocity.class);
+```
+
+This changes the returned query type, which determines the type of the function used to iterate the query:
+
+```java
+q.eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> { });
+```
+
+The builder API makes it possible to add components to a query without modifying the query type:
+
+```java
+Query q = world.queryBuilder(Position.class)
+    .with(Velocity.class).in() // const Velocity -> in modifier
+    .build();
+```
+
+When components are mixed with the builder API, the components added by the `with` method will be placed after the components provided to `queryBuilder`.
+
+The builder API makes it possible to query for regular entity ids created at runtime:
+
+```java
+long npc = world.entity();
+long platoon01 = world.entity();
+
+Query q = world.query()
+    .with(npc)
+    .with(platoon01)
+    .build();
+```
+
+Components can also be queried for by name. To query for component types by name, they have to be used or registered first.
+
+```java
+// Register component type so we can look it up by name
+world.component(Position.class);
+
+// Create entity with name so we can look it up
+long npc = world.entity("Npc");
+
+Query q = world.query()
+    .with("Position")
+    .with("Npc")
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -934,6 +1169,19 @@ let q = world
     .build();
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity())
+    .add(Position.class)
+    .add(Velocity.class);
+
+Query q = world.query()
+    .with(Flecs.Wildcard)
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -982,6 +1230,19 @@ let e = world
 let q = world
     .query::<()>()
     .with::<flecs::Any>()
+    .build();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity())
+    .add(Position.class)
+    .add(Velocity.class);
+
+Query q = world.query()
+    .with(Flecs.Any)
     .build();
 ```
 
@@ -1295,6 +1556,62 @@ A pair may contain two wildcards:
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+When both parts of a pair are types, pairs can be added to queries with the two-argument `with` method:
+
+```java
+Query q = world.query()
+    .with(Eats.class, Apples.class)
+    .build();
+
+// The value of the pair is accessed and mutated with the Eats view
+q.eachView(Eats.class, (EatsView eats) -> {
+    eats.value(eats.value() + 1);
+});
+```
+
+Pairs can also be added to queries using the builder API. This allows for the pair to be composed out of both types and regular entities. The three queries in the following example are equivalent:
+
+```java
+long eats = world.component(Eats.class);
+long apples = world.component(Apples.class);
+
+Query q1 = world.query().with(Eats.class, Apples.class).build();
+Query q2 = world.query().with(Eats.class, apples).build();
+Query q3 = world.query().with(eats, apples).build();
+```
+
+Individual elements of a pair can be specified with the `with` method. The method applies to the last added term. An example:
+
+```java
+Query q = world.query().with(Eats.class, apples).build();
+```
+
+Individual elements of a pair can be resolved by name with the `with` method:
+
+```java
+Query q = world.query()
+    .with("Eats", "Apples")
+    .build();
+```
+
+When a query pair contains a wildcard, the `id` method of the `Iter` object can be used to determine the id of the pair element that matched the query:
+
+```java
+Query q = world.query()
+    .with(Eats.class, Flecs.Wildcard)
+    .build();
+
+q.each(Eats.class, (Iter it, int index, Eats eats) -> {
+    long second = world.obtainId(it.pair(0)).second();
+    EntityView e = world.obtainEntityView(it.entity(index));
+    System.out.println("Entity " + e.name() + " likes "
+        + world.obtainEntityView(second).name());
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -1476,6 +1793,67 @@ Position, [in] Velocity
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+Access modifiers can be set using the `inout()` method:
+
+```java
+// The following two queries are the same:
+Query q1 = world.query()
+    .with(Position.class)
+    .with(Velocity.class).inout(Flecs.In)
+    .build();
+
+Query q2 = world.query()
+    .with(Position.class)
+    .with(Velocity.class).in() // shorthand for .inout(Flecs.In)
+    .build();
+```
+
+Java has no `const` type modifier: use `in()` to mark a term as read-only:
+
+```java
+Query q = world.queryBuilder(Position.class, Velocity.class)
+    .termAt(1).in() // uses the In modifier
+    .build();
+```
+
+This also applies to terms added with `with`:
+
+```java
+Query q = world.query()
+    .with(Position.class)
+    .with(Velocity.class).in() // uses the In modifier
+    .build();
+```
+
+When a term has an access modifier and is retrieved from an `Iter` object during iteration, it must meet the constraints of the access modifiers. A term with the `in` modifier should only be read:
+
+```java
+Query q = world.query()
+    .with(Position.class)
+    .with(Velocity.class).in()
+    .build();
+
+q.run(it -> {
+    while (it.next()) {
+        Field<Position> positions = it.field(Position.class, 0); // OK
+        Field<Velocity> velocities = it.field(Velocity.class, 1); // OK: read only
+        // velocities.getMutView(0); // Throws assert: term has the In modifier
+    }
+});
+```
+
+The builder API has `in()`, `inout()` and `out()` convenience methods:
+
+```java
+Query q = world.query()
+    .with(Position.class).inout()
+    .with(Velocity.class).in()
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -1589,6 +1967,29 @@ Query expressions with comma separated lists use the `And` operator:
 
 ```
 Position, Velocity
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+When no operator is specified, `And` is assumed. The following two queries are equivalent:
+
+```java
+Query q1 = world.query(Position.class, Velocity.class);
+
+Query q2 = world.query()
+    .with(Position.class).oper(Flecs.And)
+    .with(Velocity.class).oper(Flecs.And)
+    .build();
+```
+
+The builder API has a `and()` convenience method:
+
+```java
+Query q = world.query()
+    .with(Position.class).and()
+    .with(Velocity.class).and()
+    .build();
 ```
 
 </li>
@@ -1746,6 +2147,47 @@ Position, Velocity || Speed, Mass
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+To create a query with `Or` terms, use the `oper` method with `Flecs.Or`:
+
+```java
+// Position, Velocity || Speed, Mass
+Query q = world.query()
+    .with(Position.class)
+    .with(Velocity.class).oper(Flecs.Or)
+    .with(Speed.class)
+    .with(Mass.class)
+    .build();
+
+q.run(it -> {
+    while (it.next()) {
+        Field<Position> positions = it.field(Position.class, 0);
+        Field<Mass> masses = it.field(Mass.class, 2); // not 4, because of the Or expression
+
+        long vsId = it.id(1);
+        if (vsId == world.id(Velocity.class)) {
+            // The field for the Or expression can hold different types per table,
+            // so check the id before accessing it
+        } else if (vsId == world.id(Speed.class)) {
+            // iterate as usual
+        }
+    }
+});
+```
+
+The builder API has a `or()` convenience method:
+
+```java
+Query q = world.query()
+    .with(Position.class)
+    .with(Velocity.class).or()
+    .with(Speed.class)
+    .with(Mass.class)
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -1843,6 +2285,36 @@ To create a query with `Not` terms, use the `!` symbol:
 
 ```
 Position, !Velocity
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+To create a query with `Not` terms, use the `oper` method with `Flecs.Not`:
+
+```java
+Query q = world.query()
+    .with(Position.class)
+    .with(Velocity.class).oper(Flecs.Not)
+    .build();
+```
+
+The builder API has a `not()` convenience method:
+
+```java
+Query q = world.query()
+    .with(Position.class)
+    .with(Velocity.class).not()
+    .build();
+```
+
+An application can also use the `without` method:
+
+```java
+Query q = world.query()
+    .with(Position.class)
+    .without(Velocity.class)
+    .build();
 ```
 
 </li>
@@ -1991,6 +2463,54 @@ Position, ?Velocity
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+To create a query with `Optional` terms, a component can be specified as a pointer type:
+
+```java
+Query q = world.queryBuilder(Position.class, Velocity.class)
+    .termAt(1).optional()
+    .build();
+
+q.each(Position.class, Velocity.class, (Position p, Velocity v) -> {
+    if (v != null) {
+        // ...
+    }
+});
+```
+
+Alternatively, an application can call the `oper` method with `Flecs.Optional`:
+
+```java
+Query q = world.query()
+    .with(Position.class)
+    .with(Velocity.class).oper(Flecs.Optional)
+    .build();
+
+q.run(it -> {
+    while (it.next()) {
+        Field<Position> positions = it.field(Position.class, 0);
+
+        if (it.isSet(1)) {
+            Field<Velocity> velocities = it.field(Velocity.class, 1);
+            // iterate as usual
+        } else {
+            // iterate as usual
+        }
+    }
+});
+```
+
+The builder API has an `optional()` convenience method:
+
+```java
+Query q = world.query()
+    .with(Position.class)
+    .with(Velocity.class).optional()
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -2087,6 +2607,25 @@ $this == Foo
 $this != Foo
 $this == "Foo"
 $this != "Fo"
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long foo = world.entity();
+long bar = world.entity();
+
+world.queryBuilder()
+    // $this == Foo
+    .with(Flecs.PredEq, foo)
+    // $this != Foo
+    .without(Flecs.PredEq, bar)
+    // $this == "Foo"
+    .with(Flecs.PredEq).second("Foo").flags(Flecs.IsName)
+    // $this ~= "Fo"
+    .with(Flecs.PredMatch).second("Fo").flags(Flecs.IsName)
+    .build();
 ```
 
 </li>
@@ -2192,6 +2731,33 @@ and | type_list, or | type_list, not | type_list
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+To use the `AndFrom`, `OrFrom` and `NotFrom` operators, call the `oper` method with `Flecs.AndFrom`, `Flecs.OrFrom` or `Flecs.NotFrom`:
+
+```java
+Entity typeList = world.obtainEntity(world.prefab())
+    .add(Position.class)
+    .add(Velocity.class);
+
+Query q = world.query()
+    .with(typeList).oper(Flecs.AndFrom) // match Position, Velocity
+    .with(typeList).oper(Flecs.OrFrom)  // match Position || Velocity
+    .with(typeList).oper(Flecs.NotFrom) // match !Position, !Velocity
+    .build();
+```
+
+The builder API has the `andFrom`, `orFrom` and `notFrom` convenience methods:
+
+```java
+Query q = world.query()
+    .with(typeList).andFrom()
+    .with(typeList).orFrom()
+    .with(typeList).notFrom()
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -2288,6 +2854,20 @@ world
 
 ```
 Position, !{ Velocity || Speed }
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.queryBuilder()
+    // Position, !{ Velocity || Speed }
+    .with(Position.class)
+    .scopeOpen().not()
+    .with(Velocity.class).or()
+    .with(Speed.class)
+    .scopeClose()
+    .build();
 ```
 
 </li>
@@ -2582,6 +3162,97 @@ Color($this, Diffuse), Color(Game, Sky)
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+To specify a fixed source, call the `src()` method with the entity to match. The following example shows how to set a source, and how to access the value provided by a term with a fixed source:
+
+```java
+Entity game = world.obtainEntity(world.entity()).add(SimTime.class);
+
+Query q = world.query()
+    .with(Position.class)  // normal term, uses $this source
+    .with(Velocity.class)  // normal term, also uses $this source
+    .with(SimTime.class).src(game) // fixed source, match SimTime on Game
+    .build();
+
+q.run(it -> {
+    while (it.next()) {
+        Field<Position> positions = it.field(Position.class, 0);
+        Field<Velocity> velocities = it.field(Velocity.class, 1);
+        Field<SimTime> simTimes = it.field(SimTime.class, 2);
+
+        for (int i = 0; i < it.count(); i++) {
+            PositionView p = positions.getMutView(i);
+            Velocity v = velocities.get(i);
+            SimTime st = simTimes.get(0); // fixed source, single value
+            p.x(p.x() + v.dx() * st.value());
+            p.y(p.y() + v.dy() * st.value());
+        }
+    }
+});
+```
+
+Note that since `SimTime` is matched on a single entity, it is accessed as a single value, not an array. The next example shows how queries with mixed `$this` and fixed sources can be iterated with `eachView`:
+
+```java
+Query q = world.queryBuilder(Position.class, Velocity.class, SimTime.class)
+    .termAt(2).src(game) // fixed source for 3rd term (SimTime)
+    .build();
+
+// Because all components are now part of the query terms, we can use eachView
+q.eachView(Position.class, Velocity.class, SimTime.class, (p, v, st) -> {
+    p.x(p.x() + v.dx() * st.value());
+    p.y(p.y() + v.dy() * st.value());
+});
+```
+
+Note how `eachView` abstracts away the difference between components matched on the (default) `$this` source and components matched on a single entity.
+
+When a query has no terms for the (default) `$this` source, it must be iterated with the `run` function or with a variant of `each` that does not have a signature with the entity id as first argument:
+
+```java
+Query q = world.queryBuilder(SimConfig.class, SimTime.class)
+    .termAt(0).src(cfg)
+    .termAt(1).src(game)
+    .build();
+
+// Ok (note that it.count() will be 0)
+q.run(it -> {
+    while (it.next()) {
+        Field<SimConfig> simConfigs = it.field(SimConfig.class, 0);
+        Field<SimTime> simTimes = it.field(SimTime.class, 1);
+        SimTimeView st = simTimes.getMutView(0);
+        SimConfig sc = simConfigs.get(0);
+        st.value(st.value() + sc.simSpeed());
+    }
+});
+
+// Ok
+q.eachView(SimConfig.class, SimTime.class, (SimConfigView sc, SimTimeView st) -> {
+    st.value(st.value() + sc.simSpeed());
+});
+
+// Ok
+q.eachView(SimConfig.class, SimTime.class, (Iter it, int index, SimConfigView sc, SimTimeView st) -> {
+    st.value(st.value() + sc.simSpeed());
+});
+
+// Not ok: there is no entity to pass to first argument
+q.each(SimConfig.class, SimTime.class, (entityId, sc, st) -> {
+    // ...
+});
+```
+
+A source may also be specified by name:
+
+```java
+Query q = world.queryBuilder(SimConfig.class, SimTime.class)
+    .termAt(0).src("Cfg")
+    .termAt(1).src("Game")
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -2670,6 +3341,27 @@ let q3 = world
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// These three queries are the same:
+Query q1 = world.query()
+    .with(Mass.class)
+    .up(Flecs.ChildOf)
+    .build();
+
+Query q2 = world.query()
+    .with(Mass.class)
+    .up() // defaults to .up(Flecs.ChildOf)
+    .build();
+
+Query q3 = world.query()
+    .with(Mass.class)
+    .parent() // shortcut for .up(Flecs.ChildOf)
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -2732,6 +3424,26 @@ flecs::query<> q2 = world.query_builder()
      .query::<()>()
      .with::<Mass>() // defaults to .self().up(flecs::IsA)
      .build();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Register an inheritable component 'Mass'
+world.obtainEntity(world.component(Mass.class))
+    .add(Flecs.OnInstantiate, Flecs.Inherit);
+
+// These two queries are the same:
+Query q1 = world.query()
+    .with(Mass.class)
+    .self()
+    .up(Flecs.IsA)
+    .build();
+
+Query q2 = world.query()
+    .with(Mass.class) // defaults to .self().up(Flecs.IsA)
+    .build();
 ```
 
 </li>
@@ -2801,6 +3513,27 @@ let child = world.entity().child_of_id(parent);
 let q = world
     .query::<()>()
     .with::<Mass>()
+    .up() // traverses ChildOf upwards
+    .build();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Register an inheritable component 'Mass'
+world.obtainEntity(world.component(Mass.class))
+    .add(Flecs.OnInstantiate, Flecs.Inherit);
+
+Entity base = world.obtainEntity(world.entity()).add(Mass.class);
+
+Entity parent = world.obtainEntity(world.entity()).isA(base); // inherits Mass
+
+Entity child = world.obtainEntity(world.entity()).childOf(parent);
+
+// Matches 'child', because parent inherits Mass from prefab
+Query q = world.query()
+    .with(Mass.class)
     .up() // traverses ChildOf upwards
     .build();
 ```
@@ -3005,6 +3738,54 @@ The following example shows a query that traverses a custom relationship:
 
 ```c
 Position(up ContainedBy)
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+The following example shows a query that matches an inherited component:
+
+```java
+// Register inheritable 'Position' component
+world.obtainEntity(world.component(Position.class))
+    .add(Flecs.OnInstantiate, Flecs.Inherit);
+
+Entity base = world.obtainEntity(world.entity()).add(Position.class);
+Entity inst = world.obtainEntity(world.entity()).isA(base); // short for .add(Flecs.IsA, base)
+
+// The following two queries are the same:
+Query q1 = world.query(Position.class);
+
+Query q2 = world.queryBuilder(Position.class)
+    .termAt(0).self().up(Flecs.IsA)
+    .build();
+```
+
+The following example shows a query that matches a component from a parent:
+
+```java
+Entity parent = world.obtainEntity(world.entity()).add(Position.class);
+
+Entity child = world.obtainEntity(world.entity()).childOf(parent); // short for .add(Flecs.ChildOf, parent)
+
+Query q = world.queryBuilder(Position.class)
+    .termAt(0).up()
+    .build();
+```
+
+The following example shows a query that traverses a custom relationship:
+
+```java
+// Create a new traversable relationship
+Entity containedBy = world.obtainEntity(world.entity()).add(Flecs.Traversable);
+
+Entity parent = world.obtainEntity(world.entity()).add(Position.class);
+
+Entity child = world.obtainEntity(world.entity()).add(containedBy, parent);
+
+Query q = world.queryBuilder(Position.class)
+    .termAt(0).up(containedBy.id())
+    .build();
 ```
 
 </li>
@@ -3252,6 +4033,53 @@ q.iterable().set_var_expr("$Location", earth).each(|it| {
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+Query variables can be specified by specifying a name with a `$` prefix:
+
+```java
+Query q = world.query()
+    .with(SpaceShip.class)
+    .with(DockedTo.class).second("$Location") // matches DockedTo($Location)
+    .with(Planet.class).src("$Location") // matches Planet($Location)
+    .build();
+```
+
+Alternatively, variables can also be specified using the `var` method:
+
+```java
+// TODO: term-level .second().var("Location") is not exposed
+```
+
+An application can constrain the results of the query by setting the variable before starting iteration:
+
+```java
+long earth = world.entity();
+
+int locationVar = q.findVar("Location");
+
+q.run(it -> {
+    it.setVar(locationVar, earth);
+    while (it.next()) {
+        // iterate as usual
+    }
+});
+```
+
+Alternatively the variable name can be provided to `setVar` directly:
+
+```java
+long earth = world.entity();
+
+q.run(it -> {
+    it.setVar("Location", earth);
+    while (it.next()) {
+        // iterate as usual
+    }
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -3331,6 +4159,30 @@ flecs::query<> q = world.query()
 
 ```
 Movement.direction($this, Left)
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+@Component
+record Movement(long value) { }
+
+// Register 'Movement' component and reflection data
+world.component(Movement.class);
+
+// Create two entities for the direction
+long left = world.entity();
+long right = world.entity();
+
+// Create two entities with different directions
+world.obtainEntity(world.entity()).set(new Movement(left));
+world.obtainEntity(world.entity()).set(new Movement(right));
+
+// Create query that only matches e1
+Query q = world.query()
+    .with("Movement.value", left)
+    .build();
 ```
 
 </li>
@@ -3524,6 +4376,52 @@ q_read.run(|mut it| {
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+The following example shows how the change detection API is used in Java:
+
+```java
+// Query used for change detection.
+Query qRead = world.queryBuilder(Position.class)
+    .in()
+    .detectChanges()
+    .build();
+
+// Query used to create changes
+Query qWrite = world.query(Position.class); // defaults to inout
+
+// Test if changes have occurred for anything matching the query.
+boolean changed = qRead.changed();
+
+// Setting a component will update the changed state
+Entity e = world.obtainEntity(world.entity()).set(new Position(10, 20));
+
+qWrite.run(it -> {
+    while (it.next()) {
+        if (!changed) {
+            // If no changes are made to the iterated table, the skip function can be
+            // called to prevent marking the matched components as dirty.
+            it.skip();
+        } else {
+            // Iterate as usual. It does not matter whether the code actually writes the
+            // components or not: when a table is not skipped, components matched with
+            // inout or out terms will be marked dirty by the iterator.
+        }
+    }
+});
+
+qRead.run(it -> {
+    while (it.next()) {
+        if (it.changed()) {
+            // Check if the current table has changed. The change state will be reset
+            // after the table is iterated, so code can respond to changes in individual
+            // tables.
+        }
+    }
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -3690,6 +4588,42 @@ let q = world
     .order_by_id(0, |e1, _d1: *const c_void, e2, _d2: *const c_void| {
         (e1 > e2) as i32 - (e1 < e2) as i32
     })
+    .build();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+The following example shows how to use sorted queries in Java:
+
+```java
+// Use readonly term for component used for sorting
+Query q = world.queryBuilder(Depth.class, Position.class)
+    .termAt(0).in()
+    .orderBy(Depth.class, (ComparatorComponent<Depth>) (d1, d2) ->
+        Float.compare(d1.value(), d2.value()))
+    .build();
+```
+
+Queries may specify a component id if the component is not known at compile time:
+
+```java
+long depthId = world.component(Depth.class);
+
+Query q = world.queryBuilder(Position.class)
+    .with(depthId).in()
+    .orderBy(depthId, (ComparatorId) (id1, id2) -> {
+        // Generic sort code ...
+        return 0;
+    })
+    .build();
+```
+
+Queries may specify zero for component id to sort on entity ids:
+
+```java
+Query q = world.queryBuilder(Position.class)
+    .orderBy(0, (ComparatorId) (e1, e2) -> Long.compare(e1, e2))
     .build();
 ```
 
@@ -3871,6 +4805,66 @@ To iterate entities in a single group, use the `set_group` function:
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+The following example shows how grouping can be used to group entities that are in the same game region.
+
+```java
+long region01 = world.entity();
+long region02 = world.entity();
+
+// Example of entities created in different regions
+world.obtainEntity(world.entity())
+    .add(Unit.class)
+    .add(Region.class, region01);
+
+world.obtainEntity(world.entity())
+    .add(Unit.class)
+    .add(Region.class, region02);
+
+// Create query that groups entities that are in the same region
+Query q = world.query()
+    .with(Unit.class)
+    .groupBy(Region.class, (w, table, id) -> {
+        long result = 0;
+
+        // Use id (Region) to find target for relationship
+        Type type = table.type();
+        for (int i = 0; i < type.count(); i++) {
+            Id pair = type.get(i);
+            if (pair.isPair() && pair.first() == id) {
+                result = pair.second(); // Return second element (target)
+                break;
+            }
+        }
+
+        return result;
+    })
+    .build();
+```
+
+When no group by callback is provided, it will default to an internal function with the same behavior as the previous example. An example:
+
+```java
+// Create query that groups entities that are in the same region
+Query q = world.query()
+    .with(Unit.class)
+    .groupBy(Region.class) // groups by the relationship target
+    .build();
+```
+
+To iterate entities in a single group, use the `setGroup` function:
+
+```java
+q.run(it -> {
+    it.setGroup(region01);
+    while (it.next()) {
+        // iterate as usual
+    }
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -3946,6 +4940,26 @@ let unit_02 = world.entity().add_id(ranged_unit);
 
 // Matches entities with Unit, MeleeUnit and RangedUnit
 let q = world.query::<&Unit>();
+
+// Iterate as usual
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+The following example shows a query that uses component inheritance to match entities:
+
+```java
+long unit = world.component(Unit.class);
+
+world.obtainEntity(world.component(MeleeUnit.class)).isA(unit); // MeleeUnit is a Unit
+world.obtainEntity(world.component(RangedUnit.class)).isA(unit); // RangedUnit is a Unit
+
+world.obtainEntity(world.entity()).add(MeleeUnit.class);
+world.obtainEntity(world.entity()).add(RangedUnit.class);
+
+// Matches entities with Unit, MeleeUnit and RangedUnit
+Query q = world.query(Unit.class);
 
 // Iterate as usual
 ```
@@ -4165,6 +5179,64 @@ Return the city entities are in:
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+The following example shows a query that uses transitivity to match entities that are located in New York:
+
+```java
+// Create LocatedIn relationship with transitive property
+long locatedIn = world.component(LocatedIn.class);
+world.obtainEntity(locatedIn).add(Flecs.Transitive);
+
+long newYork = world.entity();
+long manhattan = world.entity();
+long centralPark = world.entity();
+long bob = world.entity();
+
+world.obtainEntity(manhattan).add(locatedIn, newYork);
+world.obtainEntity(centralPark).add(locatedIn, manhattan);
+world.obtainEntity(bob).add(locatedIn, centralPark);
+
+// Matches ManHattan, CentralPark, Bob
+Query q = world.query()
+    .with(locatedIn, newYork)
+    .build();
+
+// Iterate as usual
+```
+
+Queries for transitive relationships can be compared with variables. This query returns all locations an entity is in:
+
+```java
+// Matches:
+//  - ManHattan (Place = NewYork)
+//  - CentralPark (Place = ManHattan, NewYork)
+//  - Bob (Place = CentralPark, ManHattan, NewYork)
+Query q = world.query()
+    .with(locatedIn).second("$Place")
+    .build();
+```
+
+Variables can be used to constrain the results of a transitive query. The following query returns locations an entity is in that are a city:
+
+```java
+@Component
+record City() { }
+
+// Add City property to NewYork
+world.obtainEntity(newYork).add(City.class);
+
+// Matches:
+//  - ManHattan (Place = NewYork)
+//  - CentralPark (Place = NewYork)
+//  - Bob (Place = NewYork)
+Query q = world.query()
+    .with(locatedIn).second("$Place")
+    .with(City.class).src("$Place")
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -4233,6 +5305,23 @@ Reflexivity in a query is enabled by adding the `Reflexive` property to a relati
 
 ```
 (IsA, Tree)
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+The following example shows a query that uses the `IsA` reflexive relationship:
+
+```java
+long tree = world.entity();
+long oak = world.obtainEntity(world.entity()).isA(tree).id();
+
+// Matches Tree, Oak
+Query q = world.query()
+    .with(Flecs.IsA, tree)
+    .build();
+
+// Iterate as usual
 ```
 
 </li>

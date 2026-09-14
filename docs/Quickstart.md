@@ -1348,7 +1348,7 @@ Entity e = world.obtainEntity(world.entity())
     .add(Position.class)
     .add(Velocity.class);
 
-System.out.println(e.type().str()); // output: 'Position, Velocity'
+System.out.println(e.type().toString()); // output: 'Position, Velocity'
 ```
 </li>
 </ul>

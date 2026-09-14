@@ -101,6 +101,25 @@ println!("Defense value: {}", defense.value);
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+@Component
+record Defense(float value) { }
+
+// Create a SpaceShip prefab with a Defense component.
+Entity spaceShip = world.obtainEntity(world.prefab("SpaceShip"))
+    .set(new Defense(50));
+
+// Create two prefab instances
+Entity inst1 = world.obtainEntity(world.entity()).isA(spaceShip);
+Entity inst2 = world.obtainEntity(world.entity()).isA(spaceShip);
+
+// Get instantiated component
+Defense d = inst1.get(Defense.class);
+```
+
+</li>
 </ul>
 </div>
 
@@ -146,6 +165,18 @@ let myprefab = world.entity().add::<flecs::Prefab>();
 // or the shortcut
 
 let myprefab = world.prefab();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity myPrefab = world.obtainEntity(world.entity())
+    .add(Flecs.Prefab);
+
+// or the shortcut
+
+long myPrefab = world.prefab();
 ```
 
 </li>
@@ -195,6 +226,17 @@ world.QueryBuilder<Position>()
 // Only match prefab entities
 world.query::<&Position>()
     .with::<flecs::Prefab>()
+    .build();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Only match prefab entities
+Query q = world.query()
+    .with(Position.class)
+    .with(Flecs.Prefab)
     .build();
 ```
 
@@ -252,6 +294,17 @@ world.query::<&Position>()
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Only match prefab entities
+Query q = world.query()
+    .with(Position.class)
+    .with(Flecs.Prefab).optional()
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -297,6 +350,17 @@ world.QueryBuilder()
 // Only match prefab entities
 world.query::<&Position>()
     .query_flags(QueryFlags::MatchPrefab)
+    .build();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Only match prefab entities
+Query q = world.query()
+    .with(Position.class)
+    .queryFlags(Flecs.QueryMatchPrefab)
     .build();
 ```
 
@@ -416,6 +480,30 @@ println!("Defense value: {}", defense.value);
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Make Defense component inheritable
+long defenseId = world.component(Defense.class);
+world.obtainEntity(defenseId)
+    .add(Flecs.OnInstantiate, Flecs.Inherit);
+
+// Create prefab
+Entity spaceShip = world.obtainEntity(world.prefab())
+    .set(new Health(100))
+    .set(new Defense(50));
+
+// Create prefab instance
+Entity inst = world.obtainEntity(world.entity()).isA(spaceShip);
+
+// Component is retrieved from instance
+Health health = inst.get(Health.class);
+
+// Component is retrieved from prefab
+Defense defense = inst.get(Defense.class);
+```
+
+</li>
 </ul>
 </div>
 
@@ -454,6 +542,15 @@ if (inst.Owns<Defense>()) {
 ```rust
 if inst.owns::<Defense>() {
 // not inherited
+}
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+if (inst.owns(Defense.class)) {
+    // not inherited
 }
 ```
 
@@ -502,6 +599,17 @@ if (inheritedFrom == 0) {
 let inherited_from = inst.target::<Defense>(0);
 if inherited_from.is_none() {
 // not inherited
+}
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long defenseId = world.component(Defense.class);
+long inheritedFrom = inst.targetFor(Flecs.IsA, defenseId);
+if (inheritedFrom == 0) {
+    // not inherited
 }
 ```
 
@@ -600,6 +708,27 @@ inst_a.set(Defense { value: 75 });
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Make Defense component inheritable
+long defenseId = world.component(Defense.class);
+world.obtainEntity(defenseId)
+    .add(Flecs.OnInstantiate, Flecs.Inherit);
+
+// Create prefab
+Entity spaceShip = world.obtainEntity(world.prefab())
+    .set(new Defense(50));
+
+// Create prefab instances
+Entity instA = world.obtainEntity(world.entity()).isA(spaceShip);
+Entity instB = world.obtainEntity(world.entity()).isA(spaceShip);
+
+// Override Defense only for instA
+instA.set(new Defense(75));
+```
+
+</li>
 </ul>
 </div>
 
@@ -694,6 +823,27 @@ inst_a.add::<Defense>(); // Initialized with value 50
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Make Defense component inheritable
+long defenseId = world.component(Defense.class);
+world.obtainEntity(defenseId)
+    .add(Flecs.OnInstantiate, Flecs.Inherit);
+
+// Create prefab
+Entity spaceShip = world.obtainEntity(world.prefab())
+    .set(new Defense(50));
+
+// Create prefab instances
+Entity instA = world.obtainEntity(world.entity()).isA(spaceShip);
+Entity instB = world.obtainEntity(world.entity()).isA(spaceShip);
+
+// Override Defense only for instA
+instA.add(Defense.class); // Initialized with value 50
+```
+
+</li>
 </ul>
 </div>
 
@@ -777,6 +927,25 @@ let spaceship = world.prefab().set_auto_override(Defense { value: 50 }); // Set 
 // Create prefab instance
 let inst = world.entity().is_a_id(spaceship);
 inst.owns::<Defense>(); // true
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Make Defense component inheritable
+long defenseId = world.component(Defense.class);
+world.obtainEntity(defenseId)
+    .add(Flecs.OnInstantiate, Flecs.Inherit);
+
+// Create prefab
+Entity spaceShip = world.obtainEntity(world.prefab())
+    .set(new Defense(50))
+    .autoOverride(defenseId); // Set & auto override Defense
+
+// Create prefab instance
+Entity inst = world.obtainEntity(world.entity()).isA(spaceShip);
+inst.owns(Defense.class); // true
 ```
 
 </li>
@@ -890,6 +1059,26 @@ println!("Defense value: {}", defense.value); // 50
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Create prefab
+Entity spaceShip = world.obtainEntity(world.prefab("SpaceShip"))
+    .set(new Defense(50))
+    .set(new Health(100));
+
+// Create prefab variant
+Entity freighter = world.obtainEntity(world.prefab("Freighter"))
+    .isA(spaceShip)
+    .set(new Health(150)); // Override the Health component of the freighter
+
+// Create prefab instance
+Entity inst = world.obtainEntity(world.entity()).isA(freighter);
+Health health = inst.get(Health.class); // 150
+Defense defense = inst.get(Defense.class); // 50
+```
+
+</li>
 </ul>
 </div>
 
@@ -965,6 +1154,21 @@ let inst_cockpit = inst.lookup("Cockpit");
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity spaceShip = world.obtainEntity(world.prefab("SpaceShip"));
+Entity cockpit = world.obtainEntity(world.prefab("Cockpit"))
+    .childOf(spaceShip);
+
+// Instantiate the prefab hierarchy
+Entity inst = world.obtainEntity(world.entity()).isA(spaceShip);
+
+// Lookup instantiated child
+long instCockpit = inst.lookup("Cockpit");
+```
+
+</li>
 </ul>
 </div>
 
@@ -1004,6 +1208,22 @@ flecs::entity inst = world.entity().is_a(SpaceShip);
 
 // Get the instance child from the prefab child
 flecs::entity inst_cockpit = inst.target(Cockpit);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity spaceShip = world.obtainEntity(world.prefab()).name("SpaceShip");
+Entity cockpit = world.obtainEntity(world.prefab())
+    .set(new FlecsParent(spaceShip.id()))
+    .name("Cockpit");
+
+// Instantiate the prefab hierarchy
+Entity inst = world.obtainEntity(world.entity()).isA(spaceShip);
+
+// Get the instance child from the prefab child
+long instCockpit = inst.target(cockpit);
 ```
 
 </li>
@@ -1070,6 +1290,25 @@ let inst = world.entity().is_a::<Spaceship>();
 
 // Lookup prefab handle
 let prefab = world.lookup("spaceship");
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+@Component
+record SpaceShip() { }
+
+// Create prefab associated with the SpaceShip type
+world.obtainEntity(world.prefab(SpaceShip.class))
+    .set(new Defense(50))
+    .set(new Health(100));
+
+// Instantiate prefab with type
+Entity inst = world.obtainEntity(world.entity()).isA(SpaceShip.class);
+
+// Lookup prefab handle
+Entity prefab = world.obtainEntity(world.lookup("SpaceShip"));
 ```
 
 </li>
