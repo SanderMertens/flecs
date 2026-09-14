@@ -2465,7 +2465,7 @@ Position, ?Velocity
 </li>
 <li><b class="tab-title">Java</b>
 
-To create a query with `Optional` terms, a component can be specified as a pointer type:
+To create a query with `Optional` terms, mark the component as optional:
 
 ```java
 Query q = world.queryBuilder(Position.class, Velocity.class)
