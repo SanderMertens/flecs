@@ -77,6 +77,18 @@ world
     });
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// System declaration
+FlecsSystem sys = world.system("Move", Position.class, Velocity.class)
+    .eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> {
+        p.x(p.x() + v.dx());
+        p.y(p.y() + v.dy());
+    });
+```
+
+</li>
 </ul>
 </div>
 
@@ -110,6 +122,14 @@ let sys = ...;
 sys.run();
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+FlecsSystem sys = ...;
+sys.run();
+```
+
+</li>
 </ul>
 </div>
 
@@ -142,6 +162,14 @@ world.Progress();
 let world = World::new();
 world.progress();
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+World world = new World();
+world.progress();
+```
+
 </li>
 </ul>
 </div>
@@ -179,6 +207,15 @@ world
     .kind_id(0)
     .each(|(p, v)| { /* ... */ });
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.system("Move", Position.class, Velocity.class)
+    .kind(0)
+    .each(Position.class, Velocity.class, (p, v) -> { /* ... */ });
+```
+
 </li>
 </ul>
 </div>
@@ -371,6 +408,68 @@ The `run` function can be invoked multiple times per frame, once for each matche
 
 Note that there is no significant performance difference between `run` and `each`, which can both be vectorized by the compiler.
 </li>
+<li><b class="tab-title">Java</b>
+
+Java components are immutable records: `each` passes a read-only record, while `eachView` passes a mutable view. In `run`/`iter` callbacks, `Field.get(i)` reads a record and `Field.getMutView(i)` returns a mutable view.
+
+```java
+// Query iteration (each): components are read-only records
+query.each(Position.class, (entityId, p) -> { /* ... */ });
+
+// Query iteration (eachView): components are mutable views
+query.eachView(Position.class, (PositionView p) -> {
+    p.x(p.x() + 1);
+});
+
+// System iteration (each)
+world.system("Move", Position.class, Velocity.class)
+    .each(Position.class, Velocity.class, (p, v) -> { /* ... */ });
+
+// System iteration (eachView)
+world.system("Move", Position.class, Velocity.class)
+    .eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> {
+        p.x(p.x() + v.dx());
+        p.y(p.y() + v.dy());
+    });
+```
+```java
+// Query iteration (run)
+query.run(it -> {
+    while (it.next()) {
+        Field<Position> positions = it.field(Position.class, 0);
+        Field<Velocity> velocities = it.field(Velocity.class, 1);
+
+        for (int i = 0; i < it.count(); i++) {
+            PositionView p = positions.getMutView(i); // mutable view
+            Velocity v = velocities.get(i); // read-only record
+            p.x(p.x() + v.dx());
+            p.y(p.y() + v.dy());
+        }
+    }
+});
+
+// System iteration (iter)
+world.system("Move", Position.class, Velocity.class)
+    .run(it -> {
+        while (it.next()) {
+            Field<Position> positions = it.field(Position.class, 0);
+            Field<Velocity> velocities = it.field(Velocity.class, 1);
+
+            for (int i = 0; i < it.count(); i++) {
+                PositionView p = positions.getMutView(i); // mutable view
+                Velocity v = velocities.get(i); // read-only record
+                p.x(p.x() + v.dx());
+                p.y(p.y() + v.dy());
+            }
+        }
+    });
+```
+
+The `iter` function can be invoked multiple times per frame, once for each matched table. The `each` function is called once per matched entity.
+
+Note that there is no significant performance difference between `iter` and `each / eachView`. In Java, though, `each` passes component records that are allocated per entity unless the JIT eliminates them (escape analysis), while view variants (`eachView`, `Field.getMutView`) reuse pooled views and avoid per-entity allocations.
+
+</li>
 </ul>
 </div>
 
@@ -456,6 +555,32 @@ world
     });
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.system("Move", Position.class, Velocity.class)
+    .eachView(Position.class, Velocity.class, (Iter it, int index, PositionView p, VelocityView v) -> {
+        p.x(p.x() + v.dx() * it.deltaTime());
+        p.y(p.y() + v.dy() * it.deltaTime());
+    });
+
+world.system("Move", Position.class, Velocity.class)
+    .run(it -> {
+        while (it.next()) {
+            Field<Position> positions = it.field(Position.class, 0);
+            Field<Velocity> velocities = it.field(Velocity.class, 1);
+
+            for (int i = 0; i < it.count(); i++) {
+                PositionView p = positions.getMutView(i);
+                Velocity v = velocities.get(i);
+                p.x(p.x() + v.dx() * it.deltaTime());
+                p.y(p.y() + v.dy() * it.deltaTime());
+            }
+        }
+    });
+```
+
+</li>
 </ul>
 </div>
 
@@ -486,6 +611,13 @@ world.Progress(deltaTime);
 world.progress_time(delta_time);
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.progress(deltaTime);
+```
+
+</li>
 </ul>
 </div>
 
@@ -515,6 +647,13 @@ world.Progress();
 ```rust
 world.progress();
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.progress();
+```
+
 </li>
 </ul>
 </div>
@@ -589,6 +728,20 @@ world.system_named::<()>("PrintTime").run(|mut it| {
 world.progress();
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.system("PrintTime")
+    .kind(Flecs.OnUpdate)
+    .run(it -> {
+        System.out.println("Time: " + it.deltaTime());
+    });
+
+// Runs PrintTime
+world.progress();
+```
+
+</li>
 </ul>
 </div>
 
@@ -662,6 +815,19 @@ world
     });
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.obtainEntity(world.component(Game.class)).add(Flecs.Singleton);
+
+world.system("PrintTime", Game.class)
+    .kind(Flecs.OnUpdate)
+    .each(Game.class, (game) -> {
+        System.out.println("Time: " + game.time());
+    });
+```
+
+</li>
 </ul>
 </div>
 
@@ -719,6 +885,18 @@ world.System<Position, Velocity>("Move")
          // ...
      });
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// System is created with (DependsOn, OnUpdate)
+world.system("Move", Position.class, Velocity.class)
+    .kind(Flecs.OnUpdate)
+    .each(Position.class, Velocity.class, (p, v) -> {
+        // ...
+    });
+```
+
 </li>
 </ul>
 </div>
@@ -785,6 +963,19 @@ Flecs has the following builtin phases, listed in topology order:
 - `flecs::pipeline::PostUpdate`
 - `flecs::pipeline::PreStore`
 - `flecs::pipeline::OnStore`
+</li>
+<li><b class="tab-title">Java</b>
+
+- `Flecs.OnStart`
+- `Flecs.OnLoad`
+- `Flecs.PostLoad`
+- `Flecs.PreUpdate`
+- `Flecs.OnUpdate`
+- `Flecs.OnValidate`
+- `Flecs.PostUpdate`
+- `Flecs.PreStore`
+- `Flecs.OnStore`
+
 </li>
 </ul>
 </div>
@@ -864,6 +1055,18 @@ world
     .up_type::<flecs::DependsOn>()
     .without::<flecs::Disabled>()
     .up_type::<flecs::ChildOf>()
+    .build();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.pipeline()
+    .with(Flecs.System)
+    .with(Flecs.Phase).cascade(Flecs.DependsOn)
+    .without(Flecs.Disabled).up(Flecs.DependsOn)
+    .without(Flecs.Disabled).up(Flecs.ChildOf)
     .build();
 ```
 
@@ -965,6 +1168,30 @@ world
 world.progress();
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Create custom pipeline
+Pipeline pipeline = world.pipeline()
+    .with(Flecs.System)
+    .with(foo) // pass an Entity or id
+    .build();
+
+// Configure the world to use the custom pipeline
+world.setPipeline(pipeline);
+
+// Create system
+FlecsSystem moveSys = world.system("Move", Position.class, Velocity.class)
+    .kind(foo.id()) // pass an Entity or id
+    .each(Position.class, Velocity.class, (p, v) -> {
+        // ...
+    });
+
+// Runs the pipeline & system
+world.progress();
+```
+
+</li>
 </ul>
 </div>
 
@@ -999,6 +1226,15 @@ move.Entity.Add(foo);
 ```rust
 move_sys.add::<Foo>();
 ```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+moveSys.add(foo);
+```
+
+</li>
 </ul>
 </div>
 
@@ -1042,6 +1278,16 @@ s.disable_self();
 s.enable_self();
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Disable system
+s.disable();
+// Enable system
+s.enable();
+```
+
+</li>
 </ul>
 </div>
 
@@ -1071,6 +1317,13 @@ s.Entity.Add(Ecs.Disabled);
 ```rust
 sys.add::<flecs::Disabled>();
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+sys.add(Flecs.Disabled);
+```
+
 </li>
 </ul>
 </div>
@@ -1168,6 +1421,16 @@ world.system::<&Position>().write::<Transform>().each(|p| {
 });
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// In the Java API, use the write method to indicate commands could be inserted.
+world.system(Position.class)
+    .write(Transform.class)
+    .each( /* ... */ );
+```
+
+</li>
 </ul>
 </div>
 
@@ -1220,6 +1483,16 @@ world.system::<&Position>().read::<Transform>().each(|p| {
     // ...
 });
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// In the Java API, use the read method to indicate a component is read using .get
+world.system(Position.class)
+    .read(Transform.class)
+    .each(Position.class, p -> { /* ... */ });
+```
+
 </li>
 </ul>
 </div>
@@ -1285,6 +1558,18 @@ world
         }
     });
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.system("AssignPlate")
+    .with(Plate.class)
+    .immediate() // disable readonly mode for this system
+    .run(it -> {
+        // ...
+    });
+```
+
 </li>
 </ul>
 </div>
@@ -1353,6 +1638,23 @@ void AssignPlate(ecs_iter_t *it) {
 });
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+.run(it -> {
+    while (it.next()) {
+        for (int i = 0; i < it.count(); i++) {
+            // ECS operations ran here are visible after running the system
+            it.world().deferSuspend();
+            // ECS operations ran here are immediately visible
+            it.world().deferResume();
+            // ECS operations ran here are visible after running the system
+        }
+    }
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -1385,6 +1687,13 @@ world.SetThreads(4);
 ```rust
 world.set_threads(4);
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.setThreads(4); // Create 4 worker threads
+```
+
 </li>
 </ul>
 </div>
@@ -1431,6 +1740,15 @@ world.system::<&Position>().multi_threaded().each(|p| {
 });
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.system(Position.class)
+    .multiThreaded()
+    .each(Position.class, p -> { /* ... */ });
+```
+
+</li>
 </ul>
 </div>
 
@@ -1466,6 +1784,13 @@ world.SetTaskThreads(4);
 ```rust
 world.set_task_threads(4);
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.setTaskThreads(4); // Create 4 worker task threads for the duration of each progress update
+```
+
 </li>
 </ul>
 </div>
@@ -1533,6 +1858,17 @@ world.system::<&Position>()
 });
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.system(Position.class, Velocity.class)
+    .interval(1.0f) // Run at 1Hz
+    .each(Position.class, Velocity.class, (p, v) -> {
+        // ...
+    });
+```
+
+</li>
 </ul>
 </div>
 
@@ -1589,6 +1925,17 @@ world
         // ...
     });
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.system(Position.class, Velocity.class)
+    .rate(2) // Run every other frame
+    .each(Position.class, Velocity.class, (p, v) -> {
+        // ...
+    });
+```
+
 </li>
 </ul>
 </div>
@@ -1660,6 +2007,21 @@ world.System<Position, Velocity>()
 // Timer not yet implemented in Rust
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// A rate filter can be created with .rate(2)
+Timer tickSource = world.timer()
+    .interval(1.0f);
+
+world.system(Position.class, Velocity.class)
+    .tickSource(tickSource) // Set tick source for system
+    .each(Position.class, Velocity.class, (p, v) -> {
+        // ...
+    });
+```
+
+</li>
 </ul>
 </div>
 
@@ -1701,6 +2063,17 @@ tickSource.Start();
 ```rust
 // Timer addon yet to be implemented in rust
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Pause timer
+tickSource.stop();
+
+// Resume timer
+tickSource.start();
+```
+
 </li>
 </ul>
 </div>
@@ -1763,6 +2136,23 @@ TimerEntity eachHour = world.Timer()
 ```rust
 // Timer not yet implemented in Rust
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Tick at 1Hz
+Timer eachSecond = world.timer()
+    .interval(1.0f);
+
+// Tick each minute
+Timer eachMinute = world.timer()
+    .rate(60, eachSecond.id());
+
+// Tick each hour
+Timer eachHour = world.timer()
+    .rate(60, eachMinute.id());
+```
+
 </li>
 </ul>
 </div>
@@ -1853,6 +2243,28 @@ System_ eachHour = world.System("EachHour")
 ```rust
 // Timer not yet implemented in Rust
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Tick at 1Hz
+FlecsSystem eachSecond = world.system("EachSecond")
+    .interval(1.0f)
+    .run(it -> { /* ... */ });
+
+// Tick each minute
+FlecsSystem eachMinute = world.system("EachMinute")
+    .tickSource(eachSecond.id())
+    .rate(60)
+    .run(it -> { /* ... */ });
+
+// Tick each hour
+FlecsSystem eachHour = world.system("EachHour")
+    .tickSource(eachMinute.id())
+    .rate(60)
+    .run(it -> { /* ... */ });
+```
+
 </li>
 </ul>
 </div>

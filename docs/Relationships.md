@@ -89,6 +89,21 @@ bob.remove_id((likes, alice));
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity bob = world.obtainEntity(world.entity());
+long likes = world.entity();
+long alice = world.entity();
+
+// Bob likes Alice
+bob.add(likes, alice);
+
+// Bob likes Alice no more
+bob.remove(likes, alice);
+```
+
+</li>
 </ul>
 </div>
 
@@ -160,6 +175,22 @@ bob.add_id((eats, pears));
 
 bob.has_id((eats, apples)); // true
 bob.has_id((eats, pears)); // true
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity bob = world.obtainEntity(world.entity());
+long eats = world.entity();
+long apples = world.entity();
+long pears = world.entity();
+
+bob.add(eats, apples);
+bob.add(eats, pears);
+
+bob.has(eats, apples); // true
+bob.has(eats, pears); // true
 ```
 
 </li>
@@ -247,6 +278,27 @@ let q = world.new_query::<&(Eats, Apples)>();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Find all entities that eat apples
+Query q = world.query().expr("(Eats, Apples)").build();
+
+// Find all entities that eat anything
+Query q = world.query().expr("(Eats, *)").build();
+
+// With the query builder API:
+Query q = world.query()
+    .with(eats, apples)
+    .build();
+
+// With compile time types:
+Query q = world.queryBuilder()
+    .with(Eats.class, Apples.class)
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -287,6 +339,13 @@ bob.has_id((eats, apples));
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+bob.has(eats, apples);
+```
+
+</li>
 </ul>
 </div>
 
@@ -319,6 +378,13 @@ Bob.Has(Eats, Ecs.Wildcard);
 
 ```rust
 bob.has_id((eats, flecs::Wildcard::ID));
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+bob.has(eats, Flecs.Wildcard);
 ```
 
 </li>
@@ -364,6 +430,13 @@ let parent = bob.parent();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long parent = bob.parent();
+```
+
+</li>
 </ul>
 </div>
 
@@ -396,6 +469,13 @@ Entity food = Bob.Target(Eats);
 
 ```rust
 let food = bob.target_id(eats, 0); // first target
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long food = bob.target(eats, 0); // first target
 ```
 
 </li>
@@ -447,6 +527,16 @@ while bob.target_id(eats, index).is_some() {
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+int index = 0;
+while ((food = bob.target(eats, index++)) != 0) {
+  // ...
+}
+```
+
+</li>
 </ul>
 </div>
 
@@ -479,6 +569,13 @@ Entity parent = Bob.TargetFor<Position>(Ecs.ChildOf);
 
 ```rust
 let parent = bob.target_for::<Position>(flecs::ChildOf::ID);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long parent = bob.targetFor(Flecs.ChildOf, Position.class);
 ```
 
 </li>
@@ -536,6 +633,19 @@ bob.each_component(|id| {
     if id.is_pair() {
         let first = id.first_id();
         let second = id.second_id();
+    }
+});
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+bob.each(id -> {
+    Id typeId = world.obtainId(id);
+    if (typeId.isPair()) {
+        long first = typeId.first();
+        long second = typeId.second();
     }
 });
 ```
@@ -599,6 +709,18 @@ world
     .with_id((eats, apples))
     .build()
     .each_entity(|e, _| {
+        // Iterate as usual
+    });
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.query()
+    .with(eats, apples)
+    .build()
+    .each(entityId -> {
         // Iterate as usual
     });
 ```
@@ -675,6 +797,21 @@ world
 
 </li>
 
+<li><b class="tab-title">Java</b>
+
+```java
+world.query()
+    .with(eats, Flecs.Wildcard)
+    .build()
+    .each((Iter it, int index) -> {
+        long food = world.obtainId(it.pair(0)).second(); // Apples, ...
+
+        long e = it.entity(index);
+        // Iterate as usual
+    });
+```
+
+</li>
 </ul>
 </div>
 
@@ -718,6 +855,15 @@ parent.Children((Entity child) =>
 
 ```rust
 parent.each_child(|child| {
+    // ...
+});
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+parent.children(childId -> {
     // ...
 });
 ```
@@ -882,6 +1028,33 @@ e.add::<(flecs::ChildOf, Position)>();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// ChildOf has the Tag property, so even though Position is a type, the pair
+// does not assume the Position type
+Entity e = world.obtainEntity(world.entity());
+
+// Both Likes and Apples are tags, so (Likes, Apples) is a tag
+e.add(likes, apples);
+
+// Eats is a type and Apples is a tag, so (Eats, Apples) has type Eats
+e.set(new Eats(1), apples);
+
+// Begin is a tag and Position is a type, so (Begin, Position) has type Position
+e.setSecond(Position.class, begin, (PositionView view) -> {
+    view.x(0);
+    view.y(0);
+});
+e.setSecond(Position.class, end, (PositionView view) -> {
+    view.x(10);
+    view.y(20);
+}); // Same for End
+
+e.add(Flecs.ChildOf, world.component(Position.class));
+```
+
+</li>
 </ul>
 </div>
 
@@ -963,6 +1136,22 @@ let third = world.entity();
 e.set_first::<Position>(Position { x: 1.0, y: 2.0 }, first);
 e.set_first::<Position>(Position { x: 3.0, y: 4.0 }, second);
 e.set_first::<Position>(Position { x: 5.0, y: 6.0 }, third);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity());
+
+long first = world.entity();
+long second = world.entity();
+long third = world.entity();
+
+// Add component position 3 times, for 3 different objects
+e.set(new Position(1, 2), first);
+e.set(new Position(3, 4), second);
+e.set(new Position(5, 6), third);
 ```
 
 </li>
@@ -1053,6 +1242,27 @@ q.each_iter(|it, i, _| {
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.query()
+    .with(likes, Flecs.Wildcard)
+    .build();
+
+q.each((Iter it, int index) -> {
+    Id pairId = world.obtainId(it.pair(0)); // Obtain pair id
+
+    // Get relationship & target
+    long rel = pairId.first();
+    long obj = pairId.second();
+
+    System.out.println("entity " + it.entity(index) + " has relationship "
+        + world.obtainEntity(rel).name() + ", "
+        + world.obtainEntity(obj).name());
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -1087,6 +1297,13 @@ Query q = world.QueryBuilder().Expr("(Likes, *)").Build();
 
 ```rust
 let q = world.query::<()>().expr("(likes, *)").build();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.query().expr("(Likes, *)").build();
 ```
 
 </li>
@@ -1201,6 +1418,32 @@ bob.each_target_id(eats, |entity| {
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Bob eats apples and pears
+Entity bob = world.obtainEntity(world.entity());
+
+long eats = world.entity();
+long apples = world.entity();
+long pears = world.entity();
+
+bob.add(eats, apples);
+bob.add(eats, pears);
+
+// Find all (Eats, *) relationships in Bob's type
+bob.each(eats, Flecs.Wildcard, id -> {
+    Id typeId = world.obtainId(id);
+    System.out.println("Bob eats " + world.obtainEntity(typeId.second()).name());
+});
+
+// For target wildcard pairs, each() can be used:
+bob.each(eats, obj -> {
+    System.out.println("Bob eats " + world.obtainEntity(obj).name());
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -1249,6 +1492,15 @@ apple.add_id((flecs::IsA::ID, fruit));
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity apple = world.obtainEntity(world.entity());
+Entity fruit = world.obtainEntity(world.entity());
+apple.add(Flecs.IsA, fruit.id());
+```
+
+</li>
 </ul>
 </div>
 
@@ -1274,6 +1526,13 @@ Apple.IsA(Fruit);
 
 ```rust
 apple.is_a_id(fruit);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+apple.isA(fruit.id());
 ```
 
 </li>
@@ -1315,6 +1574,14 @@ GrannySmith.Add(Ecs.IsA, Apple);
 ```rust
 let granny_smith = world.entity();
 granny_smith.add_id((flecs::IsA::ID, apple));
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity grannySmith = world.obtainEntity(world.entity());
+grannySmith.add(Flecs.IsA, apple.id());
 ```
 
 </li>
@@ -1382,6 +1649,19 @@ let frigate = world
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity spaceship = world.obtainEntity(world.entity())
+    .set(new MaxSpeed(100))
+    .set(new Defense(50));
+
+Entity frigate = world.obtainEntity(world.entity())
+    .isA(spaceship.id()) // shorthand for .add(Flecs.IsA, spaceship)
+    .set(new Defense(75));
+```
+
+</li>
 </ul>
 </div>
 
@@ -1426,6 +1706,15 @@ let is_100 = frigate.map::<&mut MaxSpeed, _>(|v| {
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Obtain the inherited component from Spaceship
+MaxSpeed v = frigate.get(MaxSpeed.class);
+v.value() == 100; // true
+```
+
+</li>
 </ul>
 </div>
 
@@ -1466,6 +1755,15 @@ v.Value == 75; // true
 let is_75 = frigate.map::<&mut Defense, _>(|v| {
     v.value == 75 // True
 });
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Obtain the overridden component from Frigate
+Defense v = frigate.get(Defense.class);
+v.value() == 75; // true
 ```
 
 </li>
@@ -1544,6 +1842,23 @@ let is_75 = fast_frigate.map::<&mut Defense, _>(|v| {
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity fastFrigate = world.obtainEntity(world.entity())
+    .isA(frigate.id())
+    .set(new MaxSpeed(200));
+
+// Obtain the overridden component from FastFrigate
+MaxSpeed s = fastFrigate.get(MaxSpeed.class);
+s.value() == 200; // true
+
+// Obtain the inherited component from Frigate
+Defense d = fastFrigate.get(Defense.class);
+d.value() == 75; // true
+```
+
+</li>
 </ul>
 </div>
 
@@ -1593,6 +1908,16 @@ cockpit.add_id((flecs::ChildOf::ID, spaceship));
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity spaceship = world.obtainEntity(world.entity());
+Entity cockpit = world.obtainEntity(world.entity());
+
+cockpit.childOf(spaceship.id());
+```
+
+</li>
 </ul>
 </div>
 
@@ -1618,6 +1943,13 @@ Cockpit.ChildOf(Spaceship);
 
 ```rust
 cockpit.child_of_id(spaceship);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+cockpit.childOf(spaceship.id());
 ```
 
 </li>
@@ -1685,6 +2017,18 @@ let child = world.entity_named("Child").child_of_id(parent);
 
 child == world.lookup("Parent::Child"); // true
 child == parent.lookup("Child"); // true
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity parent = world.obtainEntity(world.entity("Parent"));
+Entity child = world.obtainEntity(world.entity("Child"))
+    .childOf(parent.id());
+
+child.id() == world.lookup("Parent::Child"); // true
+child.id() == parent.lookup("Child"); // true
 ```
 
 </li>
@@ -1767,6 +2111,23 @@ child_b.has_id((flecs::ChildOf::ID, parent)); // true
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity parent = world.obtainEntity(world.entity());
+long prev = world.setScope(parent.id());
+
+long childA = world.entity();
+long childB = world.entity();
+
+// Restore the previous scope
+world.setScope(prev);
+
+world.obtainEntity(childA).has(Flecs.ChildOf, parent.id()); // true
+world.obtainEntity(childB).has(Flecs.ChildOf, parent.id()); // true
+```
+
+</li>
 </ul>
 </div> 
 
@@ -1810,6 +2171,19 @@ let parent = world.entity().run_in_scope(|| {
     child_a.has_id((flecs::ChildOf::ID, parent)); // true
     child_b.has_id((flecs::ChildOf::ID, parent)); // true
 });
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+try (ScopedWorld scope = parent.scope()) {
+    Entity childA = world.obtainEntity(world.entity());
+    Entity childB = world.obtainEntity(world.entity());
+
+    childA.has(Flecs.ChildOf, parent.id()); // true
+    childB.has(Flecs.ChildOf, parent.id()); // true
+}
 ```
 
 </li>

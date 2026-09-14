@@ -64,6 +64,16 @@ let world = World::new();
 ;; Do the ECS stuff
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+World world = new World();
+
+// Do the ECS stuff
+
+world.destroy();
+```
+</li>
 </ul>
 </div>
 
@@ -124,6 +134,16 @@ e.is_alive(); // false!
 
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity());
+e.isAlive(); // true!
+
+e.destruct();
+e.isAlive(); // false!
+```
+</li>
 </ul>
 </div>
 
@@ -171,6 +191,14 @@ println!("Entity name: {}", e.name());
 ;; => "bob"
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity("Bob"));
+
+System.out.println("Entity name: " + e.name());
+```
+</li>
 </ul>
 </div>
 
@@ -207,6 +235,12 @@ let e = world.lookup("bob");
 (def e (w :bob))
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long e = world.lookup("Bob");
+```
+</li>
 </ul>
 </div>
 
@@ -216,7 +250,7 @@ An id is a 64 bit number that can encode anything that can be added to an entity
 The following sections describe components, tags and pairs in more detail.
 
 ### Component
-A component is a type of which instances can be added and removed to entities. Each component can be added only once to an entity (though not really, see [Pair](#pair)). In C applications components must be registered before use. By default in C++ this happens automatically.
+A component is a type of which instances can be added and removed to entities. Each component can be added only once to an entity (though not really, see [Pair](#pair)). In C applications components must be registered before use. By default in C++ this happens automatically. In Java applications components are records annotated with `@Component` and are registered automatically the first time they are used.
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
@@ -339,6 +373,30 @@ e.remove::<Position>();
 (disj e Position)
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity());
+
+// Add a component. This creates the component in the ECS storage, but does not
+// assign it with a value.
+e.add(Velocity.class);
+
+// Set the value for the Position & Velocity components. A component will be
+// added if the entity doesn't have it yet.
+e.set(new Position(10, 20))
+ .set(new Velocity(1, 2));
+
+// Get a component
+Position p = e.get(Position.class);
+
+// Get mutable:
+// PositionView p = e.getMutView(Position.class);
+
+// Remove component
+e.remove(Position.class);
+```
+</li>
 </ul>
 </div>
 
@@ -406,6 +464,18 @@ Clojure applications can use the `vf/ent` function.
 (conj pos-e Serializable)
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+Java applications can use the `world.entity` function.
+
+```java
+Entity posEntity = world.obtainEntity(world.entity(Position.class));
+System.out.println("Name: " + posEntity.name()); // outputs 'Name: Position'
+
+// It's possible to add components like you would for any entity
+posEntity.add(Serializable.class);
+```
+</li>
 </ul>
 </div>
 
@@ -458,6 +528,15 @@ pos_e.get::<&flecs::Component>(|c| {
 (-> (vf.c/ecs-get-id w (vf/eid pos-e) (vf/eid w :vf/component))
     (vp/as vf/EcsComponent))
 ;; => #:vybe.flecs{EcsComponent {:size 8, :alignment 4}}
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity posEntity = world.obtainEntity(world.entity(Position.class));
+
+FlecsComponent c = posEntity.get(FlecsComponent.class);
+System.out.println("Component size: " + c.size());
 ```
 </li>
 </ul>
@@ -573,6 +652,32 @@ e.has_id(enemy); // false!
 ;; => nil
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Option 1: create Tag as empty record
+@Component
+public record Enemy() { }
+
+// Create entity, add Enemy tag
+Entity e = world.obtainEntity(world.entity()).add(Enemy.class);
+e.has(Enemy.class); // true!
+
+e.remove(Enemy.class);
+e.has(Enemy.class); // false!
+
+
+// Option 2: create Tag as entity
+Entity enemy = world.obtainEntity(world.entity());
+
+// Create entity, add Enemy tag
+Entity e2 = world.obtainEntity(world.entity()).add(enemy);
+e2.has(enemy); // true!
+
+e2.remove(enemy);
+e2.has(enemy); // false!
+```
+</li>
 </ul>
 </div>
 
@@ -673,6 +778,25 @@ bob.has_first::<Likes>(alice); // false!
 ;; => nil
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Create Likes relationship as empty record (tag)
+@Component
+public record Likes() { }
+
+// Create a small graph with two entities that like each other
+Entity bob = world.obtainEntity(world.entity());
+Entity alice = world.obtainEntity(world.entity());
+
+bob.add(Likes.class, alice); // Bob likes Alice
+alice.add(Likes.class, bob); // Alice likes Bob
+bob.has(Likes.class, alice); // true!
+
+bob.remove(Likes.class, alice);
+bob.has(Likes.class, alice); // false!
+```
+</li>
 </ul>
 </div>
 
@@ -708,6 +832,14 @@ let id = world.id_first::<Likes>(bob);
 ```clojure
 (vf/eid w [:likes :bob])
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// A pair can be encoded in a single 64 bit identifier with world.pair
+Id id = world.pair(Likes.class, bob);
+```
+</li>
 </ul>
 </div>
 
@@ -761,6 +893,16 @@ if id.is_pair() {
   [(vf/get-name (vf/pair-first w id))
    (vf/get-name (vf/pair-second w id))])
 ;; => ["alice" "likes"]
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Id id = world.pair(Likes.class, bob);
+if (id.isPair()) {
+    long relationship = id.first();
+    long target = id.second();
+}
 ```
 </li>
 </ul>
@@ -828,6 +970,20 @@ bob.has_id((grows, pears)); // true!
 ;; => #{[:grows :pears] [:eats :pears] [:eats :apple]}
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity bob = world.obtainEntity(world.entity());
+
+bob.add(eats, apples);
+bob.add(eats, pears);
+bob.add(grows, pears);
+
+bob.has(eats, apples); // true!
+bob.has(eats, pears);  // true!
+bob.has(grows, pears); // true!
+```
+</li>
 </ul>
 </div>
 
@@ -866,6 +1022,14 @@ let o = alice.target::<Likes>(0); // Returns bob
 ```clojure
 (vf/get-name (vf/target (w :alice) :likes))
 ;; => "bob"
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity alice = world.obtainEntity(world.entity());
+
+long o = alice.target(Likes.class); // Returns Bob
 ```
 </li>
 </ul>
@@ -934,6 +1098,16 @@ parent.destruct();
 ;; => false
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity parent = world.obtainEntity(world.entity());
+Entity child = world.obtainEntity(world.entity()).childOf(parent);
+
+// Deleting the parent also deletes its children
+parent.destruct();
+```
+</li>
 </ul>
 </div>
 
@@ -1000,6 +1174,17 @@ parent.lookup("child"); // returns child
 ```clojure
 (vf/get-name (w [:parent :child]))
 ;; => "parent.child"
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity parent = world.obtainEntity(world.entity("parent"));
+Entity child = world.obtainEntity(world.entity("child")).childOf(parent);
+System.out.println(child.path()); // output: '::parent::child'
+
+world.lookup("parent::child"); // returns child
+parent.lookup("child"); // returns child
 ```
 </li>
 </ul>
@@ -1082,6 +1267,20 @@ q.each(|(p, p_parent)| {
 ;; => [...]
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.queryBuilder(Position.class, Position.class)
+    .termAt(1)
+    .parent()
+    .cascade()
+    .build();
+
+q.each(Position.class, Position.class, (p, pParent) -> {
+    // Do the thing
+});
+```
+</li>
 </ul>
 </div>
 
@@ -1142,6 +1341,16 @@ println!("Components: {}", e.archetype().to_string().unwrap()); // output: 'Posi
 ;; => #{{Position {:x 0.0, :y 0.0}}, {Velocity {:x 0.0, :y 0.0}} }
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity())
+    .add(Position.class)
+    .add(Velocity.class);
+
+System.out.println(e.type().toString()); // output: 'Position, Velocity'
+```
+</li>
 </ul>
 </div>
 
@@ -1197,6 +1406,17 @@ e.each_component(|id| {
 ```clojure
 (for [c (:some-entity w)]
   (vf/get-name w c))
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity());
+e.each(id -> {
+    if (id == world.id(Position.class)) {
+        // Found Position component!
+    }
+});
 ```
 </li>
 </ul>
@@ -1264,6 +1484,21 @@ world.get::<&Gravity>(|g| {
 ;; => {Position {:x 30.0, :y 40.0}}
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Register singleton component
+long gravityId = world.component(Gravity.class);
+Entity gravity = world.obtainEntity(gravityId);
+gravity.add(Flecs.Singleton);
+
+// Set singleton component
+gravity.set(new Gravity(9.81f));
+
+// Get singleton component
+Gravity g = gravity.get(Gravity.class);
+```
+</li>
 </ul>
 </div>
 
@@ -1318,6 +1553,17 @@ grav_e.get::<&Gravity>(|g| {
 (get-in w [Position Position])
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Singleton data is stored on the component entity
+Entity gravE = world.obtainEntity(world.entity(Gravity.class));
+
+gravE.set(new Gravity(9.81f));
+
+Gravity g = gravE.get(Gravity.class);
+```
+</li>
 </ul>
 </div>
 
@@ -1370,6 +1616,15 @@ world
 (vf/with-query w [_ Velocity
                   pos [:src Position Position]]
   pos)
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Create query that matches Gravity as a singleton. A singleton is matched on
+// the component entity itself, which the Singleton trait enables.
+world.queryBuilder(Velocity.class, Gravity.class)
+    .build();
 ```
 </li>
 </ul>
@@ -1527,6 +1782,38 @@ q.run(|mut it| {
 ;; => ["parent.child"]
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// For simple queries the world each() / eachView() functions can be used
+world.eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> {
+    p.x(p.x() + v.dx());
+    p.y(p.y() + v.dy());
+});
+
+// More complex queries can first be created, then iterated
+Query q = world.queryBuilder(Position.class)
+    .with(Flecs.ChildOf, parent.id())
+    .build();
+
+// Option 1: the each() callback iterates over each entity
+q.each(Position.class, (entityId, p) -> {
+    Entity e = world.obtainEntity(entityId);
+    System.out.println(e.name() + ": {" + p.x() + ", " + p.y() + "}");
+});
+
+// Option 2: the run() callback offers more control over the iteration
+q.run(it -> {
+    while (it.next()) {
+        Field<Position> positions = it.field(Position.class, 0);
+        for (int i = 0; i < it.count(); i++) {
+            Entity e = world.obtainEntity(it.entity(i));
+            System.out.println(e.name() + ": {" + positions.get(i).x() + ", " + positions.get(i).y() + "}");
+        }
+    }
+});
+```
+</li>
 </ul>
 </div>
 
@@ -1590,6 +1877,17 @@ let q = world
 (vf/with-query w [_ [:vf/child-of :*]
                   _ [:not Position]]
   ...)
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.query()
+    .with(Flecs.ChildOf, Flecs.Wildcard)
+    .with(Position.class).oper(Flecs.Not)
+    .build();
+
+// Iteration code is the same
 ```
 </li>
 </ul>
@@ -1709,6 +2007,22 @@ move_sys.run();
 (my-system w)
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Use the eachView() function that iterates each individual entity
+FlecsSystem moveSys = world.system(Position.class, Velocity.class)
+    .eachView(Position.class, Velocity.class, (Iter it, int index, PositionView p, VelocityView v) -> {
+        p.x(p.x() + v.dx() * it.deltaTime());
+        p.y(p.y() + v.dy() * it.deltaTime());
+    });
+
+// Just like with queries, systems have both the iter() and
+// each() methods to iterate entities.
+
+moveSys.run();
+```
+</li>
 </ul>
 </div>
 
@@ -1754,6 +2068,14 @@ move_sys.destruct();
 (vf/get-name (w :my-system))
 (conj ( :my-system) (flecs/EcsOnUpdate))
 (dissoc w :my-system)
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+System.out.println("System: " + moveSys.name());
+moveSys.add(Flecs.OnUpdate);
+moveSys.destruct();
 ```
 </li>
 </ul>
@@ -1827,6 +2149,19 @@ flecs::pipeline::OnStore;
 (flecs/EcsPostUpdate)
 (flecs/EcsPreStore)
 (flecs/EcsOnStore)
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Flecs.OnLoad
+Flecs.PostLoad
+Flecs.PreUpdate
+Flecs.OnUpdate
+Flecs.OnValidate
+Flecs.PostUpdate
+Flecs.PreStore
+Flecs.OnStore
 ```
 </li>
 </ul>
@@ -1919,6 +2254,19 @@ world.progress();
 (vf/progress w)
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.system("Move", Position.class, Velocity.class)
+    .kind(Flecs.OnUpdate).each( ... );
+world.system("Transform", Position.class, Transform.class)
+    .kind(Flecs.PostUpdate).each( ... );
+world.system("Render", Transform.class, Mesh.class)
+    .kind(Flecs.OnStore).each( ... );
+
+world.progress(); // run systems in default pipeline
+```
+</li>
 </ul>
 </div>
 
@@ -1959,6 +2307,13 @@ move_sys.remove::<flecs::pipeline::PostUpdate>();
 ```clojure
 (conj (w :move) (flecs/EcsOnUpdate))
 (disj (w :move) (flecs/EcsPostUpdate))
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+moveSys.add(Flecs.OnUpdate);
+moveSys.remove(Flecs.PostUpdate);
 ```
 </li>
 </ul>
@@ -2054,6 +2409,19 @@ e.set(Position { x: 30.0, y: 40.0 }); // Invokes the observer
 (merge w {:e [(Position [30 40])]})
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.observer("OnSetPosition", Position.class, Velocity.class)
+    .event(Flecs.OnSet)
+    .each(Position.class, Velocity.class, (p, v) -> { }); // Callback code is same as system
+
+Entity e = world.obtainEntity(world.entity());        // Doesn't invoke the observer
+e.set(new Position(10, 20)); // Doesn't invoke the observer
+e.set(new Velocity(1, 2));   // Invokes the observer
+e.set(new Position(20, 30)); // Invokes the observer
+```
+</li>
 </ul>
 </div>
 
@@ -2145,6 +2513,23 @@ world.import::<MyModule>();
 ```clojure
 ;; No wrapper for modules as Clojure has package namespacing already, but
 ;; you can use the the Flecs C Api directly if needed (vf.c/...)
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+public class MyModule implements FlecsModule {
+    @Override
+    public void initModule(World world) {
+        world.module(this);
+
+        // Define components, systems, triggers, ... as usual. They will be
+        // automatically created inside the scope of the module.
+    }
+}
+
+// Import code
+world.importModule(new MyModule());
 ```
 </li>
 </ul>

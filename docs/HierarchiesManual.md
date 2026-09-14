@@ -45,6 +45,14 @@ let spaceship = world.entity();
 let cockpit = world.entity().child_of_id(spaceship);
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long spaceship = world.entity();
+Entity cockpit = world.obtainEntity(world.entity()).childOf(spaceship);
+```
+
+</li>
 </ul>
 </div>
 
@@ -97,6 +105,19 @@ parent.children([](flecs::entity child) {
 ```rust
 // TODO
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Get parent for entity
+Entity parent = world.obtainEntity(entity.parent());
+
+// Iterate children for entity
+parent.children(childId -> {
+    // ...
+});
+```
+
 </li>
 </ul>
 </div>
@@ -161,6 +182,19 @@ spaceship.destruct();
 spaceship.is_alive(); // false
 cockpit.is_alive(); // false
 pilot.is_alive(); // false
+```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity spaceship = world.obtainEntity(world.entity());
+Entity cockpit = world.obtainEntity(world.entity()).childOf(spaceship);
+Entity pilot = world.obtainEntity(world.entity()).childOf(cockpit);
+
+spaceship.destruct();
+spaceship.isAlive(); // false
+cockpit.isAlive(); // false
+pilot.isAlive(); // false
 ```
 </li>
 </ul>
@@ -282,6 +316,27 @@ parent.each_child(|child| {
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity parent = world.obtainEntity(world.entity()).add(Flecs.OrderedChildren);
+
+Entity child_1 = world.obtainEntity(world.entity()).childOf(parent);
+Entity child_2 = world.obtainEntity(world.entity()).childOf(parent);
+Entity child_3 = world.obtainEntity(world.entity()).childOf(parent);
+
+// Adding/removing components usually changes the order in which children are
+// iterated, but with the OrderedChildren trait order is preserved.
+child_2.set(new Position(10, 20));
+
+parent.children(child -> {
+    // 1st result: child_1
+    // 2nd result: child_2
+    // 3rd result: child_3
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -349,6 +404,19 @@ flecs::entity cockpit = world.entity(flecs::Parent{spaceship}, nullptr /* option
 // TODO
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long spaceship = world.entity();
+
+// Create child with ChildOf storage
+Entity cockpit = world.obtainEntity(world.entity(spaceship));
+
+// Create child with Parent storage
+Entity cockpitParent = world.obtainEntity(world.entity(new FlecsParent(spaceship)));
+```
+
+</li>
 </ul>
 </div>
 
@@ -398,6 +466,21 @@ engineering.child_of(spaceship); // will remove Parent component
 ```rust
 // TODO
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long spaceship = world.entity();
+
+// OK: single parent with children using mixed storages
+Entity cockpit = world.obtainEntity(world.entity(spaceship));
+Entity engine = world.obtainEntity(world.entity(new FlecsParent(spaceship)));
+
+// Not OK: single entity with both storages
+Entity engineering = world.obtainEntity(world.entity(new FlecsParent(spaceship)));
+engineering.childOf(spaceship); // will remove Parent component
+```
+
 </li>
 </ul>
 </div>
@@ -505,6 +588,15 @@ auto q = world.query_builder<Position>()
 ```rust
 // TODO
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.queryBuilder(Position.class)
+    .groupBy(Flecs.ParentDepth)
+    .build();
+```
+
 </li>
 </ul>
 </div>
@@ -680,6 +772,18 @@ q.each([](Position& p, const flecs::Parent& parent) {
 // TODO
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.query(Position.class, FlecsParent.class);
+
+q.each(Position.class, FlecsParent.class, (p, parent) -> {
+    Position pParent = world.obtainEntityView(parent.value()).get(Position.class);
+    // logic as usual
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -783,6 +887,49 @@ for (int depth = 0; depth < 16; depth ++) {
 ```rust
 // TODO
 ```
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query qChildOf = world.queryBuilder(Position.class, Position.class)
+    .termAt(1).cascade()
+    .without(Flecs.Parent)
+    .build();
+
+Query qParent = world.queryBuilder(Position.class, FlecsParent.class)
+    .groupBy(Flecs.ParentDepth)
+    .build();
+
+// Replace 16 with max hierarchy depth in application
+for (int depth = 0; depth < 16; depth++) {
+    qChildOf.run(it -> {
+        it.setGroup(depth);
+        while (it.next()) {
+            Field<Position> positions = it.field(Position.class, 0);
+            Field<Position> parents = it.field(Position.class, 1);
+            for (int i = 0; i < it.count(); i++) {
+                PositionView p = positions.getMutView(i);
+                Position pParent = parents.get(i);
+                p.x(p.x() + pParent.x());
+            }
+        }
+    });
+
+    qParent.run(it -> {
+        it.setGroup(depth);
+        while (it.next()) {
+            Field<Position> positions = it.field(Position.class, 0);
+            Field<FlecsParent> parents = it.field(FlecsParent.class, 1);
+            for (int i = 0; i < it.count(); i++) {
+                PositionView p = positions.getMutView(i);
+                Position pParent = world.obtainEntityView(parents.get(i).value()).get(Position.class);
+                p.x(p.x() + pParent.x());
+            }
+        }
+    });
+}
+```
+
 </li>
 </ul>
 </div>
