@@ -3546,7 +3546,15 @@
                 "interface_prop_unknown_member_fails",
                 "bool_prop_mul_flt_member",
                 "bool_prop_in_flt_member_initializer",
-                "bool_prop_mul_flt_member_const"
+                "bool_prop_mul_flt_member_const",
+                "string_prop_in_const",
+                "string_prop_in_2_consts",
+                "string_prop_in_3_consts",
+                "string_prop_in_const_w_adjacent_prop",
+                "string_prop_in_chained_consts",
+                "string_prop_in_consts_reassign",
+                "string_prop_in_consts_deferred",
+                "string_prop_in_consts_nested_template"
             ]
         }, {
             "id": "TemplateVectorProp",
