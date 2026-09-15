@@ -2449,6 +2449,7 @@ int flecs_script_type_scope(
     }
 
     ecs_vec_clear(&scope->components);
+    ecs_vec_clear(&scope->set_components);
     ecs_assert(v->base.depth < ECS_SCRIPT_VISIT_MAX_DEPTH,
         ECS_INTERNAL_ERROR, NULL);
     v->base.nodes[v->base.depth ++] = (ecs_script_node_t*)scope;
@@ -2471,18 +2472,27 @@ int flecs_script_type_scope(
         v->base.depth --;
         if (result) {
             ecs_vec_clear(&scope->components);
+            ecs_vec_clear(&scope->set_components);
             break;
         }
         if (t->template_scope) {
             ecs_script_id_t *id = NULL;
+            bool w_expr = false;
             if (node->kind == EcsAstComponent) {
-                id = &((ecs_script_component_t*)node)->id;
+                ecs_script_component_t *component =
+                    (ecs_script_component_t*)node;
+                id = &component->id;
+                w_expr = component->expr != NULL;
             } else if (node->kind == EcsAstTag) {
                 id = &((ecs_script_tag_t*)node)->id;
             }
             if (id && id->eval && !id->interface && !id->dynamic) {
                 ecs_vec_append_t(&v->base.script->allocator,
                     &scope->components, ecs_id_t)[0] = id->eval;
+                if (w_expr) {
+                    ecs_vec_append_t(&v->base.script->allocator,
+                        &scope->set_components, ecs_id_t)[0] = id->eval;
+                }
             }
         }
     }

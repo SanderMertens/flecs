@@ -781,6 +781,27 @@ void flecs_script_add_entity_kind(
     stage->ensure_add = ensure_add;
 }
 
+void flecs_script_scope_add_ids(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_script_scope_t *scope,
+    const ecs_id_t *ids,
+    int32_t count)
+{
+    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(v->world));
+    ecs_stage_t *stage = world->stages[0];
+    const ecs_type_t *ensure_add = stage->ensure_add;
+    ecs_type_t ensure_add_type = {
+        ecs_vec_first_t(&scope->set_components, ecs_id_t),
+        ecs_vec_count(&scope->set_components)
+    };
+    if (ensure_add_type.count) {
+        stage->ensure_add = &ensure_add_type;
+    }
+    flecs_add_ids(v->world, entity, ids, count);
+    stage->ensure_add = ensure_add;
+}
+
 int flecs_script_eval_entity_enter(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
@@ -2318,8 +2339,8 @@ void flecs_script_scope_push(
         ecs_entity_t src = v->entity->eval;
         int32_t count = ecs_vec_count(&scope->components);
         if (src != EcsVariable && count) {
-            flecs_add_ids(
-                v->world, src, ecs_vec_first(&scope->components), count);
+            flecs_script_scope_add_ids(v, src, scope,
+                ecs_vec_first(&scope->components), count);
         }
     }
 }

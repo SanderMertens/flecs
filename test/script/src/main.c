@@ -1382,6 +1382,13 @@ void Template_template_w_vector_prop_script_kind_deferred(void);
 void Template_template_w_vector_prop_script_component_deferred(void);
 void Template_template_add_deferred_instantiates_once(void);
 void Template_template_add_remove_deferred_no_instantiate(void);
+void Template_template_in_scope_instantiates_once(void);
+void Template_template_in_scope_instantiates_once_deferred(void);
+void Template_template_w_prop_in_scope_instantiates_once(void);
+void Template_template_as_tag_in_scope_instantiates_once(void);
+void Template_template_interface_prop_in_scope_instantiates_once(void);
+void Template_template_interface_prop_in_scope_instantiates_once_deferred(void);
+void Template_template_vector_interface_prop_in_scope_instantiates_once(void);
 
 // Testsuite 'Mut'
 void Mut_setup(void);
@@ -9014,6 +9021,34 @@ bake_test_case Template_testcases[] = {
     {
         "template_add_remove_deferred_no_instantiate",
         Template_template_add_remove_deferred_no_instantiate
+    },
+    {
+        "template_in_scope_instantiates_once",
+        Template_template_in_scope_instantiates_once
+    },
+    {
+        "template_in_scope_instantiates_once_deferred",
+        Template_template_in_scope_instantiates_once_deferred
+    },
+    {
+        "template_w_prop_in_scope_instantiates_once",
+        Template_template_w_prop_in_scope_instantiates_once
+    },
+    {
+        "template_as_tag_in_scope_instantiates_once",
+        Template_template_as_tag_in_scope_instantiates_once
+    },
+    {
+        "template_interface_prop_in_scope_instantiates_once",
+        Template_template_interface_prop_in_scope_instantiates_once
+    },
+    {
+        "template_interface_prop_in_scope_instantiates_once_deferred",
+        Template_template_interface_prop_in_scope_instantiates_once_deferred
+    },
+    {
+        "template_vector_interface_prop_in_scope_instantiates_once",
+        Template_template_vector_interface_prop_in_scope_instantiates_once
     }
 };
 
@@ -17861,7 +17896,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        188,
+        195,
         Template_testcases,
         1,
         Template_params

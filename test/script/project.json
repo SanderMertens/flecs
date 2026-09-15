@@ -1423,7 +1423,14 @@
                 "template_w_vector_prop_script_kind_deferred",
                 "template_w_vector_prop_script_component_deferred",
                 "template_add_deferred_instantiates_once",
-                "template_add_remove_deferred_no_instantiate"
+                "template_add_remove_deferred_no_instantiate",
+                "template_in_scope_instantiates_once",
+                "template_in_scope_instantiates_once_deferred",
+                "template_w_prop_in_scope_instantiates_once",
+                "template_as_tag_in_scope_instantiates_once",
+                "template_interface_prop_in_scope_instantiates_once",
+                "template_interface_prop_in_scope_instantiates_once_deferred",
+                "template_vector_interface_prop_in_scope_instantiates_once"
             ]
         }, {
             "id": "Mut",

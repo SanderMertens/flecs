@@ -63,6 +63,8 @@ struct ecs_script_scope_t {
     /* Array with component ids that are added in scope. Used to limit
      * archetype moves. */
     ecs_vec_t components; /* vec<ecs_id_t> */
+
+    ecs_vec_t set_components; /* vec<ecs_id_t> */
 };
 
 typedef struct ecs_script_id_t {

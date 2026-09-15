@@ -2845,7 +2845,9 @@ static flecs_script_run_status_t flecs_ir_exec(
                     }
                     if (missing) {
                         flecs_ir_prof(EcsIrProfileBatchAdd);
-                        flecs_add_ids(v->world, src, ids, count);
+                        flecs_script_scope_add_ids(v, src,
+                            ECS_CONST_CAST(ecs_script_scope_t*, op->node),
+                            ids, count);
                     } else {
                         flecs_ir_prof(EcsIrProfileBatchSkip);
                     }
