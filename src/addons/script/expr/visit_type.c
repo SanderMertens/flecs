@@ -700,14 +700,18 @@ static int flecs_expr_interpolated_string_visit_type(
     char *ptr, *frag = NULL;
     char ch;
 
-    for (ptr = node->value; (ch = ptr[0]); ptr ++) {
+    for (ptr = node->value; (ch = ptr[0]); ) {
         if (ch == '\\') {
             ptr ++;
+            if (ptr[0]) {
+                ptr ++;
+            }
 
             continue;
         }
 
         if ((ch == '$') && (isspace(ptr[1]) || !ptr[1])) {
+            ptr ++;
             continue;
         }
 
@@ -878,6 +882,8 @@ static int flecs_expr_interpolated_string_visit_type(
             if (!ptr[0]) {
                 break;
             }
+        } else {
+            ptr ++;
         }
     }
 
