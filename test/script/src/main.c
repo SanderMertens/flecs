@@ -2630,6 +2630,7 @@ void Include_include_nested_index_parse_error_sets_error_on_parent(void);
 void Include_include_nested_error_reports_position(void);
 void Include_include_error_in_large_file_reports_position(void);
 void Include_include_missing_file_managed_sets_error_on_parent(void);
+void Include_include_nested_manifest_w_cross_file_refs(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_setup(void);
@@ -13952,6 +13953,10 @@ bake_test_case Include_testcases[] = {
     {
         "include_missing_file_managed_sets_error_on_parent",
         Include_include_missing_file_managed_sets_error_on_parent
+    },
+    {
+        "include_nested_manifest_w_cross_file_refs",
+        Include_include_nested_manifest_w_cross_file_refs
     }
 };
 
@@ -18033,7 +18038,7 @@ static bake_test_suite suites[] = {
         "Include",
         Include_setup,
         NULL,
-        56,
+        57,
         Include_testcases,
         1,
         Include_params

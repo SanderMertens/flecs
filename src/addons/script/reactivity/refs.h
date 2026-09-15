@@ -85,6 +85,10 @@ void flecs_script_ref_on_set(
 void flecs_script_run_pending_resolves(
     ecs_world_t *world);
 
+void flecs_script_pending_resolve_remove(
+    ecs_world_t *world,
+    ecs_entity_t script);
+
 void flecs_script_refs_import(
     ecs_world_t *world);
 
