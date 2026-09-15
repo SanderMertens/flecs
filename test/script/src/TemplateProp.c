@@ -2814,3 +2814,249 @@ void TemplateProp_interface_prop_empty_initializer(void) {
 
     ecs_fini(world);
 }
+
+static
+void string_prop_world_init(
+    ecs_world_t *world)
+{
+    ecs_entity_t text = ecs_entity(world, { .name = "Text" });
+    ecs_struct(world, {
+        .entity = text,
+        .members = {
+            {"data", ecs_id(ecs_string_t)}
+        }
+    });
+}
+
+static
+void test_text(
+    ecs_world_t *world,
+    const char *entity,
+    const char *expect)
+{
+    ecs_entity_t e = ecs_lookup(world, entity);
+    test_assert(e != 0);
+
+    ecs_entity_t text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    const char *const *ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], expect);
+}
+
+void TemplateProp_string_prop_in_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    string_prop_world_init(world);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop text: string = \"HELLO\""
+    LINE "  const p0 = \"<text>{text}</text>\""
+    LINE "  Text: {data: \"{p0}\"}"
+    LINE "}"
+    LINE "Sign a()"
+    LINE "Sign b(text: \"OTHER\")";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_text(world, "a", "<text>HELLO</text>");
+    test_text(world, "b", "<text>OTHER</text>");
+
+    ecs_fini(world);
+}
+
+void TemplateProp_string_prop_in_2_consts(void) {
+    ecs_world_t *world = ecs_init();
+
+    string_prop_world_init(world);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop text: string = \"HELLO\""
+    LINE "  const p0 = \"<a>{text}</a>\""
+    LINE "  const p1 = \"<b>{text}</b>\""
+    LINE "  Text: {data: \"{p0}{p1}</svg>\"}"
+    LINE "}"
+    LINE "Sign a()"
+    LINE "Sign b(text: \"OTHER\")";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_text(world, "a", "<a>HELLO</a><b>HELLO</b></svg>");
+    test_text(world, "b", "<a>OTHER</a><b>OTHER</b></svg>");
+
+    ecs_fini(world);
+}
+
+void TemplateProp_string_prop_in_3_consts(void) {
+    ecs_world_t *world = ecs_init();
+
+    string_prop_world_init(world);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop l1: string = \"ONE\""
+    LINE "  prop l2: string = \"TWO\""
+    LINE "  prop size: f32 = 12"
+    LINE "  const p0 = \"<text y='{size}'>{l1}</text>\""
+    LINE "  const p1 = \"<text y='{size}'>{l2}</text>\""
+    LINE "  const p2 = \"<text y='{size}'>{l1}{l2}</text>\""
+    LINE "  Text: {data: \"{p0}{p1}{p2}</svg>\"}"
+    LINE "}"
+    LINE "Sign a()"
+    LINE "Sign b(l1: \"AAA\", l2: \"BBB\")";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_text(world, "a",
+        "<text y='12.000000'>ONE</text>"
+        "<text y='12.000000'>TWO</text>"
+        "<text y='12.000000'>ONETWO</text></svg>");
+    test_text(world, "b",
+        "<text y='12.000000'>AAA</text>"
+        "<text y='12.000000'>BBB</text>"
+        "<text y='12.000000'>AAABBB</text></svg>");
+
+    ecs_fini(world);
+}
+
+void TemplateProp_string_prop_in_const_w_adjacent_prop(void) {
+    ecs_world_t *world = ecs_init();
+
+    string_prop_world_init(world);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop text: string = \"HELLO\""
+    LINE "  const p0 = \"<a>{text}</a>\""
+    LINE "  Text: {data: \"{p0}{text}!\"}"
+    LINE "}"
+    LINE "Sign a()"
+    LINE "Sign b(text: \"OTHER\")";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_text(world, "a", "<a>HELLO</a>HELLO!");
+    test_text(world, "b", "<a>OTHER</a>OTHER!");
+
+    ecs_fini(world);
+}
+
+void TemplateProp_string_prop_in_chained_consts(void) {
+    ecs_world_t *world = ecs_init();
+
+    string_prop_world_init(world);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop text: string = \"HELLO\""
+    LINE "  const a0 = \"<a>{text}</a>\""
+    LINE "  const a1 = \"[{a0}]\""
+    LINE "  const a2 = \"({a1})\""
+    LINE "  Text: {data: \"{a2}\"}"
+    LINE "}"
+    LINE "Sign a()"
+    LINE "Sign b(text: \"OTHER\")";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_text(world, "a", "([<a>HELLO</a>])");
+    test_text(world, "b", "([<a>OTHER</a>])");
+
+    ecs_fini(world);
+}
+
+void TemplateProp_string_prop_in_consts_reassign(void) {
+    ecs_world_t *world = ecs_init();
+
+    string_prop_world_init(world);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop l1: string = \"ONE\""
+    LINE "  prop l2: string = \"TWO\""
+    LINE "  const p0 = \"<a>{l1}</a>\""
+    LINE "  const p1 = \"<b>{l2}</b>\""
+    LINE "  const p2 = \"<c>{l1}{l2}</c>\""
+    LINE "  Text: {data: \"{p0}{p1}{p2}</svg>\"}"
+    LINE "}"
+    LINE "Sign a()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_text(world, "a", "<a>ONE</a><b>TWO</b><c>ONETWO</c></svg>");
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a { Sign: {l1: \"AAA\"} }", &ir_desc, NULL) == 0);
+
+    test_text(world, "a", "<a>AAA</a><b>TWO</b><c>AAATWO</c></svg>");
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "a { Sign: {l2: \"BBB\"} }", &ir_desc, NULL) == 0);
+
+    test_text(world, "a", "<a>AAA</a><b>BBB</b><c>AAABBB</c></svg>");
+
+    ecs_fini(world);
+}
+
+void TemplateProp_string_prop_in_consts_deferred(void) {
+    ecs_world_t *world = ecs_init();
+
+    string_prop_world_init(world);
+
+    const char *expr =
+    HEAD "template Sign {"
+    LINE "  prop l1: string = \"ONE\""
+    LINE "  prop l2: string = \"TWO\""
+    LINE "  const p0 = \"<a>{l1}</a>\""
+    LINE "  const p1 = \"<b>{l2}</b>\""
+    LINE "  const p2 = \"<c>{l1}{l2}</c>\""
+    LINE "  Text: {data: \"{p0}{p1}{p2}</svg>\"}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_defer_begin(world);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "Sign a()"
+        LINE "Sign b(l1: \"AAA\", l2: \"BBB\")"
+        LINE "Sign c(l1: \"CCCCCCCCCCCCCCCC\")", &ir_desc, NULL) == 0);
+    ecs_defer_end(world);
+
+    test_text(world, "a", "<a>ONE</a><b>TWO</b><c>ONETWO</c></svg>");
+    test_text(world, "b", "<a>AAA</a><b>BBB</b><c>AAABBB</c></svg>");
+    test_text(world, "c",
+        "<a>CCCCCCCCCCCCCCCC</a><b>TWO</b><c>CCCCCCCCCCCCCCCCTWO</c></svg>");
+
+    ecs_fini(world);
+}
+
+void TemplateProp_string_prop_in_consts_nested_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    string_prop_world_init(world);
+
+    const char *expr =
+    HEAD "template Inner {"
+    LINE "  prop text: string = \"I\""
+    LINE "  const p0 = \"<i>{text}</i>\""
+    LINE "  Text: {data: \"{p0}\"}"
+    LINE "}"
+    LINE "template Outer {"
+    LINE "  prop text: string = \"O\""
+    LINE "  const q0 = \"<o>{text}</o>\""
+    LINE "  kid { Inner: {text: \"{q0}\"} }"
+    LINE "}"
+    LINE "Outer a()"
+    LINE "Outer b(text: \"Z\")";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_text(world, "a.kid", "<i><o>O</o></i>");
+    test_text(world, "b.kid", "<i><o>Z</o></i>");
+
+    ecs_fini(world);
+}

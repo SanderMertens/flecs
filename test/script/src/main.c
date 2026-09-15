@@ -3422,6 +3422,14 @@ void TemplateProp_interface_prop_unknown_member_fails(void);
 void TemplateProp_bool_prop_mul_flt_member(void);
 void TemplateProp_bool_prop_in_flt_member_initializer(void);
 void TemplateProp_bool_prop_mul_flt_member_const(void);
+void TemplateProp_string_prop_in_const(void);
+void TemplateProp_string_prop_in_2_consts(void);
+void TemplateProp_string_prop_in_3_consts(void);
+void TemplateProp_string_prop_in_const_w_adjacent_prop(void);
+void TemplateProp_string_prop_in_chained_consts(void);
+void TemplateProp_string_prop_in_consts_reassign(void);
+void TemplateProp_string_prop_in_consts_deferred(void);
+void TemplateProp_string_prop_in_consts_nested_template(void);
 
 // Testsuite 'TemplateVectorProp'
 void TemplateVectorProp_setup(void);
@@ -17048,6 +17056,38 @@ bake_test_case TemplateProp_testcases[] = {
     {
         "bool_prop_mul_flt_member_const",
         TemplateProp_bool_prop_mul_flt_member_const
+    },
+    {
+        "string_prop_in_const",
+        TemplateProp_string_prop_in_const
+    },
+    {
+        "string_prop_in_2_consts",
+        TemplateProp_string_prop_in_2_consts
+    },
+    {
+        "string_prop_in_3_consts",
+        TemplateProp_string_prop_in_3_consts
+    },
+    {
+        "string_prop_in_const_w_adjacent_prop",
+        TemplateProp_string_prop_in_const_w_adjacent_prop
+    },
+    {
+        "string_prop_in_chained_consts",
+        TemplateProp_string_prop_in_chained_consts
+    },
+    {
+        "string_prop_in_consts_reassign",
+        TemplateProp_string_prop_in_consts_reassign
+    },
+    {
+        "string_prop_in_consts_deferred",
+        TemplateProp_string_prop_in_consts_deferred
+    },
+    {
+        "string_prop_in_consts_nested_template",
+        TemplateProp_string_prop_in_consts_nested_template
     }
 };
 
@@ -18159,7 +18199,7 @@ static bake_test_suite suites[] = {
         "TemplateProp",
         TemplateProp_setup,
         NULL,
-        96,
+        104,
         TemplateProp_testcases,
         1,
         TemplateProp_params
