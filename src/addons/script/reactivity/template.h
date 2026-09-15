@@ -107,7 +107,9 @@ typedef struct ecs_script_template_pending_t {
     uint64_t input;
     int32_t depth;
     void *data;
+    const ecs_type_info_t *ti;
     bool inline_data;
+    bool owns_data;
     int64_t _align;
     char data_storage[ECS_TEMPLATE_SMALL_SIZE];
 } ecs_script_template_pending_t;

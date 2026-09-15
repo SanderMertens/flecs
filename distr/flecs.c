@@ -48120,7 +48120,9 @@ typedef struct ecs_script_template_pending_t {
     uint64_t input;
     int32_t depth;
     void *data;
+    const ecs_type_info_t *ti;
     bool inline_data;
+    bool owns_data;
     int64_t _align;
     char data_storage[ECS_TEMPLATE_SMALL_SIZE];
 } ecs_script_template_pending_t;
@@ -115105,6 +115107,24 @@ static void flecs_script_template_muts_ctor(
     flecs_script_template_ctor(ptr, count, ti, true);
 }
 
+static void* flecs_script_template_pending_data(
+    ecs_script_template_pending_t *p)
+{
+    return p->inline_data ? p->data_storage : p->data;
+}
+
+static void flecs_script_template_pending_release(
+    ecs_script_template_pending_t *p)
+{
+    void *data = flecs_script_template_pending_data(p);
+    if (p->owns_data) {
+        flecs_type_info_dtor(data, 1, p->ti);
+    }
+    if (!p->inline_data) {
+        ecs_os_free(p->data);
+    }
+}
+
 /* Defer template instantiation if we're in deferred mode. */
 void flecs_script_template_pending_fini(
     ecs_vec_t *pending)
@@ -115112,9 +115132,7 @@ void flecs_script_template_pending_fini(
     ecs_script_template_pending_t *array = ecs_vec_first(pending);
     int32_t i, count = ecs_vec_count(pending);
     for (i = 0; i < count; i ++) {
-        if (!array[i].inline_data) {
-            ecs_os_free(array[i].data);
-        }
+        flecs_script_template_pending_release(&array[i]);
     }
     ecs_vec_fini_t(NULL, pending, ecs_script_template_pending_t);
 }
@@ -115127,6 +115145,8 @@ static void flecs_script_template_defer_on_set(
     void *data)
 {
     ecs_script_runtime_t *rt = flecs_script_runtime_get(it->real_world);
+    bool owns_data = ti->hooks.copy_ctor != NULL &&
+        !(ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
     bool any = false;
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -115145,14 +115165,21 @@ static void flecs_script_template_defer_on_set(
         p->component = component;
         p->input = input;
         p->depth = rt->template_depth;
+        p->ti = ti;
+        p->owns_data = owns_data;
         void *src = ECS_OFFSET(data, ti->size * i);
         if (ti->size <= ECS_TEMPLATE_SMALL_SIZE) {
             p->inline_data = true;
             p->data = NULL;
-            ecs_os_memcpy(p->data_storage, src, ti->size);
         } else {
             p->inline_data = false;
-            p->data = ecs_os_memdup(src, ti->size);
+            p->data = ecs_os_malloc(ti->size);
+        }
+        void *dst = flecs_script_template_pending_data(p);
+        if (owns_data) {
+            flecs_type_info_copy_ctor(dst, src, 1, ti);
+        } else {
+            ecs_os_memcpy(dst, src, ti->size);
         }
         any = true;
     }
@@ -115929,13 +115956,11 @@ static void flecs_on_template_flush_event(
         ecs_script_template_pending_t p = ecs_vec_get_t(
             &rt->template_pending, ecs_script_template_pending_t, i)[0];
         rt->template_depth = p.depth;
-        void *data = p.inline_data ? p.data_storage : p.data;
+        void *data = flecs_script_template_pending_data(&p);
         flecs_script_template_instantiate(
             world, p.template_entity, p.component,
             p.entity, data, p.input);
-        if (!p.inline_data) {
-            ecs_os_free(p.data);
-        }
+        flecs_script_template_pending_release(&p);
     }
     ecs_vec_clear(&rt->template_pending);
     rt->template_pending_active = false;
