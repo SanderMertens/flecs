@@ -1162,7 +1162,7 @@ static void flecs_script_template_on_add(
 
     script->template_->refcount += it->count;
 
-    if (it->real_world->stages[0]->ensure_add) {
+    if (flecs_stage_is_ensure_add(it->real_world, template_entity)) {
         return;
     }
 
