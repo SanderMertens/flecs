@@ -1437,7 +1437,10 @@
                 "for_entity_w_child_w_template_after",
                 "for_entity_w_named_child_w_template_after",
                 "for_entity_w_child_in_scope_w_template_after",
-                "for_entity_w_child_in_template_w_template_after"
+                "for_entity_w_child_in_template_w_template_after",
+                "on_add_instantiates_other_entity",
+                "on_add_instantiates_other_entity_w_props",
+                "on_add_instantiates_other_entity_in_scope"
             ]
         }, {
             "id": "Mut",
@@ -3174,7 +3177,13 @@
                 "sparse_blocks_restore_cached_constants",
                 "computed_const_skips_unchanged",
                 "computed_const_capture_skips_unchanged",
-                "computed_const_cache_restored_and_reset"
+                "computed_const_cache_restored_and_reset",
+                "component_in_interpolated_children_w_string_prefix_collision",
+                "component_in_interpolated_children_w_string_suffix_collision",
+                "component_in_interpolated_children_w_string_middle_collision",
+                "component_in_interpolated_children_w_numeric_boundary_collision",
+                "component_in_interpolated_children_w_formatted_integer",
+                "component_in_interpolated_children_w_fill_collision"
             ]
         }, {
             "id": "ConstVar",

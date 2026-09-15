@@ -1003,10 +1003,10 @@ static void flecs_cmd_batch_for_entity(
     /* Move entity to destination table in single operation */
     flecs_table_diff_build_noalloc(diff, &table_diff);
     ecs_stage_t *stage = world->stages[0];
-    const ecs_type_t *prev_ensure_add = stage->ensure_add;
-    ecs_type_t ensure_add_type = {
-        ecs_vec_first_t(set_ids, ecs_id_t), ecs_vec_count(set_ids) };
-    if (ensure_add_type.count) {
+    const ecs_stage_ensure_t *prev_ensure_add = stage->ensure_add;
+    ecs_stage_ensure_t ensure_add_type = { entity, {
+        ecs_vec_first_t(set_ids, ecs_id_t), ecs_vec_count(set_ids) }};
+    if (ensure_add_type.ids.count) {
         stage->ensure_add = &ensure_add_type;
     }
     flecs_defer_begin(world, world->stages[0]);
