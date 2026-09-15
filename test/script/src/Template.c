@@ -7503,3 +7503,183 @@ void Template_manual_managed_script_clear(void) {
     test_assert(!ecs_lookup(world, "b"));
     ecs_fini(world);
 }
+
+static void test_tag_form_position(
+    ecs_world_t *world,
+    const char *path,
+    float x,
+    float y)
+{
+    ecs_entity_t e = ecs_lookup(world, path);
+    test_assert(e != 0);
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+    const Position *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, x);
+    test_flt(p->y, y);
+}
+
+#define TAG_FORM_DEFS\
+    HEAD "struct Position(x: f32, y: f32)"\
+    LINE "template Brick {"\
+    LINE "  prop height: f32 = 5"\
+    LINE "  Position: {0, $height}"\
+    LINE "  child { Position: {1, $height} }"\
+    LINE "}"\
+    LINE "template NoProp {"\
+    LINE "  Position: {2, 2}"\
+    LINE "}"
+
+void Template_template_w_props_as_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    TAG_FORM_DEFS
+    LINE "x { Brick }"
+    LINE "y { NoProp }"
+    LINE "z { Brick: {} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    test_assert(brick != 0);
+
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, brick));
+    const float *xv = ecs_get_id(world, x, brick);
+    test_assert(xv != NULL);
+    test_flt(*xv, 5);
+    test_tag_form_position(world, "x", 0, 5);
+    test_tag_form_position(world, "x.child", 1, 5);
+
+    test_tag_form_position(world, "y", 2, 2);
+
+    test_tag_form_position(world, "z", 0, 5);
+    test_tag_form_position(world, "z.child", 1, 5);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_props_as_tag_from_c(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = TAG_FORM_DEFS;
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    test_assert(brick != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_id(world, e, brick);
+
+    test_tag_form_position(world, "e", 0, 5);
+    test_tag_form_position(world, "e.child", 1, 5);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_props_as_tag_from_c_deferred(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = TAG_FORM_DEFS;
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    test_assert(brick != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_defer_begin(world);
+    ecs_add_id(world, e, brick);
+    ecs_defer_end(world);
+
+    test_tag_form_position(world, "e", 0, 5);
+    test_tag_form_position(world, "e.child", 1, 5);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_props_add_twice(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = TAG_FORM_DEFS;
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(brick != 0);
+    test_assert(position != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_id(world, e, brick);
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+
+    Position marker = {42, 42};
+    ecs_set_id(world, child, position, sizeof(Position), &marker);
+
+    ecs_add_id(world, e, brick);
+
+    test_tag_form_position(world, "e.child", 42, 42);
+    test_assert(ecs_lookup(world, "e.child") == child);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_props_add_then_set(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = TAG_FORM_DEFS;
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    test_assert(brick != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_id(world, e, brick);
+
+    test_tag_form_position(world, "e", 0, 5);
+    test_tag_form_position(world, "e.child", 1, 5);
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+
+    float height = 10;
+    ecs_set_id(world, e, brick, sizeof(float), &height);
+
+    test_tag_form_position(world, "e", 0, 10);
+    test_tag_form_position(world, "e.child", 1, 10);
+    test_assert(ecs_lookup(world, "e.child") == child);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_props_set_after_add_deferred(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = TAG_FORM_DEFS;
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    test_assert(brick != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    float height = 10;
+
+    ecs_defer_begin(world);
+    ecs_add_id(world, e, brick);
+    ecs_set_id(world, e, brick, sizeof(float), &height);
+    ecs_defer_end(world);
+
+    test_tag_form_position(world, "e", 0, 10);
+    test_tag_form_position(world, "e.child", 1, 10);
+
+    ecs_fini(world);
+}

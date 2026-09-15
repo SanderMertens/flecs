@@ -1098,7 +1098,7 @@ static int flecs_script_type_check_component_expr(
     ecs_entity_t *type)
 {
     ecs_expr_initializer_t *init = NULL;
-    if (node->id.value_sp != -1 && node->expr &&
+    if ((node->id.value_sp != -1 || node->id.interface) && node->expr &&
         (node->expr->kind == EcsExprInitializer ||
          node->expr->kind == EcsExprEmptyInitializer))
     {
