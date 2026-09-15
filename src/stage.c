@@ -481,3 +481,22 @@ bool ecs_is_defer_suspended(
 error:
     return false;
 }
+
+bool flecs_stage_is_ensure_add(
+    const ecs_world_t *world,
+    ecs_id_t component)
+{
+    const ecs_type_t *ensure_add = world->stages[0]->ensure_add;
+    if (!ensure_add) {
+        return false;
+    }
+
+    int32_t i, count = ensure_add->count;
+    for (i = 0; i < count; i ++) {
+        if (ensure_add->array[i] == component) {
+            return true;
+        }
+    }
+
+    return false;
+}
