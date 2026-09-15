@@ -99500,6 +99500,55 @@ static int flecs_expr_value_visit_eval(
     return 0;
 }
 
+static int flecs_expr_interpolated_fragment_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_node_t *expr,
+    ecs_expr_format_t *format,
+    ecs_strbuf_t *buf)
+{
+    ecs_expr_value_t *val = flecs_expr_eval_result(
+        ctx, expr, &(ecs_expr_value_t){0});
+    if (!val) {
+        return -1;
+    }
+
+    if (format->is_present) {
+        int32_t width = 0;
+        int32_t precision = -1;
+        ecs_expr_node_t *format_exprs[2] = {
+            format->width, format->precision
+        };
+        int32_t *format_values[2] = { &width, &precision };
+        int32_t f;
+        for (f = 0; f < 2; f ++) {
+            if (!format_exprs[f]) {
+                continue;
+            }
+
+            ecs_expr_value_t *format_val = flecs_expr_eval_result(
+                ctx, format_exprs[f], &(ecs_expr_value_t){0});
+            if (!format_val) {
+                return -1;
+            }
+            ecs_assert(format_val->value.type == ecs_id(ecs_i32_t),
+                ECS_INTERNAL_ERROR, NULL);
+            format_values[f][0] = *(int32_t*)format_val->value.ptr;
+        }
+
+        return flecs_expr_format_value(ctx->script, expr, &val->value,
+            format, width, precision, buf);
+    }
+
+    ecs_assert(val->value.type == ecs_id(ecs_string_t),
+        ECS_INTERNAL_ERROR, NULL);
+    const char *str = *(char**)val->value.ptr;
+    if (str) {
+        ecs_strbuf_appendstr(buf, str);
+    }
+
+    return 0;
+}
+
 static int flecs_expr_interpolated_string_visit_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_interpolated_string_t *node,
@@ -99520,50 +99569,15 @@ static int flecs_expr_interpolated_string_visit_eval(
             ecs_strbuf_appendstr(&buf, fragment);
         }
         if (fragments[i].expr) {
-            ecs_expr_node_t *expr = fragments[i].expr;
-            ecs_expr_format_t *format = &fragments[i].format;
-            
-            ecs_expr_value_t *val = flecs_expr_eval_result(
-                ctx, expr, &(ecs_expr_value_t){0});
-            if (!val) {
+            flecs_expr_stack_push(ctx->stack);
+
+            int result = flecs_expr_interpolated_fragment_eval(
+                ctx, fragments[i].expr, &fragments[i].format, &buf);
+
+            flecs_expr_stack_pop(ctx->stack);
+
+            if (result) {
                 goto error;
-            }
-
-            if (format->is_present) {
-                int32_t width = 0;
-                int32_t precision = -1;
-                ecs_expr_node_t *format_exprs[2] = {
-                    format->width, format->precision
-                };
-                int32_t *format_values[2] = { &width, &precision };
-                int32_t f;
-                for (f = 0; f < 2; f ++) {
-                    if (!format_exprs[f]) {
-                        continue;
-                    }
-
-                    ecs_expr_value_t *format_val = flecs_expr_eval_result(
-                        ctx, format_exprs[f], &(ecs_expr_value_t){0});
-                    if (!format_val) {
-                        goto error;
-                    }
-                    ecs_assert(format_val->value.type == ecs_id(ecs_i32_t),
-                        ECS_INTERNAL_ERROR, NULL);
-                    format_values[f][0] = *(int32_t*)format_val->value.ptr;
-                }
-
-                if (flecs_expr_format_value(ctx->script, expr, &val->value,
-                    format, width, precision, &buf))
-                {
-                    goto error;
-                }
-            } else {
-                ecs_assert(val->value.type == ecs_id(ecs_string_t),
-                    ECS_INTERNAL_ERROR, NULL);
-                const char *str = *(char**)val->value.ptr;
-                if (str) {
-                    ecs_strbuf_appendstr(&buf, str);
-                }
             }
         }
     }
@@ -102851,14 +102865,18 @@ static int flecs_expr_interpolated_string_visit_type(
     char *ptr, *frag = NULL;
     char ch;
 
-    for (ptr = node->value; (ch = ptr[0]); ptr ++) {
+    for (ptr = node->value; (ch = ptr[0]); ) {
         if (ch == '\\') {
             ptr ++;
+            if (ptr[0]) {
+                ptr ++;
+            }
 
             continue;
         }
 
         if ((ch == '$') && (isspace(ptr[1]) || !ptr[1])) {
+            ptr ++;
             continue;
         }
 
@@ -103029,6 +103047,8 @@ static int flecs_expr_interpolated_string_visit_type(
             if (!ptr[0]) {
                 break;
             }
+        } else {
+            ptr ++;
         }
     }
 

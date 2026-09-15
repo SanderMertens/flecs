@@ -7101,6 +7101,247 @@ void Expr_interpolate_string_w_func_chain(void) {
     ecs_fini(world);
 }
 
+void Expr_interpolate_string_w_var_followed_by_curly_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_string_t);
+    test_assert(a != NULL);
+    *(ecs_string_t*)a->value.ptr = ecs_os_strdup("AAA");
+
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_string_t);
+    test_assert(b != NULL);
+    *(ecs_string_t*)b->value.ptr = ecs_os_strdup("BBB");
+
+    char *result = ecs_script_string_interpolate(world, "$a{$b}", vars);
+    test_assert(result != NULL);
+    test_str(result, "AAABBB");
+    ecs_os_free(result);
+
+    result = ecs_script_string_interpolate(world, "x$a {$b}{$a} y", vars);
+    test_assert(result != NULL);
+    test_str(result, "xAAA BBBAAA y");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_string_w_adjacent_curly_vars(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_string_t);
+    test_assert(a != NULL);
+    *(ecs_string_t*)a->value.ptr = ecs_os_strdup("AAA");
+
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_string_t);
+    test_assert(b != NULL);
+    *(ecs_string_t*)b->value.ptr = ecs_os_strdup("BBB");
+
+    char *result = ecs_script_string_interpolate(world, "{$a}{$b}", vars);
+    test_assert(result != NULL);
+    test_str(result, "AAABBB");
+    ecs_os_free(result);
+
+    result = ecs_script_string_interpolate(world, "{$a}{$b}{$a}", vars);
+    test_assert(result != NULL);
+    test_str(result, "AAABBBAAA");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_string_w_adjacent_curly_exprs(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *result = ecs_script_string_interpolate(
+        world, "{1 + 2}{3 + 4}", NULL);
+    test_assert(result != NULL);
+    test_str(result, "37");
+    ecs_os_free(result);
+
+    result = ecs_script_string_interpolate(
+        world, "a{1 + 2}{3 + 4}{5 + 6}b", NULL);
+    test_assert(result != NULL);
+    test_str(result, "a3711b");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_string_w_adjacent_curly_vars_w_trailing_text(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_string_t);
+    test_assert(a != NULL);
+    *(ecs_string_t*)a->value.ptr = ecs_os_strdup("AAA");
+
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_string_t);
+    test_assert(b != NULL);
+    *(ecs_string_t*)b->value.ptr = ecs_os_strdup("BBB");
+
+    char *result = ecs_script_string_interpolate(world, "{$a}{$b}end", vars);
+    test_assert(result != NULL);
+    test_str(result, "AAABBBend");
+    ecs_os_free(result);
+
+    result = ecs_script_string_interpolate(world, "pre{$a}{$b}", vars);
+    test_assert(result != NULL);
+    test_str(result, "preAAABBB");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_string_w_string_parts(void) {
+    ecs_world_t *world = ecs_init();
+
+    static const char *parts[8] = {
+        "<svg viewBox=\"0 0 8 8\">",
+        "<defs><mask id=\"m\">",
+        "<rect width=\"8\" height=\"8\" fill=\"#fff\"/>",
+        "</mask></defs>",
+        "<g mask=\"url(#m)\">",
+        "<path d=\"M0 0 L8 8\"/>",
+        "</g>",
+        "<g><circle cx=\"4\" cy=\"4\" r=\"2\"/></g>"
+    };
+
+    static const char *names[8] = {
+        "p0", "p1", "p2", "p3", "p4", "p5", "p6", "p7"
+    };
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    int32_t i;
+    for (i = 0; i < 8; i ++) {
+        ecs_script_var_t *v = ecs_script_vars_define(
+            vars, names[i], ecs_string_t);
+        test_assert(v != NULL);
+        *(ecs_string_t*)v->value.ptr = ecs_os_strdup(parts[i]);
+    }
+
+    ecs_strbuf_t expect_buf = ECS_STRBUF_INIT;
+    for (i = 0; i < 8; i ++) {
+        ecs_strbuf_appendstr(&expect_buf, parts[i]);
+    }
+    ecs_strbuf_appendstr(&expect_buf, "</svg>");
+    char *expect = ecs_strbuf_get(&expect_buf);
+
+    char *result = ecs_script_string_interpolate(world,
+        "{$p0}{$p1}{$p2}{$p3}{$p4}{$p5}{$p6}{$p7}</svg>", vars);
+    test_assert(result != NULL);
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    ecs_strbuf_t expect_no_tail_buf = ECS_STRBUF_INIT;
+    for (i = 0; i < 8; i ++) {
+        ecs_strbuf_appendstr(&expect_no_tail_buf, parts[i]);
+    }
+    char *expect_no_tail = ecs_strbuf_get(&expect_no_tail_buf);
+
+    result = ecs_script_string_interpolate(world,
+        "{$p0}{$p1}{$p2}{$p3}{$p4}{$p5}{$p6}{$p7}", vars);
+    test_assert(result != NULL);
+    test_str(result, expect_no_tail);
+    ecs_os_free(result);
+
+    ecs_os_free(expect);
+    ecs_os_free(expect_no_tail);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_string_w_part_boundary_special_chars(void) {
+    ecs_world_t *world = ecs_init();
+
+    static const char *parts[6] = {
+        "head</g>",
+        "slash/>",
+        "brace}",
+        "dollar$",
+        "curly{",
+        "backslash\\"
+    };
+
+    static const char *names[6] = {
+        "p0", "p1", "p2", "p3", "p4", "p5"
+    };
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    int32_t i;
+    for (i = 0; i < 6; i ++) {
+        ecs_script_var_t *v = ecs_script_vars_define(
+            vars, names[i], ecs_string_t);
+        test_assert(v != NULL);
+        *(ecs_string_t*)v->value.ptr = ecs_os_strdup(parts[i]);
+    }
+
+    ecs_strbuf_t expect_buf = ECS_STRBUF_INIT;
+    for (i = 0; i < 6; i ++) {
+        ecs_strbuf_appendstr(&expect_buf, parts[i]);
+    }
+    ecs_strbuf_appendstr(&expect_buf, "tail");
+    char *expect = ecs_strbuf_get(&expect_buf);
+
+    char *result = ecs_script_string_interpolate(world,
+        "{$p0}{$p1}{$p2}{$p3}{$p4}{$p5}tail", vars);
+    test_assert(result != NULL);
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    ecs_os_free(expect);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_string_w_300_expressions(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *v = ecs_script_vars_define(vars, "v", ecs_string_t);
+    test_assert(v != NULL);
+    *(ecs_string_t*)v->value.ptr = ecs_os_strdup("ab");
+
+    ecs_strbuf_t code_buf = ECS_STRBUF_INIT;
+    ecs_strbuf_t expect_buf = ECS_STRBUF_INIT;
+    int32_t i;
+    for (i = 0; i < 300; i ++) {
+        ecs_strbuf_appendstr(&code_buf, "{$v}");
+        ecs_strbuf_appendstr(&expect_buf, "ab");
+    }
+    char *code = ecs_strbuf_get(&code_buf);
+    char *expect = ecs_strbuf_get(&expect_buf);
+
+    char *result = ecs_script_string_interpolate(world, code, vars);
+    test_assert(result != NULL);
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    ecs_os_free(code);
+    ecs_os_free(expect);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
 void Expr_interpolate_in_expr_var_name(void) {
     ecs_world_t *world = ecs_init();
 

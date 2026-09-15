@@ -695,6 +695,8 @@ void Eval_ir_eval_desc(void);
 void Eval_ir_to_str(void);
 void Eval_ir_managed_script_update_keeps_runtime(void);
 void Eval_string_interpolation_of_scalar_types(void);
+void Eval_string_interpolation_of_const_parts(void);
+void Eval_string_interpolation_of_const_parts_w_leading_literal(void);
 void Eval_while_count(void);
 void Eval_while_count_vars(void);
 void Eval_while_count_1_4(void);
@@ -2125,6 +2127,13 @@ void Expr_interpolate_string_w_escape_var_operator(void);
 void Expr_interpolate_string_w_escape_curly_brackets(void);
 void Expr_interpolate_string_w_func(void);
 void Expr_interpolate_string_w_func_chain(void);
+void Expr_interpolate_string_w_var_followed_by_curly_var(void);
+void Expr_interpolate_string_w_adjacent_curly_vars(void);
+void Expr_interpolate_string_w_adjacent_curly_exprs(void);
+void Expr_interpolate_string_w_adjacent_curly_vars_w_trailing_text(void);
+void Expr_interpolate_string_w_string_parts(void);
+void Expr_interpolate_string_w_part_boundary_special_chars(void);
+void Expr_interpolate_string_w_300_expressions(void);
 void Expr_interpolate_in_expr_var_name(void);
 void Expr_interpolate_in_expr_var_name_w_pre(void);
 void Expr_interpolate_in_expr_var_name_w_post(void);
@@ -6339,6 +6348,14 @@ bake_test_case Eval_testcases[] = {
     {
         "string_interpolation_of_scalar_types",
         Eval_string_interpolation_of_scalar_types
+    },
+    {
+        "string_interpolation_of_const_parts",
+        Eval_string_interpolation_of_const_parts
+    },
+    {
+        "string_interpolation_of_const_parts_w_leading_literal",
+        Eval_string_interpolation_of_const_parts_w_leading_literal
     },
     {
         "while_count",
@@ -11960,6 +11977,34 @@ bake_test_case Expr_testcases[] = {
     {
         "interpolate_string_w_func_chain",
         Expr_interpolate_string_w_func_chain
+    },
+    {
+        "interpolate_string_w_var_followed_by_curly_var",
+        Expr_interpolate_string_w_var_followed_by_curly_var
+    },
+    {
+        "interpolate_string_w_adjacent_curly_vars",
+        Expr_interpolate_string_w_adjacent_curly_vars
+    },
+    {
+        "interpolate_string_w_adjacent_curly_exprs",
+        Expr_interpolate_string_w_adjacent_curly_exprs
+    },
+    {
+        "interpolate_string_w_adjacent_curly_vars_w_trailing_text",
+        Expr_interpolate_string_w_adjacent_curly_vars_w_trailing_text
+    },
+    {
+        "interpolate_string_w_string_parts",
+        Expr_interpolate_string_w_string_parts
+    },
+    {
+        "interpolate_string_w_part_boundary_special_chars",
+        Expr_interpolate_string_w_part_boundary_special_chars
+    },
+    {
+        "interpolate_string_w_300_expressions",
+        Expr_interpolate_string_w_300_expressions
     },
     {
         "interpolate_in_expr_var_name",
@@ -17848,7 +17893,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        754,
+        756,
         Eval_testcases,
         1,
         Eval_params
@@ -17947,7 +17992,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        418,
+        425,
         Expr_testcases,
         2,
         Expr_params
