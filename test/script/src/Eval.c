@@ -21266,6 +21266,72 @@ void Eval_string_interpolation_of_scalar_types(void) {
     ecs_fini(world);
 }
 
+void Eval_string_interpolation_of_const_parts(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "const p0 = \"<svg viewBox=\\\"0 0 8 8\\\">\""
+    LINE "const p1 = \"<defs><mask id=\\\"m\\\">\""
+    LINE "const p2 = \"<rect width=\\\"8\\\" height=\\\"8\\\"/>\""
+    LINE "const p3 = \"</mask></defs>\""
+    LINE "const p4 = \"<g mask=\\\"url(#m)\\\">\""
+    LINE "const p5 = \"<path d=\\\"M0 0 L8 8\\\"/>\""
+    LINE "const p6 = \"</g>\""
+    LINE "const p7 = \"<g><circle cx=\\\"4\\\" cy=\\\"4\\\" r=\\\"2\\\"/></g>\""
+    LINE "e { Label: {\"{p0}{p1}{p2}{p3}{p4}{p5}{p6}{p7}</svg>\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0],
+        "<svg viewBox=\"0 0 8 8\">"
+        "<defs><mask id=\"m\">"
+        "<rect width=\"8\" height=\"8\"/>"
+        "</mask></defs>"
+        "<g mask=\"url(#m)\">"
+        "<path d=\"M0 0 L8 8\"/>"
+        "</g>"
+        "<g><circle cx=\"4\" cy=\"4\" r=\"2\"/></g>"
+        "</svg>");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_const_parts_w_leading_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "const p0 = \"one\""
+    LINE "const p1 = \"two\""
+    LINE "const p2 = \"three\""
+    LINE "e { Label: {\"start{p0}{p1}{p2}\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "startonetwothree");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
 void Eval_semicolon_after_scope_close(void) {
     ecs_world_t *world = ecs_init();
 
