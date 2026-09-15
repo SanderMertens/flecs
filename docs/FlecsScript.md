@@ -2131,6 +2131,58 @@ template Building {
 
 This makes it possible to use templates as primitive for procedural generation templates, where a generic template specifies the "grammar" of an object (for example a building), with a set of derived templates that implement the style and/or content.
 
+##### Vectors of templates
+A prop can also accept a *list* of templates by adding `[]` to the type. The prop value is a vector of entities, where each element must be a template that derives from the interface type:
+
+```cpp
+template Building {
+  prop facade: template Facade[] = [VictorianFacade, ModernFacade]
+  prop floors: i32 = 3
+
+  for i in 0..floors {
+    "floor_{i}" {
+      facade[i % facade.count()]: {height: 3}
+    }
+  }
+}
+```
+
+An element is selected with `[]`, and the result can be used anywhere a single `template Facade` prop can be used, both as a component with an initializer and as a tag:
+
+```cpp
+template Building {
+  prop facade: template Facade[] = [VictorianFacade]
+
+  front { facade[0]: {height: 3} } // instantiate with initializer
+  back  { facade[0] }              // instantiate with default props
+}
+```
+
+The vector can also be used in expressions. It supports `count()`, iteration with `for`, and passing individual elements to other templates:
+
+```cpp
+template Building {
+  prop facade: template Facade[] = [VictorianFacade, ModernFacade]
+
+  for f in facade {
+    side { f: {height: 3} }
+  }
+
+  annex { Wing: {facade: facade[0]} }
+}
+```
+
+The default value may be omitted, in which case the vector is empty. Indexing an empty or out of range vector is an error.
+
+Instances override the vector like any other prop, both from script and from C:
+
+```cpp
+Building tower(facade: [ModernFacade])
+e { Building: {facade: [VictorianFacade, ModernFacade]} }
+```
+
+Vector props require an *interface struct* type (like `Facade` above). `prop x: template SomeTemplate[]`, where `SomeTemplate` is itself a template, is not supported.
+
 #### Parent constraints
 A template can require its immediate parent to be an instance of another template:
 

@@ -193,7 +193,13 @@ static int32_t flecs_irc_id(
     bool is_component,
     int32_t component_slot)
 {
-    int32_t first_reg = -1, second_reg = -1;
+    int32_t first_reg = -1, second_reg = -1, index_reg = -1;
+    if (id->index_expr) {
+        index_reg = flecs_irc_reg(c);
+        if (flecs_irc_compile_expr(c, id->index_expr, index_reg, false)) {
+            return -1;
+        }
+    }
     if (id->first_expr) {
         first_reg = flecs_irc_reg(c);
         if (flecs_irc_compile_expr(c, id->first_expr, first_reg, false)) {
@@ -223,11 +229,13 @@ static int32_t flecs_irc_id(
     desc->second_sp = id->second_sp;
     desc->first_reg = first_reg;
     desc->second_reg = second_reg;
+    desc->index_reg = index_reg;
+    desc->index_sp = id->index_expr ? id->index_sp : -1;
     desc->value_sp = id->value_sp;
     desc->component_slot = component_slot;
     desc->resolved = id->eval != 0;
     desc->has_second = id->second != NULL;
-    desc->dynamic = id->first_expr || id->second_expr ||
+    desc->dynamic = id->first_expr || id->second_expr || id->index_expr ||
         id->first_symbol != -1 || id->second_symbol != -1 ||
         id->first_sp != -1 || id->second_sp != -1 || !id->eval;
 
@@ -250,7 +258,8 @@ static int32_t flecs_irc_id(
 static bool flecs_irc_id_needs_expr(
     const ecs_script_id_t *id)
 {
-    return id->first_expr != NULL || id->second_expr != NULL;
+    return id->first_expr != NULL || id->second_expr != NULL ||
+        id->index_expr != NULL;
 }
 
 static int flecs_irc_compile_initializer(

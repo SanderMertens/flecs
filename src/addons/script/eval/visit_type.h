@@ -20,11 +20,17 @@ typedef struct ecs_script_type_entity_t {
     bool in_template;
 } ecs_script_type_entity_t;
 
+typedef struct ecs_script_type_interface_var_t {
+    int32_t sp;
+    ecs_entity_t interface;
+} ecs_script_type_interface_var_t;
+
 typedef struct ecs_script_type_visitor_t {
     ecs_script_eval_visitor_t *v;
     ecs_vec_t tables;
     ecs_vec_t entities;
     ecs_vec_t skipped_vars;
+    ecs_vec_t interface_vars;
     ecs_hashmap_t names;
 
     ecs_script_node_t *stmt_node;

@@ -85,6 +85,13 @@ static void flecs_script_id_to_str(
     } else {
         flecs_scriptbuf_appendstr(v, id->first);
     }
+
+    if (id->index_expr) {
+        flecs_scriptbuf_appendstr(v, "[");
+        flecs_expr_to_str_buf(
+            &v->script->pub, id->index_expr, v->buf, v->colors);
+        flecs_scriptbuf_appendstr(v, "]");
+    }
 }
 
 static void flecs_expr_to_str(
@@ -250,10 +257,11 @@ static void flecs_script_stmt_to_str(
     case EcsAstMut: {
         ecs_script_var_node_t *stmt = (ecs_script_var_node_t*)node;
         if (stmt->type) {
-            flecs_scriptbuf_append(v, "%s : %s%s = ",
+            flecs_scriptbuf_append(v, "%s : %s%s%s = ",
                 stmt->name,
                 stmt->type_is_template ? "template " : "",
-                stmt->type);
+                stmt->type,
+                stmt->type_is_vector ? "[]" : "");
         } else {
             flecs_scriptbuf_append(v, "%s = ",
                 stmt->name);

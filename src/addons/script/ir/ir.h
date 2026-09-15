@@ -178,6 +178,8 @@ typedef struct ecs_script_ir_id_t {
     int32_t second_sp;
     int32_t first_reg;
     int32_t second_reg;
+    int32_t index_reg;
+    int32_t index_sp;
     int32_t value_sp;
     int32_t component_slot;
     ecs_id_t cache_id;

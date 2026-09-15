@@ -46255,6 +46255,11 @@ typedef struct ecs_script_id_t {
     ecs_expr_node_t *first_expr;
     ecs_expr_node_t *second_expr;
 
+    /* If first refers to a vector template prop, this is the index expression
+     * and the stack pointer of the vector variable. */
+    ecs_expr_node_t *index_expr;
+    int32_t index_sp;
+
     /* If true, the lookup result for this id cannot be cached. This is the case
      * for entities that are defined inside of templates, which have different
      * values for each instantiation. */
@@ -46347,6 +46352,7 @@ typedef struct ecs_script_var_node_t {
     const char *name;
     const char *type;
     bool type_is_template;
+    bool type_is_vector;
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
     ecs_entity_t eval_interface;
@@ -47594,6 +47600,24 @@ void flecs_script_track_component(
     int32_t component_slot,
     ecs_id_t component);
 
+const ecs_vec_t* flecs_script_vector_prop_vec(
+    ecs_script_eval_visitor_t *v,
+    int32_t sp);
+
+typedef enum flecs_script_vector_prop_result_t {
+    FlecsScriptVectorPropOk,
+    FlecsScriptVectorPropOutOfRange,
+    FlecsScriptVectorPropInvalid
+} flecs_script_vector_prop_result_t;
+
+int flecs_script_vector_prop_elem(
+    ecs_script_eval_visitor_t *v,
+    const ecs_vec_t *vec,
+    int32_t index,
+    ecs_entity_t interface,
+    ecs_entity_t *out,
+    int32_t *count_out);
+
 const ecs_script_var_t* flecs_script_template_prop_var(
     ecs_script_eval_visitor_t *v,
     const void *node,
@@ -47645,11 +47669,17 @@ typedef struct ecs_script_type_entity_t {
     bool in_template;
 } ecs_script_type_entity_t;
 
+typedef struct ecs_script_type_interface_var_t {
+    int32_t sp;
+    ecs_entity_t interface;
+} ecs_script_type_interface_var_t;
+
 typedef struct ecs_script_type_visitor_t {
     ecs_script_eval_visitor_t *v;
     ecs_vec_t tables;
     ecs_vec_t entities;
     ecs_vec_t skipped_vars;
+    ecs_vec_t interface_vars;
     ecs_hashmap_t names;
 
     ecs_script_node_t *stmt_node;
@@ -47938,6 +47968,7 @@ typedef struct ecs_script_template_member_t {
     uint64_t input;
     bool is_mut;
     bool is_template;
+    bool is_vector;
     ecs_entity_t interface;
 
     /* Cached member layout for diffing new against old prop values */
@@ -48067,6 +48098,10 @@ int flecs_script_template_eval_var(
     bool mut);
 
 ecs_entity_t flecs_script_template_member_interface(
+    const ecs_script_template_t *template,
+    int32_t sp);
+
+bool flecs_script_template_member_is_vector(
     const ecs_script_template_t *template,
     int32_t sp);
 
@@ -48276,6 +48311,8 @@ typedef struct ecs_script_ir_id_t {
     int32_t second_sp;
     int32_t first_reg;
     int32_t second_reg;
+    int32_t index_reg;
+    int32_t index_sp;
     int32_t value_sp;
     int32_t component_slot;
     ecs_id_t cache_id;
@@ -63471,6 +63508,7 @@ static int flecs_script_set_id(
     id->first_sp = -1;
     id->second_sp = -1;
     id->value_sp = -1;
+    id->index_sp = -1;
     id->first_symbol = -1;
     id->second_symbol = -1;
 
@@ -66759,6 +66797,14 @@ static const char* flecs_script_parse_var(
                         Parse_1(EcsTokIdentifier,
                             var->type = Token(4 + token_offset);
                             var->type_is_template = true;
+
+                            {
+                                LookAhead_2('[', ']',
+                                    pos = lookahead;
+                                    var->type_is_vector = true;
+                                )
+                            }
+
                             goto var_type;
                         )
                     )
@@ -67030,6 +67076,7 @@ static const char* flecs_script_stmt_parse(
 
     const char *component_first = NULL, *component_second = NULL;
     bool component_collection = false;
+    ecs_expr_node_t *component_index = NULL;
 
     parser->stmt_pos = NULL;
 
@@ -67103,6 +67150,11 @@ identifier: {
         // Position:
         case ':': {
             goto identifier_colon;
+        }
+
+        // facade[
+        case '[': {
+            goto identifier_index;
         }
 
         // SpaceShip(
@@ -67630,6 +67682,73 @@ flagged_id: {
     )
 }
 
+// facade[0]
+identifier_index: {
+    component_first = Token(0);
+
+    {
+        LookAhead(
+            case '}':
+            case ']':
+            EcsTokEndOfStatement: {
+                Error("expected index expression after '%s['",
+                    component_first);
+            }
+        )
+    }
+
+    {
+        parser->significant_newline = false;
+        parser->expr_pos = pos;
+        if (!(pos = flecs_script_parse_expr(
+            parser, pos, 0, &component_index)))
+        {
+            goto error;
+        }
+        parser->significant_newline = true;
+        parser->expr_end = pos;
+    }
+
+    if (!component_index) {
+        Error("expected index expression after '%s['", component_first);
+    }
+
+    Parse_1(']',
+        {
+            // facade[0] } (end of scope)
+            LookAhead_1('}',
+                ecs_script_tag_t *tag = flecs_script_insert_tag(
+                    parser, component_first);
+                if (!tag) {
+                    Error("invalid context for tag '%s': must be part of "
+                        "entity", component_first);
+                }
+                tag->id.index_expr = component_index;
+                EndOfRule;
+            )
+        }
+
+        Parse(
+            // facade[0]\n
+            EcsTokEndOfStatement: {
+                ecs_script_tag_t *tag = flecs_script_insert_tag(
+                    parser, component_first);
+                if (!tag) {
+                    Error("invalid context for tag '%s': must be part of "
+                        "entity", component_first);
+                }
+                tag->id.index_expr = component_index;
+                EndOfRule;
+            }
+
+            // facade[0]:
+            case ':': {
+                goto component_expr;
+            }
+        )
+    )
+}
+
 // Position:
 identifier_colon: {
     component_first = Token(0);
@@ -67808,6 +67927,7 @@ component_expr: {
             parser, component_first, component_second);
         comp->expr = EXPR;
         comp->is_collection = component_collection;
+        comp->id.index_expr = component_index;
         EndOfRule;
     })
 }
@@ -69205,6 +69325,7 @@ static void flecs_script_id_free(
 {
     flecs_expr_visit_free(script, id->first_expr);
     flecs_expr_visit_free(script, id->second_expr);
+    flecs_expr_visit_free(script, id->index_expr);
 }
 
 int flecs_script_visit_free_node(
@@ -69380,6 +69501,13 @@ static void flecs_script_id_to_str(
     } else {
         flecs_scriptbuf_appendstr(v, id->first);
     }
+
+    if (id->index_expr) {
+        flecs_scriptbuf_appendstr(v, "[");
+        flecs_expr_to_str_buf(
+            &v->script->pub, id->index_expr, v->buf, v->colors);
+        flecs_scriptbuf_appendstr(v, "]");
+    }
 }
 
 static void flecs_expr_to_str(
@@ -69545,10 +69673,11 @@ static void flecs_script_stmt_to_str(
     case EcsAstMut: {
         ecs_script_var_node_t *stmt = (ecs_script_var_node_t*)node;
         if (stmt->type) {
-            flecs_scriptbuf_append(v, "%s : %s%s = ",
+            flecs_scriptbuf_append(v, "%s : %s%s%s = ",
                 stmt->name,
                 stmt->type_is_template ? "template " : "",
-                stmt->type);
+                stmt->type,
+                stmt->type_is_vector ? "[]" : "");
         } else {
             flecs_scriptbuf_append(v, "%s = ",
                 stmt->name);
@@ -90703,13 +90832,94 @@ int flecs_script_eval_id_elem(
     return 0;
 }
 
+const ecs_vec_t* flecs_script_vector_prop_vec(
+    ecs_script_eval_visitor_t *v,
+    int32_t sp)
+{
+    ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, sp);
+    if (!var || !var->value.ptr) {
+        return NULL;
+    }
+    return var->value.ptr;
+}
+
+int flecs_script_vector_prop_elem(
+    ecs_script_eval_visitor_t *v,
+    const ecs_vec_t *vec,
+    int32_t index,
+    ecs_entity_t interface,
+    ecs_entity_t *out,
+    int32_t *count_out)
+{
+    int32_t count = vec ? ecs_vec_count(vec) : 0;
+    *count_out = count;
+    *out = 0;
+
+    if (index < 0 || index >= count) {
+        return FlecsScriptVectorPropOutOfRange;
+    }
+
+    ecs_entity_t elem = ((const ecs_entity_t*)ecs_vec_first(vec))[index];
+    *out = elem;
+
+    if (!elem || !ecs_is_alive(v->world, elem) || (interface &&
+        !flecs_script_template_interface_accepts(v->world, elem, interface)))
+    {
+        return FlecsScriptVectorPropInvalid;
+    }
+
+    return FlecsScriptVectorPropOk;
+}
+
+static int flecs_script_eval_index_elem(
+    ecs_script_eval_visitor_t *v,
+    void *node,
+    ecs_script_id_t *id,
+    ecs_entity_t *out)
+{
+    int32_t index = 0;
+    ecs_value_t value = { .type = ecs_id(ecs_i32_t), .ptr = &index };
+    if (flecs_script_eval_expr(v, &id->index_expr, &value)) {
+        return -1;
+    }
+
+    const ecs_vec_t *vec = flecs_script_vector_prop_vec(v, id->index_sp);
+    ecs_entity_t elem = 0;
+    int32_t count = 0;
+    int result = flecs_script_vector_prop_elem(
+        v, vec, index, id->interface, &elem, &count);
+    if (result == FlecsScriptVectorPropOk) {
+        *out = elem;
+        return 0;
+    }
+
+    if (result == FlecsScriptVectorPropOutOfRange) {
+        flecs_script_eval_error(v, node,
+            "index %d out of range for vector prop '%s' with %d element(s)",
+            index, id->first, count);
+        return -1;
+    }
+
+    char *elem_str = elem ? ecs_get_path(v->world, elem) : ecs_os_strdup("0");
+    flecs_script_eval_error(v, node,
+        "'%s' at index %d of vector prop '%s' is not a template derived "
+        "from '%s'", elem_str, index, id->first,
+        ecs_get_name(v->world, id->interface));
+    ecs_os_free(elem_str);
+    return -1;
+}
+
 static int flecs_script_eval_id(
     ecs_script_eval_visitor_t *v,
     void *node,
     ecs_script_id_t *id)
 {
     ecs_entity_t first;
-    if (flecs_script_eval_id_elem(v, node, &id->first_expr,
+    if (id->index_expr) {
+        if (flecs_script_eval_index_elem(v, node, id, &first)) {
+            return -1;
+        }
+    } else if (flecs_script_eval_id_elem(v, node, &id->first_expr,
         id->first_eval, id->first_symbol, id->first_sp, &first))
     {
         return -1;
@@ -91286,7 +91496,9 @@ static int flecs_script_eval_component(
 {
     bool resolved = node->id.eval != 0;
 
-    if (node->id.interface && flecs_script_eval_interface_id(v, node)) {
+    if (node->id.interface && !node->id.index_expr &&
+        flecs_script_eval_interface_id(v, node))
+    {
         return -1;
     }
 
@@ -94209,12 +94421,18 @@ static int flecs_script_type_name_compare(
     return ecs_os_memcmp(a->name, b->name, a->length);
 }
 
+static ecs_entity_t flecs_script_type_interface_var(
+    const ecs_script_type_visitor_t *t,
+    int32_t sp);
+
 static void flecs_script_type_init(
     ecs_script_type_visitor_t *t)
 {
     ecs_vec_init_t(NULL, &t->tables, ecs_script_type_table_t, 0);
     ecs_vec_init_t(NULL, &t->entities, ecs_script_type_entity_t, 0);
     ecs_vec_init_t(NULL, &t->skipped_vars, const char*, 0);
+    ecs_vec_init_t(NULL, &t->interface_vars,
+        ecs_script_type_interface_var_t, 0);
     flecs_hashmap_init(&t->names, flecs_script_type_name_t, int32_t,
         flecs_script_type_name_hash, flecs_script_type_name_compare, NULL);
     flecs_script_type_table_new(t, -1, NULL);
@@ -94224,6 +94442,8 @@ static void flecs_script_type_fini(
     ecs_script_type_visitor_t *t)
 {
     flecs_hashmap_fini(&t->names);
+    ecs_vec_fini_t(NULL, &t->interface_vars,
+        ecs_script_type_interface_var_t);
     ecs_vec_fini_t(NULL, &t->skipped_vars, const char*);
     ecs_vec_fini_t(NULL, &t->entities, ecs_script_type_entity_t);
     ecs_vec_fini_t(NULL, &t->tables, ecs_script_type_table_t);
@@ -94824,7 +95044,30 @@ static int flecs_script_type_id_elem(
             ? flecs_script_template_member_interface(
                 t->v->template, symbol.sp)
             : 0;
+        if (!interface && var) {
+            interface = flecs_script_type_interface_var(t, symbol.sp);
+            if (interface) {
+                if (id->second) {
+                    flecs_script_eval_error(t->v, node,
+                        "template prop '%s' cannot be used as pair element",
+                        name);
+                    return -1;
+                }
+                id->interface = interface;
+                *sp = symbol.sp;
+                id->dynamic = true;
+                return 0;
+            }
+        }
         if (interface) {
+            if (flecs_script_template_member_is_vector(
+                t->v->template, symbol.sp))
+            {
+                flecs_script_eval_error(t->v, node,
+                    "prop '%s' is a vector, use '%s[index]' to select an "
+                    "element", name, name);
+                return -1;
+            }
             if (id->second) {
                 flecs_script_eval_error(t->v, node,
                     "template prop '%s' cannot be used as pair element",
@@ -94852,6 +95095,40 @@ static int flecs_script_type_id_elem(
     return 0;
 }
 
+static int flecs_script_type_index_id(
+    ecs_script_type_visitor_t *t,
+    void *node,
+    ecs_script_id_t *id)
+{
+    if (id->second) {
+        flecs_script_eval_error(t->v, node,
+            "vector prop '%s' cannot be used as pair element", id->first);
+        return -1;
+    }
+
+    ecs_script_var_t *var = ecs_script_vars_lookup(t->v->vars, id->first);
+    if (!var || !t->v->template || !flecs_script_template_member_is_vector(
+        t->v->template, var->sp))
+    {
+        flecs_script_eval_error(t->v, node,
+            "'%s' is not a vector prop, cannot use '[]'", id->first);
+        return -1;
+    }
+
+    ecs_entity_t index_type = ecs_id(ecs_i32_t);
+    int result = flecs_script_type_check_expr(t, &id->index_expr, &index_type);
+    if (result) {
+        return result;
+    }
+
+    id->interface = flecs_script_template_member_interface(
+        t->v->template, var->sp);
+    id->index_sp = var->sp;
+    id->dynamic = true;
+
+    return 0;
+}
+
 static int flecs_script_type_id(
     ecs_script_type_visitor_t *t,
     void *node,
@@ -94872,8 +95149,13 @@ static int flecs_script_type_id(
     id->first_sp = -1;
     id->second_sp = -1;
     id->value_sp = -1;
+    id->index_sp = -1;
     id->interface = 0;
     id->dynamic = id->first_expr || id->second_expr;
+
+    if (id->index_expr) {
+        return flecs_script_type_index_id(t, node, id);
+    }
 
     int result = flecs_script_type_id_elem(t, id, node, id->first,
         &id->first_expr, 0, &id->first_eval, &id->first_symbol,
@@ -95565,6 +95847,16 @@ static int flecs_script_type_template_var(
         }
     }
 
+    if (node->type_is_vector) {
+        if (!node->eval_interface) {
+            flecs_script_eval_error(t->v, node,
+                "vector props require an interface struct type, but '%s' of "
+                "prop '%s' is a template", node->type, node->name);
+            return -1;
+        }
+        type = flecs_script_vector_type(t->v->world, ecs_id(ecs_entity_t));
+    }
+
     if (node->expr) {
         int result = flecs_script_type_check_expr(t, &node->expr, &type);
         if (result) {
@@ -95577,6 +95869,46 @@ static int flecs_script_type_template_var(
     }
     node->eval_type = type;
     return flecs_script_template_eval_var(t->v, node, mut);
+}
+
+static ecs_entity_t flecs_script_type_interface_var(
+    const ecs_script_type_visitor_t *t,
+    int32_t sp)
+{
+    const ecs_script_type_interface_var_t *vars = ecs_vec_first(
+        &t->interface_vars);
+    int32_t i, count = ecs_vec_count(&t->interface_vars);
+    for (i = count - 1; i >= 0; i --) {
+        if (vars[i].sp == sp) {
+            return vars[i].interface;
+        }
+    }
+    return 0;
+}
+
+static ecs_entity_t flecs_script_type_for_interface(
+    ecs_script_type_visitor_t *t,
+    ecs_script_for_t *node,
+    ecs_entity_t elem_type)
+{
+    if (!node->expr || elem_type != ecs_id(ecs_entity_t) || !t->v->template) {
+        return 0;
+    }
+
+    if (node->expr->kind != EcsExprVariable) {
+        return 0;
+    }
+
+    int32_t sp = ((ecs_expr_variable_t*)node->expr)->sp;
+    if (sp < 0) {
+        return 0;
+    }
+
+    if (!flecs_script_template_member_is_vector(t->v->template, sp)) {
+        return 0;
+    }
+
+    return flecs_script_template_member_interface(t->v->template, sp);
 }
 
 static int flecs_script_type_for(
@@ -95641,9 +95973,20 @@ static int flecs_script_type_for(
     node->loop_var_sp[var_i] = var->sp;
 
     {
+        int32_t interface_var_count = ecs_vec_count(&t->interface_vars);
+        ecs_entity_t elem_interface = flecs_script_type_for_interface(
+            t, node, elem_type);
+        if (elem_interface) {
+            ecs_script_type_interface_var_t *iv = ecs_vec_append_t(NULL,
+                &t->interface_vars, ecs_script_type_interface_var_t);
+            iv->sp = var->sp;
+            iv->interface = elem_interface;
+        }
         t->for_depth ++;
         int result = flecs_script_type_control_scope(t, node->scope);
         t->for_depth --;
+        ecs_vec_set_count_t(NULL, &t->interface_vars,
+            ecs_script_type_interface_var_t, interface_var_count);
         t->v->vars = ecs_script_vars_pop(t->v->vars);
         return result;
     }
@@ -105291,7 +105634,13 @@ static int32_t flecs_irc_id(
     bool is_component,
     int32_t component_slot)
 {
-    int32_t first_reg = -1, second_reg = -1;
+    int32_t first_reg = -1, second_reg = -1, index_reg = -1;
+    if (id->index_expr) {
+        index_reg = flecs_irc_reg(c);
+        if (flecs_irc_compile_expr(c, id->index_expr, index_reg, false)) {
+            return -1;
+        }
+    }
     if (id->first_expr) {
         first_reg = flecs_irc_reg(c);
         if (flecs_irc_compile_expr(c, id->first_expr, first_reg, false)) {
@@ -105321,11 +105670,13 @@ static int32_t flecs_irc_id(
     desc->second_sp = id->second_sp;
     desc->first_reg = first_reg;
     desc->second_reg = second_reg;
+    desc->index_reg = index_reg;
+    desc->index_sp = id->index_expr ? id->index_sp : -1;
     desc->value_sp = id->value_sp;
     desc->component_slot = component_slot;
     desc->resolved = id->eval != 0;
     desc->has_second = id->second != NULL;
-    desc->dynamic = id->first_expr || id->second_expr ||
+    desc->dynamic = id->first_expr || id->second_expr || id->index_expr ||
         id->first_symbol != -1 || id->second_symbol != -1 ||
         id->first_sp != -1 || id->second_sp != -1 || !id->eval;
 
@@ -105348,7 +105699,8 @@ static int32_t flecs_irc_id(
 static bool flecs_irc_id_needs_expr(
     const ecs_script_id_t *id)
 {
-    return id->first_expr != NULL || id->second_expr != NULL;
+    return id->first_expr != NULL || id->second_expr != NULL ||
+        id->index_expr != NULL;
 }
 
 static int flecs_irc_compile_initializer(
@@ -107728,6 +108080,41 @@ static int flecs_ir_id_elem(
     return 0;
 }
 
+static int flecs_ir_index_elem(
+    ecs_script_ir_vm_t *vm,
+    const ecs_script_ir_id_t *desc,
+    const void *node,
+    ecs_entity_t *out)
+{
+    ecs_script_eval_visitor_t *v = &vm->v;
+    int32_t index = *(int32_t*)flecs_ir_reg(vm, desc->index_reg)->value.ptr;
+
+    const ecs_vec_t *vec = flecs_script_vector_prop_vec(v, desc->index_sp);
+    ecs_entity_t elem = 0;
+    int32_t count = 0;
+    int result = flecs_script_vector_prop_elem(
+        v, vec, index, desc->interface, &elem, &count);
+    if (result == FlecsScriptVectorPropOk) {
+        *out = elem;
+        return 0;
+    }
+
+    if (result == FlecsScriptVectorPropOutOfRange) {
+        flecs_ir_error(vm, node,
+            "index %d out of range for vector prop '%s' with %d element(s)",
+            index, desc->first, count);
+        return -1;
+    }
+
+    char *elem_str = elem ? ecs_get_path(v->world, elem) : ecs_os_strdup("0");
+    flecs_ir_error(vm, node,
+        "'%s' at index %d of vector prop '%s' is not a template derived "
+        "from '%s'", elem_str, index, desc->first,
+        ecs_get_name(v->world, desc->interface));
+    ecs_os_free(elem_str);
+    return -1;
+}
+
 static int flecs_ir_id_resolve(
     ecs_script_ir_vm_t *vm,
     const ecs_script_ir_id_t *desc,
@@ -107740,7 +108127,11 @@ static int flecs_ir_id_resolve(
     }
 
     ecs_entity_t first;
-    if (flecs_ir_id_elem(vm, node, desc->first_reg, desc->first_eval,
+    if (desc->index_sp != -1) {
+        if (flecs_ir_index_elem(vm, desc, node, &first)) {
+            return -1;
+        }
+    } else if (flecs_ir_id_elem(vm, node, desc->first_reg, desc->first_eval,
         desc->first_symbol, desc->first_sp, &first))
     {
         return -1;
@@ -107791,7 +108182,9 @@ static inline int flecs_ir_id_get(
         *out = desc->eval;
         return 0;
     }
-    if (desc->first_reg == -1 && desc->first_sp == -1) {
+    if (desc->first_reg == -1 && desc->first_sp == -1 &&
+        desc->index_sp == -1)
+    {
         ecs_entity_t first = desc->first_symbol != -1
             ? flecs_ir_symbol_entity(&vm->v, desc->first_symbol)
             : desc->first_eval;
@@ -108091,7 +108484,9 @@ static int flecs_ir_component_begin(
     const ecs_script_ir_id_t *desc = flecs_ir_id_desc(vm, op->a);
     const ecs_script_component_t *node = op->node;
 
-    if (desc->interface && flecs_ir_interface_check(vm, desc, node)) {
+    if (desc->interface && desc->index_sp == -1 &&
+        flecs_ir_interface_check(vm, desc, node))
+    {
         return -1;
     }
 
@@ -112899,16 +113294,19 @@ static int flecs_script_dep_id(
     uint64_t *internal)
 {
     if (flecs_script_dep_expr(ctx, id->first_expr, input, internal) ||
-        flecs_script_dep_expr(ctx, id->second_expr, input, internal))
+        flecs_script_dep_expr(ctx, id->second_expr, input, internal) ||
+        flecs_script_dep_expr(ctx, id->index_expr, input, internal))
     {
         return -1;
     }
     *input |= flecs_script_dep_var_get(ctx, id->first_sp);
     *input |= flecs_script_dep_var_get(ctx, id->second_sp);
     *input |= flecs_script_dep_var_get(ctx, id->value_sp);
+    *input |= flecs_script_dep_var_get(ctx, id->index_sp);
     *internal |= flecs_script_dep_var_get_internal(ctx, id->first_sp);
     *internal |= flecs_script_dep_var_get_internal(ctx, id->second_sp);
     *internal |= flecs_script_dep_var_get_internal(ctx, id->value_sp);
+    *internal |= flecs_script_dep_var_get_internal(ctx, id->index_sp);
     return 0;
 }
 
@@ -114825,6 +115223,33 @@ static int flecs_script_template_validate_interfaces(
 
         const ecs_member_t *member = ecs_vec_get_t(
             &st->members, ecs_member_t, tm->index);
+
+        if (tm->is_vector) {
+            const ecs_vec_t *vec = ECS_OFFSET(data, member->offset);
+            int32_t e, elem_count = ecs_vec_count(vec);
+            const ecs_entity_t *elems = ecs_vec_first(vec);
+            for (e = 0; e < elem_count; e ++) {
+                ecs_entity_t elem = elems[e];
+                if (elem && ecs_is_alive(world, elem) &&
+                    flecs_script_template_interface_accepts(
+                        world, elem, tm->interface))
+                {
+                    continue;
+                }
+                char *elem_str = elem
+                    ? ecs_get_path(world, elem)
+                    : ecs_os_strdup("0");
+                ecs_err("invalid value '%s' at index %d of prop '%s' of "
+                    "template '%s': expected a template derived from '%s'",
+                    elem_str, e, member->name,
+                    ecs_get_name(world, template_entity),
+                    ecs_get_name(world, tm->interface));
+                ecs_os_free(elem_str);
+                return -1;
+            }
+            continue;
+        }
+
         ecs_entity_t value = *(const ecs_entity_t*)
             ECS_OFFSET(data, member->offset);
 
@@ -115654,8 +116079,30 @@ int flecs_script_template_eval_var(
         if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
             return -1;
         }
-    } else if (node->eval_interface) {
+    } else if (node->eval_interface && !node->type_is_vector) {
         *(ecs_entity_t*)var->value.ptr = node->eval_interface;
+    }
+
+    if (node->type_is_vector && node->eval_interface) {
+        const ecs_vec_t *vec = var->value.ptr;
+        const ecs_entity_t *elems = ecs_vec_first(vec);
+        int32_t e, elem_count = ecs_vec_count(vec);
+        for (e = 0; e < elem_count; e ++) {
+            if (elems[e] && flecs_script_template_interface_accepts(
+                v->world, elems[e], node->eval_interface))
+            {
+                continue;
+            }
+            char *elem_str = elems[e]
+                ? ecs_get_path(v->world, elems[e])
+                : ecs_os_strdup("0");
+            flecs_script_eval_error(v, node,
+                "'%s' at index %d of prop '%s' is not a template derived "
+                "from '%s'", elem_str, e, node->name,
+                ecs_get_name(v->world, node->eval_interface));
+            ecs_os_free(elem_str);
+            return -1;
+        }
     }
 
     ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator,
@@ -115693,6 +116140,7 @@ int flecs_script_template_eval_var(
     member->input = 0;
     member->is_mut = mut;
     member->is_template = node->type_is_template && !node->eval_interface;
+    member->is_vector = node->type_is_vector;
     member->interface = node->eval_interface;
     member->diff_ti = NULL;
     if (member->interface) {
@@ -115765,6 +116213,26 @@ static bool flecs_script_template_prop_is_template(
     for (i = 0; i < count; i ++) {
         if (!members[i].is_mut && members[i].index == index) {
             return members[i].is_template;
+        }
+    }
+
+    return false;
+}
+
+static bool flecs_script_template_prop_is_vector(
+    const ecs_script_template_t *template,
+    int32_t index)
+{
+    if (!template) {
+        return false;
+    }
+
+    const ecs_script_template_member_t *members = ecs_vec_first(
+        &template->members);
+    int32_t i, count = ecs_vec_count(&template->members);
+    for (i = 0; i < count; i ++) {
+        if (!members[i].is_mut && members[i].index == index) {
+            return members[i].is_vector;
         }
     }
 
@@ -115871,6 +116339,8 @@ static int flecs_script_template_inherit(
         member->is_mut = false;
         member->is_template = flecs_script_template_prop_is_template(
             base_template, i);
+        member->is_vector = flecs_script_template_prop_is_vector(
+            base_template, i);
         member->interface = flecs_script_template_prop_interface(
             base_template, i);
         member->diff_ti = NULL;
@@ -115913,6 +116383,24 @@ ecs_entity_t flecs_script_template_member_interface(
         }
     }
     return 0;
+}
+
+bool flecs_script_template_member_is_vector(
+    const ecs_script_template_t *template,
+    int32_t sp)
+{
+    if (!template) {
+        return false;
+    }
+    const ecs_script_template_member_t *members = ecs_vec_first(
+        &template->members);
+    int32_t i, count = ecs_vec_count(&template->members);
+    for (i = 0; i < count; i ++) {
+        if (members[i].sp == sp) {
+            return members[i].is_vector;
+        }
+    }
+    return false;
 }
 
 bool flecs_script_template_member_is_template(

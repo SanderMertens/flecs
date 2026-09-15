@@ -498,13 +498,94 @@ int flecs_script_eval_id_elem(
     return 0;
 }
 
+const ecs_vec_t* flecs_script_vector_prop_vec(
+    ecs_script_eval_visitor_t *v,
+    int32_t sp)
+{
+    ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, sp);
+    if (!var || !var->value.ptr) {
+        return NULL;
+    }
+    return var->value.ptr;
+}
+
+int flecs_script_vector_prop_elem(
+    ecs_script_eval_visitor_t *v,
+    const ecs_vec_t *vec,
+    int32_t index,
+    ecs_entity_t interface,
+    ecs_entity_t *out,
+    int32_t *count_out)
+{
+    int32_t count = vec ? ecs_vec_count(vec) : 0;
+    *count_out = count;
+    *out = 0;
+
+    if (index < 0 || index >= count) {
+        return FlecsScriptVectorPropOutOfRange;
+    }
+
+    ecs_entity_t elem = ((const ecs_entity_t*)ecs_vec_first(vec))[index];
+    *out = elem;
+
+    if (!elem || !ecs_is_alive(v->world, elem) || (interface &&
+        !flecs_script_template_interface_accepts(v->world, elem, interface)))
+    {
+        return FlecsScriptVectorPropInvalid;
+    }
+
+    return FlecsScriptVectorPropOk;
+}
+
+static int flecs_script_eval_index_elem(
+    ecs_script_eval_visitor_t *v,
+    void *node,
+    ecs_script_id_t *id,
+    ecs_entity_t *out)
+{
+    int32_t index = 0;
+    ecs_value_t value = { .type = ecs_id(ecs_i32_t), .ptr = &index };
+    if (flecs_script_eval_expr(v, &id->index_expr, &value)) {
+        return -1;
+    }
+
+    const ecs_vec_t *vec = flecs_script_vector_prop_vec(v, id->index_sp);
+    ecs_entity_t elem = 0;
+    int32_t count = 0;
+    int result = flecs_script_vector_prop_elem(
+        v, vec, index, id->interface, &elem, &count);
+    if (result == FlecsScriptVectorPropOk) {
+        *out = elem;
+        return 0;
+    }
+
+    if (result == FlecsScriptVectorPropOutOfRange) {
+        flecs_script_eval_error(v, node,
+            "index %d out of range for vector prop '%s' with %d element(s)",
+            index, id->first, count);
+        return -1;
+    }
+
+    char *elem_str = elem ? ecs_get_path(v->world, elem) : ecs_os_strdup("0");
+    flecs_script_eval_error(v, node,
+        "'%s' at index %d of vector prop '%s' is not a template derived "
+        "from '%s'", elem_str, index, id->first,
+        ecs_get_name(v->world, id->interface));
+    ecs_os_free(elem_str);
+    return -1;
+}
+
 static int flecs_script_eval_id(
     ecs_script_eval_visitor_t *v,
     void *node,
     ecs_script_id_t *id)
 {
     ecs_entity_t first;
-    if (flecs_script_eval_id_elem(v, node, &id->first_expr,
+    if (id->index_expr) {
+        if (flecs_script_eval_index_elem(v, node, id, &first)) {
+            return -1;
+        }
+    } else if (flecs_script_eval_id_elem(v, node, &id->first_expr,
         id->first_eval, id->first_symbol, id->first_sp, &first))
     {
         return -1;
@@ -1081,7 +1162,9 @@ static int flecs_script_eval_component(
 {
     bool resolved = node->id.eval != 0;
 
-    if (node->id.interface && flecs_script_eval_interface_id(v, node)) {
+    if (node->id.interface && !node->id.index_expr &&
+        flecs_script_eval_interface_id(v, node))
+    {
         return -1;
     }
 

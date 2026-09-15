@@ -482,6 +482,14 @@ static const char* flecs_script_parse_var(
                         Parse_1(EcsTokIdentifier,
                             var->type = Token(4 + token_offset);
                             var->type_is_template = true;
+
+                            {
+                                LookAhead_2('[', ']',
+                                    pos = lookahead;
+                                    var->type_is_vector = true;
+                                )
+                            }
+
                             goto var_type;
                         )
                     )
@@ -753,6 +761,7 @@ static const char* flecs_script_stmt_parse(
 
     const char *component_first = NULL, *component_second = NULL;
     bool component_collection = false;
+    ecs_expr_node_t *component_index = NULL;
 
     parser->stmt_pos = NULL;
 
@@ -826,6 +835,11 @@ identifier: {
         // Position:
         case ':': {
             goto identifier_colon;
+        }
+
+        // facade[
+        case '[': {
+            goto identifier_index;
         }
 
         // SpaceShip(
@@ -1353,6 +1367,73 @@ flagged_id: {
     )
 }
 
+// facade[0]
+identifier_index: {
+    component_first = Token(0);
+
+    {
+        LookAhead(
+            case '}':
+            case ']':
+            EcsTokEndOfStatement: {
+                Error("expected index expression after '%s['",
+                    component_first);
+            }
+        )
+    }
+
+    {
+        parser->significant_newline = false;
+        parser->expr_pos = pos;
+        if (!(pos = flecs_script_parse_expr(
+            parser, pos, 0, &component_index)))
+        {
+            goto error;
+        }
+        parser->significant_newline = true;
+        parser->expr_end = pos;
+    }
+
+    if (!component_index) {
+        Error("expected index expression after '%s['", component_first);
+    }
+
+    Parse_1(']',
+        {
+            // facade[0] } (end of scope)
+            LookAhead_1('}',
+                ecs_script_tag_t *tag = flecs_script_insert_tag(
+                    parser, component_first);
+                if (!tag) {
+                    Error("invalid context for tag '%s': must be part of "
+                        "entity", component_first);
+                }
+                tag->id.index_expr = component_index;
+                EndOfRule;
+            )
+        }
+
+        Parse(
+            // facade[0]\n
+            EcsTokEndOfStatement: {
+                ecs_script_tag_t *tag = flecs_script_insert_tag(
+                    parser, component_first);
+                if (!tag) {
+                    Error("invalid context for tag '%s': must be part of "
+                        "entity", component_first);
+                }
+                tag->id.index_expr = component_index;
+                EndOfRule;
+            }
+
+            // facade[0]:
+            case ':': {
+                goto component_expr;
+            }
+        )
+    )
+}
+
 // Position:
 identifier_colon: {
     component_first = Token(0);
@@ -1531,6 +1612,7 @@ component_expr: {
             parser, component_first, component_second);
         comp->expr = EXPR;
         comp->is_collection = component_collection;
+        comp->id.index_expr = component_index;
         EndOfRule;
     })
 }

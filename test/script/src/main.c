@@ -3382,6 +3382,35 @@ void TemplateProp_bool_prop_mul_flt_member(void);
 void TemplateProp_bool_prop_in_flt_member_initializer(void);
 void TemplateProp_bool_prop_mul_flt_member_const(void);
 
+// Testsuite 'TemplateVectorProp'
+void TemplateVectorProp_setup(void);
+void TemplateVectorProp_declaration_w_default(void);
+void TemplateVectorProp_declaration_wo_default(void);
+void TemplateVectorProp_count(void);
+void TemplateVectorProp_index_instantiate_w_initializer(void);
+void TemplateVectorProp_index_tag_form(void);
+void TemplateVectorProp_pass_element_to_interface_prop(void);
+void TemplateVectorProp_iterate_w_for(void);
+void TemplateVectorProp_index_by_rng(void);
+void TemplateVectorProp_override_kind_syntax(void);
+void TemplateVectorProp_override_component_syntax(void);
+void TemplateVectorProp_native_set_id(void);
+void TemplateVectorProp_expr_run_props(void);
+void TemplateVectorProp_index_out_of_range_fails(void);
+void TemplateVectorProp_index_empty_vector_fails(void);
+void TemplateVectorProp_default_not_derived_fails(void);
+void TemplateVectorProp_value_not_derived_fails(void);
+void TemplateVectorProp_value_not_derived_from_c_fails(void);
+void TemplateVectorProp_template_type_vector_fails(void);
+void TemplateVectorProp_bare_vector_prop_as_component_fails(void);
+void TemplateVectorProp_reactive_prop_change(void);
+void TemplateVectorProp_reactive_prop_change_from_script(void);
+void TemplateVectorProp_nested_template(void);
+void TemplateVectorProp_template_inheritance(void);
+void TemplateVectorProp_index_in_interpolated_string(void);
+void TemplateVectorProp_collection_value_still_parses(void);
+void TemplateVectorProp_to_str(void);
+
 // Testsuite 'Scenario'
 void Scenario_setup(void);
 void Scenario_rocket_instantiate(void);
@@ -16815,6 +16844,113 @@ bake_test_case TemplateProp_testcases[] = {
     }
 };
 
+bake_test_case TemplateVectorProp_testcases[] = {
+    {
+        "declaration_w_default",
+        TemplateVectorProp_declaration_w_default
+    },
+    {
+        "declaration_wo_default",
+        TemplateVectorProp_declaration_wo_default
+    },
+    {
+        "count",
+        TemplateVectorProp_count
+    },
+    {
+        "index_instantiate_w_initializer",
+        TemplateVectorProp_index_instantiate_w_initializer
+    },
+    {
+        "index_tag_form",
+        TemplateVectorProp_index_tag_form
+    },
+    {
+        "pass_element_to_interface_prop",
+        TemplateVectorProp_pass_element_to_interface_prop
+    },
+    {
+        "iterate_w_for",
+        TemplateVectorProp_iterate_w_for
+    },
+    {
+        "index_by_rng",
+        TemplateVectorProp_index_by_rng
+    },
+    {
+        "override_kind_syntax",
+        TemplateVectorProp_override_kind_syntax
+    },
+    {
+        "override_component_syntax",
+        TemplateVectorProp_override_component_syntax
+    },
+    {
+        "native_set_id",
+        TemplateVectorProp_native_set_id
+    },
+    {
+        "expr_run_props",
+        TemplateVectorProp_expr_run_props
+    },
+    {
+        "index_out_of_range_fails",
+        TemplateVectorProp_index_out_of_range_fails
+    },
+    {
+        "index_empty_vector_fails",
+        TemplateVectorProp_index_empty_vector_fails
+    },
+    {
+        "default_not_derived_fails",
+        TemplateVectorProp_default_not_derived_fails
+    },
+    {
+        "value_not_derived_fails",
+        TemplateVectorProp_value_not_derived_fails
+    },
+    {
+        "value_not_derived_from_c_fails",
+        TemplateVectorProp_value_not_derived_from_c_fails
+    },
+    {
+        "template_type_vector_fails",
+        TemplateVectorProp_template_type_vector_fails
+    },
+    {
+        "bare_vector_prop_as_component_fails",
+        TemplateVectorProp_bare_vector_prop_as_component_fails
+    },
+    {
+        "reactive_prop_change",
+        TemplateVectorProp_reactive_prop_change
+    },
+    {
+        "reactive_prop_change_from_script",
+        TemplateVectorProp_reactive_prop_change_from_script
+    },
+    {
+        "nested_template",
+        TemplateVectorProp_nested_template
+    },
+    {
+        "template_inheritance",
+        TemplateVectorProp_template_inheritance
+    },
+    {
+        "index_in_interpolated_string",
+        TemplateVectorProp_index_in_interpolated_string
+    },
+    {
+        "collection_value_still_parses",
+        TemplateVectorProp_collection_value_still_parses
+    },
+    {
+        "to_str",
+        TemplateVectorProp_to_str
+    }
+};
+
 bake_test_case Scenario_testcases[] = {
     {
         "rocket_instantiate",
@@ -17562,6 +17698,11 @@ bake_test_param TemplateProp_params[] = {
     {"ir", (char**)TemplateProp_ir_param, 2}
 };
 
+const char* TemplateVectorProp_ir_param[] = {"disabled", "enabled"};
+bake_test_param TemplateVectorProp_params[] = {
+    {"ir", (char**)TemplateVectorProp_ir_param, 2}
+};
+
 const char* Scenario_ir_param[] = {"disabled", "enabled"};
 bake_test_param Scenario_params[] = {
     {"ir", (char**)Scenario_ir_param, 2}
@@ -17809,6 +17950,15 @@ static bake_test_suite suites[] = {
         TemplateProp_params
     },
     {
+        "TemplateVectorProp",
+        TemplateVectorProp_setup,
+        NULL,
+        26,
+        TemplateVectorProp_testcases,
+        1,
+        TemplateVectorProp_params
+    },
+    {
         "Scenario",
         Scenario_setup,
         NULL,
@@ -17838,5 +17988,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 29);
+    return bake_test_run("script", argc, argv, suites, 30);
 }

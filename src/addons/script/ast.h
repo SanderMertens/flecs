@@ -89,6 +89,11 @@ typedef struct ecs_script_id_t {
     ecs_expr_node_t *first_expr;
     ecs_expr_node_t *second_expr;
 
+    /* If first refers to a vector template prop, this is the index expression
+     * and the stack pointer of the vector variable. */
+    ecs_expr_node_t *index_expr;
+    int32_t index_sp;
+
     /* If true, the lookup result for this id cannot be cached. This is the case
      * for entities that are defined inside of templates, which have different
      * values for each instantiation. */
@@ -181,6 +186,7 @@ typedef struct ecs_script_var_node_t {
     const char *name;
     const char *type;
     bool type_is_template;
+    bool type_is_vector;
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
     ecs_entity_t eval_interface;
