@@ -7951,3 +7951,217 @@ void Template_template_add_remove_deferred_no_instantiate(void) {
 
     deferred_template_end(world);
 }
+
+#define SCOPE_TEMPLATE_DEFS\
+    HEAD "struct Position(x: f32, y: f32)"\
+    LINE "struct Roof(footprint: vecVec2)"\
+    LINE "template FlatRoof : Roof {"\
+    LINE "  Position: {footprint[0].x, footprint[0].y}"\
+    LINE "}"\
+    LINE "template Brick {"\
+    LINE "  prop height: f32 = 5"\
+    LINE "  Position: {1, $height}"\
+    LINE "}"
+
+static ecs_world_t* scope_template_world(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec2 = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec2" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "vecVec2" }),
+        .type = vec2
+    });
+
+    test_assert(ecs_script_run_w_desc(
+        world, NULL, SCOPE_TEMPLATE_DEFS, &ir_desc, NULL) == 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = position }},
+        .events = { EcsOnSet },
+        .callback = deferred_instantiate_observer
+    });
+
+    deferred_instantiate_count = 0;
+    deferred_error_count = 0;
+
+    return world;
+}
+
+void Template_template_in_scope_instantiates_once(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = scope_template_world();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "template FlatRoofProbe {"
+        LINE "  FlatRoof: {footprint: [{10, 20}, {30, 40}]}"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "probe { FlatRoofProbe: {} }", &ir_desc, NULL) == 0);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 1);
+
+    deferred_template_test_position(world, "probe", 10, 20);
+
+    deferred_template_end(world);
+}
+
+void Template_template_in_scope_instantiates_once_deferred(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = scope_template_world();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "template FlatRoofProbe {"
+        LINE "  FlatRoof: {footprint: [{10, 20}, {30, 40}]}"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    ecs_defer_begin(world);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "probe { FlatRoofProbe: {} }", &ir_desc, NULL) == 0);
+    ecs_defer_end(world);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 1);
+
+    deferred_template_test_position(world, "probe", 10, 20);
+
+    deferred_template_end(world);
+}
+
+void Template_template_w_prop_in_scope_instantiates_once(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = scope_template_world();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "template BrickProbe {"
+        LINE "  Brick: {height: 7}"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "probe { BrickProbe: {} }", &ir_desc, NULL) == 0);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 1);
+
+    deferred_template_test_position(world, "probe", 1, 7);
+
+    deferred_template_end(world);
+}
+
+void Template_template_as_tag_in_scope_instantiates_once(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = scope_template_world();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "template BrickTagProbe {"
+        LINE "  Brick"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "probe { BrickTagProbe: {} }", &ir_desc, NULL) == 0);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 1);
+
+    deferred_template_test_position(world, "probe", 1, 5);
+
+    deferred_template_end(world);
+}
+
+void Template_template_interface_prop_in_scope_instantiates_once(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = scope_template_world();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "template Building {"
+        LINE "  prop roof: template Roof = FlatRoof"
+        LINE "  roof { roof: {footprint: [{10, 20}, {30, 40}]} }"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "template BuildingProbe {"
+        LINE "  Building: {roof: FlatRoof}"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "probe { BuildingProbe: {} }", &ir_desc, NULL) == 0);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 1);
+
+    deferred_template_test_position(world, "probe.roof", 10, 20);
+
+    deferred_template_end(world);
+}
+
+void Template_template_interface_prop_in_scope_instantiates_once_deferred(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = scope_template_world();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "template Building {"
+        LINE "  prop roof: template Roof = FlatRoof"
+        LINE "  roof { roof: {footprint: [{10, 20}, {30, 40}]} }"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "template BuildingProbe {"
+        LINE "  Building: {roof: FlatRoof}"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    ecs_defer_begin(world);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "probe { BuildingProbe: {} }", &ir_desc, NULL) == 0);
+    ecs_defer_end(world);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 1);
+
+    deferred_template_test_position(world, "probe.roof", 10, 20);
+
+    deferred_template_end(world);
+}
+
+void Template_template_vector_interface_prop_in_scope_instantiates_once(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = scope_template_world();
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "template Building {"
+        LINE "  prop roofs: template Roof[] = [FlatRoof]"
+        LINE "  roof { roofs[0]: {footprint: [{10, 20}, {30, 40}]} }"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "template BuildingProbe {"
+        LINE "  Building: {roofs: [FlatRoof]}"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "probe { BuildingProbe: {} }", &ir_desc, NULL) == 0);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 1);
+
+    deferred_template_test_position(world, "probe.roof", 10, 20);
+
+    deferred_template_end(world);
+}

@@ -46294,6 +46294,8 @@ struct ecs_script_scope_t {
     /* Array with component ids that are added in scope. Used to limit
      * archetype moves. */
     ecs_vec_t components; /* vec<ecs_id_t> */
+
+    ecs_vec_t set_components; /* vec<ecs_id_t> */
 };
 
 typedef struct ecs_script_id_t {
@@ -47322,6 +47324,13 @@ void flecs_script_add_entity_kind(
     ecs_entity_t entity,
     ecs_entity_t kind,
     bool w_expr);
+
+void flecs_script_scope_add_ids(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_script_scope_t *scope,
+    const ecs_id_t *ids,
+    int32_t count);
 
 FLECS_API
 int flecs_script_eval_entity_enter(
@@ -63484,6 +63493,7 @@ ecs_script_scope_t* flecs_script_scope_new(
         parser, ecs_script_scope_t, EcsAstScope);
     flecs_ast_vec(parser, result->stmts, ecs_script_node_t);
     ecs_vec_init_t(NULL, &result->components, ecs_id_t, 0);
+    ecs_vec_init_t(NULL, &result->set_components, ecs_id_t, 0);
     result->parent = parser->scope;
     result->scope_slot = -1;
     return result;
@@ -69443,6 +69453,7 @@ int flecs_script_visit_free_node(
         }
         ecs_vec_fini_t(a, &scope->stmts, ecs_script_node_t*);
         ecs_vec_fini_t(a, &scope->components, ecs_id_t);
+        ecs_vec_fini_t(a, &scope->set_components, ecs_id_t);
         break;
     }
     case EcsAstEntity:
@@ -91222,6 +91233,27 @@ void flecs_script_add_entity_kind(
     stage->ensure_add = ensure_add;
 }
 
+void flecs_script_scope_add_ids(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_script_scope_t *scope,
+    const ecs_id_t *ids,
+    int32_t count)
+{
+    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(v->world));
+    ecs_stage_t *stage = world->stages[0];
+    const ecs_type_t *ensure_add = stage->ensure_add;
+    ecs_type_t ensure_add_type = {
+        ecs_vec_first_t(&scope->set_components, ecs_id_t),
+        ecs_vec_count(&scope->set_components)
+    };
+    if (ensure_add_type.count) {
+        stage->ensure_add = &ensure_add_type;
+    }
+    flecs_add_ids(v->world, entity, ids, count);
+    stage->ensure_add = ensure_add;
+}
+
 int flecs_script_eval_entity_enter(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
@@ -92759,8 +92791,8 @@ void flecs_script_scope_push(
         ecs_entity_t src = v->entity->eval;
         int32_t count = ecs_vec_count(&scope->components);
         if (src != EcsVariable && count) {
-            flecs_add_ids(
-                v->world, src, ecs_vec_first(&scope->components), count);
+            flecs_script_scope_add_ids(v, src, scope,
+                ecs_vec_first(&scope->components), count);
         }
     }
 }
@@ -96962,6 +96994,7 @@ int flecs_script_type_scope(
     }
 
     ecs_vec_clear(&scope->components);
+    ecs_vec_clear(&scope->set_components);
     ecs_assert(v->base.depth < ECS_SCRIPT_VISIT_MAX_DEPTH,
         ECS_INTERNAL_ERROR, NULL);
     v->base.nodes[v->base.depth ++] = (ecs_script_node_t*)scope;
@@ -96984,18 +97017,27 @@ int flecs_script_type_scope(
         v->base.depth --;
         if (result) {
             ecs_vec_clear(&scope->components);
+            ecs_vec_clear(&scope->set_components);
             break;
         }
         if (t->template_scope) {
             ecs_script_id_t *id = NULL;
+            bool w_expr = false;
             if (node->kind == EcsAstComponent) {
-                id = &((ecs_script_component_t*)node)->id;
+                ecs_script_component_t *component =
+                    (ecs_script_component_t*)node;
+                id = &component->id;
+                w_expr = component->expr != NULL;
             } else if (node->kind == EcsAstTag) {
                 id = &((ecs_script_tag_t*)node)->id;
             }
             if (id && id->eval && !id->interface && !id->dynamic) {
                 ecs_vec_append_t(&v->base.script->allocator,
                     &scope->components, ecs_id_t)[0] = id->eval;
+                if (w_expr) {
+                    ecs_vec_append_t(&v->base.script->allocator,
+                        &scope->set_components, ecs_id_t)[0] = id->eval;
+                }
             }
         }
     }
@@ -110487,7 +110529,9 @@ static flecs_script_run_status_t flecs_ir_exec(
                     }
                     if (missing) {
                         flecs_ir_prof(EcsIrProfileBatchAdd);
-                        flecs_add_ids(v->world, src, ids, count);
+                        flecs_script_scope_add_ids(v, src,
+                            ECS_CONST_CAST(ecs_script_scope_t*, op->node),
+                            ids, count);
                     } else {
                         flecs_ir_prof(EcsIrProfileBatchSkip);
                     }

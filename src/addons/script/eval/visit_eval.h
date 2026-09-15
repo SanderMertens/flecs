@@ -82,6 +82,13 @@ void flecs_script_add_entity_kind(
     ecs_entity_t kind,
     bool w_expr);
 
+void flecs_script_scope_add_ids(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_script_scope_t *scope,
+    const ecs_id_t *ids,
+    int32_t count);
+
 FLECS_API
 int flecs_script_eval_entity_enter(
     ecs_script_eval_visitor_t *v,
