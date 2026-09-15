@@ -21,6 +21,7 @@ typedef struct ecs_script_template_member_t {
     uint64_t input;
     bool is_mut;
     bool is_template;
+    bool is_vector;
     ecs_entity_t interface;
 
     /* Cached member layout for diffing new against old prop values */
@@ -150,6 +151,10 @@ int flecs_script_template_eval_var(
     bool mut);
 
 ecs_entity_t flecs_script_template_member_interface(
+    const ecs_script_template_t *template,
+    int32_t sp);
+
+bool flecs_script_template_member_is_vector(
     const ecs_script_template_t *template,
     int32_t sp);
 

@@ -424,6 +424,24 @@ void flecs_script_track_component(
     int32_t component_slot,
     ecs_id_t component);
 
+const ecs_vec_t* flecs_script_vector_prop_vec(
+    ecs_script_eval_visitor_t *v,
+    int32_t sp);
+
+typedef enum flecs_script_vector_prop_result_t {
+    FlecsScriptVectorPropOk,
+    FlecsScriptVectorPropOutOfRange,
+    FlecsScriptVectorPropInvalid
+} flecs_script_vector_prop_result_t;
+
+int flecs_script_vector_prop_elem(
+    ecs_script_eval_visitor_t *v,
+    const ecs_vec_t *vec,
+    int32_t index,
+    ecs_entity_t interface,
+    ecs_entity_t *out,
+    int32_t *count_out);
+
 const ecs_script_var_t* flecs_script_template_prop_var(
     ecs_script_eval_visitor_t *v,
     const void *node,

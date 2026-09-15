@@ -539,6 +539,33 @@ static int flecs_script_template_validate_interfaces(
 
         const ecs_member_t *member = ecs_vec_get_t(
             &st->members, ecs_member_t, tm->index);
+
+        if (tm->is_vector) {
+            const ecs_vec_t *vec = ECS_OFFSET(data, member->offset);
+            int32_t e, elem_count = ecs_vec_count(vec);
+            const ecs_entity_t *elems = ecs_vec_first(vec);
+            for (e = 0; e < elem_count; e ++) {
+                ecs_entity_t elem = elems[e];
+                if (elem && ecs_is_alive(world, elem) &&
+                    flecs_script_template_interface_accepts(
+                        world, elem, tm->interface))
+                {
+                    continue;
+                }
+                char *elem_str = elem
+                    ? ecs_get_path(world, elem)
+                    : ecs_os_strdup("0");
+                ecs_err("invalid value '%s' at index %d of prop '%s' of "
+                    "template '%s': expected a template derived from '%s'",
+                    elem_str, e, member->name,
+                    ecs_get_name(world, template_entity),
+                    ecs_get_name(world, tm->interface));
+                ecs_os_free(elem_str);
+                return -1;
+            }
+            continue;
+        }
+
         ecs_entity_t value = *(const ecs_entity_t*)
             ECS_OFFSET(data, member->offset);
 
@@ -1368,8 +1395,30 @@ int flecs_script_template_eval_var(
         if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
             return -1;
         }
-    } else if (node->eval_interface) {
+    } else if (node->eval_interface && !node->type_is_vector) {
         *(ecs_entity_t*)var->value.ptr = node->eval_interface;
+    }
+
+    if (node->type_is_vector && node->eval_interface) {
+        const ecs_vec_t *vec = var->value.ptr;
+        const ecs_entity_t *elems = ecs_vec_first(vec);
+        int32_t e, elem_count = ecs_vec_count(vec);
+        for (e = 0; e < elem_count; e ++) {
+            if (elems[e] && flecs_script_template_interface_accepts(
+                v->world, elems[e], node->eval_interface))
+            {
+                continue;
+            }
+            char *elem_str = elems[e]
+                ? ecs_get_path(v->world, elems[e])
+                : ecs_os_strdup("0");
+            flecs_script_eval_error(v, node,
+                "'%s' at index %d of prop '%s' is not a template derived "
+                "from '%s'", elem_str, e, node->name,
+                ecs_get_name(v->world, node->eval_interface));
+            ecs_os_free(elem_str);
+            return -1;
+        }
     }
 
     ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator,
@@ -1407,6 +1456,7 @@ int flecs_script_template_eval_var(
     member->input = 0;
     member->is_mut = mut;
     member->is_template = node->type_is_template && !node->eval_interface;
+    member->is_vector = node->type_is_vector;
     member->interface = node->eval_interface;
     member->diff_ti = NULL;
     if (member->interface) {
@@ -1479,6 +1529,26 @@ static bool flecs_script_template_prop_is_template(
     for (i = 0; i < count; i ++) {
         if (!members[i].is_mut && members[i].index == index) {
             return members[i].is_template;
+        }
+    }
+
+    return false;
+}
+
+static bool flecs_script_template_prop_is_vector(
+    const ecs_script_template_t *template,
+    int32_t index)
+{
+    if (!template) {
+        return false;
+    }
+
+    const ecs_script_template_member_t *members = ecs_vec_first(
+        &template->members);
+    int32_t i, count = ecs_vec_count(&template->members);
+    for (i = 0; i < count; i ++) {
+        if (!members[i].is_mut && members[i].index == index) {
+            return members[i].is_vector;
         }
     }
 
@@ -1585,6 +1655,8 @@ static int flecs_script_template_inherit(
         member->is_mut = false;
         member->is_template = flecs_script_template_prop_is_template(
             base_template, i);
+        member->is_vector = flecs_script_template_prop_is_vector(
+            base_template, i);
         member->interface = flecs_script_template_prop_interface(
             base_template, i);
         member->diff_ti = NULL;
@@ -1627,6 +1699,24 @@ ecs_entity_t flecs_script_template_member_interface(
         }
     }
     return 0;
+}
+
+bool flecs_script_template_member_is_vector(
+    const ecs_script_template_t *template,
+    int32_t sp)
+{
+    if (!template) {
+        return false;
+    }
+    const ecs_script_template_member_t *members = ecs_vec_first(
+        &template->members);
+    int32_t i, count = ecs_vec_count(&template->members);
+    for (i = 0; i < count; i ++) {
+        if (members[i].sp == sp) {
+            return members[i].is_vector;
+        }
+    }
+    return false;
 }
 
 bool flecs_script_template_member_is_template(

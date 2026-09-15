@@ -497,16 +497,19 @@ static int flecs_script_dep_id(
     uint64_t *internal)
 {
     if (flecs_script_dep_expr(ctx, id->first_expr, input, internal) ||
-        flecs_script_dep_expr(ctx, id->second_expr, input, internal))
+        flecs_script_dep_expr(ctx, id->second_expr, input, internal) ||
+        flecs_script_dep_expr(ctx, id->index_expr, input, internal))
     {
         return -1;
     }
     *input |= flecs_script_dep_var_get(ctx, id->first_sp);
     *input |= flecs_script_dep_var_get(ctx, id->second_sp);
     *input |= flecs_script_dep_var_get(ctx, id->value_sp);
+    *input |= flecs_script_dep_var_get(ctx, id->index_sp);
     *internal |= flecs_script_dep_var_get_internal(ctx, id->first_sp);
     *internal |= flecs_script_dep_var_get_internal(ctx, id->second_sp);
     *internal |= flecs_script_dep_var_get_internal(ctx, id->value_sp);
+    *internal |= flecs_script_dep_var_get_internal(ctx, id->index_sp);
     return 0;
 }
 

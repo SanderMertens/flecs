@@ -21,6 +21,7 @@ static void flecs_script_id_free(
 {
     flecs_expr_visit_free(script, id->first_expr);
     flecs_expr_visit_free(script, id->second_expr);
+    flecs_expr_visit_free(script, id->index_expr);
 }
 
 int flecs_script_visit_free_node(
