@@ -484,16 +484,17 @@ error:
 
 bool flecs_stage_is_ensure_add(
     const ecs_world_t *world,
+    ecs_entity_t entity,
     ecs_id_t component)
 {
-    const ecs_type_t *ensure_add = world->stages[0]->ensure_add;
-    if (!ensure_add) {
+    const ecs_stage_ensure_t *ensure_add = world->stages[0]->ensure_add;
+    if (!ensure_add || ensure_add->entity != entity) {
         return false;
     }
 
-    int32_t i, count = ensure_add->count;
+    int32_t i, count = ensure_add->ids.count;
     for (i = 0; i < count; i ++) {
-        if (ensure_add->array[i] == component) {
+        if (ensure_add->ids.array[i] == component) {
             return true;
         }
     }

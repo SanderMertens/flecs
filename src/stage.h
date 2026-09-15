@@ -16,6 +16,11 @@ typedef struct ecs_stage_allocators_t {
 #endif
 } ecs_stage_allocators_t;
 
+typedef struct ecs_stage_ensure_t {
+    ecs_entity_t entity;
+    ecs_type_t ids;
+} ecs_stage_ensure_t;
+
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
  * operations, which causes the operation to be run on the stage instead of the
@@ -39,8 +44,7 @@ struct ecs_stage_t {
     ecs_commands_t *cmd;
     ecs_commands_t cmd_stack[2];     /* Two so we can flush one & populate the other */
     bool cmd_flushing;               /* Ensures only one defer_end call flushes */
-    const ecs_type_t *ensure_add;    /* Components added by an operation that is
-                                      * about to assign the component value */
+    const ecs_stage_ensure_t *ensure_add;
 
     /* Thread context */
     ecs_world_t *thread_ctx;         /* Points to stage when used as a thread stage */
@@ -97,6 +101,7 @@ void ecs_stage_shrink(
 /* Test if component is added by an operation that is about to assign a value. */
 bool flecs_stage_is_ensure_add(
     const ecs_world_t *world,
+    ecs_entity_t entity,
     ecs_id_t component);
 
 #endif

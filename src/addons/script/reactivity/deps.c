@@ -151,52 +151,135 @@ static bool flecs_script_dep_ids_may_match(
     return true;
 }
 
-static const char* flecs_script_dep_name_skip_interpolation(
-    const char *ptr)
+enum {
+    FlecsScriptDepNameAny = -1,
+    FlecsScriptDepNameInteger = -2
+};
+
+typedef struct flecs_script_dep_name_char_t {
+    int16_t value;
+    char fill;
+} flecs_script_dep_name_char_t;
+
+static void flecs_script_dep_name_text(
+    ecs_vec_t *pattern,
+    const char *text)
 {
-    int32_t depth = 0;
-    do {
-        if (ptr[0] == '\\') {
-            if (ptr[1]) {
-                ptr ++;
-            }
-        } else if (ptr[0] == '{') {
-            depth ++;
-        } else if (ptr[0] == '}') {
-            depth --;
+    if (text) {
+        while (text[0]) {
+            ecs_vec_append_t(NULL, pattern, flecs_script_dep_name_char_t)[0] =
+                (flecs_script_dep_name_char_t){
+                    .value = (unsigned char)*text ++ };
         }
-        ptr ++;
-    } while (depth && ptr[0]);
-    return ptr;
+    }
+}
+
+static void flecs_script_dep_name_expr(
+    ecs_vec_t *pattern,
+    const ecs_expr_node_t *expr,
+    const ecs_expr_format_t *format)
+{
+    bool formatted = format && format->is_present;
+    if (!formatted && expr->kind == EcsExprValue &&
+        expr->type == ecs_id(ecs_string_t))
+    {
+        flecs_script_dep_name_text(pattern,
+            *(char**)((const ecs_expr_value_node_t*)expr)->ptr);
+        return;
+    }
+
+    if (expr->kind == EcsExprCast) {
+        expr = ((const ecs_expr_cast_t*)expr)->expr;
+    }
+    ecs_vec_append_t(NULL, pattern, flecs_script_dep_name_char_t)[0] =
+        (flecs_script_dep_name_char_t){
+            .value = flecs_expr_is_type_integer(expr->type)
+                ? FlecsScriptDepNameInteger : FlecsScriptDepNameAny,
+            .fill = formatted ? format->fill : 0
+        };
+}
+
+static void flecs_script_dep_name_pattern(
+    ecs_vec_t *pattern,
+    const ecs_script_entity_t *entity)
+{
+    ecs_vec_init_t(NULL, pattern, flecs_script_dep_name_char_t, 0);
+    const ecs_expr_node_t *expr = entity->name_expr;
+    if (!expr) {
+        flecs_script_dep_name_text(pattern, entity->name);
+    } else if (expr->kind == EcsExprInterpolatedString) {
+        const ecs_expr_interpolated_string_t *str =
+            (const ecs_expr_interpolated_string_t*)expr;
+        const ecs_expr_fragment_t *fragments = ecs_vec_first(&str->fragments);
+        int32_t i, count = ecs_vec_count(&str->fragments);
+        for (i = 0; i < count; i ++) {
+            flecs_script_dep_name_text(pattern, fragments[i].text);
+            if (fragments[i].expr) {
+                flecs_script_dep_name_expr(pattern, fragments[i].expr,
+                    &fragments[i].format);
+            }
+        }
+    } else {
+        flecs_script_dep_name_expr(pattern, expr, NULL);
+    }
+}
+
+static bool flecs_script_dep_name_accepts(
+    const flecs_script_dep_name_char_t *pattern,
+    int16_t ch)
+{
+    return pattern->value == FlecsScriptDepNameAny ||
+        ch == (unsigned char)pattern->fill || ch == '-' || ch == '+' ||
+        (ch >= '0' && ch <= '9');
 }
 
 static bool flecs_script_dep_names_may_match(
-    const char *first,
-    const char *second)
+    const ecs_script_entity_t *first,
+    const ecs_script_entity_t *second)
 {
-    while (first[0] && second[0]) {
-        if (first[0] == '{' || second[0] == '{') {
-            if (first[0] != second[0]) {
-                return false;
-            }
-            first = flecs_script_dep_name_skip_interpolation(first);
-            second = flecs_script_dep_name_skip_interpolation(second);
-            continue;
-        }
-        if (first[0] != second[0]) {
-            return false;
-        }
-        if (first[0] == '\\' && first[1]) {
-            if (first[1] != second[1]) {
-                return false;
-            }
-            first ++;
-            second ++;
-        }
-        first ++;
-        second ++;
+    if (!first->name_expr && !second->name_expr) {
+        return false;
     }
-    return !first[0] && !second[0];
+
+    ecs_vec_t first_pattern, second_pattern;
+    flecs_script_dep_name_pattern(&first_pattern, first);
+    flecs_script_dep_name_pattern(&second_pattern, second);
+    const flecs_script_dep_name_char_t *a = ecs_vec_first(&first_pattern);
+    const flecs_script_dep_name_char_t *b = ecs_vec_first(&second_pattern);
+    int32_t a_count = ecs_vec_count(&first_pattern);
+    int32_t b_count = ecs_vec_count(&second_pattern);
+    bool *matches = ecs_os_calloc_n(bool, b_count + 1);
+
+    int32_t i, j;
+    for (i = a_count; i >= 0; i --) {
+        bool diagonal = false;
+        for (j = b_count; j >= 0; j --) {
+            bool below = matches[j];
+            int16_t a_ch = i < a_count ? a[i].value : 0;
+            int16_t b_ch = j < b_count ? b[j].value : 0;
+            bool match = (i == a_count && j == b_count) ||
+                (a_ch < 0 && below) ||
+                (b_ch < 0 && matches[j + 1]);
+            if (a_ch && b_ch) {
+                if (a_ch < 0 && b_ch > 0) {
+                    match |= flecs_script_dep_name_accepts(&a[i], b_ch) &&
+                        matches[j + 1];
+                } else if (b_ch < 0 && a_ch > 0) {
+                    match |= flecs_script_dep_name_accepts(&b[j], a_ch) && below;
+                } else if (a_ch > 0 && b_ch > 0) {
+                    match |= a_ch == b_ch && diagonal;
+                }
+            }
+            matches[j] = match;
+            diagonal = below;
+        }
+    }
+
+    bool result = matches[0];
+    ecs_os_free(matches);
+    ecs_vec_fini_t(NULL, &first_pattern, flecs_script_dep_name_char_t);
+    ecs_vec_fini_t(NULL, &second_pattern, flecs_script_dep_name_char_t);
+    return result;
 }
 
 static bool flecs_script_dep_entity_may_match(
@@ -216,7 +299,7 @@ static bool flecs_script_dep_entity_may_match(
         return false;
     }
     if (ecs_os_strcmp(first->name, second->name) &&
-        !flecs_script_dep_names_may_match(first->name, second->name))
+        !flecs_script_dep_names_may_match(first, second))
     {
         return false;
     }
