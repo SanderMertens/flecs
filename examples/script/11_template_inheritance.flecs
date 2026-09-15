@@ -109,16 +109,19 @@ template RoofFacade : Facade {
 
 // The building template.
 template Building {
-  prop facade: template Facade // Accepts any type that inherits from Facade
+  // Accepts a list of types that inherit from Facade
+  prop facade: template Facade[]
   prop roof: template Facade = RoofFacade
   prop floors: i32 = 3
   prop floorHeight: f32 = 3
 
-  // Instantiate a facade for each floor.
+  // Instantiate a facade for each floor, cycling through the provided list.
   for i in 0..floors {
     {
       Position: {0, i * floorHeight, 0}
-      facade: {height: floorHeight} // Instantiate facade as normal component
+
+      // Select an element of the vector and instantiate it as a component
+      facade[i % facade.count()]: {height: floorHeight}
     }
   }
 
@@ -151,10 +154,11 @@ template Building {
 }
 
 // A two-story building with a brick facade
-Building brick_house(facade: BrickFacade, floors: 2, floorHeight: 2) {
+Building brick_house(facade: [BrickFacade], floors: 2, floorHeight: 2) {
   Position: {-2.5, 0, 0}
 }
 
-Building glass_tower(facade: GlassFacade, floors: 3, floorHeight: 2.5) {
+// A tower that alternates between a glass and a brick facade
+Building glass_tower(facade: [GlassFacade, BrickFacade], floors: 3, floorHeight: 2.5) {
   Position: {2.5, 0, 0}
 }

@@ -3508,6 +3508,40 @@
                 "bool_prop_mul_flt_member_const"
             ]
         }, {
+            "id": "TemplateVectorProp",
+            "params": {
+                "ir": ["disabled", "enabled"]
+            },
+            "setup": true,
+            "testcases": [
+                "declaration_w_default",
+                "declaration_wo_default",
+                "count",
+                "index_instantiate_w_initializer",
+                "index_tag_form",
+                "pass_element_to_interface_prop",
+                "iterate_w_for",
+                "index_by_rng",
+                "override_kind_syntax",
+                "override_component_syntax",
+                "native_set_id",
+                "expr_run_props",
+                "index_out_of_range_fails",
+                "index_empty_vector_fails",
+                "default_not_derived_fails",
+                "value_not_derived_fails",
+                "value_not_derived_from_c_fails",
+                "template_type_vector_fails",
+                "bare_vector_prop_as_component_fails",
+                "reactive_prop_change",
+                "reactive_prop_change_from_script",
+                "nested_template",
+                "template_inheritance",
+                "index_in_interpolated_string",
+                "collection_value_still_parses",
+                "to_str"
+            ]
+        }, {
             "id": "Scenario",
             "params": {
                 "ir": ["disabled", "enabled"]

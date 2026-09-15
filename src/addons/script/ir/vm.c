@@ -562,6 +562,41 @@ static int flecs_ir_id_elem(
     return 0;
 }
 
+static int flecs_ir_index_elem(
+    ecs_script_ir_vm_t *vm,
+    const ecs_script_ir_id_t *desc,
+    const void *node,
+    ecs_entity_t *out)
+{
+    ecs_script_eval_visitor_t *v = &vm->v;
+    int32_t index = *(int32_t*)flecs_ir_reg(vm, desc->index_reg)->value.ptr;
+
+    const ecs_vec_t *vec = flecs_script_vector_prop_vec(v, desc->index_sp);
+    ecs_entity_t elem = 0;
+    int32_t count = 0;
+    int result = flecs_script_vector_prop_elem(
+        v, vec, index, desc->interface, &elem, &count);
+    if (result == FlecsScriptVectorPropOk) {
+        *out = elem;
+        return 0;
+    }
+
+    if (result == FlecsScriptVectorPropOutOfRange) {
+        flecs_ir_error(vm, node,
+            "index %d out of range for vector prop '%s' with %d element(s)",
+            index, desc->first, count);
+        return -1;
+    }
+
+    char *elem_str = elem ? ecs_get_path(v->world, elem) : ecs_os_strdup("0");
+    flecs_ir_error(vm, node,
+        "'%s' at index %d of vector prop '%s' is not a template derived "
+        "from '%s'", elem_str, index, desc->first,
+        ecs_get_name(v->world, desc->interface));
+    ecs_os_free(elem_str);
+    return -1;
+}
+
 static int flecs_ir_id_resolve(
     ecs_script_ir_vm_t *vm,
     const ecs_script_ir_id_t *desc,
@@ -574,7 +609,11 @@ static int flecs_ir_id_resolve(
     }
 
     ecs_entity_t first;
-    if (flecs_ir_id_elem(vm, node, desc->first_reg, desc->first_eval,
+    if (desc->index_sp != -1) {
+        if (flecs_ir_index_elem(vm, desc, node, &first)) {
+            return -1;
+        }
+    } else if (flecs_ir_id_elem(vm, node, desc->first_reg, desc->first_eval,
         desc->first_symbol, desc->first_sp, &first))
     {
         return -1;
@@ -625,7 +664,9 @@ static inline int flecs_ir_id_get(
         *out = desc->eval;
         return 0;
     }
-    if (desc->first_reg == -1 && desc->first_sp == -1) {
+    if (desc->first_reg == -1 && desc->first_sp == -1 &&
+        desc->index_sp == -1)
+    {
         ecs_entity_t first = desc->first_symbol != -1
             ? flecs_ir_symbol_entity(&vm->v, desc->first_symbol)
             : desc->first_eval;
@@ -925,7 +966,9 @@ static int flecs_ir_component_begin(
     const ecs_script_ir_id_t *desc = flecs_ir_id_desc(vm, op->a);
     const ecs_script_component_t *node = op->node;
 
-    if (desc->interface && flecs_ir_interface_check(vm, desc, node)) {
+    if (desc->interface && desc->index_sp == -1 &&
+        flecs_ir_interface_check(vm, desc, node))
+    {
         return -1;
     }
 
