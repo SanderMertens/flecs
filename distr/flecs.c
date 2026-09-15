@@ -113096,44 +113096,52 @@ static bool flecs_script_dep_ids_may_match(
     return true;
 }
 
-static bool flecs_script_dep_name_prefix_may_match(
-    const char *first,
-    const char *second)
+static const char* flecs_script_dep_name_skip_interpolation(
+    const char *ptr)
 {
-    while (*first && *second && *first == *second &&
-        *first != '{' && *second != '{')
-    {
-        first ++;
-        second ++;
-    }
-    return *first == '{' || *second == '{';
-}
-
-static bool flecs_script_dep_name_suffix_may_match(
-    const char *first,
-    const char *second)
-{
-    const char *first_end = first + ecs_os_strlen(first);
-    const char *second_end = second + ecs_os_strlen(second);
-
-    while (first_end != first && second_end != second &&
-        first_end[-1] == second_end[-1] &&
-        first_end[-1] != '}' && second_end[-1] != '}')
-    {
-        first_end --;
-        second_end --;
-    }
-
-    return (first_end != first && first_end[-1] == '}') ||
-           (second_end != second && second_end[-1] == '}');
+    int32_t depth = 0;
+    do {
+        if (ptr[0] == '\\') {
+            if (ptr[1]) {
+                ptr ++;
+            }
+        } else if (ptr[0] == '{') {
+            depth ++;
+        } else if (ptr[0] == '}') {
+            depth --;
+        }
+        ptr ++;
+    } while (depth && ptr[0]);
+    return ptr;
 }
 
 static bool flecs_script_dep_names_may_match(
     const char *first,
     const char *second)
 {
-    return flecs_script_dep_name_prefix_may_match(first, second) &&
-           flecs_script_dep_name_suffix_may_match(first, second);
+    while (first[0] && second[0]) {
+        if (first[0] == '{' || second[0] == '{') {
+            if (first[0] != second[0]) {
+                return false;
+            }
+            first = flecs_script_dep_name_skip_interpolation(first);
+            second = flecs_script_dep_name_skip_interpolation(second);
+            continue;
+        }
+        if (first[0] != second[0]) {
+            return false;
+        }
+        if (first[0] == '\\' && first[1]) {
+            if (first[1] != second[1]) {
+                return false;
+            }
+            first ++;
+            second ++;
+        }
+        first ++;
+        second ++;
+    }
+    return !first[0] && !second[0];
 }
 
 static bool flecs_script_dep_entity_may_match(
