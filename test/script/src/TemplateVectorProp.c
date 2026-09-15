@@ -701,3 +701,43 @@ void TemplateVectorProp_to_str(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void TemplateVectorProp_index_tag_form_instantiates(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_DEFS
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  a { facade[0] }"
+    LINE "  b { facade[1] }"
+    LINE "}"
+    LINE "Building e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_facade(world, "e.a", 0, 1);
+    test_facade(world, "e.b", 0, 2);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_index_empty_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_DEFS
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
+    LINE "  a { facade[0]: {} }"
+    LINE "  b { facade[1]: {} }"
+    LINE "}"
+    LINE "Building e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_facade(world, "e.a", 0, 1);
+    test_facade(world, "e.b", 0, 2);
+
+    ecs_fini(world);
+}

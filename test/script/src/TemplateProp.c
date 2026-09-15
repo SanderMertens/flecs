@@ -246,28 +246,7 @@ void TemplateProp_interface_prop_self_template(void) {
     ecs_fini(world);
 }
 
-void TemplateProp_interface_prop_empty_initializer_fails(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "struct Iface(on: bool)"
-    LINE "template Light : Iface {"
-    LINE "  Bulb {}"
-    LINE "}"
-    LINE "template Road {"
-    LINE "  prop light : template Iface"
-    LINE "  lamp { light: {} }"
-    LINE "}"
-    LINE "Road r(light: Light)";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-    ecs_log_set_level(-1);
-
-    ecs_fini(world);
-}
-
-void TemplateProp_interface_prop_in_with_w_initializer_fails(void) {
+void TemplateProp_interface_prop_in_with_w_initializer(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -283,9 +262,19 @@ void TemplateProp_interface_prop_in_with_w_initializer_fails(void) {
     LINE "}"
     LINE "Road r(light: Light)";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-    ecs_log_set_level(-1);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "r.lamp");
+    ecs_entity_t light = ecs_lookup(world, "Light");
+    test_assert(lamp != 0);
+    test_assert(light != 0);
+    test_assert(ecs_has_id(world, lamp, light));
+
+    const bool *v = ecs_get_id(world, lamp, light);
+    test_assert(v != NULL);
+    test_bool(*v, true);
+
+    test_assert(ecs_lookup(world, "r.lamp.Bulb") != 0);
 
     ecs_fini(world);
 }
@@ -2757,6 +2746,71 @@ void TemplateProp_struct_prop_default_and_derived_template(void) {
     test_assert(h != NULL);
     test_flt(*h, 3);
     test_point(world, "b.child", 3, 1);
+
+    ecs_fini(world);
+}
+
+void TemplateProp_interface_prop_as_tag_instantiates(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct StreetLight(on_off: bool)"
+    LINE "template MyStreetLight : StreetLight {"
+    LINE "  prop scale: f32 = 2"
+    LINE "  Position: {$scale, $scale + 1}"
+    LINE "}"
+    LINE "template Road {"
+    LINE "  prop street_light : template StreetLight"
+    LINE "  lamp { street_light }"
+    LINE "}"
+    LINE "e { Road: {street_light: MyStreetLight} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "e.lamp");
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(lamp != 0);
+    test_assert(light != 0);
+    test_assert(position != 0);
+    test_assert(ecs_has_id(world, lamp, light));
+
+    const PointValue *p = ecs_get_id(world, lamp, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 2);
+    test_flt(p->y, 3);
+
+    ecs_fini(world);
+}
+
+void TemplateProp_interface_prop_empty_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Iface(on: bool)"
+    LINE "template Light : Iface {"
+    LINE "  Bulb {}"
+    LINE "}"
+    LINE "template Road {"
+    LINE "  prop light : template Iface"
+    LINE "  lamp { light: {} }"
+    LINE "}"
+    LINE "Road r(light: Light)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t lamp = ecs_lookup(world, "r.lamp");
+    ecs_entity_t light = ecs_lookup(world, "Light");
+    test_assert(lamp != 0);
+    test_assert(light != 0);
+    test_assert(ecs_has_id(world, lamp, light));
+
+    const bool *v = ecs_get_id(world, lamp, light);
+    test_assert(v != NULL);
+    test_bool(*v, false);
+
+    test_assert(ecs_lookup(world, "r.lamp.Bulb") != 0);
 
     ecs_fini(world);
 }
