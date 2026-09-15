@@ -37,6 +37,7 @@ ecs_script_scope_t* flecs_script_scope_new(
         parser, ecs_script_scope_t, EcsAstScope);
     flecs_ast_vec(parser, result->stmts, ecs_script_node_t);
     ecs_vec_init_t(NULL, &result->components, ecs_id_t, 0);
+    ecs_vec_init_t(NULL, &result->set_components, ecs_id_t, 0);
     result->parent = parser->scope;
     result->scope_slot = -1;
     return result;

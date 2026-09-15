@@ -43,6 +43,7 @@ int flecs_script_visit_free_node(
         }
         ecs_vec_fini_t(a, &scope->stmts, ecs_script_node_t*);
         ecs_vec_fini_t(a, &scope->components, ecs_id_t);
+        ecs_vec_fini_t(a, &scope->set_components, ecs_id_t);
         break;
     }
     case EcsAstEntity:
