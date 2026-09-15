@@ -1432,7 +1432,12 @@
                 "template_as_tag_in_scope_instantiates_once",
                 "template_interface_prop_in_scope_instantiates_once",
                 "template_interface_prop_in_scope_instantiates_once_deferred",
-                "template_vector_interface_prop_in_scope_instantiates_once"
+                "template_vector_interface_prop_in_scope_instantiates_once",
+                "for_entity_w_child_w_template",
+                "for_entity_w_child_w_template_after",
+                "for_entity_w_named_child_w_template_after",
+                "for_entity_w_child_in_scope_w_template_after",
+                "for_entity_w_child_in_template_w_template_after"
             ]
         }, {
             "id": "Mut",

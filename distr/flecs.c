@@ -47733,6 +47733,7 @@ typedef struct ecs_script_type_entity_t {
     int32_t child_table;
     int32_t slot;
     bool in_template;
+    bool in_for;
 } ecs_script_type_entity_t;
 
 typedef struct ecs_script_type_interface_var_t {
@@ -94771,6 +94772,7 @@ static ecs_script_type_entity_t* flecs_script_type_declare(
     entity->child_table = -1;
     entity->slot = flecs_script_type_slot_new(t, *slot);
     entity->in_template = t->template_scope;
+    entity->in_for = t->for_depth != 0;
     int32_t index = ecs_vec_count(&t->entities) - 1;
     flecs_script_type_name_t key = {name, (uint64_t)t->table, length, true};
     flecs_hashmap_result_t result = flecs_hashmap_ensure(
@@ -95394,6 +95396,9 @@ static int flecs_script_type_ensure_entities(
         if (entries[i].in_template && !t->template_scope) {
             /* Entities declared in a template body are created when the
              * template is instantiated, not in the scope of the script. */
+            continue;
+        }
+        if (entries[i].in_for && !t->for_depth) {
             continue;
         }
         if (node && flecs_script_type_ensure_node(t, node)) {

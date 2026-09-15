@@ -1391,6 +1391,11 @@ void Template_template_as_tag_in_scope_instantiates_once(void);
 void Template_template_interface_prop_in_scope_instantiates_once(void);
 void Template_template_interface_prop_in_scope_instantiates_once_deferred(void);
 void Template_template_vector_interface_prop_in_scope_instantiates_once(void);
+void Template_for_entity_w_child_w_template(void);
+void Template_for_entity_w_child_w_template_after(void);
+void Template_for_entity_w_named_child_w_template_after(void);
+void Template_for_entity_w_child_in_scope_w_template_after(void);
+void Template_for_entity_w_child_in_template_w_template_after(void);
 
 // Testsuite 'Mut'
 void Mut_setup(void);
@@ -9073,6 +9078,26 @@ bake_test_case Template_testcases[] = {
     {
         "template_vector_interface_prop_in_scope_instantiates_once",
         Template_template_vector_interface_prop_in_scope_instantiates_once
+    },
+    {
+        "for_entity_w_child_w_template",
+        Template_for_entity_w_child_w_template
+    },
+    {
+        "for_entity_w_child_w_template_after",
+        Template_for_entity_w_child_w_template_after
+    },
+    {
+        "for_entity_w_named_child_w_template_after",
+        Template_for_entity_w_named_child_w_template_after
+    },
+    {
+        "for_entity_w_child_in_scope_w_template_after",
+        Template_for_entity_w_child_in_scope_w_template_after
+    },
+    {
+        "for_entity_w_child_in_template_w_template_after",
+        Template_for_entity_w_child_in_template_w_template_after
     }
 };
 
@@ -17976,7 +18001,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        195,
+        200,
         Template_testcases,
         1,
         Template_params
