@@ -15,7 +15,7 @@ typedef struct test_file_t {
     size_t pos;
 } test_file_t;
 
-#define TEST_FILE_MAX (8)
+#define TEST_FILE_MAX (64)
 
 static test_file_t test_files[TEST_FILE_MAX];
 
@@ -1564,4 +1564,120 @@ void Include_include_missing_file_managed_sets_error_on_parent(void) {
     }
 
     ecs_fini(world);
+}
+
+#define INCLUDE_REPRO_FILE_COUNT (6)
+#define INCLUDE_REPRO_TEMPLATE_COUNT (4)
+
+void Include_include_nested_manifest_w_cross_file_refs(void) {
+    test_files_install();
+
+    char *names[INCLUDE_REPRO_FILE_COUNT];
+    char *contents[INCLUDE_REPRO_FILE_COUNT];
+    ecs_strbuf_t manifest = ECS_STRBUF_INIT;
+    int32_t i;
+
+    ecs_strbuf_appendlit(&manifest, "include cfg.flecs\n");
+
+    for (i = 0; i < INCLUDE_REPRO_FILE_COUNT; i ++) {
+        char buf[64];
+        ecs_os_snprintf(buf, 64, "city/f%d.flecs", i);
+        names[i] = ecs_os_strdup(buf);
+
+        ecs_strbuf_t file = ECS_STRBUF_INIT;
+        ecs_strbuf_append(&file,
+            "grp%d {\n"
+            "  export const v%d: f32 = cfg.pitch * %d\n"
+            "}\n",
+            i, i, i);
+
+        if (i + 1 < INCLUDE_REPRO_FILE_COUNT) {
+            ecs_strbuf_append(&file,
+                "const local%d: f32 = grp%d.v%d + cfg.half\n",
+                i, i + 1, i + 1);
+        } else {
+            ecs_strbuf_append(&file,
+                "const local%d: f32 = cfg.half\n", i);
+        }
+
+        ecs_strbuf_append(&file,
+            "template T%d {\n"
+            "  prop x: f32 = 0\n"
+            "  Position: {x: $x + local%d, y: cfg.half + grp%d.v%d}\n"
+            "}\n",
+            i, i, i, i);
+
+        contents[i] = ecs_strbuf_get(&file);
+        test_file_add(names[i], contents[i]);
+
+        ecs_strbuf_append(&manifest, "include f%d.flecs\n", i);
+    }
+
+    ecs_strbuf_appendlit(&manifest, "include agg.flecs\n");
+
+    ecs_strbuf_t agg = ECS_STRBUF_INIT;
+    ecs_strbuf_appendlit(&agg,
+        "template Agg {\n"
+        "  prop x: f32 = 0\n");
+    for (i = 0; i < INCLUDE_REPRO_TEMPLATE_COUNT; i ++) {
+        ecs_strbuf_append(&agg, "  child%d { T%d: {x: $x} }\n", i, i);
+    }
+    ecs_strbuf_appendlit(&agg, "}\n");
+    char *agg_str = ecs_strbuf_get(&agg);
+    char *manifest_str = ecs_strbuf_get(&manifest);
+
+    test_file_add("city/cfg.flecs",
+        "using flecs.meta\n"
+        "struct Position(x: f32, y: f32)\n"
+        "cfg {\n"
+        "  export const half: f32 = 60\n"
+        "  export const pitch: f32 = 120\n"
+        "}\n");
+    test_file_add("city/agg.flecs", agg_str);
+    test_file_add("city/city.flecs", manifest_str);
+    test_file_add("parent.flecs",
+        "include city/city.flecs\n"
+        "e { Agg: {x: 1} }\n");
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t templates[INCLUDE_REPRO_FILE_COUNT];
+    for (i = 0; i < INCLUDE_REPRO_FILE_COUNT; i ++) {
+        char buf[64];
+        ecs_os_snprintf(buf, 64, "T%d", i);
+        templates[i] = ecs_lookup(world, buf);
+        test_assert(templates[i] != 0);
+        test_assert(ecs_is_alive(world, templates[i]));
+        test_assert(ecs_has(world, templates[i], EcsScript));
+    }
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    for (i = 0; i < INCLUDE_REPRO_TEMPLATE_COUNT; i ++) {
+        char buf[64];
+        ecs_os_snprintf(buf, 64, "e.child%d", i);
+        ecs_entity_t child = ecs_lookup(world, buf);
+        test_assert(child != 0);
+        test_assert(ecs_has_id(world, child, templates[i]));
+    }
+
+    ecs_fini(world);
+
+    for (i = 0; i < INCLUDE_REPRO_FILE_COUNT; i ++) {
+        ecs_os_free(names[i]);
+        ecs_os_free(contents[i]);
+    }
+    ecs_os_free(agg_str);
+    ecs_os_free(manifest_str);
 }

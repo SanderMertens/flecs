@@ -504,6 +504,7 @@ int flecs_script_update(
     } else {
         parsed_impl->evaluating = false;
         if (!instance) {
+            flecs_script_pending_resolve_remove(world, e);
             flecs_script_update_observers(world, e, parsed);
         }
     }

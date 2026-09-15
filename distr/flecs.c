@@ -48011,6 +48011,10 @@ void flecs_script_ref_on_set(
 void flecs_script_run_pending_resolves(
     ecs_world_t *world);
 
+void flecs_script_pending_resolve_remove(
+    ecs_world_t *world,
+    ecs_entity_t script);
+
 void flecs_script_refs_import(
     ecs_world_t *world);
 
@@ -68765,6 +68769,7 @@ int flecs_script_update(
     } else {
         parsed_impl->evaluating = false;
         if (!instance) {
+            flecs_script_pending_resolve_remove(world, e);
             flecs_script_update_observers(world, e, parsed);
         }
     }
@@ -114289,6 +114294,22 @@ static bool flecs_script_defer_resolve(
     ecs_vec_append_t(&runtime->allocator, pending, ecs_entity_t)[0] = script;
 
     return true;
+}
+
+void flecs_script_pending_resolve_remove(
+    ecs_world_t *world,
+    ecs_entity_t script)
+{
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    ecs_vec_t *pending = &runtime->pending_resolves;
+    ecs_entity_t *elems = ecs_vec_first(pending);
+    int32_t i, count = ecs_vec_count(pending);
+    for (i = 0; i < count; i ++) {
+        if (elems[i] == script) {
+            ecs_vec_remove_t(pending, ecs_entity_t, i);
+            return;
+        }
+    }
 }
 
 void flecs_script_run_pending_resolves(
