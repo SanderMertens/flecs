@@ -1382,7 +1382,8 @@ static int flecs_ir_entity_enter(
                 goto error;
             }
         }
-        ecs_add_id(v->world, state->eval, state->eval_kind);
+        flecs_script_add_entity_kind(
+            v, state->eval, state->eval_kind, node->kind_w_expr);
     }
 
     int32_t i, count = ecs_vec_count(&v->r->annot);

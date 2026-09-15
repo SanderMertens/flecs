@@ -3579,6 +3579,8 @@ struct ecs_stage_t {
     ecs_commands_t *cmd;
     ecs_commands_t cmd_stack[2];     /* Two so we can flush one & populate the other */
     bool cmd_flushing;               /* Ensures only one defer_end call flushes */
+    bool ensure_add;                 /* Component added by operation that is
+                                      * about to assign the component value */
 
     /* Thread context */
     ecs_world_t *thread_ctx;         /* Points to stage when used as a thread stage */
@@ -8069,9 +8071,16 @@ static void flecs_add_id_w_record(
     ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
     ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, &component, &diff);
+
+    ecs_stage_t *stage = world->stages[0];
+    bool ensure_add = stage->ensure_add;
+    stage->ensure_add = true;
+
     flecs_commit(world, entity, record, dst_table, &diff, emplace_id,
         EcsEventNoOnSet); /* No OnSet, this function is only called from
                            * functions that are about to set the component. */
+
+    stage->ensure_add = ensure_add;
 }
 
 void flecs_add_id(
@@ -47251,6 +47260,12 @@ struct flecs_script_entity_state_t {
     int32_t for_slot;
     bool created;
 };
+
+void flecs_script_add_entity_kind(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_entity_t kind,
+    bool w_expr);
 
 FLECS_API
 int flecs_script_eval_entity_enter(
@@ -91098,6 +91113,20 @@ int flecs_script_apply_annot(
     return 0;
 }
 
+void flecs_script_add_entity_kind(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_entity_t kind,
+    bool w_expr)
+{
+    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(v->world));
+    ecs_stage_t *stage = world->stages[0];
+    bool ensure_add = stage->ensure_add;
+    stage->ensure_add = ensure_add || w_expr;
+    ecs_add_id(v->world, entity, kind);
+    stage->ensure_add = ensure_add;
+}
+
 int flecs_script_eval_entity_enter(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
@@ -91220,7 +91249,8 @@ int flecs_script_eval_entity_enter(
             }
         }
 
-        ecs_add_id(v->world, state->eval, state->eval_kind);
+        flecs_script_add_entity_kind(
+            v, state->eval, state->eval_kind, node->kind_w_expr);
     }
 
     int32_t i, count = ecs_vec_count(&v->r->annot);
@@ -95486,7 +95516,7 @@ static int flecs_script_type_check_component_expr(
     ecs_entity_t *type)
 {
     ecs_expr_initializer_t *init = NULL;
-    if (node->id.value_sp != -1 && node->expr &&
+    if ((node->id.value_sp != -1 || node->id.interface) && node->expr &&
         (node->expr->kind == EcsExprInitializer ||
          node->expr->kind == EcsExprEmptyInitializer))
     {
@@ -108899,7 +108929,8 @@ static int flecs_ir_entity_enter(
                 goto error;
             }
         }
-        ecs_add_id(v->world, state->eval, state->eval_kind);
+        flecs_script_add_entity_kind(
+            v, state->eval, state->eval_kind, node->kind_w_expr);
     }
 
     int32_t i, count = ecs_vec_count(&v->r->annot);
@@ -115846,9 +115877,11 @@ static void flecs_script_template_on_add(
 
     script->template_->refcount += it->count;
 
-    if (!ecs_vec_count(&script->template_->props.defaults)) {
-        flecs_script_template_on_set(it, template_entity);
+    if (it->real_world->stages[0]->ensure_add) {
+        return;
     }
+
+    flecs_script_template_on_set(it, template_entity);
 }
 
 static void flecs_script_template_on_replace(

@@ -1202,6 +1202,12 @@ void Template_template_no_scope(void);
 void Template_template_no_props(void);
 void Template_template_no_props_as_tag(void);
 void Template_template_no_props_add_deferred(void);
+void Template_template_w_props_as_tag(void);
+void Template_template_w_props_as_tag_from_c(void);
+void Template_template_w_props_as_tag_from_c_deferred(void);
+void Template_template_w_props_add_twice(void);
+void Template_template_w_props_add_then_set(void);
+void Template_template_w_props_set_after_add_deferred(void);
 void Template_template_newline_before_scope(void);
 void Template_template_prop(void);
 void Template_template_prop_space_colon(void);
@@ -3360,8 +3366,8 @@ void TemplateProp_pass_unrelated_to_child_template_fails(void);
 void TemplateProp_interface_prop_invalid_value(void);
 void TemplateProp_interface_prop_unrelated_template(void);
 void TemplateProp_interface_prop_missing_value_defaults_to_interface(void);
-void TemplateProp_interface_prop_empty_initializer_fails(void);
-void TemplateProp_interface_prop_in_with_w_initializer_fails(void);
+void TemplateProp_interface_prop_empty_initializer(void);
+void TemplateProp_interface_prop_in_with_w_initializer(void);
 void TemplateProp_interface_prop_dollar_initializer(void);
 void TemplateProp_interface_prop_self_template(void);
 void TemplateProp_interface_prop_instantiates_passed_template(void);
@@ -3372,6 +3378,7 @@ void TemplateProp_interface_prop_default_template(void);
 void TemplateProp_interface_prop_default_overridden(void);
 void TemplateProp_interface_prop_default_overridden_from_c(void);
 void TemplateProp_interface_prop_as_tag(void);
+void TemplateProp_interface_prop_as_tag_instantiates(void);
 void TemplateProp_interface_prop_from_c(void);
 void TemplateProp_interface_prop_change_template(void);
 void TemplateProp_interface_prop_not_derived_fails(void);
@@ -3389,6 +3396,8 @@ void TemplateVectorProp_declaration_wo_default(void);
 void TemplateVectorProp_count(void);
 void TemplateVectorProp_index_instantiate_w_initializer(void);
 void TemplateVectorProp_index_tag_form(void);
+void TemplateVectorProp_index_tag_form_instantiates(void);
+void TemplateVectorProp_index_empty_initializer(void);
 void TemplateVectorProp_pass_element_to_interface_prop(void);
 void TemplateVectorProp_iterate_w_for(void);
 void TemplateVectorProp_index_by_rng(void);
@@ -8279,6 +8288,30 @@ bake_test_case Template_testcases[] = {
     {
         "template_no_props_add_deferred",
         Template_template_no_props_add_deferred
+    },
+    {
+        "template_w_props_as_tag",
+        Template_template_w_props_as_tag
+    },
+    {
+        "template_w_props_as_tag_from_c",
+        Template_template_w_props_as_tag_from_c
+    },
+    {
+        "template_w_props_as_tag_from_c_deferred",
+        Template_template_w_props_as_tag_from_c_deferred
+    },
+    {
+        "template_w_props_add_twice",
+        Template_template_w_props_add_twice
+    },
+    {
+        "template_w_props_add_then_set",
+        Template_template_w_props_add_then_set
+    },
+    {
+        "template_w_props_set_after_add_deferred",
+        Template_template_w_props_set_after_add_deferred
     },
     {
         "template_newline_before_scope",
@@ -16759,12 +16792,12 @@ bake_test_case TemplateProp_testcases[] = {
         TemplateProp_interface_prop_missing_value_defaults_to_interface
     },
     {
-        "interface_prop_empty_initializer_fails",
-        TemplateProp_interface_prop_empty_initializer_fails
+        "interface_prop_empty_initializer",
+        TemplateProp_interface_prop_empty_initializer
     },
     {
-        "interface_prop_in_with_w_initializer_fails",
-        TemplateProp_interface_prop_in_with_w_initializer_fails
+        "interface_prop_in_with_w_initializer",
+        TemplateProp_interface_prop_in_with_w_initializer
     },
     {
         "interface_prop_dollar_initializer",
@@ -16805,6 +16838,10 @@ bake_test_case TemplateProp_testcases[] = {
     {
         "interface_prop_as_tag",
         TemplateProp_interface_prop_as_tag
+    },
+    {
+        "interface_prop_as_tag_instantiates",
+        TemplateProp_interface_prop_as_tag_instantiates
     },
     {
         "interface_prop_from_c",
@@ -16864,6 +16901,14 @@ bake_test_case TemplateVectorProp_testcases[] = {
     {
         "index_tag_form",
         TemplateVectorProp_index_tag_form
+    },
+    {
+        "index_tag_form_instantiates",
+        TemplateVectorProp_index_tag_form_instantiates
+    },
+    {
+        "index_empty_initializer",
+        TemplateVectorProp_index_empty_initializer
     },
     {
         "pass_element_to_interface_prop",
@@ -17786,7 +17831,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        176,
+        182,
         Template_testcases,
         1,
         Template_params
@@ -17944,7 +17989,7 @@ static bake_test_suite suites[] = {
         "TemplateProp",
         TemplateProp_setup,
         NULL,
-        95,
+        96,
         TemplateProp_testcases,
         1,
         TemplateProp_params
@@ -17953,7 +17998,7 @@ static bake_test_suite suites[] = {
         "TemplateVectorProp",
         TemplateVectorProp_setup,
         NULL,
-        26,
+        28,
         TemplateVectorProp_testcases,
         1,
         TemplateVectorProp_params

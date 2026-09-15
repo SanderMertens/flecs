@@ -764,6 +764,20 @@ int flecs_script_apply_annot(
     return 0;
 }
 
+void flecs_script_add_entity_kind(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_entity_t kind,
+    bool w_expr)
+{
+    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(v->world));
+    ecs_stage_t *stage = world->stages[0];
+    bool ensure_add = stage->ensure_add;
+    stage->ensure_add = ensure_add || w_expr;
+    ecs_add_id(v->world, entity, kind);
+    stage->ensure_add = ensure_add;
+}
+
 int flecs_script_eval_entity_enter(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
@@ -886,7 +900,8 @@ int flecs_script_eval_entity_enter(
             }
         }
 
-        ecs_add_id(v->world, state->eval, state->eval_kind);
+        flecs_script_add_entity_kind(
+            v, state->eval, state->eval_kind, node->kind_w_expr);
     }
 
     int32_t i, count = ecs_vec_count(&v->r->annot);

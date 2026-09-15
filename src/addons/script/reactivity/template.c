@@ -1162,9 +1162,11 @@ static void flecs_script_template_on_add(
 
     script->template_->refcount += it->count;
 
-    if (!ecs_vec_count(&script->template_->props.defaults)) {
-        flecs_script_template_on_set(it, template_entity);
+    if (it->real_world->stages[0]->ensure_add) {
+        return;
     }
+
+    flecs_script_template_on_set(it, template_entity);
 }
 
 static void flecs_script_template_on_replace(

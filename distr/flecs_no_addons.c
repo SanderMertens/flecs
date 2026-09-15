@@ -2206,6 +2206,8 @@ struct ecs_stage_t {
     ecs_commands_t *cmd;
     ecs_commands_t cmd_stack[2];     /* Two so we can flush one & populate the other */
     bool cmd_flushing;               /* Ensures only one defer_end call flushes */
+    bool ensure_add;                 /* Component added by operation that is
+                                      * about to assign the component value */
 
     /* Thread context */
     ecs_world_t *thread_ctx;         /* Points to stage when used as a thread stage */
@@ -6410,9 +6412,16 @@ static void flecs_add_id_w_record(
     ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
     ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, &component, &diff);
+
+    ecs_stage_t *stage = world->stages[0];
+    bool ensure_add = stage->ensure_add;
+    stage->ensure_add = true;
+
     flecs_commit(world, entity, record, dst_table, &diff, emplace_id,
         EcsEventNoOnSet); /* No OnSet, this function is only called from
                            * functions that are about to set the component. */
+
+    stage->ensure_add = ensure_add;
 }
 
 void flecs_add_id(

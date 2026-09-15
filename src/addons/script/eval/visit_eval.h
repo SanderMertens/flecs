@@ -76,6 +76,12 @@ struct flecs_script_entity_state_t {
     bool created;
 };
 
+void flecs_script_add_entity_kind(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_entity_t kind,
+    bool w_expr);
+
 FLECS_API
 int flecs_script_eval_entity_enter(
     ecs_script_eval_visitor_t *v,
