@@ -1417,7 +1417,13 @@
                 "instance_w_props_scope_same_line",
                 "instance_w_props_scope_newline",
                 "instance_wo_props_scope_newline",
-                "anonymous_instance_w_props_scope_newline"
+                "anonymous_instance_w_props_scope_newline",
+                "template_w_vector_prop_set_deferred",
+                "template_w_vector_prop_add_set_deferred",
+                "template_w_vector_prop_script_kind_deferred",
+                "template_w_vector_prop_script_component_deferred",
+                "template_add_deferred_instantiates_once",
+                "template_add_remove_deferred_no_instantiate"
             ]
         }, {
             "id": "Mut",

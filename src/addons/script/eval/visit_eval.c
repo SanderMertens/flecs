@@ -772,8 +772,11 @@ void flecs_script_add_entity_kind(
 {
     ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(v->world));
     ecs_stage_t *stage = world->stages[0];
-    bool ensure_add = stage->ensure_add;
-    stage->ensure_add = ensure_add || w_expr;
+    const ecs_type_t *ensure_add = stage->ensure_add;
+    ecs_type_t ensure_add_type = { &kind, 1 };
+    if (w_expr) {
+        stage->ensure_add = &ensure_add_type;
+    }
     ecs_add_id(v->world, entity, kind);
     stage->ensure_add = ensure_add;
 }

@@ -1376,6 +1376,12 @@ void Template_instance_w_props_scope_same_line(void);
 void Template_instance_w_props_scope_newline(void);
 void Template_instance_wo_props_scope_newline(void);
 void Template_anonymous_instance_w_props_scope_newline(void);
+void Template_template_w_vector_prop_set_deferred(void);
+void Template_template_w_vector_prop_add_set_deferred(void);
+void Template_template_w_vector_prop_script_kind_deferred(void);
+void Template_template_w_vector_prop_script_component_deferred(void);
+void Template_template_add_deferred_instantiates_once(void);
+void Template_template_add_remove_deferred_no_instantiate(void);
 
 // Testsuite 'Mut'
 void Mut_setup(void);
@@ -8984,6 +8990,30 @@ bake_test_case Template_testcases[] = {
     {
         "anonymous_instance_w_props_scope_newline",
         Template_anonymous_instance_w_props_scope_newline
+    },
+    {
+        "template_w_vector_prop_set_deferred",
+        Template_template_w_vector_prop_set_deferred
+    },
+    {
+        "template_w_vector_prop_add_set_deferred",
+        Template_template_w_vector_prop_add_set_deferred
+    },
+    {
+        "template_w_vector_prop_script_kind_deferred",
+        Template_template_w_vector_prop_script_kind_deferred
+    },
+    {
+        "template_w_vector_prop_script_component_deferred",
+        Template_template_w_vector_prop_script_component_deferred
+    },
+    {
+        "template_add_deferred_instantiates_once",
+        Template_template_add_deferred_instantiates_once
+    },
+    {
+        "template_add_remove_deferred_no_instantiate",
+        Template_template_add_remove_deferred_no_instantiate
     }
 };
 
@@ -17831,7 +17861,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        182,
+        188,
         Template_testcases,
         1,
         Template_params

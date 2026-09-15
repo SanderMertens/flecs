@@ -39,7 +39,7 @@ struct ecs_stage_t {
     ecs_commands_t *cmd;
     ecs_commands_t cmd_stack[2];     /* Two so we can flush one & populate the other */
     bool cmd_flushing;               /* Ensures only one defer_end call flushes */
-    bool ensure_add;                 /* Component added by operation that is
+    const ecs_type_t *ensure_add;    /* Components added by an operation that is
                                       * about to assign the component value */
 
     /* Thread context */
@@ -93,5 +93,10 @@ ecs_stack_t* flecs_stage_get_stack_allocator(
 /* Shrink memory for stage data structures. */
 void ecs_stage_shrink(
     ecs_stage_t *stage);
+
+/* Test if component is added by an operation that is about to assign a value. */
+bool flecs_stage_is_ensure_add(
+    const ecs_world_t *world,
+    ecs_id_t component);
 
 #endif

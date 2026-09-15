@@ -859,6 +859,7 @@ static bool flecs_remove_invalid(
 static void flecs_cmd_batch_for_entity(
     ecs_world_t *world,
     ecs_table_diff_builder_t *diff,
+    ecs_vec_t *set_ids,
     ecs_entity_t entity,
     ecs_cmd_t *cmds,
     int32_t start)
@@ -869,6 +870,8 @@ static void flecs_cmd_batch_for_entity(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     world->info.cmd.batched_entity_count ++;
+
+    ecs_vec_clear(set_ids);
 
     bool has_set = false;
     ecs_table_t *start_table = table;
@@ -940,6 +943,7 @@ static void flecs_cmd_batch_for_entity(
         case EcsCmdEnsure: {
             table = flecs_find_table_add(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
+            ecs_vec_append_t(&world->allocator, set_ids, ecs_id_t)[0] = id;
             has_set = true;
             break;
         }
@@ -998,9 +1002,17 @@ static void flecs_cmd_batch_for_entity(
 
     /* Move entity to destination table in single operation */
     flecs_table_diff_build_noalloc(diff, &table_diff);
+    ecs_stage_t *stage = world->stages[0];
+    const ecs_type_t *prev_ensure_add = stage->ensure_add;
+    ecs_type_t ensure_add_type = {
+        ecs_vec_first_t(set_ids, ecs_id_t), ecs_vec_count(set_ids) };
+    if (ensure_add_type.count) {
+        stage->ensure_add = &ensure_add_type;
+    }
     flecs_defer_begin(world, world->stages[0]);
     flecs_commit(world, entity, r, table, &table_diff, 0, 0);
     flecs_defer_end(world, world->stages[0]);
+    stage->ensure_add = prev_ensure_add;
 
     /* If destination table has new sparse components, make sure they're created
      * for the entity. */
@@ -1191,6 +1203,7 @@ bool flecs_defer_end(
             int32_t i, count = ecs_vec_count(queue);
 
             ecs_table_diff_builder_t diff = {0};
+            ecs_vec_t set_ids = {0};
             bool diff_builder_used = false;
 
             for (i = 0; i < count; i ++) {
@@ -1207,10 +1220,13 @@ bool flecs_defer_end(
                     if (is_alive) {
                         if (!diff_builder_used) {
                             flecs_table_diff_builder_init(world, &diff);
+                            ecs_vec_init_t(
+                                &world->allocator, &set_ids, ecs_id_t, 0);
                             diff_builder_used = true;
                         }
 
-                        flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
+                        flecs_cmd_batch_for_entity(
+                            world, &diff, &set_ids, e, cmds, i);
 
                         is_alive = flecs_entities_is_alive(world, e);
                     } else {
@@ -1374,6 +1390,7 @@ bool flecs_defer_end(
 
             if (diff_builder_used) {
                 flecs_table_diff_builder_fini(world, &diff);
+                ecs_vec_fini_t(&world->allocator, &set_ids, ecs_id_t);
             }
 
             /* Internal callback for capturing commands, signal queue is done */

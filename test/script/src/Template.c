@@ -7683,3 +7683,271 @@ void Template_template_w_props_set_after_add_deferred(void) {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    float x, y;
+} Vec2Value;
+
+static int deferred_instantiate_count = 0;
+static int deferred_error_count = 0;
+
+static void deferred_instantiate_observer(ecs_iter_t *it) {
+    deferred_instantiate_count += it->count;
+}
+
+static void deferred_error_log_callback(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    (void)file;
+    (void)line;
+    (void)msg;
+    if (level <= -3) {
+        deferred_error_count ++;
+    }
+}
+
+#define DEFERRED_TEMPLATE_DEFS\
+    HEAD "struct Position(x: f32, y: f32)"\
+    LINE "template Roof {"\
+    LINE "  prop footprint: vecVec2 = [{1, 2}]"\
+    LINE "  Position: {footprint[0].x, footprint[0].y}"\
+    LINE "}"\
+    LINE "template FlatRoof {"\
+    LINE "  prop footprint: vecVec2 = []"\
+    LINE "  Position: {footprint[0].x, footprint[0].y}"\
+    LINE "}"\
+    LINE "template Brick {"\
+    LINE "  prop height: f32 = 5"\
+    LINE "  Position: {1, $height}"\
+    LINE "}"
+
+static void deferred_template_begin(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = deferred_error_log_callback;
+    ecs_os_set_api(&os_api);
+    deferred_instantiate_count = 0;
+    deferred_error_count = 0;
+}
+
+static void deferred_template_end(ecs_world_t *world) {
+    ecs_fini(world);
+    ecs_os_set_api_defaults();
+}
+
+static ecs_world_t* deferred_template_world(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec2 = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec2" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "vecVec2" }),
+        .type = vec2
+    });
+
+    test_assert(ecs_script_run_w_desc(
+        world, NULL, DEFERRED_TEMPLATE_DEFS, &ir_desc, NULL) == 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = position }},
+        .events = { EcsOnSet },
+        .callback = deferred_instantiate_observer
+    });
+
+    deferred_instantiate_count = 0;
+    deferred_error_count = 0;
+
+    return world;
+}
+
+static void deferred_template_footprint(ecs_vec_t *v) {
+    ecs_vec_init_t(NULL, v, Vec2Value, 3);
+    ecs_vec_set_count_t(NULL, v, Vec2Value, 3);
+    Vec2Value *elems = ecs_vec_first_t(v, Vec2Value);
+    elems[0] = (Vec2Value){0, 0};
+    elems[1] = (Vec2Value){0, 10};
+    elems[2] = (Vec2Value){10, 10};
+}
+
+static void deferred_template_test_position(
+    ecs_world_t *world,
+    const char *path,
+    float x,
+    float y)
+{
+    ecs_entity_t e = ecs_lookup(world, path);
+    test_assert(e != 0);
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+    const Position *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, x);
+    test_flt(p->y, y);
+}
+
+void Template_template_w_vector_prop_set_deferred(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = deferred_template_world();
+
+    ecs_entity_t roof = ecs_lookup(world, "Roof");
+    ecs_entity_t flat_roof = ecs_lookup(world, "FlatRoof");
+    test_assert(roof != 0);
+    test_assert(flat_roof != 0);
+
+    ecs_vec_t footprint, flat_footprint;
+    deferred_template_footprint(&footprint);
+    deferred_template_footprint(&flat_footprint);
+
+    ecs_defer_begin(world);
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_set_id(world, a, roof, sizeof(ecs_vec_t), &footprint);
+    ecs_set_id(world, b, flat_roof, sizeof(ecs_vec_t), &flat_footprint);
+    ecs_defer_end(world);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 2);
+
+    deferred_template_test_position(world, "a", 0, 0);
+    deferred_template_test_position(world, "b", 0, 0);
+
+    ecs_vec_fini_t(NULL, &footprint, Vec2Value);
+    ecs_vec_fini_t(NULL, &flat_footprint, Vec2Value);
+
+    deferred_template_end(world);
+}
+
+void Template_template_w_vector_prop_add_set_deferred(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = deferred_template_world();
+
+    ecs_entity_t roof = ecs_lookup(world, "Roof");
+    ecs_entity_t flat_roof = ecs_lookup(world, "FlatRoof");
+    test_assert(roof != 0);
+    test_assert(flat_roof != 0);
+
+    ecs_vec_t footprint, flat_footprint;
+    deferred_template_footprint(&footprint);
+    deferred_template_footprint(&flat_footprint);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+
+    ecs_defer_begin(world);
+    ecs_add_id(world, a, roof);
+    ecs_set_id(world, a, roof, sizeof(ecs_vec_t), &footprint);
+    ecs_add_id(world, b, flat_roof);
+    ecs_set_id(world, b, flat_roof, sizeof(ecs_vec_t), &flat_footprint);
+    ecs_defer_end(world);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 2);
+
+    deferred_template_test_position(world, "a", 0, 0);
+    deferred_template_test_position(world, "b", 0, 0);
+
+    ecs_vec_fini_t(NULL, &footprint, Vec2Value);
+    ecs_vec_fini_t(NULL, &flat_footprint, Vec2Value);
+
+    deferred_template_end(world);
+}
+
+void Template_template_w_vector_prop_script_kind_deferred(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = deferred_template_world();
+
+    ecs_defer_begin(world);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "Roof a(footprint: [{0,0},{0,10},{10,10}])"
+        LINE "FlatRoof b(footprint: [{0,0},{0,10},{10,10}])",
+        &ir_desc, NULL) == 0);
+    ecs_defer_end(world);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 2);
+
+    deferred_template_test_position(world, "a", 0, 0);
+    deferred_template_test_position(world, "b", 0, 0);
+
+    deferred_template_end(world);
+}
+
+void Template_template_w_vector_prop_script_component_deferred(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = deferred_template_world();
+
+    ecs_defer_begin(world);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "a { Roof: {footprint: [{0,0},{0,10},{10,10}]} }"
+        LINE "b { FlatRoof: {footprint: [{0,0},{0,10},{10,10}]} }",
+        &ir_desc, NULL) == 0);
+    ecs_defer_end(world);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 2);
+
+    deferred_template_test_position(world, "a", 0, 0);
+    deferred_template_test_position(world, "b", 0, 0);
+
+    deferred_template_end(world);
+}
+
+void Template_template_add_deferred_instantiates_once(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = deferred_template_world();
+
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    test_assert(brick != 0);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+
+    ecs_defer_begin(world);
+    ecs_add_id(world, a, brick);
+    ecs_defer_end(world);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 1);
+
+    deferred_template_test_position(world, "a", 1, 5);
+
+    deferred_template_end(world);
+}
+
+void Template_template_add_remove_deferred_no_instantiate(void) {
+    deferred_template_begin();
+
+    ecs_world_t *world = deferred_template_world();
+
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    test_assert(brick != 0);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+
+    ecs_defer_begin(world);
+    ecs_add_id(world, a, brick);
+    ecs_remove_id(world, a, brick);
+    ecs_defer_end(world);
+
+    test_int(deferred_error_count, 0);
+    test_int(deferred_instantiate_count, 0);
+    test_assert(!ecs_has_id(world, a, brick));
+
+    deferred_template_end(world);
+}
