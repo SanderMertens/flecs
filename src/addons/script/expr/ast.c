@@ -193,7 +193,7 @@ ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
 {
     ecs_expr_interpolated_string_t *result = flecs_expr_ast_new(
         parser, ecs_expr_interpolated_string_t, EcsExprInterpolatedString);
-    result->value = ECS_CONST_CAST(char*, value);
+    result->value = flecs_strdup(&parser->script->allocator, value);
     result->buffer = flecs_strdup(&parser->script->allocator, value);
     result->buffer_size = ecs_os_strlen(result->buffer) + 1;
     result->node.type = ecs_id(ecs_string_t);

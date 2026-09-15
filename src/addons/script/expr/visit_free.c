@@ -41,6 +41,7 @@ void flecs_expr_visit_free(
             (ecs_expr_interpolated_string_t*)node;
         ecs_vec_fini_t(a, &n->fragments, ecs_expr_fragment_t);
         flecs_free_n(a, char, n->buffer_size, n->buffer);
+        flecs_free_n(a, char, n->buffer_size, n->value);
         break;
     }
     case EcsExprInitializer:

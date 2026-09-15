@@ -97279,7 +97279,7 @@ ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
 {
     ecs_expr_interpolated_string_t *result = flecs_expr_ast_new(
         parser, ecs_expr_interpolated_string_t, EcsExprInterpolatedString);
-    result->value = ECS_CONST_CAST(char*, value);
+    result->value = flecs_strdup(&parser->script->allocator, value);
     result->buffer = flecs_strdup(&parser->script->allocator, value);
     result->buffer_size = ecs_os_strlen(result->buffer) + 1;
     result->node.type = ecs_id(ecs_string_t);
@@ -101599,6 +101599,7 @@ void flecs_expr_visit_free(
             (ecs_expr_interpolated_string_t*)node;
         ecs_vec_fini_t(a, &n->fragments, ecs_expr_fragment_t);
         flecs_free_n(a, char, n->buffer_size, n->buffer);
+        flecs_free_n(a, char, n->buffer_size, n->value);
         break;
     }
     case EcsExprInitializer:
@@ -113068,7 +113069,7 @@ static bool flecs_script_dep_ids_may_match(
     return true;
 }
 
-static bool flecs_script_dep_names_may_match(
+static bool flecs_script_dep_name_prefix_may_match(
     const char *first,
     const char *second)
 {
@@ -113079,6 +113080,33 @@ static bool flecs_script_dep_names_may_match(
         second ++;
     }
     return *first == '{' || *second == '{';
+}
+
+static bool flecs_script_dep_name_suffix_may_match(
+    const char *first,
+    const char *second)
+{
+    const char *first_end = first + ecs_os_strlen(first);
+    const char *second_end = second + ecs_os_strlen(second);
+
+    while (first_end != first && second_end != second &&
+        first_end[-1] == second_end[-1] &&
+        first_end[-1] != '}' && second_end[-1] != '}')
+    {
+        first_end --;
+        second_end --;
+    }
+
+    return (first_end != first && first_end[-1] == '}') ||
+           (second_end != second && second_end[-1] == '}');
+}
+
+static bool flecs_script_dep_names_may_match(
+    const char *first,
+    const char *second)
+{
+    return flecs_script_dep_name_prefix_may_match(first, second) &&
+           flecs_script_dep_name_suffix_may_match(first, second);
 }
 
 static bool flecs_script_dep_entity_may_match(

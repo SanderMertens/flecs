@@ -2935,6 +2935,9 @@ void Reactivity_template_non_exclusive_component_owner_fails(void);
 void Reactivity_component_in_static_and_interpolated_named_children(void);
 void Reactivity_component_in_two_interpolated_named_children(void);
 void Reactivity_component_in_matching_interpolated_named_children_fails(void);
+void Reactivity_component_in_interpolated_named_children_w_different_suffix(void);
+void Reactivity_component_in_interpolated_named_children_w_leading_interpolation(void);
+void Reactivity_component_in_template_interpolated_named_children_w_different_suffix(void);
 void Reactivity_partial_assignment_does_not_own_component(void);
 void Reactivity_same_entity_in_two_non_exclusive_scopes(void);
 void Reactivity_partial_component_in_two_non_exclusive_scopes(void);
@@ -15135,6 +15138,18 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_component_in_matching_interpolated_named_children_fails
     },
     {
+        "component_in_interpolated_named_children_w_different_suffix",
+        Reactivity_component_in_interpolated_named_children_w_different_suffix
+    },
+    {
+        "component_in_interpolated_named_children_w_leading_interpolation",
+        Reactivity_component_in_interpolated_named_children_w_leading_interpolation
+    },
+    {
+        "component_in_template_interpolated_named_children_w_different_suffix",
+        Reactivity_component_in_template_interpolated_named_children_w_different_suffix
+    },
+    {
         "partial_assignment_does_not_own_component",
         Reactivity_partial_assignment_does_not_own_component
     },
@@ -18000,7 +18015,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        149,
+        152,
         Reactivity_testcases,
         1,
         Reactivity_params
