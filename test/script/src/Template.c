@@ -8165,3 +8165,170 @@ void Template_template_vector_interface_prop_in_scope_instantiates_once(void) {
 
     deferred_template_end(world);
 }
+
+static
+void template_for_child_world_init(
+    ecs_world_t *world)
+{
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+}
+
+static
+void template_for_child_test_position(
+    ecs_world_t *world,
+    const char *path,
+    float x,
+    float y)
+{
+    ecs_entity_t e = ecs_lookup(world, path);
+    test_assert(e != 0);
+    ecs_entity_t pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    const float *ptr = ecs_get_id(world, e, pos);
+    test_assert(ptr != NULL);
+    test_flt(ptr[0], x);
+    test_flt(ptr[1], y);
+}
+
+void Template_for_entity_w_child_w_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    template_for_child_world_init(world);
+
+    const char *expr =
+    HEAD "template T { Position: {1, 2} }"
+    LINE "for i in 0..3 {"
+    LINE "  \"e_{i}\" {"
+    LINE "    Position: {i, 0}"
+    LINE "    child { Position: {0, i} }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    template_for_child_test_position(world, "e_0", 0, 0);
+    template_for_child_test_position(world, "e_0.child", 0, 0);
+    template_for_child_test_position(world, "e_1", 1, 0);
+    template_for_child_test_position(world, "e_1.child", 0, 1);
+    template_for_child_test_position(world, "e_2", 2, 0);
+    template_for_child_test_position(world, "e_2.child", 0, 2);
+
+    ecs_fini(world);
+}
+
+void Template_for_entity_w_child_w_template_after(void) {
+    ecs_world_t *world = ecs_init();
+
+    template_for_child_world_init(world);
+
+    const char *expr =
+    HEAD "for i in 0..3 {"
+    LINE "  \"e_{i}\" {"
+    LINE "    Position: {i, 0}"
+    LINE "    child { Position: {0, i} }"
+    LINE "  }"
+    LINE "}"
+    LINE "template T { Position: {1, 2} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    template_for_child_test_position(world, "e_0", 0, 0);
+    template_for_child_test_position(world, "e_0.child", 0, 0);
+    template_for_child_test_position(world, "e_1", 1, 0);
+    template_for_child_test_position(world, "e_1.child", 0, 1);
+    template_for_child_test_position(world, "e_2", 2, 0);
+    template_for_child_test_position(world, "e_2.child", 0, 2);
+
+    ecs_fini(world);
+}
+
+void Template_for_entity_w_named_child_w_template_after(void) {
+    ecs_world_t *world = ecs_init();
+
+    template_for_child_world_init(world);
+
+    const char *expr =
+    HEAD "for i in 0..3 {"
+    LINE "  \"e_{i}\" {"
+    LINE "    Position: {i, 0}"
+    LINE "    \"c_{i}\" { Position: {0, i} }"
+    LINE "  }"
+    LINE "}"
+    LINE "template T { Position: {1, 2} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    template_for_child_test_position(world, "e_0", 0, 0);
+    template_for_child_test_position(world, "e_0.c_0", 0, 0);
+    template_for_child_test_position(world, "e_1", 1, 0);
+    template_for_child_test_position(world, "e_1.c_1", 0, 1);
+    template_for_child_test_position(world, "e_2", 2, 0);
+    template_for_child_test_position(world, "e_2.c_2", 0, 2);
+
+    ecs_fini(world);
+}
+
+void Template_for_entity_w_child_in_scope_w_template_after(void) {
+    ecs_world_t *world = ecs_init();
+
+    template_for_child_world_init(world);
+
+    const char *expr =
+    HEAD "grp {"
+    LINE "  for i in 0..3 {"
+    LINE "    \"e_{i}\" {"
+    LINE "      Position: {i, 0}"
+    LINE "      child { Position: {0, i} }"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE "template T { Position: {1, 2} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    template_for_child_test_position(world, "grp.e_0", 0, 0);
+    template_for_child_test_position(world, "grp.e_0.child", 0, 0);
+    template_for_child_test_position(world, "grp.e_1", 1, 0);
+    template_for_child_test_position(world, "grp.e_1.child", 0, 1);
+    template_for_child_test_position(world, "grp.e_2", 2, 0);
+    template_for_child_test_position(world, "grp.e_2.child", 0, 2);
+
+    ecs_fini(world);
+}
+
+void Template_for_entity_w_child_in_template_w_template_after(void) {
+    ecs_world_t *world = ecs_init();
+
+    template_for_child_world_init(world);
+
+    const char *expr =
+    HEAD "template T {"
+    LINE "  for i in 0..3 {"
+    LINE "    \"e_{i}\" {"
+    LINE "      Position: {i, 0}"
+    LINE "      child { Position: {0, i} }"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE "template U { Position: {9, 9} }"
+    LINE "grp { T: {} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    template_for_child_test_position(world, "grp.e_0", 0, 0);
+    template_for_child_test_position(world, "grp.e_0.child", 0, 0);
+    template_for_child_test_position(world, "grp.e_1", 1, 0);
+    template_for_child_test_position(world, "grp.e_1.child", 0, 1);
+    template_for_child_test_position(world, "grp.e_2", 2, 0);
+    template_for_child_test_position(world, "grp.e_2.child", 0, 2);
+
+    ecs_fini(world);
+}
