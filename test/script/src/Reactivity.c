@@ -1084,6 +1084,136 @@ void Reactivity_component_in_matching_interpolated_named_children_fails(void) {
     ecs_fini(world);
 }
 
+void Reactivity_component_in_interpolated_named_children_w_different_suffix(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "for i in 0..2 {"
+            LINE "  \"x_{i}_a\" { Position: {1, 2} }"
+            LINE "  \"x_{i}_b\" { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t x_0_a = ecs_lookup(world, "x_0_a");
+    ecs_entity_t x_0_b = ecs_lookup(world, "x_0_b");
+    ecs_entity_t x_1_a = ecs_lookup(world, "x_1_a");
+    ecs_entity_t x_1_b = ecs_lookup(world, "x_1_b");
+    test_assert(x_0_a != 0);
+    test_assert(x_0_b != 0);
+    test_assert(x_1_a != 0);
+    test_assert(x_1_b != 0);
+
+    const Position *p = ecs_get_id(world, x_0_a, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, x_0_b, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
+    p = ecs_get_id(world, x_1_a, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, x_1_b, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_named_children_w_leading_interpolation(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "for i in 0..2 {"
+            LINE "  \"{i}_a\" { Position: {1, 2} }"
+            LINE "  \"{i}_b\" { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t e_0_a = ecs_lookup(world, "0_a");
+    ecs_entity_t e_1_b = ecs_lookup(world, "1_b");
+    test_assert(e_0_a != 0);
+    test_assert(e_1_b != 0);
+
+    const Position *p = ecs_get_id(world, e_0_a, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, e_1_b, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_template_interpolated_named_children_w_different_suffix(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Panel {"
+            LINE "  for i in 0..2 {"
+            LINE "    \"x_{i}_a\" { Position: {1, 2} }"
+            LINE "    \"x_{i}_b\" { Position: {3, 4} }"
+            LINE "  }"
+            LINE "}"
+            LINE "Panel instance()"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t x_0_a = ecs_lookup(world, "instance.x_0_a");
+    ecs_entity_t x_1_b = ecs_lookup(world, "instance.x_1_b");
+    test_assert(x_0_a != 0);
+    test_assert(x_1_b != 0);
+
+    const Position *p = ecs_get_id(world, x_0_a, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, x_1_b, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
+
+    ecs_fini(world);
+}
+
 void Reactivity_partial_assignment_does_not_own_component(void) {
     ecs_world_t *world = ecs_init();
 
