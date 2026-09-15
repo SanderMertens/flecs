@@ -2183,6 +2183,11 @@ typedef struct ecs_stage_allocators_t {
     ecs_block_allocator_t query_impl;
 } ecs_stage_allocators_t;
 
+typedef struct ecs_stage_ensure_t {
+    ecs_entity_t entity;
+    ecs_type_t ids;
+} ecs_stage_ensure_t;
+
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
  * operations, which causes the operation to be run on the stage instead of the
@@ -2206,8 +2211,7 @@ struct ecs_stage_t {
     ecs_commands_t *cmd;
     ecs_commands_t cmd_stack[2];     /* Two so we can flush one & populate the other */
     bool cmd_flushing;               /* Ensures only one defer_end call flushes */
-    const ecs_type_t *ensure_add;    /* Components added by an operation that is
-                                      * about to assign the component value */
+    const ecs_stage_ensure_t *ensure_add;
 
     /* Thread context */
     ecs_world_t *thread_ctx;         /* Points to stage when used as a thread stage */
@@ -2260,6 +2264,7 @@ void ecs_stage_shrink(
 /* Test if component is added by an operation that is about to assign a value. */
 bool flecs_stage_is_ensure_add(
     const ecs_world_t *world,
+    ecs_entity_t entity,
     ecs_id_t component);
 
 #endif
@@ -4675,10 +4680,10 @@ static void flecs_cmd_batch_for_entity(
     /* Move entity to destination table in single operation */
     flecs_table_diff_build_noalloc(diff, &table_diff);
     ecs_stage_t *stage = world->stages[0];
-    const ecs_type_t *prev_ensure_add = stage->ensure_add;
-    ecs_type_t ensure_add_type = {
-        ecs_vec_first_t(set_ids, ecs_id_t), ecs_vec_count(set_ids) };
-    if (ensure_add_type.count) {
+    const ecs_stage_ensure_t *prev_ensure_add = stage->ensure_add;
+    ecs_stage_ensure_t ensure_add_type = { entity, {
+        ecs_vec_first_t(set_ids, ecs_id_t), ecs_vec_count(set_ids) }};
+    if (ensure_add_type.ids.count) {
         stage->ensure_add = &ensure_add_type;
     }
     flecs_defer_begin(world, world->stages[0]);
@@ -6436,8 +6441,8 @@ static void flecs_add_id_w_record(
         world, src_table, &component, &diff);
 
     ecs_stage_t *stage = world->stages[0];
-    const ecs_type_t *ensure_add = stage->ensure_add;
-    ecs_type_t ensure_add_type = { &component, 1 };
+    const ecs_stage_ensure_t *ensure_add = stage->ensure_add;
+    ecs_stage_ensure_t ensure_add_type = { entity, { &component, 1 } };
     stage->ensure_add = &ensure_add_type;
 
     flecs_commit(world, entity, record, dst_table, &diff, emplace_id,
@@ -16939,16 +16944,17 @@ error:
 
 bool flecs_stage_is_ensure_add(
     const ecs_world_t *world,
+    ecs_entity_t entity,
     ecs_id_t component)
 {
-    const ecs_type_t *ensure_add = world->stages[0]->ensure_add;
-    if (!ensure_add) {
+    const ecs_stage_ensure_t *ensure_add = world->stages[0]->ensure_add;
+    if (!ensure_add || ensure_add->entity != entity) {
         return false;
     }
 
-    int32_t i, count = ensure_add->count;
+    int32_t i, count = ensure_add->ids.count;
     for (i = 0; i < count; i ++) {
-        if (ensure_add->array[i] == component) {
+        if (ensure_add->ids.array[i] == component) {
             return true;
         }
     }

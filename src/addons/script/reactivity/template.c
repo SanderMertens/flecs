@@ -1185,7 +1185,9 @@ static void flecs_script_template_on_add(
 
     script->template_->refcount += it->count;
 
-    if (flecs_stage_is_ensure_add(it->real_world, template_entity)) {
+    if (it->count == 1 && flecs_stage_is_ensure_add(
+        it->real_world, it->entities[0], template_entity))
+    {
         return;
     }
 
@@ -1520,12 +1522,12 @@ static void flecs_script_template_declare_inherited_vars(
     }
 }
 
-static ecs_entity_t flecs_script_template_prop_interface(
+static const ecs_script_template_member_t* flecs_script_template_prop_member(
     const ecs_script_template_t *template,
     int32_t index)
 {
     if (!template) {
-        return 0;
+        return NULL;
     }
 
     const ecs_script_template_member_t *members = ecs_vec_first(
@@ -1533,51 +1535,11 @@ static ecs_entity_t flecs_script_template_prop_interface(
     int32_t i, count = ecs_vec_count(&template->members);
     for (i = 0; i < count; i ++) {
         if (!members[i].is_mut && members[i].index == index) {
-            return members[i].interface;
+            return &members[i];
         }
     }
 
-    return 0;
-}
-
-static bool flecs_script_template_prop_is_template(
-    const ecs_script_template_t *template,
-    int32_t index)
-{
-    if (!template) {
-        return false;
-    }
-
-    const ecs_script_template_member_t *members = ecs_vec_first(
-        &template->members);
-    int32_t i, count = ecs_vec_count(&template->members);
-    for (i = 0; i < count; i ++) {
-        if (!members[i].is_mut && members[i].index == index) {
-            return members[i].is_template;
-        }
-    }
-
-    return false;
-}
-
-static bool flecs_script_template_prop_is_vector(
-    const ecs_script_template_t *template,
-    int32_t index)
-{
-    if (!template) {
-        return false;
-    }
-
-    const ecs_script_template_member_t *members = ecs_vec_first(
-        &template->members);
-    int32_t i, count = ecs_vec_count(&template->members);
-    for (i = 0; i < count; i ++) {
-        if (!members[i].is_mut && members[i].index == index) {
-            return members[i].is_vector;
-        }
-    }
-
-    return false;
+    return NULL;
 }
 
 static int flecs_script_template_inherit(
@@ -1678,12 +1640,11 @@ static int flecs_script_template_inherit(
             (template->parent_type != 0) + i;
         member->input = 0;
         member->is_mut = false;
-        member->is_template = flecs_script_template_prop_is_template(
-            base_template, i);
-        member->is_vector = flecs_script_template_prop_is_vector(
-            base_template, i);
-        member->interface = flecs_script_template_prop_interface(
-            base_template, i);
+        const ecs_script_template_member_t *base_member =
+            flecs_script_template_prop_member(base_template, i);
+        member->is_template = base_member && base_member->is_template;
+        member->is_vector = base_member && base_member->is_vector;
+        member->interface = base_member ? base_member->interface : 0;
         member->diff_ti = NULL;
         if (member->interface) {
             template->has_interface_members = true;

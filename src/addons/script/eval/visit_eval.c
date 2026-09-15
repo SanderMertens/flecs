@@ -772,8 +772,8 @@ void flecs_script_add_entity_kind(
 {
     ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(v->world));
     ecs_stage_t *stage = world->stages[0];
-    const ecs_type_t *ensure_add = stage->ensure_add;
-    ecs_type_t ensure_add_type = { &kind, 1 };
+    const ecs_stage_ensure_t *ensure_add = stage->ensure_add;
+    ecs_stage_ensure_t ensure_add_type = { entity, { &kind, 1 } };
     if (w_expr) {
         stage->ensure_add = &ensure_add_type;
     }
@@ -790,12 +790,12 @@ void flecs_script_scope_add_ids(
 {
     ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(v->world));
     ecs_stage_t *stage = world->stages[0];
-    const ecs_type_t *ensure_add = stage->ensure_add;
-    ecs_type_t ensure_add_type = {
+    const ecs_stage_ensure_t *ensure_add = stage->ensure_add;
+    ecs_stage_ensure_t ensure_add_type = { entity, {
         ecs_vec_first_t(&scope->set_components, ecs_id_t),
         ecs_vec_count(&scope->set_components)
-    };
-    if (ensure_add_type.count) {
+    }};
+    if (ensure_add_type.ids.count) {
         stage->ensure_add = &ensure_add_type;
     }
     flecs_add_ids(v->world, entity, ids, count);

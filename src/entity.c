@@ -369,8 +369,8 @@ static void flecs_add_id_w_record(
         world, src_table, &component, &diff);
 
     ecs_stage_t *stage = world->stages[0];
-    const ecs_type_t *ensure_add = stage->ensure_add;
-    ecs_type_t ensure_add_type = { &component, 1 };
+    const ecs_stage_ensure_t *ensure_add = stage->ensure_add;
+    ecs_stage_ensure_t ensure_add_type = { entity, { &component, 1 } };
     stage->ensure_add = &ensure_add_type;
 
     flecs_commit(world, entity, record, dst_table, &diff, emplace_id,

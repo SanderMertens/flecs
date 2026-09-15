@@ -1396,6 +1396,9 @@ void Template_for_entity_w_child_w_template_after(void);
 void Template_for_entity_w_named_child_w_template_after(void);
 void Template_for_entity_w_child_in_scope_w_template_after(void);
 void Template_for_entity_w_child_in_template_w_template_after(void);
+void Template_on_add_instantiates_other_entity(void);
+void Template_on_add_instantiates_other_entity_w_props(void);
+void Template_on_add_instantiates_other_entity_in_scope(void);
 
 // Testsuite 'Mut'
 void Mut_setup(void);
@@ -3078,6 +3081,12 @@ void Reactivity_sparse_blocks_restore_cached_constants(void);
 void Reactivity_computed_const_skips_unchanged(void);
 void Reactivity_computed_const_capture_skips_unchanged(void);
 void Reactivity_computed_const_cache_restored_and_reset(void);
+void Reactivity_component_in_interpolated_children_w_string_prefix_collision(void);
+void Reactivity_component_in_interpolated_children_w_string_suffix_collision(void);
+void Reactivity_component_in_interpolated_children_w_string_middle_collision(void);
+void Reactivity_component_in_interpolated_children_w_numeric_boundary_collision(void);
+void Reactivity_component_in_interpolated_children_w_formatted_integer(void);
+void Reactivity_component_in_interpolated_children_w_fill_collision(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -9106,6 +9115,18 @@ bake_test_case Template_testcases[] = {
     {
         "for_entity_w_child_in_template_w_template_after",
         Template_for_entity_w_child_in_template_w_template_after
+    },
+    {
+        "on_add_instantiates_other_entity",
+        Template_on_add_instantiates_other_entity
+    },
+    {
+        "on_add_instantiates_other_entity_w_props",
+        Template_on_add_instantiates_other_entity_w_props
+    },
+    {
+        "on_add_instantiates_other_entity_in_scope",
+        Template_on_add_instantiates_other_entity_in_scope
     }
 };
 
@@ -15734,6 +15755,30 @@ bake_test_case Reactivity_testcases[] = {
     {
         "computed_const_cache_restored_and_reset",
         Reactivity_computed_const_cache_restored_and_reset
+    },
+    {
+        "component_in_interpolated_children_w_string_prefix_collision",
+        Reactivity_component_in_interpolated_children_w_string_prefix_collision
+    },
+    {
+        "component_in_interpolated_children_w_string_suffix_collision",
+        Reactivity_component_in_interpolated_children_w_string_suffix_collision
+    },
+    {
+        "component_in_interpolated_children_w_string_middle_collision",
+        Reactivity_component_in_interpolated_children_w_string_middle_collision
+    },
+    {
+        "component_in_interpolated_children_w_numeric_boundary_collision",
+        Reactivity_component_in_interpolated_children_w_numeric_boundary_collision
+    },
+    {
+        "component_in_interpolated_children_w_formatted_integer",
+        Reactivity_component_in_interpolated_children_w_formatted_integer
+    },
+    {
+        "component_in_interpolated_children_w_fill_collision",
+        Reactivity_component_in_interpolated_children_w_fill_collision
     }
 };
 
@@ -18041,7 +18086,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        200,
+        203,
         Template_testcases,
         1,
         Template_params
@@ -18145,7 +18190,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        155,
+        161,
         Reactivity_testcases,
         1,
         Reactivity_params

@@ -8332,3 +8332,49 @@ void Template_for_entity_w_child_in_template_w_template_after(void) {
 
     ecs_fini(world);
 }
+
+static void template_add_to_other_entity(ecs_iter_t *it) {
+    ecs_entity_t target = *(ecs_entity_t*)it->ctx;
+    if (it->entities[0] != target) {
+        ecs_add_id(it->world, target, ecs_field_id(it, 0));
+    }
+}
+
+static void template_nested_on_add(const char *definition, const char *code) {
+    ecs_world_t *world = ecs_init();
+    test_int(ecs_script_run_w_desc(
+        world, NULL, definition, &ir_desc, NULL), 0);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t target = ecs_entity(world, { .name = "b" });
+    ecs_observer(world, {
+        .query.terms = {{ .id = t }},
+        .events = { EcsOnAdd },
+        .callback = template_add_to_other_entity,
+        .ctx = &target
+    });
+
+    test_int(ecs_script_run_w_desc(
+        world, NULL, code, &ir_desc, NULL), 0);
+    test_assert(ecs_lookup(world, "a.child") != 0);
+    test_assert(ecs_has_id(world, target, t));
+    test_assert(ecs_lookup(world, "b.child") != 0);
+
+    ecs_fini(world);
+}
+
+void Template_on_add_instantiates_other_entity(void) {
+    template_nested_on_add("template T { child {} }", "T a()");
+}
+
+void Template_on_add_instantiates_other_entity_w_props(void) {
+    template_nested_on_add(
+        "template T { prop n: i32 = 10\n child {} }", "T a(n: 20)");
+}
+
+void Template_on_add_instantiates_other_entity_in_scope(void) {
+    template_nested_on_add(
+        "template T { prop n: i32 = 10\n child {} }\n"
+        "template Outer { T: {n: 20} }", "Outer a()");
+}

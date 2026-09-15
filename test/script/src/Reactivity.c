@@ -8878,3 +8878,175 @@ void Reactivity_count_range_is_reactive(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_component_in_interpolated_children_w_string_prefix_collision(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            "using flecs.meta\n"
+            "struct Position(x: f32, y: f32)\n"
+            "template Panel {\n"
+            "  prop name: string = \"top_0\"\n"
+            "  \"post_{name}\" { Position: {1, 2} }\n"
+            "  for i in 0..1 {\n"
+            "    \"post_top_{i}\" { Position: {3, 4} }\n"
+            "  }\n"
+            "}\n"
+            "Panel e()\n"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error != NULL);
+    test_assert(strstr(data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_children_w_string_suffix_collision(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            "using flecs.meta\n"
+            "struct Position(x: f32, y: f32)\n"
+            "template Panel {\n"
+            "  prop name: string = \"0_top\"\n"
+            "  \"post_{name}\" { Position: {1, 2} }\n"
+            "  for i in 0..1 {\n"
+            "    \"post_{i}_top\" { Position: {3, 4} }\n"
+            "  }\n"
+            "}\n"
+            "Panel e()\n"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error != NULL);
+    test_assert(strstr(data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_children_w_string_middle_collision(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            "using flecs.meta\n"
+            "struct Position(x: f32, y: f32)\n"
+            "template Panel {\n"
+            "  prop name: string = \"0_m_0\"\n"
+            "  \"post_{name}\" { Position: {1, 2} }\n"
+            "  for i in 0..1 {\n"
+            "    \"post_{i}_m_{i}\" { Position: {3, 4} }\n"
+            "  }\n"
+            "}\n"
+            "Panel e()\n"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error != NULL);
+    test_assert(strstr(data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_children_w_numeric_boundary_collision(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            "using flecs.meta\n"
+            "struct Position(x: f32, y: f32)\n"
+            "template Panel {\n"
+            "  prop index: i32 = 1\n"
+            "  \"post_{index}0\" { Position: {1, 2} }\n"
+            "  for i in 0..1 {\n"
+            "    \"post_1{i}\" { Position: {3, 4} }\n"
+            "  }\n"
+            "}\n"
+            "Panel e()\n"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error != NULL);
+    test_assert(strstr(data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_children_w_formatted_integer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "using flecs.meta"
+            LINE "struct Position(x: f32, y: f32)"
+            LINE "for i in 0..2 {"
+            LINE "  \"post_{i:02}\" { Position: {1, 2} }"
+            LINE "  \"post_top_{i:02}\" { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error == NULL);
+    test_assert(ecs_lookup(world, "post_00") != 0);
+    test_assert(ecs_lookup(world, "post_01") != 0);
+    test_assert(ecs_lookup(world, "post_top_00") != 0);
+    test_assert(ecs_lookup(world, "post_top_01") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_children_w_fill_collision(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "using flecs.meta"
+            LINE "struct Position(x: f32, y: f32)"
+            LINE "for i in 0..1 {"
+            LINE "  \"post_{i:a>3}\" { Position: {1, 2} }"
+            LINE "  \"post_aa{i}\" { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error != NULL);
+    test_assert(strstr(data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
