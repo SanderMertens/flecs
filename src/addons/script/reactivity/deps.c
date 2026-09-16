@@ -662,11 +662,9 @@ static int flecs_script_dep_id(
 
     *input |= flecs_script_dep_var_get(ctx, id->first_sp);
     *input |= flecs_script_dep_var_get(ctx, id->second_sp);
-    *input |= flecs_script_dep_var_get(ctx, id->value_sp);
     *input |= flecs_script_dep_var_get(ctx, id->index_sp);
     *internal |= flecs_script_dep_var_get_internal(ctx, id->first_sp);
     *internal |= flecs_script_dep_var_get_internal(ctx, id->second_sp);
-    *internal |= flecs_script_dep_var_get_internal(ctx, id->value_sp);
     *internal |= flecs_script_dep_var_get_internal(ctx, id->index_sp);
     return 0;
 }
@@ -863,18 +861,26 @@ static int flecs_script_dep_node_impl(
             break;
         }
 
-        if (!ctx->template ||
-            ctx->member >= ecs_vec_count(&ctx->template->members))
-        {
-            flecs_script_eval_error(ctx->v, node,
-                "variable '%s' is not a template member", n->name);
-            return -1;
+        ecs_script_template_member_t *member;
+        if (n->base_member) {
+            ecs_assert(ctx->template != NULL, ECS_INTERNAL_ERROR, NULL);
+            member = ecs_vec_get_t(&ctx->template->members,
+                ecs_script_template_member_t, n->base_member - 1);
+        } else {
+            if (!ctx->template ||
+                ctx->member >= ecs_vec_count(&ctx->template->members))
+            {
+                flecs_script_eval_error(ctx->v, node,
+                    "variable '%s' is not a template member", n->name);
+                return -1;
+            }
+
+            member = ecs_vec_get_t(
+                &ctx->template->members, ecs_script_template_member_t,
+                ctx->member ++);
+            flecs_script_dep_var_set(ctx, n->sp, member->input, 0);
         }
 
-        ecs_script_template_member_t *member = ecs_vec_get_t(
-            &ctx->template->members, ecs_script_template_member_t,
-            ctx->member ++);
-        flecs_script_dep_var_set(ctx, n->sp, member->input, 0);
         if (flecs_script_dep_expr(ctx, n->expr, &node->direct_input, &node->direct_internal)) {
             return -1;
         }

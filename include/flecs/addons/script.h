@@ -82,6 +82,14 @@ extern ECS_DECLARE(EcsScriptVectorType);
 /* Script template. */
 typedef struct ecs_script_template_t ecs_script_template_t;
 
+typedef struct ecs_script_template_ref_t {
+    ecs_entity_t type;
+    void *value;
+} ecs_script_template_ref_t;
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(ecs_script_template_ref_t);
+
 /** Script variable. */
 typedef struct ecs_script_var_t {
     const char *name;                    /**< Variable name. */

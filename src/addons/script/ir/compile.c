@@ -247,7 +247,6 @@ static int32_t flecs_irc_id(
     desc->second_reg = second_reg;
     desc->index_reg = index_reg;
     desc->index_sp = id->index_expr ? id->index_sp : -1;
-    desc->value_sp = id->value_sp;
     desc->component_slot = component_slot;
     desc->resolved = id->eval != 0;
     desc->has_second = id->second != NULL;
@@ -797,6 +796,42 @@ static int flecs_irc_compile_expr(
     case EcsExprMethod:
         return flecs_irc_compile_call(
             c, (ecs_expr_function_t*)node, dst, in_place, true);
+    case EcsExprTemplate: {
+        ecs_expr_function_t *n = (ecs_expr_function_t*)node;
+        ecs_expr_node_t *args = (ecs_expr_node_t*)n->args;
+        bool has_type = n->args && n->args->node.type_info != NULL;
+        bool has_args = n->args && ecs_vec_count(&n->args->elements) != 0;
+        bool from_var = flecs_expr_template_ref_var(n->left) != NULL;
+        if (!from_var && node->type != ecs_id(ecs_script_template_ref_t)) {
+            return flecs_irc_compile_expr(c, args, dst, in_place);
+        }
+
+        int32_t src = -1;
+        if (from_var) {
+            src = flecs_irc_reg(c);
+            if (flecs_irc_compile_expr(c, n->left, src, false)) {
+                return -1;
+            }
+        } else if (has_type) {
+            src = flecs_irc_reg(c);
+            if (flecs_irc_compile_expr(c, args, src, false)) {
+                return -1;
+            }
+        }
+
+        int32_t op = flecs_irc_emit(c, EcsIrTemplateRef, dst, src, 0, node);
+        flecs_irc_op(c, op)->flags = (uint16_t)(place |
+            (from_var ? EcsIrTemplateRefVar : 0));
+        flecs_irc_op(c, op)->imm.entity = n->calldata.function;
+
+        if (from_var && has_args) {
+            int32_t value = flecs_irc_reg(c);
+            flecs_irc_emit(c, EcsIrTemplateRefValue, value, dst, 0, args);
+            return flecs_irc_compile_expr(c, args, value, true);
+        }
+
+        return 0;
+    }
     case EcsExprMember: {
         ecs_expr_member_t *n = (ecs_expr_member_t*)node;
         int32_t src = flecs_irc_reg(c);

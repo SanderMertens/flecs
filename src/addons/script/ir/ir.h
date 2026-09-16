@@ -99,6 +99,8 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrRange,
     EcsIrNew,
     EcsIrScript,
+    EcsIrTemplateRef,
+    EcsIrTemplateRefValue,
     EcsIrToBool,
     EcsIrReturn,
     EcsIrOpKindLast
@@ -116,6 +118,7 @@ typedef enum ecs_script_ir_op_kind_t {
 #define EcsIrAnnotNoTarget   (1u << 0)
 #define EcsIrAnnotBadTarget  (1u << 1)
 #define EcsIrComponentPartial   (1u << 2)
+#define EcsIrTemplateRefVar  (1u << 1)
 #define EcsIrElementMap      (1u << 0)
 #define EcsIrElementVector   (1u << 1)
 
@@ -180,7 +183,6 @@ typedef struct ecs_script_ir_id_t {
     int32_t second_reg;
     int32_t index_reg;
     int32_t index_sp;
-    int32_t value_sp;
     int32_t component_slot;
     ecs_id_t cache_id;
     const ecs_type_info_t *cache_ti;

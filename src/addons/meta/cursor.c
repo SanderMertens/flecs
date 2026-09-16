@@ -1882,6 +1882,14 @@ int ecs_meta_set_value(
                 return ecs_ptr_copy(cursor->world, op->type, ptr, value->ptr);
             }
 
+            if (mt->kind == EcsOpaqueType && op->kind == EcsOpString) {
+                char *str = ecs_ptr_to_str(
+                    cursor->world, value->type, value->ptr);
+                int result = ecs_meta_set_string(cursor, str);
+                ecs_os_free(str);
+                return result;
+            }
+
             char *type_str = ecs_get_path(cursor->world, value->type);
             flecs_meta_conversion_error(cursor, op, type_str);
             ecs_os_free(type_str);

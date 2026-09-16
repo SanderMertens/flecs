@@ -479,20 +479,23 @@ static const char* flecs_script_parse_var(
                         }
 
                         pos = lookahead;
+                        var->type_is_template = true;
 
-                        Parse_1(EcsTokIdentifier,
-                            var->type = Token(4 + token_offset);
-                            var->type_is_template = true;
+                        {
+                            LookAhead_1(EcsTokIdentifier,
+                                var->type = Token(4 + token_offset);
+                                LookAhead_Keep();
+                            )
+                        }
 
-                            {
-                                LookAhead_2('[', ']',
-                                    pos = lookahead;
-                                    var->type_is_vector = true;
-                                )
-                            }
+                        {
+                            LookAhead_2('[', ']',
+                                pos = lookahead;
+                                var->type_is_vector = true;
+                            )
+                        }
 
-                            goto var_type;
-                        )
+                        goto var_type;
                     )
                 }
 
@@ -548,6 +551,16 @@ static const char* flecs_script_parse_var(
 
                 {
                     LookAhead_1(EcsTokKeywordMatch,
+                        Expr('\n',
+                            var->expr = EXPR;
+                            EndOfRule;
+                        )
+                    )
+                }
+
+                {
+                    LookAhead_2(EcsTokIdentifier, '(',
+                        pos = old_ptr;
                         Expr('\n',
                             var->expr = EXPR;
                             EndOfRule;

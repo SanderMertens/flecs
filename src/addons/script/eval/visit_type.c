@@ -581,6 +581,36 @@ static bool flecs_script_is_var_name(
     return true;
 }
 
+static int flecs_script_type_template_prop_id(
+    ecs_script_type_visitor_t *t,
+    void *node,
+    ecs_script_id_t *id,
+    const char *name,
+    int32_t var_sp,
+    ecs_entity_t interface,
+    int32_t *sp)
+{
+    if (t->v->template && flecs_script_template_member_is_vector(
+        t->v->template, var_sp))
+    {
+        flecs_script_eval_error(t->v, node,
+            "prop '%s' is a vector, use '%s[index]' to select an "
+            "element", name, name);
+        return -1;
+    }
+
+    if (id->second) {
+        flecs_script_eval_error(t->v, node,
+            "template prop '%s' cannot be used as pair element", name);
+        return -1;
+    }
+
+    id->interface = interface;
+    *sp = var_sp;
+    id->dynamic = true;
+    return 0;
+}
+
 static int flecs_script_type_id_elem(
     ecs_script_type_visitor_t *t,
     ecs_script_id_t *id,
@@ -599,21 +629,23 @@ static int flecs_script_type_id_elem(
             if (flecs_script_is_var_name(value)) {
                 ecs_script_var_t *var = ecs_script_vars_lookup(
                     t->v->vars, &value[1]);
-                if (var && flecs_script_template_member_is_template(
-                    t->v->template, var->sp))
-                {
-                    if (id->second) {
-                        flecs_script_eval_error(t->v, node,
-                            "template prop '%s' cannot be used as pair "
-                            "element", &value[1]);
+                ecs_entity_t interface = var
+                    ? flecs_script_template_member_interface(
+                        t->v->template, var->sp)
+                    : 0;
+                if (!interface && var) {
+                    interface = flecs_script_type_interface_var(t, var->sp);
+                }
+
+                if (interface) {
+                    if (flecs_script_type_template_prop_id(
+                        t, node, id, &value[1], var->sp, interface, sp))
+                    {
                         return -1;
                     }
 
                     flecs_expr_visit_free(&t->v->base.script->pub, *name_expr);
                     *name_expr = NULL;
-                    id->dynamic = id->first_expr || id->second_expr;
-                    *eval = var->value.type;
-                    id->value_sp = var->sp;
                     return 0;
                 }
             }
@@ -666,63 +698,17 @@ static int flecs_script_type_id_elem(
     if (symbol.kind == FlecsScriptSymbolVariable) {
         ecs_script_var_t *var = ecs_script_vars_from_sp(
             t->v->vars, symbol.sp);
-        if (var && t->v->template && flecs_script_template_member_is_template(
-            t->v->template, symbol.sp))
-        {
-            if (id->second) {
-                flecs_script_eval_error(t->v, node,
-                    "template prop '%s' cannot be used as pair element",
-                    name);
-                return -1;
-            }
-
-            *eval = var->value.type;
-            id->value_sp = symbol.sp;
-            return 0;
-        }
-
         ecs_entity_t interface = var && t->v->template
             ? flecs_script_template_member_interface(
                 t->v->template, symbol.sp)
             : 0;
         if (!interface && var) {
             interface = flecs_script_type_interface_var(t, symbol.sp);
-            if (interface) {
-                if (id->second) {
-                    flecs_script_eval_error(t->v, node,
-                        "template prop '%s' cannot be used as pair element",
-                        name);
-                    return -1;
-                }
-
-                id->interface = interface;
-                *sp = symbol.sp;
-                id->dynamic = true;
-                return 0;
-            }
         }
 
         if (interface) {
-            if (flecs_script_template_member_is_vector(
-                t->v->template, symbol.sp))
-            {
-                flecs_script_eval_error(t->v, node,
-                    "prop '%s' is a vector, use '%s[index]' to select an "
-                    "element", name, name);
-                return -1;
-            }
-
-            if (id->second) {
-                flecs_script_eval_error(t->v, node,
-                    "template prop '%s' cannot be used as pair element",
-                    name);
-                return -1;
-            }
-
-            id->interface = interface;
-            *sp = symbol.sp;
-            id->dynamic = true;
-            return 0;
+            return flecs_script_type_template_prop_id(
+                t, node, id, name, symbol.sp, interface, sp);
         }
 
         if (!var || var->value.type != ecs_id(ecs_entity_t)) {
@@ -796,7 +782,6 @@ static int flecs_script_type_id(
     id->second_symbol = -1;
     id->first_sp = -1;
     id->second_sp = -1;
-    id->value_sp = -1;
     id->index_sp = -1;
     id->interface = 0;
     id->dynamic = id->first_expr || id->second_expr;
@@ -1170,7 +1155,7 @@ static int flecs_script_type_check_component_expr(
     ecs_entity_t *type)
 {
     ecs_expr_initializer_t *init = NULL;
-    if ((node->id.value_sp != -1 || node->id.interface) && node->expr &&
+    if (node->id.interface && node->expr &&
         (node->expr->kind == EcsExprInitializer ||
          node->expr->kind == EcsExprEmptyInitializer))
     {
@@ -1199,6 +1184,19 @@ static int flecs_script_type_with_tag(
     return result == 1 ? 0 : result;
 }
 
+static int flecs_script_type_untyped_template_check(
+    ecs_script_type_visitor_t *t,
+    ecs_script_component_t *node)
+{
+    if (node->id.interface != ecs_id(EcsStruct)) {
+        return 0;
+    }
+
+    flecs_script_eval_error(t->v, node,
+        "cannot assign value to untyped template prop '%s'", node->id.first);
+    return -1;
+}
+
 static int flecs_script_type_with_component(
     ecs_script_type_visitor_t *t,
     ecs_script_component_t *node)
@@ -1209,6 +1207,10 @@ static int flecs_script_type_with_component(
     }
 
     if (node->expr) {
+        if (flecs_script_type_untyped_template_check(t, node)) {
+            return -1;
+        }
+
         ecs_entity_t type = flecs_script_type_component_type(t, node);
         if (!type) {
             flecs_script_eval_error(t->v, node,
@@ -1246,6 +1248,10 @@ static int flecs_script_type_component(
 
     if (!node->expr) {
         return 0;
+    }
+
+    if (flecs_script_type_untyped_template_check(t, node)) {
+        return -1;
     }
 
     if (!node->id.second && node->id.eval && ecs_has(
@@ -1485,6 +1491,21 @@ static int flecs_script_type_const(
         return 0;
     }
 
+    ecs_expr_eval_desc_t desc = {
+        .name = t->v->base.script->pub.name,
+        .vars = t->v->vars,
+        .type = type,
+        .runtime = t->v->r,
+        .disable_dynamic_variable_binding = true,
+        .script_visitor = t->v
+    };
+
+    if (flecs_expr_visit_fold_const(
+        &t->v->base.script->pub, &node->expr, &desc))
+    {
+        return -1;
+    }
+
     if (node->expr->kind == EcsExprValue) {
         ecs_expr_value_node_t *value = (ecs_expr_value_node_t*)node->expr;
         const ecs_type_info_t *ti = var->type_info;
@@ -1505,7 +1526,7 @@ static int flecs_script_type_template_var(
     ecs_script_var_node_t *node,
     bool mut)
 {
-    if (!node->expr && (mut || !node->type)) {
+    if (!node->expr && (mut || (!node->type && !node->type_is_template))) {
         flecs_script_eval_error(t->v, node,
             "%s variable '%s' is missing initializer",
             mut ? "mut" : "prop", node->name);
@@ -1536,32 +1557,24 @@ static int flecs_script_type_template_var(
         return -1;
     }
 
-    if (node->type_is_template) {
-        const EcsScript *type_script = type
-            ? ecs_get(t->v->world, type, EcsScript)
-            : NULL;
-        if (!type_script || !type_script->template_) {
-            if (type && ecs_has(t->v->world, type, EcsStruct)) {
-                node->eval_interface = type;
-                type = ecs_id(ecs_entity_t);
-            } else {
-                flecs_script_eval_error(t->v, node,
-                    "type '%s' of prop '%s' is not a template or struct",
-                    node->type, node->name);
-                return -1;
-            }
+    if (node->type_is_template && !node->type) {
+        node->eval_interface = ecs_id(EcsStruct);
+        type = ecs_id(ecs_script_template_ref_t);
+    } else if (node->type_is_template) {
+        if (type && ecs_has(t->v->world, type, EcsStruct)) {
+            node->eval_interface = type;
+            type = ecs_id(ecs_script_template_ref_t);
+        } else {
+            flecs_script_eval_error(t->v, node,
+                "type '%s' of prop '%s' is not a template or struct",
+                node->type, node->name);
+            return -1;
         }
     }
 
     if (node->type_is_vector) {
-        if (!node->eval_interface) {
-            flecs_script_eval_error(t->v, node,
-                "vector props require an interface struct type, but '%s' of "
-                "prop '%s' is a template", node->type, node->name);
-            return -1;
-        }
-
-        type = flecs_script_vector_type(t->v->world, ecs_id(ecs_entity_t));
+        type = flecs_script_vector_type(
+            t->v->world, ecs_id(ecs_script_template_ref_t));
     }
 
     if (node->expr) {
@@ -1601,7 +1614,9 @@ static ecs_entity_t flecs_script_type_for_interface(
     ecs_script_for_t *node,
     ecs_entity_t elem_type)
 {
-    if (!node->expr || elem_type != ecs_id(ecs_entity_t) || !t->v->template) {
+    if (!node->expr || elem_type != ecs_id(ecs_script_template_ref_t) ||
+        !t->v->template)
+    {
         return 0;
     }
 

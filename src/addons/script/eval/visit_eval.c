@@ -485,6 +485,7 @@ int flecs_script_eval_id_elem(
     ecs_entity_t *elem)
 {
     ecs_entity_t result = eval;
+    v->id_ref = NULL;
     if (name_expr && *name_expr) {
         result = flecs_script_eval_name_expr(v, NULL, name_expr, true);
     } else if (slot != -1) {
@@ -492,10 +493,13 @@ int flecs_script_eval_id_elem(
     } else if (sp != -1) {
         ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, sp);
         result = 0;
-        if (var && var->value.type == ecs_id(ecs_entity_t) &&
-            var->value.ptr)
-        {
-            result = *(ecs_entity_t*)var->value.ptr;
+        if (var && var->value.ptr) {
+            if (var->value.type == ecs_id(ecs_entity_t)) {
+                result = *(ecs_entity_t*)var->value.ptr;
+            } else if (var->value.type == ecs_id(ecs_script_template_ref_t)) {
+                v->id_ref = var->value.ptr;
+                result = v->id_ref->type;
+            }
         }
     }
 
@@ -532,12 +536,15 @@ int flecs_script_vector_prop_elem(
     int32_t count = vec ? ecs_vec_count(vec) : 0;
     *count_out = count;
     *out = 0;
+    v->id_ref = NULL;
 
     if (index < 0 || index >= count) {
         return FlecsScriptVectorPropOutOfRange;
     }
 
-    ecs_entity_t elem = ((const ecs_entity_t*)ecs_vec_first(vec))[index];
+    const ecs_script_template_ref_t *ref = ecs_vec_get_t(
+        vec, ecs_script_template_ref_t, index);
+    ecs_entity_t elem = ref->type;
     *out = elem;
 
     if (!elem || !ecs_is_alive(v->world, elem) || (interface &&
@@ -546,6 +553,7 @@ int flecs_script_vector_prop_elem(
         return FlecsScriptVectorPropInvalid;
     }
 
+    v->id_ref = ref;
     return FlecsScriptVectorPropOk;
 }
 
@@ -579,10 +587,12 @@ static int flecs_script_eval_index_elem(
     }
 
     char *elem_str = elem ? ecs_get_path(v->world, elem) : ecs_os_strdup("0");
+    char *expected = flecs_script_template_expected_str(
+        v->world, id->interface);
     flecs_script_eval_error(v, node,
-        "'%s' at index %d of vector prop '%s' is not a template derived "
-        "from '%s'", elem_str, index, id->first,
-        ecs_get_name(v->world, id->interface));
+        "'%s' at index %d of vector prop '%s' is not %s",
+        elem_str, index, id->first, expected);
+    ecs_os_free(expected);
     ecs_os_free(elem_str);
     return -1;
 }
@@ -1072,22 +1082,6 @@ void flecs_script_track_component(
     slot->scope_slot = v->scope_slot;
 }
 
-const ecs_script_var_t* flecs_script_template_prop_var(
-    ecs_script_eval_visitor_t *v,
-    const void *node,
-    int32_t sp,
-    ecs_id_t id)
-{
-    const ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, sp);
-    if (!var || !var->value.ptr || var->value.type != id) {
-        flecs_script_eval_error(v, node,
-            "template prop used as component has no value");
-        return NULL;
-    }
-
-    return var;
-}
-
 static int flecs_script_eval_tag(
     ecs_script_eval_visitor_t *v,
     ecs_script_tag_t *node)
@@ -1168,21 +1162,23 @@ static int flecs_script_eval_tag(
     ecs_entity_t src = flecs_script_get_src(
         v, v->entity->eval, node->id.eval);
 
-    if (node->id.value_sp != -1) {
-        const ecs_script_var_t *var = flecs_script_template_prop_var(
-            v, node, node->id.value_sp, node->id.eval);
-        if (!var) {
-            return -1;
-        }
-
+    if (node->id.interface && v->id_ref && v->id_ref->value) {
         const ecs_type_info_t *ti = flecs_script_get_type_info(
             v, node, node->id.eval);
         if (!ti) {
             return -1;
         }
 
+        void *value = ecs_os_alloca(ti->size);
+        flecs_type_info_ctor(value, 1, ti);
+        if (flecs_script_template_ref_apply(v->world, v->id_ref, ti, value)) {
+            flecs_type_info_dtor(value, 1, ti);
+            return -1;
+        }
+
         ecs_set_id(v->world, src, node->id.eval,
-            flecs_itosize(ti->size), var->value.ptr);
+            flecs_itosize(ti->size), value);
+        flecs_type_info_dtor(value, 1, ti);
     } else {
         ecs_add_id(v->world, src, node->id.eval);
     }
@@ -1204,12 +1200,13 @@ static int flecs_script_eval_interface_id(
         return -1;
     }
 
-    char *interface_str = ecs_get_path(v->world, node->id.interface);
+    char *expected = flecs_script_template_expected_str(
+        v->world, node->id.interface);
     if (!tmpl) {
         flecs_script_eval_error(v, node,
-            "template prop '%s' has no value: expected a template derived "
-            "from '%s'", node->id.first, interface_str);
-        ecs_os_free(interface_str);
+            "template prop '%s' has no value: expected %s",
+            node->id.first, expected);
+        ecs_os_free(expected);
         return -1;
     }
 
@@ -1218,14 +1215,14 @@ static int flecs_script_eval_interface_id(
     {
         char *tmpl_str = ecs_get_path(v->world, tmpl);
         flecs_script_eval_error(v, node,
-            "'%s' passed to template prop '%s' is not a template derived "
-            "from '%s'", tmpl_str, node->id.first, interface_str);
+            "'%s' passed to template prop '%s' is not %s",
+            tmpl_str, node->id.first, expected);
         ecs_os_free(tmpl_str);
-        ecs_os_free(interface_str);
+        ecs_os_free(expected);
         return -1;
     }
 
-    ecs_os_free(interface_str);
+    ecs_os_free(expected);
     return 0;
 }
 
@@ -1347,15 +1344,13 @@ static int flecs_script_eval_component(
             flecs_type_info_ctor(value.ptr, 1, ti);
         }
 
-        if (node->id.value_sp != -1) {
-            const ecs_script_var_t *var = flecs_script_template_prop_var(
-                v, node, node->id.value_sp, node->id.eval);
-            if (!var) {
+        if (node->id.interface && v->id_ref && v->id_ref->value) {
+            if (flecs_script_template_ref_apply(
+                v->world, v->id_ref, ti, value.ptr))
+            {
                 flecs_type_info_dtor(value.ptr, 1, ti);
                 return -1;
             }
-
-            ecs_ptr_copy_w_type_info(v->world, ti, value.ptr, var->value.ptr);
         } else if (existing) {
             ecs_ptr_copy_w_type_info(v->world, ti, value.ptr, existing);
         }
@@ -1389,8 +1384,14 @@ static int flecs_script_eval_component(
             flecs_type_info_ctor(value, 1, ti);
         }
 
+        if (flecs_script_template_ref_apply(v->world, v->id_ref, ti, value)) {
+            flecs_type_info_dtor(value, 1, ti);
+            return -1;
+        }
+
         ecs_set_id(v->world, src, node->id.eval,
             flecs_itosize(ti->size), value);
+        flecs_type_info_dtor(value, 1, ti);
     } else {
         ecs_add_id(v->world, src, node->id.eval);
     }
@@ -1409,13 +1410,7 @@ static int flecs_script_eval_with_tag(
         return -1;
     }
 
-    if (node->id.value_sp != -1) {
-        const ecs_script_var_t *var = flecs_script_template_prop_var(
-            v, node, node->id.value_sp, node->id.eval);
-        if (!var) {
-            return -1;
-        }
-
+    if (node->id.interface && v->id_ref && v->id_ref->value) {
         const ecs_type_info_t *ti = flecs_script_get_type_info(
             v, node, node->id.eval);
         if (!ti) {
@@ -1426,8 +1421,8 @@ static int flecs_script_eval_with_tag(
         value->type = node->id.eval;
         value->ptr = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
         flecs_type_info_ctor(value->ptr, 1, ti);
-        ecs_ptr_copy_w_type_info(v->world, ti, value->ptr, var->value.ptr);
-        return 0;
+        return flecs_script_template_ref_apply(
+            v->world, v->id_ref, ti, value->ptr);
     }
 
     ecs_value_t *value = flecs_script_with_append(v, NULL);
@@ -1462,14 +1457,10 @@ static int flecs_script_eval_with_component(
 
         flecs_type_info_ctor(value->ptr, 1, ti);
 
-        if (node->id.value_sp != -1) {
-            const ecs_script_var_t *var = flecs_script_template_prop_var(
-                v, node, node->id.value_sp, node->id.eval);
-            if (!var) {
-                return -1;
-            }
-
-            ecs_ptr_copy_w_type_info(v->world, ti, value->ptr, var->value.ptr);
+        if (node->id.interface && flecs_script_template_ref_apply(
+            v->world, v->id_ref, ti, value->ptr))
+        {
+            return -1;
         }
 
         if (flecs_script_eval_expr(v, &node->expr, value)) {

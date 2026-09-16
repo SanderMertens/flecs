@@ -772,7 +772,8 @@
                 "mut_assign_string_to_int_fails",
                 "mut_assign_int_to_string_fails",
                 "mut_assign_struct_to_int_fails",
-                "mut_assign_missing_expr_fails"
+                "mut_assign_missing_expr_fails",
+                "struct_wo_members"
             ]
         }, {
             "id": "Collection",
@@ -1625,7 +1626,6 @@
                 "const_w_old_typed_syntax",
                 "struct_member_negative_count",
                 "struct_member_huge_count",
-                "struct_wo_members",
                 "struct_member_wo_name",
                 "enum_constant_w_invalid_expr",
                 "const_w_old_untyped_syntax",
@@ -3361,7 +3361,9 @@
                 "assign_base_to_derived_fails",
                 "assign_base_to_derived_component_fails",
                 "assign_unrelated_struct_fails",
-                "assign_unrelated_struct_prop_fails"
+                "assign_unrelated_struct_prop_fails",
+                "empty_base",
+                "empty_base_empty_derived"
             ]
         }, {
             "id": "TemplateParent",
@@ -3451,7 +3453,13 @@
                 "derived_instance_set_from_c",
                 "const_before_prop_in_derived",
                 "const_after_prop_in_derived",
-                "derived_from_template_w_captured_const"
+                "derived_from_template_w_captured_const",
+                "derived_prop_override_base_default",
+                "derived_prop_override_struct_default",
+                "derived_prop_override_used_in_body",
+                "derived_prop_override_chain",
+                "derived_prop_override_wrong_type_fails",
+                "derived_prop_override_no_default_fails"
             ]
         }, {
             "id": "TemplateProp",
@@ -3462,8 +3470,6 @@
             "testcases": [
                 "prop_template_type",
                 "prop_template_type_default",
-                "prop_template_type_default_initializer",
-                "prop_template_type_partial_default_initializer",
                 "use_as_tag",
                 "use_as_tag_dollar",
                 "use_as_tag_default",
@@ -3479,6 +3485,7 @@
                 "use_in_with_w_initializer",
                 "use_in_with_w_positional_initializer",
                 "member_access_in_expr",
+                "member_access_in_binary_expr_w_loop_var",
                 "prop_change_updates_children",
                 "prop_change_from_c_updates_children",
                 "multiple_template_props",
@@ -3563,7 +3570,60 @@
                 "string_prop_in_chained_consts",
                 "string_prop_in_consts_reassign",
                 "string_prop_in_consts_deferred",
-                "string_prop_in_consts_nested_template"
+                "string_prop_in_consts_nested_template",
+                "template_ref_call_empty",
+                "template_ref_call_positional",
+                "template_ref_call_positional_inherited",
+                "template_ref_call_named",
+                "template_ref_call_named_inherited_member",
+                "template_ref_call_use_site_overrides",
+                "template_ref_call_tag_form",
+                "template_ref_call_in_with",
+                "template_ref_call_default",
+                "template_ref_call_w_const",
+                "template_ref_call_w_prop_expr",
+                "template_ref_call_update",
+                "template_ref_call_from_c_w_value",
+                "template_ref_call_too_many_args_fails",
+                "template_ref_call_unknown_member_fails",
+                "template_ref_call_not_derived_fails",
+                "template_ref_call_not_template_fails",
+                "template_ref_call_ast_to_str",
+                "template_ref_call_to_json",
+                "template_ref_nested_empty",
+                "template_ref_nested_positional",
+                "template_ref_nested_named",
+                "template_ref_nested_multiple",
+                "template_ref_nested_update",
+                "template_ref_nested_default",
+                "any_prop_template_value",
+                "any_prop_template_call_value",
+                "any_prop_struct_value",
+                "any_prop_default_template",
+                "any_prop_default_struct",
+                "any_prop_in_with",
+                "any_prop_update",
+                "any_prop_vector",
+                "any_prop_from_c",
+                "any_prop_ast_to_str",
+                "any_prop_missing_value_fails",
+                "any_prop_initializer_fails",
+                "any_prop_with_initializer_fails",
+                "any_prop_not_struct_fails",
+                "any_prop_mut_fails",
+                "template_ref_prop_call_as_template_arg",
+                "derived_template_inherits_base_defaults",
+                "template_interface_prop_default",
+                "template_interface_prop_call_as_template_arg",
+                "empty_struct_base",
+                "empty_struct_interface_prop",
+                "empty_struct_interface_prop_as_template_arg",
+                "empty_struct_in_interface_scope",
+                "empty_template_base",
+                "empty_template_interface_prop",
+                "empty_template_in_interface_scope",
+                "prop_default_from_nested_struct_const",
+                "prop_default_from_nested_struct_const_member"
             ]
         }, {
             "id": "TemplateVectorProp",
@@ -3591,7 +3651,7 @@
                 "default_not_derived_fails",
                 "value_not_derived_fails",
                 "value_not_derived_from_c_fails",
-                "template_type_vector_fails",
+                "template_type_vector",
                 "bare_vector_prop_as_component_fails",
                 "reactive_prop_change",
                 "reactive_prop_change_from_script",
@@ -3599,7 +3659,19 @@
                 "template_inheritance",
                 "index_in_interpolated_string",
                 "collection_value_still_parses",
-                "to_str"
+                "to_str",
+                "template_ref_call_default",
+                "template_ref_call_positional",
+                "template_ref_call_instance",
+                "template_ref_call_tag_form",
+                "template_ref_call_iterate_w_for",
+                "template_ref_call_pass_element_to_interface_prop",
+                "template_ref_call_index_in_interpolated_string",
+                "template_ref_call_update",
+                "template_ref_from_c_w_value",
+                "template_ref_call_nested",
+                "template_ref_call_nested_ref",
+                "template_ref_call_not_derived_fails"
             ]
         }, {
             "id": "Scenario",

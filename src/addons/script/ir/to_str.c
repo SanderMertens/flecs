@@ -104,6 +104,8 @@ static const struct {
     [EcsIrRange] = {"Range", {"dst", "from", "to"}},
     [EcsIrNew] = {"New", {"dst", "block"}},
     [EcsIrScript] = {"Script", {"dst"}},
+    [EcsIrTemplateRef] = {"TemplateRef", {"dst", "src"}},
+    [EcsIrTemplateRefValue] = {"TemplateRefValue", {"dst", "ref"}},
     [EcsIrToBool] = {"ToBool", {"value"}},
     [EcsIrReturn] = {"Return", {"value"}},
 };
