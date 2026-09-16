@@ -71,6 +71,7 @@ static int32_t flecs_table_cache_find(
         if (!r) {
             return -1;
         }
+
         return flecs_uto(int32_t, *r);
     }
 
@@ -229,6 +230,7 @@ void* ecs_table_cache_remove(
                 break;
             }
         }
+
         ecs_assert(index <= last, ECS_INTERNAL_ERROR, NULL);
     }
 

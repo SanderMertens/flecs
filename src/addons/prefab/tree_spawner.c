@@ -159,6 +159,7 @@ static bool flecs_tree_spawner_is_empty(
             return false;
         }
     }
+
     return true;
 }
 
@@ -418,6 +419,7 @@ static bool flecs_prefab_diff_has_override(
             return true;
         }
     }
+
     return false;
 }
 

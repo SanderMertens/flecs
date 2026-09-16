@@ -56,6 +56,7 @@ static bool flecs_json_serialize_iter_result_ids(
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
+
         flecs_json_next(buf);
         flecs_json_id(buf, world, it->ids[f]);
     }
@@ -97,6 +98,7 @@ static bool flecs_json_serialize_iter_result_sources(
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
+
         flecs_json_next(buf);
         flecs_json_path(buf, world, it->sources[f]);
     }

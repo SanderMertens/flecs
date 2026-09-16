@@ -199,6 +199,7 @@ void flecs_commit(
             flecs_actions_move_remove(world, src_table, src_table,
                 ECS_RECORD_TO_ROW(record->row), 1, diff);
         }
+
         flecs_journal_end();
         return;
     }
@@ -546,6 +547,7 @@ flecs_component_ptr_t flecs_get_mut(
                 result.ti = column->ti;
                 return result;
             }
+
             return (flecs_component_ptr_t){0};
         }
     }
@@ -568,6 +570,7 @@ void flecs_record_add_flag(
             flecs_table_traversable_add(table, 1);
         }
     }
+
     record->row |= flag;
 }
 
@@ -808,6 +811,7 @@ static int flecs_entity_init_name(
     } else if (new_entity && scope) {
         ecs_add_pair(world, entity, EcsChildOf, scope);
     }
+
     return 0;
 }
 
@@ -900,6 +904,7 @@ ecs_entity_t ecs_entity_init(
             } else {
                 result = ecs_new(world);
             }
+
             new_entity = true;
             ecs_assert(ecs_get_type(world, result) != NULL,
                 ECS_INTERNAL_ERROR, NULL);
@@ -932,6 +937,7 @@ ecs_entity_t ecs_entity_init(
                     path = ECS_CONST_CAST(char*, ecs_get_name(world, result));
                 }
             }
+
             if (path) {
                 if (ecs_os_strcmp(path, name)) {
                     /* Mismatching name */
@@ -940,8 +946,10 @@ ecs_entity_t ecs_entity_init(
                     if (!sep || sep[0]) {
                         ecs_os_free(path);
                     }
+
                     return 0;
                 }
+
                 if (!sep || sep[0]) {
                     ecs_os_free(path);
                 }
@@ -1074,6 +1082,7 @@ const ecs_entity_t* ecs_bulk_init(
         entities = flecs_entities_ids(world);
         return &entities[sparse_count];
     }
+
 error:
     return NULL;
 }
@@ -1122,6 +1131,7 @@ static void flecs_check_component(
         ecs_abort(ECS_INVALID_COMPONENT_SIZE, "%s", path);
         ecs_os_free(path);
     }
+
     if (ptr->alignment != alignment) {
         char *path = ecs_get_path(world, result);
         ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, "%s", path);
@@ -1275,6 +1285,7 @@ void ecs_delete(
                     flecs_on_delete(world,
                         ecs_pair(EcsFlag, entity), 0, true, true);
                 }
+
                 flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0, true, true);
             }
 
@@ -1529,6 +1540,7 @@ const void* ecs_get_id(
         if (cr->flags & EcsIdSparse) {
             return flecs_component_sparse_get(world, cr, table, entity);
         }
+
         ecs_check(tr->column != -1, ECS_INVALID_PARAMETER,
             "component '%s' passed to get() is a tag/zero sized",
                 flecs_errstr(ecs_id_str(world, component)));
@@ -1704,6 +1716,7 @@ void* ecs_emplace_id(
             if (is_new) {
                 *is_new = false;
             }
+
             flecs_defer_end(world, stage);
             return ptr;
         }
@@ -1711,6 +1724,7 @@ void* ecs_emplace_id(
         if (is_new) {
             *is_new = true;
         }
+
         is_new = NULL;
     }
 
@@ -1765,6 +1779,7 @@ bool ecs_record_has_id(
     if (r->table) {
         return ecs_table_has_id(world, r->table, component);
     }
+
     return false;
 }
 
@@ -2256,6 +2271,7 @@ ecs_entity_t ecs_get_target(
         if (index > 0) {
             return 0;
         }
+
         return ecs_get_parent(world, entity);
     }
 
@@ -2272,6 +2288,7 @@ ecs_entity_t ecs_get_target(
         if (!index) {
             return flecs_get_prefab_instance_child(world, entity, rel);
         }
+
         return 0;
     }
 
@@ -2413,6 +2430,7 @@ ecs_entity_t ecs_new_w_parent(
         if (name) {
             ecs_set_name(stage_world, entity, name);
         }
+
         return entity;
     }
 
@@ -2729,6 +2747,7 @@ void ecs_make_alive_id(
     } else {
         ecs_make_alive(world, component & ECS_COMPONENT_MASK);
     }
+
 error:
     return;
 }
@@ -2829,6 +2848,7 @@ void ecs_enable(
     } else {
         ecs_add_id(world, entity, EcsDisabled);
     }
+
 error:
     return;
 }
@@ -2884,6 +2904,7 @@ char* ecs_entity_str(
     if (type) {
         ecs_type_str_buf(world, type, &buf);
     }
+
     ecs_strbuf_appendch(&buf, ']');
 
     return ecs_strbuf_get(&buf);
@@ -2899,6 +2920,7 @@ ecs_table_range_t flecs_range_from_entity(
     if (!r) {
         return (ecs_table_range_t){ 0 };
     }
+
     return (ecs_table_range_t){
         .table = r->table,
         .offset = ECS_RECORD_TO_ROW(r->row),

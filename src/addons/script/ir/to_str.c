@@ -114,6 +114,7 @@ const char* flecs_script_ir_op_name(
     if (kind < 0 || kind >= EcsIrOpKindLast) {
         return "?";
     }
+
     return flecs_ir_listing[kind].name;
 }
 
@@ -131,26 +132,33 @@ static void flecs_irs_id_to_buf(
         ecs_os_free(str);
         return;
     }
+
     if (id->has_second) {
         ecs_strbuf_append(buf, "(%s, %s)", id->first, id->second);
     } else {
         ecs_strbuf_appendstr(buf, id->first);
     }
+
     if (id->first_symbol != -1) {
         ecs_strbuf_append(buf, " sym=%d", id->first_symbol);
     }
+
     if (id->first_sp != -1) {
         ecs_strbuf_append(buf, " sp=%d", id->first_sp);
     }
+
     if (id->first_reg != -1) {
         ecs_strbuf_append(buf, " r%d", id->first_reg);
     }
+
     if (id->second_symbol != -1) {
         ecs_strbuf_append(buf, " sym2=%d", id->second_symbol);
     }
+
     if (id->second_sp != -1) {
         ecs_strbuf_append(buf, " sp2=%d", id->second_sp);
     }
+
     if (id->second_reg != -1) {
         ecs_strbuf_append(buf, " r%d", id->second_reg);
     }
@@ -196,6 +204,7 @@ static void flecs_irs_payload_to_buf(
             ecs_strbuf_append(buf, "%s%s", i ? ", " : " add=", id);
             ecs_os_free(id);
         }
+
         break;
     }
     default:
@@ -209,6 +218,7 @@ static void flecs_irs_payload_to_buf(
             : (ecs_token_kind_t)(op->flags & 0x7fff);
         ecs_strbuf_append(buf, " operator=%s", flecs_token_str(token));
     }
+
     if (op->node && op->kind != EcsIrJump && op->kind != EcsIrEnd) {
         const char *pos;
         if (op->kind >= EcsIrLoadConst && op->kind < EcsIrToBool) {
@@ -223,6 +233,7 @@ static void flecs_irs_payload_to_buf(
         } else {
             pos = ((const ecs_script_node_t*)op->node)->pos;
         }
+
         if (pos && op->kind == EcsIrStmt) {
             int32_t length = 0;
             while (length < 80 && pos[length] && pos[length] != '\n') {
@@ -248,6 +259,7 @@ void flecs_script_ir_to_buf(
         flecs_irs_id_to_buf(script, ir, i, buf);
         ecs_strbuf_appendch(buf, '\n');
     }
+
     for (int32_t i = 0; i < count; i ++) {
         const ecs_script_ir_op_t *op = &ops[i];
         for (int32_t e = 0; e < entry_count; e ++) {
@@ -260,6 +272,7 @@ void flecs_script_ir_to_buf(
                     entries[e].reg_count);
             }
         }
+
         ecs_strbuf_append(buf, "%4d  %-18s", i,
             flecs_script_ir_op_name(op->kind));
         const int32_t values[] = {op->a, op->b, op->c};
@@ -272,9 +285,11 @@ void flecs_script_ir_to_buf(
                 ecs_strbuf_appendint(buf, values[a]);
             }
         }
+
         if (op->flags) {
             ecs_strbuf_append(buf, " flags=0x%x", op->flags);
         }
+
         flecs_irs_payload_to_buf(script, op, buf);
         ecs_strbuf_appendch(buf, '\n');
     }

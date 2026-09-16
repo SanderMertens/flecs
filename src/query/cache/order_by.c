@@ -140,6 +140,7 @@ static void flecs_query_cache_build_sorted_table_range(
                 helper[to_sort].elem_size = size;
                 helper[to_sort].shared = true;
             }
+
             ecs_assert(helper[to_sort].ptr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(helper[to_sort].elem_size != 0, ECS_INTERNAL_ERROR, NULL);
         } else {

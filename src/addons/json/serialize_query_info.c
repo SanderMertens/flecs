@@ -81,6 +81,7 @@ static void flecs_json_serialize_term_ref(
         flecs_json_memberl(buf, "name");
         flecs_json_string(buf, ref->name);
     }
+
     flecs_json_object_pop(buf);
 }
 
@@ -102,6 +103,7 @@ static void flecs_json_serialize_term_trav(
         flecs_json_next(buf);
         flecs_json_string(buf, "self");
     }
+
     if (term->src.id & EcsCascade) {
         flecs_json_next(buf);
         flecs_json_string(buf, "cascade");
@@ -110,6 +112,7 @@ static void flecs_json_serialize_term_trav(
         flecs_json_next(buf);
         flecs_json_string(buf, "up");
     }
+
     flecs_json_array_pop(buf);
 }
 
@@ -181,6 +184,7 @@ void flecs_json_serialize_query(
                 flecs_json_string(buf, "this");
             }
         }
+
         flecs_json_array_pop(buf);
     }
 
@@ -191,6 +195,7 @@ void flecs_json_serialize_query(
         flecs_json_next(buf);
         flecs_json_serialize_term(world, q, t, buf);
     }
+
     flecs_json_array_pop(buf);
 
 

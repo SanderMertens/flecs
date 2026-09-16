@@ -37,10 +37,12 @@ int32_t ecs_query_find_var(
                 var_id = 0;
             }
         }
+
         if (var_id == EcsVarNone) {
             return -1;
         }
     }
+
     return (int32_t)var_id;
 }
 
@@ -127,6 +129,7 @@ static int flecs_query_set_caching_policy(
                 "group_by/order_by/change detection");
             return -1;
         }
+
         return 0;
     }
 
@@ -485,6 +488,7 @@ ecs_query_t* ecs_query_update(
         /* Ensures that remove operation doesn't get applied after bind */
         ecs_defer_suspend(world);
     }
+
     ecs_remove_pair(world, entity, ecs_id(EcsPoly), EcsQuery);
     if (deferred) {
         ecs_defer_resume(world);
@@ -642,6 +646,7 @@ bool flecs_query_count_trivial_cache(
             if (!entities && !match_empty) {
                 continue;
             }
+
             out->results ++;
             out->entities += entities;
         }

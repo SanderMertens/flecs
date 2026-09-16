@@ -133,6 +133,7 @@ ecs_ftime_t ecs_get_timeout(
     if (value) {
         return value->timeout;
     }
+
 error:
     return 0;
 }
@@ -158,6 +159,7 @@ ecs_entity_t ecs_set_interval(
     if (system_data) {
         system_data->tick_source = timer;
     }
+
 error:
     return timer;  
 }
@@ -176,6 +178,7 @@ ecs_ftime_t ecs_get_interval(
     if (value) {
         return value->timeout;
     }
+
 error:
     return 0;
 }

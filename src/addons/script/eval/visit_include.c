@@ -28,6 +28,7 @@ static bool flecs_script_include_has_parent_dir(
                 return true;
             }
         }
+
         p ++;
     }
     return false;
@@ -44,6 +45,7 @@ static char* flecs_script_include_resolve(
             if (p[0] == '/' || p[0] == '\\') {
                 dir_end = p + 1;
             }
+
             p ++;
         }
     }
@@ -66,9 +68,11 @@ static bool flecs_script_include_is_absolute(
     if (path[0] == '/' || path[0] == '\\') {
         return true;
     }
+
     if (path[0] && path[1] == ':') {
         return true;
     }
+
     return false;
 }
 
@@ -106,6 +110,7 @@ static int flecs_script_include_node(
             script_name = sc->filename;
         }
     }
+
     if (!script_name) {
         script_name = v->base.script->pub.name;
     }
@@ -218,6 +223,7 @@ int flecs_script_eval_include(
             break;
         }
     }
+
     if (i < 0 || (ecs_script_scope_t*)v->base.nodes[i] !=
         v->base.script->root)
     {
@@ -292,6 +298,7 @@ int flecs_script_visit_include(
         if (error) {
             ecs_err("%s", error);
         }
+
         result = -1;
     }
 

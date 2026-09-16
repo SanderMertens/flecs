@@ -201,6 +201,7 @@ static int flecs_json_serialize_entity_alerts(
                 flecs_json_memberl(buf, "message");
                 flecs_json_string(buf, alert->message);
             }
+
             flecs_json_memberl(buf, "severity");
             flecs_json_string(buf, severity);
             
@@ -211,6 +212,7 @@ static int flecs_json_serialize_entity_alerts(
                 ecs_os_free(path);
             }
         }
+
         flecs_json_object_pop(buf);
     }
 
@@ -281,6 +283,7 @@ int flecs_json_serialize_alerts(
     if (alerts) {
         flecs_json_serialize_entity_alerts(world, buf, entity, alerts, true);
     }
+
     flecs_json_serialize_children_alerts(world, buf, entity);
     flecs_json_array_pop(buf);
 #endif

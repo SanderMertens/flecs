@@ -6411,18 +6411,6 @@ void Reactivity_component_ref_via_var_entity_in_if_is_reactive(void) {
     ecs_fini(world);
 }
 
-static int32_t script_child_count(
-    ecs_world_t *world,
-    ecs_entity_t script)
-{
-    int32_t count = 0;
-    ecs_iter_t it = ecs_children(world, script);
-    while (ecs_children_next(&it)) {
-        count += it.count;
-    }
-    return count;
-}
-
 void Reactivity_two_dyn_refs_alternating_updates(void) {
     typedef struct {
         ecs_entity_t items[2];
@@ -6482,7 +6470,11 @@ void Reactivity_two_dyn_refs_alternating_updates(void) {
     test_str(*(char**)ecs_get_id(world, rowa, text), "a 10");
     test_str(*(char**)ecs_get_id(world, rowb, text), "b 11");
 
-    int32_t child_count = script_child_count(world, script);
+    int32_t child_count = 0;
+    ecs_iter_t it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+    }
 
     ecs_set_id(world, it0, icon, sizeof(Icon), &(Icon){20});
     test_str(*(char**)ecs_get_id(world, rowa, text), "a 20");
@@ -6506,7 +6498,12 @@ void Reactivity_two_dyn_refs_alternating_updates(void) {
     ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){41});
     test_str(*(char**)ecs_get_id(world, rowb, text), "b 41");
 
-    test_int(script_child_count(world, script), child_count);
+    int32_t count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_fini(world);
 }
@@ -6576,7 +6573,11 @@ void Reactivity_three_dyn_refs_alternating_updates(void) {
     test_str(*(char**)ecs_get_id(world, rowb, text), "b 11");
     test_str(*(char**)ecs_get_id(world, rowc, text), "c 12");
 
-    int32_t child_count = script_child_count(world, script);
+    int32_t child_count = 0;
+    ecs_iter_t it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+    }
 
     ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){21});
     test_str(*(char**)ecs_get_id(world, rowa, text), "a 10");
@@ -6600,7 +6601,12 @@ void Reactivity_three_dyn_refs_alternating_updates(void) {
     test_str(*(char**)ecs_get_id(world, rowb, text), "b 31");
     test_str(*(char**)ecs_get_id(world, rowc, text), "c 32");
 
-    test_int(script_child_count(world, script), child_count);
+    int32_t count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_fini(world);
 }
@@ -6813,12 +6819,22 @@ void Reactivity_dyn_ref_var_retargeting(void) {
     test_assert(row != 0);
     test_str(*(char**)ecs_get_id(world, row, text), "icon 10");
 
-    int32_t child_count = script_child_count(world, script);
+    int32_t child_count = 0;
+    ecs_iter_t it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+    }
 
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it1, it0}, 2});
     test_str(*(char**)ecs_get_id(world, row, text), "icon 11");
-    test_int(script_child_count(world, script), child_count);
+
+    int32_t count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){99});
     test_str(*(char**)ecs_get_id(world, row, text), "icon 99");
@@ -6833,7 +6849,12 @@ void Reactivity_dyn_ref_var_retargeting(void) {
     ecs_set_id(world, it0, icon, sizeof(Icon), &(Icon){66});
     test_str(*(char**)ecs_get_id(world, row, text), "icon 66");
 
-    test_int(script_child_count(world, script), child_count);
+    count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_fini(world);
 }
@@ -7047,7 +7068,11 @@ void Reactivity_dyn_ref_in_for_rows_are_independent(void) {
     test_str(*(char**)ecs_get_id(world, ecs_lookup(world, "list.r2"), text),
         "icon 12");
 
-    int32_t child_count = script_child_count(world, script);
+    int32_t child_count = 0;
+    ecs_iter_t it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+    }
 
     ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){21});
     test_str(*(char**)ecs_get_id(world, ecs_lookup(world, "list.r0"), text),
@@ -7069,7 +7094,12 @@ void Reactivity_dyn_ref_in_for_rows_are_independent(void) {
     test_str(*(char**)ecs_get_id(world, ecs_lookup(world, "list.r1"), text),
         "icon 31");
 
-    test_int(script_child_count(world, script), child_count);
+    int32_t count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_fini(world);
 }
@@ -7145,7 +7175,11 @@ void Reactivity_dyn_ref_in_nested_for(void) {
     test_str(*(char**)ecs_get_id(world,
         ecs_lookup(world, "list.o1.c1"), text), "11-21");
 
-    int32_t child_count = script_child_count(world, script);
+    int32_t child_count = 0;
+    ecs_iter_t it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+    }
 
     ecs_set_id(world, a1, icon, sizeof(Icon), &(Icon){31});
     test_str(*(char**)ecs_get_id(world,
@@ -7171,7 +7205,12 @@ void Reactivity_dyn_ref_in_nested_for(void) {
     test_str(*(char**)ecs_get_id(world,
         ecs_lookup(world, "list.o1.c0"), text), "31-60");
 
-    test_int(script_child_count(world, script), child_count);
+    int32_t count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_fini(world);
 }
@@ -8569,7 +8608,7 @@ static void reactivity_const_on_set(ecs_iter_t *it) {
     *count += it->count;
 }
 
-static void reactivity_const_threshold(bool capture) {
+void Reactivity_computed_const_skips_unchanged(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ecs_struct(world, {
@@ -8590,23 +8629,17 @@ static void reactivity_const_threshold(bool capture) {
     ecs_entity_t source = ecs_entity(world, {.name = "source"});
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
 
-    const char *code = capture
-        ? HEAD "const x: bool = source[Mass].value < 0.5"
-          LINE "template Panel {"
-          LINE "  const lit = x * 2"
-          LINE "  child { Position: {lit, 1} }"
-          LINE "}"
-          LINE "Panel output()"
-        : HEAD "const x: bool = source[Mass].value < 0.5"
-          LINE "const lit = x * 2"
-          LINE "@brief Computed output"
-          LINE "output { Position: {lit, 1} }";
+    const char *code =
+    HEAD "const x: bool = source[Mass].value < 0.5"
+    LINE "const lit = x * 2"
+    LINE "@brief Computed output"
+    LINE "output { Position: {lit, 1} }";
     ecs_entity_t script = ecs_script(world, {.ir = ir_enabled, .code = code});
     test_assert(script != 0);
     const EcsScript *sc = ecs_get(world, script, EcsScript);
     test_assert(sc != NULL);
     test_assert(sc->error == NULL);
-    ecs_entity_t output = ecs_lookup(world, capture ? "output.child" : "output");
+    ecs_entity_t output = ecs_lookup(world, "output");
     test_assert(output != 0);
     test_int(count, 1);
     test_flt(ecs_get(world, output, Position)->x, 2);
@@ -8623,19 +8656,63 @@ static void reactivity_const_threshold(bool capture) {
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
     test_int(count, 3);
     test_flt(ecs_get(world, output, Position)->x, 2);
-    test_uint(ecs_lookup(world, capture ? "output.child" : "output"), output);
-    if (!capture) {
-        test_str(ecs_doc_get_brief(world, output), "Computed output");
-    }
+    test_uint(ecs_lookup(world, "output"), output);
+    test_str(ecs_doc_get_brief(world, output), "Computed output");
     ecs_fini(world);
 }
 
-void Reactivity_computed_const_skips_unchanged(void) {
-    reactivity_const_threshold(false);
-}
-
 void Reactivity_computed_const_capture_skips_unchanged(void) {
-    reactivity_const_threshold(true);
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Mass"}),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+    int32_t count = 0;
+    ecs_observer(world, {
+        .query.terms = {{ecs_id(Position)}},
+        .events = {EcsOnSet},
+        .callback = reactivity_const_on_set,
+        .ctx = &count
+    });
+    ecs_entity_t source = ecs_entity(world, {.name = "source"});
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
+
+    const char *code =
+    HEAD "const x: bool = source[Mass].value < 0.5"
+    LINE "template Panel {"
+    LINE "  const lit = x * 2"
+    LINE "  child { Position: {lit, 1} }"
+    LINE "}"
+    LINE "Panel output()";
+    ecs_entity_t script = ecs_script(world, {.ir = ir_enabled, .code = code});
+    test_assert(script != 0);
+    const EcsScript *sc = ecs_get(world, script, EcsScript);
+    test_assert(sc != NULL);
+    test_assert(sc->error == NULL);
+    ecs_entity_t output = ecs_lookup(world, "output.child");
+    test_assert(output != 0);
+    test_int(count, 1);
+    test_flt(ecs_get(world, output, Position)->x, 2);
+
+    for (int32_t i = 2; i <= 4; i ++) {
+        ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){i * 0.1f});
+        test_int(count, 1);
+    }
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.6});
+    test_int(count, 2);
+    test_flt(ecs_get(world, output, Position)->x, 0);
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.7});
+    test_int(count, 2);
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
+    test_int(count, 3);
+    test_flt(ecs_get(world, output, Position)->x, 2);
+    test_uint(ecs_lookup(world, "output.child"), output);
+    ecs_fini(world);
 }
 
 void Reactivity_computed_const_cache_restored_and_reset(void) {
@@ -8809,29 +8886,20 @@ void Reactivity_count_template_prop_is_reactive(void) {
     ecs_fini(world);
 }
 
-static void reactivity_count_array(bool inline_array) {
+void Reactivity_count_array_is_reactive(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t type = ecs_entity(world, { .name = "Values" });
-    if (inline_array) {
-        ecs_struct(world, {
-            .entity = type,
-            .members = {{"values", ecs_id(ecs_i32_t), .count = 3}}
-        });
-    } else {
-        ecs_array(world, {
-            .entity = type, .type = ecs_id(ecs_i32_t), .count = 3
-        });
-    }
+    ecs_array(world, {
+        .entity = type, .type = ecs_id(ecs_i32_t), .count = 3
+    });
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     int32_t values[3] = {10, 20, 30};
     ecs_set_id(world, source, type, sizeof(values), values);
 
     ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
-        .code = inline_array
-            ? HEAD "const values = source[Values].values"
-              LINE "item { i32: {values[values.count() - 1]} }"
-            : HEAD "const values = source[Values]"
-              LINE "item { i32: {values[values.count() - 1]} }"
+        .code =
+        HEAD "const values = source[Values]"
+        LINE "item { i32: {values[values.count() - 1]} }"
     });
     test_assert(script != 0);
     ecs_entity_t item = ecs_lookup(world, "item");
@@ -8849,12 +8917,36 @@ static void reactivity_count_array(bool inline_array) {
     ecs_fini(world);
 }
 
-void Reactivity_count_array_is_reactive(void) {
-    reactivity_count_array(false);
-}
-
 void Reactivity_count_inline_array_is_reactive(void) {
-    reactivity_count_array(true);
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t type = ecs_entity(world, { .name = "Values" });
+    ecs_struct(world, {
+        .entity = type,
+        .members = {{"values", ecs_id(ecs_i32_t), .count = 3}}
+    });
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    int32_t values[3] = {10, 20, 30};
+    ecs_set_id(world, source, type, sizeof(values), values);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .code =
+        HEAD "const values = source[Values].values"
+        LINE "item { i32: {values[values.count() - 1]} }"
+    });
+    test_assert(script != 0);
+    ecs_entity_t item = ecs_lookup(world, "item");
+    test_assert(item != 0);
+    const int32_t *value = ecs_get(world, item, ecs_i32_t);
+    test_assert(value != NULL);
+    test_int(*value, 30);
+
+    values[2] = 60;
+    ecs_set_id(world, source, type, sizeof(values), values);
+    value = ecs_get(world, item, ecs_i32_t);
+    test_assert(value != NULL);
+    test_int(*value, 60);
+
+    ecs_fini(world);
 }
 
 void Reactivity_count_range_is_reactive(void) {

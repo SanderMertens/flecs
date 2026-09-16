@@ -24,8 +24,10 @@ void flecs_script_state_clear_computed(
             if (slots[i].ti && slots[i].ti->hooks.dtor) {
                 flecs_type_info_dtor(slots[i].ptr, 1, slots[i].ti);
             }
+
             ecs_os_free(slots[i].ptr);
         }
+
         slots[i] = (ecs_script_computed_t){0};
     }
 }
@@ -64,12 +66,14 @@ void flecs_script_state_resize(
         ecs_os_memset(ecs_vec_first(&state->scope_slots), 0,
             scope_count * ECS_SIZEOF(int32_t));
     }
+
     ecs_vec_set_count_t(NULL, &state->component_slots,
         ecs_script_component_slot_t, component_count);
     if (component_count) {
         ecs_os_memset(ecs_vec_first(&state->component_slots), 0,
             component_count * ECS_SIZEOF(ecs_script_component_slot_t));
     }
+
     flecs_script_for_slots_init(&state->for_slots, for_count);
 }
 
@@ -81,8 +85,10 @@ int32_t flecs_script_state_next(
             ecs_os_memset(ecs_vec_first(&state->scope_slots), 0,
                 ecs_vec_count(&state->scope_slots) * ECS_SIZEOF(int32_t));
         }
+
         state->visit = 0;
     }
+
     return ++ state->visit;
 }
 
@@ -99,6 +105,7 @@ void flecs_script_state_mark(
             scopes[slot] = visit;
         }
     }
+
     int32_t for_count = ecs_vec_count(&state->for_slots);
     for (int32_t i = 0; i < region->for_count; i ++) {
         int32_t slot = region->for_first + i;
@@ -152,6 +159,7 @@ void flecs_script_for_slots_fini(
     for (i = 0; i < count; i ++) {
         flecs_script_for_slot_fini(&slots[i]);
     }
+
     ecs_vec_fini_t(NULL, for_slots, ecs_script_for_slot_t);
 }
 
@@ -177,11 +185,14 @@ static void flecs_script_for_slot_delete_named(
                         ecs_script_for_component_t, c);
                 }
             }
+
             continue;
         }
+
         if (alive) {
             ecs_delete(world, entity);
         }
+
         ecs_vec_fini_t(NULL, &entry->components, ecs_script_for_component_t);
         ecs_map_remove_free(&slot->named, entity);
         slot->cache_entity = 0;
@@ -201,6 +212,7 @@ void flecs_script_for_slot_clear(
             ecs_delete(world, array[i]);
         }
     }
+
     ecs_vec_clear(&slot->entities);
 
     if (delete_named) {
@@ -259,6 +271,7 @@ void flecs_script_for_slot_track(
             return;
         }
     }
+
     ecs_vec_append_t(NULL, &slot->entities, ecs_entity_t)[0] = entity;
 }
 
@@ -276,6 +289,7 @@ void flecs_script_for_slot_track_component(
         if (!entry) {
             return;
         }
+
         slot->cache_entity = entity;
         slot->cache_entry = entry;
     }

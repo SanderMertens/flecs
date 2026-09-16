@@ -34,6 +34,7 @@ void flecs_expr_visit_free(
             ecs_ptr_free_w_type_info(script->world, node->type_info, n->ptr);
             flecs_type_info_release(node->type_info);
         }
+
         break;
     }
     case EcsExprInterpolatedString: {
@@ -55,6 +56,7 @@ void flecs_expr_visit_free(
         if (var->owns_name) {
             flecs_strfree(a, ECS_CONST_CAST(char*, var->name));
         }
+
         break;
     }
     case EcsExprMatch:
@@ -66,6 +68,7 @@ void flecs_expr_visit_free(
         if (entity) {
             flecs_script_visit_free_node(script, (ecs_script_node_t*)entity);
         }
+
         break;
     }
     case EcsExprScript: {
@@ -73,6 +76,7 @@ void flecs_expr_visit_free(
         if (nested) {
             ecs_script_free(nested);
         }
+
         break;
     }
     default:

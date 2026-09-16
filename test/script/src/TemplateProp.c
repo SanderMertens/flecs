@@ -14,31 +14,6 @@ typedef struct {
     float y;
 } PointValue;
 
-static void test_point(
-    ecs_world_t *world,
-    const char *entity,
-    float x,
-    float y)
-{
-    ecs_entity_t e = ecs_lookup(world, entity);
-    test_assert(e != 0);
-
-    ecs_entity_t point = ecs_lookup(world, "Point");
-    ecs_entity_t position = ecs_lookup(world, "Position");
-    test_assert(point != 0);
-    test_assert(position != 0);
-
-    const PointValue *pt = ecs_get_id(world, e, point);
-    test_assert(pt != NULL);
-    test_flt(pt->x, x);
-    test_flt(pt->y, y);
-
-    const PointValue *pos = ecs_get_id(world, e, position);
-    test_assert(pos != NULL);
-    test_flt(pos->x, x);
-    test_flt(pos->y, y);
-}
-
 void TemplateProp_prop_template_type(void) {
     ecs_world_t *world = ecs_init();
 
@@ -187,7 +162,24 @@ void TemplateProp_use_as_tag(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -196,35 +188,6 @@ typedef struct {
     bool on_off;
     float scale;
 } MyStreetLightValue;
-
-static void test_light(
-    ecs_world_t *world,
-    const char *entity,
-    bool on_off,
-    float scale)
-{
-    ecs_entity_t e = ecs_lookup(world, entity);
-    test_assert(e != 0);
-    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
-    ecs_entity_t interface = ecs_lookup(world, "StreetLight");
-    ecs_entity_t position = ecs_lookup(world, "Position");
-    test_assert(light != 0 && interface != 0 && position != 0);
-
-    const MyStreetLightValue *v = ecs_get_id(world, e, light);
-    test_assert(v != NULL);
-    test_bool(v->on_off, on_off);
-    test_flt(v->scale, scale);
-    test_assert(!ecs_has_id(world, e, interface));
-
-    const PointValue *p = ecs_get_id(world, e, position);
-    if (on_off) {
-        test_assert(p != NULL);
-        test_flt(p->x, scale);
-        test_flt(p->y, scale + 1);
-    } else {
-        test_assert(p == NULL);
-    }
-}
 
 void TemplateProp_interface_prop_self_template(void) {
     test_quarantine("1 Sep 2026");
@@ -401,7 +364,24 @@ void TemplateProp_interface_prop_instantiates_passed_template(void) {
     LINE "e { Road: {street_light: MyStreetLight} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_light(world, "e.lamp", true, 2);
+
+    ecs_entity_t inst = ecs_lookup(world, "e.lamp");
+    test_assert(inst != 0);
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    ecs_entity_t interface = ecs_lookup(world, "StreetLight");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(light != 0 && interface != 0 && position != 0);
+
+    const MyStreetLightValue *v = ecs_get_id(world, inst, light);
+    test_assert(v != NULL);
+    test_bool(v->on_off, true);
+    test_flt(v->scale, 2);
+    test_assert(!ecs_has_id(world, inst, interface));
+
+    const PointValue *p = ecs_get_id(world, inst, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 2);
+    test_flt(p->y, 2 + 1);
 
     ecs_entity_t road = ecs_lookup(world, "Road");
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -431,7 +411,24 @@ void TemplateProp_interface_prop_paren_syntax(void) {
     LINE "Road r(street_light: MyStreetLight)";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_light(world, "r.lamp", true, 2);
+
+    ecs_entity_t e = ecs_lookup(world, "r.lamp");
+    test_assert(e != 0);
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    ecs_entity_t interface = ecs_lookup(world, "StreetLight");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(light != 0 && interface != 0 && position != 0);
+
+    const MyStreetLightValue *v = ecs_get_id(world, e, light);
+    test_assert(v != NULL);
+    test_bool(v->on_off, true);
+    test_flt(v->scale, 2);
+    test_assert(!ecs_has_id(world, e, interface));
+
+    const PointValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 2);
+    test_flt(p->y, 2 + 1);
 
     ecs_fini(world);
 }
@@ -455,7 +452,22 @@ void TemplateProp_interface_prop_false_branch(void) {
     LINE "e { Road: {street_light: MyStreetLight} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_light(world, "e.lamp", false, 2);
+
+    ecs_entity_t e = ecs_lookup(world, "e.lamp");
+    test_assert(e != 0);
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    ecs_entity_t interface = ecs_lookup(world, "StreetLight");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(light != 0 && interface != 0 && position != 0);
+
+    const MyStreetLightValue *v = ecs_get_id(world, e, light);
+    test_assert(v != NULL);
+    test_bool(v->on_off, false);
+    test_flt(v->scale, 2);
+    test_assert(!ecs_has_id(world, e, interface));
+
+    const PointValue *p = ecs_get_id(world, e, position);
+    test_assert(p == NULL);
 
     ecs_fini(world);
 }
@@ -480,7 +492,24 @@ void TemplateProp_interface_prop_with_other_components(void) {
     LINE "e { Road: {street_light: MyStreetLight} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_light(world, "e.lamp", true, 2);
+
+    ecs_entity_t e = ecs_lookup(world, "e.lamp");
+    test_assert(e != 0);
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    ecs_entity_t interface = ecs_lookup(world, "StreetLight");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(light != 0 && interface != 0 && position != 0);
+
+    const MyStreetLightValue *v = ecs_get_id(world, e, light);
+    test_assert(v != NULL);
+    test_bool(v->on_off, true);
+    test_flt(v->scale, 2);
+    test_assert(!ecs_has_id(world, e, interface));
+
+    const PointValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 2);
+    test_flt(p->y, 2 + 1);
 
     ecs_entity_t velocity = ecs_lookup(world, "Velocity");
     const PointValue *vel = ecs_get_id(world, ecs_lookup(world, "e.lamp"), velocity);
@@ -510,7 +539,24 @@ void TemplateProp_interface_prop_default_template(void) {
     LINE "e { Road: {} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_light(world, "e.lamp", true, 2);
+
+    ecs_entity_t e = ecs_lookup(world, "e.lamp");
+    test_assert(e != 0);
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    ecs_entity_t interface = ecs_lookup(world, "StreetLight");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(light != 0 && interface != 0 && position != 0);
+
+    const MyStreetLightValue *v = ecs_get_id(world, e, light);
+    test_assert(v != NULL);
+    test_bool(v->on_off, true);
+    test_flt(v->scale, 2);
+    test_assert(!ecs_has_id(world, e, interface));
+
+    const PointValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 2);
+    test_flt(p->y, 2 + 1);
 
     ecs_fini(world);
 }
@@ -631,7 +677,22 @@ void TemplateProp_interface_prop_as_tag(void) {
     LINE "e { Road: {street_light: MyStreetLight} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_light(world, "e.lamp", false, 2);
+
+    ecs_entity_t e = ecs_lookup(world, "e.lamp");
+    test_assert(e != 0);
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    ecs_entity_t interface = ecs_lookup(world, "StreetLight");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(light != 0 && interface != 0 && position != 0);
+
+    const MyStreetLightValue *v = ecs_get_id(world, e, light);
+    test_assert(v != NULL);
+    test_bool(v->on_off, false);
+    test_flt(v->scale, 2);
+    test_assert(!ecs_has_id(world, e, interface));
+
+    const PointValue *p = ecs_get_id(world, e, position);
+    test_assert(p == NULL);
 
     ecs_fini(world);
 }
@@ -660,7 +721,23 @@ void TemplateProp_interface_prop_from_c(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set_id(world, e, road, sizeof(ecs_entity_t), &light);
 
-    test_light(world, "e.lamp", true, 2);
+    ecs_entity_t inst = ecs_lookup(world, "e.lamp");
+    test_assert(inst != 0);
+    ecs_entity_t light_1 = ecs_lookup(world, "MyStreetLight");
+    ecs_entity_t interface = ecs_lookup(world, "StreetLight");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(light_1 != 0 && interface != 0 && position != 0);
+
+    const MyStreetLightValue *v = ecs_get_id(world, inst, light_1);
+    test_assert(v != NULL);
+    test_bool(v->on_off, true);
+    test_flt(v->scale, 2);
+    test_assert(!ecs_has_id(world, inst, interface));
+
+    const PointValue *p = ecs_get_id(world, inst, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 2);
+    test_flt(p->y, 2 + 1);
 
     ecs_fini(world);
 }
@@ -692,7 +769,24 @@ void TemplateProp_interface_prop_change_template(void) {
     LINE "e { Road: {street_light: MyStreetLight} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_light(world, "e.lamp", true, 2);
+
+    ecs_entity_t e = ecs_lookup(world, "e.lamp");
+    test_assert(e != 0);
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    ecs_entity_t interface = ecs_lookup(world, "StreetLight");
+    ecs_entity_t pos_id = ecs_lookup(world, "Position");
+    test_assert(light != 0 && interface != 0 && pos_id != 0);
+
+    const MyStreetLightValue *val = ecs_get_id(world, e, light);
+    test_assert(val != NULL);
+    test_bool(val->on_off, true);
+    test_flt(val->scale, 2);
+    test_assert(!ecs_has_id(world, e, interface));
+
+    const PointValue *pos = ecs_get_id(world, e, pos_id);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 2);
+    test_flt(pos->y, 2 + 1);
 
     test_assert(ecs_script_run_w_desc(world, NULL,
         "e { Road: {street_light: OtherStreetLight} }", &ir_desc, NULL) == 0);
@@ -843,7 +937,24 @@ void TemplateProp_use_as_tag_dollar(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -865,7 +976,24 @@ void TemplateProp_use_as_tag_default(void) {
     LINE "e { Foo: {} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 1, 2);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 1);
+    test_flt(pt->y, 2);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 1);
+    test_flt(pos->y, 2);
 
     ecs_fini(world);
 }
@@ -887,7 +1015,24 @@ void TemplateProp_use_as_tag_on_instance(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -909,7 +1054,24 @@ void TemplateProp_use_w_initializer_partial(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 10, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 10);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 10);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -931,7 +1093,24 @@ void TemplateProp_use_w_initializer_partial_dollar(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 5, 20);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 20);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 20);
 
     ecs_fini(world);
 }
@@ -953,7 +1132,24 @@ void TemplateProp_use_w_initializer_full(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 10, 20);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 10);
+    test_flt(pt->y, 20);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 10);
+    test_flt(pos->y, 20);
 
     ecs_fini(world);
 }
@@ -976,8 +1172,42 @@ void TemplateProp_use_w_initializer_positional(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 10, 20);
-    test_point(world, "e.child2", 10, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 10);
+    test_flt(pt->y, 20);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 10);
+    test_flt(pos->y, 20);
+
+    e = ecs_lookup(world, "e.child2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 10);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 10);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1000,7 +1230,24 @@ void TemplateProp_use_w_initializer_expr(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 105, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 105);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 105);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1022,7 +1269,24 @@ void TemplateProp_use_w_empty_initializer(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1047,8 +1311,42 @@ void TemplateProp_use_in_with(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 5, 6);
-    test_point(world, "e.child2", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.child2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1072,7 +1370,24 @@ void TemplateProp_use_in_with_dollar(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1099,8 +1414,42 @@ void TemplateProp_use_in_with_w_initializer(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 42, 6);
-    test_point(world, "e.child2", 5, 43);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 42);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 42);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.child2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 43);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 43);
 
     ecs_fini(world);
 }
@@ -1124,7 +1473,24 @@ void TemplateProp_use_in_with_w_positional_initializer(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 42, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 42);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 42);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1180,8 +1546,42 @@ void TemplateProp_prop_change_updates_children(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 10, 6);
-    test_point(world, "e.child2", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 10);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 10);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.child2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_entity_t child = ecs_lookup(world, "e.child");
     ecs_entity_t child2 = ecs_lookup(world, "e.child2");
@@ -1191,8 +1591,42 @@ void TemplateProp_prop_change_updates_children(void) {
 
     test_assert(ecs_lookup(world, "e.child") == child);
     test_assert(ecs_lookup(world, "e.child2") == child2);
-    test_point(world, "e.child", 10, 8);
-    test_point(world, "e.child2", 7, 8);
+
+    e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 10);
+    test_flt(pt->y, 8);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 10);
+    test_flt(pos->y, 8);
+
+    e = ecs_lookup(world, "e.child2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 7);
+    test_flt(pt->y, 8);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 7);
+    test_flt(pos->y, 8);
 
     ecs_fini(world);
 }
@@ -1214,14 +1648,47 @@ void TemplateProp_prop_change_from_c_updates_children(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 5, 6);
+
+    ecs_entity_t inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, inst, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t e = ecs_lookup(world, "e");
     PointValue new_value = { 20, 30 };
     ecs_set_id(world, e, foo, sizeof(PointValue), &new_value);
 
-    test_point(world, "e.child", 20, 30);
+    inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, inst, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 20);
+    test_flt(pt->y, 30);
+
+    pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 20);
+    test_flt(pos->y, 30);
 
     ecs_fini(world);
 }
@@ -1250,8 +1717,41 @@ void TemplateProp_multiple_template_props(void) {
     const EcsComponent *c = ecs_get(world, foo, EcsComponent);
     test_int(c->size, 16);
 
-    test_point(world, "e.child_a", 1, 2);
-    test_point(world, "e.child_b", 3, 4);
+    ecs_entity_t e = ecs_lookup(world, "e.child_a");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 1);
+    test_flt(pt->y, 2);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 1);
+    test_flt(pos->y, 2);
+
+    e = ecs_lookup(world, "e.child_b");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 3);
+    test_flt(pt->y, 4);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 3);
+    test_flt(pos->y, 4);
 
     ecs_fini(world);
 }
@@ -1282,7 +1782,23 @@ void TemplateProp_template_prop_w_other_props(void) {
     test_str(str, "{count: 5, point: {x: 1, y: 2}, name: \"foo\"}");
     ecs_os_free(str);
 
-    test_point(world, "e.child", 1, 2);
+    ecs_entity_t inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, inst, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 1);
+    test_flt(pt->y, 2);
+
+    const PointValue *pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 1);
+    test_flt(pos->y, 2);
 
     ecs_fini(world);
 }
@@ -1355,8 +1871,42 @@ void TemplateProp_inherited_template_prop(void) {
     LINE "e { Bar: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 5, 3);
-    test_point(world, "e.child2", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 3);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 3);
+
+    e = ecs_lookup(world, "e.child2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1382,8 +1932,42 @@ void TemplateProp_inherited_template_prop_dollar(void) {
     LINE "e { Bar: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 5, 3);
-    test_point(world, "e.child2", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 3);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 3);
+
+    e = ecs_lookup(world, "e.child2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1410,7 +1994,24 @@ void TemplateProp_inherited_template_prop_chain(void) {
     LINE "e { Baz: {point: {x: 5, y: 6}, z: 30} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 30, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 30);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 30);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1472,7 +2073,24 @@ void TemplateProp_nested_template_instantiation(void) {
     LINE "e { Bar: {} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.foo.child", 7, 8);
+
+    ecs_entity_t e = ecs_lookup(world, "e.foo.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 7);
+    test_flt(pt->y, 8);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 7);
+    test_flt(pos->y, 8);
 
     ecs_fini(world);
 }
@@ -1496,9 +2114,60 @@ void TemplateProp_template_prop_in_for_loop(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child_0", 0, 6);
-    test_point(world, "e.child_1", 1, 6);
-    test_point(world, "e.child_2", 2, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child_0");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 0);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 0);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.child_1");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 1);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 1);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.child_2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 2);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 2);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1526,8 +2195,42 @@ void TemplateProp_template_prop_in_if(void) {
     LINE "f { Foo: {point: {x: 5, y: 6}, flag: false} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 5, 6);
-    test_point(world, "f.child", 100, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "f.child");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1837,7 +2540,24 @@ void TemplateProp_prop_template_type_wo_default_required(void) {
     LINE "e { Foo: {} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 1, 2);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 1);
+    test_flt(pt->y, 2);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 1);
+    test_flt(pos->y, 2);
 
     ecs_fini(world);
 }
@@ -1862,7 +2582,24 @@ void TemplateProp_run_script_twice(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL,
         "e { Foo: {point: {x: 5, y: 6}} }", &ir_desc, NULL) == 0);
-    test_point(world, "e.child", 10, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 10);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 10);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1888,10 +2625,44 @@ void TemplateProp_managed_script_update(void) {
         .code = expr
     });
     test_assert(s != 0);
-    test_point(world, "e.child", 10, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 10);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 10);
+    test_flt(pos->y, 6);
 
     test_assert(ecs_script_update(world, s, 0, expr) == 0);
-    test_point(world, "e.child", 10, 6);
+
+    e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 10);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 10);
+    test_flt(pos->y, 6);
 
     expr =
     HEAD "struct Position(x: f32, y: f32)"
@@ -1907,7 +2678,24 @@ void TemplateProp_managed_script_update(void) {
     LINE "e { Foo: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_update(world, s, 0, expr) == 0);
-    test_point(world, "e.child", 20, 6);
+
+    e = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 20);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 20);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -1969,18 +2757,6 @@ void TemplateProp_instance_to_json(void) {
 }
 
 
-#define POINT3D_TEMPLATE\
-    LINE "template Point3D : Point {"\
-    LINE "  prop z: f32 = 3"\
-    LINE "}"
-
-#define INNER_TEMPLATE\
-    LINE "template Inner {"\
-    LINE "  prop point : template Point"\
-    LINE "  leaf { point }"\
-    LINE "  leaf2 { point: {x: 100} }"\
-    LINE "}"
-
 void TemplateProp_pass_to_child_template_same_type(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1991,7 +2767,11 @@ void TemplateProp_pass_to_child_template_same_type(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    INNER_TEMPLATE
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point"
     LINE "  inner { Inner: {point: $point} }"
@@ -2008,8 +2788,41 @@ void TemplateProp_pass_to_child_template_same_type(void) {
     test_flt(pt->x, 5);
     test_flt(pt->y, 6);
 
-    test_point(world, "e.inner.leaf", 5, 6);
-    test_point(world, "e.inner.leaf2", 100, 6);
+    ecs_entity_t e = ecs_lookup(world, "e.inner.leaf");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt_1 = ecs_get_id(world, e, point);
+    test_assert(pt_1 != NULL);
+    test_flt(pt_1->x, 5);
+    test_flt(pt_1->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt_1 = ecs_get_id(world, e, point);
+    test_assert(pt_1 != NULL);
+    test_flt(pt_1->x, 100);
+    test_flt(pt_1->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -2035,7 +2848,24 @@ void TemplateProp_pass_to_child_template_same_type_dollar(void) {
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.inner.leaf", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.inner.leaf");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -2050,7 +2880,11 @@ void TemplateProp_pass_to_child_template_positional(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    INNER_TEMPLATE
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point"
     LINE "  inner { Inner: {$point} }"
@@ -2058,8 +2892,42 @@ void TemplateProp_pass_to_child_template_positional(void) {
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.inner.leaf", 5, 6);
-    test_point(world, "e.inner.leaf2", 100, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.inner.leaf");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -2074,7 +2942,11 @@ void TemplateProp_pass_to_child_template_w_expr(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    INNER_TEMPLATE
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point"
     LINE "  inner { Inner: {point: {x: $point.x + 1, y: $point.y * 2}} }"
@@ -2082,8 +2954,42 @@ void TemplateProp_pass_to_child_template_w_expr(void) {
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.inner.leaf", 6, 12);
-    test_point(world, "e.inner.leaf2", 100, 12);
+
+    ecs_entity_t e = ecs_lookup(world, "e.inner.leaf");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 6);
+    test_flt(pt->y, 12);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 6);
+    test_flt(pos->y, 12);
+
+    e = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 12);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 12);
 
     ecs_fini(world);
 }
@@ -2098,7 +3004,11 @@ void TemplateProp_pass_to_child_template_w_with(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    INNER_TEMPLATE
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point"
     LINE "  with Inner(point: $point) {"
@@ -2108,8 +3018,42 @@ void TemplateProp_pass_to_child_template_w_with(void) {
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.inner.leaf", 5, 6);
-    test_point(world, "e.inner.leaf2", 100, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.inner.leaf");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -2124,7 +3068,11 @@ void TemplateProp_pass_to_child_template_default(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    INNER_TEMPLATE
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point"
     LINE "  inner { Inner: {point: $point} }"
@@ -2132,8 +3080,42 @@ void TemplateProp_pass_to_child_template_default(void) {
     LINE "e { Outer: {} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.inner.leaf", 1, 2);
-    test_point(world, "e.inner.leaf2", 100, 2);
+
+    ecs_entity_t e = ecs_lookup(world, "e.inner.leaf");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 1);
+    test_flt(pt->y, 2);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 1);
+    test_flt(pos->y, 2);
+
+    e = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 2);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 2);
 
     ecs_fini(world);
 }
@@ -2148,7 +3130,11 @@ void TemplateProp_pass_to_child_template_update(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    INNER_TEMPLATE
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point"
     LINE "  inner { Inner: {point: $point} }"
@@ -2156,7 +3142,24 @@ void TemplateProp_pass_to_child_template_update(void) {
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.inner.leaf", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.inner.leaf");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_entity_t inner = ecs_lookup(world, "e.inner");
     ecs_entity_t leaf = ecs_lookup(world, "e.inner.leaf");
@@ -2166,8 +3169,42 @@ void TemplateProp_pass_to_child_template_update(void) {
 
     test_assert(ecs_lookup(world, "e.inner") == inner);
     test_assert(ecs_lookup(world, "e.inner.leaf") == leaf);
-    test_point(world, "e.inner.leaf", 7, 8);
-    test_point(world, "e.inner.leaf2", 100, 8);
+
+    e = ecs_lookup(world, "e.inner.leaf");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 7);
+    test_flt(pt->y, 8);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 7);
+    test_flt(pos->y, 8);
+
+    e = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 8);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 8);
 
     ecs_fini(world);
 }
@@ -2182,7 +3219,11 @@ void TemplateProp_pass_to_child_template_from_c(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    INNER_TEMPLATE
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point"
     LINE "  inner { Inner: {point: $point} }"
@@ -2195,15 +3236,81 @@ void TemplateProp_pass_to_child_template_from_c(void) {
     PointValue value = { 5, 6 };
     ecs_set_id(world, e, outer, sizeof(PointValue), &value);
 
-    test_point(world, "e.inner.leaf", 5, 6);
-    test_point(world, "e.inner.leaf2", 100, 6);
+    ecs_entity_t inst = ecs_lookup(world, "e.inner.leaf");
+    test_assert(inst != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, inst, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
+
+    inst = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(inst != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, inst, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 6);
 
     value.x = 7;
     value.y = 8;
     ecs_set_id(world, e, outer, sizeof(PointValue), &value);
 
-    test_point(world, "e.inner.leaf", 7, 8);
-    test_point(world, "e.inner.leaf2", 100, 8);
+    inst = ecs_lookup(world, "e.inner.leaf");
+    test_assert(inst != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, inst, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 7);
+    test_flt(pt->y, 8);
+
+    pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 7);
+    test_flt(pos->y, 8);
+
+    inst = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(inst != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, inst, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 8);
+
+    pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 8);
 
     ecs_fini(world);
 }
@@ -2218,7 +3325,11 @@ void TemplateProp_pass_to_child_template_two_levels(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    INNER_TEMPLATE
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Middle {"
     LINE "  prop point : template Point"
     LINE "  inner { Inner: {point: $point} }"
@@ -2230,8 +3341,42 @@ void TemplateProp_pass_to_child_template_two_levels(void) {
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.middle.inner.leaf", 5, 6);
-    test_point(world, "e.middle.inner.leaf2", 100, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.middle.inner.leaf");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.middle.inner.leaf2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -2246,7 +3391,11 @@ void TemplateProp_pass_to_child_template_and_use_in_outer(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    INNER_TEMPLATE
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point"
     LINE "  point: {y: 50}"
@@ -2255,8 +3404,42 @@ void TemplateProp_pass_to_child_template_and_use_in_outer(void) {
     LINE "e { Outer: {point: {x: 5, y: 6}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e", 5, 50);
-    test_point(world, "e.inner.leaf", 5, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 50);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 50);
+
+    e = ecs_lookup(world, "e.inner.leaf");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -2271,8 +3454,14 @@ void TemplateProp_pass_derived_to_child_template_base(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    POINT3D_TEMPLATE
-    INNER_TEMPLATE
+    LINE "template Point3D : Point {"
+    LINE "  prop z: f32 = 3"
+    LINE "}"
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point3D"
     LINE "  inner { Inner: {point: $point} }"
@@ -2300,8 +3489,42 @@ void TemplateProp_pass_derived_to_child_template_base(void) {
 
     ecs_entity_t leaf = ecs_lookup(world, "e.inner.leaf");
     test_assert(!ecs_has_id(world, leaf, point3d));
-    test_point(world, "e.inner.leaf", 5, 6);
-    test_point(world, "e.inner.leaf2", 100, 6);
+
+    ecs_entity_t inst = ecs_lookup(world, "e.inner.leaf");
+    test_assert(inst != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt_1 = ecs_get_id(world, inst, point);
+    test_assert(pt_1 != NULL);
+    test_flt(pt_1->x, 5);
+    test_flt(pt_1->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
+
+    inst = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(inst != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt_1 = ecs_get_id(world, inst, point);
+    test_assert(pt_1 != NULL);
+    test_flt(pt_1->x, 100);
+    test_flt(pt_1->y, 6);
+
+    pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -2316,8 +3539,14 @@ void TemplateProp_pass_derived_to_child_template_base_positional(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    POINT3D_TEMPLATE
-    INNER_TEMPLATE
+    LINE "template Point3D : Point {"
+    LINE "  prop z: f32 = 3"
+    LINE "}"
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point3D"
     LINE "  inner { Inner: {$point} }"
@@ -2325,8 +3554,42 @@ void TemplateProp_pass_derived_to_child_template_base_positional(void) {
     LINE "e { Outer: {point: {x: 5, y: 6, z: 7}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.inner.leaf", 5, 6);
-    test_point(world, "e.inner.leaf2", 100, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.inner.leaf");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -2341,8 +3604,14 @@ void TemplateProp_pass_derived_to_child_template_base_w_with(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    POINT3D_TEMPLATE
-    INNER_TEMPLATE
+    LINE "template Point3D : Point {"
+    LINE "  prop z: f32 = 3"
+    LINE "}"
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point3D"
     LINE "  with Inner(point: $point) {"
@@ -2352,8 +3621,42 @@ void TemplateProp_pass_derived_to_child_template_base_w_with(void) {
     LINE "e { Outer: {point: {x: 5, y: 6, z: 7}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.inner.leaf", 5, 6);
-    test_point(world, "e.inner.leaf2", 100, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.inner.leaf");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -2368,8 +3671,14 @@ void TemplateProp_pass_derived_to_child_template_base_update(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    POINT3D_TEMPLATE
-    INNER_TEMPLATE
+    LINE "template Point3D : Point {"
+    LINE "  prop z: f32 = 3"
+    LINE "}"
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Outer {"
     LINE "  prop point : template Point3D"
     LINE "  point"
@@ -2386,7 +3695,24 @@ void TemplateProp_pass_derived_to_child_template_base_update(void) {
     test_flt(v[0], 5);
     test_flt(v[1], 6);
     test_flt(v[2], 7);
-    test_point(world, "e.inner.leaf", 5, 6);
+
+    ecs_entity_t inst = ecs_lookup(world, "e.inner.leaf");
+    test_assert(inst != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, inst, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
 
     ecs_entity_t leaf = ecs_lookup(world, "e.inner.leaf");
 
@@ -2398,8 +3724,42 @@ void TemplateProp_pass_derived_to_child_template_base_update(void) {
     test_flt(v[1], 9);
     test_flt(v[2], 10);
     test_assert(ecs_lookup(world, "e.inner.leaf") == leaf);
-    test_point(world, "e.inner.leaf", 8, 9);
-    test_point(world, "e.inner.leaf2", 100, 9);
+
+    inst = ecs_lookup(world, "e.inner.leaf");
+    test_assert(inst != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, inst, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 8);
+    test_flt(pt->y, 9);
+
+    pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 8);
+    test_flt(pos->y, 9);
+
+    inst = ecs_lookup(world, "e.inner.leaf2");
+    test_assert(inst != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, inst, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 9);
+
+    pos = ecs_get_id(world, inst, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 9);
 
     ecs_fini(world);
 }
@@ -2414,7 +3774,9 @@ void TemplateProp_pass_derived_to_child_template_derived(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    POINT3D_TEMPLATE
+    LINE "template Point3D : Point {"
+    LINE "  prop z: f32 = 3"
+    LINE "}"
     LINE "template Inner3D {"
     LINE "  prop point : template Point3D"
     LINE "  leaf { point }"
@@ -2450,8 +3812,14 @@ void TemplateProp_pass_derived_to_child_template_base_two_levels(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    POINT3D_TEMPLATE
-    INNER_TEMPLATE
+    LINE "template Point3D : Point {"
+    LINE "  prop z: f32 = 3"
+    LINE "}"
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Middle {"
     LINE "  prop point : template Point3D"
     LINE "  inner { Inner: {point: $point} }"
@@ -2463,8 +3831,42 @@ void TemplateProp_pass_derived_to_child_template_base_two_levels(void) {
     LINE "e { Outer: {point: {x: 5, y: 6, z: 7}} }";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_point(world, "e.middle.inner.leaf", 5, 6);
-    test_point(world, "e.middle.inner.leaf2", 100, 6);
+
+    ecs_entity_t e = ecs_lookup(world, "e.middle.inner.leaf");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 5);
+    test_flt(pt->y, 6);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 5);
+    test_flt(pos->y, 6);
+
+    e = ecs_lookup(world, "e.middle.inner.leaf2");
+    test_assert(e != 0);
+
+    point = ecs_lookup(world, "Point");
+    position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 100);
+    test_flt(pt->y, 6);
+
+    pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 100);
+    test_flt(pos->y, 6);
 
     ecs_fini(world);
 }
@@ -2479,7 +3881,9 @@ void TemplateProp_pass_base_to_child_template_derived_fails(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    POINT3D_TEMPLATE
+    LINE "template Point3D : Point {"
+    LINE "  prop z: f32 = 3"
+    LINE "}"
     LINE "template Inner3D {"
     LINE "  prop point : template Point3D"
     LINE "  leaf { point }"
@@ -2506,7 +3910,11 @@ void TemplateProp_pass_unrelated_to_child_template_fails(void) {
     LINE "  prop y: f32 = 2"
     LINE "  Position: {$x, $y}"
     LINE "}"
-    INNER_TEMPLATE
+    LINE "template Inner {"
+    LINE "  prop point : template Point"
+    LINE "  leaf { point }"
+    LINE "  leaf2 { point: {x: 100} }"
+    LINE "}"
     LINE "template Other {"
     LINE "  prop x: f32 = 1"
     LINE "  prop y: f32 = 2"
@@ -2745,7 +4153,24 @@ void TemplateProp_struct_prop_default_and_derived_template(void) {
     h = ecs_get_id(world, b_child, brick);
     test_assert(h != NULL);
     test_flt(*h, 3);
-    test_point(world, "b.child", 3, 1);
+
+    ecs_entity_t e = ecs_lookup(world, "b.child");
+    test_assert(e != 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(point != 0);
+    test_assert(position != 0);
+
+    const PointValue *pt = ecs_get_id(world, e, point);
+    test_assert(pt != NULL);
+    test_flt(pt->x, 3);
+    test_flt(pt->y, 1);
+
+    const PointValue *pos = ecs_get_id(world, e, position);
+    test_assert(pos != NULL);
+    test_flt(pos->x, 3);
+    test_flt(pos->y, 1);
 
     ecs_fini(world);
 }
@@ -2815,10 +4240,9 @@ void TemplateProp_interface_prop_empty_initializer(void) {
     ecs_fini(world);
 }
 
-static
-void string_prop_world_init(
-    ecs_world_t *world)
-{
+void TemplateProp_string_prop_in_const(void) {
+    ecs_world_t *world = ecs_init();
+
     ecs_entity_t text = ecs_entity(world, { .name = "Text" });
     ecs_struct(world, {
         .entity = text,
@@ -2826,30 +4250,6 @@ void string_prop_world_init(
             {"data", ecs_id(ecs_string_t)}
         }
     });
-}
-
-static
-void test_text(
-    ecs_world_t *world,
-    const char *entity,
-    const char *expect)
-{
-    ecs_entity_t e = ecs_lookup(world, entity);
-    test_assert(e != 0);
-
-    ecs_entity_t text = ecs_lookup(world, "Text");
-    test_assert(text != 0);
-
-    const char *const *ptr = ecs_get_id(world, e, text);
-    test_assert(ptr != NULL);
-    test_assert(ptr[0] != NULL);
-    test_str(ptr[0], expect);
-}
-
-void TemplateProp_string_prop_in_const(void) {
-    ecs_world_t *world = ecs_init();
-
-    string_prop_world_init(world);
 
     const char *expr =
     HEAD "template Sign {"
@@ -2862,8 +4262,27 @@ void TemplateProp_string_prop_in_const(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_text(world, "a", "<text>HELLO</text>");
-    test_text(world, "b", "<text>OTHER</text>");
+    ecs_entity_t e = ecs_lookup(world, "a");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    const char *const *ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<text>HELLO</text>");
+
+    e = ecs_lookup(world, "b");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<text>OTHER</text>");
 
     ecs_fini(world);
 }
@@ -2871,7 +4290,13 @@ void TemplateProp_string_prop_in_const(void) {
 void TemplateProp_string_prop_in_2_consts(void) {
     ecs_world_t *world = ecs_init();
 
-    string_prop_world_init(world);
+    ecs_entity_t text = ecs_entity(world, { .name = "Text" });
+    ecs_struct(world, {
+        .entity = text,
+        .members = {
+            {"data", ecs_id(ecs_string_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Sign {"
@@ -2885,8 +4310,27 @@ void TemplateProp_string_prop_in_2_consts(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_text(world, "a", "<a>HELLO</a><b>HELLO</b></svg>");
-    test_text(world, "b", "<a>OTHER</a><b>OTHER</b></svg>");
+    ecs_entity_t e = ecs_lookup(world, "a");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    const char *const *ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<a>HELLO</a><b>HELLO</b></svg>");
+
+    e = ecs_lookup(world, "b");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<a>OTHER</a><b>OTHER</b></svg>");
 
     ecs_fini(world);
 }
@@ -2894,7 +4338,13 @@ void TemplateProp_string_prop_in_2_consts(void) {
 void TemplateProp_string_prop_in_3_consts(void) {
     ecs_world_t *world = ecs_init();
 
-    string_prop_world_init(world);
+    ecs_entity_t text = ecs_entity(world, { .name = "Text" });
+    ecs_struct(world, {
+        .entity = text,
+        .members = {
+            {"data", ecs_id(ecs_string_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Sign {"
@@ -2911,14 +4361,31 @@ void TemplateProp_string_prop_in_3_consts(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_text(world, "a",
-        "<text y='12.000000'>ONE</text>"
-        "<text y='12.000000'>TWO</text>"
-        "<text y='12.000000'>ONETWO</text></svg>");
-    test_text(world, "b",
-        "<text y='12.000000'>AAA</text>"
-        "<text y='12.000000'>BBB</text>"
-        "<text y='12.000000'>AAABBB</text></svg>");
+    ecs_entity_t e = ecs_lookup(world, "a");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    const char *const *ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<text y='12.000000'>ONE</text>"
+            "<text y='12.000000'>TWO</text>"
+            "<text y='12.000000'>ONETWO</text></svg>");
+
+    e = ecs_lookup(world, "b");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<text y='12.000000'>AAA</text>"
+            "<text y='12.000000'>BBB</text>"
+            "<text y='12.000000'>AAABBB</text></svg>");
 
     ecs_fini(world);
 }
@@ -2926,7 +4393,13 @@ void TemplateProp_string_prop_in_3_consts(void) {
 void TemplateProp_string_prop_in_const_w_adjacent_prop(void) {
     ecs_world_t *world = ecs_init();
 
-    string_prop_world_init(world);
+    ecs_entity_t text = ecs_entity(world, { .name = "Text" });
+    ecs_struct(world, {
+        .entity = text,
+        .members = {
+            {"data", ecs_id(ecs_string_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Sign {"
@@ -2939,8 +4412,27 @@ void TemplateProp_string_prop_in_const_w_adjacent_prop(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_text(world, "a", "<a>HELLO</a>HELLO!");
-    test_text(world, "b", "<a>OTHER</a>OTHER!");
+    ecs_entity_t e = ecs_lookup(world, "a");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    const char *const *ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<a>HELLO</a>HELLO!");
+
+    e = ecs_lookup(world, "b");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<a>OTHER</a>OTHER!");
 
     ecs_fini(world);
 }
@@ -2948,7 +4440,13 @@ void TemplateProp_string_prop_in_const_w_adjacent_prop(void) {
 void TemplateProp_string_prop_in_chained_consts(void) {
     ecs_world_t *world = ecs_init();
 
-    string_prop_world_init(world);
+    ecs_entity_t text = ecs_entity(world, { .name = "Text" });
+    ecs_struct(world, {
+        .entity = text,
+        .members = {
+            {"data", ecs_id(ecs_string_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Sign {"
@@ -2963,8 +4461,27 @@ void TemplateProp_string_prop_in_chained_consts(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_text(world, "a", "([<a>HELLO</a>])");
-    test_text(world, "b", "([<a>OTHER</a>])");
+    ecs_entity_t e = ecs_lookup(world, "a");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    const char *const *ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "([<a>HELLO</a>])");
+
+    e = ecs_lookup(world, "b");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "([<a>OTHER</a>])");
 
     ecs_fini(world);
 }
@@ -2972,7 +4489,13 @@ void TemplateProp_string_prop_in_chained_consts(void) {
 void TemplateProp_string_prop_in_consts_reassign(void) {
     ecs_world_t *world = ecs_init();
 
-    string_prop_world_init(world);
+    ecs_entity_t text = ecs_entity(world, { .name = "Text" });
+    ecs_struct(world, {
+        .entity = text,
+        .members = {
+            {"data", ecs_id(ecs_string_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Sign {"
@@ -2987,17 +4510,44 @@ void TemplateProp_string_prop_in_consts_reassign(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_text(world, "a", "<a>ONE</a><b>TWO</b><c>ONETWO</c></svg>");
+    ecs_entity_t e = ecs_lookup(world, "a");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    const char *const *ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<a>ONE</a><b>TWO</b><c>ONETWO</c></svg>");
 
     test_assert(ecs_script_run_w_desc(world, NULL,
         "a { Sign: {l1: \"AAA\"} }", &ir_desc, NULL) == 0);
 
-    test_text(world, "a", "<a>AAA</a><b>TWO</b><c>AAATWO</c></svg>");
+    e = ecs_lookup(world, "a");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<a>AAA</a><b>TWO</b><c>AAATWO</c></svg>");
 
     test_assert(ecs_script_run_w_desc(world, NULL,
         "a { Sign: {l2: \"BBB\"} }", &ir_desc, NULL) == 0);
 
-    test_text(world, "a", "<a>AAA</a><b>BBB</b><c>AAABBB</c></svg>");
+    e = ecs_lookup(world, "a");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<a>AAA</a><b>BBB</b><c>AAABBB</c></svg>");
 
     ecs_fini(world);
 }
@@ -3005,7 +4555,13 @@ void TemplateProp_string_prop_in_consts_reassign(void) {
 void TemplateProp_string_prop_in_consts_deferred(void) {
     ecs_world_t *world = ecs_init();
 
-    string_prop_world_init(world);
+    ecs_entity_t text = ecs_entity(world, { .name = "Text" });
+    ecs_struct(world, {
+        .entity = text,
+        .members = {
+            {"data", ecs_id(ecs_string_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Sign {"
@@ -3026,10 +4582,38 @@ void TemplateProp_string_prop_in_consts_deferred(void) {
         LINE "Sign c(l1: \"CCCCCCCCCCCCCCCC\")", &ir_desc, NULL) == 0);
     ecs_defer_end(world);
 
-    test_text(world, "a", "<a>ONE</a><b>TWO</b><c>ONETWO</c></svg>");
-    test_text(world, "b", "<a>AAA</a><b>BBB</b><c>AAABBB</c></svg>");
-    test_text(world, "c",
-        "<a>CCCCCCCCCCCCCCCC</a><b>TWO</b><c>CCCCCCCCCCCCCCCCTWO</c></svg>");
+    ecs_entity_t e = ecs_lookup(world, "a");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    const char *const *ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<a>ONE</a><b>TWO</b><c>ONETWO</c></svg>");
+
+    e = ecs_lookup(world, "b");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<a>AAA</a><b>BBB</b><c>AAABBB</c></svg>");
+
+    e = ecs_lookup(world, "c");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<a>CCCCCCCCCCCCCCCC</a><b>TWO</b><c>CCCCCCCCCCCCCCCCTWO</c></svg>");
 
     ecs_fini(world);
 }
@@ -3037,7 +4621,13 @@ void TemplateProp_string_prop_in_consts_deferred(void) {
 void TemplateProp_string_prop_in_consts_nested_template(void) {
     ecs_world_t *world = ecs_init();
 
-    string_prop_world_init(world);
+    ecs_entity_t text = ecs_entity(world, { .name = "Text" });
+    ecs_struct(world, {
+        .entity = text,
+        .members = {
+            {"data", ecs_id(ecs_string_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Inner {"
@@ -3055,8 +4645,27 @@ void TemplateProp_string_prop_in_consts_nested_template(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_text(world, "a.kid", "<i><o>O</o></i>");
-    test_text(world, "b.kid", "<i><o>Z</o></i>");
+    ecs_entity_t e = ecs_lookup(world, "a.kid");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    const char *const *ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<i><o>O</o></i>");
+
+    e = ecs_lookup(world, "b.kid");
+    test_assert(e != 0);
+
+    text = ecs_lookup(world, "Text");
+    test_assert(text != 0);
+
+    ptr = ecs_get_id(world, e, text);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] != NULL);
+    test_str(ptr[0], "<i><o>Z</o></i>");
 
     ecs_fini(world);
 }

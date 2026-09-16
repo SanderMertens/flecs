@@ -45,6 +45,7 @@ void flecs_allocator_fini(
             &a->sizes, ecs_block_allocator_t, i);
         flecs_ballocator_fini(ba);
     }
+
     flecs_sparse_fini(&a->sizes);
 
     flecs_ballocator_fini(&a->chunks);

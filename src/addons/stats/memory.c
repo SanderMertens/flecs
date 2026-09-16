@@ -52,6 +52,7 @@ static ecs_size_t flecs_map_memory_get(
         result += ecs_map_count(map) * ECS_SIZEOF(ecs_bucket_entry_t);
         result += ecs_map_count(map) * element_size;
     }
+
     return result;
 }
 
@@ -116,6 +117,7 @@ static ecs_size_t flecs_allocator_memory_get(
             &allocator->sizes, ecs_block_allocator_t, i);
         result += flecs_ballocator_memory_get(ba);
     }
+
     result += flecs_ballocator_memory_get(&allocator->chunks);
     
     result += flecs_sparse_memory_get(&allocator->sizes, 
@@ -508,6 +510,7 @@ static void flecs_table_graph_edges_memory_get(
             flecs_table_graph_edge_memory_get(edge, result);
         }
     }
+
     if (edges->hi) {
         result->bytes_edges += ECS_SIZEOF(ecs_map_t);
         result->bytes_edges += flecs_map_memory_get(edges->hi, 0);
@@ -874,6 +877,7 @@ static void flecs_stats_memory_get(
             }
         }
     }
+
     for (p = 0; p < period_count; p ++) {
         ecs_iter_t it = ecs_each_id(world, 
             ecs_pair_t(EcsPipelineStats, periods[p]));
@@ -936,6 +940,7 @@ static void flecs_rest_memory_get(
             if (!r[i].impl) {
                 continue;
             }
+
             flecs_http_memory_get(r[i].impl->srv, result);
         }
     }

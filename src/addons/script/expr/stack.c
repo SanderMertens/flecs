@@ -21,6 +21,7 @@ static void flecs_expr_value_free(
         if (ti->hooks.dtor) {
             flecs_type_info_dtor(v->value.ptr, 1, ti);
         }
+
         flecs_stack_free(v->value.ptr, ti->size);
     }
 }
@@ -81,6 +82,7 @@ ecs_expr_value_t* flecs_expr_stack_result(
     if (!flecs_expr_node_borrows_result(node)) {
         flecs_expr_stack_storage(stack, v);
     }
+
     return v;
 }
 

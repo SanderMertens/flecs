@@ -276,6 +276,7 @@ int32_t ecs_stage_get_id(
     } else {
         ecs_throw(ECS_INTERNAL_ERROR, NULL);
     }
+
 error:
     return 0;
 }

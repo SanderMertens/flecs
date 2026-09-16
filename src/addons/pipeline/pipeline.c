@@ -312,6 +312,7 @@ static bool flecs_pipeline_build(
                     needs_merge = true;
                     multi_threaded = sys->multi_threaded;
                 }
+
                 if (sys->immediate != immediate) {
                     needs_merge = true;
                     immediate = sys->immediate;
@@ -367,6 +368,7 @@ static bool flecs_pipeline_build(
                     op->multi_threaded = multi_threaded;
                     op->immediate = immediate;
                 }
+
                 op->count ++;
             }
         }
@@ -417,6 +419,7 @@ static bool flecs_pipeline_build(
             } else {
                 ecs_dbg("#[green]system#[reset] %s", path);
             }
+
             ecs_os_free(path);
 #endif
 
@@ -436,6 +439,7 @@ static bool flecs_pipeline_build(
                         op[op_index].multi_threaded, 
                         !op[op_index].immediate);
                 }
+
                 ecs_log_push_1();
             }
 
@@ -805,6 +809,7 @@ static ecs_entity_t flecs_pipeline_init(
     if (!qd.order_by_callback) {
         qd.order_by_callback = flecs_entity_compare;
     }
+
     qd.entity = entity;
 
     ecs_query_t *query = query_init(world, entity, &qd);
@@ -867,6 +872,7 @@ ecs_entity_t ecs_pipeline_init(
     if (!r && entity_created) {
         ecs_delete(world, result);
     }
+
     return r;
 error:
     return 0;

@@ -259,12 +259,14 @@ int flecs_init_type(
                     size, ecs_get_name(world, type), comp->size);
                 return -1;
             }
+
             if (comp->alignment < alignment) {
                 ecs_err(
                     "computed alignment (%d) for '%s' is larger than actual type (%d)", 
                     alignment, ecs_get_name(world, type), comp->alignment);
                 return -1;
             }
+
             if (comp->size == size && comp->alignment != alignment) {
                 if (comp->alignment < alignment) {
                     ecs_err("computed size for '%s' matches with actual type but "

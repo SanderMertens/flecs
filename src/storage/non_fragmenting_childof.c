@@ -25,6 +25,7 @@ static void flecs_add_non_fragmenting_child_to_table(
         if (table->flags & EcsTableIsDisabled) {
             cr->pair->disabled_tables ++;
         }
+
         if (table->flags & EcsTableIsPrefab) {
             cr->pair->prefab_tables ++;
         }
@@ -58,6 +59,7 @@ static void flecs_remove_non_fragmenting_child_from_table(
             ecs_assert(cr->pair->disabled_tables >= 0, 
                 ECS_INTERNAL_ERROR, NULL);
         }
+
         if (table->flags & EcsTableIsPrefab) {
             cr->pair->prefab_tables --;
             ecs_assert(cr->pair->prefab_tables >= 0, 
@@ -461,6 +463,7 @@ bool flecs_component_has_non_fragmenting_childof(
     if (cr->flags & EcsIdOrderedChildren) {
         return ecs_map_count(&cr->pair->children_tables) != 0;
     }
+
     return false;
 }
 

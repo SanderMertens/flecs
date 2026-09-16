@@ -94,6 +94,7 @@ static ecs_entity_t flecs_json_lookup_id(
     if (ecs_is_alive(world, id) && !ecs_get_name(world, id)) {
         return id;
     }
+
     char name[32];
     ecs_os_snprintf(name, 32, "#%u", (uint32_t)id);
     return flecs_json_lookup(world, 0, name, desc);
@@ -206,12 +207,14 @@ static const char* flecs_json_deser_ids(
     } else if (!rel) {
         return flecs_json_expect(json, JsonArrayOpen, token, desc);
     }
+
     do {
         char *str = NULL;
         json = flecs_json_expect_string(json, token, &str, desc);
         if (!json) {
             return NULL;
         }
+
         ecs_entity_t target = flecs_json_lookup(world, 0, str, desc);
         if (str != token) ecs_os_free(str);
         ecs_id_t id = rel ? ecs_pair(rel, target) : target;
@@ -220,10 +223,12 @@ static const char* flecs_json_deser_ids(
         if (!array) {
             return json;
         }
+
         next = flecs_json_parse(json, &kind, token);
         if (kind != JsonComma) {
             return flecs_json_expect(json, JsonArrayClose, token, desc);
         }
+
         json = next;
     } while (json);
     return NULL;
@@ -242,10 +247,12 @@ static const char* flecs_json_deser_pairs(
     if (!json) {
         return NULL;
     }
+
     const char *next = flecs_json_parse(json, &kind, token);
     if (kind == JsonObjectClose) {
         return next;
     }
+
     json = flecs_json_expect_member(json, token, desc);
     while (json) {
         ecs_entity_t rel = flecs_json_lookup(world, 0, token, desc);
@@ -253,6 +260,7 @@ static const char* flecs_json_deser_pairs(
         if (!json) {
             return NULL;
         }
+
         json = flecs_json_parse_next_member(json, token, &kind, desc);
         if (kind == JsonObjectClose) {
             return json;
@@ -331,6 +339,7 @@ static const char* flecs_json_deser_components(
                     }
                 }
             }
+
             if (!next) {
                 if (!skip || !ti) {
                     flecs_json_missing_reflection(world, id, json, ctx, desc);
@@ -338,15 +347,18 @@ static const char* flecs_json_deser_components(
                         goto error;
                     }
                 }
+
                 json = flecs_parse_ws_eol(json);
                 next = flecs_json_skip_object(json + 1, token, desc);
                 if (!next) {
                     goto error;
                 }
+
                 if (!ti) {
                     ecs_add_id(world, e, id);
                 }
             }
+
             json = next;
         }
 
@@ -392,11 +404,13 @@ static const char* flecs_entity_from_json(
     if (!json) {
         goto error;
     }
+
     const char *next = flecs_json_parse(json, &token_kind, token);
     if (token_kind == JsonObjectClose) {
         json = next;
         goto end;
     }
+
     json = flecs_json_expect_member(json, token, desc);
     while (json) {
         int32_t field;
@@ -405,6 +419,7 @@ static const char* flecs_entity_from_json(
                 break;
             }
         }
+
         if (field == 8 ||
             (field == Version && previous != Id))
         {
@@ -412,13 +427,16 @@ static const char* flecs_entity_from_json(
                 "unexpected entity member '%s'", token);
             goto error;
         }
+
         if (!e && has_id && field > Version) {
             e = flecs_json_lookup_id(world, serialized_id, desc);
         }
+
         if (!e && field > Version) {
             ecs_parser_error(desc->name, expr, json - expr, "failed to create entity");
             goto error;
         }
+
         switch (field) {
         case Parent:
         case Name: {
@@ -434,6 +452,7 @@ static const char* flecs_entity_from_json(
                 else ecs_set_name(world, e, str);
                 ecs_vec_append_t(ctx->a, &ctx->ids, ecs_id_t)[0] = ecs_pair_t(EcsIdentifier, EcsName);
             }
+
             if (str != token) ecs_os_free(str);
             break;
         }
@@ -445,6 +464,7 @@ static const char* flecs_entity_from_json(
                 ecs_parser_error(desc->name, expr, json - expr, "expected %s", fields[field]);
                 goto error;
             }
+
             serialized_id |= flecs_ito(uint64_t, atoll(token)) << (field == Version ? 32 : 0);
             has_id = true;
             break;
@@ -481,6 +501,7 @@ end:
             qsort(ecs_vec_first(&ctx->ids), flecs_itosize(count),
                 sizeof(ecs_id_t), flecs_id_qsort_cmp);
         }
+
         ecs_record_t *r = flecs_entities_get(world, e);
         ecs_defer_begin(world);
         if (replace_table && r && r->table) {
@@ -494,6 +515,7 @@ end:
                 }
             }
         }
+
         if (r && (r->row & EcsEntityHasDontFragment)) {
             ecs_component_record_t *cr = world->cr_non_fragmenting_head;
             for (; cr; cr = cr->non_fragmenting.next) {
@@ -505,6 +527,7 @@ end:
                 }
             }
         }
+
         ecs_defer_end(world);
     }
 
@@ -605,6 +628,7 @@ const char* ecs_world_from_json(
                 ecs_parser_error(NULL, expr, json - expr, "expected ']'");
                 goto error;
             }
+
             break;
         }
     } while (true);

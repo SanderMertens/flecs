@@ -195,6 +195,7 @@ static void flecs_monitor_ctx_free(
     if (ctx->query) {
         ecs_query_fini(ctx->query);
     }
+
     ecs_os_free(ctx);
 }
 
@@ -228,6 +229,7 @@ void flecs_stats_api_import(
                 .flags = EcsQueryMatchDisabled
             });
         }
+
         ecs_system_desc_t desc = {
             .entity = ecs_entity(world, { .name = periods[i].name }),
             .phase = EcsPreFrame,
@@ -246,11 +248,13 @@ void flecs_stats_api_import(
             desc.query.terms[1].id = ecs_pair(kind, periods[i].source);
             desc.query.terms[1].src.id = EcsWorld;
         }
+
         ecs_entity_t system = ecs_system_init(world, &desc);
         if (i == 1) {
             minute = system;
         }
     }
+
     ecs_set_scope(world, prev);
     for (int32_t i = 0; i < 5; i ++) {
         ecs_add_pair(world, EcsWorld, kind, periods[i].period);
