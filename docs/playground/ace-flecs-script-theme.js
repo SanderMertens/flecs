@@ -99,6 +99,11 @@ function(require, exports, module) {
             position: absolute;
             background: color-mix(in srgb, var(--deprecated-color-hl) 12%, transparent);
         }
+        .ace-flecs-docs .pg-jump-line {
+            position: absolute;
+            background: var(--fl-accent-soft);
+            transition: opacity 0.3s ease;
+        }
         .ace-flecs-docs .pg-error-squiggle {
             position: absolute;
             background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3'%3E%3Cpath d='M 0 3 L 1.5 1 L 3 3 L 4.5 1 L 6 3' fill='none' stroke='%23ef4444' stroke-width='1'/%3E%3C/svg%3E") repeat-x left bottom;

@@ -71,6 +71,45 @@ void flecs_playground_key(
     });
 }
 
+/* Called by the page to set a component on an entity from a script
+ * expression, for example Position: {0, 0, 0} on a template preview. The
+ * component is looked up by name and the value deserialized through
+ * reflection, so the image does not depend on the type of the component. If
+ * the expression does not fit the type, the component keeps its default
+ * value. Returns 0 on success and -1 if the entity or component is missing. */
+EMSCRIPTEN_KEEPALIVE
+int flecs_playground_set(
+    const char *path,
+    const char *component,
+    const char *expr)
+{
+    ecs_world_t *world = playground_world;
+    if (!world || !path || !component) {
+        return -1;
+    }
+
+    ecs_entity_t e = ecs_lookup(world, path);
+    ecs_entity_t c = ecs_lookup(world, component);
+    if (!e || !c) {
+        return -1;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, c);
+    if (!ti || !ti->size) {
+        return -1;
+    }
+
+    void *ptr = ecs_ensure_id(world, e, c, (size_t)ti->size);
+    if (expr && expr[0]) {
+        int prev_log = ecs_log_set_level(-4);
+        ecs_expr_run(world, expr, &(ecs_value_t){ .type = c, .ptr = ptr }, NULL);
+        ecs_log_set_level(prev_log);
+    }
+
+    ecs_modified_id(world, e, c);
+    return 0;
+}
+
 static void playground_frame(void *world) {
     ecs_progress(world, 0);
 }
@@ -109,6 +148,8 @@ int main(void) {
         bridge.key = Module.cwrap("flecs_playground_key", null,
             "string number number number number number number".split(" "));
         bridge.request = Module.cwrap("flecs_explorer_request", "string",
+            "string string string".split(" "));
+        bridge.set = Module.cwrap("flecs_playground_set", "number",
             "string string string".split(" "));
         window.flecsPlayground = bridge;
     });

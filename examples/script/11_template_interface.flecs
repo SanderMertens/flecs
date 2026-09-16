@@ -1,5 +1,5 @@
 // This script shows how to use template inheritance to create a Building asset
-// with a configurable facade.
+// with a pluggable facade.
 
 using flecs.script
 
@@ -110,7 +110,7 @@ template RoofFacade : Facade {
 // The building template.
 template Building {
   // Accepts a list of types that inherit from Facade
-  prop facade: template Facade[]
+  prop facade: template Facade
   prop roof: template Facade = RoofFacade
   prop floors: i32 = 3
   prop floorHeight: f32 = 3
@@ -121,7 +121,7 @@ template Building {
       Position: {0, i * floorHeight, 0}
 
       // Select an element of the vector and instantiate it as a component
-      facade[i % facade.count()]: {height: floorHeight}
+      facade: {height: floorHeight}
     }
   }
 
@@ -154,11 +154,11 @@ template Building {
 }
 
 // A two-story building with a brick facade
-Building brick_house(facade: [BrickFacade], floors: 2, floorHeight: 2) {
+Building brick_house(facade: BrickFacade, floors: 2, floorHeight: 2) {
   Position: {-2.5, 0, 0}
 }
 
 // A tower that alternates between a glass and a brick facade
-Building glass_tower(facade: [GlassFacade, BrickFacade], floors: 3, floorHeight: 2.5) {
+Building glass_tower(facade: GlassFacade, floors: 3, floorHeight: 2.5) {
   Position: {2.5, 0, 0}
 }
