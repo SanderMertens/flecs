@@ -37,6 +37,10 @@ static bool flecs_keyword_boundary(
         return true;
     }
 
+    if (pos[0] == '[') {
+        return true;
+    }
+
     if (flecs_is_comment(pos)) {
         return true;
     }

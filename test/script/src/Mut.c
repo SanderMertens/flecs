@@ -33,7 +33,9 @@ void Mut_declaration(void) {
     test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type,
         ecs_id(ecs_i32_t));
 
-    test_assert(ecs_get(world, foo, EcsStruct) == NULL);
+    st = ecs_get(world, foo, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 0);
 
     ecs_fini(world);
 }

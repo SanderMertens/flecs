@@ -2100,3 +2100,72 @@ void StructInheritance_assign_unrelated_struct_prop_fails(void) {
 
     ecs_fini(world);
 }
+
+void StructInheritance_empty_base(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Facade()"
+    LINE "struct Brick : Facade(height: f32)"
+    LINE "e { Brick: {height: 2} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t facade = ecs_lookup(world, "Facade");
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    test_assert(facade != 0);
+    test_assert(brick != 0);
+    test_assert(ecs_has_pair(world, brick, EcsIsA, facade));
+
+    const EcsComponent *c = ecs_get(world, facade, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 1);
+    test_int(c->alignment, 1);
+
+    const EcsStruct *st = ecs_get(world, brick, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 1);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "height");
+
+    c = ecs_get(world, brick, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(float));
+    test_int(c->alignment, ECS_ALIGNOF(float));
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const float *v = ecs_get_id(world, e, brick);
+    test_assert(v != NULL);
+    test_flt(v[0], 2);
+    test_assert(!ecs_has_id(world, e, facade));
+
+    ecs_fini(world);
+}
+
+void StructInheritance_empty_base_empty_derived(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Facade()"
+    LINE "struct Brick : Facade()"
+    LINE "e { Brick }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t facade = ecs_lookup(world, "Facade");
+    ecs_entity_t brick = ecs_lookup(world, "Brick");
+    test_assert(facade != 0);
+    test_assert(brick != 0);
+    test_assert(ecs_has_pair(world, brick, EcsIsA, facade));
+
+    const EcsComponent *c = ecs_get(world, brick, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 1);
+    test_int(c->alignment, 1);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, brick));
+
+    ecs_fini(world);
+}

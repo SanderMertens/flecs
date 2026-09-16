@@ -3190,23 +3190,6 @@ void Error_struct_member_huge_count(void) {
     ecs_fini(world);
 }
 
-void Error_struct_wo_members(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "using flecs.meta"
-    LINE "struct Position()";
-
-    ecs_log_set_level(-4);
-    ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
-    test_assert(result.error != NULL);
-    test_assert(strstr(result.error, "at least one member") != NULL);
-    ecs_os_free(result.error);
-
-    ecs_fini(world);
-}
-
 void Error_struct_member_wo_name(void) {
     ecs_world_t *world = ecs_init();
 

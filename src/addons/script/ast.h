@@ -79,7 +79,6 @@ typedef struct ecs_script_id_t {
      * stack pointers so we don't have to lookup variables by name. */
     int32_t first_sp; 
     int32_t second_sp;
-    int32_t value_sp;
     int32_t first_symbol;
     int32_t second_symbol;
 
@@ -196,6 +195,7 @@ typedef struct ecs_script_var_node_t {
     int32_t symbol;
     /* 0 if not cached, otherwise computed slot index + 1 */
     int32_t computed;
+    int32_t base_member;
     bool is_await;
 } ecs_script_var_node_t;
 

@@ -20,6 +20,7 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprGlobalVariable,
     EcsExprFunction,
     EcsExprMethod,
+    EcsExprTemplate,
     EcsExprMember,
     EcsExprSwizzle,
     EcsExprElement,

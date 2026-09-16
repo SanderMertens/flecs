@@ -966,11 +966,20 @@ void TemplateInheritance_derived_prop_same_name_as_base(void) {
     LINE "}"
     LINE "template Derived : Base {"
     LINE "  prop x: f32 = 5"
-    LINE "}";
+    LINE "}"
+    LINE "e { Derived: {} }";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-    ecs_log_set_level(-1);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t derived = ecs_lookup(world, "Derived");
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 1);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    const float *v = ecs_get_id(world, e, derived);
+    test_assert(v != NULL);
+    test_flt(v[0], 5);
 
     ecs_fini(world);
 }
@@ -1684,6 +1693,228 @@ void TemplateInheritance_derived_from_template_w_captured_const(void) {
     test_assert(p != NULL);
     test_flt(p->x, 110);
     test_flt(p->y, 30);
+
+    ecs_fini(world);
+}
+
+void TemplateInheritance_derived_prop_override_base_default(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Base {"
+    LINE "  prop x: f32 = 1"
+    LINE "  prop y: f32 = 2"
+    LINE "}"
+    LINE "template Derived : Base {"
+    LINE "  prop x: f32 = 5"
+    LINE "  prop z: f32 = 3"
+    LINE "}"
+    LINE "b { Base: {} }"
+    LINE "e { Derived: {} }"
+    LINE "f { Derived: {x: 10} }"
+    LINE "g { Derived: {y: 20, z: 30} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    ecs_entity_t derived = ecs_lookup(world, "Derived");
+    test_assert(base != 0);
+    test_assert(derived != 0);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 12);
+
+    const PositionBase *pb = ecs_get_id(world, ecs_lookup(world, "b"), base);
+    test_assert(pb != NULL);
+    test_flt(pb->x, 1);
+    test_flt(pb->y, 2);
+
+    const Position3D *v = ecs_get_id(world, ecs_lookup(world, "e"), derived);
+    test_assert(v != NULL);
+    test_flt(v->x, 5);
+    test_flt(v->y, 2);
+    test_flt(v->z, 3);
+
+    v = ecs_get_id(world, ecs_lookup(world, "f"), derived);
+    test_assert(v != NULL);
+    test_flt(v->x, 10);
+    test_flt(v->y, 2);
+    test_flt(v->z, 3);
+
+    v = ecs_get_id(world, ecs_lookup(world, "g"), derived);
+    test_assert(v != NULL);
+    test_flt(v->x, 5);
+    test_flt(v->y, 20);
+    test_flt(v->z, 30);
+
+    ecs_fini(world);
+}
+
+void TemplateInheritance_derived_prop_override_struct_default(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Rgb(r: f32, g: f32, b: f32)"
+    LINE "template Theme {"
+    LINE "  prop panel: Rgb = {0.1, 0.2, 0.3}"
+    LINE "  child { Rgb: {$panel.r, $panel.g, $panel.b} }"
+    LINE "}"
+    LINE "template Light : Theme {"
+    LINE "  prop panel: Rgb = {1, 2, 3}"
+    LINE "  child { Rgb: {$panel.r, $panel.g, $panel.b} }"
+    LINE "}"
+    LINE "Theme t"
+    LINE "Light l"
+    LINE "Light m(panel: {4, 5, 6})";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t rgb = ecs_lookup(world, "Rgb");
+    ecs_entity_t light = ecs_lookup(world, "Light");
+    test_assert(rgb != 0);
+    test_assert(light != 0);
+
+    const float *v = ecs_get_id(world, ecs_lookup(world, "t.child"), rgb);
+    test_assert(v != NULL);
+    test_flt(v[0], 0.1);
+    test_flt(v[1], 0.2);
+    test_flt(v[2], 0.3);
+
+    v = ecs_get_id(world, ecs_lookup(world, "l"), light);
+    test_assert(v != NULL);
+    test_flt(v[0], 1);
+    test_flt(v[1], 2);
+    test_flt(v[2], 3);
+
+    v = ecs_get_id(world, ecs_lookup(world, "l.child"), rgb);
+    test_assert(v != NULL);
+    test_flt(v[0], 1);
+    test_flt(v[1], 2);
+    test_flt(v[2], 3);
+
+    v = ecs_get_id(world, ecs_lookup(world, "m.child"), rgb);
+    test_assert(v != NULL);
+    test_flt(v[0], 4);
+    test_flt(v[1], 5);
+    test_flt(v[2], 6);
+
+    ecs_fini(world);
+}
+
+void TemplateInheritance_derived_prop_override_used_in_body(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "template Base {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template Derived : Base {"
+    LINE "  prop x: f32 = 5"
+    LINE "  prop z: f32 = $x * 2"
+    LINE "  child { Position: {$x, $z} }"
+    LINE "}"
+    LINE "Derived e"
+    LINE "Derived f(x: 7)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionBase *p = ecs_get_id(
+        world, ecs_lookup(world, "e.child"), position);
+    test_assert(p != NULL);
+    test_flt(p->x, 5);
+    test_flt(p->y, 10);
+
+    p = ecs_get_id(world, ecs_lookup(world, "f.child"), position);
+    test_assert(p != NULL);
+    test_flt(p->x, 7);
+    test_flt(p->y, 10);
+
+    ecs_fini(world);
+}
+
+void TemplateInheritance_derived_prop_override_chain(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template A {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template B : A {"
+    LINE "  prop x: f32 = 2"
+    LINE "}"
+    LINE "template C : B {"
+    LINE "  prop x: f32 = 3"
+    LINE "}"
+    LINE "template D : B {"
+    LINE "}"
+    LINE "a { A: {} }"
+    LINE "b { B: {} }"
+    LINE "c { C: {} }"
+    LINE "d { D: {} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    const float *v = ecs_get_id(
+        world, ecs_lookup(world, "a"), ecs_lookup(world, "A"));
+    test_assert(v != NULL);
+    test_flt(v[0], 1);
+
+    v = ecs_get_id(world, ecs_lookup(world, "b"), ecs_lookup(world, "B"));
+    test_assert(v != NULL);
+    test_flt(v[0], 2);
+
+    v = ecs_get_id(world, ecs_lookup(world, "c"), ecs_lookup(world, "C"));
+    test_assert(v != NULL);
+    test_flt(v[0], 3);
+
+    v = ecs_get_id(world, ecs_lookup(world, "d"), ecs_lookup(world, "D"));
+    test_assert(v != NULL);
+    test_flt(v[0], 2);
+
+    ecs_fini(world);
+}
+
+void TemplateInheritance_derived_prop_override_wrong_type_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Base {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template Derived : Base {"
+    LINE "  prop x: i32 = 5"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void TemplateInheritance_derived_prop_override_no_default_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Base {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template Derived : Base {"
+    LINE "  prop x: f32"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+    ecs_log_set_level(-1);
 
     ecs_fini(world);
 }

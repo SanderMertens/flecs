@@ -134,11 +134,29 @@ static void flecs_expr_function_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_function_t *node)
 {
-    if (node->left) {
+    if (!node->function_name) {
         flecs_expr_node_to_str(v, node->left);
-        ecs_strbuf_appendlit(v->buf, ".");
+        ecs_strbuf_appendlit(v->buf, "(");
+    } else {
+        if (node->left) {
+            flecs_expr_node_to_str(v, node->left);
+            ecs_strbuf_appendlit(v->buf, ".");
+        }
+
+        ecs_strbuf_append(v->buf, "%s(", node->function_name);
     }
 
+    if (node->args) {
+        flecs_expr_node_to_str(v, (ecs_expr_node_t*)node->args);
+    }
+
+    ecs_strbuf_append(v->buf, ")");
+}
+
+static void flecs_expr_template_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_function_t *node)
+{
     ecs_strbuf_append(v->buf, "%s(", node->function_name);
 
     if (node->args) {
@@ -305,6 +323,10 @@ static void flecs_expr_node_to_str(
     case EcsExprFunction:
     case EcsExprMethod:
         flecs_expr_function_to_str(v,
+            (const ecs_expr_function_t*)node);
+        break;
+    case EcsExprTemplate:
+        flecs_expr_template_to_str(v,
             (const ecs_expr_function_t*)node);
         break;
     case EcsExprMember:

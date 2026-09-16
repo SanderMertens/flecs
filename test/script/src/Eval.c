@@ -24433,3 +24433,40 @@ void Eval_mut_assign_missing_expr_fails(void) {
 
     ecs_fini(world);
 }
+
+void Eval_struct_wo_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Facade()"
+    LINE "e { Facade }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t facade = ecs_lookup(world, "Facade");
+    test_assert(facade != 0);
+
+    const EcsStruct *st = ecs_get(world, facade, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 0);
+
+    const EcsComponent *c = ecs_get(world, facade, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 1);
+    test_int(c->alignment, 1);
+
+    const EcsType *t = ecs_get(world, facade, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, facade));
+
+    char dummy = 0;
+    char *str = ecs_ptr_to_expr(world, facade, &dummy);
+    test_str(str, "{}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}

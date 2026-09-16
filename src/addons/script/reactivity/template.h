@@ -20,7 +20,6 @@ typedef struct ecs_script_template_member_t {
     int32_t sp;
     uint64_t input;
     bool is_mut;
-    bool is_template;
     bool is_vector;
     ecs_entity_t interface;
 
@@ -156,6 +155,11 @@ ecs_entity_t flecs_script_template_member_interface(
     const ecs_script_template_t *template,
     int32_t sp);
 
+ecs_entity_t flecs_script_template_prop_interface(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const char *member);
+
 bool flecs_script_template_member_is_vector(
     const ecs_script_template_t *template,
     int32_t sp);
@@ -165,9 +169,25 @@ bool flecs_script_template_interface_accepts(
     ecs_entity_t value,
     ecs_entity_t interface);
 
-bool flecs_script_template_member_is_template(
-    const ecs_script_template_t *template,
-    int32_t sp);
+char* flecs_script_template_expected_str(
+    const ecs_world_t *world,
+    ecs_entity_t interface);
+
+void flecs_script_template_ref_clear(
+    ecs_world_t *world,
+    ecs_script_template_ref_t *ref);
+
+void flecs_script_template_ref_set(
+    ecs_world_t *world,
+    ecs_script_template_ref_t *ref,
+    ecs_entity_t type,
+    void *value);
+
+int flecs_script_template_ref_apply(
+    ecs_world_t *world,
+    const ecs_script_template_ref_t *ref,
+    const ecs_type_info_t *ti,
+    void *dst);
 
 int flecs_script_template_update_vars(
     ecs_script_eval_visitor_t *v,

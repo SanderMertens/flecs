@@ -36,6 +36,7 @@ typedef struct ecs_script_eval_visitor_t {
     int32_t scope_slot;
     int32_t for_slot;
     bool force;
+    const ecs_script_template_ref_t *id_ref;
 } ecs_script_eval_visitor_t;
 
 int flecs_script_eval(
@@ -455,11 +456,6 @@ int flecs_script_vector_prop_elem(
     ecs_entity_t *out,
     int32_t *count_out);
 
-const ecs_script_var_t* flecs_script_template_prop_var(
-    ecs_script_eval_visitor_t *v,
-    const void *node,
-    int32_t sp,
-    ecs_id_t id);
 
 bool flecs_script_scope_visited(
     ecs_script_eval_visitor_t *v,

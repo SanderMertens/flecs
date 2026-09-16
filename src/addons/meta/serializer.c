@@ -28,8 +28,7 @@ static int flecs_meta_serialize_scope(
         ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_member_t *members = ecs_vec_first(&st->members);
         int32_t count = ecs_vec_count(&st->members);
-        ecs_hashmap_t *index = count ?
-            flecs_name_index_new(&world->allocator) : NULL;
+        ecs_hashmap_t *index = flecs_name_index_new(&world->allocator);
         ecs_vec_get_t(ops, ecs_meta_op_t, first)->is.members = index;
         for (int32_t i = 0; i < count; i ++) {
             ecs_member_t *m = &members[i];

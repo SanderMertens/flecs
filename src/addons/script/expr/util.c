@@ -74,6 +74,20 @@ int flecs_value_copy_to(
         ecs_assert(src->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_ptr_copy_w_type_info(
             world, src->type_info, dst->ptr, src->value.ptr);
+    } else if (src->value.type == ecs_id(ecs_script_template_ref_t) &&
+        ecs_has(world, dst->type, EcsStruct))
+    {
+        const ecs_script_template_ref_t *ref = src->value.ptr;
+        const ecs_type_info_t *ti = ecs_get_type_info(world, dst->type);
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (ref->value) {
+            ecs_ptr_copy_w_type_info(world, ti, dst->ptr, ref->value);
+        } else {
+            ecs_entity_t type = ref->type ? ref->type : dst->type;
+            void *defaults = ecs_ptr_new(world, type);
+            ecs_ptr_copy_w_type_info(world, ti, dst->ptr, defaults);
+            ecs_ptr_free(world, type, defaults);
+        }
     } else if (src->value.type == ecs_id(ecs_bool_t) &&
         flecs_value_bool_to_number(dst, *(const bool*)src->value.ptr))
     {

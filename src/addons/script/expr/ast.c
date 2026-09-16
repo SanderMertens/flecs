@@ -327,6 +327,12 @@ bool flecs_expr_explicit_cast_allowed(
         return true;
     }
 
+    if (from == ecs_id(ecs_script_template_ref_t) &&
+        ecs_has(world, to, EcsStruct))
+    {
+        return true;
+    }
+
     /* Any type can be cast to and from a value */
     if (to == ecs_id(ecs_value_t) || from == ecs_id(ecs_value_t)) {
         return true;
@@ -492,7 +498,8 @@ int flecs_expr_visit_children(
     case EcsExprIdentifier:
         return action(&((ecs_expr_identifier_t*)node)->expr, ctx);
     case EcsExprFunction:
-    case EcsExprMethod: {
+    case EcsExprMethod:
+    case EcsExprTemplate: {
         ecs_expr_function_t *n = (ecs_expr_function_t*)node;
         ecs_expr_node_t *args = (ecs_expr_node_t*)n->args;
         if (action(&n->left, ctx) || action(&args, ctx))

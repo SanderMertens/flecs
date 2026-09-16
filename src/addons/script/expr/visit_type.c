@@ -1347,6 +1347,32 @@ static int flecs_expr_initializer_visit_type(
             goto error;
         }
 
+        if (elem_type == ecs_id(ecs_script_template_ref_t) &&
+            elem->value->type == ecs_id(ecs_script_template_ref_t))
+        {
+            const ecs_expr_variable_t *var = flecs_expr_template_ref_var(
+                elem->value);
+            ecs_script_eval_visitor_t *v = desc ? desc->script_visitor : NULL;
+            ecs_entity_t value_interface = var && v
+                ? flecs_script_template_member_interface(v->template, var->sp)
+                : 0;
+            ecs_entity_t member_interface =
+                flecs_script_template_prop_interface(script->world,
+                    cur->scope[cur->depth].type, ecs_meta_get_member(cur));
+            if (value_interface && member_interface &&
+                !flecs_script_template_interface_accepts(
+                    script->world, value_interface, member_interface))
+            {
+                char *expected = flecs_script_template_expected_str(
+                    script->world, member_interface);
+                flecs_expr_visit_error(script, elem->value,
+                    "'%s' passed to template prop '%s' is not %s",
+                    var->name, ecs_meta_get_member(cur), expected);
+                ecs_os_free(expected);
+                goto error;
+            }
+        }
+
         if (elem->value->type != elem_type) {
             bool array_assign = false;
             if (!elem->operator) {
@@ -1901,7 +1927,7 @@ static int flecs_expr_identifier_visit_type(
                 if (!type || type == ecs_id(ecs_value_t)) {
                     type = ecs_id(ecs_entity_t);
                 } else if (!flecs_expr_is_entity_type(
-                    script->world, type, &is_opaque) || is_opaque)
+                    script->world, type, &is_opaque))
                 {
                     char *type_str = ecs_get_path(script->world, type);
                     flecs_expr_visit_error(script, node,
@@ -2309,6 +2335,121 @@ static int flecs_expr_populate_vector_calldata(
     return -1;
 }
 
+const ecs_expr_variable_t* flecs_expr_template_ref_var(
+    const ecs_expr_node_t *left)
+{
+    if (!left || left->type != ecs_id(ecs_script_template_ref_t)) {
+        return NULL;
+    }
+
+    if (left->kind == EcsExprIdentifier) {
+        left = ((const ecs_expr_identifier_t*)left)->expr;
+    }
+
+    if (left && left->kind == EcsExprVariable) {
+        return (const ecs_expr_variable_t*)left;
+    }
+
+    return NULL;
+}
+
+static int flecs_expr_template_visit_type(
+    ecs_script_t *script,
+    ecs_expr_function_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_world_t *world = script->world;
+    ecs_entity_t tmpl = 0;
+    const ecs_expr_variable_t *var = flecs_expr_template_ref_var(node->left);
+    if (var) {
+        ecs_script_eval_visitor_t *v = desc ? desc->script_visitor : NULL;
+        tmpl = flecs_script_template_member_interface(
+            v ? v->template : NULL, var->sp);
+    } else {
+        flecs_script_symbol_t symbol;
+        if (flecs_script_symbol_lookup(script, desc, 0, node->function_name,
+            FlecsScriptLookupEntity, &symbol) || !symbol.entity)
+        {
+            flecs_expr_visit_error(script, node,
+                "unresolved template identifier '%s'", node->function_name);
+            goto error;
+        }
+
+        tmpl = symbol.entity;
+        const EcsScript *tmpl_script = ecs_get(world, tmpl, EcsScript);
+        if (!tmpl_script || !tmpl_script->template_) {
+            flecs_expr_visit_error(script, node,
+                "'%s' is not a template", node->function_name);
+            goto error;
+        }
+    }
+
+    ecs_entity_t target = cur->valid ? ecs_meta_get_type(cur) : 0;
+    bool is_ref = var || target == ecs_id(ecs_script_template_ref_t);
+    const ecs_type_info_t *ti = tmpl ? ecs_get_type_info(world, tmpl) : NULL;
+
+    node->node.kind = EcsExprTemplate;
+    node->calldata.function = tmpl;
+    node->node.type = is_ref ? ecs_id(ecs_script_template_ref_t) : tmpl;
+
+    ecs_expr_initializer_t *args = node->args;
+    ecs_assert(args != NULL, ECS_INTERNAL_ERROR, NULL);
+    args->is_partial = true;
+    int32_t i, count = ecs_vec_count(&args->elements);
+    if (!count) {
+        if (!is_ref && !ti) {
+            flecs_expr_visit_error(script, node,
+                "template '%s' has no props, cannot use as value",
+                node->function_name);
+            goto error;
+        }
+
+        args->node.type = tmpl;
+        args->node.type_info = ti;
+        return 0;
+    }
+
+    if (!tmpl) {
+        flecs_expr_visit_error(script, node,
+            "cannot pass arguments to template prop '%s' without interface",
+            node->function_name);
+        goto error;
+    }
+
+    const EcsStruct *st = ecs_get(world, tmpl, EcsStruct);
+    int32_t member_count = st ? ecs_vec_count(&st->members) : 0;
+    const ecs_member_t *members = st ? ecs_vec_first(&st->members) : NULL;
+    int32_t positional = 0;
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&args->elements);
+    for (i = 0; i < count; i ++) {
+        ecs_expr_initializer_element_t *elem = &elems[i];
+        if (elem->member || elem->key) {
+            continue;
+        }
+
+        if (positional >= member_count) {
+            flecs_expr_visit_error(script, node,
+                "too many arguments for template '%s'", node->function_name);
+            goto error;
+        }
+
+        elem->member = members[positional ++].name;
+    }
+
+    ecs_meta_cursor_t args_cur = ecs_meta_cursor(world, tmpl, NULL);
+    if (flecs_expr_visit_type_priv(
+        script, (ecs_expr_node_t**)&node->args, &args_cur, desc))
+    {
+        goto error;
+    }
+
+    ecs_assert(node->args->node.type == tmpl, ECS_INTERNAL_ERROR, NULL);
+    return 0;
+error:
+    return -1;
+}
+
 static int flecs_expr_function_visit_type(
     ecs_script_t *script,
     ecs_expr_function_t *node,
@@ -2357,10 +2498,16 @@ static int flecs_expr_function_visit_type(
 
     /* Left of function expression should not inherit lvalue type, since the
      * function return type is what's going to be assigned. */
+    ecs_meta_cursor_t target_cur = *cur;
     ecs_os_zeromem(cur);
 
     if (flecs_expr_visit_type_priv(script, &node->left, cur, desc)) {
         goto error;
+    }
+
+    if (!is_method && flecs_expr_template_ref_var(node->left)) {
+        return flecs_expr_template_visit_type(
+            script, node, &target_cur, desc);
     }
 
     ecs_world_t *world = script->world;
@@ -2457,6 +2604,12 @@ try_function:
         }
 
         ecs_entity_t func = symbol.entity;
+
+        const EcsScript *tmpl_script = ecs_get(world, func, EcsScript);
+        if (tmpl_script && tmpl_script->template_) {
+            return flecs_expr_template_visit_type(
+                script, node, &target_cur, desc);
+        }
 
         func_data = ecs_get(world, func, EcsScriptFunction);
         if (!func_data) {
@@ -2672,6 +2825,29 @@ static int flecs_expr_member_visit_type(
 
     ecs_world_t *world = script->world;
     ecs_entity_t left_type = node->left->type;
+
+    if (left_type == ecs_id(ecs_script_template_ref_t)) {
+        const ecs_expr_variable_t *var = flecs_expr_template_ref_var(
+            node->left);
+        ecs_script_eval_visitor_t *v = desc ? desc->script_visitor : NULL;
+        ecs_entity_t interface = var ? flecs_script_template_member_interface(
+            v ? v->template : NULL, var->sp) : 0;
+        if (!interface || !ecs_has(world, interface, EcsStruct)) {
+            flecs_expr_visit_error(script, node,
+                "cannot resolve member '%s' on template prop without "
+                "interface", node->member_name);
+            goto error;
+        }
+
+        ecs_expr_cast_t *cast = flecs_expr_cast(script, node->left, interface);
+        if (!cast) {
+            goto error;
+        }
+
+        node->left = (ecs_expr_node_t*)cast;
+        left_type = interface;
+        *cur = ecs_meta_cursor(world, interface, NULL);
+    }
 
     const EcsType *type = ecs_get(world, left_type, EcsType);
     if (!type) {
@@ -3371,6 +3547,13 @@ static int flecs_expr_visit_type_ex(
     case EcsExprFunction:
         if (flecs_expr_function_visit_type(
             script, (ecs_expr_function_t*)node, cur, desc)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprTemplate:
+        if (flecs_expr_template_visit_type(
+            script, (ecs_expr_function_t*)node, cur, desc))
         {
             goto error;
         }

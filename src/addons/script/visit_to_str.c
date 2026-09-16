@@ -260,7 +260,11 @@ static void flecs_script_stmt_to_str(
     case EcsAstProp:
     case EcsAstMut: {
         ecs_script_var_node_t *stmt = (ecs_script_var_node_t*)node;
-        if (stmt->type) {
+        if (stmt->type_is_template && !stmt->type) {
+            flecs_scriptbuf_append(v, "%s : template%s = ",
+                stmt->name,
+                stmt->type_is_vector ? "[]" : "");
+        } else if (stmt->type) {
             flecs_scriptbuf_append(v, "%s : %s%s%s = ",
                 stmt->name,
                 stmt->type_is_template ? "template " : "",
