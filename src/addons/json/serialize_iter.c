@@ -155,6 +155,7 @@ static void flecs_json_serialize_query_profile(
         if (!i || time_measure < eval_min) {
             eval_min = time_measure;
         }
+
         if (time_measure > eval_max) {
             eval_max = time_measure;
         }
@@ -178,6 +179,7 @@ static void flecs_json_serialize_query_profile(
         flecs_json_memberl(buf, "eval_count");
         flecs_json_number(buf, it->query->eval_count);
     }
+
     flecs_json_memberl(buf, "result_count");
     flecs_json_number(buf, result_count);
     flecs_json_memberl(buf, "entity_count");
@@ -224,6 +226,7 @@ static void flecs_json_accum_query_term_type_info(
         if (term->inout == EcsInOutNone) {
             continue;
         }
+
         ecs_entity_t typeid = ecs_get_typeid(world, term->id);
         if (typeid) {
             flecs_json_accum_type_info(world, typeid, ser_ctx);

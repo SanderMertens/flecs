@@ -182,6 +182,7 @@ void flecs_query_iter_constrain(
                 EcsIterTrivialSearch;
             it->flags |= EcsIterCached;
         }
+
         return;
     }
 #endif
@@ -287,8 +288,10 @@ void flecs_query_op_ctx_fini(
             } else {
                 flecs_query_up_cache_fini(cache);
             }
+
             flecs_free_t(a, ecs_query_up_impl_t, impl);
         }
+
         break;
     }
     default:
@@ -690,6 +693,7 @@ ecs_iter_t flecs_query_iter(
     if (var_count) {
         qit->vars = flecs_iter_calloc_n(&it, ecs_var_t, var_count);
     }
+
     qit->written = flecs_iter_calloc_n(&it, ecs_write_flags_t, op_count);
 
     if (impl->ops || !impl->cache) {
@@ -756,6 +760,7 @@ int flecs_query_trivial_has_range(
         if (type_mismatch) {
             *type_mismatch = true;
         }
+
         return 0;
     }
 
@@ -800,6 +805,7 @@ int flecs_query_trivial_has_range(
         if (!(terms[t].src.id & EcsSelf)) {
             tr = NULL;
         }
+
         ecs_entity_t source = 0;
         if (!tr && up) {
             ecs_table_record_t *base_tr = NULL;
@@ -812,11 +818,14 @@ int flecs_query_trivial_has_range(
             if (type_mismatch && !source && (is_not || !up)) {
                 *type_mismatch = true;
             }
+
             return 0;
         }
+
         if (source && !isa_ok) {
             goto not_trivial;
         }
+
         term_trs[t] = tr;
         term_srcs[t] = source;
         any_from_base |= source != 0;
@@ -850,6 +859,7 @@ int flecs_query_trivial_has_range(
         if (!term_trs[t]) {
             continue;
         }
+
         lit.trs[field_index] = term_trs[t];
         if (term_srcs[t]) {
             lit.sources[field_index] = term_srcs[t];

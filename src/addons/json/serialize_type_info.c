@@ -88,6 +88,7 @@ static int flecs_json_typeinfo_ser_unit(
             flecs_json_memberl(str, "symbol");
             flecs_json_string(str, uptr->symbol);
         }
+
         ecs_entity_t quantity = ecs_get_target(world, unit, EcsQuantity, 0);
         if (quantity) {
             flecs_json_memberl(str, "quantity");
@@ -132,11 +133,14 @@ static int flecs_json_typeinfo_ser_scope(
             flecs_json_member(str, child->name);
             member = ecs_vec_get_t(&st->members, ecs_member_t, child->member_index);
         }
+
         if (flecs_json_typeinfo_ser_op(world, child, member, str)) {
             return -1;
         }
+
         i += child->op_count;
     }
+
     ecs_entity_t unit = ecs_get_target_for(world, op->type, EcsIsA, EcsUnit);
     if (unit) {
         flecs_json_member(str, "@self");
@@ -146,6 +150,7 @@ static int flecs_json_typeinfo_ser_scope(
         flecs_json_object_pop(str);
         flecs_json_array_pop(str);
     }
+
     return 0;
 }
 
@@ -158,17 +163,20 @@ static int flecs_json_typeinfo_ser_op(
     if (op->kind == EcsOpForward) {
         return flecs_json_typeinfo_ser_type(world, op->type, str);
     }
+
     if (op->kind == EcsOpOpaqueStruct || op->kind == EcsOpOpaqueArray ||
         op->kind == EcsOpOpaqueVector || op->kind == EcsOpOpaqueValue)
     {
         const EcsOpaque *ct = ecs_get(world, op->type, EcsOpaque);
         return flecs_json_typeinfo_ser_type(world, ct->as_type, str);
     }
+
     if (op->kind == EcsOpPushStruct) {
         flecs_json_object_push(str);
         if (flecs_json_typeinfo_ser_scope(world, op, str)) {
             return -1;
         }
+
         flecs_json_object_pop(str);
         return 0;
     }
@@ -182,13 +190,16 @@ static int flecs_json_typeinfo_ser_op(
         if (key.kind == EcsOpEnum || key.kind == EcsOpBitmask) {
             key.type = ecs_get(world, op->type, EcsMap)->key_type;
         }
+
         if (flecs_json_typeinfo_ser_op(world, &key, NULL, str)) {
             return -1;
         }
+
         flecs_json_next(str);
         if (flecs_json_typeinfo_ser_scope(world, op, str)) {
             return -1;
         }
+
         break;
     }
     case EcsOpPushArray:
@@ -199,9 +210,11 @@ static int flecs_json_typeinfo_ser_op(
         if (flecs_json_typeinfo_ser_scope(world, op, str)) {
             return -1;
         }
+
         if (op->kind == EcsOpPushArray) {
             ecs_strbuf_list_append(str, "%u", ecs_meta_op_get_elem_count(op, NULL));
         }
+
         break;
     case EcsOpPushValue:
         ecs_strbuf_list_appendstr(str, "\"value\"");
@@ -231,18 +244,23 @@ static int flecs_json_typeinfo_ser_op(
             if (member->unit) {
                 flecs_json_typeinfo_ser_unit(world, str, member->unit);
             }
+
             if (value_range) {
                 flecs_json_typeinfo_ser_range(str, "range", &member->range);
             }
+
             if (error_range) {
                 flecs_json_typeinfo_ser_range(str, "error_range", &member->error_range);
             }
+
             if (warning_range) {
                 flecs_json_typeinfo_ser_range(str, "warning_range", &member->warning_range);
             }
+
             flecs_json_object_pop(str);
         }
     }
+
     flecs_json_array_pop(str);
     return 0;
 }
@@ -257,6 +275,7 @@ static int flecs_json_typeinfo_ser_type(
         ecs_strbuf_appendch(buf, '0');
         return 0;
     }
+
     return flecs_json_typeinfo_ser_op(world, ecs_vec_first(&ser->ops), NULL, buf);
 }
 

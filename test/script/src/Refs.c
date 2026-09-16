@@ -7475,15 +7475,6 @@ void Refs_wait_for_has_unresolved_entity(void) {
     ecs_fini(world);
 }
 
-static int32_t refs_count_children(ecs_world_t *world, ecs_entity_t parent) {
-    int32_t result = 0;
-    ecs_iter_t it = ecs_children(world, parent);
-    while (ecs_children_next(&it)) {
-        result += it.count;
-    }
-    return result;
-}
-
 void Refs_has_ref_resolve_observer_on_add(void) {
     ecs_world_t *world = ecs_init();
 
@@ -7517,12 +7508,24 @@ void Refs_has_ref_resolve_observer_on_add(void) {
     test_assert(s != 0);
 
     test_assert(ecs_lookup(world, "foo") == 0);
-    test_int(refs_count_children(world, s), 2);
+
+    int32_t result = 0;
+    ecs_iter_t it = ecs_children(world, s);
+    while (ecs_children_next(&it)) {
+        result += it.count;
+    }
+    test_int(result, 2);
 
     ecs_add(world, e, Position);
 
     test_assert(ecs_lookup(world, "foo") == 0);
-    test_int(refs_count_children(world, s), 1);
+
+    result = 0;
+    it = ecs_children(world, s);
+    while (ecs_children_next(&it)) {
+        result += it.count;
+    }
+    test_int(result, 1);
 
     ecs_entity(world, { .name = "Bar" });
 

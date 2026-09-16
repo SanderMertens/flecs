@@ -83,10 +83,12 @@ ecs_event_record_t* flecs_event_record_ensure(
     if (er) {
         return er;
     }
+
     er = flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
     if (!er) {
         er = flecs_sparse_ensure_t(&o->events, ecs_event_record_t, event, NULL);
     }
+
     er->event = event;
     return er;
 }
@@ -102,12 +104,15 @@ static const ecs_event_record_t* flecs_event_record_get_if(
         if (ecs_map_is_init(&er->event_ids)) {
             return er;
         }
+
         if (er->any) {
             return er;
         }
+
         if (er->wildcard) {
             return er;
         }
+
         if (er->wildcard_pair) {
             return er;
         }
@@ -131,6 +136,7 @@ ecs_event_id_record_t* flecs_event_id_record_get(
         if (er->event_ids_filter & (1llu << (id % 64))) {
             return ecs_map_get_deref(&er->event_ids, ecs_event_id_record_t, id);
         }
+
         return NULL;
     }
 }
@@ -232,10 +238,12 @@ static int32_t flecs_event_observers_get(
                 iders[count] = flecs_event_id_record_get_if(er, id_fwc);
                 count += iders[count] != 0;
             }
+
             if (id_swc != id) {
                 iders[count] = flecs_event_id_record_get_if(er, id_swc);
                 count += iders[count] != 0;
             }
+
             if (id_pwc != id) {
                 iders[count] = flecs_event_id_record_get_if(er, id_pwc);
                 count += iders[count] != 0;
@@ -394,6 +402,7 @@ static void flecs_emit_propagate_id(
                             .count = 1
                         });
             }
+
             it->event_cur = event_cur;
         }
 
@@ -760,6 +769,7 @@ static void flecs_reachable_cache_ensure(
                     cur = flecs_components_get(world, ecs_childof(parent->value));
                     ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
                 }
+
                 flecs_reachable_cache_ensure(world, cur, depth + 1, true);
                 const ecs_vec_t *ids = &cur->pair->reachable.ids;
                 const ecs_reachable_elem_t *elems = ecs_vec_first(ids);
@@ -1191,6 +1201,7 @@ repeat_event:
         if (!cr) {
             continue;
         }
+
         ecs_flags32_t cr_flags = cr->flags;
 
         /* Check if this id is a pair of a traversable relationship. If so, we
@@ -1336,6 +1347,7 @@ repeat_event:
                 if (!cr) {
                     continue;
                 }
+
                 const ecs_type_info_t *ti = cr->type_info;;
                 ecs_flags32_t cr_flags = cr->flags;
 
@@ -1366,6 +1378,7 @@ error:
     if (measure_time) {
         world->info.emit_time_total += (ecs_ftime_t)ecs_time_measure(&t);
     }
+
     return;
 }
 
@@ -1413,6 +1426,7 @@ void ecs_emit(
     if (desc->ids == &default_ids) {
         desc->ids = NULL;
     }
+
 error:
     return;
 }

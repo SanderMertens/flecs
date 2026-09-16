@@ -69,10 +69,12 @@ static void flecs_expr_interpolated_string_to_str(
             ecs_strbuf_appendlit(v->buf, "\"");
             flecs_expr_color_to_str(v, ECS_NORMAL);
         }
+
         if (fragments[i].expr) {
             if (fragment) {
                 ecs_strbuf_appendlit(v->buf, ", ");
             }
+
             flecs_expr_node_to_str(v, fragments[i].expr);
         }
     }
@@ -180,6 +182,7 @@ static void flecs_expr_type_to_str(
         ecs_strbuf_appendstr(v->buf, path);
         ecs_os_free(path);
     }
+
     flecs_expr_color_to_str(v, ECS_NORMAL);
     ecs_strbuf_appendlit(v->buf, "(");
 }
@@ -258,6 +261,7 @@ static void flecs_expr_node_to_str(
     if (v->failed) {
         return;
     }
+
     const char *suffix = NULL;
 
     switch(node->kind) {

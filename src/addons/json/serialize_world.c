@@ -28,6 +28,7 @@ int ecs_world_to_json_buf(
             query_desc.terms[term_id].src.id = EcsSelf | EcsUp;
             term_id ++;
         }
+
         if (!serialize_modules) {
             query_desc.terms[term_id].id = EcsModule;
             query_desc.terms[term_id].oper = EcsNot;

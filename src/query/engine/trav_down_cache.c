@@ -214,6 +214,7 @@ static void flecs_trav_entity_down_iter_tables(
                     if (self) {
                         continue;
                     }
+
                     leaf = true;
                 }
             }
@@ -311,6 +312,7 @@ ecs_trav_down_t* flecs_query_get_down_cache(
             }
 
         }
+
         return result;
     }
 

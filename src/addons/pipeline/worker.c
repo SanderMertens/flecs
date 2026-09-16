@@ -95,6 +95,7 @@ void flecs_create_worker_threads(
             /* workers are using long-running os threads */
             stage->thread = ecs_os_thread_new(flecs_worker, stage);
         }
+
         ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED,
             "failed to create thread");
     }
@@ -130,6 +131,7 @@ static void flecs_wait_for_workers(
         if (world->workers_running == (stage_count - 1)) {
             wait = false;
         }
+
         ecs_os_mutex_unlock(world->sync_mutex);
     } while (wait);
 }
@@ -212,6 +214,7 @@ void flecs_join_worker_threads(
         } else {
             ecs_os_thread_join(stage->thread);
         }
+
         stage->thread = 0;
     }
 
@@ -261,9 +264,11 @@ static void flecs_set_threads_internal(
             if (world->worker_cond) {
                 ecs_os_cond_free(world->worker_cond);
             }
+
             if (world->sync_cond) {
                 ecs_os_cond_free(world->sync_cond);
             }
+
             if (world->sync_mutex) {
                 ecs_os_mutex_free(world->sync_mutex);
             }

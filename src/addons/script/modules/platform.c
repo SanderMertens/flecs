@@ -15,22 +15,27 @@ EM_JS(int, flecs_script_platform_mobile, (void), {
     if (typeof navigator === "undefined") {
         return 0;
     }
+
     if (navigator.userAgentData && navigator.userAgentData.mobile) {
         return 1;
     }
+
     var ua = navigator.userAgent || "";
     if (/Android|iPhone|iPad|iPod|Mobile|Silk|Tablet/i.test(ua)) {
         return 1;
     }
+
     if (/Mac/.test(ua) && navigator.maxTouchPoints > 1) {
         return 1;
     }
+
     if (typeof window !== "undefined" && window.matchMedia &&
         window.matchMedia("(pointer: coarse)").matches &&
         navigator.maxTouchPoints > 0)
     {
         return 1;
     }
+
     return 0;
 });
 

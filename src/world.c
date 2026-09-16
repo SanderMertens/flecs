@@ -495,6 +495,7 @@ static void flecs_fini_root_tables(
                     }
                 }
             }
+
             if(!finished) {
                 /* flush queue and restart iteration */
                 flecs_defer_end(world, stage0);
@@ -1010,9 +1011,11 @@ ecs_world_t* ecs_init_w_args(
         if (!last_elem) {
             last_elem = strrchr(app, '\\');
         }
+
         if (last_elem) {
             app = last_elem + 1;
         }
+
         ecs_set_pair(world, EcsWorld, EcsDocDescription, EcsName, {app});
     }
 #endif
@@ -1132,6 +1135,7 @@ int ecs_fini(
     if (world->ctx_free) {
         world->ctx_free(world->ctx);
     }
+
     if (world->binding_ctx_free) {
         world->binding_ctx_free(world->binding_ctx);
     }
@@ -1417,6 +1421,7 @@ int32_t ecs_delete_empty_tables(
                 if (result >= count) {
                     result = 0;
                 }
+
                 goto done;
             }
 

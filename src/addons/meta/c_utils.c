@@ -24,6 +24,7 @@ static bool flecs_meta_c_expect(
         flecs_meta_c_error(p, "expected '%c'", ch);
         return false;
     }
+
     p->ptr = flecs_parse_ws_eol(p->ptr + 1);
     return true;
 }
@@ -37,6 +38,7 @@ static bool flecs_meta_c_identifier(
         flecs_meta_c_error(p, "expected identifier");
         return false;
     }
+
     int32_t length = 0;
     while (isalnum((unsigned char)p->ptr[0]) ||
         p->ptr[0] == '_' || p->ptr[0] == ':' || p->ptr[0] == '.')
@@ -45,6 +47,7 @@ static bool flecs_meta_c_identifier(
             flecs_meta_c_error(p, "identifier is too long");
             return false;
         }
+
         name[length ++] = *p->ptr ++;
     }
     name[length] = '\0';
@@ -65,6 +68,7 @@ static bool flecs_meta_c_number(
         flecs_meta_c_error(p, "invalid numeric value");
         return false;
     }
+
     p->ptr = flecs_parse_ws_eol(end);
     return true;
 }
@@ -99,6 +103,7 @@ static ecs_entity_t flecs_meta_c_lookup(
             return *aliases[i].type;
         }
     }
+
     return ecs_lookup_symbol(world, name, true, true);
 }
 
@@ -114,6 +119,7 @@ static const char* flecs_meta_c_scope_end(
             if (depth == 256) {
                 break;
             }
+
             scopes[depth ++] = ch == '(' ? ')' : '>';
         } else if (ch == ')' || ch == '>') {
             if (!depth || ch != scopes[-- depth]) {
@@ -122,6 +128,7 @@ static const char* flecs_meta_c_scope_end(
         } else if (!ch) {
             break;
         }
+
         if (!depth) {
             return flecs_parse_ws_eol(ptr);
         }
@@ -137,13 +144,16 @@ static ecs_entity_t flecs_meta_c_type(
     if (!flecs_meta_c_identifier(p, name)) {
         return 0;
     }
+
     if (!ecs_os_strcmp(name, "ECS_PRIVATE")) {
         p->is_private = p->depth == 0;
         return 0;
     }
+
     if (!ecs_os_strcmp(name, "const") && !flecs_meta_c_identifier(p, name)) {
         return 0;
     }
+
     ecs_world_t *world = p->world;
     ecs_entity_t type = 0;
     char close = p->ptr[0] == '(' ? ')' : p->ptr[0] == '<' ? '>' : 0;
@@ -161,27 +171,33 @@ static ecs_entity_t flecs_meta_c_type(
         } else if (!ecs_os_strcmp(name, "flecs::bitmask")) {
             kind = EcsBitmaskType;
         }
+
         const char *end = flecs_meta_c_scope_end(p);
         if (!end) {
             return 0;
         }
+
         if (*end == '*' || kind == EcsOpaqueType) {
             p->ptr = end;
             if (*end == '*') {
                 p->ptr = flecs_parse_ws_eol(end + 1);
                 return ecs_id(ecs_uptr_t);
             }
+
             return flecs_meta_c_lookup(world, name);
         }
+
         if (++ p->depth >= 256) {
             flecs_meta_c_error(p, "maximum level of nesting reached");
             return 0;
         }
+
         p->ptr ++;
         ecs_entity_t first = flecs_meta_c_type(p), second = 0;
         if (!first) {
             return 0;
         }
+
         int64_t count = 0;
         if (p->ptr[0] == ',') {
             p->ptr = flecs_parse_ws_eol(p->ptr + 1);
@@ -199,9 +215,11 @@ static ecs_entity_t flecs_meta_c_type(
                 }
             }
         }
+
         if (!flecs_meta_c_expect(p, close)) {
             return 0;
         }
+
         p->depth --;
         if (kind == EcsArrayType && count && !second) {
             type = ecs_insert(world, ecs_value(EcsArray, {first, (int32_t)count}));
@@ -223,9 +241,11 @@ static ecs_entity_t flecs_meta_c_type(
     } else {
         type = flecs_meta_c_lookup(world, name);
     }
+
     if (!type) {
         flecs_meta_c_error(p, "unknown type '%s'", name);
     }
+
     return type;
 }
 
@@ -239,18 +259,22 @@ static int flecs_meta_c_struct(
     if (!flecs_meta_c_expect(p, '{')) {
         return -1;
     }
+
     while (p->ptr[0] != '}') {
         ecs_entity_t type = flecs_meta_c_type(p);
         if (p->is_private) {
             break;
         }
+
         if (!type) {
             goto done;
         }
+
         char name[256];
         if (!flecs_meta_c_identifier(p, name)) {
             goto done;
         }
+
         int64_t elem_count = 0;
         if (p->ptr[0] == '[') {
             p->ptr ++;
@@ -262,13 +286,16 @@ static int flecs_meta_c_struct(
                 goto done;
             }
         }
+
         if (!flecs_meta_c_expect(p, ';')) {
             goto done;
         }
+
         if (count == ECS_MEMBER_DESC_CACHE_SIZE - 1) {
             flecs_meta_c_error(p, "too many struct members");
             goto done;
         }
+
         desc.members[count ++] = (ecs_member_t){
             .name = ecs_os_strdup(name), .type = type, .count = (int32_t)elem_count
         };
@@ -277,6 +304,7 @@ static int flecs_meta_c_struct(
         flecs_meta_c_error(p, "stray characters after struct definition");
         goto done;
     }
+
     result = ecs_struct_init(p->world, &desc) ? 0 : -1;
 done:
     for (int32_t i = 0; i < count; i ++) {
@@ -295,6 +323,7 @@ static int flecs_meta_c_constants(
     if (!flecs_meta_c_expect(p, '{')) {
         return -1;
     }
+
     const char *prefix = ecs_get_world_info(world)->name_prefix;
     int32_t prefix_len = prefix ? ecs_os_strlen(prefix) : 0;
     int32_t name_len = ecs_os_strlen(p->name);
@@ -306,6 +335,7 @@ static int flecs_meta_c_constants(
         if (!flecs_meta_c_identifier(p, name)) {
             goto done;
         }
+
         if (p->ptr[0] == '=') {
             p->ptr ++;
             if (!flecs_meta_c_number(p, &value, 0)) {
@@ -315,23 +345,28 @@ static int flecs_meta_c_constants(
             flecs_meta_c_error(p, "bitmask requires explicit value assignment");
             goto done;
         }
+
         if (p->ptr[0] != '}' && p->ptr[0] != ',') {
             flecs_meta_c_error(p, "missing , after enum constant");
             goto done;
         }
+
         const char *constant = name;
         if (prefix && !ecs_os_strncmp(constant, prefix, prefix_len)) {
             constant += prefix_len;
         }
+
         if (!ecs_os_strncmp(constant, p->name, name_len)) {
             constant += name_len;
         }
+
         ecs_entity_t e = ecs_entity(world, {.name = constant});
         if (bitmask) {
             ecs_set_pair_second(world, e, EcsConstant, ecs_u32_t, {(ecs_u32_t)value});
         } else {
             ecs_set_pair_second(world, e, EcsConstant, ecs_i32_t, {(ecs_i32_t)value});
         }
+
         value ++;
         if (p->ptr[0] == ',') {
             p->ptr = flecs_parse_ws_eol(p->ptr + 1);
@@ -341,6 +376,7 @@ static int flecs_meta_c_constants(
         flecs_meta_c_error(p, "stray characters after enum definition");
         goto done;
     }
+
     result = 0;
 done:
     ecs_set_scope(world, old_scope);

@@ -88,6 +88,7 @@ bool flecs_query_select(
     if (!redo) {
         id = flecs_query_op_get_id(op, ctx);
     }
+
     return flecs_query_select_w_id(op, redo, ctx, id, 
         (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
 }
@@ -163,6 +164,7 @@ static bool flecs_query_all(
         if (field_index != -1) {
             it->ids[field_index] = EcsWildcard;
         }
+
         return !redo;
     } else {
         ecs_query_all_ctx_t *op_ctx = flecs_op_ctx(ctx, all);
@@ -181,6 +183,7 @@ static bool flecs_query_all(
                 it->ids[field_index] = EcsWildcard;
                 flecs_query_it_set_tr(it, field_index, &op_ctx->dummy_tr);
             }
+
             table = &world->store.root;
         } else if (op_ctx->cur < flecs_sparse_count(tables)) {
             table = flecs_sparse_get_dense_t(
@@ -219,6 +222,7 @@ static ecs_table_t* flecs_query_select_dont_fragment_table(
     if (!index) {
         return &world->store.root;
     }
+
     return flecs_sparse_get_dense_t(&world->store.tables, ecs_table_t, index);
 }
 
@@ -300,6 +304,7 @@ next_dont_fragment:
                 id = df_cr->id;
                 break;
             }
+
             op_ctx->df_cr = df_cr->non_fragmenting.next;
         }
     }
@@ -313,6 +318,7 @@ next_dont_fragment:
         it->ids[field_index] = id;
         flecs_query_it_set_tr(it, field_index, NULL);
     }
+
     flecs_query_set_vars(op, id, ctx);
 
     return true;
@@ -525,6 +531,7 @@ static int32_t flecs_query_next_inheritable_id(
             return i;
         }
     }
+
     return -1;
 }
 
@@ -628,10 +635,12 @@ static bool flecs_query_x_from(
                         break;
                     }
                 }
+
                 if (i != op_ctx->cur_id_index) {
                     continue;
                 }
             }
+
             goto match;
         }
 
@@ -795,6 +804,7 @@ static bool flecs_query_idsright(
             if (!cur) {
                 return false;
             }
+
             flecs_query_set_vars(op, id, ctx);
             it->ids[op->field_index] = id;
             it->sources[op->field_index] = EcsWildcard;
@@ -987,6 +997,7 @@ static bool flecs_query_each(
         if (!ecs_table_count(table)) {
             return false;
         }
+
         row = op_ctx->row = range.offset;
     } else {
         int32_t end = range.count;
@@ -995,6 +1006,7 @@ static bool flecs_query_each(
         } else {
             end = ecs_table_count(table);
         }
+
         row = ++ op_ctx->row;
         if (op_ctx->row >= end) {
             return false;
@@ -1251,6 +1263,7 @@ static void flecs_query_reset_after_block(
             flecs_query_var_reset(op->first.var, ctx);
         }
     }
+
     if (flags_2nd & EcsQueryIsVar) {
         if (!flecs_ref_is_written(op, &op->second, EcsQuerySecond, written_cur)){
             flecs_query_var_reset(op->second.var, ctx);
@@ -1545,6 +1558,7 @@ static bool flecs_query_eval_if(
         flecs_query_reset_after_block(op, ctx, op_ctx, result);
         return result;
     }
+
     return true;
 }
 

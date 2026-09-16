@@ -4500,6 +4500,7 @@ static bool flecs_unset_id_flag(
         cr->flags &= ~flag;
         return true;
     }
+
     return false;
 }
 
@@ -4576,6 +4577,7 @@ void flecs_register_flag_for_trait(
             flecs_assert_relation_unused(world, e, trait);
         }
     }
+
 error:
     return;
 }
@@ -4597,6 +4599,7 @@ static void flecs_register_tag(ecs_iter_t *it) {
                     if (cr->type_info != NULL) {
                         flecs_assert_relation_unused(world, e, EcsPairIsTag);
                     }
+
                     cr->type_info = NULL;
                 } while ((cr = flecs_component_first_next(cr)));
             }
@@ -4699,6 +4702,7 @@ static void flecs_disable_module_observers(
                 flecs_disable_module_observers(
                     world, child_it.entities[i], should_disable);
             }
+
             continue;
         }
 
@@ -4938,6 +4942,7 @@ static void flecs_bootstrap_sanity_check(
             table = flecs_sparse_get_dense_t(
                 &world->store.tables, ecs_table_t, i);
         }
+
         for (e = 0; e < table->data.count; e ++) {
             ecs_record_t *r = flecs_entities_get(
                 world, table->data.entities[e]);
@@ -5418,8 +5423,10 @@ bool flecs_defer_modified(
             cmd->id = id;
             cmd->entity = entity;
         }
+
         return true;
     }
+
     return false;
 }
 
@@ -5437,6 +5444,7 @@ bool flecs_defer_clone(
         cmd->is._1.clone_value = clone_value;
         return true;
     }
+
     return false;   
 }
 
@@ -5454,6 +5462,7 @@ bool flecs_defer_path(
         cmd->is._1.value = ecs_os_strdup(name);
         return true;
     }
+
     return false;
 }
 
@@ -5467,6 +5476,7 @@ bool flecs_defer_delete(
         cmd->entity = entity;
         return true;
     }
+
     return false;
 }
 
@@ -5480,6 +5490,7 @@ bool flecs_defer_clear(
         cmd->entity = entity;
         return true;
     }
+
     return false;
 }
 
@@ -5497,6 +5508,7 @@ bool flecs_defer_on_delete_action(
         cmd->is._1.force_delete = force_delete;
         return true;
     }
+
     return false;
 }
 
@@ -5513,6 +5525,7 @@ bool flecs_defer_enable(
         cmd->id = id;
         return true;
     }
+
     return false;
 }
 
@@ -5543,6 +5556,7 @@ bool flecs_defer_bulk_new(
         cmd->entity = 0;
         return true;
     }
+
     return false;
 }
 
@@ -5559,6 +5573,7 @@ bool flecs_defer_add(
         cmd->entity = entity;
         return true;
     }
+
     return false;
 }
 
@@ -5634,6 +5649,7 @@ bool flecs_defer_remove(
 #endif
         return true;
     }
+
     return false;
 }
 
@@ -5671,6 +5687,7 @@ static flecs_component_ptr_t flecs_defer_get_existing(
             ptr.ti = cr->type_info;
         }
     }
+
     return ptr;
 }
 
@@ -6048,6 +6065,7 @@ static void flecs_flush_bulk_new(
             if (!r->table) {
                 flecs_add_to_root_table(world, entities[i]);
             }
+
             flecs_add_id(world, entities[i], cmd->id);
         }
     }
@@ -6208,6 +6226,7 @@ static void flecs_cmd_batch_for_entity(
                 } else if (cmd->kind == EcsCmdEnsure) {
                     cmd->kind = EcsCmdEnsureDontFragment;
                 }
+
                 continue;
             }
 
@@ -6267,6 +6286,7 @@ static void flecs_cmd_batch_for_entity(
                     table->type.count);
                 diff->removed_flags |= table->flags & EcsTableRemoveEdgeFlags;
             }
+
             table = &world->store.root;
             world->info.cmd.batched_command_count ++;
             cmd->kind = EcsCmdSkip;
@@ -6310,6 +6330,7 @@ static void flecs_cmd_batch_for_entity(
     if (ensure_add_type.ids.count) {
         stage->ensure_add = &ensure_add_type;
     }
+
     flecs_defer_begin(world, world->stages[0]);
     flecs_commit(world, entity, r, table, &table_diff, 0, 0);
     flecs_defer_end(world, world->stages[0]);
@@ -6398,6 +6419,7 @@ static void flecs_cmd_batch_for_entity(
                      * command queue. In that case skip the command. */
                     cmd->kind = EcsCmdSkip;
                 }
+
                 break;
             }
             case EcsCmdDelete:
@@ -6566,6 +6588,7 @@ bool flecs_defer_end(
                         world->info.cmd.discard_count ++;
                         ecs_delete(world, e);
                     }
+
                     break;
                 case EcsCmdRemove:
                     flecs_remove_id(world, e, id);
@@ -6578,6 +6601,7 @@ bool flecs_defer_end(
                     } else {
                         world->info.cmd.discard_count ++;
                     }
+
                     break;
                 case EcsCmdSet:
                 case EcsCmdSetDontFragment:
@@ -6659,9 +6683,11 @@ bool flecs_defer_end(
                             keep_alive = false;
                         }
                     }
+
                     if (keep_alive) {
                         ecs_set_name(world, e, cmd->is._1.value);
                     }
+
                     ecs_os_free(cmd->is._1.value);
                     cmd->is._1.value = NULL;
                     world->info.cmd.other_count ++;
@@ -6931,6 +6957,7 @@ static void flecs_on_unparent(
         if (other_table) {
             flecs_unparent_name_index(world, table, other_table, row, count);
         }
+
         flecs_non_fragmenting_childof_unparent(
             world, other_table, table, row, count);
     }
@@ -7408,6 +7435,7 @@ void flecs_notify_on_set_ids(
                     });
                 }
             }
+
             continue;
         }
 
@@ -7609,6 +7637,7 @@ bool ecs_each_next(
         } else {
             it->ids = NULL;
         }
+
         it->trs = &each_iter->trs;
         it->columns = &each_iter->columns;
         it->sources = &each_iter->sources;
@@ -7936,6 +7965,7 @@ void flecs_commit(
             flecs_actions_move_remove(world, src_table, src_table,
                 ECS_RECORD_TO_ROW(record->row), 1, diff);
         }
+
         flecs_journal_end();
         return;
     }
@@ -8283,6 +8313,7 @@ flecs_component_ptr_t flecs_get_mut(
                 result.ti = column->ti;
                 return result;
             }
+
             return (flecs_component_ptr_t){0};
         }
     }
@@ -8305,6 +8336,7 @@ void flecs_record_add_flag(
             flecs_table_traversable_add(table, 1);
         }
     }
+
     record->row |= flag;
 }
 
@@ -8545,6 +8577,7 @@ static int flecs_entity_init_name(
     } else if (new_entity && scope) {
         ecs_add_pair(world, entity, EcsChildOf, scope);
     }
+
     return 0;
 }
 
@@ -8637,6 +8670,7 @@ ecs_entity_t ecs_entity_init(
             } else {
                 result = ecs_new(world);
             }
+
             new_entity = true;
             ecs_assert(ecs_get_type(world, result) != NULL,
                 ECS_INTERNAL_ERROR, NULL);
@@ -8669,6 +8703,7 @@ ecs_entity_t ecs_entity_init(
                     path = ECS_CONST_CAST(char*, ecs_get_name(world, result));
                 }
             }
+
             if (path) {
                 if (ecs_os_strcmp(path, name)) {
                     /* Mismatching name */
@@ -8677,8 +8712,10 @@ ecs_entity_t ecs_entity_init(
                     if (!sep || sep[0]) {
                         ecs_os_free(path);
                     }
+
                     return 0;
                 }
+
                 if (!sep || sep[0]) {
                     ecs_os_free(path);
                 }
@@ -8811,6 +8848,7 @@ const ecs_entity_t* ecs_bulk_init(
         entities = flecs_entities_ids(world);
         return &entities[sparse_count];
     }
+
 error:
     return NULL;
 }
@@ -8859,6 +8897,7 @@ static void flecs_check_component(
         ecs_abort(ECS_INVALID_COMPONENT_SIZE, "%s", path);
         ecs_os_free(path);
     }
+
     if (ptr->alignment != alignment) {
         char *path = ecs_get_path(world, result);
         ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, "%s", path);
@@ -9012,6 +9051,7 @@ void ecs_delete(
                     flecs_on_delete(world,
                         ecs_pair(EcsFlag, entity), 0, true, true);
                 }
+
                 flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0, true, true);
             }
 
@@ -9266,6 +9306,7 @@ const void* ecs_get_id(
         if (cr->flags & EcsIdSparse) {
             return flecs_component_sparse_get(world, cr, table, entity);
         }
+
         ecs_check(tr->column != -1, ECS_INVALID_PARAMETER,
             "component '%s' passed to get() is a tag/zero sized",
                 flecs_errstr(ecs_id_str(world, component)));
@@ -9441,6 +9482,7 @@ void* ecs_emplace_id(
             if (is_new) {
                 *is_new = false;
             }
+
             flecs_defer_end(world, stage);
             return ptr;
         }
@@ -9448,6 +9490,7 @@ void* ecs_emplace_id(
         if (is_new) {
             *is_new = true;
         }
+
         is_new = NULL;
     }
 
@@ -9502,6 +9545,7 @@ bool ecs_record_has_id(
     if (r->table) {
         return ecs_table_has_id(world, r->table, component);
     }
+
     return false;
 }
 
@@ -9993,6 +10037,7 @@ ecs_entity_t ecs_get_target(
         if (index > 0) {
             return 0;
         }
+
         return ecs_get_parent(world, entity);
     }
 
@@ -10009,6 +10054,7 @@ ecs_entity_t ecs_get_target(
         if (!index) {
             return flecs_get_prefab_instance_child(world, entity, rel);
         }
+
         return 0;
     }
 
@@ -10150,6 +10196,7 @@ ecs_entity_t ecs_new_w_parent(
         if (name) {
             ecs_set_name(stage_world, entity, name);
         }
+
         return entity;
     }
 
@@ -10466,6 +10513,7 @@ void ecs_make_alive_id(
     } else {
         ecs_make_alive(world, component & ECS_COMPONENT_MASK);
     }
+
 error:
     return;
 }
@@ -10565,6 +10613,7 @@ void ecs_enable(
     } else {
         ecs_add_id(world, entity, EcsDisabled);
     }
+
 error:
     return;
 }
@@ -10620,6 +10669,7 @@ char* ecs_entity_str(
     if (type) {
         ecs_type_str_buf(world, type, &buf);
     }
+
     ecs_strbuf_appendch(&buf, ']');
 
     return ecs_strbuf_get(&buf);
@@ -10635,6 +10685,7 @@ ecs_table_range_t flecs_range_from_entity(
     if (!r) {
         return (ecs_table_range_t){ 0 };
     }
+
     return (ecs_table_range_t){
         .table = r->table,
         .offset = ECS_RECORD_TO_ROW(r->row),
@@ -10770,8 +10821,10 @@ bool flecs_name_is_id(
                 return false;
             }
         }
+
         return true;
     }
+
     return false;
 }
 
@@ -10842,6 +10895,7 @@ static const char* flecs_path_elem(
             if (!ch) {
                 break;
             }
+
             escaped = true;
         }
 
@@ -10862,6 +10916,7 @@ static const char* flecs_path_elem(
                 } else { /* heap buffer */
                     buffer = ecs_os_realloc(buffer, size * 2 + 1);
                 }
+
                 size *= 2;
             }
 
@@ -10928,6 +10983,7 @@ static ecs_entity_t flecs_lookup_child_n(
             if (ch < '0' || ch > '9') {
                 break;
             }
+
             if (value < UINT32_MAX) {
                 value = value * 10 + flecs_ito(uint64_t, ch - '0');
             }
@@ -10940,6 +10996,7 @@ static ecs_entity_t flecs_lookup_child_n(
                 if (parent && !ecs_has_pair(world, e, EcsChildOf, parent)) {
                     return 0;
                 }
+
                 return e;
             }
         }
@@ -10953,6 +11010,7 @@ static ecs_entity_t flecs_lookup_child_n(
             return flecs_name_index_find(index, name, length, hash);
         }
     }
+
     return 0;
 }
 
@@ -11112,6 +11170,7 @@ void ecs_on_set(EcsIdentifier)(
                 if (index_hash) {
                     flecs_name_index_remove(index, e, index_hash);
                 }
+
                 if (hash) {
                     if (kind == EcsSymbol || kind == EcsAlias) {
                         uint64_t existing = flecs_name_index_find(
@@ -11124,6 +11183,7 @@ void ecs_on_set(EcsIdentifier)(
                                 name, (uint32_t)existing, (uint32_t)e);
                         }
                     }
+
                     flecs_name_index_ensure(index, e, name, len, hash);
                     cur->index_hash = hash;
                     cur->index = index;
@@ -11265,6 +11325,7 @@ void ecs_get_path_w_sep_buf(
         ecs_strbuf_appendch(buf, '*');
         return;
     }
+
     if (child == EcsAny) {
         ecs_strbuf_appendch(buf, '_');
         return;
@@ -11429,10 +11490,12 @@ retry:
             if (!len && !next) {
                 break;
             }
+
             cur = flecs_lookup_child_n(world, cur, ptr, len, 0);
             if (!cur) {
                 goto tail;
             }
+
             ptr = next;
         }
     } else {
@@ -11629,6 +11692,7 @@ ecs_entity_t ecs_add_path_w_sep(
             if (name) {
                 ecs_os_free(name);
             }
+
             name = ecs_os_strdup(elem);
 
             if (!e) {
@@ -11707,6 +11771,7 @@ static const char* flecs_get_identifier(
     } else {
         return NULL;
     }
+
 error:
     return NULL;
 }
@@ -11861,6 +11926,7 @@ bool ecs_id_match(
                 if (ECS_PAIR_FIRST(id) == pattern_second) {
                     return true;
                 }
+
                 if (ECS_PAIR_SECOND(id) == pattern_second) {
                     return true;
                 }
@@ -11938,6 +12004,7 @@ const char* flecs_id_invalid_reason(
     if (!id) {
         return "components cannot be 0 (is the component registered?)";
     }
+
     if (ecs_id_is_wildcard(id)) {
         return "cannot add wildcards";
     }
@@ -11950,9 +12017,11 @@ const char* flecs_id_invalid_reason(
         if (!ECS_PAIR_FIRST(id) && !ECS_PAIR_SECOND(id)) {
             return "invalid pair: both elements are 0";
         }
+
         if (!ECS_PAIR_FIRST(id)) {
             return "invalid pair: first element is 0 (is the relationship registered?)";
         }
+
         if (!ECS_PAIR_SECOND(id)) {
             return "invalid pair: second element is 0";
         }
@@ -11998,6 +12067,7 @@ ecs_id_t ecs_id_from_str(
         ecs_log_set_level(prev_level);
         return 0;
     }
+
     ecs_log_set_level(prev_level);
     return result;
 #else
@@ -12066,6 +12136,7 @@ void ecs_id_str_buf(
             if ((e = ecs_get_alive(world, tgt))) {
                 tgt = e;
             }
+
             ecs_get_path_w_sep_buf(world, 0, tgt, NULL, NULL, buf, false);
         }
 
@@ -12145,6 +12216,7 @@ ecs_entity_t ecs_get_typeid(
         ecs_assert(ti->component != 0, ECS_INTERNAL_ERROR, NULL);
         return ti->component;
     }
+
 error:
     return 0;
 }
@@ -12330,10 +12402,12 @@ static ecs_component_record_t* flecs_field_cr(
         } else {
             cr = flecs_components_get(it->real_world, it->ids[index]);
         }
+
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     } else {
         cr = tr->hdr.cr;
     }
+
     return cr;
 }
 
@@ -12399,6 +12473,7 @@ bool ecs_field_is_readonly(
             return true;
         }
     }
+
 error:
     return false;
 }
@@ -12517,6 +12592,7 @@ ecs_entity_t ecs_field_src(
     } else {
         return 0;
     }
+
 error:
     return 0;
 }
@@ -12590,6 +12666,7 @@ bool ecs_iter_is_true(
     if (result) {
         ecs_iter_fini(it);
     }
+
     return result;
 error:
     return false;
@@ -12614,6 +12691,7 @@ ecs_entity_t ecs_iter_get_var(
         if (!table && !var_id) {
             table = it->table;
         }
+
         if (table) {
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
@@ -12919,6 +12997,7 @@ void ecs_iter_set_var_as_range(
     if (!it->count) {
         it->count = ecs_table_count(it->table);
     }
+
     it->entities = ecs_table_entities(it->table);
     if (it->entities) {
         it->entities += it->offset;
@@ -13341,6 +13420,7 @@ char* flecs_to_snake_case(const char *str) {
         if (isupper(ch)) {
             upper_count ++;
         }
+
         len ++;
     }
 
@@ -13351,6 +13431,7 @@ char* flecs_to_snake_case(const char *str) {
                 out_ptr[0] = '_';
                 out_ptr ++;
             }
+
             out_ptr[0] = (char)tolower(ch);
             out_ptr ++;
         } else {
@@ -13515,10 +13596,12 @@ ecs_event_record_t* flecs_event_record_ensure(
     if (er) {
         return er;
     }
+
     er = flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
     if (!er) {
         er = flecs_sparse_ensure_t(&o->events, ecs_event_record_t, event, NULL);
     }
+
     er->event = event;
     return er;
 }
@@ -13534,12 +13617,15 @@ static const ecs_event_record_t* flecs_event_record_get_if(
         if (ecs_map_is_init(&er->event_ids)) {
             return er;
         }
+
         if (er->any) {
             return er;
         }
+
         if (er->wildcard) {
             return er;
         }
+
         if (er->wildcard_pair) {
             return er;
         }
@@ -13563,6 +13649,7 @@ ecs_event_id_record_t* flecs_event_id_record_get(
         if (er->event_ids_filter & (1llu << (id % 64))) {
             return ecs_map_get_deref(&er->event_ids, ecs_event_id_record_t, id);
         }
+
         return NULL;
     }
 }
@@ -13664,10 +13751,12 @@ static int32_t flecs_event_observers_get(
                 iders[count] = flecs_event_id_record_get_if(er, id_fwc);
                 count += iders[count] != 0;
             }
+
             if (id_swc != id) {
                 iders[count] = flecs_event_id_record_get_if(er, id_swc);
                 count += iders[count] != 0;
             }
+
             if (id_pwc != id) {
                 iders[count] = flecs_event_id_record_get_if(er, id_pwc);
                 count += iders[count] != 0;
@@ -13826,6 +13915,7 @@ static void flecs_emit_propagate_id(
                             .count = 1
                         });
             }
+
             it->event_cur = event_cur;
         }
 
@@ -14192,6 +14282,7 @@ static void flecs_reachable_cache_ensure(
                     cur = flecs_components_get(world, ecs_childof(parent->value));
                     ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
                 }
+
                 flecs_reachable_cache_ensure(world, cur, depth + 1, true);
                 const ecs_vec_t *ids = &cur->pair->reachable.ids;
                 const ecs_reachable_elem_t *elems = ecs_vec_first(ids);
@@ -14623,6 +14714,7 @@ repeat_event:
         if (!cr) {
             continue;
         }
+
         ecs_flags32_t cr_flags = cr->flags;
 
         /* Check if this id is a pair of a traversable relationship. If so, we
@@ -14768,6 +14860,7 @@ repeat_event:
                 if (!cr) {
                     continue;
                 }
+
                 const ecs_type_info_t *ti = cr->type_info;;
                 ecs_flags32_t cr_flags = cr->flags;
 
@@ -14798,6 +14891,7 @@ error:
     if (measure_time) {
         world->info.emit_time_total += (ecs_ftime_t)ecs_time_measure(&t);
     }
+
     return;
 }
 
@@ -14845,6 +14939,7 @@ void ecs_emit(
     if (desc->ids == &default_ids) {
         desc->ids = NULL;
     }
+
 error:
     return;
 }
@@ -14871,6 +14966,7 @@ static ecs_entity_t flecs_get_observer_event(
     if (sub->tag && event == EcsOnSet) {
         event = EcsOnAdd;
     }
+
     if (sub->oper == EcsNot) {
         if (event == EcsOnAdd || event == EcsOnSet) {
             event = EcsOnRemove;
@@ -14878,6 +14974,7 @@ static ecs_entity_t flecs_get_observer_event(
             event = EcsOnAdd;
         }
     }
+
     return event;
 }
 
@@ -14887,22 +14984,28 @@ static ecs_flags32_t flecs_id_flag_for_event(
     if (e == EcsOnAdd) {
         return EcsIdHasOnAdd;
     }
+
     if (e == EcsOnRemove) {
         return EcsIdHasOnRemove;
     }
+
     if (e == EcsOnSet) {
         return EcsIdHasOnSet;
     }
+
     if (e == EcsOnTableCreate) {
         return EcsIdHasOnTableCreate;
     }
+
     if (e == EcsOnTableDelete) {
         return EcsIdHasOnTableDelete;
     }
+
     if (e == EcsWildcard) {
         return EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|
             EcsIdHasOnTableCreate|EcsIdHasOnTableDelete;
     }
+
     return 0;
 }
 
@@ -14979,10 +15082,12 @@ static void flecs_inc_observer_count(
             if (cr) {
                 cr->flags |= flags;
             }
+
             if (!up_notify && (event == EcsOnSet || event == EcsWildcard)) {
                 if (id < FLECS_HI_COMPONENT_ID) {
                     world->non_trivial_set[id] = true;
                 }
+
                 if (id == EcsWildcard || id == EcsAny) {
                     ecs_os_memset_n(world->non_trivial_set, true, bool,
                         FLECS_HI_COMPONENT_ID);
@@ -15019,6 +15124,7 @@ static ecs_id_t flecs_observer_id(
         if (ECS_PAIR_FIRST(id) == EcsAny) {
             id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
         }
+
         if (ECS_PAIR_SECOND(id) == EcsAny) {
             id = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
         }
@@ -15047,6 +15153,7 @@ static void flecs_observer_update_id(
                 break;
             }
         }
+
         if (i != j) {
             continue;
         }
@@ -15083,6 +15190,7 @@ static void flecs_observer_update_registration(
     } else if (!sub->id) {
         return;
     }
+
     ecs_flags64_t flags = sub->src & EcsTermRefFlags;
     ecs_id_t id = flecs_observer_id(sub->register_id);
     if (flags & (EcsSelf|EcsUp)) {
@@ -15099,6 +15207,7 @@ static void flecs_observer_update_registration(
         flecs_observer_update_id(world, sub, offsetof(ecs_event_id_record_t, self),
             ecs_pair(EcsChildOf, EcsWildcard), delta);
     }
+
     if (delta < 0) {
         flecs_component_unlock(world, sub->register_id);
     }
@@ -15163,10 +15272,12 @@ static bool flecs_observer_query_has_range(
             return false;
         }
     }
+
     if (second_var) {
         if (!ECS_IS_PAIR(event_id)) {
             return false;
         }
+
         second = flecs_entities_get_alive(world, ECS_PAIR_SECOND(event_id));
         if (!second) {
             return false;
@@ -15178,6 +15289,7 @@ static bool flecs_observer_query_has_range(
     if (first_var) {
         ecs_iter_set_var(it, ecs_query_find_var(query, term->first.name), first);
     }
+
     if (second_var) {
         ecs_iter_set_var(it, ecs_query_find_var(query, term->second.name), second);
     }
@@ -15206,6 +15318,7 @@ static void flecs_observer_invoke(
         } else {
             it->ctx = o->ctx;
         }
+
         o->run(it);
     } else {
         ecs_iter_action_t callback = o->callback;
@@ -15362,6 +15475,7 @@ static void flecs_observers_invoke_intern(
             if (mode == FlecsObserversInvokeUpNotifyOnly && !up_notify) {
                 continue;
             }
+
             if (mode == FlecsObserversInvokeSkipUpNotify && up_notify) {
                 continue;
             }
@@ -15705,6 +15819,7 @@ static void flecs_observer_add_subscription(
         sub = ecs_vec_append_t(&world->allocator, &impl->subscriptions,
             ecs_observer_subscription_t);
     }
+
     *sub = (ecs_observer_subscription_t){
         .observer = o, .register_id = id, .src = term->src.id,
         .trav = term->trav, .oper = term->oper,
@@ -15815,6 +15930,7 @@ static int flecs_multi_observer_init(
 
                 flecs_observer_add_subscription(world, o, term, ti_id);
             }
+
             continue;
         }
 
@@ -15868,6 +15984,7 @@ static int flecs_multi_observer_init(
     for (i = 0; i < ecs_vec_count(&impl->subscriptions); i ++) {
         flecs_observer_update_registration(world, &subs[i], 1);
     }
+
     return 0;
 }
 
@@ -15887,6 +16004,7 @@ static bool flecs_observer_init_trivial(
     {
         return false;
     }
+
     *term = desc->terms[0];
     ecs_query_validator_ctx_t ctx = {
         .world = world, .desc = desc, .term = term
@@ -15894,6 +16012,7 @@ static bool flecs_observer_init_trivial(
     if (flecs_term_finalize(world, term, &ctx)) {
         return false;
     }
+
     bool wildcard = ecs_id_is_wildcard(term->id);
     bool disabled = term->id == EcsDisabled;
 #ifdef FLECS_PREFAB
@@ -15917,6 +16036,7 @@ static bool flecs_observer_init_trivial(
     {
         return false;
     }
+
     ecs_component_record_t *cr = flecs_components_get(world, term->id);
     ecs_flags32_t cr_flags = cr ? cr->flags :
         flecs_component_get_flags(world, term->id);
@@ -15934,9 +16054,11 @@ static bool flecs_observer_init_trivial(
     if (disabled) {
         *flags |= EcsQueryMatchDisabled;
     }
+
     if (prefab) {
         *flags |= EcsQueryMatchPrefab;
     }
+
     return true;
 }
 
@@ -15981,6 +16103,7 @@ ecs_observer_t* flecs_observer_init(
             flecs_observer_fini(o);
             return NULL;
         }
+
         terms = query->terms;
         term_count = query->term_count;
         query_flags = query->flags;
@@ -16096,6 +16219,7 @@ ecs_observer_t* flecs_observer_init(
                 }
             }
         }
+
         flecs_observer_update_registration(world, &impl->subscription, 1);
     } else {
         if (flecs_multi_observer_init(world, o, desc)) {
@@ -16251,6 +16375,7 @@ void flecs_observer_fini(
     for (int32_t i = 0; i < ecs_vec_count(&impl->subscriptions); i ++) {
         flecs_observer_update_registration(world, &subs[i], -1);
     }
+
     flecs_observer_update_registration(world, &impl->subscription, -1);
     ecs_vec_fini_t(&world->allocator, &impl->subscriptions,
         ecs_observer_subscription_t);
@@ -16342,16 +16467,19 @@ static void flecs_target_mark_for_delete(
             flecs_component_mark_for_delete(world, cr,
                 ECS_ID_ON_DELETE(cr->flags), true, force_delete);
         }
+
         if ((cr = flecs_components_get(world, ecs_pair(e, EcsWildcard)))) {
             flecs_component_mark_for_delete(world, cr,
                 ECS_ID_ON_DELETE(cr->flags), true, force_delete);
         }
     }
+
     if (flags & EcsEntityIsTarget) {
         if ((cr = flecs_components_get(world, ecs_pair(EcsWildcard, e)))) {
             flecs_component_mark_for_delete(world, cr,
                 ECS_ID_ON_DELETE_TARGET(cr->flags), true, force_delete);
         }
+
         if (world->cr_flag_count) {
             if ((cr = flecs_components_get(world, ecs_pair(EcsFlag, e)))) {
                 flecs_component_mark_for_delete(world, cr,
@@ -16382,6 +16510,7 @@ static bool flecs_id_is_delete_target(
          * has the form (*, Target), use OnDeleteTarget action */
         return true;
     }
+
     return false;
 }
 
@@ -16698,6 +16827,7 @@ static void flecs_component_mark_for_delete(
                 if (cur->flags & EcsIdOrderedChildren) {
                     continue;
                 }
+
                 cur->flags |= EcsIdMarkedForDelete;
             }
         }
@@ -16872,9 +17002,11 @@ static bool flecs_on_delete_clear_entities(
                 if (is_deferred) {
                     ecs_defer_suspend(world);
                 }
+
                 for (c = count - 1; c >= 0; c --) {
                     ecs_delete(world, children[c]);
                 }
+
                 if (is_deferred) {
                     ecs_defer_resume(world);
                 }
@@ -17009,6 +17141,7 @@ void flecs_throw_invalid_delete(
             "(OnDelete, Panic) constraint violated while deleting entities with %s", 
             flecs_errstr(ecs_id_str(world, id)));
     }
+
 error:
     return;
 }
@@ -17252,15 +17385,18 @@ static void flecs_log_msg(
         if (ecs_os_api.log_last_timestamp_) {
             delta = now - ecs_os_api.log_last_timestamp_;
         }
+
         ecs_os_api.log_last_timestamp_ = (int64_t)now;
 
         if (delta) {
             if (delta < 10) {
                 fputs(" ", stream);
             }
+
             if (delta < 100) {
                 fputs(" ", stream);
             }
+
             char time_buf[20];
             ecs_os_snprintf(time_buf, 20, "%u", (uint32_t)delta);
             fputs("+", stream);
@@ -17275,6 +17411,7 @@ static void flecs_log_msg(
         if (!now) {
             now = time(NULL);
         }
+
         char time_buf[20];
         ecs_os_snprintf(time_buf, 20, "%u", (uint32_t)now);
         fputs(time_buf, stream);
@@ -17290,6 +17427,7 @@ static void flecs_log_msg(
         } else {
             if (use_colors) fputs(ECS_GREY, stream);
         }
+
         fputs("info", stream);
     } else if (level == -2) {
         if (use_colors) fputs(ECS_YELLOW, stream);
@@ -17467,6 +17605,7 @@ static void ecs_os_api_free(void *ptr) {
         ecs_os_allocated_bytes -= size;
         ecs_os_linc(&ecs_os_api_free_count);
     }
+
     free(ptr);
 }
 #else
@@ -17499,6 +17638,7 @@ static void ecs_os_api_free(void *ptr) {
     if (ptr) {
         ecs_os_linc(&ecs_os_api_free_count);
     }
+
     free(ptr);
 }
 #endif
@@ -17537,6 +17677,7 @@ char* ecs_os_strdup_(const char *str) {
     if (!str) {
         return NULL;
     }
+
     return ecs_os_api.strdup_(str);
 }
 
@@ -17929,6 +18070,7 @@ ecs_poly_t* flecs_poly_get_(
     if (p) {
         return p->poly;
     }
+
     return NULL;
 }
 
@@ -17956,6 +18098,7 @@ const ecs_world_t* ecs_get_world(
     if (((const ecs_header_t*)poly)->type == ecs_world_t_magic) {
         return poly;
     }
+
     return *(ecs_world_t**)assert_mixin(poly, EcsMixinWorld);
 }
 
@@ -17985,9 +18128,11 @@ void flecs_poly_update_ctx(
             *ctx_free = NULL;
         }
     }
+
     if (value) {
         *ctx = value;
     }
+
     if (free_value) {
         *ctx_free = free_value;
     }
@@ -18134,6 +18279,7 @@ static int32_t flecs_table_search(
         if (id_out) {
             id_out[0] = table->type.array[r];
         }
+
         return r;
     }
 
@@ -18156,6 +18302,7 @@ static int32_t flecs_table_offset_search(
             if (id_out) {
                 id_out[0] = type_id;
             }
+
             return offset - 1;
         }
     }
@@ -18186,6 +18333,7 @@ bool flecs_type_can_inherit_id(
                     if (ECS_PAIR_SECOND(id) == EcsWildcard) {
                         return false;
                     }
+
                     if (table->type.array[tr->index] != id) {
                         return false;
                     }
@@ -18328,6 +18476,7 @@ static int32_t flecs_table_search_relation(
                 return column;
             }
         }
+
         if (rel == ecs_isa(EcsWildcard)) {
             return -1;
         }
@@ -18806,6 +18955,7 @@ int32_t ecs_stage_get_id(
     } else {
         ecs_throw(ECS_INTERNAL_ERROR, NULL);
     }
+
 error:
     return 0;
 }
@@ -19064,6 +19214,7 @@ bool flecs_type_info_ctor(
         ctor(ptr, count, ti);
         return true;
     }
+
     return false;
 }
 
@@ -19080,6 +19231,7 @@ bool flecs_type_info_dtor(
         dtor(ptr, count, ti);
         return true;
     }
+
     return false;
 }
 
@@ -19380,21 +19532,27 @@ static bool flecs_type_hooks_storage_equal(
     if ((a->flags & flags) != (b->flags & flags)) {
         return false;
     }
+
     if ((a->on_add != NULL) != (b->on_add != NULL)) {
         return false;
     }
+
     if ((a->on_set != NULL) != (b->on_set != NULL)) {
         return false;
     }
+
     if ((a->on_remove != NULL) != (b->on_remove != NULL)) {
         return false;
     }
+
     if ((a->on_replace != NULL) != (b->on_replace != NULL)) {
         return false;
     }
+
     if ((a->on_validate != NULL) != (b->on_validate != NULL)) {
         return false;
     }
+
     return true;
 }
 
@@ -19406,33 +19564,43 @@ static ecs_flags32_t flecs_type_hooks_specified(
     if (hooks->ctor && (!exclude_illegal || hooks->ctor != flecs_ctor_illegal)) {
         result |= ECS_TYPE_HOOK_CTOR_ILLEGAL;
     }
+
     if (hooks->dtor && (!exclude_illegal || hooks->dtor != flecs_dtor_illegal)) {
         result |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
     }
+
     if (hooks->copy && (!exclude_illegal || hooks->copy != flecs_copy_illegal)) {
         result |= ECS_TYPE_HOOK_COPY_ILLEGAL;
     }
+
     if (hooks->move && (!exclude_illegal || hooks->move != flecs_move_illegal)) {
         result |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
     }
+
     if (hooks->copy_ctor && (!exclude_illegal || hooks->copy_ctor != flecs_copy_ctor_illegal)) {
         result |= ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL;
     }
+
     if (hooks->move_ctor && (!exclude_illegal || hooks->move_ctor != flecs_move_ctor_illegal)) {
         result |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
     }
+
     if (hooks->ctor_move_dtor && (!exclude_illegal || hooks->ctor_move_dtor != flecs_move_ctor_illegal)) {
         result |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
     }
+
     if (hooks->move_dtor && (!exclude_illegal || hooks->move_dtor != flecs_move_ctor_illegal)) {
         result |= ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
     }
+
     if (hooks->cmp && (!exclude_illegal || hooks->cmp != flecs_comp_illegal)) {
         result |= ECS_TYPE_HOOK_CMP_ILLEGAL;
     }
+
     if (hooks->equals && (!exclude_illegal || hooks->equals != flecs_equals_illegal)) {
         result |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
     }
+
     return result;
 }
 
@@ -19566,6 +19734,7 @@ void ecs_set_hooks_id(
                 }
             }
         }
+
         if(flags & illegal_check) {
             flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
         }
@@ -19587,6 +19756,7 @@ void ecs_set_hooks_id(
                 hooks.move_dtor = flecs_default_dtor;
             }
         }
+
         if(flags & illegal_check) {
             flags |= ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
         }
@@ -19666,12 +19836,15 @@ static void flecs_type_info_fini(
     if (ti->hooks.ctx_free) {
         ti->hooks.ctx_free(ti->hooks.ctx);
     }
+
     if (ti->hooks.binding_ctx_free) {
         ti->hooks.binding_ctx_free(ti->hooks.binding_ctx);
     }
+
     if (ti->hooks.lifecycle_ctx_free) {
         ti->hooks.lifecycle_ctx_free(ti->hooks.lifecycle_ctx);
     }
+
     if (ti->name) {
         /* Safe to cast away const, world has ownership over string */
         ecs_os_free(ECS_CONST_CAST(char*, ti->name));
@@ -19867,6 +20040,7 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
     if (ti) {
         return &ti->hooks;
     }
+
     return NULL;
 }
 
@@ -19918,6 +20092,7 @@ const ecs_type_info_t* ecs_get_type_info(
     } else {
         return flecs_determine_type_info_for_component(world, id);
     }
+
 error:
     return NULL;
 }
@@ -20413,6 +20588,7 @@ static void flecs_fini_root_tables(
                     }
                 }
             }
+
             if(!finished) {
                 /* flush queue and restart iteration */
                 flecs_defer_end(world, stage0);
@@ -20928,9 +21104,11 @@ ecs_world_t* ecs_init_w_args(
         if (!last_elem) {
             last_elem = strrchr(app, '\\');
         }
+
         if (last_elem) {
             app = last_elem + 1;
         }
+
         ecs_set_pair(world, EcsWorld, EcsDocDescription, EcsName, {app});
     }
 #endif
@@ -21050,6 +21228,7 @@ int ecs_fini(
     if (world->ctx_free) {
         world->ctx_free(world->ctx);
     }
+
     if (world->binding_ctx_free) {
         world->binding_ctx_free(world->binding_ctx);
     }
@@ -21335,6 +21514,7 @@ int32_t ecs_delete_empty_tables(
                 if (result >= count) {
                     result = 0;
                 }
+
                 goto done;
             }
 
@@ -21869,15 +22049,18 @@ static void MonitorAlerts(ecs_iter_t *it) {
                         continue;
                     }
                 }
+
                 if (!member_src) {
                     member_data = ecs_table_get_id(
                         world, rit.table, member_id, rit.offset);
                 } else {
                     member_data = ecs_get_id(world, member_src, member_id);
                 }
+
                 if (!member_data) {
                     continue;
                 }
+
                 member_data = ECS_OFFSET(member_data, alert[i].offset);
             }
 
@@ -21891,9 +22074,11 @@ static void MonitorAlerts(ecs_iter_t *it) {
                     if (!member_src) {
                         member_data = ECS_OFFSET(member_data, alert[i].size);
                     }
+
                     if (!range_severity) {
                         continue;
                     }
+
                     if (range_severity < src_severity) {
                         /* Actual severity should not exceed range severity */
                         src_severity = range_severity;
@@ -22045,6 +22230,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
                         flecs_alerts_add_alert_to_src(world, e, parent, ai);
                         ecs_remove_id(world, ai, EcsDisabled);
                     }
+
                     timeout[i].inactive_time = 0;
                 }
 
@@ -22063,6 +22249,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
                 flecs_alerts_remove_alert_from_src(world, e, parent);
                 ecs_add_id(world, ai, EcsDisabled);
             }
+
             ecs_ftime_t t = timeout[i].inactive_time;
             timeout[i].inactive_time += it->delta_system_time;
             if (t < timeout[i].expire_time) {
@@ -22126,6 +22313,7 @@ ecs_entity_t ecs_alert_init(
                 ecs_err("severity filter must have severity");
                 goto error;
             }
+
             ecs_alert_severity_filter_t *sf = ecs_vec_append_t(NULL, 
                 &alert->severity_filters, ecs_alert_severity_filter_t);
             *sf = desc->severity_filters[i];
@@ -22149,6 +22337,7 @@ ecs_entity_t ecs_alert_init(
                 ecs_err("ecs_alert_desc_t::member is not a member");
                 goto error;
             }
+
             ecs_check(alert->id != 0, ECS_INVALID_PARAMETER, NULL);
         } else {
             alert->id = desc->id;
@@ -22175,6 +22364,7 @@ ecs_entity_t ecs_alert_init(
             ecs_err("ecs_alert_desc_t::member is not a member");
             goto error;
         }
+
         if (!member->type) {
             ecs_err("ecs_alert_desc_t::member must have a type");
             goto error;
@@ -22444,6 +22634,7 @@ char* flecs_explorer_request(const char *method, char *request, char *body) {
         reply_body = flecs_asprintf(
             "{\"error\": \"bad request\", \"status\": %d}", reply.code);
     }
+
     return reply_body;
 }
 #endif
@@ -22458,6 +22649,7 @@ int ecs_app_run(
     if (ECS_NEQZERO(ecs_app_desc.target_fps)) {
         ecs_set_target_fps(world, ecs_app_desc.target_fps);
     }
+
     if (ecs_app_desc.threads) {
         ecs_set_threads(world, ecs_app_desc.threads);
     }
@@ -22743,6 +22935,7 @@ void flecs_entity_ranges_fini(
         ecs_vec_fini_t(index->allocator, &ranges[r]->recycled, uint64_t);
         flecs_free_t(index->allocator, ecs_entity_range_t, ranges[r]);
     }
+
     ecs_vec_fini_t(index->allocator, &index->ranges, ecs_entity_range_t*);
 }
 
@@ -22759,6 +22952,7 @@ static void flecs_entity_index_remove_not_alive(
         r_last->dense = not_alive;
         ids[not_alive] = e_last;
     }
+
     ecs_vec_set_count_t(index->allocator, &index->dense, uint64_t, last);
     r->dense = 0;
 }
@@ -22853,6 +23047,7 @@ void flecs_entity_index_set_range(
                 break;
             }
         }
+
         ecs_assert(found, ECS_INVALID_PARAMETER,
             "range was not created with ecs_entity_range_new");
         (void)found;
@@ -22875,6 +23070,7 @@ void flecs_entity_index_set_range(
         } else {
             ecs_vec_set_count_t(a, &prev->recycled, uint64_t, 0);
         }
+
         prev->cur = index->max_id;
     }
 
@@ -22892,6 +23088,7 @@ void flecs_entity_index_set_range(
                 }
             }
         }
+
         ecs_vec_set_count_t(a, &index->dense, uint64_t, alive_count);
     }
 
@@ -22981,6 +23178,7 @@ const ecs_entity_range_t* ecs_entity_range_new(
             } else {
                 overlap = min <= existing->max && max >= existing->min;
             }
+
             ecs_check(!overlap, ECS_INVALID_PARAMETER,
                 "range [%u, %u] overlaps with existing range [%u, %u]",
                     min, max, existing->min, existing->max);
@@ -23007,8 +23205,10 @@ const ecs_entity_range_t* ecs_entity_range_new(
             if (ranges[i - 1]->min <= min) {
                 break;
             }
+
             ranges[i] = ranges[i - 1];
         }
+
         ranges[i] = range;
     }
 
@@ -23078,6 +23278,7 @@ static ecs_size_t ecs_cpp_strip_prefix(
         typeName[len - prefix_len] = '\0';
         len -= prefix_len;
     }
+
     return len;
 }
 
@@ -23104,6 +23305,7 @@ static void ecs_cpp_trim_type_name(
         if (!ecs_os_strncmp(&typeName[len - ECS_CONST_LEN], " const", ECS_CONST_LEN)) {
             typeName[len - ECS_CONST_LEN] = '\0';
         }
+
         len -= ECS_CONST_LEN;
     }
 
@@ -23177,6 +23379,7 @@ static const char* flecs_cpp_func_rchr(
     if ((r - func_name) >= (func_name_len - flecs_uto(ecs_size_t, func_back_len))) {
         return NULL;
     }
+
     return r;
 }
 
@@ -23347,6 +23550,7 @@ ecs_entity_t ecs_cpp_component_register(
         c = ecs_lookup_path_w_sep(world, 0, user_name, "::", "::", false);
         existing = c != 0 && ecs_has(world, c, EcsComponent);
     }
+
     ecs_set_scope(world, prev_scope);
 
     /* If entity exists, compare symbol name to ensure that the component
@@ -23960,6 +24164,7 @@ void ecs_measure_frame_time(
     if (ECS_EQZERO(world->info.target_fps) || enable) {
         ECS_BIT_COND(world->flags, EcsWorldMeasureFrameTime, enable);
     }
+
 error:
     return;
 }
@@ -24025,6 +24230,7 @@ static char* flecs_journal_entitystr(
             path = flecs_asprintf("#[normal]_%u", (uint32_t)entity);
         }
     }
+
     return path;
 }
 
@@ -24093,6 +24299,7 @@ void flecs_journal_begin(
         ecs_print(4, "%d: %s = #[cyan]ecs_new#[reset](world); "
             "#[grey] // %s = new()", flecs_journal_counter, var_id, path);
     }
+
     if (kind == EcsJournalSetParent) {
         ecs_entity_t parent = add->array[0];
         char *parentstr = flecs_journal_entitystr(world, parent);
@@ -24112,6 +24319,7 @@ void flecs_journal_begin(
                 ecs_os_free(jidstr);
             }
         }
+
         if (remove) {
             for (int i = 0; i < remove->count; i ++) {
                 char *jidstr = flecs_journal_idstr(world, remove->array[i]);
@@ -24231,6 +24439,7 @@ static void flecs_log_capture_log(
         } else {
             ecs_strbuf_appendch(flecs_log_last_err, '\n');
         }
+
         ecs_strbuf_appendstr(flecs_log_last_err, msg);
     }
 
@@ -24244,6 +24453,7 @@ static char* flecs_log_get_captured_log(void) {
     if (!flecs_log_last_err) {
         return NULL;
     }
+
     char *result = ecs_strbuf_get(flecs_log_last_err);
     ecs_os_free(flecs_log_last_err);
     flecs_log_last_err = NULL;
@@ -24260,6 +24470,7 @@ void ecs_log_start_capture(bool try) {
     if (flecs_log_capture_depth ++) {
         return;
     }
+
     flecs_log_last_err_line = 0;
     flecs_log_last_err_column = 0;
     flecs_parser_err_line = 0;
@@ -24278,6 +24489,7 @@ char* ecs_log_stop_capture(void) {
     if (-- flecs_log_capture_depth) {
         return NULL;
     }
+
     flecs_log_stopped_err_line = flecs_log_last_err_line;
     flecs_log_stopped_err_column = flecs_log_last_err_column;
     ecs_os_api.log_ = flecs_log_prev_fatal_log;
@@ -24341,6 +24553,7 @@ void flecs_log_get_captured_error_pos(
     if (line) {
         *line = flecs_log_stopped_err_line;
     }
+
     if (column) {
         *column = flecs_log_stopped_err_column;
     }
@@ -24370,6 +24583,7 @@ void flecs_colorize_buf(
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 isNum = false;
             }
+
             if (isStr && (isStr == ch) && prev != '\\') {
                 isStr = '\0';
             } else if (((ch == '\'') || (ch == '"')) && !isStr &&
@@ -24439,6 +24653,7 @@ void flecs_colorize_buf(
                 while ((ch = *ptr) != ']') ptr ++;
                 dontAppend = true;
             }
+
             if (!autoColor) {
                 overrideColor = true;
             }
@@ -24658,6 +24873,7 @@ static void flecs_parser_errorv(
                 for (c = 0; c < column; c ++) {
                     ecs_strbuf_appendch(&msg_buf, ' ');
                 }
+
                 ecs_strbuf_appendch(&msg_buf, '^');
             }
         }
@@ -24668,6 +24884,7 @@ static void flecs_parser_errorv(
         } else {
             ecs_os_err(name, 0, msg);
         }
+
         ecs_os_free(msg);
     }
 }
@@ -24741,6 +24958,7 @@ void ecs_abort_(
         ecs_fatal_(file, line, "#[red]abort()#[reset]: #[blue]%s#[reset]", 
             ecs_strerror(err));
     }
+
     ecs_os_api.log_last_error_ = err;
 }
 
@@ -24764,6 +24982,7 @@ void ecs_assert_log_(
         ecs_fatal_(file, line, "#[red]assert(%s)#[reset] (#[blue]%s#[reset])",
             cond_str, ecs_strerror(err));
     }
+
     ecs_os_api.log_last_error_ = err;
 }
 
@@ -24965,6 +25184,7 @@ void flecs_log_get_captured_error_pos(
     if (line) {
         *line = 0;
     }
+
     if (column) {
         *column = 0;
     }
@@ -25485,6 +25705,7 @@ static int flecs_member_metric_init(
             ecs_os_free(metric_name);
             goto error;
         }
+
         if (ecs_meta_dotmember(&cur, desc->dotmember)) {
             char *metric_name = ecs_get_path(world, metric);
             ecs_err("invalid dotmember '%s' for metric '%s'",
@@ -25533,6 +25754,7 @@ static int flecs_member_metric_init(
                 ecs_os_free(metric_name);
                 goto error;
             }
+
             id = desc->id;
         }
 
@@ -25785,11 +26007,13 @@ ecs_entity_t ecs_metric_init(
                 ecs_err("cannot specify targets for id that is not a pair");
                 goto error;
             }
+
             if (ECS_PAIR_FIRST(desc->id) == EcsWildcard) {
                 ecs_err("first element of pair cannot be wildcard with "
                     " targets enabled");
                 goto error;
             }
+
             if (ECS_PAIR_SECOND(desc->id) != EcsWildcard) {
                 ecs_err("second element of pair must be wildcard with "
                     " targets enabled");
@@ -26086,6 +26310,7 @@ ecs_entity_t ecs_import_from_library(
         if (module != module_name) {
             ecs_os_free(module);
         }
+
         return 0;
     } else {
         ecs_trace("found file '%s' for library '%s'", 
@@ -26615,6 +26840,7 @@ static ECS_DTOR(EcsRest, ptr, {
             ecs_rest_server_fini(impl->srv);
         }
     }
+
     ecs_os_free(ptr->ipaddr);
 })
 
@@ -26741,6 +26967,7 @@ static bool flecs_rest_get_entity(
             for (sep = suggestion; (sep = strchr(sep, '.')); sep ++) {
                 *sep = '/';
             }
+
             flecs_reply_error(reply,
                 "entity '%s' not found, did you mean '/entity/%s'?",
                 path, suggestion);
@@ -26748,6 +26975,7 @@ static bool flecs_rest_get_entity(
         } else {
             flecs_reply_error(reply, "entity '%s' not found", path);
         }
+
         reply->code = 404;
         return true;
     }
@@ -26760,6 +26988,7 @@ static bool flecs_rest_get_entity(
         reply->status = "Internal server error";
         return true;
     }
+
     return true;
 }
 
@@ -26810,6 +27039,7 @@ static bool flecs_rest_get_world(
         reply->status = "Internal server error";
         return true;
     }
+
     return true;
 }
 
@@ -26824,6 +27054,7 @@ static ecs_entity_t flecs_rest_entity_from_path(
         flecs_reply_error(reply, "entity '%s' not found", path);
         reply->code = 404;
     }
+
     return e;
 }
 
@@ -27195,6 +27426,7 @@ static bool flecs_rest_call(
         reply->code = 400;
         return true;
     }
+
     int32_t i, param_count = ecs_vec_count(&func->params);
     ecs_script_parameter_t *params = ecs_vec_first(&func->params);
     ecs_value_t *args = param_count ? ecs_os_calloc_n(ecs_value_t, param_count) : NULL;
@@ -27211,6 +27443,7 @@ static bool flecs_rest_call(
             reply->code = 500;
             goto done;
         }
+
         args[i] = ecs_value_new(world, params[i].type);
 
         const EcsPrimitive *primitive = ecs_get(
@@ -27224,6 +27457,7 @@ static bool flecs_rest_call(
                 reply->code = 400;
                 goto done;
             }
+
             *(char*)args[i].ptr = value[0];
         } else {
             flecs_log_capture_push(true);
@@ -27313,8 +27547,10 @@ static void flecs_rest_reply_capture(
             flecs_reply_error(reply, "%s", escaped_err);
             ecs_os_free(escaped_err);
         }
+
         reply->code = 400;
     }
+
     ecs_os_free(err);
 }
 
@@ -27439,6 +27675,7 @@ static bool flecs_rest_get_query(
         ok = flecs_rest_iter_to_reply(req, reply, q, &it);
         ecs_query_fini(q);
     }
+
     flecs_rest_reply_capture(reply, ok);
     if (!q && try) {
         reply->code = 200;
@@ -27842,6 +28079,7 @@ static void flecs_rest_append_component_memory(
     if (ecs_id_is_wildcard(cr->id)) {
         storage_bytes = 0;
     }
+
     ecs_strbuf_list_appendlit(reply, "\"storage\":");
     ecs_strbuf_append(reply, "%d", storage_bytes);
     ecs_strbuf_list_pop(reply, "}");
@@ -27859,60 +28097,79 @@ static void flecs_rest_append_component_traits(
     if (flags & EcsIdOnDeleteRemove) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDelete,Remove)\"");
     }
+
     if (flags & EcsIdOnDeleteDelete) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDelete,Delete)\"");
     }
+
     if (flags & EcsIdOnDeletePanic) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDelete,Panic)\"");
     }
+
     if (flags & EcsIdOnDeleteTargetRemove) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDeleteTarget,Remove)\"");
     }
+
     if (flags & EcsIdOnDeleteTargetDelete) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDeleteTarget,Delete)\"");
     }
+
     if (flags & EcsIdOnDeleteTargetPanic) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDeleteTarget,Panic)\"");
     }
+
     if (flags & EcsIdOnInstantiateOverride) {
         ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,Override)\"");
     }
+
     if (flags & EcsIdOnInstantiateInherit) {
         ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,Inherit)\"");
     }
+
     if (flags & EcsIdOnInstantiateDontInherit) {
         ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,DontInherit)\"");
     }
+
     if (flags & EcsIdExclusive) {
         ecs_strbuf_list_appendlit(reply, "\"Exclusive\"");
     }
+
     if (flags & EcsIdTraversable) {
         ecs_strbuf_list_appendlit(reply, "\"Traversable\"");
     }
+
     if (flags & EcsPairIsTag) {
         ecs_strbuf_list_appendlit(reply, "\"PairIsTag\"");
     }
+
     if (flags & EcsIdWith) {
         ecs_strbuf_list_appendlit(reply, "\"With\"");
     }
+
     if (flags & EcsIdCanToggle) {
         ecs_strbuf_list_appendlit(reply, "\"CanToggle\"");
     }
+
     if (flags & EcsIdIsTransitive) {
         ecs_strbuf_list_appendlit(reply, "\"IsTransitive\"");
     }
+
     if (flags & EcsIdInheritable) {
         ecs_strbuf_list_appendlit(reply, "\"Inheritable\"");
     }
+
     if (flags & EcsIdSparse) {
         ecs_strbuf_list_appendlit(reply, "\"Sparse\"");
     }
+
     if (flags & EcsIdDontFragment) {
         ecs_strbuf_list_appendlit(reply, "\"DontFragment\"");
     }
+
     if (flags & EcsIdOrderedChildren) {
         ecs_strbuf_list_appendlit(reply, "\"OrderedChildren\"");
     }
+
     if (flags & EcsIdSingleton) {
         ecs_strbuf_list_appendlit(reply, "\"Singleton\"");
     }
@@ -28239,6 +28496,7 @@ static void flecs_rest_reply_table_append_type(
         flecs_json_string_escape(reply, idstr);
         ecs_os_free(idstr);
     }
+
     ecs_strbuf_list_pop(reply, "]");
 }
 
@@ -28255,6 +28513,7 @@ static void flecs_rest_reply_table_append_memory(
     if (!ecs_id(ecs_table_memory_t) || !ecs_id(ecs_component_memory_t)) {
         return;
     }
+
     ecs_table_memory_t table_memory = {0};
     ecs_table_memory_get(table, &table_memory);
 
@@ -28308,6 +28567,7 @@ static bool flecs_rest_get_tables(
         ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
         flecs_rest_reply_table_append(world, &reply->body, table);
     }
+
     ecs_strbuf_list_pop(&reply->body, "]");
 
     return true;
@@ -28369,6 +28629,7 @@ static void flecs_rest_server_garbage_collect_all(
             ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
             ecs_os_free(sync->cmds);
         }
+
         ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
         ecs_os_free(capture);
     }
@@ -28394,6 +28655,7 @@ static void flecs_rest_server_garbage_collect(
                 ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
                 ecs_os_free(sync->cmds);
             }
+
             ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
             ecs_os_free(capture);
 
@@ -28411,6 +28673,7 @@ static void flecs_rest_server_garbage_collect(
                     flecs_ito(uint64_t, frames[i]));
             }
         }
+
         ecs_vec_fini_t(NULL, &removed_frames, int64_t);
     }
 }
@@ -28460,6 +28723,7 @@ static void flecs_rest_cmd_to_json(
                 } else {
                     ecs_strbuf_appendlit(buf, "false");
                 }
+
                 ecs_strbuf_appendlit(buf, "\"");
 
             ecs_strbuf_list_appendlit(buf, "\"next_for_entity\":");
@@ -28494,6 +28758,7 @@ static void flecs_rest_on_commands(
                 ecs_strbuf_list_next(&sync->buf);
                 flecs_rest_cmd_to_json(world, &sync->buf, &cmds[i]);
             }
+
             ecs_strbuf_list_pop(&sync->buf, "]");
 
         /* Measure how long it takes to process queue */
@@ -28732,6 +28997,7 @@ ecs_http_server_t* ecs_rest_server_init(
     if (desc) {
         private_desc = *desc;
     }
+
     private_desc.callback = flecs_rest_reply;
     private_desc.ctx = srv_ctx;
 
@@ -29045,6 +29311,7 @@ ecs_ftime_t ecs_get_timeout(
     if (value) {
         return value->timeout;
     }
+
 error:
     return 0;
 }
@@ -29070,6 +29337,7 @@ ecs_entity_t ecs_set_interval(
     if (system_data) {
         system_data->tick_source = timer;
     }
+
 error:
     return timer;  
 }
@@ -29088,6 +29356,7 @@ ecs_ftime_t ecs_get_interval(
     if (value) {
         return value->timeout;
     }
+
 error:
     return 0;
 }
@@ -29625,21 +29894,25 @@ void FlecsUnitsImport(
         } else if (def->is_prefix) {
             parent = EcsUnitPrefixes;
         }
+
         ecs_entity_t entity = *def->id = ecs_entity(world, {
             .name = def->name, .parent = parent
         });
         if (def->module) {
             ecs_add_id(world, entity, EcsModule);
         }
+
         if (def->is_quantity) {
             ecs_quantity_init(world, &(ecs_entity_desc_t){.id = entity});
         }
+
         if (def->is_prefix) {
             ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
                 .entity = entity, .symbol = def->symbol,
                 .translation = {def->factor, def->power}
             });
         }
+
         if (def->is_unit) {
             ecs_unit_init(world, &(ecs_unit_desc_t){
                 .entity = entity, .symbol = def->symbol,
@@ -29650,6 +29923,7 @@ void FlecsUnitsImport(
                 .translation = {def->factor, def->power}
             });
         }
+
         if (def->kind) {
             ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity = entity, .kind = def->kind
@@ -29708,6 +29982,7 @@ void flecs_allocator_fini(
             &a->sizes, ecs_block_allocator_t, i);
         flecs_ballocator_fini(ba);
     }
+
     flecs_sparse_fini(&a->sizes);
 
     flecs_ballocator_fini(&a->chunks);
@@ -30020,6 +30295,7 @@ void flecs_ballocator_init(
         ba->outstanding = ecs_os_malloc_t(ecs_map_t);
         ecs_map_init(ba->outstanding, NULL);
     }
+
     size += ECS_SIZEOF(int64_t) * 2; /* 16 byte aligned */
 #endif
     ba->chunk_size = ECS_ALIGN(size, 16);
@@ -30053,8 +30329,10 @@ void flecs_ballocator_fini(
                 }
             }
         }
+
         ecs_abort(ECS_LEAK_DETECTED, NULL);
     }
+
     if (ba->outstanding) {
         ecs_map_fini(ba->outstanding);
         ecs_os_free(ba->outstanding);
@@ -30114,6 +30392,7 @@ void* flecs_balloc_w_dbg_info(
         uint64_t *v = ecs_map_ensure(ba->outstanding, (uintptr_t)result);
         *(const char**)v = type_name;
     }
+
     ba->alloc_count ++;
     *(int64_t*)result = (uintptr_t)ba;
     result = ECS_OFFSET(result, ECS_SIZEOF(int64_t) * 2);
@@ -30197,6 +30476,7 @@ void flecs_bfree_w_dbg_info(
                 "(chunk = %ub, allocator = %ub)",
                     memory, actual->data_size, ba->chunk_size);
         }
+
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -30246,8 +30526,10 @@ void* flecs_brealloc_w_dbg_info(
         if (dst->data_size < size) {
             size = dst->data_size;
         }
+
         ecs_os_memcpy(result, memory, size);
     }
+
     flecs_bfree_w_dbg_info(src, memory, type_name);
 #endif
 #ifdef FLECS_MEMSET_UNINITIALIZED
@@ -30396,9 +30678,11 @@ static inline uint64_t wyhash(const void *key, size_t len, uint64_t seed, const 
       }while(likely_(i>48));
       seed^=see1^see2;
     }
+
     while(unlikely_(i>16)){  seed=wymix_(wyr8_(p)^secret[1],wyr8_(p+8)^seed);  i-=16; p+=16;  }
     a=wyr8_(p+i-16);  b=wyr8_(p+i-8);
   }
+
   a^=secret[1]; b^=seed;  wymum_(&a,&b);
   return  wymix_(a^secret[0]^len,b^secret[1]);
 }
@@ -30423,6 +30707,7 @@ static ecs_hm_bucket_t* flecs_hashmap_find_key(
             return bucket;
         }
     }
+
     return NULL;
 }
 
@@ -30499,6 +30784,7 @@ void flecs_hashmap_copy(
             ecs_os_memcpy(*ptr, src_bucket, dst->bucket_size);
             ptr = &(*ptr)->next;
         }
+
         *ptr = NULL;
     }
 }
@@ -30540,6 +30826,7 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
         bucket = *r = flecs_hm_bucket_new(map);
         ecs_os_memcpy(flecs_hm_bucket_key(bucket), key, key_size);
     }
+
     return (flecs_hashmap_result_t){
         .key = flecs_hm_bucket_key(bucket),
         .value = flecs_hm_bucket_value(map, bucket), .hash = hash
@@ -30568,6 +30855,7 @@ void flecs_hm_bucket_remove(
     if (!*head) {
         ecs_map_remove(&map->impl, hash);
     }
+
     flecs_hm_bucket_free(map, bucket);
 }
 
@@ -30611,12 +30899,15 @@ void* flecs_hashmap_next_(
         if (!ecs_map_next(&it->it)) {
             return NULL;
         }
+
         bucket = ecs_map_ptr(&it->it);
     }
+
     it->bucket = bucket->next;
     if (key_out) {
         *(void**)key_out = flecs_hm_bucket_key(bucket);
     }
+
     return flecs_hm_bucket_value(it->map, bucket);
 }
 
@@ -30737,6 +31028,7 @@ static ecs_map_val_t* flecs_map_bucket_get(
             return &entry->value;
         }
     }
+
     return NULL;
 }
 
@@ -30829,6 +31121,7 @@ void* ecs_map_get_deref_(
     if (ptr) {
         return (void*)(uintptr_t)ptr[0];
     }
+
     return NULL;
 }
 
@@ -30945,6 +31238,7 @@ void ecs_map_clear(
     for (i = 0; i < count; i ++) {
         flecs_map_bucket_clear(map->allocator, &map->buckets[i]);
     }
+
     ECS_MAP_FREE_N(map->allocator, ecs_bucket_t, count, map->buckets);
     map->buckets = NULL;
     map->bucket_count = 0;
@@ -31017,6 +31311,7 @@ bool ecs_map_next(
                 break;
             }
         }
+
         if (iter->bucket == end) {
             return false;
         }
@@ -31226,6 +31521,7 @@ uint64_t flecs_name_index_find(
     if (id) {
         return id[0];
     }
+
     return 0;
 }
 
@@ -31269,6 +31565,7 @@ bool flecs_name_index_update_name(
             return true;
         }
     }
+
     return false;
 }
 
@@ -31352,6 +31649,7 @@ static void flecs_sparse_page_free(
     } else {
         ecs_os_free(page->sparse);
     }
+
     if (a) {
         flecs_free(a, sparse->size * FLECS_SPARSE_PAGE_SIZE, page->data);
     } else {
@@ -31370,6 +31668,7 @@ static ecs_sparse_page_t* flecs_sparse_get_page(
     if (page_index >= ecs_vec_count(&sparse->pages)) {
         return NULL;
     }
+
     return ecs_vec_get_t(&sparse->pages, ecs_sparse_page_t, page_index);
 }
 
@@ -31596,6 +31895,7 @@ void* flecs_sparse_ensure(
         if (dense != count) {
             flecs_sparse_swap_dense(sparse, page, dense, count);
         }
+
         ecs_vec_first_t(&sparse->dense, uint64_t)[count] = id;
     }
 
@@ -31920,6 +32220,7 @@ void* flecs_stack_alloc(
         } else {
             page = page->next = flecs_stack_page_new(page->id);
         }
+
         sp = 0;
         next_sp = flecs_ito(int16_t, size);
         stack->tail_page = page;
@@ -32027,6 +32328,7 @@ void flecs_stack_restore_cursor(
         if (!prev || !prev->is_free) {
             break; /* Found active cursor, free up until this point */
         }
+
         cursor = prev;
     } while (cursor);
 
@@ -32059,6 +32361,7 @@ void flecs_stack_reset(
     if (stack->first) {
         stack->first->sp = 0;
     }
+
     stack->tail_cursor = NULL;
 }
 
@@ -32142,6 +32445,7 @@ static char* flecs_strbuf_itoa(
 		}
 		ptr = p1;
 	}
+
     return ptr;
 }
 
@@ -32161,10 +32465,12 @@ static void flecs_strbuf_ftoa(
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
         }
+
         ecs_strbuf_appendstrn(out, nan ? "NaN" : "Inf", 3);
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
         }
+
         return;
     }
 
@@ -32193,6 +32499,7 @@ static void flecs_strbuf_ftoa(
         *ptr++ = (char)('0' + c);
         f -= c;
     }
+
 	*ptr = 0;
 
     /* Remove trailing 0s */
@@ -32238,6 +32545,7 @@ static void flecs_strbuf_ftoa(
                     p1 --;
                     break;
                 }
+
                 p1[0] = c;
                 c = t;
                 exp ++;
@@ -32447,6 +32755,7 @@ void ecs_strbuf_mergebuff(
     if (src->content && src->length) {
         flecs_strbuf_appendstr(b, src->content, src->length);
     }
+
     ecs_strbuf_reset(src);
 }
 
@@ -32497,6 +32806,7 @@ void ecs_strbuf_reset(
     if (b->content && b->content != b->small_string) {
         ecs_os_free(b->content);
     }
+
     *b = ECS_STRBUF_INIT;
 }
 
@@ -32562,6 +32872,7 @@ void ecs_strbuf_list_next(
             ecs_strbuf_appendstr(b, sep);
         }
     }
+
     b->list_stack[list_sp].count ++;
 }
 
@@ -32644,6 +32955,7 @@ static void* flecs_vec_alloc(
             return ecs_os_malloc(size * elem_count);
         }
     }
+
     return NULL;
 }
 
@@ -32708,6 +33020,7 @@ void ecs_vec_fini(
         } else {
             ecs_os_free(v->array);
         }
+
         v->array = NULL;
         v->count = 0;
         v->size = 0;
@@ -32725,6 +33038,7 @@ ecs_vec_t* ecs_vec_reset(
         ecs_san_assert(size == v->elem_size, ECS_INTERNAL_ERROR, NULL);
         ecs_vec_clear(v);
     }
+
     return v;
 }
 
@@ -32746,6 +33060,7 @@ ecs_vec_t ecs_vec_copy(
     } else {
         array = ecs_os_memdup(v->array, size * v->size);
     }
+
     return (ecs_vec_t) {
         .count = v->count,
         .size = v->size,
@@ -32779,6 +33094,7 @@ void ecs_vec_reclaim(
                 ecs_os_free(v->array);
                 v->array = new_array;
             }
+
             v->size = count;
         } else {
             ecs_vec_fini(allocator, v, size);
@@ -32808,9 +33124,11 @@ void ecs_vec_set_size(
         if (new_count < 2) {
             new_count = 2;
         }
+
         if (new_count < elem_count || new_count > max_count) {
             new_count = max_count;
         }
+
         elem_count = new_count;
 
         if (elem_count != v->size) {
@@ -32826,6 +33144,7 @@ void ecs_vec_set_size(
             } else {
                 v->array = ecs_os_realloc(v->array, size * elem_count);
             }
+
             v->size = elem_count;
         }
     }
@@ -32944,13 +33263,16 @@ void ecs_vec_set_count_w_type_info(
             if (old_count) {
                 flecs_type_info_ctor_move_dtor(array, v->array, old_count, ti);
             }
+
             flecs_vec_free(allocator, size, v->size, v->array);
             v->array = array;
             v->size = new_size;
         }
+
         flecs_type_info_ctor(ECS_ELEM(v->array, size, old_count),
             elem_count - old_count, ti);
     }
+
     v->count = elem_count;
 }
 
@@ -32977,6 +33299,7 @@ void* ecs_vec_append(
     if (v->size == count) {
         ecs_vec_set_size(allocator, v, size, count + 1);
     }
+
     v->count = count + 1;
     return ECS_ELEM(v->array, size, count);
 }
@@ -33093,10 +33416,12 @@ int32_t ecs_query_find_var(
                 var_id = 0;
             }
         }
+
         if (var_id == EcsVarNone) {
             return -1;
         }
     }
+
     return (int32_t)var_id;
 }
 
@@ -33183,6 +33508,7 @@ static int flecs_query_set_caching_policy(
                 "group_by/order_by/change detection");
             return -1;
         }
+
         return 0;
     }
 
@@ -33541,6 +33867,7 @@ ecs_query_t* ecs_query_update(
         /* Ensures that remove operation doesn't get applied after bind */
         ecs_defer_suspend(world);
     }
+
     ecs_remove_pair(world, entity, ecs_id(EcsPoly), EcsQuery);
     if (deferred) {
         ecs_defer_resume(world);
@@ -33698,6 +34025,7 @@ bool flecs_query_count_trivial_cache(
             if (!entities && !match_empty) {
                 continue;
             }
+
             out->results ++;
             out->entities += entities;
         }
@@ -33982,6 +34310,7 @@ bool flecs_term_is_builtin_pred(
             return true;
         }
     }
+
     return false;
 }
 
@@ -34007,6 +34336,7 @@ bool flecs_term_ref_is_wildcard(
     {
         return true;
     }
+
     return false;
 }
 
@@ -34023,6 +34353,7 @@ bool flecs_term_is_fixed_id(
     if (term->oper == EcsOr) {
         return false;
     }
+
     if ((term != q->terms) && term[-1].oper == EcsOr) {
         return false;
     }
@@ -34111,6 +34442,7 @@ bool flecs_ref_is_written(
     } else if (flags & EcsQueryIsVar) {
         return flecs_query_is_written(ref->var, written);
     }
+
     return false;
 }
 
@@ -34151,6 +34483,7 @@ static int32_t flecs_query_op_ref_str(
         if (var->kind == EcsVarTable) {
             ecs_strbuf_appendch(buf, '[');
         }
+
         ecs_strbuf_appendlit(buf, "#[green]");
         if (var->name) {
             ecs_strbuf_appendstr(buf, var->name);
@@ -34167,10 +34500,12 @@ static int32_t flecs_query_op_ref_str(
                 ecs_strbuf_appendlit(buf, "this");
             }
         }
+
         ecs_strbuf_appendlit(buf, "#[reset]");
         if (var->kind == EcsVarTable) {
             ecs_strbuf_appendch(buf, ']');
         }
+
         color_chars = ecs_os_strlen("#[green]#[reset]#[green]#[reset]");
     } else if (flags & EcsQueryIsEntity) {
         char *path = ecs_get_path(query->pub.world, ref->entity);
@@ -34180,6 +34515,7 @@ static int32_t flecs_query_op_ref_str(
         ecs_os_free(path);
         color_chars = ecs_os_strlen("#[blue]#[reset]");
     }
+
     return color_chars;
 }
 
@@ -34194,6 +34530,7 @@ static void flecs_query_str_append_bitset(
             ecs_strbuf_list_append(buf, "%d", b);
         }
     }
+
     ecs_strbuf_list_pop(buf, "}");
 }
 
@@ -34281,12 +34618,15 @@ static void flecs_query_plan_w_profile(
             if (op->first.entity) {
                 flecs_query_str_append_bitset(buf, op->first.entity);
             }
+
             if (op->second.entity) {
                 if (op->first.entity) {
                     ecs_strbuf_appendlit(buf, ", !");
                 }
+
                 flecs_query_str_append_bitset(buf, op->second.entity);
             }
+
             ecs_strbuf_appendstr(buf, "\n");
             continue;
         }
@@ -34407,6 +34747,7 @@ static void flecs_query_str_add_id(
     } else {
         ecs_strbuf_appendlit(buf, "#0");
     }
+
     is_added = true;
 
     ecs_flags64_t flags = ECS_TERM_REF_FLAGS(ref);
@@ -34422,6 +34763,7 @@ static void flecs_query_str_add_id(
         } else {
             ecs_strbuf_list_push(buf, "", "|");
         }
+
         if (is_src) {
             if (flags & EcsSelf) {
                 ecs_strbuf_list_appendstr(buf, "self");
@@ -34520,6 +34862,7 @@ void flecs_term_to_buf(
                 {
                     ecs_strbuf_appendlit(buf, "!");
                 }
+
                 ecs_strbuf_appendstr(buf, term->second.name);
                 ecs_strbuf_appendlit(buf, "\"");
             }
@@ -34569,6 +34912,7 @@ void flecs_term_to_buf(
             ecs_strbuf_appendlit(buf, ",");
             flecs_query_str_add_id(world, buf, term, &term->second, false);
         }
+
         ecs_strbuf_appendlit(buf, ")");
     }
 }
@@ -34668,12 +35012,14 @@ static void flecs_query_validator_error(
             } else {
                 ecs_strbuf_appendlit(&buf, "   ");
             }
+
             flecs_term_to_buf(ctx->world, term, &buf, i);
             if (term->oper == EcsOr) {
                 ecs_strbuf_appendlit(&buf, " ||");
             } else if (i != (count - 1)) {
                 ecs_strbuf_appendlit(&buf, ",");
             }
+
             ecs_strbuf_appendlit(&buf, "\n");
         }
     } else {
@@ -34776,6 +35122,7 @@ static int flecs_term_ref_lookup(
             flecs_query_validator_error(ctx, "invalid variable name '%s'", name);
             return -1;
         }
+
         return 0;
     } else if (ref->id & EcsIsName) {
         return 0;
@@ -34789,6 +35136,7 @@ static int flecs_term_ref_lookup(
                 ctx, "name '0' does not match entity id");
             return -1;
         }
+
         ref->name = NULL;
         return 0;
     }
@@ -34839,6 +35187,7 @@ static int flecs_term_ref_lookup(
         flecs_query_validator_error(ctx, "identifier '%s' is not alive", name);
         return -1;
     }
+
     ref->name = NULL;
     return 0;
 }
@@ -34882,6 +35231,7 @@ static int flecs_term_refs_finalize(
     if (flecs_term_ref_lookup(world, 0, src, ctx)) {
         return -1;
     }
+
     if (flecs_term_ref_lookup(world, 0, first, ctx)) {
         return -1;
     }
@@ -34966,6 +35316,7 @@ static int flecs_term_decode_id(
             ref->id = EcsIsEntity;
         }
     }
+
     return 0;
 }
 
@@ -34998,6 +35349,7 @@ static int flecs_term_encode_id(
     } else {
         term->id = id;
     }
+
     return 0;
 }
 
@@ -35042,6 +35394,7 @@ static int flecs_term_verify_eq_pred(
             flecs_query_validator_error(ctx, "both sides of operator are equal");
             goto error;
         }
+
         if (src->name && second->name && !ecs_os_strcmp(src->name, second->name)) {
             flecs_query_validator_error(ctx, "both sides of operator are equal");
             goto error;
@@ -35084,9 +35437,11 @@ static bool flecs_term_ref_same(
         if (a_id == EcsWildcard || a_id == EcsAny) {
             return false;
         }
+
         if (a->id & EcsIsVariable) {
             return match_this;
         }
+
         return true;
     }
 
@@ -35519,6 +35874,7 @@ static ecs_term_t* flecs_query_or_other_type(
         if (q->terms[t].oper != EcsOr) {
             break;
         }
+
         first = &q->terms[t];
     }
 
@@ -35530,6 +35886,7 @@ static ecs_term_t* flecs_query_or_other_type(
         if (first_type == term_type) {
             return NULL;
         }
+
         return first;
     } else {
         return NULL;
@@ -35578,15 +35935,18 @@ static void flecs_query_set_self_trivial(
             flags = 0;
             break;
         }
+
         if (!(src & EcsSelf)) {
             flags &= ~EcsQuerySelfTrivial;
         }
+
         if ((src & (EcsCascade|EcsDesc)) || !(src & (EcsSelf|EcsUp)) ||
             ((src & EcsUp) && term->trav != EcsIsA))
         {
             flags &= ~EcsQueryIsaTrivial;
         }
     }
+
     q->flags = (q->flags & ~(EcsQuerySelfTrivial|EcsQueryIsaTrivial)) | flags;
 }
 
@@ -35701,6 +36061,7 @@ static int flecs_query_finalize_terms(
             if (prev_is_or && !(term[-1].flags_ & EcsTermIsCacheable)) {
                 ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
             }
+
             if (term->flags_ & EcsTermIsToggle) {
                 cacheable = false;
             }
@@ -35764,6 +36125,7 @@ static int flecs_query_finalize_terms(
             q->sizes[field] = ti->size;
             q->ids[field] = cr ? cr->id : term->id;
         }
+
         nodata_term = term->src.id == EcsIsEntity || term->inout == EcsInOutNone ||
             !ti || (term->flags_ & EcsTermIsMember) || scope_nesting;
 
@@ -35795,9 +36157,11 @@ static int flecs_query_finalize_terms(
             if (term->inout != EcsIn) {
                 ECS_TERMSET_SET(q->write_fields, 1u << term->field_index);
             }
+
             if (term->inout != EcsOut) {
                 ECS_TERMSET_SET(q->read_fields, 1u << term->field_index);
             }
+
             if (term->inout == EcsInOutDefault) {
                 ECS_TERMSET_SET(q->shared_readonly_fields, 
                     1u << term->field_index);
@@ -35844,6 +36208,7 @@ static int flecs_query_finalize_terms(
                     "expression must have the same source)");
                 return -1;
             }
+
             if (term->oper != EcsOr && term->oper != EcsAnd) {
                 flecs_query_validator_error(&ctx, 
                     "term after OR expression cannot use operators");
@@ -35888,6 +36253,7 @@ static int flecs_query_finalize_terms(
                     "invalid operator for scope");
                 return -1;
             }
+
             q->flags |= EcsQueryHasScopes;
             scope_nesting ++;
             if (scope_nesting >= FLECS_QUERY_SCOPE_NESTING_MAX) {
@@ -35943,6 +36309,7 @@ static int flecs_query_finalize_terms(
                 }
             }
         }
+
         if (cascade_count > 1) {
             flecs_query_validator_error(&ctx,
                 "query can only have one cascade term");
@@ -35964,6 +36331,7 @@ static int flecs_query_finalize_terms(
             {
                 is_trivial = false;
             }
+
             if ((term->flags_ & EcsTermIsTrivial) &&
                 (term->src.id & EcsTraverseFlags) == EcsSelf &&
                 !ecs_id_is_wildcard(term->id))
@@ -36033,6 +36401,7 @@ static int flecs_query_query_populate_terms(
         if (!ecs_term_is_initialized(&desc->terms[i])) {
             break;
         }
+
         term_count ++;
     }
 
@@ -36375,9 +36744,11 @@ static void flecs_query_populate_tokens(
         if (term->first.name) {
             len += ecs_os_strlen(term->first.name) + 1;
         }
+
         if (term->second.name) {
             len += ecs_os_strlen(term->second.name) + 1;
         }
+
         if (term->src.name) {
             len += ecs_os_strlen(term->src.name) + 1;
         }
@@ -36396,11 +36767,13 @@ static void flecs_query_populate_tokens(
                 term->first.name = token;
                 token = next;
             }
+
             if (term->second.name) {
                 next = flecs_query_append_token(token, term->second.name);
                 term->second.name = token;
                 token = next;
             }
+
             if (term->src.name) {
                 next = flecs_query_append_token(token, term->src.name);
                 term->src.name = token;
@@ -36568,6 +36941,7 @@ static void flecs_component_elem_insert(
         ecs_id_record_elem_t *cur_elem = flecs_component_elem(cr, elem, cur);
         cur_elem->prev = cr;
     }
+
     head_elem->next = cr;
 }
 
@@ -36597,6 +36971,7 @@ static void flecs_insert_id_elem(
     if (!wcr) {
         wcr = flecs_components_ensure(world, wildcard);
     }
+
     ecs_assert(wcr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_pair_record_t *pair = cr->pair;
@@ -36657,12 +37032,15 @@ static ecs_id_t flecs_component_hash(
             if (r == EcsAny) {
                 r = EcsWildcard;
             }
+
             if (t == EcsAny) {
                 t = EcsWildcard;
             }
+
             id = ecs_pair(r, t);
         }
     }
+
     return id;
 }
 
@@ -36945,6 +37323,7 @@ static void flecs_component_record_check_constraints(
         goto error;
 #endif
     }
+
 error:
     return;
 #endif
@@ -37247,6 +37626,7 @@ ecs_component_record_t* flecs_components_ensure(
     if (!cr) {
         cr = flecs_component_new(world, id);
     }
+
     return cr;
 }
 
@@ -37452,6 +37832,7 @@ static ecs_flags32_t flecs_id_flags(
     if (cr_flags & EcsIdOnInstantiateInherit) {
         extra_flags |= EcsIdHasOnAdd|EcsIdHasOnRemove;
     }
+
     return cr_flags|extra_flags;
 }
 
@@ -37472,9 +37853,11 @@ ecs_flags32_t flecs_id_flags_get(
         if (id != ecs_pair(first, EcsWildcard)) {
             result |= flecs_id_flags(world, ecs_pair(first, EcsWildcard));
         }
+
         if (id != ecs_pair(EcsWildcard, second)) {
             result |= flecs_id_flags(world, ecs_pair(EcsWildcard, second));
         }
+
         if (id != ecs_pair(EcsWildcard, EcsWildcard)) {
             result |= flecs_id_flags(world, ecs_pair(EcsWildcard, EcsWildcard));
         }
@@ -37631,6 +38014,7 @@ static void flecs_entities_update_childof_depth(
             if (!r) {
                 continue;
             }
+
             ecs_table_t *table = r->table;
 
             if (table->flags & EcsTableHasParent) {
@@ -37650,6 +38034,7 @@ static void flecs_entities_update_childof_depth(
 
             flecs_component_update_childof_depth(world, tgt_cr, tgt, r);
         }
+
         return;
     }
 
@@ -37793,6 +38178,7 @@ void flecs_entity_index_fini(
     for (i = 0; i < count; i ++) {
         ecs_os_free(pages[i]);
     }
+
     ecs_vec_fini_t(index->allocator, &index->pages, ecs_entity_index_page_t*);
 
 #ifdef FLECS_ENTITY_RANGES
@@ -37859,10 +38245,12 @@ ecs_record_t* flecs_entity_index_try_get(
         if (r->dense >= index->alive_count) {
             return NULL;
         }
+
         if (ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0] != entity) {
             return NULL;
         }
     }
+
     return r;
 }
 
@@ -37979,6 +38367,7 @@ uint64_t flecs_entity_index_get_alive(
             return ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0];
         }
     }
+
     return 0;
 }
 
@@ -38208,6 +38597,7 @@ static void flecs_add_non_fragmenting_child_to_table(
         if (table->flags & EcsTableIsDisabled) {
             cr->pair->disabled_tables ++;
         }
+
         if (table->flags & EcsTableIsPrefab) {
             cr->pair->prefab_tables ++;
         }
@@ -38241,6 +38631,7 @@ static void flecs_remove_non_fragmenting_child_from_table(
             ecs_assert(cr->pair->disabled_tables >= 0, 
                 ECS_INTERNAL_ERROR, NULL);
         }
+
         if (table->flags & EcsTableIsPrefab) {
             cr->pair->prefab_tables --;
             ecs_assert(cr->pair->prefab_tables >= 0, 
@@ -38644,6 +39035,7 @@ bool flecs_component_has_non_fragmenting_childof(
     if (cr->flags & EcsIdOrderedChildren) {
         return ecs_map_count(&cr->pair->children_tables) != 0;
     }
+
     return false;
 }
 
@@ -38737,6 +39129,7 @@ void flecs_ordered_entities_append(
         for (i = count - 1; i > index; i --) {
             array[i] = array[i - 1];
         }
+
         array[index] = e;
     }
 
@@ -38801,6 +39194,7 @@ int32_t flecs_ordered_entities_remove(
             if (cr->flags & EcsIdPrefabChildren) {
                 ecs_map_remove(&world->prefab_child_indices, e);
             }
+
             return i;
         }
     }
@@ -39077,6 +39471,7 @@ static ecs_entity_t flecs_component_sparse_remove_intern(
         if (flecs_sparse_remove(cr->sparse, 0, entity)) {
             return entity;
         }
+
         return 0;
     }
 
@@ -39521,11 +39916,13 @@ static void flecs_table_check_sanity(
             if (!ECS_HAS_ID_FLAG(ids[i], TOGGLE)) {
                 continue;
             }
+
             ecs_bitset_t *bs = &table->_->bs_columns[bs_i];
             ecs_assert(flecs_bitset_count(bs) == count,
                 ECS_INTERNAL_ERROR, NULL);
             bs_i ++;
         }
+
         ecs_assert(bs_i == bs_count, ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -39546,18 +39943,23 @@ static ecs_flags32_t flecs_type_info_flags(
     if (ti->hooks.ctor) {
         flags |= EcsTableHasCtors;
     }
+
     if (ti->hooks.on_add) {
         flags |= EcsTableHasCtors;
     }
+
     if (ti->hooks.dtor) {
         flags |= EcsTableHasDtors;
     }
+
     if (ti->hooks.on_remove) {
         flags |= EcsTableHasDtors;
     }
+
     if (ti->hooks.copy) {
         flags |= EcsTableHasCopy;
     }
+
     if (ti->hooks.move) {
         flags |= EcsTableHasMove;
     }  
@@ -39635,6 +40037,7 @@ static void flecs_table_init_columns(
     if (table->_->name_column != -1) {
         table->_->name_column = table->column_map[table->_->name_column];
     }
+
     if (table->_->doc_name_column != -1) {
         table->_->doc_name_column = table->column_map[table->_->doc_name_column];
     }
@@ -39816,8 +40219,10 @@ static void flecs_table_init_flags(
                 if (!meta->bs_count) {
                     meta->bs_offset = flecs_ito(int16_t, i);
                 }
+
                 meta->bs_count ++;
             }
+
             if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
                 table->flags |= EcsTableHasOverrides;
             }
@@ -39875,6 +40280,7 @@ static void flecs_table_init_overrides(
     if (!table->column_count) {
         return;
     }
+
     ecs_size_t bases_size = ECS_SIZEOF(ecs_table_overrides_t) +
         (tr->count - 1) * ECS_SIZEOF(ecs_table_override_base_t);
     ecs_size_t size = bases_size + table->column_count * ECS_SIZEOF(ecs_ref_t);
@@ -39887,6 +40293,7 @@ static void flecs_table_init_overrides(
         o->bases[i].pair = table->_->records[tr->index + i].hdr.cr->pair;
         o->bases[i].generation = -1;
     }
+
     table->data.overrides = o;
 }
 
@@ -39916,9 +40323,11 @@ static void flecs_table_update_overrides(
             break;
         }
     }
+
     if (base_index == o->count) {
         return;
     }
+
     for (; base_index < o->count; base_index ++) {
         ecs_table_override_base_t *base = &o->bases[base_index];
         base->generation = base->pair->reachable.generation;
@@ -39989,10 +40398,12 @@ void flecs_table_init(
             if (first_pair == -1) {
                 first_pair = i;
             }
+
             pair_count ++;
         } else if (first_role == dst_count) {
             first_role = i;
         }
+
         has_low_id |= id < FLECS_HI_COMPONENT_ID;
         table->bloom_filter = flecs_table_bloom_filter_add(table->bloom_filter, id);
     }
@@ -40012,10 +40423,12 @@ void flecs_table_init(
                 if (r == EcsChildOf) {
                     childof_cr = cr;
                 }
+
                 relationship = flecs_table_add_record(world, records,
                     cr->pair->parent, i, 0);
                 last_relationship = r;
             }
+
             relationship->count ++;
             if (!ECS_IS_VALUE_PAIR(id)) {
                 flecs_table_append_to_records(world, records,
@@ -40029,6 +40442,7 @@ void flecs_table_init(
                 flecs_table_append_to_records(world, records,
                     ecs_pair(EcsFlag, first), i, dst_count);
             }
+
             if (second) {
                 flecs_table_append_to_records(world, records,
                     ecs_pair(EcsFlag, second), i, dst_count);
@@ -40039,10 +40453,12 @@ void flecs_table_init(
     if (id_count) {
         flecs_table_add_record(world, records, world->cr_wildcard, 0, id_count);
     }
+
     if (pair_count) {
         flecs_table_add_record(world, records,
             world->cr_wildcard_wildcard, first_pair, pair_count);
     }
+
     if (!(table->flags & (EcsTableHasChildOf|EcsTableHasParent))) {
         childof_cr = world->cr_childof_0;
         flecs_table_add_record(world, records, childof_cr, -1, 0);
@@ -40213,6 +40629,7 @@ static void flecs_table_invoke_ctor(
         for (int32_t i = 0; i < count; i ++) {
             flecs_type_info_copy_ctor(ECS_ELEM(ptr, ti->size, i), base_ptr, 1, ti);
         }
+
         if (ti->hooks.on_set) {
             flecs_invoke_hook(world, table, tr->hdr.cr, tr->column,
                 count, row, &table->data.entities[row], ti->component, ti,
@@ -40412,6 +40829,7 @@ static void flecs_table_fini_data(
                     ecs_os_memset(bs->data, 0,
                         (bs->size >> 6) * ECS_SIZEOF(uint64_t));
                 }
+
                 bs->count = 0;
             }
         }
@@ -40517,6 +40935,7 @@ void flecs_table_fini(
     if (table->component_map != flecs_table_empty_component_map) {
         ecs_os_free(table->component_map);
     }
+
     flecs_table_records_unregister(world, table);
 
     /* Update counters */
@@ -40583,6 +41002,7 @@ static void flecs_table_mark_table_dirty(
     if (table->dirty_state) {
         table->dirty_state[index] ++;
     }
+
     if (!index) {
         flecs_increment_table_version(world, table);
     }
@@ -40642,6 +41062,7 @@ int32_t* flecs_table_get_dirty_state(
             table->dirty_state[i] = 1;
         }
     }
+
     return table->dirty_state;
 }
 
@@ -40661,6 +41082,7 @@ static void flecs_table_move_bitset_columns(
         if (!ECS_HAS_ID_FLAG(id, TOGGLE)) {
             continue;
         }
+
         ecs_bitset_t *src_bs = &src->bs_columns[src_column ++];
         while (dst_type < dst_table->type.count &&
             dst_table->type.array[dst_type] < id)
@@ -40679,6 +41101,7 @@ static void flecs_table_move_bitset_columns(
                     flecs_bitset_get(src_bs, src_index + j));
             }
         }
+
         if (clear) {
             ecs_assert(count == flecs_bitset_count(src_bs), ECS_INTERNAL_ERROR, NULL);
             flecs_bitset_fini(src_bs);
@@ -40695,6 +41118,7 @@ static void flecs_table_resize_column(
     if (old_size == new_size) {
         return;
     }
+
     const ecs_type_info_t *ti = column->ti;
     void *old = column->data;
     if (!new_size) {
@@ -40707,6 +41131,7 @@ static void flecs_table_resize_column(
         column->data = ecs_os_realloc(old, ti->size * new_size);
         return;
     }
+
     ecs_os_free(old);
 }
 
@@ -40744,11 +41169,13 @@ static FLECS_ALWAYS_INLINE int32_t flecs_table_grow_data(
                     column->data, column->ti->size * entities.size);
             }
         }
+
         table->data.count = entities.count;
         table->data.size = entities.size;
         flecs_table_mark_table_dirty(world, table, 0);
         return count;
     }
+
     flecs_table_update_overrides(world, table);
     table->data.count = entities.count;
     table->data.size = entities.size;
@@ -40760,6 +41187,7 @@ static FLECS_ALWAYS_INLINE int32_t flecs_table_grow_data(
         if (construct) {
             flecs_table_invoke_ctor(world, table, i, count, to_add);
         }
+
         if (on_add && to_add && ti->hooks.on_add) {
             flecs_table_invoke_hook(world, table, ti->hooks.on_add,
                 EcsOnAdd, column, e, count, to_add);
@@ -41330,13 +41758,16 @@ void flecs_table_merge(
                 ecs_os_free(dst->data);
                 dst->data = src->data;
             }
+
             flecs_table_mark_table_dirty(world, dst_table, ++ dst_i);
         } else {
             flecs_table_invoke_dtor(src, 0, src_count);
             ecs_os_free(src->data);
         }
+
         src->data = NULL;
     }
+
     ecs_assert(dst_i == dst_table->column_count, ECS_INTERNAL_ERROR, NULL);
 
     flecs_table_move_bitset_columns(
@@ -41375,9 +41806,11 @@ static int32_t flecs_table_get_toggle_column(
         if (!ECS_HAS_ID_FLAG(cur, TOGGLE)) {
             continue;
         }
+
         if (cur == bs_id) {
             return column;
         }
+
         column ++;
     }
 
@@ -41537,6 +41970,7 @@ ecs_pair_record_t* flecs_table_get_childof_pr(
     if (cr) {
         return cr->pair;
     }
+
     return NULL;
 }
 
@@ -41552,6 +41986,7 @@ ecs_hashmap_t* flecs_table_get_name_index(
     if (pr) {
         return pr->name_index;
     }
+
     return NULL;
 }
 
@@ -41637,6 +42072,7 @@ int32_t ecs_table_get_column_index(
         if (res > 0) {
             return res - 1;
         }
+
         return -1;
     }
 
@@ -41671,6 +42107,7 @@ int32_t ecs_table_type_to_column_index(
     if (column_map) {
         return column_map[index];
     }
+
 error:
     return -1;
 }
@@ -41869,6 +42306,7 @@ ecs_record_t* ecs_record_find(
     if (r) {
         return r;
     }
+
 error:
     return NULL;
 }
@@ -41938,6 +42376,7 @@ static int32_t flecs_table_cache_find(
         if (!r) {
             return -1;
         }
+
         return flecs_uto(int32_t, *r);
     }
 
@@ -42096,6 +42535,7 @@ void* ecs_table_cache_remove(
                 break;
             }
         }
+
         ecs_assert(index <= last, ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -42228,10 +42668,12 @@ static int flecs_type_find_insert(
         if (id == to_add) {
             return -1;
         }
+
         if (id > to_add) {
             return i;
         }
     }
+
     return i;
 }
 
@@ -42248,6 +42690,7 @@ static int flecs_type_find(
         if (ecs_id_match(cur, id)) {
             return i;
         }
+
         if (!ECS_IS_PAIR(id) && (cur > id)) {
             return -1;
         }
@@ -42277,10 +42720,12 @@ static int flecs_type_new_with(
         if (at) {
             ecs_os_memcpy_n(array, src->array, ecs_id_t, at);
         }
+
         if (count != at) {
             ecs_os_memcpy_n(array + at + 1, src->array + at, ecs_id_t, count - at);
         }
     }
+
     array[at] = with;
     *dst = (ecs_type_t){ .array = array, .count = count + 1 };
     return 0;
@@ -42296,6 +42741,7 @@ static int flecs_type_new_without(
     if (at == -1) {
         return -1;
     }
+
     ecs_assert(src->array != NULL, ECS_INTERNAL_ERROR, NULL);
     int32_t count = src->count, removed = 1;
     bool wildcard = ecs_id_is_wildcard(without);
@@ -42314,6 +42760,7 @@ static int flecs_type_new_without(
             ecs_os_memcpy_n(array, src->array, ecs_id_t, at);
         }
     }
+
     if (dst_count > at) {
         ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
         if (wildcard) {
@@ -42329,6 +42776,7 @@ static int flecs_type_new_without(
                 ecs_id_t, dst_count - at);
         }
     }
+
     if (dst == src) {
         if (dst_count) {
             array = flecs_wrealloc_n(world, ecs_id_t, dst_count, count, array);
@@ -42337,6 +42785,7 @@ static int flecs_type_new_without(
             array = NULL;
         }
     }
+
     *dst = (ecs_type_t){ .array = array, .count = dst_count };
     return 0;
 }
@@ -42527,6 +42976,7 @@ static ecs_graph_edge_t* flecs_table_ensure_edge(
         if (!edges->lo) {
             edges->lo = flecs_bcalloc(&world->allocators.graph_edge_lo);
         }
+
         edge = &edges->lo[id];
     } else {
         edge = edges->hi ? ecs_map_get_ptr(edges->hi, id) : NULL;
@@ -42550,6 +43000,7 @@ static void flecs_table_disconnect_edge(
     if (edge->next) {
         edge->next->prev = edge->prev;
     }
+
     if (edge->prev) {
         *edge->prev = edge->next;
     }
@@ -42609,8 +43060,10 @@ static ecs_table_t *flecs_table_new(
                 } else {
                     ecs_err("   %d: %s", j, str);
                 }
+
                 ecs_os_free(str);
             }
+
             ecs_abort(ECS_CONSTRAINT_VIOLATED, "table type is not ordered");
         }
     }
@@ -42669,6 +43122,7 @@ static ecs_table_t* flecs_table_ensure(
         if (own_type) {
             flecs_type_free(world, type);
         }
+
         return table;
     }
 
@@ -42693,9 +43147,11 @@ static bool flecs_id_is_alive(
         if (!flecs_entities_get_alive(world, ECS_PAIR_FIRST(id))) {
             return false;
         }
+
         if (!flecs_entities_get_alive(world, ECS_PAIR_SECOND(id))) {
             return false;
         }
+
         return true;
     } else {
         return flecs_entities_get_alive(world, id & ECS_COMPONENT_MASK) != 0;
@@ -42718,13 +43174,16 @@ static ecs_flags32_t flecs_table_diff_ids(
         if (j < src->count && src->array[j] == id) {
             continue;
         }
+
         if (result->array) {
             result->array[count] = id;
         } else {
             flags |= flecs_id_flags_get(world, id);
         }
+
         count ++;
     }
+
     result->count = count;
     return flags;
 }
@@ -42751,6 +43210,7 @@ static void flecs_compute_table_diff(
             diff->added.array[0] = id;
             diff->added_flags = EcsTableHasDontFragment|EcsTableHasSparse;
         }
+
         edge->diff = diff;
         ecs_vec_append_t(&world->allocator,
             &cr->dont_fragment_tables, uint64_t)[0] = node->id;
@@ -42782,6 +43242,7 @@ static void flecs_compute_table_diff(
             diff->removed_flags |= EcsTableEdgeReparent;
         }
     }
+
     edge->diff = diff;
 }
 
@@ -42835,6 +43296,7 @@ static void flecs_add_overrides_for_base(
                         exclusive = (cr->flags & EcsIdExclusive) != 0;
                     }
                 }
+
                 if (!exclusive) {
                     flecs_type_add(world, dst_type, to_add);
                 } else {
@@ -42894,6 +43356,7 @@ static void flecs_add_with_property(
             if (!(a_cr->flags & EcsIdDontFragment)) {
                 flecs_type_add(world, dst_type, a);
             }
+
             flecs_add_with_property(world, cr_with_wildcard, dst_type, ra, o);
         }
     }
@@ -43048,9 +43511,11 @@ static ecs_table_t* flecs_table_create_edge(
         if (edge->next) {
             edge->next->prev = &edge->next;
         }
+
         *incoming = edge;
         flecs_compute_table_diff(world, table, to, edge, id, remove);
     }
+
     return to;
 }
 
@@ -43167,6 +43632,7 @@ void flecs_table_edges_add_flags(
                     edge->diff = flecs_table_diff_new(world, 1, 0);
                     edge->diff->added.array[0] = edge->id;
                 }
+
                 edge->diff->added_flags |= flags;
             }
         }
@@ -43183,6 +43649,7 @@ void flecs_table_edges_add_flags(
                     edge->diff = flecs_table_diff_new(world, 0, 1);
                     edge->diff->removed.array[0] = edge->id;
                 }
+
                 edge->diff->removed_flags |= flags;
             }
         }
@@ -43855,11 +44322,13 @@ static void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
             ecs_os_strerror(errno));
         return;
     }
+
     if (enable) {
         flags = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
     } else {
         flags = fcntl(sock, F_SETFL, flags & ~O_NONBLOCK);
     }
+
     if (flags == -1) {
         ecs_warn("http: failed to set socket NONBLOCK: %s",
             ecs_os_strerror(errno));
@@ -43972,6 +44441,7 @@ static char http_hex_2_int(char a, char b){
     if (a < 0) {
         return 0;
     }
+
     return (char)((a << 4) + b);
 }
 
@@ -43986,6 +44456,7 @@ static void http_decode_url_str(
             if (!ptr[2]) {
                 break;
             }
+
             ptr += 2;
         } else if (ch == '+') {
             dst[0] = ' ';
@@ -43995,6 +44466,7 @@ static void http_decode_url_str(
             dst ++;
         }
     }
+
     dst[0] = '\0';
 }
 
@@ -44016,6 +44488,7 @@ static ecs_http_method_t http_parse_method(
             return methods[i].kind;
         }
     }
+
     return EcsHttpMethodUnsupported;
 }
 
@@ -44059,6 +44532,7 @@ static ecs_http_request_entry_t* http_find_request_entry(
             return entry;
         }
     }
+
     return NULL;
 }
 
@@ -44106,6 +44580,7 @@ static char* http_decode_request(
         ecs_os_free(res);
         return NULL;
     }
+
     char *target = strchr(res, ' ') + 1;
     char *end = strchr(target, ' ');
     char *line = strstr(end, "\r\n") + 2;
@@ -44120,6 +44595,7 @@ static char* http_decode_request(
         if (c != '?' && c != '&' && c != '=') {
             continue;
         }
+
         int32_t count = req->pub.param_count;
         if (count < ECS_HTTP_QUERY_PARAM_COUNT_MAX) {
             *p = '\0';
@@ -44135,10 +44611,12 @@ static char* http_decode_request(
             *p = '\0';
         }
     }
+
     http_decode_url_str(req->pub.path);
     for (int32_t i = 0; i < req->pub.param_count; i ++) {
         http_decode_url_str(ECS_CONST_CAST(char*, req->pub.params[i].value));
     }
+
     while (line < res + frag->body_offset - 2) {
         char *next = strstr(line, "\r\n");
         *next = '\0';
@@ -44148,18 +44626,21 @@ static char* http_decode_request(
             if (*value == ' ') {
                 value ++;
             }
+
             if (*value) {
                 int32_t h = req->pub.header_count ++;
                 req->pub.headers[h].key = line;
                 req->pub.headers[h].value = value;
             }
         }
+
         line = next + 2;
     }
     if (frag->content_length) {
         req->pub.body = res + frag->body_offset;
         req->pub.body[frag->content_length] = '\0';
     }
+
     return res;
 }
 
@@ -44215,6 +44696,7 @@ static bool http_parse_request(
         frag->invalid = true;
         return false;
     }
+
     ecs_strbuf_appendstrn(&frag->buf, req_frag, req_frag_len);
     char *buf = frag->buf.content;
     int32_t length = ecs_strbuf_written(&frag->buf);
@@ -44225,18 +44707,21 @@ static bool http_parse_request(
             frag->scan = length;
             break;
         }
+
         int32_t end = flecs_ito(int32_t, nl - buf);
         frag->scan = end + 1;
         if (end == frag->line_offset || nl[-1] != '\r') {
             frag->invalid = true;
             return false;
         }
+
         char *line = buf + frag->line_offset;
         int32_t line_length = end - frag->line_offset - 1;
         if (memchr(line, 0, flecs_ito(size_t, line_length))) {
             frag->invalid = true;
             return false;
         }
+
         if (!frag->line_offset) {
             char *space = memchr(line, ' ', flecs_ito(size_t, line_length));
             if (!space || !memchr(space + 1, ' ',
@@ -44245,6 +44730,7 @@ static bool http_parse_request(
                 frag->invalid = true;
                 return false;
             }
+
             frag->method = http_parse_method(line,
                 flecs_ito(int32_t, space - line));
             frag->invalid = frag->method == EcsHttpMethodUnsupported;
@@ -44261,8 +44747,10 @@ static bool http_parse_request(
                 frag->invalid = true;
                 return false;
             }
+
             frag->content_length = flecs_ito(int32_t, content_length);
         }
+
         frag->line_offset = end + 1;
     }
     return frag->body_offset &&
@@ -44350,6 +44838,7 @@ static void* http_server_send_queue(void* arg) {
                         error = true;
                     }
                 }
+
                 if (!error) {
                     ecs_os_linc(&ecs_http_send_ok_count);
                 }
@@ -44438,6 +44927,7 @@ static void http_send_reply(
                 conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
             ecs_os_linc(&ecs_http_send_error_count);
         }
+
         ecs_os_free(content);
         ecs_os_free(headers);
         http_close(&conn->sock);
@@ -44527,6 +45017,7 @@ static void http_recv_connection(
         if (still_owns_sock) {
             conn->sock = HTTP_SOCKET_INVALID;
         }
+
         ecs_os_mutex_unlock(srv->lock);
         if (still_owns_sock) {
             http_close(&sock);
@@ -44680,6 +45171,7 @@ static int http_accept_connections(
     } else {
         ecs_dbg_2("http: server shut down while initializing");
     }
+
     ecs_os_mutex_unlock(srv->lock);
 
     struct sockaddr_storage remote_addr;
@@ -44695,6 +45187,7 @@ static int http_accept_connections(
                 ecs_dbg("http: connection attempt failed: %s", 
                     ecs_os_strerror(errno));
             }
+
             continue;
         }
 
@@ -44708,6 +45201,7 @@ done:
         http_close(&sock);
         srv->sock = sock;
     }
+
     ecs_os_mutex_unlock(srv->lock);
 
     ecs_trace("http: no longer accepting connections on '%s:%s'",
@@ -44768,6 +45262,7 @@ static void http_do_request(
             ecs_os_linc(&ecs_http_request_handled_ok_count);
         }
     }
+
 error:
     return;
 }
@@ -44827,6 +45322,7 @@ static void http_purge_request_cache(
                 flecs_hm_bucket_remove(&srv->request_cache, bucket,
                     ecs_map_key(&it));
             }
+
             bucket = next;
         }
     }
@@ -44881,6 +45377,7 @@ const char* ecs_http_get_header(
             return req->headers[i].value;
         }
     }
+
     return NULL;
 }
 
@@ -44893,6 +45390,7 @@ const char* ecs_http_get_param(
             return req->params[i].value;
         }
     }
+
     return NULL;
 }
 
@@ -44903,6 +45401,7 @@ ecs_http_server_t* ecs_http_server_init(
     if (ecs_os_has_threading()) {
         srv->lock = ecs_os_mutex_new();
     }
+
     srv->sock = HTTP_SOCKET_INVALID;
 
     srv->should_run = false;
@@ -44951,9 +45450,11 @@ void ecs_http_server_fini(
     if (srv->should_run) {
         ecs_http_server_stop(srv);
     }
+
     if (ecs_os_has_threading()) {
         ecs_os_mutex_free(srv->lock);
     }
+
     http_purge_request_cache(srv, true);
     flecs_sparse_fini(&srv->connections);
     ecs_os_free(srv);
@@ -45007,6 +45508,7 @@ void ecs_http_server_stop(
     if (http_socket_is_valid(srv->sock)) {
         http_close(&srv->sock);
     }
+
     ecs_os_mutex_unlock(srv->lock);
 
     ecs_os_thread_join(srv->thread);
@@ -45273,6 +45775,7 @@ static ecs_entity_t flecs_json_lookup_id(
     if (ecs_is_alive(world, id) && !ecs_get_name(world, id)) {
         return id;
     }
+
     char name[32];
     ecs_os_snprintf(name, 32, "#%u", (uint32_t)id);
     return flecs_json_lookup(world, 0, name, desc);
@@ -45385,12 +45888,14 @@ static const char* flecs_json_deser_ids(
     } else if (!rel) {
         return flecs_json_expect(json, JsonArrayOpen, token, desc);
     }
+
     do {
         char *str = NULL;
         json = flecs_json_expect_string(json, token, &str, desc);
         if (!json) {
             return NULL;
         }
+
         ecs_entity_t target = flecs_json_lookup(world, 0, str, desc);
         if (str != token) ecs_os_free(str);
         ecs_id_t id = rel ? ecs_pair(rel, target) : target;
@@ -45399,10 +45904,12 @@ static const char* flecs_json_deser_ids(
         if (!array) {
             return json;
         }
+
         next = flecs_json_parse(json, &kind, token);
         if (kind != JsonComma) {
             return flecs_json_expect(json, JsonArrayClose, token, desc);
         }
+
         json = next;
     } while (json);
     return NULL;
@@ -45421,10 +45928,12 @@ static const char* flecs_json_deser_pairs(
     if (!json) {
         return NULL;
     }
+
     const char *next = flecs_json_parse(json, &kind, token);
     if (kind == JsonObjectClose) {
         return next;
     }
+
     json = flecs_json_expect_member(json, token, desc);
     while (json) {
         ecs_entity_t rel = flecs_json_lookup(world, 0, token, desc);
@@ -45432,6 +45941,7 @@ static const char* flecs_json_deser_pairs(
         if (!json) {
             return NULL;
         }
+
         json = flecs_json_parse_next_member(json, token, &kind, desc);
         if (kind == JsonObjectClose) {
             return json;
@@ -45510,6 +46020,7 @@ static const char* flecs_json_deser_components(
                     }
                 }
             }
+
             if (!next) {
                 if (!skip || !ti) {
                     flecs_json_missing_reflection(world, id, json, ctx, desc);
@@ -45517,15 +46028,18 @@ static const char* flecs_json_deser_components(
                         goto error;
                     }
                 }
+
                 json = flecs_parse_ws_eol(json);
                 next = flecs_json_skip_object(json + 1, token, desc);
                 if (!next) {
                     goto error;
                 }
+
                 if (!ti) {
                     ecs_add_id(world, e, id);
                 }
             }
+
             json = next;
         }
 
@@ -45571,11 +46085,13 @@ static const char* flecs_entity_from_json(
     if (!json) {
         goto error;
     }
+
     const char *next = flecs_json_parse(json, &token_kind, token);
     if (token_kind == JsonObjectClose) {
         json = next;
         goto end;
     }
+
     json = flecs_json_expect_member(json, token, desc);
     while (json) {
         int32_t field;
@@ -45584,6 +46100,7 @@ static const char* flecs_entity_from_json(
                 break;
             }
         }
+
         if (field == 8 ||
             (field == Version && previous != Id))
         {
@@ -45591,13 +46108,16 @@ static const char* flecs_entity_from_json(
                 "unexpected entity member '%s'", token);
             goto error;
         }
+
         if (!e && has_id && field > Version) {
             e = flecs_json_lookup_id(world, serialized_id, desc);
         }
+
         if (!e && field > Version) {
             ecs_parser_error(desc->name, expr, json - expr, "failed to create entity");
             goto error;
         }
+
         switch (field) {
         case Parent:
         case Name: {
@@ -45613,6 +46133,7 @@ static const char* flecs_entity_from_json(
                 else ecs_set_name(world, e, str);
                 ecs_vec_append_t(ctx->a, &ctx->ids, ecs_id_t)[0] = ecs_pair_t(EcsIdentifier, EcsName);
             }
+
             if (str != token) ecs_os_free(str);
             break;
         }
@@ -45624,6 +46145,7 @@ static const char* flecs_entity_from_json(
                 ecs_parser_error(desc->name, expr, json - expr, "expected %s", fields[field]);
                 goto error;
             }
+
             serialized_id |= flecs_ito(uint64_t, atoll(token)) << (field == Version ? 32 : 0);
             has_id = true;
             break;
@@ -45660,6 +46182,7 @@ end:
             qsort(ecs_vec_first(&ctx->ids), flecs_itosize(count),
                 sizeof(ecs_id_t), flecs_id_qsort_cmp);
         }
+
         ecs_record_t *r = flecs_entities_get(world, e);
         ecs_defer_begin(world);
         if (replace_table && r && r->table) {
@@ -45673,6 +46196,7 @@ end:
                 }
             }
         }
+
         if (r && (r->row & EcsEntityHasDontFragment)) {
             ecs_component_record_t *cr = world->cr_non_fragmenting_head;
             for (; cr; cr = cr->non_fragmenting.next) {
@@ -45684,6 +46208,7 @@ end:
                 }
             }
         }
+
         ecs_defer_end(world);
     }
 
@@ -45784,6 +46309,7 @@ const char* ecs_world_from_json(
                 ecs_parser_error(NULL, expr, json - expr, "expected ']'");
                 goto error;
             }
+
             break;
         }
     } while (true);
@@ -46072,13 +46598,6 @@ typedef struct ecs_script_unresolved_component_ref_t {
     int32_t column;
 } ecs_script_unresolved_component_ref_t;
 
-/* Stores value of const variable so it can be diffed in reactive update */
-typedef struct ecs_script_computed_t {
-    void *ptr;
-    const ecs_type_info_t *ti;
-    bool valid;
-} ecs_script_computed_t;
-
 typedef struct ecs_script_region_t {
     int32_t scope_first;
     int32_t scope_count;
@@ -46120,6 +46639,13 @@ typedef struct ecs_script_component_slot_t {
     ecs_id_t component;
     int32_t scope_slot;
 } ecs_script_component_slot_t;
+
+/* Stores value of const variable so it can be diffed in reactive update */
+typedef struct ecs_script_computed_t {
+    void *ptr;
+    const ecs_type_info_t *ti;
+    bool valid;
+} ecs_script_computed_t;
 
 typedef struct ecs_script_state_t {
     ecs_vec_t symbol_slots;
@@ -49045,6 +49571,7 @@ const char* flecs_json_parse_large_string(
         if (!json) {
             return NULL;
         }
+
         ecs_strbuf_appendch(buf, ch_out);
     }
 
@@ -49177,6 +49704,7 @@ const char* flecs_json_expect_member(
     if (!json) {
         return NULL;
     }
+
     return json;
 }
 
@@ -49190,11 +49718,13 @@ const char* flecs_json_expect_member_name(
     if (!json) {
         return NULL;
     }
+
     if (ecs_os_strcmp(token, member_name)) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
             "expected member '%s'", member_name);
         return NULL;
     }
+
     return json;
 }
 
@@ -49398,6 +49928,7 @@ void flecs_json_string_escape_ctrl(
             } else {
                 ecs_strbuf_appendch(buf, ch);
             }
+
             break;
         }
     }
@@ -49498,6 +50029,7 @@ void flecs_json_id(
         } else {
             ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf, true);
         }
+
         ecs_strbuf_appendch(buf, '"');
     } else {
         ecs_strbuf_appendch(buf, '"');
@@ -49624,9 +50156,11 @@ void flecs_json_accum_type_info(
     if (!typeid || !ser_ctx || !ser_ctx->type_info_buf) {
         return;
     }
+
     if (ecs_map_get(&ser_ctx->type_info_seen, typeid) != NULL) {
         return;
     }
+
     ecs_map_ensure(&ser_ctx->type_info_seen, typeid);
 
     ecs_strbuf_t *buf = ser_ctx->type_info_buf;
@@ -49670,11 +50204,13 @@ void flecs_json_assemble_output(
         flecs_json_memberl(out, "type_info");
         ecs_strbuf_mergebuff(out, type_info_buf);
     }
+
     int32_t body_len = ecs_strbuf_written(body_buf);
     if (body_len > 2) {
         ecs_strbuf_list_next(out);
         ecs_strbuf_appendstrn(out, body_buf->content + 1, body_len - 2);
     }
+
     flecs_json_object_pop(out);
     ecs_strbuf_reset(body_buf);
 }
@@ -50044,6 +50580,7 @@ static void flecs_json_serialize_query_profile(
         if (!i || time_measure < eval_min) {
             eval_min = time_measure;
         }
+
         if (time_measure > eval_max) {
             eval_max = time_measure;
         }
@@ -50067,6 +50604,7 @@ static void flecs_json_serialize_query_profile(
         flecs_json_memberl(buf, "eval_count");
         flecs_json_number(buf, it->query->eval_count);
     }
+
     flecs_json_memberl(buf, "result_count");
     flecs_json_number(buf, result_count);
     flecs_json_memberl(buf, "entity_count");
@@ -50113,6 +50651,7 @@ static void flecs_json_accum_query_term_type_info(
         if (term->inout == EcsInOutNone) {
             continue;
         }
+
         ecs_entity_t typeid = ecs_get_typeid(world, term->id);
         if (typeid) {
             flecs_json_accum_type_info(world, typeid, ser_ctx);
@@ -50435,6 +50974,7 @@ static int flecs_json_serialize_entity_alerts(
                 flecs_json_memberl(buf, "message");
                 flecs_json_string(buf, alert->message);
             }
+
             flecs_json_memberl(buf, "severity");
             flecs_json_string(buf, severity);
             
@@ -50445,6 +50985,7 @@ static int flecs_json_serialize_entity_alerts(
                 ecs_os_free(path);
             }
         }
+
         flecs_json_object_pop(buf);
     }
 
@@ -50515,6 +51056,7 @@ int flecs_json_serialize_alerts(
     if (alerts) {
         flecs_json_serialize_entity_alerts(world, buf, entity, alerts, true);
     }
+
     flecs_json_serialize_children_alerts(world, buf, entity);
     flecs_json_array_pop(buf);
 #endif
@@ -50856,6 +51398,7 @@ static bool flecs_json_serialize_iter_result_ids(
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
+
         flecs_json_next(buf);
         flecs_json_id(buf, world, it->ids[f]);
     }
@@ -50897,6 +51440,7 @@ static bool flecs_json_serialize_iter_result_sources(
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
+
         flecs_json_next(buf);
         flecs_json_path(buf, world, it->sources[f]);
     }
@@ -51109,10 +51653,12 @@ static ecs_component_record_t* flecs_json_type_next(
             } else {
                 cr = it->cr ? it->cr->non_fragmenting.next : NULL;
             }
+
             it->column = -1;
             if (!cr) {
                 return NULL;
             }
+
             it->cr = cr;
             if (!cr->sparse || ecs_id_is_wildcard(cr->id) ||
                 !flecs_sparse_has(cr->sparse, it->entity))
@@ -51120,6 +51666,7 @@ static ecs_component_record_t* flecs_json_type_next(
                 continue;
             }
         }
+
         it->cr = cr;
         ecs_id_t id = cr->id;
         bool data = it->column != -1 ||
@@ -51129,17 +51676,20 @@ static ecs_component_record_t* flecs_json_type_next(
         {
             continue;
         }
+
         if ((!it->desc || !it->desc->serialize_builtin) && ECS_IS_PAIR(id) &&
             (ECS_PAIR_FIRST(id) == EcsChildOf ||
              id == ecs_pair_t(EcsIdentifier, EcsName)))
         {
             continue;
         }
+
         if (kind == 2 && it->desc && it->desc->component_filter &&
             !it->desc->component_filter(it->world, id))
         {
             continue;
         }
+
         return cr;
     }
 }
@@ -51163,6 +51713,7 @@ static void flecs_json_serialize_table_tags(
     if (!cr) {
         return;
     }
+
     flecs_json_memberl(buf, "tags");
     flecs_json_array_push(buf);
     do {
@@ -51210,6 +51761,7 @@ static void flecs_json_emit_pair_entry(
             *same_first = true;
         }
     }
+
     if (*same_first) {
         flecs_json_next(buf);
     }
@@ -51257,6 +51809,7 @@ static void flecs_json_serialize_table_pairs(
             next = index + 1 < table->type.count ?
                 table->type.array[index + 1] : 0;
         }
+
         flecs_json_emit_pair_entry(world, buf, desc, id, prev,
             next, &count, &same_first);
         if (index < table->type.count && it.index > table->type.count &&
@@ -51265,11 +51818,13 @@ static void flecs_json_serialize_table_pairs(
             flecs_json_array_pop(buf);
             same_first = false;
         }
+
         prev = id;
     }
     if (same_first) {
         flecs_json_array_pop(buf);
     }
+
     if (count) {
         flecs_json_object_pop(buf);
     }
@@ -51313,6 +51868,7 @@ static int flecs_json_serialize_component_value(
             ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
             type_ser = ecs_get(world, ti->component, EcsTypeSerializer);
         }
+
         has_reflection = type_ser != NULL;
     }
 
@@ -51362,9 +51918,11 @@ static int flecs_json_serialize_table_components(
                 ecs_table_entities(table)[row] : entity;
             ptr = flecs_sparse_get(cr->sparse, ti->size, e);
         }
+
         if (!ptr) {
             continue;
         }
+
         ecs_json_value_ser_ctx_t *value_ctx = NULL;
         if (values_ctx) {
             int32_t index = component_count[0];
@@ -51377,6 +51935,7 @@ static int flecs_json_serialize_table_components(
                     values_ctx, ecs_json_value_ser_ctx_t, index);
             }
         }
+
         if (flecs_json_serialize_component_value(world, cr->id, ptr, ti, buf,
             ser_ctx, value_ctx, desc, component_count))
         {
@@ -51386,6 +51945,7 @@ static int flecs_json_serialize_table_components(
     if (component_count[0]) {
         flecs_json_object_pop(buf);
     }
+
     return 0;
 }
 
@@ -51465,6 +52025,7 @@ static int flecs_json_serialize_table_inherited(
     {
         return -1;
     }
+
     flecs_json_object_pop(buf);
     return 0;
 }
@@ -51553,6 +52114,7 @@ int flecs_json_serialize_iter_result_table(
     for (i = 0; i < ecs_vec_count(&values_ctx); i ++) {
         ecs_os_free(contexts[i].id_label);
     }
+
     ecs_vec_fini_t(NULL, &values_ctx, ecs_json_value_ser_ctx_t);
     return result;
 }
@@ -51635,6 +52197,7 @@ static void flecs_json_serialize_term_ref(
         flecs_json_memberl(buf, "name");
         flecs_json_string(buf, ref->name);
     }
+
     flecs_json_object_pop(buf);
 }
 
@@ -51656,6 +52219,7 @@ static void flecs_json_serialize_term_trav(
         flecs_json_next(buf);
         flecs_json_string(buf, "self");
     }
+
     if (term->src.id & EcsCascade) {
         flecs_json_next(buf);
         flecs_json_string(buf, "cascade");
@@ -51664,6 +52228,7 @@ static void flecs_json_serialize_term_trav(
         flecs_json_next(buf);
         flecs_json_string(buf, "up");
     }
+
     flecs_json_array_pop(buf);
 }
 
@@ -51735,6 +52300,7 @@ void flecs_json_serialize_query(
                 flecs_json_string(buf, "this");
             }
         }
+
         flecs_json_array_pop(buf);
     }
 
@@ -51745,6 +52311,7 @@ void flecs_json_serialize_query(
         flecs_json_next(buf);
         flecs_json_serialize_term(world, q, t, buf);
     }
+
     flecs_json_array_pop(buf);
 
     flecs_json_object_pop(buf);
@@ -51835,6 +52402,7 @@ static int flecs_json_typeinfo_ser_unit(
             flecs_json_memberl(str, "symbol");
             flecs_json_string(str, uptr->symbol);
         }
+
         ecs_entity_t quantity = ecs_get_target(world, unit, EcsQuantity, 0);
         if (quantity) {
             flecs_json_memberl(str, "quantity");
@@ -51879,11 +52447,14 @@ static int flecs_json_typeinfo_ser_scope(
             flecs_json_member(str, child->name);
             member = ecs_vec_get_t(&st->members, ecs_member_t, child->member_index);
         }
+
         if (flecs_json_typeinfo_ser_op(world, child, member, str)) {
             return -1;
         }
+
         i += child->op_count;
     }
+
     ecs_entity_t unit = ecs_get_target_for(world, op->type, EcsIsA, EcsUnit);
     if (unit) {
         flecs_json_member(str, "@self");
@@ -51893,6 +52464,7 @@ static int flecs_json_typeinfo_ser_scope(
         flecs_json_object_pop(str);
         flecs_json_array_pop(str);
     }
+
     return 0;
 }
 
@@ -51905,17 +52477,20 @@ static int flecs_json_typeinfo_ser_op(
     if (op->kind == EcsOpForward) {
         return flecs_json_typeinfo_ser_type(world, op->type, str);
     }
+
     if (op->kind == EcsOpOpaqueStruct || op->kind == EcsOpOpaqueArray ||
         op->kind == EcsOpOpaqueVector || op->kind == EcsOpOpaqueValue)
     {
         const EcsOpaque *ct = ecs_get(world, op->type, EcsOpaque);
         return flecs_json_typeinfo_ser_type(world, ct->as_type, str);
     }
+
     if (op->kind == EcsOpPushStruct) {
         flecs_json_object_push(str);
         if (flecs_json_typeinfo_ser_scope(world, op, str)) {
             return -1;
         }
+
         flecs_json_object_pop(str);
         return 0;
     }
@@ -51929,13 +52504,16 @@ static int flecs_json_typeinfo_ser_op(
         if (key.kind == EcsOpEnum || key.kind == EcsOpBitmask) {
             key.type = ecs_get(world, op->type, EcsMap)->key_type;
         }
+
         if (flecs_json_typeinfo_ser_op(world, &key, NULL, str)) {
             return -1;
         }
+
         flecs_json_next(str);
         if (flecs_json_typeinfo_ser_scope(world, op, str)) {
             return -1;
         }
+
         break;
     }
     case EcsOpPushArray:
@@ -51946,9 +52524,11 @@ static int flecs_json_typeinfo_ser_op(
         if (flecs_json_typeinfo_ser_scope(world, op, str)) {
             return -1;
         }
+
         if (op->kind == EcsOpPushArray) {
             ecs_strbuf_list_append(str, "%u", ecs_meta_op_get_elem_count(op, NULL));
         }
+
         break;
     case EcsOpPushValue:
         ecs_strbuf_list_appendstr(str, "\"value\"");
@@ -51978,18 +52558,23 @@ static int flecs_json_typeinfo_ser_op(
             if (member->unit) {
                 flecs_json_typeinfo_ser_unit(world, str, member->unit);
             }
+
             if (value_range) {
                 flecs_json_typeinfo_ser_range(str, "range", &member->range);
             }
+
             if (error_range) {
                 flecs_json_typeinfo_ser_range(str, "error_range", &member->error_range);
             }
+
             if (warning_range) {
                 flecs_json_typeinfo_ser_range(str, "warning_range", &member->warning_range);
             }
+
             flecs_json_object_pop(str);
         }
     }
+
     flecs_json_array_pop(str);
     return 0;
 }
@@ -52004,6 +52589,7 @@ static int flecs_json_typeinfo_ser_type(
         ecs_strbuf_appendch(buf, '0');
         return 0;
     }
+
     return flecs_json_typeinfo_ser_op(world, ecs_vec_first(&ser->ops), NULL, buf);
 }
 
@@ -52298,6 +52884,7 @@ int ecs_world_to_json_buf(
             query_desc.terms[term_id].src.id = EcsSelf | EcsUp;
             term_id ++;
         }
+
         if (!serialize_modules) {
             query_desc.terms[term_id].id = EcsModule;
             query_desc.terms[term_id].oper = EcsNot;
@@ -52365,6 +52952,7 @@ static bool flecs_meta_c_expect(
         flecs_meta_c_error(p, "expected '%c'", ch);
         return false;
     }
+
     p->ptr = flecs_parse_ws_eol(p->ptr + 1);
     return true;
 }
@@ -52378,6 +52966,7 @@ static bool flecs_meta_c_identifier(
         flecs_meta_c_error(p, "expected identifier");
         return false;
     }
+
     int32_t length = 0;
     while (isalnum((unsigned char)p->ptr[0]) ||
         p->ptr[0] == '_' || p->ptr[0] == ':' || p->ptr[0] == '.')
@@ -52386,6 +52975,7 @@ static bool flecs_meta_c_identifier(
             flecs_meta_c_error(p, "identifier is too long");
             return false;
         }
+
         name[length ++] = *p->ptr ++;
     }
     name[length] = '\0';
@@ -52406,6 +52996,7 @@ static bool flecs_meta_c_number(
         flecs_meta_c_error(p, "invalid numeric value");
         return false;
     }
+
     p->ptr = flecs_parse_ws_eol(end);
     return true;
 }
@@ -52440,6 +53031,7 @@ static ecs_entity_t flecs_meta_c_lookup(
             return *aliases[i].type;
         }
     }
+
     return ecs_lookup_symbol(world, name, true, true);
 }
 
@@ -52455,6 +53047,7 @@ static const char* flecs_meta_c_scope_end(
             if (depth == 256) {
                 break;
             }
+
             scopes[depth ++] = ch == '(' ? ')' : '>';
         } else if (ch == ')' || ch == '>') {
             if (!depth || ch != scopes[-- depth]) {
@@ -52463,6 +53056,7 @@ static const char* flecs_meta_c_scope_end(
         } else if (!ch) {
             break;
         }
+
         if (!depth) {
             return flecs_parse_ws_eol(ptr);
         }
@@ -52478,13 +53072,16 @@ static ecs_entity_t flecs_meta_c_type(
     if (!flecs_meta_c_identifier(p, name)) {
         return 0;
     }
+
     if (!ecs_os_strcmp(name, "ECS_PRIVATE")) {
         p->is_private = p->depth == 0;
         return 0;
     }
+
     if (!ecs_os_strcmp(name, "const") && !flecs_meta_c_identifier(p, name)) {
         return 0;
     }
+
     ecs_world_t *world = p->world;
     ecs_entity_t type = 0;
     char close = p->ptr[0] == '(' ? ')' : p->ptr[0] == '<' ? '>' : 0;
@@ -52502,27 +53099,33 @@ static ecs_entity_t flecs_meta_c_type(
         } else if (!ecs_os_strcmp(name, "flecs::bitmask")) {
             kind = EcsBitmaskType;
         }
+
         const char *end = flecs_meta_c_scope_end(p);
         if (!end) {
             return 0;
         }
+
         if (*end == '*' || kind == EcsOpaqueType) {
             p->ptr = end;
             if (*end == '*') {
                 p->ptr = flecs_parse_ws_eol(end + 1);
                 return ecs_id(ecs_uptr_t);
             }
+
             return flecs_meta_c_lookup(world, name);
         }
+
         if (++ p->depth >= 256) {
             flecs_meta_c_error(p, "maximum level of nesting reached");
             return 0;
         }
+
         p->ptr ++;
         ecs_entity_t first = flecs_meta_c_type(p), second = 0;
         if (!first) {
             return 0;
         }
+
         int64_t count = 0;
         if (p->ptr[0] == ',') {
             p->ptr = flecs_parse_ws_eol(p->ptr + 1);
@@ -52540,9 +53143,11 @@ static ecs_entity_t flecs_meta_c_type(
                 }
             }
         }
+
         if (!flecs_meta_c_expect(p, close)) {
             return 0;
         }
+
         p->depth --;
         if (kind == EcsArrayType && count && !second) {
             type = ecs_insert(world, ecs_value(EcsArray, {first, (int32_t)count}));
@@ -52564,9 +53169,11 @@ static ecs_entity_t flecs_meta_c_type(
     } else {
         type = flecs_meta_c_lookup(world, name);
     }
+
     if (!type) {
         flecs_meta_c_error(p, "unknown type '%s'", name);
     }
+
     return type;
 }
 
@@ -52580,18 +53187,22 @@ static int flecs_meta_c_struct(
     if (!flecs_meta_c_expect(p, '{')) {
         return -1;
     }
+
     while (p->ptr[0] != '}') {
         ecs_entity_t type = flecs_meta_c_type(p);
         if (p->is_private) {
             break;
         }
+
         if (!type) {
             goto done;
         }
+
         char name[256];
         if (!flecs_meta_c_identifier(p, name)) {
             goto done;
         }
+
         int64_t elem_count = 0;
         if (p->ptr[0] == '[') {
             p->ptr ++;
@@ -52603,13 +53214,16 @@ static int flecs_meta_c_struct(
                 goto done;
             }
         }
+
         if (!flecs_meta_c_expect(p, ';')) {
             goto done;
         }
+
         if (count == ECS_MEMBER_DESC_CACHE_SIZE - 1) {
             flecs_meta_c_error(p, "too many struct members");
             goto done;
         }
+
         desc.members[count ++] = (ecs_member_t){
             .name = ecs_os_strdup(name), .type = type, .count = (int32_t)elem_count
         };
@@ -52618,6 +53232,7 @@ static int flecs_meta_c_struct(
         flecs_meta_c_error(p, "stray characters after struct definition");
         goto done;
     }
+
     result = ecs_struct_init(p->world, &desc) ? 0 : -1;
 done:
     for (int32_t i = 0; i < count; i ++) {
@@ -52636,6 +53251,7 @@ static int flecs_meta_c_constants(
     if (!flecs_meta_c_expect(p, '{')) {
         return -1;
     }
+
     const char *prefix = ecs_get_world_info(world)->name_prefix;
     int32_t prefix_len = prefix ? ecs_os_strlen(prefix) : 0;
     int32_t name_len = ecs_os_strlen(p->name);
@@ -52647,6 +53263,7 @@ static int flecs_meta_c_constants(
         if (!flecs_meta_c_identifier(p, name)) {
             goto done;
         }
+
         if (p->ptr[0] == '=') {
             p->ptr ++;
             if (!flecs_meta_c_number(p, &value, 0)) {
@@ -52656,23 +53273,28 @@ static int flecs_meta_c_constants(
             flecs_meta_c_error(p, "bitmask requires explicit value assignment");
             goto done;
         }
+
         if (p->ptr[0] != '}' && p->ptr[0] != ',') {
             flecs_meta_c_error(p, "missing , after enum constant");
             goto done;
         }
+
         const char *constant = name;
         if (prefix && !ecs_os_strncmp(constant, prefix, prefix_len)) {
             constant += prefix_len;
         }
+
         if (!ecs_os_strncmp(constant, p->name, name_len)) {
             constant += name_len;
         }
+
         ecs_entity_t e = ecs_entity(world, {.name = constant});
         if (bitmask) {
             ecs_set_pair_second(world, e, EcsConstant, ecs_u32_t, {(ecs_u32_t)value});
         } else {
             ecs_set_pair_second(world, e, EcsConstant, ecs_i32_t, {(ecs_i32_t)value});
         }
+
         value ++;
         if (p->ptr[0] == ',') {
             p->ptr = flecs_parse_ws_eol(p->ptr + 1);
@@ -52682,6 +53304,7 @@ static int flecs_meta_c_constants(
         flecs_meta_c_error(p, "stray characters after enum definition");
         goto done;
     }
+
     result = 0;
 done:
     ecs_set_scope(world, old_scope);
@@ -52739,6 +53362,7 @@ ecs_size_t ecs_meta_op_get_elem_count(
     } else if (op->kind == EcsOpPushMap) {
         return ecs_map_count((const ecs_map_t*)ptr);
     }
+
     ecs_throw(ECS_INVALID_OPERATION, 
         "cannot get element count for %s operation",
         flecs_meta_op_kind_str(op->kind));
@@ -52766,6 +53390,7 @@ static ecs_meta_scope_t* flecs_cursor_restore_scope(
     if (scope->prev_depth) {
         cursor->depth = scope->prev_depth;
     }
+
 error:
     return (ecs_meta_scope_t*)&cursor->scope[cursor->depth];
 }
@@ -52857,6 +53482,7 @@ static void* flecs_meta_cursor_get_ptr(
             if (!v) {
                 return NULL;
             }
+
             ecs_assert(v->ptr != NULL, ECS_INTERNAL_ERROR, NULL);
             return ECS_OFFSET(v->ptr, op->offset);
         } else {
@@ -53059,11 +53685,13 @@ static int flecs_meta_cursor_lookup(
         } else {
             *out = ecs_lookup_from(cursor->world, 0, value);
         }
+
         if (!*out) {
             ecs_err("unresolved entity identifier '%s'", value);
             return -1;
         }
     }
+
     return 0;
 }
 
@@ -53104,6 +53732,7 @@ static int flecs_meta_cursor_from_str(
             ecs_err("expected number, got '%s'", value);
             goto error;
         }
+
         break;
     }
     case EcsOpEnum:
@@ -53145,6 +53774,7 @@ static int flecs_meta_cursor_from_str(
             ecs_err("invalid value for boolean '%s'", value);
             goto error;
         }
+
         break;
     case EcsOpI8:
     case EcsOpU8:
@@ -53186,6 +53816,7 @@ static int flecs_meta_cursor_from_str(
         if (*(ecs_string_t*)ptr == value) {
             break;
         }
+
         ecs_os_free(*(ecs_string_t*)ptr);
         char *result = ecs_os_strdup(value);
         flecs_meta_set_t(ecs_string_t, ptr, result);
@@ -53197,6 +53828,7 @@ static int flecs_meta_cursor_from_str(
         {
             goto error;
         }
+
         break;
     }
     case EcsOpBitmask:
@@ -53211,6 +53843,7 @@ static int flecs_meta_cursor_from_str(
         if (flecs_meta_cursor_lookup(cursor, value, &e)) {
             goto error;
         }
+
         flecs_meta_set_t(ecs_entity_t, ptr, e);
         break;
     }
@@ -53246,6 +53879,7 @@ static int flecs_meta_cursor_from_str(
             if (flecs_meta_cursor_lookup(cursor, value, &e)) {
                 goto error;
             }
+
             opaque->assign_entity(ptr, 
                 ECS_CONST_CAST(ecs_world_t*, cursor->world), e);
             break;
@@ -53291,6 +53925,7 @@ static int flecs_meta_cursor_parse_map_key(
             ecs_err("unresolved enum constant '%s' for map key", value);
             return -1;
         }
+
         *key_out = key;
     } else if (kind == EcsOpBitmask) {
         uint32_t key = 0;
@@ -53299,6 +53934,7 @@ static int flecs_meta_cursor_parse_map_key(
         {
             return -1;
         }
+
         *key_out = key;
         return 0;
     } else {
@@ -53340,6 +53976,7 @@ static int flecs_meta_map_ensure_key(
         if (!*val) {
             *val = (ecs_map_val_t)(uintptr_t)ecs_os_calloc(vti->size);
         }
+
         ptr = (void*)(uintptr_t)*val;
     }
 
@@ -53383,9 +54020,11 @@ static bool flecs_meta_op_is_value(
     if (op->kind == EcsOpPushValue) {
         return true;
     }
+
     if (op->kind == EcsOpForward && op->type == ecs_id(ecs_value_t)) {
         return true;
     }
+
     return false;
 }
 
@@ -54183,6 +54822,7 @@ static int flecs_meta_assign_opaque_number(
             opaque->assign_bool(ptr, value);
             return 0;
         }
+
         break;
     }
     case EcsChar: {
@@ -54197,6 +54837,7 @@ static int flecs_meta_assign_opaque_number(
             opaque->assign_int(ptr, value);
             return 0;
         }
+
         break;
     }
     case EcsI64: {
@@ -54214,6 +54855,7 @@ static int flecs_meta_assign_opaque_number(
             opaque->assign_char(ptr, flecs_ito(char, value));
             return 0;
         }
+
         break;
     }
     case EcsU64: {
@@ -54231,6 +54873,7 @@ static int flecs_meta_assign_opaque_number(
             opaque->assign_char(ptr, flecs_uto(char, value));
             return 0;
         }
+
         break;
     }
     case EcsF64: {
@@ -54252,6 +54895,7 @@ static int flecs_meta_assign_opaque_number(
                     (ecs_entity_t)value);
             return 0;
         }
+
         break;
     }
     case EcsEntity: {
@@ -54261,6 +54905,7 @@ static int flecs_meta_assign_opaque_number(
                 ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
             return 0;
         }
+
         break;
     }
     case EcsId: {
@@ -54270,6 +54915,7 @@ static int flecs_meta_assign_opaque_number(
                 ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
             return 0;
         }
+
         break;
     }
     default:
@@ -54299,6 +54945,7 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
     if (from == EcsI64 || from == EcsU64 || from == EcsF64) {
         ecs_assert(ptr != NULL, ECS_INVALID_OPERATION, "no object to assign");
     }
+
     if (flecs_meta_op_is_value(op)) {
         kind = (ecs_meta_op_kind_t)(EcsOpPrimitive + (int)from);
         ptr = flecs_meta_cursor_value_ensure(cursor, ptr,
@@ -54309,12 +54956,15 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
     } else if (kind == EcsOpEnum) {
         kind = op->underlying_kind;
     }
+
     if (kind == EcsOpOpaqueValue) {
         if (!flecs_meta_assign_opaque_number(cursor, op, ptr, from, number)) {
             return 0;
         }
+
         goto error;
     }
+
     if (kind == EcsOpString) {
         char *result = NULL;
         switch (from) {
@@ -54331,12 +54981,14 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
         *(char**)ptr = result;
         return 0;
     }
+
     if ((from == EcsEntity && kind != EcsOpEntity &&
         kind != EcsOpId && kind != EcsOpBool) ||
         (from == EcsId && kind != EcsOpId))
     {
         goto error;
     }
+
     if (from == EcsChar && op->kind != EcsOpEnum &&
         kind != EcsOpBool && kind != EcsOpChar && kind != EcsOpI8 &&
         kind != EcsOpI16 && kind != EcsOpI32 && kind != EcsOpI64 &&
@@ -54344,6 +54996,7 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
     {
         goto error;
     }
+
     switch (from) {
     case EcsBool:
     case EcsChar:
@@ -54472,11 +55125,13 @@ int ecs_meta_set_value(
             ecs_err("no object to assign");
             return -1;
         }
+
         if (type == ecs_id(ecs_value_t)) {
             ecs_value_copy(cursor->world, ptr, value->ptr);
         } else {
             ecs_value_set(cursor->world, ptr, type, value->ptr);
         }
+
         return 0;
     }
 
@@ -54514,6 +55169,7 @@ int ecs_meta_set_value(
             if (!str) {
                 return ecs_meta_set_null(cursor);
             }
+
             return ecs_meta_set_string(cursor, str);
         }
         case EcsEntity: return ecs_meta_set_entity(cursor, *(ecs_entity_t*)value->ptr);
@@ -54560,11 +55216,13 @@ int ecs_meta_set_value(
             {
                 return ecs_ptr_copy(cursor->world, op->type, ptr, value->ptr);
             }
+
             char *type_str = ecs_get_path(cursor->world, value->type);
             flecs_meta_conversion_error(cursor, op, type_str);
             ecs_os_free(type_str);
             goto error;
         }
+
         return ecs_ptr_copy(cursor->world, value->type, ptr, value->ptr);
     }
 
@@ -54594,6 +55252,7 @@ int ecs_meta_set_string(
         if (!ptr) {
             goto error;
         }
+
         ecs_os_free(*(ecs_string_t*)ptr);
         flecs_meta_set_t(ecs_string_t, ptr, ecs_os_strdup(value));
         return 0;
@@ -54659,6 +55318,7 @@ int ecs_meta_set_null(
         ecs_err("no object to assign");
         goto error;
     }
+
     switch (op->kind) {
     case EcsOpString:
         ecs_os_free(*(char**)ptr);
@@ -54670,6 +55330,7 @@ int ecs_meta_set_null(
             ot->assign_null(ptr);
             return 0;
         }
+
         break;
     }
     default:
@@ -54698,12 +55359,14 @@ static FLECS_ALWAYS_INLINE flecs_meta_number_t flecs_meta_to_number(
     {
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for %s", name);
     }
+
     if ((kind == EcsOpEntity || kind == EcsOpId) &&
         (to == EcsI64 || to == EcsF64))
     {
         ecs_throw(ECS_INVALID_PARAMETER, "invalid conversion from %s to %s",
             kind == EcsOpEntity ? "entity" : "id", name);
     }
+
     switch (kind) {
     case EcsOpBool: value.i = *(const ecs_bool_t*)ptr; break;
     case EcsOpChar: value.i = *(const ecs_char_t*)ptr; break;
@@ -54745,6 +55408,7 @@ static FLECS_ALWAYS_INLINE flecs_meta_number_t flecs_meta_to_number(
         } else {
             value.i = atoi(*(const char*const*)ptr);
         }
+
         break;
     default:
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for %s", name);
@@ -54824,6 +55488,7 @@ static int ecs_meta_get_string_value_from_opaque(
          ecs_err("Expected value call for opaque type to be a string");
          return -1;
     }
+
     char*** ctx = (char ***) ser->ctx;
     *ctx = ECS_CONST_CAST(char**, value);
     return 0;
@@ -55522,12 +56187,14 @@ int flecs_init_type(
                     size, ecs_get_name(world, type), comp->size);
                 return -1;
             }
+
             if (comp->alignment < alignment) {
                 ecs_err(
                     "computed alignment (%d) for '%s' is larger than actual type (%d)", 
                     alignment, ecs_get_name(world, type), comp->alignment);
                 return -1;
             }
+
             if (comp->size == size && comp->alignment != alignment) {
                 if (comp->alignment < alignment) {
                     ecs_err("computed size for '%s' matches with actual type but "
@@ -55622,6 +56289,7 @@ static int flecs_meta_ser_scalar(
         } else {
             ecs_strbuf_appendlit(str, "false");
         }
+
         break;
     case EcsOpChar: {
         char chbuf[3];
@@ -55634,6 +56302,7 @@ static int flecs_meta_ser_scalar(
         } else {
             ecs_strbuf_appendch(str, '0');
         }
+
         break;
     }
     case EcsOpByte:
@@ -55700,6 +56369,7 @@ static int flecs_meta_ser_scalar(
         } else {
             ecs_strbuf_appendlit(str, "null");
         }
+
         break;
     }
     case EcsOpEntity: {
@@ -55709,6 +56379,7 @@ static int flecs_meta_ser_scalar(
         } else {
             ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str, false);
         }
+
         break;
     }
     case EcsOpId: {
@@ -55718,6 +56389,7 @@ static int flecs_meta_ser_scalar(
         } else {
             ecs_id_str_buf(world, id, str);
         }
+
         break;
     }
     case EcsOpEnum:
@@ -55768,6 +56440,7 @@ ecs_entity_t flecs_meta_primitive_type(
     if (kind < EcsBool || kind > EcsPrimitiveKindLast) {
         return 0;
     }
+
     return *types[kind];
 }
 
@@ -55777,6 +56450,7 @@ ecs_meta_op_kind_t flecs_meta_primitive_to_op_kind(
     if (kind < EcsBool || kind > EcsPrimitiveKindLast) {
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
+
     return (ecs_meta_op_kind_t)(EcsOpPrimitive + (int)kind);
 }
 
@@ -55788,11 +56462,13 @@ ecs_entity_t flecs_meta_op_kind_to_type(
     } else if (kind == EcsOpI64) {
         kind = EcsOpU64;
     }
+
     ecs_entity_t type = flecs_meta_primitive_type(
         (ecs_primitive_kind_t)(kind - EcsOpPrimitive));
     if (!type) {
         ecs_err("cannot convert kind to type");
     }
+
     return type;
 }
 
@@ -56187,6 +56863,7 @@ int flecs_meta_parse_enum(
         if (flecs_meta_find_constant(world, constants, value, &constant)) {
             goto error;
         }
+
         *(uint64_t*)out = constant;
         return 0;
     }
@@ -56511,6 +57188,7 @@ static FLECS_ALWAYS_INLINE int flecs_rtt_struct_action(
     if (action >= FlecsRttCompare && ptr == src) {
         return 0;
     }
+
     ecs_rtt_struct_ctx_t *ctx = ti->hooks.lifecycle_ctx;
     ecs_vec_t *vec = action == FlecsRttDtor ? &ctx->dtors : &ctx->members;
     const ecs_rtt_call_data_t *members = ecs_vec_first(vec);
@@ -56552,6 +57230,7 @@ static FLECS_ALWAYS_INLINE int flecs_rtt_struct_action(
             }
         }
     }
+
     return 0;
 }
 
@@ -56646,6 +57325,7 @@ static ecs_rtt_struct_ctx_t* flecs_rtt_struct_members(
         if (!mt || mt == ti) {
             continue;
         }
+
         ecs_rtt_call_data_t *data =
             ecs_vec_append_t(NULL, &result->members, ecs_rtt_call_data_t);
         *data = (ecs_rtt_call_data_t){
@@ -56655,15 +57335,18 @@ static ecs_rtt_struct_ctx_t* flecs_rtt_struct_members(
             *ecs_vec_append_t(NULL, &result->dtors, ecs_rtt_call_data_t) = *data;
             available.dtor = flecs_rtt_struct_dtor;
         }
+
         if (mt->hooks.ctor && mt->hooks.ctor != flecs_default_ctor) {
             available.ctor = flecs_rtt_struct_ctor;
         }
+
         if (mt->hooks.copy) available.copy = flecs_rtt_struct_copy;
         if (mt->hooks.move) available.move = flecs_rtt_struct_move;
         if (!mt->hooks.cmp) available.cmp = NULL;
         if (!mt->hooks.equals) available.equals = NULL;
         available.flags |= mt->hooks.flags & ECS_TYPE_HOOKS_ILLEGAL;
     }
+
     if (hooks) {
         ecs_flags32_t flags = available.flags;
         hooks->ctor = flags & ECS_TYPE_HOOK_CTOR_ILLEGAL ? NULL : available.ctor;
@@ -56674,6 +57357,7 @@ static ecs_rtt_struct_ctx_t* flecs_rtt_struct_members(
         hooks->equals = flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL ? NULL : available.equals;
         hooks->flags = flags;
     }
+
     return result;
 }
 
@@ -56687,6 +57371,7 @@ static void flecs_rtt_struct_hooks(
     if (hooks->lifecycle_ctx_free) {
         hooks->lifecycle_ctx_free(hooks->lifecycle_ctx);
     }
+
     ecs_rtt_struct_ctx_t *ctx = flecs_rtt_struct_members(
         world, ti, members, member_count, hooks);
     if (hooks->ctor || hooks->dtor || hooks->move || hooks->copy ||
@@ -56737,6 +57422,7 @@ static FLECS_ALWAYS_INLINE void flecs_rtt_vector_clear(
             flecs_type_info_dtor(
                 ecs_vec_first(vec), num_elements, element_ti);
         }
+
         if (release) {
             ecs_vec_fini(NULL, vec, element_ti->size);
         } else {
@@ -56789,11 +57475,13 @@ static void flecs_rtt_vector_copy(
         if (!src_count) {
             continue;
         }
+
         if (ti->hooks.ctor) {
             flecs_type_info_ctor(ecs_vec_first(dst), src_count, ti);
         } else {
             flecs_default_ctor(ecs_vec_first(dst), src_count, ti);
         }
+
         flecs_type_info_copy(ecs_vec_first(dst), ecs_vec_first(src), src_count, ti);
     }
 }
@@ -56835,6 +57523,7 @@ static int flecs_rtt_vector_cmp(
             return c;
         }
     }
+
     return 0;
 }
 
@@ -56873,6 +57562,7 @@ static bool flecs_rtt_vector_equals(
             return false;
         }
     }
+
     return true;
 }
 
@@ -56972,11 +57662,13 @@ static int flecs_rtt_map_cmp(
     if (a_ptr == b_ptr) {
         return 0;
     }
+
     const ecs_map_t *a = a_ptr, *b = b_ptr;
     int32_t count_diff = ecs_map_count(a) - ecs_map_count(b);
     if (count_diff) {
         return count_diff;
     }
+
     bool different_keys = false;
     ecs_map_key_t first_key = UINT64_MAX;
     ecs_map_iter_t it = ecs_map_iter(a);
@@ -56997,6 +57689,7 @@ static int flecs_rtt_map_cmp(
         }
         return -1;
     }
+
     const ecs_type_info_t *ti = type_info->hooks.lifecycle_ctx;
     int result = 0;
     it = ecs_map_iter(a);
@@ -57073,9 +57766,11 @@ static void flecs_rtt_collection_hooks(
             ecs_get_name(world, component));
         return;
     }
+
     if (hooks->lifecycle_ctx_free) {
         hooks->lifecycle_ctx_free(hooks->lifecycle_ctx);
     }
+
     hooks->lifecycle_ctx = ECS_CONST_CAST(ecs_type_info_t*, ti);
     hooks->lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
     hooks->ctor = map ? flecs_default_ctor : flecs_rtt_vector_ctor;
@@ -57140,6 +57835,7 @@ static int flecs_rtt_gen_struct_hook(
         if (m->type == component) {
             continue;
         }
+
         if (flecs_rtt_ensure_hook(world, m->type, equals)) {
             return -1;
         }
@@ -57153,6 +57849,7 @@ static int flecs_rtt_gen_struct_hook(
         if (hooks.lifecycle_ctx) {
             return -1;
         }
+
         hooks.lifecycle_ctx = flecs_rtt_struct_members(
             world, ti, members, member_count, NULL);
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
@@ -57185,6 +57882,7 @@ static int flecs_rtt_gen_collection_hook(
     if (hooks.lifecycle_ctx && hooks.lifecycle_ctx != element_ti) {
         return -1;
     }
+
     hooks.lifecycle_ctx = ECS_CONST_CAST(ecs_type_info_t*, element_ti);
     hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
     flecs_rtt_set_hook(&hooks, equals, cmp, eq);
@@ -57222,6 +57920,7 @@ static int flecs_rtt_ensure_hook(
         if (!arr || arr->type == type) {
             return -1;
         }
+
         ecs_member_t member = { .type = arr->type, .count = arr->count };
         return flecs_rtt_gen_struct_hook(world, type, equals, &member, 1);
     }
@@ -57426,6 +58125,7 @@ static int flecs_meta_write_scope(
     {
         return -1;
     }
+
     return 0;
 }
 
@@ -57473,12 +58173,14 @@ static int flecs_meta_write_map(
         if (!json) {
             ecs_strbuf_list_next(str);
         }
+
         if (flecs_meta_ser_map_key(
             world, ops, ecs_map_key(&it), json ? &key_buf : str))
         {
             ecs_strbuf_reset(&key_buf);
             return -1;
         }
+
         if (json) {
             char *key = ecs_strbuf_get(&key_buf);
             flecs_meta_write_member(str, key, format);
@@ -57527,10 +58229,12 @@ static int flecs_meta_write_value(
     if (!json) {
         ecs_strbuf_list_next(str);
     }
+
     if (flecs_meta_value_type_str(world, value->type, json ? &type_buf : str)) {
         ecs_strbuf_reset(&type_buf);
         return -1;
     }
+
     if (json) {
         char *name = ecs_strbuf_get(&type_buf);
         flecs_meta_write_member(str, name, format);
@@ -57601,6 +58305,7 @@ static int flecs_meta_write_opaque_value(
     if (writer->is_collection) {
         ecs_strbuf_list_next(writer->str);
     }
+
     return flecs_meta_write_forward(
         ser->world, type, value, writer->str, writer->format);
 }
@@ -57679,6 +58384,7 @@ static int flecs_meta_write_primitive(
             } else {
                 flecs_json_id(str, world, id);
             }
+
             return 0;
         }
         case EcsOpString:
@@ -57704,23 +58410,28 @@ static int flecs_meta_write_primitive(
         ecs_strbuf_appendstr(str, buf);
         return 0;
     }
+
     if (kind <= EcsOpPrimitive || kind > EcsMetaTypeOpKindLast) {
         ecs_throw(ECS_INVALID_PARAMETER, "invalid serializer operation");
     }
+
     bool quote = format == EcsMetaJson &&
         ((kind == EcsOpI64 && *(const int64_t*)ptr >= 2147483648) ||
          (kind == EcsOpU64 && *(const uint64_t*)ptr >= 2147483648));
     if (quote) {
         ecs_strbuf_appendch(str, '"');
     }
+
     if (flecs_meta_ser_primitive(world, kind - EcsOpPrimitive,
         ptr, str, format != EcsMetaStr))
     {
         return -1;
     }
+
     if (quote) {
         ecs_strbuf_appendch(str, '"');
     }
+
     return 0;
 error:
     return -1;
@@ -57748,6 +58459,7 @@ static int flecs_meta_write_type_ops(
             if (flecs_meta_write_struct(world, op, ptr, str, format)) {
                 goto error;
             }
+
             break;
         }
         case EcsOpPushArray: {
@@ -57756,6 +58468,7 @@ static int flecs_meta_write_type_ops(
             {
                 goto error;
             }
+
             break;
         }
         case EcsOpPushVector: {
@@ -57766,24 +58479,28 @@ static int flecs_meta_write_type_ops(
             {
                 goto error;
             }
+
             break;
         }
         case EcsOpPushMap: {
             if (flecs_meta_write_map(world, op, ptr, str, format)) {
                 goto error;
             }
+
             break;
         }
         case EcsOpPushValue: {
             if (flecs_meta_write_value(world, ptr, str, format)) {
                 goto error;
             }
+
             break;
         }
         case EcsOpForward: {
             if (flecs_meta_write_forward(world, op->type, ptr, str, format)) {
                 goto error;
             }
+
             break;
         }
         case EcsOpOpaqueStruct:
@@ -57803,9 +58520,11 @@ static int flecs_meta_write_type_ops(
             {
                 return -1;
             }
+
             if (format == EcsMetaJson) {
                 ecs_strbuf_appendch(str, '"');
             }
+
             break;
         case EcsOpBitmask:
             if (flecs_meta_ser_bitmask(world, op->type, op->is.constants,
@@ -57889,13 +58608,16 @@ static int flecs_meta_serialize_scope(
                 ret = flecs_meta_serialize_type(
                     world, m->type, m->offset, ops, false);
             }
+
             if (ret) {
                 continue;
             }
+
             ecs_meta_op_t *member_op = ecs_vec_get_t(ops, ecs_meta_op_t, cur);
             if (!member_op->type) {
                 member_op->type = m->type;
             }
+
             member_op->op_count = flecs_ito(int16_t, ecs_vec_count(ops) - cur);
             member_op->name = ecs_os_strdup(m->name);
             member_op->member_index = flecs_ito(int16_t, i);
@@ -57907,6 +58629,7 @@ static int flecs_meta_serialize_scope(
     {
         return -1;
     }
+
     ecs_meta_op_t *pop = ecs_vec_append_t(NULL, ops, ecs_meta_op_t);
     *pop = (ecs_meta_op_t){
         .kind = EcsOpPop,
@@ -57933,6 +58656,7 @@ static int flecs_meta_serialize_type(
             flecs_errstr(ecs_get_path(world, type)));
         return -1;
     }
+
     ecs_meta_op_t op = {
         .kind = EcsOpForward,
         .op_count = 1,
@@ -57951,6 +58675,7 @@ static int flecs_meta_serialize_type(
                 flecs_errstr(ecs_get_path(world, type)));
             return -1;
         }
+
         op.kind = flecs_meta_primitive_to_op_kind(p->kind);
         break;
     }
@@ -57973,6 +58698,7 @@ static int flecs_meta_serialize_type(
             op.kind = EcsOpEnum;
             op.underlying_kind = flecs_meta_primitive_to_op_kind(p->kind);
         }
+
         break;
     }
     case EcsStructType:
@@ -57984,6 +58710,7 @@ static int flecs_meta_serialize_type(
             if (!a) {
                 return -1;
             }
+
             op.kind = EcsOpPushArray;
             op.type = element = a->type;
             op.type_info = NULL;
@@ -57996,6 +58723,7 @@ static int flecs_meta_serialize_type(
             if (!v) {
                 return -1;
             }
+
             op.kind = EcsOpPushVector;
             element = v->type;
         }
@@ -58006,11 +58734,13 @@ static int flecs_meta_serialize_type(
             if (!m) {
                 return -1;
             }
+
             const EcsTypeSerializer *key = ecs_get(
                 world, m->key_type, EcsTypeSerializer);
             if (!key || !ecs_vec_count(&key->ops)) {
                 return -1;
             }
+
             const ecs_meta_op_t *key_op = ecs_vec_first(&key->ops);
             op.kind = EcsOpPushMap;
             op.underlying_kind = key_op->kind;
@@ -58037,6 +58767,7 @@ static int flecs_meta_serialize_type(
         } else if (as->kind == EcsStructType) {
             op.kind = EcsOpOpaqueStruct;
         }
+
         op.is.opaque = o->serialize;
         break;
     }
@@ -58048,8 +58779,10 @@ static int flecs_meta_serialize_type(
         if (element) {
             op.elem_size = flecs_type_size(world, element);
         }
+
         return flecs_meta_serialize_scope(world, op, element, array_count, ops);
     }
+
     *ecs_vec_append_t(NULL, ops, ecs_meta_op_t) = op;
     return 0;
 }
@@ -59478,6 +60211,7 @@ char* flecs_chresc(
         } else {
             *bptr = in;
         }
+
         break;
     }
 
@@ -59579,6 +60313,7 @@ ecs_size_t flecs_stresc(
             written++;
         }
     }
+
     return written;
 error:
     return 0;
@@ -59664,6 +60399,7 @@ int64_t flecs_parser_errpos(
     if (parser->fixed_pos) {
         return parser->fixed_pos - parser->code;
     }
+
     return pos - parser->code;
 }
 
@@ -59803,6 +60539,7 @@ const char* flecs_token_kind_str(
     if ((unsigned)kind < EcsTokLast && flecs_tokens[kind].description) {
         return flecs_tokens[kind].description;
     }
+
     return "<corrupt>";
 }
 
@@ -59812,12 +60549,15 @@ const char* flecs_token_str(
     if (kind == EcsTokMod) {
         return "%%";
     }
+
     if (kind == EcsTokMember) {
         return "member";
     }
+
     if ((unsigned)kind < EcsTokLast && flecs_tokens[kind].spelling) {
         return flecs_tokens[kind].spelling;
     }
+
     return "<corrupt>";
 }
 
@@ -59846,6 +60586,7 @@ static const char* flecs_scan_line_comment(
     ecs_assert(pos[0] == '/' && pos[1] == '/', ECS_INTERNAL_ERROR, NULL);
 
     for (pos = pos + 2; pos[0] && pos[0] != '\n'; pos ++) { }
+
     return pos;
 }
 
@@ -59856,6 +60597,7 @@ static const char* flecs_scan_whitespace_and_comment(
     if (!pos) {
         return NULL;
     }
+
     const char *newline = NULL;
     bool collapse = false;
     for (;;) {
@@ -59864,12 +60606,15 @@ static const char* flecs_scan_whitespace_and_comment(
             if (!collapse) {
                 return pos;
             }
+
             newline = pos ++;
             continue;
         }
+
         if (!flecs_is_comment(pos)) {
             return newline ? newline : pos;
         }
+
         if (pos[1] == '/') {
             pos = flecs_scan_line_comment(pos);
             if (parser->significant_newline && pos[0] == '\n') {
@@ -59882,16 +60627,19 @@ static const char* flecs_scan_whitespace_and_comment(
                 if (newline) {
                     return newline;
                 }
+
                 ecs_parser_error(parser->name, parser->code,
                     flecs_parser_errpos(parser, pos),
                     "missing */ for multiline comment");
                 return NULL;
             }
+
             pos = end + 2;
             const char *next = pos;
             if (next[0] == '\r' && next[1] == '\n') {
                 next ++;
             }
+
             if (parser->significant_newline && next[0] == '\n' &&
                 flecs_is_comment(flecs_scan_whitespace(parser, next + 1)))
             {
@@ -59988,6 +60736,7 @@ const char* flecs_tokenizer_identifier(
                     if (outpos) {
                         outpos = flecs_tokenizer_write(parser, outpos, c);
                     }
+
                     pos ++;
 
                     if (!indent) {
@@ -60058,14 +60807,17 @@ static const char* flecs_script_number(
     if (*pos == '-') {
         pos ++;
     }
+
     if (pos[0] == '0') {
         if (pos[1] == 'x' || pos[1] == 'X') {
             base = 16;
         } else if (pos[1] == 'b' || pos[1] == 'B') {
             base = 2;
         }
+
         pos += base != 10 ? 2 : 0;
     }
+
     const char *digits = pos;
     pos = flecs_script_digits(pos, base);
     bool has_digits = pos != digits;
@@ -60074,6 +60826,7 @@ static const char* flecs_script_number(
         pos = flecs_script_digits(pos, base);
         has_digits |= pos != digits;
     }
+
     if (base == 10 && (*pos == 'e' || *pos == 'E')) {
         digits = pos + 1;
         digits += *digits == '+' || *digits == '-';
@@ -60081,11 +60834,13 @@ static const char* flecs_script_number(
             pos = flecs_script_digits(digits, base);
         }
     }
+
     if (!has_digits && base != 10) {
         ecs_parser_error(parser->name, parser->code,
             flecs_parser_errpos(parser, pos), "missing digits in number literal");
         return NULL;
     }
+
     ecs_size_t length = flecs_ito(ecs_size_t, pos - start);
     ecs_assert(!parser->token_end || parser->token_cur + length < parser->token_end,
         ECS_INVALID_OPERATION, "out of parser token storage");
@@ -60132,6 +60887,7 @@ static const char* flecs_tokenizer_emit(
     for (i = 0; i < len; i ++) {
         outpos = flecs_tokenizer_write(parser, outpos, pos[i + 1]);
     }
+
     outpos = flecs_tokenizer_write(parser, outpos, '\0');
 
     out->kind = kind;
@@ -60194,6 +60950,7 @@ static const char* flecs_script_multiline_string(
         if (ch == '\\' && end[1] == '`') {
             end ++;
         }
+
         end ++;
     }
 
@@ -60252,6 +61009,7 @@ const char* flecs_tokenizer_until(
     for (i = 0; i < len; i ++) {
         outpos = flecs_tokenizer_write(parser, outpos, start[i]);
     }
+
     out->value = parser->token_cur;
     parser->token_cur = outpos;
 
@@ -60275,6 +61033,7 @@ static const char* flecs_token_scan(
             ecs_parser_error(parser->name, parser->code, 0,
                 "unexpected end of parser state");
         }
+
         return NULL;
     }
 
@@ -60325,6 +61084,7 @@ static const char* flecs_token_scan(
                 return pos + 2;
             }
         }
+
         if (flecs_tokens[ch].spelling &&
             (!flecs_tokens[ch].description[0] || ch == '.'))
         {
@@ -60713,6 +61473,7 @@ static bool flecs_pipeline_build(
                     needs_merge = true;
                     multi_threaded = sys->multi_threaded;
                 }
+
                 if (sys->immediate != immediate) {
                     needs_merge = true;
                     immediate = sys->immediate;
@@ -60768,6 +61529,7 @@ static bool flecs_pipeline_build(
                     op->multi_threaded = multi_threaded;
                     op->immediate = immediate;
                 }
+
                 op->count ++;
             }
         }
@@ -60818,6 +61580,7 @@ static bool flecs_pipeline_build(
             } else {
                 ecs_dbg("#[green]system#[reset] %s", path);
             }
+
             ecs_os_free(path);
 #endif
 
@@ -60837,6 +61600,7 @@ static bool flecs_pipeline_build(
                         op[op_index].multi_threaded, 
                         !op[op_index].immediate);
                 }
+
                 ecs_log_push_1();
             }
 
@@ -61206,6 +61970,7 @@ static ecs_entity_t flecs_pipeline_init(
     if (!qd.order_by_callback) {
         qd.order_by_callback = flecs_entity_compare;
     }
+
     qd.entity = entity;
 
     ecs_query_t *query = query_init(world, entity, &qd);
@@ -61268,6 +62033,7 @@ ecs_entity_t ecs_pipeline_init(
     if (!r && entity_created) {
         ecs_delete(world, result);
     }
+
     return r;
 error:
     return 0;
@@ -61488,6 +62254,7 @@ void flecs_create_worker_threads(
             /* workers are using long-running os threads */
             stage->thread = ecs_os_thread_new(flecs_worker, stage);
         }
+
         ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED,
             "failed to create thread");
     }
@@ -61523,6 +62290,7 @@ static void flecs_wait_for_workers(
         if (world->workers_running == (stage_count - 1)) {
             wait = false;
         }
+
         ecs_os_mutex_unlock(world->sync_mutex);
     } while (wait);
 }
@@ -61605,6 +62373,7 @@ void flecs_join_worker_threads(
         } else {
             ecs_os_thread_join(stage->thread);
         }
+
         stage->thread = 0;
     }
 
@@ -61654,9 +62423,11 @@ static void flecs_set_threads_internal(
             if (world->worker_cond) {
                 ecs_os_cond_free(world->worker_cond);
             }
+
             if (world->sync_cond) {
                 ecs_os_cond_free(world->sync_cond);
             }
+
             if (world->sync_mutex) {
                 ecs_os_mutex_free(world->sync_mutex);
             }
@@ -61896,6 +62667,7 @@ static void flecs_instantiate_children(
             {
                 childof_base_index ++;
             }
+
             continue;
         }
 
@@ -62153,6 +62925,7 @@ void flecs_instantiate(
 
         ecs_os_perf_trace_pop("flecs.instantiate");
     }
+
 error:
     return;
 }
@@ -62639,6 +63412,7 @@ static bool flecs_tree_spawner_is_empty(
             return false;
         }
     }
+
     return true;
 }
 
@@ -62898,6 +63672,7 @@ static bool flecs_prefab_diff_has_override(
             return true;
         }
     }
+
     return false;
 }
 
@@ -62969,19 +63744,23 @@ static bool flecs_term_trav(flecs_term_parser_t *p, ecs_term_ref_t *ref) {
         if (p->token.kind != EcsTokIdentifier) {
             return flecs_term_error(p, "expected traversal flag");
         }
+
         ref->id |= flecs_query_parse_trav_flags(p->token.value);
         if (!flecs_term_next(p)) return false;
         if (p->token.kind == '|') {
             if (!flecs_term_next(p)) return false;
             continue;
         }
+
         if (p->token.kind == EcsTokIdentifier) {
             p->parser->term->trav = ecs_lookup(p->parser->world, p->token.value);
             if (!p->parser->term->trav) {
                 return flecs_term_error(p, "unresolved traversal relationship");
             }
+
             if (!flecs_term_next(p)) return false;
         }
+
         return true;
     }
 }
@@ -62992,6 +63771,7 @@ static bool flecs_term_ref(flecs_term_parser_t *p, ecs_term_ref_t *ref) {
     {
         return flecs_term_trav(p, ref);
     }
+
     if (p->token.kind == '@') {
         p->parser->term->id = ECS_VALUE_PAIR;
         if (!flecs_term_next(p)) return false;
@@ -63004,11 +63784,14 @@ static bool flecs_term_ref(flecs_term_parser_t *p, ecs_term_ref_t *ref) {
         } else {
             return flecs_term_error(p, "expected value pair target");
         }
+
         return flecs_term_next(p);
     }
+
     if (!flecs_term_identifier(p)) {
         return flecs_term_error(p, "expected term argument");
     }
+
     ref->name = p->token.value;
     if (!flecs_term_next(p)) return false;
     if (p->token.kind == '|') {
@@ -63018,9 +63801,11 @@ static bool flecs_term_ref(flecs_term_parser_t *p, ecs_term_ref_t *ref) {
             if (!p->parser->term->trav) {
                 return flecs_term_error(p, "unresolved traversal relationship");
             }
+
             return flecs_term_next(p);
         }
     }
+
     return true;
 }
 
@@ -63036,17 +63821,21 @@ static bool flecs_term_args(flecs_term_parser_t *p, int32_t arg) {
             if (arg > FLECS_TERM_ARG_COUNT_MAX || !parser->extra_args) {
                 return flecs_term_error(p, "too many arguments in term");
             }
+
             ref = &parser->extra_args[arg - 2];
         }
+
         if (!flecs_term_ref(p, ref)) return false;
         if (p->token.kind == ')') return flecs_term_next(p);
         if (p->token.kind != ',' && p->token.kind != EcsTokOr) {
             return flecs_term_error(p, "expected argument separator or ')'");
         }
+
         ecs_oper_kind_t oper = p->token.kind == ',' ? EcsAnd : EcsOr;
         if (arg > 1 && parser->extra_oper != oper) {
             return flecs_term_error(p, "cannot mix operators in extra term arguments");
         }
+
         parser->extra_oper = oper;
         arg ++;
         if (!flecs_term_next(p)) return false;
@@ -63057,6 +63846,7 @@ static bool flecs_term_pair(flecs_term_parser_t *p) {
     if (!flecs_term_next(p) || !flecs_term_identifier(p)) {
         return flecs_term_error(p, "expected pair relationship");
     }
+
     p->parser->term->first.name = p->token.value;
     if (!flecs_term_next(p)) return false;
     if (p->token.kind == '|') {
@@ -63064,6 +63854,7 @@ static bool flecs_term_pair(flecs_term_parser_t *p) {
             return false;
         }
     }
+
     if (p->token.kind != ',') return flecs_term_error(p, "expected ',' in pair");
     return flecs_term_next(p) && flecs_term_args(p, 1);
 }
@@ -63089,21 +63880,25 @@ static const char* flecs_query_term_parse(
                 break;
             }
         }
+
         if (!flecs_term_next(&p) || p.token.kind != ']' || !flecs_term_next(&p)) {
             goto unexpected;
         }
     }
+
     if (p.token.kind == '!' || p.token.kind == '?') {
         term->oper = p.token.kind == '!' ? EcsNot : EcsOptional;
         unary = true;
         if (!flecs_term_next(&p)) return NULL;
     }
+
     if (p.token.kind == '{' && (!inout || unary)) {
         term->first.id = EcsScopeOpen;
         term->src.id = EcsIsEntity;
         term->inout = EcsInOutNone;
         return p.pos;
     }
+
     if (!inout && !unary) {
         if (p.token.kind == EcsTokEnd || p.token.kind == EcsTokNewline) return p.pos;
         if (p.token.kind == '}') {
@@ -63115,6 +63910,7 @@ static const char* flecs_query_term_parse(
             return p.token.kind == ',' ? p.pos : end;
         }
     }
+
     if (flecs_term_identifier(&p) && !unary) {
         int16_t oper = 0;
         ecs_id_t flag = 0;
@@ -63128,6 +63924,7 @@ static const char* flecs_query_term_parse(
             if (!flecs_term_next(&p) || p.token.kind != '|' || !flecs_term_next(&p)) {
                 goto unexpected;
             }
+
             if (flecs_term_identifier(&p)) {
                 if (oper) term->oper = oper;
                 if (flag) term->id = flag;
@@ -63136,6 +63933,7 @@ static const char* flecs_query_term_parse(
             }
         }
     }
+
     if (p.token.kind == '(') {
         if (!flecs_term_pair(&p)) return NULL;
     } else if (flecs_term_identifier(&p)) {
@@ -63146,6 +63944,7 @@ static const char* flecs_query_term_parse(
                 flecs_term_error(&p, "cannot mix operator with equality expression");
                 return NULL;
             }
+
             neq = p.token.kind == EcsTokNeq;
             ecs_entity_t pred = p.token.kind == EcsTokMatch ? EcsPredMatch : EcsPredEq;
             term->src = term->first;
@@ -63160,6 +63959,7 @@ static const char* flecs_query_term_parse(
                     term->oper = EcsNot;
                 }
             }
+
             if (!flecs_term_next(&p)) return NULL;
         } else {
             bool trav = p.token.kind == '|';
@@ -63177,6 +63977,7 @@ static const char* flecs_query_term_parse(
     } else {
         goto unexpected;
     }
+
     switch (p.token.kind) {
     case '}': p.pos --; break;
     case EcsTokOr:
@@ -63565,6 +64366,7 @@ static bool flecs_script_name_is_path(
             if (ptr[1]) {
                 ptr ++;
             }
+
             continue;
         }
 
@@ -64040,6 +64842,7 @@ int flecs_script_visit_scopes(
         if (result) {
             return result;
         }
+
         ecs_script_catch_t *catches = ecs_vec_first(&stmt->catches);
         for (int32_t i = 0; i < ecs_vec_count(&stmt->catches); i ++) {
             result = catches[i].scope ? action(catches[i].scope, ctx) : 0;
@@ -64047,6 +64850,7 @@ int flecs_script_visit_scopes(
                 return result;
             }
         }
+
         return 0;
     }
     default:
@@ -64058,6 +64862,7 @@ int flecs_script_visit_scopes(
             return result;
         }
     }
+
     return 0;
 }
 
@@ -64148,17 +64953,20 @@ static int flecs_script_edit_walk(
         {
             continue;
         }
+
         if (node->kind == EcsAstEntity) {
             int result = walk->action((ecs_script_entity_t*)node, walk->ctx);
             if (result) {
                 return result;
             }
         }
+
         int result = flecs_script_visit_scopes(node, flecs_script_edit_walk, ctx);
         if (result) {
             return result;
         }
     }
+
     return 0;
 }
 
@@ -64176,6 +64984,7 @@ static int flecs_script_edit_index_entity(
             ecs_map_insert_ptr(&impl->entity_index, slot->entity, entity);
         }
     }
+
     return 0;
 }
 
@@ -64236,6 +65045,7 @@ static int flecs_script_edit_find_symbol(
     if (node->symbol != symbol->symbol) {
         return 0;
     }
+
     symbol->node = node;
     return 1;
 }
@@ -64332,6 +65142,7 @@ static ecs_script_entity_t* flecs_script_edit_find_in_template(
                 if (template_out) {
                     template_out[0] = template_entity;
                 }
+
                 return node;
             }
         }
@@ -64748,6 +65559,7 @@ static char* flecs_script_edit_indent_str(
     if (!result) {
         result = ecs_os_strdup("");
     }
+
     return result;
 }
 
@@ -64761,6 +65573,7 @@ static char* flecs_script_edit_child_indent(
     } else {
         ecs_strbuf_appendlit(&buf, "    ");
     }
+
     return ecs_strbuf_get(&buf);
 }
 
@@ -64832,6 +65645,7 @@ static void flecs_script_edit_collapse_blank(
             } else if (c != ' ' && c != '\t' && c != '\r') {
                 break;
             }
+
             cur --;
         }
 
@@ -64856,6 +65670,7 @@ static void flecs_script_edit_collapse_blank(
             } else if (c != ' ' && c != '\t' && c != '\r') {
                 break;
             }
+
             cur ++;
         }
 
@@ -64876,6 +65691,7 @@ static void flecs_script_edit_collapse_blank(
         if (cur[0] == '\n') {
             *length_out += flecs_ito(int32_t, (cur + 1) - finish);
         }
+
         return;
     }
 
@@ -65297,6 +66113,7 @@ static int flecs_script_edit_compare(
         if (a->kind == FlecsScriptEditDelete) {
             return -1;
         }
+
         if (b->kind == FlecsScriptEditDelete) {
             return 1;
         }
@@ -65502,6 +66319,7 @@ static ECS_COPY(EcsScriptFunction, dst, src, {
     if (dst->binding_ctx && dst->binding_ctx_free) {
         dst->binding_ctx_free(dst->binding_ctx);
     }
+
     dst->binding_ctx = NULL;
     dst->binding_ctx_free = NULL;
     dst->return_type = src->return_type;
@@ -65518,6 +66336,7 @@ static ECS_MOVE(EcsScriptFunction, dst, src, {
     if (dst->binding_ctx && dst->binding_ctx_free) {
         dst->binding_ctx_free(dst->binding_ctx);
     }
+
     *dst = *src;
     ecs_os_zeromem(src);
 })
@@ -65648,6 +66467,7 @@ ecs_value_t flecs_script_global_var_get(
         if (component) {
             component[0] = ecs_id(EcsScriptConstVar);
         }
+
         return cv->value;
     }
 
@@ -65656,6 +66476,7 @@ ecs_value_t flecs_script_global_var_get(
         if (component) {
             component[0] = ecs_id(EcsScriptMutVar);
         }
+
         return mv->value;
     }
 
@@ -65959,6 +66780,7 @@ ecs_entity_t ecs_function_init(
     if (result) {
         ecs_modified(world, result, EcsScriptFunction);
     }
+
     return result;
 }
 
@@ -66004,6 +66826,7 @@ ecs_entity_t ecs_method_init(
     if (result) {
         ecs_modified(world, result, EcsScriptMethod);
     }
+
     return result;
 }
 
@@ -66062,6 +66885,7 @@ static int flecs_script_function_call(
         if (argc) {
             ecs_os_memcpy_n(&method_argv[1], argv, ecs_value_t, argc);
         }
+
         call_argv = method_argv;
     }
 
@@ -66079,6 +66903,7 @@ static int flecs_script_function_call(
         if (result_allocated) {
             ecs_value_fini(world, result);
         }
+
         goto error;
     }
 
@@ -66780,6 +67605,7 @@ static const char* flecs_script_if_stmt(
                             if (!pos) {
                                 goto error;
                             }
+
                             return pos;
                         }
 
@@ -67006,6 +67832,7 @@ static const char* flecs_script_parse_var(
                     pos = lookahead;
                     EndOfRule;
                 }
+
                 break;
             }
 
@@ -67013,6 +67840,7 @@ static const char* flecs_script_parse_var(
                 if (is_prop) {
                     EndOfRule;
                 }
+
                 break;
             }
         )
@@ -67160,6 +67988,7 @@ static const char* flecs_script_fn_body(
         parser->significant_newline = true;
         goto error;
     }
+
     parser->significant_newline = true;
     parser->token_keep = parser->token_cur;
 
@@ -67190,6 +68019,7 @@ int32_t flecs_script_last_stmt_kind(
     if (!count) {
         return -1;
     }
+
     return ecs_vec_last_t(&scope->stmts, ecs_script_node_t*)[0]->kind;
 }
 
@@ -67398,34 +68228,43 @@ template_stmt: {
                     if (!pos) {
                         goto error;
                     }
+
                     if (token.kind != EcsTokIdentifier) {
                         Error("expected template base or parent constraint");
                     }
+
                     if (!ecs_os_strcmp(token.value, "parent")) {
                         if (template->parent) {
                             Error("duplicate parent constraint");
                         }
+
                         pos = flecs_token(parser, pos, &token, false);
                         if (!pos) {
                             goto error;
                         }
+
                         if (token.kind != EcsTokIdentifier) {
                             Error("expected parent template name");
                         }
+
                         template->parent = token.value;
                     } else {
                         if (template->base) {
                             Error("multiple template bases are not supported");
                         }
+
                         template->base = token.value;
                     }
+
                     const char *next = flecs_token(parser, pos, &token, true);
                     if (!next) {
                         goto error;
                     }
+
                     if (token.kind != ',') {
                         break;
                     }
+
                     pos = next;
                 } while (true);
                 goto template_scope;
@@ -67648,6 +68487,7 @@ try_stmt: {
                         if (!pos) {
                             goto error;
                         }
+
                         continue;
                     }
 
@@ -67658,6 +68498,7 @@ try_stmt: {
                             if (Token(4)[0] == '$') {
                                 Error("variable not allowed as catch error");
                             }
+
                             clause->error = Token(4);
                             parser->token_keep = parser->token_cur;
 
@@ -67668,6 +68509,7 @@ try_stmt: {
                                 if (!pos) {
                                     goto error;
                                 }
+
                                 continue;
                             })
                         })
@@ -67712,12 +68554,14 @@ include_stmt: {
                     p[0] = '\0';
                     break;
                 }
+
                 p ++;
             }
         }
         if (!filename || !filename[0]) {
             Error("expected filename after 'include'");
         }
+
         flecs_script_insert_include(parser, filename);
         EndOfRule;
     )
@@ -67831,6 +68675,7 @@ identifier_index: {
         {
             goto error;
         }
+
         parser->significant_newline = true;
         parser->expr_end = pos;
     }
@@ -67863,6 +68708,7 @@ identifier_index: {
                     Error("invalid context for tag '%s': must be part of "
                         "entity", component_first);
                 }
+
                 tag->id.index_expr = component_index;
                 EndOfRule;
             }
@@ -67906,6 +68752,7 @@ identifier_colon: {
             }
         )
     }
+
     tokenizer->stack.count = colon_stack_count;
 
     if (!is_inherit) {
@@ -68115,6 +68962,7 @@ static bool flecs_script_stmt_is_terminated(
                 if (p[-1] == '/' && p[0] == '*') {
                     break;
                 }
+
                 p --;
             }
 
@@ -68229,6 +69077,7 @@ ecs_script_t* flecs_script_parse_nested(
     if (using_code) {
         ecs_strbuf_appendstr(&buf, using_code);
     }
+
     int32_t open_offset = ecs_strbuf_written(&buf);
     ecs_strbuf_appendch(&buf, '{');
     ecs_strbuf_appendstr(&buf, code);
@@ -68285,6 +69134,7 @@ ecs_script_t* ecs_script_parse(
     if (desc && desc->skip_unknown) {
         impl->skip_unknown = true;
     }
+
     if (desc && desc->ir) {
         impl->ir_enabled = true;
     }
@@ -68356,12 +69206,15 @@ static void flecs_script_component_fini(
     if (!next || ptr->filename != next->filename) {
         ecs_os_free(ptr->filename);
     }
+
     if (!next || ptr->code != next->code) {
         ecs_os_free(ptr->code);
     }
+
     if (!next || ptr->error != next->error) {
         ecs_os_free(ptr->error);
     }
+
     flecs_script_ref_observers_fini(&ptr->observers);
     flecs_script_ref_observers_fini(&ptr->dyn_observers);
 }
@@ -68435,6 +69288,7 @@ char* ecs_script_ir_to_str(
     if (!ir) {
         goto error;
     }
+
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     flecs_script_ir_to_buf(impl, ir, &buf);
     return ecs_strbuf_get(&buf);
@@ -68483,6 +69337,7 @@ void flecs_script_pos_to_line_col(
             line_start = ptr + 1;
         }
     }
+
     column[0] = flecs_ito(int32_t, pos - line_start) + 1;
 }
 
@@ -68526,6 +69381,7 @@ void ecs_script_clear(
         for (i = 0; i < count; i ++) {
             ecs_delete(world, to_delete_ids[i]);
         }
+
         ecs_vec_fini_t(&world->allocator, &to_delete, ecs_entity_t);
     }
 }
@@ -68617,6 +69473,7 @@ void ecs_script_free(
             for (wi = 0; wi < wcount; wi ++) {
                 ecs_os_free(warned[wi]);
             }
+
             ecs_vec_fini_t(NULL, &impl->skip_unknown_warned, char*);
         }
         flecs_free(&impl->allocator,
@@ -68626,6 +69483,7 @@ void ecs_script_free(
         ecs_os_free(ECS_CONST_CAST(char*, impl->pub.code)); /* safe, owned value */
         ecs_os_free(impl);
     }
+
 error:
     return;
 }
@@ -68689,6 +69547,7 @@ static int flecs_script_update_parse(
             flecs_script_ref_observers_clear(world, &s->observers);
             flecs_script_ref_observers_clear(world, &s->dyn_observers);
         }
+
         return -1;
     }
 
@@ -68709,6 +69568,7 @@ static void flecs_script_update_error(
     if (!s->error) {
         s->error = ecs_os_strdup("failed to evaluate script");
     }
+
     if (runtime->error_name && runtime->include_depth) {
         ecs_log_(-3, NULL, 0, "%s: %s: %s",
             name ? name : "script", runtime->error_name, s->error);
@@ -68718,6 +69578,7 @@ static void flecs_script_update_error(
                 (name ? name : "script"),
             s->error);
     }
+
     flecs_script_runtime_error_reset(runtime);
     if (!instance) {
         flecs_script_update_resolve_observers(world, e,
@@ -68726,6 +69587,7 @@ static void flecs_script_update_error(
         flecs_script_ref_observers_clear(world, &s->dyn_observers);
         s = ecs_ensure(world, e, EcsScript);
     }
+
     ecs_script_free(parsed);
     s->script = NULL;
     ecs_delete_with(world, ecs_pair_t(EcsScript, e));
@@ -68744,12 +69606,14 @@ static void flecs_script_update_observers(
         if (refs[i].component == ecs_id(EcsScriptMutVar)) {
             continue;
         }
+
         if (refs[i].entity && ecs_has_pair(
             world, refs[i].entity, ecs_id(EcsScript), e))
         {
             ecs_vec_remove_t(script_refs, ecs_script_ref_t, i);
         }
     }
+
     flecs_script_ref_observers_clear(world, &s->observers);
     flecs_script_update_ref_observers(world, e, 0,
         script_refs, &s->observers, flecs_script_ref_on_set);
@@ -68898,6 +69762,7 @@ error:
     if (!desc->entity) {
         ecs_delete(world, e);
     }
+
     return 0;
 }
 
@@ -68923,6 +69788,7 @@ static int EcsScript_serialize(
         ser->member(ser, "ast");
         ser->value(ser, ecs_id(ecs_string_t), &nullString);
     }
+
     return 0;
 }
 
@@ -69099,6 +69965,7 @@ ecs_script_vars_t* flecs_script_vars_push(
         ecs_check(stack == parent->stack, ECS_INVALID_PARAMETER, 
             "provided stack allocator is different from parent scope");
     }
+
     if (!allocator) {
         allocator = parent->allocator;
     } else if (parent) {
@@ -69117,6 +69984,7 @@ ecs_script_vars_t* flecs_script_vars_push(
     } else {
         result->sp = 0;
     }
+
     result->stack = stack;
     result->allocator = allocator;
     result->cursor = cursor;
@@ -69280,6 +70148,7 @@ ecs_script_var_t* ecs_script_vars_lookup(
         if (vars->parent) {
             return ecs_script_vars_lookup(vars->parent, name);
         }
+
         return NULL;
     }
 
@@ -69385,6 +70254,7 @@ void ecs_script_vars_from_iter(
                 ecs_check(var->value.type == it->ids[i], 
                     ECS_INVALID_PARAMETER, NULL);
             }
+
             var->value.ptr = ptr;
             var->owned = false;
         }
@@ -69409,6 +70279,7 @@ void ecs_script_vars_from_iter(
                         e_ptr = &entities[range->offset];
                     }
                 }
+
                 if (!e_ptr) {
                     continue;
                 }
@@ -69463,6 +70334,7 @@ int flecs_script_visit_free_node(
     if (!node) {
         return 0;
     }
+
     ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
     flecs_script_visit_scopes(node, flecs_script_scope_free, script);
     switch (node->kind) {
@@ -69472,6 +70344,7 @@ int flecs_script_visit_free_node(
         for (int32_t i = 0; i < ecs_vec_count(&scope->stmts); i ++) {
             flecs_script_visit_free_node(script, stmts[i]);
         }
+
         ecs_vec_fini_t(a, &scope->stmts, ecs_script_node_t*);
         ecs_vec_fini_t(a, &scope->components, ecs_id_t);
         ecs_vec_fini_t(a, &scope->set_components, ecs_id_t);
@@ -69731,6 +70604,7 @@ static void flecs_script_stmt_to_str(
         flecs_scriptbuf_append(v, "%s: ", flecs_script_node_kind_str(node));
         flecs_script_color_to_str(v, ECS_NORMAL);
     }
+
     ecs_script_scope_t *scope = NULL;
     bool wrap = false;
     switch(node->kind) {
@@ -69751,6 +70625,7 @@ static void flecs_script_stmt_to_str(
             flecs_scriptbuf_appendstr(v, ": ");
             flecs_expr_to_str(v, stmt->expr);
         }
+
         break;
     }
     case EcsAstWith: {
@@ -69787,10 +70662,12 @@ static void flecs_script_stmt_to_str(
             flecs_scriptbuf_append(v, ": %s%s",
                 stmt->base, stmt->parent ? "" : " ");
         }
+
         if (stmt->parent) {
             flecs_scriptbuf_append(v, "%sparent %s ",
                 stmt->base ? ", " : ": ", stmt->parent);
         }
+
         scope = stmt->scope;
         break;
     }
@@ -69810,9 +70687,11 @@ static void flecs_script_stmt_to_str(
             flecs_scriptbuf_append(v, "%s = ",
                 stmt->name);
         }
+
         if (stmt->is_await) {
             flecs_scriptbuf_appendstr(v, "await ");
         }
+
         flecs_expr_to_str(v, stmt->expr);
         break;
     }
@@ -69821,6 +70700,7 @@ static void flecs_script_stmt_to_str(
         if (stmt->kind) {
             flecs_scriptbuf_append(v, "%s ", stmt->kind);
         }
+
         if (stmt->name) {
             flecs_scriptbuf_append(v, "%s ", stmt->name);
         } else {
@@ -69830,6 +70710,7 @@ static void flecs_script_stmt_to_str(
         if (!flecs_scope_is_empty(stmt->scope)) {
             scope = stmt->scope;
         }
+
         break;
     }
     case EcsAstPairScope: {
@@ -69857,12 +70738,15 @@ static void flecs_script_stmt_to_str(
         if (stmt->loop_var_count > 1) {
             flecs_scriptbuf_appendstr(v, "(");
         }
+
         for (i = 0; i < stmt->loop_var_count; i ++) {
             if (i) {
                 flecs_scriptbuf_appendstr(v, ", ");
             }
+
             flecs_scriptbuf_appendstr(v, stmt->loop_vars[i]);
         }
+
         if (stmt->loop_var_count > 1) {
             flecs_scriptbuf_appendstr(v, ")");
         }
@@ -69926,9 +70810,11 @@ static void flecs_script_stmt_to_str(
             } else {
                 flecs_scriptbuf_appendstr(v, "catch: ");
             }
+
             flecs_script_color_to_str(v, ECS_NORMAL);
             flecs_script_scope_to_str(v, catches[i].scope);
         }
+
         v->depth --;
         flecs_scriptbuf_appendstr(v, "}\n");
         return;
@@ -69942,14 +70828,17 @@ static void flecs_script_stmt_to_str(
             if (i) {
                 flecs_scriptbuf_appendstr(v, ", ");
             }
+
             flecs_scriptbuf_append(v, "%s: %s",
                 params[i].name, params[i].type);
         }
+
         flecs_scriptbuf_append(v, ") -> %s ", fn->return_type);
         flecs_script_scope_to_str(v, fn->body);
         if (fn->return_expr) {
             flecs_expr_to_str(v, fn->return_expr);
         }
+
         break;
     }
     }
@@ -69959,6 +70848,7 @@ static void flecs_script_stmt_to_str(
             flecs_scriptbuf_appendstr(v, " {\n");
             v->depth ++;
         }
+
         flecs_script_scope_to_str(v, scope);
         if (wrap) {
             v->depth --;
@@ -70117,6 +71007,7 @@ static ecs_size_t flecs_map_memory_get(
         result += ecs_map_count(map) * ECS_SIZEOF(ecs_bucket_entry_t);
         result += ecs_map_count(map) * element_size;
     }
+
     return result;
 }
 
@@ -70181,6 +71072,7 @@ static ecs_size_t flecs_allocator_memory_get(
             &allocator->sizes, ecs_block_allocator_t, i);
         result += flecs_ballocator_memory_get(ba);
     }
+
     result += flecs_ballocator_memory_get(&allocator->chunks);
     
     result += flecs_sparse_memory_get(&allocator->sizes, 
@@ -70573,6 +71465,7 @@ static void flecs_table_graph_edges_memory_get(
             flecs_table_graph_edge_memory_get(edge, result);
         }
     }
+
     if (edges->hi) {
         result->bytes_edges += ECS_SIZEOF(ecs_map_t);
         result->bytes_edges += flecs_map_memory_get(edges->hi, 0);
@@ -70939,6 +71832,7 @@ static void flecs_stats_memory_get(
             }
         }
     }
+
     for (p = 0; p < period_count; p ++) {
         ecs_iter_t it = ecs_each_id(world, 
             ecs_pair_t(EcsPipelineStats, periods[p]));
@@ -71001,6 +71895,7 @@ static void flecs_rest_memory_get(
             if (!r[i].impl) {
                 continue;
             }
+
             flecs_http_memory_get(r[i].impl->srv, result);
         }
     }
@@ -71625,6 +72520,7 @@ static void flecs_monitor_ctx_free(
     if (ctx->query) {
         ecs_query_fini(ctx->query);
     }
+
     ecs_os_free(ctx);
 }
 
@@ -71658,6 +72554,7 @@ void flecs_stats_api_import(
                 .flags = EcsQueryMatchDisabled
             });
         }
+
         ecs_system_desc_t desc = {
             .entity = ecs_entity(world, { .name = periods[i].name }),
             .phase = EcsPreFrame,
@@ -71676,11 +72573,13 @@ void flecs_stats_api_import(
             desc.query.terms[1].id = ecs_pair(kind, periods[i].source);
             desc.query.terms[1].src.id = EcsWorld;
         }
+
         ecs_entity_t system = ecs_system_init(world, &desc);
         if (i == 1) {
             minute = system;
         }
     }
+
     ecs_set_scope(world, prev);
     for (int32_t i = 0; i < 5; i ++) {
         ecs_add_pair(world, EcsWorld, kind, periods[i].period);
@@ -71885,6 +72784,7 @@ static double flecs_counter_record(
     if (gauge_value < 0) {
         gauge_value = 0; /* Counters are monotonically increasing */
     }
+
     flecs_gauge_record(m, t, (ecs_float_t)gauge_value);
     return gauge_value;
 }
@@ -71938,6 +72838,7 @@ void ecs_metric_reduce(
             dst->gauge.min[t_dst] = src->gauge.min[t];
             min_set = true;
         }
+
         if ((src->gauge.max[t] > dst->gauge.max[t_dst])) {
             dst->gauge.max[t_dst] = src->gauge.max[t];
         }
@@ -72105,6 +73006,7 @@ void ecs_world_stats_get(
     if (ecs_is_alive(world, EcsSystem)) {
         ECS_GAUGE_RECORD(&s->queries.system_count, t, ecs_count_id(world, EcsSystem));
     }
+
     ECS_COUNTER_RECORD(&s->tables.create_count, t, world->info.table_create_total);
     ECS_COUNTER_RECORD(&s->tables.delete_count, t, world->info.table_delete_total);
     ECS_GAUGE_RECORD(&s->tables.count, t, world->info.table_count);
@@ -72324,6 +73226,7 @@ bool ecs_pipeline_stats_get(
     if (!pqc) {
         return false;
     }
+
     ecs_pipeline_state_t *pq = pqc->state;
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -72338,6 +73241,7 @@ bool ecs_pipeline_stats_get(
         if (cr_empty && flecs_component_get_table(cr_empty, it.table) != NULL) {
             continue;
         }
+
         active_sys_count += it.count;
     }
 
@@ -73441,6 +74345,7 @@ static uint64_t flecs_query_cache_default_group_by(
             return ecs_pair_second(world, match);
         }
     }
+
     return 0;
 }
 
@@ -73818,6 +74723,7 @@ static void flecs_query_cache_on_event(
         if (o_impl->last_event_id[0] == world->event_id) {
             return;
         }
+
         o_impl->last_event_id[0] = world->event_id;
     }
 
@@ -73839,6 +74745,7 @@ static void flecs_query_cache_on_event(
                 ecs_os_free(table_str);
             }
         }
+
         return;
     }
 
@@ -74261,6 +75168,7 @@ static ecs_query_cache_match_t* flecs_query_cache_next(
                         }
                     }
                 }
+
                 qit->cur ++;
                 goto repeat;
             }
@@ -74578,6 +75486,7 @@ static const ecs_table_record_t *flecs_query_get_tr(
     if (!cr) {
         return NULL;
     }
+
     return flecs_component_get_table(cr, table);
 }
 
@@ -74948,6 +75857,7 @@ static bool flecs_query_check_match_monitor(
                 if (mon != dirty_state[column + 1]) {
                     return true;
                 }
+
                 continue;
             } else {
                 continue; /* owned but not a component */
@@ -74961,6 +75871,7 @@ static bool flecs_query_check_match_monitor(
         if (!tc.table || tc.column < 0) {
             continue;
         }
+
         int32_t *src_dirty_state = flecs_table_get_dirty_state(
             world, tc.table);
         if (mon != src_dirty_state[tc.column + 1]) {
@@ -75116,6 +76027,7 @@ void flecs_query_mark_fixed_fields_dirty(
                 continue;
             }
         }
+
         ecs_assert(tr->column >= 0, ECS_INTERNAL_ERROR, NULL);
         int32_t column = table->column_map[tr->index];
         dirty_state[column + 1] ++;
@@ -75311,6 +76223,7 @@ static void flecs_query_cache_group_insert(
             link = &(*link)->next;
         }
     }
+
     group->next = *link;
     *link = group;
 }
@@ -75323,12 +76236,14 @@ static ecs_query_cache_group_t* flecs_query_cache_ensure_group(
     if (group && group->info.table_count) {
         return group;
     }
+
     if (group_id) {
         group = ecs_map_insert_alloc_t(&cache->groups,
             ecs_query_cache_group_t, group_id);
     } else if (ecs_map_is_init(&cache->groups)) {
         ecs_map_insert_ptr(&cache->groups, 0, group);
     }
+
     ecs_allocator_t *a = &cache->query->real_world->allocator;
     ecs_vec_init(a, &group->tables, flecs_query_cache_elem_size(cache), 0);
     group->info.id = group_id;
@@ -75337,6 +76252,7 @@ static ecs_query_cache_group_t* flecs_query_cache_ensure_group(
         group->info.ctx = cache->on_group_create(
             cache->query->world, group_id, cache->group_by_ctx);
     }
+
     return group;
 }
 
@@ -75358,6 +76274,7 @@ static void flecs_query_cache_group_fini(
         flecs_query_cache_match_fini(cache,
             ecs_vec_get(&group->tables, elem_size, i));
     }
+
     ecs_vec_fini(a, &group->tables, elem_size);
     group->info.table_count = 0;
     group->info.match_count = 0;
@@ -75684,6 +76601,7 @@ static void flecs_query_cache_match_set(
             if (qm->_ids == ids || !qm->_ids) {
                 qm->_ids = flecs_balloc(&cache->allocators.ids);
             }
+
             ecs_os_memcpy_n(qm->_ids, it->ids, ecs_id_t, field_count);
         } else {
             if (qm->_ids != ids) {
@@ -75705,6 +76623,7 @@ static void flecs_query_cache_match_set(
             if (qm->_sources == cache->sources || !qm->_sources) {
                 qm->_sources = flecs_balloc(&cache->allocators.ids);
             }
+
             ecs_os_memcpy_n(qm->_sources, it->sources, ecs_entity_t, field_count);
         } else {
             if (qm->_sources != cache->sources) {
@@ -75718,6 +76637,7 @@ static void flecs_query_cache_match_set(
         if (!qm->_trs) {
             qm->_trs = flecs_balloc(&cache->allocators.pointers);
         }
+
         for (i = 0; i < field_count; i ++) {
             if (it->trs[i] && !it->sources[i] &&
                 !(it->up_fields & (1llu << i)))
@@ -76058,6 +76978,7 @@ static void flecs_query_cache_build_sorted_table_range(
                 helper[to_sort].elem_size = size;
                 helper[to_sort].shared = true;
             }
+
             ecs_assert(helper[to_sort].ptr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(helper[to_sort].elem_size != 0, ECS_INTERNAL_ERROR, NULL);
         } else {
@@ -76421,6 +77342,7 @@ static int flecs_query_discover_vars(
             if (!scope) {
                 scoped_var_index = ecs_vec_count(vars);
             }
+
             scope ++;
             continue;
         } else if (ECS_TERM_REF_ID(first) == EcsScopeClose) {
@@ -76432,6 +77354,7 @@ static int flecs_query_discover_vars(
                     ecs_vec_get_t(vars, ecs_query_var_t, v)->anonymous = true;
                 }
             }
+
             continue;
         }
 
@@ -76562,6 +77485,7 @@ static int flecs_query_discover_vars(
                     ecs_os_free(var_name);
                     goto error;
                 }
+
                 base_entity_id = flecs_query_add_var(
                     query, EcsThisName, vars, EcsVarEntity);
                 var = ecs_vec_get_t(vars, ecs_query_var_t, i);
@@ -76688,6 +77612,7 @@ static bool flecs_query_var_is_unknown(
             return flecs_query_var_is_unknown(query, table_var, ctx);
         }
     }
+
     return true;
 }
 
@@ -76722,11 +77647,13 @@ static bool flecs_query_term_is_unknown(
             return false;
         }
     }
+
     if (dummy.flags & (EcsQueryIsVar << EcsQuerySecond)) {
         if (!flecs_query_var_is_unknown(query, dummy.second.var, ctx)) {
             return false;
         }
     }
+
     if (dummy.flags & (EcsQueryIsVar << EcsQuerySrc)) {
         if (!flecs_query_var_is_unknown(query, dummy.src.var, ctx)) {
             return false;
@@ -77446,6 +78373,7 @@ ecs_var_id_t flecs_query_find_var_id(
         if (index == 0) {
             return EcsVarNone;
         }
+
         return flecs_utovar(index);
     }
 
@@ -77459,6 +78387,7 @@ ecs_var_id_t flecs_query_find_var_id(
         if (index == 0) {
             return EcsVarNone;
         }
+
         return flecs_utovar(index);
     }
 
@@ -77579,11 +78508,13 @@ static void flecs_query_begin_block_cond_eval(
         ecs_assert(first_var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
         cond_mask |= (1ull << first_var);
     }
+
     if (flecs_query_ref_flags(op->flags, EcsQuerySecond) == EcsQueryIsVar) {
         second_var = op->second.var;
         ecs_assert(second_var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
         cond_mask |= (1ull << second_var);
     }
+
     if (flecs_query_ref_flags(op->flags, EcsQuerySrc) == EcsQueryIsVar) {
         src_var = op->src.var;
         ecs_assert(src_var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
@@ -77610,10 +78541,12 @@ static void flecs_query_begin_block_cond_eval(
             jmp_op.flags |= (EcsQueryIsVar << EcsQueryFirst);
             jmp_op.first.var = first_var;
         }
+
         if ((second_var != EcsVarNone) && cond_write_state & (1ull << second_var)) {
             jmp_op.flags |= (EcsQueryIsVar << EcsQuerySecond);
             jmp_op.second.var = second_var;
         }
+
         if ((src_var != EcsVarNone) && cond_write_state & (1ull << src_var)) {
             jmp_op.flags |= (EcsQueryIsVar << EcsQuerySrc);
             jmp_op.src.var = src_var;
@@ -77742,6 +78675,7 @@ static void flecs_query_end_block_or(
             }
         }
     }
+
     ctx->written |= ctx->cond_written;
 
     /* Scan which variables were conditionally written in the OR chain and 
@@ -77876,6 +78810,7 @@ static void flecs_query_insert_inheritance(
     if (term->first.id & EcsSelf) {
         trav_op.match_flags |= EcsTermReflexive;
     }
+
     flecs_query_op_insert(&trav_op, ctx);
     flecs_query_insert_each(tvar, evar, ctx, cond_write);
 
@@ -77915,10 +78850,12 @@ void flecs_query_compile_term_ref(
             } else {
                 ref->var = flecs_query_add_var(query, NULL, NULL, EcsVarEntity);
             }
+
             if (is_wildcard) {
                 flecs_set_var_label(&query->vars[ref->var], 
                     ecs_get_name(world, ECS_TERM_REF_ID(term_ref)));
             }
+
             ecs_assert(ref->var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
         }
     }
@@ -78183,12 +79120,14 @@ static int flecs_query_compile_0_src(
         if (flecs_query_ensure_scope_vars(world, impl, ctx, term)) {
             goto error;
         }
+
         if (term->oper == EcsNot) {
             ctx->scope_is_not |= (ecs_flags32_t)(1ull << ctx->scope);
             flecs_query_begin_block(EcsQueryNot, ctx);
         } else {
             ctx->scope_is_not &= (ecs_flags32_t)~(1ull << ctx->scope);
         }
+
         flecs_query_compile_push(ctx);
     } else if (ECS_TERM_REF_ID(&term->first) == EcsScopeClose) {
         flecs_query_compile_pop(ctx);
@@ -78215,6 +79154,7 @@ static ecs_flags32_t flecs_query_to_table_flags(
         if (!(query_flags & EcsQueryMatchDisabled)) {
             table_flags |= EcsTableIsDisabled;
         }
+
         if (!(query_flags & EcsQueryMatchPrefab)) {
             table_flags |= EcsTableIsPrefab;
         }
@@ -78253,6 +79193,7 @@ static bool flecs_query_select_all(
             match_any.second.entity = EcsName;
             match_any.flags |= (EcsQueryIsEntity << EcsQuerySecond);
         }
+
         match_any.written = (1ull << src_var);
         match_any.other = flecs_itolbl(flecs_query_to_table_flags(q));
         flecs_query_op_insert(&match_any, ctx);
@@ -78261,6 +79202,7 @@ static bool flecs_query_select_all(
         /* Update write administration */
         return true;
     }
+
     return false;
 }
 
@@ -78665,6 +79607,7 @@ int flecs_query_compile_term(
         if (flecs_query_compile_0_src(world, query, term, ctx)) {
             goto error;
         }
+
         return 0;
     }
 
@@ -78810,6 +79753,7 @@ int flecs_query_compile_term(
                     op.kind = EcsQueryIdsRight;
                 }
             }
+
             op.src.entity = 0;
             src_is_var = false;
             op.flags &= (ecs_flags8_t)~(EcsQueryIsVar << EcsQuerySrc); /* ids has no src */
@@ -78886,11 +79830,13 @@ int flecs_query_compile_term(
             write_state |= (1ull << op.first.var); // lookups are resolved inline
         }
     }
+
     if (src_is_var) {
         if (flecs_query_compile_lookup(query, op.src.var, ctx, cond_write)) {
             write_state |= (1ull << op.src.var); // lookups are resolved inline
         }
     }
+
     if (second_is_var) {
         if (flecs_query_compile_lookup(query, op.second.var, ctx, cond_write)) {
             write_state |= (1ull << op.second.var); // lookups are resolved inline
@@ -78917,10 +79863,12 @@ int flecs_query_compile_term(
         flecs_query_write(op.src.var, &op.written);
         flecs_query_write_ctx(op.src.var, ctx, cond_write);
     }
+
     if (first_is_var) {
         flecs_query_write(op.first.var, &op.written);
         flecs_query_write_ctx(op.first.var, ctx, cond_write);
     }
+
     if (second_is_var) {
         flecs_query_write(op.second.var, &op.written);
         flecs_query_write_ctx(op.second.var, ctx, cond_write);
@@ -78938,6 +79886,7 @@ int flecs_query_compile_term(
         if (first_is_var) {
             flecs_query_insert_contains(query, op.src.var, op.first.var, ctx);
         }
+
         if (second_is_var &&
             !(first_is_var && op.first.var == op.second.var))
         {
@@ -79083,6 +80032,7 @@ bool flecs_query_select(
     if (!redo) {
         id = flecs_query_op_get_id(op, ctx);
     }
+
     return flecs_query_select_w_id(op, redo, ctx, id, 
         (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
 }
@@ -79158,6 +80108,7 @@ static bool flecs_query_all(
         if (field_index != -1) {
             it->ids[field_index] = EcsWildcard;
         }
+
         return !redo;
     } else {
         ecs_query_all_ctx_t *op_ctx = flecs_op_ctx(ctx, all);
@@ -79176,6 +80127,7 @@ static bool flecs_query_all(
                 it->ids[field_index] = EcsWildcard;
                 flecs_query_it_set_tr(it, field_index, &op_ctx->dummy_tr);
             }
+
             table = &world->store.root;
         } else if (op_ctx->cur < flecs_sparse_count(tables)) {
             table = flecs_sparse_get_dense_t(
@@ -79214,6 +80166,7 @@ static ecs_table_t* flecs_query_select_dont_fragment_table(
     if (!index) {
         return &world->store.root;
     }
+
     return flecs_sparse_get_dense_t(&world->store.tables, ecs_table_t, index);
 }
 
@@ -79295,6 +80248,7 @@ next_dont_fragment:
                 id = df_cr->id;
                 break;
             }
+
             op_ctx->df_cr = df_cr->non_fragmenting.next;
         }
     }
@@ -79308,6 +80262,7 @@ next_dont_fragment:
         it->ids[field_index] = id;
         flecs_query_it_set_tr(it, field_index, NULL);
     }
+
     flecs_query_set_vars(op, id, ctx);
 
     return true;
@@ -79520,6 +80475,7 @@ static int32_t flecs_query_next_inheritable_id(
             return i;
         }
     }
+
     return -1;
 }
 
@@ -79623,10 +80579,12 @@ static bool flecs_query_x_from(
                         break;
                     }
                 }
+
                 if (i != op_ctx->cur_id_index) {
                     continue;
                 }
             }
+
             goto match;
         }
 
@@ -79790,6 +80748,7 @@ static bool flecs_query_idsright(
             if (!cur) {
                 return false;
             }
+
             flecs_query_set_vars(op, id, ctx);
             it->ids[op->field_index] = id;
             it->sources[op->field_index] = EcsWildcard;
@@ -79982,6 +80941,7 @@ static bool flecs_query_each(
         if (!ecs_table_count(table)) {
             return false;
         }
+
         row = op_ctx->row = range.offset;
     } else {
         int32_t end = range.count;
@@ -79990,6 +80950,7 @@ static bool flecs_query_each(
         } else {
             end = ecs_table_count(table);
         }
+
         row = ++ op_ctx->row;
         if (op_ctx->row >= end) {
             return false;
@@ -80246,6 +81207,7 @@ static void flecs_query_reset_after_block(
             flecs_query_var_reset(op->first.var, ctx);
         }
     }
+
     if (flags_2nd & EcsQueryIsVar) {
         if (!flecs_ref_is_written(op, &op->second, EcsQuerySecond, written_cur)){
             flecs_query_var_reset(op->second.var, ctx);
@@ -80540,6 +81502,7 @@ static bool flecs_query_eval_if(
         flecs_query_reset_after_block(op, ctx, op_ctx, result);
         return result;
     }
+
     return true;
 }
 
@@ -80906,6 +81869,7 @@ void flecs_query_iter_constrain(
                 EcsIterTrivialSearch;
             it->flags |= EcsIterCached;
         }
+
         return;
     }
 #endif
@@ -81011,8 +81975,10 @@ void flecs_query_op_ctx_fini(
             } else {
                 flecs_query_up_cache_fini(cache);
             }
+
             flecs_free_t(a, ecs_query_up_impl_t, impl);
         }
+
         break;
     }
     default:
@@ -81414,6 +82380,7 @@ ecs_iter_t flecs_query_iter(
     if (var_count) {
         qit->vars = flecs_iter_calloc_n(&it, ecs_var_t, var_count);
     }
+
     qit->written = flecs_iter_calloc_n(&it, ecs_write_flags_t, op_count);
 
     if (impl->ops || !impl->cache) {
@@ -81480,6 +82447,7 @@ int flecs_query_trivial_has_range(
         if (type_mismatch) {
             *type_mismatch = true;
         }
+
         return 0;
     }
 
@@ -81524,6 +82492,7 @@ int flecs_query_trivial_has_range(
         if (!(terms[t].src.id & EcsSelf)) {
             tr = NULL;
         }
+
         ecs_entity_t source = 0;
         if (!tr && up) {
             ecs_table_record_t *base_tr = NULL;
@@ -81536,11 +82505,14 @@ int flecs_query_trivial_has_range(
             if (type_mismatch && !source && (is_not || !up)) {
                 *type_mismatch = true;
             }
+
             return 0;
         }
+
         if (source && !isa_ok) {
             goto not_trivial;
         }
+
         term_trs[t] = tr;
         term_srcs[t] = source;
         any_from_base |= source != 0;
@@ -81574,6 +82546,7 @@ int flecs_query_trivial_has_range(
         if (!term_trs[t]) {
             continue;
         }
+
         lit.trs[field_index] = term_trs[t];
         if (term_srcs[t]) {
             lit.sources[field_index] = term_srcs[t];
@@ -81795,6 +82768,7 @@ static bool flecs_query_compare_range(
         if (r->offset < l->offset) {
             return false;
         }
+
         if (r_end > l_end) {
             return false;
         }
@@ -81824,6 +82798,7 @@ static bool flecs_query_pred_eq_w_range(
         if (r.count == 1) {
             ctx->vars[l].entity = ecs_table_entities(r.table)[r.offset];
         }
+
         return true;
     } else {
         ecs_table_range_t l = flecs_query_get_range(
@@ -81989,6 +82964,7 @@ static bool flecs_query_pred_match(
         if (op_ctx->name_col == -1) {
             return is_neq;
         }
+
         op_ctx->name_col = flecs_ito(int16_t, 
             l.table->column_map[op_ctx->name_col]);
         ecs_assert(op_ctx->name_col != -1, ECS_INTERNAL_ERROR, NULL);
@@ -82169,9 +83145,11 @@ next:
             if (not) {
                 result = !result;
             }
+
             if (!result) {
                 break;
             }
+
             op_ctx->cur ++;
         }
 
@@ -82360,6 +83338,7 @@ static FLECS_ALWAYS_INLINE bool flecs_query_sparse_wildcard(
         } else if (cr && (select || (!not && !(cr->flags & EcsIdExclusive)))) {
             cr = flecs_query_sparse_next_component(cr, id);
         }
+
         op_ctx->cr = cr;
         if (!cr) {
             return !all && not;
@@ -82377,6 +83356,7 @@ static FLECS_ALWAYS_INLINE bool flecs_query_sparse_wildcard(
         if (!redo && !flecs_query_sparse_init_sparse(op_ctx, op_ctx->cr)) {
             return !all && not;
         }
+
         bool result = select
             ? flecs_query_sparse_select_id(op, true, ctx, table_mask, actual_id)
             : flecs_query_sparse_with_id(op, redo, ctx, not, op_ctx->cr, NULL);
@@ -82385,11 +83365,14 @@ static FLECS_ALWAYS_INLINE bool flecs_query_sparse_wildcard(
                 ctx->it->ids[op->field_index] = actual_id;
                 flecs_query_set_vars(op, actual_id, ctx);
             }
+
             if (!all && (op->match_flags & EcsTermMatchAny)) {
                 ctx->it->ids[op->field_index] = id;
             }
+
             return true;
         }
+
         op_ctx->cr = !all && not ? NULL
             : flecs_query_sparse_next_component(op_ctx->cr, id);
         redo = false;
@@ -82410,6 +83393,7 @@ bool flecs_query_sparse_select(
         return flecs_query_sparse_wildcard(
             op, redo, ctx, id, true, false, table_mask);
     }
+
     return flecs_query_sparse_select_id(op, redo, ctx, table_mask, id);
 }
 
@@ -82425,6 +83409,7 @@ bool flecs_query_sparse_with(
     if (ecs_id_is_wildcard(id)) {
         return flecs_query_sparse_wildcard(op, redo, ctx, id, false, not, 0);
     }
+
     return flecs_query_sparse_with_id(op, redo, ctx, not,
         redo ? NULL : flecs_components_get(ctx->world, id), NULL);
 }
@@ -82468,6 +83453,7 @@ bool flecs_query_sparse_self_up(
                 } else {
                     it->sources[op->field_index] = 0;
                 }
+
                 flecs_reset_source_set_flag(it, op->field_index);
                 return true;
             }
@@ -82609,6 +83595,7 @@ bool flecs_query_trivial_sparse_search(
             if (i == lead) {
                 continue;
             }
+
             if (!flecs_sparse_has(op_ctx->sparse[i], e)) {
                 goto next;
             }
@@ -82708,6 +83695,7 @@ static flecs_query_row_mask_t flecs_query_get_row_mask(
                     break;
                 }
             }
+
             continue;
         }
 
@@ -82717,6 +83705,7 @@ static flecs_query_row_mask_t flecs_query_get_row_mask(
         if (not_fields & field_bit) {
             block = ~block;
         }
+
         mask &= block;
         has_bitset = true;
     }
@@ -82900,6 +83889,7 @@ next_block:
     } else {
         run_len = flecs_ctz64(~run);
     }
+
     int32_t max_len = last_bit - tz;
     if (run_len > max_len) {
         run_len = max_len;
@@ -83011,10 +84001,12 @@ static bool flecs_query_trav_fixed_src_reflexive(
             break;
         }
     }
+
     if (i == end) {
         /* Table didn't contain target entity */
         return false;
     }
+
     if (count > 1) {
         /* If the range contains more than one entity, set the range to
          * return only the entity matched by the reflexive property. */
@@ -83177,6 +84169,7 @@ static bool flecs_query_trav_yield_reflexive_src(
             vars[src_var].range.count = count;
             vars[src_var].entity = 0;
         }
+
         return false;
     }
 
@@ -83226,6 +84219,7 @@ static bool flecs_query_trav_fixed_src_up_unknown_second(
         if (flecs_query_trav_yield_reflexive_src(op, ctx, &range, trav)) {
             return true;
         }
+
         trav_ctx->yield_reflexive = false;
         trav_ctx->index = 0;
     }
@@ -83408,6 +84402,7 @@ next:
             redo = false;
             goto next;
         }
+
         it->ids[field_index] = ecs_pair(EcsChildOf, EcsWildcard);
         return true;
     }
@@ -83418,6 +84413,7 @@ next:
         if (!result) {
             return false;
         }
+
         it->ids[field_index] = pair;
         return true;
     }
@@ -83506,6 +84502,7 @@ next:
                 op_ctx->state = EcsQueryTreeIterTables;
             }
         }
+
         goto next;
     }
 
@@ -83599,6 +84596,7 @@ bool flecs_query_tree_with(
             flecs_query_iter_set_id(it, op->field_index, ecs_childof(EcsWildcard));
             return true;
         }
+
         return false;
     }
 
@@ -83707,6 +84705,7 @@ static bool flecs_query_tree_with_pre(
             flecs_query_iter_set_id(
                 ctx->it, op->field_index, ecs_childof(EcsWildcard));
         }
+
         return result;
     }
 
@@ -84648,6 +85647,7 @@ bool flecs_query_self_up_with(
                 ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] =
                     tr ? tr->column : -1;
             }
+
             return true;
         }
     }
@@ -84700,6 +85700,7 @@ void flecs_query_set_iter_this(
         if (!count) {
             count = ecs_table_count(table);
         }
+
         it->table = table;
         it->offset = range->offset;
         it->count = count;
@@ -84809,6 +85810,7 @@ ecs_table_range_t flecs_query_get_range(
             return flecs_range_from_entity(ctx->world, var->entity);
         }
     }
+
     return (ecs_table_range_t){0};
 }
 
@@ -84957,6 +85959,7 @@ ecs_table_range_t flecs_get_ref_range(
     } else if (flag & EcsQueryIsVar) {
         return flecs_query_var_get_range(ref->var, ctx);
     }
+
     return (ecs_table_range_t){0};
 }
 
@@ -84970,6 +85973,7 @@ ecs_entity_t flecs_get_ref_entity(
     } else if (flag & EcsQueryIsVar) {
         return flecs_query_var_get_entity(ref->var, ctx);
     }
+
     return 0;
 }
 
@@ -84989,6 +85993,7 @@ ecs_id_t flecs_query_op_get_id_w_written(
             first = EcsWildcard;
         }
     }
+
     if (flags_2nd) {
         if (flecs_ref_is_written(op, &op->second, EcsQuerySecond, written)) {
             second = flecs_get_ref_entity(&op->second, flags_2nd, ctx);
@@ -85026,6 +86031,7 @@ int16_t flecs_query_next_column(
         column = ecs_search_offset(NULL, table, column + 1, id, NULL);
         ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
     }
+
     return flecs_ito(int16_t, column);
 }
 
@@ -85183,6 +86189,7 @@ static void flecs_query_build_up_cache(
             if (!r_tr) {
                 continue;
             }
+
             flecs_query_build_up_cache(world, a, ctx, cache, trav, r->table,
                 r_tr, root_column);
         }
@@ -85459,6 +86466,7 @@ static void flecs_trav_entity_down_iter_tables(
                     if (self) {
                         continue;
                     }
+
                     leaf = true;
                 }
             }
@@ -85556,6 +86564,7 @@ ecs_trav_down_t* flecs_query_get_down_cache(
             }
 
         }
+
         return result;
     }
 
@@ -86075,6 +87084,7 @@ void flecs_query_trivial_set_iter_this(
         if (!count) {
             count = ecs_table_count(table);
         }
+
         it->table = table;
         it->offset = range->offset;
         it->count = count;
@@ -86366,6 +87376,7 @@ static ECS_DTOR(EcsConstants, ptr, {
         flecs_constants_dtor(ptr->constants);
         ecs_os_free(ptr->constants);
     }
+
     flecs_ordered_constants_dtor(&ptr->ordered_constants);
 })
 
@@ -86408,13 +87419,16 @@ static int flecs_constants_insert(
             ecs_err("conflicting constant value for '%s' (other is '%s')",
                 path, c->name);
         }
+
         ecs_os_free(path);
         return -1;
     }
+
     if (!ptr->constants) {
         ptr->constants = ecs_os_malloc_t(ecs_map_t);
         ecs_map_init(ptr->constants, NULL);
     }
+
     ecs_map_init_if(ptr->constants, &world->allocator);
     c = ecs_map_insert_alloc_t(ptr->constants, ecs_enum_constant_t, key);
     *c = (ecs_enum_constant_t){
@@ -86733,6 +87747,7 @@ ecs_entity_t ecs_enum_init(
                     ecs_os_free(path);
                     return 0;
                 }
+
                 ret = ecs_meta_set_int(&cur, m_desc->value);
             } else {
                 if (!ut_is_unsigned) {
@@ -86742,6 +87757,7 @@ ecs_entity_t ecs_enum_init(
                     ecs_os_free(path);
                     return 0;
                 }
+
                 ret = ecs_meta_set_uint(&cur, m_desc->value_unsigned);
             }
 
@@ -87213,12 +88229,15 @@ int flecs_compare_string(
     if(str_a == str_b) {
         return 0;
     }
+
     if(str_a == NULL) {
         return -1;
     }
+
     if(str_b == NULL) {
         return 1;
     }
+
     return ecs_os_strcmp(str_a, str_b);
 }
 
@@ -87343,6 +88362,7 @@ static void flecs_struct_dtor(
     for (i = 0; i < count; i ++) {
         ecs_os_free(ECS_CONST_CAST(char*, members[i].name));
     }
+
     ecs_vec_fini_t(NULL, &ptr->members, ecs_member_t);
 }
 
@@ -87403,27 +88423,34 @@ static bool flecs_struct_member_unchanged(
     if (existing->member != member_entity) {
         return false;
     }
+
     if (ecs_os_strcmp(existing->name, m->name)) {
         return false;
     }
+
     if (existing->type != m->type || existing->count != m->count) {
         return false;
     }
+
     if (existing->unit != unit) {
         return false;
     }
+
     if (existing->use_offset != m->use_offset) {
         return false;
     }
+
     if ((m->offset || m->use_offset) && existing->offset != m->offset) {
         return false;
     }
+
     if (!flecs_struct_range_equals(&existing->range, &m->range) ||
         !flecs_struct_range_equals(&existing->error_range, &m->error_range) ||
         !flecs_struct_range_equals(&existing->warning_range, &m->warning_range))
     {
         return false;
     }
+
     return true;
 }
 
@@ -87440,6 +88467,7 @@ static ecs_entity_t flecs_struct_base(
             if (base_struct) {
                 *base_struct = bs;
             }
+
             return base;
         }
     }
@@ -87461,6 +88489,7 @@ bool flecs_struct_is_derived_from(
         if (!ecs_has(world, cur, EcsStruct)) {
             return false;
         }
+
         cur = flecs_struct_base(ECS_CONST_CAST(ecs_world_t*, world), cur, NULL);
         depth ++;
     }
@@ -87492,6 +88521,7 @@ static ecs_size_t flecs_struct_base_size(
     if (base_comp && base_comp->size > size) {
         return base_comp->size;
     }
+
     return size;
 }
 
@@ -87643,6 +88673,7 @@ static int flecs_add_member_to_struct(
                 ecs_os_free(path);
                 return -1;
             }
+
             continue;
         }
 
@@ -87654,6 +88685,7 @@ static int flecs_add_member_to_struct(
                     flecs_set_struct_member(
                         &members[i], member_entity, &m, unit);
                 }
+
                 break;
             }
         } else {
@@ -87664,6 +88696,7 @@ static int flecs_add_member_to_struct(
                     flecs_set_struct_member(
                         &members[i], member_entity, &m, unit);
                 }
+
                 break;
             }
         }
@@ -87708,6 +88741,7 @@ static int flecs_struct_layout(
     if (inherited > count) {
         inherited = count;
     }
+
     int32_t first = explicit_offset ? explicit_member : 0;
     int32_t end = explicit_offset ? first + 1 : count;
     for (int32_t i = first; i < end; i ++) {
@@ -87718,6 +88752,7 @@ static int flecs_struct_layout(
                 flecs_errstr(ecs_get_path(world, elem->type)));
             return -1;
         }
+
         int64_t member_size = (int64_t)comp->size *
             (elem->count ? elem->count : 1);
         if (!member_size || member_size > INT32_MAX || !comp->alignment) {
@@ -87725,12 +88760,14 @@ static int flecs_struct_layout(
                 flecs_errstr(ecs_get_path(world, elem->type)));
             return -1;
         }
+
         ecs_size_t member_alignment = comp->alignment;
         ecs_size_t offset = elem->offset;
         if (!explicit_offset) {
             if (i == inherited && base) {
                 size = flecs_struct_base_size(world, base, size);
             }
+
             offset = i < inherited
                 ? ecs_vec_get_t(&base_st->members, ecs_member_t, i)->offset
                 : ECS_ALIGN(size, member_alignment);
@@ -87738,6 +88775,7 @@ static int flecs_struct_layout(
                 ecs_ensure(world, elem->member, EcsMember)->offset = offset;
             }
         }
+
         layout_changed |= elem->size != member_size || elem->offset != offset;
         elem->size = (ecs_size_t)member_size;
         elem->offset = offset;
@@ -87746,6 +88784,7 @@ static int flecs_struct_layout(
             alignment = member_alignment;
         }
     }
+
     if (explicit_offset) {
         const EcsComponent *comp = ecs_get(world, struct_type, EcsComponent);
         if (comp) {
@@ -87754,6 +88793,7 @@ static int flecs_struct_layout(
     } else if (base && inherited == count) {
         size = flecs_struct_base_size(world, base, size);
     }
+
     if (size == 0) {
         ecs_err("struct '%s' has 0 size", ecs_get_name(world, struct_type));
         return -1;
@@ -88070,6 +89110,7 @@ ecs_entity_t ecs_struct_init(
                 goto error;
             }
         }
+
         ecs_modified(world, type, EcsStruct);
     } else if (!ecs_has(world, type, EcsStruct)) {
         goto error;
@@ -88083,6 +89124,7 @@ error:
     if (type) {
         ecs_delete(world, type);
     }
+
     return 0;
 }
 
@@ -88346,6 +89388,7 @@ static bool flecs_unit_validate(
                 ecs_get_name(world, t));
             goto error;
         }
+
         if (!ecs_has(world, over, EcsUnit)) {
             ecs_err("entity '%s' for unit '%s' used as over is not a unit",
                 ecs_get_name(world, over), ecs_get_name(world, t));
@@ -88359,6 +89402,7 @@ static bool flecs_unit_validate(
                 ecs_get_name(world, t));
             goto error;
         }
+
         const EcsUnitPrefix *prefix_ptr = ecs_get(world, prefix, EcsUnitPrefix);
         if (!prefix_ptr) {
             ecs_err("entity '%s' for unit '%s' used as prefix is not a prefix",
@@ -88422,6 +89466,7 @@ static bool flecs_unit_validate(
                 goto error;
             }
         }
+
         if (!symbol && derived_symbol && (prefix || over)) {
             ecs_os_free(data->symbol);
             data->symbol = derived_symbol;
@@ -88736,6 +89781,7 @@ static void flecs_script_future_cancel(
     if (cancel) {
         future->state = FlecsScriptFutureCancelled;
     }
+
     flecs_script_future_unlock(future);
     if (cancel && future->cancel) {
         future->cancel(&future->function_ctx, future);
@@ -88771,13 +89817,16 @@ void ecs_script_future_release(
     if (future->value.ptr) {
         ecs_value_fini(future->function_ctx.world, &future->value);
     }
+
     ecs_os_free(future->error);
     if (future->ctx_free) {
         future->ctx_free(future->ctx);
     }
+
     if (future->mutex) {
         ecs_os_mutex_free(future->mutex);
     }
+
     ecs_os_free(future);
 }
 
@@ -88829,6 +89878,7 @@ int ecs_script_future_reject_id(
         flecs_script_future_unlock(future);
         goto error;
     }
+
     future->error = ecs_os_strdup(msg ? msg : "async function failed");
     future->error_id = error;
     future->state = FlecsScriptFutureRejected;
@@ -88880,6 +89930,7 @@ void flecs_script_throw_clear(
         ecs_script_future_release(state->thrown);
         state->thrown = NULL;
     }
+
     state->throw_node = NULL;
 }
 
@@ -88904,6 +89955,7 @@ void flecs_script_report_throw(
     } else {
         flecs_script_eval_error(v, state->throw_node, "%s", msg);
     }
+
     flecs_script_throw_clear(state);
 }
 
@@ -88927,11 +89979,13 @@ int flecs_script_await_poll(
         async->throw_node = stmt;
         return -1;
     }
+
     if (state == FlecsScriptFutureCancelled) {
         flecs_script_eval_error(v, stmt, "awaited operation was cancelled");
         ecs_script_future_release(future);
         return -1;
     }
+
     *ready = future;
     return 0;
 }
@@ -88986,6 +90040,7 @@ done:
     if (result && arg_offset) {
         ecs_value_fini(v->world, &argv[0]);
     }
+
     return result;
 }
 
@@ -89024,17 +90079,21 @@ int32_t flecs_script_find_catch(
         if (!catches[i].error) {
             return i;
         }
+
         if (!throw_id) {
             continue;
         }
+
         ecs_entity_t e = catches[i].eval_error;
         if (catches[i].error_symbol != -1) {
             e = flecs_script_symbol_entity(v, catches[i].error_symbol);
         }
+
         if (e == throw_id) {
             return i;
         }
     }
+
     return -1;
 }
 
@@ -89071,6 +90130,7 @@ int flecs_script_step_await(
     if (result) {
         return result;
     }
+
     if (var) {
         result = flecs_script_await_assign_const(v, var, &future->value);
     }
@@ -89110,6 +90170,7 @@ static ecs_script_eval_visitor_t* flecs_script_task_visitor(
     if (task->vm) {
         return &task->vm->v;
     }
+
     return &task->runner->v;
 }
 
@@ -89152,12 +90213,14 @@ static void flecs_script_task_unbind(
     if (!task->bound_registered) {
         return;
     }
+
     task->bound_registered = false;
     EcsScriptAsyncTasks *bound = ecs_get_mut(
         task->script->world, task->entity, EcsScriptAsyncTasks);
     if (!bound) {
         return;
     }
+
     int32_t i, count = ecs_vec_count(&bound->tasks);
     ecs_script_task_t **tasks = ecs_vec_first(&bound->tasks);
     for (i = 0; i < count; i ++) {
@@ -89226,6 +90289,7 @@ static ecs_script_task_t* flecs_script_task_alloc(
     } else {
         result->runner = ECS_OFFSET(result, offset);
     }
+
     result->script = &impl->pub;
     result->sched_index = -1;
     impl->task_refcount ++;
@@ -89243,12 +90307,14 @@ static int flecs_script_task_compile(
     if (impl->compiled) {
         return 0;
     }
+
     ecs_script_eval_visitor_t *v = flecs_script_task_visitor(task);
     if (flecs_script_visit_include(v, impl->root) ||
         flecs_script_visit_type(v, impl->root))
     {
         return -1;
     }
+
     impl->compiled = true;
     return 0;
 }
@@ -89263,6 +90329,7 @@ static int flecs_script_task_engine_init(
             flecs_script_ir_vm_fini(task->vm, &task->eval_desc);
             return -1;
         }
+
         task->vm->can_suspend = true;
         task->vm->async.entity = task->entity;
     } else {
@@ -89270,6 +90337,7 @@ static int flecs_script_task_engine_init(
         task->runner->can_suspend = true;
         task->runner->async.entity = task->entity;
     }
+
     return 0;
 }
 
@@ -89280,6 +90348,7 @@ static void flecs_script_task_dealloc(
     if (task->ctx_free) {
         task->ctx_free(task->ctx);
     }
+
     ecs_script_impl_t *impl = flecs_script_impl(task->script);
     ecs_assert(impl->task_refcount > 0, ECS_INTERNAL_ERROR, NULL);
     impl->task_refcount --;
@@ -89315,25 +90384,31 @@ ecs_script_task_t* ecs_script_task_new(
         result->loop = desc->loop;
         result->iterations = desc->iterations;
     }
+
     ecs_script_eval_visitor_t *v = flecs_script_task_visitor(result);
     if (result->entity) {
         flecs_script_task_push_this(v, runtime, result->entity);
         result->has_owner_vars = true;
     }
+
     if (flecs_script_task_compile(result)) {
         goto task_error;
     }
+
     result->scope = impl->root;
     if (flecs_script_task_engine_init(result)) {
         goto task_error;
     }
+
     if (result->vm) {
         result->entry = ecs_vec_get_t(&result->vm->ir->entries,
             ecs_script_ir_entry_t, result->vm->ir->root_entry);
     }
+
     if (result->entity) {
         flecs_script_task_register(result);
     }
+
     result->initial_vars = flecs_script_task_visitor(result)->vars;
     return result;
 task_error:
@@ -89352,6 +90427,7 @@ static ecs_script_future_t** flecs_script_task_future(
     if (task->vm) {
         return &task->vm->async.future;
     }
+
     return &task->runner->async.future;
 }
 
@@ -89388,6 +90464,7 @@ ecs_script_task_status_t ecs_script_task_resume(
     if (result) {
         flecs_log_capture_push(true);
     }
+
     ecs_script_runtime_t *world_rt = flecs_script_runtime_get(
         flecs_script_task_visitor(task)->world);
     bool prev_error = world_rt->error;
@@ -89398,6 +90475,7 @@ ecs_script_task_status_t ecs_script_task_resume(
     } else {
         status = flecs_script_runner_run_scope(task->runner, task->scope);
     }
+
     bool nested_error = world_rt->error;
     world_rt->error = prev_error;
     if (task->status == EcsScriptTaskCancelled) {
@@ -89409,18 +90487,22 @@ ecs_script_task_status_t ecs_script_task_resume(
     } else {
         task->status = EcsScriptTaskPending;
     }
+
     if (result) {
         result->error = flecs_log_capture_pop();
         flecs_log_get_captured_error_pos(&result->line, &result->column);
     }
+
     if (task->status == EcsScriptTaskDone) {
         bool repeat = task->loop == EcsScriptTaskLoopForever;
         if (task->loop != EcsScriptTaskLoopOnce) {
             task->completed_iterations ++;
         }
+
         if (task->loop == EcsScriptTaskLoopCount) {
             repeat = task->completed_iterations < task->iterations;
         }
+
         if (repeat) {
             ecs_assert(task->vm
                 ? task->vm->frame_count == 0
@@ -89431,6 +90513,7 @@ ecs_script_task_status_t ecs_script_task_resume(
             task->status = EcsScriptTaskPending;
         }
     }
+
     task->running = false;
     return task->status;
 error:
@@ -89446,6 +90529,7 @@ bool ecs_script_task_is_ready(
     if (!future) {
         return true;
     }
+
     return flecs_script_future_poll(future) != FlecsScriptFuturePending;
 error:
     return false;
@@ -89477,6 +90561,7 @@ void ecs_script_task_free(
     if (!task) {
         return;
     }
+
     flecs_script_task_unbind(task);
     if (task->running) {
         /* Async block task freed by its owner while it is being resumed. The
@@ -89489,6 +90574,7 @@ void ecs_script_task_free(
         task->free_pending = true;
         return;
     }
+
     ecs_script_task_cancel(task);
     flecs_script_task_unregister(task);
     flecs_script_task_sched_remove(task);
@@ -89497,24 +90583,29 @@ void ecs_script_task_free(
     } else {
         flecs_script_runner_abandon(task->runner);
     }
+
     ecs_script_eval_visitor_t *v = flecs_script_task_visitor(task);
     ecs_assert(v->vars == task->initial_vars, ECS_INTERNAL_ERROR, NULL);
     if (task->has_owner_vars) {
         v->vars = ecs_script_vars_pop(v->vars);
     }
+
     if (task->is_async_block) {
         while (v->vars) {
             v->vars = ecs_script_vars_pop(v->vars);
         }
     }
+
     if (task->vm) {
         flecs_script_ir_vm_fini(task->vm, &task->eval_desc);
     } else {
         flecs_script_runner_fini(task->runner, &task->eval_desc);
     }
+
     if (task->has_state) {
         flecs_script_state_fini(&task->state);
     }
+
     flecs_script_task_dealloc(task);
 error:
     return;
@@ -89535,12 +90626,14 @@ static ECS_DTOR(EcsScriptTask, ptr, {
             ECS_INVALID_OPERATION,
             "script still has alive tasks, free tasks before ecs_fini");
     }
+
     for (t = 0; t < task_count; t ++) {
         /* Component doesn't own tasks; cancel so the application observes a
          * cancelled status on the next resume and frees them. */
         tasks[t]->entity = 0;
         ecs_script_task_cancel(tasks[t]);
     }
+
     ecs_vec_fini_t(NULL, &ptr->tasks, ecs_script_task_t*);
 })
 
@@ -89637,6 +90730,7 @@ static void flecs_script_tasks_pending_set(
     if (!EcsScriptTasksPending || ecs_is_fini(world)) {
         return;
     }
+
     if (pending) {
         ecs_add_id(world, EcsScriptTasksPending, EcsScriptTasksPending);
     } else {
@@ -89663,6 +90757,7 @@ static void flecs_script_task_sched_remove(
     if (index < 0) {
         return;
     }
+
     task->sched_index = -1;
 
     ecs_script_runtime_t *rt = flecs_script_runtime_get(task->script->world);
@@ -89680,6 +90775,7 @@ static void flecs_script_task_sched_remove(
     if (last) {
         last->sched_index = index;
     }
+
     ecs_vec_remove_last(&rt->async_tasks);
     if (!ecs_vec_count(&rt->async_tasks)) {
         flecs_script_tasks_pending_set(task->script->world, false);
@@ -89711,6 +90807,7 @@ static ecs_script_vars_t* flecs_script_vars_snapshot(
         if (!var) {
             var = ecs_script_vars_declare(dst, NULL);
         }
+
         ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(var->sp == src_var->sp, ECS_INTERNAL_ERROR, NULL);
 
@@ -89732,10 +90829,12 @@ static ecs_script_vars_t* flecs_script_vars_snapshot(
                     break;
                 }
             }
+
             if (var->value.ptr) {
                 continue;
             }
         }
+
         if (src_var->value.ptr && ti) {
             var->value.ptr = flecs_stack_alloc(stack, ti->size, ti->alignment);
             flecs_type_info_ctor(var->value.ptr, 1, ti);
@@ -89781,6 +90880,7 @@ int flecs_script_async_spawn(
                 "async block has no template instance");
             return -1;
         }
+
         owner_instance = v->template_instance;
         owner_template = v->body_template;
         EcsScriptTemplateRoot *root = ecs_get_mut_pair(
@@ -89793,9 +90893,11 @@ int flecs_script_async_spawn(
                 ecs_vec_remove_t(&root->async_blocks, ecs_script_async_block_t, i);
                 continue;
             }
+
             if (block->entity == entity && block->scope == node->scope) {
                 return 0;
             }
+
             i ++;
         }
     } else {
@@ -89840,6 +90942,7 @@ int flecs_script_async_spawn(
     if (flecs_script_task_engine_init(task)) {
         goto error;
     }
+
     if (task->vm) {
         task->entry = flecs_script_ir_entry(task->vm->ir, node);
         if (!task->entry) {
@@ -89847,6 +90950,7 @@ int flecs_script_async_spawn(
             goto error;
         }
     }
+
     task->initial_vars = tv->vars;
 
     if (owner_template) {
@@ -89896,6 +91000,7 @@ void flecs_script_async_tasks_free(
         task->owner_template = 0;
         ecs_script_task_free(task);
     }
+
     ecs_vec_clear(tasks);
 }
 
@@ -89951,6 +91056,7 @@ void flecs_script_async_cleanup(
             i ++;
             continue;
         }
+
         ecs_vec_remove_t(&root->async_blocks, ecs_script_async_block_t, i);
         for (int32_t t = 0; t < ecs_vec_count(&root->tasks); t ++) {
             ecs_script_task_t *task = ecs_vec_get_t(
@@ -89987,9 +91093,11 @@ static void flecs_script_async_tasks_on_remove(
             array[t]->bound_registered = false;
             flecs_script_task_detach(array[t]);
         }
+
         for (int32_t t = 0; t < count; t ++) {
             ecs_script_task_free(array[t]);
         }
+
         ecs_vec_fini_t(NULL, &tasks, ecs_script_task_t*);
     }
 }
@@ -90022,6 +91130,7 @@ int32_t ecs_script_tasks_progress(
         if (!task) {
             continue;
         }
+
         if (task->status != EcsScriptTaskPending ||
             !ecs_script_task_is_ready(task))
         {
@@ -90047,6 +91156,7 @@ int32_t ecs_script_tasks_progress(
             tasks[dst ++] = tasks[i];
         }
     }
+
     ecs_vec_set_count_t(NULL, &rt->async_tasks, ecs_script_task_t*, dst);
     if (!dst) {
         flecs_script_tasks_pending_set(world, false);
@@ -90179,6 +91289,7 @@ void ecs_script_runtime_free(
     for (i = 0; i < count; i ++) {
         ecs_script_runtime_free(calls[i]);
     }
+
     ecs_vec_fini_t(NULL, &r->call_runtimes, ecs_script_runtime_t*);
     flecs_expr_stack_fini(&r->expr_stack);
     flecs_script_ir_vm_pool_fini(r);
@@ -90201,6 +91312,7 @@ ecs_script_runtime_t* flecs_script_runtime_acquire_call(
         return ((ecs_script_runtime_t**)r->call_runtimes.array)
             [-- r->call_runtimes.count];
     }
+
     return ecs_script_runtime_new();
 }
 
@@ -90560,9 +91672,11 @@ void flecs_script_with_set_count(
             if (ti->hooks.dtor) {
                 flecs_type_info_dtor(val->ptr, 1, ti);
             }
+
             flecs_stack_free(val->ptr, ti->size);
         }
     }
+
     ecs_vec_set_count_t(&v->r->allocator, &v->r->with,
         ecs_script_with_value_t, count);
 }
@@ -90599,6 +91713,7 @@ int32_t flecs_script_symbol_runtime_slot(
     if (slot >= v->symbol_offset) {
         return slot - v->symbol_offset;
     }
+
     return slot;
 }
 
@@ -90727,6 +91842,7 @@ int flecs_script_symbol_lookup(
     } else {
         symbol->kind = FlecsScriptSymbolEntity;
     }
+
     return 0;
 }
 
@@ -90743,9 +91859,11 @@ int flecs_script_id_elem_lookup(
     if (first) {
         from = flecs_get_oneof(script->world, first);
     }
+
     if (from_out) {
         from_out[0] = from;
     }
+
     return flecs_script_symbol_lookup(
         script, desc, from, name, lookup_kind, symbol);
 }
@@ -90767,6 +91885,7 @@ int flecs_script_id_lookup(
         if (unresolved) {
             unresolved[0] = first_name;
         }
+
         return -1;
     }
 
@@ -90786,6 +91905,7 @@ int flecs_script_id_lookup(
         if (unresolved) {
             unresolved[0] = second_name;
         }
+
         return -1;
     }
 
@@ -90834,6 +91954,7 @@ static ecs_entity_t flecs_script_eval_name_expr(
             ecs_ptr_free(script->world, value.type, value.ptr);
             return 0;
         }
+
         result = symbol.entity;
     }
 
@@ -90858,6 +91979,7 @@ bool flecs_script_is_script_scope(
         if (script == e) {
             return true;
         }
+
         script = ecs_get_target(world, script, EcsChildOf, 0);
     }
     return false;
@@ -90930,6 +92052,7 @@ ecs_entity_t flecs_script_create_entity(
     {
         ecs_add_id(v->world, result, v->script_tag);
     }
+
     if (result) {
         flecs_script_apply_with(v, result);
     }
@@ -90979,6 +92102,7 @@ const ecs_vec_t* flecs_script_vector_prop_vec(
     if (!var || !var->value.ptr) {
         return NULL;
     }
+
     return var->value.ptr;
 }
 
@@ -91063,6 +92187,7 @@ static int flecs_script_eval_id(
     {
         return -1;
     }
+
     if (!first) {
         flecs_script_eval_error(v, node,
             "unresolved identifier '%s'", id->first);
@@ -91076,11 +92201,13 @@ static int flecs_script_eval_id(
         {
             return -1;
         }
+
         if (!second) {
             flecs_script_eval_error(v, node,
                 "unresolved identifier '%s'", id->second);
             return -1;
         }
+
         id->eval = id->flag | ecs_pair(first, second);
     } else {
         id->eval = id->flag | first;
@@ -91154,15 +92281,18 @@ static int flecs_script_apply_tree_scope(
         if (stmt->kind == EcsAstTemplate || stmt->kind == EcsAstFunction) {
             continue;
         }
+
         if (stmt->kind == EcsAstEntity) {
             ((ecs_script_entity_t*)stmt)->non_fragmenting_parent = *(bool*)ctx;
         }
+
         if (stmt->kind == EcsAstScope) {
             flecs_script_apply_tree_scope((ecs_script_scope_t*)stmt, ctx);
         } else {
             flecs_script_visit_scopes(stmt, flecs_script_apply_tree_scope, ctx);
         }
     }
+
     return 0;
 }
 
@@ -91250,6 +92380,7 @@ void flecs_script_add_entity_kind(
     if (w_expr) {
         stage->ensure_add = &ensure_add_type;
     }
+
     ecs_add_id(v->world, entity, kind);
     stage->ensure_add = ensure_add;
 }
@@ -91271,6 +92402,7 @@ void flecs_script_scope_add_ids(
     if (ensure_add_type.ids.count) {
         stage->ensure_add = &ensure_add_type;
     }
+
     flecs_add_ids(v->world, entity, ids, count);
     stage->ensure_add = ensure_add;
 }
@@ -91319,6 +92451,7 @@ int flecs_script_eval_entity_enter(
                 state->eval_kind = *(ecs_entity_t*)var->value.ptr;
             }
         }
+
         if (!state->eval_kind) {
             flecs_script_eval_error(v, node,
                 "unresolved identifier '%s'", node->kind);
@@ -91345,20 +92478,24 @@ int flecs_script_eval_entity_enter(
         if (!eval) {
             return -1;
         }
+
         if (state->eval && state->eval != eval &&
             ecs_is_alive(v->world, state->eval))
         {
             ecs_delete(v->world, state->eval);
         }
+
         state->eval = eval;
         state->created = true;
     } else if (!state->eval) {
         state->eval = flecs_script_create_entity(v, node->name);
         state->created = true;
     }
+
     if (apply_with && !node->name_expr && v->force) {
         flecs_script_apply_with(v, state->eval);
     }
+
     if (node->symbol != -1) {
         flecs_script_symbol_set(v, node->symbol, state->eval);
     }
@@ -91409,6 +92546,7 @@ int flecs_script_eval_entity_enter(
                 goto error;
             }
         }
+
         ecs_vec_clear(&v->r->annot);
     }
 
@@ -91458,6 +92596,7 @@ ecs_entity_t flecs_script_get_src(
             return id & ECS_COMPONENT_MASK;
         }
     }
+
     return entity;
 }
 
@@ -91475,6 +92614,7 @@ bool flecs_script_can_default_ctor(
             return false;
         }
     }
+
     return true;
 }
 
@@ -91498,6 +92638,7 @@ void flecs_script_track_component(
     {
         return;
     }
+
     int32_t entity_slot = v->entity->symbol;
     ecs_script_component_slot_t *slot = ecs_vec_get_t(
         &v->state->component_slots, ecs_script_component_slot_t, component_slot);
@@ -91510,6 +92651,7 @@ void flecs_script_track_component(
             ecs_remove_id(v->world, src, slot->component);
         }
     }
+
     slot->entity_slot = entity_slot;
     slot->component = component;
     slot->scope_slot = v->scope_slot;
@@ -91527,6 +92669,7 @@ const ecs_script_var_t* flecs_script_template_prop_var(
             "template prop used as component has no value");
         return NULL;
     }
+
     return var;
 }
 
@@ -91560,6 +92703,7 @@ static int flecs_script_eval_tag(
                     "type is not default constructible",
                     node->id.first);
             }
+
             return -1;
         }
     }
@@ -91615,11 +92759,13 @@ static int flecs_script_eval_tag(
         if (!var) {
             return -1;
         }
+
         const ecs_type_info_t *ti = flecs_script_get_type_info(
             v, node, node->id.eval);
         if (!ti) {
             return -1;
         }
+
         ecs_set_id(v->world, src, node->id.eval,
             flecs_itosize(ti->size), var->value.ptr);
     } else {
@@ -91697,6 +92843,7 @@ static int flecs_script_eval_component(
                     "type is not default constructible",
                     node->id.first);
             }
+
             return -1;
         }
     }
@@ -91792,6 +92939,7 @@ static int flecs_script_eval_component(
                 flecs_type_info_dtor(value.ptr, 1, ti);
                 return -1;
             }
+
             ecs_ptr_copy_w_type_info(v->world, ti, value.ptr, var->value.ptr);
         } else if (existing) {
             ecs_ptr_copy_w_type_info(v->world, ti, value.ptr, existing);
@@ -91818,12 +92966,14 @@ static int flecs_script_eval_component(
         if (!ti) {
             return -1;
         }
+
         void *value = ecs_os_alloca(ti->size);
         if (!ti->hooks.ctor) {
             ecs_os_memset(value, 0, ti->size);
         } else {
             flecs_type_info_ctor(value, 1, ti);
         }
+
         ecs_set_id(v->world, src, node->id.eval,
             flecs_itosize(ti->size), value);
     } else {
@@ -91850,11 +93000,13 @@ static int flecs_script_eval_with_tag(
         if (!var) {
             return -1;
         }
+
         const ecs_type_info_t *ti = flecs_script_get_type_info(
             v, node, node->id.eval);
         if (!ti) {
             return -1;
         }
+
         ecs_value_t *value = flecs_script_with_append(v, ti);
         value->type = node->id.eval;
         value->ptr = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
@@ -91901,6 +93053,7 @@ static int flecs_script_eval_with_component(
             if (!var) {
                 return -1;
             }
+
             ecs_ptr_copy_w_type_info(v->world, ti, value->ptr, var->value.ptr);
         }
 
@@ -91941,8 +93094,10 @@ int flecs_script_eval_with_enter(
             flecs_script_eval_with_leave(v, state);
             return -1;
         }
+
         v->base.depth --;
     }
+
     v->base.depth = depth;
 
     v->is_with_scope = true;
@@ -92008,6 +93163,7 @@ ecs_script_computed_t* flecs_script_computed_get(
     {
         return NULL;
     }
+
     return ecs_vec_get_t(&v->state->computed,
         ecs_script_computed_t, node->computed - 1);
 }
@@ -92020,11 +93176,13 @@ static bool flecs_script_computed_equals(
     if (ti->hooks.equals && !(ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL)) {
         return flecs_type_info_equals(a, b, ti);
     }
+
     if (!ti->hooks.ctor && !ti->hooks.copy && !ti->hooks.move &&
         !ti->hooks.dtor)
     {
         return !ecs_os_memcmp(a, b, ti->size);
     }
+
     return false;
 }
 
@@ -92044,6 +93202,7 @@ bool flecs_script_computed_store(
         if (slot->ti && slot->ti->hooks.dtor) {
             flecs_type_info_dtor(slot->ptr, 1, slot->ti);
         }
+
         ecs_os_free(slot->ptr);
         slot->ptr = ecs_os_malloc(ti->size);
         flecs_type_info_ctor(slot->ptr, 1, ti);
@@ -92052,14 +93211,17 @@ bool flecs_script_computed_store(
     } else if (slot->valid) {
         changed = !flecs_script_computed_equals(ti, slot->ptr, value);
     }
+
     if (changed) {
         if (ti->hooks.copy) {
             ti->hooks.copy(slot->ptr, value, 1, ti);
         } else {
             ecs_os_memcpy(slot->ptr, value, ti->size);
         }
+
         v->internal |= (uint64_t)1 << index;
     }
+
     slot->valid = true;
     return changed;
 }
@@ -92077,6 +93239,7 @@ int flecs_script_eval_const_cached(
             "variable '%s' redeclared", node->name);
         return -1;
     }
+
     var->is_const = true;
     var->type_info = slot->ti;
     var->value.type = node->eval_type;
@@ -92131,6 +93294,7 @@ int flecs_script_eval_const(
         if (ti->hooks.dtor) {
             flecs_type_info_dtor(result.ptr, 1, ti);
         }
+
         flecs_stack_free(result.ptr, ti->size);
         return -1;
     }
@@ -92144,6 +93308,7 @@ int flecs_script_eval_const(
         if (ti->hooks.dtor) {
             flecs_type_info_dtor(result.ptr, 1, ti);
         }
+
         flecs_stack_free(result.ptr, ti->size);
         var->is_const = true;
         var->type_info = ti;
@@ -92193,6 +93358,7 @@ int flecs_script_eval_const(
         if (v->script_tag) {
             ecs_add_id(v->world, const_var, v->script_tag);
         }
+
         if (node->symbol != -1) {
             flecs_script_symbol_set(v, node->symbol, const_var);
         }
@@ -92213,11 +93379,13 @@ int flecs_script_eval_pair_scope_enter(
     {
         return -1;
     }
+
     if (!first && node->id.first_symbol != -1) {
         first = flecs_script_create_entity(v, node->id.first);
         if (!first) {
             return -1;
         }
+
         flecs_script_symbol_set(v, node->id.first_symbol, first);
     } else if (!first) {
         return -1;
@@ -92230,12 +93398,14 @@ int flecs_script_eval_pair_scope_enter(
     {
         return -1;
     }
+
     if (!second && node->id.second_symbol != -1) {
         second = flecs_script_create_entity(v, node->id.second);
         if (second) {
             flecs_script_symbol_set(v, node->id.second_symbol, second);
         }
     }
+
     if (!second) {
         return -1;
     }
@@ -92415,6 +93585,7 @@ void flecs_script_user_function_ctx_free(
     if (uf->script) {
         ecs_script_free(uf->script);
     }
+
     ecs_vec_fini_t(NULL, &uf->refs, ecs_script_ref_t);
     ecs_vec_fini_t(NULL, &uf->using, ecs_entity_t);
     ecs_os_free(uf);
@@ -92429,6 +93600,7 @@ static int flecs_script_function_ref(
     if (ref->entity) {
         flecs_script_ref_ensure(ctx, ref);
     }
+
     return 0;
 }
 
@@ -92476,6 +93648,7 @@ int flecs_script_eval_function(
             return -1;
         }
     }
+
     if (node->return_expr && flecs_expr_visit_refs(
         &v->base.script->pub, node->return_expr,
         flecs_script_function_ref, &fn_refs))
@@ -92496,6 +93669,7 @@ int flecs_script_eval_function(
     if (fcomp->binding_ctx && fcomp->binding_ctx_free) {
         fcomp->binding_ctx_free(fcomp->binding_ctx);
     }
+
     fcomp->binding_ctx = uf;
     fcomp->binding_ctx_free = flecs_script_user_function_ctx_free;
     ecs_modified(world, fn_entity, EcsScriptFunction);
@@ -92513,6 +93687,7 @@ int flecs_script_assign_value(
     if (node->parent && instance && ecs_is_alive(world, instance)) {
         instance = ecs_get_parent(world, instance);
     }
+
     if (!instance || !ecs_is_alive(world, instance) ||
         !ecs_has_id(world, instance, node->component))
     {
@@ -92565,6 +93740,7 @@ static int flecs_script_eval_assign(
     if (ti->hooks.dtor) {
         flecs_type_info_dtor(value.ptr, 1, ti);
     }
+
     flecs_stack_free(value.ptr, ti->size);
     return result;
 }
@@ -92739,6 +93915,7 @@ static flecs_script_frame_t* flecs_script_frame_push(
         r->frames[chunk] = ecs_os_malloc_n(
             flecs_script_frame_t, ECS_SCRIPT_FRAME_CHUNK_SIZE);
     }
+
     flecs_script_frame_t *frame = flecs_script_frame_at(r, r->frame_count ++);
     frame->node = node;
     frame->pc = 0;
@@ -92825,6 +94002,7 @@ static void flecs_script_mark_node(
     if (!node->region) {
         return;
     }
+
     const ecs_script_region_t *region = ecs_vec_get_t(
         &v->base.script->regions, ecs_script_region_t, node->region - 1);
     flecs_script_state_mark(v->state, region, v->visit);
@@ -92846,6 +94024,7 @@ static bool flecs_script_stmt_run(
     if (node->skip) {
         return false;
     }
+
     return v->force || flecs_script_stmt_support(node) ||
         ((node->input & v->input) != 0) ||
         ((node->internal & v->internal) != 0);
@@ -92878,6 +94057,7 @@ static int flecs_script_step_scope(
                         return -1;
                     }
                 }
+
                 flecs_script_mark_node(v, stmt);
                 frame->pc ++;
                 continue;
@@ -92907,6 +94087,7 @@ static int flecs_script_step_scope(
             if (res) {
                 return res;
             }
+
             frame->pc ++;
         } else if (stmt->kind == EcsAstScope) {
             frame->pc ++;
@@ -92945,6 +94126,7 @@ static int flecs_script_step_scope(
             if (res) {
                 return -1;
             }
+
             frame->pc ++;
         }
     }
@@ -92965,11 +94147,13 @@ static int flecs_script_step_entity(
         {
             return -1;
         }
+
         frame->pc = 1;
         flecs_script_scope_push(r, node->scope);
         if (!r->v.template) {
             r->v.parent = frame->state.entity.eval;
         }
+
         return 0;
     }
 
@@ -93005,6 +94189,7 @@ static int flecs_script_control_enter(
         if (flecs_script_eval_with_enter(v, node, &frame->state.with)) {
             return -1;
         }
+
         scope = node->scope;
         break;
     }
@@ -93015,6 +94200,7 @@ static int flecs_script_control_enter(
         {
             return -1;
         }
+
         scope = node->scope;
         break;
     }
@@ -93052,6 +94238,7 @@ static bool flecs_script_runner_continue(
         if (kind == EcsAstFor || kind == EcsAstWhile) {
             break;
         }
+
         frame --;
     }
 
@@ -93150,6 +94337,7 @@ static flecs_script_run_status_t flecs_script_runner_exec(
                 flecs_script_frame_leave(r, frame);
                 res = 0;
             }
+
             break;
         }
 
@@ -93208,8 +94396,10 @@ flecs_script_run_status_t flecs_script_runner_run_scope(
         if (!scope) {
             return FlecsScriptRunError;
         }
+
         flecs_script_scope_push(r, scope);
     }
+
     return flecs_script_runner_exec(r);
 }
 
@@ -93247,6 +94437,7 @@ int flecs_script_eval_entity(
         if (vars) {
             flecs_script_eval_pop_vars(&runner.v);
         }
+
         flecs_script_runner_fini(&runner, &desc);
     }
 
@@ -93338,6 +94529,7 @@ static ecs_script_symbol_slot_t* flecs_script_runtime_symbol_slot(
     if (slot < 0 || slot >= ecs_vec_count(slots)) {
         return NULL;
     }
+
     return ecs_vec_get_t(slots, ecs_script_symbol_slot_t, slot);
 }
 
@@ -93350,6 +94542,7 @@ bool flecs_script_scope_visited(
     {
         return true;
     }
+
     return ecs_vec_get_t(&v->state->scope_slots, int32_t, slot)[0] == v->visit;
 }
 
@@ -93362,6 +94555,7 @@ static ecs_entity_t flecs_script_component_slot_src(
     if (!symbol || !symbol->entity) {
         return 0;
     }
+
     return flecs_script_get_src(v, symbol->entity, slot->component);
 }
 
@@ -93385,19 +94579,23 @@ static void flecs_script_cleanup_slots(
             if (!slot->component || flecs_scope_visited(slot->scope_slot)) {
                 continue;
             }
+
             ecs_entity_t src = flecs_script_component_slot_src(v, slot);
             bool active = false;
             for (j = 0; j < count; j ++) {
                 if (i == j || slots[j].component != slot->component) {
                     continue;
                 }
+
                 if (!flecs_scope_visited(slots[j].scope_slot)) {
                     continue;
                 }
+
                 if (slots[j].entity_slot == slot->entity_slot) {
                     active = true;
                     break;
                 }
+
                 if (src && flecs_script_component_slot_src(
                     v, &slots[j]) == src)
                 {
@@ -93405,9 +94603,11 @@ static void flecs_script_cleanup_slots(
                     break;
                 }
             }
+
             if (src && ecs_is_alive(v->world, src) && !active) {
                 ecs_remove_id(v->world, src, slot->component);
             }
+
             ecs_os_zeromem(slot);
         }
     }
@@ -93420,24 +94620,29 @@ static void flecs_script_cleanup_slots(
         if (!slot->entity || flecs_scope_visited(slot->scope_slot)) {
             continue;
         }
+
         if (ecs_is_alive(v->world, slot->entity) &&
             flecs_script_is_builtin(v->world, slot->entity))
         {
             continue;
         }
+
         bool active = false;
         for (j = 0; j < count; j ++) {
             if (i == j || symbols[j].entity != slot->entity) {
                 continue;
             }
+
             if (flecs_scope_visited(symbols[j].scope_slot)) {
                 active = true;
                 break;
             }
         }
+
         if (!active && ecs_is_alive(v->world, slot->entity)) {
             ecs_delete(v->world, slot->entity);
         }
+
         ecs_os_zeromem(slot);
     }
 #undef flecs_scope_visited
@@ -93535,6 +94740,7 @@ int flecs_script_eval(
             impl->compiled = true;
         }
     }
+
     if (!r && input) {
         flecs_script_eval_begin(&runner.v, input,
             flecs_script_state_next(&impl->state));
@@ -93550,6 +94756,7 @@ int flecs_script_eval(
             flecs_script_eval_cleanup(&runner.v, true);
         }
     }
+
     flecs_script_runner_fini(&runner, &priv_desc);
 
     runtime->current_tag = prev_tag;
@@ -93650,8 +94857,10 @@ int flecs_script_for_check_var_count(
                 "(expected 'elem' or '(index, elem)')",
                 kind == FlecsScriptForArray ? "array" : "vector");
         }
+
         return -1;
     }
+
     return 0;
 }
 
@@ -93662,6 +94871,7 @@ bool flecs_script_for_has_index_var(
     if (kind == FlecsScriptForMap) {
         return loop_var_count == 3;
     }
+
     return loop_var_count == 2;
 }
 
@@ -93688,6 +94898,7 @@ ecs_script_var_t* flecs_script_for_declare_var(
                 "invalid type for loop variable '%s'", name);
             return NULL;
         }
+
         var->value.ptr = flecs_stack_calloc(
             &v->r->stack, ti->size, ti->alignment);
         var->type_info = ti;
@@ -93732,6 +94943,7 @@ static int flecs_script_for_enter(
         if (flecs_script_eval_expr(v, &node->from, &from_val)) {
             return -1;
         }
+
         if (flecs_script_eval_expr(v, &node->to, &to_val)) {
             return -1;
         }
@@ -93825,6 +95037,7 @@ error:
         ecs_ptr_free(v->world, state->collection.type, state->collection.ptr);
         state->collection = (ecs_value_t){0, NULL};
     }
+
     return -1;
 }
 
@@ -93839,6 +95052,7 @@ static bool flecs_script_for_next(
         if (value >= state->count) {
             return false;
         }
+
         *(int32_t*)state->elem_var->value.ptr = value;
         break;
     }
@@ -93859,11 +95073,13 @@ static bool flecs_script_for_next(
             ecs_map_key_t key = ecs_map_key(&state->map_it);
             ecs_os_memcpy(state->key_var->value.ptr, &key, state->key_size);
         }
+
         if (state->elem_size > ECS_SIZEOF(ecs_map_val_t)) {
             state->elem_var->value.ptr = ecs_map_ptr(&state->map_it);
         } else {
             state->elem_var->value.ptr = &state->map_it.res[1];
         }
+
         state->elem_var->owned = false;
         break;
     }
@@ -93902,6 +95118,7 @@ int flecs_script_step_for(
         if (flecs_script_for_enter(v, node, state)) {
             return -1;
         }
+
         frame->pc = 1;
     }
 
@@ -93939,6 +95156,7 @@ static bool flecs_script_include_has_parent_dir(
                 return true;
             }
         }
+
         p ++;
     }
     return false;
@@ -93955,6 +95173,7 @@ static char* flecs_script_include_resolve(
             if (p[0] == '/' || p[0] == '\\') {
                 dir_end = p + 1;
             }
+
             p ++;
         }
     }
@@ -93977,9 +95196,11 @@ static bool flecs_script_include_is_absolute(
     if (path[0] == '/' || path[0] == '\\') {
         return true;
     }
+
     if (path[0] && path[1] == ':') {
         return true;
     }
+
     return false;
 }
 
@@ -94017,6 +95238,7 @@ static int flecs_script_include_node(
             script_name = sc->filename;
         }
     }
+
     if (!script_name) {
         script_name = v->base.script->pub.name;
     }
@@ -94129,6 +95351,7 @@ int flecs_script_eval_include(
             break;
         }
     }
+
     if (i < 0 || (ecs_script_scope_t*)v->base.nodes[i] !=
         v->base.script->root)
     {
@@ -94203,6 +95426,7 @@ int flecs_script_visit_include(
         if (error) {
             ecs_err("%s", error);
         }
+
         result = -1;
     }
 
@@ -94410,6 +95634,7 @@ static int flecs_script_type_name_compare(
     {
         return 1;
     }
+
     return ecs_os_memcmp(a->name, b->name, a->length);
 }
 
@@ -94461,6 +95686,7 @@ static const char* flecs_script_type_path_sep(
         if (ptr == name || ptr[-1] != '\\') {
             return ptr;
         }
+
         ptr ++;
     }
     return NULL;
@@ -94554,6 +95780,7 @@ static ecs_script_type_entity_t* flecs_script_type_find(
         if (entity) {
             break;
         }
+
         table = ecs_vec_get_t(
             &t->tables, ecs_script_type_table_t, table)->parent;
     }
@@ -94573,6 +95800,7 @@ static ecs_script_type_entity_t* flecs_script_type_find(
             next = flecs_script_type_find_in_table(
                 t, entity->child_table, name, length);
         }
+
         if (!next) {
             ecs_entity_t parent = flecs_script_symbol_entity(
                 t->v, entity->slot);
@@ -94581,9 +95809,11 @@ static ecs_script_type_entity_t* flecs_script_type_find(
                     t, parent, name, length);
             }
         }
+
         if (!next) {
             return NULL;
         }
+
         entity = next;
     }
     return entity;
@@ -94599,6 +95829,7 @@ int32_t flecs_script_type_slot_new(
             ECS_INTERNAL_ERROR, NULL);
         return expected;
     }
+
     int32_t result = ecs_vec_count(&impl->state.symbol_slots);
     ecs_script_symbol_slot_t *slot = ecs_vec_append_t(
         NULL, &impl->state.symbol_slots, ecs_script_symbol_slot_t);
@@ -94622,10 +95853,12 @@ static ecs_script_type_entity_t* flecs_script_type_declare(
         if (node && !entity->node) {
             entity->node = node;
         }
+
         if (node && entity->node == node) {
             node->type_index = (int32_t)(entity -
                 (ecs_script_type_entity_t*)ecs_vec_first(&t->entities)) + 1;
         }
+
         if (has_scope && entity->child_table == -1) {
             entity->child_table = flecs_script_type_table_new(
                 t, t->table, node);
@@ -94636,6 +95869,7 @@ static ecs_script_type_entity_t* flecs_script_type_declare(
                 child_table->owner = node;
             }
         }
+
         return entity;
     }
 
@@ -94661,14 +95895,17 @@ static ecs_script_type_entity_t* flecs_script_type_declare(
         result = flecs_hashmap_ensure(&t->names, &key, int32_t);
         *(int32_t*)result.value = index;
     }
+
     if (node) {
         node->type_index = index + 1;
     }
+
     *slot = entity->slot;
     if (has_scope) {
         entity->child_table = flecs_script_type_table_new(
             t, t->table, node);
     }
+
     return entity;
 }
 
@@ -94692,6 +95929,7 @@ int flecs_script_type_symbol_lookup(
     {
         symbol->kind = FlecsScriptSymbolGlobalVariable;
     }
+
     return 0;
 }
 
@@ -94732,6 +95970,7 @@ static int flecs_script_type_resolve_type(
     {
         return -1;
     }
+
     type[0] = symbol.entity;
     return 0;
 }
@@ -94778,10 +96017,12 @@ bool flecs_script_type_is_skipped_var(
         if (ecs_os_strncmp(name, vars[i], len)) {
             continue;
         }
+
         if (!name[len] || name[len] == '.') {
             return true;
         }
     }
+
     return false;
 }
 
@@ -94803,6 +96044,7 @@ static void flecs_script_type_prune_skipped_refs(
         {
             continue;
         }
+
         refs[dst ++] = refs[i];
     }
 
@@ -94839,8 +96081,10 @@ static int flecs_script_type_check_expr(
                 if (v->base.script->skip_unknown) {
                     flecs_script_skip_unknown_skip_refs(t, prev_unresolved);
                 }
+
                 return 1;
             }
+
             return -1;
         }
     }
@@ -94865,6 +96109,7 @@ static int flecs_script_type_check_expr(
     if (type) {
         type[0] = expr_ptr[0]->type;
     }
+
     return 0;
 }
 
@@ -94929,12 +96174,14 @@ static bool flecs_script_is_var_name(
     if (!name || name[0] != '$' || !name[1]) {
         return false;
     }
+
     const char *ptr;
     for (ptr = &name[1]; ptr[0]; ptr ++) {
         if (!isalnum((unsigned char)ptr[0]) && ptr[0] != '_') {
             return false;
         }
     }
+
     return true;
 }
 
@@ -94965,6 +96212,7 @@ static int flecs_script_type_id_elem(
                             "element", &value[1]);
                         return -1;
                     }
+
                     flecs_expr_visit_free(&t->v->base.script->pub, *name_expr);
                     *name_expr = NULL;
                     id->dynamic = id->first_expr || id->second_expr;
@@ -94992,6 +96240,7 @@ static int flecs_script_type_id_elem(
             ecs_os_free(parent_str);
             return -1;
         }
+
         ecs_script_node_kind_t node_kind = ((ecs_script_node_t*)node)->kind;
         if (flecs_script_is_skip_unknown(&t->v->base.script->pub) &&
             flecs_script_skip_unknown_can_skip(node_kind) &&
@@ -95013,6 +96262,7 @@ static int flecs_script_type_id_elem(
                 }
             }
         }
+
         flecs_script_type_unresolved_ref(t, node, name, ref_kind);
         return 1;
     }
@@ -95029,10 +96279,12 @@ static int flecs_script_type_id_elem(
                     name);
                 return -1;
             }
+
             *eval = var->value.type;
             id->value_sp = symbol.sp;
             return 0;
         }
+
         ecs_entity_t interface = var && t->v->template
             ? flecs_script_template_member_interface(
                 t->v->template, symbol.sp)
@@ -95046,12 +96298,14 @@ static int flecs_script_type_id_elem(
                         name);
                     return -1;
                 }
+
                 id->interface = interface;
                 *sp = symbol.sp;
                 id->dynamic = true;
                 return 0;
             }
         }
+
         if (interface) {
             if (flecs_script_template_member_is_vector(
                 t->v->template, symbol.sp))
@@ -95061,22 +96315,26 @@ static int flecs_script_type_id_elem(
                     "element", name, name);
                 return -1;
             }
+
             if (id->second) {
                 flecs_script_eval_error(t->v, node,
                     "template prop '%s' cannot be used as pair element",
                     name);
                 return -1;
             }
+
             id->interface = interface;
             *sp = symbol.sp;
             id->dynamic = true;
             return 0;
         }
+
         if (!var || var->value.type != ecs_id(ecs_entity_t)) {
             flecs_script_eval_error(t->v, node,
                 "variable '%s' must be of type entity", name);
             return -1;
         }
+
         *sp = symbol.sp;
         id->dynamic = true;
     } else if (symbol.kind == FlecsScriptSymbolEntitySlot) {
@@ -95085,6 +96343,7 @@ static int flecs_script_type_id_elem(
     } else {
         *eval = symbol.entity;
     }
+
     return 0;
 }
 
@@ -95163,6 +96422,7 @@ static int flecs_script_type_id(
     {
         return -1;
     }
+
     if (id->second) {
         result = flecs_script_type_id_elem(t, id, node, id->second,
             &id->second_expr, first, &id->second_eval, &id->second_symbol,
@@ -95170,18 +96430,21 @@ static int flecs_script_type_id(
         if (result) {
             return result;
         }
+
         ecs_entity_t second;
         if (flecs_script_eval_id_elem(t->v, node, NULL,
             id->second_eval, id->second_symbol, id->second_sp, &second))
         {
             return -1;
         }
+
         if (first && second) {
             id->eval = id->flag | ecs_pair(first, second);
         }
     } else if (first) {
         id->eval = id->flag | first;
     }
+
     return 0;
 }
 
@@ -95200,12 +96463,15 @@ static ecs_entity_t flecs_script_type_parent(
         if (flecs_script_type_ensure_node(t, entry->parent_node)) {
             return 0;
         }
+
         if (entry->parent_node->symbol != -1) {
             return flecs_script_symbol_entity(
                 t->v, entry->parent_node->symbol);
         }
+
         return entry->parent_node->eval;
     }
+
     return entry->parent;
 }
 
@@ -95234,6 +96500,7 @@ static int flecs_script_type_ensure_node(
         if (flecs_script_eval_expr(t->v, &node->name_expr, &value)) {
             return -1;
         }
+
         name = *(char**)value.ptr;
     }
 
@@ -95244,22 +96511,27 @@ static int flecs_script_type_ensure_node(
         desc.parent = parent;
         desc.name = name;
     }
+
     current = ecs_entity_init(t->v->world, &desc);
     if (value.ptr) {
         ecs_ptr_free(t->v->world, value.type, value.ptr);
     }
+
     if (!current) {
         return -1;
     }
+
     if (t->v->script_tag && flecs_script_can_own_entity(
         t->v->world, t->v->script_entity, current))
     {
         ecs_add_id(t->v->world, current, t->v->script_tag);
     }
+
     node->eval = current;
     if (node->symbol != -1) {
         flecs_script_symbol_set(t->v, node->symbol, current);
     }
+
     return 0;
 }
 
@@ -95275,13 +96547,16 @@ static int flecs_script_type_ensure_entities(
              * template is instantiated, not in the scope of the script. */
             continue;
         }
+
         if (entries[i].in_for && !t->for_depth) {
             continue;
         }
+
         if (node && flecs_script_type_ensure_node(t, node)) {
             return -1;
         }
     }
+
     return 0;
 }
 
@@ -95293,15 +96568,18 @@ static int flecs_script_type_tag(
     if (result) {
         return result == 1 ? 0 : -1;
     }
+
     if (t->v->is_with_scope) {
         flecs_script_eval_error(t->v, node, "invalid tag in with scope");
         return -1;
     }
+
     if (!t->v->entity) {
         flecs_script_eval_error(t->v, node, "missing entity for tag %s",
             node->id.first);
         return -1;
     }
+
     if (node->id.eval) {
         ecs_entity_t type = ecs_get_typeid(t->v->world, node->id.eval);
         if (type) {
@@ -95315,6 +96593,7 @@ static int flecs_script_type_tag(
             }
         }
     }
+
     return 0;
 }
 
@@ -95325,6 +96604,7 @@ static ecs_entity_t flecs_script_type_component_type(
     if (node->id.interface) {
         return node->id.interface;
     }
+
     if (node->id.eval) {
         return ecs_get_typeid(t->v->world, node->id.eval);
     }
@@ -95339,21 +96619,25 @@ static ecs_entity_t flecs_script_type_component_type(
     {
         return 0;
     }
+
     if (candidates[0] && node->id.second &&
         ecs_has_id(t->v->world, candidates[0], EcsPairIsTag))
     {
         return 0;
     }
+
     for (int32_t i = 0; i < 2; i ++) {
         if (!candidates[i]) {
             continue;
         }
+
         const ecs_type_info_t *ti = ecs_get_type_info(
             t->v->world, candidates[i]);
         if (ti) {
             return ti->component;
         }
     }
+
     return 0;
 }
 
@@ -95385,6 +96669,7 @@ static int flecs_script_type_struct_expr(
             }
         }
     }
+
     return 0;
 }
 
@@ -95427,6 +96712,7 @@ static int flecs_script_type_constants_expr(
                     return result;
                 }
             }
+
             if (!is_bitmask && cfg_elems[c].member &&
                 !ecs_os_strcmp(cfg_elems[c].member, "underlying_type"))
             {
@@ -95438,6 +96724,7 @@ static int flecs_script_type_constants_expr(
                 {
                     return -1;
                 }
+
                 underlying = *(ecs_entity_t*)value.ptr;
                 ecs_ptr_free(t->v->world, value.type, value.ptr);
             }
@@ -95447,6 +96734,7 @@ static int flecs_script_type_constants_expr(
     if (!underlying) {
         underlying = ecs_id(ecs_i32_t);
     }
+
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
         if (elem->member && elem->value) {
@@ -95457,6 +96745,7 @@ static int flecs_script_type_constants_expr(
             }
         }
     }
+
     return 0;
 }
 
@@ -95467,12 +96756,15 @@ static int flecs_script_type_visitor_expr(
     if (node->id.eval == ecs_id(EcsStruct)) {
         return flecs_script_type_struct_expr(t, node->expr);
     }
+
     if (node->id.eval == ecs_id(EcsEnum)) {
         return flecs_script_type_constants_expr(t, node->expr, false);
     }
+
     if (node->id.eval == ecs_id(EcsBitmask)) {
         return flecs_script_type_constants_expr(t, node->expr, true);
     }
+
     return 0;
 }
 
@@ -95519,6 +96811,7 @@ static int flecs_script_type_with_component(
     if (result) {
         return result == 1 ? 0 : -1;
     }
+
     if (node->expr) {
         ecs_entity_t type = flecs_script_type_component_type(t, node);
         if (!type) {
@@ -95526,9 +96819,11 @@ static int flecs_script_type_with_component(
                 "unresolved component type '%s'", node->id.first);
             return -1;
         }
+
         result = flecs_script_type_check_component_expr(t, node, &type);
         return result == 1 ? 0 : result;
     }
+
     return 0;
 }
 
@@ -95540,11 +96835,13 @@ static int flecs_script_type_component(
     if (id_result) {
         return id_result == 1 ? 0 : -1;
     }
+
     if (!t->v->entity) {
         flecs_script_eval_error(t->v, node,
             "missing entity for component %s", node->id.first);
         return -1;
     }
+
     if (t->v->is_with_scope) {
         flecs_script_eval_error(t->v, node,
             "invalid component in with scope");
@@ -95554,6 +96851,7 @@ static int flecs_script_type_component(
     if (!node->expr) {
         return 0;
     }
+
     if (!node->id.second && node->id.eval && ecs_has(
         t->v->world, node->id.eval, EcsScriptVisitor))
     {
@@ -95571,10 +96869,12 @@ static int flecs_script_type_component(
             flecs_script_skip_unknown_drop_expr(t, &node->expr);
             return 0;
         }
+
         flecs_script_eval_error(t->v, node,
             "unresolved component type '%s'", node->id.first);
         return -1;
     }
+
     const ecs_type_info_t *ti = ecs_get_type_info(
         t->v->world, component_type);
     if (!ti) {
@@ -95584,6 +96884,7 @@ static int flecs_script_type_component(
             flecs_script_skip_unknown_drop_expr(t, &node->expr);
             return 0;
         }
+
         flecs_script_eval_error(t->v, node,
             "cannot set value of '%s': not a component", node->id.first);
         return -1;
@@ -95638,6 +96939,7 @@ static int flecs_script_type_annot(
             "annotation '%s' is not applied to anything", node->name);
         return -1;
     }
+
     ecs_script_node_kind_t kind = v->base.next->kind;
     if (kind != EcsAstEntity && kind != EcsAstTemplate &&
         kind != EcsAstAnnotation)
@@ -95684,6 +96986,7 @@ static int flecs_script_type_const(
         if (flecs_script_skip_unknown_drop_var(t, node)) {
             return 0;
         }
+
         flecs_script_type_unresolved_ref(t, node, node->type,
             FlecsScriptUnresolvedComponent);
         if (node->expr->kind == EcsExprInitializer ||
@@ -95692,6 +96995,7 @@ static int flecs_script_type_const(
             return -1;
         }
     }
+
     ecs_entity_t type = expected_type;
     int expr_result = flecs_script_type_check_expr(t, &node->expr, &type);
     if (expr_result) {
@@ -95699,8 +97003,10 @@ static int flecs_script_type_const(
             flecs_script_type_skip_var(t, node->name);
             return 0;
         }
+
         return -1;
     }
+
     node->eval_type = type;
 
     if (node->is_await && export) {
@@ -95715,11 +97021,13 @@ static int flecs_script_type_const(
                 "exported variable '%s' shadows a local variable", node->name);
             return -1;
         }
+
         flecs_script_type_declare(
             t, node->name, NULL, &node->symbol, false);
         if (flecs_script_type_ensure_entities(t)) {
             return -1;
         }
+
         ecs_entity_t old_parent = t->v->parent;
         ecs_entity_t parent = flecs_script_type_ensure_owner(t);
         if (!parent && ecs_vec_get_t(
@@ -95727,12 +97035,14 @@ static int flecs_script_type_const(
         {
             return -1;
         }
+
         t->v->parent = parent;
         int result = flecs_script_eval_const(t->v, node, true);
         t->v->parent = old_parent;
         if (result || !flecs_script_symbol_entity(t->v, node->symbol)) {
             return -1;
         }
+
         return 0;
     }
 
@@ -95747,6 +97057,7 @@ static int flecs_script_type_const(
                 : table->owner->eval;
             parent_known = parent != 0;
         }
+
         if (parent_known) {
             ecs_entity_t existing = ecs_lookup_child(
                 t->v->world, parent, node->name);
@@ -95768,6 +97079,7 @@ static int flecs_script_type_const(
             "variable '%s' redeclared", node->name);
         return -1;
     }
+
     var->value.type = type;
     var->type_info = ecs_get_type_info(t->v->world, type);
     var->is_const = true;
@@ -95788,6 +97100,7 @@ static int flecs_script_type_const(
         var->is_const = true;
         var->owned = true;
     }
+
     return 0;
 }
 
@@ -95810,6 +97123,7 @@ static int flecs_script_type_template_var(
         if (flecs_script_skip_unknown_drop_var(t, node)) {
             return 0;
         }
+
         flecs_script_type_unresolved_ref(t, node, node->type,
             FlecsScriptUnresolvedComponent);
         if (!node->expr || node->expr->kind == EcsExprInitializer ||
@@ -95850,6 +97164,7 @@ static int flecs_script_type_template_var(
                 "prop '%s' is a template", node->type, node->name);
             return -1;
         }
+
         type = flecs_script_vector_type(t->v->world, ecs_id(ecs_entity_t));
     }
 
@@ -95860,9 +97175,11 @@ static int flecs_script_type_template_var(
                 flecs_script_type_skip_var(t, node->name);
                 return 0;
             }
+
             return -1;
         }
     }
+
     node->eval_type = type;
     return flecs_script_template_eval_var(t->v, node, mut);
 }
@@ -95879,6 +97196,7 @@ static ecs_entity_t flecs_script_type_interface_var(
             return vars[i].interface;
         }
     }
+
     return 0;
 }
 
@@ -95921,6 +97239,7 @@ static int flecs_script_type_for(
         if (expr_result) {
             return expr_result == 1 ? 0 : -1;
         }
+
         type = ecs_id(ecs_i32_t);
         expr_result = flecs_script_type_check_expr(t, &node->to, &type);
         if (expr_result) {
@@ -95932,12 +97251,14 @@ static int flecs_script_type_for(
         if (expr_result) {
             return expr_result == 1 ? 0 : -1;
         }
+
         if (flecs_script_for_collection_kind(
             t->v, node, type, &kind, &key_type, &elem_type))
         {
             return -1;
         }
     }
+
     if (flecs_script_for_check_var_count(t->v, node, kind)) {
         return -1;
     }
@@ -95951,21 +97272,26 @@ static int flecs_script_type_for(
         if (!var) {
             goto error;
         }
+
         node->loop_var_sp[var_i ++] = var->sp;
     }
+
     if (flecs_script_for_has_index_var(kind, node->loop_var_count)) {
         ecs_script_var_t *var = flecs_script_for_declare_var(
             t->v, node, node->loop_vars[var_i], ecs_id(ecs_i32_t), true);
         if (!var) {
             goto error;
         }
+
         node->loop_var_sp[var_i ++] = var->sp;
     }
+
     ecs_script_var_t *var = flecs_script_for_declare_var(
         t->v, node, node->loop_vars[var_i], elem_type, true);
     if (!var) {
         goto error;
     }
+
     node->loop_var_sp[var_i] = var->sp;
 
     {
@@ -95978,6 +97304,7 @@ static int flecs_script_type_for(
             iv->sp = var->sp;
             iv->interface = elem_interface;
         }
+
         t->for_depth ++;
         int result = flecs_script_type_control_scope(t, node->scope);
         t->for_depth --;
@@ -95999,12 +97326,15 @@ static ecs_entity_t flecs_script_type_ensure_owner(
     if (!table->owner) {
         return t->v->parent;
     }
+
     if (flecs_script_type_ensure_node(t, table->owner)) {
         return 0;
     }
+
     if (table->owner->symbol != -1) {
         return flecs_script_symbol_entity(t->v, table->owner->symbol);
     }
+
     return table->owner->eval;
 }
 
@@ -96026,11 +97356,13 @@ static int flecs_script_type_pair_scope(
         {
             continue;
         }
+
         if (i == 1) {
             flecs_script_type_declare(
                 t, name, NULL, slots[i], true);
             continue;
         }
+
         flecs_script_symbol_t symbol;
         if (flecs_script_type_lookup(
             t, 0, name, FlecsScriptLookupEntity, NULL, &symbol))
@@ -96055,9 +97387,11 @@ static int flecs_script_type_if(
     if (flecs_script_type_check_expr(t, &node->expr, NULL) == -1) {
         return -1;
     }
+
     if (flecs_script_type_control_scope(t, node->if_true)) {
         return -1;
     }
+
     return flecs_script_type_control_scope(t, node->if_false);
 }
 
@@ -96088,10 +97422,12 @@ static int flecs_script_type_try(
                 catch_->eval_error = symbol.entity;
             }
         }
+
         if (flecs_script_type_control_scope(t, catch_->scope)) {
             return -1;
         }
     }
+
     return 0;
 }
 
@@ -96121,6 +97457,7 @@ static int flecs_script_type_function(
         if (flecs_script_skip_unknown_drop_fn(t, node, node->return_type)) {
             return 0;
         }
+
         flecs_script_type_unresolved_ref(
             t, &node->return_type_node, node->return_type,
             FlecsScriptUnresolvedComponent);
@@ -96148,10 +97485,12 @@ static int flecs_script_type_function(
                     t, &params[i].node, params[i].type,
                     FlecsScriptUnresolvedComponent);
             }
+
             t->v->vars = ecs_script_vars_pop(t->v->vars);
             t->v->vars = outer_vars;
             return 0;
         }
+
         ecs_script_var_t *var = ecs_script_vars_declare(
             t->v->vars, params[i].name);
         if (!var) {
@@ -96160,6 +97499,7 @@ static int flecs_script_type_function(
                 params[i].name, node->name);
             goto error;
         }
+
         params[i].sp = var->sp;
         var->value.type = params[i].eval_type;
         var->type_info = ecs_get_type_info(
@@ -96176,12 +97516,14 @@ static int flecs_script_type_function(
         fn_desc.params[i].name = params[i].name;
         fn_desc.params[i].type = params[i].eval_type;
     }
+
     fn_entity = ecs_function_init(t->v->world, &fn_desc);
     if (!fn_entity) {
         flecs_script_eval_error(t->v, node,
             "failed to register function '%s'", node->name);
         goto error;
     }
+
     flecs_script_symbol_set(t->v, node->symbol, fn_entity);
     if (flecs_script_type_ensure_entities(t)) {
         goto error;
@@ -96198,6 +97540,7 @@ static int flecs_script_type_function(
         t->function_scope = old_function_scope;
         goto error;
     }
+
     if (node->return_expr) {
         ecs_entity_t return_type = node->eval_return_type;
         int expr_result = flecs_script_type_check_expr(
@@ -96209,9 +97552,11 @@ static int flecs_script_type_function(
                 t->v->vars = outer_vars;
                 return 0;
             }
+
             goto error;
         }
     }
+
     t->function_scope = old_function_scope;
 
     t->v->vars = ecs_script_vars_pop(t->v->vars);
@@ -96224,6 +97569,7 @@ static int flecs_script_type_function(
         ecs_delete(t->v->world, fn_entity);
         flecs_script_symbol_set(t->v, node->symbol, 0);
     }
+
     return result;
 error:
     t->v->vars = ecs_script_vars_pop(t->v->vars);
@@ -96232,6 +97578,7 @@ error:
         ecs_delete(t->v->world, fn_entity);
         flecs_script_symbol_set(t->v, node->symbol, 0);
     }
+
     return -1;
 }
 
@@ -96255,6 +97602,7 @@ static int flecs_script_type_entity(
         if (node->symbol == -1 && !t->for_depth && !t->function_scope) {
             node->symbol = flecs_script_type_slot_new(t, -1);
         }
+
         child_table = flecs_script_type_table_new(t, t->table, node);
     }
 
@@ -96272,6 +97620,7 @@ static int flecs_script_type_entity(
                 "invalid empty entity kind");
             return -1;
         }
+
         if (!ecs_os_strcmp(node->kind, "prefab")) {
 #ifdef FLECS_PREFAB
             node->eval_kind = EcsPrefab;
@@ -96295,6 +97644,7 @@ static int flecs_script_type_entity(
                         "variable '%s' must be of type entity", node->kind);
                     return -1;
                 }
+
                 node->kind_sp = symbol.sp;
             } else if (symbol.kind == FlecsScriptSymbolEntitySlot) {
                 node->kind_symbol = symbol.slot;
@@ -96314,6 +97664,7 @@ static int flecs_script_type_entity(
             node->is_type = false;
         }
     }
+
     if (node->is_type && (!allow_type || t->control_depth ||
         t->template_scope || t->function_scope))
     {
@@ -96334,6 +97685,7 @@ static int flecs_script_type_entity(
     if (!node->is_type) {
         ecs_vec_clear(&t->v->r->annot);
     }
+
     int32_t prev_unresolved = ecs_vec_count(
         &t->v->base.script->unresolved_refs);
     int result = flecs_script_type_scope(
@@ -96358,9 +97710,11 @@ static int flecs_script_type_entity(
         if (flecs_script_type_ensure_node(t, node)) {
             return -1;
         }
+
         if (entry) {
             entry = flecs_script_type_entity_from_node(t, node);
         }
+
         ecs_entity_t old_parent = t->v->parent;
         ecs_entity_t parent = entry
             ? flecs_script_type_parent(t, entry)
@@ -96373,10 +97727,12 @@ static int flecs_script_type_entity(
         if (result) {
             return -1;
         }
+
         if (node->symbol != -1) {
             flecs_script_symbol_set(t->v, node->symbol, out);
         }
     }
+
     return 0;
 }
 
@@ -96389,11 +97745,13 @@ static int flecs_script_type_template(
             "nested templates are not allowed");
         return -1;
     }
+
     flecs_script_type_declare(
         t, node->name, NULL, &node->symbol, true);
     if (flecs_script_type_ensure_entities(t)) {
         return -1;
     }
+
     ecs_entity_t old_parent = t->v->parent;
     ecs_entity_t parent = flecs_script_type_ensure_owner(t);
     if (!parent && ecs_vec_get_t(
@@ -96401,6 +97759,7 @@ static int flecs_script_type_template(
     {
         return -1;
     }
+
     t->v->parent = parent;
 
     node->eval_base = 0;
@@ -96447,6 +97806,7 @@ static int flecs_script_type_module(
         t->v->parent = old_parent;
         return -1;
     }
+
     ecs_add_id(t->v->world, node->eval, EcsModule);
     t->v->module = node->eval;
     t->v->parent = node->eval;
@@ -96474,6 +97834,7 @@ static int flecs_script_type_using(
     if (path) {
         flecs_strfree(a, path);
     }
+
     if (result || !symbol.entity) {
         if (flecs_script_is_skip_unknown(&t->v->base.script->pub)) {
             flecs_script_skip_unknown_warn(&t->v->base.script->pub, node->name,
@@ -96481,10 +97842,12 @@ static int flecs_script_type_using(
             node->node.skip = true;
             return 0;
         }
+
         flecs_script_type_unresolved_ref(t, node, node->name,
             FlecsScriptUnresolvedEntity);
         return -1;
     }
+
     node->eval = symbol.entity;
     return flecs_script_eval_node(&t->v->base, (ecs_script_node_t*)node);
 }
@@ -96536,6 +97899,7 @@ static int flecs_script_type_async(
     if (in_template) {
         v->vars = ecs_script_vars_pop(v->vars);
     }
+
     return result;
 #endif
 }
@@ -96549,11 +97913,13 @@ static int flecs_script_type_while(
             "while is only allowed in async blocks");
         return -1;
     }
+
     ecs_entity_t type = 0;
     int expr_result = flecs_script_type_check_expr(t, &node->expr, &type);
     if (expr_result == -1) {
         return -1;
     }
+
     if (!expr_result && type) {
         const EcsType *type_ptr = ecs_get(t->v->world, type, EcsType);
         if (!type_ptr || (type_ptr->kind != EcsPrimitiveType &&
@@ -96565,6 +97931,7 @@ static int flecs_script_type_while(
             return -1;
         }
     }
+
     t->for_depth ++;
     int result = flecs_script_type_control_scope(t, node->scope);
     t->for_depth --;
@@ -96579,6 +97946,7 @@ static bool flecs_script_type_is_number(
     if (!p) {
         return false;
     }
+
     switch(p->kind) {
     case EcsBool:
     case EcsChar:
@@ -96628,6 +97996,7 @@ static int flecs_script_type_assign(
                 "assignment requires a mut variable name");
             return -1;
         }
+
         m = flecs_script_template_parent_member(
             v->world, template, name, &component);
         if (m && component != template->parent_type) {
@@ -96636,6 +98005,7 @@ static int flecs_script_type_assign(
             m = NULL;
         }
     }
+
     if (!node->parent && var && template) {
         ecs_script_template_member_t *members = ecs_vec_first(&template->members);
         int32_t count = ecs_vec_count(&template->members);
@@ -96648,6 +98018,7 @@ static int flecs_script_type_assign(
             }
         }
     }
+
     if (!m) {
         flecs_script_eval_error(v, node,
             "cannot assign to '%s': only mut variables of a template can be "
@@ -96664,6 +98035,7 @@ static int flecs_script_type_assign(
             node->node.skip = true;
             return 0;
         }
+
         return -1;
     }
 
@@ -96677,6 +98049,7 @@ static int flecs_script_type_assign(
             flecs_errstr_1(ecs_get_path(v->world, var_type)), node->name);
         return -1;
     }
+
     type = var_type;
 
     node->eval_type = type;
@@ -96859,6 +98232,7 @@ int flecs_script_type_scope(
             ecs_vec_clear(&scope->set_components);
             break;
         }
+
         if (t->template_scope) {
             ecs_script_id_t *id = NULL;
             bool w_expr = false;
@@ -96870,6 +98244,7 @@ int flecs_script_type_scope(
             } else if (node->kind == EcsAstTag) {
                 id = &((ecs_script_tag_t*)node)->id;
             }
+
             if (id && id->eval && !id->interface && !id->dynamic) {
                 ecs_vec_append_t(&v->base.script->allocator,
                     &scope->components, ecs_id_t)[0] = id->eval;
@@ -96885,6 +98260,7 @@ int flecs_script_type_scope(
     if (push_vars) {
         v->vars = ecs_script_vars_pop(v->vars);
     }
+
     ecs_vec_set_count_t(NULL, &t->skipped_vars, const char*, old_skipped_vars);
     t->table = old_table;
     return result;
@@ -96904,6 +98280,7 @@ int flecs_script_visit_type_entity_expr(
         if (old_function_scope) {
             entity->symbol = -1;
         }
+
         t->function_scope = old_function_scope;
         return result;
     }
@@ -96937,6 +98314,7 @@ int flecs_script_visit_type_entity_expr(
     if (desc && desc->vars) {
         flecs_script_eval_pop_vars(&visitor);
     }
+
     flecs_script_eval_visit_fini(&visitor, &eval_desc);
     return result;
 }
@@ -97096,8 +98474,10 @@ ecs_expr_value_node_t* flecs_expr_char(
                 &parser->script->allocator, ecs_expr_value_node_t, result);
             return NULL;
         }
+
         result->storage.char_ = ch;
     }
+
     result->ptr = &result->storage.char_;
     result->node.type = ecs_id(ecs_char_t);
     return result;
@@ -97128,6 +98508,7 @@ ecs_expr_value_node_t* flecs_expr_uint(
     } else {
         result->node.type = ecs_id(ecs_i64_t);
     }
+
     return result;
 }
 
@@ -97316,6 +98697,7 @@ bool flecs_expr_explicit_cast_allowed(
         from_type = ecs_get(world, o->as_type, EcsType);
         ecs_assert(from_type != NULL, ECS_INTERNAL_ERROR, NULL);
     }
+
     if (to_type->kind == EcsOpaqueType) {
         const EcsOpaque *o = ecs_get(world, to, EcsOpaque);
         ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -97422,6 +98804,7 @@ int flecs_expr_visit_children(
                 return -1;
             }
         }
+
         for (i = 0; i < count; i ++) {
             if (action(&fragments[i].format.width, ctx) ||
                 action(&fragments[i].format.precision, ctx))
@@ -97429,6 +98812,7 @@ int flecs_expr_visit_children(
                 return -1;
             }
         }
+
         break;
     }
     case EcsExprInitializer:
@@ -97443,6 +98827,7 @@ int flecs_expr_visit_children(
                 return -1;
             }
         }
+
         break;
     }
     case EcsExprUnary:
@@ -97454,6 +98839,7 @@ int flecs_expr_visit_children(
         {
             return -1;
         }
+
         break;
     }
     case EcsExprIdentifier:
@@ -97466,6 +98852,7 @@ int flecs_expr_visit_children(
         {
             return -1;
         }
+
         n->args = (ecs_expr_initializer_t*)args;
         break;
     }
@@ -97481,6 +98868,7 @@ int flecs_expr_visit_children(
         {
             return -1;
         }
+
         break;
     }
     case EcsExprHas: {
@@ -97491,6 +98879,7 @@ int flecs_expr_visit_children(
         {
             return -1;
         }
+
         break;
     }
     case EcsExprCast:
@@ -97501,6 +98890,7 @@ int flecs_expr_visit_children(
         if (action(&n->expr, ctx)) {
             return -1;
         }
+
         ecs_expr_match_element_t *elems = ecs_vec_first(&n->elements);
         int32_t i, count = ecs_vec_count(&n->elements);
         for (i = 0; i < count; i ++) {
@@ -97510,11 +98900,13 @@ int flecs_expr_visit_children(
                 return -1;
             }
         }
+
         if (action(&n->any.compare, ctx) ||
             action(&n->any.expr, ctx))
         {
             return -1;
         }
+
         break;
     }
     case EcsExprRange: {
@@ -97524,6 +98916,7 @@ int flecs_expr_visit_children(
         {
             return -1;
         }
+
         break;
     }
     case EcsExprNew:
@@ -97587,6 +98980,7 @@ static void flecs_expr_format_parse_error(
     {
         column = flecs_ito(int32_t, parser->fixed_pos - parser->code);
     }
+
     ecs_parser_error(parser->name, parser->code,
         column, "%s", message);
 }
@@ -97652,6 +99046,7 @@ const char* flecs_expr_format_parse(
             if (separator[0] == '$') {
                 separator ++;
             }
+
             while (isalnum(separator[0]) || separator[0] == '_') {
                 separator ++;
             }
@@ -97664,14 +99059,17 @@ const char* flecs_expr_format_parse(
         if (separator) {
             separator[0] = '\0';
         }
+
         const char *expr_end = flecs_script_parse_expr(
             parser, pos, 0, &format->width);
         if (separator) {
             separator[0] = '.';
         }
+
         if (!expr_end) {
             return NULL;
         }
+
         pos = separator ? separator : expr_end;
     }
 
@@ -97692,6 +99090,7 @@ const char* flecs_expr_format_parse(
             if (end[0] == '$') {
                 end ++;
             }
+
             while (isalnum(end[0]) || end[0] == '_') {
                 end ++;
             }
@@ -97712,9 +99111,11 @@ const char* flecs_expr_format_parse(
         if (notation) {
             notation[0] = notation_ch;
         }
+
         if (!expr_end) {
             return NULL;
         }
+
         pos = notation ? notation : expr_end;
     }
 
@@ -97759,16 +99160,19 @@ int flecs_expr_format_value(
             "minimum width must not be negative");
         return -1;
     }
+
     if (format->width && width > 1024) {
         flecs_expr_visit_error(script, node,
             "minimum width must not exceed 1024");
         return -1;
     }
+
     if (format->precision && precision < 0) {
         flecs_expr_visit_error(script, node,
             "precision must not be negative");
         return -1;
     }
+
     if (format->precision && precision > 1024) {
         flecs_expr_visit_error(script, node,
             "precision must not exceed 1024");
@@ -97794,11 +99198,13 @@ int flecs_expr_format_value(
             fmt_ptr[0] = '+';
             fmt_ptr ++;
         }
+
         if (precision >= 0) {
             fmt_ptr[0] = '.';
             fmt_ptr[1] = '*';
             fmt_ptr += 2;
         }
+
         fmt_ptr[0] = format->notation ? format->notation : 'f';
         fmt_ptr[1] = '\0';
 
@@ -97813,11 +99219,13 @@ int flecs_expr_format_value(
                 "precision is only supported for f32 and f64 values");
             return -1;
         }
+
         if (format->notation) {
             flecs_expr_visit_error(script, node,
                 "scientific notation is only supported for f32 and f64 values");
             return -1;
         }
+
         char *value_str = *(char**)value->ptr;
         str = ecs_os_strdup(value_str ? value_str : "null");
     } else {
@@ -97826,6 +99234,7 @@ int flecs_expr_format_value(
                 "precision is only supported for f32 and f64 values");
             return -1;
         }
+
         if (format->notation) {
             flecs_expr_visit_error(script, node,
                 "scientific notation is only supported for f32 and f64 values");
@@ -97873,6 +99282,7 @@ int flecs_expr_format_value(
             ecs_strbuf_appendch(buf, number_ptr[0]);
             number_ptr ++;
         }
+
         flecs_expr_format_append_fill(buf, '0', padding);
         ecs_strbuf_appendstr(buf, number_ptr);
     } else if (format->alignment == '<') {
@@ -97944,6 +99354,7 @@ static bool flecs_has_precedence(
     if (!flecs_expr_precedence[first]) {
         return false;
     }
+
     return flecs_expr_precedence[first] <= flecs_expr_precedence[second];
 }
 
@@ -98065,9 +99476,11 @@ const char* flecs_script_parse_initializer(
                 if ((char)lookahead_token.kind != until) {
                     Error("expected '%c'", until);
                 }
+
                 if (first) {
                     node->node.kind = EcsExprEmptyInitializer;
                 }
+
                 pos = lookahead - 1;
                 EndOfRule;
             })
@@ -98177,6 +99590,7 @@ const char* flecs_script_parse_initializer(
                     if ((char)lookahead_token.kind != until) {
                         Error("expected '%c'", until);
                     }
+
                     EndOfRule;
                 }
 
@@ -98247,6 +99661,7 @@ static const char* flecs_script_parse_rhs(
                 } else {
                     Error("unexpected number");
                 }
+
             case EcsTokAdd:
             case EcsTokSub:
             case EcsTokMul:
@@ -98451,6 +99866,7 @@ static const char* flecs_script_parse_lhs(
                 *out = (ecs_expr_node_t*)flecs_expr_uint(parser, 
                     strtoull(expr, &end, base));
             }
+
             break;
         }
 
@@ -98466,6 +99882,7 @@ static const char* flecs_script_parse_lhs(
             } else {
                 *out = (ecs_expr_node_t*)flecs_expr_string(parser, Token(0));
             }
+
             break;
         }
 
@@ -98578,6 +99995,7 @@ static const char* flecs_script_parse_lhs(
                 parser->significant_newline = old_significant_newline;
                 goto error;
             }
+
             parser->function_token = old_function_token;
             parser->significant_newline = old_significant_newline;
 
@@ -98623,6 +100041,7 @@ static const char* flecs_script_parse_lhs(
                 if (!node->script) {
                     goto error;
                 }
+
                 break;
             })
 
@@ -98658,6 +100077,7 @@ static const char* flecs_script_parse_lhs(
             {
                 ((ecs_expr_initializer_t*)node)->is_collection = true;
             }
+
             *out = node;
 
             Parse(
@@ -98717,6 +100137,7 @@ const char* flecs_script_parse_expr(
             flecs_script_parser_expr_free(parser, *out);
             *out = NULL;
         }
+
         return NULL;
     }
 
@@ -98872,6 +100293,7 @@ char* ecs_script_string_interpolate(
             ecs_os_free(result);
             return NULL;
         }
+
         return result;
     }
 
@@ -98906,6 +100328,7 @@ static void flecs_expr_value_free(
         if (ti->hooks.dtor) {
             flecs_type_info_dtor(v->value.ptr, 1, ti);
         }
+
         flecs_stack_free(v->value.ptr, ti->size);
     }
 }
@@ -98966,6 +100389,7 @@ ecs_expr_value_t* flecs_expr_stack_result(
     if (!flecs_expr_node_borrows_result(node)) {
         flecs_expr_stack_storage(stack, v);
     }
+
     return v;
 }
 
@@ -99057,15 +100481,25 @@ static bool flecs_value_bool_to_number(
     ecs_entity_t type = dst->type;
     void *ptr = dst->ptr;
     if (type == ecs_id(ecs_f32_t)) { *(float*)ptr = value ? 1.0f : 0.0f; return true; }
+
     if (type == ecs_id(ecs_f64_t)) { *(double*)ptr = value ? 1.0 : 0.0; return true; }
+
     if (type == ecs_id(ecs_i32_t)) { *(int32_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_i64_t)) { *(int64_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_u32_t)) { *(uint32_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_u64_t)) { *(uint64_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_i8_t))  { *(int8_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_i16_t)) { *(int16_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_u8_t))  { *(uint8_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_u16_t)) { *(uint16_t*)ptr = value; return true; }
+
     return false;
 }
 
@@ -99195,15 +100629,18 @@ int flecs_value_binary(
     if (operator == EcsTokAddAssign || operator == EcsTokMulAssign) {
         left = out;
     }
+
     if ((operator == EcsTokDiv || operator == EcsTokMod) && flecs_value_is_0(right)) {
         flecs_expr_visit_error(script, node, "division by zero");
         return -1;
     }
+
     if (operator == EcsTokAnd || operator == EcsTokOr) {
         bool l = *(bool*)left->ptr, r = *(bool*)right->ptr;
         *(bool*)out->ptr = operator == EcsTokAnd ? l && r : l || r;
         return 0;
     }
+
     if (right->type == ecs_id(ecs_string_t)) {
         char *l = *(char**)left->ptr, *r = *(char**)right->ptr;
         ecs_assert(operator == EcsTokEq || operator == EcsTokNeq, ECS_INTERNAL_ERROR, NULL);
@@ -99212,6 +100649,7 @@ int flecs_value_binary(
             : l == r;
         return 0;
     }
+
     if (operator == EcsTokAdd || operator == EcsTokSub || operator == EcsTokMul ||
         operator == EcsTokDiv || operator == EcsTokMod || operator == EcsTokBitwiseAnd ||
         operator == EcsTokBitwiseOr || operator == EcsTokShiftLeft || operator == EcsTokShiftRight ||
@@ -99316,6 +100754,7 @@ bool flecs_value_is_0(
     if (!info || !(info->integer || info->floating_point || info->kind == EcsBool)) {
         return true;
     }
+
     uint64_t zero = 0;
     return !ecs_os_memcmp(value->ptr, &zero, info->size);
 }
@@ -99373,6 +100812,7 @@ static inline ecs_expr_value_t* flecs_expr_eval_result(
         literal->owned = false;
         return literal;
     }
+
     ecs_expr_value_t *result = flecs_expr_stack_result(ctx->stack, node);
     return flecs_expr_visit_eval_priv(ctx, node, result) ? NULL : result;
 }
@@ -99419,6 +100859,7 @@ static int flecs_expr_interpolated_fragment_eval(
             if (!format_val) {
                 return -1;
             }
+
             ecs_assert(format_val->value.type == ecs_id(ecs_i32_t),
                 ECS_INTERNAL_ERROR, NULL);
             format_values[f][0] = *(int32_t*)format_val->value.ptr;
@@ -99457,6 +100898,7 @@ static int flecs_expr_interpolated_string_visit_eval(
         if (fragment) {
             ecs_strbuf_appendstr(&buf, fragment);
         }
+
         if (fragments[i].expr) {
             flecs_expr_stack_push(ctx->stack);
 
@@ -99537,11 +100979,13 @@ static int flecs_expr_initializer_eval_static(
                 inner_value = ECS_OFFSET(value, elem->offset);
                 inner_size = inner->node.type_info->size;
             }
+
             if (flecs_expr_initializer_eval(ctx,
                 inner, inner_value, NULL, inner_size))
             {
                 goto error;
             }
+
             continue;
         }
 
@@ -99570,6 +101014,7 @@ static int flecs_expr_initializer_eval_static(
                 ecs_os_memcpy(ECS_OFFSET(value, offset),
                     ECS_OFFSET(left->value.ptr, swizzle->src[s]), size);
             }
+
             continue;
         }
 
@@ -99680,6 +101125,7 @@ static int flecs_expr_initializer_eval_dynamic(
             {
                 goto error;
             }
+
             continue;
         }
 
@@ -99708,6 +101154,7 @@ static int flecs_expr_initializer_eval_dynamic(
                     goto error;
                 }
             }
+
             continue;
         }
 
@@ -99901,6 +101348,7 @@ static int flecs_expr_identifier_set_entity(
             "failed to assign identifier '%s'", node->value);
         return -1;
     }
+
     return 0;
 }
 
@@ -99921,6 +101369,7 @@ static int flecs_expr_identifier_visit_eval(
                 "unresolved identifier '%s'", node->value);
             goto error;
         }
+
         if (flecs_expr_identifier_set_entity(ctx, node, out,
             entity))
         {
@@ -99973,9 +101422,11 @@ static int flecs_expr_variable_visit_eval(
         {
             symbol.sp = -1;
         }
+
         var = symbol.sp == -1 ? NULL : ecs_script_vars_from_sp(
             ctx->desc->vars, symbol.sp);
     }
+
     if (!var) {
         flecs_expr_visit_error(ctx->script, node, "unresolved variable '%s'",
             node->name);
@@ -100224,6 +101675,7 @@ static int flecs_expr_function_visit_eval(
     if (method && !node->left) {
         return 0;
     }
+
     flecs_expr_stack_push(ctx->stack);
     ecs_value_t receiver = {0};
     if (method) {
@@ -100232,6 +101684,7 @@ static int flecs_expr_function_visit_eval(
         if (!expr) {
             goto error;
         }
+
         receiver = expr->value;
     }
 
@@ -100261,6 +101714,7 @@ static int flecs_expr_function_visit_eval(
         if (method) {
             argv[0] = receiver;
         }
+
         if (flecs_expr_function_args_visit_eval(ctx, node->args, argv + method)) {
             goto error;
         }
@@ -100555,6 +102009,7 @@ static int flecs_expr_match_visit_eval(
             if (flecs_expr_visit_eval_priv(ctx, elem->expr, out)) {
                 goto error;
             }
+
             break;
         }
     }
@@ -100739,6 +102194,7 @@ static int flecs_expr_has_visit_eval(
             flecs_script_record_dyn_ref(v->base.script, entity, node->id,
                 node->dyn_input, true);
         }
+
         *(bool*)out->value.ptr = ecs_has_id(ctx->world, entity, node->id);
     } else {
         *(bool*)out->value.ptr = false;
@@ -100924,6 +102380,7 @@ int flecs_expr_visit_eval(
     if (desc && desc->runtime) {
         stack = &desc->runtime->expr_stack;
     }
+
     if (!stack) {
         stack = &stack_local;
         flecs_expr_stack_init(stack);
@@ -100994,12 +102451,14 @@ int flecs_expr_visit_eval(
     if (stack == &stack_local) {
         flecs_expr_stack_fini(stack);
     }
+
     return 0;
 error:
     flecs_expr_stack_pop(stack);
     if (stack == &stack_local) {
         flecs_expr_stack_fini(stack);
     }
+
     return -1;
 }
 
@@ -101021,9 +102480,11 @@ static int flecs_expr_fold_child(
     if (!*node || !(*node)->type) {
         return 0;
     }
+
     if (flecs_expr_visit_fold(ctx->script, node, ctx->desc)) {
         return -1;
     }
+
     ctx->can_fold &= (*node)->kind == EcsExprValue;
     return 0;
 }
@@ -101060,12 +102521,14 @@ static int flecs_expr_fold_eval(
         if (flecs_value_unary(script, &value, &value, unary->operator)) {
             return -1;
         }
+
         unary->expr = NULL;
         result->node.pos = node->pos;
         result->node.end = node->end;
         flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
         return 0;
     }
+
     ecs_expr_value_node_t *result = flecs_expr_value_from(script, node, node->type);
     const ecs_type_info_t *ti = result->node.type_info;
     if (ti->size > ECS_SIZEOF(result->storage) || ti->hooks.dtor) {
@@ -101074,6 +102537,7 @@ static int flecs_expr_fold_eval(
     } else {
         flecs_type_info_ctor(result->ptr, 1, ti);
     }
+
     ecs_value_t value = { .type = node->type, .ptr = result->ptr };
     int ret;
     if (node->kind == EcsExprCastNumber) {
@@ -101089,10 +102553,12 @@ static int flecs_expr_fold_eval(
     } else {
         ret = flecs_expr_visit_eval(script, node, desc, &value);
     }
+
     if (ret) {
         flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
         return -1;
     }
+
     flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     return 0;
 }
@@ -101155,6 +102621,7 @@ static int flecs_expr_pure_visit_fold(
     if (flecs_expr_visit_children(*node_ptr, flecs_expr_fold_child, &ctx)) {
         return -1;
     }
+
     return ctx.can_fold ? flecs_expr_fold_eval(script, node_ptr, desc) : 0;
 }
 
@@ -101185,6 +102652,7 @@ static int flecs_expr_initializer_pre_fold(
             {
                 goto error;
             }
+
             continue;
         }
 
@@ -101221,6 +102689,7 @@ static int flecs_expr_initializer_visit_fold(
     if (flecs_expr_initializer_pre_fold(script, node, desc, &can_fold)) {
         return -1;
     }
+
     return can_fold ? flecs_expr_fold_eval(script, node_ptr, desc) : 0;
 }
 
@@ -101240,6 +102709,7 @@ static int flecs_expr_identifier_visit_fold(
             flecs_expr_visit_free(script, expr);
             goto error;
         }
+
         flecs_visit_fold_replace(script, node_ptr, expr);
     }
 
@@ -101327,6 +102797,7 @@ static int flecs_expr_match_visit_fold(
     if (flecs_expr_fold_children(script, &node->node, desc)) {
         goto error;
     }
+
     int32_t i, count = ecs_vec_count(&node->elements);
     ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
 
@@ -101373,6 +102844,7 @@ static int flecs_expr_match_visit_fold(
         if (!node->any.expr) {
             return 0;
         }
+
         selected = &node->any.expr;
     }
 
@@ -101434,6 +102906,7 @@ int flecs_expr_visit_fold(
         if (flecs_expr_visit_fold(script, &function->left, desc)) {
             goto error;
         }
+
         return function->args ? flecs_expr_fold_children(
             script, (ecs_expr_node_t*)function->args, desc) : 0;
     }
@@ -101495,6 +102968,7 @@ void flecs_expr_visit_free(
             ecs_ptr_free_w_type_info(script->world, node->type_info, n->ptr);
             flecs_type_info_release(node->type_info);
         }
+
         break;
     }
     case EcsExprInterpolatedString: {
@@ -101516,6 +102990,7 @@ void flecs_expr_visit_free(
         if (var->owns_name) {
             flecs_strfree(a, ECS_CONST_CAST(char*, var->name));
         }
+
         break;
     }
     case EcsExprMatch:
@@ -101527,6 +103002,7 @@ void flecs_expr_visit_free(
         if (entity) {
             flecs_script_visit_free_node(script, (ecs_script_node_t*)entity);
         }
+
         break;
     }
     case EcsExprScript: {
@@ -101534,6 +103010,7 @@ void flecs_expr_visit_free(
         if (nested) {
             ecs_script_free(nested);
         }
+
         break;
     }
     default:
@@ -101571,6 +103048,7 @@ static ecs_entity_t flecs_expr_ref_entity(
                     identifier->symbol)->entity;
             }
         }
+
         return entity;
     }
 
@@ -101608,6 +103086,7 @@ static int flecs_expr_ref_visit(
     if (!node) {
         return 0;
     }
+
     flecs_expr_ref_ctx_t *ctx = ptr;
     const ecs_script_t *script = ctx->script;
     switch(node->kind) {
@@ -101620,6 +103099,7 @@ static int flecs_expr_ref_visit(
             };
             return ctx->action(&ref, NULL, ctx->ctx);
         }
+
         break;
     }
     case EcsExprFunction:
@@ -101628,6 +103108,7 @@ static int flecs_expr_ref_visit(
         if (flecs_expr_visit_children(node, flecs_expr_ref_visit, ctx)) {
             return -1;
         }
+
         if (n->calldata.is.callback == flecs_script_user_function_callback)
         {
             const EcsScriptFunction *fn = ecs_get(
@@ -101643,6 +103124,7 @@ static int flecs_expr_ref_visit(
                 }
             }
         }
+
         return 0;
     }
     case EcsExprComponent:
@@ -101660,10 +103142,12 @@ static int flecs_expr_ref_visit(
             if (!ref.entity) {
                 ref.name = flecs_expr_ref_var_name(left);
             }
+
             if (ctx->action(&ref, ref.entity ? NULL : node, ctx->ctx)) {
                 return -1;
             }
         }
+
         return flecs_expr_ref_visit(&left, ctx);
     }
     default:
@@ -101747,10 +103231,12 @@ static void flecs_expr_interpolated_string_to_str(
             ecs_strbuf_appendlit(v->buf, "\"");
             flecs_expr_color_to_str(v, ECS_NORMAL);
         }
+
         if (fragments[i].expr) {
             if (fragment) {
                 ecs_strbuf_appendlit(v->buf, ", ");
             }
+
             flecs_expr_node_to_str(v, fragments[i].expr);
         }
     }
@@ -101858,6 +103344,7 @@ static void flecs_expr_type_to_str(
         ecs_strbuf_appendstr(v->buf, path);
         ecs_os_free(path);
     }
+
     flecs_expr_color_to_str(v, ECS_NORMAL);
     ecs_strbuf_appendlit(v->buf, "(");
 }
@@ -101936,6 +103423,7 @@ static void flecs_expr_node_to_str(
     if (v->failed) {
         return;
     }
+
     const char *suffix = NULL;
 
     switch(node->kind) {
@@ -102114,14 +103602,17 @@ static void flecs_expr_unresolved_component_ref(
     if (!v || !v->type_visitor) {
         return;
     }
+
     if (left->kind == EcsExprIdentifier) {
         left = ((ecs_expr_identifier_t*)left)->expr;
     }
+
     if (!left || left->kind != EcsExprValue ||
         left->type != ecs_id(ecs_entity_t))
     {
         return;
     }
+
     ecs_entity_t src = ((ecs_expr_value_node_t*)left)->storage.entity;
     if (src && !ecs_has_id(script->world, src, component)) {
         ecs_script_impl_t *impl = flecs_script_impl(script);
@@ -102146,6 +103637,7 @@ static bool flecs_expr_skip_unknown_unresolved_ref(
     if (!flecs_script_is_skip_unknown(script)) {
         return false;
     }
+
     return flecs_expr_unresolved_ref(script, desc, node, name, kind);
 }
 
@@ -102247,6 +103739,7 @@ static int32_t flecs_expr_expressiveness_score(
     if (info) {
         return info->expressiveness;
     }
+
     return false;
 }
 
@@ -102257,6 +103750,7 @@ static ecs_size_t flecs_expr_storage_score(
     if (info) {
         return flecs_ito(ecs_size_t, info->storage);
     }
+
     return false;
 }
 
@@ -102267,6 +103761,7 @@ ecs_size_t flecs_expr_storage_size(
     if (info) {
         return info->size;
     }
+
     return false;
 }
 
@@ -102308,11 +103803,13 @@ static ecs_entity_t flecs_expr_narrow_type(
     if (node->kind != EcsExprValue) {
         return node->type;
     }
+
     const flecs_expr_type_info_t *info = flecs_expr_type_info(node->type);
     if (!info || !(info->integer || info->floating_point))
     {
         return node->type;
     }
+
     if (info->floating_point || info->kind == EcsIPtr || info->kind == EcsUPtr) {
         return lvalue == ecs_id(ecs_f32_t) ? lvalue : node->type;
     }
@@ -102327,8 +103824,10 @@ static ecs_entity_t flecs_expr_narrow_type(
         } else if (value >= INT32_MIN && value <= INT32_MAX) {
             return ecs_id(ecs_i32_t);
         }
+
         return ecs_id(ecs_i64_t);
     }
+
     if (value <= UINT8_MAX) {
         return ecs_id(ecs_u8_t);
     } else if (value <= UINT16_MAX) {
@@ -102336,6 +103835,7 @@ static ecs_entity_t flecs_expr_narrow_type(
     } else if (value <= UINT32_MAX) {
         return ecs_id(ecs_u32_t);
     }
+
     return ecs_id(ecs_u64_t);
 }
 
@@ -102688,6 +104188,7 @@ static int flecs_expr_type_for_operator(
             *operand_type = ecs_id(ecs_i64_t);
             goto done;
         }
+
         if (rtype == ecs_id(ecs_i8_t) || rtype == ecs_id(ecs_i16_t) ||
             rtype == ecs_id(ecs_i32_t) || rtype == ecs_id(ecs_i64_t))
         {
@@ -102918,6 +104419,7 @@ static int flecs_expr_interpolated_string_visit_type(
                         if (!cast) {
                             goto error;
                         }
+
                         format_value[0] = cast;
                     }
                 }
@@ -102927,6 +104429,7 @@ static int flecs_expr_interpolated_string_visit_type(
                 if (!cast) {
                     goto error;
                 }
+
                 *result = cast;
             }
 
@@ -103034,6 +104537,7 @@ static bool flecs_expr_initializer_is_dynamic(
         return t->kind == EcsOpaqueType || t->kind == EcsVectorType ||
             t->kind == EcsMapType || t->kind == EcsValueType;
     }
+
     return false;
 }
 
@@ -103202,6 +104706,7 @@ static int flecs_expr_anonymous_collection_visit_type(
             if (!cast) {
                 goto error;
             }
+
             elem->value = cast;
         }
     }
@@ -103273,6 +104778,7 @@ static int flecs_expr_initializer_visit_type(
                 goto error;
             }
         }
+
         prev_removed = false;
 
         ecs_expr_initializer_element_t *elem = &elems[i];
@@ -103305,6 +104811,7 @@ static int flecs_expr_initializer_visit_type(
                 if (!cast) {
                     goto error;
                 }
+
                 elem->key = cast;
             }
         } else {
@@ -103323,6 +104830,7 @@ static int flecs_expr_initializer_visit_type(
             if (skip_unknown) {
                 ecs_log_set_level(prev_log);
             }
+
             if (dotmember_result) { /* x: */
                 if (!skip_unknown) {
                     flecs_expr_visit_error(script, node,
@@ -103396,6 +104904,7 @@ static int flecs_expr_initializer_visit_type(
                         arr_count =
                             arr_cur.scope[arr_cur.depth - 1].elem_count;
                     }
+
                     ecs_log_set_level(arr_log);
                     if (arr_count == val_arr->count) {
                         array_assign = true;
@@ -103422,10 +104931,12 @@ static int flecs_expr_initializer_visit_type(
                         goto error;
                     }
                 }
+
                 elem->value = NULL;
                 if (ecs_meta_pop(cur)) {
                     goto error;
                 }
+
                 flecs_expr_visit_free(script, (ecs_expr_node_t*)node);
                 *node_ptr = value;
                 return 0;
@@ -103451,6 +104962,7 @@ static int flecs_expr_initializer_visit_type(
             if (!cast) {
                 goto error;
             }
+
             elem->value = cast;
         }
 
@@ -103520,6 +105032,7 @@ static int flecs_expr_unary_visit_type(
         if (!cast) {
             goto error;
         }
+
         node->expr = cast;
     }
 
@@ -103622,6 +105135,7 @@ static int flecs_expr_binary_visit_type(
             if (!cast) {
                 goto error;
             }
+
             node->left = cast;
         }
 
@@ -103651,6 +105165,7 @@ static int flecs_expr_binary_visit_type(
             if (!cast) {
                 goto error;
             }
+
             node->right = cast;
         }
     }
@@ -103734,6 +105249,7 @@ static int flecs_expr_identifier_variable_member_visit_type(
             if (symbol.kind == FlecsScriptSymbolVariable) {
                 break;
             }
+
             if (symbol.kind == FlecsScriptSymbolGlobalVariable &&
                 symbol.entity && flecs_script_global_var_get(
                     script->world, symbol.entity, NULL).ptr)
@@ -103787,6 +105303,7 @@ static int flecs_expr_parent_member_visit_type(
     if (!template || !template->parent_type) {
         return 1;
     }
+
     const char *name = node->value;
     bool qualified = !ecs_os_strncmp(name, "parent.", 7);
     if (qualified) {
@@ -103804,6 +105321,7 @@ static int flecs_expr_parent_member_visit_type(
             }
         }
     }
+
     ecs_entity_t component = 0;
     if (!flecs_script_template_parent_member(
         script->world, template, name, &component))
@@ -103832,6 +105350,7 @@ static int flecs_expr_parent_member_visit_type(
     if (flecs_expr_visit_type_priv(script, &node->expr, cur, desc)) {
         return -1;
     }
+
     node->node.type = node->expr->type;
     flecs_script_ref_ensure(&template->dynamic_refs, &(ecs_script_ref_t){
         .name = "#parent",
@@ -103853,6 +105372,7 @@ static int flecs_expr_identifier_visit_type(
         flecs_expr_visit_free(script, node->expr);
         node->expr = NULL;
     }
+
     node->symbol = -1;
 
     ecs_entity_t type = node->node.type;
@@ -103917,6 +105437,7 @@ static int flecs_expr_identifier_visit_type(
                     "cannot use anonymous entity as value");
                 goto error;
             }
+
             if (symbol.kind == FlecsScriptSymbolEntitySlot) {
                 bool is_opaque = false;
                 if (!type || type == ecs_id(ecs_value_t)) {
@@ -103931,6 +105452,7 @@ static int flecs_expr_identifier_visit_type(
                     ecs_os_free(type_str);
                     goto error;
                 }
+
                 node->symbol = symbol.slot;
                 node->node.type = type;
                 return 0;
@@ -103940,6 +105462,7 @@ static int flecs_expr_identifier_visit_type(
             if (e) {
                 global = flecs_script_global_var_get(script->world, e, NULL);
             }
+
             if (!global.ptr) {
                 bool is_opaque = false;
                 if (!type || type == ecs_id(ecs_value_t)) {
@@ -104010,6 +105533,7 @@ static int flecs_expr_identifier_visit_type(
                 flecs_expr_visit_error(script, node,
                     "unresolved identifier '%s'", node->value);
             }
+
             goto error;
         }
 
@@ -104040,8 +105564,10 @@ static int flecs_expr_global_variable_resolve(
             flecs_expr_visit_error(script, node, "unresolved variable '%s'",
                 node->name);
         }
+
         goto error;
     }
+
     ecs_entity_t global = symbol.entity;
 
     ecs_id_t component = 0;
@@ -104183,6 +105709,7 @@ static int flecs_expr_arguments_visit_type(
             if (!cast) {
                 goto error;
             }
+
             elem->value = cast;
         }
     }
@@ -104366,6 +105893,7 @@ static int flecs_expr_function_visit_type(
             last_elem[0] = '\0';
             is_split = true;
         }
+
         is_method = true;
     }
 
@@ -104391,6 +105919,7 @@ static int flecs_expr_function_visit_type(
         {
             func = symbol.entity;
         }
+
         if (!func) {
             const EcsType *type = ecs_get(world, node->left->type, EcsType);
             if (type && (type->kind == EcsArrayType ||
@@ -104401,6 +105930,7 @@ static int flecs_expr_function_visit_type(
                 func = ecs_lookup_child(world, collection, node->function_name);
             }
         }
+
         if (!func) {
             /* If identifier could be a function (not a method), try that */
             if (func_identifier) {
@@ -104464,8 +105994,10 @@ try_function:
                     "unresolved function identifier '%s'",
                     node->function_name);
             }
+
             goto error;
         }
+
         ecs_entity_t func = symbol.entity;
 
         func_data = ecs_get(world, func, EcsScriptFunction);
@@ -104534,9 +106066,11 @@ error:
         node->left = (ecs_expr_node_t*)replaced_member;
         node->function_name = NULL;
     }
+
     if (node->node.kind == EcsExprMethod) {
         node->node.kind = EcsExprFunction;
     }
+
     return -1;
 }
 
@@ -104564,9 +106098,11 @@ static int flecs_expr_member_try_swizzle(
         if (!member->name[0] || member->name[1]) {
             return 1;
         }
+
         if (!ecs_owns(world, member->type, EcsPrimitive)) {
             return 1;
         }
+
         if (!elem_type) {
             elem_type = member->type;
         } else if (member->type != elem_type) {
@@ -104592,9 +106128,11 @@ static int flecs_expr_member_try_swizzle(
                 break;
             }
         }
+
         if (m == member_count) {
             return 1;
         }
+
         offsets[i] = flecs_ito(uint16_t, members[m].offset);
     }
 
@@ -104622,6 +106160,7 @@ static int flecs_expr_member_try_swizzle(
                 "cannot determine type for swizzle '%s'", name);
             return -1;
         }
+
         result_type = left_type;
     }
 
@@ -104723,6 +106262,7 @@ static int flecs_expr_member_visit_type(
         ecs_os_free(type_str);
         goto error;
     }
+
     ecs_log_set_level(prev_log);
 
     node->node.type = ecs_meta_get_type(cur);
@@ -104742,6 +106282,7 @@ static int flecs_expr_member_visit_type(
         if (!ecs_meta_push(&elem_cur) && ecs_meta_is_collection(&elem_cur)) {
             elem_count = elem_cur.scope[elem_cur.depth - 1].elem_count;
         }
+
         ecs_log_set_level(prev_log);
 
         if (elem_count > 0) {
@@ -104750,6 +106291,7 @@ static int flecs_expr_member_visit_type(
             if (!array_type) {
                 goto error;
             }
+
             node->node.type = array_type;
         }
     }
@@ -104819,8 +106361,10 @@ static int flecs_expr_element_visit_type(
                         "unresolved component identifier '%s'",
                             ident->value);
                 }
+
                 goto error;
             }
+
             node->node.type = symbol.entity;
             if (!node->node.type) {
                 if (!flecs_expr_skip_unknown_unresolved_ref(script, desc,
@@ -104831,6 +106375,7 @@ static int flecs_expr_element_visit_type(
                         "unresolved component identifier '%s'",
                             ident->value);
                 }
+
                 goto error;
             }
 
@@ -104841,6 +106386,7 @@ static int flecs_expr_element_visit_type(
                 {
                     goto error;
                 }
+
                 char *type_str = ecs_get_path(world, node->node.type);
                 flecs_expr_visit_error(script, node,
                     "cannot use [] with component '%s' "
@@ -104973,6 +106519,7 @@ static int flecs_expr_has_visit_type(
     if (flecs_expr_has_id_elem_name(script, node, node->first, &first_name)) {
         goto error;
     }
+
     if (node->second && flecs_expr_has_id_elem_name(
         script, node, node->second, &second_name))
     {
@@ -104991,6 +106538,7 @@ static int flecs_expr_has_visit_type(
             flecs_expr_visit_error(script, node,
                 "unresolved component identifier '%s'", unresolved);
         }
+
         goto error;
     }
 
@@ -105044,6 +106592,7 @@ static bool flecs_expr_identifier_is_any(
             return true;
         }
     }
+
     return false;
 }
 
@@ -105130,6 +106679,7 @@ static int flecs_expr_match_visit_type(
             if (!cast) {
                 goto error;
             }
+
             elem->expr = cast;
         }
     }
@@ -105185,6 +106735,7 @@ static int flecs_expr_match_visit_type(
                 if (!cast) {
                     goto error;
                 }
+
                 elem->compare = cast;
             }
         }
@@ -105219,6 +106770,7 @@ static int flecs_expr_range_visit_type(
         if (!cast) {
             goto error;
         }
+
         node->from = cast;
     }
 
@@ -105228,6 +106780,7 @@ static int flecs_expr_range_visit_type(
         if (!cast) {
             goto error;
         }
+
         node->to = cast;
     }
 
@@ -105245,6 +106798,7 @@ static int flecs_expr_range_visit_type(
             ecs_os_free(type_str);
             goto error;
         }
+
         node->node.type = type;
     } else {
         node->node.type = flecs_script_vector_type(
@@ -105274,6 +106828,7 @@ static int flecs_expr_new_visit_type(
     {
         return -1;
     }
+
     node->node.type = ecs_id(ecs_entity_t);
     return 0;
 }
@@ -105540,6 +107095,7 @@ static int32_t flecs_irc_reg(
     if (c->reg_count > c->reg_max) {
         c->reg_max = c->reg_count;
     }
+
     return reg;
 }
 
@@ -105553,6 +107109,7 @@ static int32_t flecs_irc_entry_add(
     if (existing) {
         return (int32_t)*existing;
     }
+
     int32_t count = ecs_vec_count(&c->ir->entries);
     ecs_script_ir_entry_t *entry = ecs_vec_append_t(
         NULL, &c->ir->entries, ecs_script_ir_entry_t);
@@ -105569,21 +107126,33 @@ static ecs_script_ir_num_class_t flecs_irc_num_class(
     int32_t *size)
 {
     if (type == ecs_id(ecs_i8_t))  { *size = 1; return EcsIrNumSigned; }
+
     if (type == ecs_id(ecs_i16_t)) { *size = 2; return EcsIrNumSigned; }
+
     if (type == ecs_id(ecs_i32_t)) { *size = 4; return EcsIrNumSigned; }
+
     if (type == ecs_id(ecs_i64_t)) { *size = 8; return EcsIrNumSigned; }
+
     if (type == ecs_id(ecs_iptr_t)) {
         *size = ECS_SIZEOF(ecs_iptr_t); return EcsIrNumSigned;
     }
+
     if (type == ecs_id(ecs_u8_t))  { *size = 1; return EcsIrNumUnsigned; }
+
     if (type == ecs_id(ecs_u16_t)) { *size = 2; return EcsIrNumUnsigned; }
+
     if (type == ecs_id(ecs_u32_t)) { *size = 4; return EcsIrNumUnsigned; }
+
     if (type == ecs_id(ecs_u64_t)) { *size = 8; return EcsIrNumUnsigned; }
+
     if (type == ecs_id(ecs_uptr_t)) {
         *size = ECS_SIZEOF(ecs_uptr_t); return EcsIrNumUnsigned;
     }
+
     if (type == ecs_id(ecs_f32_t)) { *size = 4; return EcsIrNumFloat; }
+
     if (type == ecs_id(ecs_f64_t)) { *size = 8; return EcsIrNumFloat; }
+
     *size = 0;
     return EcsIrNumNone;
 }
@@ -105668,12 +107237,14 @@ static int32_t flecs_irc_id(
             return -1;
         }
     }
+
     if (id->first_expr) {
         first_reg = flecs_irc_reg(c);
         if (flecs_irc_compile_expr(c, id->first_expr, first_reg, false)) {
             return -1;
         }
     }
+
     if (id->second_expr) {
         second_reg = flecs_irc_reg(c);
         if (flecs_irc_compile_expr(c, id->second_expr, second_reg, false)) {
@@ -105714,6 +107285,7 @@ static int32_t flecs_irc_id(
             desc->ti = cr->type_info;
             desc->needs_set = desc->ti->hooks.on_replace != NULL;
         }
+
         if (!desc->has_second) {
             desc->visitor = ecs_has(c->world, id->eval, EcsScriptVisitor);
         }
@@ -105756,6 +107328,7 @@ static int flecs_irc_compile_dynamic_initializer(
             if (flecs_irc_compile_expr(c, elem->key, key, false)) {
                 return -1;
             }
+
             flecs_irc_emit(c, EcsIrDynKey, key, 0, 0, node);
         } else if (elem->member) {
             int32_t op = flecs_irc_emit(c, EcsIrDynMember, 0, 0, 0, node);
@@ -105768,6 +107341,7 @@ static int flecs_irc_compile_dynamic_initializer(
             {
                 return -1;
             }
+
             continue;
         }
 
@@ -105778,6 +107352,7 @@ static int flecs_irc_compile_dynamic_initializer(
             if (flecs_irc_compile_expr(c, swizzle->left, left, false)) {
                 return -1;
             }
+
             int32_t op = flecs_irc_emit(c, EcsIrDynSwizzle, left, 0, 0, node);
             flecs_irc_op(c, op)->imm.ptr = swizzle;
             continue;
@@ -105787,6 +107362,7 @@ static int flecs_irc_compile_dynamic_initializer(
         if (flecs_irc_compile_expr(c, elem->value, value, false)) {
             return -1;
         }
+
         flecs_irc_emit(c, EcsIrDynSet, value, 0, 0, node);
     }
 
@@ -105817,12 +107393,14 @@ static int flecs_irc_compile_static_initializer(
                 if (flecs_irc_compile_dynamic_initializer(c, inner, member)) {
                     return -1;
                 }
+
                 flecs_irc_emit(c, EcsIrDynEnd, member, 0, 0, inner);
             } else {
                 if (flecs_irc_compile_static_initializer(c, inner, dst)) {
                     return -1;
                 }
             }
+
             continue;
         }
 
@@ -105833,6 +107411,7 @@ static int flecs_irc_compile_static_initializer(
             if (flecs_irc_compile_expr(c, swizzle->left, left, false)) {
                 return -1;
             }
+
             int32_t op = flecs_irc_emit(
                 c, EcsIrInitSwizzle, dst, offset, left, node);
             flecs_irc_op(c, op)->imm.ptr = swizzle;
@@ -105877,9 +107456,11 @@ static int flecs_irc_compile_initializer(
         if (flecs_irc_compile_dynamic_initializer(c, node, dst)) {
             return -1;
         }
+
         flecs_irc_emit(c, EcsIrDynEnd, dst, 0, 0, node);
         return 0;
     }
+
     return flecs_irc_compile_static_initializer(c, node, dst);
 }
 
@@ -105898,6 +107479,7 @@ static int flecs_irc_compile_interpolated_string(
             int32_t op = flecs_irc_emit(c, EcsIrStrFrag, 0, 0, 0, node);
             flecs_irc_op(c, op)->imm.str = fragment;
         }
+
         if (!fragments[i].expr) {
             continue;
         }
@@ -105925,11 +107507,13 @@ static int flecs_irc_compile_interpolated_string(
                     cls = 3;
                 }
             }
+
             if (cls) {
                 int32_t src = flecs_irc_reg(c);
                 if (flecs_irc_compile_expr(c, inner, src, false)) {
                     return -1;
                 }
+
                 int32_t op = flecs_irc_emit(c, EcsIrStrCast, src, sz, 0, inner);
                 flecs_irc_op(c, op)->flags = cls;
                 continue;
@@ -105949,6 +107533,7 @@ static int flecs_irc_compile_interpolated_string(
                     return -1;
                 }
             }
+
             if (format->precision) {
                 precision = flecs_irc_reg(c);
                 if (flecs_irc_compile_expr(
@@ -105957,6 +107542,7 @@ static int flecs_irc_compile_interpolated_string(
                     return -1;
                 }
             }
+
             int32_t op = flecs_irc_emit(
                 c, EcsIrStrFormat, value, width, precision, expr);
             flecs_irc_op(c, op)->imm.ptr = format;
@@ -105989,9 +107575,11 @@ static int flecs_irc_compile_call(
         if (!node->left) {
             return 0;
         }
+
         if (flecs_irc_compile_expr(c, node->left, first, false)) {
             return -1;
         }
+
         arg_reg ++;
     }
 
@@ -106030,10 +107618,12 @@ static int flecs_irc_compile_match(
         if (flecs_irc_compile_expr(c, elems[i].compare, compare, false)) {
             goto error;
         }
+
         int32_t cmp = flecs_irc_emit(c, EcsIrMatchCmp, value, compare, 0, node);
         if (flecs_irc_compile_expr(c, elems[i].expr, dst, in_place)) {
             goto error;
         }
+
         ecs_vec_append_t(NULL, &jumps, int32_t)[0] =
             flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
         flecs_irc_op(c, cmp)->c = flecs_irc_pc(c);
@@ -106108,12 +107698,14 @@ static int flecs_irc_compile_binary(
             };
             kind = kinds[class][size];
         }
+
         if (kind != EcsIrBinary && (node->operator == EcsTokAddAssign ||
             node->operator == EcsTokMulAssign || node->operator == EcsTokAnd ||
             node->operator == EcsTokOr))
         {
             kind = EcsIrBinary;
         }
+
         if ((kind == EcsIrBinaryF64 || kind == EcsIrBinaryF32) &&
             (node->operator == EcsTokMod || node->operator == EcsTokBitwiseAnd ||
              node->operator == EcsTokBitwiseOr ||
@@ -106123,6 +107715,7 @@ static int flecs_irc_compile_binary(
             kind = EcsIrBinary;
         }
     }
+
     int32_t op = flecs_irc_emit(c, kind, dst, left, right, node);
     ecs_script_ir_op_t *ptr = flecs_irc_op(c, op);
     ptr->flags = (uint16_t)(node->operator | (in_place ? 0x8000 : 0));
@@ -106130,6 +107723,7 @@ static int flecs_irc_compile_binary(
     if (skip != -1) {
         flecs_irc_op(c, skip)->b = flecs_irc_pc(c);
     }
+
     return 0;
 }
 
@@ -106156,6 +107750,7 @@ static int flecs_irc_compile_expr(
         if (!in_place) {
             flecs_irc_emit(c, EcsIrInitAlloc, dst, 0, 0, node);
         }
+
         return flecs_irc_compile_initializer(
             c, (ecs_expr_initializer_t*)node, dst);
     }
@@ -106164,12 +107759,14 @@ static int flecs_irc_compile_expr(
         if (!in_place) {
             flecs_irc_emit(c, EcsIrInitAlloc, dst, 0, 0, node);
         }
+
         if (n->is_dynamic) {
             flecs_irc_emit(c, EcsIrDynBegin, dst, 0, 0, node);
             flecs_irc_emit(c, EcsIrDynPush, dst, 0, 0, node);
             flecs_irc_emit(c, EcsIrDynPop, dst, 0, 0, node);
             flecs_irc_emit(c, EcsIrDynEnd, dst, 0, 0, node);
         }
+
         return 0;
     }
     case EcsExprUnary: {
@@ -106178,6 +107775,7 @@ static int flecs_irc_compile_expr(
         if (flecs_irc_compile_expr(c, n->expr, src, false)) {
             return -1;
         }
+
         int32_t op = flecs_irc_emit(c, EcsIrUnary, dst, src, 0, node);
         flecs_irc_op(c, op)->flags = place;
         return 0;
@@ -106200,6 +107798,7 @@ static int flecs_irc_compile_expr(
             flecs_irc_op(c, op)->flags = (uint16_t)(place |
                 (node->type == ecs_id(ecs_entity_t) ? EcsIrIdDirect : 0));
         }
+
         return 0;
     }
     case EcsExprVariable: {
@@ -106227,6 +107826,7 @@ static int flecs_irc_compile_expr(
         if (flecs_irc_compile_expr(c, n->left, src, false)) {
             return -1;
         }
+
         flecs_irc_emit(c, EcsIrMember, dst, src,
             flecs_uto(int32_t, n->offset), node);
         return 0;
@@ -106237,6 +107837,7 @@ static int flecs_irc_compile_expr(
         if (flecs_irc_compile_expr(c, n->left, src, false)) {
             return -1;
         }
+
         int32_t op = flecs_irc_emit(c, EcsIrSwizzle, dst, src, 0, node);
         flecs_irc_op(c, op)->flags = place;
         return 0;
@@ -106247,10 +107848,12 @@ static int flecs_irc_compile_expr(
         if (flecs_irc_compile_expr(c, n->left, left, false)) {
             return -1;
         }
+
         int32_t index = flecs_irc_reg(c);
         if (flecs_irc_compile_expr(c, n->index, index, false)) {
             return -1;
         }
+
         int32_t op = flecs_irc_emit(c, EcsIrElement, dst, left, index, node);
         const EcsType *type = ecs_get(c->world, n->left->type, EcsType);
         if (type && type->kind == EcsMapType) {
@@ -106258,6 +107861,7 @@ static int flecs_irc_compile_expr(
         } else if (type && type->kind == EcsVectorType) {
             flecs_irc_op(c, op)->flags = EcsIrElementVector;
         }
+
         return 0;
     }
     case EcsExprComponent: {
@@ -106266,10 +107870,12 @@ static int flecs_irc_compile_expr(
         if (flecs_irc_compile_expr(c, n->left, left, false)) {
             return -1;
         }
+
         ecs_expr_node_t *index = n->index;
         if (index && index->kind == EcsExprIdentifier) {
             index = ((ecs_expr_identifier_t*)index)->expr;
         }
+
         ecs_entity_t component;
         if (index) {
             ecs_assert(index->kind == EcsExprValue, ECS_INTERNAL_ERROR, NULL);
@@ -106277,6 +107883,7 @@ static int flecs_irc_compile_expr(
         } else {
             component = node->type;
         }
+
         int32_t op = flecs_irc_emit(c, EcsIrComponentGet, dst, left, 0, node);
         flecs_irc_op(c, op)->imm.entity = component;
         return 0;
@@ -106287,6 +107894,7 @@ static int flecs_irc_compile_expr(
         if (flecs_irc_compile_expr(c, n->left, left, false)) {
             return -1;
         }
+
         int32_t op = flecs_irc_emit(c, EcsIrHas, dst, left, 0, node);
         flecs_irc_op(c, op)->imm.id = n->id;
         flecs_irc_op(c, op)->flags = place;
@@ -106298,6 +107906,7 @@ static int flecs_irc_compile_expr(
         if (flecs_irc_compile_expr(c, n->expr, src, false)) {
             return -1;
         }
+
         int32_t rsize = 0;
         ecs_script_ir_num_class_t rclass = flecs_irc_num_class(
             node->type, &rsize);
@@ -106308,6 +107917,7 @@ static int flecs_irc_compile_expr(
                 n->expr->type, node->type);
             return 0;
         }
+
         int32_t op = flecs_irc_emit(c, EcsIrCast, dst, src, 0, node);
         flecs_irc_op(c, op)->flags = place;
         return 0;
@@ -106318,6 +107928,7 @@ static int flecs_irc_compile_expr(
         if (flecs_irc_compile_expr(c, n->expr, src, false)) {
             return -1;
         }
+
         int32_t op = flecs_irc_emit(c, EcsIrCastNumber, dst, src, 0, node);
         flecs_irc_op(c, op)->flags = place;
         flecs_irc_op(c, op)->imm.cast = flecs_irc_cast_handler(
@@ -106333,10 +107944,12 @@ static int flecs_irc_compile_expr(
         if (flecs_irc_compile_expr(c, n->from, from, false)) {
             return -1;
         }
+
         int32_t to = flecs_irc_reg(c);
         if (flecs_irc_compile_expr(c, n->to, to, false)) {
             return -1;
         }
+
         int32_t op = flecs_irc_emit(c, EcsIrRange, dst, from, to, node);
         flecs_irc_op(c, op)->flags = place;
         return 0;
@@ -106384,6 +107997,7 @@ static bool flecs_irc_expr_borrows(
                 return true;
             }
         }
+
         return m->any.expr ? flecs_irc_expr_borrows(m->any.expr) : false;
     }
     default:
@@ -106399,17 +108013,21 @@ static bool flecs_irc_type_matches(
     if (!type) {
         return false;
     }
+
     if (flecs_irc_expr_borrows(expr)) {
         return false;
     }
+
     if (expr->type == type) {
         return true;
     }
+
     if (expr->kind == EcsExprInitializer ||
         expr->kind == EcsExprEmptyInitializer)
     {
         return flecs_struct_is_derived_from(c->world, type, expr->type);
     }
+
     return false;
 }
 
@@ -106442,14 +108060,17 @@ static int flecs_irc_compile_tag(
     if (expr) {
         begin = flecs_irc_expr_begin(c, node);
     }
+
     int32_t id = flecs_irc_id(c, &node->id, node, false, node->component_slot);
     if (id == -1) {
         return -1;
     }
+
     flecs_irc_emit(c, with ? EcsIrWithTag : EcsIrTag, id, 0, 0, node);
     if (expr) {
         flecs_irc_expr_end(c, begin, true);
     }
+
     return 0;
 }
 
@@ -106496,13 +108117,16 @@ static int flecs_irc_compile_component(
             in_place = node->expr->kind == EcsExprInitializer ||
                 node->expr->kind == EcsExprEmptyInitializer;
         }
+
         int32_t value = tmp;
         if (!in_place) {
             value = flecs_irc_reg(c);
         }
+
         if (flecs_irc_compile_expr(c, node->expr, value, in_place)) {
             return -1;
         }
+
         flecs_irc_emit(c,
             with ? EcsIrWithComponentEnd : EcsIrComponentEnd,
             id, value, tmp, node);
@@ -106532,6 +108156,7 @@ static int flecs_irc_compile_const(
     if (flecs_irc_compile_expr(c, node->expr, value, false)) {
         return -1;
     }
+
     int32_t op = flecs_irc_emit(c, EcsIrConstEnd, value,
         node->computed - 1, 0, node);
     flecs_irc_op(c, op)->imm.ptr = node->eval_type
@@ -106580,8 +108205,10 @@ static int flecs_irc_compile_await(
             if (flecs_irc_compile_expr(c, call->left, first, false)) {
                 return -1;
             }
+
             arg_reg ++;
         }
+
         ecs_expr_initializer_element_t *elems = ecs_vec_first(
             &call->args->elements);
         for (i = 0; i < argc; i ++) {
@@ -106646,10 +108273,12 @@ static int flecs_irc_compile_pair_scope(
     if (expr) {
         begin = flecs_irc_expr_begin(c, node);
     }
+
     int32_t id = flecs_irc_id(c, &node->id, node, false, -1);
     if (id == -1) {
         return -1;
     }
+
     int32_t op = flecs_irc_emit(c, EcsIrPairScopeEnter, id, 0, 0, node);
     if (expr) {
         flecs_irc_expr_end(c, begin, false);
@@ -106682,6 +108311,7 @@ static int flecs_irc_compile_with(
         if (stmt->skip) {
             continue;
         }
+
         if (stmt->kind == EcsAstWithTag) {
             if (flecs_irc_compile_tag(c, (ecs_script_tag_t*)stmt, true)) {
                 return -1;
@@ -106721,6 +108351,7 @@ static int flecs_irc_compile_if(
     if (flecs_irc_compile_expr(c, node->expr, cond, false)) {
         return -1;
     }
+
     flecs_irc_emit(c, EcsIrToBool, cond, 0, 0, node);
     flecs_irc_expr_end(c, begin, true);
 
@@ -106731,11 +108362,13 @@ static int flecs_irc_compile_if(
     if (flecs_irc_compile_scope(c, node->if_true, 0)) {
         return -1;
     }
+
     int32_t jump = flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
     flecs_irc_op(c, enter)->b = flecs_irc_pc(c);
     if (flecs_irc_compile_scope(c, node->if_false, 0)) {
         return -1;
     }
+
     c->reg_floor = floor;
     flecs_irc_op(c, jump)->a = flecs_irc_pc(c);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameIf, 0, 0, node);
@@ -106753,6 +108386,7 @@ static int flecs_irc_compile_for(
         if (flecs_irc_compile_expr(c, node->from, from, false)) {
             return -1;
         }
+
         to = flecs_irc_reg(c);
         if (flecs_irc_compile_expr(c, node->to, to, false)) {
             return -1;
@@ -106763,6 +108397,7 @@ static int flecs_irc_compile_for(
             return -1;
         }
     }
+
     flecs_irc_expr_end(c, begin, false);
 
     flecs_irc_emit(c, EcsIrForEnter, from, to, 0, node);
@@ -106806,6 +108441,7 @@ static int flecs_irc_compile_try(
     if (flecs_irc_compile_scope(c, node->try_scope, 0)) {
         goto error;
     }
+
     ecs_vec_append_t(NULL, &jumps, int32_t)[0] =
         flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
 
@@ -106817,9 +108453,11 @@ static int flecs_irc_compile_try(
         if (flecs_irc_compile_scope(c, catch_->scope, 0)) {
             goto error;
         }
+
         ecs_vec_append_t(NULL, &jumps, int32_t)[0] =
             flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
     }
+
     c->reg_floor = floor;
 
     int32_t end = flecs_irc_pc(c);
@@ -106827,6 +108465,7 @@ static int flecs_irc_compile_try(
     for (i = 0; i < ecs_vec_count(&jumps); i ++) {
         flecs_irc_op(c, jump_ops[i])->a = end;
     }
+
     flecs_irc_op(c, enter)->c = end;
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameTry, 0, 0, node);
     ecs_vec_fini_t(NULL, &jumps, int32_t);
@@ -106858,6 +108497,7 @@ static int flecs_irc_compile_while(
     if (flecs_irc_compile_expr(c, node->expr, cond, false)) {
         return -1;
     }
+
     flecs_irc_emit(c, EcsIrToBool, cond, 0, 0, node);
     flecs_irc_expr_end(c, begin, true);
 
@@ -106888,6 +108528,7 @@ static int flecs_irc_compile_assign(
     if (flecs_irc_compile_expr(c, node->expr, value, false)) {
         return -1;
     }
+
     flecs_irc_emit(c, EcsIrAssign, value, 0, 0, node);
     flecs_irc_expr_end(c, begin, true);
     return 0;
@@ -106957,6 +108598,7 @@ static int flecs_irc_compile_stmt(
         {
             flecs_irc_op(c, op)->flags = EcsIrAnnotBadTarget;
         }
+
         break;
     }
     case EcsAstTemplate: {
@@ -106986,6 +108628,7 @@ static int flecs_irc_compile_stmt(
                 stmt = -1;
             }
         }
+
         break;
     }
     case EcsAstExportConst:
@@ -107001,6 +108644,7 @@ static int flecs_irc_compile_stmt(
         } else {
             result = flecs_irc_compile_entity(c, n);
         }
+
         break;
     }
     case EcsAstPairScope:
@@ -107046,6 +108690,7 @@ static int flecs_irc_compile_stmt(
     if (stmt != -1) {
         flecs_irc_op(c, stmt)->b = flecs_irc_pc(c);
     }
+
     return 0;
 }
 
@@ -107059,6 +108704,7 @@ static int32_t flecs_irc_scope_var_count(
             result ++;
         }
     }
+
     return result;
 }
 
@@ -107091,13 +108737,16 @@ static int flecs_irc_compile_scope(
             if (block != -1) {
                 flecs_irc_op(c, block)->b = flecs_irc_pc(c);
             }
+
             block = flecs_irc_emit(c, EcsIrStmtBlock, 0, 0, 0, scope);
         }
+
         int32_t stmt = flecs_irc_pc(c);
         if (flecs_irc_compile_stmt(c, scope, i)) {
             c->scope = prev;
             return -1;
         }
+
         if (block != -1) {
             const ecs_script_ir_op_t *stmt_op = flecs_irc_op(c, stmt);
             bool always = stmt_op->flags & (EcsIrStmtAlways | EcsIrStmtCached);
@@ -107106,6 +108755,7 @@ static int flecs_irc_compile_scope(
                     &c->script->regions, ecs_script_region_t, stmt_op->c);
                 always |= region->for_count != 0;
             }
+
             ecs_script_ir_op_t *block_op = flecs_irc_op(c, block);
             block_op->imm.u64 |= stmts[i]->input;
             block_op->c ++;
@@ -107149,6 +108799,7 @@ static int flecs_irc_compile_function(
         if (flecs_irc_compile_expr(c, node->return_expr, value, false)) {
             return -1;
         }
+
         flecs_irc_expr_end(c, begin, false);
         flecs_irc_emit(c, EcsIrReturn, value, 0, 0, node);
     }
@@ -107223,6 +108874,7 @@ void flecs_script_ir_free(
     if (!ir) {
         return;
     }
+
     ecs_vec_fini_t(NULL, &ir->ops, ecs_script_ir_op_t);
     ecs_vec_fini_t(NULL, &ir->ids, ecs_script_ir_id_t);
     ecs_vec_fini_t(NULL, &ir->catches, int32_t);
@@ -107262,6 +108914,7 @@ ecs_script_ir_t* flecs_script_ir_ensure(
     if (!script->ir) {
         script->ir = flecs_script_ir_compile(script);
     }
+
     return script->ir;
 }
 
@@ -107384,6 +109037,7 @@ const char* flecs_script_ir_op_name(
     if (kind < 0 || kind >= EcsIrOpKindLast) {
         return "?";
     }
+
     return flecs_ir_listing[kind].name;
 }
 
@@ -107401,26 +109055,33 @@ static void flecs_irs_id_to_buf(
         ecs_os_free(str);
         return;
     }
+
     if (id->has_second) {
         ecs_strbuf_append(buf, "(%s, %s)", id->first, id->second);
     } else {
         ecs_strbuf_appendstr(buf, id->first);
     }
+
     if (id->first_symbol != -1) {
         ecs_strbuf_append(buf, " sym=%d", id->first_symbol);
     }
+
     if (id->first_sp != -1) {
         ecs_strbuf_append(buf, " sp=%d", id->first_sp);
     }
+
     if (id->first_reg != -1) {
         ecs_strbuf_append(buf, " r%d", id->first_reg);
     }
+
     if (id->second_symbol != -1) {
         ecs_strbuf_append(buf, " sym2=%d", id->second_symbol);
     }
+
     if (id->second_sp != -1) {
         ecs_strbuf_append(buf, " sp2=%d", id->second_sp);
     }
+
     if (id->second_reg != -1) {
         ecs_strbuf_append(buf, " r%d", id->second_reg);
     }
@@ -107466,6 +109127,7 @@ static void flecs_irs_payload_to_buf(
             ecs_strbuf_append(buf, "%s%s", i ? ", " : " add=", id);
             ecs_os_free(id);
         }
+
         break;
     }
     default:
@@ -107479,6 +109141,7 @@ static void flecs_irs_payload_to_buf(
             : (ecs_token_kind_t)(op->flags & 0x7fff);
         ecs_strbuf_append(buf, " operator=%s", flecs_token_str(token));
     }
+
     if (op->node && op->kind != EcsIrJump && op->kind != EcsIrEnd) {
         const char *pos;
         if (op->kind >= EcsIrLoadConst && op->kind < EcsIrToBool) {
@@ -107493,6 +109156,7 @@ static void flecs_irs_payload_to_buf(
         } else {
             pos = ((const ecs_script_node_t*)op->node)->pos;
         }
+
         if (pos && op->kind == EcsIrStmt) {
             int32_t length = 0;
             while (length < 80 && pos[length] && pos[length] != '\n') {
@@ -107518,6 +109182,7 @@ void flecs_script_ir_to_buf(
         flecs_irs_id_to_buf(script, ir, i, buf);
         ecs_strbuf_appendch(buf, '\n');
     }
+
     for (int32_t i = 0; i < count; i ++) {
         const ecs_script_ir_op_t *op = &ops[i];
         for (int32_t e = 0; e < entry_count; e ++) {
@@ -107530,6 +109195,7 @@ void flecs_script_ir_to_buf(
                     entries[e].reg_count);
             }
         }
+
         ecs_strbuf_append(buf, "%4d  %-18s", i,
             flecs_script_ir_op_name(op->kind));
         const int32_t values[] = {op->a, op->b, op->c};
@@ -107542,9 +109208,11 @@ void flecs_script_ir_to_buf(
                 ecs_strbuf_appendint(buf, values[a]);
             }
         }
+
         if (op->flags) {
             ecs_strbuf_append(buf, " flags=0x%x", op->flags);
         }
+
         flecs_irs_payload_to_buf(script, op, buf);
         ecs_strbuf_appendch(buf, '\n');
     }
@@ -107586,6 +109254,7 @@ static void flecs_ir_regs_ensure(
     if (count <= vm->reg_count) {
         return;
     }
+
     int32_t new_count = count < 16 ? 16 : count;
     vm->regs = ecs_os_realloc_n(vm->regs, ecs_script_ir_reg_t, new_count);
     ecs_os_memset(&vm->regs[vm->reg_count], 0,
@@ -107604,11 +109273,13 @@ static void* flecs_ir_arena_alloc(
         arena->size = size > initial ? size : initial;
         arena->data = ecs_os_malloc(arena->size);
     }
+
     int32_t top = (arena->top + (align - 1)) & ~(align - 1);
     if (top + size <= arena->size) {
         arena->top = top + size;
         return arena->data + top;
     }
+
     void *ptr = ecs_os_malloc(size);
     ecs_vec_append_t(NULL, &arena->heap, void*)[0] = ptr;
     return ptr;
@@ -107623,6 +109294,7 @@ static void flecs_ir_arena_restore(
     for (int32_t i = heap_count; i < arena->heap.count; i ++) {
         ecs_os_free(heap[i]);
     }
+
     arena->heap.count = heap_count;
     arena->top = top;
 }
@@ -107654,6 +109326,7 @@ static inline ecs_script_var_t* flecs_ir_var_declare(
     } else {
         var = ecs_vec_append_t(vars->allocator, &vars->vars, ecs_script_var_t);
     }
+
     var->name = NULL;
     var->value.ptr = NULL;
     var->value.type = 0;
@@ -107675,6 +109348,7 @@ static void* flecs_ir_var_alloc(
     } else {
         ecs_os_memset(ptr, 0, ti->size);
     }
+
     return ptr;
 }
 
@@ -107694,6 +109368,7 @@ static void* flecs_ir_reg_alloc_w_init(
             ecs_os_memset(ptr, 0, ti->size);
         }
     }
+
     if (ti->hooks.dtor) {
         flecs_ir_owned_t *o = ecs_vec_append_t(
             NULL, &vm->owned, flecs_ir_owned_t);
@@ -107701,6 +109376,7 @@ static void* flecs_ir_reg_alloc_w_init(
         o->ti = ti;
         o->reg = (int32_t)(reg - vm->regs);
     }
+
     reg->value.ptr = ptr;
     reg->value.type = ti->component;
     reg->ti = ti;
@@ -107737,6 +109413,7 @@ static void* flecs_ir_reg_out(
         reg->ti = node->type_info;
         return reg->value.ptr;
     }
+
     return flecs_ir_reg_alloc(vm, reg, node->type_info);
 }
 
@@ -107753,6 +109430,7 @@ static inline void* flecs_ir_reg_out_raw(
         reg->ti = ti;
         return reg->value.ptr;
     }
+
     if (!ti->hooks.dtor && ti->size <= 16) {
         int32_t top = (vm->scratch.top + 15) & ~15;
         if (top + 16 <= vm->scratch.size) {
@@ -107766,6 +109444,7 @@ static inline void* flecs_ir_reg_out_raw(
             return out;
         }
     }
+
     return flecs_ir_reg_alloc_raw(vm, reg, ti);
 }
 
@@ -107802,6 +109481,7 @@ static ecs_script_ir_frame_t* flecs_ir_frame_push(
         vm->frames[chunk] = ecs_os_malloc_n(
             ecs_script_ir_frame_t, ECS_SCRIPT_IR_FRAME_CHUNK_SIZE);
     }
+
     ecs_script_ir_frame_t *frame = flecs_ir_frame_at(vm, vm->frame_count ++);
     frame->kind = (int16_t)kind;
     frame->state = 0;
@@ -107831,6 +109511,7 @@ static void flecs_ir_expr_release(
                 reg->owned = false;
             }
         }
+
         ecs_vec_set_count_t(NULL, &vm->owned, flecs_ir_owned_t,
             frame->u.expr.owned_count);
     }
@@ -107847,6 +109528,7 @@ static void flecs_ir_expr_release(
         }
         ecs_vec_set_count_t(NULL, &vm->strbufs, ecs_strbuf_t, strbuf_count);
     }
+
     if (vm->cursors.count != frame->u.expr.cursor_count) {
         ecs_vec_set_count_t(NULL, &vm->cursors, ecs_meta_cursor_t,
             frame->u.expr.cursor_count);
@@ -107896,8 +109578,10 @@ static void flecs_ir_vars_truncate(
                 flecs_type_info_dtor(var->value.ptr, 1, var->type_info);
             }
         }
+
         vars->vars.count = count;
     }
+
     flecs_ir_arena_restore(&vm->vscratch, vscratch_top, vheap_count);
 }
 
@@ -107910,6 +109594,7 @@ static void flecs_ir_scope_leave(
         flecs_ir_vars_truncate(vm, frame->u.scope.var_count,
             frame->u.scope.vscratch_top, frame->u.scope.vheap_count);
     }
+
     v->parent = frame->u.scope.state.parent;
     v->scope_slot = frame->u.scope.state.scope_slot;
 }
@@ -107990,12 +109675,14 @@ static void flecs_ir_set_dirty(
     if (vm->dirty) {
         return;
     }
+
     vm->dirty = true;
     int32_t i, count = vm->pending_marks.count;
     const int32_t *marks = vm->pending_marks.array;
     for (i = 0; i < count; i ++) {
         flecs_ir_mark(vm, marks[i]);
     }
+
     vm->pending_marks.count = 0;
 }
 
@@ -108038,8 +109725,10 @@ static void flecs_ir_mark(
                 flecs_ir_mark(vm, marks);
             }
         }
+
         return;
     }
+
     ecs_script_eval_visitor_t *v = &vm->v;
     const ecs_script_region_t *region = ecs_vec_get_t(
         &v->base.script->regions, ecs_script_region_t, index);
@@ -108065,6 +109754,7 @@ static ecs_entity_t flecs_ir_lookup_name(
     {
         return 0;
     }
+
     return symbol.entity;
 }
 
@@ -108085,6 +109775,7 @@ static int flecs_ir_id_elem(
             flecs_ir_error(vm, node, "failed to evaluate entity name");
             return -1;
         }
+
         result = flecs_ir_lookup_name(vm, name);
     } else if (slot != -1) {
         result = flecs_script_symbol_entity(v, slot);
@@ -108163,6 +109854,7 @@ static int flecs_ir_id_resolve(
     {
         return -1;
     }
+
     if (!first) {
         flecs_ir_error(vm, node, "unresolved identifier '%s'", desc->first);
         return -1;
@@ -108175,15 +109867,18 @@ static int flecs_ir_id_resolve(
         {
             return -1;
         }
+
         if (!second) {
             flecs_ir_error(vm, node,
                 "unresolved identifier '%s'", desc->second);
             return -1;
         }
+
         *out = desc->flag | ecs_pair(first, second);
     } else {
         *out = desc->flag | first;
     }
+
     return 0;
 }
 
@@ -108195,6 +109890,7 @@ static inline ecs_entity_t flecs_ir_symbol_entity(
         return ((ecs_script_symbol_slot_t*)v->state->symbol_slots.array)
             [slot - v->symbol_offset].entity;
     }
+
     return ((ecs_script_symbol_slot_t*)v->base.script->state.symbol_slots.array)
         [slot].entity;
 }
@@ -108209,6 +109905,7 @@ static inline int flecs_ir_id_get(
         *out = desc->eval;
         return 0;
     }
+
     if (desc->first_reg == -1 && desc->first_sp == -1 &&
         desc->index_sp == -1)
     {
@@ -108220,6 +109917,7 @@ static inline int flecs_ir_id_get(
                 *out = desc->flag | first;
                 return 0;
             }
+
             if (desc->second_reg == -1 && desc->second_sp == -1) {
                 ecs_entity_t second = desc->second_symbol != -1
                     ? flecs_ir_symbol_entity(&vm->v, desc->second_symbol)
@@ -108231,6 +109929,7 @@ static inline int flecs_ir_id_get(
             }
         }
     }
+
     return flecs_ir_id_resolve(vm, desc, node, out);
 }
 
@@ -108253,6 +109952,7 @@ static void flecs_ir_track(
             return;
         }
     }
+
     flecs_script_track_component(v, component_slot, component);
 }
 
@@ -108272,6 +109972,7 @@ static int flecs_ir_default_ctor_check(
     if (desc->resolved) {
         return 0;
     }
+
     if (!flecs_script_can_default_ctor(vm->v.world, id)) {
         if (desc->has_second) {
             flecs_ir_error(vm, node,
@@ -108282,8 +109983,10 @@ static int flecs_ir_default_ctor_check(
                 "cannot add %s, type is not default constructible",
                 desc->first);
         }
+
         return -1;
     }
+
     return 0;
 }
 
@@ -108309,12 +110012,15 @@ static const ecs_type_info_t* flecs_ir_id_type_info(
     if (desc->ti) {
         return desc->ti;
     }
+
     if (desc->cache_id != id) {
         flecs_ir_id_cache(vm, desc, id);
     }
+
     if (desc->cache_ti) {
         return desc->cache_ti;
     }
+
     return flecs_script_get_type_info(&vm->v, node, id);
 }
 
@@ -108352,18 +110058,21 @@ static int flecs_ir_tag(
                 desc->second, v->entity->node->name);
             return -1;
         }
+
         if (base == v->entity->eval) {
             flecs_ir_error(vm, node,
                 "struct '%s' cannot inherit from itself",
                 v->entity->node->name);
             return -1;
         }
+
         if (flecs_struct_is_derived_from(v->world, base, v->entity->eval)) {
             flecs_ir_error(vm, node,
                 "inheritance cycle between struct '%s' and base '%s'",
                 v->entity->node->name, desc->second);
             return -1;
         }
+
         int32_t i = 0;
         ecs_entity_t existing;
         while ((existing = ecs_get_target(
@@ -108386,10 +110095,12 @@ static int flecs_ir_tag(
         if (!var) {
             return -1;
         }
+
         const ecs_type_info_t *ti = flecs_ir_id_type_info(vm, desc, node, id);
         if (!ti) {
             return -1;
         }
+
         ecs_set_id(v->world, src, id, flecs_itosize(ti->size), var->value.ptr);
     } else {
         flecs_ir_prof(EcsIrProfileTagAdd);
@@ -108460,10 +110171,12 @@ static int flecs_ir_component_visitor(
         if (desc->cache_id != id) {
             flecs_ir_id_cache(vm, desc, id);
         }
+
         if (desc->cache_visitor) {
             visitor = ecs_get(v->world, id, EcsScriptVisitor);
         }
     }
+
     if (!visitor) {
         return 0;
     }
@@ -108578,6 +110291,7 @@ static int flecs_ir_component_alloc(
         if (!var) {
             return -1;
         }
+
         ecs_ptr_copy_w_type_info(v->world, ti, ptr, var->value.ptr);
     } else if (op->flags & EcsIrComponentPartial) {
         ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, id);
@@ -108601,12 +110315,14 @@ static int flecs_ir_value_to(
     if (src->value.ptr == dst_ptr) {
         return 0;
     }
+
     if (src->value.type == dst_type) {
         if (src->owned) {
             flecs_type_info_move(dst_ptr, src->value.ptr, 1, dst_ti);
         } else {
             flecs_type_info_copy(dst_ptr, src->value.ptr, 1, dst_ti);
         }
+
         return 0;
     }
 
@@ -108614,6 +110330,7 @@ static int flecs_ir_value_to(
     if (ecs_meta_set_value(&cur, &src->value)) {
         return -1;
     }
+
     return 0;
 }
 
@@ -108630,6 +110347,7 @@ static int flecs_ir_component_end(
         if (flecs_ir_component_begin(vm, op, &id)) {
             return -1;
         }
+
         ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, id);
         if (desc->interface) {
             const ecs_type_info_t *ti = flecs_ir_id_type_info(
@@ -108637,12 +110355,14 @@ static int flecs_ir_component_end(
             if (!ti) {
                 return -1;
             }
+
             void *value = ecs_os_alloca(ti->size);
             flecs_type_info_ctor(value, 1, ti);
             ecs_set_id(v->world, src, id, flecs_itosize(ti->size), value);
         } else {
             ecs_add_id(v->world, src, id);
         }
+
         flecs_ir_track(v, desc->component_slot, id);
         return 0;
     }
@@ -108698,10 +110418,12 @@ static int flecs_ir_with_tag(
         if (!var) {
             return -1;
         }
+
         const ecs_type_info_t *ti = flecs_ir_id_type_info(vm, desc, node, id);
         if (!ti) {
             return -1;
         }
+
         ecs_value_t *value = flecs_script_with_append(v, ti);
         value->type = id;
         value->ptr = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
@@ -108764,6 +110486,7 @@ static int flecs_ir_with_component_begin(
         if (!var) {
             return -1;
         }
+
         ecs_ptr_copy_w_type_info(v->world, ti, value->ptr, var->value.ptr);
     }
 
@@ -108792,6 +110515,7 @@ static int flecs_ir_with_component_end(
         flecs_ir_expr_error(vm, node->expr, "failed to write to output");
         return -1;
     }
+
     return 0;
 }
 
@@ -108843,6 +110567,7 @@ static int flecs_ir_entity_enter(
                 state->eval_kind = *(ecs_entity_t*)var->value.ptr;
             }
         }
+
         if (!state->eval_kind) {
             flecs_ir_error(vm, node, "unresolved identifier '%s'", node->kind);
             return -1;
@@ -108868,16 +110593,19 @@ static int flecs_ir_entity_enter(
             flecs_ir_error(vm, node, "failed to evaluate entity name");
             return -1;
         }
+
         ecs_entity_t eval = flecs_script_create_entity(v, name);
         if (!eval) {
             return -1;
         }
+
         state->created = true;
         if (state->eval && state->eval != eval &&
             ecs_is_alive(v->world, state->eval))
         {
             ecs_delete(v->world, state->eval);
         }
+
         state->eval = eval;
     } else if (!state->eval) {
         flecs_ir_prof(EcsIrProfileEntityCreate);
@@ -108886,9 +110614,11 @@ static int flecs_ir_entity_enter(
     } else {
         flecs_ir_prof(EcsIrProfileEntityReuse);
     }
+
     if (apply_with && op->a == -1 && v->force) {
         flecs_script_apply_with(v, state->eval);
     }
+
     if (node->symbol != -1) {
         flecs_script_symbol_set(v, node->symbol, state->eval);
     }
@@ -108926,6 +110656,7 @@ static int flecs_ir_entity_enter(
                 goto error;
             }
         }
+
         flecs_script_add_entity_kind(
             v, state->eval, state->eval_kind, node->kind_w_expr);
     }
@@ -108938,6 +110669,7 @@ static int flecs_ir_entity_enter(
                 goto error;
             }
         }
+
         ecs_vec_clear(&v->r->annot);
     }
 
@@ -108968,11 +110700,13 @@ static int flecs_ir_pair_scope_enter(
     {
         return -1;
     }
+
     if (!first && desc->first_symbol != -1) {
         first = flecs_script_create_entity(v, desc->first);
         if (!first) {
             return -1;
         }
+
         flecs_script_symbol_set(v, desc->first_symbol, first);
     } else if (!first) {
         return -1;
@@ -108984,12 +110718,14 @@ static int flecs_ir_pair_scope_enter(
     {
         return -1;
     }
+
     if (!second && desc->second_symbol != -1) {
         second = flecs_script_create_entity(v, desc->second);
         if (second) {
             flecs_script_symbol_set(v, desc->second_symbol, second);
         }
     }
+
     if (!second) {
         return -1;
     }
@@ -109032,6 +110768,7 @@ static int flecs_ir_reg_to_i32(
         *out = *(int32_t*)reg->value.ptr;
         return 0;
     }
+
     ecs_meta_cursor_t cur = ecs_meta_cursor(
         vm->v.world, ecs_id(ecs_i32_t), out);
     return ecs_meta_set_value(&cur, &reg->value);
@@ -109054,6 +110791,7 @@ static ecs_script_var_t* flecs_ir_for_var(
         var->type_info = ti;
         var->owned = true;
     }
+
     return var;
 }
 
@@ -109096,10 +110834,12 @@ static int flecs_ir_for_enter(
             flecs_ir_expr_error(vm, node->from, "failed to write to output");
             return -1;
         }
+
         if (flecs_ir_reg_to_i32(vm, flecs_ir_reg(vm, op->b), &to)) {
             flecs_ir_expr_error(vm, node->to, "failed to write to output");
             return -1;
         }
+
         state->kind = FlecsScriptForRange;
         state->from = from;
         state->count = to;
@@ -109168,9 +110908,11 @@ static bool flecs_ir_for_next(
     if (frame->u.for_.var_index[1] != -1) {
         state->key_var = &vars[frame->u.for_.var_index[1]];
     }
+
     if (frame->u.for_.var_index[2] != -1) {
         state->index_var = &vars[frame->u.for_.var_index[2]];
     }
+
     int32_t i = state->index;
 
     switch(state->kind) {
@@ -109179,6 +110921,7 @@ static bool flecs_ir_for_next(
         if (value >= state->count) {
             return false;
         }
+
         *(int32_t*)state->elem_var->value.ptr = value;
         break;
     }
@@ -109199,11 +110942,13 @@ static bool flecs_ir_for_next(
             ecs_map_key_t key = ecs_map_key(&state->map_it);
             ecs_os_memcpy(state->key_var->value.ptr, &key, state->key_size);
         }
+
         if (state->elem_size > ECS_SIZEOF(ecs_map_val_t)) {
             state->elem_var->value.ptr = ecs_map_ptr(&state->map_it);
         } else {
             state->elem_var->value.ptr = &state->map_it.res[1];
         }
+
         state->elem_var->owned = false;
         break;
     }
@@ -109230,6 +110975,7 @@ static int flecs_ir_const_end(
     if (!ti) {
         ti = ecs_get_type_info(v->world, type);
     }
+
     if (!ti) {
         frame->state = 0;
         flecs_ir_error(vm, node,
@@ -109255,12 +111001,15 @@ static int flecs_ir_const_end(
                     "failed to write to output");
                 return -1;
             }
+
             src = tmp;
         }
+
         flecs_script_computed_store(v, slot, op->b, ti, src);
         if (tmp && ti->hooks.dtor) {
             flecs_type_info_dtor(tmp, 1, ti);
         }
+
         frame->state = 0;
         var->is_const = true;
         var->type_info = ti;
@@ -109286,6 +111035,7 @@ static int flecs_ir_const_end(
         if (ti->hooks.dtor) {
             flecs_type_info_dtor(ptr, 1, ti);
         }
+
         return -1;
     }
 
@@ -109321,6 +111071,7 @@ static int flecs_ir_using(
     } else {
         ecs_vec_append_t(a, &v->r->using, ecs_entity_t)[0] = from;
     }
+
     return 0;
 }
 
@@ -109335,12 +111086,14 @@ static int flecs_ir_annot(
             "missing target for @%s annotation", node->name);
         return -1;
     }
+
     if (op->flags & EcsIrAnnotBadTarget) {
         flecs_ir_error(vm, node,
             "target of @%s annotation must be an entity or template",
             node->name);
         return -1;
     }
+
     ecs_vec_append_t(&v->r->allocator, &v->r->annot,
         ecs_script_annot_t*)[0] = ECS_CONST_CAST(
             ecs_script_annot_t*, node);
@@ -109392,6 +111145,7 @@ static int flecs_ir_load_symbol(
         *(ecs_entity_t*)flecs_ir_reg_out_raw(vm, op, dst) = entity;
         return 0;
     }
+
     void *ptr = flecs_ir_reg_out(vm, op, dst);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(
@@ -109401,6 +111155,7 @@ static int flecs_ir_load_symbol(
             "failed to assign identifier '%s'", node->value);
         return -1;
     }
+
     return 0;
 }
 
@@ -109426,6 +111181,7 @@ static int flecs_ir_assign(
             ecs_ptr_free_w_type_info(v->world, ti, tmp);
             return -1;
         }
+
         src = tmp;
     }
 
@@ -109433,6 +111189,7 @@ static int flecs_ir_assign(
     if (tmp) {
         ecs_ptr_free_w_type_info(v->world, ti, tmp);
     }
+
     return result;
 }
 
@@ -109451,16 +111208,19 @@ static int flecs_ir_load_var(
             var = ecs_script_vars_from_sp(vars, sp);
         }
     }
+
     if (!var) {
         flecs_ir_expr_error(vm, node,
             "unresolved variable '%s'", node->name);
         return -1;
     }
+
     if (!var->value.ptr) {
         flecs_ir_expr_error(vm, node,
             "variable '%s' is not a compile time constant", node->name);
         return -1;
     }
+
     ecs_assert(var->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
     flecs_ir_reg_borrow(flecs_ir_reg(vm, op->a), &node->node,
         var->value.type, var->value.ptr);
@@ -109483,6 +111243,7 @@ static int flecs_ir_load_global(
     } else {
         value = flecs_script_global_var_get(vm->v.world, op->imm.entity, NULL);
     }
+
     ecs_assert(value.type == node->type, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_ir_reg_borrow(flecs_ir_reg(vm, op->a), node, value.type, value.ptr);
@@ -109503,11 +111264,13 @@ static int flecs_ir_element(
         if (flecs_value_blit_u64(vm->v.world, &index->value, &key)) {
             return -1;
         }
+
         const ecs_map_t *map = expr->value.ptr;
         ecs_map_val_t *val = NULL;
         if (ecs_map_is_init(map)) {
             val = ecs_map_get(map, key);
         }
+
         if (!val) {
             char *key_str = ecs_ptr_to_str(
                 vm->v.world, index->value.type, index->value.ptr);
@@ -109516,6 +111279,7 @@ static int flecs_ir_element(
             ecs_os_free(key_str);
             return -1;
         }
+
         void *ptr = node->elem_size > ECS_SIZEOF(ecs_map_val_t)
             ? (void*)(uintptr_t)val[0]
             : (void*)val;
@@ -109601,10 +111365,12 @@ static int flecs_ir_has(
             flecs_script_record_dyn_ref(v->base.script, entity, op->imm.id,
                 node->dyn_input, true);
         }
+
         *out = ecs_has_id(v->world, entity, op->imm.id);
     } else {
         *out = false;
     }
+
     return 0;
 }
 
@@ -109642,6 +111408,7 @@ static int flecs_ir_binary(
     if (left->value.type == right->value.type) {
         right_offset = size;
     }
+
     int32_t i;
     for (i = 0; i < node->vector_count; i ++) {
         if (flecs_value_binary(script, &node->node, &left_value,
@@ -109649,10 +111416,12 @@ static int flecs_ir_binary(
         {
             return -1;
         }
+
         left_value.ptr = ECS_OFFSET(left_value.ptr, size);
         right_value.ptr = ECS_OFFSET(right_value.ptr, right_offset);
         out_value.ptr = ECS_OFFSET(out_value.ptr, size);
     }
+
     return 0;
 }
 
@@ -109774,6 +111543,7 @@ static int flecs_ir_cast(
         flecs_ir_expr_error(vm, node, "failed to cast value");
         return -1;
     }
+
     return 0;
 }
 
@@ -109846,6 +111616,7 @@ static inline int flecs_ir_init_check(
     if (dst->ti && (op->b + ti->size) <= dst->ti->size) {
         return 0;
     }
+
     uintptr_t offset = flecs_ito(uintptr_t, op->b);
     uintptr_t type_size = flecs_uto(uintptr_t, ti->size);
     uintptr_t dst_size = dst->ti
@@ -109857,6 +111628,7 @@ static inline int flecs_ir_init_check(
             flecs_errstr(ecs_get_path(vm->v.world, ti->component)));
         return -1;
     }
+
     return 0;
 }
 
@@ -109870,12 +111642,14 @@ static int flecs_ir_init_const(
     if (flecs_ir_init_check(vm, op, dst, ti)) {
         return -1;
     }
+
     void *ptr = ECS_OFFSET(dst->value.ptr, op->b);
     if (!ti->hooks.copy) {
         ecs_os_memcpy(ptr, op->imm.ptr, ti->size);
     } else {
         ecs_ptr_copy_w_type_info(vm->v.world, ti, ptr, op->imm.ptr);
     }
+
     return 0;
 }
 
@@ -109890,6 +111664,7 @@ static int flecs_ir_init_assign(
     if (flecs_ir_init_check(vm, op, dst, ti)) {
         return -1;
     }
+
     void *ptr = ECS_OFFSET(dst->value.ptr, op->b);
     if (src->owned) {
         if (!ti->hooks.move) {
@@ -109904,6 +111679,7 @@ static int flecs_ir_init_assign(
             flecs_type_info_copy(ptr, src->value.ptr, 1, ti);
         }
     }
+
     return 0;
 }
 
@@ -109918,6 +111694,7 @@ static int flecs_ir_init_op(
     if (flecs_ir_init_check(vm, op, dst, ti)) {
         return -1;
     }
+
     ecs_value_t out = {
         .type = node->type,
         .ptr = ECS_OFFSET(dst->value.ptr, op->b)
@@ -109946,9 +111723,11 @@ static int flecs_ir_init_swizzle(
                 flecs_errstr(ecs_get_path(vm->v.world, swizzle->node.type)));
             return -1;
         }
+
         ecs_os_memcpy(ECS_OFFSET(dst->value.ptr, offset),
             ECS_OFFSET(left->value.ptr, swizzle->src[s]), size);
     }
+
     return 0;
 }
 
@@ -109973,6 +111752,7 @@ static int flecs_ir_dyn_swizzle(
                 return -1;
             }
         }
+
         ecs_value_t value = {
             .ptr = ECS_OFFSET(left->value.ptr, swizzle->src[s]),
             .type = swizzle->node.type
@@ -109981,6 +111761,7 @@ static int flecs_ir_dyn_swizzle(
             return -1;
         }
     }
+
     return 0;
 }
 
@@ -109995,9 +111776,11 @@ static int flecs_ir_str_format(
     if (op->b != -1) {
         width = *(int32_t*)flecs_ir_reg(vm, op->b)->value.ptr;
     }
+
     if (op->c != -1) {
         precision = *(int32_t*)flecs_ir_reg(vm, op->c)->value.ptr;
     }
+
     ecs_strbuf_t *buf = ecs_vec_last_t(&vm->strbufs, ecs_strbuf_t);
     return flecs_expr_format_value(&vm->v.base.script->pub, expr,
         &value->value, format, width, precision, buf);
@@ -110017,23 +111800,28 @@ static int flecs_ir_range(
     if (ecs_meta_push(&cur)) {
         return -1;
     }
+
     int32_t i, count = to_value - from_value;
     if (count < 0) {
         count = 0;
     }
+
     for (i = 0; i < count; i ++) {
         if (i) {
             if (ecs_meta_next(&cur)) {
                 return -1;
             }
         }
+
         if (ecs_meta_set_int(&cur, from_value + i)) {
             return -1;
         }
     }
+
     if (ecs_meta_pop(&cur)) {
         return -1;
     }
+
     return 0;
 }
 
@@ -110051,6 +111839,7 @@ static int flecs_ir_match_cmp(
     {
         return -1;
     }
+
     vm->cond = result;
     return 0;
 }
@@ -110119,6 +111908,7 @@ static int flecs_ir_await_poll(
     if (result) {
         return result == 1 ? 0 : -1;
     }
+
     if (op->flags & EcsIrAwaitVar) {
         ecs_script_eval_visitor_t *v = &vm->v;
         const ecs_value_t *value = &future->value;
@@ -110170,6 +111960,7 @@ static bool flecs_ir_unwind(
         if (frame->kind == EcsIrFrameBlock) {
             return false;
         }
+
         flecs_ir_frame_leave(vm, frame);
         vm->frame_count --;
     }
@@ -110185,10 +111976,12 @@ static bool flecs_ir_continue(
         if (kind == EcsIrFrameFor || kind == EcsIrFrameWhile) {
             break;
         }
+
         if (kind == EcsIrFrameBlock) {
             return false;
         }
     }
+
     if (i < 0) {
         return false;
     }
@@ -110234,6 +112027,7 @@ static int flecs_ir_run_nested(
     if (status != FlecsScriptRunDone) {
         return -1;
     }
+
     *out = vm->last_entity;
     return 0;
 }
@@ -110283,8 +112077,10 @@ static flecs_script_run_status_t flecs_ir_exec(
                         break;
                     }
                 }
+
                 flecs_ir_expr_end(vm);
             }
+
             while (vm->frame_count > base + 1) {
                 ecs_script_ir_frame_t *frame = flecs_ir_frame_top(vm);
                 flecs_ir_frame_leave(vm, frame);
@@ -110313,6 +112109,7 @@ static flecs_script_run_status_t flecs_ir_exec(
 #endif
                 vm->pc = op->b;
             }
+
             break;
         case EcsIrStmt: {
             if (v->script_entity && !ecs_is_alive(v->world, v->script_entity)) {
@@ -110320,14 +112117,17 @@ static flecs_script_run_status_t flecs_ir_exec(
                 flecs_ir_block_pop(vm);
                 return FlecsScriptRunError;
             }
+
             if (flecs_ir_stmt_runs(vm, op)) {
                 flecs_ir_prof(EcsIrProfileStmtRun);
                 break;
             }
+
             if (op->flags & EcsIrStmtCached) {
                 vm->pc = op->b;
                 break;
             }
+
             flecs_ir_stmt_skip(vm, op);
             int32_t next = op->b;
             for (;;) {
@@ -110336,18 +112136,22 @@ static flecs_script_run_status_t flecs_ir_exec(
                     vm->pc = next;
                     break;
                 }
+
                 if (flecs_ir_stmt_runs(vm, next_op)) {
                     flecs_ir_prof(EcsIrProfileStmtRun);
                     vm->pc = next + 1;
                     break;
                 }
+
                 if (next_op->flags & EcsIrStmtCached) {
                     vm->pc = next_op->b;
                     break;
                 }
+
                 flecs_ir_stmt_skip(vm, next_op);
                 next = next_op->b;
             }
+
             break;
         }
         case EcsIrMark:
@@ -110368,11 +112172,13 @@ static flecs_script_run_status_t flecs_ir_exec(
             {
                 ecs_vec_get_t(&v->state->scope_slots, int32_t, op->a)[0] = v->visit;
             }
+
             if (op->b > 0) {
                 frame->u.scope.var_count = v->vars->vars.count;
                 frame->u.scope.vscratch_top = vm->vscratch.top;
                 frame->u.scope.vheap_count = vm->vscratch.heap.count;
             }
+
             if (v->entity && op->c &&
                 (v->force || v->entity->created))
             {
@@ -110387,6 +112193,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                             missing = true;
                         }
                     }
+
                     if (missing) {
                         flecs_ir_prof(EcsIrProfileBatchAdd);
                         flecs_script_scope_add_ids(v, src,
@@ -110397,10 +112204,12 @@ static flecs_script_run_status_t flecs_ir_exec(
                     }
                 }
             }
+
             if (op->flags & EcsIrScopeEntity) {
                 ecs_assert(v->entity != NULL, ECS_INTERNAL_ERROR, NULL);
                 v->parent = v->entity->eval;
             }
+
             break;
         }
 
@@ -110410,6 +112219,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (frame->kind == EcsIrFrameEntity) {
                 vm->last_entity = frame->u.entity.eval;
             }
+
             flecs_ir_frame_leave(vm, frame);
             vm->frame_count --;
             break;
@@ -110420,12 +112230,14 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (op->flags & 1) {
                 flecs_ir_expr_end(vm);
             }
+
             if (!res) {
                 ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
                     vm, EcsIrFrameEntity, pc);
                 frame->u.entity = state;
                 v->entity = &frame->u.entity;
             }
+
             break;
         }
 
@@ -110463,11 +112275,13 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (op->flags & 1) {
                 flecs_ir_expr_end(vm);
             }
+
             if (!res) {
                 ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
                     vm, EcsIrFramePairScope, pc);
                 frame->u.pair_scope = state;
             }
+
             break;
         }
 
@@ -110483,6 +112297,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (!vm->cond) {
                 vm->pc = op->b;
             }
+
             break;
         }
 
@@ -110507,6 +112322,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             } else {
                 flecs_ir_vars_truncate(vm, var_count, vscratch_top, vheap_count);
             }
+
             break;
         }
         case EcsIrForNext: {
@@ -110526,6 +112342,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             } else if (!flecs_ir_for_next(vm, frame)) {
                 vm->pc = op->a;
             }
+
             break;
         }
 
@@ -110583,6 +112400,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (vm->async.future) {
                 vm->pc = op->b;
             }
+
             break;
 #else
             flecs_ir_error(vm, op->node,
@@ -110625,6 +112443,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (!res && handled) {
                 vm->pc = op->b;
             }
+
             break;
         }
         case EcsIrUsing:
@@ -110664,6 +112483,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 vm->pc = op->b;
                 break;
             }
+
             const ecs_script_var_node_t *node = op->node;
             ecs_script_var_t *var = flecs_ir_var_declare(vm);
             var->is_const = true;
@@ -110717,6 +112537,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 ecs_os_memcpy(ECS_OFFSET(out, i * size),
                     ECS_OFFSET(src->value.ptr, node->src[i]), size);
             }
+
             break;
         }
         case EcsIrElement:
@@ -110780,6 +112601,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 *out = value;
                 vm->pc = op->b;
             }
+
             break;
         }
         case EcsIrCast:
@@ -110861,6 +112683,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 ecs_strbuf_appendstr(
                     ecs_vec_last_t(&vm->strbufs, ecs_strbuf_t), str);
             }
+
             break;
         }
         case EcsIrStrCast: {
@@ -110915,6 +112738,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (op->flags & EcsIrInPlace) {
                 ecs_os_free(*out);
             }
+
             *out = str;
             break;
         }
@@ -110923,6 +112747,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (!res && !vm->cond) {
                 vm->pc = op->c;
             }
+
             break;
         case EcsIrMatchFail: {
             ecs_script_ir_reg_t *reg = flecs_ir_reg(vm, op->a);
@@ -110945,6 +112770,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 *out = result;
                 dst->value.type = ecs_id(ecs_entity_t);
             }
+
             break;
         }
         case EcsIrScript:
@@ -110957,6 +112783,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             } else {
                 res = flecs_ir_to_bool(vm, op);
             }
+
             break;
         }
         case EcsIrOpKindLast:
@@ -111024,6 +112851,7 @@ static void flecs_ir_vm_clear(
     for (i = 0; i < count; i ++) {
         ecs_strbuf_reset(ecs_vec_get_t(&vm->strbufs, ecs_strbuf_t, i));
     }
+
     vm->strbufs.count = 0;
     vm->cursors.count = 0;
     vm->pending_marks.count = 0;
@@ -111043,6 +112871,7 @@ static void flecs_ir_vm_teardown(
     for (i = 0; i < (int32_t)(sizeof(vm->frames) / sizeof(vm->frames[0])); i ++) {
         ecs_os_free(vm->frames[i]);
     }
+
     ecs_vec_fini_t(NULL, &vm->strbufs, ecs_strbuf_t);
     ecs_vec_fini_t(NULL, &vm->cursors, ecs_meta_cursor_t);
     ecs_vec_fini_t(NULL, &vm->pending_marks, int32_t);
@@ -111066,6 +112895,7 @@ static ecs_script_ir_vm_t* flecs_ir_vm_acquire(
         vm = ecs_os_malloc_t(ecs_script_ir_vm_t);
         flecs_ir_vm_setup(vm, ir);
     }
+
     return vm;
 }
 
@@ -111091,6 +112921,7 @@ void flecs_script_ir_vm_pool_fini(
         flecs_ir_vm_teardown(vms[i]);
         ecs_os_free(vms[i]);
     }
+
     ecs_vec_fini_t(NULL, &r->ir_vms, ecs_script_ir_vm_t*);
 }
 
@@ -111175,6 +113006,7 @@ void flecs_script_ir_vm_abandon(
         if (frame->kind == EcsIrFrameExpr) {
             frame->state = 0;
         }
+
         flecs_ir_frame_leave(vm, frame);
         vm->frame_count --;
     }
@@ -111195,6 +113027,7 @@ flecs_script_run_status_t flecs_script_ir_vm_run(
     if (!vm->ir || !entry) {
         return FlecsScriptRunError;
     }
+
     flecs_ir_prof(EcsIrProfileRun);
     if (!vm->frame_count) {
         const ecs_script_ir_entry_t *entries = ecs_vec_first(&vm->ir->entries);
@@ -111212,6 +113045,7 @@ flecs_script_run_status_t flecs_script_ir_vm_run(
         vm->pending_marks.count = 0;
         flecs_ir_regs_ensure(vm, entry->reg_count);
     }
+
     return flecs_ir_exec(vm, 0);
 }
 
@@ -111228,10 +113062,12 @@ const char* flecs_script_ir_vm_stmt_pos(
     if (!vm->frame_count || !vm->ops) {
         return NULL;
     }
+
     const ecs_script_ir_op_t *op = &vm->ops[vm->pc];
     if (op->kind == EcsIrAwaitPoll && op->node) {
         return ((const ecs_script_node_t*)op->node)->pos;
     }
+
     return NULL;
 }
 
@@ -111325,6 +113161,7 @@ void flecs_script_ir_call_function(
     if (flecs_script_ir_vm_run(vm, entry) != FlecsScriptRunDone) {
         failed = true;
     }
+
     v->type_visitor = NULL;
 
     v->vars = ecs_script_vars_pop(v->vars);
@@ -111368,6 +113205,7 @@ char* ecs_script_ir_profile_str(void)
     for (i = 0; i < EcsIrOpKindLast; i ++) {
         total += flecs_ir_profile_ops[i];
     }
+
     ecs_strbuf_append(&buf, "instructions: %lld\n", (long long)total);
     for (i = 0; i < EcsIrOpKindLast; i ++) {
         if (flecs_ir_profile_ops[i]) {
@@ -111377,10 +113215,12 @@ char* ecs_script_ir_profile_str(void)
                 100.0 * (double)flecs_ir_profile_ops[i] / (double)total);
         }
     }
+
     for (i = 0; i < EcsIrProfileLast; i ++) {
         ecs_strbuf_append(&buf, "%-22s %10lld\n", flecs_ir_profile_stat_name(i),
             (long long)flecs_ir_profile_stats[i]);
     }
+
     return ecs_strbuf_get(&buf);
 }
 #endif
@@ -111440,6 +113280,7 @@ static ECS_DTOR(EcsScriptEventState, state, {
     for (int32_t w = 0; w < ecs_vec_count(&state->waiters); w ++) {
         ecs_script_future_release(waiters[w].future);
     }
+
     ecs_vec_fini_t(NULL, &state->waiters, flecs_script_event_waiter_t);
 })
 
@@ -111449,6 +113290,7 @@ static EcsScriptEventState* flecs_script_event_state(
     if (!ecs_id(EcsScriptEventState) || ecs_is_fini(world)) {
         return NULL;
     }
+
     return ecs_singleton_get_mut(world, EcsScriptEventState);
 }
 
@@ -111483,6 +113325,7 @@ static void flecs_script_event_cancel(
     if (!state) {
         return;
     }
+
     flecs_script_event_waiter_t *waiters = ecs_vec_first(&state->waiters);
     for (int32_t i = 0; i < ecs_vec_count(&state->waiters); i ++) {
         if (waiters[i].future == future) {
@@ -111510,6 +113353,7 @@ static int32_t flecs_script_event_deliver_one(
             i ++;
             continue;
         }
+
         ecs_script_future_t *future = w->future;
         ecs_vec_remove_ordered_t(
             &state->waiters, flecs_script_event_waiter_t, i);
@@ -111518,6 +113362,7 @@ static int32_t flecs_script_event_deliver_one(
         ecs_script_future_release(future);
         resolved ++;
     }
+
     return resolved;
 }
 
@@ -111537,6 +113382,7 @@ static int32_t flecs_script_event_deliver(
         resolved += flecs_script_event_deliver_one(
             state, kind, target, type, value);
     }
+
     return resolved;
 }
 
@@ -111552,6 +113398,7 @@ static bool flecs_script_event_is_ancestor_or_self(
             return true;
         }
     }
+
     return false;
 }
 
@@ -111594,6 +113441,7 @@ bool ecs_script_mouse_event(
             e.delta_x = e.local_x - state->last.local_x;
             e.delta_y = e.local_y - state->last.local_y;
         }
+
         state->pressed_mask = e.buttons & ~state->last.buttons;
         state->released_mask = state->last.buttons & ~e.buttons;
         state->prev_hover = state->hover;
@@ -111601,10 +113449,12 @@ bool ecs_script_mouse_event(
         if (!state->last.buttons) {
             state->pressed = 0;
         }
+
         if (state->pressed_mask) {
             state->pressed = e.target;
             state->focus = e.target;
         }
+
         state->last = e;
         state->has_last = true;
 
@@ -111692,6 +113542,7 @@ void ecs_script_keyboard_event(
     {
         ecs_script_tasks_progress(world);
     }
+
 error:
     return;
 }
@@ -111792,6 +113643,7 @@ static void flecs_script_rng_keep(ecs_script_rng_t *rng) {
     if (!rng) {
         return;
     }
+
     rng->refcount ++;
 }
 
@@ -111799,6 +113651,7 @@ static void flecs_script_rng_free(ecs_script_rng_t *rng) {
     if (!rng) {
         return;
     }
+
     ecs_assert(rng->refcount > 0, ECS_INTERNAL_ERROR, NULL);
     if (!--rng->refcount) {
         ecs_os_free(rng);
@@ -111816,6 +113669,7 @@ static void flecs_script_rng_init(ecs_script_rng_t *rng, uint64_t seed) {
     if (rng->initialized) {
         return;
     }
+
     rng->x = flecs_script_rng_mix(seed);
     rng->w = flecs_script_rng_mix(rng->x);
     rng->initialized = true;
@@ -111840,6 +113694,7 @@ static ECS_COPY(EcsScriptRng, dst, src, {
     if (dst->impl != src->impl) {
         flecs_script_rng_free(dst->impl);
     }
+
     dst->seed = src->seed;
     dst->impl = src->impl;
 })
@@ -112244,6 +114099,7 @@ void FlecsScriptMathImport(
             desc.params[1].type = fn->exponent
                 ? ecs_id(ecs_i32_t) : ecs_id(ecs_f64_t);
         }
+
         ecs_entity_t f = ecs_function_init(world, &desc);
         ecs_doc_set_brief(world, f, fn->brief);
     }
@@ -112579,22 +114435,27 @@ EM_JS(int, flecs_script_platform_mobile, (void), {
     if (typeof navigator === "undefined") {
         return 0;
     }
+
     if (navigator.userAgentData && navigator.userAgentData.mobile) {
         return 1;
     }
+
     var ua = navigator.userAgent || "";
     if (/Android|iPhone|iPad|iPod|Mobile|Silk|Tablet/i.test(ua)) {
         return 1;
     }
+
     if (/Mac/.test(ua) && navigator.maxTouchPoints > 1) {
         return 1;
     }
+
     if (typeof window !== "undefined" && window.matchMedia &&
         window.matchMedia("(pointer: coarse)").matches &&
         navigator.maxTouchPoints > 0)
     {
         return 1;
     }
+
     return 0;
 });
 
@@ -112749,6 +114610,7 @@ static ecs_entity_t flecs_script_typecache_get(
         ecs_add_id(world, result, EcsModule);
         ecs_set_scope(world, prev_scope);
     }
+
     return result;
 }
 
@@ -112777,6 +114639,7 @@ ecs_entity_t flecs_script_array_type(
             ecs_os_free(name);
             return existing;
         }
+
         ecs_os_free(name);
         name = NULL;
     }
@@ -112814,6 +114677,7 @@ ecs_entity_t flecs_script_vector_type(
             ecs_os_free(name);
             return existing;
         }
+
         ecs_os_free(name);
         name = NULL;
     }
@@ -112886,6 +114750,7 @@ static bool flecs_script_dep_scope_contains(
         if (scope == contains) {
             return true;
         }
+
         scope = scope->parent;
     }
     return false;
@@ -112901,6 +114766,7 @@ static bool flecs_script_dep_scopes_exclusive(
         {
             return true;
         }
+
         first = first->parent;
     }
     return false;
@@ -112931,12 +114797,15 @@ static bool flecs_script_dep_static_elems_differ(
     if (first_symbol != -1 && second_symbol != -1) {
         return first_symbol != second_symbol;
     }
+
     if (first_eval && second_eval) {
         return first_eval != second_eval;
     }
+
     if (!first_name || !second_name) {
         return false;
     }
+
     return ecs_os_strcmp(
         flecs_script_dep_name_last_elem(first_name),
         flecs_script_dep_name_last_elem(second_name)) != 0;
@@ -112951,11 +114820,13 @@ static bool flecs_script_dep_ids_may_match(
     {
         return false;
     }
+
     if (!first->dynamic && !second->dynamic &&
         first->eval && second->eval)
     {
         return first->eval == second->eval;
     }
+
     if (flecs_script_dep_id_elem_static(
             first->first_expr, first->first_sp) &&
         flecs_script_dep_id_elem_static(
@@ -112966,6 +114837,7 @@ static bool flecs_script_dep_ids_may_match(
     {
         return false;
     }
+
     if (first->second && flecs_script_dep_id_elem_static(
             first->second_expr, first->second_sp) &&
         flecs_script_dep_id_elem_static(
@@ -112976,6 +114848,7 @@ static bool flecs_script_dep_ids_may_match(
     {
         return false;
     }
+
     return true;
 }
 
@@ -113019,6 +114892,7 @@ static void flecs_script_dep_name_expr(
     if (expr->kind == EcsExprCast) {
         expr = ((const ecs_expr_cast_t*)expr)->expr;
     }
+
     ecs_vec_append_t(NULL, pattern, flecs_script_dep_name_char_t)[0] =
         (flecs_script_dep_name_char_t){
             .value = flecs_expr_is_type_integer(expr->type)
@@ -113098,6 +114972,7 @@ static bool flecs_script_dep_names_may_match(
                     match |= a_ch == b_ch && diagonal;
                 }
             }
+
             matches[j] = match;
             diagonal = below;
         }
@@ -113117,20 +114992,25 @@ static bool flecs_script_dep_entity_may_match(
     if (first == second) {
         return true;
     }
+
     if (!first || !second) {
         return false;
     }
+
     if (first->symbol != -1 && first->symbol == second->symbol) {
         return true;
     }
+
     if (!first->name || !second->name) {
         return false;
     }
+
     if (ecs_os_strcmp(first->name, second->name) &&
         !flecs_script_dep_names_may_match(first, second))
     {
         return false;
     }
+
     return flecs_script_dep_entity_may_match(first->parent, second->parent);
 }
 
@@ -113141,18 +115021,22 @@ static bool flecs_script_dep_entity_matches(
     if (first == second) {
         return true;
     }
+
     if (!first || !second) {
         return false;
     }
+
     if (first->symbol != -1 && first->symbol == second->symbol) {
         return true;
     }
+
     if (!first->name || !second->name ||
         first->name_expr || second->name_expr ||
         ecs_os_strcmp(first->name, second->name))
     {
         return false;
     }
+
     return flecs_script_dep_entity_matches(first->parent, second->parent);
 }
 
@@ -113164,6 +115048,7 @@ static bool flecs_script_dep_same_entity(
         return flecs_script_dep_entity_may_match(
             owner->entity, ctx->entity);
     }
+
     return owner->entity_symbol == ctx->entity_symbol;
 }
 
@@ -113223,6 +115108,7 @@ static bool flecs_script_dep_initializer_is_complete(
         if (!elements[i].member) {
             return false;
         }
+
         const ecs_expr_node_t *value = elements[i].value;
         if (value && value->kind == EcsExprInitializer &&
             ((const ecs_expr_initializer_t*)value)->is_partial)
@@ -113244,6 +115130,7 @@ static int flecs_script_dep_component_owner(
     if (!ctx->v->base.script->entity) {
         return 0;
     }
+
     flecs_script_component_owner_t *owners = ecs_vec_first(
         &ctx->component_owners);
     int32_t i, count = ecs_vec_count(&ctx->component_owners);
@@ -113254,21 +115141,25 @@ static int flecs_script_dep_component_owner(
         {
             continue;
         }
+
         if (owner->scope == ctx->scope ||
             flecs_script_dep_component_already_owned(owner, ctx))
         {
             *already_owned = true;
             return 0;
         }
+
         if (flecs_script_dep_scopes_exclusive(owner->scope, ctx->scope)) {
             continue;
         }
+
         flecs_script_eval_error(ctx->v, node,
             "component can only be created in one scope or "
             "mutually exclusive scopes (use if/else branches, or assign "
             "individual members)");
         return -1;
     }
+
     flecs_script_component_owner_t *owner = ecs_vec_append_t(
         NULL, &ctx->component_owners, flecs_script_component_owner_t);
     owner->entity = ctx->entity;
@@ -113287,6 +115178,7 @@ static int flecs_script_dep_input_new(
             "script cannot have more than 64 reactive inputs");
         return -1;
     }
+
     *input = (uint64_t)1 << (*ctx->input_count) ++;
     return 0;
 }
@@ -113301,6 +115193,7 @@ static int flecs_script_dep_ref_input(
     if (!ref->input && flecs_script_dep_input_new(ctx, &ref->input)) {
         return -1;
     }
+
     *input |= ref->input;
     return 0;
 }
@@ -113312,6 +115205,7 @@ static uint64_t flecs_script_dep_var_get(
     if (sp < 0 || sp >= ecs_vec_count(&ctx->vars)) {
         return 0;
     }
+
     return ecs_vec_get_t(&ctx->vars, flecs_script_dep_var_t, sp)->input;
 }
 
@@ -113322,6 +115216,7 @@ static uint64_t flecs_script_dep_var_get_internal(
     if (sp < 0 || sp >= ecs_vec_count(&ctx->vars)) {
         return 0;
     }
+
     return ecs_vec_get_t(&ctx->vars, flecs_script_dep_var_t, sp)->internal;
 }
 
@@ -113334,6 +115229,7 @@ static void flecs_script_dep_var_set(
     if (sp < 0) {
         return;
     }
+
     ecs_vec_set_min_count_zeromem_t(NULL, &ctx->vars,
         flecs_script_dep_var_t, sp + 1);
     ecs_vec_get_t(&ctx->vars, flecs_script_dep_var_t, sp)[0] =
@@ -113354,6 +115250,7 @@ static int flecs_script_dep_expr_var(
     if (!node) {
         return 0;
     }
+
     flecs_script_dep_expr_ctx_t *ctx = ptr;
     if (node->kind == EcsExprVariable) {
         int32_t sp = ((ecs_expr_variable_t*)node)->sp;
@@ -113364,9 +115261,11 @@ static int flecs_script_dep_expr_var(
         if (flecs_script_dep_node(ctx->deps, (ecs_script_node_t*)entity)) {
             return -1;
         }
+
         *ctx->input |= entity->node.input;
         *ctx->internal |= entity->node.internal;
     }
+
     return flecs_expr_visit_children(node, flecs_script_dep_expr_var, ctx);
 }
 
@@ -113393,18 +115292,22 @@ static int flecs_script_dep_expr_ref(
     {
         return -1;
     }
+
     if (dynamic && ctx->v->script_entity && !ctx->template) {
         uint64_t input;
         if (flecs_script_dep_input_new(ctx, &input)) {
             return -1;
         }
+
         if (dynamic->kind == EcsExprHas) {
             ((ecs_expr_has_t*)dynamic)->dyn_input = input;
         } else {
             ((ecs_expr_element_t*)dynamic)->dyn_input = input;
         }
+
         *expr->input |= input;
     }
+
     return 0;
 }
 
@@ -113448,6 +115351,7 @@ static int flecs_script_dep_id(
     {
         return -1;
     }
+
     *input |= flecs_script_dep_var_get(ctx, id->first_sp);
     *input |= flecs_script_dep_var_get(ctx, id->second_sp);
     *input |= flecs_script_dep_var_get(ctx, id->value_sp);
@@ -113467,10 +115371,12 @@ static void flecs_script_dep_symbol_scope(
     if (symbol < 0) {
         return;
     }
+
     ecs_vec_t *slots = &ctx->v->base.script->state.symbol_slots;
     if (symbol >= ecs_vec_count(slots)) {
         return;
     }
+
     ecs_vec_get_t(slots,
         ecs_script_symbol_slot_t, symbol)->scope_slot = scope_slot;
 }
@@ -113495,6 +115401,7 @@ static void flecs_script_dep_region(
     if (!region.scope_count && !region.for_count) {
         return;
     }
+
     ecs_vec_t *regions = &ctx->v->base.script->regions;
     int32_t count = ecs_vec_count(regions);
     if (!count || ecs_os_memcmp(ecs_vec_last_t(regions, ecs_script_region_t),
@@ -113503,6 +115410,7 @@ static void flecs_script_dep_region(
         ecs_vec_append_t(NULL, regions, ecs_script_region_t)[0] = region;
         count ++;
     }
+
     node->region = count;
 }
 
@@ -113531,6 +115439,7 @@ static int flecs_script_dep_node_impl(
         if (flecs_script_dep_id(ctx, &n->id, &node->direct_input, &node->direct_internal)) {
             return -1;
         }
+
         if (node->kind == EcsAstTag) {
             bool already_owned;
             if (flecs_script_dep_component_owner(
@@ -113538,10 +115447,12 @@ static int flecs_script_dep_node_impl(
             {
                 return -1;
             }
+
             n->component_slot = already_owned
                 ? -1
                 : ctx->component_count ++;
         }
+
         node->input = node->direct_input;
         node->internal = node->direct_internal;
         break;
@@ -113554,6 +115465,7 @@ static int flecs_script_dep_node_impl(
         {
             return -1;
         }
+
         if (node->kind == EcsAstComponent) {
             bool partial = false;
             if (n->expr && n->expr->kind == EcsExprInitializer) {
@@ -113571,12 +115483,14 @@ static int flecs_script_dep_node_impl(
                         }
                     }
                 }
+
                 if (partial && flecs_script_dep_initializer_is_complete(
                     ctx->v->world, n->id.eval, initializer))
                 {
                     partial = false;
                 }
             }
+
             bool already_owned = false;
             if (!partial) {
                 if (flecs_script_dep_component_owner(
@@ -113585,10 +115499,12 @@ static int flecs_script_dep_node_impl(
                     return -1;
                 }
             }
+
             n->component_slot = partial || already_owned
                 ? -1
                 : ctx->component_count ++;
         }
+
         node->input = node->direct_input;
         node->internal = node->direct_internal;
         break;
@@ -113598,11 +115514,13 @@ static int flecs_script_dep_node_impl(
         if (flecs_script_dep_scope(ctx, n->expressions)) {
             return -1;
         }
+
         node->direct_input = n->expressions->node.input;
         node->direct_internal = n->expressions->node.internal;
         if (flecs_script_dep_scope(ctx, n->scope)) {
             return -1;
         }
+
         node->input = node->direct_input | n->scope->node.input;
         node->internal = node->direct_internal | n->scope->node.internal;
         break;
@@ -113625,6 +115543,7 @@ static int flecs_script_dep_node_impl(
         {
             return -1;
         }
+
         node->input = node->direct_input;
         node->internal = node->direct_internal;
         break;
@@ -113635,6 +115554,7 @@ static int flecs_script_dep_node_impl(
         if (node->skip) {
             break;
         }
+
         if (!ctx->template ||
             ctx->member >= ecs_vec_count(&ctx->template->members))
         {
@@ -113642,6 +115562,7 @@ static int flecs_script_dep_node_impl(
                 "variable '%s' is not a template member", n->name);
             return -1;
         }
+
         ecs_script_template_member_t *member = ecs_vec_get_t(
             &ctx->template->members, ecs_script_template_member_t,
             ctx->member ++);
@@ -113649,6 +115570,7 @@ static int flecs_script_dep_node_impl(
         if (flecs_script_dep_expr(ctx, n->expr, &node->direct_input, &node->direct_internal)) {
             return -1;
         }
+
         node->input = node->direct_input | member->input;
         break;
     }
@@ -113660,6 +115582,7 @@ static int flecs_script_dep_node_impl(
         if (node->skip) {
             break;
         }
+
         bool no_deps = ctx->no_deps;
         ctx->no_deps = no_deps || node->kind == EcsAstExportMut;
         int dep_result = flecs_script_dep_expr(
@@ -113668,6 +115591,7 @@ static int flecs_script_dep_node_impl(
         if (dep_result) {
             return -1;
         }
+
         if (node->kind == EcsAstConst) {
             bool computed = (ctx->template || ctx->v->base.script->entity) &&
                 !ctx->conditional && !n->is_await && ctx->computed_count < 64;
@@ -113682,6 +115606,7 @@ static int flecs_script_dep_node_impl(
         } else {
             flecs_script_dep_symbol_scope(ctx, n->symbol, scope_slot);
         }
+
         node->input = node->direct_input;
         node->internal = node->direct_internal;
         break;
@@ -113692,6 +115617,7 @@ static int flecs_script_dep_node_impl(
         if (flecs_script_dep_expr(ctx, n->name_expr, &node->direct_input, &node->direct_internal)) {
             return -1;
         }
+
         node->direct_input |= flecs_script_dep_var_get(ctx, n->kind_sp);
         node->direct_internal |= flecs_script_dep_var_get_internal(ctx, n->kind_sp);
         int32_t entity_symbol = ctx->entity_symbol;
@@ -113705,6 +115631,7 @@ static int flecs_script_dep_node_impl(
         if (result) {
             return -1;
         }
+
         node->input = node->direct_input | n->scope->node.input;
         node->internal = node->direct_internal | n->scope->node.internal;
         break;
@@ -113720,6 +115647,7 @@ static int flecs_script_dep_node_impl(
         {
             return -1;
         }
+
         node->input = node->direct_input | n->scope->node.input;
         node->internal = node->direct_internal | n->scope->node.internal;
         break;
@@ -113733,6 +115661,7 @@ static int flecs_script_dep_node_impl(
         {
             return -1;
         }
+
         ctx->conditional ++;
         if (flecs_script_dep_scope(ctx, n->if_true) ||
             flecs_script_dep_scope(ctx, n->if_false))
@@ -113740,6 +115669,7 @@ static int flecs_script_dep_node_impl(
             ctx->conditional --;
             return -1;
         }
+
         ctx->conditional --;
         node->input = node->direct_input |
             n->if_true->node.input | n->if_false->node.input;
@@ -113755,17 +115685,20 @@ static int flecs_script_dep_node_impl(
         {
             return -1;
         }
+
         n->for_slot = ctx->for_count ++;
         int32_t i;
         for (i = 0; i < n->loop_var_count; i ++) {
             flecs_script_dep_var_set(ctx, n->loop_var_sp[i],
                 node->direct_input, node->direct_internal);
         }
+
         ctx->conditional ++;
         if (flecs_script_dep_scope(ctx, n->scope)) {
             ctx->conditional --;
             return -1;
         }
+
         ctx->conditional --;
         node->input = node->direct_input | n->scope->node.input;
         node->internal = node->direct_internal | n->scope->node.internal;
@@ -113781,6 +115714,7 @@ static int flecs_script_dep_node_impl(
         if (flecs_script_dep_expr(ctx, n->expr, &node->direct_input, &node->direct_internal)) {
             return -1;
         }
+
         node->input = node->direct_input;
         node->internal = node->direct_internal;
         break;
@@ -113792,6 +115726,7 @@ static int flecs_script_dep_node_impl(
             ctx->conditional --;
             return -1;
         }
+
         ctx->conditional --;
         node->input = ctx->template ? ctx->template->async_input : 0;
         node->internal = 0;
@@ -113804,11 +115739,13 @@ static int flecs_script_dep_node_impl(
         {
             return -1;
         }
+
         ctx->conditional ++;
         if (flecs_script_dep_scope(ctx, n->scope)) {
             ctx->conditional --;
             return -1;
         }
+
         ctx->conditional --;
         node->input = node->direct_input | n->scope->node.input;
         node->internal = node->direct_internal | n->scope->node.internal;
@@ -113821,6 +115758,7 @@ static int flecs_script_dep_node_impl(
         {
             return -1;
         }
+
         node->input = node->direct_input;
         node->internal = node->direct_internal;
         break;
@@ -113832,6 +115770,7 @@ static int flecs_script_dep_node_impl(
             ctx->conditional --;
             return -1;
         }
+
         node->input = n->try_scope->node.input;
         node->internal = n->try_scope->node.internal;
         ecs_script_catch_t *catches = ecs_vec_first(&n->catches);
@@ -113841,9 +115780,11 @@ static int flecs_script_dep_node_impl(
                 ctx->conditional --;
                 return -1;
             }
+
             node->input |= catches[i].scope->node.input;
             node->internal |= catches[i].scope->node.internal;
         }
+
         ctx->conditional --;
         break;
     }
@@ -113860,6 +115801,7 @@ static int flecs_script_dep_node(
     if (!result) {
         flecs_script_dep_region(ctx, node, scope_first, for_first);
     }
+
     return result;
 }
 
@@ -113886,9 +115828,11 @@ static int flecs_script_dep_scope(
             ctx->scope = prev_scope;
             return -1;
         }
+
         scope->node.input |= stmts[i]->input;
         scope->node.internal |= stmts[i]->internal;
     }
+
     uint64_t next_input = 0, next_internal = 0;
     for (i = count - 1; i >= 0; i --) {
         if (stmts[i]->kind == EcsAstAnnotation) {
@@ -113901,6 +115845,7 @@ static int flecs_script_dep_scope(
             next_internal = stmts[i]->internal;
         }
     }
+
     ctx->v->base.depth --;
     ctx->scope = prev_scope;
     flecs_script_dep_region(ctx, &scope->node, scope->scope_slot, for_first);
@@ -113919,6 +115864,7 @@ static int flecs_script_dep_assign_refs(
             return -1;
         }
     }
+
     return 0;
 }
 
@@ -113937,15 +115883,18 @@ static int flecs_script_dep_template_init(
         if (flecs_script_dep_input_new(ctx, &members[i].input)) {
             return -1;
         }
+
         if (members[i].is_mut) {
             template->async_input &= ~members[i].input;
         }
     }
+
     if (flecs_script_dep_assign_refs(ctx, &template->refs) ||
         flecs_script_dep_assign_refs(ctx, &template->dynamic_refs))
     {
         return -1;
     }
+
     if (template->parent_type) {
         const EcsScript *parent = ecs_get(ctx->v->world,
             template->parent_type, EcsScript);
@@ -113961,6 +115910,7 @@ static int flecs_script_dep_template_init(
             }
         }
     }
+
     int32_t *capture_sp = ecs_vec_first(&template->capture_sp);
     count = ecs_vec_count(&template->capture_sp);
     ecs_vec_set_count_t(NULL, &template->capture_input,
@@ -113980,17 +115930,20 @@ static int flecs_script_dep_template_init(
         {
             return -1;
         }
+
         captures[i].outer_input = outer_input;
         captures[i].outer_internal = outer_internal;
         captures[i].input = input;
         flecs_script_dep_var_set(ctx, i, input, 0);
     }
+
     flecs_script_dep_var_set(ctx, count, 0, 0);
 
     members = ecs_vec_first(&template->members);
     for (i = 0; i < template->inherited_count; i ++) {
         flecs_script_dep_var_set(ctx, members[i].sp, members[i].input, 0);
     }
+
     ctx->member = template->inherited_count;
     return 0;
 }
@@ -114014,6 +115967,7 @@ static int flecs_script_dep_template_analyze(
         flecs_script_dep_fini(&ctx);
         return -1;
     }
+
     int32_t old_depth = v->base.depth;
     v->base.depth = 0;
     int result = flecs_script_dep_scope(&ctx, template->node->scope);
@@ -114028,8 +115982,10 @@ static int flecs_script_dep_template_analyze(
                 &ctx, template->root_symbol,
                 template->node->scope->scope_slot);
         }
+
         template->input_count = *ctx.input_count;
     }
+
     flecs_script_dep_fini(&ctx);
     return result;
 }
@@ -114047,6 +116003,7 @@ static int flecs_script_dep_template(
             "'%s' is not a template", node->name);
         return -1;
     }
+
     ecs_script_template_t *template = script->template_;
     int32_t *capture_sp = ecs_vec_first(&template->capture_sp);
     int32_t i, count = ecs_vec_count(&template->capture_sp);
@@ -114054,6 +116011,7 @@ static int flecs_script_dep_template(
         *input |= flecs_script_dep_var_get(ctx, capture_sp[i]);
         *internal |= flecs_script_dep_var_get_internal(ctx, capture_sp[i]);
     }
+
     return flecs_script_dep_template_analyze(ctx->v, template, ctx);
 }
 
@@ -114077,6 +116035,7 @@ int flecs_script_analyze_dependencies(
         flecs_script_dep_fini(&ctx);
         return -1;
     }
+
     int32_t old_depth = v->base.depth;
     v->base.depth = 0;
     int result = flecs_script_dep_scope(&ctx, scope);
@@ -114086,6 +116045,7 @@ int flecs_script_analyze_dependencies(
             ctx.component_count, ctx.for_count);
         flecs_script_state_resize_computed(&impl->state, ctx.computed_count);
     }
+
     flecs_script_dep_fini(&ctx);
     return result;
 }
@@ -114119,6 +116079,7 @@ ecs_script_ref_t* flecs_script_ref_ensure(
             return &array[i];
         }
     }
+
     ecs_script_ref_t *ref = ecs_vec_append_t(NULL, refs, ecs_script_ref_t);
     *ref = *value;
     ref->observer = 0;
@@ -114136,14 +116097,17 @@ static void flecs_script_ref_eval(
     if (!s || !s->script || !input) {
         return;
     }
+
     ecs_script_impl_t *impl = flecs_script_impl(s->script);
     if (impl->evaluating) {
         return;
     }
+
     bool is_deferred = ecs_is_deferred(world);
     if (is_deferred) {
         ecs_defer_suspend(world);
     }
+
     impl->evaluating = true;
     ecs_script_runtime_t *pool = flecs_script_runtime_get(world);
     ecs_script_runtime_t *runtime = flecs_script_runtime_acquire_call(pool);
@@ -114161,16 +116125,19 @@ static void flecs_script_ref_eval(
             world, script, impl, &s->dyn_observers, input);
         s = ecs_ensure(world, script, EcsScript);
     }
+
     ecs_vec_clear(&impl->run_refs);
     if (s && s->error) {
         ecs_os_free(s->error);
         s->error = NULL;
     }
+
     if (s && rc) {
         s->error = result.error;
     } else {
         ecs_os_free(result.error);
     }
+
     flecs_script_runtime_release_call(pool, runtime);
     if (is_deferred) {
         ecs_defer_resume(world);
@@ -114185,6 +116152,7 @@ static const char* flecs_script_name_leaf(
         if (ptr == name || ptr[-1] != '\\') {
             last = ptr + 1;
         }
+
         ptr ++;
     }
     return last;
@@ -114331,6 +116299,7 @@ static void flecs_script_resolve_on_set(
                 break;
             }
         }
+
         if (i == it->count) {
             return;
         }
@@ -114463,6 +116432,7 @@ static ecs_entity_t flecs_script_create_resolve_observer(
             desc.query.terms[2].id = ecs_id(EcsTypeSerializer);
             desc.query.terms[2].oper = EcsOptional;
         }
+
         ctx->name = ecs_os_strdup(ref->name);
     } else {
         desc.query.terms[0].id = ref->component;
@@ -114521,6 +116491,7 @@ void flecs_script_update_ref_observers(
                     world, script, instance, value.entity, value.component,
                     value.input, value.is_has, callback);
             }
+
             value.name = value.name ? ecs_os_strdup(value.name) : NULL;
             ecs_vec_append_t(NULL, observers, ecs_script_ref_t)[0] = value;
             old_refs = ecs_vec_first(observers);
@@ -114537,10 +116508,12 @@ void flecs_script_update_ref_observers(
         if (old_refs[i].observer) {
             ecs_delete(world, old_refs[i].observer);
         }
+
         if (old_refs[i].is_resolve) {
             ecs_os_free(ECS_CONST_CAST(char*, old_refs[i].name));
         }
     }
+
     ecs_vec_set_count_t(NULL, observers, ecs_script_ref_t, new_count);
 }
 
@@ -114554,6 +116527,7 @@ static void flecs_script_ref_observers_discard(
         if (refs[i].observer && ecs_is_alive(world, refs[i].observer)) {
             ecs_delete(world, refs[i].observer);
         }
+
         refs[i].observer = 0;
     }
 }
@@ -114617,9 +116591,11 @@ void flecs_script_update_dyn_observers(
         if (old_refs[i].input & discard) {
             continue;
         }
+
         if (!ecs_is_alive(world, old_refs[i].entity)) {
             continue;
         }
+
         ecs_script_ref_t *ref = ecs_vec_append_t(
             NULL, &refs, ecs_script_ref_t);
         *ref = old_refs[i];
@@ -114630,11 +116606,13 @@ void flecs_script_update_dyn_observers(
         if (!ecs_is_alive(world, new_refs[i].entity)) {
             continue;
         }
+
         if (new_refs[i].component != ecs_id(EcsScriptMutVar) &&
             ecs_has_pair(world, new_refs[i].entity, ecs_id(EcsScript), script))
         {
             continue;
         }
+
         ecs_script_ref_t *ref = ecs_vec_append_t(
             NULL, &refs, ecs_script_ref_t);
         *ref = new_refs[i];
@@ -114719,6 +116697,7 @@ void flecs_script_ref_observers_fini(
             ecs_os_free(ECS_CONST_CAST(char*, refs[i].name));
         }
     }
+
     ecs_vec_fini_t(NULL, observers, ecs_script_ref_t);
 }
 
@@ -114769,8 +116748,10 @@ void flecs_script_state_clear_computed(
             if (slots[i].ti && slots[i].ti->hooks.dtor) {
                 flecs_type_info_dtor(slots[i].ptr, 1, slots[i].ti);
             }
+
             ecs_os_free(slots[i].ptr);
         }
+
         slots[i] = (ecs_script_computed_t){0};
     }
 }
@@ -114809,12 +116790,14 @@ void flecs_script_state_resize(
         ecs_os_memset(ecs_vec_first(&state->scope_slots), 0,
             scope_count * ECS_SIZEOF(int32_t));
     }
+
     ecs_vec_set_count_t(NULL, &state->component_slots,
         ecs_script_component_slot_t, component_count);
     if (component_count) {
         ecs_os_memset(ecs_vec_first(&state->component_slots), 0,
             component_count * ECS_SIZEOF(ecs_script_component_slot_t));
     }
+
     flecs_script_for_slots_init(&state->for_slots, for_count);
 }
 
@@ -114826,8 +116809,10 @@ int32_t flecs_script_state_next(
             ecs_os_memset(ecs_vec_first(&state->scope_slots), 0,
                 ecs_vec_count(&state->scope_slots) * ECS_SIZEOF(int32_t));
         }
+
         state->visit = 0;
     }
+
     return ++ state->visit;
 }
 
@@ -114844,6 +116829,7 @@ void flecs_script_state_mark(
             scopes[slot] = visit;
         }
     }
+
     int32_t for_count = ecs_vec_count(&state->for_slots);
     for (int32_t i = 0; i < region->for_count; i ++) {
         int32_t slot = region->for_first + i;
@@ -114897,6 +116883,7 @@ void flecs_script_for_slots_fini(
     for (i = 0; i < count; i ++) {
         flecs_script_for_slot_fini(&slots[i]);
     }
+
     ecs_vec_fini_t(NULL, for_slots, ecs_script_for_slot_t);
 }
 
@@ -114922,11 +116909,14 @@ static void flecs_script_for_slot_delete_named(
                         ecs_script_for_component_t, c);
                 }
             }
+
             continue;
         }
+
         if (alive) {
             ecs_delete(world, entity);
         }
+
         ecs_vec_fini_t(NULL, &entry->components, ecs_script_for_component_t);
         ecs_map_remove_free(&slot->named, entity);
         slot->cache_entity = 0;
@@ -114946,6 +116936,7 @@ void flecs_script_for_slot_clear(
             ecs_delete(world, array[i]);
         }
     }
+
     ecs_vec_clear(&slot->entities);
 
     if (delete_named) {
@@ -115004,6 +116995,7 @@ void flecs_script_for_slot_track(
             return;
         }
     }
+
     ecs_vec_append_t(NULL, &slot->entities, ecs_entity_t)[0] = entity;
 }
 
@@ -115021,6 +117013,7 @@ void flecs_script_for_slot_track_component(
         if (!entry) {
             return;
         }
+
         slot->cache_entity = entity;
         slot->cache_entry = entry;
     }
@@ -115127,11 +117120,14 @@ static void flecs_script_template_root_init(
     if (ecs_vec_count(&root->state.computed) != template->computed_count) {
         flecs_script_state_resize_computed(&root->state, template->computed_count);
     }
+
     if (ecs_vec_count(&root->state.symbol_slots) == template->symbol_count) {
         return;
     }
+
     ecs_vec_set_count_t(NULL, &root->state.symbol_slots,
         ecs_script_symbol_slot_t, template->symbol_count);
+
     if (template->symbol_count) {
         ecs_os_memset(ecs_vec_first(&root->state.symbol_slots), 0,
             template->symbol_count * ECS_SIZEOF(ecs_script_symbol_slot_t));
@@ -115142,6 +117138,7 @@ static void flecs_script_template_root_init(
             dst[i].scope_slot = src[template->symbol_offset + i].scope_slot;
         }
     }
+
     flecs_script_state_resize(&root->state, template->scope_count,
         template->component_count, template->for_count);
 }
@@ -115168,6 +117165,7 @@ static void flecs_script_template_root_clear(
         ecs_vec_get_t(&state.symbol_slots,
             ecs_script_symbol_slot_t, root_symbol)->scope_slot = -1;
     }
+
     if (ecs_vec_count(&state.scope_slots)) {
         ecs_os_memset(ecs_vec_first(&state.scope_slots), 0,
             ecs_vec_count(&state.scope_slots) * ECS_SIZEOF(int32_t));
@@ -115180,6 +117178,7 @@ static void flecs_script_template_root_clear(
         .instance_template = template,
         .visit = 1
     };
+
     flecs_script_eval_cleanup(&v, true);
 }
 
@@ -115301,6 +117300,7 @@ static void flecs_script_template_pending_release(
     if (p->owns_data) {
         flecs_type_info_dtor(data, 1, p->ti);
     }
+
     if (!p->inline_data) {
         ecs_os_free(p->data);
     }
@@ -115315,6 +117315,7 @@ void flecs_script_template_pending_fini(
     for (i = 0; i < count; i ++) {
         flecs_script_template_pending_release(&array[i]);
     }
+
     ecs_vec_fini_t(NULL, pending, ecs_script_template_pending_t);
 }
 
@@ -115339,6 +117340,7 @@ static void flecs_script_template_defer_on_set(
         if (!input) {
             continue;
         }
+
         ecs_script_template_pending_t *p = ecs_vec_append_t(NULL,
             &rt->template_pending, ecs_script_template_pending_t);
         p->entity = it->entities[i];
@@ -115356,12 +117358,14 @@ static void flecs_script_template_defer_on_set(
             p->inline_data = false;
             p->data = ecs_os_malloc(ti->size);
         }
+
         void *dst = flecs_script_template_pending_data(p);
         if (owns_data) {
             flecs_type_info_copy_ctor(dst, src, 1, ti);
         } else {
             ecs_os_memcpy(dst, src, ti->size);
         }
+
         any = true;
     }
 
@@ -115420,6 +117424,7 @@ static void flecs_script_template_update_instance_observers(
                 break;
             }
         }
+
         if (j != resolved_count) {
             continue;
         }
@@ -115492,19 +117497,23 @@ const ecs_member_t* flecs_script_template_parent_member(
     if (!template || !template->parent_type) {
         return NULL;
     }
+
     const EcsScript *script = ecs_get(world, template->parent_type, EcsScript);
     if (!script || !script->template_) {
         return NULL;
     }
+
     const ecs_script_template_t *parent = script->template_;
     ecs_entity_t types[2] = {parent->props.type, parent->muts.type};
     const char *dot = strchr(name, '.');
     ecs_size_t len = dot ? flecs_ito(ecs_size_t, dot - name) : ecs_os_strlen(name);
+
     for (int32_t i = 0; i < 2; i ++) {
         const EcsStruct *st = types[i] ? ecs_get(world, types[i], EcsStruct) : NULL;
         if (!st) {
             continue;
         }
+
         const ecs_member_t *members = ecs_vec_first(&st->members);
         for (int32_t m = 0; m < ecs_vec_count(&st->members); m ++) {
             if (ecs_os_strlen(members[m].name) == len &&
@@ -115515,6 +117524,7 @@ const ecs_member_t* flecs_script_template_parent_member(
             }
         }
     }
+
     return NULL;
 }
 
@@ -115529,8 +117539,10 @@ static void flecs_script_template_instantiate_vars(
 {
     ecs_script_template_member_t *template_members =
         ecs_vec_first(&template->members);
+
     bool named = ecs_vec_count(&template->dynamic_refs) != 0;
     int32_t m, member_count = ecs_vec_count(&template->members);
+
     for (m = 0; m < member_count; m ++) {
         ecs_script_template_member_t *template_member = &template_members[m];
         const EcsStruct *st = template_member->is_mut ? muts_st : props_st;
@@ -115612,6 +117624,7 @@ static int flecs_script_template_validate_interfaces(
                 {
                     continue;
                 }
+
                 char *elem_str = elem
                     ? ecs_get_path(world, elem)
                     : ecs_os_strdup("0");
@@ -115621,8 +117634,10 @@ static int flecs_script_template_validate_interfaces(
                     ecs_get_name(world, template_entity),
                     ecs_get_name(world, tm->interface));
                 ecs_os_free(elem_str);
+
                 return -1;
             }
+
             continue;
         }
 
@@ -115705,12 +117720,14 @@ static int flecs_script_template_instantiate_now(
         if (vm->ir) {
             entry = flecs_script_ir_entry(vm->ir, template->node);
         }
+
         v = &vm->v;
     } else {
         flecs_script_eval_visit_init(impl, &runner.v, &desc);
         flecs_script_runner_init(&runner, &runner.v);
         v = &runner.v;
     }
+
     ecs_vec_t prev_using = v->r->using;
     ecs_vec_t prev_with = desc.runtime->with;
 
@@ -115749,6 +117766,7 @@ static int flecs_script_template_instantiate_now(
     {
         goto done;
     }
+
     if (instance == template_entity) {
         ecs_err("cannot instantiate template '%s' on itself",
             ecs_get_name(world, template_entity));
@@ -115778,6 +117796,7 @@ static int flecs_script_template_instantiate_now(
     if (!run_input) {
         goto done;
     }
+
     if ((run_input == UINT64_MAX || (run_input & template->async_input)) &&
         ecs_vec_count(&root->async_blocks))
     {
@@ -115785,6 +117804,7 @@ static int flecs_script_template_instantiate_now(
         root = ecs_ensure_pair(
             world, instance, EcsScriptTemplateRoot, template_entity);
     }
+
     flecs_script_eval_begin(v, run_input, flecs_script_state_next(&root->state));
     int32_t root_symbol = template->root_symbol - template->symbol_offset;
     ecs_script_symbol_slot_t *root_slot = ecs_vec_get_t(
@@ -115873,19 +117893,21 @@ static int flecs_script_template_instantiate_now(
         run_ok = flecs_script_runner_run_scope(&runner, scope) ==
             FlecsScriptRunDone;
     }
+
     if (!run_ok) {
         result = -1;
         goto done_vars;
     }
 
     flecs_script_eval_cleanup(v, vm ? vm->dirty : true);
+
 #ifdef FLECS_SCRIPT_ASYNC
     if (!vm || vm->dirty) {
         flecs_script_async_cleanup(v);
     }
 #endif
-    root = ecs_ensure_pair(
-        world, instance, EcsScriptTemplateRoot, template_entity);
+
+    root = ecs_ensure_pair(world, instance, EcsScriptTemplateRoot, template_entity);
     root->state.initialized = true;
     root->changed = 0;
 
@@ -115908,6 +117930,7 @@ done:
     v->r->with = prev_with;
     v->r->using = prev_using;
     v->state = &v->base.script->state;
+
     if (vm) {
         flecs_script_ir_vm_free(vm, &desc);
     } else {
@@ -115926,6 +117949,7 @@ done:
         if (!desc.runtime->error_name && script->script->name) {
             desc.runtime->error_name = ecs_os_strdup(script->script->name);
         }
+
         desc.runtime->error = true;
     }
 
@@ -115946,8 +117970,10 @@ static int flecs_script_template_instantiate(
         {
             ecs_add_pair(world, instance, EcsScriptTemplatePending, template_entity);
         }
+
         return 0;
     }
+
     return flecs_script_template_instantiate_now(
         world, template_entity, component, instance, data, input);
 }
@@ -115963,12 +117989,14 @@ int ecs_script_template_update(
     if (!ecs_is_alive(world, template_entity)) {
         return -1;
     }
+
     const EcsScript *script = ecs_get(world, template_entity, EcsScript);
     if (!script || !script->template_ || !ecs_is_alive(world, instance) ||
         !ecs_has_id(world, instance, template_entity))
     {
         return -1;
     }
+
     ecs_remove_pair(world, instance, EcsScriptTemplatePending, template_entity);
     const void *data = ecs_get_id(world, instance, template_entity);
     void *copy = ecs_ptr_new(world, template_entity);
@@ -115976,6 +118004,7 @@ int ecs_script_template_update(
     int result = flecs_script_template_instantiate_now(
         world, template_entity, template_entity, instance, copy, UINT64_MAX);
     ecs_ptr_free(world, template_entity, copy);
+
     return result;
 error:
     return -1;
@@ -116093,11 +118122,13 @@ static void flecs_script_template_instance_ref_on_set(
             .instance = instance,
             .input = ctx->input
         };
+
         ecs_enqueue(it->world, &(ecs_event_desc_t){
             .event = ecs_id(EcsScriptTemplateInstanceUpdateEvent),
             .entity = EcsAny,
             .param = &evt
         });
+
         return;
     }
 
@@ -116133,6 +118164,7 @@ static void flecs_on_template_flush_event(
     int32_t prev_depth = rt->template_depth;
     rt->template_pending_active = true;
     int32_t i;
+
     for (i = 0; i < ecs_vec_count(&rt->template_pending); i ++) {
         ecs_script_template_pending_t p = ecs_vec_get_t(
             &rt->template_pending, ecs_script_template_pending_t, i)[0];
@@ -116143,6 +118175,7 @@ static void flecs_on_template_flush_event(
             p.entity, data, p.input);
         flecs_script_template_pending_release(&p);
     }
+
     ecs_vec_clear(&rt->template_pending);
     rt->template_pending_active = false;
     rt->template_depth = prev_depth;
@@ -116197,6 +118230,7 @@ static void flecs_script_template_on_set(
         if (!input) {
             continue;
         }
+
         flecs_script_template_instantiate(
             world, template_entity, component,
             it->entities[i], ECS_OFFSET(data, ti->size * i), input);
@@ -116258,17 +118292,20 @@ static void flecs_script_template_on_replace(
         if (!ecs_os_memcmp(old_ptr, new_ptr, ti->size)) {
             continue;
         }
+
         EcsScriptTemplateRoot *root = ECS_CONST_CAST(EcsScriptTemplateRoot*,
             ecs_get_pair(world, it->entities[i],
                 EcsScriptTemplateRoot, template_entity));
         if (!root || !root->state.initialized) {
             continue;
         }
+
         for (m = 0; m < member_count; m ++) {
             ecs_script_template_member_t *template_member = &members[m];
             if (template_member->is_mut != mut) {
                 continue;
             }
+
             if (!template_member->diff_ti) {
                 const ecs_member_t *member = ecs_vec_get_t(
                     &st->members, ecs_member_t, template_member->index);
@@ -116283,6 +118320,7 @@ static void flecs_script_template_on_replace(
                     !member_ti->hooks.copy && !member_ti->hooks.move &&
                     !member_ti->hooks.dtor;
             }
+
             const ecs_type_info_t *member_ti = template_member->diff_ti;
             ecs_size_t offset = template_member->diff_offset;
             ecs_size_t size = template_member->diff_size;
@@ -116385,6 +118423,7 @@ static void flecs_script_template_on_remove(
             flecs_script_template_root_clear(
                 world, template, impl, root);
         }
+
         ecs_remove_pair(world, it->entities[i],
             ecs_id(EcsScriptTemplateRoot), template_entity);
     }
@@ -116437,11 +118476,13 @@ int flecs_script_template_eval_var(
     if (!ti) {
         return -1;
     }
+
     if (ecs_set_rtt_equals(v->world, type)) {
         flecs_script_eval_error(v, node,
             "type '%s' cannot be compared", ti->name);
         return -1;
     }
+
     ti = ecs_get_type_info(v->world, type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -116471,6 +118512,7 @@ int flecs_script_template_eval_var(
             {
                 continue;
             }
+
             char *elem_str = elems[e]
                 ? ecs_get_path(v->world, elems[e])
                 : ecs_os_strdup("0");
@@ -116479,6 +118521,7 @@ int flecs_script_template_eval_var(
                 "from '%s'", elem_str, e, node->name,
                 ecs_get_name(v->world, node->eval_interface));
             ecs_os_free(elem_str);
+
             return -1;
         }
     }
@@ -116521,6 +118564,7 @@ int flecs_script_template_eval_var(
     member->is_vector = node->type_is_vector;
     member->interface = node->eval_interface;
     member->diff_ti = NULL;
+
     if (member->interface) {
         template->has_interface_members = true;
     }
@@ -116641,6 +118685,7 @@ static int flecs_script_template_inherit(
                 count);
             return -1;
         }
+
         base_defaults = ecs_vec_first(&base_template->props.defaults);
     }
 
@@ -116697,10 +118742,12 @@ bool flecs_script_template_interface_accepts(
     if (value == interface) {
         return true;
     }
+
     const EcsScript *script = ecs_get(world, value, EcsScript);
     if (!script || !script->template_) {
         return false;
     }
+
     return flecs_struct_is_derived_from(world, value, interface);
 }
 
@@ -116711,6 +118758,7 @@ ecs_entity_t flecs_script_template_member_interface(
     if (!template) {
         return 0;
     }
+
     const ecs_script_template_member_t *members = ecs_vec_first(
         &template->members);
     int32_t i, count = ecs_vec_count(&template->members);
@@ -116719,6 +118767,7 @@ ecs_entity_t flecs_script_template_member_interface(
             return members[i].interface;
         }
     }
+
     return 0;
 }
 
@@ -116729,6 +118778,7 @@ bool flecs_script_template_member_is_vector(
     if (!template) {
         return false;
     }
+
     const ecs_script_template_member_t *members = ecs_vec_first(
         &template->members);
     int32_t i, count = ecs_vec_count(&template->members);
@@ -116737,6 +118787,7 @@ bool flecs_script_template_member_is_vector(
             return members[i].is_vector;
         }
     }
+
     return false;
 }
 
@@ -116752,6 +118803,7 @@ bool flecs_script_template_member_is_template(
             return members[i].is_template;
         }
     }
+
     return false;
 }
 
@@ -116765,10 +118817,12 @@ static int flecs_script_visit_type_template(
     if (tnode->symbol_offset == -1) {
         tnode->symbol_offset = ecs_vec_count(&v->base.script->state.symbol_slots);
     }
+
     template->symbol_offset = tnode->symbol_offset;
     if (tnode->root_symbol == -1) {
         tnode->root_symbol = flecs_script_type_slot_new(t, -1);
     }
+
     template->root_symbol = tnode->root_symbol;
 
     int32_t old_table = t->table;
@@ -116836,6 +118890,7 @@ static int flecs_script_visit_type_template(
         tnode->symbol_count = ecs_vec_count(
             &v->base.script->state.symbol_slots) - template->symbol_offset;
     }
+
     template->symbol_count = tnode->symbol_count;
     return result;
 }
@@ -116887,10 +118942,12 @@ static int flecs_script_template_hoist_vars(
         if (!src->is_const) {
             continue;
         }
+
         if (ecs_script_vars_lookup(template->vars, src->name)) {
             /* If variable is masked, don't declare it twice */
             continue;
         }
+
         ecs_script_var_t *dst = ecs_script_vars_define_id(
             template->vars, src->name, src->value.type);
         ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -116898,6 +118955,7 @@ static int flecs_script_template_hoist_vars(
             ecs_ptr_copy(v->world,
                 src->value.type, dst->value.ptr, src->value.ptr);
         }
+
         dst->is_const = true;
         ecs_vec_append_t(NULL, &template->capture_sp, int32_t)[0] = src->sp;
     }
@@ -116969,8 +119027,10 @@ void flecs_script_template_fini(
             if (ti->hooks.dtor) {
                 flecs_type_info_dtor(value->value.ptr, 1, ti);
             }
+
             flecs_free(a, ti->size, value->value.ptr);
         }
+
         ecs_vec_fini_t(a, defaults[d], ecs_script_var_t);
     }
 
@@ -117001,6 +119061,7 @@ int flecs_script_eval_template(
             flecs_script_symbol_set(v, node->symbol, template_entity);
         }
     }
+
     if (!template_entity) {
         return -1;
     }
@@ -117031,11 +119092,13 @@ int flecs_script_eval_template(
                     node->base);
                 goto error;
             }
+
             if (!template->parent_type) {
                 template->parent_type = inherited_parent;
             }
         }
     }
+
     if (template->parent_type) {
         const EcsScript *parent_script = ecs_get(
             v->world, template->parent_type, EcsScript);
@@ -117090,6 +119153,7 @@ int flecs_script_eval_template(
                         "'Parent' or 'ChildOf')", annot->expr);
                     goto error;
                 }
+
                 ecs_script_entity_t tree_node = {
                     .node = { .kind = EcsAstEntity, .pos = node->node.pos },
                     .scope = node->scope
@@ -117097,11 +119161,14 @@ int flecs_script_eval_template(
                 flecs_script_apply_tree_annot(annot, &tree_node);
                 template->non_fragmenting_parent =
                     tree_node.non_fragmenting_parent;
+
                 continue;
             }
+
             ecs_vec_append_t(&v->base.script->allocator, 
                 &template->annot, ecs_script_annot_t*)[0] = annot;
         }
+
         ecs_vec_clear(&v->r->annot);
     }
 
@@ -117113,6 +119180,7 @@ int flecs_script_eval_template(
             flecs_script_template_fini(
                 flecs_script_impl(script->script), script->template_);
         }
+
         ecs_script_free(script->script);
     }
 
@@ -117171,6 +119239,7 @@ int flecs_script_template_update_vars(
                 dst[i].name);
             return -1;
         }
+
         if (src->value.type != dst[i].value.type) {
             flecs_script_eval_error(v, node,
                 "variable '%s' captured by template has type %s, expected %s",
@@ -117179,6 +119248,7 @@ int flecs_script_template_update_vars(
                 flecs_errstr_1(ecs_get_path(v->world, dst[i].value.type)));
             return -1;
         }
+
         ecs_ptr_copy(v->world, src->value.type,
             dst[i].value.ptr, src->value.ptr);
     }
@@ -117224,6 +119294,7 @@ int flecs_script_template_update_vars(
             return -1;
         }
     }
+
     ecs_vec_fini_t(NULL, &instances, ecs_entity_t);
     return 0;
 }

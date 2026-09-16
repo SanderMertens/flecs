@@ -135,6 +135,7 @@ static ecs_entity_t flecs_component_sparse_remove_intern(
         if (flecs_sparse_remove(cr->sparse, 0, entity)) {
             return entity;
         }
+
         return 0;
     }
 

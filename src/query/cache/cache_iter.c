@@ -95,6 +95,7 @@ static ecs_query_cache_match_t* flecs_query_cache_next(
                         }
                     }
                 }
+
                 qit->cur ++;
                 goto repeat;
             }

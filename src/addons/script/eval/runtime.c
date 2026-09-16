@@ -34,6 +34,7 @@ void ecs_script_runtime_free(
     for (i = 0; i < count; i ++) {
         ecs_script_runtime_free(calls[i]);
     }
+
     ecs_vec_fini_t(NULL, &r->call_runtimes, ecs_script_runtime_t*);
     flecs_expr_stack_fini(&r->expr_stack);
     flecs_script_ir_vm_pool_fini(r);
@@ -56,6 +57,7 @@ ecs_script_runtime_t* flecs_script_runtime_acquire_call(
         return ((ecs_script_runtime_t**)r->call_runtimes.array)
             [-- r->call_runtimes.count];
     }
+
     return ecs_script_runtime_new();
 }
 

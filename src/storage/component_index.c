@@ -37,6 +37,7 @@ static void flecs_component_elem_insert(
         ecs_id_record_elem_t *cur_elem = flecs_component_elem(cr, elem, cur);
         cur_elem->prev = cr;
     }
+
     head_elem->next = cr;
 }
 
@@ -66,6 +67,7 @@ static void flecs_insert_id_elem(
     if (!wcr) {
         wcr = flecs_components_ensure(world, wildcard);
     }
+
     ecs_assert(wcr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_pair_record_t *pair = cr->pair;
@@ -126,12 +128,15 @@ static ecs_id_t flecs_component_hash(
             if (r == EcsAny) {
                 r = EcsWildcard;
             }
+
             if (t == EcsAny) {
                 t = EcsWildcard;
             }
+
             id = ecs_pair(r, t);
         }
     }
+
     return id;
 }
 
@@ -414,6 +419,7 @@ static void flecs_component_record_check_constraints(
         goto error;
 #endif
     }
+
 error:
     return;
 #endif
@@ -716,6 +722,7 @@ ecs_component_record_t* flecs_components_ensure(
     if (!cr) {
         cr = flecs_component_new(world, id);
     }
+
     return cr;
 }
 
@@ -921,6 +928,7 @@ static ecs_flags32_t flecs_id_flags(
     if (cr_flags & EcsIdOnInstantiateInherit) {
         extra_flags |= EcsIdHasOnAdd|EcsIdHasOnRemove;
     }
+
     return cr_flags|extra_flags;
 }
 
@@ -941,9 +949,11 @@ ecs_flags32_t flecs_id_flags_get(
         if (id != ecs_pair(first, EcsWildcard)) {
             result |= flecs_id_flags(world, ecs_pair(first, EcsWildcard));
         }
+
         if (id != ecs_pair(EcsWildcard, second)) {
             result |= flecs_id_flags(world, ecs_pair(EcsWildcard, second));
         }
+
         if (id != ecs_pair(EcsWildcard, EcsWildcard)) {
             result |= flecs_id_flags(world, ecs_pair(EcsWildcard, EcsWildcard));
         }
@@ -1100,6 +1110,7 @@ static void flecs_entities_update_childof_depth(
             if (!r) {
                 continue;
             }
+
             ecs_table_t *table = r->table;
 
             if (table->flags & EcsTableHasParent) {
@@ -1119,6 +1130,7 @@ static void flecs_entities_update_childof_depth(
 
             flecs_component_update_childof_depth(world, tgt_cr, tgt, r);
         }
+
         return;
     }
 

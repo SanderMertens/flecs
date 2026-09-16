@@ -94,9 +94,11 @@ next:
             if (not) {
                 result = !result;
             }
+
             if (!result) {
                 break;
             }
+
             op_ctx->cur ++;
         }
 
@@ -285,6 +287,7 @@ static FLECS_ALWAYS_INLINE bool flecs_query_sparse_wildcard(
         } else if (cr && (select || (!not && !(cr->flags & EcsIdExclusive)))) {
             cr = flecs_query_sparse_next_component(cr, id);
         }
+
         op_ctx->cr = cr;
         if (!cr) {
             return !all && not;
@@ -302,6 +305,7 @@ static FLECS_ALWAYS_INLINE bool flecs_query_sparse_wildcard(
         if (!redo && !flecs_query_sparse_init_sparse(op_ctx, op_ctx->cr)) {
             return !all && not;
         }
+
         bool result = select
             ? flecs_query_sparse_select_id(op, true, ctx, table_mask, actual_id)
             : flecs_query_sparse_with_id(op, redo, ctx, not, op_ctx->cr, NULL);
@@ -310,11 +314,14 @@ static FLECS_ALWAYS_INLINE bool flecs_query_sparse_wildcard(
                 ctx->it->ids[op->field_index] = actual_id;
                 flecs_query_set_vars(op, actual_id, ctx);
             }
+
             if (!all && (op->match_flags & EcsTermMatchAny)) {
                 ctx->it->ids[op->field_index] = id;
             }
+
             return true;
         }
+
         op_ctx->cr = !all && not ? NULL
             : flecs_query_sparse_next_component(op_ctx->cr, id);
         redo = false;
@@ -335,6 +342,7 @@ bool flecs_query_sparse_select(
         return flecs_query_sparse_wildcard(
             op, redo, ctx, id, true, false, table_mask);
     }
+
     return flecs_query_sparse_select_id(op, redo, ctx, table_mask, id);
 }
 
@@ -350,6 +358,7 @@ bool flecs_query_sparse_with(
     if (ecs_id_is_wildcard(id)) {
         return flecs_query_sparse_wildcard(op, redo, ctx, id, false, not, 0);
     }
+
     return flecs_query_sparse_with_id(op, redo, ctx, not,
         redo ? NULL : flecs_components_get(ctx->world, id), NULL);
 }
@@ -393,6 +402,7 @@ bool flecs_query_sparse_self_up(
                 } else {
                     it->sources[op->field_index] = 0;
                 }
+
                 flecs_reset_source_set_flag(it, op->field_index);
                 return true;
             }
@@ -534,6 +544,7 @@ bool flecs_query_trivial_sparse_search(
             if (i == lead) {
                 continue;
             }
+
             if (!flecs_sparse_has(op_ctx->sparse[i], e)) {
                 goto next;
             }

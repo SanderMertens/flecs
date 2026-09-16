@@ -66,6 +66,7 @@ static flecs_query_row_mask_t flecs_query_get_row_mask(
                     break;
                 }
             }
+
             continue;
         }
 
@@ -75,6 +76,7 @@ static flecs_query_row_mask_t flecs_query_get_row_mask(
         if (not_fields & field_bit) {
             block = ~block;
         }
+
         mask &= block;
         has_bitset = true;
     }
@@ -258,6 +260,7 @@ next_block:
     } else {
         run_len = flecs_ctz64(~run);
     }
+
     int32_t max_len = last_bit - tz;
     if (run_len > max_len) {
         run_len = max_len;

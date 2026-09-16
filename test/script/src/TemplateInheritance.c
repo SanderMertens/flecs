@@ -20,38 +20,6 @@ typedef struct {
     float z;
 } Position3D;
 
-static void test_member(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    int32_t index,
-    const char *name,
-    ecs_entity_t member_type,
-    int32_t offset)
-{
-    const EcsStruct *st = ecs_get(world, type, EcsStruct);
-    test_assert(st != NULL);
-    test_assert(index < ecs_vec_count(&st->members));
-    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, index);
-    test_str(m->name, name);
-    test_uint(m->type, member_type);
-    test_int(m->offset, offset);
-}
-
-static void test_struct(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    int32_t member_count,
-    ecs_size_t size)
-{
-    const EcsStruct *st = ecs_get(world, type, EcsStruct);
-    test_assert(st != NULL);
-    test_int(ecs_vec_count(&st->members), member_count);
-
-    const EcsComponent *c = ecs_get(world, type, EcsComponent);
-    test_assert(c != NULL);
-    test_int(c->size, size);
-}
-
 void TemplateInheritance_base_template_prop(void) {
     ecs_world_t *world = ecs_init();
 
@@ -72,10 +40,37 @@ void TemplateInheritance_base_template_prop(void) {
     test_assert(derived != 0);
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
 
-    test_struct(world, base, 1, 4);
-    test_struct(world, derived, 2, 8);
-    test_member(world, derived, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "z", ecs_id(ecs_f32_t), 4);
+    const EcsStruct *st = ecs_get(world, base, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 1);
+
+    const EcsComponent *c = ecs_get(world, base, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 4);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
 
     const EcsScript *s = ecs_get(world, derived, EcsScript);
     test_assert(s != NULL);
@@ -108,10 +103,38 @@ void TemplateInheritance_base_template_two_props(void) {
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
-    test_struct(world, derived, 3, 12);
-    test_member(world, derived, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "y", ecs_id(ecs_f32_t), 4);
-    test_member(world, derived, 2, "z", ecs_id(ecs_f32_t), 8);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 12);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 8);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const Position3D *v = ecs_get_id(world, e, derived);
@@ -142,9 +165,30 @@ void TemplateInheritance_base_template_no_own_props(void) {
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t position = ecs_lookup(world, "Position");
     test_assert(derived != 0);
-    test_struct(world, derived, 2, 8);
-    test_member(world, derived, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "y", ecs_id(ecs_f32_t), 4);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const PositionBase *p = ecs_get_id(world, e, position);
@@ -331,10 +375,30 @@ void TemplateInheritance_base_template_string_prop(void) {
         ecs_string_t name;
         ecs_f32_t z;
     } Derived;
-    test_struct(world, derived, 2, ECS_SIZEOF(Derived));
-    test_member(world, derived, 0, "name", ecs_id(ecs_string_t), 0);
-    test_member(world, derived, 1, "z", ecs_id(ecs_f32_t),
-        (int32_t)offsetof(Derived, z));
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, ECS_SIZEOF(Derived));
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "name");
+    test_uint(m->type, ecs_id(ecs_string_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, (int32_t)offsetof(Derived, z));
 
     ecs_entity_t e = ecs_lookup(world, "e");
     ecs_entity_t f = ecs_lookup(world, "f");
@@ -399,7 +463,14 @@ void TemplateInheritance_base_struct(void) {
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     ecs_entity_t position = ecs_lookup(world, "Position");
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
-    test_struct(world, derived, 3, 12);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 12);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const Position3D *v = ecs_get_id(world, e, derived);
@@ -447,7 +518,14 @@ void TemplateInheritance_base_component_defined_in_c(void) {
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
     test_assert(ecs_has_pair(world, derived, EcsIsA, ecs_id(PositionBase)));
-    test_struct(world, derived, 3, 12);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 12);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const Position3D *v = ecs_get_id(world, e, derived);
@@ -483,12 +561,53 @@ void TemplateInheritance_chain(void) {
     test_assert(ecs_has_pair(world, b, EcsIsA, a));
     test_assert(ecs_has_pair(world, c, EcsIsA, b));
 
-    test_struct(world, a, 1, 4);
-    test_struct(world, b, 2, 8);
-    test_struct(world, c, 3, 12);
-    test_member(world, c, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, c, 1, "y", ecs_id(ecs_f32_t), 4);
-    test_member(world, c, 2, "z", ecs_id(ecs_f32_t), 8);
+    const EcsStruct *st = ecs_get(world, a, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 1);
+
+    const EcsComponent *comp = ecs_get(world, a, EcsComponent);
+    test_assert(comp != NULL);
+    test_int(comp->size, 4);
+
+    st = ecs_get(world, b, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    comp = ecs_get(world, b, EcsComponent);
+    test_assert(comp != NULL);
+    test_int(comp->size, 8);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    comp = ecs_get(world, c, EcsComponent);
+    test_assert(comp != NULL);
+    test_int(comp->size, 12);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 8);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const Position3D *v = ecs_get_id(world, e, c);
@@ -643,11 +762,46 @@ void TemplateInheritance_two_derived(void) {
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t d1 = ecs_lookup(world, "D1");
     ecs_entity_t d2 = ecs_lookup(world, "D2");
-    test_struct(world, base, 1, 4);
-    test_struct(world, d1, 2, 8);
-    test_struct(world, d2, 2, 8);
-    test_member(world, d1, 1, "y", ecs_id(ecs_f32_t), 4);
-    test_member(world, d2, 1, "z", ecs_id(ecs_f32_t), 4);
+
+    const EcsStruct *st = ecs_get(world, base, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 1);
+
+    const EcsComponent *c = ecs_get(world, base, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 4);
+
+    st = ecs_get(world, d1, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    c = ecs_get(world, d1, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
+
+    st = ecs_get(world, d2, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    c = ecs_get(world, d2, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
+
+    st = ecs_get(world, d1, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, d2, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const float *v = ecs_get_id(world, e, d1);
@@ -749,7 +903,14 @@ void TemplateInheritance_base_w_mut(void) {
     test_assert(base_mut != 0);
     test_assert(derived != 0);
     test_assert(!ecs_has_pair(world, derived, EcsWith, base_mut));
-    test_struct(world, derived, 2, 8);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(ecs_has_id(world, e, derived));
@@ -777,7 +938,14 @@ void TemplateInheritance_derived_w_mut(void) {
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived_mut != 0);
     test_assert(ecs_has_pair(world, derived, EcsWith, derived_mut));
-    test_struct(world, derived, 2, 8);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(ecs_has_id(world, e, derived));
@@ -1075,7 +1243,14 @@ void TemplateInheritance_newline_before_scope(void) {
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
-    test_struct(world, derived, 2, 8);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const float *v = ecs_get_id(world, e, derived);
@@ -1102,7 +1277,14 @@ void TemplateInheritance_no_space_around_colon(void) {
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
-    test_struct(world, derived, 2, 8);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
 
     ecs_fini(world);
 }
@@ -1132,7 +1314,14 @@ void TemplateInheritance_base_in_module(void) {
     test_assert(base != 0);
     test_assert(derived != 0);
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
-    test_struct(world, derived, 2, 8);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const float *v = ecs_get_id(world, e, derived);
@@ -1193,7 +1382,14 @@ void TemplateInheritance_base_in_separate_script(void) {
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
-    test_struct(world, derived, 3, 12);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 12);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const Position3D *v = ecs_get_id(world, e, derived);
@@ -1221,7 +1417,14 @@ void TemplateInheritance_run_script_twice(void) {
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
-    test_struct(world, derived, 2, 8);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
 
     test_assert(ecs_script_run_w_desc(world, NULL, "e { Derived: {} }", &ir_desc, NULL) == 0);
     ecs_entity_t e = ecs_lookup(world, "e");
@@ -1257,7 +1460,14 @@ void TemplateInheritance_managed_script_update(void) {
     test_assert(base != 0);
     test_assert(derived != 0);
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
-    test_struct(world, derived, 2, 8);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);

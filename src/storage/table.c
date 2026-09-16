@@ -76,11 +76,13 @@ static void flecs_table_check_sanity(
             if (!ECS_HAS_ID_FLAG(ids[i], TOGGLE)) {
                 continue;
             }
+
             ecs_bitset_t *bs = &table->_->bs_columns[bs_i];
             ecs_assert(flecs_bitset_count(bs) == count,
                 ECS_INTERNAL_ERROR, NULL);
             bs_i ++;
         }
+
         ecs_assert(bs_i == bs_count, ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -101,18 +103,23 @@ static ecs_flags32_t flecs_type_info_flags(
     if (ti->hooks.ctor) {
         flags |= EcsTableHasCtors;
     }
+
     if (ti->hooks.on_add) {
         flags |= EcsTableHasCtors;
     }
+
     if (ti->hooks.dtor) {
         flags |= EcsTableHasDtors;
     }
+
     if (ti->hooks.on_remove) {
         flags |= EcsTableHasDtors;
     }
+
     if (ti->hooks.copy) {
         flags |= EcsTableHasCopy;
     }
+
     if (ti->hooks.move) {
         flags |= EcsTableHasMove;
     }  
@@ -190,6 +197,7 @@ static void flecs_table_init_columns(
     if (table->_->name_column != -1) {
         table->_->name_column = table->column_map[table->_->name_column];
     }
+
     if (table->_->doc_name_column != -1) {
         table->_->doc_name_column = table->column_map[table->_->doc_name_column];
     }
@@ -371,8 +379,10 @@ static void flecs_table_init_flags(
                 if (!meta->bs_count) {
                     meta->bs_offset = flecs_ito(int16_t, i);
                 }
+
                 meta->bs_count ++;
             }
+
             if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
                 table->flags |= EcsTableHasOverrides;
             }
@@ -430,6 +440,7 @@ static void flecs_table_init_overrides(
     if (!table->column_count) {
         return;
     }
+
     ecs_size_t bases_size = ECS_SIZEOF(ecs_table_overrides_t) +
         (tr->count - 1) * ECS_SIZEOF(ecs_table_override_base_t);
     ecs_size_t size = bases_size + table->column_count * ECS_SIZEOF(ecs_ref_t);
@@ -442,6 +453,7 @@ static void flecs_table_init_overrides(
         o->bases[i].pair = table->_->records[tr->index + i].hdr.cr->pair;
         o->bases[i].generation = -1;
     }
+
     table->data.overrides = o;
 }
 
@@ -471,9 +483,11 @@ static void flecs_table_update_overrides(
             break;
         }
     }
+
     if (base_index == o->count) {
         return;
     }
+
     for (; base_index < o->count; base_index ++) {
         ecs_table_override_base_t *base = &o->bases[base_index];
         base->generation = base->pair->reachable.generation;
@@ -544,10 +558,12 @@ void flecs_table_init(
             if (first_pair == -1) {
                 first_pair = i;
             }
+
             pair_count ++;
         } else if (first_role == dst_count) {
             first_role = i;
         }
+
         has_low_id |= id < FLECS_HI_COMPONENT_ID;
         table->bloom_filter = flecs_table_bloom_filter_add(table->bloom_filter, id);
     }
@@ -567,10 +583,12 @@ void flecs_table_init(
                 if (r == EcsChildOf) {
                     childof_cr = cr;
                 }
+
                 relationship = flecs_table_add_record(world, records,
                     cr->pair->parent, i, 0);
                 last_relationship = r;
             }
+
             relationship->count ++;
             if (!ECS_IS_VALUE_PAIR(id)) {
                 flecs_table_append_to_records(world, records,
@@ -584,6 +602,7 @@ void flecs_table_init(
                 flecs_table_append_to_records(world, records,
                     ecs_pair(EcsFlag, first), i, dst_count);
             }
+
             if (second) {
                 flecs_table_append_to_records(world, records,
                     ecs_pair(EcsFlag, second), i, dst_count);
@@ -594,10 +613,12 @@ void flecs_table_init(
     if (id_count) {
         flecs_table_add_record(world, records, world->cr_wildcard, 0, id_count);
     }
+
     if (pair_count) {
         flecs_table_add_record(world, records,
             world->cr_wildcard_wildcard, first_pair, pair_count);
     }
+
     if (!(table->flags & (EcsTableHasChildOf|EcsTableHasParent))) {
         childof_cr = world->cr_childof_0;
         flecs_table_add_record(world, records, childof_cr, -1, 0);
@@ -768,6 +789,7 @@ static void flecs_table_invoke_ctor(
         for (int32_t i = 0; i < count; i ++) {
             flecs_type_info_copy_ctor(ECS_ELEM(ptr, ti->size, i), base_ptr, 1, ti);
         }
+
         if (ti->hooks.on_set) {
             flecs_invoke_hook(world, table, tr->hdr.cr, tr->column,
                 count, row, &table->data.entities[row], ti->component, ti,
@@ -967,6 +989,7 @@ static void flecs_table_fini_data(
                     ecs_os_memset(bs->data, 0,
                         (bs->size >> 6) * ECS_SIZEOF(uint64_t));
                 }
+
                 bs->count = 0;
             }
         }
@@ -1072,6 +1095,7 @@ void flecs_table_fini(
     if (table->component_map != flecs_table_empty_component_map) {
         ecs_os_free(table->component_map);
     }
+
     flecs_table_records_unregister(world, table);
 
     /* Update counters */
@@ -1138,6 +1162,7 @@ static void flecs_table_mark_table_dirty(
     if (table->dirty_state) {
         table->dirty_state[index] ++;
     }
+
     if (!index) {
         flecs_increment_table_version(world, table);
     }
@@ -1197,6 +1222,7 @@ int32_t* flecs_table_get_dirty_state(
             table->dirty_state[i] = 1;
         }
     }
+
     return table->dirty_state;
 }
 
@@ -1216,6 +1242,7 @@ static void flecs_table_move_bitset_columns(
         if (!ECS_HAS_ID_FLAG(id, TOGGLE)) {
             continue;
         }
+
         ecs_bitset_t *src_bs = &src->bs_columns[src_column ++];
         while (dst_type < dst_table->type.count &&
             dst_table->type.array[dst_type] < id)
@@ -1234,6 +1261,7 @@ static void flecs_table_move_bitset_columns(
                     flecs_bitset_get(src_bs, src_index + j));
             }
         }
+
         if (clear) {
             ecs_assert(count == flecs_bitset_count(src_bs), ECS_INTERNAL_ERROR, NULL);
             flecs_bitset_fini(src_bs);
@@ -1250,6 +1278,7 @@ static void flecs_table_resize_column(
     if (old_size == new_size) {
         return;
     }
+
     const ecs_type_info_t *ti = column->ti;
     void *old = column->data;
     if (!new_size) {
@@ -1262,6 +1291,7 @@ static void flecs_table_resize_column(
         column->data = ecs_os_realloc(old, ti->size * new_size);
         return;
     }
+
     ecs_os_free(old);
 }
 
@@ -1299,11 +1329,13 @@ static FLECS_ALWAYS_INLINE int32_t flecs_table_grow_data(
                     column->data, column->ti->size * entities.size);
             }
         }
+
         table->data.count = entities.count;
         table->data.size = entities.size;
         flecs_table_mark_table_dirty(world, table, 0);
         return count;
     }
+
     flecs_table_update_overrides(world, table);
     table->data.count = entities.count;
     table->data.size = entities.size;
@@ -1315,6 +1347,7 @@ static FLECS_ALWAYS_INLINE int32_t flecs_table_grow_data(
         if (construct) {
             flecs_table_invoke_ctor(world, table, i, count, to_add);
         }
+
         if (on_add && to_add && ti->hooks.on_add) {
             flecs_table_invoke_hook(world, table, ti->hooks.on_add,
                 EcsOnAdd, column, e, count, to_add);
@@ -1885,13 +1918,16 @@ void flecs_table_merge(
                 ecs_os_free(dst->data);
                 dst->data = src->data;
             }
+
             flecs_table_mark_table_dirty(world, dst_table, ++ dst_i);
         } else {
             flecs_table_invoke_dtor(src, 0, src_count);
             ecs_os_free(src->data);
         }
+
         src->data = NULL;
     }
+
     ecs_assert(dst_i == dst_table->column_count, ECS_INTERNAL_ERROR, NULL);
 
     flecs_table_move_bitset_columns(
@@ -1930,9 +1966,11 @@ static int32_t flecs_table_get_toggle_column(
         if (!ECS_HAS_ID_FLAG(cur, TOGGLE)) {
             continue;
         }
+
         if (cur == bs_id) {
             return column;
         }
+
         column ++;
     }
 
@@ -2093,6 +2131,7 @@ ecs_pair_record_t* flecs_table_get_childof_pr(
     if (cr) {
         return cr->pair;
     }
+
     return NULL;
 }
 
@@ -2108,6 +2147,7 @@ ecs_hashmap_t* flecs_table_get_name_index(
     if (pr) {
         return pr->name_index;
     }
+
     return NULL;
 }
 
@@ -2194,6 +2234,7 @@ int32_t ecs_table_get_column_index(
         if (res > 0) {
             return res - 1;
         }
+
         return -1;
     }
 
@@ -2228,6 +2269,7 @@ int32_t ecs_table_type_to_column_index(
     if (column_map) {
         return column_map[index];
     }
+
 error:
     return -1;
 }
@@ -2426,6 +2468,7 @@ ecs_record_t* ecs_record_find(
     if (r) {
         return r;
     }
+
 error:
     return NULL;
 }

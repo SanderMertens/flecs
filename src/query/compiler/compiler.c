@@ -189,6 +189,7 @@ static int flecs_query_discover_vars(
             if (!scope) {
                 scoped_var_index = ecs_vec_count(vars);
             }
+
             scope ++;
             continue;
         } else if (ECS_TERM_REF_ID(first) == EcsScopeClose) {
@@ -200,6 +201,7 @@ static int flecs_query_discover_vars(
                     ecs_vec_get_t(vars, ecs_query_var_t, v)->anonymous = true;
                 }
             }
+
             continue;
         }
 
@@ -330,6 +332,7 @@ static int flecs_query_discover_vars(
                     ecs_os_free(var_name);
                     goto error;
                 }
+
                 base_entity_id = flecs_query_add_var(
                     query, EcsThisName, vars, EcsVarEntity);
                 var = ecs_vec_get_t(vars, ecs_query_var_t, i);
@@ -456,6 +459,7 @@ static bool flecs_query_var_is_unknown(
             return flecs_query_var_is_unknown(query, table_var, ctx);
         }
     }
+
     return true;
 }
 
@@ -490,11 +494,13 @@ static bool flecs_query_term_is_unknown(
             return false;
         }
     }
+
     if (dummy.flags & (EcsQueryIsVar << EcsQuerySecond)) {
         if (!flecs_query_var_is_unknown(query, dummy.second.var, ctx)) {
             return false;
         }
     }
+
     if (dummy.flags & (EcsQueryIsVar << EcsQuerySrc)) {
         if (!flecs_query_var_is_unknown(query, dummy.src.var, ctx)) {
             return false;

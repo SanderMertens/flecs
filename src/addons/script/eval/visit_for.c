@@ -69,8 +69,10 @@ int flecs_script_for_check_var_count(
                 "(expected 'elem' or '(index, elem)')",
                 kind == FlecsScriptForArray ? "array" : "vector");
         }
+
         return -1;
     }
+
     return 0;
 }
 
@@ -81,6 +83,7 @@ bool flecs_script_for_has_index_var(
     if (kind == FlecsScriptForMap) {
         return loop_var_count == 3;
     }
+
     return loop_var_count == 2;
 }
 
@@ -107,6 +110,7 @@ ecs_script_var_t* flecs_script_for_declare_var(
                 "invalid type for loop variable '%s'", name);
             return NULL;
         }
+
         var->value.ptr = flecs_stack_calloc(
             &v->r->stack, ti->size, ti->alignment);
         var->type_info = ti;
@@ -151,6 +155,7 @@ static int flecs_script_for_enter(
         if (flecs_script_eval_expr(v, &node->from, &from_val)) {
             return -1;
         }
+
         if (flecs_script_eval_expr(v, &node->to, &to_val)) {
             return -1;
         }
@@ -244,6 +249,7 @@ error:
         ecs_ptr_free(v->world, state->collection.type, state->collection.ptr);
         state->collection = (ecs_value_t){0, NULL};
     }
+
     return -1;
 }
 
@@ -258,6 +264,7 @@ static bool flecs_script_for_next(
         if (value >= state->count) {
             return false;
         }
+
         *(int32_t*)state->elem_var->value.ptr = value;
         break;
     }
@@ -278,11 +285,13 @@ static bool flecs_script_for_next(
             ecs_map_key_t key = ecs_map_key(&state->map_it);
             ecs_os_memcpy(state->key_var->value.ptr, &key, state->key_size);
         }
+
         if (state->elem_size > ECS_SIZEOF(ecs_map_val_t)) {
             state->elem_var->value.ptr = ecs_map_ptr(&state->map_it);
         } else {
             state->elem_var->value.ptr = &state->map_it.res[1];
         }
+
         state->elem_var->owned = false;
         break;
     }
@@ -321,6 +330,7 @@ int flecs_script_step_for(
         if (flecs_script_for_enter(v, node, state)) {
             return -1;
         }
+
         frame->pc = 1;
     }
 
