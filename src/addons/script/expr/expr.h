@@ -102,4 +102,7 @@ int flecs_expr_initializer_validate_assign(
 ecs_expr_swizzle_t* flecs_expr_expand_swizzle_get(
     ecs_expr_node_t *node);
 
+const ecs_expr_variable_t* flecs_expr_template_ref_var(
+    const ecs_expr_node_t *left);
+
 #endif

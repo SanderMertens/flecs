@@ -235,6 +235,28 @@ static int flecs_expr_initializer_visit_fold(
     return can_fold ? flecs_expr_fold_eval(script, node_ptr, desc) : 0;
 }
 
+int flecs_expr_visit_fold_const(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_expr_node_t *node = *node_ptr;
+    if (node->kind != EcsExprInitializer ||
+        !((ecs_expr_initializer_t*)node)->is_partial)
+    {
+        return 0;
+    }
+
+    bool can_fold = true;
+    if (flecs_expr_initializer_pre_fold(
+        script, (ecs_expr_initializer_t*)node, desc, &can_fold))
+    {
+        return -1;
+    }
+
+    return can_fold ? flecs_expr_fold_eval(script, node_ptr, desc) : 0;
+}
+
 static int flecs_expr_identifier_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -451,6 +473,15 @@ int flecs_expr_visit_fold(
 
         return function->args ? flecs_expr_fold_children(
             script, (ecs_expr_node_t*)function->args, desc) : 0;
+    }
+    case EcsExprTemplate: {
+        ecs_expr_function_t *function = (ecs_expr_function_t*)node;
+        if (function->args && flecs_expr_visit_fold(
+            script, (ecs_expr_node_t**)&function->args, desc))
+        {
+            goto error;
+        }
+        break;
     }
     case EcsExprMember:
     case EcsExprSwizzle:

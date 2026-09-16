@@ -552,13 +552,14 @@ void TemplateVectorProp_native_set_id(void) {
     test_int(ti->size, ECS_SIZEOF(ecs_vec_t));
 
     ecs_vec_t vec;
-    ecs_vec_init_t(NULL, &vec, ecs_entity_t, 1);
-    ecs_vec_append_t(NULL, &vec, ecs_entity_t)[0] = glass;
+    ecs_vec_init_t(NULL, &vec, ecs_script_template_ref_t, 1);
+    ecs_vec_append_t(NULL, &vec, ecs_script_template_ref_t)[0] =
+        (ecs_script_template_ref_t){ .type = glass };
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set_id(world, e, building, ECS_SIZEOF(ecs_vec_t), &vec);
 
-    ecs_vec_fini_t(NULL, &vec, ecs_entity_t);
+    ecs_vec_fini_t(NULL, &vec, ecs_script_template_ref_t);
 
     ecs_entity_t inst = ecs_lookup(world, "e.a");
     test_assert(inst != 0);
@@ -789,22 +790,23 @@ void TemplateVectorProp_value_not_derived_from_c_fails(void) {
     test_assert(unrelated != 0);
 
     ecs_vec_t vec;
-    ecs_vec_init_t(NULL, &vec, ecs_entity_t, 1);
-    ecs_vec_append_t(NULL, &vec, ecs_entity_t)[0] = unrelated;
+    ecs_vec_init_t(NULL, &vec, ecs_script_template_ref_t, 1);
+    ecs_vec_append_t(NULL, &vec, ecs_script_template_ref_t)[0] =
+        (ecs_script_template_ref_t){ .type = unrelated };
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_log_set_level(-4);
     ecs_set_id(world, e, building, ECS_SIZEOF(ecs_vec_t), &vec);
     ecs_log_set_level(-1);
 
-    ecs_vec_fini_t(NULL, &vec, ecs_entity_t);
+    ecs_vec_fini_t(NULL, &vec, ecs_script_template_ref_t);
 
     test_assert(ecs_lookup(world, "e.a") == 0);
 
     ecs_fini(world);
 }
 
-void TemplateVectorProp_template_type_vector_fails(void) {
+void TemplateVectorProp_template_type_vector(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -812,12 +814,24 @@ void TemplateVectorProp_template_type_vector_fails(void) {
     LINE "  prop x: f32 = 1"
     LINE "}"
     LINE "template Building {"
-    LINE "  prop points: template Point[]"
-    LINE "}";
+    LINE "  prop points: template Point[] = [Point(x: 5), Point]"
+    LINE "  a { points[0] }"
+    LINE "  b { points[1] }"
+    LINE "}"
+    LINE "Building e";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-    ecs_log_set_level(-1);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t point = ecs_lookup(world, "Point");
+    test_assert(point != 0);
+
+    const float *a = ecs_get_id(world, ecs_lookup(world, "e.a"), point);
+    test_assert(a != NULL);
+    test_flt(a[0], 5);
+
+    const float *b = ecs_get_id(world, ecs_lookup(world, "e.b"), point);
+    test_assert(b != NULL);
+    test_flt(b[0], 1);
 
     ecs_fini(world);
 }
@@ -1270,6 +1284,330 @@ void TemplateVectorProp_index_empty_initializer(void) {
     test_assert(p != NULL);
     test_flt(p->x, 0);
     test_flt(p->y, 2);
+
+    ecs_fini(world);
+}
+
+#define FACADE_HEAD \
+    HEAD "struct Position(x: f32, y: f32)" \
+    LINE "struct Facade(height: f32)" \
+    LINE "template BrickFacade : Facade {" \
+    LINE "  prop scale: f32 = 1" \
+    LINE "  Position: {$height, $scale}" \
+    LINE "}" \
+    LINE "template GlassFacade : Facade {" \
+    LINE "  prop scale: f32 = 2" \
+    LINE "  Position: {$height, $scale}" \
+    LINE "}"
+
+typedef struct {
+    float height;
+    float scale;
+} BrickFacadeValue;
+
+static void test_position(
+    ecs_world_t *world,
+    const char *path,
+    float x,
+    float y)
+{
+    ecs_entity_t e = ecs_lookup(world, path);
+    test_assert(e != 0);
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, x);
+    test_flt(p->y, y);
+}
+
+void TemplateVectorProp_template_ref_call_default(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[] = [BrickFacade(scale: 5), GlassFacade]"
+    LINE "  a { facade[0]: {height: 10} }"
+    LINE "  b { facade[1]: {height: 20} }"
+    LINE "}"
+    LINE "Building e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_position(world, "e.a", 10, 5);
+    test_position(world, "e.b", 20, 2);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_template_ref_call_positional(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[] = [BrickFacade(0, 5), GlassFacade(0, 6)]"
+    LINE "  a { facade[0]: {height: 10} }"
+    LINE "  b { facade[1]: {height: 20} }"
+    LINE "}"
+    LINE "Building e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_position(world, "e.a", 10, 5);
+    test_position(world, "e.b", 20, 6);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_template_ref_call_instance(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[]"
+    LINE "  a { facade[0]: {height: 10} }"
+    LINE "  b { facade[1]: {height: 20} }"
+    LINE "}"
+    LINE "Building e(facade: [BrickFacade(scale: 3), GlassFacade(scale: 4)])";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_position(world, "e.a", 10, 3);
+    test_position(world, "e.b", 20, 4);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t building = ecs_lookup(world, "Building");
+    const ecs_vec_t *vec = ecs_get_id(world, e, building);
+    test_assert(vec != NULL);
+    test_int(ecs_vec_count(vec), 2);
+    const ecs_script_template_ref_t *refs = ecs_vec_first(vec);
+    test_assert(refs[0].type == ecs_lookup(world, "BrickFacade"));
+    test_assert(refs[0].value != NULL);
+    test_flt(((BrickFacadeValue*)refs[0].value)->scale, 3);
+    test_assert(refs[1].type == ecs_lookup(world, "GlassFacade"));
+    test_assert(refs[1].value != NULL);
+    test_flt(((BrickFacadeValue*)refs[1].value)->scale, 4);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_template_ref_call_tag_form(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[] = [BrickFacade(scale: 5)]"
+    LINE "  a { facade[0] }"
+    LINE "}"
+    LINE "Building e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_position(world, "e.a", 0, 5);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_template_ref_call_iterate_w_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[] = [BrickFacade(scale: 7), GlassFacade(scale: 8)]"
+    LINE "  for (i, f) in facade {"
+    LINE "    \"side_{i}\" { f: {height: 5} }"
+    LINE "  }"
+    LINE "}"
+    LINE "Building e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_position(world, "e.side_0", 5, 7);
+    test_position(world, "e.side_1", 5, 8);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_template_ref_call_pass_element_to_interface_prop(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "template Wall {"
+    LINE "  prop facade: template Facade"
+    LINE "  side { facade: {height: 7} }"
+    LINE "}"
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade(scale: 9)]"
+    LINE "  wall { Wall: {facade: facade[1]} }"
+    LINE "}"
+    LINE "Building e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_position(world, "e.wall.side", 7, 9);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_template_ref_call_index_in_interpolated_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade(scale: 9)]"
+    LINE "  \"named_{facade[1]}\" {}"
+    LINE "}"
+    LINE "Building e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e.named_GlassFacade") != 0);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_template_ref_call_update(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[]"
+    LINE "  a { facade[0]: {height: 10} }"
+    LINE "}"
+    LINE "Building e(facade: [BrickFacade(scale: 3)])";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_position(world, "e.a", 10, 3);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "Building e(facade: [BrickFacade(scale: 4)])", &ir_desc, NULL) == 0);
+
+    test_position(world, "e.a", 10, 4);
+
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "Building e(facade: [GlassFacade()])", &ir_desc, NULL) == 0);
+
+    test_position(world, "e.a", 10, 2);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_template_ref_from_c_w_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[]"
+    LINE "  a { facade[0]: {height: 4} }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t building = ecs_lookup(world, "Building");
+    ecs_entity_t brick = ecs_lookup(world, "BrickFacade");
+    test_assert(building != 0);
+    test_assert(brick != 0);
+
+    BrickFacadeValue *value = ecs_ptr_new(world, brick);
+    test_assert(value != NULL);
+    value->scale = 6;
+
+    ecs_vec_t vec;
+    ecs_vec_init_t(NULL, &vec, ecs_script_template_ref_t, 1);
+    ecs_vec_append_t(NULL, &vec, ecs_script_template_ref_t)[0] =
+        (ecs_script_template_ref_t){ .type = brick, .value = value };
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set_id(world, e, building, ECS_SIZEOF(ecs_vec_t), &vec);
+
+    ecs_vec_fini_t(NULL, &vec, ecs_script_template_ref_t);
+    ecs_ptr_free(world, brick, value);
+
+    test_position(world, "e.a", 4, 6);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_template_ref_call_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "template Street {"
+    LINE "  prop facades: template Facade[]"
+    LINE "  for (i, f) in facades {"
+    LINE "    \"b_{i}\" { f: {height: 3} }"
+    LINE "  }"
+    LINE "}"
+    LINE "template City {"
+    LINE "  prop street: template Street"
+    LINE "  s { street }"
+    LINE "}"
+    LINE "City c(street: Street(facades: [BrickFacade(scale: 4), GlassFacade(scale: 5)]))"
+    LINE "City d(street: Street([GlassFacade(), BrickFacade(0, 6)]))";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_position(world, "c.s.b_0", 3, 4);
+    test_position(world, "c.s.b_1", 3, 5);
+    test_position(world, "d.s.b_0", 3, 2);
+    test_position(world, "d.s.b_1", 3, 6);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_template_ref_call_nested_ref(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "struct Street(width: f32)"
+    LINE "template MyStreet : Street {"
+    LINE "  prop facades: template Facade[]"
+    LINE "  for (i, f) in facades {"
+    LINE "    \"b_{i}\" { f: {height: $width} }"
+    LINE "  }"
+    LINE "}"
+    LINE "template City {"
+    LINE "  prop street: template Street"
+    LINE "  s { street: {width: 3} }"
+    LINE "}"
+    LINE "City c(street: MyStreet(facades: [BrickFacade(scale: 4), GlassFacade(scale: 5)]))";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_position(world, "c.s.b_0", 3, 4);
+    test_position(world, "c.s.b_1", 3, 5);
+
+    ecs_fini(world);
+}
+
+void TemplateVectorProp_template_ref_call_not_derived_fails(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    FACADE_HEAD
+    LINE "template Unrelated {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template Building {"
+    LINE "  prop facade: template Facade[] = [BrickFacade(scale: 5), Unrelated(x: 2)]"
+    LINE "  a { facade[0]: {height: 1} }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+    ecs_log_set_level(-1);
 
     ecs_fini(world);
 }

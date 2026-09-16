@@ -158,7 +158,6 @@ static int flecs_script_set_id(
     id->second = second;
     id->first_sp = -1;
     id->second_sp = -1;
-    id->value_sp = -1;
     id->index_sp = -1;
     id->first_symbol = -1;
     id->second_symbol = -1;
