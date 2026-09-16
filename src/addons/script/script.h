@@ -30,13 +30,7 @@ typedef struct ecs_script_visitor_ctx_t {
 typedef int(*ecs_script_visitor_action_t)(
     const ecs_script_visitor_ctx_t *ctx);
 
-/* Component that customizes how initializer syntax is interpreted. When an
- * entity kind has this component, the initializer AST of a "Kind entity(...)"
- * statement is passed to the visitor callback instead of being assigned as a
- * component value. This is used to implement the type definition syntax
- * ("struct Position(x: f32, y: f32)", "enum Color(Red, Green, Blue)").
- * Private for now; can become a public customization point once the
- * expression AST types are public. */
+/* Component that customizes how initializer syntax is interpreted. */
 typedef struct EcsScriptVisitor {
     ecs_script_visitor_action_t visit;
     void *ctx;
@@ -44,6 +38,7 @@ typedef struct EcsScriptVisitor {
 
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsScriptVisitor);
 
+/* Enum used to classify symbol kind for type resolver. */
 typedef enum flecs_script_symbol_kind_t {
     FlecsScriptSymbolNone,
     FlecsScriptSymbolEntity,
@@ -52,6 +47,7 @@ typedef enum flecs_script_symbol_kind_t {
     FlecsScriptSymbolGlobalVariable
 } flecs_script_symbol_kind_t;
 
+/* Represents symbol during type resolver. */
 typedef struct flecs_script_symbol_t {
     flecs_script_symbol_kind_t kind;
     ecs_entity_t entity;
@@ -72,6 +68,7 @@ typedef enum flecs_script_unresolved_kind_t {
     FlecsScriptUnresolvedVariable
 } flecs_script_unresolved_kind_t;
 
+/* Stores unresolved reference so it can be resolved later. */
 typedef struct ecs_script_unresolved_ref_t {
     const char *name;
     flecs_script_unresolved_kind_t kind;
@@ -80,6 +77,7 @@ typedef struct ecs_script_unresolved_ref_t {
     int32_t offset;
 } ecs_script_unresolved_ref_t;
 
+/* Stores unresolved component reference so that it can be resolved later. */
 typedef struct ecs_script_unresolved_component_ref_t {
     ecs_entity_t entity;
     ecs_id_t component;
@@ -88,75 +86,6 @@ typedef struct ecs_script_unresolved_component_ref_t {
     int32_t column;
 } ecs_script_unresolved_component_ref_t;
 
-typedef struct ecs_script_symbol_slot_t {
-    ecs_entity_t entity;
-    int32_t scope_slot;
-} ecs_script_symbol_slot_t;
-
-typedef struct ecs_script_component_slot_t {
-    int32_t entity_slot;
-    ecs_id_t component;
-    int32_t scope_slot;
-} ecs_script_component_slot_t;
-
-typedef struct ecs_script_computed_t {
-    void *ptr;
-    const ecs_type_info_t *ti;
-    bool valid;
-} ecs_script_computed_t;
-
-typedef struct ecs_script_for_component_t {
-    ecs_id_t component;
-    int32_t visit;
-} ecs_script_for_component_t;
-
-typedef struct ecs_script_for_entry_t {
-    int32_t visit;
-    ecs_vec_t components; /* vec<ecs_script_for_component_t> */
-} ecs_script_for_entry_t;
-
-typedef struct ecs_script_for_slot_t {
-    ecs_vec_t entities; /* vec<ecs_entity_t>, anonymous entities */
-    ecs_map_t named;
-    ecs_entity_t cache_entity;
-    ecs_script_for_entry_t *cache_entry;
-    int32_t scope_slot;
-} ecs_script_for_slot_t;
-
-void flecs_script_for_slots_init(
-    ecs_vec_t *for_slots,
-    int32_t count);
-
-void flecs_script_for_slots_fini(
-    ecs_vec_t *for_slots);
-
-void flecs_script_for_slot_clear(
-    ecs_world_t *world,
-    ecs_script_for_slot_t *slot,
-    bool delete_named);
-
-void flecs_script_for_slot_purge(
-    ecs_world_t *world,
-    ecs_script_for_slot_t *slot,
-    int32_t visit);
-
-void flecs_script_for_slot_mark(
-    ecs_script_for_slot_t *slot,
-    int32_t visit);
-
-void flecs_script_for_slot_track(
-    ecs_world_t *world,
-    ecs_script_for_slot_t *slot,
-    ecs_entity_t entity,
-    int32_t visit,
-    bool *named);
-
-void flecs_script_for_slot_track_component(
-    ecs_script_for_slot_t *slot,
-    ecs_entity_t entity,
-    ecs_id_t component,
-    int32_t visit);
-
 typedef struct ecs_script_region_t {
     int32_t scope_first;
     int32_t scope_count;
@@ -164,42 +93,7 @@ typedef struct ecs_script_region_t {
     int32_t for_count;
 } ecs_script_region_t;
 
-typedef struct ecs_script_state_t {
-    ecs_vec_t symbol_slots;
-    ecs_vec_t component_slots;
-    ecs_vec_t scope_slots;
-    ecs_vec_t for_slots;
-    ecs_vec_t computed;
-    int32_t visit;
-    bool initialized;
-} ecs_script_state_t;
-
-void flecs_script_state_init(
-    ecs_script_state_t *state);
-
-void flecs_script_state_fini(
-    ecs_script_state_t *state);
-
-void flecs_script_state_clear_computed(
-    ecs_script_state_t *state);
-
-void flecs_script_state_resize_computed(
-    ecs_script_state_t *state,
-    int32_t count);
-
-void flecs_script_state_resize(
-    ecs_script_state_t *state,
-    int32_t scope_count,
-    int32_t component_count,
-    int32_t for_count);
-
-int32_t flecs_script_state_next(
-    ecs_script_state_t *state);
-
-void flecs_script_state_mark(
-    ecs_script_state_t *state,
-    const ecs_script_region_t *region,
-    int32_t visit);
+#include "reactivity/state.h"
 
 struct ecs_script_impl_t {
     ecs_script_t pub;
