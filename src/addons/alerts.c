@@ -266,15 +266,18 @@ static void MonitorAlerts(ecs_iter_t *it) {
                         continue;
                     }
                 }
+
                 if (!member_src) {
                     member_data = ecs_table_get_id(
                         world, rit.table, member_id, rit.offset);
                 } else {
                     member_data = ecs_get_id(world, member_src, member_id);
                 }
+
                 if (!member_data) {
                     continue;
                 }
+
                 member_data = ECS_OFFSET(member_data, alert[i].offset);
             }
 
@@ -288,9 +291,11 @@ static void MonitorAlerts(ecs_iter_t *it) {
                     if (!member_src) {
                         member_data = ECS_OFFSET(member_data, alert[i].size);
                     }
+
                     if (!range_severity) {
                         continue;
                     }
+
                     if (range_severity < src_severity) {
                         /* Actual severity should not exceed range severity */
                         src_severity = range_severity;
@@ -442,6 +447,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
                         flecs_alerts_add_alert_to_src(world, e, parent, ai);
                         ecs_remove_id(world, ai, EcsDisabled);
                     }
+
                     timeout[i].inactive_time = 0;
                 }
 
@@ -460,6 +466,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
                 flecs_alerts_remove_alert_from_src(world, e, parent);
                 ecs_add_id(world, ai, EcsDisabled);
             }
+
             ecs_ftime_t t = timeout[i].inactive_time;
             timeout[i].inactive_time += it->delta_system_time;
             if (t < timeout[i].expire_time) {
@@ -523,6 +530,7 @@ ecs_entity_t ecs_alert_init(
                 ecs_err("severity filter must have severity");
                 goto error;
             }
+
             ecs_alert_severity_filter_t *sf = ecs_vec_append_t(NULL, 
                 &alert->severity_filters, ecs_alert_severity_filter_t);
             *sf = desc->severity_filters[i];
@@ -546,6 +554,7 @@ ecs_entity_t ecs_alert_init(
                 ecs_err("ecs_alert_desc_t::member is not a member");
                 goto error;
             }
+
             ecs_check(alert->id != 0, ECS_INVALID_PARAMETER, NULL);
         } else {
             alert->id = desc->id;
@@ -572,6 +581,7 @@ ecs_entity_t ecs_alert_init(
             ecs_err("ecs_alert_desc_t::member is not a member");
             goto error;
         }
+
         if (!member->type) {
             ecs_err("ecs_alert_desc_t::member must have a type");
             goto error;

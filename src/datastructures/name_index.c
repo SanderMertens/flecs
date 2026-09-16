@@ -167,6 +167,7 @@ uint64_t flecs_name_index_find(
     if (id) {
         return id[0];
     }
+
     return 0;
 }
 
@@ -210,6 +211,7 @@ bool flecs_name_index_update_name(
             return true;
         }
     }
+
     return false;
 }
 

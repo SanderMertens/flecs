@@ -38,12 +38,15 @@ static void flecs_script_component_fini(
     if (!next || ptr->filename != next->filename) {
         ecs_os_free(ptr->filename);
     }
+
     if (!next || ptr->code != next->code) {
         ecs_os_free(ptr->code);
     }
+
     if (!next || ptr->error != next->error) {
         ecs_os_free(ptr->error);
     }
+
     flecs_script_ref_observers_fini(&ptr->observers);
     flecs_script_ref_observers_fini(&ptr->dyn_observers);
 }
@@ -117,6 +120,7 @@ char* ecs_script_ir_to_str(
     if (!ir) {
         goto error;
     }
+
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     flecs_script_ir_to_buf(impl, ir, &buf);
     return ecs_strbuf_get(&buf);
@@ -165,6 +169,7 @@ void flecs_script_pos_to_line_col(
             line_start = ptr + 1;
         }
     }
+
     column[0] = flecs_ito(int32_t, pos - line_start) + 1;
 }
 
@@ -208,6 +213,7 @@ void ecs_script_clear(
         for (i = 0; i < count; i ++) {
             ecs_delete(world, to_delete_ids[i]);
         }
+
         ecs_vec_fini_t(&world->allocator, &to_delete, ecs_entity_t);
     }
 }
@@ -299,6 +305,7 @@ void ecs_script_free(
             for (wi = 0; wi < wcount; wi ++) {
                 ecs_os_free(warned[wi]);
             }
+
             ecs_vec_fini_t(NULL, &impl->skip_unknown_warned, char*);
         }
         flecs_free(&impl->allocator,
@@ -308,6 +315,7 @@ void ecs_script_free(
         ecs_os_free(ECS_CONST_CAST(char*, impl->pub.code)); /* safe, owned value */
         ecs_os_free(impl);
     }
+
 error:
     return;
 }
@@ -371,6 +379,7 @@ static int flecs_script_update_parse(
             flecs_script_ref_observers_clear(world, &s->observers);
             flecs_script_ref_observers_clear(world, &s->dyn_observers);
         }
+
         return -1;
     }
 
@@ -391,6 +400,7 @@ static void flecs_script_update_error(
     if (!s->error) {
         s->error = ecs_os_strdup("failed to evaluate script");
     }
+
     if (runtime->error_name && runtime->include_depth) {
         ecs_log_(-3, NULL, 0, "%s: %s: %s",
             name ? name : "script", runtime->error_name, s->error);
@@ -400,6 +410,7 @@ static void flecs_script_update_error(
                 (name ? name : "script"),
             s->error);
     }
+
     flecs_script_runtime_error_reset(runtime);
     if (!instance) {
         flecs_script_update_resolve_observers(world, e,
@@ -408,6 +419,7 @@ static void flecs_script_update_error(
         flecs_script_ref_observers_clear(world, &s->dyn_observers);
         s = ecs_ensure(world, e, EcsScript);
     }
+
     ecs_script_free(parsed);
     s->script = NULL;
     ecs_delete_with(world, ecs_pair_t(EcsScript, e));
@@ -426,12 +438,14 @@ static void flecs_script_update_observers(
         if (refs[i].component == ecs_id(EcsScriptMutVar)) {
             continue;
         }
+
         if (refs[i].entity && ecs_has_pair(
             world, refs[i].entity, ecs_id(EcsScript), e))
         {
             ecs_vec_remove_t(script_refs, ecs_script_ref_t, i);
         }
     }
+
     flecs_script_ref_observers_clear(world, &s->observers);
     flecs_script_update_ref_observers(world, e, 0,
         script_refs, &s->observers, flecs_script_ref_on_set);
@@ -580,6 +594,7 @@ error:
     if (!desc->entity) {
         ecs_delete(world, e);
     }
+
     return 0;
 }
 
@@ -605,6 +620,7 @@ static int EcsScript_serialize(
         ser->member(ser, "ast");
         ser->value(ser, ecs_id(ecs_string_t), &nullString);
     }
+
     return 0;
 }
 

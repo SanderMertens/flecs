@@ -52,16 +52,19 @@ static void flecs_target_mark_for_delete(
             flecs_component_mark_for_delete(world, cr,
                 ECS_ID_ON_DELETE(cr->flags), true, force_delete);
         }
+
         if ((cr = flecs_components_get(world, ecs_pair(e, EcsWildcard)))) {
             flecs_component_mark_for_delete(world, cr,
                 ECS_ID_ON_DELETE(cr->flags), true, force_delete);
         }
     }
+
     if (flags & EcsEntityIsTarget) {
         if ((cr = flecs_components_get(world, ecs_pair(EcsWildcard, e)))) {
             flecs_component_mark_for_delete(world, cr,
                 ECS_ID_ON_DELETE_TARGET(cr->flags), true, force_delete);
         }
+
         if (world->cr_flag_count) {
             if ((cr = flecs_components_get(world, ecs_pair(EcsFlag, e)))) {
                 flecs_component_mark_for_delete(world, cr,
@@ -92,6 +95,7 @@ static bool flecs_id_is_delete_target(
          * has the form (*, Target), use OnDeleteTarget action */
         return true;
     }
+
     return false;
 }
 
@@ -400,6 +404,7 @@ static void flecs_component_mark_for_delete(
                 if (cur->flags & EcsIdOrderedChildren) {
                     continue;
                 }
+
                 cur->flags |= EcsIdMarkedForDelete;
             }
         }
@@ -574,9 +579,11 @@ static bool flecs_on_delete_clear_entities(
                 if (is_deferred) {
                     ecs_defer_suspend(world);
                 }
+
                 for (c = count - 1; c >= 0; c --) {
                     ecs_delete(world, children[c]);
                 }
+
                 if (is_deferred) {
                     ecs_defer_resume(world);
                 }
@@ -711,6 +718,7 @@ void flecs_throw_invalid_delete(
             "(OnDelete, Panic) constraint violated while deleting entities with %s", 
             flecs_errstr(ecs_id_str(world, id)));
     }
+
 error:
     return;
 }

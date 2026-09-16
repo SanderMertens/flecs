@@ -29,44 +29,6 @@ typedef struct {
     int8_t z;
 } PaddedDerived;
 
-static void test_member(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    int32_t index,
-    const char *name,
-    ecs_entity_t member_type,
-    int32_t offset)
-{
-    const EcsStruct *st = ecs_get(world, type, EcsStruct);
-    test_assert(st != NULL);
-    test_assert(index < ecs_vec_count(&st->members));
-    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, index);
-    test_str(m->name, name);
-    test_uint(m->type, member_type);
-    test_int(m->offset, offset);
-}
-
-static void test_struct(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    int32_t member_count,
-    ecs_size_t size,
-    ecs_size_t alignment)
-{
-    const EcsStruct *st = ecs_get(world, type, EcsStruct);
-    test_assert(st != NULL);
-    test_int(ecs_vec_count(&st->members), member_count);
-
-    const EcsComponent *c = ecs_get(world, type, EcsComponent);
-    test_assert(c != NULL);
-    test_int(c->size, size);
-    test_int(c->alignment, alignment);
-
-    const EcsType *t = ecs_get(world, type, EcsType);
-    test_assert(t != NULL);
-    test_assert(t->kind == EcsStructType);
-}
-
 void StructInheritance_block_syntax(void) {
     ecs_world_t *world = ecs_init();
 
@@ -82,11 +44,55 @@ void StructInheritance_block_syntax(void) {
     test_assert(derived != 0);
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
 
-    test_struct(world, base, 2, sizeof(PositionBase), ECS_ALIGNOF(PositionBase));
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
-    test_member(world, derived, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "y", ecs_id(ecs_f32_t), 4);
-    test_member(world, derived, 2, "z", ecs_id(ecs_f32_t), 8);
+    const EcsStruct *st = ecs_get(world, base, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, base, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(PositionBase));
+    test_int(c->alignment, ECS_ALIGNOF(PositionBase));
+
+    const EcsType *t = ecs_get(world, base, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 8);
 
     ecs_fini(world);
 }
@@ -106,11 +112,55 @@ void StructInheritance_paren_syntax(void) {
     test_assert(derived != 0);
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
 
-    test_struct(world, base, 2, sizeof(PositionBase), ECS_ALIGNOF(PositionBase));
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
-    test_member(world, derived, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "y", ecs_id(ecs_f32_t), 4);
-    test_member(world, derived, 2, "z", ecs_id(ecs_f32_t), 8);
+    const EcsStruct *st = ecs_get(world, base, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, base, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(PositionBase));
+    test_int(c->alignment, ECS_ALIGNOF(PositionBase));
+
+    const EcsType *t = ecs_get(world, base, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 8);
 
     ecs_fini(world);
 }
@@ -126,8 +176,27 @@ void StructInheritance_paren_syntax_space_before_paren(void) {
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
-    test_member(world, derived, 2, "z", ecs_id(ecs_f32_t), 8);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 8);
 
     ecs_fini(world);
 }
@@ -143,10 +212,43 @@ void StructInheritance_mixed_syntax(void) {
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
-    test_member(world, derived, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "y", ecs_id(ecs_f32_t), 4);
-    test_member(world, derived, 2, "z", ecs_id(ecs_f32_t), 8);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 8);
 
     ecs_fini(world);
 }
@@ -162,10 +264,43 @@ void StructInheritance_mixed_syntax_block_base(void) {
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
-    test_member(world, derived, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "y", ecs_id(ecs_f32_t), 4);
-    test_member(world, derived, 2, "z", ecs_id(ecs_f32_t), 8);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 8);
 
     ecs_fini(world);
 }
@@ -181,9 +316,35 @@ void StructInheritance_no_own_members(void) {
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
-    test_struct(world, derived, 2, sizeof(PositionBase), ECS_ALIGNOF(PositionBase));
-    test_member(world, derived, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "y", ecs_id(ecs_f32_t), 4);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(PositionBase));
+    test_int(c->alignment, ECS_ALIGNOF(PositionBase));
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
 
     ecs_fini(world);
 }
@@ -199,7 +360,19 @@ void StructInheritance_no_own_members_newline_before_scope(void) {
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
-    test_struct(world, derived, 2, sizeof(PositionBase), ECS_ALIGNOF(PositionBase));
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(PositionBase));
+    test_int(c->alignment, ECS_ALIGNOF(PositionBase));
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
 
     ecs_fini(world);
 }
@@ -221,12 +394,68 @@ void StructInheritance_chain(void) {
     test_assert(b != 0);
     test_assert(c != 0);
 
-    test_struct(world, a, 1, 4, 4);
-    test_struct(world, b, 2, 8, 4);
-    test_struct(world, c, 3, 12, 4);
-    test_member(world, c, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, c, 1, "y", ecs_id(ecs_f32_t), 4);
-    test_member(world, c, 2, "z", ecs_id(ecs_f32_t), 8);
+    const EcsStruct *st = ecs_get(world, a, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 1);
+
+    const EcsComponent *comp = ecs_get(world, a, EcsComponent);
+    test_assert(comp != NULL);
+    test_int(comp->size, 4);
+    test_int(comp->alignment, 4);
+
+    const EcsType *t = ecs_get(world, a, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, b, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    comp = ecs_get(world, b, EcsComponent);
+    test_assert(comp != NULL);
+    test_int(comp->size, 8);
+    test_int(comp->alignment, 4);
+
+    t = ecs_get(world, b, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    comp = ecs_get(world, c, EcsComponent);
+    test_assert(comp != NULL);
+    test_int(comp->size, 12);
+    test_int(comp->alignment, 4);
+
+    t = ecs_get(world, c, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 8);
 
     ecs_fini(world);
 }
@@ -244,15 +473,88 @@ void StructInheritance_chain_w_padding(void) {
 
     ecs_entity_t b = ecs_lookup(world, "B");
     ecs_entity_t c = ecs_lookup(world, "C");
-    test_struct(world, b, 3, 24, 8);
-    test_member(world, b, 0, "a", ecs_id(ecs_i64_t), 0);
-    test_member(world, b, 1, "b", ecs_id(ecs_i8_t), 8);
-    test_member(world, b, 2, "c", ecs_id(ecs_i8_t), 16);
-    test_struct(world, c, 4, 32, 8);
-    test_member(world, c, 0, "a", ecs_id(ecs_i64_t), 0);
-    test_member(world, c, 1, "b", ecs_id(ecs_i8_t), 8);
-    test_member(world, c, 2, "c", ecs_id(ecs_i8_t), 16);
-    test_member(world, c, 3, "d", ecs_id(ecs_i8_t), 24);
+
+    const EcsStruct *st = ecs_get(world, b, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *comp = ecs_get(world, b, EcsComponent);
+    test_assert(comp != NULL);
+    test_int(comp->size, 24);
+    test_int(comp->alignment, 8);
+
+    const EcsType *t = ecs_get(world, b, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, b, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "a");
+    test_uint(m->type, ecs_id(ecs_i64_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, b, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "b");
+    test_uint(m->type, ecs_id(ecs_i8_t));
+    test_int(m->offset, 8);
+
+    st = ecs_get(world, b, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "c");
+    test_uint(m->type, ecs_id(ecs_i8_t));
+    test_int(m->offset, 16);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 4);
+
+    comp = ecs_get(world, c, EcsComponent);
+    test_assert(comp != NULL);
+    test_int(comp->size, 32);
+    test_int(comp->alignment, 8);
+
+    t = ecs_get(world, c, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "a");
+    test_uint(m->type, ecs_id(ecs_i64_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "b");
+    test_uint(m->type, ecs_id(ecs_i8_t));
+    test_int(m->offset, 8);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "c");
+    test_uint(m->type, ecs_id(ecs_i8_t));
+    test_int(m->offset, 16);
+
+    st = ecs_get(world, c, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(3 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 3);
+    test_str(m->name, "d");
+    test_uint(m->type, ecs_id(ecs_i8_t));
+    test_int(m->offset, 24);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const char *ptr = ecs_get_id(world, e, c);
@@ -279,12 +581,68 @@ void StructInheritance_two_derived(void) {
     ecs_entity_t d1 = ecs_lookup(world, "D1");
     ecs_entity_t d2 = ecs_lookup(world, "D2");
 
-    test_struct(world, base, 1, 4, 4);
-    test_struct(world, d1, 2, 8, 4);
-    test_struct(world, d2, 3, 12, 4);
-    test_member(world, d1, 1, "y", ecs_id(ecs_f32_t), 4);
-    test_member(world, d2, 1, "z", ecs_id(ecs_i32_t), 4);
-    test_member(world, d2, 2, "w", ecs_id(ecs_i32_t), 8);
+    const EcsStruct *st = ecs_get(world, base, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 1);
+
+    const EcsComponent *c = ecs_get(world, base, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 4);
+    test_int(c->alignment, 4);
+
+    const EcsType *t = ecs_get(world, base, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, d1, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    c = ecs_get(world, d1, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
+    test_int(c->alignment, 4);
+
+    t = ecs_get(world, d1, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, d2, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    c = ecs_get(world, d2, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 12);
+    test_int(c->alignment, 4);
+
+    t = ecs_get(world, d2, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, d1, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, d2, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_i32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, d2, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "w");
+    test_uint(m->type, ecs_id(ecs_i32_t));
+    test_int(m->offset, 8);
 
     ecs_fini(world);
 }
@@ -301,11 +659,55 @@ void StructInheritance_base_w_padding(void) {
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
 
-    test_struct(world, base, 2, sizeof(PaddedBase), ECS_ALIGNOF(PaddedBase));
-    test_struct(world, derived, 3, sizeof(PaddedDerived), ECS_ALIGNOF(PaddedDerived));
-    test_member(world, derived, 0, "x", ecs_id(ecs_i32_t), offsetof(PaddedDerived, base.x));
-    test_member(world, derived, 1, "y", ecs_id(ecs_i8_t), offsetof(PaddedDerived, base.y));
-    test_member(world, derived, 2, "z", ecs_id(ecs_i8_t), offsetof(PaddedDerived, z));
+    const EcsStruct *st = ecs_get(world, base, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, base, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(PaddedBase));
+    test_int(c->alignment, ECS_ALIGNOF(PaddedBase));
+
+    const EcsType *t = ecs_get(world, base, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(PaddedDerived));
+    test_int(c->alignment, ECS_ALIGNOF(PaddedDerived));
+
+    t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_i32_t));
+    test_int(m->offset, offsetof(PaddedDerived, base.x));
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_i8_t));
+    test_int(m->offset, offsetof(PaddedDerived, base.y));
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_i8_t));
+    test_int(m->offset, offsetof(PaddedDerived, z));
 
     ecs_fini(world);
 }
@@ -496,7 +898,19 @@ void StructInheritance_base_defined_in_c(void) {
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
     test_assert(ecs_has_pair(world, derived, EcsIsA, ecs_id(PositionBase)));
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const Position3D *p = ecs_get_id(world, e, derived);
@@ -529,7 +943,19 @@ void StructInheritance_derived_defined_in_c(void) {
         }
     });
 
-    test_struct(world, ecs_id(Position3D), 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
+    const EcsStruct *st = ecs_get(world, ecs_id(Position3D), EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, ecs_id(Position3D), EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    const EcsType *ti = ecs_get(world, ecs_id(Position3D), EcsType);
+    test_assert(ti != NULL);
+    test_assert(ti->kind == EcsStructType);
+
     const EcsType *t = ecs_get(world, ecs_id(Position3D), EcsType);
     test_bool(t->existing, true);
     test_bool(t->partial, false);
@@ -566,7 +992,19 @@ void StructInheritance_base_in_module(void) {
     test_assert(base != 0);
     test_assert(derived != 0);
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
 
     ecs_fini(world);
 }
@@ -591,7 +1029,19 @@ void StructInheritance_base_w_using(void) {
     test_assert(base != 0);
     test_assert(derived != 0);
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
 
     ecs_fini(world);
 }
@@ -609,7 +1059,19 @@ void StructInheritance_derived_as_member(void) {
 
     ecs_entity_t outer = ecs_lookup(world, "Outer");
     test_assert(outer != 0);
-    test_struct(world, outer, 2, 16, 4);
+
+    const EcsStruct *st = ecs_get(world, outer, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, outer, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 16);
+    test_int(c->alignment, 4);
+
+    const EcsType *t = ecs_get(world, outer, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const float *values = ecs_get_id(world, e, outer);
@@ -657,9 +1119,35 @@ void StructInheritance_base_w_array_member(void) {
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
-    test_struct(world, derived, 2, 16, 4);
-    test_member(world, derived, 0, "arr", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "w", ecs_id(ecs_f32_t), 12);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 16);
+    test_int(c->alignment, 4);
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "arr");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "w");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 12);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const float *values = ecs_get_id(world, e, derived);
@@ -699,9 +1187,35 @@ void StructInheritance_duplicate_member_block(void) {
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
-    test_struct(world, derived, 2, sizeof(PositionBase), ECS_ALIGNOF(PositionBase));
-    test_member(world, derived, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "y", ecs_id(ecs_f32_t), 4);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(PositionBase));
+    test_int(c->alignment, ECS_ALIGNOF(PositionBase));
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
 
     ecs_fini(world);
 }
@@ -840,11 +1354,56 @@ void StructInheritance_run_script_twice(void) {
 
     ecs_entity_t base = ecs_lookup(world, "Base");
     ecs_entity_t derived = ecs_lookup(world, "Derived");
-    test_struct(world, base, 2, sizeof(PositionBase), ECS_ALIGNOF(PositionBase));
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
-    test_member(world, derived, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "y", ecs_id(ecs_f32_t), 4);
-    test_member(world, derived, 2, "z", ecs_id(ecs_f32_t), 8);
+
+    const EcsStruct *st = ecs_get(world, base, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, base, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(PositionBase));
+    test_int(c->alignment, ECS_ALIGNOF(PositionBase));
+
+    const EcsType *t = ecs_get(world, base, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 8);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const Position3D *p = ecs_get_id(world, e, derived);
@@ -872,16 +1431,61 @@ void StructInheritance_managed_script_update(void) {
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
 
     test_assert(ecs_script_update(world, s, 0, expr) == 0);
 
     derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
-    test_member(world, derived, 0, "x", ecs_id(ecs_f32_t), 0);
-    test_member(world, derived, 1, "y", ecs_id(ecs_f32_t), 4);
-    test_member(world, derived, 2, "z", ecs_id(ecs_f32_t), 8);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(0 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 0);
+    test_str(m->name, "x");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 0);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(1 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 1);
+    test_str(m->name, "y");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 4);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(2 < ecs_vec_count(&st->members));
+    m = ecs_vec_get_t(&st->members, ecs_member_t, 2);
+    test_str(m->name, "z");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 8);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const Position3D *p = ecs_get_id(world, e, derived);
@@ -916,8 +1520,27 @@ void StructInheritance_managed_script_update_add_member(void) {
 
     ecs_entity_t derived = ecs_lookup(world, "Derived");
     test_assert(derived != 0);
-    test_struct(world, derived, 4, 16, 4);
-    test_member(world, derived, 3, "w", ecs_id(ecs_f32_t), 12);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 4);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 16);
+    test_int(c->alignment, 4);
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_assert(3 < ecs_vec_count(&st->members));
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 3);
+    test_str(m->name, "w");
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->offset, 12);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const float *values = ecs_get_id(world, e, derived);
@@ -980,7 +1603,19 @@ void StructInheritance_derived_in_nested_scope(void) {
     test_assert(base != 0);
     test_assert(derived != 0);
     test_assert(ecs_has_pair(world, derived, EcsIsA, base));
-    test_struct(world, derived, 3, sizeof(Position3D), ECS_ALIGNOF(Position3D));
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 3);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, sizeof(Position3D));
+    test_int(c->alignment, ECS_ALIGNOF(Position3D));
+
+    const EcsType *t = ecs_get(world, derived, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const Position3D *p = ecs_get_id(world, e, derived);

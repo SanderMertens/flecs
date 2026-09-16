@@ -60,6 +60,7 @@ static FLECS_ALWAYS_INLINE int flecs_rtt_struct_action(
     if (action >= FlecsRttCompare && ptr == src) {
         return 0;
     }
+
     ecs_rtt_struct_ctx_t *ctx = ti->hooks.lifecycle_ctx;
     ecs_vec_t *vec = action == FlecsRttDtor ? &ctx->dtors : &ctx->members;
     const ecs_rtt_call_data_t *members = ecs_vec_first(vec);
@@ -101,6 +102,7 @@ static FLECS_ALWAYS_INLINE int flecs_rtt_struct_action(
             }
         }
     }
+
     return 0;
 }
 
@@ -195,6 +197,7 @@ static ecs_rtt_struct_ctx_t* flecs_rtt_struct_members(
         if (!mt || mt == ti) {
             continue;
         }
+
         ecs_rtt_call_data_t *data =
             ecs_vec_append_t(NULL, &result->members, ecs_rtt_call_data_t);
         *data = (ecs_rtt_call_data_t){
@@ -204,15 +207,18 @@ static ecs_rtt_struct_ctx_t* flecs_rtt_struct_members(
             *ecs_vec_append_t(NULL, &result->dtors, ecs_rtt_call_data_t) = *data;
             available.dtor = flecs_rtt_struct_dtor;
         }
+
         if (mt->hooks.ctor && mt->hooks.ctor != flecs_default_ctor) {
             available.ctor = flecs_rtt_struct_ctor;
         }
+
         if (mt->hooks.copy) available.copy = flecs_rtt_struct_copy;
         if (mt->hooks.move) available.move = flecs_rtt_struct_move;
         if (!mt->hooks.cmp) available.cmp = NULL;
         if (!mt->hooks.equals) available.equals = NULL;
         available.flags |= mt->hooks.flags & ECS_TYPE_HOOKS_ILLEGAL;
     }
+
     if (hooks) {
         ecs_flags32_t flags = available.flags;
         hooks->ctor = flags & ECS_TYPE_HOOK_CTOR_ILLEGAL ? NULL : available.ctor;
@@ -223,6 +229,7 @@ static ecs_rtt_struct_ctx_t* flecs_rtt_struct_members(
         hooks->equals = flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL ? NULL : available.equals;
         hooks->flags = flags;
     }
+
     return result;
 }
 
@@ -236,6 +243,7 @@ static void flecs_rtt_struct_hooks(
     if (hooks->lifecycle_ctx_free) {
         hooks->lifecycle_ctx_free(hooks->lifecycle_ctx);
     }
+
     ecs_rtt_struct_ctx_t *ctx = flecs_rtt_struct_members(
         world, ti, members, member_count, hooks);
     if (hooks->ctor || hooks->dtor || hooks->move || hooks->copy ||
@@ -286,6 +294,7 @@ static FLECS_ALWAYS_INLINE void flecs_rtt_vector_clear(
             flecs_type_info_dtor(
                 ecs_vec_first(vec), num_elements, element_ti);
         }
+
         if (release) {
             ecs_vec_fini(NULL, vec, element_ti->size);
         } else {
@@ -338,11 +347,13 @@ static void flecs_rtt_vector_copy(
         if (!src_count) {
             continue;
         }
+
         if (ti->hooks.ctor) {
             flecs_type_info_ctor(ecs_vec_first(dst), src_count, ti);
         } else {
             flecs_default_ctor(ecs_vec_first(dst), src_count, ti);
         }
+
         flecs_type_info_copy(ecs_vec_first(dst), ecs_vec_first(src), src_count, ti);
     }
 }
@@ -384,6 +395,7 @@ static int flecs_rtt_vector_cmp(
             return c;
         }
     }
+
     return 0;
 }
 
@@ -422,6 +434,7 @@ static bool flecs_rtt_vector_equals(
             return false;
         }
     }
+
     return true;
 }
 
@@ -521,11 +534,13 @@ static int flecs_rtt_map_cmp(
     if (a_ptr == b_ptr) {
         return 0;
     }
+
     const ecs_map_t *a = a_ptr, *b = b_ptr;
     int32_t count_diff = ecs_map_count(a) - ecs_map_count(b);
     if (count_diff) {
         return count_diff;
     }
+
     bool different_keys = false;
     ecs_map_key_t first_key = UINT64_MAX;
     ecs_map_iter_t it = ecs_map_iter(a);
@@ -546,6 +561,7 @@ static int flecs_rtt_map_cmp(
         }
         return -1;
     }
+
     const ecs_type_info_t *ti = type_info->hooks.lifecycle_ctx;
     int result = 0;
     it = ecs_map_iter(a);
@@ -622,9 +638,11 @@ static void flecs_rtt_collection_hooks(
             ecs_get_name(world, component));
         return;
     }
+
     if (hooks->lifecycle_ctx_free) {
         hooks->lifecycle_ctx_free(hooks->lifecycle_ctx);
     }
+
     hooks->lifecycle_ctx = ECS_CONST_CAST(ecs_type_info_t*, ti);
     hooks->lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
     hooks->ctor = map ? flecs_default_ctor : flecs_rtt_vector_ctor;
@@ -689,6 +707,7 @@ static int flecs_rtt_gen_struct_hook(
         if (m->type == component) {
             continue;
         }
+
         if (flecs_rtt_ensure_hook(world, m->type, equals)) {
             return -1;
         }
@@ -702,6 +721,7 @@ static int flecs_rtt_gen_struct_hook(
         if (hooks.lifecycle_ctx) {
             return -1;
         }
+
         hooks.lifecycle_ctx = flecs_rtt_struct_members(
             world, ti, members, member_count, NULL);
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
@@ -734,6 +754,7 @@ static int flecs_rtt_gen_collection_hook(
     if (hooks.lifecycle_ctx && hooks.lifecycle_ctx != element_ti) {
         return -1;
     }
+
     hooks.lifecycle_ctx = ECS_CONST_CAST(ecs_type_info_t*, element_ti);
     hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
     flecs_rtt_set_hook(&hooks, equals, cmp, eq);
@@ -771,6 +792,7 @@ static int flecs_rtt_ensure_hook(
         if (!arr || arr->type == type) {
             return -1;
         }
+
         ecs_member_t member = { .type = arr->type, .count = arr->count };
         return flecs_rtt_gen_struct_hook(world, type, equals, &member, 1);
     }

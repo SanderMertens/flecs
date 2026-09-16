@@ -135,6 +135,7 @@ static void flecs_on_unparent(
         if (other_table) {
             flecs_unparent_name_index(world, table, other_table, row, count);
         }
+
         flecs_non_fragmenting_childof_unparent(
             world, other_table, table, row, count);
     }
@@ -612,6 +613,7 @@ void flecs_notify_on_set_ids(
                     });
                 }
             }
+
             continue;
         }
 

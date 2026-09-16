@@ -22,6 +22,7 @@ static const ecs_table_record_t *flecs_query_get_tr(
     if (!cr) {
         return NULL;
     }
+
     return flecs_component_get_table(cr, table);
 }
 
@@ -392,6 +393,7 @@ static bool flecs_query_check_match_monitor(
                 if (mon != dirty_state[column + 1]) {
                     return true;
                 }
+
                 continue;
             } else {
                 continue; /* owned but not a component */
@@ -405,6 +407,7 @@ static bool flecs_query_check_match_monitor(
         if (!tc.table || tc.column < 0) {
             continue;
         }
+
         int32_t *src_dirty_state = flecs_table_get_dirty_state(
             world, tc.table);
         if (mon != src_dirty_state[tc.column + 1]) {
@@ -560,6 +563,7 @@ void flecs_query_mark_fixed_fields_dirty(
                 continue;
             }
         }
+
         ecs_assert(tr->column >= 0, ECS_INTERNAL_ERROR, NULL);
         int32_t column = table->column_map[tr->index];
         dirty_state[column + 1] ++;

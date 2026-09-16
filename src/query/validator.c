@@ -34,12 +34,14 @@ static void flecs_query_validator_error(
             } else {
                 ecs_strbuf_appendlit(&buf, "   ");
             }
+
             flecs_term_to_buf(ctx->world, term, &buf, i);
             if (term->oper == EcsOr) {
                 ecs_strbuf_appendlit(&buf, " ||");
             } else if (i != (count - 1)) {
                 ecs_strbuf_appendlit(&buf, ",");
             }
+
             ecs_strbuf_appendlit(&buf, "\n");
         }
     } else {
@@ -142,6 +144,7 @@ static int flecs_term_ref_lookup(
             flecs_query_validator_error(ctx, "invalid variable name '%s'", name);
             return -1;
         }
+
         return 0;
     } else if (ref->id & EcsIsName) {
         return 0;
@@ -155,6 +158,7 @@ static int flecs_term_ref_lookup(
                 ctx, "name '0' does not match entity id");
             return -1;
         }
+
         ref->name = NULL;
         return 0;
     }
@@ -205,6 +209,7 @@ static int flecs_term_ref_lookup(
         flecs_query_validator_error(ctx, "identifier '%s' is not alive", name);
         return -1;
     }
+
     ref->name = NULL;
     return 0;
 }
@@ -248,6 +253,7 @@ static int flecs_term_refs_finalize(
     if (flecs_term_ref_lookup(world, 0, src, ctx)) {
         return -1;
     }
+
     if (flecs_term_ref_lookup(world, 0, first, ctx)) {
         return -1;
     }
@@ -332,6 +338,7 @@ static int flecs_term_decode_id(
             ref->id = EcsIsEntity;
         }
     }
+
     return 0;
 }
 
@@ -364,6 +371,7 @@ static int flecs_term_encode_id(
     } else {
         term->id = id;
     }
+
     return 0;
 }
 
@@ -408,6 +416,7 @@ static int flecs_term_verify_eq_pred(
             flecs_query_validator_error(ctx, "both sides of operator are equal");
             goto error;
         }
+
         if (src->name && second->name && !ecs_os_strcmp(src->name, second->name)) {
             flecs_query_validator_error(ctx, "both sides of operator are equal");
             goto error;
@@ -450,9 +459,11 @@ static bool flecs_term_ref_same(
         if (a_id == EcsWildcard || a_id == EcsAny) {
             return false;
         }
+
         if (a->id & EcsIsVariable) {
             return match_this;
         }
+
         return true;
     }
 
@@ -885,6 +896,7 @@ static ecs_term_t* flecs_query_or_other_type(
         if (q->terms[t].oper != EcsOr) {
             break;
         }
+
         first = &q->terms[t];
     }
 
@@ -896,6 +908,7 @@ static ecs_term_t* flecs_query_or_other_type(
         if (first_type == term_type) {
             return NULL;
         }
+
         return first;
     } else {
         return NULL;
@@ -944,15 +957,18 @@ static void flecs_query_set_self_trivial(
             flags = 0;
             break;
         }
+
         if (!(src & EcsSelf)) {
             flags &= ~EcsQuerySelfTrivial;
         }
+
         if ((src & (EcsCascade|EcsDesc)) || !(src & (EcsSelf|EcsUp)) ||
             ((src & EcsUp) && term->trav != EcsIsA))
         {
             flags &= ~EcsQueryIsaTrivial;
         }
     }
+
     q->flags = (q->flags & ~(EcsQuerySelfTrivial|EcsQueryIsaTrivial)) | flags;
 }
 
@@ -1067,6 +1083,7 @@ static int flecs_query_finalize_terms(
             if (prev_is_or && !(term[-1].flags_ & EcsTermIsCacheable)) {
                 ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
             }
+
             if (term->flags_ & EcsTermIsToggle) {
                 cacheable = false;
             }
@@ -1130,6 +1147,7 @@ static int flecs_query_finalize_terms(
             q->sizes[field] = ti->size;
             q->ids[field] = cr ? cr->id : term->id;
         }
+
         nodata_term = term->src.id == EcsIsEntity || term->inout == EcsInOutNone ||
             !ti || (term->flags_ & EcsTermIsMember) || scope_nesting;
 
@@ -1161,9 +1179,11 @@ static int flecs_query_finalize_terms(
             if (term->inout != EcsIn) {
                 ECS_TERMSET_SET(q->write_fields, 1u << term->field_index);
             }
+
             if (term->inout != EcsOut) {
                 ECS_TERMSET_SET(q->read_fields, 1u << term->field_index);
             }
+
             if (term->inout == EcsInOutDefault) {
                 ECS_TERMSET_SET(q->shared_readonly_fields, 
                     1u << term->field_index);
@@ -1210,6 +1230,7 @@ static int flecs_query_finalize_terms(
                     "expression must have the same source)");
                 return -1;
             }
+
             if (term->oper != EcsOr && term->oper != EcsAnd) {
                 flecs_query_validator_error(&ctx, 
                     "term after OR expression cannot use operators");
@@ -1254,6 +1275,7 @@ static int flecs_query_finalize_terms(
                     "invalid operator for scope");
                 return -1;
             }
+
             q->flags |= EcsQueryHasScopes;
             scope_nesting ++;
             if (scope_nesting >= FLECS_QUERY_SCOPE_NESTING_MAX) {
@@ -1309,6 +1331,7 @@ static int flecs_query_finalize_terms(
                 }
             }
         }
+
         if (cascade_count > 1) {
             flecs_query_validator_error(&ctx,
                 "query can only have one cascade term");
@@ -1330,6 +1353,7 @@ static int flecs_query_finalize_terms(
             {
                 is_trivial = false;
             }
+
             if ((term->flags_ & EcsTermIsTrivial) &&
                 (term->src.id & EcsTraverseFlags) == EcsSelf &&
                 !ecs_id_is_wildcard(term->id))
@@ -1399,6 +1423,7 @@ static int flecs_query_query_populate_terms(
         if (!ecs_term_is_initialized(&desc->terms[i])) {
             break;
         }
+
         term_count ++;
     }
 
@@ -1741,9 +1766,11 @@ static void flecs_query_populate_tokens(
         if (term->first.name) {
             len += ecs_os_strlen(term->first.name) + 1;
         }
+
         if (term->second.name) {
             len += ecs_os_strlen(term->second.name) + 1;
         }
+
         if (term->src.name) {
             len += ecs_os_strlen(term->src.name) + 1;
         }
@@ -1762,11 +1789,13 @@ static void flecs_query_populate_tokens(
                 term->first.name = token;
                 token = next;
             }
+
             if (term->second.name) {
                 next = flecs_query_append_token(token, term->second.name);
                 term->second.name = token;
                 token = next;
             }
+
             if (term->src.name) {
                 next = flecs_query_append_token(token, term->src.name);
                 term->src.name = token;

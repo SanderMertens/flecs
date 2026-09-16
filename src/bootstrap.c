@@ -157,6 +157,7 @@ static bool flecs_unset_id_flag(
         cr->flags &= ~flag;
         return true;
     }
+
     return false;
 }
 
@@ -233,6 +234,7 @@ void flecs_register_flag_for_trait(
             flecs_assert_relation_unused(world, e, trait);
         }
     }
+
 error:
     return;
 }
@@ -254,6 +256,7 @@ static void flecs_register_tag(ecs_iter_t *it) {
                     if (cr->type_info != NULL) {
                         flecs_assert_relation_unused(world, e, EcsPairIsTag);
                     }
+
                     cr->type_info = NULL;
                 } while ((cr = flecs_component_first_next(cr)));
             }
@@ -356,6 +359,7 @@ static void flecs_disable_module_observers(
                 flecs_disable_module_observers(
                     world, child_it.entities[i], should_disable);
             }
+
             continue;
         }
 
@@ -595,6 +599,7 @@ static void flecs_bootstrap_sanity_check(
             table = flecs_sparse_get_dense_t(
                 &world->store.tables, ecs_table_t, i);
         }
+
         for (e = 0; e < table->data.count; e ++) {
             ecs_record_t *r = flecs_entities_get(
                 world, table->data.entities[e]);

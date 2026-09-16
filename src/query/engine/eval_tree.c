@@ -147,6 +147,7 @@ next:
             redo = false;
             goto next;
         }
+
         it->ids[field_index] = ecs_pair(EcsChildOf, EcsWildcard);
         return true;
     }
@@ -157,6 +158,7 @@ next:
         if (!result) {
             return false;
         }
+
         it->ids[field_index] = pair;
         return true;
     }
@@ -245,6 +247,7 @@ next:
                 op_ctx->state = EcsQueryTreeIterTables;
             }
         }
+
         goto next;
     }
 
@@ -338,6 +341,7 @@ bool flecs_query_tree_with(
             flecs_query_iter_set_id(it, op->field_index, ecs_childof(EcsWildcard));
             return true;
         }
+
         return false;
     }
 
@@ -446,6 +450,7 @@ static bool flecs_query_tree_with_pre(
             flecs_query_iter_set_id(
                 ctx->it, op->field_index, ecs_childof(EcsWildcard));
         }
+
         return result;
     }
 

@@ -85,6 +85,7 @@ static void flecs_query_build_up_cache(
             if (!r_tr) {
                 continue;
             }
+
             flecs_query_build_up_cache(world, a, ctx, cache, trav, r->table,
                 r_tr, root_column);
         }

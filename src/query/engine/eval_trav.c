@@ -31,10 +31,12 @@ static bool flecs_query_trav_fixed_src_reflexive(
             break;
         }
     }
+
     if (i == end) {
         /* Table didn't contain target entity */
         return false;
     }
+
     if (count > 1) {
         /* If the range contains more than one entity, set the range to
          * return only the entity matched by the reflexive property. */
@@ -197,6 +199,7 @@ static bool flecs_query_trav_yield_reflexive_src(
             vars[src_var].range.count = count;
             vars[src_var].entity = 0;
         }
+
         return false;
     }
 
@@ -246,6 +249,7 @@ static bool flecs_query_trav_fixed_src_up_unknown_second(
         if (flecs_query_trav_yield_reflexive_src(op, ctx, &range, trav)) {
             return true;
         }
+
         trav_ctx->yield_reflexive = false;
         trav_ctx->index = 0;
     }

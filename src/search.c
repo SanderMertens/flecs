@@ -36,6 +36,7 @@ static int32_t flecs_table_search(
         if (id_out) {
             id_out[0] = table->type.array[r];
         }
+
         return r;
     }
 
@@ -58,6 +59,7 @@ static int32_t flecs_table_offset_search(
             if (id_out) {
                 id_out[0] = type_id;
             }
+
             return offset - 1;
         }
     }
@@ -88,6 +90,7 @@ bool flecs_type_can_inherit_id(
                     if (ECS_PAIR_SECOND(id) == EcsWildcard) {
                         return false;
                     }
+
                     if (table->type.array[tr->index] != id) {
                         return false;
                     }
@@ -230,6 +233,7 @@ static int32_t flecs_table_search_relation(
                 return column;
             }
         }
+
         if (rel == ecs_isa(EcsWildcard)) {
             return -1;
         }

@@ -460,6 +460,7 @@ bool flecs_query_self_up_with(
                 ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] =
                     tr ? tr->column : -1;
             }
+
             return true;
         }
     }

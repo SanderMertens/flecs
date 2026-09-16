@@ -25,6 +25,7 @@ void flecs_entity_ranges_fini(
         ecs_vec_fini_t(index->allocator, &ranges[r]->recycled, uint64_t);
         flecs_free_t(index->allocator, ecs_entity_range_t, ranges[r]);
     }
+
     ecs_vec_fini_t(index->allocator, &index->ranges, ecs_entity_range_t*);
 }
 
@@ -41,6 +42,7 @@ static void flecs_entity_index_remove_not_alive(
         r_last->dense = not_alive;
         ids[not_alive] = e_last;
     }
+
     ecs_vec_set_count_t(index->allocator, &index->dense, uint64_t, last);
     r->dense = 0;
 }
@@ -135,6 +137,7 @@ void flecs_entity_index_set_range(
                 break;
             }
         }
+
         ecs_assert(found, ECS_INVALID_PARAMETER,
             "range was not created with ecs_entity_range_new");
         (void)found;
@@ -157,6 +160,7 @@ void flecs_entity_index_set_range(
         } else {
             ecs_vec_set_count_t(a, &prev->recycled, uint64_t, 0);
         }
+
         prev->cur = index->max_id;
     }
 
@@ -174,6 +178,7 @@ void flecs_entity_index_set_range(
                 }
             }
         }
+
         ecs_vec_set_count_t(a, &index->dense, uint64_t, alive_count);
     }
 
@@ -263,6 +268,7 @@ const ecs_entity_range_t* ecs_entity_range_new(
             } else {
                 overlap = min <= existing->max && max >= existing->min;
             }
+
             ecs_check(!overlap, ECS_INVALID_PARAMETER,
                 "range [%u, %u] overlaps with existing range [%u, %u]",
                     min, max, existing->min, existing->max);
@@ -289,8 +295,10 @@ const ecs_entity_range_t* ecs_entity_range_new(
             if (ranges[i - 1]->min <= min) {
                 break;
             }
+
             ranges[i] = ranges[i - 1];
         }
+
         ranges[i] = range;
     }
 

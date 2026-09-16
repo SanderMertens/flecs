@@ -32,6 +32,7 @@ int flecs_script_visit_free_node(
     if (!node) {
         return 0;
     }
+
     ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
     flecs_script_visit_scopes(node, flecs_script_scope_free, script);
     switch (node->kind) {
@@ -41,6 +42,7 @@ int flecs_script_visit_free_node(
         for (int32_t i = 0; i < ecs_vec_count(&scope->stmts); i ++) {
             flecs_script_visit_free_node(script, stmts[i]);
         }
+
         ecs_vec_fini_t(a, &scope->stmts, ecs_script_node_t*);
         ecs_vec_fini_t(a, &scope->components, ecs_id_t);
         ecs_vec_fini_t(a, &scope->set_components, ecs_id_t);

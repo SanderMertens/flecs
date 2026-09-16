@@ -91,6 +91,7 @@ static void flecs_query_cache_match_set(
             if (qm->_ids == ids || !qm->_ids) {
                 qm->_ids = flecs_balloc(&cache->allocators.ids);
             }
+
             ecs_os_memcpy_n(qm->_ids, it->ids, ecs_id_t, field_count);
         } else {
             if (qm->_ids != ids) {
@@ -112,6 +113,7 @@ static void flecs_query_cache_match_set(
             if (qm->_sources == cache->sources || !qm->_sources) {
                 qm->_sources = flecs_balloc(&cache->allocators.ids);
             }
+
             ecs_os_memcpy_n(qm->_sources, it->sources, ecs_entity_t, field_count);
         } else {
             if (qm->_sources != cache->sources) {
@@ -125,6 +127,7 @@ static void flecs_query_cache_match_set(
         if (!qm->_trs) {
             qm->_trs = flecs_balloc(&cache->allocators.pointers);
         }
+
         for (i = 0; i < field_count; i ++) {
             if (it->trs[i] && !it->sources[i] &&
                 !(it->up_fields & (1llu << i)))

@@ -14,42 +14,21 @@ typedef struct {
     float y;
 } PositionValue;
 
-#define FACADE_DEFS\
-    HEAD "struct Position(x: f32, y: f32)"\
-    LINE "struct Facade(height: f32)"\
-    LINE "template BrickFacade : Facade {"\
-    LINE "  Position: {$height, 1}"\
-    LINE "}"\
-    LINE "template GlassFacade : Facade {"\
-    LINE "  Position: {$height, 2}"\
-    LINE "}"\
-    LINE "template WoodFacade : Facade {"\
-    LINE "  Position: {$height, 3}"\
-    LINE "}"
-
-static void test_facade(
-    ecs_world_t *world,
-    const char *path,
-    float height,
-    float kind)
-{
-    ecs_entity_t e = ecs_lookup(world, path);
-    test_assert(e != 0);
-
-    ecs_entity_t position = ecs_lookup(world, "Position");
-    test_assert(position != 0);
-
-    const PositionValue *p = ecs_get_id(world, e, position);
-    test_assert(p != NULL);
-    test_flt(p->x, height);
-    test_flt(p->y, kind);
-}
-
 void TemplateVectorProp_declaration_w_default(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0]: {height: 10} }"
@@ -59,8 +38,27 @@ void TemplateVectorProp_declaration_w_default(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.a", 10, 1);
-    test_facade(world, "e.b", 20, 2);
+    ecs_entity_t e = ecs_lookup(world, "e.a");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 10);
+    test_flt(p->y, 1);
+
+    e = ecs_lookup(world, "e.b");
+    test_assert(e != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 20);
+    test_flt(p->y, 2);
 
     ecs_entity_t building = ecs_lookup(world, "Building");
     test_assert(building != 0);
@@ -78,7 +76,17 @@ void TemplateVectorProp_declaration_wo_default(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[]"
     LINE "  Position: {facade.count(), 0}"
@@ -87,7 +95,16 @@ void TemplateVectorProp_declaration_wo_default(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e", 0, 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 0);
+    test_flt(p->y, 0);
 
     ecs_fini(world);
 }
@@ -96,7 +113,17 @@ void TemplateVectorProp_count(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  Position: {facade.count(), 0}"
@@ -106,8 +133,27 @@ void TemplateVectorProp_count(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e", 2, 0);
-    test_facade(world, "f", 1, 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 2);
+    test_flt(p->y, 0);
+
+    e = ecs_lookup(world, "f");
+    test_assert(e != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1);
+    test_flt(p->y, 0);
 
     ecs_fini(world);
 }
@@ -116,7 +162,17 @@ void TemplateVectorProp_index_instantiate_w_initializer(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  prop floors: i32 = 3"
@@ -130,9 +186,38 @@ void TemplateVectorProp_index_instantiate_w_initializer(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.floor_0", 0, 1);
-    test_facade(world, "e.floor_1", 3, 2);
-    test_facade(world, "e.floor_2", 6, 1);
+    ecs_entity_t e = ecs_lookup(world, "e.floor_0");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 0);
+    test_flt(p->y, 1);
+
+    e = ecs_lookup(world, "e.floor_1");
+    test_assert(e != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3);
+    test_flt(p->y, 2);
+
+    e = ecs_lookup(world, "e.floor_2");
+    test_assert(e != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 6);
+    test_flt(p->y, 1);
 
     ecs_fini(world);
 }
@@ -141,7 +226,17 @@ void TemplateVectorProp_index_tag_form(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0] }"
@@ -180,7 +275,17 @@ void TemplateVectorProp_pass_element_to_interface_prop(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Wall {"
     LINE "  prop facade: template Facade"
     LINE "  side { facade: {height: 7} }"
@@ -193,7 +298,16 @@ void TemplateVectorProp_pass_element_to_interface_prop(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.wall.side", 7, 2);
+    ecs_entity_t e = ecs_lookup(world, "e.wall.side");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 7);
+    test_flt(p->y, 2);
 
     ecs_fini(world);
 }
@@ -202,7 +316,17 @@ void TemplateVectorProp_iterate_w_for(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  for (i, f) in facade {"
@@ -213,8 +337,27 @@ void TemplateVectorProp_iterate_w_for(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.side_0", 5, 1);
-    test_facade(world, "e.side_1", 5, 2);
+    ecs_entity_t e = ecs_lookup(world, "e.side_0");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 5);
+    test_flt(p->y, 1);
+
+    e = ecs_lookup(world, "e.side_1");
+    test_assert(e != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 5);
+    test_flt(p->y, 2);
 
     ecs_fini(world);
 }
@@ -226,7 +369,17 @@ void TemplateVectorProp_index_by_rng(void) {
     ECS_IMPORT(world, FlecsScriptMath);
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  const rng: flecs.script.math.Rng = {seed: 7}"
@@ -239,7 +392,17 @@ void TemplateVectorProp_index_by_rng(void) {
     LINE "Building e()";
 #else
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  for i in 0..4 {"
@@ -275,7 +438,17 @@ void TemplateVectorProp_override_kind_syntax(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0]: {height: 1} }"
@@ -285,8 +458,27 @@ void TemplateVectorProp_override_kind_syntax(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.a", 1, 2);
-    test_facade(world, "e.b", 2, 1);
+    ecs_entity_t e = ecs_lookup(world, "e.a");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1);
+    test_flt(p->y, 2);
+
+    e = ecs_lookup(world, "e.b");
+    test_assert(e != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 2);
+    test_flt(p->y, 1);
 
     ecs_fini(world);
 }
@@ -295,7 +487,17 @@ void TemplateVectorProp_override_component_syntax(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0]: {height: 1} }"
@@ -304,7 +506,16 @@ void TemplateVectorProp_override_component_syntax(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.a", 1, 3);
+    ecs_entity_t e = ecs_lookup(world, "e.a");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1);
+    test_flt(p->y, 3);
 
     ecs_fini(world);
 }
@@ -313,7 +524,17 @@ void TemplateVectorProp_native_set_id(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade]"
     LINE "  a { facade[0]: {height: 4} }"
@@ -339,7 +560,16 @@ void TemplateVectorProp_native_set_id(void) {
 
     ecs_vec_fini_t(NULL, &vec, ecs_entity_t);
 
-    test_facade(world, "e.a", 4, 2);
+    ecs_entity_t inst = ecs_lookup(world, "e.a");
+    test_assert(inst != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, inst, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 4);
+    test_flt(p->y, 2);
 
     ecs_fini(world);
 }
@@ -348,7 +578,17 @@ void TemplateVectorProp_expr_run_props(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade]"
     LINE "  a { facade[0]: {height: 8} }"
@@ -376,8 +616,27 @@ void TemplateVectorProp_expr_run_props(void) {
     }
     ecs_os_free(ptr);
 
-    test_facade(world, "e.a", 8, 1);
-    test_facade(world, "e.b", 9, 2);
+    ecs_entity_t inst = ecs_lookup(world, "e.a");
+    test_assert(inst != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, inst, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 8);
+    test_flt(p->y, 1);
+
+    inst = ecs_lookup(world, "e.b");
+    test_assert(inst != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, inst, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 9);
+    test_flt(p->y, 2);
 
     ecs_fini(world);
 }
@@ -386,7 +645,17 @@ void TemplateVectorProp_index_out_of_range_fails(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade]"
     LINE "  a { facade[2]: {height: 1} }"
@@ -404,7 +673,17 @@ void TemplateVectorProp_index_empty_vector_fails(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[]"
     LINE "  a { facade[0]: {height: 1} }"
@@ -422,7 +701,17 @@ void TemplateVectorProp_default_not_derived_fails(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Unrelated {"
     LINE "  prop x: f32 = 1"
     LINE "}"
@@ -442,7 +731,17 @@ void TemplateVectorProp_value_not_derived_fails(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Unrelated {"
     LINE "  prop x: f32 = 1"
     LINE "}"
@@ -463,7 +762,17 @@ void TemplateVectorProp_value_not_derived_from_c_fails(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Unrelated {"
     LINE "  prop x: f32 = 1"
     LINE "}"
@@ -517,7 +826,17 @@ void TemplateVectorProp_bare_vector_prop_as_component_fails(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade]"
     LINE "  a { facade: {height: 1} }"
@@ -534,7 +853,17 @@ void TemplateVectorProp_reactive_prop_change(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade]"
     LINE "  a { facade[0]: {height: 6} }"
@@ -542,7 +871,17 @@ void TemplateVectorProp_reactive_prop_change(void) {
     LINE "Building e()";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_facade(world, "e.a", 6, 1);
+
+    ecs_entity_t inst = ecs_lookup(world, "e.a");
+    test_assert(inst != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, inst, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 6);
+    test_flt(p->y, 1);
 
     ecs_entity_t building = ecs_lookup(world, "Building");
     ecs_entity_t glass = ecs_lookup(world, "GlassFacade");
@@ -557,7 +896,16 @@ void TemplateVectorProp_reactive_prop_change(void) {
     ecs_set_id(world, e, building, ECS_SIZEOF(ecs_vec_t), &vec);
     ecs_vec_fini_t(NULL, &vec, ecs_entity_t);
 
-    test_facade(world, "e.a", 6, 2);
+    inst = ecs_lookup(world, "e.a");
+    test_assert(inst != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, inst, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 6);
+    test_flt(p->y, 2);
 
     ecs_fini(world);
 }
@@ -566,7 +914,17 @@ void TemplateVectorProp_reactive_prop_change_from_script(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade]"
     LINE "  a { facade[0]: {height: 6} }"
@@ -574,12 +932,31 @@ void TemplateVectorProp_reactive_prop_change_from_script(void) {
     LINE "Building e()";
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
-    test_facade(world, "e.a", 6, 1);
+
+    ecs_entity_t e = ecs_lookup(world, "e.a");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 6);
+    test_flt(p->y, 1);
 
     test_assert(ecs_script_run_w_desc(world, NULL,
         "e { Building: {facade: [WoodFacade]} }", &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.a", 6, 3);
+    e = ecs_lookup(world, "e.a");
+    test_assert(e != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 6);
+    test_flt(p->y, 3);
 
     ecs_fini(world);
 }
@@ -588,7 +965,17 @@ void TemplateVectorProp_nested_template(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Wing {"
     LINE "  prop facade: template Facade[] = [BrickFacade]"
     LINE "  side { facade[0]: {height: 11} }"
@@ -602,8 +989,27 @@ void TemplateVectorProp_nested_template(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.left.side", 11, 2);
-    test_facade(world, "e.right.side", 11, 3);
+    ecs_entity_t e = ecs_lookup(world, "e.left.side");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 11);
+    test_flt(p->y, 2);
+
+    e = ecs_lookup(world, "e.right.side");
+    test_assert(e != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 11);
+    test_flt(p->y, 3);
 
     ecs_fini(world);
 }
@@ -612,7 +1018,17 @@ void TemplateVectorProp_template_inheritance(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "struct Base(scale: f32)"
     LINE "template BaseBuilding : Base {"
     LINE "  prop facade: template Facade[] = [BrickFacade]"
@@ -625,8 +1041,27 @@ void TemplateVectorProp_template_inheritance(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.a", 12, 1);
-    test_facade(world, "f.a", 13, 2);
+    ecs_entity_t e = ecs_lookup(world, "e.a");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 12);
+    test_flt(p->y, 1);
+
+    e = ecs_lookup(world, "f.a");
+    test_assert(e != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 13);
+    test_flt(p->y, 2);
 
     ecs_fini(world);
 }
@@ -635,7 +1070,17 @@ void TemplateVectorProp_index_in_interpolated_string(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  \"named_{facade[1]}\" {}"
@@ -659,7 +1104,17 @@ void TemplateVectorProp_collection_value_still_parses(void) {
     test_assert(vec != 0);
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[1]: {height: 3} }"
@@ -669,7 +1124,16 @@ void TemplateVectorProp_collection_value_still_parses(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.a", 3, 2);
+    ecs_entity_t inst = ecs_lookup(world, "e.a");
+    test_assert(inst != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, inst, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3);
+    test_flt(p->y, 2);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     const ecs_vec_t *v = ecs_get_id(world, e, vec);
@@ -685,7 +1149,17 @@ void TemplateVectorProp_to_str(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        FACADE_DEFS
+        HEAD "struct Position(x: f32, y: f32)"
+        LINE "struct Facade(height: f32)"
+        LINE "template BrickFacade : Facade {"
+        LINE "  Position: {$height, 1}"
+        LINE "}"
+        LINE "template GlassFacade : Facade {"
+        LINE "  Position: {$height, 2}"
+        LINE "}"
+        LINE "template WoodFacade : Facade {"
+        LINE "  Position: {$height, 3}"
+        LINE "}"
         LINE "template Building {"
         LINE "  prop facade: template Facade[] = [BrickFacade]"
         LINE "  a { facade[0]: {height: 1} }"
@@ -706,7 +1180,17 @@ void TemplateVectorProp_index_tag_form_instantiates(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0] }"
@@ -716,8 +1200,27 @@ void TemplateVectorProp_index_tag_form_instantiates(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.a", 0, 1);
-    test_facade(world, "e.b", 0, 2);
+    ecs_entity_t e = ecs_lookup(world, "e.a");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 0);
+    test_flt(p->y, 1);
+
+    e = ecs_lookup(world, "e.b");
+    test_assert(e != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 0);
+    test_flt(p->y, 2);
 
     ecs_fini(world);
 }
@@ -726,7 +1229,17 @@ void TemplateVectorProp_index_empty_initializer(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    FACADE_DEFS
+    HEAD "struct Position(x: f32, y: f32)"
+    LINE "struct Facade(height: f32)"
+    LINE "template BrickFacade : Facade {"
+    LINE "  Position: {$height, 1}"
+    LINE "}"
+    LINE "template GlassFacade : Facade {"
+    LINE "  Position: {$height, 2}"
+    LINE "}"
+    LINE "template WoodFacade : Facade {"
+    LINE "  Position: {$height, 3}"
+    LINE "}"
     LINE "template Building {"
     LINE "  prop facade: template Facade[] = [BrickFacade, GlassFacade]"
     LINE "  a { facade[0]: {} }"
@@ -736,8 +1249,27 @@ void TemplateVectorProp_index_empty_initializer(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    test_facade(world, "e.a", 0, 1);
-    test_facade(world, "e.b", 0, 2);
+    ecs_entity_t e = ecs_lookup(world, "e.a");
+    test_assert(e != 0);
+
+    ecs_entity_t position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    const PositionValue *p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 0);
+    test_flt(p->y, 1);
+
+    e = ecs_lookup(world, "e.b");
+    test_assert(e != 0);
+
+    position = ecs_lookup(world, "Position");
+    test_assert(position != 0);
+
+    p = ecs_get_id(world, e, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 0);
+    test_flt(p->y, 2);
 
     ecs_fini(world);
 }

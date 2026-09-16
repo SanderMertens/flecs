@@ -48,6 +48,7 @@ static void flecs_query_cache_group_insert(
             link = &(*link)->next;
         }
     }
+
     group->next = *link;
     *link = group;
 }
@@ -60,12 +61,14 @@ static ecs_query_cache_group_t* flecs_query_cache_ensure_group(
     if (group && group->info.table_count) {
         return group;
     }
+
     if (group_id) {
         group = ecs_map_insert_alloc_t(&cache->groups,
             ecs_query_cache_group_t, group_id);
     } else if (ecs_map_is_init(&cache->groups)) {
         ecs_map_insert_ptr(&cache->groups, 0, group);
     }
+
     ecs_allocator_t *a = &cache->query->real_world->allocator;
     ecs_vec_init(a, &group->tables, flecs_query_cache_elem_size(cache), 0);
     group->info.id = group_id;
@@ -74,6 +77,7 @@ static ecs_query_cache_group_t* flecs_query_cache_ensure_group(
         group->info.ctx = cache->on_group_create(
             cache->query->world, group_id, cache->group_by_ctx);
     }
+
     return group;
 }
 
@@ -95,6 +99,7 @@ static void flecs_query_cache_group_fini(
         flecs_query_cache_match_fini(cache,
             ecs_vec_get(&group->tables, elem_size, i));
     }
+
     ecs_vec_fini(a, &group->tables, elem_size);
     group->info.table_count = 0;
     group->info.match_count = 0;

@@ -33,6 +33,7 @@ static ecs_size_t ecs_cpp_strip_prefix(
         typeName[len - prefix_len] = '\0';
         len -= prefix_len;
     }
+
     return len;
 }
 
@@ -59,6 +60,7 @@ static void ecs_cpp_trim_type_name(
         if (!ecs_os_strncmp(&typeName[len - ECS_CONST_LEN], " const", ECS_CONST_LEN)) {
             typeName[len - ECS_CONST_LEN] = '\0';
         }
+
         len -= ECS_CONST_LEN;
     }
 
@@ -132,6 +134,7 @@ static const char* flecs_cpp_func_rchr(
     if ((r - func_name) >= (func_name_len - flecs_uto(ecs_size_t, func_back_len))) {
         return NULL;
     }
+
     return r;
 }
 
@@ -302,6 +305,7 @@ ecs_entity_t ecs_cpp_component_register(
         c = ecs_lookup_path_w_sep(world, 0, user_name, "::", "::", false);
         existing = c != 0 && ecs_has(world, c, EcsComponent);
     }
+
     ecs_set_scope(world, prev_scope);
 
     /* If entity exists, compare symbol name to ensure that the component

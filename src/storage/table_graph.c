@@ -70,10 +70,12 @@ static int flecs_type_find_insert(
         if (id == to_add) {
             return -1;
         }
+
         if (id > to_add) {
             return i;
         }
     }
+
     return i;
 }
 
@@ -90,6 +92,7 @@ static int flecs_type_find(
         if (ecs_id_match(cur, id)) {
             return i;
         }
+
         if (!ECS_IS_PAIR(id) && (cur > id)) {
             return -1;
         }
@@ -119,10 +122,12 @@ static int flecs_type_new_with(
         if (at) {
             ecs_os_memcpy_n(array, src->array, ecs_id_t, at);
         }
+
         if (count != at) {
             ecs_os_memcpy_n(array + at + 1, src->array + at, ecs_id_t, count - at);
         }
     }
+
     array[at] = with;
     *dst = (ecs_type_t){ .array = array, .count = count + 1 };
     return 0;
@@ -138,6 +143,7 @@ static int flecs_type_new_without(
     if (at == -1) {
         return -1;
     }
+
     ecs_assert(src->array != NULL, ECS_INTERNAL_ERROR, NULL);
     int32_t count = src->count, removed = 1;
     bool wildcard = ecs_id_is_wildcard(without);
@@ -156,6 +162,7 @@ static int flecs_type_new_without(
             ecs_os_memcpy_n(array, src->array, ecs_id_t, at);
         }
     }
+
     if (dst_count > at) {
         ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
         if (wildcard) {
@@ -171,6 +178,7 @@ static int flecs_type_new_without(
                 ecs_id_t, dst_count - at);
         }
     }
+
     if (dst == src) {
         if (dst_count) {
             array = flecs_wrealloc_n(world, ecs_id_t, dst_count, count, array);
@@ -179,6 +187,7 @@ static int flecs_type_new_without(
             array = NULL;
         }
     }
+
     *dst = (ecs_type_t){ .array = array, .count = dst_count };
     return 0;
 }
@@ -369,6 +378,7 @@ static ecs_graph_edge_t* flecs_table_ensure_edge(
         if (!edges->lo) {
             edges->lo = flecs_bcalloc(&world->allocators.graph_edge_lo);
         }
+
         edge = &edges->lo[id];
     } else {
         edge = edges->hi ? ecs_map_get_ptr(edges->hi, id) : NULL;
@@ -392,6 +402,7 @@ static void flecs_table_disconnect_edge(
     if (edge->next) {
         edge->next->prev = edge->prev;
     }
+
     if (edge->prev) {
         *edge->prev = edge->next;
     }
@@ -451,8 +462,10 @@ static ecs_table_t *flecs_table_new(
                 } else {
                     ecs_err("   %d: %s", j, str);
                 }
+
                 ecs_os_free(str);
             }
+
             ecs_abort(ECS_CONSTRAINT_VIOLATED, "table type is not ordered");
         }
     }
@@ -511,6 +524,7 @@ static ecs_table_t* flecs_table_ensure(
         if (own_type) {
             flecs_type_free(world, type);
         }
+
         return table;
     }
 
@@ -535,9 +549,11 @@ static bool flecs_id_is_alive(
         if (!flecs_entities_get_alive(world, ECS_PAIR_FIRST(id))) {
             return false;
         }
+
         if (!flecs_entities_get_alive(world, ECS_PAIR_SECOND(id))) {
             return false;
         }
+
         return true;
     } else {
         return flecs_entities_get_alive(world, id & ECS_COMPONENT_MASK) != 0;
@@ -560,13 +576,16 @@ static ecs_flags32_t flecs_table_diff_ids(
         if (j < src->count && src->array[j] == id) {
             continue;
         }
+
         if (result->array) {
             result->array[count] = id;
         } else {
             flags |= flecs_id_flags_get(world, id);
         }
+
         count ++;
     }
+
     result->count = count;
     return flags;
 }
@@ -593,6 +612,7 @@ static void flecs_compute_table_diff(
             diff->added.array[0] = id;
             diff->added_flags = EcsTableHasDontFragment|EcsTableHasSparse;
         }
+
         edge->diff = diff;
         ecs_vec_append_t(&world->allocator,
             &cr->dont_fragment_tables, uint64_t)[0] = node->id;
@@ -624,6 +644,7 @@ static void flecs_compute_table_diff(
             diff->removed_flags |= EcsTableEdgeReparent;
         }
     }
+
     edge->diff = diff;
 }
 
@@ -677,6 +698,7 @@ static void flecs_add_overrides_for_base(
                         exclusive = (cr->flags & EcsIdExclusive) != 0;
                     }
                 }
+
                 if (!exclusive) {
                     flecs_type_add(world, dst_type, to_add);
                 } else {
@@ -736,6 +758,7 @@ static void flecs_add_with_property(
             if (!(a_cr->flags & EcsIdDontFragment)) {
                 flecs_type_add(world, dst_type, a);
             }
+
             flecs_add_with_property(world, cr_with_wildcard, dst_type, ra, o);
         }
     }
@@ -890,9 +913,11 @@ static ecs_table_t* flecs_table_create_edge(
         if (edge->next) {
             edge->next->prev = &edge->next;
         }
+
         *incoming = edge;
         flecs_compute_table_diff(world, table, to, edge, id, remove);
     }
+
     return to;
 }
 
@@ -1011,6 +1036,7 @@ void flecs_table_edges_add_flags(
                     edge->diff = flecs_table_diff_new(world, 1, 0);
                     edge->diff->added.array[0] = edge->id;
                 }
+
                 edge->diff->added_flags |= flags;
             }
         }
@@ -1027,6 +1053,7 @@ void flecs_table_edges_add_flags(
                     edge->diff = flecs_table_diff_new(world, 0, 1);
                     edge->diff->removed.array[0] = edge->id;
                 }
+
                 edge->diff->removed_flags |= flags;
             }
         }

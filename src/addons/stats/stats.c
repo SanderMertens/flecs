@@ -57,6 +57,7 @@ static double flecs_counter_record(
     if (gauge_value < 0) {
         gauge_value = 0; /* Counters are monotonically increasing */
     }
+
     flecs_gauge_record(m, t, (ecs_float_t)gauge_value);
     return gauge_value;
 }
@@ -110,6 +111,7 @@ void ecs_metric_reduce(
             dst->gauge.min[t_dst] = src->gauge.min[t];
             min_set = true;
         }
+
         if ((src->gauge.max[t] > dst->gauge.max[t_dst])) {
             dst->gauge.max[t_dst] = src->gauge.max[t];
         }
@@ -277,6 +279,7 @@ void ecs_world_stats_get(
     if (ecs_is_alive(world, EcsSystem)) {
         ECS_GAUGE_RECORD(&s->queries.system_count, t, ecs_count_id(world, EcsSystem));
     }
+
     ECS_COUNTER_RECORD(&s->tables.create_count, t, world->info.table_create_total);
     ECS_COUNTER_RECORD(&s->tables.delete_count, t, world->info.table_delete_total);
     ECS_GAUGE_RECORD(&s->tables.count, t, world->info.table_count);
@@ -496,6 +499,7 @@ bool ecs_pipeline_stats_get(
     if (!pqc) {
         return false;
     }
+
     ecs_pipeline_state_t *pq = pqc->state;
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -510,6 +514,7 @@ bool ecs_pipeline_stats_get(
         if (cr_empty && flecs_component_get_table(cr_empty, it.table) != NULL) {
             continue;
         }
+
         active_sys_count += it.count;
     }
 

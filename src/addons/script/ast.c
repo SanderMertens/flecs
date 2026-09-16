@@ -89,6 +89,7 @@ static bool flecs_script_name_is_path(
             if (ptr[1]) {
                 ptr ++;
             }
+
             continue;
         }
 
@@ -564,6 +565,7 @@ int flecs_script_visit_scopes(
         if (result) {
             return result;
         }
+
         ecs_script_catch_t *catches = ecs_vec_first(&stmt->catches);
         for (int32_t i = 0; i < ecs_vec_count(&stmt->catches); i ++) {
             result = catches[i].scope ? action(catches[i].scope, ctx) : 0;
@@ -571,6 +573,7 @@ int flecs_script_visit_scopes(
                 return result;
             }
         }
+
         return 0;
     }
     default:
@@ -582,6 +585,7 @@ int flecs_script_visit_scopes(
             return result;
         }
     }
+
     return 0;
 }
 

@@ -47,19 +47,23 @@ static bool flecs_term_trav(flecs_term_parser_t *p, ecs_term_ref_t *ref) {
         if (p->token.kind != EcsTokIdentifier) {
             return flecs_term_error(p, "expected traversal flag");
         }
+
         ref->id |= flecs_query_parse_trav_flags(p->token.value);
         if (!flecs_term_next(p)) return false;
         if (p->token.kind == '|') {
             if (!flecs_term_next(p)) return false;
             continue;
         }
+
         if (p->token.kind == EcsTokIdentifier) {
             p->parser->term->trav = ecs_lookup(p->parser->world, p->token.value);
             if (!p->parser->term->trav) {
                 return flecs_term_error(p, "unresolved traversal relationship");
             }
+
             if (!flecs_term_next(p)) return false;
         }
+
         return true;
     }
 }
@@ -70,6 +74,7 @@ static bool flecs_term_ref(flecs_term_parser_t *p, ecs_term_ref_t *ref) {
     {
         return flecs_term_trav(p, ref);
     }
+
     if (p->token.kind == '@') {
         p->parser->term->id = ECS_VALUE_PAIR;
         if (!flecs_term_next(p)) return false;
@@ -82,11 +87,14 @@ static bool flecs_term_ref(flecs_term_parser_t *p, ecs_term_ref_t *ref) {
         } else {
             return flecs_term_error(p, "expected value pair target");
         }
+
         return flecs_term_next(p);
     }
+
     if (!flecs_term_identifier(p)) {
         return flecs_term_error(p, "expected term argument");
     }
+
     ref->name = p->token.value;
     if (!flecs_term_next(p)) return false;
     if (p->token.kind == '|') {
@@ -96,9 +104,11 @@ static bool flecs_term_ref(flecs_term_parser_t *p, ecs_term_ref_t *ref) {
             if (!p->parser->term->trav) {
                 return flecs_term_error(p, "unresolved traversal relationship");
             }
+
             return flecs_term_next(p);
         }
     }
+
     return true;
 }
 
@@ -114,17 +124,21 @@ static bool flecs_term_args(flecs_term_parser_t *p, int32_t arg) {
             if (arg > FLECS_TERM_ARG_COUNT_MAX || !parser->extra_args) {
                 return flecs_term_error(p, "too many arguments in term");
             }
+
             ref = &parser->extra_args[arg - 2];
         }
+
         if (!flecs_term_ref(p, ref)) return false;
         if (p->token.kind == ')') return flecs_term_next(p);
         if (p->token.kind != ',' && p->token.kind != EcsTokOr) {
             return flecs_term_error(p, "expected argument separator or ')'");
         }
+
         ecs_oper_kind_t oper = p->token.kind == ',' ? EcsAnd : EcsOr;
         if (arg > 1 && parser->extra_oper != oper) {
             return flecs_term_error(p, "cannot mix operators in extra term arguments");
         }
+
         parser->extra_oper = oper;
         arg ++;
         if (!flecs_term_next(p)) return false;
@@ -135,6 +149,7 @@ static bool flecs_term_pair(flecs_term_parser_t *p) {
     if (!flecs_term_next(p) || !flecs_term_identifier(p)) {
         return flecs_term_error(p, "expected pair relationship");
     }
+
     p->parser->term->first.name = p->token.value;
     if (!flecs_term_next(p)) return false;
     if (p->token.kind == '|') {
@@ -142,6 +157,7 @@ static bool flecs_term_pair(flecs_term_parser_t *p) {
             return false;
         }
     }
+
     if (p->token.kind != ',') return flecs_term_error(p, "expected ',' in pair");
     return flecs_term_next(p) && flecs_term_args(p, 1);
 }
@@ -167,21 +183,25 @@ static const char* flecs_query_term_parse(
                 break;
             }
         }
+
         if (!flecs_term_next(&p) || p.token.kind != ']' || !flecs_term_next(&p)) {
             goto unexpected;
         }
     }
+
     if (p.token.kind == '!' || p.token.kind == '?') {
         term->oper = p.token.kind == '!' ? EcsNot : EcsOptional;
         unary = true;
         if (!flecs_term_next(&p)) return NULL;
     }
+
     if (p.token.kind == '{' && (!inout || unary)) {
         term->first.id = EcsScopeOpen;
         term->src.id = EcsIsEntity;
         term->inout = EcsInOutNone;
         return p.pos;
     }
+
     if (!inout && !unary) {
         if (p.token.kind == EcsTokEnd || p.token.kind == EcsTokNewline) return p.pos;
         if (p.token.kind == '}') {
@@ -193,6 +213,7 @@ static const char* flecs_query_term_parse(
             return p.token.kind == ',' ? p.pos : end;
         }
     }
+
     if (flecs_term_identifier(&p) && !unary) {
         int16_t oper = 0;
         ecs_id_t flag = 0;
@@ -206,6 +227,7 @@ static const char* flecs_query_term_parse(
             if (!flecs_term_next(&p) || p.token.kind != '|' || !flecs_term_next(&p)) {
                 goto unexpected;
             }
+
             if (flecs_term_identifier(&p)) {
                 if (oper) term->oper = oper;
                 if (flag) term->id = flag;
@@ -214,6 +236,7 @@ static const char* flecs_query_term_parse(
             }
         }
     }
+
     if (p.token.kind == '(') {
         if (!flecs_term_pair(&p)) return NULL;
     } else if (flecs_term_identifier(&p)) {
@@ -224,6 +247,7 @@ static const char* flecs_query_term_parse(
                 flecs_term_error(&p, "cannot mix operator with equality expression");
                 return NULL;
             }
+
             neq = p.token.kind == EcsTokNeq;
             ecs_entity_t pred = p.token.kind == EcsTokMatch ? EcsPredMatch : EcsPredEq;
             term->src = term->first;
@@ -238,6 +262,7 @@ static const char* flecs_query_term_parse(
                     term->oper = EcsNot;
                 }
             }
+
             if (!flecs_term_next(&p)) return NULL;
         } else {
             bool trav = p.token.kind == '|';
@@ -255,6 +280,7 @@ static const char* flecs_query_term_parse(
     } else {
         goto unexpected;
     }
+
     switch (p.token.kind) {
     case '}': p.pos --; break;
     case EcsTokOr:

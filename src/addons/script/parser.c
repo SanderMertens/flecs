@@ -339,6 +339,7 @@ static const char* flecs_script_if_stmt(
                             if (!pos) {
                                 goto error;
                             }
+
                             return pos;
                         }
 
@@ -565,6 +566,7 @@ static const char* flecs_script_parse_var(
                     pos = lookahead;
                     EndOfRule;
                 }
+
                 break;
             }
 
@@ -572,6 +574,7 @@ static const char* flecs_script_parse_var(
                 if (is_prop) {
                     EndOfRule;
                 }
+
                 break;
             }
         )
@@ -719,6 +722,7 @@ static const char* flecs_script_fn_body(
         parser->significant_newline = true;
         goto error;
     }
+
     parser->significant_newline = true;
     parser->token_keep = parser->token_cur;
 
@@ -749,6 +753,7 @@ int32_t flecs_script_last_stmt_kind(
     if (!count) {
         return -1;
     }
+
     return ecs_vec_last_t(&scope->stmts, ecs_script_node_t*)[0]->kind;
 }
 
@@ -957,34 +962,43 @@ template_stmt: {
                     if (!pos) {
                         goto error;
                     }
+
                     if (token.kind != EcsTokIdentifier) {
                         Error("expected template base or parent constraint");
                     }
+
                     if (!ecs_os_strcmp(token.value, "parent")) {
                         if (template->parent) {
                             Error("duplicate parent constraint");
                         }
+
                         pos = flecs_token(parser, pos, &token, false);
                         if (!pos) {
                             goto error;
                         }
+
                         if (token.kind != EcsTokIdentifier) {
                             Error("expected parent template name");
                         }
+
                         template->parent = token.value;
                     } else {
                         if (template->base) {
                             Error("multiple template bases are not supported");
                         }
+
                         template->base = token.value;
                     }
+
                     const char *next = flecs_token(parser, pos, &token, true);
                     if (!next) {
                         goto error;
                     }
+
                     if (token.kind != ',') {
                         break;
                     }
+
                     pos = next;
                 } while (true);
                 goto template_scope;
@@ -1207,6 +1221,7 @@ try_stmt: {
                         if (!pos) {
                             goto error;
                         }
+
                         continue;
                     }
 
@@ -1217,6 +1232,7 @@ try_stmt: {
                             if (Token(4)[0] == '$') {
                                 Error("variable not allowed as catch error");
                             }
+
                             clause->error = Token(4);
                             parser->token_keep = parser->token_cur;
 
@@ -1227,6 +1243,7 @@ try_stmt: {
                                 if (!pos) {
                                     goto error;
                                 }
+
                                 continue;
                             })
                         })
@@ -1271,12 +1288,14 @@ include_stmt: {
                     p[0] = '\0';
                     break;
                 }
+
                 p ++;
             }
         }
         if (!filename || !filename[0]) {
             Error("expected filename after 'include'");
         }
+
         flecs_script_insert_include(parser, filename);
         EndOfRule;
     )
@@ -1390,6 +1409,7 @@ identifier_index: {
         {
             goto error;
         }
+
         parser->significant_newline = true;
         parser->expr_end = pos;
     }
@@ -1422,6 +1442,7 @@ identifier_index: {
                     Error("invalid context for tag '%s': must be part of "
                         "entity", component_first);
                 }
+
                 tag->id.index_expr = component_index;
                 EndOfRule;
             }
@@ -1465,6 +1486,7 @@ identifier_colon: {
             }
         )
     }
+
     tokenizer->stack.count = colon_stack_count;
 
     if (!is_inherit) {
@@ -1674,6 +1696,7 @@ static bool flecs_script_stmt_is_terminated(
                 if (p[-1] == '/' && p[0] == '*') {
                     break;
                 }
+
                 p --;
             }
 
@@ -1788,6 +1811,7 @@ ecs_script_t* flecs_script_parse_nested(
     if (using_code) {
         ecs_strbuf_appendstr(&buf, using_code);
     }
+
     int32_t open_offset = ecs_strbuf_written(&buf);
     ecs_strbuf_appendch(&buf, '{');
     ecs_strbuf_appendstr(&buf, code);
@@ -1844,6 +1868,7 @@ ecs_script_t* ecs_script_parse(
     if (desc && desc->skip_unknown) {
         impl->skip_unknown = true;
     }
+
     if (desc && desc->ir) {
         impl->ir_enabled = true;
     }

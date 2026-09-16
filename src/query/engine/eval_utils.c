@@ -19,6 +19,7 @@ void flecs_query_set_iter_this(
         if (!count) {
             count = ecs_table_count(table);
         }
+
         it->table = table;
         it->offset = range->offset;
         it->count = count;
@@ -128,6 +129,7 @@ ecs_table_range_t flecs_query_get_range(
             return flecs_range_from_entity(ctx->world, var->entity);
         }
     }
+
     return (ecs_table_range_t){0};
 }
 
@@ -276,6 +278,7 @@ ecs_table_range_t flecs_get_ref_range(
     } else if (flag & EcsQueryIsVar) {
         return flecs_query_var_get_range(ref->var, ctx);
     }
+
     return (ecs_table_range_t){0};
 }
 
@@ -289,6 +292,7 @@ ecs_entity_t flecs_get_ref_entity(
     } else if (flag & EcsQueryIsVar) {
         return flecs_query_var_get_entity(ref->var, ctx);
     }
+
     return 0;
 }
 
@@ -308,6 +312,7 @@ ecs_id_t flecs_query_op_get_id_w_written(
             first = EcsWildcard;
         }
     }
+
     if (flags_2nd) {
         if (flecs_ref_is_written(op, &op->second, EcsQuerySecond, written)) {
             second = flecs_get_ref_entity(&op->second, flags_2nd, ctx);
@@ -345,6 +350,7 @@ int16_t flecs_query_next_column(
         column = ecs_search_offset(NULL, table, column + 1, id, NULL);
         ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
     }
+
     return flecs_ito(int16_t, column);
 }
 

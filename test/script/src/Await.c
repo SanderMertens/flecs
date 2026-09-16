@@ -182,26 +182,6 @@ static void Await_store_with_ctx_callback(
         future, &await_future_ctx, Await_future_ctx_free);
 }
 
-static void Await_reset(void)
-{
-    for (int32_t i = 0; i < 64; i ++) {
-        ecs_os_free(await_strings[i]);
-    }
-
-    ecs_os_zeromem(await_futures);
-    await_future_count = 0;
-    await_cancel_count = 0;
-    await_tracked_ctor_count = 0;
-    await_tracked_dtor_count = 0;
-    await_method_instance = 0;
-    ecs_os_zeromem(await_args);
-    ecs_os_zeromem(await_strings);
-    ecs_os_zeromem(await_functions);
-    ecs_os_zeromem(await_entities);
-    ecs_os_zeromem(await_entity_args);
-    ecs_os_zeromem(await_i32_args);
-}
-
 void Await_task_new_w_deleted_entity(void) {
     install_test_abort();
 
@@ -224,7 +204,22 @@ void Await_delete_scope_parent_while_suspended(void) {
 
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "step",
@@ -264,7 +259,22 @@ void Await_fini_w_alive_task(void) {
 
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -294,7 +304,22 @@ void Await_free_script_w_alive_task(void) {
 
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -376,7 +401,22 @@ void Await_register_async(void) {
 void Await_await_const_suspend_resume(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Position" }),
@@ -426,7 +466,22 @@ void Await_await_const_suspend_resume(void) {
 void Await_await_stmt_sequence(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "step",
@@ -468,7 +523,22 @@ void Await_await_stmt_sequence(void) {
 void Await_reject(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -503,7 +573,22 @@ void Await_reject(void) {
 void Await_cancel(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -533,7 +618,22 @@ void Await_cancel(void) {
 void Await_preserve_const_and_using(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_entity_t ns = ecs_entity(world, { .name = "ns" });
     ecs_entity_t tag = ecs_entity(world, {
@@ -593,7 +693,22 @@ void Await_preserve_const_and_using(void) {
 void Await_await_in_if(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "step",
@@ -630,7 +745,22 @@ void Await_await_in_if(void) {
 void Await_await_in_for(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "use",
@@ -666,7 +796,22 @@ void Await_await_in_for(void) {
 void Await_await_in_with(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ECS_TAG(world, Tag);
 
@@ -706,7 +851,22 @@ void Await_await_in_with(void) {
 void Await_await_in_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "step",
@@ -744,7 +904,22 @@ void Await_await_in_entity(void) {
 void Await_await_in_pair_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ECS_TAG(world, Rel);
 
@@ -786,7 +961,22 @@ void Await_await_in_pair_scope(void) {
 void Await_preserve_string_const(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "step",
@@ -827,7 +1017,22 @@ void Await_preserve_string_const(void) {
     ecs_script_task_free(task);
     ecs_script_free(script);
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_fini(world);
 }
@@ -835,7 +1040,22 @@ void Await_preserve_string_const(void) {
 void Await_owner_context(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_entity_t ecs_id(AwaitDrone) = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "AwaitDrone" }),
@@ -878,7 +1098,22 @@ void Await_owner_context(void) {
 void Await_qualified_call(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_entity_t logistics = ecs_entity(world, { .name = "logistics" });
     ecs_entity_t accept = ecs_async_function(world, {
@@ -909,32 +1144,27 @@ void Await_qualified_call(void) {
     ecs_fini(world);
 }
 
-typedef struct AwaitHaulFixture {
-    ecs_world_t *world;
-    ecs_entity_t job_type;
-    ecs_entity_t drone_type;
-    ecs_entity_t functions[6];
-} AwaitHaulFixture;
+void Await_haul_single(void) {
+    ecs_world_t *world = ecs_init();
 
-static const char *Await_haul_code =
-    "const job = await logistics.acceptJob()\n"
-    "await takeOff()\n"
-    "await moveTo(job.src)\n"
-    "await land()\n"
-    "await pickUp(job.resource, job.amount, job.src, this)\n"
-    "await takeOff()\n"
-    "await moveTo(job.dst)\n"
-    "await land()\n"
-    "await dropOff(job.resource, job.amount, this, job.dst)\n"
-    "await takeOff()\n"
-    "await moveTo(this[AwaitDrone].home)\n"
-    "await land()";
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
 
-static AwaitHaulFixture Await_haul_fixture(
-    ecs_world_t *world)
-{
-    AwaitHaulFixture result = { .world = world };
-    result.job_type = ecs_struct(world, {
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
+    ecs_entity_t job_type = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "AwaitJob" }),
         .members = {
             {"resource", ecs_id(ecs_entity_t)},
@@ -944,39 +1174,40 @@ static AwaitHaulFixture Await_haul_fixture(
         }
     });
 
-    result.drone_type = ecs_struct(world, {
+    ecs_entity_t drone_type = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "AwaitDrone" }),
         .members = {{"home", ecs_id(ecs_entity_t)}}
     });
 
     ecs_entity_t logistics = ecs_entity(world, { .name = "logistics" });
-    result.functions[0] = ecs_async_function(world, {
+    ecs_entity_t functions[6];
+    functions[0] = ecs_async_function(world, {
         .name = "acceptJob",
         .parent = logistics,
-        .return_type = result.job_type,
+        .return_type = job_type,
         .callback = Await_record_callback
     });
 
-    result.functions[1] = ecs_async_function(world, {
+    functions[1] = ecs_async_function(world, {
         .name = "takeOff",
         .return_type = ecs_id(ecs_i32_t),
         .callback = Await_record_callback
     });
 
-    result.functions[2] = ecs_async_function(world, {
+    functions[2] = ecs_async_function(world, {
         .name = "moveTo",
         .return_type = ecs_id(ecs_i32_t),
         .params = {{"dst", ecs_id(ecs_entity_t)}},
         .callback = Await_record_callback
     });
 
-    result.functions[3] = ecs_async_function(world, {
+    functions[3] = ecs_async_function(world, {
         .name = "land",
         .return_type = ecs_id(ecs_i32_t),
         .callback = Await_record_callback
     });
 
-    result.functions[4] = ecs_async_function(world, {
+    functions[4] = ecs_async_function(world, {
         .name = "pickUp",
         .return_type = ecs_id(ecs_i32_t),
         .params = {
@@ -988,7 +1219,7 @@ static AwaitHaulFixture Await_haul_fixture(
         .callback = Await_record_callback
     });
 
-    result.functions[5] = ecs_async_function(world, {
+    functions[5] = ecs_async_function(world, {
         .name = "dropOff",
         .return_type = ecs_id(ecs_i32_t),
         .params = {
@@ -1000,85 +1231,33 @@ static AwaitHaulFixture Await_haul_fixture(
         .callback = Await_record_callback
     });
 
-    return result;
-}
-
-static ecs_entity_t Await_haul_owner(
-    const AwaitHaulFixture *fixture,
-    const char *name,
-    ecs_entity_t home)
-{
-    ecs_entity_t result = ecs_entity(fixture->world, { .name = name });
-    AwaitDrone value = {home};
-
-    ecs_set_id(fixture->world, result, fixture->drone_type,
-        ECS_SIZEOF(AwaitDrone), &value);
-
-    return result;
-}
-
-static ecs_entity_t Await_haul_function(
-    const AwaitHaulFixture *fixture,
-    int32_t step)
-{
-    int32_t indices[12] = {0, 1, 2, 3, 4, 1, 2, 3, 5, 1, 2, 3};
-    return fixture->functions[indices[step % 12]];
-}
-
-static void Await_haul_resolve(
-    const AwaitHaulFixture *fixture,
-    int32_t future,
-    int32_t step,
-    AwaitJob *job)
-{
-    if (!(step % 12)) {
-        ecs_value_t value = {fixture->job_type, job};
-        test_int(ecs_script_future_resolve(
-            await_futures[future], &value), 0);
-    } else {
-        ecs_value_t value = ecs_value(ecs_i32_t, {0});
-        test_int(ecs_script_future_resolve(
-            await_futures[future], &value), 0);
-    }
-
-    ecs_script_future_release(await_futures[future]);
-}
-
-static void Await_haul_validate(
-    int32_t base,
-    ecs_entity_t owner,
-    ecs_entity_t home,
-    const AwaitJob *job)
-{
-    test_uint(await_entity_args[base + 2][0], job->src);
-    test_uint(await_entity_args[base + 4][0], job->resource);
-    test_int(await_i32_args[base + 4][1], job->amount);
-    test_uint(await_entity_args[base + 4][2], job->src);
-    test_uint(await_entity_args[base + 4][3], owner);
-    test_uint(await_entity_args[base + 6][0], job->dst);
-    test_uint(await_entity_args[base + 8][0], job->resource);
-    test_int(await_i32_args[base + 8][1], job->amount);
-    test_uint(await_entity_args[base + 8][2], owner);
-    test_uint(await_entity_args[base + 8][3], job->dst);
-    test_uint(await_entity_args[base + 10][0], home);
-}
-
-void Await_haul_single(void) {
-    ecs_world_t *world = ecs_init();
-
-    Await_reset();
-
-    AwaitHaulFixture fixture = Await_haul_fixture(world);
-
     ecs_entity_t resource = ecs_entity(world, { .name = "Iron" });
     ecs_entity_t src = ecs_entity(world, { .name = "Mine" });
     ecs_entity_t dst = ecs_entity(world, { .name = "Factory" });
     ecs_entity_t home = ecs_entity(world, { .name = "Home" });
-    ecs_entity_t owner = Await_haul_owner(&fixture, "Drone1", home);
+
+    ecs_entity_t owner = ecs_entity(world, { .name = "Drone1" });
+    AwaitDrone value = {home};
+
+    ecs_set_id(world, owner, drone_type,
+        ECS_SIZEOF(AwaitDrone), &value);
+
     AwaitJob job = {resource, 20, src, dst};
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, Await_haul_code, &ir_desc, NULL);
+        world, NULL,
+        "const job = await logistics.acceptJob()\n"
+        "await takeOff()\n"
+        "await moveTo(job.src)\n"
+        "await land()\n"
+        "await pickUp(job.resource, job.amount, job.src, this)\n"
+        "await takeOff()\n"
+        "await moveTo(job.dst)\n"
+        "await land()\n"
+        "await dropOff(job.resource, job.amount, this, job.dst)\n"
+        "await takeOff()\n"
+        "await moveTo(this[AwaitDrone].home)\n"
+        "await land()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){ .entity = owner });
@@ -1086,15 +1265,41 @@ void Await_haul_single(void) {
     for (int32_t i = 0; i < 12; i ++) {
         test_int(ecs_script_task_resume(task, NULL),
             EcsScriptTaskPending);
-        test_uint(await_functions[i], Await_haul_function(&fixture, i));
+
+        int32_t indices[12] = {0, 1, 2, 3, 4, 1, 2, 3, 5, 1, 2, 3};
+        test_uint(await_functions[i], functions[indices[i % 12]]);
+
         test_uint(await_entities[i], owner);
-        Await_haul_resolve(&fixture, i, i, &job);
+
+        if (!(i % 12)) {
+            ecs_value_t value = {job_type, &job};
+            test_int(ecs_script_future_resolve(
+                await_futures[i], &value), 0);
+        } else {
+            ecs_value_t value = ecs_value(ecs_i32_t, {0});
+            test_int(ecs_script_future_resolve(
+                await_futures[i], &value), 0);
+        }
+
+        ecs_script_future_release(await_futures[i]);
+
     }
 
     test_int(ecs_script_task_resume(task, NULL),
         EcsScriptTaskDone);
     test_int(await_future_count, 12);
-    Await_haul_validate(0, owner, home, &job);
+
+    test_uint(await_entity_args[0 + 2][0], job.src);
+    test_uint(await_entity_args[0 + 4][0], job.resource);
+    test_int(await_i32_args[0 + 4][1], job.amount);
+    test_uint(await_entity_args[0 + 4][2], job.src);
+    test_uint(await_entity_args[0 + 4][3], owner);
+    test_uint(await_entity_args[0 + 6][0], job.dst);
+    test_uint(await_entity_args[0 + 8][0], job.resource);
+    test_int(await_i32_args[0 + 8][1], job.amount);
+    test_uint(await_entity_args[0 + 8][2], owner);
+    test_uint(await_entity_args[0 + 8][3], job.dst);
+    test_uint(await_entity_args[0 + 10][0], home);
 
     ecs_script_task_free(task);
     ecs_script_free(script);
@@ -1104,12 +1309,98 @@ void Await_haul_single(void) {
 void Await_haul_loop_3(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
 
-    AwaitHaulFixture fixture = Await_haul_fixture(world);
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
+    ecs_entity_t job_type = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "AwaitJob" }),
+        .members = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"src", ecs_id(ecs_entity_t)},
+            {"dst", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    ecs_entity_t drone_type = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "AwaitDrone" }),
+        .members = {{"home", ecs_id(ecs_entity_t)}}
+    });
+
+    ecs_entity_t logistics = ecs_entity(world, { .name = "logistics" });
+    ecs_entity_t functions[6];
+    functions[0] = ecs_async_function(world, {
+        .name = "acceptJob",
+        .parent = logistics,
+        .return_type = job_type,
+        .callback = Await_record_callback
+    });
+
+    functions[1] = ecs_async_function(world, {
+        .name = "takeOff",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_record_callback
+    });
+
+    functions[2] = ecs_async_function(world, {
+        .name = "moveTo",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"dst", ecs_id(ecs_entity_t)}},
+        .callback = Await_record_callback
+    });
+
+    functions[3] = ecs_async_function(world, {
+        .name = "land",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_record_callback
+    });
+
+    functions[4] = ecs_async_function(world, {
+        .name = "pickUp",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"src", ecs_id(ecs_entity_t)},
+            {"drone", ecs_id(ecs_entity_t)}
+        },
+        .callback = Await_record_callback
+    });
+
+    functions[5] = ecs_async_function(world, {
+        .name = "dropOff",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"drone", ecs_id(ecs_entity_t)},
+            {"dst", ecs_id(ecs_entity_t)}
+        },
+        .callback = Await_record_callback
+    });
 
     ecs_entity_t home = ecs_entity(world, { .name = "Home" });
-    ecs_entity_t owner = Await_haul_owner(&fixture, "Drone1", home);
+
+    ecs_entity_t owner = ecs_entity(world, { .name = "Drone1" });
+    AwaitDrone value = {home};
+
+    ecs_set_id(world, owner, drone_type,
+        ECS_SIZEOF(AwaitDrone), &value);
+
     AwaitJob jobs[3] = {
         {
             ecs_entity(world, { .name = "Iron" }), 20,
@@ -1150,17 +1441,65 @@ void Await_haul_loop_3(void) {
     for (int32_t i = 0; i < 36; i ++) {
         test_int(ecs_script_task_resume(task, NULL),
             EcsScriptTaskPending);
-        test_uint(await_functions[i], Await_haul_function(&fixture, i));
+
+        int32_t indices[12] = {0, 1, 2, 3, 4, 1, 2, 3, 5, 1, 2, 3};
+        test_uint(await_functions[i], functions[indices[i % 12]]);
+
         test_uint(await_entities[i], owner);
-        Await_haul_resolve(&fixture, i, i, &jobs[i / 12]);
+
+        if (!(i % 12)) {
+            ecs_value_t value = {job_type, &jobs[i / 12]};
+            test_int(ecs_script_future_resolve(
+                await_futures[i], &value), 0);
+        } else {
+            ecs_value_t value = ecs_value(ecs_i32_t, {0});
+            test_int(ecs_script_future_resolve(
+                await_futures[i], &value), 0);
+        }
+
+        ecs_script_future_release(await_futures[i]);
+
     }
 
     test_int(ecs_script_task_resume(task, NULL),
         EcsScriptTaskDone);
     test_int(await_future_count, 36);
-    Await_haul_validate(0, owner, home, &jobs[0]);
-    Await_haul_validate(12, owner, home, &jobs[1]);
-    Await_haul_validate(24, owner, home, &jobs[2]);
+
+    test_uint(await_entity_args[0 + 2][0], jobs[0].src);
+    test_uint(await_entity_args[0 + 4][0], jobs[0].resource);
+    test_int(await_i32_args[0 + 4][1], jobs[0].amount);
+    test_uint(await_entity_args[0 + 4][2], jobs[0].src);
+    test_uint(await_entity_args[0 + 4][3], owner);
+    test_uint(await_entity_args[0 + 6][0], jobs[0].dst);
+    test_uint(await_entity_args[0 + 8][0], jobs[0].resource);
+    test_int(await_i32_args[0 + 8][1], jobs[0].amount);
+    test_uint(await_entity_args[0 + 8][2], owner);
+    test_uint(await_entity_args[0 + 8][3], jobs[0].dst);
+    test_uint(await_entity_args[0 + 10][0], home);
+
+    test_uint(await_entity_args[12 + 2][0], jobs[1].src);
+    test_uint(await_entity_args[12 + 4][0], jobs[1].resource);
+    test_int(await_i32_args[12 + 4][1], jobs[1].amount);
+    test_uint(await_entity_args[12 + 4][2], jobs[1].src);
+    test_uint(await_entity_args[12 + 4][3], owner);
+    test_uint(await_entity_args[12 + 6][0], jobs[1].dst);
+    test_uint(await_entity_args[12 + 8][0], jobs[1].resource);
+    test_int(await_i32_args[12 + 8][1], jobs[1].amount);
+    test_uint(await_entity_args[12 + 8][2], owner);
+    test_uint(await_entity_args[12 + 8][3], jobs[1].dst);
+    test_uint(await_entity_args[12 + 10][0], home);
+
+    test_uint(await_entity_args[24 + 2][0], jobs[2].src);
+    test_uint(await_entity_args[24 + 4][0], jobs[2].resource);
+    test_int(await_i32_args[24 + 4][1], jobs[2].amount);
+    test_uint(await_entity_args[24 + 4][2], jobs[2].src);
+    test_uint(await_entity_args[24 + 4][3], owner);
+    test_uint(await_entity_args[24 + 6][0], jobs[2].dst);
+    test_uint(await_entity_args[24 + 8][0], jobs[2].resource);
+    test_int(await_i32_args[24 + 8][1], jobs[2].amount);
+    test_uint(await_entity_args[24 + 8][2], owner);
+    test_uint(await_entity_args[24 + 8][3], jobs[2].dst);
+    test_uint(await_entity_args[24 + 10][0], home);
 
     ecs_script_task_free(task);
     ecs_script_free(script);
@@ -1170,12 +1509,98 @@ void Await_haul_loop_3(void) {
 void Await_haul_loop_count(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
 
-    AwaitHaulFixture fixture = Await_haul_fixture(world);
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
+    ecs_entity_t job_type = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "AwaitJob" }),
+        .members = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"src", ecs_id(ecs_entity_t)},
+            {"dst", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    ecs_entity_t drone_type = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "AwaitDrone" }),
+        .members = {{"home", ecs_id(ecs_entity_t)}}
+    });
+
+    ecs_entity_t logistics = ecs_entity(world, { .name = "logistics" });
+    ecs_entity_t functions[6];
+    functions[0] = ecs_async_function(world, {
+        .name = "acceptJob",
+        .parent = logistics,
+        .return_type = job_type,
+        .callback = Await_record_callback
+    });
+
+    functions[1] = ecs_async_function(world, {
+        .name = "takeOff",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_record_callback
+    });
+
+    functions[2] = ecs_async_function(world, {
+        .name = "moveTo",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"dst", ecs_id(ecs_entity_t)}},
+        .callback = Await_record_callback
+    });
+
+    functions[3] = ecs_async_function(world, {
+        .name = "land",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_record_callback
+    });
+
+    functions[4] = ecs_async_function(world, {
+        .name = "pickUp",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"src", ecs_id(ecs_entity_t)},
+            {"drone", ecs_id(ecs_entity_t)}
+        },
+        .callback = Await_record_callback
+    });
+
+    functions[5] = ecs_async_function(world, {
+        .name = "dropOff",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"drone", ecs_id(ecs_entity_t)},
+            {"dst", ecs_id(ecs_entity_t)}
+        },
+        .callback = Await_record_callback
+    });
 
     ecs_entity_t home = ecs_entity(world, { .name = "Home" });
-    ecs_entity_t owner = Await_haul_owner(&fixture, "Drone1", home);
+
+    ecs_entity_t owner = ecs_entity(world, { .name = "Drone1" });
+    AwaitDrone value = {home};
+
+    ecs_set_id(world, owner, drone_type,
+        ECS_SIZEOF(AwaitDrone), &value);
+
     AwaitJob jobs[3] = {
         {
             ecs_entity(world, { .name = "Iron" }), 20,
@@ -1193,7 +1618,19 @@ void Await_haul_loop_count(void) {
     };
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, Await_haul_code, &ir_desc, NULL);
+        world, NULL,
+        "const job = await logistics.acceptJob()\n"
+        "await takeOff()\n"
+        "await moveTo(job.src)\n"
+        "await land()\n"
+        "await pickUp(job.resource, job.amount, job.src, this)\n"
+        "await takeOff()\n"
+        "await moveTo(job.dst)\n"
+        "await land()\n"
+        "await dropOff(job.resource, job.amount, this, job.dst)\n"
+        "await takeOff()\n"
+        "await moveTo(this[AwaitDrone].home)\n"
+        "await land()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){
@@ -1208,9 +1645,24 @@ void Await_haul_loop_count(void) {
             test_int(ecs_script_task_resume(task, NULL),
                 EcsScriptTaskPending);
             test_bool(ecs_script_task_is_ready(task), false);
-            test_uint(await_functions[i], Await_haul_function(&fixture, step));
+
+            int32_t indices[12] = {0, 1, 2, 3, 4, 1, 2, 3, 5, 1, 2, 3};
+            test_uint(await_functions[i], functions[indices[step % 12]]);
+
             test_uint(await_entities[i], owner);
-            Await_haul_resolve(&fixture, i, step, &jobs[iteration]);
+
+            if (!(step % 12)) {
+                ecs_value_t value = {job_type, &jobs[iteration]};
+                test_int(ecs_script_future_resolve(
+                    await_futures[i], &value), 0);
+            } else {
+                ecs_value_t value = ecs_value(ecs_i32_t, {0});
+                test_int(ecs_script_future_resolve(
+                    await_futures[i], &value), 0);
+            }
+
+            ecs_script_future_release(await_futures[i]);
+
         }
 
         test_int(ecs_script_task_resume(task, NULL), iteration == 2
@@ -1220,9 +1672,42 @@ void Await_haul_loop_count(void) {
     }
 
     test_int(await_future_count, 36);
-    Await_haul_validate(0, owner, home, &jobs[0]);
-    Await_haul_validate(12, owner, home, &jobs[1]);
-    Await_haul_validate(24, owner, home, &jobs[2]);
+
+    test_uint(await_entity_args[0 + 2][0], jobs[0].src);
+    test_uint(await_entity_args[0 + 4][0], jobs[0].resource);
+    test_int(await_i32_args[0 + 4][1], jobs[0].amount);
+    test_uint(await_entity_args[0 + 4][2], jobs[0].src);
+    test_uint(await_entity_args[0 + 4][3], owner);
+    test_uint(await_entity_args[0 + 6][0], jobs[0].dst);
+    test_uint(await_entity_args[0 + 8][0], jobs[0].resource);
+    test_int(await_i32_args[0 + 8][1], jobs[0].amount);
+    test_uint(await_entity_args[0 + 8][2], owner);
+    test_uint(await_entity_args[0 + 8][3], jobs[0].dst);
+    test_uint(await_entity_args[0 + 10][0], home);
+
+    test_uint(await_entity_args[12 + 2][0], jobs[1].src);
+    test_uint(await_entity_args[12 + 4][0], jobs[1].resource);
+    test_int(await_i32_args[12 + 4][1], jobs[1].amount);
+    test_uint(await_entity_args[12 + 4][2], jobs[1].src);
+    test_uint(await_entity_args[12 + 4][3], owner);
+    test_uint(await_entity_args[12 + 6][0], jobs[1].dst);
+    test_uint(await_entity_args[12 + 8][0], jobs[1].resource);
+    test_int(await_i32_args[12 + 8][1], jobs[1].amount);
+    test_uint(await_entity_args[12 + 8][2], owner);
+    test_uint(await_entity_args[12 + 8][3], jobs[1].dst);
+    test_uint(await_entity_args[12 + 10][0], home);
+
+    test_uint(await_entity_args[24 + 2][0], jobs[2].src);
+    test_uint(await_entity_args[24 + 4][0], jobs[2].resource);
+    test_int(await_i32_args[24 + 4][1], jobs[2].amount);
+    test_uint(await_entity_args[24 + 4][2], jobs[2].src);
+    test_uint(await_entity_args[24 + 4][3], owner);
+    test_uint(await_entity_args[24 + 6][0], jobs[2].dst);
+    test_uint(await_entity_args[24 + 8][0], jobs[2].resource);
+    test_int(await_i32_args[24 + 8][1], jobs[2].amount);
+    test_uint(await_entity_args[24 + 8][2], owner);
+    test_uint(await_entity_args[24 + 8][3], jobs[2].dst);
+    test_uint(await_entity_args[24 + 10][0], home);
 
     ecs_script_task_free(task);
     ecs_script_free(script);
@@ -1232,12 +1717,98 @@ void Await_haul_loop_count(void) {
 void Await_haul_loop_forever(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
 
-    AwaitHaulFixture fixture = Await_haul_fixture(world);
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
+    ecs_entity_t job_type = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "AwaitJob" }),
+        .members = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"src", ecs_id(ecs_entity_t)},
+            {"dst", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    ecs_entity_t drone_type = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "AwaitDrone" }),
+        .members = {{"home", ecs_id(ecs_entity_t)}}
+    });
+
+    ecs_entity_t logistics = ecs_entity(world, { .name = "logistics" });
+    ecs_entity_t functions[6];
+    functions[0] = ecs_async_function(world, {
+        .name = "acceptJob",
+        .parent = logistics,
+        .return_type = job_type,
+        .callback = Await_record_callback
+    });
+
+    functions[1] = ecs_async_function(world, {
+        .name = "takeOff",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_record_callback
+    });
+
+    functions[2] = ecs_async_function(world, {
+        .name = "moveTo",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"dst", ecs_id(ecs_entity_t)}},
+        .callback = Await_record_callback
+    });
+
+    functions[3] = ecs_async_function(world, {
+        .name = "land",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_record_callback
+    });
+
+    functions[4] = ecs_async_function(world, {
+        .name = "pickUp",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"src", ecs_id(ecs_entity_t)},
+            {"drone", ecs_id(ecs_entity_t)}
+        },
+        .callback = Await_record_callback
+    });
+
+    functions[5] = ecs_async_function(world, {
+        .name = "dropOff",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"drone", ecs_id(ecs_entity_t)},
+            {"dst", ecs_id(ecs_entity_t)}
+        },
+        .callback = Await_record_callback
+    });
 
     ecs_entity_t home = ecs_entity(world, { .name = "Home" });
-    ecs_entity_t owner = Await_haul_owner(&fixture, "Drone1", home);
+
+    ecs_entity_t owner = ecs_entity(world, { .name = "Drone1" });
+    AwaitDrone value = {home};
+
+    ecs_set_id(world, owner, drone_type,
+        ECS_SIZEOF(AwaitDrone), &value);
+
     AwaitJob jobs[3] = {
         {
             ecs_entity(world, { .name = "Iron" }), 20,
@@ -1255,7 +1826,19 @@ void Await_haul_loop_forever(void) {
     };
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, Await_haul_code, &ir_desc, NULL);
+        world, NULL,
+        "const job = await logistics.acceptJob()\n"
+        "await takeOff()\n"
+        "await moveTo(job.src)\n"
+        "await land()\n"
+        "await pickUp(job.resource, job.amount, job.src, this)\n"
+        "await takeOff()\n"
+        "await moveTo(job.dst)\n"
+        "await land()\n"
+        "await dropOff(job.resource, job.amount, this, job.dst)\n"
+        "await takeOff()\n"
+        "await moveTo(this[AwaitDrone].home)\n"
+        "await land()", &ir_desc, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){
@@ -1269,9 +1852,24 @@ void Await_haul_loop_forever(void) {
             test_int(ecs_script_task_resume(task, NULL),
                 EcsScriptTaskPending);
             test_bool(ecs_script_task_is_ready(task), false);
-            test_uint(await_functions[i], Await_haul_function(&fixture, step));
+
+            int32_t indices[12] = {0, 1, 2, 3, 4, 1, 2, 3, 5, 1, 2, 3};
+            test_uint(await_functions[i], functions[indices[step % 12]]);
+
             test_uint(await_entities[i], owner);
-            Await_haul_resolve(&fixture, i, step, &jobs[iteration]);
+
+            if (!(step % 12)) {
+                ecs_value_t value = {job_type, &jobs[iteration]};
+                test_int(ecs_script_future_resolve(
+                    await_futures[i], &value), 0);
+            } else {
+                ecs_value_t value = ecs_value(ecs_i32_t, {0});
+                test_int(ecs_script_future_resolve(
+                    await_futures[i], &value), 0);
+            }
+
+            ecs_script_future_release(await_futures[i]);
+
         }
 
         test_int(ecs_script_task_resume(task, NULL),
@@ -1280,9 +1878,42 @@ void Await_haul_loop_forever(void) {
     }
 
     test_int(await_future_count, 36);
-    Await_haul_validate(0, owner, home, &jobs[0]);
-    Await_haul_validate(12, owner, home, &jobs[1]);
-    Await_haul_validate(24, owner, home, &jobs[2]);
+
+    test_uint(await_entity_args[0 + 2][0], jobs[0].src);
+    test_uint(await_entity_args[0 + 4][0], jobs[0].resource);
+    test_int(await_i32_args[0 + 4][1], jobs[0].amount);
+    test_uint(await_entity_args[0 + 4][2], jobs[0].src);
+    test_uint(await_entity_args[0 + 4][3], owner);
+    test_uint(await_entity_args[0 + 6][0], jobs[0].dst);
+    test_uint(await_entity_args[0 + 8][0], jobs[0].resource);
+    test_int(await_i32_args[0 + 8][1], jobs[0].amount);
+    test_uint(await_entity_args[0 + 8][2], owner);
+    test_uint(await_entity_args[0 + 8][3], jobs[0].dst);
+    test_uint(await_entity_args[0 + 10][0], home);
+
+    test_uint(await_entity_args[12 + 2][0], jobs[1].src);
+    test_uint(await_entity_args[12 + 4][0], jobs[1].resource);
+    test_int(await_i32_args[12 + 4][1], jobs[1].amount);
+    test_uint(await_entity_args[12 + 4][2], jobs[1].src);
+    test_uint(await_entity_args[12 + 4][3], owner);
+    test_uint(await_entity_args[12 + 6][0], jobs[1].dst);
+    test_uint(await_entity_args[12 + 8][0], jobs[1].resource);
+    test_int(await_i32_args[12 + 8][1], jobs[1].amount);
+    test_uint(await_entity_args[12 + 8][2], owner);
+    test_uint(await_entity_args[12 + 8][3], jobs[1].dst);
+    test_uint(await_entity_args[12 + 10][0], home);
+
+    test_uint(await_entity_args[24 + 2][0], jobs[2].src);
+    test_uint(await_entity_args[24 + 4][0], jobs[2].resource);
+    test_int(await_i32_args[24 + 4][1], jobs[2].amount);
+    test_uint(await_entity_args[24 + 4][2], jobs[2].src);
+    test_uint(await_entity_args[24 + 4][3], owner);
+    test_uint(await_entity_args[24 + 6][0], jobs[2].dst);
+    test_uint(await_entity_args[24 + 8][0], jobs[2].resource);
+    test_int(await_i32_args[24 + 8][1], jobs[2].amount);
+    test_uint(await_entity_args[24 + 8][2], owner);
+    test_uint(await_entity_args[24 + 8][3], jobs[2].dst);
+    test_uint(await_entity_args[24 + 10][0], home);
 
     ecs_script_task_cancel(task);
     test_int(ecs_script_task_resume(task, NULL),
@@ -1297,18 +1928,112 @@ void Await_haul_loop_forever(void) {
 void Await_haul_multiple_owners(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
 
-    AwaitHaulFixture fixture = Await_haul_fixture(world);
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
+    ecs_entity_t job_type = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "AwaitJob" }),
+        .members = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"src", ecs_id(ecs_entity_t)},
+            {"dst", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    ecs_entity_t drone_type = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "AwaitDrone" }),
+        .members = {{"home", ecs_id(ecs_entity_t)}}
+    });
+
+    ecs_entity_t logistics = ecs_entity(world, { .name = "logistics" });
+    ecs_entity_t functions[6];
+    functions[0] = ecs_async_function(world, {
+        .name = "acceptJob",
+        .parent = logistics,
+        .return_type = job_type,
+        .callback = Await_record_callback
+    });
+
+    functions[1] = ecs_async_function(world, {
+        .name = "takeOff",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_record_callback
+    });
+
+    functions[2] = ecs_async_function(world, {
+        .name = "moveTo",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"dst", ecs_id(ecs_entity_t)}},
+        .callback = Await_record_callback
+    });
+
+    functions[3] = ecs_async_function(world, {
+        .name = "land",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_record_callback
+    });
+
+    functions[4] = ecs_async_function(world, {
+        .name = "pickUp",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"src", ecs_id(ecs_entity_t)},
+            {"drone", ecs_id(ecs_entity_t)}
+        },
+        .callback = Await_record_callback
+    });
+
+    functions[5] = ecs_async_function(world, {
+        .name = "dropOff",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            {"resource", ecs_id(ecs_entity_t)},
+            {"amount", ecs_id(ecs_i32_t)},
+            {"drone", ecs_id(ecs_entity_t)},
+            {"dst", ecs_id(ecs_entity_t)}
+        },
+        .callback = Await_record_callback
+    });
 
     ecs_entity_t homes[2] = {
         ecs_entity(world, { .name = "HomeA" }),
         ecs_entity(world, { .name = "HomeB" })
     };
-    ecs_entity_t owners[2] = {
-        Await_haul_owner(&fixture, "DroneA", homes[0]),
-        Await_haul_owner(&fixture, "DroneB", homes[1])
-    };
+    ecs_entity_t owners[2];
+
+    ecs_entity_t result = ecs_entity(world, { .name = "DroneA" });
+    AwaitDrone value = {homes[0]};
+
+    ecs_set_id(world, result, drone_type,
+        ECS_SIZEOF(AwaitDrone), &value);
+
+    owners[0] = result;
+
+    result = ecs_entity(world, { .name = "DroneB" });
+    value = (AwaitDrone){homes[1]};
+
+    ecs_set_id(world, result, drone_type,
+        ECS_SIZEOF(AwaitDrone), &value);
+
+    owners[1] = result;
+
     AwaitJob jobs[2] = {
         {
             ecs_entity(world, { .name = "Iron" }), 20,
@@ -1322,7 +2047,19 @@ void Await_haul_multiple_owners(void) {
     };
 
     ecs_script_t *script = ecs_script_parse(
-        world, NULL, Await_haul_code, &ir_desc, NULL);
+        world, NULL,
+        "const job = await logistics.acceptJob()\n"
+        "await takeOff()\n"
+        "await moveTo(job.src)\n"
+        "await land()\n"
+        "await pickUp(job.resource, job.amount, job.src, this)\n"
+        "await takeOff()\n"
+        "await moveTo(job.dst)\n"
+        "await land()\n"
+        "await dropOff(job.resource, job.amount, this, job.dst)\n"
+        "await takeOff()\n"
+        "await moveTo(this[AwaitDrone].home)\n"
+        "await land()", &ir_desc, NULL);
 
     ecs_script_task_t *tasks[2] = {
         ecs_script_task_new(script, &(
@@ -1336,13 +2073,28 @@ void Await_haul_multiple_owners(void) {
             int32_t index = step * 2 + owner;
             test_int(ecs_script_task_resume(tasks[owner], NULL),
                 EcsScriptTaskPending);
+
+            int32_t indices[12] = {0, 1, 2, 3, 4, 1, 2, 3, 5, 1, 2, 3};
             test_uint(await_functions[index],
-                Await_haul_function(&fixture, step));
+                functions[indices[step % 12]]);
+
             test_uint(await_entities[index], owners[owner]);
         }
         for (int32_t owner = 0; owner < 2; owner ++) {
             int32_t index = step * 2 + owner;
-            Await_haul_resolve(&fixture, index, step, &jobs[owner]);
+
+            if (!(step % 12)) {
+                ecs_value_t value = {job_type, &jobs[owner]};
+                test_int(ecs_script_future_resolve(
+                    await_futures[index], &value), 0);
+            } else {
+                ecs_value_t value = ecs_value(ecs_i32_t, {0});
+                test_int(ecs_script_future_resolve(
+                    await_futures[index], &value), 0);
+            }
+
+            ecs_script_future_release(await_futures[index]);
+
         }
     }
 
@@ -1376,7 +2128,22 @@ void Await_haul_multiple_owners(void) {
 void Await_loop_once(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -1408,7 +2175,22 @@ void Await_loop_once(void) {
 void Await_loop_count_multiple_owners(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_entity_t owners[2] = {
         ecs_entity(world, { .name = "OwnerA" }),
@@ -1470,7 +2252,22 @@ void Await_loop_count_multiple_owners(void) {
 void Await_loop_count_resets_state(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_entity_t ns = ecs_entity(world, { .name = "ns" });
     ecs_entity(world, {
@@ -1516,7 +2313,22 @@ void Await_loop_count_resets_state(void) {
     ecs_script_task_free(task);
     ecs_script_free(script);
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_fini(world);
 }
@@ -1537,7 +2349,22 @@ void Await_loop_count_invalid(void) {
 void Await_loop_error_is_terminal(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     await_future_ctx_free_count = 0;
 
@@ -1582,7 +2409,22 @@ void Await_loop_error_is_terminal(void) {
 void Await_loop_sync_yields(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -1615,7 +2457,22 @@ void Await_loop_sync_yields(void) {
 void Await_entity_enter_error_restores_state(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_script_t *script = ecs_script_parse(
         world, NULL, "@bogus ann\nEntity {}", &ir_desc, NULL);
@@ -1655,7 +2512,22 @@ void Await_entity_enter_error_restores_state(void) {
 void Await_with_enter_error_restores_state(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ECS_COMPONENT(world, AwaitTracked);
     ecs_set_hooks(world, AwaitTracked, {
@@ -1697,10 +2569,26 @@ void Await_with_enter_error_restores_state(void) {
     ecs_fini(world);
 }
 
-static ecs_script_task_t* Await_nested_task(
-    ecs_world_t *world,
-    ecs_script_t **script_out)
-{
+void Await_cancel_nested_frames(void) {
+    ecs_world_t *world = ecs_init();
+
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel);
 
@@ -1723,19 +2611,8 @@ static ecs_script_task_t* Await_nested_task(
         "}", &ir_desc, NULL);
     test_assert(script != NULL);
 
-    *script_out = script;
+    ecs_script_task_t *task = ecs_script_task_new(script, NULL);
 
-    return ecs_script_task_new(script, NULL);
-}
-
-void Await_cancel_nested_frames(void) {
-    ecs_world_t *world = ecs_init();
-
-    Await_reset();
-
-    ecs_script_t *script;
-    ecs_script_task_t *task = Await_nested_task(
-        world, &script);
     test_int(ecs_script_task_resume(task, NULL),
         EcsScriptTaskPending);
     test_int(await_future_count, 1);
@@ -1755,11 +2632,47 @@ void Await_cancel_nested_frames(void) {
 void Await_reject_nested_frames(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
 
-    ecs_script_t *script;
-    ecs_script_task_t *task = Await_nested_task(
-        world, &script);
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+
+    ecs_async_function(world, {
+        .name = "step",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback,
+        .cancel = Await_cancel_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "with Tag {\n"
+        "  Parent {\n"
+        "    (Rel, Tgt) {\n"
+        "      for i in 0..2 {\n"
+        "        await step()\n"
+        "      }\n"
+        "    }\n"
+        "  }\n"
+        "}", &ir_desc, NULL);
+    test_assert(script != NULL);
+
+    ecs_script_task_t *task = ecs_script_task_new(script, NULL);
+
     test_int(ecs_script_task_resume(task, NULL),
         EcsScriptTaskPending);
     test_int(await_future_count, 1);
@@ -1783,7 +2696,22 @@ void Await_reject_nested_frames(void) {
 void Await_cancel_is_terminal(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "step",
@@ -1817,7 +2745,22 @@ void Await_cancel_is_terminal(void) {
 void Await_immediate_resolve(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -1845,7 +2788,22 @@ void Await_immediate_resolve(void) {
 void Await_await_export_const(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -1873,7 +2831,22 @@ void Await_await_export_const(void) {
 void Await_await_method_receiver(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_entity_t method = ecs_method(world, {
         .name = "addAsync",
@@ -1914,7 +2887,22 @@ void Await_await_method_receiver(void) {
 void Await_task_component_added_on_task_new(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -1950,7 +2938,22 @@ void Await_task_component_added_on_task_new(void) {
 void Await_task_component_not_added_without_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -1975,7 +2978,22 @@ void Await_task_component_not_added_without_entity(void) {
 void Await_task_component_two_tasks(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2015,7 +3033,22 @@ void Await_task_component_two_tasks(void) {
 void Await_task_component_entity_delete_cancels_task(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2050,7 +3083,22 @@ void Await_task_component_entity_delete_cancels_task(void) {
 void Await_task_component_serialize(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2107,7 +3155,22 @@ void Await_task_component_serialize(void) {
 void Await_task_component_deferred_one_task(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2154,7 +3217,22 @@ void Await_task_component_deferred_one_task(void) {
 void Await_task_component_deferred_three_tasks(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2212,7 +3290,22 @@ void Await_task_component_deferred_three_tasks(void) {
 void Await_task_component_deferred_w_existing_task(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2257,7 +3350,22 @@ void Await_task_component_deferred_w_existing_task(void) {
 void Await_await_export_mut(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2285,7 +3393,22 @@ void Await_await_export_mut(void) {
 void Await_interleaved_tasks(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ECS_TAG(world, Tag);
 
@@ -2349,7 +3472,22 @@ void Await_interleaved_tasks(void) {
 void Await_second_task_same_script_while_suspended(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2395,7 +3533,22 @@ void Await_second_task_same_script_while_suspended(void) {
 void Await_loop_forever_recreate_deleted_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2449,7 +3602,22 @@ void Await_loop_forever_recreate_deleted_entity(void) {
 void Await_task_component_deferred_new_then_free(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2480,7 +3648,22 @@ void Await_task_component_deferred_new_then_free(void) {
 void Await_loop_forever_counts_iterations(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2554,7 +3737,22 @@ static void Await_cancel_task_callback(
 void Await_cancel_task_from_async_callback(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2614,7 +3812,23 @@ void Await_resume_from_async_callback(void) {
 
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
     await_reentrant_done = false;
 
     ecs_async_function(world, {
@@ -2657,7 +3871,22 @@ void Await_free_task_from_async_callback(void) {
 
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2680,7 +3909,22 @@ void Await_free_task_from_async_callback(void) {
 void Await_await_in_template_body_fails_task(void) {
     ecs_world_t *world = ecs_init();
 
-    Await_reset();
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
 
     ecs_async_function(world, {
         .name = "fetch",
@@ -2711,7 +3955,24 @@ void Await_await_in_template_body_fails_task(void) {
 
 void Await_deep_scope_resume(void) {
     ecs_world_t *world = ecs_init();
-    Await_reset();
+
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
     ECS_TAG(world, Done);
     ecs_async_function(world, {
         .name = "step",
@@ -2757,7 +4018,24 @@ void Await_deep_scope_resume(void) {
 
 void Await_deep_scope_cancel(void) {
     ecs_world_t *world = ecs_init();
-    Await_reset();
+
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
     ecs_async_function(world, {
         .name = "step",
         .return_type = ecs_id(ecs_i32_t),
@@ -2788,7 +4066,24 @@ void Await_deep_scope_cancel(void) {
 
 void Await_many_live_strings_resume_and_cancel(void) {
     ecs_world_t *world = ecs_init();
-    Await_reset();
+
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
     ecs_async_function(world, {
         .name = "step",
         .return_type = ecs_id(ecs_i32_t),

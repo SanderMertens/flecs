@@ -80,6 +80,7 @@ static void flecs_log_capture_log(
         } else {
             ecs_strbuf_appendch(flecs_log_last_err, '\n');
         }
+
         ecs_strbuf_appendstr(flecs_log_last_err, msg);
     }
 
@@ -93,6 +94,7 @@ static char* flecs_log_get_captured_log(void) {
     if (!flecs_log_last_err) {
         return NULL;
     }
+
     char *result = ecs_strbuf_get(flecs_log_last_err);
     ecs_os_free(flecs_log_last_err);
     flecs_log_last_err = NULL;
@@ -109,6 +111,7 @@ void ecs_log_start_capture(bool try) {
     if (flecs_log_capture_depth ++) {
         return;
     }
+
     flecs_log_last_err_line = 0;
     flecs_log_last_err_column = 0;
     flecs_parser_err_line = 0;
@@ -127,6 +130,7 @@ char* ecs_log_stop_capture(void) {
     if (-- flecs_log_capture_depth) {
         return NULL;
     }
+
     flecs_log_stopped_err_line = flecs_log_last_err_line;
     flecs_log_stopped_err_column = flecs_log_last_err_column;
     ecs_os_api.log_ = flecs_log_prev_fatal_log;
@@ -190,6 +194,7 @@ void flecs_log_get_captured_error_pos(
     if (line) {
         *line = flecs_log_stopped_err_line;
     }
+
     if (column) {
         *column = flecs_log_stopped_err_column;
     }
@@ -219,6 +224,7 @@ void flecs_colorize_buf(
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_NORMAL);
                 isNum = false;
             }
+
             if (isStr && (isStr == ch) && prev != '\\') {
                 isStr = '\0';
             } else if (((ch == '\'') || (ch == '"')) && !isStr &&
@@ -288,6 +294,7 @@ void flecs_colorize_buf(
                 while ((ch = *ptr) != ']') ptr ++;
                 dontAppend = true;
             }
+
             if (!autoColor) {
                 overrideColor = true;
             }
@@ -508,6 +515,7 @@ static void flecs_parser_errorv(
                 for (c = 0; c < column; c ++) {
                     ecs_strbuf_appendch(&msg_buf, ' ');
                 }
+
                 ecs_strbuf_appendch(&msg_buf, '^');
             }
         }
@@ -518,6 +526,7 @@ static void flecs_parser_errorv(
         } else {
             ecs_os_err(name, 0, msg);
         }
+
         ecs_os_free(msg);
     }
 }
@@ -591,6 +600,7 @@ void ecs_abort_(
         ecs_fatal_(file, line, "#[red]abort()#[reset]: #[blue]%s#[reset]", 
             ecs_strerror(err));
     }
+
     ecs_os_api.log_last_error_ = err;
 }
 
@@ -614,6 +624,7 @@ void ecs_assert_log_(
         ecs_fatal_(file, line, "#[red]assert(%s)#[reset] (#[blue]%s#[reset])",
             cond_str, ecs_strerror(err));
     }
+
     ecs_os_api.log_last_error_ = err;
 }
 
@@ -816,6 +827,7 @@ void flecs_log_get_captured_error_pos(
     if (line) {
         *line = 0;
     }
+
     if (column) {
         *column = 0;
     }

@@ -92,17 +92,20 @@ static int flecs_script_edit_walk(
         {
             continue;
         }
+
         if (node->kind == EcsAstEntity) {
             int result = walk->action((ecs_script_entity_t*)node, walk->ctx);
             if (result) {
                 return result;
             }
         }
+
         int result = flecs_script_visit_scopes(node, flecs_script_edit_walk, ctx);
         if (result) {
             return result;
         }
     }
+
     return 0;
 }
 
@@ -120,6 +123,7 @@ static int flecs_script_edit_index_entity(
             ecs_map_insert_ptr(&impl->entity_index, slot->entity, entity);
         }
     }
+
     return 0;
 }
 
@@ -180,6 +184,7 @@ static int flecs_script_edit_find_symbol(
     if (node->symbol != symbol->symbol) {
         return 0;
     }
+
     symbol->node = node;
     return 1;
 }
@@ -276,6 +281,7 @@ static ecs_script_entity_t* flecs_script_edit_find_in_template(
                 if (template_out) {
                     template_out[0] = template_entity;
                 }
+
                 return node;
             }
         }
@@ -692,6 +698,7 @@ static char* flecs_script_edit_indent_str(
     if (!result) {
         result = ecs_os_strdup("");
     }
+
     return result;
 }
 
@@ -705,6 +712,7 @@ static char* flecs_script_edit_child_indent(
     } else {
         ecs_strbuf_appendlit(&buf, "    ");
     }
+
     return ecs_strbuf_get(&buf);
 }
 
@@ -776,6 +784,7 @@ static void flecs_script_edit_collapse_blank(
             } else if (c != ' ' && c != '\t' && c != '\r') {
                 break;
             }
+
             cur --;
         }
 
@@ -800,6 +809,7 @@ static void flecs_script_edit_collapse_blank(
             } else if (c != ' ' && c != '\t' && c != '\r') {
                 break;
             }
+
             cur ++;
         }
 
@@ -820,6 +830,7 @@ static void flecs_script_edit_collapse_blank(
         if (cur[0] == '\n') {
             *length_out += flecs_ito(int32_t, (cur + 1) - finish);
         }
+
         return;
     }
 
@@ -1241,6 +1252,7 @@ static int flecs_script_edit_compare(
         if (a->kind == FlecsScriptEditDelete) {
             return -1;
         }
+
         if (b->kind == FlecsScriptEditDelete) {
             return 1;
         }

@@ -378,21 +378,25 @@ void FlecsUnitsImport(
         } else if (def->is_prefix) {
             parent = EcsUnitPrefixes;
         }
+
         ecs_entity_t entity = *def->id = ecs_entity(world, {
             .name = def->name, .parent = parent
         });
         if (def->module) {
             ecs_add_id(world, entity, EcsModule);
         }
+
         if (def->is_quantity) {
             ecs_quantity_init(world, &(ecs_entity_desc_t){.id = entity});
         }
+
         if (def->is_prefix) {
             ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
                 .entity = entity, .symbol = def->symbol,
                 .translation = {def->factor, def->power}
             });
         }
+
         if (def->is_unit) {
             ecs_unit_init(world, &(ecs_unit_desc_t){
                 .entity = entity, .symbol = def->symbol,
@@ -403,6 +407,7 @@ void FlecsUnitsImport(
                 .translation = {def->factor, def->power}
             });
         }
+
         if (def->kind) {
             ecs_primitive_init(world, &(ecs_primitive_desc_t){
                 .entity = entity, .kind = def->kind

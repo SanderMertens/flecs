@@ -84,6 +84,7 @@ bool ecs_each_next(
         } else {
             it->ids = NULL;
         }
+
         it->trs = &each_iter->trs;
         it->columns = &each_iter->columns;
         it->sources = &each_iter->sources;

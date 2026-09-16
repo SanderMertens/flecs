@@ -82,6 +82,7 @@ void* flecs_stack_alloc(
         } else {
             page = page->next = flecs_stack_page_new(page->id);
         }
+
         sp = 0;
         next_sp = flecs_ito(int16_t, size);
         stack->tail_page = page;
@@ -189,6 +190,7 @@ void flecs_stack_restore_cursor(
         if (!prev || !prev->is_free) {
             break; /* Found active cursor, free up until this point */
         }
+
         cursor = prev;
     } while (cursor);
 
@@ -221,6 +223,7 @@ void flecs_stack_reset(
     if (stack->first) {
         stack->first->sp = 0;
     }
+
     stack->tail_cursor = NULL;
 }
 

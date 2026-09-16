@@ -53,6 +53,7 @@ static ECS_DTOR(EcsConstants, ptr, {
         flecs_constants_dtor(ptr->constants);
         ecs_os_free(ptr->constants);
     }
+
     flecs_ordered_constants_dtor(&ptr->ordered_constants);
 })
 
@@ -95,13 +96,16 @@ static int flecs_constants_insert(
             ecs_err("conflicting constant value for '%s' (other is '%s')",
                 path, c->name);
         }
+
         ecs_os_free(path);
         return -1;
     }
+
     if (!ptr->constants) {
         ptr->constants = ecs_os_malloc_t(ecs_map_t);
         ecs_map_init(ptr->constants, NULL);
     }
+
     ecs_map_init_if(ptr->constants, &world->allocator);
     c = ecs_map_insert_alloc_t(ptr->constants, ecs_enum_constant_t, key);
     *c = (ecs_enum_constant_t){
@@ -420,6 +424,7 @@ ecs_entity_t ecs_enum_init(
                     ecs_os_free(path);
                     return 0;
                 }
+
                 ret = ecs_meta_set_int(&cur, m_desc->value);
             } else {
                 if (!ut_is_unsigned) {
@@ -429,6 +434,7 @@ ecs_entity_t ecs_enum_init(
                     ecs_os_free(path);
                     return 0;
                 }
+
                 ret = ecs_meta_set_uint(&cur, m_desc->value_unsigned);
             }
 

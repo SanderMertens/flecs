@@ -475,6 +475,7 @@ static int flecs_member_metric_init(
             ecs_os_free(metric_name);
             goto error;
         }
+
         if (ecs_meta_dotmember(&cur, desc->dotmember)) {
             char *metric_name = ecs_get_path(world, metric);
             ecs_err("invalid dotmember '%s' for metric '%s'",
@@ -523,6 +524,7 @@ static int flecs_member_metric_init(
                 ecs_os_free(metric_name);
                 goto error;
             }
+
             id = desc->id;
         }
 
@@ -775,11 +777,13 @@ ecs_entity_t ecs_metric_init(
                 ecs_err("cannot specify targets for id that is not a pair");
                 goto error;
             }
+
             if (ECS_PAIR_FIRST(desc->id) == EcsWildcard) {
                 ecs_err("first element of pair cannot be wildcard with "
                     " targets enabled");
                 goto error;
             }
+
             if (ECS_PAIR_SECOND(desc->id) != EcsWildcard) {
                 ecs_err("second element of pair must be wildcard with "
                     " targets enabled");

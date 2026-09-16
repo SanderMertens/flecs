@@ -31,6 +31,7 @@ static void flecs_script_rng_keep(ecs_script_rng_t *rng) {
     if (!rng) {
         return;
     }
+
     rng->refcount ++;
 }
 
@@ -38,6 +39,7 @@ static void flecs_script_rng_free(ecs_script_rng_t *rng) {
     if (!rng) {
         return;
     }
+
     ecs_assert(rng->refcount > 0, ECS_INTERNAL_ERROR, NULL);
     if (!--rng->refcount) {
         ecs_os_free(rng);
@@ -55,6 +57,7 @@ static void flecs_script_rng_init(ecs_script_rng_t *rng, uint64_t seed) {
     if (rng->initialized) {
         return;
     }
+
     rng->x = flecs_script_rng_mix(seed);
     rng->w = flecs_script_rng_mix(rng->x);
     rng->initialized = true;
@@ -79,6 +82,7 @@ static ECS_COPY(EcsScriptRng, dst, src, {
     if (dst->impl != src->impl) {
         flecs_script_rng_free(dst->impl);
     }
+
     dst->seed = src->seed;
     dst->impl = src->impl;
 })
@@ -482,6 +486,7 @@ void FlecsScriptMathImport(
             desc.params[1].type = fn->exponent
                 ? ecs_id(ecs_i32_t) : ecs_id(ecs_f64_t);
         }
+
         ecs_entity_t f = ecs_function_init(world, &desc);
         ecs_doc_set_brief(world, f, fn->brief);
     }

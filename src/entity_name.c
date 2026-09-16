@@ -133,8 +133,10 @@ bool flecs_name_is_id(
                 return false;
             }
         }
+
         return true;
     }
+
     return false;
 }
 
@@ -205,6 +207,7 @@ static const char* flecs_path_elem(
             if (!ch) {
                 break;
             }
+
             escaped = true;
         }
 
@@ -225,6 +228,7 @@ static const char* flecs_path_elem(
                 } else { /* heap buffer */
                     buffer = ecs_os_realloc(buffer, size * 2 + 1);
                 }
+
                 size *= 2;
             }
 
@@ -291,6 +295,7 @@ static ecs_entity_t flecs_lookup_child_n(
             if (ch < '0' || ch > '9') {
                 break;
             }
+
             if (value < UINT32_MAX) {
                 value = value * 10 + flecs_ito(uint64_t, ch - '0');
             }
@@ -303,6 +308,7 @@ static ecs_entity_t flecs_lookup_child_n(
                 if (parent && !ecs_has_pair(world, e, EcsChildOf, parent)) {
                     return 0;
                 }
+
                 return e;
             }
         }
@@ -316,6 +322,7 @@ static ecs_entity_t flecs_lookup_child_n(
             return flecs_name_index_find(index, name, length, hash);
         }
     }
+
     return 0;
 }
 
@@ -475,6 +482,7 @@ void ecs_on_set(EcsIdentifier)(
                 if (index_hash) {
                     flecs_name_index_remove(index, e, index_hash);
                 }
+
                 if (hash) {
                     if (kind == EcsSymbol || kind == EcsAlias) {
                         uint64_t existing = flecs_name_index_find(
@@ -487,6 +495,7 @@ void ecs_on_set(EcsIdentifier)(
                                 name, (uint32_t)existing, (uint32_t)e);
                         }
                     }
+
                     flecs_name_index_ensure(index, e, name, len, hash);
                     cur->index_hash = hash;
                     cur->index = index;
@@ -628,6 +637,7 @@ void ecs_get_path_w_sep_buf(
         ecs_strbuf_appendch(buf, '*');
         return;
     }
+
     if (child == EcsAny) {
         ecs_strbuf_appendch(buf, '_');
         return;
@@ -792,10 +802,12 @@ retry:
             if (!len && !next) {
                 break;
             }
+
             cur = flecs_lookup_child_n(world, cur, ptr, len, 0);
             if (!cur) {
                 goto tail;
             }
+
             ptr = next;
         }
     } else {
@@ -992,6 +1004,7 @@ ecs_entity_t ecs_add_path_w_sep(
             if (name) {
                 ecs_os_free(name);
             }
+
             name = ecs_os_strdup(elem);
 
             if (!e) {
@@ -1070,6 +1083,7 @@ static const char* flecs_get_identifier(
     } else {
         return NULL;
     }
+
 error:
     return NULL;
 }

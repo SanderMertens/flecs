@@ -116,8 +116,10 @@ bool flecs_defer_modified(
             cmd->id = id;
             cmd->entity = entity;
         }
+
         return true;
     }
+
     return false;
 }
 
@@ -135,6 +137,7 @@ bool flecs_defer_clone(
         cmd->is._1.clone_value = clone_value;
         return true;
     }
+
     return false;   
 }
 
@@ -152,6 +155,7 @@ bool flecs_defer_path(
         cmd->is._1.value = ecs_os_strdup(name);
         return true;
     }
+
     return false;
 }
 
@@ -165,6 +169,7 @@ bool flecs_defer_delete(
         cmd->entity = entity;
         return true;
     }
+
     return false;
 }
 
@@ -178,6 +183,7 @@ bool flecs_defer_clear(
         cmd->entity = entity;
         return true;
     }
+
     return false;
 }
 
@@ -195,6 +201,7 @@ bool flecs_defer_on_delete_action(
         cmd->is._1.force_delete = force_delete;
         return true;
     }
+
     return false;
 }
 
@@ -211,6 +218,7 @@ bool flecs_defer_enable(
         cmd->id = id;
         return true;
     }
+
     return false;
 }
 
@@ -241,6 +249,7 @@ bool flecs_defer_bulk_new(
         cmd->entity = 0;
         return true;
     }
+
     return false;
 }
 
@@ -257,6 +266,7 @@ bool flecs_defer_add(
         cmd->entity = entity;
         return true;
     }
+
     return false;
 }
 
@@ -332,6 +342,7 @@ bool flecs_defer_remove(
 #endif
         return true;
     }
+
     return false;
 }
 
@@ -369,6 +380,7 @@ static flecs_component_ptr_t flecs_defer_get_existing(
             ptr.ti = cr->type_info;
         }
     }
+
     return ptr;
 }
 
@@ -747,6 +759,7 @@ static void flecs_flush_bulk_new(
             if (!r->table) {
                 flecs_add_to_root_table(world, entities[i]);
             }
+
             flecs_add_id(world, entities[i], cmd->id);
         }
     }
@@ -907,6 +920,7 @@ static void flecs_cmd_batch_for_entity(
                 } else if (cmd->kind == EcsCmdEnsure) {
                     cmd->kind = EcsCmdEnsureDontFragment;
                 }
+
                 continue;
             }
 
@@ -966,6 +980,7 @@ static void flecs_cmd_batch_for_entity(
                     table->type.count);
                 diff->removed_flags |= table->flags & EcsTableRemoveEdgeFlags;
             }
+
             table = &world->store.root;
             world->info.cmd.batched_command_count ++;
             cmd->kind = EcsCmdSkip;
@@ -1009,6 +1024,7 @@ static void flecs_cmd_batch_for_entity(
     if (ensure_add_type.ids.count) {
         stage->ensure_add = &ensure_add_type;
     }
+
     flecs_defer_begin(world, world->stages[0]);
     flecs_commit(world, entity, r, table, &table_diff, 0, 0);
     flecs_defer_end(world, world->stages[0]);
@@ -1097,6 +1113,7 @@ static void flecs_cmd_batch_for_entity(
                      * command queue. In that case skip the command. */
                     cmd->kind = EcsCmdSkip;
                 }
+
                 break;
             }
             case EcsCmdDelete:
@@ -1265,6 +1282,7 @@ bool flecs_defer_end(
                         world->info.cmd.discard_count ++;
                         ecs_delete(world, e);
                     }
+
                     break;
                 case EcsCmdRemove:
                     flecs_remove_id(world, e, id);
@@ -1277,6 +1295,7 @@ bool flecs_defer_end(
                     } else {
                         world->info.cmd.discard_count ++;
                     }
+
                     break;
                 case EcsCmdSet:
                 case EcsCmdSetDontFragment:
@@ -1358,9 +1377,11 @@ bool flecs_defer_end(
                             keep_alive = false;
                         }
                     }
+
                     if (keep_alive) {
                         ecs_set_name(world, e, cmd->is._1.value);
                     }
+
                     ecs_os_free(cmd->is._1.value);
                     cmd->is._1.value = NULL;
                     world->info.cmd.other_count ++;

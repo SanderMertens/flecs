@@ -32,6 +32,7 @@ ecs_var_id_t flecs_query_find_var_id(
         if (index == 0) {
             return EcsVarNone;
         }
+
         return flecs_utovar(index);
     }
 
@@ -45,6 +46,7 @@ ecs_var_id_t flecs_query_find_var_id(
         if (index == 0) {
             return EcsVarNone;
         }
+
         return flecs_utovar(index);
     }
 
@@ -165,11 +167,13 @@ static void flecs_query_begin_block_cond_eval(
         ecs_assert(first_var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
         cond_mask |= (1ull << first_var);
     }
+
     if (flecs_query_ref_flags(op->flags, EcsQuerySecond) == EcsQueryIsVar) {
         second_var = op->second.var;
         ecs_assert(second_var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
         cond_mask |= (1ull << second_var);
     }
+
     if (flecs_query_ref_flags(op->flags, EcsQuerySrc) == EcsQueryIsVar) {
         src_var = op->src.var;
         ecs_assert(src_var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
@@ -196,10 +200,12 @@ static void flecs_query_begin_block_cond_eval(
             jmp_op.flags |= (EcsQueryIsVar << EcsQueryFirst);
             jmp_op.first.var = first_var;
         }
+
         if ((second_var != EcsVarNone) && cond_write_state & (1ull << second_var)) {
             jmp_op.flags |= (EcsQueryIsVar << EcsQuerySecond);
             jmp_op.second.var = second_var;
         }
+
         if ((src_var != EcsVarNone) && cond_write_state & (1ull << src_var)) {
             jmp_op.flags |= (EcsQueryIsVar << EcsQuerySrc);
             jmp_op.src.var = src_var;
@@ -328,6 +334,7 @@ static void flecs_query_end_block_or(
             }
         }
     }
+
     ctx->written |= ctx->cond_written;
 
     /* Scan which variables were conditionally written in the OR chain and 
@@ -462,6 +469,7 @@ static void flecs_query_insert_inheritance(
     if (term->first.id & EcsSelf) {
         trav_op.match_flags |= EcsTermReflexive;
     }
+
     flecs_query_op_insert(&trav_op, ctx);
     flecs_query_insert_each(tvar, evar, ctx, cond_write);
 
@@ -501,10 +509,12 @@ void flecs_query_compile_term_ref(
             } else {
                 ref->var = flecs_query_add_var(query, NULL, NULL, EcsVarEntity);
             }
+
             if (is_wildcard) {
                 flecs_set_var_label(&query->vars[ref->var], 
                     ecs_get_name(world, ECS_TERM_REF_ID(term_ref)));
             }
+
             ecs_assert(ref->var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
         }
     }
@@ -769,12 +779,14 @@ static int flecs_query_compile_0_src(
         if (flecs_query_ensure_scope_vars(world, impl, ctx, term)) {
             goto error;
         }
+
         if (term->oper == EcsNot) {
             ctx->scope_is_not |= (ecs_flags32_t)(1ull << ctx->scope);
             flecs_query_begin_block(EcsQueryNot, ctx);
         } else {
             ctx->scope_is_not &= (ecs_flags32_t)~(1ull << ctx->scope);
         }
+
         flecs_query_compile_push(ctx);
     } else if (ECS_TERM_REF_ID(&term->first) == EcsScopeClose) {
         flecs_query_compile_pop(ctx);
@@ -801,6 +813,7 @@ static ecs_flags32_t flecs_query_to_table_flags(
         if (!(query_flags & EcsQueryMatchDisabled)) {
             table_flags |= EcsTableIsDisabled;
         }
+
         if (!(query_flags & EcsQueryMatchPrefab)) {
             table_flags |= EcsTableIsPrefab;
         }
@@ -839,6 +852,7 @@ static bool flecs_query_select_all(
             match_any.second.entity = EcsName;
             match_any.flags |= (EcsQueryIsEntity << EcsQuerySecond);
         }
+
         match_any.written = (1ull << src_var);
         match_any.other = flecs_itolbl(flecs_query_to_table_flags(q));
         flecs_query_op_insert(&match_any, ctx);
@@ -847,6 +861,7 @@ static bool flecs_query_select_all(
         /* Update write administration */
         return true;
     }
+
     return false;
 }
 
@@ -1251,6 +1266,7 @@ int flecs_query_compile_term(
         if (flecs_query_compile_0_src(world, query, term, ctx)) {
             goto error;
         }
+
         return 0;
     }
 
@@ -1396,6 +1412,7 @@ int flecs_query_compile_term(
                     op.kind = EcsQueryIdsRight;
                 }
             }
+
             op.src.entity = 0;
             src_is_var = false;
             op.flags &= (ecs_flags8_t)~(EcsQueryIsVar << EcsQuerySrc); /* ids has no src */
@@ -1472,11 +1489,13 @@ int flecs_query_compile_term(
             write_state |= (1ull << op.first.var); // lookups are resolved inline
         }
     }
+
     if (src_is_var) {
         if (flecs_query_compile_lookup(query, op.src.var, ctx, cond_write)) {
             write_state |= (1ull << op.src.var); // lookups are resolved inline
         }
     }
+
     if (second_is_var) {
         if (flecs_query_compile_lookup(query, op.second.var, ctx, cond_write)) {
             write_state |= (1ull << op.second.var); // lookups are resolved inline
@@ -1503,10 +1522,12 @@ int flecs_query_compile_term(
         flecs_query_write(op.src.var, &op.written);
         flecs_query_write_ctx(op.src.var, ctx, cond_write);
     }
+
     if (first_is_var) {
         flecs_query_write(op.first.var, &op.written);
         flecs_query_write_ctx(op.first.var, ctx, cond_write);
     }
+
     if (second_is_var) {
         flecs_query_write(op.second.var, &op.written);
         flecs_query_write_ctx(op.second.var, ctx, cond_write);
@@ -1524,6 +1545,7 @@ int flecs_query_compile_term(
         if (first_is_var) {
             flecs_query_insert_contains(query, op.src.var, op.first.var, ctx);
         }
+
         if (second_is_var && op.first.var != op.second.var) {
             flecs_query_insert_contains(query, op.src.var, op.second.var, ctx);
         }

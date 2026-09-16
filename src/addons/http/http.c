@@ -133,11 +133,13 @@ static void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
             ecs_os_strerror(errno));
         return;
     }
+
     if (enable) {
         flags = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
     } else {
         flags = fcntl(sock, F_SETFL, flags & ~O_NONBLOCK);
     }
+
     if (flags == -1) {
         ecs_warn("http: failed to set socket NONBLOCK: %s",
             ecs_os_strerror(errno));
@@ -250,6 +252,7 @@ static char http_hex_2_int(char a, char b){
     if (a < 0) {
         return 0;
     }
+
     return (char)((a << 4) + b);
 }
 
@@ -264,6 +267,7 @@ static void http_decode_url_str(
             if (!ptr[2]) {
                 break;
             }
+
             ptr += 2;
         } else if (ch == '+') {
             dst[0] = ' ';
@@ -273,6 +277,7 @@ static void http_decode_url_str(
             dst ++;
         }
     }
+
     dst[0] = '\0';
 }
 
@@ -294,6 +299,7 @@ static ecs_http_method_t http_parse_method(
             return methods[i].kind;
         }
     }
+
     return EcsHttpMethodUnsupported;
 }
 
@@ -337,6 +343,7 @@ static ecs_http_request_entry_t* http_find_request_entry(
             return entry;
         }
     }
+
     return NULL;
 }
 
@@ -384,6 +391,7 @@ static char* http_decode_request(
         ecs_os_free(res);
         return NULL;
     }
+
     char *target = strchr(res, ' ') + 1;
     char *end = strchr(target, ' ');
     char *line = strstr(end, "\r\n") + 2;
@@ -398,6 +406,7 @@ static char* http_decode_request(
         if (c != '?' && c != '&' && c != '=') {
             continue;
         }
+
         int32_t count = req->pub.param_count;
         if (count < ECS_HTTP_QUERY_PARAM_COUNT_MAX) {
             *p = '\0';
@@ -413,10 +422,12 @@ static char* http_decode_request(
             *p = '\0';
         }
     }
+
     http_decode_url_str(req->pub.path);
     for (int32_t i = 0; i < req->pub.param_count; i ++) {
         http_decode_url_str(ECS_CONST_CAST(char*, req->pub.params[i].value));
     }
+
     while (line < res + frag->body_offset - 2) {
         char *next = strstr(line, "\r\n");
         *next = '\0';
@@ -426,18 +437,21 @@ static char* http_decode_request(
             if (*value == ' ') {
                 value ++;
             }
+
             if (*value) {
                 int32_t h = req->pub.header_count ++;
                 req->pub.headers[h].key = line;
                 req->pub.headers[h].value = value;
             }
         }
+
         line = next + 2;
     }
     if (frag->content_length) {
         req->pub.body = res + frag->body_offset;
         req->pub.body[frag->content_length] = '\0';
     }
+
     return res;
 }
 
@@ -493,6 +507,7 @@ static bool http_parse_request(
         frag->invalid = true;
         return false;
     }
+
     ecs_strbuf_appendstrn(&frag->buf, req_frag, req_frag_len);
     char *buf = frag->buf.content;
     int32_t length = ecs_strbuf_written(&frag->buf);
@@ -503,18 +518,21 @@ static bool http_parse_request(
             frag->scan = length;
             break;
         }
+
         int32_t end = flecs_ito(int32_t, nl - buf);
         frag->scan = end + 1;
         if (end == frag->line_offset || nl[-1] != '\r') {
             frag->invalid = true;
             return false;
         }
+
         char *line = buf + frag->line_offset;
         int32_t line_length = end - frag->line_offset - 1;
         if (memchr(line, 0, flecs_ito(size_t, line_length))) {
             frag->invalid = true;
             return false;
         }
+
         if (!frag->line_offset) {
             char *space = memchr(line, ' ', flecs_ito(size_t, line_length));
             if (!space || !memchr(space + 1, ' ',
@@ -523,6 +541,7 @@ static bool http_parse_request(
                 frag->invalid = true;
                 return false;
             }
+
             frag->method = http_parse_method(line,
                 flecs_ito(int32_t, space - line));
             frag->invalid = frag->method == EcsHttpMethodUnsupported;
@@ -539,8 +558,10 @@ static bool http_parse_request(
                 frag->invalid = true;
                 return false;
             }
+
             frag->content_length = flecs_ito(int32_t, content_length);
         }
+
         frag->line_offset = end + 1;
     }
     return frag->body_offset &&
@@ -628,6 +649,7 @@ static void* http_server_send_queue(void* arg) {
                         error = true;
                     }
                 }
+
                 if (!error) {
                     ecs_os_linc(&ecs_http_send_ok_count);
                 }
@@ -716,6 +738,7 @@ static void http_send_reply(
                 conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
             ecs_os_linc(&ecs_http_send_error_count);
         }
+
         ecs_os_free(content);
         ecs_os_free(headers);
         http_close(&conn->sock);
@@ -805,6 +828,7 @@ static void http_recv_connection(
         if (still_owns_sock) {
             conn->sock = HTTP_SOCKET_INVALID;
         }
+
         ecs_os_mutex_unlock(srv->lock);
         if (still_owns_sock) {
             http_close(&sock);
@@ -958,6 +982,7 @@ static int http_accept_connections(
     } else {
         ecs_dbg_2("http: server shut down while initializing");
     }
+
     ecs_os_mutex_unlock(srv->lock);
 
     struct sockaddr_storage remote_addr;
@@ -973,6 +998,7 @@ static int http_accept_connections(
                 ecs_dbg("http: connection attempt failed: %s", 
                     ecs_os_strerror(errno));
             }
+
             continue;
         }
 
@@ -986,6 +1012,7 @@ done:
         http_close(&sock);
         srv->sock = sock;
     }
+
     ecs_os_mutex_unlock(srv->lock);
 
     ecs_trace("http: no longer accepting connections on '%s:%s'",
@@ -1046,6 +1073,7 @@ static void http_do_request(
             ecs_os_linc(&ecs_http_request_handled_ok_count);
         }
     }
+
 error:
     return;
 }
@@ -1105,6 +1133,7 @@ static void http_purge_request_cache(
                 flecs_hm_bucket_remove(&srv->request_cache, bucket,
                     ecs_map_key(&it));
             }
+
             bucket = next;
         }
     }
@@ -1159,6 +1188,7 @@ const char* ecs_http_get_header(
             return req->headers[i].value;
         }
     }
+
     return NULL;
 }
 
@@ -1171,6 +1201,7 @@ const char* ecs_http_get_param(
             return req->params[i].value;
         }
     }
+
     return NULL;
 }
 
@@ -1181,6 +1212,7 @@ ecs_http_server_t* ecs_http_server_init(
     if (ecs_os_has_threading()) {
         srv->lock = ecs_os_mutex_new();
     }
+
     srv->sock = HTTP_SOCKET_INVALID;
 
     srv->should_run = false;
@@ -1229,9 +1261,11 @@ void ecs_http_server_fini(
     if (srv->should_run) {
         ecs_http_server_stop(srv);
     }
+
     if (ecs_os_has_threading()) {
         ecs_os_mutex_free(srv->lock);
     }
+
     http_purge_request_cache(srv, true);
     flecs_sparse_fini(&srv->connections);
     ecs_os_free(srv);
@@ -1285,6 +1319,7 @@ void ecs_http_server_stop(
     if (http_socket_is_valid(srv->sock)) {
         http_close(&srv->sock);
     }
+
     ecs_os_mutex_unlock(srv->lock);
 
     ecs_os_thread_join(srv->thread);

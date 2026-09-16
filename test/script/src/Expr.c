@@ -13021,25 +13021,6 @@ void Expr_uptr_var_mul_flt(void) {
     ecs_fini(world);
 }
 
-static void collection_count_expr(
-    ecs_world_t *world,
-    ecs_script_vars_t *vars,
-    const char *expr,
-    int32_t expected)
-{
-    ecs_expr_eval_desc_t desc = {
-        .vars = vars, .disable_folding = disable_folding
-    };
-    ecs_value_t result = {0};
-    const char *ptr = ecs_expr_run(world, expr, &result, &desc);
-    test_assert(ptr != NULL);
-    test_assert(!ptr[0]);
-    test_uint(result.type, ecs_id(ecs_i32_t));
-    test_assert(result.ptr != NULL);
-    test_int(*(int32_t*)result.ptr, expected);
-    ecs_ptr_free(world, result.type, result.ptr);
-}
-
 void Expr_count_array(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t type = ecs_array(world, {
@@ -13048,8 +13029,29 @@ void Expr_count_array(void) {
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
     ecs_script_vars_define_id(vars, "values", type);
 
-    collection_count_expr(world, vars, "values.count()", 3);
-    collection_count_expr(world, vars, "$values.count()", 3);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding
+    };
+    ecs_value_t result = {0};
+    const char *ptr = ecs_expr_run(world, "values.count()", &result, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+    test_uint(result.type, ecs_id(ecs_i32_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int32_t*)result.ptr, 3);
+    ecs_ptr_free(world, result.type, result.ptr);
+
+    desc = (ecs_expr_eval_desc_t){
+        .vars = vars, .disable_folding = disable_folding
+    };
+    result = (ecs_value_t){0};
+    ptr = ecs_expr_run(world, "$values.count()", &result, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+    test_uint(result.type, ecs_id(ecs_i32_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int32_t*)result.ptr, 3);
+    ecs_ptr_free(world, result.type, result.ptr);
 
     ecs_script_vars_fini(vars);
     ecs_fini(world);
@@ -13066,8 +13068,29 @@ void Expr_count_inline_array(void) {
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
     ecs_script_vars_define_id(vars, "data", type);
 
-    collection_count_expr(world, vars, "data.values.count()", 4);
-    collection_count_expr(world, vars, "$data.values.count()", 4);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding
+    };
+    ecs_value_t result = {0};
+    const char *ptr = ecs_expr_run(world, "data.values.count()", &result, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+    test_uint(result.type, ecs_id(ecs_i32_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int32_t*)result.ptr, 4);
+    ecs_ptr_free(world, result.type, result.ptr);
+
+    desc = (ecs_expr_eval_desc_t){
+        .vars = vars, .disable_folding = disable_folding
+    };
+    result = (ecs_value_t){0};
+    ptr = ecs_expr_run(world, "$data.values.count()", &result, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+    test_uint(result.type, ecs_id(ecs_i32_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int32_t*)result.ptr, 4);
+    ecs_ptr_free(world, result.type, result.ptr);
 
     ecs_script_vars_fini(vars);
     ecs_fini(world);
@@ -13079,7 +13102,17 @@ void Expr_count_vector_empty(void) {
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
     ecs_script_vars_define_id(vars, "values", type);
 
-    collection_count_expr(world, vars, "values.count()", 0);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding
+    };
+    ecs_value_t result = {0};
+    const char *ptr = ecs_expr_run(world, "values.count()", &result, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+    test_uint(result.type, ecs_id(ecs_i32_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int32_t*)result.ptr, 0);
+    ecs_ptr_free(world, result.type, result.ptr);
 
     ecs_script_vars_fini(vars);
     ecs_fini(world);
@@ -13092,7 +13125,17 @@ void Expr_count_vector(void) {
     ecs_script_var_t *var = ecs_script_vars_define_id(vars, "values", type);
     ecs_vec_set_count_t(NULL, var->value.ptr, int32_t, 3);
 
-    collection_count_expr(world, vars, "values.count()", 3);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding
+    };
+    ecs_value_t result = {0};
+    const char *val = ecs_expr_run(world, "values.count()", &result, &desc);
+    test_assert(val != NULL);
+    test_assert(!val[0]);
+    test_uint(result.type, ecs_id(ecs_i32_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int32_t*)result.ptr, 3);
+    ecs_ptr_free(world, result.type, result.ptr);
 
     ecs_script_vars_fini(vars);
     ecs_fini(world);
@@ -13101,7 +13144,17 @@ void Expr_count_vector(void) {
 void Expr_count_collection_literal(void) {
     ecs_world_t *world = ecs_init();
 
-    collection_count_expr(world, NULL, "[10, 20, 30].count()", 3);
+    ecs_expr_eval_desc_t desc = {
+        .vars = NULL, .disable_folding = disable_folding
+    };
+    ecs_value_t result = {0};
+    const char *ptr = ecs_expr_run(world, "[10, 20, 30].count()", &result, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+    test_uint(result.type, ecs_id(ecs_i32_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int32_t*)result.ptr, 3);
+    ecs_ptr_free(world, result.type, result.ptr);
 
     ecs_fini(world);
 }
@@ -13114,7 +13167,17 @@ void Expr_count_map_empty(void) {
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
     ecs_script_vars_define_id(vars, "values", type);
 
-    collection_count_expr(world, vars, "values.count()", 0);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding
+    };
+    ecs_value_t result = {0};
+    const char *ptr = ecs_expr_run(world, "values.count()", &result, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+    test_uint(result.type, ecs_id(ecs_i32_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int32_t*)result.ptr, 0);
+    ecs_ptr_free(world, result.type, result.ptr);
 
     ecs_script_vars_fini(vars);
     ecs_fini(world);
@@ -13133,7 +13196,17 @@ void Expr_count_map(void) {
     ecs_map_ensure(map, 20);
     ecs_map_ensure(map, 20);
 
-    collection_count_expr(world, vars, "values.count()", 2);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding
+    };
+    ecs_value_t result = {0};
+    const char *val = ecs_expr_run(world, "values.count()", &result, &desc);
+    test_assert(val != NULL);
+    test_assert(!val[0]);
+    test_uint(result.type, ecs_id(ecs_i32_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int32_t*)result.ptr, 2);
+    ecs_ptr_free(world, result.type, result.ptr);
 
     ecs_script_vars_fini(vars);
     ecs_fini(world);

@@ -39,15 +39,25 @@ static bool flecs_value_bool_to_number(
     ecs_entity_t type = dst->type;
     void *ptr = dst->ptr;
     if (type == ecs_id(ecs_f32_t)) { *(float*)ptr = value ? 1.0f : 0.0f; return true; }
+
     if (type == ecs_id(ecs_f64_t)) { *(double*)ptr = value ? 1.0 : 0.0; return true; }
+
     if (type == ecs_id(ecs_i32_t)) { *(int32_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_i64_t)) { *(int64_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_u32_t)) { *(uint32_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_u64_t)) { *(uint64_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_i8_t))  { *(int8_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_i16_t)) { *(int16_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_u8_t))  { *(uint8_t*)ptr = value; return true; }
+
     if (type == ecs_id(ecs_u16_t)) { *(uint16_t*)ptr = value; return true; }
+
     return false;
 }
 
@@ -177,15 +187,18 @@ int flecs_value_binary(
     if (operator == EcsTokAddAssign || operator == EcsTokMulAssign) {
         left = out;
     }
+
     if ((operator == EcsTokDiv || operator == EcsTokMod) && flecs_value_is_0(right)) {
         flecs_expr_visit_error(script, node, "division by zero");
         return -1;
     }
+
     if (operator == EcsTokAnd || operator == EcsTokOr) {
         bool l = *(bool*)left->ptr, r = *(bool*)right->ptr;
         *(bool*)out->ptr = operator == EcsTokAnd ? l && r : l || r;
         return 0;
     }
+
     if (right->type == ecs_id(ecs_string_t)) {
         char *l = *(char**)left->ptr, *r = *(char**)right->ptr;
         ecs_assert(operator == EcsTokEq || operator == EcsTokNeq, ECS_INTERNAL_ERROR, NULL);
@@ -194,6 +207,7 @@ int flecs_value_binary(
             : l == r;
         return 0;
     }
+
     if (operator == EcsTokAdd || operator == EcsTokSub || operator == EcsTokMul ||
         operator == EcsTokDiv || operator == EcsTokMod || operator == EcsTokBitwiseAnd ||
         operator == EcsTokBitwiseOr || operator == EcsTokShiftLeft || operator == EcsTokShiftRight ||
@@ -298,6 +312,7 @@ bool flecs_value_is_0(
     if (!info || !(info->integer || info->floating_point || info->kind == EcsBool)) {
         return true;
     }
+
     uint64_t zero = 0;
     return !ecs_os_memcmp(value->ptr, &zero, info->size);
 }

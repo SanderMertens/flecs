@@ -91,6 +91,7 @@ static int flecs_meta_write_scope(
     {
         return -1;
     }
+
     return 0;
 }
 
@@ -138,12 +139,14 @@ static int flecs_meta_write_map(
         if (!json) {
             ecs_strbuf_list_next(str);
         }
+
         if (flecs_meta_ser_map_key(
             world, ops, ecs_map_key(&it), json ? &key_buf : str))
         {
             ecs_strbuf_reset(&key_buf);
             return -1;
         }
+
         if (json) {
             char *key = ecs_strbuf_get(&key_buf);
             flecs_meta_write_member(str, key, format);
@@ -192,10 +195,12 @@ static int flecs_meta_write_value(
     if (!json) {
         ecs_strbuf_list_next(str);
     }
+
     if (flecs_meta_value_type_str(world, value->type, json ? &type_buf : str)) {
         ecs_strbuf_reset(&type_buf);
         return -1;
     }
+
     if (json) {
         char *name = ecs_strbuf_get(&type_buf);
         flecs_meta_write_member(str, name, format);
@@ -266,6 +271,7 @@ static int flecs_meta_write_opaque_value(
     if (writer->is_collection) {
         ecs_strbuf_list_next(writer->str);
     }
+
     return flecs_meta_write_forward(
         ser->world, type, value, writer->str, writer->format);
 }
@@ -344,6 +350,7 @@ static int flecs_meta_write_primitive(
             } else {
                 flecs_json_id(str, world, id);
             }
+
             return 0;
         }
         case EcsOpString:
@@ -369,23 +376,28 @@ static int flecs_meta_write_primitive(
         ecs_strbuf_appendstr(str, buf);
         return 0;
     }
+
     if (kind <= EcsOpPrimitive || kind > EcsMetaTypeOpKindLast) {
         ecs_throw(ECS_INVALID_PARAMETER, "invalid serializer operation");
     }
+
     bool quote = format == EcsMetaJson &&
         ((kind == EcsOpI64 && *(const int64_t*)ptr >= 2147483648) ||
          (kind == EcsOpU64 && *(const uint64_t*)ptr >= 2147483648));
     if (quote) {
         ecs_strbuf_appendch(str, '"');
     }
+
     if (flecs_meta_ser_primitive(world, kind - EcsOpPrimitive,
         ptr, str, format != EcsMetaStr))
     {
         return -1;
     }
+
     if (quote) {
         ecs_strbuf_appendch(str, '"');
     }
+
     return 0;
 error:
     return -1;
@@ -413,6 +425,7 @@ static int flecs_meta_write_type_ops(
             if (flecs_meta_write_struct(world, op, ptr, str, format)) {
                 goto error;
             }
+
             break;
         }
         case EcsOpPushArray: {
@@ -421,6 +434,7 @@ static int flecs_meta_write_type_ops(
             {
                 goto error;
             }
+
             break;
         }
         case EcsOpPushVector: {
@@ -431,24 +445,28 @@ static int flecs_meta_write_type_ops(
             {
                 goto error;
             }
+
             break;
         }
         case EcsOpPushMap: {
             if (flecs_meta_write_map(world, op, ptr, str, format)) {
                 goto error;
             }
+
             break;
         }
         case EcsOpPushValue: {
             if (flecs_meta_write_value(world, ptr, str, format)) {
                 goto error;
             }
+
             break;
         }
         case EcsOpForward: {
             if (flecs_meta_write_forward(world, op->type, ptr, str, format)) {
                 goto error;
             }
+
             break;
         }
         case EcsOpOpaqueStruct:
@@ -468,9 +486,11 @@ static int flecs_meta_write_type_ops(
             {
                 return -1;
             }
+
             if (format == EcsMetaJson) {
                 ecs_strbuf_appendch(str, '"');
             }
+
             break;
         case EcsOpBitmask:
             if (flecs_meta_ser_bitmask(world, op->type, op->is.constants,

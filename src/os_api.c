@@ -164,15 +164,18 @@ static void flecs_log_msg(
         if (ecs_os_api.log_last_timestamp_) {
             delta = now - ecs_os_api.log_last_timestamp_;
         }
+
         ecs_os_api.log_last_timestamp_ = (int64_t)now;
 
         if (delta) {
             if (delta < 10) {
                 fputs(" ", stream);
             }
+
             if (delta < 100) {
                 fputs(" ", stream);
             }
+
             char time_buf[20];
             ecs_os_snprintf(time_buf, 20, "%u", (uint32_t)delta);
             fputs("+", stream);
@@ -187,6 +190,7 @@ static void flecs_log_msg(
         if (!now) {
             now = time(NULL);
         }
+
         char time_buf[20];
         ecs_os_snprintf(time_buf, 20, "%u", (uint32_t)now);
         fputs(time_buf, stream);
@@ -202,6 +206,7 @@ static void flecs_log_msg(
         } else {
             if (use_colors) fputs(ECS_GREY, stream);
         }
+
         fputs("info", stream);
     } else if (level == -2) {
         if (use_colors) fputs(ECS_YELLOW, stream);
@@ -379,6 +384,7 @@ static void ecs_os_api_free(void *ptr) {
         ecs_os_allocated_bytes -= size;
         ecs_os_linc(&ecs_os_api_free_count);
     }
+
     free(ptr);
 }
 #else
@@ -411,6 +417,7 @@ static void ecs_os_api_free(void *ptr) {
     if (ptr) {
         ecs_os_linc(&ecs_os_api_free_count);
     }
+
     free(ptr);
 }
 #endif
@@ -449,6 +456,7 @@ char* ecs_os_strdup_(const char *str) {
     if (!str) {
         return NULL;
     }
+
     return ecs_os_api.strdup_(str);
 }
 

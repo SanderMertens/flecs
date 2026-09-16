@@ -179,10 +179,12 @@ static ecs_component_record_t* flecs_field_cr(
         } else {
             cr = flecs_components_get(it->real_world, it->ids[index]);
         }
+
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     } else {
         cr = tr->hdr.cr;
     }
+
     return cr;
 }
 
@@ -248,6 +250,7 @@ bool ecs_field_is_readonly(
             return true;
         }
     }
+
 error:
     return false;
 }
@@ -366,6 +369,7 @@ ecs_entity_t ecs_field_src(
     } else {
         return 0;
     }
+
 error:
     return 0;
 }
@@ -439,6 +443,7 @@ bool ecs_iter_is_true(
     if (result) {
         ecs_iter_fini(it);
     }
+
     return result;
 error:
     return false;
@@ -463,6 +468,7 @@ ecs_entity_t ecs_iter_get_var(
         if (!table && !var_id) {
             table = it->table;
         }
+
         if (table) {
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
@@ -768,6 +774,7 @@ void ecs_iter_set_var_as_range(
     if (!it->count) {
         it->count = ecs_table_count(it->table);
     }
+
     it->entities = ecs_table_entities(it->table);
     if (it->entities) {
         it->entities += it->offset;

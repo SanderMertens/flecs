@@ -101,6 +101,7 @@ bool flecs_term_is_builtin_pred(
             return true;
         }
     }
+
     return false;
 }
 
@@ -126,6 +127,7 @@ bool flecs_term_ref_is_wildcard(
     {
         return true;
     }
+
     return false;
 }
 
@@ -142,6 +144,7 @@ bool flecs_term_is_fixed_id(
     if (term->oper == EcsOr) {
         return false;
     }
+
     if ((term != q->terms) && term[-1].oper == EcsOr) {
         return false;
     }
@@ -230,6 +233,7 @@ bool flecs_ref_is_written(
     } else if (flags & EcsQueryIsVar) {
         return flecs_query_is_written(ref->var, written);
     }
+
     return false;
 }
 
@@ -270,6 +274,7 @@ static int32_t flecs_query_op_ref_str(
         if (var->kind == EcsVarTable) {
             ecs_strbuf_appendch(buf, '[');
         }
+
         ecs_strbuf_appendlit(buf, "#[green]");
         if (var->name) {
             ecs_strbuf_appendstr(buf, var->name);
@@ -286,10 +291,12 @@ static int32_t flecs_query_op_ref_str(
                 ecs_strbuf_appendlit(buf, "this");
             }
         }
+
         ecs_strbuf_appendlit(buf, "#[reset]");
         if (var->kind == EcsVarTable) {
             ecs_strbuf_appendch(buf, ']');
         }
+
         color_chars = ecs_os_strlen("#[green]#[reset]#[green]#[reset]");
     } else if (flags & EcsQueryIsEntity) {
         char *path = ecs_get_path(query->pub.world, ref->entity);
@@ -299,6 +306,7 @@ static int32_t flecs_query_op_ref_str(
         ecs_os_free(path);
         color_chars = ecs_os_strlen("#[blue]#[reset]");
     }
+
     return color_chars;
 }
 
@@ -313,6 +321,7 @@ static void flecs_query_str_append_bitset(
             ecs_strbuf_list_append(buf, "%d", b);
         }
     }
+
     ecs_strbuf_list_pop(buf, "}");
 }
 
@@ -400,12 +409,15 @@ static void flecs_query_plan_w_profile(
             if (op->first.entity) {
                 flecs_query_str_append_bitset(buf, op->first.entity);
             }
+
             if (op->second.entity) {
                 if (op->first.entity) {
                     ecs_strbuf_appendlit(buf, ", !");
                 }
+
                 flecs_query_str_append_bitset(buf, op->second.entity);
             }
+
             ecs_strbuf_appendstr(buf, "\n");
             continue;
         }
@@ -526,6 +538,7 @@ static void flecs_query_str_add_id(
     } else {
         ecs_strbuf_appendlit(buf, "#0");
     }
+
     is_added = true;
 
     ecs_flags64_t flags = ECS_TERM_REF_FLAGS(ref);
@@ -541,6 +554,7 @@ static void flecs_query_str_add_id(
         } else {
             ecs_strbuf_list_push(buf, "", "|");
         }
+
         if (is_src) {
             if (flags & EcsSelf) {
                 ecs_strbuf_list_appendstr(buf, "self");
@@ -639,6 +653,7 @@ void flecs_term_to_buf(
                 {
                     ecs_strbuf_appendlit(buf, "!");
                 }
+
                 ecs_strbuf_appendstr(buf, term->second.name);
                 ecs_strbuf_appendlit(buf, "\"");
             }
@@ -688,6 +703,7 @@ void flecs_term_to_buf(
             ecs_strbuf_appendlit(buf, ",");
             flecs_query_str_add_id(world, buf, term, &term->second, false);
         }
+
         ecs_strbuf_appendlit(buf, ")");
     }
 }

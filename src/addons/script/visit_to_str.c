@@ -187,6 +187,7 @@ static void flecs_script_stmt_to_str(
         flecs_scriptbuf_append(v, "%s: ", flecs_script_node_kind_str(node));
         flecs_script_color_to_str(v, ECS_NORMAL);
     }
+
     ecs_script_scope_t *scope = NULL;
     bool wrap = false;
     switch(node->kind) {
@@ -207,6 +208,7 @@ static void flecs_script_stmt_to_str(
             flecs_scriptbuf_appendstr(v, ": ");
             flecs_expr_to_str(v, stmt->expr);
         }
+
         break;
     }
     case EcsAstWith: {
@@ -243,10 +245,12 @@ static void flecs_script_stmt_to_str(
             flecs_scriptbuf_append(v, ": %s%s",
                 stmt->base, stmt->parent ? "" : " ");
         }
+
         if (stmt->parent) {
             flecs_scriptbuf_append(v, "%sparent %s ",
                 stmt->base ? ", " : ": ", stmt->parent);
         }
+
         scope = stmt->scope;
         break;
     }
@@ -266,9 +270,11 @@ static void flecs_script_stmt_to_str(
             flecs_scriptbuf_append(v, "%s = ",
                 stmt->name);
         }
+
         if (stmt->is_await) {
             flecs_scriptbuf_appendstr(v, "await ");
         }
+
         flecs_expr_to_str(v, stmt->expr);
         break;
     }
@@ -277,6 +283,7 @@ static void flecs_script_stmt_to_str(
         if (stmt->kind) {
             flecs_scriptbuf_append(v, "%s ", stmt->kind);
         }
+
         if (stmt->name) {
             flecs_scriptbuf_append(v, "%s ", stmt->name);
         } else {
@@ -286,6 +293,7 @@ static void flecs_script_stmt_to_str(
         if (!flecs_scope_is_empty(stmt->scope)) {
             scope = stmt->scope;
         }
+
         break;
     }
     case EcsAstPairScope: {
@@ -313,12 +321,15 @@ static void flecs_script_stmt_to_str(
         if (stmt->loop_var_count > 1) {
             flecs_scriptbuf_appendstr(v, "(");
         }
+
         for (i = 0; i < stmt->loop_var_count; i ++) {
             if (i) {
                 flecs_scriptbuf_appendstr(v, ", ");
             }
+
             flecs_scriptbuf_appendstr(v, stmt->loop_vars[i]);
         }
+
         if (stmt->loop_var_count > 1) {
             flecs_scriptbuf_appendstr(v, ")");
         }
@@ -382,9 +393,11 @@ static void flecs_script_stmt_to_str(
             } else {
                 flecs_scriptbuf_appendstr(v, "catch: ");
             }
+
             flecs_script_color_to_str(v, ECS_NORMAL);
             flecs_script_scope_to_str(v, catches[i].scope);
         }
+
         v->depth --;
         flecs_scriptbuf_appendstr(v, "}\n");
         return;
@@ -398,14 +411,17 @@ static void flecs_script_stmt_to_str(
             if (i) {
                 flecs_scriptbuf_appendstr(v, ", ");
             }
+
             flecs_scriptbuf_append(v, "%s: %s",
                 params[i].name, params[i].type);
         }
+
         flecs_scriptbuf_append(v, ") -> %s ", fn->return_type);
         flecs_script_scope_to_str(v, fn->body);
         if (fn->return_expr) {
             flecs_expr_to_str(v, fn->return_expr);
         }
+
         break;
     }
     }
@@ -415,6 +431,7 @@ static void flecs_script_stmt_to_str(
             flecs_scriptbuf_appendstr(v, " {\n");
             v->depth ++;
         }
+
         flecs_script_scope_to_str(v, scope);
         if (wrap) {
             v->depth --;

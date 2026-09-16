@@ -196,6 +196,7 @@ ecs_poly_t* flecs_poly_get_(
     if (p) {
         return p->poly;
     }
+
     return NULL;
 }
 
@@ -223,6 +224,7 @@ const ecs_world_t* ecs_get_world(
     if (((const ecs_header_t*)poly)->type == ecs_world_t_magic) {
         return poly;
     }
+
     return *(ecs_world_t**)assert_mixin(poly, EcsMixinWorld);
 }
 
@@ -252,9 +254,11 @@ void flecs_poly_update_ctx(
             *ctx_free = NULL;
         }
     }
+
     if (value) {
         *ctx = value;
     }
+
     if (free_value) {
         *ctx_free = free_value;
     }

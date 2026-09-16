@@ -94,6 +94,7 @@ static bool flecs_unit_validate(
                 ecs_get_name(world, t));
             goto error;
         }
+
         if (!ecs_has(world, over, EcsUnit)) {
             ecs_err("entity '%s' for unit '%s' used as over is not a unit",
                 ecs_get_name(world, over), ecs_get_name(world, t));
@@ -107,6 +108,7 @@ static bool flecs_unit_validate(
                 ecs_get_name(world, t));
             goto error;
         }
+
         const EcsUnitPrefix *prefix_ptr = ecs_get(world, prefix, EcsUnitPrefix);
         if (!prefix_ptr) {
             ecs_err("entity '%s' for unit '%s' used as prefix is not a prefix",
@@ -170,6 +172,7 @@ static bool flecs_unit_validate(
                 goto error;
             }
         }
+
         if (!symbol && derived_symbol && (prefix || over)) {
             ecs_os_free(data->symbol);
             data->symbol = derived_symbol;

@@ -172,6 +172,7 @@ static uint64_t flecs_query_cache_default_group_by(
             return ecs_pair_second(world, match);
         }
     }
+
     return 0;
 }
 
@@ -549,6 +550,7 @@ static void flecs_query_cache_on_event(
         if (o_impl->last_event_id[0] == world->event_id) {
             return;
         }
+
         o_impl->last_event_id[0] = world->event_id;
     }
 
@@ -570,6 +572,7 @@ static void flecs_query_cache_on_event(
                 ecs_os_free(table_str);
             }
         }
+
         return;
     }
 

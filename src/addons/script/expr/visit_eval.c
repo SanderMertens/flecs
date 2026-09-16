@@ -36,6 +36,7 @@ static inline ecs_expr_value_t* flecs_expr_eval_result(
         literal->owned = false;
         return literal;
     }
+
     ecs_expr_value_t *result = flecs_expr_stack_result(ctx->stack, node);
     return flecs_expr_visit_eval_priv(ctx, node, result) ? NULL : result;
 }
@@ -82,6 +83,7 @@ static int flecs_expr_interpolated_fragment_eval(
             if (!format_val) {
                 return -1;
             }
+
             ecs_assert(format_val->value.type == ecs_id(ecs_i32_t),
                 ECS_INTERNAL_ERROR, NULL);
             format_values[f][0] = *(int32_t*)format_val->value.ptr;
@@ -120,6 +122,7 @@ static int flecs_expr_interpolated_string_visit_eval(
         if (fragment) {
             ecs_strbuf_appendstr(&buf, fragment);
         }
+
         if (fragments[i].expr) {
             flecs_expr_stack_push(ctx->stack);
 
@@ -200,11 +203,13 @@ static int flecs_expr_initializer_eval_static(
                 inner_value = ECS_OFFSET(value, elem->offset);
                 inner_size = inner->node.type_info->size;
             }
+
             if (flecs_expr_initializer_eval(ctx,
                 inner, inner_value, NULL, inner_size))
             {
                 goto error;
             }
+
             continue;
         }
 
@@ -233,6 +238,7 @@ static int flecs_expr_initializer_eval_static(
                 ecs_os_memcpy(ECS_OFFSET(value, offset),
                     ECS_OFFSET(left->value.ptr, swizzle->src[s]), size);
             }
+
             continue;
         }
 
@@ -343,6 +349,7 @@ static int flecs_expr_initializer_eval_dynamic(
             {
                 goto error;
             }
+
             continue;
         }
 
@@ -371,6 +378,7 @@ static int flecs_expr_initializer_eval_dynamic(
                     goto error;
                 }
             }
+
             continue;
         }
 
@@ -564,6 +572,7 @@ static int flecs_expr_identifier_set_entity(
             "failed to assign identifier '%s'", node->value);
         return -1;
     }
+
     return 0;
 }
 
@@ -584,6 +593,7 @@ static int flecs_expr_identifier_visit_eval(
                 "unresolved identifier '%s'", node->value);
             goto error;
         }
+
         if (flecs_expr_identifier_set_entity(ctx, node, out,
             entity))
         {
@@ -636,9 +646,11 @@ static int flecs_expr_variable_visit_eval(
         {
             symbol.sp = -1;
         }
+
         var = symbol.sp == -1 ? NULL : ecs_script_vars_from_sp(
             ctx->desc->vars, symbol.sp);
     }
+
     if (!var) {
         flecs_expr_visit_error(ctx->script, node, "unresolved variable '%s'",
             node->name);
@@ -887,6 +899,7 @@ static int flecs_expr_function_visit_eval(
     if (method && !node->left) {
         return 0;
     }
+
     flecs_expr_stack_push(ctx->stack);
     ecs_value_t receiver = {0};
     if (method) {
@@ -895,6 +908,7 @@ static int flecs_expr_function_visit_eval(
         if (!expr) {
             goto error;
         }
+
         receiver = expr->value;
     }
 
@@ -924,6 +938,7 @@ static int flecs_expr_function_visit_eval(
         if (method) {
             argv[0] = receiver;
         }
+
         if (flecs_expr_function_args_visit_eval(ctx, node->args, argv + method)) {
             goto error;
         }
@@ -1218,6 +1233,7 @@ static int flecs_expr_match_visit_eval(
             if (flecs_expr_visit_eval_priv(ctx, elem->expr, out)) {
                 goto error;
             }
+
             break;
         }
     }
@@ -1402,6 +1418,7 @@ static int flecs_expr_has_visit_eval(
             flecs_script_record_dyn_ref(v->base.script, entity, node->id,
                 node->dyn_input, true);
         }
+
         *(bool*)out->value.ptr = ecs_has_id(ctx->world, entity, node->id);
     } else {
         *(bool*)out->value.ptr = false;
@@ -1587,6 +1604,7 @@ int flecs_expr_visit_eval(
     if (desc && desc->runtime) {
         stack = &desc->runtime->expr_stack;
     }
+
     if (!stack) {
         stack = &stack_local;
         flecs_expr_stack_init(stack);
@@ -1657,12 +1675,14 @@ int flecs_expr_visit_eval(
     if (stack == &stack_local) {
         flecs_expr_stack_fini(stack);
     }
+
     return 0;
 error:
     flecs_expr_stack_pop(stack);
     if (stack == &stack_local) {
         flecs_expr_stack_fini(stack);
     }
+
     return -1;
 }
 
