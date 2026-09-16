@@ -457,13 +457,20 @@
     return isEmissive(s) ? displayColor(linearShapeColor(s), 1) : s;
   }
 
-  function canvasChrome(host) {
+  function canvasChrome(host, onFit) {
     var tip = el("div", { class: "pg-canvas-tip" });
     tip.hidden = true;
     var empty = el("div", { class: "pg-canvas-empty", text: "No drawable entities" });
     empty.hidden = true;
+    var fit = el("button", { class: "pg-canvas-fit", type: "button", text: "Fit", title: "Fit view to contents" });
+    fit.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+    fit.addEventListener("click", function (e) {
+      e.stopPropagation();
+      onFit();
+    });
     host.appendChild(tip);
     host.appendChild(empty);
+    host.appendChild(fit);
     return {
       tip: tip,
       empty: empty,
@@ -635,7 +642,7 @@
     var host = el("div", { class: "pg-view pg-view-canvas pg-view-2d" });
     var canvas = el("canvas", { class: "pg-canvas" });
     host.appendChild(canvas);
-    var chrome = canvasChrome(host);
+    var chrome = canvasChrome(host, function () { fitted = false; fit(); });
     container.appendChild(host);
     var ctx = canvas.getContext("2d");
     var cam = { x: 0, y: 0, zoom: 20 };
@@ -883,6 +890,7 @@
       },
       setSelected: function (path) { selected = path; render(); },
       fit: fit,
+      refit: function () { fitted = false; fit(); },
       reset: function () { fitted = false; },
       resize: function () {
         var r = host.getBoundingClientRect();
@@ -1036,7 +1044,10 @@
 
   function createView3D(container, onSelect, input) {
     var host = el("div", { class: "pg-view pg-view-canvas pg-view-3d" });
-    var chrome = canvasChrome(host);
+    var chrome = canvasChrome(host, function () {
+      fitted = false;
+      if (T && shapes.length) fit();
+    });
     var status = el("div", { class: "pg-canvas-status", text: "Loading three.js…" });
     host.appendChild(status);
     container.appendChild(host);
@@ -1059,7 +1070,15 @@
           return;
         }
         T = window.THREE;
-        setup();
+        try {
+          setup();
+        } catch (err) {
+          T = null;
+          failed = true;
+          status.hidden = false;
+          status.textContent = "The 3D view could not be created: " + (err && err.message ? err.message : err);
+          return;
+        }
         cb();
       });
     }
@@ -1566,6 +1585,10 @@
       },
       setSelected: function (path) { selected = path; if (T) refreshHighlights(); },
       fit: function () { if (T) fit(); },
+      refit: function () {
+        fitted = false;
+        if (T && shapes.length) fit();
+      },
       reset: function () {
         fitted = false;
         orbit.theta = 0.7;
@@ -1642,6 +1665,7 @@
     var shapes = [];
     var matched = null;
     var refitPending = true;
+    var exclude = opts.exclude || function () { return false; };
 
     var editor = ace.edit(editorHost);
     editor.setOptions({
@@ -1725,7 +1749,10 @@
 
     function showResults(reply, tab) {
       clearError();
-      var results = reply.results || [];
+      var results = (reply.results || []).filter(function (r) {
+        return !exclude(r);
+      });
+      reply.results = results;
       setCount(results.length + (results.length === 1 ? " result" : " results"));
       if (tab === "table") {
         view.table.update(reply);
@@ -1867,5 +1894,126 @@
     };
   }
 
-  window.flecsPlaygroundQuery = { createPanel: createPanel };
+  /* Preview: a standalone 2D/3D view of a set of entities, used by the
+   * inspector to show a template instance. */
+
+  var PREVIEW_TABS = [
+    { id: "2d", label: "2D" },
+    { id: "3d", label: "3D" }
+  ];
+
+  function createPreview(opts) {
+    opts = opts || {};
+    var tabs = el("span", { class: "pg-tabs pg-preview-tabs", role: "tablist" });
+    var views = el("div", { class: "pg-preview-views" });
+    var status = el("div", { class: "pg-canvas-status pg-preview-status" });
+    status.hidden = true;
+    var root = el("div", { class: "pg-section pg-preview" }, [
+      el("p", { class: "pg-section-title" }, [
+        el("span", { text: opts.title || "Preview" }),
+        tabs
+      ]),
+      views
+    ]);
+    var input = { mouse: function () {}, key: function () {} };
+    var noSelect = function () {};
+    var view = {
+      "2d": createView2D(views, noSelect, input),
+      "3d": createView3D(views, noSelect, input)
+    };
+    views.appendChild(status);
+    var tabButtons = {};
+    PREVIEW_TABS.forEach(function (t) {
+      var b = el("button", { class: "pg-tab", type: "button", role: "tab", text: t.label });
+      b.addEventListener("click", function () { setTab(t.id); });
+      tabButtons[t.id] = b;
+      tabs.appendChild(b);
+    });
+    var activeTab = null, visible = false, autoTab = true, fitPending = true, shapes = [];
+
+    function resize() {
+      if (activeTab) view[activeTab].resize();
+    }
+
+    function setTab(id) {
+      if (activeTab === id) return;
+      var previous = activeTab;
+      activeTab = id;
+      PREVIEW_TABS.forEach(function (t) {
+        var active = t.id === id;
+        tabButtons[t.id].classList.toggle("pg-active", active);
+        tabButtons[t.id].setAttribute("aria-selected", active ? "true" : "false");
+        view[t.id].host.hidden = !active;
+      });
+      if (previous === "3d") view["3d"].hide();
+      if (id === "3d" && visible) view["3d"].show();
+      resize();
+      view[id].refit();
+    }
+
+    function apply(list) {
+      shapes = list;
+      if (autoTab && shapes.length) {
+        autoTab = false;
+        setTab(shapes.some(function (s) { return s.d > 0 || s.kind === "sphere"; }) ? "3d" : "2d");
+      }
+      view["2d"].update(shapes);
+      view["3d"].update(shapes);
+      if (fitPending && shapes.length) {
+        fitPending = false;
+        view["2d"].refit();
+        view["3d"].refit();
+      }
+    }
+
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () { resize(); }).observe(views);
+    } else {
+      window.addEventListener("resize", resize);
+    }
+
+    new MutationObserver(function () {
+      view["2d"].render();
+      view["3d"].render();
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+    setTab("2d");
+
+    return {
+      root: root,
+      views: views,
+      update: function (results) {
+        status.hidden = true;
+        apply(worldShapes(results || []));
+      },
+      setHeight: function (px) {
+        views.style.height = px + "px";
+        resize();
+      },
+      message: function (text) {
+        apply([]);
+        status.textContent = text;
+        status.hidden = false;
+      },
+      reset: function () {
+        autoTab = true;
+        fitPending = true;
+        view["2d"].reset();
+        view["3d"].reset();
+      },
+      show: function () {
+        visible = true;
+        if (activeTab === "3d") view["3d"].show();
+        resize();
+      },
+      hide: function () {
+        visible = false;
+        view["3d"].hide();
+      },
+      resize: resize,
+      setTab: setTab
+    };
+  }
+
+  window.flecsPlaygroundQuery = { createPanel: createPanel, createPreview: createPreview };
 })();
