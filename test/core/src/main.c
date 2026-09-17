@@ -310,6 +310,9 @@ void ComponentInheritance_delete_with_middle_keeps_base(void);
 void ComponentInheritance_remove_all_base_removes_derived(void);
 void ComponentInheritance_delete_with_after_remove_isa(void);
 void ComponentInheritance_get_mut_via_base(void);
+void ComponentInheritance_get_sparse_via_base(void);
+void ComponentInheritance_get_mut_sparse_via_base(void);
+void ComponentInheritance_get_sparse_derived_via_non_sparse_base(void);
 void ComponentInheritance_each_base_matches_derived(void);
 void ComponentInheritance_count_base_counts_derived(void);
 void ComponentInheritance_ensure_via_base(void);
@@ -4742,6 +4745,18 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "get_mut_via_base",
         ComponentInheritance_get_mut_via_base
+    },
+    {
+        "get_sparse_via_base",
+        ComponentInheritance_get_sparse_via_base
+    },
+    {
+        "get_mut_sparse_via_base",
+        ComponentInheritance_get_mut_sparse_via_base
+    },
+    {
+        "get_sparse_derived_via_non_sparse_base",
+        ComponentInheritance_get_sparse_derived_via_non_sparse_base
     },
     {
         "each_base_matches_derived",
@@ -17492,7 +17507,7 @@ static bake_test_suite suites[] = {
         "ComponentInheritance",
         NULL,
         NULL,
-        81,
+        84,
         ComponentInheritance_testcases
     },
     {

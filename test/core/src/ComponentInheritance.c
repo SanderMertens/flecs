@@ -672,6 +672,80 @@ void ComponentInheritance_get_mut_via_base(void) {
     ecs_fini(world);
 }
 
+void ComponentInheritance_get_sparse_via_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Unit);
+    ECS_COMPONENT(world, Warrior);
+
+    ecs_add_id(world, ecs_id(Unit), EcsSparse);
+    ecs_add_id(world, ecs_id(Warrior), EcsSparse);
+    ecs_add_pair(world, ecs_id(Warrior), EcsIsA, ecs_id(Unit));
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Warrior, {.hp = 10, .dmg = 5});
+
+    test_assert(ecs_has(world, e, Unit));
+
+    const Warrior *w = ecs_get(world, e, Warrior);
+    test_assert(w != NULL);
+
+    const Unit *u = ecs_get(world, e, Unit);
+    test_assert(u != NULL);
+    test_assert((const void*)u == (const void*)w);
+    test_int(u->hp, 10);
+
+    ecs_fini(world);
+}
+
+void ComponentInheritance_get_mut_sparse_via_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Unit);
+    ECS_COMPONENT(world, Warrior);
+
+    ecs_add_id(world, ecs_id(Unit), EcsSparse);
+    ecs_add_id(world, ecs_id(Warrior), EcsSparse);
+    ecs_add_pair(world, ecs_id(Warrior), EcsIsA, ecs_id(Unit));
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Warrior, {.hp = 10, .dmg = 5});
+
+    Unit *u = ecs_get_mut(world, e, Unit);
+    test_assert(u != NULL);
+    u->hp = 20;
+
+    const Warrior *w = ecs_get(world, e, Warrior);
+    test_assert(w != NULL);
+    test_int(w->hp, 20);
+    test_int(w->dmg, 5);
+
+    ecs_fini(world);
+}
+
+void ComponentInheritance_get_sparse_derived_via_non_sparse_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Unit);
+    ECS_COMPONENT(world, Warrior);
+
+    ecs_add_id(world, ecs_id(Warrior), EcsSparse);
+    ecs_add_pair(world, ecs_id(Warrior), EcsIsA, ecs_id(Unit));
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Warrior, {.hp = 10, .dmg = 5});
+
+    const Unit *u = ecs_get(world, e, Unit);
+    test_assert(u != NULL);
+    test_int(u->hp, 10);
+
+    Unit *u_mut = ecs_get_mut(world, e, Unit);
+    test_assert(u_mut != NULL);
+    test_assert((const void*)u_mut == (const void*)u);
+
+    ecs_fini(world);
+}
+
 void ComponentInheritance_each_base_matches_derived(void) {
     ecs_world_t *world = ecs_mini();
 
