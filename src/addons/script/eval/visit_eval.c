@@ -2103,17 +2103,20 @@ int flecs_script_assign_value(
         return -1;
     }
 
+    ecs_id_t component = node->component;
+    ecs_search(world, ecs_get_table(world, instance), component, &component);
+
     const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    const ecs_type_info_t *comp_ti = ecs_get_type_info(world, node->component);
+    const ecs_type_info_t *comp_ti = ecs_get_type_info(world, component);
     ecs_assert(comp_ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const void *cur = ecs_get_id(world, instance, node->component);
+    const void *cur = ecs_get_id(world, instance, component);
     ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
     void *copy = ecs_ptr_new_w_type_info(world, comp_ti);
     ecs_ptr_copy_w_type_info(world, comp_ti, copy, cur);
     ecs_ptr_copy_w_type_info(world, ti, ECS_OFFSET(copy, node->offset), src);
-    ecs_set_id(world, instance, node->component,
+    ecs_set_id(world, instance, component,
         flecs_ito(size_t, comp_ti->size), copy);
     ecs_ptr_free_w_type_info(world, comp_ti, copy);
 
