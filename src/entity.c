@@ -26,6 +26,25 @@ flecs_component_ptr_t flecs_table_get_component(
     };
 }
 
+static const ecs_table_record_t* flecs_get_derived_record(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    const ecs_table_record_t *tr,
+    ecs_component_record_t **cr_out)
+{
+    if (!(table->flags & EcsTableHasDerived) ||
+        !flecs_table_record_is_inherited(table, tr))
+    {
+        return NULL;
+    }
+
+    ecs_component_record_t *cr = flecs_components_get(
+        world, table->type.array[tr->index]);
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    *cr_out = cr;
+    return flecs_component_get_table(cr, table);
+}
+
 static flecs_component_ptr_t flecs_get_component_ptr(
     const ecs_world_t *world,
     ecs_table_t *table,
@@ -40,15 +59,37 @@ static flecs_component_ptr_t flecs_get_component_ptr(
 
     if (cr->flags & (EcsIdSparse|EcsIdDontFragment)) {
         ecs_entity_t entity = ecs_table_entities(table)[row];
-        return (flecs_component_ptr_t){
-            .ti = cr->type_info,
-            .ptr = flecs_component_sparse_get(world, cr, table, entity)
-        };
+        void *ptr = flecs_component_sparse_get(world, cr, table, entity);
+        if (ptr || !(table->flags & EcsTableHasDerived)) {
+            return (flecs_component_ptr_t){
+                .ti = cr->type_info,
+                .ptr = ptr
+            };
+        }
     }
 
     const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
-    if (!tr || (tr->column == -1)) {
+    if (!tr) {
         return (flecs_component_ptr_t){0};
+    }
+
+    if ((tr->column == -1) || (cr->flags & EcsIdSparse)) {
+        tr = flecs_get_derived_record(world, table, tr, &cr);
+        if (!tr) {
+            return (flecs_component_ptr_t){0};
+        }
+
+        if (cr->flags & EcsIdSparse) {
+            ecs_entity_t entity = ecs_table_entities(table)[row];
+            return (flecs_component_ptr_t){
+                .ti = cr->type_info,
+                .ptr = flecs_component_sparse_get(world, cr, table, entity)
+            };
+        }
+
+        if (tr->column == -1) {
+            return (flecs_component_ptr_t){0};
+        }
     }
 
     return flecs_table_get_component(table, tr->column, row);
@@ -1547,6 +1588,14 @@ const void* ecs_get_id(
     if (!tr) {
         return flecs_get_base_component(world, table, component, cr, 0);
     } else {
+        if ((tr->column == -1) || (cr->flags & EcsIdSparse)) {
+            const ecs_table_record_t *derived_tr = flecs_get_derived_record(
+                world, table, tr, &cr);
+            if (derived_tr) {
+                tr = derived_tr;
+            }
+        }
+
         if (cr->flags & EcsIdSparse) {
             return flecs_component_sparse_get(world, cr, table, entity);
         }
