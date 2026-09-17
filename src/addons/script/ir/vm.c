@@ -1844,7 +1844,7 @@ static int flecs_ir_using(
     const ecs_script_using_t *node)
 {
     ecs_script_eval_visitor_t *v = &vm->v;
-    ecs_allocator_t *a = &v->r->allocator;
+    ecs_allocator_t *a = v->r->allocator;
     int32_t len = ecs_os_strlen(node->name);
     bool wildcard = len > 2 && !ecs_os_strcmp(&node->name[len - 2], ".*");
     ecs_entity_t from = node->eval;
@@ -1885,7 +1885,7 @@ static int flecs_ir_annot(
         return -1;
     }
 
-    ecs_vec_append_t(&v->r->allocator, &v->r->annot,
+    ecs_vec_append_t(v->r->allocator, &v->r->annot,
         ecs_script_annot_t*)[0] = ECS_CONST_CAST(
             ecs_script_annot_t*, node);
     return 0;
@@ -3874,7 +3874,7 @@ flecs_script_run_status_t flecs_script_ir_vm_run(
         frame->u.block.entry = 0;
         frame->u.block.vars = true;
         vm->v.vars = flecs_script_vars_push(
-            vm->v.vars, &vm->v.r->stack, &vm->v.r->allocator);
+            vm->v.vars, &vm->v.r->stack, vm->v.r->allocator);
         vm->entry = (int32_t)(entry - entries);
         vm->reg_base = 0;
         vm->pc = entry->pc;
@@ -3965,7 +3965,7 @@ void flecs_script_ir_call_function(
     flecs_script_eval_visit_init(impl, &vm->v, &desc);
     ecs_script_eval_visitor_t *v = &vm->v;
 
-    ecs_allocator_t *a = &v->r->allocator;
+    ecs_allocator_t *a = v->r->allocator;
     int32_t using_count = ecs_vec_count(&uf->using);
     ecs_entity_t *using = ecs_vec_first(&uf->using);
     for (int32_t u = 0; u < using_count; u ++) {

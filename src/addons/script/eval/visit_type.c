@@ -1675,7 +1675,7 @@ static int flecs_script_type_for(
     }
 
     t->v->vars = flecs_script_vars_push(t->v->vars,
-        &t->v->r->stack, &t->v->r->allocator);
+        &t->v->r->stack, t->v->r->allocator);
     int32_t var_i = 0;
     if (kind == FlecsScriptForMap && node->loop_var_count >= 2) {
         ecs_script_var_t *var = flecs_script_for_declare_var(
@@ -1884,7 +1884,7 @@ static int flecs_script_type_function(
 
     ecs_script_vars_t *outer_vars = t->v->vars;
     t->v->vars = flecs_script_vars_push(
-        NULL, &t->v->r->stack, &t->v->r->allocator);
+        NULL, &t->v->r->stack, t->v->r->allocator);
     int32_t i, param_count = ecs_vec_count(&node->params);
     ecs_script_fn_param_t *params = ecs_vec_first(&node->params);
     for (i = 0; i < param_count; i ++) {
@@ -2229,7 +2229,7 @@ static int flecs_script_type_using(
     ecs_script_type_visitor_t *t,
     ecs_script_using_t *node)
 {
-    ecs_allocator_t *a = &t->v->r->allocator;
+    ecs_allocator_t *a = t->v->r->allocator;
     const char *name = node->name;
     int32_t len = ecs_os_strlen(name);
     char *path = NULL;
@@ -2296,7 +2296,7 @@ static int flecs_script_type_async(
 
     if (in_template) {
         v->vars = flecs_script_vars_push(
-            v->vars, &v->r->stack, &v->r->allocator);
+            v->vars, &v->r->stack, v->r->allocator);
         ecs_script_var_t *this_var = ecs_script_vars_declare(v->vars, "this");
         this_var->value.type = ecs_id(ecs_entity_t);
     }
@@ -2613,7 +2613,7 @@ int flecs_script_type_scope(
     t->table = table;
     if (push_vars) {
         v->vars = flecs_script_vars_push(
-            v->vars, &v->r->stack, &v->r->allocator);
+            v->vars, &v->r->stack, v->r->allocator);
     }
 
     ecs_vec_clear(&scope->components);
@@ -2741,9 +2741,9 @@ int flecs_script_visit_type(
     ecs_vec_t outer_using = v->r->using;
     ecs_vec_t outer_annot = v->r->annot;
     v->r->using = ecs_vec_copy_t(
-        &v->r->allocator, &outer_using, ecs_entity_t);
+        v->r->allocator, &outer_using, ecs_entity_t);
     v->r->annot = ecs_vec_copy_t(
-        &v->r->allocator, &outer_annot, ecs_script_annot_t*);
+        v->r->allocator, &outer_annot, ecs_script_annot_t*);
 
     ecs_script_type_visitor_t t = {
         .v = v,
@@ -2760,8 +2760,8 @@ int flecs_script_visit_type(
     }
 
     flecs_script_type_fini(&t);
-    ecs_vec_fini_t(&v->r->allocator, &v->r->using, ecs_entity_t);
-    ecs_vec_fini_t(&v->r->allocator, &v->r->annot, ecs_script_annot_t*);
+    ecs_vec_fini_t(v->r->allocator, &v->r->using, ecs_entity_t);
+    ecs_vec_fini_t(v->r->allocator, &v->r->annot, ecs_script_annot_t*);
     v->r->using = outer_using;
     v->r->annot = outer_annot;
     v->parent = outer_parent;

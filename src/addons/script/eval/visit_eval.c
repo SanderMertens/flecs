@@ -69,7 +69,7 @@ ecs_value_t* flecs_script_with_append(
     const ecs_type_info_t *ti)
 {
     ecs_script_with_value_t *elem = ecs_vec_append_t(
-        &v->r->allocator, &v->r->with, ecs_script_with_value_t);
+        v->r->allocator, &v->r->with, ecs_script_with_value_t);
     elem->ti = ti;
     return &elem->value;
 }
@@ -92,7 +92,7 @@ void flecs_script_with_set_count(
         }
     }
 
-    ecs_vec_set_count_t(&v->r->allocator, &v->r->with,
+    ecs_vec_set_count_t(v->r->allocator, &v->r->with,
         ecs_script_with_value_t, count);
 }
 
@@ -684,7 +684,7 @@ void flecs_script_eval_scope_enter(
         }
     }
 
-    v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
+    v->vars = flecs_script_vars_push(v->vars, &v->r->stack, v->r->allocator);
 }
 
 void flecs_script_eval_scope_leave(
@@ -1528,7 +1528,7 @@ static int flecs_script_eval_using(
     ecs_script_eval_visitor_t *v,
     ecs_script_using_t *node)
 {
-    ecs_allocator_t *a = &v->r->allocator;
+    ecs_allocator_t *a = v->r->allocator;
     int32_t len = ecs_os_strlen(node->name);
     bool wildcard = len > 2 && !ecs_os_strcmp(&node->name[len - 2], ".*");
     ecs_entity_t from = node->eval;
@@ -1885,7 +1885,7 @@ static int flecs_script_eval_annot(
         }
     }
 
-    ecs_allocator_t *a = &v->r->allocator;
+    ecs_allocator_t *a = v->r->allocator;
     ecs_vec_append_t(a, &v->r->annot, ecs_script_annot_t*)[0] = node;
 
     return 0;
@@ -1926,7 +1926,7 @@ void flecs_script_user_function_callback(
     };
     flecs_script_eval_visit_init(impl, &v, &desc);
 
-    ecs_allocator_t *a = &v.r->allocator;
+    ecs_allocator_t *a = v.r->allocator;
     int32_t using_count = ecs_vec_count(&uf->using);
     ecs_entity_t *using = ecs_vec_first(&uf->using);
     for (int32_t u = 0; u < using_count; u ++) {
@@ -3086,7 +3086,7 @@ void flecs_script_eval_push_vars(
     /* Safe const cast, evaluated code only contains an entity statement and
      * won't modify the variables. */
     v->vars = flecs_script_vars_push(
-        v->vars, &v->r->stack, &v->r->allocator);
+        v->vars, &v->r->stack, v->r->allocator);
     v->vars->parent = ECS_CONST_CAST(ecs_script_vars_t*, vars);
     v->vars->sp = ecs_vec_count(&vars->vars);
 }
