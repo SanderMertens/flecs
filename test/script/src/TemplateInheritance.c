@@ -344,7 +344,7 @@ void TemplateInheritance_base_template_body_not_inherited(void) {
     ecs_entity_t f = ecs_lookup(world, "f");
 
     test_assert(ecs_has_id(world, e, derived));
-    test_assert(!ecs_has_id(world, e, base));
+    test_assert(ecs_has_id(world, e, base));
     test_assert(!ecs_has_id(world, e, tag));
     test_assert(!ecs_has_id(world, e, position));
 

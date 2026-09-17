@@ -2137,7 +2137,7 @@ void StructInheritance_empty_base(void) {
     const float *v = ecs_get_id(world, e, brick);
     test_assert(v != NULL);
     test_flt(v[0], 2);
-    test_assert(!ecs_has_id(world, e, facade));
+    test_assert(ecs_has_id(world, e, facade));
 
     ecs_fini(world);
 }

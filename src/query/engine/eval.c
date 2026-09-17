@@ -18,6 +18,37 @@ static bool flecs_query_dispatch(
     bool redo,
     ecs_query_run_ctx_t *ctx);
 
+/* Test whether the type has to be searched to find the ids matched by a term
+ * with component inheritance. A table record that was registered for a base id
+ * describes the derived ids in the table exactly, so the record index/count can
+ * be used as-is. A table that stores the base id itself can also store ids that
+ * derive from it, which are not covered by the record. */
+static
+bool flecs_query_must_search_derived(
+    const ecs_query_op_t *op,
+    const ecs_component_record_t *cr,
+    ecs_table_t *table,
+    const ecs_table_cache_elem_t *elem)
+{
+    return (op->match_flags & EcsTermIdInherited) &&
+        (cr->flags & EcsIdHasDerived) &&
+        (table->flags & EcsTableHasDerived) &&
+        !flecs_table_record_is_inherited(table, elem->tr);
+}
+
+/* Find the first id in the table type that matches or derives from id. */
+static
+int16_t flecs_query_search_derived(
+    const ecs_query_run_ctx_t *ctx,
+    ecs_table_t *table,
+    ecs_id_t id)
+{
+    int32_t column = flecs_table_offset_search_w_inherited(
+        ctx->world, table, 0, id, NULL);
+    ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
+    return flecs_ito(int16_t, column);
+}
+
 bool flecs_query_select_w_id(
     const ecs_query_op_t *op,
     bool redo,
@@ -27,8 +58,7 @@ bool flecs_query_select_w_id(
 {
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     ecs_component_record_t *cr = op_ctx->cr;
-    const ecs_table_record_t *tr;
-    ecs_table_t *table;
+    ecs_table_t *table = NULL;
 
     if (!redo) {
         if (!cr || cr->id != id) {
@@ -49,27 +79,51 @@ bool flecs_query_select_w_id(
         }
     }
 
-repeat:
-    if (!redo || (op_ctx->remaining <= 0)) {
+repeat: {
+    bool next_table = !redo;
+
+    if (redo) {
+        ecs_assert(op_ctx->it.cur != NULL, ECS_INTERNAL_ERROR, NULL);
+        table = op_ctx->it.cur->table;
+
+        if (op_ctx->remaining <= 0) {
+            next_table = true;
+        } else if (op->match_flags & EcsTermIdInherited) {
+            /* Derived ids are not stored consecutively in the table type */
+            int32_t column = flecs_table_offset_search_w_inherited(
+                ctx->world, table, op_ctx->column + 1, cr->id, NULL);
+            if (column == -1) {
+                next_table = true;
+            } else {
+                op_ctx->column = flecs_ito(int16_t, column);
+                op_ctx->remaining --;
+            }
+        } else {
+            op_ctx->column = flecs_query_next_column(
+                table, cr->id, op_ctx->column);
+            op_ctx->remaining --;
+        }
+    }
+
+    if (next_table) {
         const ecs_table_cache_elem_t *elem = flecs_table_cache_next(
             &op_ctx->it);
         if (!elem) {
             return false;
         }
 
-        tr = elem->tr;
-        op_ctx->column = elem->index;
-        op_ctx->remaining = flecs_ito(int16_t, tr->count - 1);
         table = elem->table;
-        flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
-    } else {
-        ecs_assert(op_ctx->it.cur != NULL, ECS_INTERNAL_ERROR, NULL);
-        table = op_ctx->it.cur->table;
-        op_ctx->column = flecs_query_next_column(table, cr->id, op_ctx->column);
-        op_ctx->remaining --;
-
-        flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
+        if (flecs_query_must_search_derived(op, cr, table, elem)) {
+            op_ctx->column = flecs_query_search_derived(ctx, table, cr->id);
+            op_ctx->remaining = flecs_ito(int16_t, table->type.count - 1);
+        } else {
+            op_ctx->column = elem->index;
+            op_ctx->remaining = flecs_ito(int16_t, elem->count - 1);
+        }
     }
+
+    flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
+}
 
     if (flecs_query_table_filter(table, op->other, filter_mask)) {
         goto repeat;
@@ -100,7 +154,6 @@ bool flecs_query_with(
 {
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     ecs_component_record_t *cr = op_ctx->cr;
-    const ecs_table_record_t *tr;
 
     ecs_table_t *table = flecs_query_get_table(op, &op->src, EcsQuerySrc, ctx);
     if (!table) {
@@ -131,20 +184,37 @@ bool flecs_query_with(
             return false;
         }
 
-        tr = elem->tr;
-        op_ctx->column = elem->index;
-        op_ctx->remaining = flecs_ito(int16_t, tr->count);
+        if (flecs_query_must_search_derived(op, cr, table, elem)) {
+            op_ctx->column = flecs_query_search_derived(ctx, table, cr->id);
+            op_ctx->remaining = flecs_ito(int16_t, table->type.count);
+        } else {
+            op_ctx->column = elem->index;
+            op_ctx->remaining = flecs_ito(int16_t, elem->count);
+        }
+
         op_ctx->it.cur = elem;
     } else {
-        ecs_assert((op_ctx->remaining + op_ctx->column - 1) < table->type.count, 
-            ECS_INTERNAL_ERROR, NULL);
         ecs_assert(op_ctx->remaining >= 0, ECS_INTERNAL_ERROR, NULL);
         if (--op_ctx->remaining <= 0) {
             return false;
         }
 
-        op_ctx->column = flecs_query_next_column(table, cr->id, op_ctx->column);
-        ecs_assert(op_ctx->column != -1, ECS_INTERNAL_ERROR, NULL);
+        if (op->match_flags & EcsTermIdInherited) {
+            /* Derived ids are not stored consecutively in the table type */
+            int32_t column = flecs_table_offset_search_w_inherited(
+                ctx->world, table, op_ctx->column + 1, cr->id, NULL);
+            if (column == -1) {
+                return false;
+            }
+
+            op_ctx->column = flecs_ito(int16_t, column);
+        } else {
+            ecs_assert((op_ctx->remaining + op_ctx->column) < table->type.count, 
+                ECS_INTERNAL_ERROR, NULL);
+            op_ctx->column = flecs_query_next_column(
+                table, cr->id, op_ctx->column);
+            ecs_assert(op_ctx->column != -1, ECS_INTERNAL_ERROR, NULL);
+        }
     }
 
     flecs_query_set_match(op, table, op_ctx->column, ctx);

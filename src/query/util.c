@@ -757,6 +757,8 @@ void flecs_query_apply_iter_flags(
     ECS_BIT_COND(it->flags, EcsIterHasCondSet, 
         ECS_BIT_IS_SET(query->flags, EcsQueryHasCondSet));
     ECS_BIT_COND(it->flags, EcsIterNoData, query->data_fields == 0);
+    ECS_BIT_COND(it->flags, EcsIterComponentInheritance,
+        ECS_BIT_IS_SET(query->flags, EcsQueryHasComponentInheritance));
 }
 
 #ifdef FLECS_CACHED_QUERIES

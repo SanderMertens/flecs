@@ -346,8 +346,10 @@ int16_t flecs_query_next_column(
     if (!ECS_IS_PAIR(id) || (ECS_PAIR_FIRST(id) != EcsWildcard)) {
         column = column + 1;
     } else {
+        /* Only called for terms without component inheritance, so derived ids
+         * don't have to be matched. */
         ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
-        column = ecs_search_offset(NULL, table, column + 1, id, NULL);
+        column = flecs_table_offset_search(table, column + 1, id, NULL);
         ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
     }
 

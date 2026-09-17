@@ -1967,9 +1967,8 @@ static int flecs_expr_identifier_visit_type(
                     result->storage.entity = e;
                     result->ptr = &result->storage.entity;
                 } else {
-                    ecs_size_t size = flecs_type_size(script->world, type);
-                    ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
-                    result->ptr = flecs_walloc(script->world, size);
+                    result->ptr = ecs_ptr_new_w_type_info(
+                        script->world, result->node.type_info);
                     flecs_type_info_claim(result->node.type_info);
 
                     ecs_meta_cursor_t expr_cur = ecs_meta_cursor(
