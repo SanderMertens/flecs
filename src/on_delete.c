@@ -484,12 +484,18 @@ static void flecs_remove_from_table(
         ecs_id_t *removed = flecs_walloc_n(world, ecs_id_t, remove_count);
         ecs_flags32_t removed_flags = table->flags & EcsTableRemoveEdgeFlags;
         int32_t d = 0, r = 0;
+        bool removed_isa = false;
         for (t = 0; t < type_count; t ++) {
             ecs_id_t id = type->array[t];
             if (remove[t]) {
                 removed[r ++] = id;
-                if (ECS_IS_PAIR(id) && (ECS_PAIR_FIRST(id) == EcsChildOf)) {
-                    removed_flags |= EcsTableEdgeReparent;
+                if (ECS_IS_PAIR(id)) {
+                    ecs_entity_t first = ECS_PAIR_FIRST(id);
+                    if (first == EcsChildOf) {
+                        removed_flags |= EcsTableEdgeReparent;
+                    } else if (first == EcsIsA) {
+                        removed_isa = true;
+                    }
                 }
             } else {
                 dst_array[d ++] = id;
@@ -501,6 +507,15 @@ static void flecs_remove_from_table(
         ecs_assert(dst_table != table, ECS_INTERNAL_ERROR, NULL);
 
         int32_t table_count = ecs_table_count(table);
+
+        if (removed_isa && table_count) {
+            /* Ids aren't removed from tables with an OnRemove event here, so
+             * notify the component index of the removed IsA pairs directly. */
+            flecs_components_on_isa_change(world, table, 
+                ecs_table_entities(table), table_count,
+                (dst_table->flags & EcsTableHasIsA) != 0);
+        }
+
         if (table_count) {
             ecs_log_push_3();
 
@@ -670,7 +685,9 @@ static bool flecs_on_delete_clear_ids(
             }
 
             if (flecs_component_release_tables(world, cr)) {
-                ecs_assert(!force_delete, ECS_INVALID_OPERATION, 
+                ecs_assert(!force_delete || 
+                    (world->flags & (EcsWorldFini|EcsWorldQuit)),
+                    ECS_INVALID_OPERATION, 
                     "cannot delete component '%s': tables are keeping it alive (likely because of used prefab)",
                     flecs_errstr(ecs_id_str(world, cr->id)));
 

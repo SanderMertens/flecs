@@ -6,11 +6,6 @@
 #ifndef FLECS_CONSTRAINT_TRAITS_PRIVATE_H
 #define FLECS_CONSTRAINT_TRAITS_PRIVATE_H
 
-void flecs_assert_relation_unused(
-    ecs_world_t *world,
-    ecs_entity_t rel,
-    ecs_entity_t trait);
-
 void flecs_register_flag_for_trait(
     ecs_iter_t *it,
     ecs_entity_t trait,

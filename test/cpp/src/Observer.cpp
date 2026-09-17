@@ -1,5 +1,13 @@
 #include <cpp.h>
 
+struct ObserverUnit {
+    int32_t hp;
+};
+
+struct ObserverWarrior : ObserverUnit {
+    int32_t dmg;
+};
+
 void Observer_2_terms_on_add(void) {
     flecs::world ecs;
 
@@ -1915,4 +1923,33 @@ void Observer_single_term_observer_w_var_get_var_pair_first(void) {
     test_int(invoked, 0);
     instance.remove(rel, tgt);
     test_int(invoked, 1);
+}
+
+void Observer_component_inheritance_each_multi_entity(void) {
+    flecs::world ecs;
+
+    ecs.component<ObserverUnit>();
+    ecs.component<ObserverWarrior>().is_a<ObserverUnit>();
+
+    flecs::entity tag = ecs.entity();
+
+    int32_t count = 0, sum = 0;
+    ecs.observer<ObserverUnit>()
+        .with(tag)
+        .event(flecs::OnRemove)
+        .each([&](ObserverUnit& u) {
+            sum += u.hp;
+            count ++;
+        });
+
+    ecs.entity().set<ObserverWarrior>({{10}, 1}).add(tag);
+    ecs.entity().set<ObserverWarrior>({{20}, 2}).add(tag);
+    ecs.entity().set<ObserverWarrior>({{30}, 3}).add(tag);
+
+    test_int(count, 0);
+
+    ecs.remove_all(tag);
+
+    test_int(count, 3);
+    test_int(sum, 60);
 }

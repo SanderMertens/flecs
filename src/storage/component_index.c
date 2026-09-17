@@ -1003,6 +1003,58 @@ void flecs_component_delete_sparse(
     ecs_os_free(to_delete);
 }
 
+static void flecs_component_set_has_bases(
+    ecs_component_record_t *cr,
+    bool has_bases)
+{
+    if (has_bases) {
+        cr->flags |= EcsIdHasBases;
+    } else if (!(cr->flags & EcsIdMarkedForDelete)) {
+        cr->flags &= ~EcsIdHasBases;
+    }
+}
+
+void flecs_components_on_isa_change(
+    ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_entity_t *entities,
+    int32_t count,
+    bool has_bases)
+{
+    /* Changing the bases of a component invalidates the base ids registered for
+     * existing tables, so only allow it while the component isn't in use.
+     * Components that are being deleted are exempt, as their tables go too. */
+    bool check_unused = 
+        !(world->flags & (EcsWorldInit|EcsWorldFini|EcsWorldQuit)) &&
+        !(table->flags & EcsTableMarkedForDelete);
+
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t component = entities[i];
+        ecs_record_t *r = flecs_entities_get(world, component);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!(r->row & EcsEntityIsId)) {
+            continue; /* Entity isn't used as a component */
+        }
+
+        if (check_unused) {
+            flecs_assert_relation_unused(world, component, EcsIsA);
+        }
+
+        ecs_component_record_t *cr = flecs_components_get(world, component);
+        if (cr) {
+            flecs_component_set_has_bases(cr, has_bases);
+        }
+
+        cr = flecs_components_get(world, ecs_pair(component, EcsWildcard));
+        if (cr) {
+            do {
+                flecs_component_set_has_bases(cr, has_bases);
+            } while ((cr = flecs_component_first_next(cr)));
+        }
+    }
+}
+
 ecs_component_record_t* flecs_component_first_next(
     ecs_component_record_t *cr)
 {

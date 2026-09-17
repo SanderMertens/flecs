@@ -577,6 +577,16 @@ bool flecs_component_set_type_info(
     ecs_component_record_t *cr,
     const ecs_type_info_t *ti);
 
+/* Update the EcsIdHasBases flag for entities that got an IsA pair added or
+ * removed. Used to track which components have base components, so that tables
+ * can register records for the base ids of the components they store. */
+void flecs_components_on_isa_change(
+    ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_entity_t *entities,
+    int32_t count,
+    bool has_bases);
+
 /* Return next (R, *) record */
 ecs_component_record_t* flecs_component_first_next(
     ecs_component_record_t *cr);
@@ -797,6 +807,7 @@ typedef struct ecs_table__t {
 
     uint16_t generation;             /* Used for table cleanup */
     int16_t record_count;            /* Table record count including wildcards */
+    int16_t inherited_start;         /* First record registered for a base id */
 
     int16_t bs_count;
     int16_t bs_offset;
@@ -863,6 +874,12 @@ struct ecs_table_t {
 };
 
 extern const int16_t flecs_table_empty_component_map[];
+
+/* Test whether a table record was registered for a base id (meaning the table
+ * stores a component that inherits from it) instead of for an id the table
+ * actually stores. */
+#define flecs_table_record_is_inherited(table, tr)\
+    (((tr) - (table)->_->records) >= (table)->_->inherited_start)
 
 /* Init table */
 void flecs_table_init(
@@ -4133,6 +4150,12 @@ extern const ecs_entity_t EcsFlag;
 void flecs_bootstrap(
     ecs_world_t *world);
 
+/* Assert that a relationship isn't in use, so that its traits can be changed. */
+void flecs_assert_relation_unused(
+    ecs_world_t *world,
+    ecs_entity_t rel,
+    ecs_entity_t trait);
+
 #define flecs_bootstrap_component(world, id_)\
     ecs_component_init(world, &(ecs_component_desc_t){\
         .entity = ecs_entity(world, { .id = ecs_id(id_), .name = #id_, .symbol = #id_ }),\
@@ -4151,11 +4174,6 @@ void flecs_bootstrap_make_alive(
 
 #ifndef FLECS_CONSTRAINT_TRAITS_PRIVATE_H
 #define FLECS_CONSTRAINT_TRAITS_PRIVATE_H
-
-void flecs_assert_relation_unused(
-    ecs_world_t *world,
-    ecs_entity_t rel,
-    ecs_entity_t trait);
 
 void flecs_register_flag_for_trait(
     ecs_iter_t *it,
@@ -4328,6 +4346,21 @@ bool flecs_type_can_inherit_id(
     const ecs_table_t *table,
     const ecs_component_record_t *cr,
     ecs_id_t id);
+
+/* Search table type from offset for an id. */
+int32_t flecs_table_offset_search(
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_id_t *id_out);
+
+/* Search table type from offset, also matching derived components. */
+int32_t flecs_table_offset_search_w_inherited(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_id_t *id_out);
 
 /* Cleanup type info data. */
 void flecs_fini_type_info(
@@ -7274,13 +7307,13 @@ void flecs_actions_delete_tree(
     const ecs_table_diff_t *diff)
 {
     if (diff->removed.count) {
+        if (table->flags & EcsTableHasTraversable) {
+            flecs_emit_propagate_invalidate(world, table, row, count);
+        }
+
         ecs_flags32_t diff_flags = diff->removed_flags;
         if (!diff_flags) {
             return;
-        }
-
-        if (table->flags & EcsTableHasTraversable) {
-            flecs_emit_propagate_invalidate(world, table, row, count);
         }
 
         flecs_actions_on_remove_intern(
@@ -8251,6 +8284,16 @@ flecs_component_ptr_t flecs_ensure(
         cr = flecs_components_get(world, component);
         dst = flecs_get_component_ptr(
             world, table, ECS_RECORD_TO_ROW(r->row), cr);
+
+        if (dst.ptr && (table->flags & EcsTableHasDerived)) {
+            /* If the table only stores a component that inherits from the
+             * requested component, add the requested component instead. */
+            const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
+            if (tr && flecs_table_record_is_inherited(table, tr)) {
+                dst.ptr = NULL;
+            }
+        }
+
         if (dst.ptr) {
             ecs_assert(dst.ti->size == size, ECS_INTERNAL_ERROR, NULL);
             return dst;
@@ -12320,10 +12363,15 @@ void ecs_iter_fini(
 
 /* --- Public API --- */
 
-void* ecs_field_w_size(
+/* Get field data. When base is true the field is matched through component
+ * inheritance, which means the stored (derived) component can be larger than
+ * the requested (base) type, so the column stride is used instead of size. */
+static FLECS_ALWAYS_INLINE
+void* flecs_field_ptr(
     const ecs_iter_t *it,
     size_t size,
-    int8_t index)
+    int8_t index,
+    bool base)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
         "operation invalid before calling next()");
@@ -12339,7 +12387,6 @@ void* ecs_field_w_size(
             "mismatching size for field %d (expected '%s')", 
             index,
             flecs_errstr(ecs_id_str(it->world, it->ids[index])));
-    (void)size;
 
     if (it->ptrs) {
         return it->ptrs[index];
@@ -12347,13 +12394,34 @@ void* ecs_field_w_size(
 
     int16_t column = it->columns[index];
     if (column >= 0) {
-        return ECS_ELEM(it->table->data.columns[column].data,
-            (ecs_size_t)size, it->offset);
+        ecs_column_t *col = &it->table->data.columns[column];
+        ecs_assert(base || ((ecs_size_t)size == col->ti->size),
+            ECS_INVALID_PARAMETER, 
+            "field %d is matched on a derived component, use ecs_base_field()",
+                index);
+        return ECS_ELEM(col->data, 
+            base ? col->ti->size : (ecs_size_t)size, it->offset);
     }
 
     return flecs_field_shared(it, size, index);
 error:
     return NULL;
+}
+
+void* ecs_field_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int8_t index)
+{
+    return flecs_field_ptr(it, size, index, false);
+}
+
+void* ecs_base_field_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int8_t index)
+{
+    return flecs_field_ptr(it, size, index, true);
 }
 
 void* flecs_field_shared(
@@ -12372,10 +12440,10 @@ void* flecs_field_shared(
     ecs_component_record_t *cr = flecs_components_get(
         it->real_world, it->ids[index]);
     const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
-    int16_t column = tr->column;
+    ecs_column_t *col = &table->data.columns[tr->column];
+    (void)size;
 
-    return ECS_ELEM(table->data.columns[column].data,
-        (ecs_size_t)size, ECS_RECORD_TO_ROW(r->row));
+    return ECS_ELEM(col->data, col->ti->size, ECS_RECORD_TO_ROW(r->row));
 }
 
 static ecs_component_record_t* flecs_field_cr(
@@ -12599,6 +12667,25 @@ size_t ecs_field_size(
         "invalid field index %d", index);
     ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
         "field index %d out of bounds", index);
+
+    return (size_t)it->sizes[index];
+error:
+    return 0;
+}
+
+size_t ecs_field_stride(
+    const ecs_iter_t *it,
+    int8_t index)
+{
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
+
+    int16_t column = it->columns[index];
+    if (column >= 0 && it->table) {
+        return (size_t)it->table->data.columns[column].ti->size;
+    }
 
     return (size_t)it->sizes[index];
 error:
@@ -14716,6 +14803,13 @@ repeat_event:
         if (can_forward && ECS_IS_PAIR(id) && (cr_flags & EcsIdTraversable)) {
             const ecs_event_record_t *er_fwd = NULL;
             if (ECS_PAIR_FIRST(id) == EcsIsA) {
+                if ((event == EcsOnAdd) || (event == EcsOnRemove)) {
+                    flecs_components_on_isa_change(world, table, 
+                        &ecs_table_entities(table)[offset], count,
+                        (event == EcsOnAdd) || (it.other_table && 
+                            (it.other_table->flags & EcsTableHasIsA)));
+                }
+
                 if (event == EcsOnAdd) {
                     if (!world->stages[0]->base) {
                         /* Adding an IsA relationship can trigger prefab
@@ -15642,7 +15736,8 @@ static void flecs_multi_observer_invoke(
         user_it.trs[pivot_field] = it->trs[0];
         user_it.sources[pivot_field] = it->sources[0];
         ECS_CONST_CAST(int16_t*, user_it.columns)[pivot_field] =
-            it->sources[0] ? -1 : it->columns[0];
+            (it->sources[0] || !(user_it.set_fields & pivot_field_bit))
+                ? -1 : it->columns[0];
         user_it.term_index = pivot_term;
 
         user_it.ctx = o->ctx;
@@ -16893,12 +16988,18 @@ static void flecs_remove_from_table(
         ecs_id_t *removed = flecs_walloc_n(world, ecs_id_t, remove_count);
         ecs_flags32_t removed_flags = table->flags & EcsTableRemoveEdgeFlags;
         int32_t d = 0, r = 0;
+        bool removed_isa = false;
         for (t = 0; t < type_count; t ++) {
             ecs_id_t id = type->array[t];
             if (remove[t]) {
                 removed[r ++] = id;
-                if (ECS_IS_PAIR(id) && (ECS_PAIR_FIRST(id) == EcsChildOf)) {
-                    removed_flags |= EcsTableEdgeReparent;
+                if (ECS_IS_PAIR(id)) {
+                    ecs_entity_t first = ECS_PAIR_FIRST(id);
+                    if (first == EcsChildOf) {
+                        removed_flags |= EcsTableEdgeReparent;
+                    } else if (first == EcsIsA) {
+                        removed_isa = true;
+                    }
                 }
             } else {
                 dst_array[d ++] = id;
@@ -16910,6 +17011,15 @@ static void flecs_remove_from_table(
         ecs_assert(dst_table != table, ECS_INTERNAL_ERROR, NULL);
 
         int32_t table_count = ecs_table_count(table);
+
+        if (removed_isa && table_count) {
+            /* Ids aren't removed from tables with an OnRemove event here, so
+             * notify the component index of the removed IsA pairs directly. */
+            flecs_components_on_isa_change(world, table, 
+                ecs_table_entities(table), table_count,
+                (dst_table->flags & EcsTableHasIsA) != 0);
+        }
+
         if (table_count) {
             ecs_log_push_3();
 
@@ -17079,7 +17189,9 @@ static bool flecs_on_delete_clear_ids(
             }
 
             if (flecs_component_release_tables(world, cr)) {
-                ecs_assert(!force_delete, ECS_INVALID_OPERATION, 
+                ecs_assert(!force_delete || 
+                    (world->flags & (EcsWorldFini|EcsWorldQuit)),
+                    ECS_INVALID_OPERATION, 
                     "cannot delete component '%s': tables are keeping it alive (likely because of used prefab)",
                     flecs_errstr(ecs_id_str(world, cr->id)));
 
@@ -18272,7 +18384,7 @@ static int32_t flecs_table_search(
     return -1;
 }
 
-static int32_t flecs_table_offset_search(
+int32_t flecs_table_offset_search(
     const ecs_table_t *table,
     int32_t offset,
     ecs_id_t id,
@@ -18285,6 +18397,105 @@ static int32_t flecs_table_offset_search(
     while (offset < count) {
         ecs_id_t type_id = ids[offset ++];
         if (ecs_id_match(type_id, id)) {
+            if (id_out) {
+                id_out[0] = type_id;
+            }
+
+            return offset - 1;
+        }
+    }
+
+    return -1;
+}
+
+/* Test whether a component (transitively) inherits from a base component. */
+static bool flecs_component_inherits_from(
+    const ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_entity_t base,
+    int32_t depth)
+{
+    if (depth >= FLECS_DAG_DEPTH_MAX) {
+        return false;
+    }
+
+    ecs_record_t *r = flecs_entities_get_any(world, component);
+    ecs_table_t *table = r ? r->table : NULL;
+    if (!table || !(table->flags & EcsTableHasIsA)) {
+        return false;
+    }
+
+    const ecs_table_record_t *tr_isa = flecs_component_get_table(
+        world->cr_isa_wildcard, table);
+    ecs_assert(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_id_t *ids = table->type.array;
+    int32_t i = tr_isa->index, end = i + tr_isa->count;
+    for (; i < end; i ++) {
+        ecs_entity_t b = ECS_PAIR_SECOND(ids[i]);
+        if (b == (uint32_t)base) {
+            return true;
+        }
+
+        if (flecs_component_inherits_from(world, b, base, depth + 1)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/* Test whether an id in a table type is derived from the searched for id. */
+static bool flecs_id_match_inherited(
+    const ecs_world_t *world,
+    ecs_id_t type_id,
+    ecs_id_t id)
+{
+    if (ECS_IS_PAIR(id)) {
+        if (!ECS_IS_PAIR(type_id)) {
+            return false;
+        }
+
+        ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+        if ((tgt != EcsWildcard) && (tgt != EcsAny)) {
+            if (ECS_PAIR_SECOND(type_id) != tgt) {
+                return false;
+            }
+        }
+
+        return flecs_component_inherits_from(world,
+            ECS_PAIR_FIRST(type_id), ECS_PAIR_FIRST(id), 0);
+    }
+
+    if (type_id & ECS_ID_FLAGS_MASK) {
+        return false;
+    }
+
+    return flecs_component_inherits_from(world, type_id, id, 0);
+}
+
+int32_t flecs_table_offset_search_w_inherited(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_id_t *id_out)
+{
+    if (!(table->flags & EcsTableHasDerived)) {
+        return flecs_table_offset_search(table, offset, id, id_out);
+    }
+
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_id_t *ids = table->type.array;
+    const ecs_table_record_t *trs = table->_->records;
+    int32_t count = table->type.count;
+    while (offset < count) {
+        ecs_id_t type_id = ids[offset ++];
+        if (ecs_id_match(type_id, id) ||
+           ((trs[offset - 1].hdr.cr->flags & EcsIdHasBases) &&
+             flecs_id_match_inherited(world, type_id, id)))
+        {
             if (id_out) {
                 id_out[0] = type_id;
             }
@@ -18587,12 +18798,14 @@ int32_t ecs_search_offset(
     ecs_id_t id,
     ecs_id_t *id_out)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     if (!offset) {
-        flecs_poly_assert(world, ecs_world_t);
         return ecs_search(world, table, id, id_out);
     }
 
-    return flecs_table_offset_search(table, offset, id, id_out);
+    return flecs_table_offset_search_w_inherited(
+        world, table, offset, id, id_out);
 }
 
 static int32_t flecs_relation_depth_walk(
@@ -18608,8 +18821,15 @@ static int32_t flecs_relation_depth_walk(
         return 0;
     }
 
-    int32_t i = tr->index, end = i + tr->count;
-    for (; i != end; i ++) {
+    int32_t i = tr->index, remaining = tr->count;
+    for (; remaining; i ++) {
+        i = flecs_table_offset_search_w_inherited(world, table, i, cr->id, NULL);
+        if (i == -1) {
+            break;
+        }
+
+        remaining --;
+
         ecs_entity_t o = ecs_pair_second(world, table->type.array[i]);
         if (!o) {
             /* Rare, but can happen during cleanup when an intermediate table is
@@ -34952,6 +35172,8 @@ void flecs_query_apply_iter_flags(
     ECS_BIT_COND(it->flags, EcsIterHasCondSet, 
         ECS_BIT_IS_SET(query->flags, EcsQueryHasCondSet));
     ECS_BIT_COND(it->flags, EcsIterNoData, query->data_fields == 0);
+    ECS_BIT_COND(it->flags, EcsIterComponentInheritance,
+        ECS_BIT_IS_SET(query->flags, EcsQueryHasComponentInheritance));
 }
 
 #ifdef FLECS_CACHED_QUERIES
@@ -35525,6 +35747,24 @@ static int flecs_term_verify(
     return 0;
 }
 
+/* Test whether a component can be used as the base of other components. */
+static bool flecs_table_can_isa(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
+{
+    (void)world;
+
+    if (!table || !(table->flags & EcsTableHasIsA)) {
+        return false;
+    }
+
+#ifdef FLECS_CONSTRAINT_TRAITS
+    return !ecs_table_has_id(world, table, EcsFinal);
+#else
+    return true;
+#endif
+}
+
 int flecs_term_finalize(
     const ecs_world_t *world,
     ecs_term_t *term,
@@ -35535,7 +35775,6 @@ int flecs_term_finalize(
     ecs_term_ref_t *src = &term->src;
     ecs_term_ref_t *first = &term->first;
     ecs_term_ref_t *second = &term->second;
-    ecs_flags64_t first_flags = ECS_TERM_REF_FLAGS(first);
     ecs_flags64_t second_flags = ECS_TERM_REF_FLAGS(second);
 
     ecs_term_ref_t *refs[] = { src, first, second };
@@ -35690,32 +35929,19 @@ int flecs_term_finalize(
     }
 
     if (first_entity && !ecs_term_match_0(term)) {
-        bool first_is_self = (first_flags & EcsTraverseFlags) == EcsSelf;
         ecs_record_t *first_record = flecs_entities_get(world, first_entity);
         ecs_table_t *first_table = first_record ? first_record->table : NULL;
         
-        bool first_can_isa = false;
-        if (first_table) {
-            first_can_isa = (first_table->flags & EcsTableHasIsA) != 0;
-#ifdef FLECS_CONSTRAINT_TRAITS
-            if (first_can_isa) {
-                first_can_isa = !ecs_table_has_id(world, first_table, EcsFinal);
-            }
-#endif
-        }
-
         /* Only enable inheritance for ids which are inherited from at the time
-         * of query creation. To force component inheritance to be evaluated,
-         * an application can explicitly set traversal flags. */
+         * of query creation. */
         if (flecs_components_get(world, ecs_pair(EcsIsA, first->id)) || 
-            (cr_flags & EcsIdInheritable) || first_can_isa)
+            (cr_flags & EcsIdInheritable) || 
+             flecs_table_can_isa(world, first_table))
         {
-            if (!first_is_self) {
-                term->flags_ |= EcsTermIdInherited;
-            }
+            term->flags_ |= EcsTermIdInherited;
         } else {
 #ifdef FLECS_DEBUG
-            if (!first_is_self) {
+            if ((ECS_TERM_REF_FLAGS(first) & EcsTraverseFlags) != EcsSelf) {
                 ecs_query_impl_t *q = flecs_query_impl(ctx->query);
                 if (q) {
                     ECS_TERMSET_SET(q->final_terms, 1u << ctx->term_index);
@@ -35794,13 +36020,14 @@ int flecs_term_finalize(
         term->flags_ |= EcsTermNonFragmentingChildOf;
     }
 
-    bool table_match = !(term->flags_ & (EcsTermTransitive|EcsTermIdInherited|
+    bool table_match = !(term->flags_ & (EcsTermTransitive|
         EcsTermReflexive|EcsTermIsMember|EcsTermDontFragment)) &&
         !(first_entity == EcsPredEq || first_entity == EcsPredMatch ||
             first_entity == EcsPredLookup);
     bool cacheable_term = table_match && ECS_TERM_REF_ID(src) == EcsThis &&
         term->id != ecs_childof(0);
-    bool trivial_term = table_match && term->oper == EcsAnd &&
+    bool trivial_term = table_match && !(term->flags_ & EcsTermIdInherited) &&
+        term->oper == EcsAnd &&
         !(term->flags_ & (EcsTermIsOr|EcsTermIsToggle)) &&
         ecs_term_match_this(term) && (src->id & EcsSelf) &&
         (!term->trav || term->trav == EcsIsA) &&
@@ -36010,6 +36237,10 @@ static int flecs_query_finalize_terms(
             flecs_query_validator_error(&ctx,
                 "terms in an OR chain must have the same source");
             return -1;
+        }
+
+        if (term->flags_ & EcsTermIdInherited) {
+            q->flags |= EcsQueryHasComponentInheritance;
         }
 
         if (term->flags_ & EcsTermNonFragmentingChildOf) {
@@ -36530,6 +36761,7 @@ bool flecs_query_finalize_simple(
     /* Populate terms */
     bool has_this = false, has_only_this = true;
     int8_t cacheable_count = 0, trivial_count = 0, up_count = 0;
+    int8_t inherited_count = 0;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &q->terms[i];
         ecs_id_t id = term->id;
@@ -36648,9 +36880,17 @@ bool flecs_query_finalize_simple(
             }
         }
 
-        if (flecs_components_get(world, ecs_pair(EcsIsA, first)) != NULL) {
+        /* Enable inheritance for ids that are inherited from, that are marked
+         * inheritable, and for ids that are part of an inheritance hierarchy,
+         * as components can be derived from them after the query is created. */
+        ecs_record_t *first_r = flecs_entities_get(world, first);
+        if (flecs_components_get(world, ecs_pair(EcsIsA, first)) ||
+            (cr_flags & EcsIdInheritable) ||
+             flecs_table_can_isa(world, first_r ? first_r->table : NULL))
+        {
             term->flags_ |= EcsTermIdInherited;
-            cacheable = false; trivial = false;
+            q->flags |= EcsQueryHasComponentInheritance;
+            trivial = false; inherited_count ++;
         }
 
         if (cacheable) {
@@ -36689,8 +36929,14 @@ bool flecs_query_finalize_simple(
         q->flags |= EcsQueryHasCacheable;
     }
 
-    if (cacheable_count == term_count && trivial_count == term_count) {
-        q->flags |= EcsQueryIsCacheable|EcsQueryIsTrivial;
+    if (cacheable_count == term_count) {
+        if ((trivial_count + inherited_count) == term_count) {
+            q->flags |= EcsQueryIsCacheable;
+        }
+
+        if (trivial_count == term_count) {
+            q->flags |= EcsQueryIsTrivial;
+        }
     }
 
     if (!up_count) {
@@ -37891,6 +38137,58 @@ void flecs_component_delete_sparse(
     }
 
     ecs_os_free(to_delete);
+}
+
+static void flecs_component_set_has_bases(
+    ecs_component_record_t *cr,
+    bool has_bases)
+{
+    if (has_bases) {
+        cr->flags |= EcsIdHasBases;
+    } else if (!(cr->flags & EcsIdMarkedForDelete)) {
+        cr->flags &= ~EcsIdHasBases;
+    }
+}
+
+void flecs_components_on_isa_change(
+    ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_entity_t *entities,
+    int32_t count,
+    bool has_bases)
+{
+    /* Changing the bases of a component invalidates the base ids registered for
+     * existing tables, so only allow it while the component isn't in use.
+     * Components that are being deleted are exempt, as their tables go too. */
+    bool check_unused = 
+        !(world->flags & (EcsWorldInit|EcsWorldFini|EcsWorldQuit)) &&
+        !(table->flags & EcsTableMarkedForDelete);
+
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t component = entities[i];
+        ecs_record_t *r = flecs_entities_get(world, component);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!(r->row & EcsEntityIsId)) {
+            continue; /* Entity isn't used as a component */
+        }
+
+        if (check_unused) {
+            flecs_assert_relation_unused(world, component, EcsIsA);
+        }
+
+        ecs_component_record_t *cr = flecs_components_get(world, component);
+        if (cr) {
+            flecs_component_set_has_bases(cr, has_bases);
+        }
+
+        cr = flecs_components_get(world, ecs_pair(component, EcsWildcard));
+        if (cr) {
+            do {
+                flecs_component_set_has_bases(cr, has_bases);
+            } while ((cr = flecs_component_first_next(cr)));
+        }
+    }
 }
 
 ecs_component_record_t* flecs_component_first_next(
@@ -40163,6 +40461,7 @@ static void flecs_table_init_flags(
 
             if (r == EcsIsA) {
                 table->flags |= EcsTableHasIsA;
+                table->trait_flags |= EcsIdHasBases;
             } else if (r == EcsChildOf) {
                 table->flags |= EcsTableHasChildOf;
                 table->childof_index = flecs_ito(int16_t, i);
@@ -40335,20 +40634,181 @@ static void flecs_table_update_overrides(
     }
 }
 
+/* Add a table record for a base id of a component in the table. Returns false
+ * if the table already has the base id, or if a record was already added for
+ * the same component. */
+static bool flecs_table_add_inherited_record(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_vec_t *records,
+    int32_t inherited_start,
+    int32_t type_index,
+    ecs_id_t base_id)
+{
+    ecs_component_record_t *cr = flecs_components_ensure(world, base_id);
+    cr->flags |= EcsIdHasDerived;
+
+    /* If the table stores the base id itself no record is added for it. Queries
+     * find the derived ids by searching the table type. */
+    ecs_id_t *ids = table->type.array;
+    int32_t i, count = table->type.count;
+    for (i = 0; i < count; i ++) {
+        if (ecs_id_match(ids[i], base_id)) {
+            return false;
+        }
+    }
+
+    count = ecs_vec_count(records);
+    for (i = inherited_start; i < count; i ++) {
+        ecs_table_record_t *existing = ecs_vec_get_t(
+            records, ecs_table_record_t, i);
+        if (existing->hdr.cr == cr) {
+            if (existing->index == type_index) {
+                return false;
+            }
+
+            /* Ids are visited in reverse order, so index ends up pointing at
+             * the first derived id in the table type. */
+            existing->count ++;
+            existing->index = flecs_ito(int16_t, type_index);
+            return true;
+        }
+    }
+
+    flecs_table_add_record(world, records, cr, type_index, 1);
+
+    if (base_id < FLECS_HI_COMPONENT_ID) {
+        world->non_trivial_lookup[base_id] |= EcsNonTrivialIdInherit;
+    }
+
+    return true;
+}
+
+/* Add table records for the (transitive) base ids of a component in the table.
+ * A component with a (IsA, Base) pair is matched by queries, get and has for
+ * Base, which is implemented by registering the table with the component record
+ * of Base. */
+static void flecs_table_add_inherited_records(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_vec_t *records,
+    int32_t inherited_start,
+    int32_t type_index,
+    ecs_entity_t rel,
+    ecs_entity_t tgt)
+{
+    ecs_record_t *r = flecs_entities_get(world, rel);
+    ecs_table_t *src = r ? r->table : NULL;
+    if (!src || !(src->flags & EcsTableHasIsA)) {
+        return;
+    }
+
+    const ecs_table_record_t *tr_isa = flecs_component_get_table(
+        world->cr_isa_wildcard, src);
+    ecs_assert(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_id_t *ids = src->type.array;
+    int32_t i = tr_isa->index, end = i + tr_isa->count;
+    for (; i < end; i ++) {
+        ecs_entity_t base = ecs_pair_second(world, ids[i]);
+        if (!base) {
+            continue;
+        }
+
+        bool recurse = flecs_table_add_inherited_record(world, table, records,
+            inherited_start, type_index, tgt ? ecs_pair(base, tgt) : base);
+
+        if (tgt) {
+            recurse |= flecs_table_add_inherited_record(world, table, records,
+                inherited_start, type_index, ecs_pair(base, EcsWildcard));
+        }
+
+        if (recurse) {
+            flecs_table_add_inherited_records(world, table, records,
+                inherited_start, type_index, base, tgt);
+        }
+    }
+}
+
+/* Add table records for the base ids of all components in the table. */
+static void flecs_table_init_inherited(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_vec_t *records,
+    int32_t inherited_start)
+{
+    ecs_type_t type = table->type;
+    int32_t ti;
+
+    /* Iterate in reverse so that the record index of a base ends up pointing at
+     * the first derived id in the table type. */
+    for (ti = type.count - 1; ti >= 0; ti --) {
+        ecs_table_record_t *tr = ecs_vec_get_t(
+            records, ecs_table_record_t, ti);
+        if (!(tr->hdr.cr->flags & EcsIdHasBases)) {
+            continue;
+        }
+
+        ecs_id_t id = type.array[ti];
+        ecs_entity_t rel = id, tgt = 0;
+        if (id & ECS_ID_FLAGS_MASK) {
+            if (!ECS_IS_PAIR(id)) {
+                continue;
+            }
+
+            rel = ecs_pair_first(world, id);
+            tgt = ECS_PAIR_SECOND(id);
+        }
+
+        flecs_table_add_inherited_records(
+            world, table, records, inherited_start, ti, rel, tgt);
+    }
+}
+
 static void flecs_table_emit(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t event)
 {
+    ecs_type_t ids = table->type;
+    int32_t inherited_start = table->_->inherited_start;
+    int32_t record_count = table->_->record_count;
+    ecs_id_t *base_ids = NULL;
+
+    if (inherited_start != record_count) {
+        /* Also emit the event for the ids the table inherits from, so that
+         * query caches get notified of tables with derived components. */
+        ecs_table_record_t *records = table->_->records;
+        int32_t i, count = ids.count;
+        base_ids = flecs_walloc_n(world, ecs_id_t, 
+            count + record_count - inherited_start);
+        ecs_os_memcpy_n(base_ids, ids.array, ecs_id_t, count);
+
+        for (i = inherited_start; i < record_count; i ++) {
+            ecs_id_t base_id = records[i].hdr.cr->id;
+            if (!ecs_id_is_wildcard(base_id)) {
+                base_ids[count ++] = base_id;
+            }
+        }
+
+        ids.array = base_ids;
+        ids.count = count;
+    }
+
     ecs_defer_begin(world);
     flecs_emit(world, world, &(ecs_event_desc_t) {
-        .ids = &table->type,
+        .ids = &ids,
         .event = event,
         .table = table,
         .flags = EcsEventTableOnly,
         .observable = world
     });
     ecs_defer_end(world);
+
+    if (base_ids) {
+        flecs_wfree_n(world, ecs_id_t, 
+            table->type.count + record_count - inherited_start, base_ids);
+    }
 }
 
 /* Main table initialization function */
@@ -40366,6 +40826,7 @@ void flecs_table_init(
     int32_t first_pair = -1, pair_count = 0, id_count = 0;
     int32_t first_role = dst_count;
     bool has_low_id = false;
+    ecs_flags32_t all_flags = 0;
     ecs_component_record_t *cr, *childof_cr = NULL;
     ecs_table_record_t *tr;
 
@@ -40377,6 +40838,7 @@ void flecs_table_init(
         cr = from && src_i < from->type.count && from->type.array[src_i] == id
             ? from->_->records[src_i].hdr.cr : flecs_components_ensure(world, id);
         flecs_table_add_record(world, records, cr, i, 1);
+        all_flags |= cr->flags;
 
         if (!(id & ECS_ID_FLAGS_MASK)) {
             id_count ++;
@@ -40452,11 +40914,19 @@ void flecs_table_init(
             table->bloom_filter, ecs_pair(EcsChildOf, 0));
     }
 
+    /* Add records for the base ids of components that inherit from a base */
+    int32_t inherited_start = ecs_vec_count(records);
+    if (all_flags & EcsIdHasBases) {
+        table->flags |= EcsTableHasDerived;
+        flecs_table_init_inherited(world, table, records, inherited_start);
+    }
+
     /* Now that all records have been added, copy them to array */
     int32_t i, dst_record_count = ecs_vec_count(records);
     ecs_table_record_t *dst_tr = flecs_wdup_n(world, ecs_table_record_t, 
         dst_record_count, ecs_vec_first_t(records, ecs_table_record_t));
     table->_->record_count = flecs_ito(int16_t, dst_record_count);
+    table->_->inherited_start = flecs_ito(int16_t, inherited_start);
     table->_->records = dst_tr;
     int32_t column_count = 0;
 
@@ -40473,17 +40943,24 @@ void flecs_table_init(
         /* Claim component record so it stays alive as long as the table exists */
         flecs_component_claim(world, cr);
 
-        /* Initialize event flags */
-        table->flags |= cr->flags & EcsIdEventMask;
+        if (i >= inherited_start) {
+            /* Only propagate table event flags for base ids, so that query
+             * caches get notified of tables with derived components. */
+            table->flags |= cr->flags &
+                (EcsIdHasOnTableCreate|EcsIdHasOnTableDelete);
+        } else {
+            /* Initialize event flags */
+            table->flags |= cr->flags & EcsIdEventMask;
+
+#ifdef FLECS_PREFAB
+            if (ECS_ID_ON_INSTANTIATE(cr->flags) == EcsOverride) {
+                table->flags |= EcsTableHasOverrides;
+            }
+#endif
+        }
 
         /* Initialize column index (will be overwritten by init_data) */
         tr->column = -1;
-
-#ifdef FLECS_PREFAB
-        if (ECS_ID_ON_INSTANTIATE(cr->flags) == EcsOverride) {
-            table->flags |= EcsTableHasOverrides;
-        }
-#endif
 
         if ((i < table->type.count) && (cr->type_info != NULL)) {
             if (!(cr->flags & EcsIdSparse)) {
@@ -40513,6 +40990,18 @@ void flecs_table_init(
     table->column_count = flecs_ito(int16_t, column_count);
     table->version = 1;
     flecs_table_init_data(world, table);
+
+    for (i = inherited_start; i < dst_record_count; i ++) {
+        /* Base ids share the storage of the derived id they were added for */
+        tr = &dst_tr[i];
+        tr->column = dst_tr[tr->index].column;
+        flecs_table_cache_set_column(&tr->hdr.cr->cache, table, tr->column);
+
+        if (!ecs_id_is_wildcard(tr->hdr.cr->id)) {
+            table->bloom_filter = flecs_table_bloom_filter_add(
+                table->bloom_filter, tr->hdr.cr->id);
+        }
+    }
 
     if (childof_cr) {
         if (table->flags & EcsTableHasName) {
@@ -42421,6 +42910,7 @@ void ecs_table_cache_insert(
     slot->tr = (ecs_table_record_t*)result;
     slot->column = -1;
     slot->index = ((ecs_table_record_t*)result)->index;
+    slot->count = ((ecs_table_record_t*)result)->count;
 
     if (ecs_map_is_init(&cache->index)) {
         ecs_map_insert(&cache->index, table->id, flecs_ito(uint64_t, index));
@@ -51530,7 +52020,7 @@ static int flecs_json_serialize_iter_result_field_values(
             ptr = ecs_field_at_w_size(it, flecs_itosize(it->sizes[f]), f, i);
         } else {
             ecs_size_t size = it->sizes[f];
-            ptr = ecs_field_w_size(it, flecs_itosize(size), f);
+            ptr = ecs_base_field_w_size(it, flecs_itosize(size), f);
 
             if (!ptr) {
                 ecs_strbuf_list_appendlit(buf, "0");
@@ -51538,7 +52028,8 @@ static int flecs_json_serialize_iter_result_field_values(
             }
 
             if (!it->sources[f]) {
-                ptr = ECS_ELEM(ptr, size, i);
+                ptr = ECS_ELEM(ptr, 
+                    flecs_uto(ecs_size_t, ecs_field_stride(it, f)), i);
             }
         }
 
@@ -70246,12 +70737,15 @@ void ecs_script_vars_from_iter(
                 continue;
             }
 
-            void *ptr = ecs_field_w_size(it, flecs_itosize(size), i);
+            void *ptr = ecs_base_field_w_size(it, flecs_itosize(size), i);
             if (!ptr) {
                 continue;
             }
 
-            ptr = ECS_OFFSET(ptr, offset * size);
+            if (!it->sources[i]) {
+                ptr = ECS_OFFSET(ptr, 
+                    offset * flecs_uto(ecs_size_t, ecs_field_stride(it, i)));
+            }
 
             const char *name = flecs_script_iter_field_names[i];
             ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
@@ -74945,6 +75439,7 @@ ecs_query_cache_t* flecs_query_cache_init(
 
         if ((t == count) && (q->flags & EcsQueryMatchOnlySelf) &&
            !(q->flags & EcsQueryMatchWildcards) &&
+           !(q->flags & EcsQueryHasComponentInheritance) &&
            !(q->flags & EcsQueryCacheWithFilter))
         {
             if (!const_desc->order_by && !const_desc->group_by && 
@@ -77375,12 +77870,6 @@ static int flecs_query_discover_vars(
         ecs_var_id_t first_var_id = flecs_query_add_var_for_term_id(
             query, first, vars, EcsVarEntity);
         if (first_var_id == EcsVarNone) {
-            /* If first is not a variable, check if we need to insert anonymous
-             * variable for resolving component inheritance */
-            if (term->flags_ & EcsTermIdInherited) {
-                anonymous_count += 2; /* table & entity variable */
-            }
-
             /* If first is a wildcard, insert anonymous variable */
             if (flecs_term_ref_is_wildcard(first)) {
                 anonymous_count ++;
@@ -78794,46 +79283,6 @@ static void flecs_query_insert_unconstrained_transitive(
     flecs_query_op_insert(&and_op, ctx);
 }
 
-static void flecs_query_insert_inheritance(
-    ecs_query_impl_t *query,
-    ecs_term_t *term,
-    ecs_query_op_t *op,
-    ecs_query_compile_ctx_t *ctx,
-    bool cond_write)
-{
-    /* Anonymous variable to store the resolved component ids */
-    ecs_var_id_t tvar = flecs_query_add_var(query, NULL, NULL, EcsVarTable);
-    ecs_var_id_t evar = flecs_query_add_var(query, NULL, NULL, EcsVarEntity);
-
-    flecs_set_var_label(&query->vars[tvar], ecs_get_name(query->pub.world, 
-        ECS_TERM_REF_ID(&term->first)));
-    flecs_set_var_label(&query->vars[evar], ecs_get_name(query->pub.world, 
-        ECS_TERM_REF_ID(&term->first)));
-
-    ecs_query_op_t trav_op = {0};
-    trav_op.kind = EcsQueryTrav;
-    trav_op.field_index = -1;
-    trav_op.first.entity = EcsIsA;
-    trav_op.second.entity = ECS_TERM_REF_ID(&term->first);
-    trav_op.src.var = tvar;
-    trav_op.flags = EcsQueryIsSelf;
-    trav_op.flags |= (EcsQueryIsEntity << EcsQueryFirst);
-    trav_op.flags |= (EcsQueryIsEntity << EcsQuerySecond);
-    trav_op.flags |= (EcsQueryIsVar << EcsQuerySrc);
-    trav_op.written |= (1ull << tvar);
-    if (term->first.id & EcsSelf) {
-        trav_op.match_flags |= EcsTermReflexive;
-    }
-
-    flecs_query_op_insert(&trav_op, ctx);
-    flecs_query_insert_each(tvar, evar, ctx, cond_write);
-
-    ecs_query_ref_t r = { .var = evar };
-    op->first = r;
-    op->flags &= (ecs_flags8_t)~(EcsQueryIsEntity << EcsQueryFirst);
-    op->flags |= (EcsQueryIsVar << EcsQueryFirst);
-}
-
 void flecs_query_compile_term_ref(
     ecs_world_t *world,
     ecs_query_impl_t *query,
@@ -79820,12 +80269,6 @@ int flecs_query_compile_term(
         flecs_query_begin_block_or(&op, term, ctx);
     }
 
-    /* If term has component inheritance enabled, insert instruction to walk
-     * down the relationship tree of the id. */
-    if (term->flags_ & EcsTermIdInherited) {
-        flecs_query_insert_inheritance(query, term, &op, ctx, cond_write);
-    }
-
     op.match_flags = term->flags_;
 
     ecs_write_flags_t write_state = ctx->written;
@@ -79974,6 +80417,37 @@ static bool flecs_query_dispatch(
     bool redo,
     ecs_query_run_ctx_t *ctx);
 
+/* Test whether the type has to be searched to find the ids matched by a term
+ * with component inheritance. A table record that was registered for a base id
+ * describes the derived ids in the table exactly, so the record index/count can
+ * be used as-is. A table that stores the base id itself can also store ids that
+ * derive from it, which are not covered by the record. */
+static
+bool flecs_query_must_search_derived(
+    const ecs_query_op_t *op,
+    const ecs_component_record_t *cr,
+    ecs_table_t *table,
+    const ecs_table_cache_elem_t *elem)
+{
+    return (op->match_flags & EcsTermIdInherited) &&
+        (cr->flags & EcsIdHasDerived) &&
+        (table->flags & EcsTableHasDerived) &&
+        !flecs_table_record_is_inherited(table, elem->tr);
+}
+
+/* Find the first id in the table type that matches or derives from id. */
+static
+int16_t flecs_query_search_derived(
+    const ecs_query_run_ctx_t *ctx,
+    ecs_table_t *table,
+    ecs_id_t id)
+{
+    int32_t column = flecs_table_offset_search_w_inherited(
+        ctx->world, table, 0, id, NULL);
+    ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
+    return flecs_ito(int16_t, column);
+}
+
 bool flecs_query_select_w_id(
     const ecs_query_op_t *op,
     bool redo,
@@ -79983,8 +80457,7 @@ bool flecs_query_select_w_id(
 {
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     ecs_component_record_t *cr = op_ctx->cr;
-    const ecs_table_record_t *tr;
-    ecs_table_t *table;
+    ecs_table_t *table = NULL;
 
     if (!redo) {
         if (!cr || cr->id != id) {
@@ -80005,27 +80478,51 @@ bool flecs_query_select_w_id(
         }
     }
 
-repeat:
-    if (!redo || (op_ctx->remaining <= 0)) {
+repeat: {
+    bool next_table = !redo;
+
+    if (redo) {
+        ecs_assert(op_ctx->it.cur != NULL, ECS_INTERNAL_ERROR, NULL);
+        table = op_ctx->it.cur->table;
+
+        if (op_ctx->remaining <= 0) {
+            next_table = true;
+        } else if (op->match_flags & EcsTermIdInherited) {
+            /* Derived ids are not stored consecutively in the table type */
+            int32_t column = flecs_table_offset_search_w_inherited(
+                ctx->world, table, op_ctx->column + 1, cr->id, NULL);
+            if (column == -1) {
+                next_table = true;
+            } else {
+                op_ctx->column = flecs_ito(int16_t, column);
+                op_ctx->remaining --;
+            }
+        } else {
+            op_ctx->column = flecs_query_next_column(
+                table, cr->id, op_ctx->column);
+            op_ctx->remaining --;
+        }
+    }
+
+    if (next_table) {
         const ecs_table_cache_elem_t *elem = flecs_table_cache_next(
             &op_ctx->it);
         if (!elem) {
             return false;
         }
 
-        tr = elem->tr;
-        op_ctx->column = elem->index;
-        op_ctx->remaining = flecs_ito(int16_t, tr->count - 1);
         table = elem->table;
-        flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
-    } else {
-        ecs_assert(op_ctx->it.cur != NULL, ECS_INTERNAL_ERROR, NULL);
-        table = op_ctx->it.cur->table;
-        op_ctx->column = flecs_query_next_column(table, cr->id, op_ctx->column);
-        op_ctx->remaining --;
-
-        flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
+        if (flecs_query_must_search_derived(op, cr, table, elem)) {
+            op_ctx->column = flecs_query_search_derived(ctx, table, cr->id);
+            op_ctx->remaining = flecs_ito(int16_t, table->type.count - 1);
+        } else {
+            op_ctx->column = elem->index;
+            op_ctx->remaining = flecs_ito(int16_t, elem->count - 1);
+        }
     }
+
+    flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
+}
 
     if (flecs_query_table_filter(table, op->other, filter_mask)) {
         goto repeat;
@@ -80056,7 +80553,6 @@ bool flecs_query_with(
 {
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     ecs_component_record_t *cr = op_ctx->cr;
-    const ecs_table_record_t *tr;
 
     ecs_table_t *table = flecs_query_get_table(op, &op->src, EcsQuerySrc, ctx);
     if (!table) {
@@ -80087,20 +80583,37 @@ bool flecs_query_with(
             return false;
         }
 
-        tr = elem->tr;
-        op_ctx->column = elem->index;
-        op_ctx->remaining = flecs_ito(int16_t, tr->count);
+        if (flecs_query_must_search_derived(op, cr, table, elem)) {
+            op_ctx->column = flecs_query_search_derived(ctx, table, cr->id);
+            op_ctx->remaining = flecs_ito(int16_t, table->type.count);
+        } else {
+            op_ctx->column = elem->index;
+            op_ctx->remaining = flecs_ito(int16_t, elem->count);
+        }
+
         op_ctx->it.cur = elem;
     } else {
-        ecs_assert((op_ctx->remaining + op_ctx->column - 1) < table->type.count, 
-            ECS_INTERNAL_ERROR, NULL);
         ecs_assert(op_ctx->remaining >= 0, ECS_INTERNAL_ERROR, NULL);
         if (--op_ctx->remaining <= 0) {
             return false;
         }
 
-        op_ctx->column = flecs_query_next_column(table, cr->id, op_ctx->column);
-        ecs_assert(op_ctx->column != -1, ECS_INTERNAL_ERROR, NULL);
+        if (op->match_flags & EcsTermIdInherited) {
+            /* Derived ids are not stored consecutively in the table type */
+            int32_t column = flecs_table_offset_search_w_inherited(
+                ctx->world, table, op_ctx->column + 1, cr->id, NULL);
+            if (column == -1) {
+                return false;
+            }
+
+            op_ctx->column = flecs_ito(int16_t, column);
+        } else {
+            ecs_assert((op_ctx->remaining + op_ctx->column) < table->type.count, 
+                ECS_INTERNAL_ERROR, NULL);
+            op_ctx->column = flecs_query_next_column(
+                table, cr->id, op_ctx->column);
+            ecs_assert(op_ctx->column != -1, ECS_INTERNAL_ERROR, NULL);
+        }
     }
 
     flecs_query_set_match(op, table, op_ctx->column, ctx);
@@ -82486,7 +82999,9 @@ int flecs_query_trivial_has_range(
         bool is_not = terms[t].oper == EcsNot;
         const ecs_table_record_t *tr = NULL;
 
-        if (term_id < FLECS_HI_COMPONENT_ID) {
+        if (term_id < FLECS_HI_COMPONENT_ID && 
+           !(terms[t].flags_ & EcsTermIdInherited)) 
+        {
             int16_t res = component_map[term_id];
             if (res) {
                 int32_t type_index = res > 0 ?
@@ -82548,6 +83063,8 @@ int flecs_query_trivial_has_range(
 
     flecs_iter_init(lit.world, &lit, true);
     lit.flags |= EcsIterIsValid;
+    ECS_BIT_COND(lit.flags, EcsIterComponentInheritance,
+        ECS_BIT_IS_SET(flags, EcsQueryHasComponentInheritance));
 
     ecs_os_memcpy_n(ECS_CONST_CAST(ecs_id_t*, lit.ids), q->ids,
         ecs_id_t, q->field_count);
@@ -86030,8 +86547,10 @@ int16_t flecs_query_next_column(
     if (!ECS_IS_PAIR(id) || (ECS_PAIR_FIRST(id) != EcsWildcard)) {
         column = column + 1;
     } else {
+        /* Only called for terms without component inheritance, so derived ids
+         * don't have to be matched. */
         ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
-        column = ecs_search_offset(NULL, table, column + 1, id, NULL);
+        column = flecs_table_offset_search(table, column + 1, id, NULL);
         ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -86863,8 +87382,16 @@ ecs_trav_up_t* flecs_query_get_up_cache(
         return NULL; /* Table doesn't have the relationship */
     }
 
-    int32_t i = tr->index, end = i + tr->count;
-    for (; i < end; i ++) {
+    int32_t i = tr->index, remaining = tr->count;
+    for (; remaining; i ++) {
+        i = flecs_table_offset_search_w_inherited(
+            world, table, i, cr_trav->id, NULL);
+        if (i == -1) {
+            break;
+        }
+
+        remaining --;
+
         ecs_id_t id = table->type.array[i];
         ecs_entity_t tgt = ECS_PAIR_SECOND(id);
         ecs_trav_up_t *result = &cache->up;
@@ -105677,9 +106204,8 @@ static int flecs_expr_identifier_visit_type(
                     result->storage.entity = e;
                     result->ptr = &result->storage.entity;
                 } else {
-                    ecs_size_t size = flecs_type_size(script->world, type);
-                    ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
-                    result->ptr = flecs_walloc(script->world, size);
+                    result->ptr = ecs_ptr_new_w_type_info(
+                        script->world, result->node.type_info);
                     flecs_type_info_claim(result->node.type_info);
 
                     ecs_meta_cursor_t expr_cur = ecs_meta_cursor(

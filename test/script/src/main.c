@@ -2319,6 +2319,7 @@ void Vars_redeclare_in_scope(void);
 void Vars_init_fini_vars(void);
 void Vars_from_iter_17_fields(void);
 void Vars_define_large_type_no_leak(void);
+void Vars_from_iter_w_derived_component(void);
 
 // Testsuite 'Serialize'
 void Serialize_bool(void);
@@ -12829,6 +12830,10 @@ bake_test_case Vars_testcases[] = {
     {
         "define_large_type_no_leak",
         Vars_define_large_type_no_leak
+    },
+    {
+        "from_iter_w_derived_component",
+        Vars_from_iter_w_derived_component
     }
 };
 
@@ -18500,7 +18505,7 @@ static bake_test_suite suites[] = {
         "Vars",
         NULL,
         NULL,
-        16,
+        17,
         Vars_testcases
     },
     {

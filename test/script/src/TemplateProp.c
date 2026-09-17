@@ -335,7 +335,7 @@ void TemplateProp_interface_prop_instantiates_passed_template(void) {
     test_assert(v != NULL);
     test_bool(v->on_off, true);
     test_flt(v->scale, 2);
-    test_assert(!ecs_has_id(world, inst, interface));
+    test_assert(ecs_has_id(world, inst, interface));
 
     const PointValue *p = ecs_get_id(world, inst, position);
     test_assert(p != NULL);
@@ -383,7 +383,7 @@ void TemplateProp_interface_prop_paren_syntax(void) {
     test_assert(v != NULL);
     test_bool(v->on_off, true);
     test_flt(v->scale, 2);
-    test_assert(!ecs_has_id(world, e, interface));
+    test_assert(ecs_has_id(world, e, interface));
 
     const PointValue *p = ecs_get_id(world, e, position);
     test_assert(p != NULL);
@@ -424,7 +424,7 @@ void TemplateProp_interface_prop_false_branch(void) {
     test_assert(v != NULL);
     test_bool(v->on_off, false);
     test_flt(v->scale, 2);
-    test_assert(!ecs_has_id(world, e, interface));
+    test_assert(ecs_has_id(world, e, interface));
 
     const PointValue *p = ecs_get_id(world, e, position);
     test_assert(p == NULL);
@@ -464,7 +464,7 @@ void TemplateProp_interface_prop_with_other_components(void) {
     test_assert(v != NULL);
     test_bool(v->on_off, true);
     test_flt(v->scale, 2);
-    test_assert(!ecs_has_id(world, e, interface));
+    test_assert(ecs_has_id(world, e, interface));
 
     const PointValue *p = ecs_get_id(world, e, position);
     test_assert(p != NULL);
@@ -511,7 +511,7 @@ void TemplateProp_interface_prop_default_template(void) {
     test_assert(v != NULL);
     test_bool(v->on_off, true);
     test_flt(v->scale, 2);
-    test_assert(!ecs_has_id(world, e, interface));
+    test_assert(ecs_has_id(world, e, interface));
 
     const PointValue *p = ecs_get_id(world, e, position);
     test_assert(p != NULL);
@@ -649,7 +649,7 @@ void TemplateProp_interface_prop_as_tag(void) {
     test_assert(v != NULL);
     test_bool(v->on_off, false);
     test_flt(v->scale, 2);
-    test_assert(!ecs_has_id(world, e, interface));
+    test_assert(ecs_has_id(world, e, interface));
 
     const PointValue *p = ecs_get_id(world, e, position);
     test_assert(p == NULL);
@@ -693,7 +693,7 @@ void TemplateProp_interface_prop_from_c(void) {
     test_assert(v != NULL);
     test_bool(v->on_off, true);
     test_flt(v->scale, 2);
-    test_assert(!ecs_has_id(world, inst, interface));
+    test_assert(ecs_has_id(world, inst, interface));
 
     const PointValue *p = ecs_get_id(world, inst, position);
     test_assert(p != NULL);
@@ -2037,7 +2037,7 @@ void TemplateProp_prop_of_derived_template_type(void) {
     ecs_entity_t point = ecs_lookup(world, "Point");
     ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
-    test_assert(!ecs_has_id(world, child, point));
+    test_assert(ecs_has_id(world, child, point));
 
     const float *v = ecs_get_id(world, child, point3d);
     test_assert(v != NULL);
@@ -3505,7 +3505,7 @@ void TemplateProp_pass_derived_to_child_template_base(void) {
     test_flt(pt_1_3d[0], 5);
     test_flt(pt_1_3d[1], 6);
     test_flt(pt_1_3d[2], 7);
-    test_assert(!ecs_has_id(world, inst, point));
+    test_assert(ecs_has_id(world, inst, point));
     test_assert(!ecs_has_id(world, inst, position));
 
     inst = ecs_lookup(world, "e.inner.leaf2");
@@ -3521,7 +3521,7 @@ void TemplateProp_pass_derived_to_child_template_base(void) {
     test_flt(pt_1_3d[0], 100);
     test_flt(pt_1_3d[1], 6);
     test_flt(pt_1_3d[2], 7);
-    test_assert(!ecs_has_id(world, inst, point));
+    test_assert(ecs_has_id(world, inst, point));
     test_assert(!ecs_has_id(world, inst, position));
 
     ecs_fini(world);
@@ -3568,7 +3568,7 @@ void TemplateProp_pass_derived_to_child_template_base_positional(void) {
     test_flt(pt_3d[0], 5);
     test_flt(pt_3d[1], 6);
     test_flt(pt_3d[2], 7);
-    test_assert(!ecs_has_id(world, e, point));
+    test_assert(ecs_has_id(world, e, point));
     test_assert(!ecs_has_id(world, e, position));
 
     e = ecs_lookup(world, "e.inner.leaf2");
@@ -3584,7 +3584,7 @@ void TemplateProp_pass_derived_to_child_template_base_positional(void) {
     test_flt(pt_3d[0], 100);
     test_flt(pt_3d[1], 6);
     test_flt(pt_3d[2], 7);
-    test_assert(!ecs_has_id(world, e, point));
+    test_assert(ecs_has_id(world, e, point));
     test_assert(!ecs_has_id(world, e, position));
 
     ecs_fini(world);
@@ -3633,7 +3633,7 @@ void TemplateProp_pass_derived_to_child_template_base_w_with(void) {
     test_flt(pt_3d[0], 5);
     test_flt(pt_3d[1], 6);
     test_flt(pt_3d[2], 7);
-    test_assert(!ecs_has_id(world, e, point));
+    test_assert(ecs_has_id(world, e, point));
     test_assert(!ecs_has_id(world, e, position));
 
     e = ecs_lookup(world, "e.inner.leaf2");
@@ -3649,7 +3649,7 @@ void TemplateProp_pass_derived_to_child_template_base_w_with(void) {
     test_flt(pt_3d[0], 100);
     test_flt(pt_3d[1], 6);
     test_flt(pt_3d[2], 7);
-    test_assert(!ecs_has_id(world, e, point));
+    test_assert(ecs_has_id(world, e, point));
     test_assert(!ecs_has_id(world, e, position));
 
     ecs_fini(world);
@@ -3703,7 +3703,7 @@ void TemplateProp_pass_derived_to_child_template_base_update(void) {
     test_flt(pt_3d[0], 5);
     test_flt(pt_3d[1], 6);
     test_flt(pt_3d[2], 7);
-    test_assert(!ecs_has_id(world, inst, point));
+    test_assert(ecs_has_id(world, inst, point));
     test_assert(!ecs_has_id(world, inst, position));
 
     ecs_entity_t leaf = ecs_lookup(world, "e.inner.leaf");
@@ -3730,7 +3730,7 @@ void TemplateProp_pass_derived_to_child_template_base_update(void) {
     test_flt(pt_3d[0], 8);
     test_flt(pt_3d[1], 9);
     test_flt(pt_3d[2], 10);
-    test_assert(!ecs_has_id(world, inst, point));
+    test_assert(ecs_has_id(world, inst, point));
     test_assert(!ecs_has_id(world, inst, position));
 
     inst = ecs_lookup(world, "e.inner.leaf2");
@@ -3746,7 +3746,7 @@ void TemplateProp_pass_derived_to_child_template_base_update(void) {
     test_flt(pt_3d[0], 100);
     test_flt(pt_3d[1], 9);
     test_flt(pt_3d[2], 10);
-    test_assert(!ecs_has_id(world, inst, point));
+    test_assert(ecs_has_id(world, inst, point));
     test_assert(!ecs_has_id(world, inst, position));
 
     ecs_fini(world);
@@ -3785,7 +3785,7 @@ void TemplateProp_pass_derived_to_child_template_derived(void) {
     test_flt(v[0], 5);
     test_flt(v[1], 6);
     test_flt(v[2], 7);
-    test_assert(!ecs_has_id(world, leaf, ecs_lookup(world, "Point")));
+    test_assert(ecs_has_id(world, leaf, ecs_lookup(world, "Point")));
 
     ecs_fini(world);
 }
@@ -3835,7 +3835,7 @@ void TemplateProp_pass_derived_to_child_template_base_two_levels(void) {
     test_flt(pt_3d[0], 5);
     test_flt(pt_3d[1], 6);
     test_flt(pt_3d[2], 7);
-    test_assert(!ecs_has_id(world, e, point));
+    test_assert(ecs_has_id(world, e, point));
     test_assert(!ecs_has_id(world, e, position));
 
     e = ecs_lookup(world, "e.middle.inner.leaf2");
@@ -3851,7 +3851,7 @@ void TemplateProp_pass_derived_to_child_template_base_two_levels(void) {
     test_flt(pt_3d[0], 100);
     test_flt(pt_3d[1], 6);
     test_flt(pt_3d[2], 7);
-    test_assert(!ecs_has_id(world, e, point));
+    test_assert(ecs_has_id(world, e, point));
     test_assert(!ecs_has_id(world, e, position));
 
     ecs_fini(world);
@@ -4699,7 +4699,7 @@ static void test_my_block(
     ecs_entity_t block = ecs_lookup(world, "Block");
     test_assert(my_block != 0);
     test_assert(block != 0);
-    test_assert(!ecs_has_id(world, e, block));
+    test_assert(ecs_has_id(world, e, block));
 
     const MyBlockValue *v = ecs_get_id(world, e, my_block);
     test_assert(v != NULL);
@@ -5129,7 +5129,7 @@ static void test_my_road(
     ecs_entity_t my_road = ecs_lookup(world, "MyRoad");
     test_assert(road != 0);
     test_assert(my_road != 0);
-    test_assert(!ecs_has_id(world, e, road));
+    test_assert(ecs_has_id(world, e, road));
 
     const MyRoadValue *v = ecs_get_id(world, e, my_road);
     test_assert(v != NULL);
@@ -5689,7 +5689,7 @@ static void test_template_road(
     ecs_entity_t base = ecs_lookup(world, "interface.Road");
     test_assert(road != 0);
     test_assert(base != 0);
-    test_assert(!ecs_has_id(world, e, base));
+    test_assert(ecs_has_id(world, e, base));
     const TemplateRoadValue *v = ecs_get_id(world, e, road);
     test_assert(v != NULL);
     test_flt(v->size, size);
@@ -5828,7 +5828,7 @@ void TemplateProp_empty_struct_base(void) {
     const float *v = ecs_get_id(world, e, brick);
     test_assert(v != NULL);
     test_flt(v[0], 1);
-    test_assert(!ecs_has_id(world, e, facade));
+    test_assert(ecs_has_id(world, e, facade));
 
     ecs_entity_t f = ecs_lookup(world, "f");
     test_assert(f != 0);
@@ -5866,7 +5866,7 @@ void TemplateProp_empty_struct_interface_prop(void) {
 
     ecs_entity_t f = ecs_lookup(world, "f.ground");
     test_assert(f != 0);
-    test_assert(!ecs_has_id(world, f, facade));
+    test_assert(ecs_has_id(world, f, facade));
     const float *v = ecs_get_id(world, f, brick);
     test_assert(v != NULL);
     test_flt(v[0], 1);
@@ -6003,7 +6003,7 @@ void TemplateProp_empty_template_base(void) {
     const float *v = ecs_get_id(world, f, brick);
     test_assert(v != NULL);
     test_flt(v[0], 2);
-    test_assert(!ecs_has_id(world, f, facade));
+    test_assert(ecs_has_id(world, f, facade));
 
     ecs_fini(world);
 }
@@ -6039,7 +6039,7 @@ void TemplateProp_empty_template_interface_prop(void) {
 
     ecs_entity_t f = ecs_lookup(world, "f.ground");
     test_assert(f != 0);
-    test_assert(!ecs_has_id(world, f, facade));
+    test_assert(ecs_has_id(world, f, facade));
     const float *v = ecs_get_id(world, f, brick);
     test_assert(v != NULL);
     test_flt(v[0], 1);

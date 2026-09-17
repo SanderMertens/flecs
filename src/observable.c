@@ -1209,6 +1209,13 @@ repeat_event:
         if (can_forward && ECS_IS_PAIR(id) && (cr_flags & EcsIdTraversable)) {
             const ecs_event_record_t *er_fwd = NULL;
             if (ECS_PAIR_FIRST(id) == EcsIsA) {
+                if ((event == EcsOnAdd) || (event == EcsOnRemove)) {
+                    flecs_components_on_isa_change(world, table, 
+                        &ecs_table_entities(table)[offset], count,
+                        (event == EcsOnAdd) || (it.other_table && 
+                            (it.other_table->flags & EcsTableHasIsA)));
+                }
+
                 if (event == EcsOnAdd) {
                     if (!world->stages[0]->base) {
                         /* Adding an IsA relationship can trigger prefab
