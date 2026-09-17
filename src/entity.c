@@ -491,6 +491,16 @@ flecs_component_ptr_t flecs_ensure(
         cr = flecs_components_get(world, component);
         dst = flecs_get_component_ptr(
             world, table, ECS_RECORD_TO_ROW(r->row), cr);
+
+        if (dst.ptr && (table->flags & EcsTableHasDerived)) {
+            /* If the table only stores a component that inherits from the
+             * requested component, add the requested component instead. */
+            const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
+            if (tr && flecs_table_record_is_inherited(table, tr)) {
+                dst.ptr = NULL;
+            }
+        }
+
         if (dst.ptr) {
             ecs_assert(dst.ti->size == size, ECS_INTERNAL_ERROR, NULL);
             return dst;

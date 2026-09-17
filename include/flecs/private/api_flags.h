@@ -93,6 +93,8 @@ extern "C" {
         EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdSparse|\
         EcsIdOrderedChildren|EcsIdHasUpNotify)
 #define EcsIdPrefabChildren            (1u << 26)
+#define EcsIdHasBases                  (1u << 27) /* Component entity has IsA pairs. */
+#define EcsIdHasDerived                (1u << 28) /* Component is a base of other components. */
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
@@ -137,6 +139,7 @@ extern "C" {
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance. */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode. */
 #define EcsIterTrivialSparse           (1u << 9u)  /* Trivial sparse iterator mode (batched entity list results). */
+#define EcsIterComponentInheritance    (1u << 10u) /* Query matches via component inheritance. */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this). */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query. */
 #define EcsIterCached                  (1u << 15u) /* Cached query. */
@@ -164,6 +167,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Flags that can only be set by the query implementation. */
+#define EcsQueryHasComponentInheritance (1u << 0u) /* Query matches via component inheritance. */
 #define EcsQueryTrivialSparse         (1u << 4u)  /* All terms are self, $this, And, sparse. */
 #define EcsQuerySelfTrivial           (1u << 5u)  /* All terms are trivial for tables that own their ids. */
 #define EcsQueryIsaTrivial            (1u << 6u)  /* All terms are And/Not on $this, resolved by self and/or a single IsA traversal. */
@@ -232,6 +236,7 @@ extern "C" {
 #define EcsTableHasBuiltins            (1u << 0u)  /* Does the table have built-in components. */
 #define EcsTableIsPrefab               (1u << 1u)  /* Does the table store prefabs. */
 #define EcsTableHasIsA                 (1u << 2u)  /* Does the table have IsA relationship. */
+#define EcsTableHasDerived             (1u << 3u)  /* Does the table have components that inherit from a base. */
 #define EcsTableHasChildOf             (1u << 4u)  /* Does the table type have ChildOf relationship. */
 #define EcsTableHasParent              (1u << 5u)  /* Does the table type have Parent component. */
 #define EcsTableHasName                (1u << 6u)  /* Does the table type have (Identifier, Name). */

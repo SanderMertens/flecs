@@ -103,10 +103,15 @@ void ecs_iter_fini(
 
 /* --- Public API --- */
 
-void* ecs_field_w_size(
+/* Get field data. When base is true the field is matched through component
+ * inheritance, which means the stored (derived) component can be larger than
+ * the requested (base) type, so the column stride is used instead of size. */
+static FLECS_ALWAYS_INLINE
+void* flecs_field_ptr(
     const ecs_iter_t *it,
     size_t size,
-    int8_t index)
+    int8_t index,
+    bool base)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
         "operation invalid before calling next()");
@@ -122,7 +127,6 @@ void* ecs_field_w_size(
             "mismatching size for field %d (expected '%s')", 
             index,
             flecs_errstr(ecs_id_str(it->world, it->ids[index])));
-    (void)size;
 
     if (it->ptrs) {
         return it->ptrs[index];
@@ -130,13 +134,34 @@ void* ecs_field_w_size(
 
     int16_t column = it->columns[index];
     if (column >= 0) {
-        return ECS_ELEM(it->table->data.columns[column].data,
-            (ecs_size_t)size, it->offset);
+        ecs_column_t *col = &it->table->data.columns[column];
+        ecs_assert(base || ((ecs_size_t)size == col->ti->size),
+            ECS_INVALID_PARAMETER, 
+            "field %d is matched on a derived component, use ecs_base_field()",
+                index);
+        return ECS_ELEM(col->data, 
+            base ? col->ti->size : (ecs_size_t)size, it->offset);
     }
 
     return flecs_field_shared(it, size, index);
 error:
     return NULL;
+}
+
+void* ecs_field_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int8_t index)
+{
+    return flecs_field_ptr(it, size, index, false);
+}
+
+void* ecs_base_field_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int8_t index)
+{
+    return flecs_field_ptr(it, size, index, true);
 }
 
 void* flecs_field_shared(
@@ -155,10 +180,10 @@ void* flecs_field_shared(
     ecs_component_record_t *cr = flecs_components_get(
         it->real_world, it->ids[index]);
     const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
-    int16_t column = tr->column;
+    ecs_column_t *col = &table->data.columns[tr->column];
+    (void)size;
 
-    return ECS_ELEM(table->data.columns[column].data,
-        (ecs_size_t)size, ECS_RECORD_TO_ROW(r->row));
+    return ECS_ELEM(col->data, col->ti->size, ECS_RECORD_TO_ROW(r->row));
 }
 
 static ecs_component_record_t* flecs_field_cr(
@@ -382,6 +407,25 @@ size_t ecs_field_size(
         "invalid field index %d", index);
     ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
         "field index %d out of bounds", index);
+
+    return (size_t)it->sizes[index];
+error:
+    return 0;
+}
+
+size_t ecs_field_stride(
+    const ecs_iter_t *it,
+    int8_t index)
+{
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
+
+    int16_t column = it->columns[index];
+    if (column >= 0 && it->table) {
+        return (size_t)it->table->data.columns[column].ti->size;
+    }
 
     return (size_t)it->sizes[index];
 error:

@@ -787,7 +787,9 @@ int flecs_query_trivial_has_range(
         bool is_not = terms[t].oper == EcsNot;
         const ecs_table_record_t *tr = NULL;
 
-        if (term_id < FLECS_HI_COMPONENT_ID) {
+        if (term_id < FLECS_HI_COMPONENT_ID && 
+           !(terms[t].flags_ & EcsTermIdInherited)) 
+        {
             int16_t res = component_map[term_id];
             if (res) {
                 int32_t type_index = res > 0 ?
@@ -849,6 +851,8 @@ int flecs_query_trivial_has_range(
 
     flecs_iter_init(lit.world, &lit, true);
     lit.flags |= EcsIterIsValid;
+    ECS_BIT_COND(lit.flags, EcsIterComponentInheritance,
+        ECS_BIT_IS_SET(flags, EcsQueryHasComponentInheritance));
 
     ecs_os_memcpy_n(ECS_CONST_CAST(ecs_id_t*, lit.ids), q->ids,
         ecs_id_t, q->field_count);

@@ -176,7 +176,7 @@ static int flecs_json_serialize_iter_result_field_values(
             ptr = ecs_field_at_w_size(it, flecs_itosize(it->sizes[f]), f, i);
         } else {
             ecs_size_t size = it->sizes[f];
-            ptr = ecs_field_w_size(it, flecs_itosize(size), f);
+            ptr = ecs_base_field_w_size(it, flecs_itosize(size), f);
 
             if (!ptr) {
                 ecs_strbuf_list_appendlit(buf, "0");
@@ -184,7 +184,8 @@ static int flecs_json_serialize_iter_result_field_values(
             }
 
             if (!it->sources[f]) {
-                ptr = ECS_ELEM(ptr, size, i);
+                ptr = ECS_ELEM(ptr, 
+                    flecs_uto(ecs_size_t, ecs_field_stride(it, f)), i);
             }
         }
 
