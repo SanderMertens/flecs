@@ -516,7 +516,7 @@ static void flecs_script_task_push_this(
     ecs_entity_t entity)
 {
     v->vars = flecs_script_vars_push(
-        v->vars, &runtime->stack, &runtime->allocator);
+        v->vars, &runtime->stack, runtime->allocator);
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, "this");
     var->value.type = ecs_id(ecs_entity_t);
     var->value.ptr = flecs_stack_alloc(&runtime->stack,
@@ -629,7 +629,8 @@ static ecs_script_task_t* flecs_script_task_alloc(
     result->script = &impl->pub;
     result->sched_index = -1;
     impl->task_refcount ++;
-    ecs_script_runtime_t *runtime = ecs_script_runtime_new();
+    ecs_script_runtime_t *runtime = flecs_script_runtime_new_shared(
+        flecs_script_runtime_get(impl->pub.world));
     result->eval_desc.runtime = runtime;
     ecs_script_eval_visitor_t *v = flecs_script_task_visitor(result);
     flecs_script_eval_visit_init(impl, v, &result->eval_desc);
@@ -1258,13 +1259,13 @@ int flecs_script_async_spawn(
     int32_t i, using_count = ecs_vec_count(&v->r->using);
     ecs_entity_t *using = ecs_vec_first(&v->r->using);
     for (i = 0; i < using_count; i ++) {
-        ecs_vec_append_t(&rt->allocator, &rt->using, ecs_entity_t)[0] =
+        ecs_vec_append_t(rt->allocator, &rt->using, ecs_entity_t)[0] =
             using[i];
     }
 
     if (v->vars) {
         tv->vars = flecs_script_vars_snapshot(
-            world, v->vars, v->instance_template, &rt->stack, &rt->allocator);
+            world, v->vars, v->instance_template, &rt->stack, rt->allocator);
     }
 
     if (owner_instance) {

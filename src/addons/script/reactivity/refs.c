@@ -187,7 +187,7 @@ static bool flecs_script_defer_resolve(
         }
     }
 
-    ecs_vec_append_t(&runtime->allocator, pending, ecs_entity_t)[0] = script;
+    ecs_vec_append_t(runtime->allocator, pending, ecs_entity_t)[0] = script;
 
     return true;
 }

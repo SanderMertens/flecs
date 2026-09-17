@@ -976,7 +976,7 @@ static int flecs_script_template_instantiate_body(
     }
 
     ecs_script_vars_t *vars = flecs_script_vars_push(
-        NULL, &v->r->stack, &v->r->allocator);
+        NULL, &v->r->stack, v->r->allocator);
     vars->parent = template->vars;
     vars->sp = ecs_vec_count(&template->vars->vars);
 
@@ -1073,7 +1073,7 @@ done_vars:
 done:
     rt->template_depth --;
 
-    ecs_vec_fini_t(&desc.runtime->allocator,
+    ecs_vec_fini_t(desc.runtime->allocator,
         &desc.runtime->with, ecs_script_with_value_t);
 
     v->r->with = prev_with;
@@ -2287,7 +2287,7 @@ static int flecs_script_visit_type_template(
 
     ecs_script_vars_t *outer_vars = v->vars;
     ecs_script_vars_t *type_vars = flecs_script_vars_push(
-        NULL, &v->r->stack, &v->r->allocator);
+        NULL, &v->r->stack, v->r->allocator);
     type_vars->world = v->world;
 
     int32_t i, var_count = ecs_vec_count(&template->vars->vars);
@@ -2560,10 +2560,10 @@ int flecs_script_eval_template(
     }
 
     ecs_vec_t outer_annot = v->r->annot;
-    ecs_vec_init_t(&v->r->allocator,
+    ecs_vec_init_t(v->r->allocator,
         &v->r->annot, ecs_script_annot_t*, 0);
     int preprocess_result = flecs_script_template_preprocess(v, template);
-    ecs_vec_fini_t(&v->r->allocator,
+    ecs_vec_fini_t(v->r->allocator,
         &v->r->annot, ecs_script_annot_t*);
     v->r->annot = outer_annot;
     if (preprocess_result) {

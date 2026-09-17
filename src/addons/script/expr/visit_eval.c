@@ -1677,7 +1677,7 @@ int flecs_expr_visit_eval(
 {
     ecs_expr_stack_t *stack = NULL, stack_local;
     if (desc && desc->runtime) {
-        stack = &desc->runtime->expr_stack;
+        stack = flecs_script_runtime_expr_stack(desc->runtime);
     }
 
     if (!stack) {

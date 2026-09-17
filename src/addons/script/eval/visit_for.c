@@ -201,7 +201,7 @@ static int flecs_script_for_enter(
 
     state->elem_size = elem_ti->size;
 
-    v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
+    v->vars = flecs_script_vars_push(v->vars, &v->r->stack, v->r->allocator);
 
     /* Reserve space for the loop variables, so that declaring them does not
      * resize the variable vector and invalidate the variables that were
