@@ -3295,7 +3295,7 @@ void TemplateInheritance_base_template_prop_default(void);
 void TemplateInheritance_base_template_prop_default_in_body(void);
 void TemplateInheritance_base_template_prop_set_at_instantiate(void);
 void TemplateInheritance_base_template_prop_w_expr_default(void);
-void TemplateInheritance_base_template_body_not_inherited(void);
+void TemplateInheritance_base_template_body(void);
 void TemplateInheritance_base_template_string_prop(void);
 void TemplateInheritance_base_template_entity_prop(void);
 void TemplateInheritance_base_struct(void);
@@ -3341,6 +3341,37 @@ void TemplateInheritance_derived_prop_override_used_in_body(void);
 void TemplateInheritance_derived_prop_override_chain(void);
 void TemplateInheritance_derived_prop_override_wrong_type_fails(void);
 void TemplateInheritance_derived_prop_override_no_default_fails(void);
+void TemplateInheritance_base_body_default_props(void);
+void TemplateInheritance_base_body_partial_props(void);
+void TemplateInheritance_base_body_and_derived_body(void);
+void TemplateInheritance_base_body_multi_level(void);
+void TemplateInheritance_base_body_multi_level_default_props(void);
+void TemplateInheritance_base_body_prop_override(void);
+void TemplateInheritance_base_body_prop_override_provided_value(void);
+void TemplateInheritance_base_body_prop_override_multi_level(void);
+void TemplateInheritance_base_body_prop_override_multi_level_provided_value(void);
+void TemplateInheritance_base_body_prop_change(void);
+void TemplateInheritance_base_body_prop_change_multi_level(void);
+void TemplateInheritance_derived_body_overrides_base_component(void);
+void TemplateInheritance_base_body_children(void);
+void TemplateInheritance_remove_derived_cleans_up_base_body(void);
+void TemplateInheritance_base_mut_in_derived_body(void);
+void TemplateInheritance_base_mut_and_derived_mut(void);
+void TemplateInheritance_base_mut_multi_level(void);
+void TemplateInheritance_base_mut_init_w_prop_override(void);
+void TemplateInheritance_base_mut_set_from_c(void);
+void TemplateInheritance_mut_shadows_base_mut(void);
+void TemplateInheritance_prop_shadows_base_mut(void);
+void TemplateInheritance_base_async_block(void);
+void TemplateInheritance_base_async_block_default_props(void);
+void TemplateInheritance_base_async_block_multi_level(void);
+void TemplateInheritance_derived_async_block_assign_base_mut(void);
+void TemplateInheritance_base_async_block_mut_change_keeps_derived_block(void);
+void TemplateInheritance_base_async_block_prop_change_restarts(void);
+void TemplateInheritance_base_async_block_remove_cancels(void);
+void TemplateInheritance_base_async_block_delete_cancels(void);
+void TemplateInheritance_base_async_block_two_instances(void);
+void TemplateInheritance_template_update_w_base(void);
 
 // Testsuite 'TemplateProp'
 void TemplateProp_setup(void);
@@ -16641,8 +16672,8 @@ bake_test_case TemplateInheritance_testcases[] = {
         TemplateInheritance_base_template_prop_w_expr_default
     },
     {
-        "base_template_body_not_inherited",
-        TemplateInheritance_base_template_body_not_inherited
+        "base_template_body",
+        TemplateInheritance_base_template_body
     },
     {
         "base_template_string_prop",
@@ -16823,6 +16854,130 @@ bake_test_case TemplateInheritance_testcases[] = {
     {
         "derived_prop_override_no_default_fails",
         TemplateInheritance_derived_prop_override_no_default_fails
+    },
+    {
+        "base_body_default_props",
+        TemplateInheritance_base_body_default_props
+    },
+    {
+        "base_body_partial_props",
+        TemplateInheritance_base_body_partial_props
+    },
+    {
+        "base_body_and_derived_body",
+        TemplateInheritance_base_body_and_derived_body
+    },
+    {
+        "base_body_multi_level",
+        TemplateInheritance_base_body_multi_level
+    },
+    {
+        "base_body_multi_level_default_props",
+        TemplateInheritance_base_body_multi_level_default_props
+    },
+    {
+        "base_body_prop_override",
+        TemplateInheritance_base_body_prop_override
+    },
+    {
+        "base_body_prop_override_provided_value",
+        TemplateInheritance_base_body_prop_override_provided_value
+    },
+    {
+        "base_body_prop_override_multi_level",
+        TemplateInheritance_base_body_prop_override_multi_level
+    },
+    {
+        "base_body_prop_override_multi_level_provided_value",
+        TemplateInheritance_base_body_prop_override_multi_level_provided_value
+    },
+    {
+        "base_body_prop_change",
+        TemplateInheritance_base_body_prop_change
+    },
+    {
+        "base_body_prop_change_multi_level",
+        TemplateInheritance_base_body_prop_change_multi_level
+    },
+    {
+        "derived_body_overrides_base_component",
+        TemplateInheritance_derived_body_overrides_base_component
+    },
+    {
+        "base_body_children",
+        TemplateInheritance_base_body_children
+    },
+    {
+        "remove_derived_cleans_up_base_body",
+        TemplateInheritance_remove_derived_cleans_up_base_body
+    },
+    {
+        "base_mut_in_derived_body",
+        TemplateInheritance_base_mut_in_derived_body
+    },
+    {
+        "base_mut_and_derived_mut",
+        TemplateInheritance_base_mut_and_derived_mut
+    },
+    {
+        "base_mut_multi_level",
+        TemplateInheritance_base_mut_multi_level
+    },
+    {
+        "base_mut_init_w_prop_override",
+        TemplateInheritance_base_mut_init_w_prop_override
+    },
+    {
+        "base_mut_set_from_c",
+        TemplateInheritance_base_mut_set_from_c
+    },
+    {
+        "mut_shadows_base_mut",
+        TemplateInheritance_mut_shadows_base_mut
+    },
+    {
+        "prop_shadows_base_mut",
+        TemplateInheritance_prop_shadows_base_mut
+    },
+    {
+        "base_async_block",
+        TemplateInheritance_base_async_block
+    },
+    {
+        "base_async_block_default_props",
+        TemplateInheritance_base_async_block_default_props
+    },
+    {
+        "base_async_block_multi_level",
+        TemplateInheritance_base_async_block_multi_level
+    },
+    {
+        "derived_async_block_assign_base_mut",
+        TemplateInheritance_derived_async_block_assign_base_mut
+    },
+    {
+        "base_async_block_mut_change_keeps_derived_block",
+        TemplateInheritance_base_async_block_mut_change_keeps_derived_block
+    },
+    {
+        "base_async_block_prop_change_restarts",
+        TemplateInheritance_base_async_block_prop_change_restarts
+    },
+    {
+        "base_async_block_remove_cancels",
+        TemplateInheritance_base_async_block_remove_cancels
+    },
+    {
+        "base_async_block_delete_cancels",
+        TemplateInheritance_base_async_block_delete_cancels
+    },
+    {
+        "base_async_block_two_instances",
+        TemplateInheritance_base_async_block_two_instances
+    },
+    {
+        "template_update_w_base",
+        TemplateInheritance_template_update_w_base
     }
 };
 
@@ -18600,7 +18755,7 @@ static bake_test_suite suites[] = {
         "TemplateInheritance",
         TemplateInheritance_setup,
         NULL,
-        53,
+        84,
         TemplateInheritance_testcases,
         1,
         TemplateInheritance_params

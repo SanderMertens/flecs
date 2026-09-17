@@ -84,6 +84,8 @@ struct ecs_script_template_t {
     int32_t component_count;
     int32_t for_count;
     int32_t inherited_count;
+    int32_t inherited_mut_count;
+    ecs_entity_t base;
     ecs_entity_t parent_type;
     int32_t parent_sp;
 
