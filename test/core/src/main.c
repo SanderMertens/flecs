@@ -968,6 +968,8 @@ void NonFragmentingChildOf_defer_new_w_parent_w_name(void);
 void NonFragmentingChildOf_defer_new_w_parent_w_same_name_twice(void);
 void NonFragmentingChildOf_new_w_parent_from_stage(void);
 void NonFragmentingChildOf_new_w_parent_w_name_from_stage(void);
+void NonFragmentingChildOf_new_w_parent_childof_on_add_observer(void);
+void NonFragmentingChildOf_new_w_parent_childof_up_observer(void);
 void NonFragmentingChildOf_new_w_parent_readonly_new_table(void);
 void NonFragmentingChildOf_new_w_parent_w_name_readonly_new_table(void);
 void NonFragmentingChildOf_delete_named_child_not_last_row(void);
@@ -7330,6 +7332,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "new_w_parent_w_name_from_stage",
         NonFragmentingChildOf_new_w_parent_w_name_from_stage
+    },
+    {
+        "new_w_parent_childof_on_add_observer",
+        NonFragmentingChildOf_new_w_parent_childof_on_add_observer
+    },
+    {
+        "new_w_parent_childof_up_observer",
+        NonFragmentingChildOf_new_w_parent_childof_up_observer
     },
     {
         "new_w_parent_readonly_new_table",
@@ -17602,7 +17612,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        291,
+        293,
         NonFragmentingChildOf_testcases
     },
     {
