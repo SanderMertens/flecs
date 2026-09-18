@@ -10378,6 +10378,12 @@ ecs_entity_t ecs_new_w_parent(
 
     flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
 
+    /* Notify OnSet for the Parent component, which is forwarded as an OnAdd
+     * event for the (ChildOf, parent) pair. Without this, observers for the
+     * pair don't run for children created with this operation. */
+    flecs_notify_on_set(
+        world, table, row, ecs_id(EcsParent), true, parent_ptr);
+
     flecs_commands_end(world, stage);
     return entity;
 }

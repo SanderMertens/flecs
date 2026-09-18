@@ -7842,3 +7842,58 @@ void NonFragmentingChildOf_delete_parents_w_named_children(void) {
 
     ecs_fini(world);
 }
+
+static int new_w_parent_on_add_invoked = 0;
+
+static void NewWParentOnAdd(ecs_iter_t *it) {
+    new_w_parent_on_add_invoked += it->count;
+}
+
+void NonFragmentingChildOf_new_w_parent_childof_on_add_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_pair(EcsChildOf, EcsWildcard) }},
+        .events = { EcsOnAdd },
+        .callback = NewWParentOnAdd
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+
+    new_w_parent_on_add_invoked = 0;
+    ecs_entity_t child = ecs_new_w_parent(world, parent, NULL);
+    test_int(new_w_parent_on_add_invoked, 1);
+    test_uint(ecs_get_parent(world, child), parent);
+
+    new_w_parent_on_add_invoked = 0;
+    ecs_entity_t named = ecs_new_w_parent(world, parent, "child");
+    test_int(new_w_parent_on_add_invoked, 1);
+    test_uint(ecs_get_parent(world, named), parent);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_new_w_parent_childof_up_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsChildOf, EcsWildcard) },
+            { .id = ecs_id(Position), .src.id = EcsUp, .inout = EcsIn }
+        },
+        .events = { EcsOnAdd },
+        .callback = NewWParentOnAdd
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_set(world, parent, Position, {10, 20});
+
+    new_w_parent_on_add_invoked = 0;
+    ecs_entity_t child = ecs_new_w_parent(world, parent, NULL);
+    test_int(new_w_parent_on_add_invoked, 1);
+    test_uint(ecs_get_parent(world, child), parent);
+
+    ecs_fini(world);
+}
