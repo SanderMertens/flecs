@@ -119,6 +119,9 @@ struct ecs_script_impl_t {
     ecs_map_t entity_index;
     int32_t entity_index_visit;
     bool entity_index_valid;
+    ecs_vec_t line_index; /* vec<int32_t> with the offset of each line start */
+    const char *line_index_code; /* Code the line index was built for */
+    int32_t line_index_len; /* Length of the code the line index was built for */
     int32_t input_count;
     uint64_t pending_inputs;
     bool evaluating;
@@ -223,7 +226,7 @@ const char* flecs_script_stmt(
     ecs_parser_t *parser,
     const char *pos);
 
-void flecs_script_entity_index_fini(
+void flecs_script_edit_cache_fini(
     ecs_script_impl_t *impl);
 
 /* Write the shortest decimal string that parses back to the same value. */
