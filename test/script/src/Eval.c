@@ -3,6 +3,21 @@
 
 static bool ir_enabled = false;
 static ecs_script_eval_desc_t ir_desc = {0};
+static int eval_prefab_warn_count = 0;
+
+static void eval_prefab_warn_callback(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    (void)file;
+    (void)line;
+
+    if (level == -2 && strstr(msg, "Prefab")) {
+        eval_prefab_warn_count ++;
+    }
+}
 
 void Eval_setup(void) {
     const char *ir_param = test_param("ir");
@@ -2000,6 +2015,30 @@ void Eval_inherit_w_colon_w_scope(void) {
     test_assert(ecs_has_pair(world, child, EcsChildOf, foo));
 
     ecs_fini(world);
+}
+
+void Eval_inherit_w_colon_prefab_warns(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = eval_prefab_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    eval_prefab_warn_count = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo : Prefab {}";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(eval_prefab_warn_count, 1);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
 }
 
 void Eval_assign_component_w_value(void) {

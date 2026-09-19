@@ -110,6 +110,7 @@
                 "inherit_newline",
                 "inherit_w_colon",
                 "inherit_w_colon_w_scope",
+                "inherit_w_colon_prefab_warns",
                 "assign_component_w_value",
                 "assign_tag_in_assign_scope",
                 "assign_tag_in_assign_scope_same_line",
