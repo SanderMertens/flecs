@@ -4109,3 +4109,69 @@ void Edit_set_positional_enum_map(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Edit_set_10k_statements(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    int32_t i;
+    for (i = 0; i < 10000; i ++) {
+        ecs_strbuf_append(&buf, "e%d {\n  Position: {%d, 0}\n}\n", i, i);
+    }
+
+    char *expr = ecs_strbuf_get(&buf);
+
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
+
+    ecs_entity_t *entities = ecs_os_malloc_n(ecs_entity_t, 10000);
+    for (i = 0; i < 10000; i ++) {
+        char name[32];
+        ecs_os_snprintf(name, sizeof(name), "e%d", i);
+        entities[i] = ecs_lookup(world, name);
+        test_assert(entities[i] != 0);
+    }
+
+    ecs_time_t t = {0};
+    ecs_time_measure(&t);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    for (i = 0; i < 10000; i ++) {
+        ecs_script_source_t src = {0};
+        test_assert(ecs_script_entity_source(script, entities[i], &src));
+        test_int(src.line, (i * 3) + 1);
+        Position v = {(float)i, 1};
+        test_int(0, ecs_script_edits_set(edits, entities[i], p, &v));
+    }
+
+    test_int(10000, ecs_script_edits_count(edits));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_assert(result != NULL);
+
+    double elapsed = ecs_time_measure(&t);
+    test_assert(elapsed < 0.25);
+
+    test_assert(strstr(result, "e9999 {\n  Position: {9999, 1}\n}") != NULL);
+    test_assert(strstr(result, "e0 {\n  Position: {0, 1}\n}") != NULL);
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_os_free(entities);
+    ecs_os_free(expr);
+    ecs_script_free(script);
+    ecs_fini(world);
+}

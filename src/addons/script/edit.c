@@ -25,11 +25,37 @@ typedef struct flecs_script_edit_t {
     char *text;
 } flecs_script_edit_t;
 
+/* Key that identifies the single edit recorded for a component of an entity. */
+typedef struct flecs_script_edit_key_t {
+    ecs_entity_t entity;
+    ecs_id_t component;
+} flecs_script_edit_key_t;
+
 struct ecs_script_edits_t {
     ecs_script_t *script;
     ecs_vec_t edits;
+    ecs_hashmap_t index; /* hashmap<flecs_script_edit_key_t, int32_t> with the
+                          * index of the edit for a key, incremented by one */
+    ecs_vec_t scopes; /* vec<ecs_entity_t> with the scopes of the using
+                       * statements, resolved once per edit session */
+    ecs_map_t id_strs; /* map<ecs_id_t, char*> with the identifier written for
+                        * a component, resolved once per edit session */
+    bool scopes_init;
     int32_t seq;
 };
+
+static uint64_t flecs_script_edit_key_hash(
+    const void *ptr)
+{
+    return flecs_hash(ptr, ECS_SIZEOF(flecs_script_edit_key_t));
+}
+
+static int flecs_script_edit_key_compare(
+    const void *first,
+    const void *second)
+{
+    return ecs_os_memcmp(first, second, ECS_SIZEOF(flecs_script_edit_key_t));
+}
 
 typedef enum flecs_script_value_style_t {
     FlecsScriptValueOther,
@@ -162,13 +188,84 @@ static ecs_script_entity_t* flecs_script_edit_find(
     return ecs_map_get_ptr(&impl->entity_index, entity);
 }
 
-void flecs_script_entity_index_fini(
+void flecs_script_edit_cache_fini(
     ecs_script_impl_t *impl)
 {
     if (impl->entity_index_valid) {
         ecs_map_fini(&impl->entity_index);
         impl->entity_index_valid = false;
     }
+
+    if (impl->line_index_code) {
+        ecs_vec_fini_t(NULL, &impl->line_index, int32_t);
+        impl->line_index_code = NULL;
+    }
+}
+
+/* Index the start offset of every line of the script source, so the line and
+ * column of a position can be found without scanning the source again. */
+static void flecs_script_edit_line_index(
+    ecs_script_impl_t *impl)
+{
+    const char *code = impl->pub.code;
+    if (impl->line_index_code == code) {
+        return;
+    }
+
+    if (impl->line_index_code) {
+        ecs_vec_fini_t(NULL, &impl->line_index, int32_t);
+    }
+
+    ecs_vec_init_t(NULL, &impl->line_index, int32_t, 0);
+    ecs_vec_append_t(NULL, &impl->line_index, int32_t)[0] = 0;
+
+    const char *ptr;
+    for (ptr = code; ptr[0]; ptr ++) {
+        if (ptr[0] == '\n') {
+            ecs_vec_append_t(NULL, &impl->line_index, int32_t)[0] =
+                flecs_ito(int32_t, (ptr + 1) - code);
+        }
+    }
+
+    impl->line_index_code = code;
+    impl->line_index_len = flecs_ito(int32_t, ptr - code);
+}
+
+static void flecs_script_edit_line_col(
+    ecs_script_impl_t *impl,
+    const char *pos,
+    int32_t *line,
+    int32_t *column)
+{
+    const char *code = impl->pub.code;
+    line[0] = 0;
+    column[0] = 0;
+
+    if (!code || !pos || pos < code) {
+        return;
+    }
+
+    flecs_script_edit_line_index(impl);
+
+    int32_t offset = flecs_ito(int32_t, pos - code);
+    if (offset > impl->line_index_len) {
+        return;
+    }
+
+    int32_t *starts = ecs_vec_first(&impl->line_index);
+    int32_t low = 0, high = ecs_vec_count(&impl->line_index) - 1;
+
+    while (low < high) {
+        int32_t mid = low + ((high - low + 1) / 2);
+        if (starts[mid] <= offset) {
+            low = mid;
+        } else {
+            high = mid - 1;
+        }
+    }
+
+    line[0] = low + 1;
+    column[0] = (offset - starts[low]) + 1;
 }
 
 typedef struct flecs_script_edit_symbol_t {
@@ -335,7 +432,7 @@ bool ecs_script_entity_source(
         source->length = flecs_ito(int32_t, node->node.end - node->node.pos);
         source->has_scope = node->scope != NULL && node->scope->open != NULL;
         source->template_ = template_entity;
-        flecs_script_pos_to_line_col(script->code, node->node.pos,
+        flecs_script_edit_line_col(impl, node->node.pos,
             &source->line, &source->column);
     }
 
@@ -858,6 +955,10 @@ ecs_script_edits_t* ecs_script_edits_new(
     ecs_script_edits_t *result = ecs_os_calloc_t(ecs_script_edits_t);
     result->script = script;
     ecs_vec_init_t(NULL, &result->edits, flecs_script_edit_t, 0);
+    ecs_vec_init_t(NULL, &result->scopes, ecs_entity_t, 0);
+    ecs_map_init(&result->id_strs, NULL);
+    flecs_hashmap_init(&result->index, flecs_script_edit_key_t, int32_t,
+        flecs_script_edit_key_hash, flecs_script_edit_key_compare, NULL);
     return result;
 error:
     return NULL;
@@ -876,6 +977,14 @@ void ecs_script_edits_free(
         ecs_os_free(elems[i].text);
     }
 
+    ecs_map_iter_t mit = ecs_map_iter(&edits->id_strs);
+    while (ecs_map_next(&mit)) {
+        ecs_os_free(ecs_map_ptr(&mit));
+    }
+
+    ecs_map_fini(&edits->id_strs);
+    flecs_hashmap_fini(&edits->index);
+    ecs_vec_fini_t(NULL, &edits->scopes, ecs_entity_t);
     ecs_vec_fini_t(NULL, &edits->edits, flecs_script_edit_t);
     ecs_os_free(edits);
 }
@@ -889,18 +998,20 @@ static void flecs_script_edit_add(
     int32_t length,
     char *text)
 {
-    flecs_script_edit_t *elems = ecs_vec_first(&edits->edits);
-    int32_t i, count = ecs_vec_count(&edits->edits);
+    flecs_script_edit_key_t key = { entity, component };
+    flecs_hashmap_result_t slot = flecs_hashmap_ensure(
+        &edits->index, &key, int32_t);
+    int32_t *index = slot.value;
 
-    for (i = 0; i < count; i ++) {
-        if (elems[i].entity == entity && elems[i].component == component) {
-            ecs_os_free(elems[i].text);
-            elems[i].kind = kind;
-            elems[i].offset = offset;
-            elems[i].length = length;
-            elems[i].text = text;
-            return;
-        }
+    if (index[0]) {
+        flecs_script_edit_t *elem = ecs_vec_get_t(
+            &edits->edits, flecs_script_edit_t, index[0] - 1);
+        ecs_os_free(elem->text);
+        elem->kind = kind;
+        elem->offset = offset;
+        elem->length = length;
+        elem->text = text;
+        return;
     }
 
     flecs_script_edit_t *elem = ecs_vec_append_t(
@@ -912,6 +1023,7 @@ static void flecs_script_edit_add(
     elem->length = length;
     elem->seq = edits->seq ++;
     elem->text = text;
+    index[0] = ecs_vec_count(&edits->edits);
 }
 
 static ecs_script_entity_t* flecs_script_edit_entity(
@@ -932,6 +1044,29 @@ static ecs_script_entity_t* flecs_script_edit_entity(
     return node;
 }
 
+/* Resolve the identifier that is written for a component. The identifier and
+ * the scopes it is resolved against are cached for the edit session. */
+static const char* flecs_script_edit_component_str(
+    ecs_script_edits_t *edits,
+    ecs_id_t component)
+{
+    ecs_map_val_t *cached = ecs_map_get(&edits->id_strs, component);
+    if (cached) {
+        return (const char*)(uintptr_t)cached[0];
+    }
+
+    ecs_script_impl_t *impl = flecs_script_impl(edits->script);
+    if (!edits->scopes_init) {
+        flecs_script_edit_using_scopes(impl, &edits->scopes);
+        edits->scopes_init = true;
+    }
+
+    char *result = flecs_script_edit_id_str(impl, &edits->scopes, component);
+    ecs_map_insert_ptr(&edits->id_strs, component, result);
+
+    return result;
+}
+
 static int flecs_script_edit_set_text(
     ecs_script_edits_t *edits,
     ecs_entity_t entity,
@@ -943,7 +1078,6 @@ static int flecs_script_edit_set_text(
     ecs_check(component != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_script_t *script = edits->script;
-    ecs_script_impl_t *impl = flecs_script_impl(script);
     const char *code = script->code;
 
     ecs_script_entity_t *node = flecs_script_edit_entity(edits, entity);
@@ -991,11 +1125,7 @@ static int flecs_script_edit_set_text(
         }
     }
 
-    ecs_vec_t scopes;
-    ecs_vec_init_t(NULL, &scopes, ecs_entity_t, 0);
-    flecs_script_edit_using_scopes(impl, &scopes);
-    char *id_str = flecs_script_edit_id_str(impl, &scopes, component);
-    ecs_vec_fini_t(NULL, &scopes, ecs_entity_t);
+    const char *id_str = flecs_script_edit_component_str(edits, component);
 
     if (!id_str) {
         char *idstr = ecs_id_str(script->world, component);
@@ -1014,7 +1144,6 @@ static int flecs_script_edit_set_text(
     }
 
     if (!value_str) {
-        ecs_os_free(id_str);
         return -1;
     }
 
@@ -1029,7 +1158,6 @@ static int flecs_script_edit_set_text(
             flecs_ito(int32_t, stmt->end - stmt->pos),
             ecs_strbuf_get(&tag_buf));
 
-        ecs_os_free(id_str);
         ecs_os_free(value_str);
 
         return 0;
@@ -1105,7 +1233,6 @@ static int flecs_script_edit_set_text(
         offset = flecs_ito(int32_t, node->node.end - code);
     }
 
-    ecs_os_free(id_str);
     ecs_os_free(value_str);
     ecs_os_free(indent);
     ecs_os_free(child_indent);
@@ -1211,18 +1338,28 @@ int ecs_script_edits_clear(
 {
     ecs_check(edits != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    flecs_script_edit_t *elems = ecs_vec_first(&edits->edits);
-    int32_t i, count = ecs_vec_count(&edits->edits);
-
-    for (i = 0; i < count; i ++) {
-        if (elems[i].entity == entity && elems[i].component == component) {
-            ecs_os_free(elems[i].text);
-            ecs_vec_remove_t(&edits->edits, flecs_script_edit_t, i);
-            return 0;
-        }
+    flecs_script_edit_key_t key = { entity, component };
+    int32_t *index = flecs_hashmap_get(&edits->index, &key, int32_t);
+    if (!index || !index[0]) {
+        return -1;
     }
 
-    return -1;
+    int32_t i = index[0] - 1;
+    flecs_script_edit_t *elems = ecs_vec_first(&edits->edits);
+    ecs_os_free(elems[i].text);
+    flecs_hashmap_remove_w_hash(&edits->index, &key, int32_t,
+        flecs_script_edit_key_hash(&key));
+    ecs_vec_remove_t(&edits->edits, flecs_script_edit_t, i);
+
+    if (i < ecs_vec_count(&edits->edits)) {
+        flecs_script_edit_key_t moved = { elems[i].entity, elems[i].component };
+        int32_t *moved_index = flecs_hashmap_get(
+            &edits->index, &moved, int32_t);
+        ecs_assert(moved_index != NULL, ECS_INTERNAL_ERROR, NULL);
+        moved_index[0] = i + 1;
+    }
+
+    return 0;
 error:
     return -1;
 }

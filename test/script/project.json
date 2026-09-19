@@ -3835,7 +3835,8 @@
                 "clear_unknown_edit",
                 "set_after_clear",
                 "count_edits",
-                "set_for_recreated_entity_after_clear"
+                "set_for_recreated_entity_after_clear",
+                "set_10k_statements"
             ]
         }, {
             "id": "EditTemplate",
