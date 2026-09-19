@@ -773,7 +773,8 @@
                 "mut_assign_int_to_string_fails",
                 "mut_assign_struct_to_int_fails",
                 "mut_assign_missing_expr_fails",
-                "struct_wo_members"
+                "struct_wo_members",
+                "eval_10k_statements"
             ]
         }, {
             "id": "Collection",

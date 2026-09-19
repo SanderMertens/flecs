@@ -767,6 +767,7 @@ void Eval_mut_assign_int_to_string_fails(void);
 void Eval_mut_assign_struct_to_int_fails(void);
 void Eval_mut_assign_missing_expr_fails(void);
 void Eval_struct_wo_members(void);
+void Eval_eval_10k_statements(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -6782,6 +6783,10 @@ bake_test_case Eval_testcases[] = {
     {
         "struct_wo_members",
         Eval_struct_wo_members
+    },
+    {
+        "eval_10k_statements",
+        Eval_eval_10k_statements
     }
 };
 
@@ -18614,7 +18619,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        757,
+        758,
         Eval_testcases,
         1,
         Eval_params

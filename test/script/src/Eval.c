@@ -24468,3 +24468,65 @@ void Eval_struct_wo_members(void) {
 
     ecs_fini(world);
 }
+
+void Eval_eval_10k_statements(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    int32_t i;
+    for (i = 0; i < 10000; i ++) {
+        ecs_strbuf_append(&buf,
+            "e%d {\n  Position: {%d, 0}\n  Velocity: {1, 2}\n}\n", i, i);
+    }
+
+    char *expr = ecs_strbuf_get(&buf);
+
+    ecs_time_t t = {0};
+    ecs_time_measure(&t);
+
+    ecs_entity_t script = ecs_script(world, {
+        .code = expr,
+        .ir = ir_enabled
+    });
+
+    test_assert(script != 0);
+
+    double elapsed = ecs_time_measure(&t);
+    test_assert(elapsed < 1.0);
+
+    ecs_entity_t e = ecs_lookup(world, "e9999");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 9999);
+    test_int(p->y, 0);
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
