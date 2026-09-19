@@ -45,6 +45,13 @@ int script_update(flecs::entity_t script, const char *code,
     return ecs_script_update(world_, script, instance, code);
 }
 
+/** Reload a script from new code, or from its file when code is nullptr.
+ * @see ecs_script_reload()
+ */
+int script_reload(flecs::entity_t script, const char *code = nullptr) const {
+    return ecs_script_reload(world_, script, code);
+}
+
 function_builder function(const char *name) const {
     return function_builder(world_, name);
 }
