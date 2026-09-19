@@ -1515,6 +1515,11 @@ identifier_colon: {
         }
 
         Scope(entity->scope,
+            if (!ecs_os_strcmp(Token(2), "Prefab")) {
+                Warning("'%s : Prefab' creates a live instance, not a "
+                    "prefab; use 'prefab %s' instead", Token(0), Token(0));
+            }
+
             flecs_script_insert_pair_tag(parser, "IsA", Token(2));
 
             LookAhead_1(',', {

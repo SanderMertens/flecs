@@ -103,6 +103,7 @@ void Eval_inherit(void);
 void Eval_inherit_newline(void);
 void Eval_inherit_w_colon(void);
 void Eval_inherit_w_colon_w_scope(void);
+void Eval_inherit_w_colon_prefab_warns(void);
 void Eval_assign_component_w_value(void);
 void Eval_assign_tag_in_assign_scope(void);
 void Eval_assign_tag_in_assign_scope_same_line(void);
@@ -4127,6 +4128,10 @@ bake_test_case Eval_testcases[] = {
     {
         "inherit_w_colon_w_scope",
         Eval_inherit_w_colon_w_scope
+    },
+    {
+        "inherit_w_colon_prefab_warns",
+        Eval_inherit_w_colon_prefab_warns
     },
     {
         "assign_component_w_value",
@@ -18619,7 +18624,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        758,
+        759,
         Eval_testcases,
         1,
         Eval_params
