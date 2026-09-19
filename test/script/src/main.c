@@ -3738,6 +3738,21 @@ void EditTemplate_clear_delete_body_entity(void);
 void EditTemplate_clear_set_body_entity(void);
 void EditTemplate_apply_update_delete_body_entity_recorded_before_delete(void);
 
+// Testsuite 'Reload'
+void Reload_setup(void);
+void Reload_added_entity(void);
+void Reload_changed_entity(void);
+void Reload_removed_entity(void);
+void Reload_removed_component(void);
+void Reload_parse_error_keeps_world(void);
+void Reload_parse_error_then_reload(void);
+void Reload_from_file(void);
+void Reload_from_file_removed_entity(void);
+void Reload_from_file_parse_error_keeps_world(void);
+void Reload_without_filename(void);
+void Reload_not_a_script(void);
+void Reload_keeps_entities_outside_script(void);
+
 bake_test_case Eval_testcases[] = {
     {
         "2_components_same_line_w_semicolon",
@@ -18396,143 +18411,167 @@ bake_test_case EditTemplate_testcases[] = {
     }
 };
 
+bake_test_case Reload_testcases[] = {
+    {
+        "added_entity",
+        Reload_added_entity
+    },
+    {
+        "changed_entity",
+        Reload_changed_entity
+    },
+    {
+        "removed_entity",
+        Reload_removed_entity
+    },
+    {
+        "removed_component",
+        Reload_removed_component
+    },
+    {
+        "parse_error_keeps_world",
+        Reload_parse_error_keeps_world
+    },
+    {
+        "parse_error_then_reload",
+        Reload_parse_error_then_reload
+    },
+    {
+        "from_file",
+        Reload_from_file
+    },
+    {
+        "from_file_removed_entity",
+        Reload_from_file_removed_entity
+    },
+    {
+        "from_file_parse_error_keeps_world",
+        Reload_from_file_parse_error_keeps_world
+    },
+    {
+        "without_filename",
+        Reload_without_filename
+    },
+    {
+        "not_a_script",
+        Reload_not_a_script
+    },
+    {
+        "keeps_entities_outside_script",
+        Reload_keeps_entities_outside_script
+    }
+};
+
 const char* Eval_ir_param[] = {"disabled", "enabled"};
 bake_test_param Eval_params[] = {
     {"ir", (char**)Eval_ir_param, 2}
 };
-
 const char* Collection_ir_param[] = {"disabled", "enabled"};
 bake_test_param Collection_params[] = {
     {"ir", (char**)Collection_ir_param, 2}
 };
-
 const char* Await_ir_param[] = {"disabled", "enabled"};
 bake_test_param Await_params[] = {
     {"ir", (char**)Await_ir_param, 2}
 };
-
 const char* AsyncBlock_ir_param[] = {"disabled", "enabled"};
 bake_test_param AsyncBlock_params[] = {
     {"ir", (char**)AsyncBlock_ir_param, 2}
 };
-
 const char* Event_ir_param[] = {"disabled", "enabled"};
 bake_test_param Event_params[] = {
     {"ir", (char**)Event_ir_param, 2}
 };
-
 const char* TryCatch_ir_param[] = {"disabled", "enabled"};
 bake_test_param TryCatch_params[] = {
     {"ir", (char**)TryCatch_ir_param, 2}
 };
-
 const char* Function_ir_param[] = {"disabled", "enabled"};
 bake_test_param Function_params[] = {
     {"ir", (char**)Function_ir_param, 2}
 };
-
 const char* Template_ir_param[] = {"disabled", "enabled"};
 bake_test_param Template_params[] = {
     {"ir", (char**)Template_ir_param, 2}
 };
-
 const char* Mut_ir_param[] = {"disabled", "enabled"};
 bake_test_param Mut_params[] = {
     {"ir", (char**)Mut_ir_param, 2}
 };
-
 const char* Error_ir_param[] = {"disabled", "enabled"};
 bake_test_param Error_params[] = {
     {"ir", (char**)Error_ir_param, 2}
 };
-
 const char* Format_folding_param[] = {"enabled", "disabled"};
 bake_test_param Format_params[] = {
     {"folding", (char**)Format_folding_param, 2}
 };
-
 const char* Expr_folding_param[] = {"enabled", "disabled"};
 const char* Expr_ir_param[] = {"disabled", "enabled"};
 bake_test_param Expr_params[] = {
     {"folding", (char**)Expr_folding_param, 2},
     {"ir", (char**)Expr_ir_param, 2}
 };
-
 const char* ExprAst_ir_param[] = {"disabled", "enabled"};
 bake_test_param ExprAst_params[] = {
     {"ir", (char**)ExprAst_ir_param, 2}
 };
-
 const char* Deserialize_folding_param[] = {"enabled", "disabled"};
 bake_test_param Deserialize_params[] = {
     {"folding", (char**)Deserialize_folding_param, 2}
 };
-
 const char* Include_ir_param[] = {"disabled", "enabled"};
 bake_test_param Include_params[] = {
     {"ir", (char**)Include_ir_param, 2}
 };
-
 const char* Fuzzing_ir_param[] = {"disabled", "enabled"};
 bake_test_param Fuzzing_params[] = {
     {"ir", (char**)Fuzzing_ir_param, 2}
 };
-
 const char* Refs_ir_param[] = {"disabled", "enabled"};
 bake_test_param Refs_params[] = {
     {"ir", (char**)Refs_ir_param, 2}
 };
-
 const char* Reactivity_ir_param[] = {"disabled", "enabled"};
 bake_test_param Reactivity_params[] = {
     {"ir", (char**)Reactivity_ir_param, 2}
 };
-
 const char* ConstVar_ir_param[] = {"disabled", "enabled"};
 bake_test_param ConstVar_params[] = {
     {"ir", (char**)ConstVar_ir_param, 2}
 };
-
 const char* SkipUnknown_ir_param[] = {"disabled", "enabled"};
 bake_test_param SkipUnknown_params[] = {
     {"ir", (char**)SkipUnknown_ir_param, 2}
 };
-
 const char* StructInheritance_ir_param[] = {"disabled", "enabled"};
 bake_test_param StructInheritance_params[] = {
     {"ir", (char**)StructInheritance_ir_param, 2}
 };
-
 const char* TemplateParent_ir_param[] = {"disabled", "enabled"};
 bake_test_param TemplateParent_params[] = {
     {"ir", (char**)TemplateParent_ir_param, 2}
 };
-
 const char* TemplateInheritance_ir_param[] = {"disabled", "enabled"};
 bake_test_param TemplateInheritance_params[] = {
     {"ir", (char**)TemplateInheritance_ir_param, 2}
 };
-
 const char* TemplateProp_ir_param[] = {"disabled", "enabled"};
 bake_test_param TemplateProp_params[] = {
     {"ir", (char**)TemplateProp_ir_param, 2}
 };
-
 const char* TemplateVectorProp_ir_param[] = {"disabled", "enabled"};
 bake_test_param TemplateVectorProp_params[] = {
     {"ir", (char**)TemplateVectorProp_ir_param, 2}
 };
-
 const char* Scenario_ir_param[] = {"disabled", "enabled"};
 bake_test_param Scenario_params[] = {
     {"ir", (char**)Scenario_ir_param, 2}
 };
-
 const char* Edit_ir_param[] = {"disabled", "enabled"};
 bake_test_param Edit_params[] = {
     {"ir", (char**)Edit_ir_param, 2}
 };
-
 const char* EditTemplate_ir_param[] = {"disabled", "enabled"};
 bake_test_param EditTemplate_params[] = {
     {"ir", (char**)EditTemplate_ir_param, 2}
@@ -18804,9 +18843,16 @@ static bake_test_suite suites[] = {
         EditTemplate_testcases,
         1,
         EditTemplate_params
+    },
+    {
+        "Reload",
+        Reload_setup,
+        NULL,
+        12,
+        Reload_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 30);
+    return bake_test_run("script", argc, argv, suites, 31);
 }

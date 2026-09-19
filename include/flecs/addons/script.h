@@ -830,6 +830,30 @@ int ecs_script_update(
     ecs_entity_t instance,
     const char *code);
 
+/** Reload script from new code or from the file it was loaded from.
+ * This operation re-runs a managed script and reconciles the entities it owns:
+ * entities that the new version no longer defines are deleted, entities that
+ * changed are updated and entities that were added are created.
+ *
+ * When code is NULL the script is reloaded from EcsScript::filename, which is
+ * set when the script is created with ecs_script_desc_t::filename. When the
+ * script has no filename the operation fails.
+ *
+ * Unlike ecs_script_update(), the new code is parsed before the entities of the
+ * old version are deleted. When parsing fails the world is left untouched and
+ * the parser error is stored in EcsScript::error.
+ *
+ * @param world The world.
+ * @param script The script entity.
+ * @param code The script code, or NULL to reload from file.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_reload(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    const char *code);
+
 /** Clear all entities associated with script.
  *
  * @param world The world.

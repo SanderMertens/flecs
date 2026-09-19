@@ -3883,6 +3883,23 @@
                 "clear_set_body_entity",
                 "apply_update_delete_body_entity_recorded_before_delete"
             ]
+        }, {
+            "id": "Reload",
+            "setup": true,
+            "testcases": [
+                "added_entity",
+                "changed_entity",
+                "removed_entity",
+                "removed_component",
+                "parse_error_keeps_world",
+                "parse_error_then_reload",
+                "from_file",
+                "from_file_removed_entity",
+                "from_file_parse_error_keeps_world",
+                "without_filename",
+                "not_a_script",
+                "keeps_entities_outside_script"
+            ]
         }]
     }
 }

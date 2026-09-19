@@ -70013,11 +70013,45 @@ error:
     return;
 }
 
+/* Parse new code for a script before the old version is cleared. When parsing
+ * fails the error is stored on the script and the world is left untouched. */
+static ecs_script_t* flecs_script_reload_parse(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *code)
+{
+    const char *name = ecs_get_name(world, e);
+    const EcsScript *s = ecs_get(world, e, EcsScript);
+    ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_eval_desc_t parse_desc = {
+        .skip_unknown = s->skip_unknown,
+        .ir = s->ir
+    };
+
+    ecs_script_t *parsed = ecs_script_parse(
+        world, name, code, &parse_desc, &parse_result);
+    if (!parsed) {
+        EcsScript *script = ecs_ensure(world, e, EcsScript);
+        ecs_os_free(script->error);
+        script->error = parse_result.error;
+        if (!script->error) {
+            script->error = ecs_os_strdup("failed to parse script");
+        }
+
+        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", script->error);
+    }
+
+    return parsed;
+}
+
 static int flecs_script_update_parse(
     ecs_world_t *world,
     ecs_entity_t e,
     ecs_entity_t instance,
-    const char *code)
+    const char *code,
+    ecs_script_t *parsed)
 {
     const char *name = ecs_get_name(world, e);
     EcsScript *s = ecs_ensure(world, e, EcsScript);
@@ -70032,6 +70066,9 @@ static int flecs_script_update_parse(
             "update parent script instead (tried to update '%s')",
                 template_name);
         ecs_os_free(template_name);
+        if (parsed) {
+            ecs_script_free(parsed);
+        }
         return -1;
     }
 
@@ -70058,11 +70095,17 @@ static int flecs_script_update_parse(
     ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
     flecs_script_runtime_error_reset(runtime);
 
-    ecs_script_eval_desc_t parse_desc = {
-        .skip_unknown = s->skip_unknown,
-        .ir = s->ir
-    };
-    s->script = ecs_script_parse(world, name, code, &parse_desc, &eval_result);
+    if (parsed) {
+        s->script = parsed;
+    } else {
+        ecs_script_eval_desc_t parse_desc = {
+            .skip_unknown = s->skip_unknown,
+            .ir = s->ir
+        };
+        s->script = ecs_script_parse(
+            world, name, code, &parse_desc, &eval_result);
+    }
+
     if (s->script != NULL) {
         flecs_script_impl(s->script)->entity = e;
     } else {
@@ -70149,12 +70192,13 @@ static void flecs_script_update_observers(
     ecs_vec_clear(&flecs_script_impl(parsed)->run_refs);
 }
 
-int flecs_script_update(
+static int flecs_script_update_impl(
     ecs_world_t *world,
     ecs_entity_t e,
     ecs_entity_t instance,
     const char *code,
-    ecs_script_runtime_t *eval_runtime)
+    ecs_script_runtime_t *eval_runtime,
+    bool preparse)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(code != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -70169,8 +70213,19 @@ int flecs_script_update(
         ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
+    /* Parse the new version before anything in the world is deleted, so a
+     * script that does not parse leaves the previous version in place. */
+    ecs_script_t *preparsed = NULL;
+    if (preparse) {
+        preparsed = flecs_script_reload_parse(world, e, code);
+        if (!preparsed) {
+            result = -1;
+            goto done;
+        }
+    }
+
     const char *name = ecs_get_name(world, e);
-    if (flecs_script_update_parse(world, e, instance, code)) {
+    if (flecs_script_update_parse(world, e, instance, code, preparsed)) {
         result = -1;
         goto done;
     }
@@ -70227,6 +70282,17 @@ done:
     return result;
 }
 
+int flecs_script_update(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t instance,
+    const char *code,
+    ecs_script_runtime_t *eval_runtime)
+{
+    return flecs_script_update_impl(
+        world, e, instance, code, eval_runtime, false);
+}
+
 int ecs_script_update(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -70234,6 +70300,42 @@ int ecs_script_update(
     const char *code)
 {
     return flecs_script_update(world, e, instance, code, NULL);
+}
+
+int ecs_script_reload(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *code)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(e != 0, ECS_INVALID_PARAMETER, NULL);
+
+    char *file_code = NULL;
+    const EcsScript *s = ecs_get(world, e, EcsScript);
+    if (!s) {
+        ecs_err("entity is not a script, cannot reload");
+        goto error;
+    }
+
+    if (!code) {
+        if (!s->filename) {
+            ecs_err("script was not loaded from a file, cannot reload");
+            goto error;
+        }
+
+        file_code = flecs_load_from_file(s->filename);
+        if (!file_code) {
+            goto error;
+        }
+
+        code = file_code;
+    }
+
+    int result = flecs_script_update_impl(world, e, 0, code, NULL, true);
+    ecs_os_free(file_code);
+    return result;
+error:
+    return -1;
 }
 
 ecs_entity_t ecs_script_init(
