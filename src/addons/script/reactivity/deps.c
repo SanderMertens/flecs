@@ -8,7 +8,17 @@ typedef struct flecs_script_component_owner_t {
     ecs_script_id_t *id;
     ecs_script_scope_t *scope;
     int32_t entity_symbol;
+    int32_t next;
+    int32_t next_symbol;
 } flecs_script_component_owner_t;
+
+typedef struct flecs_script_dep_owner_iter_t {
+    flecs_script_component_owner_t *owners;
+    int32_t count;
+    int32_t cur[3];
+    int32_t index;
+    bool scan_all;
+} flecs_script_dep_owner_iter_t;
 
 typedef struct flecs_script_dep_var_t {
     uint64_t input;
@@ -22,6 +32,10 @@ typedef struct flecs_script_dep_ctx_t {
     ecs_vec_t *dynamic_refs;
     ecs_vec_t vars;
     ecs_vec_t component_owners;
+    ecs_map_t owner_names;
+    ecs_map_t owner_symbols;
+    int32_t owner_fuzzy_first;
+    int32_t owner_fuzzy_last;
     int32_t *input_count;
     int32_t scope_count;
     int32_t component_count;
@@ -35,11 +49,24 @@ typedef struct flecs_script_dep_ctx_t {
     ecs_script_scope_t *scope;
 } flecs_script_dep_ctx_t;
 
+static void flecs_script_dep_owners_init(
+    flecs_script_dep_ctx_t *ctx)
+{
+    ecs_vec_init_t(NULL, &ctx->component_owners,
+        flecs_script_component_owner_t, 0);
+    ecs_map_init(&ctx->owner_names, NULL);
+    ecs_map_init(&ctx->owner_symbols, NULL);
+    ctx->owner_fuzzy_first = -1;
+    ctx->owner_fuzzy_last = -1;
+}
+
 static void flecs_script_dep_fini(
     flecs_script_dep_ctx_t *ctx)
 {
     ecs_vec_fini_t(NULL, &ctx->vars, flecs_script_dep_var_t);
     ecs_vec_fini_t(NULL, &ctx->component_owners, flecs_script_component_owner_t);
+    ecs_map_fini(&ctx->owner_names);
+    ecs_map_fini(&ctx->owner_symbols);
 }
 
 static int flecs_script_dep_node(
@@ -428,6 +455,170 @@ static bool flecs_script_dep_initializer_is_complete(
     return true;
 }
 
+static bool flecs_script_dep_owner_path_key(
+    const ecs_script_entity_t *entity,
+    uint64_t *key_out)
+{
+    uint64_t key = 14695981039346656037ull;
+    while (entity) {
+        if (!entity->name || entity->name_expr) {
+            return false;
+        }
+
+        const char *name = entity->name;
+        do {
+            key = (key ^ (unsigned char)name[0]) * 1099511628211ull;
+        } while (*(++ name));
+
+        entity = entity->parent;
+    }
+
+    *key_out = key;
+    return true;
+}
+
+static void flecs_script_dep_owner_list_append(
+    flecs_script_component_owner_t *owners,
+    int32_t *first,
+    int32_t *last,
+    int32_t index,
+    bool symbol)
+{
+    if (*first == -1) {
+        *first = index;
+    } else if (symbol) {
+        owners[*last].next_symbol = index;
+    } else {
+        owners[*last].next = index;
+    }
+
+    *last = index;
+}
+
+static void flecs_script_dep_owner_map_append(
+    ecs_map_t *map,
+    uint64_t key,
+    flecs_script_component_owner_t *owners,
+    int32_t index,
+    bool symbol)
+{
+    ecs_map_val_t *val = ecs_map_ensure(map, key);
+    int32_t first = (int32_t)(*val >> 32) - 1;
+    int32_t last = (int32_t)(*val & 0xffffffff) - 1;
+    flecs_script_dep_owner_list_append(owners, &first, &last, index, symbol);
+    *val = ((uint64_t)(uint32_t)(first + 1) << 32) | (uint32_t)(last + 1);
+}
+
+static int32_t flecs_script_dep_owner_map_first(
+    const ecs_map_t *map,
+    uint64_t key)
+{
+    ecs_map_val_t *val = ecs_map_get(map, key);
+    if (!val) {
+        return -1;
+    }
+
+    return (int32_t)(*val >> 32) - 1;
+}
+
+static void flecs_script_dep_owner_index(
+    flecs_script_dep_ctx_t *ctx,
+    int32_t index)
+{
+    flecs_script_component_owner_t *owners = ecs_vec_first(
+        &ctx->component_owners);
+    flecs_script_component_owner_t *owner = &owners[index];
+    owner->next = -1;
+    owner->next_symbol = -1;
+
+    ecs_script_entity_t *entity = owner->entity;
+    if (!entity) {
+        flecs_script_dep_owner_map_append(&ctx->owner_symbols,
+            (uint64_t)(uint32_t)owner->entity_symbol, owners, index, true);
+        return;
+    }
+
+    uint64_t key;
+    if (flecs_script_dep_owner_path_key(entity, &key)) {
+        flecs_script_dep_owner_map_append(
+            &ctx->owner_names, key, owners, index, false);
+    } else {
+        flecs_script_dep_owner_list_append(owners, &ctx->owner_fuzzy_first,
+            &ctx->owner_fuzzy_last, index, false);
+    }
+
+    if (entity->symbol != -1) {
+        flecs_script_dep_owner_map_append(&ctx->owner_symbols,
+            (uint64_t)(uint32_t)entity->symbol, owners, index, true);
+    }
+}
+
+static void flecs_script_dep_owner_iter_init(
+    flecs_script_dep_owner_iter_t *it,
+    flecs_script_dep_ctx_t *ctx)
+{
+    it->owners = ecs_vec_first(&ctx->component_owners);
+    it->count = ecs_vec_count(&ctx->component_owners);
+    it->index = 0;
+    it->scan_all = false;
+    it->cur[0] = -1;
+    it->cur[1] = -1;
+    it->cur[2] = -1;
+
+    ecs_script_entity_t *entity = ctx->entity;
+    if (!entity) {
+        it->cur[1] = flecs_script_dep_owner_map_first(
+            &ctx->owner_symbols, (uint64_t)(uint32_t)ctx->entity_symbol);
+        return;
+    }
+
+    uint64_t key;
+    if (!flecs_script_dep_owner_path_key(entity, &key)) {
+        it->scan_all = true;
+        return;
+    }
+
+    it->cur[0] = flecs_script_dep_owner_map_first(&ctx->owner_names, key);
+    it->cur[2] = ctx->owner_fuzzy_first;
+    if (entity->symbol != -1) {
+        it->cur[1] = flecs_script_dep_owner_map_first(
+            &ctx->owner_symbols, (uint64_t)(uint32_t)entity->symbol);
+    }
+}
+
+static int32_t flecs_script_dep_owner_iter_next(
+    flecs_script_dep_owner_iter_t *it)
+{
+    if (it->scan_all) {
+        if (it->index == it->count) {
+            return -1;
+        }
+
+        return it->index ++;
+    }
+
+    int32_t i, result = -1;
+    for (i = 0; i < 3; i ++) {
+        if (it->cur[i] != -1 && (result == -1 || it->cur[i] < result)) {
+            result = it->cur[i];
+        }
+    }
+
+    if (result == -1) {
+        return -1;
+    }
+
+    for (i = 0; i < 3; i ++) {
+        if (it->cur[i] == result) {
+            it->cur[i] = (i == 1)
+                ? it->owners[result].next_symbol
+                : it->owners[result].next;
+        }
+    }
+
+    return result;
+}
+
 static int flecs_script_dep_component_owner(
     flecs_script_dep_ctx_t *ctx,
     ecs_script_node_t *node,
@@ -439,11 +630,12 @@ static int flecs_script_dep_component_owner(
         return 0;
     }
 
-    flecs_script_component_owner_t *owners = ecs_vec_first(
-        &ctx->component_owners);
-    int32_t i, count = ecs_vec_count(&ctx->component_owners);
-    for (i = 0; i < count; i ++) {
-        flecs_script_component_owner_t *owner = &owners[i];
+    flecs_script_dep_owner_iter_t it;
+    flecs_script_dep_owner_iter_init(&it, ctx);
+
+    int32_t i;
+    while ((i = flecs_script_dep_owner_iter_next(&it)) != -1) {
+        flecs_script_component_owner_t *owner = &it.owners[i];
         if (!flecs_script_dep_same_entity(owner, ctx) ||
             !flecs_script_dep_ids_may_match(owner->id, id))
         {
@@ -468,12 +660,14 @@ static int flecs_script_dep_component_owner(
         return -1;
     }
 
+    int32_t index = ecs_vec_count(&ctx->component_owners);
     flecs_script_component_owner_t *owner = ecs_vec_append_t(
         NULL, &ctx->component_owners, flecs_script_component_owner_t);
     owner->entity = ctx->entity;
     owner->entity_symbol = ctx->entity_symbol;
     owner->id = id;
     owner->scope = ctx->scope;
+    flecs_script_dep_owner_index(ctx, index);
     return 0;
 }
 
@@ -1275,8 +1469,7 @@ static int flecs_script_dep_template_analyze(
         .entity_symbol = template->root_symbol
     };
     ecs_vec_init_t(NULL, &ctx.vars, flecs_script_dep_var_t, 0);
-    ecs_vec_init_t(NULL, &ctx.component_owners,
-        flecs_script_component_owner_t, 0);
+    flecs_script_dep_owners_init(&ctx);
     if (flecs_script_dep_template_init(&ctx, template, outer)) {
         flecs_script_dep_fini(&ctx);
         return -1;
@@ -1343,8 +1536,7 @@ int flecs_script_analyze_dependencies(
         .entity_symbol = -1
     };
     ecs_vec_init_t(NULL, &ctx.vars, flecs_script_dep_var_t, 0);
-    ecs_vec_init_t(NULL, &ctx.component_owners,
-        flecs_script_component_owner_t, 0);
+    flecs_script_dep_owners_init(&ctx);
     if (flecs_script_dep_assign_refs(&ctx, &impl->refs)) {
         flecs_script_dep_fini(&ctx);
         return -1;
