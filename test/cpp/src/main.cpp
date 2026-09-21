@@ -8,6 +8,7 @@
 
 #include <cpp.h>
 
+// Testsuite 'Script'
 void Script_function(void);
 void Script_function_scope_and_ctx(void);
 void Script_method(void);
@@ -856,6 +857,7 @@ void Query_iter_targets_field_out_of_range(void);
 void Query_iter_targets_field_not_a_pair(void);
 void Query_iter_targets_field_not_set(void);
 void Query_copy_operators(void);
+void Query_move_assign(void);
 void Query_optional_singleton(void);
 void Query_optional_module(void);
 void Query_has_entity(void);
@@ -5089,6 +5091,10 @@ bake_test_case Query_testcases[] = {
         Query_copy_operators
     },
     {
+        "move_assign",
+        Query_move_assign
+    },
+    {
         "optional_singleton",
         Query_optional_singleton
     },
@@ -8680,7 +8686,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        168,
+        169,
         Query_testcases
     },
     {
