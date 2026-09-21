@@ -34192,13 +34192,15 @@ struct query_base {
 
     /** Copy assignment operator. */
     query_base& operator=(const query_base& obj) {
-        this->~query_base();
-        this->query_ = obj.query_;
-        if (this->query_)
-        {
-            flecs_poly_claim(this->query_);
+        if (this != &obj) {
+            this->~query_base();
+            this->query_ = obj.query_;
+            if (this->query_)
+            {
+                flecs_poly_claim(this->query_);
+            }
         }
-        return *this; 
+        return *this;
     }
 
     /** Move constructor. */
@@ -34209,9 +34211,12 @@ struct query_base {
 
     /** Move assignment operator. */
     query_base& operator=(query_base&& obj) noexcept {
-        this->query_ = obj.query_;
-        obj.query_ = nullptr;
-        return *this; 
+        if (this != &obj) {
+            this->~query_base();
+            this->query_ = obj.query_;
+            obj.query_ = nullptr;
+        }
+        return *this;
     }
 
     /** Get the entity associated with the query. */

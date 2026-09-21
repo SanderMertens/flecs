@@ -3945,11 +3945,33 @@ void Query_copy_operators(void) {
 
     test_assert(copyAssign.c_ptr() == q.c_ptr());
 
+    copyAssign = copyAssign;
+
+    test_assert(copyAssign.c_ptr() == q.c_ptr());
+
     flecs::query<> defaultInit{};
     flecs::query<> copyCtorDefault{defaultInit};
     copyAssign = defaultInit;
 
     test_assert(copyAssign.c_ptr() == defaultInit.c_ptr());
+}
+
+void Query_move_assign(void) {
+    flecs::world world;
+
+    flecs::query<> q = world.query_builder()
+        .with<Position>()
+        .build();
+    flecs::query<> copy = q;
+    flecs::query<> q2{};
+
+    q2 = FLECS_MOV(q);
+
+    test_assert(q.c_ptr() == nullptr);
+    test_assert(q2.c_ptr() == copy.c_ptr());
+
+    q2 = FLECS_MOV(q2);
+    test_assert(q2.c_ptr() == copy.c_ptr());
 }
 
 struct TestComponent {

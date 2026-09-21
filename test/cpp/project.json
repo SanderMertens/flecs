@@ -888,6 +888,7 @@
                 "iter_targets_field_not_a_pair",
                 "iter_targets_field_not_set",
                 "copy_operators",
+                "move_assign",
                 "optional_singleton",
                 "optional_module",
                 "has_entity",
