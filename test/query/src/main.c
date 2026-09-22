@@ -2829,6 +2829,8 @@ void NonFragmentingChildOf_this_2_up_parents_in_same_table(void);
 void NonFragmentingChildOf_this_2_self_up_parents_in_same_table(void);
 void NonFragmentingChildOf_this_up_optional_up_parents_in_same_table(void);
 void NonFragmentingChildOf_this_up_not_up_parents_in_same_table(void);
+void NonFragmentingChildOf_or_up_terms_no_match(void);
+void NonFragmentingChildOf_or_up_terms_match_parent(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -14097,6 +14099,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "this_up_not_up_parents_in_same_table",
         NonFragmentingChildOf_this_up_not_up_parents_in_same_table
+    },
+    {
+        "or_up_terms_no_match",
+        NonFragmentingChildOf_or_up_terms_no_match
+    },
+    {
+        "or_up_terms_match_parent",
+        NonFragmentingChildOf_or_up_terms_match_parent
     }
 };
 
@@ -14924,7 +14934,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        350,
+        352,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

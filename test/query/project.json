@@ -2919,7 +2919,9 @@
                 "this_2_up_parents_in_same_table",
                 "this_2_self_up_parents_in_same_table",
                 "this_up_optional_up_parents_in_same_table",
-                "this_up_not_up_parents_in_same_table"
+                "this_up_not_up_parents_in_same_table",
+                "or_up_terms_no_match",
+                "or_up_terms_match_parent"
             ]
         }, {
             "id": "OrderBy",
