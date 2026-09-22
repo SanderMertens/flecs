@@ -24627,12 +24627,11 @@ static int flecs_query_finalize_terms(
             }
         }
 
-        if (term->trav == EcsChildOf && (term->oper == EcsAnd ||
-            term->oper == EcsOptional || term->oper == EcsNot))
+        if (term->trav == EcsChildOf &&
+            ((term->flags_ & EcsTermIsOr) || term->oper == EcsAnd ||
+                term->oper == EcsOptional || term->oper == EcsNot))
         {
-            if (!(term->flags_ & EcsTermIsOr)) {
-                has_childof = true;
-            }
+            has_childof = true;
         }
 
         if (term->src.id != EcsIsEntity) {

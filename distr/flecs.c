@@ -36276,12 +36276,11 @@ static int flecs_query_finalize_terms(
             }
         }
 
-        if (term->trav == EcsChildOf && (term->oper == EcsAnd ||
-            term->oper == EcsOptional || term->oper == EcsNot))
+        if (term->trav == EcsChildOf &&
+            ((term->flags_ & EcsTermIsOr) || term->oper == EcsAnd ||
+                term->oper == EcsOptional || term->oper == EcsNot))
         {
-            if (!(term->flags_ & EcsTermIsOr)) {
-                has_childof = true;
-            }
+            has_childof = true;
         }
 
         if (term->src.id != EcsIsEntity) {
@@ -78668,14 +78667,26 @@ static void flecs_query_insert_cache_search(
                 continue;
             }
 
-            if (term->trav == EcsChildOf && (term->oper == EcsAnd ||
-                term->oper == EcsOptional || term->oper == EcsNot))
-            {
-                ecs_oper_kind_t oper = q->terms[i].oper;
-                q->terms[i].oper = EcsAnd;
-                flecs_query_compile_term(
-                    q->stage, query, &q->terms[i], ctx);
-                q->terms[i].oper = (int16_t)oper;
+            bool is_or = term->flags_ & EcsTermIsOr;
+            bool filter = term->trav == EcsChildOf &&
+                (is_or || term->oper == EcsAnd ||
+                    term->oper == EcsOptional || term->oper == EcsNot);
+            if (is_or && !filter) {
+                for (int32_t j = i; j > 0 && terms[j - 1].oper == EcsOr; j --) {
+                    filter |= terms[j - 1].trav == EcsChildOf;
+                }
+                for (int32_t j = i; j < count - 1 && terms[j].oper == EcsOr; j ++) {
+                    filter |= terms[j + 1].trav == EcsChildOf;
+                }
+            }
+
+            if (filter) {
+                ecs_oper_kind_t oper = term->oper;
+                if (!is_or) {
+                    term->oper = EcsAnd;
+                }
+                flecs_query_compile_term(q->stage, query, term, ctx);
+                term->oper = (int16_t)oper;
             }
         }
     }

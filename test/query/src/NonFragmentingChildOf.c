@@ -24852,3 +24852,85 @@ void NonFragmentingChildOf_this_src_not_childof_self_up_w_not_self_up(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_or_up_terms_no_match(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Mesh);
+    ECS_TAG(world, DynA);
+    ECS_TAG(world, DynB);
+
+    ecs_entity_t other = ecs_new_w(world, DynA);
+    ecs_entity_t root = ecs_new(world);
+    ecs_entity_t mid = ecs_insert(world, ecs_value(EcsParent, {root}));
+    ecs_add(world, mid, Mesh);
+    ecs_entity_t leaf = ecs_insert(world, ecs_value(EcsParent, {mid}));
+    ecs_add(world, leaf, Mesh);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Mesh, DynA(self|up) || DynB(self|up)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    test_assert(ecs_is_alive(world, other));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_or_up_terms_match_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Mesh);
+    ECS_TAG(world, DynA);
+    ECS_TAG(world, DynB);
+
+    ecs_entity_t root = ecs_new(world);
+    ecs_entity_t mid = ecs_insert(world, ecs_value(EcsParent, {root}));
+    ecs_add(world, mid, Mesh);
+    ecs_entity_t leaf = ecs_insert(world, ecs_value(EcsParent, {mid}));
+    ecs_add(world, leaf, Mesh);
+    ecs_entity_t loose = ecs_new_w(world, Mesh);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Mesh, DynA(self|up) || DynB(self|up)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, root, DynB);
+
+    {
+        int32_t count = 0;
+        bool mid_found = false, leaf_found = false;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            int32_t i;
+            for (i = 0; i < it.count; i ++) {
+                test_assert(it.entities[i] != loose);
+                mid_found |= it.entities[i] == mid;
+                leaf_found |= it.entities[i] == leaf;
+                count ++;
+            }
+        }
+        test_int(2, count);
+        test_bool(true, mid_found);
+        test_bool(true, leaf_found);
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
