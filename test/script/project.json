@@ -3190,7 +3190,14 @@
                 "component_in_interpolated_children_w_numeric_boundary_collision",
                 "component_in_interpolated_children_w_formatted_integer",
                 "component_in_interpolated_children_w_fill_collision",
-                "template_this_has_ref_add_tag_reinstantiates"
+                "template_switch_keeps_child_of_same_name",
+                "template_switch_in_for_keeps_child_of_same_name",
+                "template_switch_keeps_tag_both_templates_add",
+                "template_this_has_ref_add_tag_reinstantiates",
+                "template_switch_keeps_child_created_in_for_of_new_template",
+                "template_switch_keeps_child_created_in_for_of_old_template",
+                "template_switch_keeps_shared_base_template_state",
+                "template_switch_keeps_tag_added_by_script"
             ]
         }, {
             "id": "ConstVar",
