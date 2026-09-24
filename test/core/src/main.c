@@ -1486,6 +1486,7 @@ void OnDelete_delete_with_3(void);
 void OnDelete_empty_after_remove(void);
 void OnDelete_remove_target_no_intermediate_table(void);
 void OnDelete_remove_target_no_intermediate_table_3_pairs(void);
+void OnDelete_delete_parent_w_isa_base_that_inherits_from_disabled_child(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -9344,6 +9345,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "remove_target_no_intermediate_table_3_pairs",
         OnDelete_remove_target_no_intermediate_table_3_pairs
+    },
+    {
+        "delete_parent_w_isa_base_that_inherits_from_disabled_child",
+        OnDelete_delete_parent_w_isa_base_that_inherits_from_disabled_child
     }
 };
 
@@ -17648,7 +17653,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        129,
+        130,
         OnDelete_testcases
     },
     {

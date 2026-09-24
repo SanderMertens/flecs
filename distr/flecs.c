@@ -17010,13 +17010,8 @@ static void flecs_component_delete_non_fragmenting_childof(
         ecs_record_t *r = flecs_entities_get_any(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if ((r->row & EcsEntityIsTarget)) {
-            ecs_component_record_t *tgt_cr = flecs_components_get(
-                world, ecs_pair(EcsWildcard, e));
-            if (tgt_cr) {
-                flecs_emit_propagate_invalidate_tables(world, tgt_cr);
-            }
-
+        bool is_target = (r->row & EcsEntityIsTarget) != 0;
+        if (is_target) {
             ecs_component_record_t *child_cr = flecs_components_get(
                 world, ecs_childof(e));
             if (child_cr &&
@@ -17039,6 +17034,14 @@ static void flecs_component_delete_non_fragmenting_childof(
         }
 
         flecs_simple_delete(world, e, r);
+
+        if (is_target) {
+            ecs_component_record_t *tgt_cr = flecs_components_get(
+                world, ecs_pair(EcsWildcard, e));
+            if (tgt_cr) {
+                flecs_emit_propagate_invalidate_tables(world, tgt_cr);
+            }
+        }
     }
 
     ecs_vec_fini_t(&world->allocator, &children_vec, ecs_entity_t);
