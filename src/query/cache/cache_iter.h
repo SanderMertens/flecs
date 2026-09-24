@@ -42,6 +42,10 @@ bool flecs_query_cache_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo);
 
+bool flecs_query_tree_cache_search(
+    ecs_query_run_ctx_t *ctx,
+    bool redo);
+
 #endif // FLECS_QUERY_PLANS
 
 #endif

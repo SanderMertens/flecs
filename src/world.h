@@ -101,6 +101,9 @@ struct ecs_world_t {
 
     int32_t non_fragmenting_child_count;
 
+    /* Set once any table has dirty state allocated for change detection */
+    bool has_dirty_state;
+
     /* -- Mixins -- */
     ecs_world_t *self;
     ecs_observable_t observable;

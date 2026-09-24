@@ -466,6 +466,10 @@ void flecs_query_mark_fields_dirty(
     ecs_iter_t *it)
 {
     ecs_query_t *q = &impl->pub;
+    ecs_world_t *world = q->world;
+    if (!world->has_dirty_state) {
+        return;
+    }
 
     /* Evaluate all writable non-fixed, set fields */
     ecs_termset_t write_fields =
@@ -475,7 +479,6 @@ void flecs_query_mark_fields_dirty(
         return;
     }
 
-    ecs_world_t *world = q->world;
     int16_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
         ecs_termset_t field_bit = (ecs_termset_t)(1u << i);
@@ -530,12 +533,16 @@ void flecs_query_mark_fixed_fields_dirty(
 {
     /* This function marks fields dirty for terms with fixed sources. */
     ecs_query_t *q = &impl->pub;
+    ecs_world_t *world = q->world;
+    if (!world->has_dirty_state) {
+        return;
+    }
+
     ecs_termset_t fixed_write_fields = q->write_fields & q->fixed_fields;
     if (!fixed_write_fields) {
         return;
     }
 
-    ecs_world_t *world = q->world;
     int32_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
         if (!(fixed_write_fields & flecs_ito(uint32_t, 1 << i))) {

@@ -904,11 +904,157 @@ static int flecs_query_insert_fixed_src_terms(
     return 0;
 }
 
+static int16_t flecs_query_find_tree_cache_op(
+    ecs_query_impl_t *query)
+{
+    if (!query->cache || query->pub.cache_kind != EcsQueryCacheAuto) {
+        return -1;
+    }
+
+    int32_t i, cache_op = -1, count = query->op_count;
+    for (i = 0; i < count; i ++) {
+        ecs_query_op_kind_t kind = query->ops[i].kind;
+        if (kind == EcsQueryCache) {
+            if (cache_op != -1) {
+                return -1;
+            }
+            cache_op = i;
+        } else if (kind == EcsQuerySetIds) {
+            if (cache_op != -1) {
+                return -1;
+            }
+        } else if (kind == EcsQueryTreeUpPost || 
+            kind == EcsQueryTreeSelfUpPost) 
+        {
+            if (cache_op == -1) {
+                return -1;
+            }
+        } else if (kind == EcsQueryYield) {
+            if (i != (count - 1)) {
+                return -1;
+            }
+        } else {
+            return -1;
+        }
+    }
+
+    if (cache_op == -1 || cache_op == (count - 2)) {
+        return -1;
+    }
+
+#ifdef FLECS_DEBUG
+    {
+        ecs_query_cache_t *cache = query->cache;
+        int32_t f, field_count = cache->query->field_count;
+        ecs_assert(field_count == query->pub.field_count,
+            ECS_INTERNAL_ERROR, NULL);
+        for (f = 0; f < field_count; f ++) {
+            ecs_assert(cache->field_map[f] == f, ECS_INTERNAL_ERROR, NULL);
+        }
+    }
+#endif
+
+    return flecs_ito(int16_t, cache_op);
+}
+
+static bool flecs_query_op_has_ctx(
+    ecs_query_op_kind_t kind)
+{
+    switch(kind) {
+    case EcsQueryCache:
+    case EcsQueryIsCache:
+    case EcsQueryIds:
+    case EcsQueryReset:
+    case EcsQueryLookup:
+    case EcsQuerySetVars:
+    case EcsQuerySetFixed:
+    case EcsQuerySetIds:
+    case EcsQuerySetId:
+    case EcsQueryContain:
+    case EcsQueryPairEq:
+    case EcsQueryEnd:
+    case EcsQueryPredEq:
+    case EcsQueryPredEqName:
+    case EcsQueryYield:
+    case EcsQueryNothing:
+        return false;
+    default:
+        return true;
+    }
+}
+
+static bool flecs_query_op_has_ctx_fini(
+    ecs_query_op_kind_t kind)
+{
+    switch(kind) {
+    case EcsQueryTrav:
+    case EcsQueryUp:
+    case EcsQuerySelfUp:
+    case EcsQueryTreeUpPre:
+    case EcsQueryTreeSelfUpPre:
+    case EcsQueryTreeUpPost:
+    case EcsQueryTreeSelfUpPost:
+    case EcsQueryTreeUpNot:
+    case EcsQueryTreeSelfUpNot:
+    case EcsQuerySparseUp:
+    case EcsQuerySparseSelfUp:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static void flecs_query_compute_op_ctx_ranges(
+    ecs_query_impl_t *query)
+{
+    int32_t i, count = query->op_count;
+    int32_t zero_first = -1, zero_last = -1;
+    int32_t fini_first = -1, fini_last = -1;
+
+    for (i = 0; i < count; i ++) {
+        ecs_query_op_kind_t kind = query->ops[i].kind;
+        if (flecs_query_op_has_ctx(kind)) {
+            if (zero_first == -1) {
+                zero_first = i;
+            }
+            zero_last = i;
+        }
+        if (flecs_query_op_has_ctx_fini(kind)) {
+            if (fini_first == -1) {
+                fini_first = i;
+            }
+            fini_last = i;
+        }
+    }
+
+    if (zero_first == -1) {
+        query->op_ctx_zero_first = 0;
+        query->op_ctx_zero_count = 0;
+    } else {
+        query->op_ctx_zero_first = flecs_ito(int16_t, zero_first);
+        query->op_ctx_zero_count = flecs_ito(int16_t, zero_last - zero_first + 1);
+    }
+
+    if (fini_first == -1) {
+        query->op_ctx_fini_first = 0;
+        query->op_ctx_fini_count = 0;
+    } else {
+        query->op_ctx_fini_first = flecs_ito(int16_t, fini_first);
+        query->op_ctx_fini_count = flecs_ito(int16_t, fini_last - fini_first + 1);
+    }
+}
+
 int flecs_query_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_query_impl_t *query)
 {
+    query->tree_cache_op = -1;
+    query->op_ctx_zero_first = 0;
+    query->op_ctx_zero_count = 1;
+    query->op_ctx_fini_first = 0;
+    query->op_ctx_fini_count = 0;
+
     /* Compile query to operations. Only necessary for non-trivial queries, as
      * trivial queries use trivial iterators that don't use query ops. */
     if (!flecs_query_needs_plan(query)) {
@@ -1175,6 +1321,8 @@ int flecs_query_compile(
         query->ops = flecs_alloc_n(&stage->allocator, ecs_query_op_t, op_count);
         ecs_query_op_t *query_ops = ecs_vec_first_t(ctx.ops, ecs_query_op_t);
         ecs_os_memcpy_n(query->ops, query_ops, ecs_query_op_t, op_count);
+        query->tree_cache_op = flecs_query_find_tree_cache_op(query);
+        flecs_query_compute_op_ctx_ranges(query);
     }
 
     return 0;
