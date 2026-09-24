@@ -3497,3 +3497,27 @@ void OnDelete_remove_target_no_intermediate_table_3_pairs(void) {
 
     ecs_fini(world);
 }
+
+void OnDelete_delete_parent_w_isa_base_that_inherits_from_disabled_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new_w_parent(world, a, NULL);
+    ecs_entity_t base = ecs_new(world);
+    ecs_add_pair(world, a, EcsIsA, base);
+    ecs_add(world, b, Tag);
+    ecs_add_id(world, b, EcsDisabled);
+    ecs_add_pair(world, base, EcsIsA, b);
+
+    ecs_delete(world, a);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+    test_assert(ecs_is_alive(world, base));
+    test_assert(!ecs_has_pair(world, base, EcsIsA, b));
+
+    ecs_fini(world);
+}
