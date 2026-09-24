@@ -9603,3 +9603,42 @@ void Reactivity_template_switch_keeps_tag_added_by_script(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_fini_w_instance_of_derived_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_add_id(world, parent, EcsModule);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main", .parent = parent }),
+        .code =
+            HEAD "module templates"
+            LINE "Ta {}"
+            LINE "Tb {}"
+            LINE "template Base {"
+            LINE "  prop flag = true"
+            LINE "  if flag {"
+            LINE "    Ta"
+            LINE "  }"
+            LINE "}"
+            LINE "template A : Base {"
+            LINE "  Tb"
+            LINE "}"
+            LINE "A x()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t ta = ecs_lookup(world, "templates.Ta");
+    ecs_entity_t tb = ecs_lookup(world, "templates.Tb");
+    ecs_entity_t x = ecs_lookup(world, "templates.x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, ta));
+    test_assert(ecs_has_id(world, x, tb));
+
+    ecs_entity_t a = ecs_lookup(world, "templates.A");
+    test_assert(a != 0);
+    ecs_add_id(world, a, ecs_entity(world, { .name = "templates.Tc" }));
+
+    ecs_fini(world);
+}

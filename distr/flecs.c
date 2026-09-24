@@ -120039,6 +120039,10 @@ static void flecs_script_template_root_release_shared(
 
     while ((col = ecs_search_offset(world, table, col + 1, wc, &found)) != -1) {
         ecs_entity_t other = ecs_pair_second(world, found);
+        if (!other) {
+            continue;
+        }
+
         if (flecs_script_template_chain_has(world, other, template_entity) ||
             flecs_script_template_chain_has(world, template_entity, other))
         {
