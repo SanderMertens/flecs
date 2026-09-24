@@ -8832,3 +8832,34 @@ void Cached_on_add_childof_observer_w_parent_component_and_up_query(void) {
 
     ecs_fini(world);
 }
+
+void Cached_fini_w_optional_cascade_query_and_nested_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity), .src.id = EcsUp|EcsCascade,
+              .trav = EcsChildOf, .oper = EcsOptional }
+        },
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_entity_t root = ecs_new(world);
+    ecs_set(world, root, Velocity, {1, 2});
+    ecs_add_pair(world, ecs_new(world), rel, root);
+    ecs_entity_t parent = ecs_new_w_parent(world, root, "parent");
+    ecs_set(world, parent, Velocity, {1, 2});
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_set(world, child, Position, {10, 20});
+    ecs_set(world, child, Velocity, {3, 4});
+
+    test_int(ecs_query_count(q).entities, 1);
+
+    ecs_fini(world);
+}
