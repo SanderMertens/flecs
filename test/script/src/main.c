@@ -2642,6 +2642,9 @@ void Include_include_nested_error_reports_position(void);
 void Include_include_error_in_large_file_reports_position(void);
 void Include_include_missing_file_managed_sets_error_on_parent(void);
 void Include_include_nested_manifest_w_cross_file_refs(void);
+void Include_include_diamond_absolute_path_evaluates_shared_once(void);
+void Include_include_absolute_path_template_from_shared_include(void);
+void Include_include_absolute_path_unresolved_refs_no_infinite_loop(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_setup(void);
@@ -14148,6 +14151,18 @@ bake_test_case Include_testcases[] = {
     {
         "include_nested_manifest_w_cross_file_refs",
         Include_include_nested_manifest_w_cross_file_refs
+    },
+    {
+        "include_diamond_absolute_path_evaluates_shared_once",
+        Include_include_diamond_absolute_path_evaluates_shared_once
+    },
+    {
+        "include_absolute_path_template_from_shared_include",
+        Include_include_absolute_path_template_from_shared_include
+    },
+    {
+        "include_absolute_path_unresolved_refs_no_infinite_loop",
+        Include_include_absolute_path_unresolved_refs_no_infinite_loop
     }
 };
 
@@ -18764,7 +18779,7 @@ static bake_test_suite suites[] = {
         "Include",
         Include_setup,
         NULL,
-        57,
+        60,
         Include_testcases,
         1,
         Include_params

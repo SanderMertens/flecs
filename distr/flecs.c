@@ -70700,7 +70700,7 @@ ecs_entity_t ecs_script_init(
 
     if (!e) {
         if (desc->filename) {
-            e = ecs_new_from_path_w_sep(world, 0, desc->filename, "/", NULL);
+            e = ecs_new_from_path_w_sep(world, 0, desc->filename, "/", "/");
         } else {
             e = ecs_new(world);
         }
@@ -97104,7 +97104,7 @@ static int flecs_script_include_node(
 
     if (is_managed) {
         ecs_entity_t existing = ecs_lookup_path_w_sep(
-            v->world, 0, resolved, "/", NULL, false);
+            v->world, 0, resolved, "/", "/", false);
         if (existing && ecs_has(v->world, existing, EcsScript)) {
             const EcsScript *existing_script = ecs_get(
                 v->world, existing, EcsScript);

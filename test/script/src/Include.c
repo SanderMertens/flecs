@@ -2390,3 +2390,174 @@ void Include_include_nested_manifest_w_cross_file_refs(void) {
     ecs_os_free(agg_str);
     ecs_os_free(manifest_str);
 }
+
+void Include_include_diamond_absolute_path_evaluates_shared_once(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "/tmp/inc/shared.flecs", "_ { Ui: {3} }\n", 0 };
+    test_files[1] = (test_file_t){ "/tmp/inc/a.flecs", "include shared.flecs\n", 0 };
+    test_files[2] = (test_file_t){ "/tmp/inc/b.flecs", "include shared.flecs\n", 0 };
+    test_files[3] = (test_file_t){ "/tmp/inc/parent.flecs", "include a.flecs\n"
+        "include b.flecs\n", 0 };
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .filename = "/tmp/inc/parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t shared = ecs_lookup_path_w_sep(
+        world, 0, "/tmp/inc/shared.flecs", "/", "/", false);
+    test_assert(shared != 0);
+    test_assert(ecs_has(world, shared, EcsScript));
+
+    test_int(ecs_count_id(world, ui), 1);
+
+    ecs_fini(world);
+}
+
+void Include_include_absolute_path_template_from_shared_include(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "/tmp/inc/shared.flecs",
+        "template Base {\n"
+        "  Ui: {3}\n"
+        "}\n", 0 };
+    test_files[1] = (test_file_t){ "/tmp/inc/a.flecs",
+        "include shared.flecs\n"
+        "template Derived {\n"
+        "  Base child\n"
+        "}\n", 0 };
+    test_files[2] = (test_file_t){ "/tmp/inc/b.flecs", "include shared.flecs\n", 0 };
+    test_files[3] = (test_file_t){ "/tmp/inc/parent.flecs",
+        "include a.flecs\n"
+        "include b.flecs\n"
+        "export mut show = false\n"
+        "if show {\n"
+        "  Derived inst\n"
+        "}\n", 0 };
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .filename = "/tmp/inc/parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    test_assert(base != 0);
+
+    test_int(ecs_mut_var_set_t(world, "show", ecs_bool_t, {true}), 0);
+
+    test_assert(ecs_lookup(world, "inst") != 0);
+    test_assert(ecs_lookup(world, "inst.child") != 0);
+    test_assert(ecs_has_id(world, ecs_lookup(world, "inst.child"), ui));
+    test_assert(ecs_lookup(world, "Base") == base);
+
+    ecs_fini(world);
+}
+
+void Include_include_absolute_path_unresolved_refs_no_infinite_loop(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    ecs_log_set_level(-4);
+
+    test_files[0] = (test_file_t){ "/tmp/inc/theme.flecs",
+        "module theme\n"
+        "export const spacing = 2\n"
+        "export const pad = 4\n", 0 };
+    test_files[1] = (test_file_t){ "/tmp/inc/a.flecs",
+        "include theme\n"
+        "_ { Ui: {spacing} }\n", 0 };
+    test_files[2] = (test_file_t){ "/tmp/inc/b.flecs",
+        "include theme\n"
+        "_ { Ui: {pad} }\n", 0 };
+    test_files[3] = (test_file_t){ "/tmp/inc/parent.flecs",
+        "include a\n"
+        "include b\n", 0 };
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .filename = "/tmp/inc/parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+
+    ecs_fini(world);
+}

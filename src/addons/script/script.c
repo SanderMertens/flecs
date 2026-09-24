@@ -657,7 +657,7 @@ ecs_entity_t ecs_script_init(
 
     if (!e) {
         if (desc->filename) {
-            e = ecs_new_from_path_w_sep(world, 0, desc->filename, "/", NULL);
+            e = ecs_new_from_path_w_sep(world, 0, desc->filename, "/", "/");
         } else {
             e = ecs_new(world);
         }
