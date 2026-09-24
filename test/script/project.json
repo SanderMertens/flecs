@@ -3850,7 +3850,25 @@
                 "set_after_clear",
                 "count_edits",
                 "set_for_recreated_entity_after_clear",
-                "set_10k_statements"
+                "set_10k_statements",
+                "from_scene_no_changes",
+                "from_scene_no_changes_float_literal",
+                "from_scene_changed_value",
+                "from_scene_changed_value_named",
+                "from_scene_preserves_layout",
+                "from_scene_changed_child",
+                "from_scene_multiple_entities",
+                "from_scene_partial_initializer",
+                "from_scene_updates_entities",
+                "from_scene_skip_variable_expr",
+                "from_scene_skip_removed_component",
+                "from_scene_skip_added_component",
+                "from_scene_skip_template_body",
+                "from_scene_pair",
+                "from_scene_not_a_script",
+                "save",
+                "save_no_filename",
+                "save_not_a_script"
             ]
         }, {
             "id": "EditTemplate",

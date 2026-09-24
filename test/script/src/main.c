@@ -3711,6 +3711,24 @@ void Edit_set_after_clear(void);
 void Edit_count_edits(void);
 void Edit_set_for_recreated_entity_after_clear(void);
 void Edit_set_10k_statements(void);
+void Edit_from_scene_no_changes(void);
+void Edit_from_scene_no_changes_float_literal(void);
+void Edit_from_scene_changed_value(void);
+void Edit_from_scene_changed_value_named(void);
+void Edit_from_scene_preserves_layout(void);
+void Edit_from_scene_changed_child(void);
+void Edit_from_scene_multiple_entities(void);
+void Edit_from_scene_partial_initializer(void);
+void Edit_from_scene_updates_entities(void);
+void Edit_from_scene_skip_variable_expr(void);
+void Edit_from_scene_skip_removed_component(void);
+void Edit_from_scene_skip_added_component(void);
+void Edit_from_scene_skip_template_body(void);
+void Edit_from_scene_pair(void);
+void Edit_from_scene_not_a_script(void);
+void Edit_save(void);
+void Edit_save_no_filename(void);
+void Edit_save_not_a_script(void);
 
 // Testsuite 'EditTemplate'
 void EditTemplate_setup(void);
@@ -18328,6 +18346,78 @@ bake_test_case Edit_testcases[] = {
     {
         "set_10k_statements",
         Edit_set_10k_statements
+    },
+    {
+        "from_scene_no_changes",
+        Edit_from_scene_no_changes
+    },
+    {
+        "from_scene_no_changes_float_literal",
+        Edit_from_scene_no_changes_float_literal
+    },
+    {
+        "from_scene_changed_value",
+        Edit_from_scene_changed_value
+    },
+    {
+        "from_scene_changed_value_named",
+        Edit_from_scene_changed_value_named
+    },
+    {
+        "from_scene_preserves_layout",
+        Edit_from_scene_preserves_layout
+    },
+    {
+        "from_scene_changed_child",
+        Edit_from_scene_changed_child
+    },
+    {
+        "from_scene_multiple_entities",
+        Edit_from_scene_multiple_entities
+    },
+    {
+        "from_scene_partial_initializer",
+        Edit_from_scene_partial_initializer
+    },
+    {
+        "from_scene_updates_entities",
+        Edit_from_scene_updates_entities
+    },
+    {
+        "from_scene_skip_variable_expr",
+        Edit_from_scene_skip_variable_expr
+    },
+    {
+        "from_scene_skip_removed_component",
+        Edit_from_scene_skip_removed_component
+    },
+    {
+        "from_scene_skip_added_component",
+        Edit_from_scene_skip_added_component
+    },
+    {
+        "from_scene_skip_template_body",
+        Edit_from_scene_skip_template_body
+    },
+    {
+        "from_scene_pair",
+        Edit_from_scene_pair
+    },
+    {
+        "from_scene_not_a_script",
+        Edit_from_scene_not_a_script
+    },
+    {
+        "save",
+        Edit_save
+    },
+    {
+        "save_no_filename",
+        Edit_save_no_filename
+    },
+    {
+        "save_not_a_script",
+        Edit_save_not_a_script
     }
 };
 
@@ -18932,7 +19022,7 @@ static bake_test_suite suites[] = {
         "Edit",
         Edit_setup,
         NULL,
-        103,
+        121,
         Edit_testcases,
         1,
         Edit_params
