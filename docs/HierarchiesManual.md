@@ -600,7 +600,7 @@ auto q = world.query_builder<Position, const flecs::Parent>()
 ```
 Position, Position(up)
 ```
-This query will perform _worse_ for `Parent` queries. This query will first find all tables with `Position`. If it finds a table with a `Parent` component (as opposed to one with a `ChildOf` pair) the query will have to iterate each entity, and traverse the hierarchy upwards for that entity. The result of this cannot be cached, which further hurts performance.
+This query will perform _worse_ for `Parent` queries. This query will first find all tables with `Position`. If it finds a table with a `Parent` component (as opposed to one with a `ChildOf` pair) the query has to look at the `Parent` value of each entity and traverse the hierarchy upwards for it. Consecutive entities with the same parent are returned as a single result, so per-entity work is only needed when parents alternate. The result of this cannot be cached, which further hurts performance.
 
 The reason up traversal is supported for `Parent` hierarchies is mostly to provide an easier migration path from `ChildOf` hierarchies. Performance critical queries should generally not use up traversal in combination with `Parent` hierarchies. See below on how to migrate to alternative queries.
 
@@ -608,7 +608,7 @@ The reason up traversal is supported for `Parent` hierarchies is mostly to provi
 ```
 Position(up), Position
 ```
-This query will perform _worse_ for `Parent` queries. Though not as bad as the previous query, this query will also perform worse with `Parent` hierarchies than for `ChildOf` hierarchies, because the results that use the `Parent` hierarchy cannot be cached.
+This query will perform _worse_ for `Parent` queries. Though not as bad as the previous query, this query will also perform worse with `Parent` hierarchies than for `ChildOf` hierarchies, because the results that use the `Parent` hierarchy cannot be cached. As with the previous query, consecutive entities with the same parent are returned as a single result.
 
 #### Optimizing Relationship Traversal
 As outlined in the previous section, queries that use relationship traversal can be slower for entities with `Parent` hierarchies. To get around this, an application can split up a query that uses relationship traversal into two queries, one for `ChildOf` hierarchies, and one for `Parent` hierarchies. Consider the following query:

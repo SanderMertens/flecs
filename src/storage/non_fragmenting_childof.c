@@ -254,6 +254,12 @@ static void flecs_on_replace_parent(ecs_iter_t *it) {
          * it can trigger a table move that reads the parent value. */
         old[i].value = new_parent;
 
+        ecs_record_t *r_e = flecs_entities_get(world, e);
+        if (r_e->row & EcsEntityIsTraversable) {
+            flecs_emit_propagate_invalidate(world, r_e->table,
+                ECS_RECORD_TO_ROW(r_e->row), 1);
+        }
+
         int32_t depth = cr_parent->pair->depth;
 
         /* If the entity had a parent before, it has a ParentDepth pair that

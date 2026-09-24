@@ -157,7 +157,7 @@ static void flecs_inc_observer_count(
             ecs_event_record_t *er_onset =
                 flecs_event_record_ensure(observable, EcsOnSet);
             flecs_inc_observer_count(
-                world, EcsOnSet, er_onset, ecs_id(EcsParent), value, false);
+                world, EcsOnSet, er_onset, ecs_id(EcsParent), value, up_notify);
         } else {
             flecs_inc_observer_count(
                 world, event, evt, ecs_id(EcsParent), value, up_notify);

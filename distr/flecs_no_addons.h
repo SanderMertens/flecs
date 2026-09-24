@@ -584,6 +584,8 @@ extern "C" {
 #define EcsIterTrivialSparse           (1u << 9u)  /* Trivial sparse iterator mode (batched entity list results). */
 #define EcsIterComponentInheritance    (1u << 10u) /* Query matches via component inheritance. */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this). */
+#define EcsIterTreeCached              (1u << 12u) /* Cached search that only filters tables with Parent component. */
+#define EcsIterOpCtxFini               (1u << 13u) /* Query op contexts hold resources that must be released. */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query. */
 #define EcsIterCached                  (1u << 15u) /* Cached query. */
 #define EcsIterFixedInChangeComputed   (1u << 16u) /* Change detection for fixed-in terms is done. */
@@ -591,6 +593,7 @@ extern "C" {
 #define EcsIterSkip                    (1u << 18u) /* Result was skipped for change detection. */
 #define EcsIterCppEach                 (1u << 19u) /* Uses C++ 'each' iterator. */
 #define EcsIterImmutableCacheData      (1u << 21u) /* Internally used by the engine to indicate immutable arrays from the cache. */
+#define EcsIterOpCtxSplit              (1u << 22u) /* Query op contexts were allocated separately from other iterator data. */
 
 /* Same as event flags. */
 #define EcsIterTableOnly               (1u << 20u)  /* Result only populates the table. */
@@ -2430,7 +2433,7 @@ typedef struct ecs_stack_t {
 #define FLECS_STACK_PAGE_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_page_t), 16)
 
 /** Size of usable data within a stack page. */
-#define FLECS_STACK_PAGE_SIZE (1024 - FLECS_STACK_PAGE_OFFSET)
+#define FLECS_STACK_PAGE_SIZE (4096 - FLECS_STACK_PAGE_OFFSET)
 
 /** Initialize a stack allocator.
  *
@@ -2529,6 +2532,22 @@ void flecs_stack_reset(
 FLECS_DBG_API
 ecs_stack_cursor_t* flecs_stack_get_cursor(
     ecs_stack_t *stack);
+
+/** Get a cursor and allocate memory in a single stack operation.
+ * The allocation must fit in a page together with the cursor.
+ *
+ * @param stack The stack allocator.
+ * @param size Number of bytes to allocate.
+ * @param align Alignment of the allocation (at least cursor alignment).
+ * @param data_out Receives the allocated memory.
+ * @return The cursor.
+ */
+FLECS_DBG_API
+ecs_stack_cursor_t* flecs_stack_get_cursor_w_alloc(
+    ecs_stack_t *stack,
+    ecs_size_t size,
+    ecs_size_t align,
+    void **data_out);
 
 /** Restore the stack to a previously saved cursor position.
  *

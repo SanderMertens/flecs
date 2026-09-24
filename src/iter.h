@@ -23,6 +23,12 @@ void flecs_iter_free(
     void *ptr,
     ecs_size_t size);
 
+/* Allocate memory from iterator allocator. */
+void* flecs_iter_alloc(
+    ecs_iter_t *it,
+    ecs_size_t size,
+    ecs_size_t align);
+
 /* Allocate zero initialized memory from iterator allocator. */
 void* flecs_iter_calloc(
     ecs_iter_t *it,

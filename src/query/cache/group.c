@@ -167,6 +167,7 @@ static ecs_query_cache_match_t* flecs_query_cache_add_table_to_group(
     group->info.table_count ++;
     group->info.match_count ++;
     cache->match_count ++;
+    cache->parent_table_count += (table->flags & EcsTableHasParent) != 0;
 
     return result;
 }
@@ -180,6 +181,12 @@ static void flecs_query_cache_remove_table_from_group(
     cache->match_count ++;
 
     ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
+    ecs_query_cache_match_t *removed = ecs_vec_get(
+        &group->tables, elem_size, index);
+    cache->parent_table_count -= 
+        (removed->base.table->flags & EcsTableHasParent) != 0;
+    ecs_assert(cache->parent_table_count >= 0, ECS_INTERNAL_ERROR, NULL);
+
     ecs_vec_remove(&group->tables, elem_size, index);
     int32_t count = ecs_vec_count(&group->tables);
 
@@ -339,6 +346,7 @@ void flecs_query_cache_remove_all_tables(
         flecs_free_t(a, ecs_query_cache_table_t, ecs_map_ptr(&it));
     }
     ecs_map_clear(&cache->tables);
+    cache->parent_table_count = 0;
     ecs_assert(ecs_map_count(&cache->groups) == 0, ECS_INTERNAL_ERROR, NULL);
 }
 

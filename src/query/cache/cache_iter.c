@@ -149,6 +149,13 @@ static ecs_query_cache_match_t* flecs_query_test(
         qit->cur = qt->index;
     }
 
+    if (redo) {
+        ecs_query_iter_t *qit = &it->priv_.iter.query;
+        if (qit->tables == qit->all_tables && !qit->elem->wildcard_matches) {
+            return NULL;
+        }
+    }
+
     ecs_query_cache_match_t *qm = flecs_query_cache_next(ctx, true /* always match empty */);
     if (redo && qm) {
         if (qm->base.table != it->table) {
@@ -383,6 +390,108 @@ bool flecs_query_cache_test(
     flecs_query_cache_init_mapped_fields(ctx, node);
 
     return true;
+}
+
+bool flecs_query_tree_cache_search(
+    ecs_query_run_ctx_t *ctx,
+    bool redo)
+{
+    ecs_iter_t *it = ctx->it;
+    ecs_query_iter_t *qit = ctx->qit;
+    const ecs_query_impl_t *impl = ctx->query;
+    const ecs_query_op_t *ops = qit->ops;
+    int32_t cache_op = impl->tree_cache_op;
+    int32_t last_op = impl->op_count - 1;
+    bool test = (it->constrained_vars & 1) != 0;
+    ecs_assert(cache_op >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (!redo) {
+        if (!test) {
+            flecs_query_cache_iter_restart(ctx);
+        }
+
+        qit->op = -1;
+    } else if (qit->op != -1) {
+        if (flecs_query_run_until(true, ctx, ops, cache_op, qit->op, last_op)) {
+            qit->op = flecs_itolbl(ctx->op_index - 1);
+            flecs_query_set_iter_this(it, ctx);
+            return true;
+        }
+
+        qit->op = -1;
+    }
+
+    if (test && !redo) {
+        ecs_table_t *table = ctx->vars[0].range.table;
+        ecs_assert(table != NULL, ECS_INVALID_OPERATION,
+            "the iterator constraint is missing a table");
+        ecs_query_cache_table_t *qt = flecs_query_cache_get_table(
+            impl->cache, table);
+        if (!qt) {
+            return false;
+        }
+
+        ecs_query_cache_group_t *group = qt->group;
+        ecs_query_cache_match_t *node = ecs_vec_get_t(
+            &group->tables, ecs_query_cache_match_t, qt->index);
+        ecs_assert(node->base.table == table, ECS_INTERNAL_ERROR, NULL);
+        if (!node->wildcard_matches && !(table->flags & EcsTableHasParent)) {
+            qit->group = group;
+            qit->tables = qit->all_tables = &group->tables;
+            qit->cur = qt->index + 1;
+            qit->elem = node;
+            if (node->_trs) {
+                it->trs = node->_trs;
+                it->columns = node->base.columns;
+                it->ids = node->_ids;
+                it->sources = node->_sources;
+                it->set_fields = node->base.set_fields;
+                it->up_fields = node->_up_fields;
+#ifdef FLECS_DEBUG
+                it->flags |= EcsIterImmutableCacheData;
+#endif
+            } else {
+                flecs_query_cache_init_mapped_fields(ctx, node);
+            }
+            flecs_query_set_iter_this(it, ctx);
+            return true;
+        }
+    }
+
+    do {
+        ecs_query_cache_match_t *node;
+        if (test) {
+            node = flecs_query_test(ctx, redo);
+            redo = true;
+        } else {
+            node = flecs_query_cache_next(ctx, false);
+        }
+
+        if (!node) {
+            return false;
+        }
+
+        ecs_table_t *table = node->base.table;
+        flecs_query_cache_init_mapped_fields(ctx, node);
+        if (!test) {
+            ctx->vars[0].range.table = table;
+            ctx->vars[0].range.count = node->_count;
+            ctx->vars[0].range.offset = node->_offset;
+        }
+
+        if (!(table->flags & EcsTableHasParent)) {
+            flecs_query_set_iter_this(it, ctx);
+            return true;
+        }
+
+        if (flecs_query_run_until(false, ctx, ops, cache_op, cache_op + 1, 
+            last_op))
+        {
+            qit->op = flecs_itolbl(ctx->op_index - 1);
+            flecs_query_set_iter_this(it, ctx);
+            return true;
+        }
+    } while (true);
 }
 
 #endif // FLECS_QUERY_PLANS

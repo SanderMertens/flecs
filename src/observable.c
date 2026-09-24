@@ -390,14 +390,44 @@ static void flecs_emit_propagate_id(
             int32_t i, count = ecs_vec_count(&cur->pair->ordered_children);
             ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
             int32_t event_cur = it->event_cur;
+
+            bool invoke = false;
+            for (i = 0; i < ider_count; i ++) {
+                ecs_event_id_record_t *ider = iders[i];
+                if ((ider->observer_count - ider->up_notify_count) > 0) {
+                    invoke = true;
+                    break;
+                }
+            }
+
             for (i = 0; i < count; i ++) {
                 ecs_record_t *r = flecs_entities_get(world, children[i]);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_table_t *table = r->table;
+
+                if (!invoke && (table->flags & EcsTableHasParent)) {
+                    if (!(r->row & EcsEntityIsTraversable)) {
+                        continue;
+                    }
+
+                    if (flecs_component_get_table(cr, table)) {
+                        continue;
+                    }
+
+                    ecs_component_record_t *cr_t = flecs_components_get(
+                        world, ecs_pair(EcsWildcard, children[i]));
+                    if (cr_t) {
+                        flecs_emit_propagate(world, it, cr, cr_t, trav,
+                            iders, ider_count);
+                    }
+
+                    continue;
+                }
 
                 flecs_emit_propagate_id_for_range(
                     world, it, cr, trav, iders, ider_count,
                         &(ecs_table_range_t){
-                            .table = r->table,
+                            .table = table,
                             .offset = ECS_RECORD_TO_ROW(r->row),
                             .count = 1
                         });
@@ -799,6 +829,23 @@ static void flecs_reachable_cache_ensure(
     if (validate) {
         rc->current = rc->generation;
     }
+}
+
+const ecs_vec_t* flecs_reachable_cache_get(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_reachable_cache_t *rc = &cr->pair->reachable;
+    if (rc->current != rc->generation) {
+        if (world->flags & EcsWorldMultiThreaded) {
+            return NULL;
+        }
+
+        flecs_reachable_cache_ensure(world, cr, 0, true);
+    }
+
+    return &rc->ids;
 }
 
 static void flecs_emit_forward(

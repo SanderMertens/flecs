@@ -154,6 +154,44 @@ ecs_stack_cursor_t* flecs_stack_get_cursor(
     return result;
 }
 
+ecs_stack_cursor_t* flecs_stack_get_cursor_w_alloc(
+    ecs_stack_t *stack,
+    ecs_size_t size,
+    ecs_size_t align,
+    void **data_out)
+{
+    ecs_assert(stack != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(align >= ECS_ALIGNOF(ecs_stack_cursor_t),
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_size_t hdr = ECS_ALIGN(ECS_SIZEOF(ecs_stack_cursor_t), align);
+    ecs_assert((hdr + size) <= FLECS_STACK_PAGE_SIZE,
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_stack_page_t *page = stack->tail_page;
+    if (!page) {
+        page = stack->first = flecs_stack_page_new(0);
+        stack->tail_page = page;
+    }
+
+    int16_t sp = page->sp;
+    char *buf = flecs_stack_alloc(stack, hdr + size, align);
+    ecs_stack_cursor_t *result = (ecs_stack_cursor_t*)(void*)buf;
+    result->page = page;
+    result->sp = sp;
+    result->is_free = false;
+
+#ifdef FLECS_DEBUG
+    ++ stack->cursor_count;
+    result->owner = stack;
+#endif
+
+    result->prev = stack->tail_cursor;
+    stack->tail_cursor = result;
+    *data_out = buf + hdr;
+    return result;
+}
+
 #define FLECS_STACK_LEAK_MSG \
     "a stack allocator leak is most likely due to an unterminated " \
     "iteration: call ecs_iter_fini to fix"

@@ -265,6 +265,12 @@ static void flecs_query_cache_on_rematch_event(
 
     ecs_world_t *world = it->world;
 
+    if (it->table->flags & EcsTableHasParent) {
+        const ecs_term_t *term = &o->query->terms[it->term_index];
+        if (term->trav == EcsChildOf) {
+            return;
+        }
+    }
 
     ecs_enqueue(it->stage, &(ecs_event_desc_t){
         .event = EcsOnQueryCacheRevalidate,

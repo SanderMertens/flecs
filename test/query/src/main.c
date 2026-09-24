@@ -1943,6 +1943,10 @@ void Cached_no_rematch_on_instantiate(void);
 void Cached_no_rematch_on_instantiate_multi_up(void);
 void Cached_no_rematch_on_instantiate_child(void);
 void Cached_self_term_w_inheritable_component(void);
+void Cached_rematch_after_reparent_parent_component_w_grandchild(void);
+void Cached_unmatch_after_reparent_parent_component_to_empty_parent(void);
+void Cached_spawn_despawn_parent_component_children_w_up_query(void);
+void Cached_on_add_childof_observer_w_parent_component_and_up_query(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -10604,6 +10608,22 @@ bake_test_case Cached_testcases[] = {
     {
         "self_term_w_inheritable_component",
         Cached_self_term_w_inheritable_component
+    },
+    {
+        "rematch_after_reparent_parent_component_w_grandchild",
+        Cached_rematch_after_reparent_parent_component_w_grandchild
+    },
+    {
+        "unmatch_after_reparent_parent_component_to_empty_parent",
+        Cached_unmatch_after_reparent_parent_component_to_empty_parent
+    },
+    {
+        "spawn_despawn_parent_component_children_w_up_query",
+        Cached_spawn_despawn_parent_component_children_w_up_query
+    },
+    {
+        "on_add_childof_observer_w_parent_component_and_up_query",
+        Cached_on_add_childof_observer_w_parent_component_and_up_query
     }
 };
 
@@ -14847,7 +14867,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        165,
+        169,
         Cached_testcases
     },
     {

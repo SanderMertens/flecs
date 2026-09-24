@@ -2026,6 +2026,10 @@ void flecs_observers_invoke_skip_up_notify(
     ecs_entity_t trav);
 
 /* Invalidate reachable cache. */
+const ecs_vec_t* flecs_reachable_cache_get(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
 void flecs_emit_propagate_invalidate(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -2065,6 +2069,12 @@ void* flecs_field_shared(
 void flecs_iter_free(
     void *ptr,
     ecs_size_t size);
+
+/* Allocate memory from iterator allocator. */
+void* flecs_iter_alloc(
+    ecs_iter_t *it,
+    ecs_size_t size,
+    ecs_size_t align);
 
 /* Allocate zero initialized memory from iterator allocator. */
 void* flecs_iter_calloc(
@@ -2406,6 +2416,9 @@ struct ecs_world_t {
     int32_t cr_flag_count;
 
     int32_t non_fragmenting_child_count;
+
+    /* Set once any table has dirty state allocated for change detection */
+    bool has_dirty_state;
 
     /* -- Mixins -- */
     ecs_world_t *self;
@@ -5530,6 +5543,15 @@ void flecs_entity_remove_non_fragmenting(
     r->row &= ~EcsEntityHasDontFragment;
 }
 
+static bool flecs_on_set_emit_up_notify(
+    const ecs_table_t *table,
+    ecs_id_t id)
+{
+    return (id == ecs_id(EcsParent)) &&
+        (table->flags & EcsTableHasUpNotify) &&
+        (table->flags & EcsTableHasTraversable);
+}
+
 static bool flecs_actions_emit_for_diff(
     const ecs_table_t *table,
     ecs_flags32_t diff_flags,
@@ -5785,14 +5807,15 @@ void flecs_notify_on_set_ids(
     ecs_assert((row + count) <= ecs_table_count(table), 
         ECS_INTERNAL_ERROR, NULL);
 
-    bool dont_fragment = false;
+    bool emit_on_set = false;
     bool any_validate = false;
 
     int i;
     for (i = 0; i < ids->count; i ++) {
         ecs_id_t id = ids->array[i];
         ecs_component_record_t *cr = flecs_components_get(world, id);
-        dont_fragment |= (cr->flags & EcsIdDontFragment) != 0;
+        emit_on_set |= (cr->flags & EcsIdDontFragment) != 0;
+        emit_on_set |= flecs_on_set_emit_up_notify(table, id);
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         const ecs_type_info_t *ti = cr->type_info;
@@ -5865,7 +5888,7 @@ void flecs_notify_on_set_ids(
 
     /* Run OnSet notifications */
     if (!any_validate) {
-        if ((dont_fragment || table->flags & EcsTableHasOnSet) && ids->count) {
+        if ((emit_on_set || table->flags & EcsTableHasOnSet) && ids->count) {
             flecs_emit(world, world, &(ecs_event_desc_t) {
                 .event = EcsOnSet,
                 .ids = ids,
@@ -5875,7 +5898,7 @@ void flecs_notify_on_set_ids(
                 .observable = world
             });
         }
-    } else if (dont_fragment || table->flags & EcsTableHasOnSet) {
+    } else if (emit_on_set || table->flags & EcsTableHasOnSet) {
         for (i = 0; i < ids->count; i ++) {
             ecs_id_t id = ids->array[i];
             ecs_component_record_t *cr = flecs_components_get(world, id);
@@ -5924,7 +5947,8 @@ void flecs_notify_on_set_w_cr(
 
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    bool dont_fragment = (cr->flags & EcsIdDontFragment) != 0;
+    bool emit_on_set = (cr->flags & EcsIdDontFragment) != 0;
+    emit_on_set |= flecs_on_set_emit_up_notify(table, id);
     const ecs_type_info_t *ti = cr->type_info;
 
     ecs_on_validate_t on_validate = ti->hooks.on_validate;
@@ -5956,7 +5980,7 @@ void flecs_notify_on_set_w_cr(
         }
     }
 
-    if ((dont_fragment || table->flags & EcsTableHasOnSet)) {
+    if ((emit_on_set || table->flags & EcsTableHasOnSet)) {
         ecs_type_t ids = { .array = &id, .count = 1 };
         flecs_emit(world, world, &(ecs_event_desc_t) {
             .event = EcsOnSet,
@@ -6336,6 +6360,10 @@ static void flecs_move_entity(
 
     flecs_actions_move_add(world, dst_table, src_table, dst_row, 1, diff,
         evt_flags, true, emplace_id, true);
+
+    if (!diff->added.count && (record->row & EcsEntityIsTraversable)) {
+        flecs_emit_propagate_invalidate(world, dst_table, dst_row, 1);
+    }
 
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
 }
@@ -10665,6 +10693,17 @@ bool ecs_id_in_use(
 /* If term count is smaller than cache size, initialize with inline array,
  * otherwise allocate. */
 
+void* flecs_iter_alloc(
+    ecs_iter_t *it,
+    ecs_size_t size,
+    ecs_size_t align)
+{
+    ecs_world_t *world = it->stage;
+    ecs_stage_t *stage = flecs_stage_from_world((ecs_world_t**)&world);
+    ecs_stack_t *stack = &stage->allocators.iter_stack;
+    return flecs_stack_alloc(stack, size, align);
+}
+
 void* flecs_iter_calloc(
     ecs_iter_t *it,
     ecs_size_t size,
@@ -10827,14 +10866,28 @@ void* flecs_field_shared(
     ecs_entity_t src = it->sources[index];
     ecs_record_t *r = flecs_entities_get(it->world, src);
     ecs_table_t *table = r->table;
-
-    ecs_component_record_t *cr = flecs_components_get(
-        it->world, it->ids[index]);
-    const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
-    ecs_column_t *col = &table->data.columns[tr->column];
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
     (void)size;
 
-    return ECS_ELEM(col->data, col->ti->size, ECS_RECORD_TO_ROW(r->row));
+    const ecs_table_record_t *tr = it->trs[index];
+    if (tr && tr->hdr.table == table) {
+        ecs_column_t *col = &table->data.columns[tr->column];
+        return ECS_ELEM(col->data, col->ti->size, row);
+    }
+
+    ecs_id_t id = it->ids[index];
+    if (id < FLECS_HI_COMPONENT_ID) {
+        int16_t column_index = table->component_map[id];
+        if (column_index > 0) {
+            ecs_column_t *col = &table->data.columns[column_index - 1];
+            return ECS_ELEM(col->data, col->ti->size, row);
+        }
+    }
+
+    ecs_component_record_t *cr = flecs_components_get(it->world, id);
+    tr = flecs_component_get_table(cr, table);
+    ecs_column_t *col = &table->data.columns[tr->column];
+    return ECS_ELEM(col->data, col->ti->size, row);
 }
 
 static ecs_component_record_t* flecs_field_cr(
@@ -12118,14 +12171,44 @@ static void flecs_emit_propagate_id(
             int32_t i, count = ecs_vec_count(&cur->pair->ordered_children);
             ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
             int32_t event_cur = it->event_cur;
+
+            bool invoke = false;
+            for (i = 0; i < ider_count; i ++) {
+                ecs_event_id_record_t *ider = iders[i];
+                if ((ider->observer_count - ider->up_notify_count) > 0) {
+                    invoke = true;
+                    break;
+                }
+            }
+
             for (i = 0; i < count; i ++) {
                 ecs_record_t *r = flecs_entities_get(world, children[i]);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_table_t *table = r->table;
+
+                if (!invoke && (table->flags & EcsTableHasParent)) {
+                    if (!(r->row & EcsEntityIsTraversable)) {
+                        continue;
+                    }
+
+                    if (flecs_component_get_table(cr, table)) {
+                        continue;
+                    }
+
+                    ecs_component_record_t *cr_t = flecs_components_get(
+                        world, ecs_pair(EcsWildcard, children[i]));
+                    if (cr_t) {
+                        flecs_emit_propagate(world, it, cr, cr_t, trav,
+                            iders, ider_count);
+                    }
+
+                    continue;
+                }
 
                 flecs_emit_propagate_id_for_range(
                     world, it, cr, trav, iders, ider_count,
                         &(ecs_table_range_t){
-                            .table = r->table,
+                            .table = table,
                             .offset = ECS_RECORD_TO_ROW(r->row),
                             .count = 1
                         });
@@ -12527,6 +12610,23 @@ static void flecs_reachable_cache_ensure(
     if (validate) {
         rc->current = rc->generation;
     }
+}
+
+const ecs_vec_t* flecs_reachable_cache_get(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_reachable_cache_t *rc = &cr->pair->reachable;
+    if (rc->current != rc->generation) {
+        if (world->flags & EcsWorldMultiThreaded) {
+            return NULL;
+        }
+
+        flecs_reachable_cache_ensure(world, cr, 0, true);
+    }
+
+    return &rc->ids;
 }
 
 static void flecs_emit_forward(
@@ -13327,7 +13427,7 @@ static void flecs_inc_observer_count(
             ecs_event_record_t *er_onset =
                 flecs_event_record_ensure(observable, EcsOnSet);
             flecs_inc_observer_count(
-                world, EcsOnSet, er_onset, ecs_id(EcsParent), value, false);
+                world, EcsOnSet, er_onset, ecs_id(EcsParent), value, up_notify);
         } else {
             flecs_inc_observer_count(
                 world, event, evt, ecs_id(EcsParent), value, up_notify);
@@ -21954,6 +22054,44 @@ ecs_stack_cursor_t* flecs_stack_get_cursor(
     return result;
 }
 
+ecs_stack_cursor_t* flecs_stack_get_cursor_w_alloc(
+    ecs_stack_t *stack,
+    ecs_size_t size,
+    ecs_size_t align,
+    void **data_out)
+{
+    ecs_assert(stack != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(align >= ECS_ALIGNOF(ecs_stack_cursor_t),
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_size_t hdr = ECS_ALIGN(ECS_SIZEOF(ecs_stack_cursor_t), align);
+    ecs_assert((hdr + size) <= FLECS_STACK_PAGE_SIZE,
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_stack_page_t *page = stack->tail_page;
+    if (!page) {
+        page = stack->first = flecs_stack_page_new(0);
+        stack->tail_page = page;
+    }
+
+    int16_t sp = page->sp;
+    char *buf = flecs_stack_alloc(stack, hdr + size, align);
+    ecs_stack_cursor_t *result = (ecs_stack_cursor_t*)(void*)buf;
+    result->page = page;
+    result->sp = sp;
+    result->is_free = false;
+
+#ifdef FLECS_DEBUG
+    ++ stack->cursor_count;
+    result->owner = stack;
+#endif
+
+    result->prev = stack->tail_cursor;
+    stack->tail_cursor = result;
+    *data_out = buf + hdr;
+    return result;
+}
+
 #define FLECS_STACK_LEAK_MSG \
     "a stack allocator leak is most likely due to an unterminated " \
     "iteration: call ecs_iter_fini to fix"
@@ -25690,6 +25828,7 @@ static ecs_flags32_t flecs_component_event_flags(
 
     bool up_notify = flecs_up_notify_observers_exist(o, id, EcsOnAdd);
     up_notify |= flecs_up_notify_observers_exist(o, id, EcsOnRemove);
+    up_notify |= flecs_up_notify_observers_exist(o, id, EcsOnSet);
     result |= up_notify * EcsIdHasUpNotify;
 
     return result;
@@ -27338,6 +27477,12 @@ static void flecs_on_replace_parent(ecs_iter_t *it) {
         /* Write new parent value to component storage before ecs_add_id, as
          * it can trigger a table move that reads the parent value. */
         old[i].value = new_parent;
+
+        ecs_record_t *r_e = flecs_entities_get(world, e);
+        if (r_e->row & EcsEntityIsTraversable) {
+            flecs_emit_propagate_invalidate(world, r_e->table,
+                ECS_RECORD_TO_ROW(r_e->row), 1);
+        }
 
         int32_t depth = cr_parent->pair->depth;
 
@@ -29664,6 +29809,7 @@ int32_t* flecs_table_get_dirty_state(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!table->dirty_state) {
         int32_t column_count = table->column_count;
+        world->has_dirty_state = true;
         table->dirty_state = flecs_alloc_n(&world->allocator,
              int32_t, column_count + 1);
         ecs_assert(table->dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);

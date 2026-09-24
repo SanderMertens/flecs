@@ -200,6 +200,10 @@ static void flecs_move_entity(
     flecs_actions_move_add(world, dst_table, src_table, dst_row, 1, diff,
         evt_flags, true, emplace_id, true);
 
+    if (!diff->added.count && (record->row & EcsEntityIsTraversable)) {
+        flecs_emit_propagate_invalidate(world, dst_table, dst_row, 1);
+    }
+
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
 }
 

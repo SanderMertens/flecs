@@ -270,6 +270,7 @@ bool flecs_query_trav(
     const ecs_query_run_ctx_t *ctx)
 {
     uint64_t written = ctx->written[ctx->op_index];
+    ctx->it->flags |= EcsIterOpCtxFini;
 
     if (!flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         if (!flecs_ref_is_written(op, &op->second, EcsQuerySecond, written)) {

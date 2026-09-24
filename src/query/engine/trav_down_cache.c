@@ -153,6 +153,7 @@ static void flecs_trav_entity_down_iter_children(
     ecs_vec_t *children = &cr_trav->pair->ordered_children;
     int32_t i, count = ecs_vec_count(children);
     ecs_entity_t *elems = ecs_vec_first(children);
+    ecs_trav_down_elem_t *prev = NULL;
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = elems[i];
@@ -170,13 +171,22 @@ static void flecs_trav_entity_down_iter_children(
             }
         }
 
+        int32_t row = ECS_RECORD_TO_ROW(r->row);
+        if (prev && prev->range.table == r->table &&
+            prev->leaf == leaf && (prev->range.offset + prev->range.count) == row)
+        {
+            prev->range.count ++;
+            continue;
+        }
+
         /* Add element to the cache for a single child */
         ecs_trav_down_elem_t *elem = ecs_vec_append_t(
             a, &dst->elems, ecs_trav_down_elem_t);
         elem->range.table = r->table;
-        elem->range.offset = ECS_RECORD_TO_ROW(r->row);
+        elem->range.offset = row;
         elem->range.count = 1;
         elem->leaf = leaf;
+        prev = elem;
     }
 }
 
