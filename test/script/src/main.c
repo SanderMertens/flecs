@@ -3093,7 +3093,14 @@ void Reactivity_component_in_interpolated_children_w_string_middle_collision(voi
 void Reactivity_component_in_interpolated_children_w_numeric_boundary_collision(void);
 void Reactivity_component_in_interpolated_children_w_formatted_integer(void);
 void Reactivity_component_in_interpolated_children_w_fill_collision(void);
+void Reactivity_template_switch_keeps_child_of_same_name(void);
+void Reactivity_template_switch_in_for_keeps_child_of_same_name(void);
+void Reactivity_template_switch_keeps_tag_both_templates_add(void);
 void Reactivity_template_this_has_ref_add_tag_reinstantiates(void);
+void Reactivity_template_switch_keeps_child_created_in_for_of_new_template(void);
+void Reactivity_template_switch_keeps_child_created_in_for_of_old_template(void);
+void Reactivity_template_switch_keeps_shared_base_template_state(void);
+void Reactivity_template_switch_keeps_tag_added_by_script(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -15931,8 +15938,36 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_component_in_interpolated_children_w_fill_collision
     },
     {
+        "template_switch_keeps_child_of_same_name",
+        Reactivity_template_switch_keeps_child_of_same_name
+    },
+    {
+        "template_switch_in_for_keeps_child_of_same_name",
+        Reactivity_template_switch_in_for_keeps_child_of_same_name
+    },
+    {
+        "template_switch_keeps_tag_both_templates_add",
+        Reactivity_template_switch_keeps_tag_both_templates_add
+    },
+    {
         "template_this_has_ref_add_tag_reinstantiates",
         Reactivity_template_this_has_ref_add_tag_reinstantiates
+    },
+    {
+        "template_switch_keeps_child_created_in_for_of_new_template",
+        Reactivity_template_switch_keeps_child_created_in_for_of_new_template
+    },
+    {
+        "template_switch_keeps_child_created_in_for_of_old_template",
+        Reactivity_template_switch_keeps_child_created_in_for_of_old_template
+    },
+    {
+        "template_switch_keeps_shared_base_template_state",
+        Reactivity_template_switch_keeps_shared_base_template_state
+    },
+    {
+        "template_switch_keeps_tag_added_by_script",
+        Reactivity_template_switch_keeps_tag_added_by_script
     }
 };
 
@@ -18811,7 +18846,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        162,
+        169,
         Reactivity_testcases,
         1,
         Reactivity_params
