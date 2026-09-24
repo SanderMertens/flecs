@@ -78681,7 +78681,9 @@ int flecs_query_compile_term(
         if (first_is_var) {
             flecs_query_insert_contains(query, op.src.var, op.first.var, ctx);
         }
-        if (second_is_var && op.first.var != op.second.var) {
+        if (second_is_var &&
+            !(first_is_var && op.first.var == op.second.var))
+        {
             flecs_query_insert_contains(query, op.src.var, op.second.var, ctx);
         }
     }
