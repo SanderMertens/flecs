@@ -3189,7 +3189,8 @@
                 "component_in_interpolated_children_w_string_middle_collision",
                 "component_in_interpolated_children_w_numeric_boundary_collision",
                 "component_in_interpolated_children_w_formatted_integer",
-                "component_in_interpolated_children_w_fill_collision"
+                "component_in_interpolated_children_w_fill_collision",
+                "template_this_has_ref_add_tag_reinstantiates"
             ]
         }, {
             "id": "ConstVar",
