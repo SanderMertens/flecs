@@ -9143,6 +9143,192 @@ void Reactivity_component_in_interpolated_children_w_fill_collision(void) {
     ecs_fini(world);
 }
 
+void Reactivity_template_switch_keeps_child_of_same_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Ta {}"
+            LINE "Tb {}"
+            LINE "template A {"
+            LINE "  child { Ta }"
+            LINE "}"
+            LINE "template B {"
+            LINE "  child { Tb }"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  A x()"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    ecs_entity_t child = ecs_lookup(world, "x.child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, tb));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    child = ecs_lookup(world, "x.child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, ta));
+    test_assert(!ecs_has_id(world, child, tb));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_in_for_keeps_child_of_same_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Ta {}"
+            LINE "Tb {}"
+            LINE "template A {"
+            LINE "  child { Ta }"
+            LINE "}"
+            LINE "template B {"
+            LINE "  child { Tb }"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "for i in 0..2 {"
+            LINE "  if cfg.flag {"
+            LINE "    A \"x_{i}\"()"
+            LINE "  } else {"
+            LINE "    B \"x_{i}\"()"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x_0");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    ecs_entity_t child = ecs_lookup(world, "x_0.child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, tb));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x_0") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    child = ecs_lookup(world, "x_0.child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, ta));
+    test_assert(!ecs_has_id(world, child, tb));
+
+    ecs_entity_t x1 = ecs_lookup(world, "x_1");
+    test_assert(x1 != 0);
+    test_assert(ecs_has_id(world, x1, a));
+    child = ecs_lookup(world, "x_1.child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, ta));
+    test_assert(!ecs_has_id(world, child, tb));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_keeps_tag_both_templates_add(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Shared {}"
+            LINE "Ta {}"
+            LINE "Tb {}"
+            LINE "template A {"
+            LINE "  Shared"
+            LINE "  Ta"
+            LINE "}"
+            LINE "template B {"
+            LINE "  Shared"
+            LINE "  Tb"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  A x()"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t shared = ecs_lookup(world, "Shared");
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, shared));
+    test_assert(ecs_has_id(world, x, tb));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, ta));
+    test_assert(!ecs_has_id(world, x, tb));
+    test_assert(ecs_has_id(world, x, shared));
+
+    ecs_fini(world);
+}
+
 void Reactivity_template_this_has_ref_add_tag_reinstantiates(void) {
     ecs_world_t *world = ecs_init();
 
@@ -9178,6 +9364,242 @@ void Reactivity_template_this_has_ref_add_tag_reinstantiates(void) {
     ecs_remove_id(world, x, hovered);
     test_assert(ecs_has_id(world, x, cold));
     test_assert(!ecs_has_id(world, x, hot));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_keeps_child_created_in_for_of_new_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Ta {}"
+            LINE "Tb {}"
+            LINE "template A {"
+            LINE "  for i in 0..1 {"
+            LINE "    \"child_{i}\" { Ta }"
+            LINE "  }"
+            LINE "}"
+            LINE "template B {"
+            LINE "  child_0 { Tb }"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  A x()"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    ecs_entity_t child = ecs_lookup(world, "x.child_0");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, tb));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    child = ecs_lookup(world, "x.child_0");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, ta));
+    test_assert(!ecs_has_id(world, child, tb));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_keeps_child_created_in_for_of_old_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Ta {}"
+            LINE "Tb {}"
+            LINE "template A {"
+            LINE "  child_0 { Ta }"
+            LINE "}"
+            LINE "template B {"
+            LINE "  for i in 0..1 {"
+            LINE "    \"child_{i}\" { Tb }"
+            LINE "  }"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  A x()"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    ecs_entity_t child = ecs_lookup(world, "x.child_0");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, tb));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    child = ecs_lookup(world, "x.child_0");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, ta));
+    test_assert(!ecs_has_id(world, child, tb));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_keeps_shared_base_template_state(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Shared {}"
+            LINE "Ta {}"
+            LINE "Tb {}"
+            LINE "template Base {"
+            LINE "  Shared"
+            LINE "  base_child { Shared }"
+            LINE "}"
+            LINE "template A : Base {"
+            LINE "  Ta"
+            LINE "}"
+            LINE "template B : Base {"
+            LINE "  Tb"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  A x()"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t shared = ecs_lookup(world, "Shared");
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, shared));
+    test_assert(ecs_has_id(world, x, tb));
+    ecs_entity_t child = ecs_lookup(world, "x.base_child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, shared));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, ta));
+    test_assert(!ecs_has_id(world, x, tb));
+    test_assert(ecs_has_id(world, x, shared));
+    child = ecs_lookup(world, "x.base_child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, shared));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_keeps_tag_added_by_script(void) {
+    test_quarantine("23 Sep 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Shared {}"
+            LINE "template B {"
+            LINE "  Shared"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  x { Shared }"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t shared = ecs_lookup(world, "Shared");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, shared));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(!ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, shared));
 
     ecs_fini(world);
 }
