@@ -120880,7 +120880,9 @@ static void flecs_script_template_instance_ref_on_set(
     ecs_entity_t template_entity = ctx->script;
     ecs_entity_t instance = ctx->instance;
 
-    if (it->event == EcsOnRemove && ecs_is_deferred(it->stage)) {
+    if ((it->event == EcsOnAdd || it->event == EcsOnRemove) &&
+        ecs_is_deferred(it->stage))
+    {
         EcsScriptTemplateInstanceUpdateEvent evt = {
             .template_entity = template_entity,
             .instance = instance,
