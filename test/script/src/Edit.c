@@ -4175,3 +4175,656 @@ void Edit_set_10k_statements(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Edit_from_scene_no_changes(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "foo {"
+    LINE "  Position: {10, 20}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    const char *code_before = sc->code;
+    ecs_script_t *script_before = sc->script;
+
+    test_int(0, ecs_script_from_scene(world, s));
+
+    sc = ecs_get(world, s, EcsScript);
+    test_assert(sc->code == code_before);
+    test_assert(sc->script == script_before);
+    test_str(sc->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_no_changes_float_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "foo {"
+    LINE "  Position: {10.0, 20.50}"
+    LINE "}"
+    LINE "bar {"
+    LINE "  Position: {x: 0.1, y: -1.25}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    test_int(0, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_changed_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {10, 20}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {30, 40});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "foo {"
+        LINE "  Position: {30, 40}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_changed_value_named(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {x: 10, y: 20}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {1.5, 20});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "foo {"
+        LINE "  Position: {x: 1.5, y: 20}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_preserves_layout(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "// The foo entity"
+            LINE "foo {"
+            LINE "    Tag"
+            LINE "    Position: {10, 20} // position"
+            LINE "}"
+            LINE ""
+            LINE "/* bar */"
+            LINE "bar {"
+            LINE "    Position: {1, 2}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {11, 20});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "// The foo entity"
+        LINE "foo {"
+        LINE "    Tag"
+        LINE "    Position: {11, 20} // position"
+        LINE "}"
+        LINE ""
+        LINE "/* bar */"
+        LINE "bar {"
+        LINE "    Position: {1, 2}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_changed_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "parent {"
+            LINE "  Position: {1, 2}"
+            LINE "  child {"
+            LINE "    Position: {3, 4}"
+            LINE "  }"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t child = ecs_lookup(world, "parent.child");
+    test_assert(child != 0);
+    ecs_set(world, child, Position, {5, 6});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "parent {"
+        LINE "  Position: {1, 2}"
+        LINE "  child {"
+        LINE "    Position: {5, 6}"
+        LINE "  }"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_multiple_entities(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "a {"
+            LINE "  Position: {1, 2}"
+            LINE "  Velocity: {3, 4}"
+            LINE "}"
+            LINE "b {"
+            LINE "  Position: {5, 6}"
+            LINE "}"
+            LINE "c {"
+            LINE "  Velocity: {7, 8}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t c = ecs_lookup(world, "c");
+    test_assert(a != 0);
+    test_assert(c != 0);
+    ecs_set(world, a, Velocity, {30, 40});
+    ecs_set(world, c, Velocity, {70, 80});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "a {"
+        LINE "  Position: {1, 2}"
+        LINE "  Velocity: {30, 40}"
+        LINE "}"
+        LINE "b {"
+        LINE "  Position: {5, 6}"
+        LINE "}"
+        LINE "c {"
+        LINE "  Velocity: {70, 80}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_partial_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "foo {"
+    LINE "  Position: {x: 10}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    test_int(0, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, code);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {10, 20});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "foo {"
+        LINE "  Position: {x: 10, y: 20}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_updates_entities(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {10, 20}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {30, 40});
+
+    test_int(1, ecs_script_from_scene(world, s));
+    foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_script_source_t src = {0};
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_assert(ecs_script_entity_source(sc->script, foo, &src));
+    test_int(src.line, 1);
+
+    const char *code_before = sc->code;
+    test_int(0, ecs_script_from_scene(world, s));
+    test_assert(ecs_get(world, s, EcsScript)->code == code_before);
+
+    ecs_set(world, foo, Position, {50, 60});
+    test_int(1, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code,
+        HEAD "foo {"
+        LINE "  Position: {50, 60}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_skip_variable_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "const v = 10"
+    LINE "foo {"
+    LINE "  Position: {$v, 20}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {30, 40});
+
+    test_int(0, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_skip_removed_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "foo {"
+    LINE "  Position: {10, 20}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_remove(world, foo, Position);
+
+    test_int(0, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_skip_added_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "foo {"
+    LINE "  Position: {10, 20}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Velocity, {1, 2});
+
+    test_int(0, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_skip_template_body(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "template Tree {"
+    LINE "  trunk {"
+    LINE "    Position: {1, 2}"
+    LINE "  }"
+    LINE "}"
+    LINE "tree {"
+    LINE "  Tree: {}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    ecs_entity_t trunk = ecs_lookup(world, "tree.trunk");
+    test_assert(trunk != 0);
+    ecs_set(world, trunk, Position, {3, 4});
+
+    test_int(0, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "foo {"
+            LINE "  (Position, Tgt): {10, 20}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set_pair(world, foo, Position, Tgt, {30, 40});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "foo {"
+        LINE "  (Position, Tgt): {30, 40}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_not_a_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_log_set_level(-4);
+    test_int(-1, ecs_script_from_scene(world, e));
+
+    ecs_fini(world);
+}
+
+void Edit_save(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *filename = "edit_save_test.flecs";
+    FILE *f = fopen(filename, "w");
+    test_assert(f != NULL);
+    fputs(
+        HEAD "// comment"
+        LINE "foo {"
+        LINE "  Position: {10, 20}"
+        LINE "}"
+        LINE, f);
+    fclose(f);
+
+    ecs_entity_t s = ecs_script(world, {
+        .filename = filename, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {30, 40});
+
+    test_int(1, ecs_script_from_scene(world, s));
+    test_int(0, ecs_script_save(world, s));
+
+    char *saved = flecs_load_from_file(filename);
+    test_str(saved,
+        HEAD "// comment"
+        LINE "foo {"
+        LINE "  Position: {30, 40}"
+        LINE "}"
+        LINE);
+    ecs_os_free(saved);
+
+    remove(filename);
+
+    ecs_fini(world);
+}
+
+void Edit_save_no_filename(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = "foo {}", .ir = ir_enabled });
+    test_assert(s != 0);
+
+    test_int(0, ecs_script_save(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, "foo {}");
+
+    ecs_fini(world);
+}
+
+void Edit_save_not_a_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_log_set_level(-4);
+    test_int(-1, ecs_script_save(world, e));
+
+    ecs_fini(world);
+}
