@@ -3093,6 +3093,7 @@ void Reactivity_component_in_interpolated_children_w_string_middle_collision(voi
 void Reactivity_component_in_interpolated_children_w_numeric_boundary_collision(void);
 void Reactivity_component_in_interpolated_children_w_formatted_integer(void);
 void Reactivity_component_in_interpolated_children_w_fill_collision(void);
+void Reactivity_template_this_has_ref_add_tag_reinstantiates(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -15928,6 +15929,10 @@ bake_test_case Reactivity_testcases[] = {
     {
         "component_in_interpolated_children_w_fill_collision",
         Reactivity_component_in_interpolated_children_w_fill_collision
+    },
+    {
+        "template_this_has_ref_add_tag_reinstantiates",
+        Reactivity_template_this_has_ref_add_tag_reinstantiates
     }
 };
 
@@ -18806,7 +18811,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        161,
+        162,
         Reactivity_testcases,
         1,
         Reactivity_params

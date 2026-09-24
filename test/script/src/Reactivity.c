@@ -9142,3 +9142,42 @@ void Reactivity_component_in_interpolated_children_w_fill_collision(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_template_this_has_ref_add_tag_reinstantiates(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Hovered {}"
+            LINE "Hot {}"
+            LINE "Cold {}"
+            LINE "template A {"
+            LINE "  if this?[Hovered] {"
+            LINE "    Hot"
+            LINE "  } else {"
+            LINE "    Cold"
+            LINE "  }"
+            LINE "}"
+            LINE "A x()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t hovered = ecs_lookup(world, "Hovered");
+    ecs_entity_t hot = ecs_lookup(world, "Hot");
+    ecs_entity_t cold = ecs_lookup(world, "Cold");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, cold));
+    test_assert(!ecs_has_id(world, x, hot));
+
+    ecs_add_id(world, x, hovered);
+    test_assert(ecs_has_id(world, x, hot));
+    test_assert(!ecs_has_id(world, x, cold));
+
+    ecs_remove_id(world, x, hovered);
+    test_assert(ecs_has_id(world, x, cold));
+    test_assert(!ecs_has_id(world, x, hot));
+
+    ecs_fini(world);
+}
