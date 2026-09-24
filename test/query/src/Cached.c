@@ -8521,3 +8521,314 @@ void Cached_self_term_w_inheritable_component(void) {
 
     ecs_fini(world);
 }
+
+void Cached_rematch_after_reparent_parent_component_w_grandchild(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t root_a = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t root_b = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t parent = ecs_insert(world, ecs_value(EcsParent, {root_a}));
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t grandchild = ecs_new_w_pair(world, EcsChildOf, child);
+
+    {
+        int32_t parent_count = 0, child_count = 0, grandchild_count = 0;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            test_uint(root_a, ecs_field_src(&it, 0));
+            Position *p = ecs_field(&it, Position, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 10); test_int(p->y, 20);
+            int32_t i;
+            for (i = 0; i < it.count; i ++) {
+                if (it.entities[i] == parent) parent_count ++;
+                if (it.entities[i] == child) child_count ++;
+                if (it.entities[i] == grandchild) grandchild_count ++;
+            }
+        }
+        test_int(parent_count, 1);
+        test_int(child_count, 1);
+        test_int(grandchild_count, 1);
+    }
+
+    ecs_set(world, parent, EcsParent, {root_b});
+
+    {
+        int32_t parent_count = 0, child_count = 0, grandchild_count = 0;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            test_uint(root_b, ecs_field_src(&it, 0));
+            Position *p = ecs_field(&it, Position, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 30); test_int(p->y, 40);
+            int32_t i;
+            for (i = 0; i < it.count; i ++) {
+                if (it.entities[i] == parent) parent_count ++;
+                if (it.entities[i] == child) child_count ++;
+                if (it.entities[i] == grandchild) grandchild_count ++;
+            }
+        }
+        test_int(parent_count, 1);
+        test_int(child_count, 1);
+        test_int(grandchild_count, 1);
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_unmatch_after_reparent_parent_component_to_empty_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t root_a = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t root_b = ecs_new(world);
+    ecs_entity_t parent = ecs_insert(world, ecs_value(EcsParent, {root_a}));
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t grandchild = ecs_new_w_pair(world, EcsChildOf, child);
+
+    {
+        int32_t count = 0;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            test_uint(root_a, ecs_field_src(&it, 0));
+            count += it.count;
+        }
+        test_int(count, 3);
+    }
+
+    ecs_set(world, parent, EcsParent, {root_b});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, parent, EcsParent, {root_a});
+
+    {
+        int32_t parent_count = 0, child_count = 0, grandchild_count = 0;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            test_uint(root_a, ecs_field_src(&it, 0));
+            int32_t i;
+            for (i = 0; i < it.count; i ++) {
+                if (it.entities[i] == parent) parent_count ++;
+                if (it.entities[i] == child) child_count ++;
+                if (it.entities[i] == grandchild) grandchild_count ++;
+            }
+        }
+        test_int(parent_count, 1);
+        test_int(child_count, 1);
+        test_int(grandchild_count, 1);
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_spawn_despawn_parent_component_children_w_up_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(Position), .src.id = EcsUp }
+        },
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t root = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t other = ecs_new(world);
+
+    ecs_entity_t children[8];
+    int32_t i;
+    for (i = 0; i < 8; i ++) {
+        children[i] = ecs_new_w_parent(world, root, NULL);
+        ecs_set(world, children[i], Position, {i, i});
+    }
+
+    ecs_entity_t unmatched = ecs_new_w_parent(world, other, NULL);
+    ecs_set(world, unmatched, Position, {100, 100});
+
+    {
+        int32_t count = 0;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            test_uint(root, ecs_field_src(&it, 1));
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 10); test_int(p->y, 20);
+            int32_t j;
+            for (j = 0; j < it.count; j ++) {
+                test_assert(it.entities[j] != unmatched);
+                test_uint(root, ecs_get_parent(world, it.entities[j]));
+            }
+            count += it.count;
+        }
+        test_int(count, 8);
+    }
+
+    for (i = 0; i < 4; i ++) {
+        ecs_delete(world, children[i]);
+    }
+
+    {
+        int32_t count = 0;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            test_uint(root, ecs_field_src(&it, 1));
+            int32_t j;
+            for (j = 0; j < it.count; j ++) {
+                test_assert(it.entities[j] != unmatched);
+                test_assert(ecs_is_alive(world, it.entities[j]));
+            }
+            count += it.count;
+        }
+        test_int(count, 4);
+    }
+
+    for (i = 4; i < 8; i ++) {
+        ecs_delete(world, children[i]);
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    for (i = 0; i < 8; i ++) {
+        children[i] = ecs_new_w_parent(world, root, NULL);
+        ecs_set(world, children[i], Position, {i, i});
+    }
+
+    {
+        int32_t count = 0;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            test_uint(root, ecs_field_src(&it, 1));
+            int32_t j;
+            for (j = 0; j < it.count; j ++) {
+                test_assert(it.entities[j] != unmatched);
+            }
+            count += it.count;
+        }
+        test_int(count, 8);
+    }
+
+    ecs_delete(world, unmatched);
+    ecs_delete(world, other);
+
+    {
+        int32_t count = 0;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            count += it.count;
+        }
+        test_int(count, 8);
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+static int cached_on_add_childof_invoked = 0;
+static ecs_entity_t cached_on_add_childof_entity = 0;
+static ecs_entity_t cached_on_add_childof_parent = 0;
+
+static void Cached_on_add_childof(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    cached_on_add_childof_invoked ++;
+    cached_on_add_childof_entity = it->entities[0];
+    cached_on_add_childof_parent = ecs_pair_second(it->world, it->ids[0]);
+}
+
+void Cached_on_add_childof_observer_w_parent_component_and_up_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t root = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t root_b = ecs_insert(world, ecs_value(Position, {30, 40}));
+
+    ecs_entity_t e1 = ecs_new_w_parent(world, root, NULL);
+    test_int(cached_on_add_childof_invoked, 0);
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsChildOf, EcsWildcard) }},
+        .events = { EcsOnAdd },
+        .callback = Cached_on_add_childof
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e2 = ecs_new_w_parent(world, root, NULL);
+    test_int(cached_on_add_childof_invoked, 1);
+    test_uint(cached_on_add_childof_entity, e2);
+    test_uint(cached_on_add_childof_parent, root);
+
+    ecs_set(world, e1, EcsParent, {root_b});
+    test_int(cached_on_add_childof_invoked, 2);
+    test_uint(cached_on_add_childof_entity, e1);
+    test_uint(cached_on_add_childof_parent, root_b);
+
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {root}));
+    test_int(cached_on_add_childof_invoked, 3);
+    test_uint(cached_on_add_childof_entity, e3);
+    test_uint(cached_on_add_childof_parent, root);
+
+    {
+        int32_t a_count = 0, b_count = 0;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            int32_t i;
+            for (i = 0; i < it.count; i ++) {
+                if (ecs_field_src(&it, 0) == root) a_count ++;
+                if (ecs_field_src(&it, 0) == root_b) b_count ++;
+            }
+        }
+        test_int(a_count, 2);
+        test_int(b_count, 1);
+    }
+
+    ecs_query_fini(q);
+
+    ecs_entity_t e4 = ecs_new_w_parent(world, root, NULL);
+    test_int(cached_on_add_childof_invoked, 4);
+    test_uint(cached_on_add_childof_entity, e4);
+    test_uint(cached_on_add_childof_parent, root);
+
+    ecs_delete(world, o);
+
+    ecs_entity_t e5 = ecs_new_w_parent(world, root, NULL);
+    test_assert(e5 != 0);
+    test_int(cached_on_add_childof_invoked, 4);
+
+    ecs_fini(world);
+}

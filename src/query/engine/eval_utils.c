@@ -239,7 +239,7 @@ void flecs_query_var_set_entity(
     var->entity = entity;
 }
 
-void flecs_query_set_vars(
+void flecs_query_set_vars_w_var_refs(
     const ecs_query_op_t *op,
     ecs_id_t id,
     const ecs_query_run_ctx_t *ctx)
