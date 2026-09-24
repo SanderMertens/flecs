@@ -13648,3 +13648,100 @@ void Variables_first_var_w_fixed_tgt_id_matching_var_id(void) {
         ecs_fini(world);
     }
 }
+
+void Variables_same_src_tgt_var_w_fixed_first_id_matching_var_id(void) {
+    int32_t i;
+
+    for (i = 0; i < 256; i ++) {
+        ecs_world_t *world = ecs_mini();
+
+        ecs_entity_t rel = 0x10000 + (ecs_entity_t)i;
+        ecs_make_alive(world, rel);
+        ecs_set_name(world, rel, "Rel");
+        ecs_add_id(world, rel, EcsTransitive);
+        ecs_add_id(world, rel, EcsReflexive);
+
+        ecs_entity_t e0 = ecs_new(world);
+        ecs_entity_t e1 = ecs_new(world);
+        ecs_entity_t e2 = ecs_new(world);
+        ecs_add_pair(world, e1, rel, e0);
+        ecs_add_pair(world, e2, rel, e1);
+
+        ecs_query_t *q = ecs_query(world, {
+            .expr = "Rel($x, $x)",
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        int32_t x_var = ecs_query_find_var(q, "x");
+        test_assert(x_var != -1);
+
+        int32_t count = 0;
+        bool e1_found = false;
+        bool e2_found = false;
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            ecs_entity_t x = ecs_iter_get_var(&it, x_var);
+            e1_found |= x == e1;
+            e2_found |= x == e2;
+            count ++;
+        }
+
+        test_int(count, 2);
+        test_bool(e1_found, true);
+        test_bool(e2_found, true);
+
+        ecs_query_fini(q);
+        ecs_fini(world);
+    }
+}
+
+void Variables_same_this_src_tgt_w_fixed_first_id_matching_var_id(void) {
+    int32_t i;
+
+    for (i = 0; i < 256; i ++) {
+        ecs_world_t *world = ecs_mini();
+
+        ecs_entity_t rel = 0x10000 + (ecs_entity_t)i;
+        ecs_make_alive(world, rel);
+        ecs_set_name(world, rel, "Rel");
+        ecs_add_id(world, rel, EcsTransitive);
+        ecs_add_id(world, rel, EcsReflexive);
+
+        ecs_entity_t e0 = ecs_new(world);
+        ecs_entity_t e1 = ecs_new(world);
+        ecs_entity_t e2 = ecs_new(world);
+        ecs_add_pair(world, e1, rel, e0);
+        ecs_add_pair(world, e2, rel, e1);
+
+        ecs_query_t *q = ecs_query(world, {
+            .expr = "Rel($this, $this)",
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        int32_t count = 0;
+        bool e1_found = false;
+        bool e2_found = false;
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            int32_t j;
+            for (j = 0; j < it.count; j ++) {
+                e1_found |= it.entities[j] == e1;
+                e2_found |= it.entities[j] == e2;
+            }
+            count += it.count;
+        }
+
+        test_int(count, 2);
+        test_bool(e1_found, true);
+        test_bool(e2_found, true);
+
+        ecs_query_fini(q);
+        ecs_fini(world);
+    }
+}
