@@ -2008,7 +2008,8 @@
                 "rematch_after_reparent_parent_component_w_grandchild",
                 "unmatch_after_reparent_parent_component_to_empty_parent",
                 "spawn_despawn_parent_component_children_w_up_query",
-                "on_add_childof_observer_w_parent_component_and_up_query"
+                "on_add_childof_observer_w_parent_component_and_up_query",
+                "fini_w_optional_cascade_query_and_nested_parent"
             ]
         }, {
             "id": "ChangeDetection",

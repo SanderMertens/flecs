@@ -77967,6 +77967,10 @@ void flecs_query_revalidate_table(
         return;
     }
 
+    if (table->flags & EcsTableMarkedForDelete) {
+        return;
+    }
+
     ecs_os_perf_trace_push("flecs.query.revalidate_table");
 
     ecs_time_t t = {0};

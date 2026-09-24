@@ -1947,6 +1947,7 @@ void Cached_rematch_after_reparent_parent_component_w_grandchild(void);
 void Cached_unmatch_after_reparent_parent_component_to_empty_parent(void);
 void Cached_spawn_despawn_parent_component_children_w_up_query(void);
 void Cached_on_add_childof_observer_w_parent_component_and_up_query(void);
+void Cached_fini_w_optional_cascade_query_and_nested_parent(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -10624,6 +10625,10 @@ bake_test_case Cached_testcases[] = {
     {
         "on_add_childof_observer_w_parent_component_and_up_query",
         Cached_on_add_childof_observer_w_parent_component_and_up_query
+    },
+    {
+        "fini_w_optional_cascade_query_and_nested_parent",
+        Cached_fini_w_optional_cascade_query_and_nested_parent
     }
 };
 
@@ -14867,7 +14872,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        169,
+        170,
         Cached_testcases
     },
     {
