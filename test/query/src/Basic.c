@@ -10037,7 +10037,7 @@ void Basic_no_results_after_delete_tree_deferred(void) {
 
     test_int(3, ecs_query_count(q).results);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(stage_1, parent);
     ecs_merge(stage_1);
     
@@ -10215,7 +10215,7 @@ void Basic_create_w_entity_deferred(void) {
 
     ecs_entity_t qe = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_query_t *q = ecs_query(stage_1, {
         .entity = qe,
         .terms = {{ Foo }}

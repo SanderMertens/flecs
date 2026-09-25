@@ -359,7 +359,7 @@ void Reference_get_ref_staged(void) {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_set(stage_1, e, Position, {30, 40});
 
@@ -383,7 +383,7 @@ void Reference_get_ref_after_new_in_stage(void) {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_new_w(stage_1, Position);
 

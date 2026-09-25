@@ -1412,7 +1412,7 @@ void Refs_multiple_refs_in_template_const_dont_reeval_others_deferred(void) {
 
     ecs_set(world, other, Position, {999, 0});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     Mass *mass = ecs_get_mut(stage_1, ecs_id(Mass), Mass);
     test_assert(mass != NULL);
     mass->value = 20;
@@ -6381,7 +6381,7 @@ void Refs_global_mut_var_declared_in_same_script_modified_deferred(void) {
         test_int(p->x, 10);
     }
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_value_t value = ecs_mut_var_get(stage_1, v);
     test_assert(value.ptr != NULL);
     *(ecs_f32_t*)value.ptr = 20;

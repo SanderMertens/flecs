@@ -574,7 +574,7 @@ ecs_cpp_get_mut_t ecs_cpp_set(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    bool deferred = ecs_is_deferred(world);
+    bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_cpp_get_mut_t result;
 
@@ -626,7 +626,7 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    bool deferred = ecs_is_deferred(world);
+    bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_cpp_get_mut_t result;
 

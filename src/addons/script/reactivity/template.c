@@ -1141,7 +1141,7 @@ static int flecs_script_template_instantiate_body(
     bool force,
     bool *ran)
 {
-    ecs_assert(!ecs_is_deferred(world), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!ecs_is_stage(world), ECS_INTERNAL_ERROR, NULL);
 
     ecs_record_t *r = ecs_record_find(world, template_entity);
     if (!r) {
@@ -1577,7 +1577,7 @@ int ecs_script_template_update(
     ecs_entity_t template_entity)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!ecs_is_deferred(world) && !ecs_stage_is_readonly(world),
+    ecs_check(!ecs_is_stage(world) && !ecs_stage_is_readonly(world),
         ECS_INVALID_OPERATION, NULL);
     if (!ecs_is_alive(world, template_entity)) {
         return -1;
@@ -1696,7 +1696,7 @@ static void flecs_script_template_instance_ref_on_set(
     ecs_entity_t instance = ctx->instance;
 
     if ((it->event == EcsOnAdd || it->event == EcsOnRemove) &&
-        ecs_is_deferred(it->stage))
+        ecs_is_stage(it->stage))
     {
         EcsScriptTemplateInstanceUpdateEvent evt = {
             .template_entity = template_entity,
@@ -1730,7 +1730,7 @@ static void flecs_on_template_instance_update_event(
 static void flecs_on_template_flush_event(
     ecs_iter_t *it)
 {
-    ecs_assert(ecs_is_deferred(it->stage), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_is_stage(it->stage), ECS_INTERNAL_ERROR, NULL);
     ecs_world_t *world = it->world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
 
@@ -1793,7 +1793,7 @@ static void flecs_script_template_on_set(
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     void *data = ecs_field_w_size(it, flecs_ito(size_t, ti->size), 0);
 
-    if (ecs_is_deferred(it->stage)) {
+    if (ecs_is_stage(it->stage)) {
         flecs_script_template_defer_on_set(
             it, template_entity, component, ti, data);
         return;

@@ -3001,7 +3001,7 @@ void OnDelete_deferred_delete_with_after_create_named(void) {
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Tag);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete_with(stage_1, Tag);
     ecs_entity_t e2 = ecs_entity(stage_1, { .name = "e2" });
     ecs_add(stage_1, e2, Tag);
@@ -3026,7 +3026,7 @@ void OnDelete_deferred_delete_with_childof_after_create_named(void) {
     ecs_entity_t e1 = ecs_entity(world, { .name = "parent.e1" });
     ecs_add(world, e1, Tag);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete_with(stage_1, ecs_childof(parent));
     ecs_entity_t e2 = ecs_entity(stage_1, { .name = "parent.e2" });
     ecs_add(stage_1, e2, Tag);

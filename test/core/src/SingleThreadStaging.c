@@ -2490,7 +2490,7 @@ void SingleThreadStaging_clear_stage_after_merge(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     ecs_merge(stage_1);
     
@@ -2499,7 +2499,7 @@ void SingleThreadStaging_clear_stage_after_merge(void) {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_2 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_2, e, Position, {30, 40});
     ecs_merge(stage_2);
 

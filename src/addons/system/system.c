@@ -170,7 +170,7 @@ ecs_entity_t ecs_run_worker(
     ecs_ftime_t delta_time,
     void *param)
 {
-    bool deferred = ecs_is_deferred(world);
+    bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -192,7 +192,7 @@ ecs_entity_t ecs_run(
     ecs_ftime_t delta_time,
     void *param)
 {
-    bool deferred = ecs_is_deferred(world);
+    bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);

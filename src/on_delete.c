@@ -785,7 +785,7 @@ void flecs_delete_with(
 {
     flecs_journal_begin(world, EcsJournalDeleteWith, id, NULL, NULL);
 
-    bool deferred = ecs_is_deferred(world);
+    bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_on_delete_action(stage, deferred, id, EcsDelete, force_delete)) {
         return;
@@ -810,7 +810,7 @@ void ecs_remove_all(
 {
     flecs_journal_begin(world, EcsJournalRemoveAll, id, NULL, NULL);
 
-    bool deferred = ecs_is_deferred(world);
+    bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_on_delete_action(stage, deferred, id, EcsRemove, false)) {
         return;

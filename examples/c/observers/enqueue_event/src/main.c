@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     // trigger the observer yet.
     ecs_set(ecs, e, Position, {10, 20});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(ecs) ? ecs : ecs_get_stage(ecs, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(ecs) ? ecs : ecs_get_stage(ecs, 0);
 
     // Emit the custom event
     ecs_enqueue(stage_1, &(ecs_event_desc_t) {

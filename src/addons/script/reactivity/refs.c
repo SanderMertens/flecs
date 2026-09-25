@@ -136,7 +136,7 @@ void flecs_script_ref_on_set(
         return;
     }
 
-    if (ecs_is_deferred(it->stage)) {
+    if (ecs_is_stage(it->stage)) {
         EcsScriptUpdateEvent evt = { .script = script };
         evt.input = ctx->input;
         ecs_enqueue(it->stage, &(ecs_event_desc_t){
@@ -276,7 +276,7 @@ static void flecs_script_resolve_on_set(
         return;
     }
 
-    if (ecs_is_deferred(it->stage)) {
+    if (ecs_is_stage(it->stage)) {
         EcsScriptUpdateEvent evt = { .script = script };
         ecs_enqueue(it->stage, &(ecs_event_desc_t){
             .event = ecs_id(EcsScriptUpdateEvent),
@@ -292,7 +292,7 @@ static void flecs_script_resolve_on_set(
 static void flecs_script_on_update_event(
     ecs_iter_t *it)
 {
-    ecs_assert(ecs_is_deferred(it->stage), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_is_stage(it->stage), ECS_INTERNAL_ERROR, NULL);
 
     EcsScriptUpdateEvent *evt = it->param;
     ecs_world_t *world = it->world;

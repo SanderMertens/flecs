@@ -444,7 +444,7 @@ struct entity_with_delegate_impl<arg_list<Args...>> {
         IdArray ids ({ _::type<Args>::id(world)... });
         ArrayType ptrs;
         ecs_table_t *table = nullptr;
-        if (!ecs_is_deferred(world)) {
+        if (!ecs_is_stage(world)) {
             ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INVALID_PARAMETER, nullptr);
             ecs_record_t *record = ecs_record_find(world, entity);
             ecs_assert(record != nullptr, ECS_INVALID_PARAMETER, nullptr);

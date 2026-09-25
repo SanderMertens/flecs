@@ -9508,7 +9508,7 @@ void Traversal_up_after_add_batched_to_parent(void) {
     ecs_entity_t e2 = ecs_new(world);
     ecs_add_pair(world, e2, EcsChildOf, e1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e1, Foo);
     ecs_add(stage_1, e1, Bar);
     ecs_merge(stage_1);
@@ -14103,7 +14103,7 @@ void Traversal_up_after_pair_target_delete(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     for (int i = 0; i < 10; i ++) {
         ecs_delete(stage_1, targets[i]);
     }

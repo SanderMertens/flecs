@@ -323,7 +323,7 @@ void MultiThreadStaging_custom_thread_auto_merge(void) {
     ecs_readonly_begin(world, true);
 
     /* thread 1 */
-    ecs_world_t *stage_1 = ecs_is_deferred(ctx_1) ? ctx_1 : ecs_get_stage(ctx_1, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(ctx_1) ? ctx_1 : ecs_get_stage(ctx_1, 0);
     ecs_set(stage_1, e1, Position, {10, 20});
     test_assert(!ecs_has(world, e1, Position));
     test_assert(!ecs_has(stage_1, e1, Position));
@@ -331,7 +331,7 @@ void MultiThreadStaging_custom_thread_auto_merge(void) {
     test_assert(!ecs_has(ctx_1, e1, Position));
     
     /* thread 2 */
-    ecs_world_t *stage_2 = ecs_is_deferred(ctx_2) ? ctx_2 : ecs_get_stage(ctx_2, 0);
+    ecs_world_t *stage_2 = ecs_is_stage(ctx_2) ? ctx_2 : ecs_get_stage(ctx_2, 0);
     ecs_set(stage_2, e2, Position, {20, 30});
     test_assert(!ecs_has(world, e2, Position));
     test_assert(!ecs_has(stage_2, e2, Position));
@@ -364,7 +364,7 @@ void MultiThreadStaging_set_pair_w_new_target_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t tgt = ecs_new(stage_1);
     ecs_set_pair(stage_1, e, Position, tgt, {10, 20});
@@ -390,7 +390,7 @@ void MultiThreadStaging_set_pair_w_new_target_tgt_component_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t tgt = ecs_new(stage_1);
     ecs_set_pair_second(stage_1, e, tgt, Position, {10, 20});

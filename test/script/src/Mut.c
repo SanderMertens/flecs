@@ -391,7 +391,7 @@ void Mut_deferred_modified_reinstantiates(void) {
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     float value = 50;
     ecs_set_id(stage_1, e, mut, sizeof(float), &value);
     ecs_merge(stage_1);

@@ -2262,7 +2262,7 @@ void Trigger_remove_in_trigger(void) {
     });
 
     ecs_entity_t e = ecs_new(world);
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add_id(stage_1, e, TagA);
     ecs_add_id(stage_1, e, TagB);
     ecs_merge(stage_1);
@@ -2286,7 +2286,7 @@ void Trigger_clear_in_trigger(void) {
     });
 
     ecs_entity_t e = ecs_new(world);
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add_id(stage_1, e, TagA);
     ecs_add_id(stage_1, e, TagB);
     ecs_merge(stage_1);
@@ -2311,7 +2311,7 @@ void Trigger_delete_in_trigger(void) {
     });
 
     ecs_entity_t e = ecs_new(world);
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add_id(stage_1, e, TagA);
     ecs_add_id(stage_1, e, TagB);
     ecs_merge(stage_1);

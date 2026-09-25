@@ -3398,7 +3398,7 @@ void Pipeline_disable_component_from_immediate_system(void) {
 
     ecs_progress(world, 0);
     test_int(toggle_immediate_system_invoked, 1);
-    test_bool(ecs_is_deferred(world), false);
+    test_bool(ecs_is_stage(world), false);
 
     ecs_fini(world);
 }

@@ -743,7 +743,7 @@ void Entity_get_alive_after_delete_twice(void) {
 void Entity_init_w_name_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
         .name = "Foo"
@@ -759,7 +759,7 @@ void Entity_init_w_name_deferred(void) {
 void Entity_init_w_name_twice_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e1 = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
         .name = "Foo"
@@ -780,7 +780,7 @@ void Entity_init_w_name_twice_deferred(void) {
 void Entity_init_w_nested_name_twice_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e1 = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
         .name = "Foo.Bar"
@@ -805,7 +805,7 @@ void Entity_init_w_nested_name_twice_deferred(void) {
 void Entity_init_w_scope_name_twice_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e1 = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
         .name = "Foo.Bar"
@@ -830,7 +830,7 @@ void Entity_init_w_scope_name_twice_deferred(void) {
 void Entity_init_w_childof_name_twice_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t parent = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
         .name = "Foo"
@@ -864,7 +864,7 @@ void Entity_init_w_childof_name_twice_deferred(void) {
 void Entity_init_w_childof_nested_name_twice_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t parent = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
         .name = "Foo"
@@ -1297,7 +1297,7 @@ void Entity_deferred_entity_init_w_childof_and_scope(void) {
     ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
     ecs_entity_t parent_b = ecs_set_name(world, 0, "ParentB");
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_set_scope(stage_1, parent_a);
     ecs_entity_t child = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
@@ -1325,7 +1325,7 @@ void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name(void) {
     ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
     ecs_entity_t parent_b = ecs_set_name(world, 0, "ParentB");
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_set_scope(stage_1, parent_a);
     ecs_entity_t grand_child = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
@@ -1356,7 +1356,7 @@ void Entity_deferred_entity_init_w_childof_and_no_name(void) {
 
     ecs_entity_t parent = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t child = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
         .parent = parent
     });
@@ -1438,7 +1438,7 @@ void Entity_new_entity_scoped_twice(void) {
 void Entity_defer_component_init(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t c = ecs_component_init(stage_1, &(ecs_component_desc_t){
         .entity = ecs_entity(stage_1, {.name = "Position"}),
@@ -1463,7 +1463,7 @@ void Entity_defer_component_init(void) {
 void Entity_defer_component_init_w_symbol(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t c = ecs_component_init(stage_1, &(ecs_component_desc_t){
         .entity = ecs_entity(stage_1, {.name = "Position", .symbol = "Position"}),
@@ -1489,7 +1489,7 @@ void Entity_defer_component_init_w_symbol(void) {
 void Entity_defer_entity_init_w_symbol(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t c = ecs_entity_init(stage_1, &(ecs_entity_desc_t){
         .name = "Position",
@@ -1761,7 +1761,7 @@ void Entity_defer_set_name_w_overlapping_ptr(void) {
     test_assert(name != NULL);
     test_str(name, "foo");
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set_name(stage_1, e, &name[1]);
     ecs_merge(stage_1);
 
@@ -1825,7 +1825,7 @@ void Entity_defer_entity_init_w_set_name_w_add_childof(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_entity(stage_1, { .id = e, .name = "Foo" });
     ecs_set_name(stage_1, e, "FooBar");
     ecs_add_pair(stage_1, e, EcsChildOf, parent);
@@ -1990,7 +1990,7 @@ void Entity_set_version_while_deferred(void) {
     ecs_world_t* world = ecs_mini();
     ecs_entity_t e1 = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     test_expect_abort();
     ecs_set_version(stage_1, e1 |= 0x200000000ul);
 }

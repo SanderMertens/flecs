@@ -19,7 +19,7 @@ static void Observer(ecs_iter_t *it) {
 
 static void Observer_is_deferred(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
-    test_assert(ecs_is_deferred(it->stage));
+    test_assert(ecs_is_stage(it->stage));
 }
 
 static void Observer_w_field(ecs_iter_t *it) {
@@ -5614,7 +5614,7 @@ void Observer_on_add_after_batch_w_exclusive_adds(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add_pair(stage_1, e, Rel, TgtA);
     ecs_add_pair(stage_1, e, Rel, TgtB);
     ecs_merge(stage_1);
@@ -6337,7 +6337,7 @@ void Observer_1_term_wildcard_batched(void) {
         .ctx = &ctx
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_new(stage_1);
     ecs_add_id(stage_1, e, TagA);
@@ -6369,7 +6369,7 @@ void Observer_2_terms_wildcard_batched(void) {
 
     ctx.invoked = 0;
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_add_id(stage_1, e, TagA);
     ecs_add_id(stage_1, e, TagB);
@@ -6395,7 +6395,7 @@ void Observer_1_term_var_batched(void) {
         .ctx = &ctx
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_new(stage_1);
     ecs_add_id(stage_1, e, TagA);
@@ -6427,7 +6427,7 @@ void Observer_2_terms_var_batched(void) {
 
     ctx.invoked = 0;
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_add_id(stage_1, e, TagA);
     ecs_add_id(stage_1, e, TagB);
@@ -6457,7 +6457,7 @@ void Observer_2_terms_var_src_w_trait_batched(void) {
         .ctx = &ctx
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_new(stage_1);
     ecs_add_id(stage_1, e, TagA);
@@ -9285,7 +9285,7 @@ void Observer_notify_after_defer_batched(void) {
         .ctx = &ctx
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t e1 = ecs_new(stage_1);
     ecs_set(stage_1, e1, Position, {10, 20});
     test_int(ctx.invoked, 0);
@@ -9328,7 +9328,7 @@ void Observer_notify_after_defer_batched_2_entities_in_table(void) {
     
     ecs_entity_t e2 = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e2, Position, {30, 40});
     ecs_set(stage_1, e2, Velocity, {3, 4});
     test_int(ctx.count, 0);
@@ -9371,7 +9371,7 @@ void Observer_notify_after_defer_batched_2_entities_in_table_w_tgt(void) {
     ecs_entity_t e3 = ecs_new(world);
     ecs_add_pair(world, e3, EcsChildOf, e2);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e2, Position, {30, 40});
     ecs_set(stage_1, e2, Velocity, {3, 4});
     test_int(ctx.count, 0);
@@ -10320,7 +10320,7 @@ void Observer_2_up_terms_w_batched_add(void) {
         .ctx = &ctx
     });
     
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e1 = ecs_new(stage_1);
     ecs_add(stage_1, e1, Foo);
@@ -10417,7 +10417,7 @@ void Observer_on_table_create_is_deferred_batched(void) {
 
     test_int(ctx.invoked, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_new_w(stage_1, Foo);
 
@@ -10460,7 +10460,7 @@ void Observer_2_children_w_deferred_set(void) {
     ecs_os_zeromem(&ctx);
 
     {
-        ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+        ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
         ecs_entity_t e = ecs_new(stage_1);
         ecs_add_pair(stage_1, e, EcsChildOf, p);
         ecs_set(stage_1, e, Position, {20, 30});
@@ -10477,7 +10477,7 @@ void Observer_2_children_w_deferred_set(void) {
     }
 
     {
-        ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+        ecs_world_t *stage_2 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
         ecs_entity_t e = ecs_new(stage_2);
         ecs_add_pair(stage_2, e, EcsChildOf, p);
         ecs_set(stage_2, e, Position, {30, 40});
@@ -11998,7 +11998,7 @@ void Observer_1_on_set_after_remove_overridden_term_field_size_defer(void) {
         .callback = on_set_mass
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, e, Position);
     ecs_remove(stage_1, e, Mass);
 
@@ -12033,7 +12033,7 @@ void Observer_2_on_set_after_remove_overridden_terms_field_size_defer(void) {
         .callback = on_set_position_mass
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, e, Position);
     ecs_remove(stage_1, e, Mass);
 

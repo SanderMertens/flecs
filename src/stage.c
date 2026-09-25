@@ -382,7 +382,7 @@ void ecs_stage_shrink(
     }
 }
 
-bool ecs_is_deferred(
+bool ecs_is_stage(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);

@@ -33,7 +33,7 @@ void ExclusiveAccess_self(void) {
     ecs_delete(world, e);
     test_assert(!ecs_is_alive(world, e));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     e = ecs_new(stage_1);
     test_assert(ecs_is_alive(stage_1, e));
@@ -538,7 +538,7 @@ void ExclusiveAccess_other_defer_end(void) {
 
     ecs_exclusive_access_begin(world, NULL);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_os_thread_t thr = 
         ecs_os_thread_new(thread_exclusive_access_other_defer_end, stage_1);
@@ -1766,7 +1766,7 @@ void ExclusiveAccess_locked_defer_end(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_exclusive_access_begin(world, NULL);
     ecs_exclusive_access_end(world, true); // lock stage_1

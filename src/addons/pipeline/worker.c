@@ -229,7 +229,7 @@ void flecs_workers_progress(
     ecs_ftime_t delta_time)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!ecs_is_deferred(world), ECS_INVALID_OPERATION, 
+    ecs_assert(!ecs_is_stage(world), ECS_INVALID_OPERATION, 
         "cannot call progress while world is deferred");
 
     /* Make sure workers are running and ready */
