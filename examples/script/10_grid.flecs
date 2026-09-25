@@ -1,0 +1,14 @@
+// This example shows how to create a grid of entities
+
+// Create a component type
+struct Position(x: i32, y: i32)
+
+for x in 0..10 {
+  for y in 0..10 {
+    for z in 0..10 {
+      "e_{x}_{y}_{z}" {
+        Position: {x * 2, y * 2, z * 2}
+      }
+    }
+  }
+}

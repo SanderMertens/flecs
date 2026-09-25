@@ -313,25 +313,72 @@
     return shape;
   }
 
-  function worldShapes(results) {
+  var clockStart = performance.now();
+
+  function clock() {
+    return (performance.now() - clockStart) / 1000;
+  }
+
+  function resetClock() {
+    clockStart = performance.now();
+  }
+
+  function number(v) {
+    if (typeof v === "string") v = parseFloat(v);
+    return typeof v === "number" && isFinite(v) ? v : undefined;
+  }
+
+  function orbitOf(comps) {
+    var o = struct(comps, "Orbit");
+    if (!o) return null;
+    var period = number(o.period);
+    if (!period) return null;
+    return {
+      period: period,
+      e: clamp(number(o.eccentricity) || 0, 0, 0.99),
+      inclination: (number(o.inclination) || 0) * Math.PI / 180
+    };
+  }
+
+  function orbitOffset(o, p, t) {
+    var M = 2 * Math.PI * t / o.period;
+    var E = M;
+    for (var i = 0; i < 8; i++) E -= (E - o.e * Math.sin(E) - M) / (1 - o.e * Math.cos(E));
+    var nu = 2 * Math.atan2(Math.sqrt(1 + o.e) * Math.sin(E / 2), Math.sqrt(1 - o.e) * Math.cos(E / 2));
+    var scale = 1 - o.e * Math.cos(E);
+    var kx = 0, ky = -Math.cos(o.inclination), kz = Math.sin(o.inclination);
+    var cos = Math.cos(nu), sin = Math.sin(nu);
+    var dot = kx * p.x + ky * p.y + kz * p.z;
+    var cx = ky * p.z - kz * p.y, cy = kz * p.x - kx * p.z, cz = kx * p.y - ky * p.x;
+    return {
+      x: (p.x * cos + cx * sin + kx * dot * (1 - cos)) * scale,
+      y: (p.y * cos + cy * sin + ky * dot * (1 - cos)) * scale,
+      z: (p.z * cos + cz * sin + kz * dot * (1 - cos)) * scale
+    };
+  }
+
+  function worldShapes(results, time) {
     var byPath = {};
+    var animated = false;
     results.forEach(function (r) {
       var p = resultPath(r);
       if (p) byPath[p] = r;
       if (r.id !== undefined) byPath["#" + r.id] = r;
+      if (r.components && orbitOf(r.components)) animated = true;
     });
-    var memo = {};
-    function worldTransform(path) {
+    var memo;
+    function worldTransform(path, t) {
       if (memo[path]) return memo[path];
       var r = byPath[path];
-      var base = r && r.parent ? worldTransform(r.parent) : {
+      var base = r && r.parent ? worldTransform(r.parent, t) : {
         x: 0, y: 0, z: 0, rotation: [1, 0, 0, 0, 1, 0, 0, 0, 1]
       };
       var comps = r ? r.components || {} : {};
       var pos = struct(comps, "Position"), rot = struct(comps, "Rotation");
-      var offset = rotatePoint(base.rotation, {
-        x: member(pos, ["x"], 0, 0), y: member(pos, ["y"], 1, 0), z: member(pos, ["z"], 2, 0)
-      });
+      var p = { x: member(pos, ["x"], 0, 0), y: member(pos, ["y"], 1, 0), z: member(pos, ["z"], 2, 0) };
+      var orbit = orbitOf(comps);
+      if (orbit) p = orbitOffset(orbit, p, t);
+      var offset = rotatePoint(base.rotation, p);
       var rx = member(rot, ["x"], -1, 0), ry = member(rot, ["y"], -1, 0), rz = member(rot, ["z"], -1, 0);
       var a = Math.cos(rx), b = Math.sin(rx), c = Math.cos(ry), d = Math.sin(ry), e = Math.cos(rz), f = Math.sin(rz);
       var local = [c * e, -c * f, d, a * f + b * e * d, a * e - b * f * d, -b * c,
@@ -349,34 +396,43 @@
     results.forEach(function (r) {
       if ((r.tags || []).indexOf("flecs.core.Prefab") !== -1) return;
       var s = shapeOf(r);
-      if (!s) return;
-      var wp = worldTransform(s.path || s.key);
-      s.rotation = wp.rotation;
-      var offset = rotatePoint(s.rotation, { x: s.ox, y: 0, z: 0 });
-      s.x = wp.x + offset.x; s.y = wp.y + offset.y; s.z = wp.z + offset.z;
-      shapes.push(s);
+      if (s) shapes.push(s);
     });
 
-    /* Bounds of every entity that has shapes in its subtree, and the parent
-     * of every entity, for propagating pointer events up the tree with
-     * coordinates relative to each parent. */
-    var entities = {};
-    function entity(key) {
-      if (!entities[key]) {
-        var r = byPath[key];
-        entities[key] = { parent: r && r.parent ? r.parent : null, minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+    function layout(t) {
+      memo = {};
+      shapes.forEach(function (s) {
+        var wp = worldTransform(s.path || s.key, t);
+        s.rotation = wp.rotation;
+        var offset = rotatePoint(s.rotation, { x: s.ox, y: 0, z: 0 });
+        s.x = wp.x + offset.x; s.y = wp.y + offset.y; s.z = wp.z + offset.z;
+      });
+
+      /* Bounds of every entity that has shapes in its subtree, and the parent
+       * of every entity, for propagating pointer events up the tree with
+       * coordinates relative to each parent. */
+      var entities = {};
+      function entity(key) {
+        if (!entities[key]) {
+          var r = byPath[key];
+          entities[key] = { parent: r && r.parent ? r.parent : null, minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+        }
+        return entities[key];
       }
-      return entities[key];
+      shapes.forEach(function (s) {
+        var e = halfExtent(s);
+        for (var key = s.path || s.key; key; key = entity(key).parent) {
+          var b = entity(key);
+          b.minX = Math.min(b.minX, s.x - e.x); b.maxX = Math.max(b.maxX, s.x + e.x);
+          b.minY = Math.min(b.minY, s.y - e.y); b.maxY = Math.max(b.maxY, s.y + e.y);
+        }
+      });
+      shapes.entities = entities;
     }
-    shapes.forEach(function (s) {
-      var e = halfExtent(s);
-      for (var key = s.path || s.key; key; key = entity(key).parent) {
-        var b = entity(key);
-        b.minX = Math.min(b.minX, s.x - e.x); b.maxX = Math.max(b.maxX, s.x + e.x);
-        b.minY = Math.min(b.minY, s.y - e.y); b.maxY = Math.max(b.maxY, s.y + e.y);
-      }
-    });
-    shapes.entities = entities;
+
+    layout(time === undefined ? clock() : time);
+    shapes.animated = animated;
+    shapes.layout = layout;
     return shapes;
   }
 
@@ -647,8 +703,23 @@
     var ctx = canvas.getContext("2d");
     var cam = { x: 0, y: 0, zoom: 20 };
     var shapes = [], selected = null, hover = null, fitted = false;
-    var width = 0, height = 0, dpr = 1, drag = null;
+    var width = 0, height = 0, dpr = 1, drag = null, animating = false;
     var bloom = null, bloomLoading = false, bloomFailed = false;
+
+    function isShown() {
+      return !host.hidden && host.isConnected && !!host.offsetParent;
+    }
+
+    function animate() {
+      if (animating || !shapes.animated || !isShown()) return;
+      animating = true;
+      requestAnimationFrame(function step() {
+        if (!shapes.animated || !isShown()) { animating = false; return; }
+        shapes.layout(clock());
+        draw();
+        requestAnimationFrame(step);
+      });
+    }
 
     function ensureBloom() {
       if (bloom || bloomLoading || bloomFailed) return;
@@ -711,6 +782,11 @@
     }
 
     function render() {
+      draw();
+      animate();
+    }
+
+    function draw() {
       if (!width || !height || host.hidden) return;
       var c = theme();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1298,12 +1374,7 @@
           m.userData.gk = gk;
         }
         m.userData.shape = s;
-        m.position.set(s.x, s.y, s.z);
-        if (s.kind !== "text") {
-          var r = s.rotation;
-          m.quaternion.setFromRotationMatrix(new T.Matrix4().set(
-            r[0], r[1], r[2], 0, r[3], r[4], r[5], 0, r[6], r[7], r[8], 0, 0, 0, 0, 1));
-        }
+        placeMesh(m, s);
         applyMaterial(m, c);
       });
       Object.keys(meshes).forEach(function (k) {
@@ -1406,12 +1477,32 @@
       composer.render();
     }
 
+    function placeMesh(m, s) {
+      m.position.set(s.x, s.y, s.z);
+      if (s.kind !== "text") {
+        var r = s.rotation;
+        m.quaternion.setFromRotationMatrix(new T.Matrix4().set(
+          r[0], r[1], r[2], 0, r[3], r[4], r[5], 0, r[6], r[7], r[8], 0, 0, 0, 0, 1));
+      }
+    }
+
+    function moveShapes() {
+      shapes.layout(clock());
+      shapes.forEach(function (s) {
+        var m = meshes[s.key];
+        if (m) placeMesh(m, s);
+      });
+    }
+
     function requestRender() {
       if (!T || pendingFrame || !visible) return;
       pendingFrame = true;
       requestAnimationFrame(function () {
         pendingFrame = false;
+        if (!visible) return;
+        if (shapes.animated) moveShapes();
         draw();
+        if (shapes.animated) requestRender();
       });
     }
 
@@ -1861,6 +1952,7 @@
       refresh: function () { refresh(true); },
       setWorld: function (results) {
         world = results || [];
+        if (refitPending) resetClock();
         shapes = worldShapes(world);
         if (refitPending && shapes.length) {
           refitPending = false;
