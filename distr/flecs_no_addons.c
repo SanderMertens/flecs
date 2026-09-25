@@ -16445,7 +16445,7 @@ void ecs_ref_update(
     ecs_check(id == ref->id, ECS_INVALID_PARAMETER, "id does not match ref");
 #endif
 
-    world = ecs_get_world(world);
+    // world = ecs_get_world(world);
 
     flecs_check_exclusive_world_access_read(world);
 
