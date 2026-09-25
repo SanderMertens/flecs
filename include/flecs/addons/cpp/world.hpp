@@ -270,11 +270,11 @@ struct world {
      *
      * @return True if deferred, false if not.
      *
-     * @see ecs_is_deferred()
+     * @see ecs_is_stage()
      * @see flecs::world::defer()
      */
     bool is_deferred() const {
-        return ecs_is_deferred(world_);
+        return ecs_is_stage(world_);
     }
 
     /** Configure world to have N stages.

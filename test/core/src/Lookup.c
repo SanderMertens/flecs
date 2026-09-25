@@ -890,7 +890,7 @@ void Lookup_defer_set_name(void) {
     test_str("Foo", ecs_get_name(world, e));
     test_uint(e, ecs_lookup(world, "Foo"));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set_name(stage_1, e, "Bar");
     ecs_merge(stage_1);
 
@@ -908,7 +908,7 @@ void Lookup_defer_set_same_name(void) {
     test_str("MyName", ecs_get_name(world, e));
     test_uint(e, ecs_lookup(world, "MyName"));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set_name(stage_1, e, "MyName");
     ecs_merge(stage_1);
     

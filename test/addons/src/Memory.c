@@ -247,7 +247,7 @@ void Memory_commands_memory(void) {
     test_assert(mem.bytes_commands >= 0);
 
     /* Create deferred operations to test command memory usage */
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     
     /* Create multiple entities with components to generate commands */
     for (int i = 0; i < 10; i++) {
@@ -280,7 +280,7 @@ void Memory_commands_memory(void) {
     test_assert(mem.bytes_commands >= 0);
 
     /* Test with multiple defer levels */
-    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_2 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     
     ecs_entity_t nested_e = ecs_new(stage_2);
     ecs_set(stage_2, nested_e, Position, {100.0f, 200.0f});

@@ -3,21 +3,21 @@
 void Commands_is_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
-    test_bool(false, ecs_is_deferred(world));
+    test_bool(false, ecs_is_stage(world));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
-    test_bool(true, ecs_is_deferred(stage_1));
-
-
-    test_bool(false, ecs_is_deferred(world));
+    test_bool(true, ecs_is_stage(stage_1));
 
 
-    test_bool(true, ecs_is_deferred(stage_1));
+    test_bool(false, ecs_is_stage(world));
+
+
+    test_bool(true, ecs_is_stage(stage_1));
 
     ecs_merge(stage_1);
 
-    test_bool(false, ecs_is_deferred(world));
+    test_bool(false, ecs_is_stage(world));
 
     ecs_fini(world);
 }
@@ -25,11 +25,11 @@ void Commands_is_deferred(void) {
 void Commands_stage_always_deferred(void) {
     ecs_world_t *world = ecs_mini();
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    test_assert(ecs_is_deferred(stage));
-    test_assert(!ecs_is_deferred(world));
+    test_assert(ecs_is_stage(stage));
+    test_assert(!ecs_is_stage(world));
     ecs_merge(stage);
-    test_assert(ecs_is_deferred(stage));
-    test_assert(!ecs_is_deferred(world));
+    test_assert(ecs_is_stage(stage));
+    test_assert(!ecs_is_stage(world));
     ecs_fini(world);
 }
 
@@ -40,7 +40,7 @@ void Commands_defer_new(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     ecs_entity_t e = ecs_new_w(stage_1, Position);
@@ -69,7 +69,7 @@ void Commands_defer_bulk_new(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     const ecs_entity_t *temp_ids = ecs_bulk_new(stage_1, Position, 3);
@@ -109,7 +109,7 @@ void Commands_defer_add(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     ecs_add(stage_1, e, Position);
@@ -140,7 +140,7 @@ void Commands_defer_add_two(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     ecs_add(stage_1, e, Position);
@@ -175,7 +175,7 @@ void Commands_defer_remove(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     ecs_remove(stage_1, e, Position);
@@ -208,7 +208,7 @@ void Commands_defer_remove_two(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     ecs_remove(stage_1, e, Position);
@@ -249,7 +249,7 @@ void Commands_defer_set(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     /* set will not be deferred if the component exists */
@@ -304,7 +304,7 @@ void Commands_defer_set_large(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     Large *l = ecs_ensure(stage_1, e, Large);
     test_assert(l != NULL);
@@ -342,7 +342,7 @@ void Commands_defer_set_large_non_trivial(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     Large *l = ecs_ensure(stage_1, e, Large);
     test_assert(l != NULL);
@@ -379,7 +379,7 @@ void Commands_defer_set_non_trivial(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_set(stage_1, e, Velocity, {1, 2});
 
@@ -406,7 +406,7 @@ void Commands_defer_batched_set_large(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_set(stage_1, e, Position, {10, 20});
     Large *l = ecs_ensure(stage_1, e, Large);
@@ -453,7 +453,7 @@ void Commands_defer_batched_set_large_non_trivial(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_set(stage_1, e, Position, {10, 20});
     Large *l = ecs_ensure(stage_1, e, Large);
@@ -500,7 +500,7 @@ void Commands_defer_batched_set_non_trivial(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_set(stage_1, e, Position, {10, 20});
     ecs_set(stage_1, e, Velocity, {1, 2});
@@ -536,7 +536,7 @@ void Commands_defer_delete(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     ecs_delete(stage_1, e);
@@ -565,7 +565,7 @@ void Commands_defer_twice(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_set(stage_1, e, Velocity, {1, 2});
 
@@ -593,7 +593,7 @@ void Commands_defer_twice_in_progress(void) {
     ecs_readonly_begin(world, false);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(stage) ? stage : ecs_get_stage(stage, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(stage) ? stage : ecs_get_stage(stage, 0);
 
     ecs_set(stage_1, e, Velocity, {1, 2});
 
@@ -616,7 +616,7 @@ void Commands_defer_twice_in_progress(void) {
 static void AddVelocity(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(it->stage) ? it->stage : ecs_get_stage(it->stage, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(it->stage) ? it->stage : ecs_get_stage(it->stage, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -666,7 +666,7 @@ void Commands_defer_ensure(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
@@ -692,7 +692,7 @@ void Commands_defer_ensure_twice(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         Position *p1 = ecs_ensure(stage_1, e, Position);
         test_assert(p1 != NULL);
@@ -724,7 +724,7 @@ void Commands_defer_ensure_twice_w_remove(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         Position *p1 = ecs_ensure(stage_1, e, Position);
         test_assert(p1 != NULL);
@@ -758,7 +758,7 @@ void Commands_defer_ensure_after_set(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         ecs_set(stage_1, e, Position, {10, 20});
 
@@ -825,7 +825,7 @@ void Commands_defer_ensure_3x_vector_append(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         VectorComponent *v = ecs_ensure(stage_1, e, VectorComponent);
         test_assert(v != NULL);
@@ -873,7 +873,7 @@ void Commands_defer_ensure_3x_vector_append_existing(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, VectorComponent);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         VectorComponent *v = ecs_ensure(stage_1, e, VectorComponent);
         test_assert(v != NULL);
@@ -920,7 +920,7 @@ void Commands_defer_ensure_no_modify(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     Velocity *v = ecs_ensure(stage_1, e, Velocity);
     v->x = 1;
@@ -950,7 +950,7 @@ void Commands_defer_ensure_w_modify(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     Velocity *v = ecs_ensure(stage_1, e, Velocity);
     v->x = 1;
@@ -982,7 +982,7 @@ void Commands_defer_modify(void) {
 
     ecs_entity_t e = ecs_new_w(world, Velocity);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_modified(stage_1, e, Velocity);
 
@@ -1003,7 +1003,7 @@ void Commands_defer_set_pair(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_set_pair(stage_1, e, Velocity, ecs_id(Position), {1, 2});
 
@@ -1023,7 +1023,7 @@ void Commands_defer_clear(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     ecs_clear(stage_1, e);
@@ -1054,7 +1054,7 @@ void Commands_defer_add_after_delete(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_delete(stage_1, e);
     ecs_add(stage_1, e, Velocity);
@@ -1087,7 +1087,7 @@ void Commands_defer_set_after_delete(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_delete(stage_1, e);
     ecs_set(stage_1, e, Velocity, {1, 2});
@@ -1120,7 +1120,7 @@ void Commands_defer_ensure_after_delete(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_delete(stage_1, e);
     Velocity *v = ecs_ensure(stage_1, e, Velocity);
@@ -1159,7 +1159,7 @@ void Commands_defer_ensure_after_delete_2nd_to_last(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_delete(stage_1, e);
     Velocity *v = ecs_ensure(stage_1, e, Velocity);
@@ -1194,7 +1194,7 @@ void Commands_defer_add_child_to_deleted_parent(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t child = ecs_new_w_pair(stage_1, EcsChildOf, parent);
     ecs_add(stage_1, child, Velocity);
@@ -1223,7 +1223,7 @@ void Commands_recreate_deleted_entity_while_deferred(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     ecs_entity_t e = ecs_new_w(stage_1, Position);
@@ -1264,7 +1264,7 @@ void Commands_defer_add_to_recycled_id(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t child = ecs_new_w_id(stage_1, id_2);
     ecs_add(stage_1, child, Velocity);
@@ -1298,7 +1298,7 @@ void Commands_defer_add_to_recycled_id_w_role(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t child = ecs_new_w_id(stage_1, ECS_TOGGLE | id_2);
     ecs_add(stage_1, child, Velocity);
@@ -1335,7 +1335,7 @@ void Commands_defer_add_to_recycled_relation(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t child = ecs_new_w_pair(stage_1, rel_2, target);
     ecs_add(stage_1, child, Velocity);
@@ -1371,7 +1371,7 @@ void Commands_defer_add_to_recycled_object(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t child = ecs_new_w_pair(stage_1, Rel, object_2);
     ecs_add(stage_1, child, Velocity);
@@ -1405,7 +1405,7 @@ void Commands_defer_add_to_recycled_object_childof(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t child = ecs_new_w_pair(stage_1, EcsChildOf, parent_2);
     ecs_add(stage_1, child, Velocity);
@@ -1432,7 +1432,7 @@ void Commands_defer_add_to_deleted_id(void) {
     test_assert(id != 0);
     
     ecs_frame_begin(world, 1);
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_delete(stage_1, id);
     ecs_entity_t child = ecs_new_w_id(stage_1, id);
@@ -1459,7 +1459,7 @@ void Commands_defer_add_to_deleted_id_w_role(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_delete(stage_1, id);
     ecs_entity_t child = ecs_new_w_id(stage_1, ECS_TOGGLE | id);
@@ -1490,7 +1490,7 @@ void Commands_defer_add_to_deleted_relation(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_delete(stage_1, rel);
     ecs_entity_t child = ecs_new_w_pair(stage_1, rel, target);
@@ -1520,7 +1520,7 @@ void Commands_defer_add_to_deleted_object(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_delete(stage_1, target);
     ecs_entity_t child = ecs_new_w_pair(stage_1, Rel, target);
@@ -1547,7 +1547,7 @@ void Commands_defer_add_to_deleted_object_childof(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_delete(stage_1, parent);
     ecs_entity_t child = ecs_new_w_pair(stage_1, EcsChildOf, parent);
@@ -1574,7 +1574,7 @@ void Commands_defer_delete_added_id(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t child = ecs_new_w_id(stage_1, id);
     ecs_add(stage_1, child, Velocity);
@@ -1602,7 +1602,7 @@ void Commands_defer_delete_added_id_w_role(void) {
     
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t child = ecs_new_w_id(stage_1, ECS_TOGGLE | id);
     ecs_add(stage_1, child, Velocity);
@@ -1633,7 +1633,7 @@ void Commands_defer_delete_added_relation(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t child = ecs_new_w_pair(stage_1, rel, target);
     ecs_add(stage_1, child, Velocity);
@@ -1663,7 +1663,7 @@ void Commands_defer_delete_added_object(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t child = ecs_new_w_pair(stage_1, Rel, target);
     ecs_add(stage_1, child, Velocity);
@@ -1690,7 +1690,7 @@ void Commands_defer_delete_added_object_childof(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t child = ecs_new_w_pair(stage_1, EcsChildOf, parent);
     ecs_add(stage_1, child, Velocity);
@@ -1715,7 +1715,7 @@ void Commands_discard_add(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
 
     ecs_delete(stage_1, e);
@@ -1750,7 +1750,7 @@ void Commands_discard_remove(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
 
     ecs_delete(stage_1, e);
@@ -1786,7 +1786,7 @@ void Commands_discard_add_two(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
 
     ecs_delete(stage_1, e);
@@ -1827,7 +1827,7 @@ void Commands_discard_remove_two(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
 
     ecs_delete(stage_1, e);
@@ -1863,7 +1863,7 @@ void Commands_discard_child(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     ecs_entity_t e = ecs_new(stage_1);
@@ -1902,7 +1902,7 @@ void Commands_discard_child_w_add(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     
     ecs_entity_t e = ecs_new(stage_1);
@@ -1958,7 +1958,7 @@ void Commands_defer_ensure_pair(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     Position *p = ecs_ensure_pair(stage_1, e, Position, Pair);
     test_assert(p != NULL);
@@ -2193,7 +2193,7 @@ void Commands_register_component_while_deferred(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_entity_t canary = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_add_id(stage_1, canary, Tag);
 
@@ -2220,7 +2220,7 @@ void Commands_defer_enable(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_enable(stage_1, e, false);
     test_assert(!ecs_has_id(stage_1, e, EcsDisabled));
     ecs_merge(stage_1);
@@ -2235,7 +2235,7 @@ void Commands_defer_disable(void) {
 
     ecs_entity_t e = ecs_new_w_id(world, EcsDisabled);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_enable(stage_1, e, true);
     test_assert(ecs_has_id(stage_1, e, EcsDisabled));
     ecs_merge(stage_1);
@@ -2252,7 +2252,7 @@ void Commands_defer_enable_from_stage(void) {
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_enable(stage, e, false);
     test_assert(!ecs_has_id(stage_1, e, EcsDisabled));
     ecs_merge(stage_1);
@@ -2270,7 +2270,7 @@ void Commands_defer_toggle(void) {
 
     ecs_entity_t e = ecs_new_w(world, Foo);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_enable_id(stage_1, e, Foo, false);
     test_assert(ecs_is_enabled_id(stage_1, e, Foo));
     ecs_merge(stage_1);
@@ -2290,7 +2290,7 @@ void Commands_defer_toggle_from_stage(void) {
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_enable_id(stage, e, Foo, false);
     test_assert(ecs_is_enabled_id(stage, e, Foo));
     ecs_merge(stage_1);
@@ -2311,7 +2311,7 @@ void Commands_defer_delete_with(void) {
     ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add(world, e_1, TagB);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete_with(stage_1, TagA);
     test_assert(ecs_is_alive(stage_1, e_1));
     test_assert(ecs_is_alive(stage_1, e_2));
@@ -2336,7 +2336,7 @@ void Commands_defer_remove_all(void) {
     ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add(world, e_1, TagB);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove_all(stage_1, TagA);
     test_assert(ecs_is_alive(stage_1, e_1));
     test_assert(ecs_is_alive(stage_1, e_2));
@@ -2373,7 +2373,7 @@ void Commands_deferred_modified_after_remove(void) {
     test_int(on_set_invoked, 1);
     on_set_invoked = 0;
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_remove(stage_1, e, Position);
     test_assert(ecs_has(stage_1, e, Position));
@@ -2526,7 +2526,7 @@ void Commands_defer_suspend_resume(void) {
 
     ecs_entity_t e = ecs_new(world);
     
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e, TagA);
     test_assert(!ecs_has(stage_1, e, TagA));
 
@@ -2561,7 +2561,7 @@ void Commands_create_observer_while_deferred(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     Probe ctx = {0};
     ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ .id = TagA }},
@@ -2584,7 +2584,7 @@ void Commands_create_query_while_deferred(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_query_t *query = ecs_query(stage_1, {
         .terms = {{ .id = TagA }}
     });
@@ -2609,7 +2609,7 @@ void Commands_update_observer_while_deferred(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     Probe ctx = {0};
     ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ .id = TagA }},
@@ -2626,7 +2626,7 @@ void Commands_update_observer_while_deferred(void) {
 
     test_int(system_2_invoked, 0);
 
-    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_2 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_observer_update(world, observer, &(ecs_observer_desc_t){
         .callback = System2
     });
@@ -2650,7 +2650,7 @@ void Commands_defer_set_large_component(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     LargeComponent *ptr = ecs_ensure(stage_1, e, LargeComponent);
     test_assert(ptr != NULL);
     for (int i = 0; i < 8096; i ++) {
@@ -2785,7 +2785,7 @@ void Commands_defer_remove_after_set(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     test_assert(!ecs_has(stage_1, e, Position));
     ecs_remove(stage_1, e, Position);
@@ -2811,7 +2811,7 @@ void Commands_defer_remove_after_set_w_observer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     test_assert(!ecs_has(stage_1, e, Position));
     ecs_remove(stage_1, e, Position);
@@ -2835,7 +2835,7 @@ void Commands_defer_override_after_remove(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, inst, Position);
     ecs_add(stage_1, inst, Position);
     ecs_merge(stage_1);
@@ -2862,7 +2862,7 @@ void Commands_defer_override_after_remove_3_ops(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, inst, Position);
     ecs_add(stage_1, inst, Position);
     ecs_merge(stage_1);
@@ -2896,7 +2896,7 @@ void Commands_defer_override_after_remove_63_commands(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, inst, Position);
     for (int i = 0; i < 63; i ++) {
         ecs_add_id(stage_1, inst, components[i]);
@@ -2933,7 +2933,7 @@ void Commands_defer_override_after_remove_64_commands(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, inst, Position);
     for (int i = 0; i < 64; i ++) {
         ecs_add_id(stage_1, inst, components[i]);
@@ -2970,7 +2970,7 @@ void Commands_defer_override_after_remove_65_commands(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, inst, Position);
     for (int i = 0; i < 65; i ++) {
         ecs_add_id(stage_1, inst, components[i]);
@@ -3007,7 +3007,7 @@ void Commands_defer_override_after_remove_96_commands(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, inst, Position);
     for (int i = 0; i < 96; i ++) {
         ecs_add_id(stage_1, inst, components[i]);
@@ -3044,7 +3044,7 @@ void Commands_defer_override_after_remove_255_commands(void) {
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, inst, Position);
     for (int i = 0; i < 255; i ++) {
         ecs_add_id(stage_1, inst, components[i]);
@@ -3073,7 +3073,7 @@ void Commands_flush_stage_to_deferred_world(void) {
     ecs_add(async, e, Tag);
     test_assert(!ecs_has(world, e, Tag));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_merge(async);
     test_assert(ecs_has(stage_1, e, Tag));
     ecs_merge(stage_1);
@@ -3099,7 +3099,7 @@ void Commands_add_in_observer_during_merge(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e, TagA);
     test_assert(!ecs_has(stage_1, e, TagA));
     test_assert(!ecs_has(stage_1, e, Position));
@@ -3127,7 +3127,7 @@ void Commands_add_in_observer_during_merge_2_commands(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e, TagA);
     ecs_add(stage_1, e, TagB);
     test_assert(!ecs_has(stage_1, e, TagA));
@@ -3223,7 +3223,7 @@ void Commands_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id(
     ecs_delete(world, ecs_new(world));
 
     ecs_entity_t e = ecs_new_w(world, TagA);
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(stage_1, e);
     ecs_merge(stage_1);
 
@@ -3240,7 +3240,7 @@ void Commands_defer_add_after_clear(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_clear(stage_1, e);
     ecs_add(stage_1, e, Position);
     ecs_merge(stage_1);
@@ -3258,7 +3258,7 @@ void Commands_defer_cmd_after_modified(void) {
     ecs_entity_t e1 = ecs_new(world);
     ecs_entity_t e2 = ecs_new(world);
     
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e1, Position, {10, 20});
     ecs_modified(stage_1, e2, Position);
     ecs_set(stage_1, e2, Position, {20, 30});
@@ -3291,7 +3291,7 @@ void Commands_defer_remove_after_emplace_different_id(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Tag);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     Position *p = ecs_emplace(stage_1, e, Position, NULL);
     p->x = 10;
     p->y = 20;
@@ -3321,7 +3321,7 @@ void Commands_defer_remove_after_set_and_emplace_different_id(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Tag);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     Position *p = ecs_emplace(stage_1, e, Position, NULL);
     p->x = 10;
     p->y = 20;
@@ -3357,7 +3357,7 @@ void Commands_clear_after_add_to_nonempty(void) {
 
     ecs_entity_t e = ecs_new_w(world, TagA);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e, TagB);
     ecs_clear(stage_1, e);
 
@@ -3379,7 +3379,7 @@ void Commands_remove_after_add_to_nonempty(void) {
 
     ecs_entity_t e = ecs_new_w(world, TagA);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e, TagB);
     ecs_remove(stage_1, e, TagA);
     ecs_remove(stage_1, e, TagB);
@@ -3399,7 +3399,7 @@ void Commands_register_while_deferred_with_n_stages(void) {
 
     ecs_set_stage_count(world, 2);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ECS_COMPONENT(stage_1, Position);
     ecs_merge(stage_1);
 
@@ -3441,7 +3441,7 @@ void Commands_defer_2_sets_w_multi_observer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     ecs_set(stage_1, e, Velocity, {1, 2});
     ecs_merge(stage_1);
@@ -3472,7 +3472,7 @@ void Commands_defer_2_ensures_w_multi_observer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         Position *p = ecs_ensure(stage_1, e, Position);
         p->x = 10;
@@ -3511,7 +3511,7 @@ void Commands_defer_2_ensures_no_modified_w_multi_observer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         Position *p = ecs_ensure(stage_1, e, Position);
         p->x = 10;
@@ -3542,7 +3542,7 @@ void Commands_exists_remove_set(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, e, Position);
     ecs_set(stage_1, e, Position, {5, 6});
     ecs_merge(stage_1);
@@ -3562,7 +3562,7 @@ void Commands_absent_remove_set(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, e, Position);
     ecs_set(stage_1, e, Position, {5, 6});
     ecs_merge(stage_1);
@@ -3583,7 +3583,7 @@ void Commands_exists_set_remove(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {5, 6});
     ecs_remove(stage_1, e, Position);
     ecs_merge(stage_1);
@@ -3601,7 +3601,7 @@ void Commands_absent_set_remove(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {5, 6});
     ecs_remove(stage_1, e, Position);
     ecs_merge(stage_1);
@@ -3620,7 +3620,7 @@ void Commands_exists_set_w_ensure(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         ecs_set(stage_1, e, Position, {5, 6});
         Position *p = ecs_ensure(stage_1, e, Position);
@@ -3644,7 +3644,7 @@ void Commands_exists_remove_ensure(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, e, Position);
     {
         Position *p = ecs_ensure(stage_1, e, Position);
@@ -3669,7 +3669,7 @@ void Commands_absent_remove_ensure(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, e, Position);
     {
         Position *p = ecs_ensure(stage_1, e, Position);
@@ -3696,7 +3696,7 @@ void Commands_exists_ensure_remove(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
@@ -3719,7 +3719,7 @@ void Commands_absent_ensure_remove(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
@@ -3746,7 +3746,7 @@ void Commands_absent_set_invoke_on_set(void) {
     ecs_entity_t e = ecs_new(world);
 
     /* create the component */
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {1, 2});
 
     /* OnSet should not be run until defer has completed */
@@ -3772,7 +3772,7 @@ void Commands_exists_set_invoke_on_set(void) {
     on_set_invoked = 0;
 
     /* create the component */
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {5, 6});
 
     /* OnSet should not be run until defer has completed */
@@ -3797,7 +3797,7 @@ void Commands_defer_ensure_no_on_set(void) {
     ecs_entity_t e = ecs_new(world);
 
     /* create the component */
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         Position *p = ecs_ensure(stage_1, e, Position);
         p->x = 1;
@@ -3825,7 +3825,7 @@ void Commands_defer_existing_ensure_no_on_set(void) {
     ecs_entity_t e = ecs_new_w(world, Position);
 
     /* create the component */
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         Position *p = ecs_ensure(stage_1, e, Position);
         p->x = 1;
@@ -3853,7 +3853,7 @@ void Commands_ensure_override(void) {
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
@@ -3891,7 +3891,7 @@ void Commands_set_override(void) {
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         ecs_set(stage_1, e, Position, {5, 6});
     }
@@ -3923,7 +3923,7 @@ void Commands_absent_ensure_for_entity_w_tag(void) {
     ecs_entity_t e = ecs_new_w(world, Tag);
     test_assert(e != 0);
     
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         Position *p = ecs_ensure(stage_1, e, Position);
         test_assert(p != NULL);
@@ -3966,7 +3966,7 @@ void Commands_defer_2_sets_w_observer_same_component(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     ecs_set(stage_1, e, Position, {20, 30});
     ecs_merge(stage_1);
@@ -4001,7 +4001,7 @@ void Commands_defer_2_sets_w_observer_other_component(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     ecs_set(stage_1, e, Velocity, {1, 2});
     ecs_merge(stage_1);
@@ -4044,7 +4044,7 @@ void Commands_on_remove_after_deferred_clear_and_add(void) {
     ecs_add(world, e, TagA);
     ecs_add(world, e, TagB);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_clear(stage_1, e);
     ecs_add(stage_1, e, TagC);
     test_int(remove_tag_invoked, 0);
@@ -4082,7 +4082,7 @@ void Commands_defer_delete_recycle_same_id(void) {
         .ctx = &e1
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(stage_1, parent);
     ecs_add(stage_1, e2, Foo);
     ecs_add(stage_1, e1, Bar);
@@ -4119,7 +4119,7 @@ void Commands_observer_while_defer_suspended(void) {
         .callback = AddWhileSuspended,
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
@@ -4144,7 +4144,7 @@ void Commands_on_add_hook_while_defer_suspended(void) {
         .on_add = AddWhileSuspended
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
@@ -4169,7 +4169,7 @@ void Commands_on_set_hook_while_defer_suspended(void) {
         .on_set = AddWhileSuspended
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(e != 0);
@@ -4199,7 +4199,7 @@ void Commands_on_remove_hook_while_defer_suspended(void) {
     test_assert(ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     test_assert(ecs_has(world, e, Position));
     ecs_remove(world, e, Position);
@@ -4252,7 +4252,7 @@ void Commands_on_set_hook_batched_is_deferred(void) {
     test_int(on_set_is_deferred_invoked, 0);
     test_int(dummy_observer_invoked, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e, Tag);
     ecs_modified(stage_1, e, Position);
     test_int(on_set_is_deferred_invoked, 0);
@@ -4276,7 +4276,7 @@ void Commands_add_path(void) {
     ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add_path(stage_1, e, p, "foo");
     ecs_merge(stage_1);
 
@@ -4297,7 +4297,7 @@ void Commands_add_path_to_deleted_parent(void) {
     ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(stage_1, p);
     ecs_add_path(stage_1, e, p, "foo");
     ecs_merge(stage_1);
@@ -4317,7 +4317,7 @@ void Commands_add_path_nested(void) {
     ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add_path(stage_1, e, p, "foo.bar");
     ecs_merge(stage_1);
 
@@ -4338,7 +4338,7 @@ void Commands_add_path_nested_to_deleted_parent(void) {
     ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(stage_1, p);
     ecs_add_path(stage_1, e, p, "foo.bar");
     ecs_merge(stage_1);
@@ -4358,7 +4358,7 @@ void Commands_add_path_nested_to_created_deleted_parent(void) {
     ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t foo = ecs_entity(stage_1, { .name = "p.foo" });
     ecs_delete(stage_1, foo);
     ecs_add_path(stage_1, e, p, "foo.bar");
@@ -4379,7 +4379,7 @@ void Commands_add_path_w_stage(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add_path(s, e, p, "foo");
     ecs_merge(stage_1);
 
@@ -4402,7 +4402,7 @@ void Commands_add_path_to_deleted_parent_w_stage(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(stage_1, p);
     ecs_add_path(s, e, p, "foo");
     ecs_merge(stage_1);
@@ -4424,7 +4424,7 @@ void Commands_add_path_nested_w_stage(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add_path(s, e, p, "foo.bar");
     ecs_merge(stage_1);
 
@@ -4447,7 +4447,7 @@ void Commands_add_path_nested_to_deleted_parent_w_stage(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(stage_1, p);
     ecs_add_path(s, e, p, "foo.bar");
     ecs_merge(stage_1);
@@ -4469,7 +4469,7 @@ void Commands_add_path_nested_to_created_deleted_parent_w_stage(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t foo = ecs_entity(s, { .name = "p.foo" });
     ecs_delete(s, foo);
     ecs_add_path(s, e, p, "foo.bar");
@@ -4489,7 +4489,7 @@ void Commands_defer_emplace_w_arg(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         bool is_new = false;
         Position *p = ecs_emplace(stage_1, e, Position, &is_new);
@@ -4521,7 +4521,7 @@ void Commands_defer_emplace_existing_w_arg(void) {
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     {
         bool is_new = false;
         Position *p = ecs_emplace(stage_1, e, Position, &is_new);
@@ -4581,7 +4581,7 @@ void Commands_mixed_on_add_on_set_w_set_w_batching(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e, Foo);
     ecs_set(stage_1, e, Position, {10, 20});
     ecs_merge(stage_1);
@@ -4607,7 +4607,7 @@ void Commands_mixed_on_add_on_set_w_emplace(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e, Foo);
     Position *p = ecs_emplace(stage_1, e, Position, NULL);
     p->x = 10;
@@ -4629,7 +4629,7 @@ void Commands_add_isa_set_w_override_batched(void) {
 
     ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t i = ecs_new(stage_1);
     ecs_add_pair(stage_1, i, EcsIsA, p);
     ecs_set(stage_1, i, Position, {20, 30});
@@ -4654,7 +4654,7 @@ void Commands_add_set_isa_w_override_batched(void) {
 
     ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t i = ecs_new(stage_1);
     ecs_set(stage_1, i, Position, {20, 30});
     ecs_add_pair(stage_1, i, EcsIsA, p);
@@ -4683,7 +4683,7 @@ void Commands_add_batched_set_with(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e, Foo);
     ecs_set(stage_1, e, Position, {10, 20});
     ecs_merge(stage_1);
@@ -4707,7 +4707,7 @@ void Commands_defer_emplace_after_remove(void) {
 
     ecs_entity_t e = ecs_insert(world, ecs_value(Position, {0, 0}));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, e, Position);
     {
         Position *p = ecs_emplace(stage_1, e, Position, NULL);
@@ -4736,7 +4736,7 @@ void Commands_defer_emplace_2nd(void) {
     ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
@@ -4785,7 +4785,7 @@ void Commands_batched_w_table_change_in_observer(void) {
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, e1, Position);
     ecs_add(stage_1, e1, Foo);
     ecs_merge(stage_1);
@@ -4802,7 +4802,7 @@ void Commands_redefine_named_in_threaded_app(void) {
 
     ecs_set_threads(world, 2);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t c1 = ecs_entity(stage_1, { .name = "parent.child_1" });
     ecs_entity_t c2 = ecs_entity(stage_1, { .name = "parent.child_2" });
     ecs_merge(stage_1);
@@ -4823,7 +4823,7 @@ void Commands_batched_cmd_w_component_init(void) {
 
     ecs_entity_t parent = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_add(stage_1, parent, Foo);
 
@@ -4953,7 +4953,7 @@ void Commands_batch_w_old_and_recycled_id(void) {
     ecs_add_pair(world, grandchild, EcsChildOf, child);
     ecs_add(world, grandchild, Position);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(world, child);
     ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
     ecs_entity_t e = ecs_new(stage_1);
@@ -4983,7 +4983,7 @@ void Commands_batch_w_two_named_entities_one_reparent(void) {
     ecs_entity_t e1 = ecs_entity(world, { .name = "a" });
     ecs_entity_t e2 = ecs_entity(world, { .name = "b" });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_add_pair(stage_1, e1, EcsChildOf, parent); // to trigger reparenting
     ecs_add(stage_1, e1, Position); // to create batch
@@ -5014,7 +5014,7 @@ void Commands_batch_w_two_named_entities_one_reparent_w_remove(void) {
 
     ecs_add_pair(world, e1, EcsChildOf, parent);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_remove_pair(stage_1, e1, EcsChildOf, parent); // to trigger reparenting
     ecs_add(stage_1, e1, Position); // to create batch
@@ -5038,7 +5038,7 @@ void Commands_batch_new_w_parent_w_name(void) {
 
     ecs_entity_t parent = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_new_w_pair(stage_1, EcsChildOf, parent);
     ecs_set_name(stage_1, e, "Foo");
@@ -5068,7 +5068,7 @@ void Commands_enable_component_from_stage(void) {
 
     test_bool(true, ecs_is_enabled(world, e, Position));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(s) ? s : ecs_get_stage(s, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(s) ? s : ecs_get_stage(s, 0);
 
     ecs_enable_component(stage_1, e, Position, false);
 
@@ -5123,7 +5123,7 @@ void Commands_on_replace_w_set(void) {
     ecs_entity_t e = ecs_new(world);
     test_int(replace_Position_invoked, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     test_int(replace_Position_invoked, 0);
     ecs_merge(stage_1);
@@ -5151,7 +5151,7 @@ void Commands_on_replace_w_set_twice(void) {
     ecs_entity_t e = ecs_new(world);
     test_int(replace_Position_invoked, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     ecs_set(stage_1, e, Position, {11, 21});
     test_int(replace_Position_invoked, 0);
@@ -5183,7 +5183,7 @@ void Commands_on_replace_w_set_existing(void) {
     ecs_set(world, e, Position, {10, 20});
     test_int(replace_Position_invoked, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {11, 21});
     test_int(replace_Position_invoked, 2);
     ecs_merge(stage_1);
@@ -5214,7 +5214,7 @@ void Commands_on_replace_w_set_existing_twice(void) {
     ecs_set(world, e, Position, {10, 20});
     test_int(replace_Position_invoked, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {11, 21});
     ecs_set(stage_1, e, Position, {12, 22});
     test_int(replace_Position_invoked, 3);
@@ -5244,7 +5244,7 @@ void Commands_on_replace_w_set_batched(void) {
     ecs_entity_t e = ecs_new(world);
     test_int(replace_Position_invoked, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     ecs_set(stage_1, e, Velocity, {1, 2});
     test_int(replace_Position_invoked, 0);
@@ -5279,7 +5279,7 @@ void Commands_on_replace_w_set_batched_twice(void) {
     ecs_entity_t e = ecs_new(world);
     test_int(replace_Position_invoked, 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     ecs_set(stage_1, e, Position, {11, 21});
     ecs_set(stage_1, e, Velocity, {1, 2});
@@ -5318,7 +5318,7 @@ void Commands_on_replace_w_set_batched_existing(void) {
     ecs_set(world, e, Position, {10, 20});
     test_int(replace_Position_invoked, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {11, 21});
     ecs_set(stage_1, e, Velocity, {1, 2});
     test_int(replace_Position_invoked, 2);
@@ -5356,7 +5356,7 @@ void Commands_on_replace_w_set_batched_existing_twice(void) {
     ecs_set(world, e, Position, {10, 20});
     test_int(replace_Position_invoked, 1);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {11, 21});
     ecs_set(stage_1, e, Position, {12, 22});
     ecs_set(stage_1, e, Velocity, {1, 2});
@@ -5386,7 +5386,7 @@ void Commands_set_existing_after_remove(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
         ecs_remove(stage_1, e, EcsParent);
         ecs_set(stage_1, e, Position, {30, 40});
     ecs_merge(stage_1);
@@ -5408,7 +5408,7 @@ void Commands_set_existing_after_remove_move_table(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
         ecs_add(stage_1, e, Foo);
         ecs_remove(stage_1, e, Position);
         ecs_set(stage_1, e, Position, {30, 40});
@@ -5433,7 +5433,7 @@ void Commands_set_existing_after_remove_w_is_a(void) {
     ecs_add_pair(world, e, EcsIsA, p);
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
         ecs_remove(stage_1, e, EcsParent);
         ecs_set(stage_1, e, Position, {30, 40});
     ecs_merge(stage_1);
@@ -5458,7 +5458,7 @@ void Commands_set_existing_after_remove_w_is_a_move_table(void) {
     ecs_add_pair(world, e, EcsIsA, p);
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
         ecs_add(stage_1, e, Foo);
         ecs_remove(stage_1, e, Position);
         ecs_set(stage_1, e, Position, {30, 40});
@@ -5535,7 +5535,7 @@ void Commands_on_replace_w_set_batched_grow_table_in_hook(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e, Tag);
     ecs_set(stage_1, e, Position, {10, 20});
     test_int(on_replace_grow_table_invoked, 0);
@@ -5570,7 +5570,7 @@ void Commands_defer_batched_add_after_delete(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e, TagA);
     ecs_delete(stage_1, e);
     ecs_add(stage_1, e, TagB);
@@ -5591,7 +5591,7 @@ void Commands_defer_ensure_dont_fragment_w_set(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {1, 2});
     Velocity *v = ecs_ensure_id(stage_1, e, ecs_id(Velocity), sizeof(Velocity));
     v->x = 10;
@@ -5619,7 +5619,7 @@ void Commands_defer_add_remove_childof_w_dont_fragment(void) {
     ecs_entity_t c = ecs_new(world);
     ecs_add_id(world, c, ecs_id(Velocity));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add_pair(stage_1, c, EcsChildOf, p);
     ecs_remove_pair(stage_1, c, EcsChildOf, EcsWildcard);
     ecs_merge(stage_1);
@@ -5639,7 +5639,7 @@ void Commands_defer_remove_dont_fragment_on_cascade_deleted_child(void) {
     ecs_entity_t child = ecs_new(world);
     ecs_entity_t other = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(stage_1, del);
     ecs_add_id(stage_1, other, ecs_id(Velocity));
     ecs_remove_id(stage_1, child, ecs_id(Velocity));
@@ -5662,8 +5662,8 @@ static void RecordCommandOrder(ecs_iter_t *it) {
     CommandOrder *ctx = it->ctx;
     test_assert(it->stage != it->world);
     test_assert(ecs_get_world(it->stage) == it->world);
-    test_assert(ecs_is_deferred(it->stage));
-    test_assert(!ecs_is_deferred(it->world));
+    test_assert(ecs_is_stage(it->stage));
+    test_assert(!ecs_is_stage(it->world));
     int32_t tag = 0;
     while (ctx->tags[tag] != it->event_id) {
         tag ++;

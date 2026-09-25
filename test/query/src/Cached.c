@@ -4180,7 +4180,7 @@ void Cached_no_rematch_after_batched_parent_create(void) {
     { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
     test_int(info->rematch_count_total, 0);
     
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t p3 = ecs_new_w(stage_1, Position);
     ecs_add(stage_1, p3, Velocity);
     ecs_new_w_pair(stage_1, EcsChildOf, p3);
@@ -4242,7 +4242,7 @@ void Cached_no_rematch_after_batched_instantiate(void) {
     { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
     test_int(info->rematch_count_total, 0);
     
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_entity_t i = ecs_new_w_pair(stage_1, EcsIsA, base);
     ecs_add(stage_1, i, Velocity);
     ecs_merge(stage_1);
@@ -8156,7 +8156,7 @@ void Cached_match_after_defer_add_to_parent(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, parent, Position, {10, 20});
     ecs_merge(stage_1);
 
@@ -8197,7 +8197,7 @@ void Cached_unmatch_after_defer_remove_from_parent(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_remove(stage_1, parent, Position);
     ecs_merge(stage_1);
 

@@ -164,7 +164,7 @@ void Misc_quantity_from_stage(void) {
 void Misc_primitive_from_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_primitive(stage_1, { .kind = EcsI32 });
     test_assert(t != 0);
@@ -178,7 +178,7 @@ void Misc_primitive_from_defer(void) {
 void Misc_enum_from_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_enum(stage_1, {
         .constants = {
@@ -196,7 +196,7 @@ void Misc_enum_from_defer(void) {
 void Misc_bitmask_from_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_bitmask(stage_1, {
         .constants = {
@@ -214,7 +214,7 @@ void Misc_bitmask_from_defer(void) {
 void Misc_array_from_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_array(stage_1, {
         .type = ecs_id(ecs_i32_t),
@@ -231,7 +231,7 @@ void Misc_array_from_defer(void) {
 void Misc_vector_from_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_vector(stage_1, {
         .type = ecs_id(ecs_i32_t)
@@ -247,7 +247,7 @@ void Misc_vector_from_defer(void) {
 void Misc_struct_from_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_struct(stage_1, { .members = {
         {"x", ecs_id(ecs_i32_t)},
@@ -266,7 +266,7 @@ void Misc_opaque_from_defer(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_opaque(stage_1, {
         .entity = ecs_id(Position),
@@ -283,7 +283,7 @@ void Misc_opaque_from_defer(void) {
 void Misc_unit_from_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_unit(stage_1, {
         .symbol = "f"
@@ -299,7 +299,7 @@ void Misc_unit_from_defer(void) {
 void Misc_unit_prefix_from_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_unit_prefix(stage_1, {
         .symbol = "f"
@@ -315,7 +315,7 @@ void Misc_unit_prefix_from_defer(void) {
 void Misc_quantity_from_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_quantity(stage_1, {
         .name = "q"
@@ -498,7 +498,7 @@ void Misc_quantity_from_readonly(void) {
 void Misc_primitive_from_suspend_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_primitive(world, { .kind = EcsI32 });
     test_assert(t != 0);
@@ -512,7 +512,7 @@ void Misc_primitive_from_suspend_defer(void) {
 void Misc_enum_from_suspend_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_enum(world, {
         .constants = {
@@ -530,7 +530,7 @@ void Misc_enum_from_suspend_defer(void) {
 void Misc_bitmask_from_suspend_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_bitmask(world, {
         .constants = {
@@ -548,7 +548,7 @@ void Misc_bitmask_from_suspend_defer(void) {
 void Misc_array_from_suspend_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_array(world, {
         .type = ecs_id(ecs_i32_t),
@@ -565,7 +565,7 @@ void Misc_array_from_suspend_defer(void) {
 void Misc_vector_from_suspend_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_vector(world, {
         .type = ecs_id(ecs_i32_t)
@@ -581,7 +581,7 @@ void Misc_vector_from_suspend_defer(void) {
 void Misc_struct_from_suspend_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_struct(world, { .members = {
         {"x", ecs_id(ecs_i32_t)},
@@ -600,7 +600,7 @@ void Misc_opaque_from_suspend_defer(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_opaque(world, {
         .entity = ecs_id(Position),
@@ -617,7 +617,7 @@ void Misc_opaque_from_suspend_defer(void) {
 void Misc_unit_from_suspend_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_unit(world, {
         .symbol = "f"
@@ -634,7 +634,7 @@ void Misc_unit_from_suspend_defer(void) {
 void Misc_unit_prefix_from_suspend_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_unit_prefix(world, {
         .symbol = "f"
@@ -651,7 +651,7 @@ void Misc_unit_prefix_from_suspend_defer(void) {
 void Misc_quantity_from_suspend_defer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t t = ecs_quantity(world, {
         .name = "q"

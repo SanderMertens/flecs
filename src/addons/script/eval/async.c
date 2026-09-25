@@ -586,7 +586,7 @@ static void flecs_script_task_unregister(
 
     EcsScriptTask *t = ecs_get_mut(world, entity, EcsScriptTask);
     if (!t) {
-        if (!ecs_is_deferred(world)) {
+        if (!ecs_is_stage(world)) {
             return;
         }
 

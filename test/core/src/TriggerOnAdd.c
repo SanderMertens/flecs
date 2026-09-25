@@ -817,17 +817,17 @@ void TriggerOnAdd_on_remove_in_on_add(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_1, e1, Position);
     ecs_add(stage_1, e1, Velocity);
     ecs_merge(stage_1);
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
-    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_2 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_2, e2, Position);
     ecs_add(stage_2, e2, Velocity);
     ecs_merge(stage_2);
     ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
-    ecs_world_t *stage_3 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_3 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_add(stage_3, e3, Position);
     ecs_add(stage_3, e3, Velocity);
     ecs_merge(stage_3);

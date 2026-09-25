@@ -995,7 +995,7 @@ ecs_entity_t ecs_add_path_w_sep(
     /* If we're in deferred/readonly mode suspend it, so that the name index is
      * immediately updated. Without this, we could create multiple entities for
      * the same name in a single command queue. */
-    bool suspend_defer = ecs_is_deferred(world) &&
+    bool suspend_defer = ecs_is_stage(world) &&
         !(real_world->flags & EcsWorldMultiThreaded);
         
     ecs_entity_t cur = parent;
@@ -1166,7 +1166,7 @@ ecs_entity_t ecs_set_name(
         });
     }
 
-    bool deferred = ecs_is_deferred(world);
+    bool deferred = ecs_is_stage(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (deferred && name) {
         flecs_defer_path(stage, 0, entity, name);
