@@ -667,7 +667,7 @@ void World_range_deferred_delete_across_ranges(void) {
     ecs_entity_t eb = ecs_new(world);
     test_uint((uint32_t)eb, 3000);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(stage_1, ea);
     test_assert(ecs_is_alive(stage_1, ea));
     ecs_merge(stage_1);

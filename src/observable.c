@@ -1485,7 +1485,7 @@ void ecs_enqueue(
     ecs_world_t *world,
     ecs_event_desc_t *desc)
 {
-    if (!ecs_is_deferred(world)) {
+    if (!ecs_is_stage(world)) {
         ecs_emit(world, desc);
         return;
     }

@@ -511,7 +511,7 @@ static int flecs_script_update_impl(
     ecs_assert(code != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int result = 0;
-    bool is_defer = ecs_is_deferred(world);
+    bool is_defer = ecs_is_stage(world);
     ecs_suspend_readonly_state_t srs;
     ecs_world_t *real_world = NULL;
     if (is_defer) {

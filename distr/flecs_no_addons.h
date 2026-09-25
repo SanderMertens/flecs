@@ -6741,7 +6741,7 @@ void ecs_merge(
  *
  */
 FLECS_API
-bool ecs_is_deferred(
+bool ecs_is_stage(
     const ecs_world_t *world);
 
 /** Configure the world to have N stages.

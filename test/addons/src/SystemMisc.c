@@ -661,7 +661,7 @@ void SystemMisc_add_to_system_in_progress(void) {
 
     ecs_new_w(world, Position);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_add(stage_1, Dummy, Tag);
 

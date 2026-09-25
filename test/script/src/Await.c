@@ -3185,7 +3185,7 @@ void Await_task_component_deferred_one_task(void) {
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_script_task_t *task = ecs_script_task_new(script,
         &(ecs_script_task_desc_t){ .entity = e });
     test_assert(task != NULL);
@@ -3247,7 +3247,7 @@ void Await_task_component_deferred_three_tasks(void) {
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_script_task_t *task_a = ecs_script_task_new(script,
         &(ecs_script_task_desc_t){ .entity = e });
     ecs_script_task_t *task_b = ecs_script_task_new(script,
@@ -3325,7 +3325,7 @@ void Await_task_component_deferred_w_existing_task(void) {
     test_assert(task_a != NULL);
     test_assert(ecs_has(world, e, EcsScriptTask));
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_script_task_t *task_b = ecs_script_task_new(script,
         &(ecs_script_task_desc_t){ .entity = e });
     test_assert(task_b != NULL);
@@ -3632,7 +3632,7 @@ void Await_task_component_deferred_new_then_free(void) {
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_script_task_t *task = ecs_script_task_new(script,
         &(ecs_script_task_desc_t){ .entity = e });
     test_assert(task != NULL);

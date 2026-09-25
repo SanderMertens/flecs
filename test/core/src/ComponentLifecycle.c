@@ -553,7 +553,7 @@ void ComponentLifecycle_merge_to_different_table(void) {
     copy_rotation = 0;
     move_rotation = 0;
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_remove(stage_1, e, Position);
     test_int(ctor_position, 0);
@@ -639,7 +639,7 @@ void ComponentLifecycle_merge_to_new_table(void) {
         .move = ecs_move(Position)
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_add(stage_1, e, Position);
 
@@ -699,7 +699,7 @@ void ComponentLifecycle_delete_in_stage(void) {
     copy_mass = 0;
     move_mass = 0;
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     /* None of the components should be destructed while in the stage as they
      * were never copied to the stage */
@@ -1214,7 +1214,7 @@ void ComponentLifecycle_ctor_w_emplace_defer(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     Position *ptr = ecs_emplace(stage_1, e, Position, NULL);
     test_assert(ptr != NULL);
     test_int(ctor_position, 0);
@@ -1290,7 +1290,7 @@ void ComponentLifecycle_on_add_w_emplace_defer(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     test_int(on_add_position, 0);
     const Position *ptr = ecs_emplace(stage_1, e, Position, NULL);
     test_assert(ptr != NULL);
@@ -1338,7 +1338,7 @@ void ComponentLifecycle_ctor_w_emplace_defer_use_move_ctor(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     test_int(on_add_position, 0);
     Position *ptr = ecs_emplace(stage_1, e, Position, NULL);
     ptr->x = 10;
@@ -1375,7 +1375,7 @@ void ComponentLifecycle_ctor_w_emplace_defer_twice(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
@@ -1430,7 +1430,7 @@ void ComponentLifecycle_ctor_w_emplace_defer_existing(void) {
     test_int(ctor_position, 1);
     ctor_position = 0;
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     {
         bool is_new = false;
@@ -1531,7 +1531,7 @@ void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void) {
     p->x = 10;
     p->y = 20;
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_merge(async);
     test_assert(ecs_has(world, e, Position));
     test_int(ecs_get(world, e, Position)->x, 10);
@@ -1654,7 +1654,7 @@ void ComponentLifecycle_ctor_w_emplace_w_with_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     Velocity *v = ecs_emplace(stage_1, e, Velocity, NULL);
     test_assert(v != NULL);
     v->x = 1;
@@ -1691,7 +1691,7 @@ void ComponentLifecycle_emplace_2_components_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     Position *p = ecs_emplace(stage_1, e, Position, NULL);
     test_assert(p != NULL);
     p->x = 10;
@@ -1735,7 +1735,7 @@ void ComponentLifecycle_set_and_emplace_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     Velocity *v = ecs_emplace(stage_1, e, Velocity, NULL);
     test_assert(v != NULL);
@@ -1781,7 +1781,7 @@ void ComponentLifecycle_emplace_2_components_w_with_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     Position *p = ecs_emplace(stage_1, e, Position, NULL);
     test_assert(p != NULL);
     p->x = 10;
@@ -1829,7 +1829,7 @@ void ComponentLifecycle_set_and_emplace_w_with_defer(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     Velocity *v = ecs_emplace(stage_1, e, Velocity, NULL);
     test_assert(v != NULL);
@@ -3640,7 +3640,7 @@ void ComponentLifecycle_batched_set_new_component_w_lifecycle(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_new(stage_1);
     ecs_set(stage_1, e, Position, {10, 20});
@@ -3681,7 +3681,7 @@ void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
 
     ecs_entity_t e = ecs_new(stage_1);
     ecs_ensure(stage_1, e, Position);
@@ -5444,7 +5444,7 @@ void ComponentLifecycle_on_validate_false_blocks_on_set_deferred(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {0, 0});
     test_int(on_validate_invoked, 0);
     test_int(on_validate_on_set_invoked, 0);
@@ -5469,7 +5469,7 @@ void ComponentLifecycle_on_validate_true_invokes_on_set_deferred(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_set(stage_1, e, Position, {10, 20});
     ecs_merge(stage_1);
 

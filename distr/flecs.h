@@ -7192,7 +7192,7 @@ void ecs_merge(
  *
  */
 FLECS_API
-bool ecs_is_deferred(
+bool ecs_is_stage(
     const ecs_world_t *world);
 
 /** Configure the world to have N stages.
@@ -26174,11 +26174,11 @@ struct world {
      *
      * @return True if deferred, false if not.
      *
-     * @see ecs_is_deferred()
+     * @see ecs_is_stage()
      * @see flecs::world::defer()
      */
     bool is_deferred() const {
-        return ecs_is_deferred(world_);
+        return ecs_is_stage(world_);
     }
 
     /** Configure world to have N stages.
@@ -30995,7 +30995,7 @@ struct entity_with_delegate_impl<arg_list<Args...>> {
         IdArray ids ({ _::type<Args>::id(world)... });
         ArrayType ptrs;
         ecs_table_t *table = nullptr;
-        if (!ecs_is_deferred(world)) {
+        if (!ecs_is_stage(world)) {
             ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INVALID_PARAMETER, nullptr);
             ecs_record_t *record = ecs_record_find(world, entity);
             ecs_assert(record != nullptr, ECS_INVALID_PARAMETER, nullptr);

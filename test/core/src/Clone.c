@@ -549,7 +549,7 @@ void Clone_clone_after_delete_deferred(void) {
     ecs_set(world, src, Position, {10, 20});
     ecs_set(world, src, Velocity, {10, 20});
 
-    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
     ecs_delete(stage_1, src);
     ecs_entity_t dst = ecs_clone(stage_1, 0, src, true);
     ecs_merge(stage_1);
