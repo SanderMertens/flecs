@@ -2107,16 +2107,6 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void);
 
 // Testsuite 'Observer'
-void Observer_on_set_no_propagate_w_self_only_observer_on_child(void);
-void Observer_on_set_propagate_w_up_observer_on_child(void);
-void Observer_on_set_propagate_isa_w_up_observer_on_instance(void);
-void Observer_on_set_propagate_w_up_observer_created_after_entities(void);
-void Observer_on_set_no_propagate_after_up_observer_deleted(void);
-void Observer_nomatch_table_memo_alternating_tables(void);
-void Observer_up_isa_term_no_match_then_base_gains_component(void);
-void Observer_up_isa_term_alternating_match_and_no_match(void);
-void Observer_up_isa_not_term_base_gains_component(void);
-void Observer_nomatch_table_memo_after_table_delete(void);
 void Observer_multi_term_inheritable_component_owned(void);
 void Observer_multi_term_inheritable_component_w_not_term(void);
 void Observer_multi_term_inheritable_component_w_prefab_term(void);
@@ -11783,46 +11773,6 @@ bake_test_case Trigger_testcases[] = {
 
 bake_test_case Observer_testcases[] = {
     {
-        "on_set_no_propagate_w_self_only_observer_on_child",
-        Observer_on_set_no_propagate_w_self_only_observer_on_child
-    },
-    {
-        "on_set_propagate_w_up_observer_on_child",
-        Observer_on_set_propagate_w_up_observer_on_child
-    },
-    {
-        "on_set_propagate_isa_w_up_observer_on_instance",
-        Observer_on_set_propagate_isa_w_up_observer_on_instance
-    },
-    {
-        "on_set_propagate_w_up_observer_created_after_entities",
-        Observer_on_set_propagate_w_up_observer_created_after_entities
-    },
-    {
-        "on_set_no_propagate_after_up_observer_deleted",
-        Observer_on_set_no_propagate_after_up_observer_deleted
-    },
-    {
-        "nomatch_table_memo_alternating_tables",
-        Observer_nomatch_table_memo_alternating_tables
-    },
-    {
-        "up_isa_term_no_match_then_base_gains_component",
-        Observer_up_isa_term_no_match_then_base_gains_component
-    },
-    {
-        "up_isa_term_alternating_match_and_no_match",
-        Observer_up_isa_term_alternating_match_and_no_match
-    },
-    {
-        "up_isa_not_term_base_gains_component",
-        Observer_up_isa_not_term_base_gains_component
-    },
-    {
-        "nomatch_table_memo_after_table_delete",
-        Observer_nomatch_table_memo_after_table_delete
-    },
-    {
         "multi_term_inheritable_component_owned",
         Observer_multi_term_inheritable_component_owned
     },
@@ -17709,7 +17659,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        409,
+        399,
         Observer_testcases
     },
     {

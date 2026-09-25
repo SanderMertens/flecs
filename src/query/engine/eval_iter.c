@@ -899,8 +899,7 @@ int flecs_query_trivial_has_range(
     const ecs_world_t *world,
     ecs_table_t *table,
     int32_t offset,
-    int32_t count,
-    bool *type_mismatch)
+    int32_t count)
 {
     ecs_flags32_t flags = q->flags;
     ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
@@ -911,16 +910,12 @@ int flecs_query_trivial_has_range(
      * single table to test: try the table first and only fall back to the
      * query engine when an id is missing and could still be found on a base
      * entity. */
-    bool self_ok =
-        (((flags & trivial_flags) == trivial_flags) ||
-            (flags & EcsQuerySelfTrivial)) != 0;
-    bool isa_ok = (flags & EcsQueryIsaTrivial) != 0;
-
     if (
 #ifdef FLECS_CACHED_QUERIES
         flecs_query_impl(q)->cache ||
 #endif
-        (!self_ok && !isa_ok) ||
+        (((flags & trivial_flags) != trivial_flags) &&
+            !(flags & EcsQuerySelfTrivial)) ||
         (flags & EcsQueryMatchWildcards) ||
         q->row_fields)
     {
@@ -934,89 +929,12 @@ int flecs_query_trivial_has_range(
     }
 
     if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
-        if (type_mismatch) {
-            *type_mismatch = true;
-        }
-
         return 0;
-    }
-
-    const ecs_world_t *real_world = q->world;
-    const ecs_term_t *terms = q->terms;
-    const ecs_table_record_t *term_trs[FLECS_TERM_COUNT_MAX];
-    ecs_entity_t term_srcs[FLECS_TERM_COUNT_MAX] = {0};
-    bool any_from_base = false;
-    int32_t t, term_count = q->term_count;
-    const ecs_table_record_t *table_records = table->_->records;
-    int32_t type_count = table->type.count;
-    const int16_t *component_map = table->component_map;
-    const int16_t *column_map = table->column_map;
-
-    for (t = 0; t < term_count; t ++) {
-        ecs_id_t term_id = terms[t].id;
-
-        /* An id that is not owned by the table can still be matched on a
-         * base entity when the term traverses IsA. The base search returns the
-         * table record the id was found on, which is everything the iterator
-         * needs, so an IsA-trivial query can answer such a term itself instead
-         * of handing the table to the query engine. */
-        bool up = (terms[t].src.id & EcsUp) != 0;
-        bool is_not = terms[t].oper == EcsNot;
-        const ecs_table_record_t *tr = NULL;
-
-        if (term_id < FLECS_HI_COMPONENT_ID && 
-           !(terms[t].flags_ & EcsTermIdInherited)) 
-        {
-            int16_t res = component_map[term_id];
-            if (res) {
-                int32_t type_index = res > 0 ?
-                    column_map[type_count + (res - 1)] : (-res - 1);
-                tr = &table_records[type_index];
-            }
-        } else {
-            ecs_component_record_t *cr = flecs_components_get(
-                real_world, term_id);
-            if (cr) {
-                tr = flecs_component_get_table(cr, table);
-            }
-        }
-
-        if (!(terms[t].src.id & EcsSelf)) {
-            tr = NULL;
-        }
-
-        ecs_entity_t source = 0;
-        if (!tr && up) {
-            ecs_table_record_t *base_tr = NULL;
-            ecs_search_relation(real_world, table, 0, term_id, EcsIsA,
-                EcsUp, &source, NULL, &base_tr);
-            tr = base_tr;
-        }
-
-        if ((tr != NULL) == is_not) {
-            if (type_mismatch && !source && (is_not || !up)) {
-                *type_mismatch = true;
-            }
-
-            return 0;
-        }
-
-        if (source && !isa_ok) {
-            goto not_trivial;
-        }
-
-        term_trs[t] = tr;
-        term_srcs[t] = source;
-        any_from_base |= source != 0;
-    }
-
-    if (any_from_base ? !isa_ok : !self_ok) {
-        goto not_trivial;
     }
 
     ecs_iter_t lit = {0};
     lit.stage = ECS_CONST_CAST(ecs_world_t*, world);
-    lit.world = ECS_CONST_CAST(ecs_world_t*, real_world);
+    lit.world = ECS_CONST_CAST(ecs_world_t*, q->world);
     lit.query = q;
     lit.system = q->entity;
     lit.field_count = q->field_count;
@@ -1034,21 +952,43 @@ int flecs_query_trivial_has_range(
     ecs_os_memcpy_n(ECS_CONST_CAST(ecs_id_t*, lit.ids), q->ids,
         ecs_id_t, q->field_count);
 
+    const ecs_term_t *terms = q->terms;
     int16_t *columns = ECS_CONST_CAST(int16_t*, lit.columns);
+    int32_t t, term_count = q->term_count;
     for (t = 0; t < term_count; t ++) {
-        int8_t field_index = terms[t].field_index;
-        if (!term_trs[t]) {
+        const ecs_term_t *term = &terms[t];
+
+        /* An id that is not owned by the table can still be matched on a
+         * base entity when the term traverses IsA, in which case the query
+         * engine has to do the work. */
+        bool up = (term->src.id & EcsUp) != 0;
+        bool is_not = term->oper == EcsNot;
+        const ecs_table_record_t *tr = NULL;
+
+        ecs_component_record_t *cr = flecs_components_get(
+            lit.world, term->id);
+        if (cr) {
+            tr = flecs_component_get_table(cr, table);
+        }
+
+        if (!tr) {
+            if (up) {
+                goto not_trivial;
+            }
+
+            if (!is_not) {
+                goto no_match;
+            }
+
             continue;
         }
 
-        lit.trs[field_index] = term_trs[t];
-        if (term_srcs[t]) {
-            lit.sources[field_index] = term_srcs[t];
-            columns[field_index] = -1;
-            lit.up_fields |= (ecs_termset_t)1 << field_index;
-        } else {
-            columns[field_index] = term_trs[t]->column;
+        if (is_not) {
+            goto no_match;
         }
+
+        lit.trs[term->field_index] = tr;
+        columns[term->field_index] = tr->column;
     }
 
     const ecs_entity_t *entities = ecs_table_entities(table);
@@ -1059,7 +999,14 @@ int flecs_query_trivial_has_range(
     *it = lit;
     return 1;
 
+no_match:
+    lit.flags |= EcsIterSkip;
+    ecs_iter_fini(&lit);
+    return 0;
+
 not_trivial:
+    lit.flags |= EcsIterSkip;
+    ecs_iter_fini(&lit);
     ECS_CONST_CAST(ecs_query_t*, q)->eval_count --;
     return -1;
 }

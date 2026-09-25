@@ -939,42 +939,27 @@ static void flecs_normalize_term_name(
 static void flecs_query_set_self_trivial(
     ecs_query_t *q)
 {
-    ecs_flags32_t flags = EcsQuerySelfTrivial | EcsQueryIsaTrivial;
-    if (!q->term_count || q->row_fields ||
-        (q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryHasRefs|
-            EcsQueryMatchNothing|EcsQueryMatchWildcards)))
-    {
-        flags = 0;
-    }
+    bool self_trivial = q->term_count && !q->row_fields &&
+        !(q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryHasRefs|
+            EcsQueryMatchNothing|EcsQueryMatchWildcards));
 
-    for (int32_t i = 0; flags && i < q->term_count; i ++) {
+    for (int32_t i = 0; self_trivial && i < q->term_count; i ++) {
         const ecs_term_t *term = &q->terms[i];
-        ecs_flags64_t src = term->src.id;
         if ((term->oper != EcsAnd && term->oper != EcsNot) ||
             (term->flags_ & (EcsTermIsOr|EcsTermIsToggle|EcsTermDontFragment|
                 EcsTermIsSparse|EcsTermTransitive|EcsTermReflexive|EcsTermIsMember|
                 EcsTermIsScope|EcsTermMatchAny|EcsTermMatchAnySrc)) ||
             !ecs_term_match_this(term) ||
+            !(term->src.id & EcsSelf) ||
             (term->trav && term->trav != EcsIsA) ||
             ecs_id_is_wildcard(term->id) ||
             (ECS_HAS_RELATION(term->id, EcsChildOf) && ECS_PAIR_SECOND(term->id)))
         {
-            flags = 0;
-            break;
-        }
-
-        if (!(src & EcsSelf)) {
-            flags &= ~EcsQuerySelfTrivial;
-        }
-
-        if ((src & (EcsCascade|EcsDesc)) || !(src & (EcsSelf|EcsUp)) ||
-            ((src & EcsUp) && term->trav != EcsIsA))
-        {
-            flags &= ~EcsQueryIsaTrivial;
+            self_trivial = false;
         }
     }
 
-    q->flags = (q->flags & ~(EcsQuerySelfTrivial|EcsQueryIsaTrivial)) | flags;
+    ECS_BIT_COND(q->flags, EcsQuerySelfTrivial, self_trivial);
 }
 
 static int flecs_query_finalize_terms(
