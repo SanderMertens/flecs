@@ -16,6 +16,11 @@ typedef struct ecs_stage_allocators_t {
 #endif
 } ecs_stage_allocators_t;
 
+typedef struct ecs_stage_ensure_t {
+    ecs_entity_t entity;
+    ecs_type_t ids;
+} ecs_stage_ensure_t;
+
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
  * operations, which causes the operation to be run on the stage instead of the
@@ -32,13 +37,9 @@ struct ecs_stage_t {
     /* Unique id that identifies the stage */
     int32_t id;
 
-    /* Zero if not deferred, positive if deferred, negative if suspended */
-    int32_t defer;
-
-    /* Command queue */
     ecs_commands_t *cmd;
-    ecs_commands_t cmd_stack[2];     /* Two so we can flush one & populate the other */
-    bool cmd_flushing;               /* Ensures only one defer_end call flushes */
+    ecs_commands_t cmd_root;
+    const ecs_stage_ensure_t *ensure_add;
 
     /* Thread context */
     ecs_world_t *thread_ctx;         /* Points to stage when used as a thread stage */
@@ -70,6 +71,19 @@ struct ecs_stage_t {
 #endif
 };
 
+static inline
+bool flecs_commands_begin(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    (void)world;
+    if (!stage->cmd->next) {
+        flecs_commands_grow(stage);
+    }
+    stage->cmd = stage->cmd->next;
+    return true;
+}
+
 /* Post-frame merge actions. */
 void flecs_stage_merge_post_frame(
     ecs_world_t *world,
@@ -91,5 +105,11 @@ ecs_stack_t* flecs_stage_get_stack_allocator(
 /* Shrink memory for stage data structures. */
 void ecs_stage_shrink(
     ecs_stage_t *stage);
+
+/* Test if component is added by an operation that is about to assign a value. */
+bool flecs_stage_is_ensure_add(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component);
 
 #endif

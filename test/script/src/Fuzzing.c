@@ -9,7 +9,15 @@ void Fuzzing_setup(void) {
     ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
 }
 
-static void fuzz(const char *expr) {
+void Fuzzing_1(void) {
+    const char *expr =
+    HEAD "const pi = 3.1415926"
+    LINE "const pi_2 = $pi * 2"
+    LINE " $pi "
+    LINE "my_entity {"
+    LINE "tation: {aUg/ 2}"
+    ;
+
     ecs_world_t *world = ecs_init();
 
 #ifdef FLECS_SCRIPT_MATH
@@ -21,18 +29,6 @@ static void fuzz(const char *expr) {
     ecs_fini(world);
 }
 
-void Fuzzing_1(void) {
-    const char *expr =
-    HEAD "const pi = 3.1415926"
-    LINE "const pi_2 = $pi * 2"
-    LINE " $pi "
-    LINE "my_entity {"
-    LINE "tation: {aUg/ 2}"
-    ;
-
-    fuzz(expr);
-}
-
 void Fuzzing_2(void) {
     const char *expr =
     HEAD "const pi = 3.141"
@@ -40,7 +36,15 @@ void Fuzzing_2(void) {
     LINE "c�\\entity ⏎"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_3(void) {
@@ -53,7 +57,15 @@ void Fuzzing_3(void) {
     LINE "t\\\\\\\\\\\\\\\\\\\\.1"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_4(void) {
@@ -62,7 +74,15 @@ void Fuzzing_4(void) {
     LINE "strumela,#44444444444444"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_5(void) {
@@ -70,7 +90,15 @@ void Fuzzing_5(void) {
     HEAD "coRRRSVRRco3V.melconsta,#43444444444a,melRRcoRV.melconsta,#43444444444a,#234444"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_6(void) {
@@ -78,7 +106,15 @@ void Fuzzing_6(void) {
     HEAD "VRRcoRcoRRRSRRRRRRRRRR,#23444nsta,#434.melRRcoRV,#23444nsta,#434..melco4"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_7(void) {
@@ -100,7 +136,15 @@ void Fuzzing_7(void) {
     LINE "s"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_8(void) {
@@ -122,7 +166,15 @@ void Fuzzing_8(void) {
     LINE "la,D"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_9(void) {
@@ -150,7 +202,15 @@ void Fuzzing_9(void) {
     LINE "la,D"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_10(void) {
@@ -177,7 +237,15 @@ void Fuzzing_10(void) {
     LINE "la,D"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_11(void) {
@@ -199,7 +267,15 @@ void Fuzzing_11(void) {
     LINE "s"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_12(void) {
@@ -238,7 +314,15 @@ void Fuzzing_12(void) {
     LINE "l"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_13(void) {
@@ -263,7 +347,15 @@ void Fuzzing_13(void) {
     LINE "la,D"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_14(void) {
@@ -272,7 +364,15 @@ void Fuzzing_14(void) {
     LINE "RRRRm###44"
     ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000000,sig:11,src:000009,time:34419,execs:4908,op:havoc,rep:1, sha1=28c972a5c8e7fc949987fd9cb73b615aea9410b9
@@ -344,7 +444,15 @@ void Fuzzing_15(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000001,sig:11,src:000009,time:37726,execs:5396,op:havoc,rep:10, sha1=38e3f6971329bed18ce181e0cb1a85b3b172b8f0
@@ -422,7 +530,15 @@ void Fuzzing_16(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000002,sig:11,src:000009,time:39381,execs:5638,op:havoc,rep:1, sha1=428b7e010e7d903e0ccce91f61b9aacd54b50124
@@ -494,7 +610,15 @@ void Fuzzing_17(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000003,sig:11,src:000005,time:140104,execs:20199,op:havoc,rep:2, sha1=379eaa226792fb1cff0c5e03c85a3442b8289331
@@ -537,7 +661,15 @@ void Fuzzing_18(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000004,sig:11,src:000005+000008,time:232662,execs:33440,op:splice,rep:7, sha1=7e9d39714e27ad7f44e11bbba722c6c30399be9c
@@ -606,7 +738,15 @@ void Fuzzing_19(void) {
     LINE "ue = se: $base, offs"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000005,sig:11,src:000007,time:606033,execs:88526,op:havoc,rep:2, sha1=85d042cd61fd1b88875c6f6dfac410a4dc6681dc
@@ -644,7 +784,15 @@ void Fuzzing_20(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer03/crashes/id:000000,sig:11,src:000008,time:632949,execs:90081,op:havoc,rep:12, sha1=7be89e2b7a3ce314e7af1e5580876db28b04176b
@@ -707,7 +855,15 @@ void Fuzzing_21(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer04/crashes/id:000000,sig:11,src:000005,time:19403,execs:2948,op:havoc,rep:1, sha1=61bb719881a454a38dee9b845e4b11c2694d2b05
@@ -750,7 +906,15 @@ void Fuzzing_22(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer04/crashes/id:000001,sig:11,src:000395,time:383902,execs:55897,op:havoc,rep:1, sha1=ac7f719e1e85bb6feb4fd80d79b0a33e818b1dbf
@@ -794,7 +958,15 @@ void Fuzzing_23(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000000,sig:11,src:000008,time:93641,execs:13452,op:havoc,rep:2, sha1=fddfbe493953395362308fc1fe8e86a92b4be5b0
@@ -857,7 +1029,15 @@ void Fuzzing_24(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000001,sig:11,src:000509,time:173806,execs:24720,op:havoc,rep:7, sha1=482c77f460748f2c4f0c3d9ed30daaa39188b0f4
@@ -903,7 +1083,15 @@ void Fuzzing_25(void) {
     LINE "tree_a { Branch: {count: 4, ba"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000002,sig:11,src:000002,time:411640,execs:59754,op:havoc,rep:13, sha1=e66f20148e9861145fa450af7dffc0f1d5b9d919
@@ -952,7 +1140,15 @@ void Fuzzing_26(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000003,sig:11,src:000002,time:416163,execs:60428,op:havoc,rep:11, sha1=8fcb77b93b15994a8e2c956123fd7b24937fe7af
@@ -1008,7 +1204,15 @@ void Fuzzing_27(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000000,sig:11,src:000008,time:96417,execs:13968,op:havoc,rep:14, sha1=67ab09a48e2ec9d3ad63fbcfd5d2be2fa892bf1a
@@ -1072,7 +1276,15 @@ void Fuzzing_28(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000001,sig:11,src:000008,time:108052,execs:15668,op:havoc,rep:12, sha1=3ac258ba549953a7f8db958044b4505d0ad03a92
@@ -1134,7 +1346,15 @@ void Fuzzing_29(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000002,sig:11,src:000002,time:288101,execs:40399,op:havoc,rep:5, sha1=f7386dfbec580c98268fce17c8b45e9f022414dc
@@ -1181,7 +1401,15 @@ void Fuzzing_30(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000003,sig:11,src:000456,time:589757,execs:84831,op:havoc,rep:3, sha1=b648eca4ecbf1faf13f5841b7a9cecb11d4fe2da
@@ -1246,7 +1474,15 @@ void Fuzzing_31(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer07/crashes/id:000000,sig:11,src:000293,time:138515,execs:19966,op:havoc,rep:1, sha1=046d53ff73f610573d9474f433d7991460644769
@@ -1291,7 +1527,15 @@ void Fuzzing_32(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer07/crashes/id:000001,sig:11,src:000008,time:548382,execs:79917,op:havoc,rep:6, sha1=a785c0aefe1afb3eacdd46e1d8bd3df68dd4a8fb
@@ -1357,7 +1601,15 @@ void Fuzzing_33(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer08/crashes/id:000000,sig:11,src:000555,time:188612,execs:27167,op:havoc,rep:4, sha1=67e77e9088c8982c6cb1ab8fece7d9c8e74b3520
@@ -1391,7 +1643,15 @@ void Fuzzing_34(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer08/crashes/id:000001,sig:11,src:000008,time:354349,execs:51526,op:havoc,rep:5, sha1=8973da00874e70e4480b1f27243730f5661bd10b
@@ -1460,7 +1720,15 @@ void Fuzzing_35(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer08/crashes/id:000002,sig:11,src:000004,time:474765,execs:69183,op:havoc,rep:2, sha1=4e49bbb35547bd496c1ad2af8da104f751cdad01
@@ -1515,7 +1783,15 @@ void Fuzzing_36(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer09/crashes/id:000000,sig:11,src:000003,time:7087,execs:1109,op:havoc,rep:3, sha1=f87c0b98252b4c24353814263369ea063ee08a39
@@ -1564,7 +1840,15 @@ void Fuzzing_37(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer09/crashes/id:000001,sig:11,src:000003,time:33215,execs:4770,op:havoc,rep:1, sha1=b952e2dc74b7f20ac842210984d0d085354d2370
@@ -1613,7 +1897,15 @@ void Fuzzing_38(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer09/crashes/id:000002,sig:11,src:000003,time:84164,execs:12306,op:havoc,rep:2, sha1=921e761e3296d17dc70253929f9e76841a6ed910
@@ -1663,7 +1955,15 @@ void Fuzzing_39(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer09/crashes/id:000003,sig:11,src:000002+000009,time:229485,execs:33232,op:splice,rep:6, sha1=884ca5e930c910f8b727d6cbe58ce1ea6c9b20e9
@@ -1736,7 +2036,15 @@ void Fuzzing_40(void) {
     LINE "      gains: {p: 3.0 / 1.0e2, i: 1.0 / 1.0e3,"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer09/crashes/id:000004,sig:11,src:000864,time:527224,execs:77139,op:havoc,rep:2, sha1=f770c7786548cb5545d694cce4d46f7799f55360
@@ -1785,7 +2093,15 @@ void Fuzzing_41(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer11/crashes/id:000000,sig:11,src:000005,time:37508,execs:5380,op:havoc,rep:1, sha1=2c801e604a9b1c0e52c09d77fef539a5d1cf59d9
@@ -1828,7 +2144,15 @@ void Fuzzing_42(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer11/crashes/id:000001,sig:11,src:000719+000605,time:257192,execs:37030,op:splice,rep:4, sha1=a05bf58f7158129cfddf154c8290e84c188178ec
@@ -1886,7 +2210,15 @@ void Fuzzing_43(void) {
     LINE "hifted: (3 << 4) + (64 "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer11/crashes/id:000002,sig:11,src:000004,time:472309,execs:68451,op:havoc,rep:13, sha1=a21db0b39a02f3f72586f656d4632739e49af1b6
@@ -1942,7 +2274,15 @@ void Fuzzing_44(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer12/crashes/id:000000,sig:11,src:000008,time:463446,execs:67534,op:havoc,rep:2, sha1=264e56f6a91e4b0b2734e2a412c8586d2eaf565c
@@ -2009,7 +2349,15 @@ void Fuzzing_45(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer12/crashes/id:000001,sig:11,src:000008,time:494869,execs:72178,op:havoc,rep:4, sha1=b3b5454d192cf46c1d695dd2ede6cd5e485f2dbc
@@ -2073,7 +2421,15 @@ void Fuzzing_46(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer12/crashes/id:000002,sig:11,src:000007,time:618162,execs:89842,op:havoc,rep:1, sha1=0247ed2d99b7e3980b632debb1fd127caee949bc
@@ -2122,7 +2478,15 @@ void Fuzzing_47(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer13/crashes/id:000000,sig:11,src:000004,time:36920,execs:5279,op:havoc,rep:4, sha1=6ad9bf7ca317be45e70a2a580a25df358260c992
@@ -2174,7 +2538,15 @@ void Fuzzing_48(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer13/crashes/id:000001,sig:11,src:000005,time:262599,execs:37684,op:havoc,rep:1, sha1=2c977ccf0300865d11c0cc61f6a971162f261b72
@@ -2217,7 +2589,15 @@ void Fuzzing_49(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer13/crashes/id:000002,sig:11,src:000009,time:371283,execs:53539,op:havoc,rep:2, sha1=a52337520e477fba7ce84a26ef11d77e18e36aff
@@ -2289,7 +2669,15 @@ void Fuzzing_50(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer13/crashes/id:000003,sig:11,src:000009,time:379807,execs:54788,op:havoc,rep:1, sha1=12aad1271444c55165b1088b3db0a7b2eff46c72
@@ -2360,7 +2748,15 @@ void Fuzzing_51(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer13/crashes/id:000004,sig:11,src:000009,time:395313,execs:57049,op:havoc,rep:6, sha1=c7df4fdd2bfc6d4e6e56d97607bcd39c462cb225
@@ -2432,7 +2828,15 @@ void Fuzzing_52(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer16/crashes/id:000000,sig:11,src:000001,time:164695,execs:23678,op:havoc,rep:5, sha1=362e168f6aded33d27aca34b2d921d0bdfb299ed
@@ -2482,7 +2886,15 @@ void Fuzzing_53(void) {
     LINE "\377\200"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000000,sig:11,src:000013,time:9379,execs:2468,op:havoc,rep:1, sha1=a480a69251313d8d9dca0f7bc73a45c3c4f955ae
@@ -2528,7 +2940,15 @@ void Fuzzing_54(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world_1 = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world_1, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world_1, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world_1);
 }
 
 /* crash=out/fuzzer01/crashes/id:000000,sig:11,src:001310,time:1043436,execs:262772,op:havoc,rep:1, sha1=2759f4a6b67a2dba5248e4e087da9e38b02b0443, grouped_crashes=6
@@ -2792,7 +3212,15 @@ void Fuzzing_55(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000001,sig:11,src:002097,time:1517583,execs:379774,op:havoc,rep:3, sha1=91b3f458415d0aeba4587763d3ec568dbf5fb4c6, grouped_crashes=2
@@ -2837,7 +3265,15 @@ void Fuzzing_56(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000002,sig:11,src:002842,time:2105300,execs:532190,op:havoc,rep:4, sha1=59ea8d34dcc4dc3dbd58d53c5573503828ca1229, grouped_crashes=1
@@ -2865,7 +3301,15 @@ void Fuzzing_57(void) {
     LINE "  sed =--------------------0-000000000E-0.0) &t ra"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000003,sig:11,src:002842,time:2109616,execs:533271,op:havoc,rep:1, sha1=3138d9a1d5a63c0ed4d76cb6136c5f3771555470, grouped_crashes=1
@@ -2891,7 +3335,15 @@ void Fuzzing_58(void) {
     LINE "***ed =--------------------0-000000000E-0.0) &t ra"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000004,sig:11,src:002875,time:2151145,execs:544193,op:havoc,rep:1, sha1=4f9181f80200db70b28b29c0da41e814c5af74b7, grouped_crashes=27
@@ -2937,7 +3389,15 @@ void Fuzzing_59(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000007,sig:11,src:002957,time:2176342,execs:550780,op:havoc,rep:3, sha1=cad226870d08b713f63dcb4eec5f9d9ea7e51fd9, grouped_crashes=5
@@ -2957,7 +3417,15 @@ void Fuzzing_60(void) {
     LINE "_1.4*// r"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000008,sig:11,src:002957+001009,time:2176657,execs:550867,op:splice,rep:3, sha1=a9e29b3e74467f5c452a6c194c7cbd4f32bbcbd0, grouped_crashes=3
@@ -2994,7 +3462,15 @@ void Fuzzing_61(void) {
     LINE "      n"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000010,sig:11,src:002974+000363,time:2181175,execs:552039,op:splice,rep:14, sha1=fb6b7b5364ce6cd86f44ac085ab41c8bde413b87, grouped_crashes=2
@@ -3254,7 +3730,15 @@ void Fuzzing_62(void) {
     LINE "    Flag"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000011,sig:11,src:002983,time:2183511,execs:552664,op:havoc,rep:2, sha1=42b42838f058e41e7a6fe89fce27d5ffd3680cd0, grouped_crashes=1
@@ -3275,7 +3759,15 @@ void Fuzzing_63(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000012,sig:11,src:000940+002438,time:2275982,execs:576154,op:splice,rep:3, sha1=c2178505eb7d3f4ccc6d4a2990e9e6bf7b6cd3a7, grouped_crashes=1
@@ -3539,7 +4031,15 @@ void Fuzzing_64(void) {
     LINE "    "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000013,sig:11,src:003017+001623,time:2333589,execs:590298,op:splice,rep:2, sha1=a25d29eb8020d3fd6b5da8ae4135e5ab32d6b0d3, grouped_crashes=1
@@ -3608,7 +4108,15 @@ void Fuzzing_65(void) {
     LINE "  "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000015,sig:11,src:000009,time:2363010,execs:597432,op:havoc,rep:3, sha1=d6c2526783c987d2fbc8cc26f808033722066e75, grouped_crashes=2
@@ -3696,7 +4204,15 @@ void Fuzzing_66(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000016,sig:11,src:003027+003140,time:2413463,execs:610189,op:splice,rep:2, sha1=ec61a458cb99a92ccb0b2fc5a449a6c99e9a71b0, grouped_crashes=4
@@ -3716,7 +4232,15 @@ void Fuzzing_67(void) {
     LINE "/*,us[/*[/["
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000017,sig:11,src:003176,time:2417803,execs:611326,op:havoc,rep:2, sha1=432625e4e33e2aaa2fcf2ffbe911f7f6813fe64e, grouped_crashes=1
@@ -3770,7 +4294,15 @@ void Fuzzing_68(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000018,sig:11,src:003240,time:2431130,execs:614809,op:havoc,rep:4, sha1=87022f6194b5b842334ce4bff6709d4f2481b01e, grouped_crashes=1
@@ -3794,7 +4326,15 @@ void Fuzzing_69(void) {
     LINE "  sed =-----------------------------------------------------------------------L-------------------------------------------------------------------------------------------------------------------------------------------------A---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------se_speed <=30.0)"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000019,sig:11,src:003245,time:2478849,execs:627344,op:havoc,rep:2, sha1=313e36e76b9ef06f1b0d3fd231a87dcfed513cce, grouped_crashes=6
@@ -3813,7 +4353,15 @@ void Fuzzing_70(void) {
     LINE "  /*n-Con = l "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000020,sig:11,src:003255+002949,time:2489093,execs:630124,op:splice,rep:12, sha1=4c82bcae57843dfcd1d896db865c675c350f9997, grouped_crashes=4
@@ -3841,7 +4389,15 @@ void Fuzzing_71(void) {
     LINE "\367\016\016"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000021,sig:11,src:003255+002949,time:2489115,execs:630130,op:splice,rep:1, sha1=c4b433f4fdeca18dac65865b6035c34c0e362bab, grouped_crashes=1
@@ -3868,7 +4424,15 @@ void Fuzzing_72(void) {
     LINE "/*//}                 &(1./(1.\016\016\016\016\016\016\016\016\016\016\016\016\016\016\016\016\016"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000024,sig:11,src:003268,time:2524325,execs:639337,op:havoc,rep:2, sha1=80264d95615eb9abd3611c2695566bd1f0864d93, grouped_crashes=1
@@ -3891,7 +4455,15 @@ void Fuzzing_73(void) {
     HEAD "if  ! ! \ttm[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]Uq !  t \ttm[[[]U: {radius: $fle\ttm[[[]Uq !  t \ttm[[][Uq[[[[[tm[[[]Uq !  t \ttm\\[[]U: {radiu[[[!["
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000025,sig:11,src:003294,time:2865815,execs:650661,op:havoc,rep:3, sha1=085956f524cbf8447b925819b7709ab6bbae6072, grouped_crashes=4
@@ -4230,7 +4802,15 @@ void Fuzzing_74(void) {
     LINE "    EnginePack: {thrust: 140, effi"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000001,sig:11,src:002848+002413,time:2192068,execs:543603,op:splice,rep:2, sha1=22ebd78e6b98b58f34dae05733079ba51bb184ae, grouped_crashes=10
@@ -4253,7 +4833,15 @@ void Fuzzing_75(void) {
     LINE "\335/ +"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer03/crashes/id:000002,sig:11,src:001805,time:1146265,execs:288822,op:havoc,rep:1, sha1=abfe4f6be67b5bf4ac3a84f3671f8ca800e7ea56, grouped_crashes=1
@@ -4280,7 +4868,15 @@ void Fuzzing_76(void) {
     LINE "/*////////"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer03/crashes/id:000003,sig:11,src:001805,time:1159034,execs:292062,op:havoc,rep:2, sha1=113d19fe1d99f2099d22966ce1ca7f8a11f34e4e, grouped_crashes=3
@@ -4303,7 +4899,15 @@ void Fuzzing_77(void) {
     LINE "////"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer03/crashes/id:000005,sig:11,src:001854,time:1331190,execs:336127,op:havoc,rep:2, sha1=8c24dc2f614e0e4f304e42c73bfee61d64578501, grouped_crashes=1
@@ -4326,7 +4930,15 @@ void Fuzzing_78(void) {
     LINE "  /*////////"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer03/crashes/id:000006,sig:11,src:001854+000688,time:1334923,execs:337059,op:splice,rep:13, sha1=b83c9b5783df0c92d9feb9feabffe3b2fe2a8519, grouped_crashes=1
@@ -4590,7 +5202,15 @@ void Fuzzing_79(void) {
     LINE "    Nameplate: {\"fast "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer03/crashes/id:000007,sig:11,src:001731+000488,time:1683433,execs:425667,op:splice,rep:2, sha1=c3b2488866fd19fc2c59eaa33b865630c4dbb1a0, grouped_crashes=2
@@ -4853,7 +5473,15 @@ void Fuzzing_80(void) {
     LINE "          l"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer03/crashes/id:000008,sig:11,src:002393,time:2004204,execs:504907,op:havoc,rep:2, sha1=6170c3d644cd052d288fc924516ace76b73680bf, grouped_crashes=2
@@ -4906,7 +5534,15 @@ void Fuzzing_81(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer04/crashes/id:000000,sig:11,src:000010,time:238025,execs:61106,op:havoc,rep:1, sha1=280d0b336cbae154a684fcb9decf1000fa94576b, grouped_crashes=1
@@ -4978,7 +5614,15 @@ void Fuzzing_82(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000000,sig:11,src:001249,time:809022,execs:205800,op:havoc,rep:1, sha1=ee4f179341903578cd5ecf93453f960fac7bcb68, grouped_crashes=2
@@ -5049,7 +5693,15 @@ void Fuzzing_83(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world_1 = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world_1, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world_1, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world_1);
 }
 
 /* crash=out/fuzzer05/crashes/id:000001,sig:06,src:000885,time:1137824,execs:288020,op:havoc,rep:1, sha1=95df6db40779938f9ec387d58efd622e2593f5e9, grouped_crashes=1
@@ -5315,7 +5967,15 @@ void Fuzzing_84(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000006,sig:11,src:001834,time:1307813,execs:331973,op:havoc,rep:1, sha1=62ba6ae35f49e8f9f7386545999131e6e91217a8, grouped_crashes=1
@@ -5341,7 +6001,15 @@ void Fuzzing_85(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000008,sig:11,src:001850+000958,time:1341710,execs:340778,op:splice,rep:5, sha1=d755b653034cfbd93055a2febc8f55346bba0b64, grouped_crashes=4
@@ -5393,7 +6061,15 @@ void Fuzzing_86(void) {
     LINE "  Velocity: {-$speed"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000019,sig:11,src:002009+000193,time:1538200,execs:389937,op:splice,rep:12, sha1=dccaffde1492205e463daac84b2a7904bbd8b225, grouped_crashes=1
@@ -5430,7 +6106,15 @@ void Fuzzing_87(void) {
     LINE "\200|"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000020,sig:11,src:001337,time:1571170,execs:398643,op:havoc,rep:3, sha1=d34560b92e5a9d2177e0d18d3af2d1b2aa162e7d, grouped_crashes=1
@@ -5457,7 +6141,15 @@ void Fuzzing_88(void) {
     LINE "stru\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\~\\\\O\\\\\\oot\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264\264te: {\"root\"}wi   S"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000022,sig:11,src:002011,time:1707292,execs:434265,op:havoc,rep:5, sha1=08ccdc94a07a25a14e6839e7574c8b55aae0ce58, grouped_crashes=1
@@ -5483,7 +6175,15 @@ void Fuzzing_89(void) {
     LINE "/*,us}!!}"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000023,sig:11,src:002011,time:1711178,execs:435335,op:havoc,rep:6, sha1=89620ede803fec6de98933430caf8d59d70b5c51, grouped_crashes=2
@@ -5508,7 +6208,15 @@ void Fuzzing_90(void) {
     LINE "/*,us[p = f!!!!!}"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000025,sig:11,src:002107,time:1979756,execs:502400,op:havoc,rep:1, sha1=dc6d3accc1a3648bba9a4e7146689132eaf5d53d, grouped_crashes=2
@@ -5773,7 +6481,15 @@ void Fuzzing_91(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000026,sig:11,src:002944,time:2316439,execs:585354,op:havoc,rep:7, sha1=844a1ecf067f61ef7457a22c4a2655739b63bfe2, grouped_crashes=1
@@ -5801,7 +6517,15 @@ void Fuzzing_92(void) {
     LINE "  sed =--------\016---E----se_s > 30.0)"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000027,sig:11,src:002988,time:2358938,execs:596232,op:havoc,rep:2, sha1=977cb43350909f5434f4019d7fcb5d7e60c66dae, grouped_crashes=1
@@ -5829,7 +6553,15 @@ void Fuzzing_93(void) {
     LINE "/*,0b0000000E----se_s\024> 3"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000028,sig:11,src:002623,time:2404477,execs:607854,op:havoc,rep:3, sha1=21258ffe20dc3f13d9861a9422196223c1c8f580, grouped_crashes=1
@@ -5873,7 +6605,15 @@ void Fuzzing_94(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000006,sig:11,src:001741,time:1293648,execs:333474,op:havoc,rep:3, sha1=4c1bd5a72b0fcde518cc502161c4923b2cbe1978, grouped_crashes=2
@@ -5897,7 +6637,15 @@ void Fuzzing_95(void) {
     LINE "  a// r"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000012,sig:11,src:001741,time:1308863,execs:337478,op:havoc,rep:4, sha1=e6400771011c97462842e6db96e4624a36b0986d, grouped_crashes=1
@@ -5921,7 +6669,15 @@ void Fuzzing_96(void) {
     LINE "\"(1.4*// r"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000014,sig:11,src:001741,time:1312793,execs:338542,op:havoc,rep:4, sha1=99d828c681efa6aac6da00192efe58fcad41d6a9, grouped_crashes=1
@@ -5947,7 +6703,15 @@ void Fuzzing_97(void) {
     LINE "\200*/ /*\200\377\177\377\377(1.4*// r"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000020,sig:11,src:001741,time:1329675,execs:343004,op:havoc,rep:4, sha1=0806bb5bb8a7f0355f08a2412c759bca056a0e34, grouped_crashes=1
@@ -5978,7 +6742,15 @@ void Fuzzing_98(void) {
     LINE "@\377// r"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000028,sig:11,src:001773,time:1399078,execs:361059,op:havoc,rep:3, sha1=ea16f0bc2e7844ea8f7f033ce99b01f25e550591, grouped_crashes=1
@@ -6003,7 +6775,15 @@ void Fuzzing_99(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000030,sig:11,src:001701,time:1491092,execs:385070,op:havoc,rep:4, sha1=66269f2ee4eb47c83d0848d14d3da86e992b988b, grouped_crashes=1
@@ -6038,7 +6818,15 @@ void Fuzzing_100(void) {
     LINE " "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000032,sig:11,src:001570,time:1586566,execs:410157,op:havoc,rep:3, sha1=c904cbc5bf09014bc019f8d340eba9aee7f3fc1e, grouped_crashes=1
@@ -6084,7 +6872,15 @@ void Fuzzing_101(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000034,sig:11,src:001722,time:1612953,execs:416873,op:havoc,rep:1, sha1=701a4869cf717bf10196508f49c320747fcdf78b, grouped_crashes=1
@@ -6135,7 +6931,15 @@ void Fuzzing_102(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000036,sig:11,src:001861,time:1682377,execs:435073,op:havoc,rep:4, sha1=e44c3a5156688ede613b4be84382a9d54e75b9e0, grouped_crashes=1
@@ -6187,7 +6991,15 @@ void Fuzzing_103(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000037,sig:11,src:001600,time:1707153,execs:441533,op:havoc,rep:3, sha1=ea89ccd1570c70723b6e96d0752633e370d72cdf, grouped_crashes=1
@@ -6322,7 +7134,15 @@ void Fuzzing_104(void) {
     LINE "const/ 10"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000039,sig:11,src:001790,time:2135760,execs:551936,op:havoc,rep:3, sha1=585b37923c4f20d72eca9277d61de7de4e761075, grouped_crashes=1
@@ -6346,7 +7166,15 @@ void Fuzzing_105(void) {
     LINE " /*\200\3771.4 ////\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377(1."
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000040,sig:11,src:002937+001986,time:2263386,execs:584192,op:splice,rep:5, sha1=b35338a0c1f624456bf0f71c4aff3656c01c70e3, grouped_crashes=1
@@ -6397,7 +7225,15 @@ void Fuzzing_106(void) {
     LINE "  Marker: {x: -5, y: 3, "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000042,sig:11,src:000484+001740,time:2484596,execs:637432,op:splice,rep:1, sha1=950dec7f5f95e141e0872f63fcb55013c5925bd6, grouped_crashes=1
@@ -6429,7 +7265,15 @@ void Fuzzing_107(void) {
     LINE "/*//}          "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer08/crashes/id:000005,sig:11,src:000008,time:1348094,execs:349650,op:havoc,rep:1, sha1=6942e7438748b415a54141ab2303f4eb94f81235, grouped_crashes=1
@@ -6493,7 +7337,15 @@ void Fuzzing_108(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world_1 = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world_1, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world_1, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world_1);
 }
 
 /* crash=out/fuzzer01/crashes/id:000000,sig:11,src:003001,time:2328738,execs:569781,op:havoc,rep:1, sha1=9052187fb2925ee67b316584ac68fb9a4e37b3cc, grouped_crashes=5
@@ -6761,7 +7613,15 @@ void Fuzzing_109(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000001,sig:11,src:003042,time:2424645,execs:593728,op:havoc,rep:3, sha1=7629448a6cb886d7c28b12dec0fbb233a382542c, grouped_crashes=3
@@ -6786,7 +7646,15 @@ void Fuzzing_110(void) {
     LINE "@"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000002,sig:11,src:003072,time:2466677,execs:604623,op:havoc,rep:1, sha1=98eca0e7b193c28081f316ffe9de7f03a2c7e94f, grouped_crashes=1
@@ -6810,7 +7678,15 @@ void Fuzzing_111(void) {
     LINE "constri"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000005,sig:11,src:003236,time:2793738,execs:692536,op:havoc,rep:4, sha1=3e28483a9de5870b724ae322484227458fb1a422, grouped_crashes=2
@@ -6837,7 +7713,15 @@ void Fuzzing_112(void) {
     LINE "@"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000007,sig:11,src:003236,time:2815039,execs:697547,op:havoc,rep:6, sha1=faffc5533d637cf09a0d6c86ed04a1dd398d4294, grouped_crashes=1
@@ -6864,7 +7748,15 @@ void Fuzzing_113(void) {
     LINE "@"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000000,sig:11,src:000008,time:354295,execs:87887,op:havoc,rep:1, sha1=1af6f9c26b52efdb436ac5f52d843da0bdeadd6e, grouped_crashes=1
@@ -6927,7 +7819,15 @@ void Fuzzing_114(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000000,sig:11,src:001492+000229,time:2622238,execs:591383,op:splice,rep:1, sha1=9f044908b698434efd11c7d8af957b50e3a67c4e, grouped_crashes=1
@@ -6937,7 +7837,15 @@ void Fuzzing_115(void) {
     HEAD "usinam: {Blug flecs new "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer03/crashes/id:000000,sig:11,src:002055,time:1717558,execs:417138,op:havoc,rep:1, sha1=5bd58b73d1ed2e975329e5d1db12bff2ddf9d7c1, grouped_crashes=1
@@ -7064,7 +7972,15 @@ void Fuzzing_116(void) {
     LINE "childo"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer04/crashes/id:000000,sig:11,src:000009,time:519664,execs:129879,op:havoc,rep:1, sha1=cff8a81cbf594cbbd06dbe6bb2f43edbe61148bb, grouped_crashes=3
@@ -7141,7 +8057,15 @@ void Fuzzing_117(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000000,sig:11,src:002494+002607,time:2175174,execs:493444,op:splice,rep:1, sha1=33c57048787bf36087accb28b204d01491866b64, grouped_crashes=1
@@ -7223,7 +8147,15 @@ void Fuzzing_118(void) {
     LINE "      value: new "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000001,sig:11,src:002494+002607,time:2175205,execs:493450,op:splice,rep:1, sha1=bc9b1e55909dff7aceb737b4690220cca67c221d, grouped_crashes=1
@@ -7306,7 +8238,15 @@ void Fuzzing_119(void) {
     LINE "      value: new "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000002,sig:11,src:002348+001441,time:2376369,execs:543010,op:splice,rep:2, sha1=a5ace3ec5858ce277ee0b4d76ec59095a9bd84e3, grouped_crashes=1
@@ -7334,7 +8274,15 @@ void Fuzzing_120(void) {
     LINE "\001   f"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000000,sig:11,src:001259,time:1225467,execs:207848,op:havoc,rep:1, sha1=f3e0045119b57f6c50dc69171207500ac41d148e, grouped_crashes=1
@@ -7345,7 +8293,15 @@ void Fuzzing_121(void) {
     LINE "\377  \025f888Z88888888\27088g!-1-8888((((((>((8%88S88lecs.8,\" "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000000,sig:11,src:003045,time:2867320,execs:480865,op:havoc,rep:2, sha1=ad9000b2e4ea00cd8ed806d7f392fc7f283f6501, grouped_crashes=2
@@ -7482,7 +8438,15 @@ void Fuzzing_122(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000001,sig:11,src:004801,time:5016725,execs:784772,op:havoc,rep:2, sha1=0eb4613a9b55350939bfa4bedd4dec04549dab38, grouped_crashes=2
@@ -7505,7 +8469,15 @@ void Fuzzing_123(void) {
     HEAD "dd,#1111110,#1111111d,#111111#1111111mpkat5 OJ"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000002,sig:11,src:004801,time:5016885,execs:784805,op:havoc,rep:1, sha1=7c67b638b0ecf65d81c72e7c629bc8de211b1099, grouped_crashes=2
@@ -7524,7 +8496,15 @@ void Fuzzing_124(void) {
     HEAD "dd,#1111110,#1111111d,#111111#1111111mpkat5 O\\"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000003,sig:11,src:004801,time:5029682,execs:787426,op:havoc,rep:2, sha1=f9bfc814a82825b736503d45c7fd9153206f53a4, grouped_crashes=1
@@ -7542,7 +8522,15 @@ void Fuzzing_125(void) {
     HEAD "dd,#1111111,#1111112d,#111111#1111111m#1111112d,#111111#1111111mpkat5 pkat5 O\\"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000000,sig:11,src:002790,time:2240821,execs:380309,op:havoc,rep:1, sha1=67ab091fe7d55d3e6f2687c9c11b3dcc7aed9795, grouped_crashes=2
@@ -7597,7 +8585,15 @@ void Fuzzing_126(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer04/crashes/id:000000,sig:11,src:003575,time:4075077,execs:696504,op:havoc,rep:2, sha1=0a13357ae2d7bcf5ab51a6b353da627460eb291a, grouped_crashes=2
@@ -7719,7 +8715,15 @@ void Fuzzing_127(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000000,sig:11,src:004546,time:4379169,execs:755989,op:havoc,rep:2, sha1=a82a5f88639f425e681d94fb603cfb1fc84a47ea, grouped_crashes=1
@@ -7768,7 +8772,15 @@ void Fuzzing_128(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000000,sig:11,src:003249,time:3082286,execs:498535,op:havoc,rep:2, sha1=73a7b0fbc4209740ceff503fa172c9183b771523, grouped_crashes=1
@@ -7893,7 +8905,15 @@ void Fuzzing_129(void) {
     LINE "  "
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000001,sig:11,src:004588,time:6692888,execs:1046549,op:havoc,rep:1, sha1=29f7f003304a1926b3cc7ec0f24414ae26a2ff27, grouped_crashes=1
@@ -7916,7 +8936,15 @@ void Fuzzing_130(void) {
     HEAD "```''<'''. =!f'''!'''g '''\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\'''''''`"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000002,sig:06,src:005474,time:6916326,execs:1074737,op:havoc,rep:2, sha1=3b2e6bb41ce4f13621a01a732649b8aa87f984d9, grouped_crashes=71
@@ -7945,7 +8973,15 @@ void Fuzzing_131(void) {
     LINE "  y!= f\t   10,'''''5''`"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000008,sig:06,src:005505,time:7028716,execs:1094279,op:havoc,rep:2, sha1=f52a7fa88b7466d45435fb65afe6be74a0f75c91, grouped_crashes=6
@@ -7974,7 +9010,15 @@ void Fuzzing_132(void) {
     LINE "  y!= f\t   10,'''''5''`"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000013,sig:11,src:000768+005475,time:8314754,execs:1310000,op:splice,rep:1, sha1=881d5cb5520cefa722d16836339e22569ba1a4cc, grouped_crashes=2
@@ -7999,7 +9043,15 @@ void Fuzzing_133(void) {
     LINE "b\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\325\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000017,sig:11,src:006293,time:11132002,execs:1733808,op:havoc,rep:1, sha1=c85fe243537ea941fd2d9034a7d8ecde65e5ed2c, grouped_crashes=2
@@ -8025,7 +9077,15 @@ void Fuzzing_134(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000019,sig:11,src:006380,time:11567157,execs:1802823,op:havoc,rep:6, sha1=ea9a0d9edd0598de582b6d5d95936d13ba165200, grouped_crashes=1
@@ -8066,7 +9126,15 @@ void Fuzzing_135(void) {
     LINE "\3114: {1<=010-'g'}'o\221'''''\235'D''''\020'5''`"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000000,sig:11,src:000941,time:514022,execs:68569,op:havoc,rep:2, sha1=8ba48b3f1977af932b8194e9fa1bbd1e05e7971c, grouped_crashes=1
@@ -8102,7 +9170,15 @@ void Fuzzing_136(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000001,sig:11,src:001074,time:644030,execs:91077,op:havoc,rep:2, sha1=c6bf108fd1b562433bd20d5d399f4b568522a081, grouped_crashes=1
@@ -8133,7 +9209,15 @@ void Fuzzing_137(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer02/crashes/id:000002,sig:11,src:001323,time:782212,execs:115505,op:havoc,rep:1, sha1=82ba3e8084b644353daf191d35431f3097aad5b0, grouped_crashes=1
@@ -8161,7 +9245,15 @@ void Fuzzing_138(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer03/crashes/id:000000,sig:11,src:003857,time:4946367,execs:817108,op:havoc,rep:1, sha1=c836ef044c0674c75fa60bcbebb7c6d8b149c52a, grouped_crashes=6
@@ -8291,7 +9383,15 @@ void Fuzzing_140(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world_1 = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world_1, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world_1, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world_1);
 }
 
 /* crash=out/fuzzer03/crashes/id:000001,sig:11,src:003857,time:4946564,execs:817137,op:havoc,rep:1, sha1=61607ce78575e056391d52c735ca4d7915241f70, grouped_crashes=4
@@ -8417,7 +9517,15 @@ void Fuzzing_141(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer04/crashes/id:000018,sig:07,src:003588+005495,time:9514977,execs:1465181,op:splice,rep:1, sha1=802df47e4a3062ce996dcedb86ec6eb517db8025, grouped_crashes=1
@@ -8464,7 +9572,15 @@ void Fuzzing_144(void) {
     install_test_abort();
     test_expect_abort();
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000000,sig:11,src:001897,time:5200818,execs:838518,op:havoc,rep:1, sha1=aa899f807fe5e122129f1b10d0810620a358b8f5, grouped_crashes=4
@@ -8590,7 +9706,15 @@ void Fuzzing_145(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer05/crashes/id:000004,sig:11,src:003488,time:7089413,execs:1111171,op:havoc,rep:1, sha1=738d7ee0255f3f0982f2a30ec8563b6bfc421ede, grouped_crashes=2
@@ -8639,7 +9763,15 @@ void Fuzzing_146(void) {
 
 
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer06/crashes/id:000000,sig:11,src:005494,time:6424436,execs:1003935,op:havoc,rep:1, sha1=01a84b9966efb73b591638ff0166ad7f05d29795, grouped_crashes=1
@@ -8668,7 +9800,15 @@ void Fuzzing_147(void) {
     LINE "const subgv = $to. o.5\\"
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000000,sig:07,src:004563,time:11309477,execs:680016,op:havoc,rep:2, sha1=36ddae5ede5747df9862a5579c6b4f72988c8c4b, grouped_crashes=3
@@ -8718,7 +9858,15 @@ void Fuzzing_149(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 /* crash=out/fuzzer01/crashes/id:000003,sig:11,src:004632,time:11453873,execs:703838,op:havoc,rep:1, sha1=338d7a6bb81a601d3638769744cf0891ab5e6aeb, grouped_crashes=1
@@ -8768,7 +9916,15 @@ void Fuzzing_150(void) {
     LINE ""
         ;
 
-    fuzz(expr);
+    ecs_world_t *world = ecs_init();
+
+#ifdef FLECS_SCRIPT_MATH
+    ECS_IMPORT(world, FlecsScriptMath);
+#endif
+    ecs_log_set_level(-5);
+    ecs_script_run_w_desc(world, "test", expr, &ir_desc, NULL);
+    test_assert(true);
+    ecs_fini(world);
 }
 
 void Fuzzing_139(void) {

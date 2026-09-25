@@ -148,6 +148,10 @@ void flecs_observers_invoke_skip_up_notify(
     ecs_entity_t trav);
 
 /* Invalidate reachable cache. */
+const ecs_vec_t* flecs_reachable_cache_get(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
 void flecs_emit_propagate_invalidate(
     ecs_world_t *world,
     ecs_table_t *table,

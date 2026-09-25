@@ -41,6 +41,7 @@ static void flecs_ir_regs_ensure(
     if (count <= vm->reg_count) {
         return;
     }
+
     int32_t new_count = count < 16 ? 16 : count;
     vm->regs = ecs_os_realloc_n(vm->regs, ecs_script_ir_reg_t, new_count);
     ecs_os_memset(&vm->regs[vm->reg_count], 0,
@@ -59,11 +60,13 @@ static void* flecs_ir_arena_alloc(
         arena->size = size > initial ? size : initial;
         arena->data = ecs_os_malloc(arena->size);
     }
+
     int32_t top = (arena->top + (align - 1)) & ~(align - 1);
     if (top + size <= arena->size) {
         arena->top = top + size;
         return arena->data + top;
     }
+
     void *ptr = ecs_os_malloc(size);
     ecs_vec_append_t(NULL, &arena->heap, void*)[0] = ptr;
     return ptr;
@@ -78,6 +81,7 @@ static void flecs_ir_arena_restore(
     for (int32_t i = heap_count; i < arena->heap.count; i ++) {
         ecs_os_free(heap[i]);
     }
+
     arena->heap.count = heap_count;
     arena->top = top;
 }
@@ -109,6 +113,7 @@ static inline ecs_script_var_t* flecs_ir_var_declare(
     } else {
         var = ecs_vec_append_t(vars->allocator, &vars->vars, ecs_script_var_t);
     }
+
     var->name = NULL;
     var->value.ptr = NULL;
     var->value.type = 0;
@@ -130,6 +135,7 @@ static void* flecs_ir_var_alloc(
     } else {
         ecs_os_memset(ptr, 0, ti->size);
     }
+
     return ptr;
 }
 
@@ -149,6 +155,7 @@ static void* flecs_ir_reg_alloc_w_init(
             ecs_os_memset(ptr, 0, ti->size);
         }
     }
+
     if (ti->hooks.dtor) {
         flecs_ir_owned_t *o = ecs_vec_append_t(
             NULL, &vm->owned, flecs_ir_owned_t);
@@ -156,6 +163,7 @@ static void* flecs_ir_reg_alloc_w_init(
         o->ti = ti;
         o->reg = (int32_t)(reg - vm->regs);
     }
+
     reg->value.ptr = ptr;
     reg->value.type = ti->component;
     reg->ti = ti;
@@ -192,6 +200,7 @@ static void* flecs_ir_reg_out(
         reg->ti = node->type_info;
         return reg->value.ptr;
     }
+
     return flecs_ir_reg_alloc(vm, reg, node->type_info);
 }
 
@@ -208,6 +217,7 @@ static inline void* flecs_ir_reg_out_raw(
         reg->ti = ti;
         return reg->value.ptr;
     }
+
     if (!ti->hooks.dtor && ti->size <= 16) {
         int32_t top = (vm->scratch.top + 15) & ~15;
         if (top + 16 <= vm->scratch.size) {
@@ -221,6 +231,7 @@ static inline void* flecs_ir_reg_out_raw(
             return out;
         }
     }
+
     return flecs_ir_reg_alloc_raw(vm, reg, ti);
 }
 
@@ -257,6 +268,7 @@ static ecs_script_ir_frame_t* flecs_ir_frame_push(
         vm->frames[chunk] = ecs_os_malloc_n(
             ecs_script_ir_frame_t, ECS_SCRIPT_IR_FRAME_CHUNK_SIZE);
     }
+
     ecs_script_ir_frame_t *frame = flecs_ir_frame_at(vm, vm->frame_count ++);
     frame->kind = (int16_t)kind;
     frame->state = 0;
@@ -286,6 +298,7 @@ static void flecs_ir_expr_release(
                 reg->owned = false;
             }
         }
+
         ecs_vec_set_count_t(NULL, &vm->owned, flecs_ir_owned_t,
             frame->u.expr.owned_count);
     }
@@ -302,6 +315,7 @@ static void flecs_ir_expr_release(
         }
         ecs_vec_set_count_t(NULL, &vm->strbufs, ecs_strbuf_t, strbuf_count);
     }
+
     if (vm->cursors.count != frame->u.expr.cursor_count) {
         ecs_vec_set_count_t(NULL, &vm->cursors, ecs_meta_cursor_t,
             frame->u.expr.cursor_count);
@@ -351,8 +365,10 @@ static void flecs_ir_vars_truncate(
                 flecs_type_info_dtor(var->value.ptr, 1, var->type_info);
             }
         }
+
         vars->vars.count = count;
     }
+
     flecs_ir_arena_restore(&vm->vscratch, vscratch_top, vheap_count);
 }
 
@@ -365,6 +381,7 @@ static void flecs_ir_scope_leave(
         flecs_ir_vars_truncate(vm, frame->u.scope.var_count,
             frame->u.scope.vscratch_top, frame->u.scope.vheap_count);
     }
+
     v->parent = frame->u.scope.state.parent;
     v->scope_slot = frame->u.scope.state.scope_slot;
 }
@@ -445,12 +462,14 @@ static void flecs_ir_set_dirty(
     if (vm->dirty) {
         return;
     }
+
     vm->dirty = true;
     int32_t i, count = vm->pending_marks.count;
     const int32_t *marks = vm->pending_marks.array;
     for (i = 0; i < count; i ++) {
         flecs_ir_mark(vm, marks[i]);
     }
+
     vm->pending_marks.count = 0;
 }
 
@@ -493,8 +512,10 @@ static void flecs_ir_mark(
                 flecs_ir_mark(vm, marks);
             }
         }
+
         return;
     }
+
     ecs_script_eval_visitor_t *v = &vm->v;
     const ecs_script_region_t *region = ecs_vec_get_t(
         &v->base.script->regions, ecs_script_region_t, index);
@@ -520,6 +541,7 @@ static ecs_entity_t flecs_ir_lookup_name(
     {
         return 0;
     }
+
     return symbol.entity;
 }
 
@@ -534,22 +556,27 @@ static int flecs_ir_id_elem(
 {
     ecs_script_eval_visitor_t *v = &vm->v;
     ecs_entity_t result = eval;
+    v->id_ref = NULL;
     if (reg != -1) {
         const char *name = *(char**)flecs_ir_reg(vm, reg)->value.ptr;
         if (!name) {
             flecs_ir_error(vm, node, "failed to evaluate entity name");
             return -1;
         }
+
         result = flecs_ir_lookup_name(vm, name);
     } else if (slot != -1) {
         result = flecs_script_symbol_entity(v, slot);
     } else if (sp != -1) {
         ecs_script_var_t *var = ecs_script_vars_from_sp(v->vars, sp);
         result = 0;
-        if (var && var->value.type == ecs_id(ecs_entity_t) &&
-            var->value.ptr)
-        {
-            result = *(ecs_entity_t*)var->value.ptr;
+        if (var && var->value.ptr) {
+            if (var->value.type == ecs_id(ecs_entity_t)) {
+                result = *(ecs_entity_t*)var->value.ptr;
+            } else if (var->value.type == ecs_id(ecs_script_template_ref_t)) {
+                v->id_ref = var->value.ptr;
+                result = v->id_ref->type;
+            }
         }
     }
 
@@ -560,6 +587,43 @@ static int flecs_ir_id_elem(
 
     *out = result;
     return 0;
+}
+
+static int flecs_ir_index_elem(
+    ecs_script_ir_vm_t *vm,
+    const ecs_script_ir_id_t *desc,
+    const void *node,
+    ecs_entity_t *out)
+{
+    ecs_script_eval_visitor_t *v = &vm->v;
+    int32_t index = *(int32_t*)flecs_ir_reg(vm, desc->index_reg)->value.ptr;
+
+    const ecs_vec_t *vec = flecs_script_vector_prop_vec(v, desc->index_sp);
+    ecs_entity_t elem = 0;
+    int32_t count = 0;
+    int result = flecs_script_vector_prop_elem(
+        v, vec, index, desc->interface, &elem, &count);
+    if (result == FlecsScriptVectorPropOk) {
+        *out = elem;
+        return 0;
+    }
+
+    if (result == FlecsScriptVectorPropOutOfRange) {
+        flecs_ir_error(vm, node,
+            "index %d out of range for vector prop '%s' with %d element(s)",
+            index, desc->first, count);
+        return -1;
+    }
+
+    char *elem_str = elem ? ecs_get_path(v->world, elem) : ecs_os_strdup("0");
+    char *expected = flecs_script_template_expected_str(
+        v->world, desc->interface);
+    flecs_ir_error(vm, node,
+        "'%s' at index %d of vector prop '%s' is not %s",
+        elem_str, index, desc->first, expected);
+    ecs_os_free(expected);
+    ecs_os_free(elem_str);
+    return -1;
 }
 
 static int flecs_ir_id_resolve(
@@ -574,11 +638,16 @@ static int flecs_ir_id_resolve(
     }
 
     ecs_entity_t first;
-    if (flecs_ir_id_elem(vm, node, desc->first_reg, desc->first_eval,
+    if (desc->index_sp != -1) {
+        if (flecs_ir_index_elem(vm, desc, node, &first)) {
+            return -1;
+        }
+    } else if (flecs_ir_id_elem(vm, node, desc->first_reg, desc->first_eval,
         desc->first_symbol, desc->first_sp, &first))
     {
         return -1;
     }
+
     if (!first) {
         flecs_ir_error(vm, node, "unresolved identifier '%s'", desc->first);
         return -1;
@@ -591,15 +660,18 @@ static int flecs_ir_id_resolve(
         {
             return -1;
         }
+
         if (!second) {
             flecs_ir_error(vm, node,
                 "unresolved identifier '%s'", desc->second);
             return -1;
         }
+
         *out = desc->flag | ecs_pair(first, second);
     } else {
         *out = desc->flag | first;
     }
+
     return 0;
 }
 
@@ -611,6 +683,7 @@ static inline ecs_entity_t flecs_ir_symbol_entity(
         return ((ecs_script_symbol_slot_t*)v->state->symbol_slots.array)
             [slot - v->symbol_offset].entity;
     }
+
     return ((ecs_script_symbol_slot_t*)v->base.script->state.symbol_slots.array)
         [slot].entity;
 }
@@ -625,7 +698,10 @@ static inline int flecs_ir_id_get(
         *out = desc->eval;
         return 0;
     }
-    if (desc->first_reg == -1 && desc->first_sp == -1) {
+
+    if (desc->first_reg == -1 && desc->first_sp == -1 &&
+        desc->index_sp == -1)
+    {
         ecs_entity_t first = desc->first_symbol != -1
             ? flecs_ir_symbol_entity(&vm->v, desc->first_symbol)
             : desc->first_eval;
@@ -634,6 +710,7 @@ static inline int flecs_ir_id_get(
                 *out = desc->flag | first;
                 return 0;
             }
+
             if (desc->second_reg == -1 && desc->second_sp == -1) {
                 ecs_entity_t second = desc->second_symbol != -1
                     ? flecs_ir_symbol_entity(&vm->v, desc->second_symbol)
@@ -645,6 +722,7 @@ static inline int flecs_ir_id_get(
             }
         }
     }
+
     return flecs_ir_id_resolve(vm, desc, node, out);
 }
 
@@ -667,6 +745,7 @@ static void flecs_ir_track(
             return;
         }
     }
+
     flecs_script_track_component(v, component_slot, component);
 }
 
@@ -686,6 +765,7 @@ static int flecs_ir_default_ctor_check(
     if (desc->resolved) {
         return 0;
     }
+
     if (!flecs_script_can_default_ctor(vm->v.world, id)) {
         if (desc->has_second) {
             flecs_ir_error(vm, node,
@@ -696,8 +776,10 @@ static int flecs_ir_default_ctor_check(
                 "cannot add %s, type is not default constructible",
                 desc->first);
         }
+
         return -1;
     }
+
     return 0;
 }
 
@@ -723,12 +805,15 @@ static const ecs_type_info_t* flecs_ir_id_type_info(
     if (desc->ti) {
         return desc->ti;
     }
+
     if (desc->cache_id != id) {
         flecs_ir_id_cache(vm, desc, id);
     }
+
     if (desc->cache_ti) {
         return desc->cache_ti;
     }
+
     return flecs_script_get_type_info(&vm->v, node, id);
 }
 
@@ -766,18 +851,21 @@ static int flecs_ir_tag(
                 desc->second, v->entity->node->name);
             return -1;
         }
+
         if (base == v->entity->eval) {
             flecs_ir_error(vm, node,
                 "struct '%s' cannot inherit from itself",
                 v->entity->node->name);
             return -1;
         }
+
         if (flecs_struct_is_derived_from(v->world, base, v->entity->eval)) {
             flecs_ir_error(vm, node,
                 "inheritance cycle between struct '%s' and base '%s'",
                 v->entity->node->name, desc->second);
             return -1;
         }
+
         int32_t i = 0;
         ecs_entity_t existing;
         while ((existing = ecs_get_target(
@@ -794,17 +882,21 @@ static int flecs_ir_tag(
 
     ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, id);
 
-    if (desc->value_sp != -1) {
-        const ecs_script_var_t *var = flecs_script_template_prop_var(
-            v, node, desc->value_sp, id);
-        if (!var) {
-            return -1;
-        }
+    if (desc->interface && v->id_ref && v->id_ref->value) {
         const ecs_type_info_t *ti = flecs_ir_id_type_info(vm, desc, node, id);
         if (!ti) {
             return -1;
         }
-        ecs_set_id(v->world, src, id, flecs_itosize(ti->size), var->value.ptr);
+
+        void *value = ecs_os_alloca(ti->size);
+        flecs_type_info_ctor(value, 1, ti);
+        if (flecs_script_template_ref_apply(v->world, v->id_ref, ti, value)) {
+            flecs_type_info_dtor(value, 1, ti);
+            return -1;
+        }
+
+        ecs_set_id(v->world, src, id, flecs_itosize(ti->size), value);
+        flecs_type_info_dtor(value, 1, ti);
     } else {
         flecs_ir_prof(EcsIrProfileTagAdd);
         ecs_add_id(v->world, src, id);
@@ -827,12 +919,13 @@ static int flecs_ir_interface_check(
         return -1;
     }
 
-    char *interface_str = ecs_get_path(v->world, desc->interface);
+    char *expected = flecs_script_template_expected_str(
+        v->world, desc->interface);
     if (!tmpl) {
         flecs_ir_error(vm, node,
-            "template prop '%s' has no value: expected a template derived "
-            "from '%s'", desc->first, interface_str);
-        ecs_os_free(interface_str);
+            "template prop '%s' has no value: expected %s",
+            desc->first, expected);
+        ecs_os_free(expected);
         return -1;
     }
 
@@ -841,14 +934,14 @@ static int flecs_ir_interface_check(
     {
         char *tmpl_str = ecs_get_path(v->world, tmpl);
         flecs_ir_error(vm, node,
-            "'%s' passed to template prop '%s' is not a template derived "
-            "from '%s'", tmpl_str, desc->first, interface_str);
+            "'%s' passed to template prop '%s' is not %s",
+            tmpl_str, desc->first, expected);
         ecs_os_free(tmpl_str);
-        ecs_os_free(interface_str);
+        ecs_os_free(expected);
         return -1;
     }
 
-    ecs_os_free(interface_str);
+    ecs_os_free(expected);
     return 0;
 }
 
@@ -874,10 +967,12 @@ static int flecs_ir_component_visitor(
         if (desc->cache_id != id) {
             flecs_ir_id_cache(vm, desc, id);
         }
+
         if (desc->cache_visitor) {
             visitor = ecs_get(v->world, id, EcsScriptVisitor);
         }
     }
+
     if (!visitor) {
         return 0;
     }
@@ -925,7 +1020,9 @@ static int flecs_ir_component_begin(
     const ecs_script_ir_id_t *desc = flecs_ir_id_desc(vm, op->a);
     const ecs_script_component_t *node = op->node;
 
-    if (desc->interface && flecs_ir_interface_check(vm, desc, node)) {
+    if (desc->interface && desc->index_sp == -1 &&
+        flecs_ir_interface_check(vm, desc, node))
+    {
         return -1;
     }
 
@@ -984,13 +1081,10 @@ static int flecs_ir_component_alloc(
     ecs_script_ir_reg_t *tmp = flecs_ir_reg(vm, op->b);
     void *ptr = flecs_ir_reg_alloc(vm, tmp, ti);
 
-    if (desc->value_sp != -1) {
-        const ecs_script_var_t *var = flecs_script_template_prop_var(
-            v, node, desc->value_sp, id);
-        if (!var) {
+    if (desc->interface && v->id_ref && v->id_ref->value) {
+        if (flecs_script_template_ref_apply(v->world, v->id_ref, ti, ptr)) {
             return -1;
         }
-        ecs_ptr_copy_w_type_info(v->world, ti, ptr, var->value.ptr);
     } else if (op->flags & EcsIrComponentPartial) {
         ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, id);
         const void *existing = ecs_get_id(v->world, src, id);
@@ -1013,12 +1107,14 @@ static int flecs_ir_value_to(
     if (src->value.ptr == dst_ptr) {
         return 0;
     }
+
     if (src->value.type == dst_type) {
         if (src->owned) {
             flecs_type_info_move(dst_ptr, src->value.ptr, 1, dst_ti);
         } else {
             flecs_type_info_copy(dst_ptr, src->value.ptr, 1, dst_ti);
         }
+
         return 0;
     }
 
@@ -1026,6 +1122,7 @@ static int flecs_ir_value_to(
     if (ecs_meta_set_value(&cur, &src->value)) {
         return -1;
     }
+
     return 0;
 }
 
@@ -1042,6 +1139,7 @@ static int flecs_ir_component_end(
         if (flecs_ir_component_begin(vm, op, &id)) {
             return -1;
         }
+
         ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, id);
         if (desc->interface) {
             const ecs_type_info_t *ti = flecs_ir_id_type_info(
@@ -1049,12 +1147,22 @@ static int flecs_ir_component_end(
             if (!ti) {
                 return -1;
             }
+
             void *value = ecs_os_alloca(ti->size);
             flecs_type_info_ctor(value, 1, ti);
+            if (flecs_script_template_ref_apply(
+                v->world, v->id_ref, ti, value))
+            {
+                flecs_type_info_dtor(value, 1, ti);
+                return -1;
+            }
+
             ecs_set_id(v->world, src, id, flecs_itosize(ti->size), value);
+            flecs_type_info_dtor(value, 1, ti);
         } else {
             ecs_add_id(v->world, src, id);
         }
+
         flecs_ir_track(v, desc->component_slot, id);
         return 0;
     }
@@ -1105,22 +1213,18 @@ static int flecs_ir_with_tag(
         return -1;
     }
 
-    if (desc->value_sp != -1) {
-        const ecs_script_var_t *var = flecs_script_template_prop_var(
-            v, node, desc->value_sp, id);
-        if (!var) {
-            return -1;
-        }
+    if (desc->interface && v->id_ref && v->id_ref->value) {
         const ecs_type_info_t *ti = flecs_ir_id_type_info(vm, desc, node, id);
         if (!ti) {
             return -1;
         }
+
         ecs_value_t *value = flecs_script_with_append(v, ti);
         value->type = id;
         value->ptr = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
         flecs_type_info_ctor(value->ptr, 1, ti);
-        ecs_ptr_copy_w_type_info(v->world, ti, value->ptr, var->value.ptr);
-        return 0;
+        return flecs_script_template_ref_apply(
+            v->world, v->id_ref, ti, value->ptr);
     }
 
     ecs_value_t *value = flecs_script_with_append(v, NULL);
@@ -1171,13 +1275,10 @@ static int flecs_ir_with_component_begin(
     value->ptr = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
     flecs_type_info_ctor(value->ptr, 1, ti);
 
-    if (desc->value_sp != -1) {
-        const ecs_script_var_t *var = flecs_script_template_prop_var(
-            v, node, desc->value_sp, id);
-        if (!var) {
-            return -1;
-        }
-        ecs_ptr_copy_w_type_info(v->world, ti, value->ptr, var->value.ptr);
+    if (desc->interface && flecs_script_template_ref_apply(
+        v->world, v->id_ref, ti, value->ptr))
+    {
+        return -1;
     }
 
     ecs_script_ir_reg_t *tmp = flecs_ir_reg(vm, op->b);
@@ -1205,6 +1306,7 @@ static int flecs_ir_with_component_end(
         flecs_ir_expr_error(vm, node->expr, "failed to write to output");
         return -1;
     }
+
     return 0;
 }
 
@@ -1256,6 +1358,7 @@ static int flecs_ir_entity_enter(
                 state->eval_kind = *(ecs_entity_t*)var->value.ptr;
             }
         }
+
         if (!state->eval_kind) {
             flecs_ir_error(vm, node, "unresolved identifier '%s'", node->kind);
             return -1;
@@ -1281,16 +1384,19 @@ static int flecs_ir_entity_enter(
             flecs_ir_error(vm, node, "failed to evaluate entity name");
             return -1;
         }
+
         ecs_entity_t eval = flecs_script_create_entity(v, name);
         if (!eval) {
             return -1;
         }
+
         state->created = true;
         if (state->eval && state->eval != eval &&
             ecs_is_alive(v->world, state->eval))
         {
             ecs_delete(v->world, state->eval);
         }
+
         state->eval = eval;
     } else if (!state->eval) {
         flecs_ir_prof(EcsIrProfileEntityCreate);
@@ -1299,9 +1405,11 @@ static int flecs_ir_entity_enter(
     } else {
         flecs_ir_prof(EcsIrProfileEntityReuse);
     }
+
     if (apply_with && op->a == -1 && v->force) {
         flecs_script_apply_with(v, state->eval);
     }
+
     if (node->symbol != -1) {
         flecs_script_symbol_set(v, node->symbol, state->eval);
     }
@@ -1339,7 +1447,9 @@ static int flecs_ir_entity_enter(
                 goto error;
             }
         }
-        ecs_add_id(v->world, state->eval, state->eval_kind);
+
+        flecs_script_add_entity_kind(
+            v, state->eval, state->eval_kind, node->kind_w_expr);
     }
 
     int32_t i, count = ecs_vec_count(&v->r->annot);
@@ -1350,6 +1460,7 @@ static int flecs_ir_entity_enter(
                 goto error;
             }
         }
+
         ecs_vec_clear(&v->r->annot);
     }
 
@@ -1380,11 +1491,13 @@ static int flecs_ir_pair_scope_enter(
     {
         return -1;
     }
+
     if (!first && desc->first_symbol != -1) {
         first = flecs_script_create_entity(v, desc->first);
         if (!first) {
             return -1;
         }
+
         flecs_script_symbol_set(v, desc->first_symbol, first);
     } else if (!first) {
         return -1;
@@ -1396,12 +1509,14 @@ static int flecs_ir_pair_scope_enter(
     {
         return -1;
     }
+
     if (!second && desc->second_symbol != -1) {
         second = flecs_script_create_entity(v, desc->second);
         if (second) {
             flecs_script_symbol_set(v, desc->second_symbol, second);
         }
     }
+
     if (!second) {
         return -1;
     }
@@ -1444,6 +1559,7 @@ static int flecs_ir_reg_to_i32(
         *out = *(int32_t*)reg->value.ptr;
         return 0;
     }
+
     ecs_meta_cursor_t cur = ecs_meta_cursor(
         vm->v.world, ecs_id(ecs_i32_t), out);
     return ecs_meta_set_value(&cur, &reg->value);
@@ -1466,6 +1582,7 @@ static ecs_script_var_t* flecs_ir_for_var(
         var->type_info = ti;
         var->owned = true;
     }
+
     return var;
 }
 
@@ -1508,10 +1625,12 @@ static int flecs_ir_for_enter(
             flecs_ir_expr_error(vm, node->from, "failed to write to output");
             return -1;
         }
+
         if (flecs_ir_reg_to_i32(vm, flecs_ir_reg(vm, op->b), &to)) {
             flecs_ir_expr_error(vm, node->to, "failed to write to output");
             return -1;
         }
+
         state->kind = FlecsScriptForRange;
         state->from = from;
         state->count = to;
@@ -1580,9 +1699,11 @@ static bool flecs_ir_for_next(
     if (frame->u.for_.var_index[1] != -1) {
         state->key_var = &vars[frame->u.for_.var_index[1]];
     }
+
     if (frame->u.for_.var_index[2] != -1) {
         state->index_var = &vars[frame->u.for_.var_index[2]];
     }
+
     int32_t i = state->index;
 
     switch(state->kind) {
@@ -1591,6 +1712,7 @@ static bool flecs_ir_for_next(
         if (value >= state->count) {
             return false;
         }
+
         *(int32_t*)state->elem_var->value.ptr = value;
         break;
     }
@@ -1611,11 +1733,13 @@ static bool flecs_ir_for_next(
             ecs_map_key_t key = ecs_map_key(&state->map_it);
             ecs_os_memcpy(state->key_var->value.ptr, &key, state->key_size);
         }
+
         if (state->elem_size > ECS_SIZEOF(ecs_map_val_t)) {
             state->elem_var->value.ptr = ecs_map_ptr(&state->map_it);
         } else {
             state->elem_var->value.ptr = &state->map_it.res[1];
         }
+
         state->elem_var->owned = false;
         break;
     }
@@ -1642,6 +1766,7 @@ static int flecs_ir_const_end(
     if (!ti) {
         ti = ecs_get_type_info(v->world, type);
     }
+
     if (!ti) {
         frame->state = 0;
         flecs_ir_error(vm, node,
@@ -1667,12 +1792,15 @@ static int flecs_ir_const_end(
                     "failed to write to output");
                 return -1;
             }
+
             src = tmp;
         }
+
         flecs_script_computed_store(v, slot, op->b, ti, src);
         if (tmp && ti->hooks.dtor) {
             flecs_type_info_dtor(tmp, 1, ti);
         }
+
         frame->state = 0;
         var->is_const = true;
         var->type_info = ti;
@@ -1698,6 +1826,7 @@ static int flecs_ir_const_end(
         if (ti->hooks.dtor) {
             flecs_type_info_dtor(ptr, 1, ti);
         }
+
         return -1;
     }
 
@@ -1715,7 +1844,7 @@ static int flecs_ir_using(
     const ecs_script_using_t *node)
 {
     ecs_script_eval_visitor_t *v = &vm->v;
-    ecs_allocator_t *a = &v->r->allocator;
+    ecs_allocator_t *a = v->r->allocator;
     int32_t len = ecs_os_strlen(node->name);
     bool wildcard = len > 2 && !ecs_os_strcmp(&node->name[len - 2], ".*");
     ecs_entity_t from = node->eval;
@@ -1733,6 +1862,7 @@ static int flecs_ir_using(
     } else {
         ecs_vec_append_t(a, &v->r->using, ecs_entity_t)[0] = from;
     }
+
     return 0;
 }
 
@@ -1747,13 +1877,15 @@ static int flecs_ir_annot(
             "missing target for @%s annotation", node->name);
         return -1;
     }
+
     if (op->flags & EcsIrAnnotBadTarget) {
         flecs_ir_error(vm, node,
             "target of @%s annotation must be an entity or template",
             node->name);
         return -1;
     }
-    ecs_vec_append_t(&v->r->allocator, &v->r->annot,
+
+    ecs_vec_append_t(v->r->allocator, &v->r->annot,
         ecs_script_annot_t*)[0] = ECS_CONST_CAST(
             ecs_script_annot_t*, node);
     return 0;
@@ -1804,6 +1936,7 @@ static int flecs_ir_load_symbol(
         *(ecs_entity_t*)flecs_ir_reg_out_raw(vm, op, dst) = entity;
         return 0;
     }
+
     void *ptr = flecs_ir_reg_out(vm, op, dst);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(
@@ -1813,6 +1946,7 @@ static int flecs_ir_load_symbol(
             "failed to assign identifier '%s'", node->value);
         return -1;
     }
+
     return 0;
 }
 
@@ -1838,6 +1972,7 @@ static int flecs_ir_assign(
             ecs_ptr_free_w_type_info(v->world, ti, tmp);
             return -1;
         }
+
         src = tmp;
     }
 
@@ -1845,6 +1980,7 @@ static int flecs_ir_assign(
     if (tmp) {
         ecs_ptr_free_w_type_info(v->world, ti, tmp);
     }
+
     return result;
 }
 
@@ -1863,16 +1999,19 @@ static int flecs_ir_load_var(
             var = ecs_script_vars_from_sp(vars, sp);
         }
     }
+
     if (!var) {
         flecs_ir_expr_error(vm, node,
             "unresolved variable '%s'", node->name);
         return -1;
     }
+
     if (!var->value.ptr) {
         flecs_ir_expr_error(vm, node,
             "variable '%s' is not a compile time constant", node->name);
         return -1;
     }
+
     ecs_assert(var->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
     flecs_ir_reg_borrow(flecs_ir_reg(vm, op->a), &node->node,
         var->value.type, var->value.ptr);
@@ -1895,6 +2034,7 @@ static int flecs_ir_load_global(
     } else {
         value = flecs_script_global_var_get(vm->v.world, op->imm.entity, NULL);
     }
+
     ecs_assert(value.type == node->type, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_ir_reg_borrow(flecs_ir_reg(vm, op->a), node, value.type, value.ptr);
@@ -1915,11 +2055,13 @@ static int flecs_ir_element(
         if (flecs_value_blit_u64(vm->v.world, &index->value, &key)) {
             return -1;
         }
+
         const ecs_map_t *map = expr->value.ptr;
         ecs_map_val_t *val = NULL;
         if (ecs_map_is_init(map)) {
             val = ecs_map_get(map, key);
         }
+
         if (!val) {
             char *key_str = ecs_ptr_to_str(
                 vm->v.world, index->value.type, index->value.ptr);
@@ -1928,6 +2070,7 @@ static int flecs_ir_element(
             ecs_os_free(key_str);
             return -1;
         }
+
         void *ptr = node->elem_size > ECS_SIZEOF(ecs_map_val_t)
             ? (void*)(uintptr_t)val[0]
             : (void*)val;
@@ -2013,10 +2156,12 @@ static int flecs_ir_has(
             flecs_script_record_dyn_ref(v->base.script, entity, op->imm.id,
                 node->dyn_input, true);
         }
+
         *out = ecs_has_id(v->world, entity, op->imm.id);
     } else {
         *out = false;
     }
+
     return 0;
 }
 
@@ -2054,6 +2199,7 @@ static int flecs_ir_binary(
     if (left->value.type == right->value.type) {
         right_offset = size;
     }
+
     int32_t i;
     for (i = 0; i < node->vector_count; i ++) {
         if (flecs_value_binary(script, &node->node, &left_value,
@@ -2061,10 +2207,12 @@ static int flecs_ir_binary(
         {
             return -1;
         }
+
         left_value.ptr = ECS_OFFSET(left_value.ptr, size);
         right_value.ptr = ECS_OFFSET(right_value.ptr, right_offset);
         out_value.ptr = ECS_OFFSET(out_value.ptr, size);
     }
+
     return 0;
 }
 
@@ -2186,6 +2334,43 @@ static int flecs_ir_cast(
         flecs_ir_expr_error(vm, node, "failed to cast value");
         return -1;
     }
+
+    return 0;
+}
+
+static int flecs_ir_template_ref(
+    ecs_script_ir_vm_t *vm,
+    const ecs_script_ir_op_t *op)
+{
+    ecs_script_eval_visitor_t *v = &vm->v;
+    ecs_script_ir_reg_t *dst = flecs_ir_reg(vm, op->a);
+    ecs_script_template_ref_t *ref = flecs_ir_reg_out(vm, op, dst);
+    ecs_entity_t tmpl = op->imm.entity;
+    void *value = NULL;
+    if (op->flags & EcsIrTemplateRefVar) {
+        ecs_script_ir_reg_t *src = flecs_ir_reg(vm, op->b);
+        const ecs_script_template_ref_t *src_ref = src->value.ptr;
+        tmpl = src_ref->type;
+        if (!tmpl) {
+            const ecs_expr_function_t *node = op->node;
+            flecs_ir_expr_error(vm, &node->node,
+                "template prop '%s' has no value", node->function_name);
+            return -1;
+        }
+
+        value = ecs_ptr_new(v->world, tmpl);
+        if (src_ref->value) {
+            ecs_ptr_copy(v->world, tmpl, value, src_ref->value);
+        }
+    } else if (op->b != -1) {
+        ecs_script_ir_reg_t *src = flecs_ir_reg(vm, op->b);
+        ecs_assert(src->ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(src->ti->component == tmpl, ECS_INTERNAL_ERROR, NULL);
+        value = ecs_ptr_new(v->world, tmpl);
+        ecs_ptr_copy_w_type_info(v->world, src->ti, value, src->value.ptr);
+    }
+
+    flecs_script_template_ref_set(v->world, ref, tmpl, value);
     return 0;
 }
 
@@ -2258,6 +2443,7 @@ static inline int flecs_ir_init_check(
     if (dst->ti && (op->b + ti->size) <= dst->ti->size) {
         return 0;
     }
+
     uintptr_t offset = flecs_ito(uintptr_t, op->b);
     uintptr_t type_size = flecs_uto(uintptr_t, ti->size);
     uintptr_t dst_size = dst->ti
@@ -2269,6 +2455,7 @@ static inline int flecs_ir_init_check(
             flecs_errstr(ecs_get_path(vm->v.world, ti->component)));
         return -1;
     }
+
     return 0;
 }
 
@@ -2282,12 +2469,14 @@ static int flecs_ir_init_const(
     if (flecs_ir_init_check(vm, op, dst, ti)) {
         return -1;
     }
+
     void *ptr = ECS_OFFSET(dst->value.ptr, op->b);
     if (!ti->hooks.copy) {
         ecs_os_memcpy(ptr, op->imm.ptr, ti->size);
     } else {
         ecs_ptr_copy_w_type_info(vm->v.world, ti, ptr, op->imm.ptr);
     }
+
     return 0;
 }
 
@@ -2302,6 +2491,7 @@ static int flecs_ir_init_assign(
     if (flecs_ir_init_check(vm, op, dst, ti)) {
         return -1;
     }
+
     void *ptr = ECS_OFFSET(dst->value.ptr, op->b);
     if (src->owned) {
         if (!ti->hooks.move) {
@@ -2316,6 +2506,7 @@ static int flecs_ir_init_assign(
             flecs_type_info_copy(ptr, src->value.ptr, 1, ti);
         }
     }
+
     return 0;
 }
 
@@ -2330,6 +2521,7 @@ static int flecs_ir_init_op(
     if (flecs_ir_init_check(vm, op, dst, ti)) {
         return -1;
     }
+
     ecs_value_t out = {
         .type = node->type,
         .ptr = ECS_OFFSET(dst->value.ptr, op->b)
@@ -2358,9 +2550,11 @@ static int flecs_ir_init_swizzle(
                 flecs_errstr(ecs_get_path(vm->v.world, swizzle->node.type)));
             return -1;
         }
+
         ecs_os_memcpy(ECS_OFFSET(dst->value.ptr, offset),
             ECS_OFFSET(left->value.ptr, swizzle->src[s]), size);
     }
+
     return 0;
 }
 
@@ -2385,6 +2579,7 @@ static int flecs_ir_dyn_swizzle(
                 return -1;
             }
         }
+
         ecs_value_t value = {
             .ptr = ECS_OFFSET(left->value.ptr, swizzle->src[s]),
             .type = swizzle->node.type
@@ -2393,6 +2588,7 @@ static int flecs_ir_dyn_swizzle(
             return -1;
         }
     }
+
     return 0;
 }
 
@@ -2407,9 +2603,11 @@ static int flecs_ir_str_format(
     if (op->b != -1) {
         width = *(int32_t*)flecs_ir_reg(vm, op->b)->value.ptr;
     }
+
     if (op->c != -1) {
         precision = *(int32_t*)flecs_ir_reg(vm, op->c)->value.ptr;
     }
+
     ecs_strbuf_t *buf = ecs_vec_last_t(&vm->strbufs, ecs_strbuf_t);
     return flecs_expr_format_value(&vm->v.base.script->pub, expr,
         &value->value, format, width, precision, buf);
@@ -2429,23 +2627,28 @@ static int flecs_ir_range(
     if (ecs_meta_push(&cur)) {
         return -1;
     }
+
     int32_t i, count = to_value - from_value;
     if (count < 0) {
         count = 0;
     }
+
     for (i = 0; i < count; i ++) {
         if (i) {
             if (ecs_meta_next(&cur)) {
                 return -1;
             }
         }
+
         if (ecs_meta_set_int(&cur, from_value + i)) {
             return -1;
         }
     }
+
     if (ecs_meta_pop(&cur)) {
         return -1;
     }
+
     return 0;
 }
 
@@ -2463,6 +2666,7 @@ static int flecs_ir_match_cmp(
     {
         return -1;
     }
+
     vm->cond = result;
     return 0;
 }
@@ -2531,6 +2735,7 @@ static int flecs_ir_await_poll(
     if (result) {
         return result == 1 ? 0 : -1;
     }
+
     if (op->flags & EcsIrAwaitVar) {
         ecs_script_eval_visitor_t *v = &vm->v;
         const ecs_value_t *value = &future->value;
@@ -2582,6 +2787,7 @@ static bool flecs_ir_unwind(
         if (frame->kind == EcsIrFrameBlock) {
             return false;
         }
+
         flecs_ir_frame_leave(vm, frame);
         vm->frame_count --;
     }
@@ -2597,10 +2803,12 @@ static bool flecs_ir_continue(
         if (kind == EcsIrFrameFor || kind == EcsIrFrameWhile) {
             break;
         }
+
         if (kind == EcsIrFrameBlock) {
             return false;
         }
     }
+
     if (i < 0) {
         return false;
     }
@@ -2646,6 +2854,7 @@ static int flecs_ir_run_nested(
     if (status != FlecsScriptRunDone) {
         return -1;
     }
+
     *out = vm->last_entity;
     return 0;
 }
@@ -2695,8 +2904,10 @@ static flecs_script_run_status_t flecs_ir_exec(
                         break;
                     }
                 }
+
                 flecs_ir_expr_end(vm);
             }
+
             while (vm->frame_count > base + 1) {
                 ecs_script_ir_frame_t *frame = flecs_ir_frame_top(vm);
                 flecs_ir_frame_leave(vm, frame);
@@ -2725,6 +2936,7 @@ static flecs_script_run_status_t flecs_ir_exec(
 #endif
                 vm->pc = op->b;
             }
+
             break;
         case EcsIrStmt: {
             if (v->script_entity && !ecs_is_alive(v->world, v->script_entity)) {
@@ -2732,14 +2944,17 @@ static flecs_script_run_status_t flecs_ir_exec(
                 flecs_ir_block_pop(vm);
                 return FlecsScriptRunError;
             }
+
             if (flecs_ir_stmt_runs(vm, op)) {
                 flecs_ir_prof(EcsIrProfileStmtRun);
                 break;
             }
+
             if (op->flags & EcsIrStmtCached) {
                 vm->pc = op->b;
                 break;
             }
+
             flecs_ir_stmt_skip(vm, op);
             int32_t next = op->b;
             for (;;) {
@@ -2748,18 +2963,22 @@ static flecs_script_run_status_t flecs_ir_exec(
                     vm->pc = next;
                     break;
                 }
+
                 if (flecs_ir_stmt_runs(vm, next_op)) {
                     flecs_ir_prof(EcsIrProfileStmtRun);
                     vm->pc = next + 1;
                     break;
                 }
+
                 if (next_op->flags & EcsIrStmtCached) {
                     vm->pc = next_op->b;
                     break;
                 }
+
                 flecs_ir_stmt_skip(vm, next_op);
                 next = next_op->b;
             }
+
             break;
         }
         case EcsIrMark:
@@ -2780,11 +2999,13 @@ static flecs_script_run_status_t flecs_ir_exec(
             {
                 ecs_vec_get_t(&v->state->scope_slots, int32_t, op->a)[0] = v->visit;
             }
+
             if (op->b > 0) {
                 frame->u.scope.var_count = v->vars->vars.count;
                 frame->u.scope.vscratch_top = vm->vscratch.top;
                 frame->u.scope.vheap_count = vm->vscratch.heap.count;
             }
+
             if (v->entity && op->c &&
                 (v->force || v->entity->created))
             {
@@ -2799,18 +3020,23 @@ static flecs_script_run_status_t flecs_ir_exec(
                             missing = true;
                         }
                     }
+
                     if (missing) {
                         flecs_ir_prof(EcsIrProfileBatchAdd);
-                        flecs_add_ids(v->world, src, ids, count);
+                        flecs_script_scope_add_ids(v, src,
+                            ECS_CONST_CAST(ecs_script_scope_t*, op->node),
+                            ids, count);
                     } else {
                         flecs_ir_prof(EcsIrProfileBatchSkip);
                     }
                 }
             }
+
             if (op->flags & EcsIrScopeEntity) {
                 ecs_assert(v->entity != NULL, ECS_INTERNAL_ERROR, NULL);
                 v->parent = v->entity->eval;
             }
+
             break;
         }
 
@@ -2820,6 +3046,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (frame->kind == EcsIrFrameEntity) {
                 vm->last_entity = frame->u.entity.eval;
             }
+
             flecs_ir_frame_leave(vm, frame);
             vm->frame_count --;
             break;
@@ -2830,12 +3057,14 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (op->flags & 1) {
                 flecs_ir_expr_end(vm);
             }
+
             if (!res) {
                 ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
                     vm, EcsIrFrameEntity, pc);
                 frame->u.entity = state;
                 v->entity = &frame->u.entity;
             }
+
             break;
         }
 
@@ -2873,11 +3102,13 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (op->flags & 1) {
                 flecs_ir_expr_end(vm);
             }
+
             if (!res) {
                 ecs_script_ir_frame_t *frame = flecs_ir_frame_push(
                     vm, EcsIrFramePairScope, pc);
                 frame->u.pair_scope = state;
             }
+
             break;
         }
 
@@ -2893,6 +3124,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (!vm->cond) {
                 vm->pc = op->b;
             }
+
             break;
         }
 
@@ -2917,6 +3149,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             } else {
                 flecs_ir_vars_truncate(vm, var_count, vscratch_top, vheap_count);
             }
+
             break;
         }
         case EcsIrForNext: {
@@ -2936,6 +3169,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             } else if (!flecs_ir_for_next(vm, frame)) {
                 vm->pc = op->a;
             }
+
             break;
         }
 
@@ -2993,6 +3227,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (vm->async.future) {
                 vm->pc = op->b;
             }
+
             break;
 #else
             flecs_ir_error(vm, op->node,
@@ -3035,6 +3270,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (!res && handled) {
                 vm->pc = op->b;
             }
+
             break;
         }
         case EcsIrUsing:
@@ -3074,6 +3310,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 vm->pc = op->b;
                 break;
             }
+
             const ecs_script_var_node_t *node = op->node;
             ecs_script_var_t *var = flecs_ir_var_declare(vm);
             var->is_const = true;
@@ -3127,6 +3364,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 ecs_os_memcpy(ECS_OFFSET(out, i * size),
                     ECS_OFFSET(src->value.ptr, node->src[i]), size);
             }
+
             break;
         }
         case EcsIrElement:
@@ -3190,6 +3428,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 *out = value;
                 vm->pc = op->b;
             }
+
             break;
         }
         case EcsIrCast:
@@ -3271,6 +3510,7 @@ static flecs_script_run_status_t flecs_ir_exec(
                 ecs_strbuf_appendstr(
                     ecs_vec_last_t(&vm->strbufs, ecs_strbuf_t), str);
             }
+
             break;
         }
         case EcsIrStrCast: {
@@ -3325,6 +3565,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (op->flags & EcsIrInPlace) {
                 ecs_os_free(*out);
             }
+
             *out = str;
             break;
         }
@@ -3333,6 +3574,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             if (!res && !vm->cond) {
                 vm->pc = op->c;
             }
+
             break;
         case EcsIrMatchFail: {
             ecs_script_ir_reg_t *reg = flecs_ir_reg(vm, op->a);
@@ -3355,11 +3597,22 @@ static flecs_script_run_status_t flecs_ir_exec(
                 *out = result;
                 dst->value.type = ecs_id(ecs_entity_t);
             }
+
             break;
         }
         case EcsIrScript:
             res = flecs_ir_script(vm, op);
             break;
+        case EcsIrTemplateRef:
+            res = flecs_ir_template_ref(vm, op);
+            break;
+        case EcsIrTemplateRefValue: {
+            const ecs_expr_node_t *node = op->node;
+            ecs_script_template_ref_t *ref = flecs_ir_reg(vm, op->b)->value.ptr;
+            flecs_ir_reg_borrow(flecs_ir_reg(vm, op->a), node, node->type,
+                ref->value);
+            break;
+        }
         case EcsIrToBool: {
             ecs_script_ir_reg_t *reg = flecs_ir_reg(vm, op->a);
             if (reg->value.type == ecs_id(ecs_bool_t)) {
@@ -3367,6 +3620,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             } else {
                 res = flecs_ir_to_bool(vm, op);
             }
+
             break;
         }
         case EcsIrOpKindLast:
@@ -3434,6 +3688,7 @@ static void flecs_ir_vm_clear(
     for (i = 0; i < count; i ++) {
         ecs_strbuf_reset(ecs_vec_get_t(&vm->strbufs, ecs_strbuf_t, i));
     }
+
     vm->strbufs.count = 0;
     vm->cursors.count = 0;
     vm->pending_marks.count = 0;
@@ -3453,6 +3708,7 @@ static void flecs_ir_vm_teardown(
     for (i = 0; i < (int32_t)(sizeof(vm->frames) / sizeof(vm->frames[0])); i ++) {
         ecs_os_free(vm->frames[i]);
     }
+
     ecs_vec_fini_t(NULL, &vm->strbufs, ecs_strbuf_t);
     ecs_vec_fini_t(NULL, &vm->cursors, ecs_meta_cursor_t);
     ecs_vec_fini_t(NULL, &vm->pending_marks, int32_t);
@@ -3476,6 +3732,7 @@ static ecs_script_ir_vm_t* flecs_ir_vm_acquire(
         vm = ecs_os_malloc_t(ecs_script_ir_vm_t);
         flecs_ir_vm_setup(vm, ir);
     }
+
     return vm;
 }
 
@@ -3501,6 +3758,7 @@ void flecs_script_ir_vm_pool_fini(
         flecs_ir_vm_teardown(vms[i]);
         ecs_os_free(vms[i]);
     }
+
     ecs_vec_fini_t(NULL, &r->ir_vms, ecs_script_ir_vm_t*);
 }
 
@@ -3585,6 +3843,7 @@ void flecs_script_ir_vm_abandon(
         if (frame->kind == EcsIrFrameExpr) {
             frame->state = 0;
         }
+
         flecs_ir_frame_leave(vm, frame);
         vm->frame_count --;
     }
@@ -3605,6 +3864,7 @@ flecs_script_run_status_t flecs_script_ir_vm_run(
     if (!vm->ir || !entry) {
         return FlecsScriptRunError;
     }
+
     flecs_ir_prof(EcsIrProfileRun);
     if (!vm->frame_count) {
         const ecs_script_ir_entry_t *entries = ecs_vec_first(&vm->ir->entries);
@@ -3614,7 +3874,7 @@ flecs_script_run_status_t flecs_script_ir_vm_run(
         frame->u.block.entry = 0;
         frame->u.block.vars = true;
         vm->v.vars = flecs_script_vars_push(
-            vm->v.vars, &vm->v.r->stack, &vm->v.r->allocator);
+            vm->v.vars, &vm->v.r->stack, vm->v.r->allocator);
         vm->entry = (int32_t)(entry - entries);
         vm->reg_base = 0;
         vm->pc = entry->pc;
@@ -3622,6 +3882,7 @@ flecs_script_run_status_t flecs_script_ir_vm_run(
         vm->pending_marks.count = 0;
         flecs_ir_regs_ensure(vm, entry->reg_count);
     }
+
     return flecs_ir_exec(vm, 0);
 }
 
@@ -3638,10 +3899,12 @@ const char* flecs_script_ir_vm_stmt_pos(
     if (!vm->frame_count || !vm->ops) {
         return NULL;
     }
+
     const ecs_script_ir_op_t *op = &vm->ops[vm->pc];
     if (op->kind == EcsIrAwaitPoll && op->node) {
         return ((const ecs_script_node_t*)op->node)->pos;
     }
+
     return NULL;
 }
 
@@ -3702,7 +3965,7 @@ void flecs_script_ir_call_function(
     flecs_script_eval_visit_init(impl, &vm->v, &desc);
     ecs_script_eval_visitor_t *v = &vm->v;
 
-    ecs_allocator_t *a = &v->r->allocator;
+    ecs_allocator_t *a = v->r->allocator;
     int32_t using_count = ecs_vec_count(&uf->using);
     ecs_entity_t *using = ecs_vec_first(&uf->using);
     for (int32_t u = 0; u < using_count; u ++) {
@@ -3735,6 +3998,7 @@ void flecs_script_ir_call_function(
     if (flecs_script_ir_vm_run(vm, entry) != FlecsScriptRunDone) {
         failed = true;
     }
+
     v->type_visitor = NULL;
 
     v->vars = ecs_script_vars_pop(v->vars);
@@ -3778,6 +4042,7 @@ char* ecs_script_ir_profile_str(void)
     for (i = 0; i < EcsIrOpKindLast; i ++) {
         total += flecs_ir_profile_ops[i];
     }
+
     ecs_strbuf_append(&buf, "instructions: %lld\n", (long long)total);
     for (i = 0; i < EcsIrOpKindLast; i ++) {
         if (flecs_ir_profile_ops[i]) {
@@ -3787,10 +4052,12 @@ char* ecs_script_ir_profile_str(void)
                 100.0 * (double)flecs_ir_profile_ops[i] / (double)total);
         }
     }
+
     for (i = 0; i < EcsIrProfileLast; i ++) {
         ecs_strbuf_append(&buf, "%-22s %10lld\n", flecs_ir_profile_stat_name(i),
             (long long)flecs_ir_profile_stats[i]);
     }
+
     return ecs_strbuf_get(&buf);
 }
 #endif

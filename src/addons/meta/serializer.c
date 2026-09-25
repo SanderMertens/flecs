@@ -28,8 +28,7 @@ static int flecs_meta_serialize_scope(
         ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_member_t *members = ecs_vec_first(&st->members);
         int32_t count = ecs_vec_count(&st->members);
-        ecs_hashmap_t *index = count ?
-            flecs_name_index_new(&world->allocator) : NULL;
+        ecs_hashmap_t *index = flecs_name_index_new(&world->allocator);
         ecs_vec_get_t(ops, ecs_meta_op_t, first)->is.members = index;
         for (int32_t i = 0; i < count; i ++) {
             ecs_member_t *m = &members[i];
@@ -48,13 +47,16 @@ static int flecs_meta_serialize_scope(
                 ret = flecs_meta_serialize_type(
                     world, m->type, m->offset, ops, false);
             }
+
             if (ret) {
                 continue;
             }
+
             ecs_meta_op_t *member_op = ecs_vec_get_t(ops, ecs_meta_op_t, cur);
             if (!member_op->type) {
                 member_op->type = m->type;
             }
+
             member_op->op_count = flecs_ito(int16_t, ecs_vec_count(ops) - cur);
             member_op->name = ecs_os_strdup(m->name);
             member_op->member_index = flecs_ito(int16_t, i);
@@ -66,6 +68,7 @@ static int flecs_meta_serialize_scope(
     {
         return -1;
     }
+
     ecs_meta_op_t *pop = ecs_vec_append_t(NULL, ops, ecs_meta_op_t);
     *pop = (ecs_meta_op_t){
         .kind = EcsOpPop,
@@ -92,6 +95,7 @@ static int flecs_meta_serialize_type(
             flecs_errstr(ecs_get_path(world, type)));
         return -1;
     }
+
     ecs_meta_op_t op = {
         .kind = EcsOpForward,
         .op_count = 1,
@@ -110,6 +114,7 @@ static int flecs_meta_serialize_type(
                 flecs_errstr(ecs_get_path(world, type)));
             return -1;
         }
+
         op.kind = flecs_meta_primitive_to_op_kind(p->kind);
         break;
     }
@@ -132,6 +137,7 @@ static int flecs_meta_serialize_type(
             op.kind = EcsOpEnum;
             op.underlying_kind = flecs_meta_primitive_to_op_kind(p->kind);
         }
+
         break;
     }
     case EcsStructType:
@@ -143,6 +149,7 @@ static int flecs_meta_serialize_type(
             if (!a) {
                 return -1;
             }
+
             op.kind = EcsOpPushArray;
             op.type = element = a->type;
             op.type_info = NULL;
@@ -155,6 +162,7 @@ static int flecs_meta_serialize_type(
             if (!v) {
                 return -1;
             }
+
             op.kind = EcsOpPushVector;
             element = v->type;
         }
@@ -165,11 +173,13 @@ static int flecs_meta_serialize_type(
             if (!m) {
                 return -1;
             }
+
             const EcsTypeSerializer *key = ecs_get(
                 world, m->key_type, EcsTypeSerializer);
             if (!key || !ecs_vec_count(&key->ops)) {
                 return -1;
             }
+
             const ecs_meta_op_t *key_op = ecs_vec_first(&key->ops);
             op.kind = EcsOpPushMap;
             op.underlying_kind = key_op->kind;
@@ -196,6 +206,7 @@ static int flecs_meta_serialize_type(
         } else if (as->kind == EcsStructType) {
             op.kind = EcsOpOpaqueStruct;
         }
+
         op.is.opaque = o->serialize;
         break;
     }
@@ -207,8 +218,10 @@ static int flecs_meta_serialize_type(
         if (element) {
             op.elem_size = flecs_type_size(world, element);
         }
+
         return flecs_meta_serialize_scope(world, op, element, array_count, ops);
     }
+
     *ecs_vec_append_t(NULL, ops, ecs_meta_op_t) = op;
     return 0;
 }

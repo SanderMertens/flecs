@@ -225,7 +225,7 @@ static ecs_entity_t flecs_alert_out_of_range_kind(
 }
 
 static void MonitorAlerts(ecs_iter_t *it) {
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->stage;
     EcsAlert *alert = ecs_field(it, EcsAlert, 0);
     EcsPoly *poly = ecs_field(it, EcsPoly, 1);
 
@@ -252,7 +252,7 @@ static void MonitorAlerts(ecs_iter_t *it) {
 
         while (ecs_query_next(&rit)) {
             ecs_entity_t severity = flecs_alert_get_severity(
-                world, &rit, &alert[i]);
+                it->world, &rit, &alert[i]);
             if (!severity) {
                 severity = default_severity;
             }
@@ -266,15 +266,18 @@ static void MonitorAlerts(ecs_iter_t *it) {
                         continue;
                     }
                 }
+
                 if (!member_src) {
                     member_data = ecs_table_get_id(
                         world, rit.table, member_id, rit.offset);
                 } else {
                     member_data = ecs_get_id(world, member_src, member_id);
                 }
+
                 if (!member_data) {
                     continue;
                 }
+
                 member_data = ECS_OFFSET(member_data, alert[i].offset);
             }
 
@@ -288,9 +291,11 @@ static void MonitorAlerts(ecs_iter_t *it) {
                     if (!member_src) {
                         member_data = ECS_OFFSET(member_data, alert[i].size);
                     }
+
                     if (!range_severity) {
                         continue;
                     }
+
                     if (range_severity < src_severity) {
                         /* Actual severity should not exceed range severity */
                         src_severity = range_severity;
@@ -313,9 +318,7 @@ static void MonitorAlerts(ecs_iter_t *it) {
                         });
                     }
 
-                    ecs_defer_suspend(it->world);
-                    flecs_alerts_add_alert_to_src(world, e, a, ai);
-                    ecs_defer_resume(it->world);
+                    flecs_alerts_add_alert_to_src(it->world, e, a, ai);
                     aptr[0] = ai;
                 } else {
                     /* Make sure alert severity is up to date */
@@ -334,7 +337,7 @@ static void MonitorAlerts(ecs_iter_t *it) {
 }
 
 static void MonitorAlertInstances(ecs_iter_t *it) {
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->stage;
     EcsAlertInstance *alert_instance = ecs_field(it, EcsAlertInstance, 0);
     EcsMetricSource *source = ecs_field(it, EcsMetricSource, 1);
     EcsMetricValue *value = ecs_field(it, EcsMetricValue, 2);
@@ -342,7 +345,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
 
     /* Get alert component from alert instance parent (the alert) */
     ecs_id_t childof_pair;
-    if (ecs_search(world, it->table, ecs_childof(EcsWildcard), &childof_pair) == -1) {
+    if (ecs_search(it->world, it->table, ecs_childof(EcsWildcard), &childof_pair) == -1) {
         ecs_err("alert instances must be a child of an alert");
         return;
     }
@@ -370,7 +373,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
         ranges = ecs_ref_get(world, &alert->ranges, EcsMemberRanges);
     }
 
-    ecs_script_vars_t *vars = ecs_script_vars_init(it->world);
+    ecs_script_vars_t *vars = ecs_script_vars_init(it->stage);
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t ai = it->entities[i];
@@ -442,6 +445,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
                         flecs_alerts_add_alert_to_src(world, e, parent, ai);
                         ecs_remove_id(world, ai, EcsDisabled);
                     }
+
                     timeout[i].inactive_time = 0;
                 }
 
@@ -460,6 +464,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
                 flecs_alerts_remove_alert_from_src(world, e, parent);
                 ecs_add_id(world, ai, EcsDisabled);
             }
+
             ecs_ftime_t t = timeout[i].inactive_time;
             timeout[i].inactive_time += it->delta_system_time;
             if (t < timeout[i].expire_time) {
@@ -523,6 +528,7 @@ ecs_entity_t ecs_alert_init(
                 ecs_err("severity filter must have severity");
                 goto error;
             }
+
             ecs_alert_severity_filter_t *sf = ecs_vec_append_t(NULL, 
                 &alert->severity_filters, ecs_alert_severity_filter_t);
             *sf = desc->severity_filters[i];
@@ -546,6 +552,7 @@ ecs_entity_t ecs_alert_init(
                 ecs_err("ecs_alert_desc_t::member is not a member");
                 goto error;
             }
+
             ecs_check(alert->id != 0, ECS_INVALID_PARAMETER, NULL);
         } else {
             alert->id = desc->id;
@@ -572,6 +579,7 @@ ecs_entity_t ecs_alert_init(
             ecs_err("ecs_alert_desc_t::member is not a member");
             goto error;
         }
+
         if (!member->type) {
             ecs_err("ecs_alert_desc_t::member must have a type");
             goto error;

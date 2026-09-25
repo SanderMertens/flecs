@@ -1,5 +1,13 @@
 #include <cpp.h>
 
+struct ObserverUnit {
+    int32_t hp;
+};
+
+struct ObserverWarrior : ObserverUnit {
+    int32_t dmg;
+};
+
 void Observer_2_terms_on_add(void) {
     flecs::world ecs;
 
@@ -857,11 +865,11 @@ void Observer_on_set_w_defer_set(void) {
     flecs::entity e = world.entity();
     test_int(count, 0);
 
-    world.defer_begin();
-    e.set<Position>({10, 20});
+    flecs::world stage_1 = world.get_stage(0);
+    e.mut(stage_1).set<Position>({10, 20});
 
     test_int(count, 0);
-    world.defer_end();
+    stage_1.merge();
 
     test_int(count, 1);
 }
@@ -993,7 +1001,7 @@ void Observer_on_set_singleton_set_component_named_entity(void) {
         .write<MySingletonComponent>()
         .event(flecs::OnSet)
         .each([](flecs::iter &it, size_t, const MySingletonComponent &c1) {
-            it.world().entity("A").set<MyComponent>({c1.v});
+            it.stage().entity("A").set<MyComponent>({c1.v});
         });
 
     world.set<MySingletonComponent>({1});
@@ -1135,9 +1143,9 @@ void Observer_implicit_register_in_emit_for_named_entity_w_defer(void) {
         e2.set<Position>({10, 20});
     });
 
-    world.defer_begin();
+    flecs::world stage_1 = world.get_stage(0);
     e1.emit<MyEvent>({ 10 });
-    world.defer_end();
+    stage_1.merge();
 }
 
 void Observer_add_to_named_in_emit_for_named_entity_w_defer(void) {
@@ -1155,9 +1163,9 @@ void Observer_add_to_named_in_emit_for_named_entity_w_defer(void) {
         e2.set<Position>({10, 20});
     });
 
-    world.defer_begin();
+    flecs::world stage_1 = world.get_stage(0);
     e1.emit<MyEvent>({ 10 });
-    world.defer_end();
+    stage_1.merge();
 }
 
 void Observer_register_twice_w_each(void) {
@@ -1915,4 +1923,33 @@ void Observer_single_term_observer_w_var_get_var_pair_first(void) {
     test_int(invoked, 0);
     instance.remove(rel, tgt);
     test_int(invoked, 1);
+}
+
+void Observer_component_inheritance_each_multi_entity(void) {
+    flecs::world ecs;
+
+    ecs.component<ObserverUnit>();
+    ecs.component<ObserverWarrior>().is_a<ObserverUnit>();
+
+    flecs::entity tag = ecs.entity();
+
+    int32_t count = 0, sum = 0;
+    ecs.observer<ObserverUnit>()
+        .with(tag)
+        .event(flecs::OnRemove)
+        .each([&](ObserverUnit& u) {
+            sum += u.hp;
+            count ++;
+        });
+
+    ecs.entity().set<ObserverWarrior>({{10}, 1}).add(tag);
+    ecs.entity().set<ObserverWarrior>({{20}, 2}).add(tag);
+    ecs.entity().set<ObserverWarrior>({{30}, 3}).add(tag);
+
+    test_int(count, 0);
+
+    ecs.remove_all(tag);
+
+    test_int(count, 3);
+    test_int(sum, 60);
 }

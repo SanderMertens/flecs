@@ -15,12 +15,23 @@
 /* If term count is smaller than cache size, initialize with inline array,
  * otherwise allocate. */
 
+void* flecs_iter_alloc(
+    ecs_iter_t *it,
+    ecs_size_t size,
+    ecs_size_t align)
+{
+    ecs_world_t *world = it->stage;
+    ecs_stage_t *stage = flecs_stage_from_world((ecs_world_t**)&world);
+    ecs_stack_t *stack = &stage->allocators.iter_stack;
+    return flecs_stack_alloc(stack, size, align);
+}
+
 void* flecs_iter_calloc(
     ecs_iter_t *it,
     ecs_size_t size,
     ecs_size_t align)
 {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_stage_t *stage = flecs_stage_from_world((ecs_world_t**)&world);
     ecs_stack_t *stack = &stage->allocators.iter_stack;
     return flecs_stack_calloc(stack, size, align); 
@@ -82,7 +93,7 @@ void ecs_iter_fini(
 
     ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
 
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     if (!world) {
         return;
     }
@@ -103,10 +114,15 @@ void ecs_iter_fini(
 
 /* --- Public API --- */
 
-void* ecs_field_w_size(
+/* Get field data. When base is true the field is matched through component
+ * inheritance, which means the stored (derived) component can be larger than
+ * the requested (base) type, so the column stride is used instead of size. */
+static FLECS_ALWAYS_INLINE
+void* flecs_field_ptr(
     const ecs_iter_t *it,
     size_t size,
-    int8_t index)
+    int8_t index,
+    bool base)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
         "operation invalid before calling next()");
@@ -121,7 +137,7 @@ void* ecs_field_w_size(
             ECS_INVALID_PARAMETER, 
             "mismatching size for field %d (expected '%s')", 
             index,
-            flecs_errstr(ecs_id_str(it->world, it->ids[index])));
+            flecs_errstr(ecs_id_str(it->stage, it->ids[index])));
     (void)size;
 
     if (it->ptrs) {
@@ -130,13 +146,34 @@ void* ecs_field_w_size(
 
     int16_t column = it->columns[index];
     if (column >= 0) {
-        return ECS_ELEM(it->table->data.columns[column].data,
-            (ecs_size_t)size, it->offset);
+        ecs_column_t *col = &it->table->data.columns[column];
+        ecs_assert(base || ((ecs_size_t)size == col->ti->size),
+            ECS_INVALID_PARAMETER, 
+            "field %d is matched on a derived component, use ecs_base_field()",
+                index);
+        return ECS_ELEM(col->data, 
+            base ? col->ti->size : (ecs_size_t)size, it->offset);
     }
 
     return flecs_field_shared(it, size, index);
 error:
     return NULL;
+}
+
+void* ecs_field_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int8_t index)
+{
+    return flecs_field_ptr(it, size, index, false);
+}
+
+void* ecs_base_field_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int8_t index)
+{
+    return flecs_field_ptr(it, size, index, true);
 }
 
 void* flecs_field_shared(
@@ -149,16 +186,30 @@ void* flecs_field_shared(
     }
 
     ecs_entity_t src = it->sources[index];
-    ecs_record_t *r = flecs_entities_get(it->real_world, src);
+    ecs_record_t *r = flecs_entities_get(it->world, src);
     ecs_table_t *table = r->table;
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    (void)size;
 
-    ecs_component_record_t *cr = flecs_components_get(
-        it->real_world, it->ids[index]);
-    const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
-    int16_t column = tr->column;
+    const ecs_table_record_t *tr = it->trs[index];
+    if (tr && tr->hdr.table == table) {
+        ecs_column_t *col = &table->data.columns[tr->column];
+        return ECS_ELEM(col->data, col->ti->size, row);
+    }
 
-    return ECS_ELEM(table->data.columns[column].data,
-        (ecs_size_t)size, ECS_RECORD_TO_ROW(r->row));
+    ecs_id_t id = it->ids[index];
+    if (id < FLECS_HI_COMPONENT_ID) {
+        int16_t column_index = table->component_map[id];
+        if (column_index > 0) {
+            ecs_column_t *col = &table->data.columns[column_index - 1];
+            return ECS_ELEM(col->data, col->ti->size, row);
+        }
+    }
+
+    ecs_component_record_t *cr = flecs_components_get(it->world, id);
+    tr = flecs_component_get_table(cr, table);
+    ecs_column_t *col = &table->data.columns[tr->column];
+    return ECS_ELEM(col->data, col->ti->size, row);
 }
 
 static ecs_component_record_t* flecs_field_cr(
@@ -174,15 +225,17 @@ static ecs_component_record_t* flecs_field_cr(
             cr = cr_cache[index];
             if (!cr || cr->id != it->ids[index]) {
                 cr = cr_cache[index] = flecs_components_get(
-                    it->real_world, it->ids[index]);
+                    it->world, it->ids[index]);
             }
         } else {
-            cr = flecs_components_get(it->real_world, it->ids[index]);
+            cr = flecs_components_get(it->world, it->ids[index]);
         }
+
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     } else {
         cr = tr->hdr.cr;
     }
+
     return cr;
 }
 
@@ -248,6 +301,7 @@ bool ecs_field_is_readonly(
             return true;
         }
     }
+
 error:
     return false;
 }
@@ -339,11 +393,11 @@ int32_t ecs_field_column(
 
     ecs_entity_t src = it->sources[index];
     ecs_assert(src != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_record_t *r = flecs_entities_get(it->real_world, src);
+    ecs_record_t *r = flecs_entities_get(it->world, src);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_component_record_t *cr = flecs_components_get(
-        it->real_world, it->ids[index]);
+        it->world, it->ids[index]);
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_table_record_t *tr = flecs_component_get_table(cr, r->table);
     ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -366,6 +420,7 @@ ecs_entity_t ecs_field_src(
     } else {
         return 0;
     }
+
 error:
     return 0;
 }
@@ -378,6 +433,25 @@ size_t ecs_field_size(
         "invalid field index %d", index);
     ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
         "field index %d out of bounds", index);
+
+    return (size_t)it->sizes[index];
+error:
+    return 0;
+}
+
+size_t ecs_field_stride(
+    const ecs_iter_t *it,
+    int8_t index)
+{
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
+
+    int16_t column = it->columns[index];
+    if (column >= 0 && it->table) {
+        return (size_t)it->table->data.columns[column].ti->size;
+    }
 
     return (size_t)it->sizes[index];
 error:
@@ -439,6 +513,7 @@ bool ecs_iter_is_true(
     if (result) {
         ecs_iter_fini(it);
     }
+
     return result;
 error:
     return false;
@@ -463,6 +538,7 @@ ecs_entity_t ecs_iter_get_var(
         if (!table && !var_id) {
             table = it->table;
         }
+
         if (table) {
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
@@ -471,7 +547,7 @@ ecs_entity_t ecs_iter_get_var(
             }
         }
     } else {
-        ecs_assert(ecs_is_valid(it->real_world, e), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_is_valid(it->world, e), ECS_INTERNAL_ERROR, NULL);
     }
 
     return e;
@@ -499,7 +575,7 @@ ecs_table_t* ecs_iter_get_var_as_table(
         /* If table is not set, try to get table from entity */
         ecs_entity_t e = var->entity;
         if (e) {
-            ecs_record_t *r = flecs_entities_get(it->real_world, e);
+            ecs_record_t *r = flecs_entities_get(it->world, e);
             if (r) {
                 table = r->table;
                 if (ecs_table_count(table) != 1) {
@@ -548,7 +624,7 @@ ecs_table_range_t ecs_iter_get_var_as_range(
     if (!table) {
         ecs_entity_t e = var->entity;
         if (e) {
-            ecs_record_t *r = flecs_entities_get(it->real_world, e);
+            ecs_record_t *r = flecs_entities_get(it->world, e);
             if (r) {
                 result.table = r->table;
                 result.offset = ECS_RECORD_TO_ROW(r->row);
@@ -660,7 +736,7 @@ void ecs_iter_set_var(
     ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     var->entity = entity;
 
-    ecs_record_t *r = flecs_entities_get(it->real_world, entity);
+    ecs_record_t *r = flecs_entities_get(it->world, entity);
     if (r) {
         var->range.table = r->table;
         var->range.offset = ECS_RECORD_TO_ROW(r->row);
@@ -682,7 +758,7 @@ void ecs_iter_set_var(
     qit->constrained_this = true;
     qit->entity = entity;
 
-    ecs_record_t *r = flecs_entities_get(it->real_world, entity);
+    ecs_record_t *r = flecs_entities_get(it->world, entity);
     if (r) {
         it->table = r->table;
         it->offset = ECS_RECORD_TO_ROW(r->row);
@@ -768,6 +844,7 @@ void ecs_iter_set_var_as_range(
     if (!it->count) {
         it->count = ecs_table_count(it->table);
     }
+
     it->entities = ecs_table_entities(it->table);
     if (it->entities) {
         it->entities += it->offset;

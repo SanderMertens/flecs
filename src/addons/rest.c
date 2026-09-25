@@ -47,6 +47,7 @@ static ECS_DTOR(EcsRest, ptr, {
             ecs_rest_server_fini(impl->srv);
         }
     }
+
     ecs_os_free(ptr->ipaddr);
 })
 
@@ -173,6 +174,7 @@ static bool flecs_rest_get_entity(
             for (sep = suggestion; (sep = strchr(sep, '.')); sep ++) {
                 *sep = '/';
             }
+
             flecs_reply_error(reply,
                 "entity '%s' not found, did you mean '/entity/%s'?",
                 path, suggestion);
@@ -180,6 +182,7 @@ static bool flecs_rest_get_entity(
         } else {
             flecs_reply_error(reply, "entity '%s' not found", path);
         }
+
         reply->code = 404;
         return true;
     }
@@ -192,6 +195,7 @@ static bool flecs_rest_get_entity(
         reply->status = "Internal server error";
         return true;
     }
+
     return true;
 }
 
@@ -242,6 +246,7 @@ static bool flecs_rest_get_world(
         reply->status = "Internal server error";
         return true;
     }
+
     return true;
 }
 
@@ -256,6 +261,7 @@ static ecs_entity_t flecs_rest_entity_from_path(
         flecs_reply_error(reply, "entity '%s' not found", path);
         reply->code = 404;
     }
+
     return e;
 }
 
@@ -627,6 +633,7 @@ static bool flecs_rest_call(
         reply->code = 400;
         return true;
     }
+
     int32_t i, param_count = ecs_vec_count(&func->params);
     ecs_script_parameter_t *params = ecs_vec_first(&func->params);
     ecs_value_t *args = param_count ? ecs_os_calloc_n(ecs_value_t, param_count) : NULL;
@@ -643,6 +650,7 @@ static bool flecs_rest_call(
             reply->code = 500;
             goto done;
         }
+
         args[i] = ecs_value_new(world, params[i].type);
 
         const EcsPrimitive *primitive = ecs_get(
@@ -656,6 +664,7 @@ static bool flecs_rest_call(
                 reply->code = 400;
                 goto done;
             }
+
             *(char*)args[i].ptr = value[0];
         } else {
             flecs_log_capture_push(true);
@@ -745,8 +754,10 @@ static void flecs_rest_reply_capture(
             flecs_reply_error(reply, "%s", escaped_err);
             ecs_os_free(escaped_err);
         }
+
         reply->code = 400;
     }
+
     ecs_os_free(err);
 }
 
@@ -871,6 +882,7 @@ static bool flecs_rest_get_query(
         ok = flecs_rest_iter_to_reply(req, reply, q, &it);
         ecs_query_fini(q);
     }
+
     flecs_rest_reply_capture(reply, ok);
     if (!q && try) {
         reply->code = 200;
@@ -1274,6 +1286,7 @@ static void flecs_rest_append_component_memory(
     if (ecs_id_is_wildcard(cr->id)) {
         storage_bytes = 0;
     }
+
     ecs_strbuf_list_appendlit(reply, "\"storage\":");
     ecs_strbuf_append(reply, "%d", storage_bytes);
     ecs_strbuf_list_pop(reply, "}");
@@ -1291,60 +1304,79 @@ static void flecs_rest_append_component_traits(
     if (flags & EcsIdOnDeleteRemove) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDelete,Remove)\"");
     }
+
     if (flags & EcsIdOnDeleteDelete) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDelete,Delete)\"");
     }
+
     if (flags & EcsIdOnDeletePanic) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDelete,Panic)\"");
     }
+
     if (flags & EcsIdOnDeleteTargetRemove) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDeleteTarget,Remove)\"");
     }
+
     if (flags & EcsIdOnDeleteTargetDelete) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDeleteTarget,Delete)\"");
     }
+
     if (flags & EcsIdOnDeleteTargetPanic) {
         ecs_strbuf_list_appendlit(reply, "\"(OnDeleteTarget,Panic)\"");
     }
+
     if (flags & EcsIdOnInstantiateOverride) {
         ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,Override)\"");
     }
+
     if (flags & EcsIdOnInstantiateInherit) {
         ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,Inherit)\"");
     }
+
     if (flags & EcsIdOnInstantiateDontInherit) {
         ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,DontInherit)\"");
     }
+
     if (flags & EcsIdExclusive) {
         ecs_strbuf_list_appendlit(reply, "\"Exclusive\"");
     }
+
     if (flags & EcsIdTraversable) {
         ecs_strbuf_list_appendlit(reply, "\"Traversable\"");
     }
+
     if (flags & EcsPairIsTag) {
         ecs_strbuf_list_appendlit(reply, "\"PairIsTag\"");
     }
+
     if (flags & EcsIdWith) {
         ecs_strbuf_list_appendlit(reply, "\"With\"");
     }
+
     if (flags & EcsIdCanToggle) {
         ecs_strbuf_list_appendlit(reply, "\"CanToggle\"");
     }
+
     if (flags & EcsIdIsTransitive) {
         ecs_strbuf_list_appendlit(reply, "\"IsTransitive\"");
     }
+
     if (flags & EcsIdInheritable) {
         ecs_strbuf_list_appendlit(reply, "\"Inheritable\"");
     }
+
     if (flags & EcsIdSparse) {
         ecs_strbuf_list_appendlit(reply, "\"Sparse\"");
     }
+
     if (flags & EcsIdDontFragment) {
         ecs_strbuf_list_appendlit(reply, "\"DontFragment\"");
     }
+
     if (flags & EcsIdOrderedChildren) {
         ecs_strbuf_list_appendlit(reply, "\"OrderedChildren\"");
     }
+
     if (flags & EcsIdSingleton) {
         ecs_strbuf_list_appendlit(reply, "\"Singleton\"");
     }
@@ -1671,6 +1703,7 @@ static void flecs_rest_reply_table_append_type(
         flecs_json_string_escape(reply, idstr);
         ecs_os_free(idstr);
     }
+
     ecs_strbuf_list_pop(reply, "]");
 }
 
@@ -1687,6 +1720,7 @@ static void flecs_rest_reply_table_append_memory(
     if (!ecs_id(ecs_table_memory_t) || !ecs_id(ecs_component_memory_t)) {
         return;
     }
+
     ecs_table_memory_t table_memory = {0};
     ecs_table_memory_get(table, &table_memory);
 
@@ -1740,6 +1774,7 @@ static bool flecs_rest_get_tables(
         ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
         flecs_rest_reply_table_append(world, &reply->body, table);
     }
+
     ecs_strbuf_list_pop(&reply->body, "]");
 
     return true;
@@ -1801,6 +1836,7 @@ static void flecs_rest_server_garbage_collect_all(
             ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
             ecs_os_free(sync->cmds);
         }
+
         ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
         ecs_os_free(capture);
     }
@@ -1826,6 +1862,7 @@ static void flecs_rest_server_garbage_collect(
                 ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
                 ecs_os_free(sync->cmds);
             }
+
             ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
             ecs_os_free(capture);
 
@@ -1843,6 +1880,7 @@ static void flecs_rest_server_garbage_collect(
                     flecs_ito(uint64_t, frames[i]));
             }
         }
+
         ecs_vec_fini_t(NULL, &removed_frames, int64_t);
     }
 }
@@ -1892,6 +1930,7 @@ static void flecs_rest_cmd_to_json(
                 } else {
                     ecs_strbuf_appendlit(buf, "false");
                 }
+
                 ecs_strbuf_appendlit(buf, "\"");
 
             ecs_strbuf_list_appendlit(buf, "\"next_for_entity\":");
@@ -1926,6 +1965,7 @@ static void flecs_rest_on_commands(
                 ecs_strbuf_list_next(&sync->buf);
                 flecs_rest_cmd_to_json(world, &sync->buf, &cmds[i]);
             }
+
             ecs_strbuf_list_pop(&sync->buf, "]");
 
         /* Measure how long it takes to process queue */
@@ -2164,6 +2204,7 @@ ecs_http_server_t* ecs_rest_server_init(
     if (desc) {
         private_desc = *desc;
     }
+
     private_desc.callback = flecs_rest_reply;
     private_desc.ctx = srv_ctx;
 
@@ -2205,7 +2246,7 @@ static void flecs_on_set_rest(ecs_iter_t *it) {
             rest[i].port = ECS_REST_DEFAULT_PORT;
         }
 
-        ecs_http_server_t *srv = ecs_rest_server_init(it->real_world,
+        ecs_http_server_t *srv = ecs_rest_server_init(it->world,
             &(ecs_http_server_desc_t){ 
                 .ipaddr = rest[i].ipaddr, 
                 .port = rest[i].port,
@@ -2234,7 +2275,7 @@ static void DequeueRest(ecs_iter_t *it) {
             (double)it->delta_system_time);
     }
 
-    const ecs_world_info_t *wi = ecs_get_world_info(it->world);
+    const ecs_world_info_t *wi = ecs_get_world_info(it->stage);
 
     int32_t i;
     for(i = 0; i < it->count; i ++) {

@@ -2131,6 +2131,108 @@ template Building {
 
 This makes it possible to use templates as primitive for procedural generation templates, where a generic template specifies the "grammar" of an object (for example a building), with a set of derived templates that implement the style and/or content.
 
+##### Inheriting from templates
+When a template inherits from another template, the body of the base template is instantiated before the body of the derived template. The base body is evaluated with the prop values of the derived instance, which means that it sees default values overridden by the derived template, as well as values provided by the instance:
+
+```cpp
+template Shape {
+  prop size: f32 = 1
+
+  Box: {size, size, size}
+}
+
+template BigShape : Shape {
+  prop size: f32 = 10 // override default of base prop
+  prop color: Rgb = {255, 0, 0}
+
+  Rgb: color
+}
+
+BigShape a()         // Box: {10, 10, 10}
+BigShape b(size: 20) // Box: {20, 20, 20}
+```
+
+Because the body of the derived template is evaluated last, components it assigns overwrite components assigned by the base template. Inheritance can be chained, in which case bodies are evaluated starting from the root base template.
+
+A derived template inherits the `mut` variables of its base template, and can read and assign them like its own. Async blocks of a base template run for instances of a derived template. This makes it possible to split up behavior and visuals:
+
+```cpp
+template HeadlessButton {
+  mut hover = false
+
+  async {
+    while true {
+      await on.enter(this)
+      hover = true
+      await on.leave(this)
+      hover = false
+    }
+  }
+}
+
+template Button : HeadlessButton {
+  if hover {
+    Rgb: {60, 65, 75}
+  } else {
+    Rgb: {46, 50, 58}
+  }
+}
+```
+
+A derived template cannot redeclare a `mut` variable of its base template.
+
+##### Vectors of templates
+A prop can also accept a *list* of templates by adding `[]` to the type. The prop value is a vector of entities, where each element must be a template that derives from the interface type:
+
+```cpp
+template Building {
+  prop facade: template Facade[] = [VictorianFacade, ModernFacade]
+  prop floors: i32 = 3
+
+  for i in 0..floors {
+    "floor_{i}" {
+      facade[i % facade.count()]: {height: 3}
+    }
+  }
+}
+```
+
+An element is selected with `[]`, and the result can be used anywhere a single `template Facade` prop can be used, both as a component with an initializer and as a tag:
+
+```cpp
+template Building {
+  prop facade: template Facade[] = [VictorianFacade]
+
+  front { facade[0]: {height: 3} } // instantiate with initializer
+  back  { facade[0] }              // instantiate with default props
+}
+```
+
+The vector can also be used in expressions. It supports `count()`, iteration with `for`, and passing individual elements to other templates:
+
+```cpp
+template Building {
+  prop facade: template Facade[] = [VictorianFacade, ModernFacade]
+
+  for f in facade {
+    side { f: {height: 3} }
+  }
+
+  annex { Wing: {facade: facade[0]} }
+}
+```
+
+The default value may be omitted, in which case the vector is empty. Indexing an empty or out of range vector is an error.
+
+Instances override the vector like any other prop, both from script and from C:
+
+```cpp
+Building tower(facade: [ModernFacade])
+e { Building: {facade: [VictorianFacade, ModernFacade]} }
+```
+
+Vector props require an *interface struct* type (like `Facade` above). `prop x: template SomeTemplate[]`, where `SomeTemplate` is itself a template, is not supported.
+
 #### Parent constraints
 A template can require its immediate parent to be an instance of another template:
 

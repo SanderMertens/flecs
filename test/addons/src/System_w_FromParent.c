@@ -753,7 +753,7 @@ static void SetMass(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], Mass, {2});
+        ecs_set(it->stage, it->entities[i], Mass, {2});
     }
 }
 
@@ -969,7 +969,7 @@ static void AddMass(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], Mass, {2});
+        ecs_set(it->stage, it->entities[i], Mass, {2});
     }
 }
 

@@ -358,17 +358,17 @@ void Reference_get_ref_staged(void) {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
     /* ecs_set() makes immediate changes */
-    ecs_set(world, e, Position, {30, 40});
+    ecs_set(stage_1, e, Position, {30, 40});
 
-    p = ecs_ref_get(world, &ref, Position);
+    p = ecs_ref_get(stage_1, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 40);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
@@ -391,19 +391,19 @@ void Reference_get_ref_after_new_in_stage(void) {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
 
-    ecs_new_w(world, Position);
+    ecs_new_w(stage_1, Position);
 
     /* ecs_set() makes immediate changes */
-    ecs_set(world, e, Position, {30, 40});
+    ecs_set(stage_1, e, Position, {30, 40});
 
-    p = ecs_ref_get(world, &ref, Position);
+    p = ecs_ref_get(stage_1, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 40);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);

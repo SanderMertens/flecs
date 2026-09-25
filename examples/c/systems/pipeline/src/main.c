@@ -19,7 +19,7 @@ void PrintPosition(ecs_iter_t *it) {
     const Position *p = ecs_field(it, const Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
-        printf("%s: {%f, %f}\n", ecs_get_name(it->world, it->entities[i]), 
+        printf("%s: {%f, %f}\n", ecs_get_name(it->stage, it->entities[i]),
             p[i].x, p[i].y);
     }
 }

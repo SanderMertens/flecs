@@ -121,8 +121,10 @@ ecs_expr_value_node_t* flecs_expr_char(
                 &parser->script->allocator, ecs_expr_value_node_t, result);
             return NULL;
         }
+
         result->storage.char_ = ch;
     }
+
     result->ptr = &result->storage.char_;
     result->node.type = ecs_id(ecs_char_t);
     return result;
@@ -153,6 +155,7 @@ ecs_expr_value_node_t* flecs_expr_uint(
     } else {
         result->node.type = ecs_id(ecs_i64_t);
     }
+
     return result;
 }
 
@@ -193,7 +196,7 @@ ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
 {
     ecs_expr_interpolated_string_t *result = flecs_expr_ast_new(
         parser, ecs_expr_interpolated_string_t, EcsExprInterpolatedString);
-    result->value = ECS_CONST_CAST(char*, value);
+    result->value = flecs_strdup(&parser->script->allocator, value);
     result->buffer = flecs_strdup(&parser->script->allocator, value);
     result->buffer_size = ecs_os_strlen(result->buffer) + 1;
     result->node.type = ecs_id(ecs_string_t);
@@ -324,6 +327,12 @@ bool flecs_expr_explicit_cast_allowed(
         return true;
     }
 
+    if (from == ecs_id(ecs_script_template_ref_t) &&
+        ecs_has(world, to, EcsStruct))
+    {
+        return true;
+    }
+
     /* Any type can be cast to and from a value */
     if (to == ecs_id(ecs_value_t) || from == ecs_id(ecs_value_t)) {
         return true;
@@ -341,6 +350,7 @@ bool flecs_expr_explicit_cast_allowed(
         from_type = ecs_get(world, o->as_type, EcsType);
         ecs_assert(from_type != NULL, ECS_INTERNAL_ERROR, NULL);
     }
+
     if (to_type->kind == EcsOpaqueType) {
         const EcsOpaque *o = ecs_get(world, to, EcsOpaque);
         ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -447,6 +457,7 @@ int flecs_expr_visit_children(
                 return -1;
             }
         }
+
         for (i = 0; i < count; i ++) {
             if (action(&fragments[i].format.width, ctx) ||
                 action(&fragments[i].format.precision, ctx))
@@ -454,6 +465,7 @@ int flecs_expr_visit_children(
                 return -1;
             }
         }
+
         break;
     }
     case EcsExprInitializer:
@@ -468,6 +480,7 @@ int flecs_expr_visit_children(
                 return -1;
             }
         }
+
         break;
     }
     case EcsExprUnary:
@@ -479,18 +492,21 @@ int flecs_expr_visit_children(
         {
             return -1;
         }
+
         break;
     }
     case EcsExprIdentifier:
         return action(&((ecs_expr_identifier_t*)node)->expr, ctx);
     case EcsExprFunction:
-    case EcsExprMethod: {
+    case EcsExprMethod:
+    case EcsExprTemplate: {
         ecs_expr_function_t *n = (ecs_expr_function_t*)node;
         ecs_expr_node_t *args = (ecs_expr_node_t*)n->args;
         if (action(&n->left, ctx) || action(&args, ctx))
         {
             return -1;
         }
+
         n->args = (ecs_expr_initializer_t*)args;
         break;
     }
@@ -506,6 +522,7 @@ int flecs_expr_visit_children(
         {
             return -1;
         }
+
         break;
     }
     case EcsExprHas: {
@@ -516,6 +533,7 @@ int flecs_expr_visit_children(
         {
             return -1;
         }
+
         break;
     }
     case EcsExprCast:
@@ -526,6 +544,7 @@ int flecs_expr_visit_children(
         if (action(&n->expr, ctx)) {
             return -1;
         }
+
         ecs_expr_match_element_t *elems = ecs_vec_first(&n->elements);
         int32_t i, count = ecs_vec_count(&n->elements);
         for (i = 0; i < count; i ++) {
@@ -535,11 +554,13 @@ int flecs_expr_visit_children(
                 return -1;
             }
         }
+
         if (action(&n->any.compare, ctx) ||
             action(&n->any.expr, ctx))
         {
             return -1;
         }
+
         break;
     }
     case EcsExprRange: {
@@ -549,6 +570,7 @@ int flecs_expr_visit_children(
         {
             return -1;
         }
+
         break;
     }
     case EcsExprNew:

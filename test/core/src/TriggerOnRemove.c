@@ -24,18 +24,18 @@ void Deinit(ecs_iter_t *it) {
 }
 
 static void Remove_from_current(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_ctx(it->world);
+    IterData *ctx = ecs_get_ctx(it->stage);
 
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
 
         if (ctx->component) {
-            ecs_remove_id(it->world, e, ctx->component);
+            ecs_remove_id(it->stage, e, ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_remove_id(it->world, e, ctx->component_2);
+            ecs_remove_id(it->stage, e, ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -245,8 +245,8 @@ typedef struct DummyComp {
 static void RemoveDummyComp(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        test_assert(ecs_is_valid(it->world, it->entities[i]));
-        test_assert(ecs_is_alive(it->world, it->entities[i]));
+        test_assert(ecs_is_valid(it->stage, it->entities[i]));
+        test_assert(ecs_is_alive(it->stage, it->entities[i]));
     }
 
     dummy_dtor_invoked ++;
@@ -355,7 +355,7 @@ static void OnRemoveHasTag(ecs_iter_t *it) {
     test_int(it->count, 1);
     test_assert(it->entities[0] == ctx->ent);
     test_assert(ecs_field_id(it, 0) == ctx->tag);
-    test_bool(ecs_has_id(it->world, ctx->ent, ctx->tag), true);
+    test_bool(ecs_has_id(it->stage, ctx->ent, ctx->tag), true);
 
     dummy_called = true;
 }

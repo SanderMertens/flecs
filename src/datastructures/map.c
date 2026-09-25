@@ -124,6 +124,7 @@ static ecs_map_val_t* flecs_map_bucket_get(
             return &entry->value;
         }
     }
+
     return NULL;
 }
 
@@ -216,6 +217,7 @@ void* ecs_map_get_deref_(
     if (ptr) {
         return (void*)(uintptr_t)ptr[0];
     }
+
     return NULL;
 }
 
@@ -332,6 +334,7 @@ void ecs_map_clear(
     for (i = 0; i < count; i ++) {
         flecs_map_bucket_clear(map->allocator, &map->buckets[i]);
     }
+
     ECS_MAP_FREE_N(map->allocator, ecs_bucket_t, count, map->buckets);
     map->buckets = NULL;
     map->bucket_count = 0;
@@ -404,6 +407,7 @@ bool ecs_map_next(
                 break;
             }
         }
+
         if (iter->bucket == end) {
             return false;
         }

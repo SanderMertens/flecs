@@ -66,6 +66,7 @@ static void flecs_sparse_page_free(
     } else {
         ecs_os_free(page->sparse);
     }
+
     if (a) {
         flecs_free(a, sparse->size * FLECS_SPARSE_PAGE_SIZE, page->data);
     } else {
@@ -84,6 +85,7 @@ static ecs_sparse_page_t* flecs_sparse_get_page(
     if (page_index >= ecs_vec_count(&sparse->pages)) {
         return NULL;
     }
+
     return ecs_vec_get_t(&sparse->pages, ecs_sparse_page_t, page_index);
 }
 
@@ -310,6 +312,7 @@ void* flecs_sparse_ensure(
         if (dense != count) {
             flecs_sparse_swap_dense(sparse, page, dense, count);
         }
+
         ecs_vec_first_t(&sparse->dense, uint64_t)[count] = id;
     }
 

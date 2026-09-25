@@ -58,6 +58,7 @@ static void flecs_expr_format_parse_error(
     {
         column = flecs_ito(int32_t, parser->fixed_pos - parser->code);
     }
+
     ecs_parser_error(parser->name, parser->code,
         column, "%s", message);
 }
@@ -123,6 +124,7 @@ const char* flecs_expr_format_parse(
             if (separator[0] == '$') {
                 separator ++;
             }
+
             while (isalnum(separator[0]) || separator[0] == '_') {
                 separator ++;
             }
@@ -135,14 +137,17 @@ const char* flecs_expr_format_parse(
         if (separator) {
             separator[0] = '\0';
         }
+
         const char *expr_end = flecs_script_parse_expr(
             parser, pos, 0, &format->width);
         if (separator) {
             separator[0] = '.';
         }
+
         if (!expr_end) {
             return NULL;
         }
+
         pos = separator ? separator : expr_end;
     }
 
@@ -163,6 +168,7 @@ const char* flecs_expr_format_parse(
             if (end[0] == '$') {
                 end ++;
             }
+
             while (isalnum(end[0]) || end[0] == '_') {
                 end ++;
             }
@@ -183,9 +189,11 @@ const char* flecs_expr_format_parse(
         if (notation) {
             notation[0] = notation_ch;
         }
+
         if (!expr_end) {
             return NULL;
         }
+
         pos = notation ? notation : expr_end;
     }
 
@@ -230,16 +238,19 @@ int flecs_expr_format_value(
             "minimum width must not be negative");
         return -1;
     }
+
     if (format->width && width > 1024) {
         flecs_expr_visit_error(script, node,
             "minimum width must not exceed 1024");
         return -1;
     }
+
     if (format->precision && precision < 0) {
         flecs_expr_visit_error(script, node,
             "precision must not be negative");
         return -1;
     }
+
     if (format->precision && precision > 1024) {
         flecs_expr_visit_error(script, node,
             "precision must not exceed 1024");
@@ -265,11 +276,13 @@ int flecs_expr_format_value(
             fmt_ptr[0] = '+';
             fmt_ptr ++;
         }
+
         if (precision >= 0) {
             fmt_ptr[0] = '.';
             fmt_ptr[1] = '*';
             fmt_ptr += 2;
         }
+
         fmt_ptr[0] = format->notation ? format->notation : 'f';
         fmt_ptr[1] = '\0';
 
@@ -284,11 +297,13 @@ int flecs_expr_format_value(
                 "precision is only supported for f32 and f64 values");
             return -1;
         }
+
         if (format->notation) {
             flecs_expr_visit_error(script, node,
                 "scientific notation is only supported for f32 and f64 values");
             return -1;
         }
+
         char *value_str = *(char**)value->ptr;
         str = ecs_os_strdup(value_str ? value_str : "null");
     } else {
@@ -297,6 +312,7 @@ int flecs_expr_format_value(
                 "precision is only supported for f32 and f64 values");
             return -1;
         }
+
         if (format->notation) {
             flecs_expr_visit_error(script, node,
                 "scientific notation is only supported for f32 and f64 values");
@@ -344,6 +360,7 @@ int flecs_expr_format_value(
             ecs_strbuf_appendch(buf, number_ptr[0]);
             number_ptr ++;
         }
+
         flecs_expr_format_append_fill(buf, '0', padding);
         ecs_strbuf_appendstr(buf, number_ptr);
     } else if (format->alignment == '<') {

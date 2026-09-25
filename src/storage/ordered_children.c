@@ -84,6 +84,7 @@ void flecs_ordered_entities_append(
         for (i = count - 1; i > index; i --) {
             array[i] = array[i - 1];
         }
+
         array[index] = e;
     }
 
@@ -148,6 +149,7 @@ int32_t flecs_ordered_entities_remove(
             if (cr->flags & EcsIdPrefabChildren) {
                 ecs_map_remove(&world->prefab_child_indices, e);
             }
+
             return i;
         }
     }

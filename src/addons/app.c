@@ -74,6 +74,7 @@ char* flecs_explorer_request(const char *method, char *request, char *body) {
         reply_body = flecs_asprintf(
             "{\"error\": \"bad request\", \"status\": %d}", reply.code);
     }
+
     return reply_body;
 }
 #endif
@@ -88,6 +89,7 @@ int ecs_app_run(
     if (ECS_NEQZERO(ecs_app_desc.target_fps)) {
         ecs_set_target_fps(world, ecs_app_desc.target_fps);
     }
+
     if (ecs_app_desc.threads) {
         ecs_set_threads(world, ecs_app_desc.threads);
     }

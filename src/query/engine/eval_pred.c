@@ -54,6 +54,7 @@ static bool flecs_query_compare_range(
         if (r->offset < l->offset) {
             return false;
         }
+
         if (r_end > l_end) {
             return false;
         }
@@ -83,6 +84,7 @@ static bool flecs_query_pred_eq_w_range(
         if (r.count == 1) {
             ctx->vars[l].entity = ecs_table_entities(r.table)[r.offset];
         }
+
         return true;
     } else {
         ecs_table_range_t l = flecs_query_get_range(
@@ -248,6 +250,7 @@ static bool flecs_query_pred_match(
         if (op_ctx->name_col == -1) {
             return is_neq;
         }
+
         op_ctx->name_col = flecs_ito(int16_t, 
             l.table->column_map[op_ctx->name_col]);
         ecs_assert(op_ctx->name_col != -1, ECS_INTERNAL_ERROR, NULL);

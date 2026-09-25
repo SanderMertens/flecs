@@ -10037,9 +10037,9 @@ void Basic_no_results_after_delete_tree_deferred(void) {
 
     test_int(3, ecs_query_count(q).results);
 
-    ecs_defer_begin(world);
-    ecs_delete(world, parent);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, parent);
+    ecs_merge(stage_1);
     
     test_bool(ecs_is_alive(world, parent), false);
     test_bool(ecs_is_alive(world, child), false);
@@ -10215,13 +10215,13 @@ void Basic_create_w_entity_deferred(void) {
 
     ecs_entity_t qe = ecs_new(world);
 
-    ecs_defer_begin(world);
-    ecs_query_t *q = ecs_query(world, {
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_query_t *q = ecs_query(stage_1, {
         .entity = qe,
         .terms = {{ Foo }}
     });
     test_assert(q != NULL);
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
 
     test_assert(ecs_has_pair(world, qe, ecs_id(EcsPoly), EcsQuery));
 
@@ -10394,14 +10394,15 @@ void Basic_stage_query(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_assert(it.world == stage);
-    test_assert(it.real_world == world);
+    test_assert(it.stage == stage);
+    test_assert(it.world == world);
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
 
+    ecs_merge(stage);
     ecs_fini(world);
 }
 
@@ -10422,8 +10423,8 @@ void Basic_world_query_w_stage_iter(void) {
 
     ecs_iter_t it = ecs_query_iter(stage, q);
     test_bool(true, ecs_query_next(&it));
-    test_assert(it.world == stage);
-    test_assert(it.real_world == world);
+    test_assert(it.stage == stage);
+    test_assert(it.world == world);
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
     test_bool(false, ecs_query_next(&it));
@@ -10451,14 +10452,15 @@ void Basic_stage_query_w_nth_stage(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_assert(it.world == stage);
-    test_assert(it.real_world == world);
+    test_assert(it.stage == stage);
+    test_assert(it.world == world);
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
 
+    ecs_merge(stage);
     ecs_fini(world);
 }
 
@@ -10480,8 +10482,8 @@ void Basic_world_query_w_nth_stage_iter(void) {
 
     ecs_iter_t it = ecs_query_iter(stage, q);
     test_bool(true, ecs_query_next(&it));
-    test_assert(it.world == stage);
-    test_assert(it.real_world == world);
+    test_assert(it.stage == stage);
+    test_assert(it.world == world);
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
     test_bool(false, ecs_query_next(&it));

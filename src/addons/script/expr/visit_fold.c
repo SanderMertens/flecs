@@ -22,9 +22,11 @@ static int flecs_expr_fold_child(
     if (!*node || !(*node)->type) {
         return 0;
     }
+
     if (flecs_expr_visit_fold(ctx->script, node, ctx->desc)) {
         return -1;
     }
+
     ctx->can_fold &= (*node)->kind == EcsExprValue;
     return 0;
 }
@@ -61,12 +63,14 @@ static int flecs_expr_fold_eval(
         if (flecs_value_unary(script, &value, &value, unary->operator)) {
             return -1;
         }
+
         unary->expr = NULL;
         result->node.pos = node->pos;
         result->node.end = node->end;
         flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
         return 0;
     }
+
     ecs_expr_value_node_t *result = flecs_expr_value_from(script, node, node->type);
     const ecs_type_info_t *ti = result->node.type_info;
     if (ti->size > ECS_SIZEOF(result->storage) || ti->hooks.dtor) {
@@ -75,6 +79,7 @@ static int flecs_expr_fold_eval(
     } else {
         flecs_type_info_ctor(result->ptr, 1, ti);
     }
+
     ecs_value_t value = { .type = node->type, .ptr = result->ptr };
     int ret;
     if (node->kind == EcsExprCastNumber) {
@@ -90,10 +95,12 @@ static int flecs_expr_fold_eval(
     } else {
         ret = flecs_expr_visit_eval(script, node, desc, &value);
     }
+
     if (ret) {
         flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
         return -1;
     }
+
     flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     return 0;
 }
@@ -156,6 +163,7 @@ static int flecs_expr_pure_visit_fold(
     if (flecs_expr_visit_children(*node_ptr, flecs_expr_fold_child, &ctx)) {
         return -1;
     }
+
     return ctx.can_fold ? flecs_expr_fold_eval(script, node_ptr, desc) : 0;
 }
 
@@ -186,6 +194,7 @@ static int flecs_expr_initializer_pre_fold(
             {
                 goto error;
             }
+
             continue;
         }
 
@@ -222,6 +231,29 @@ static int flecs_expr_initializer_visit_fold(
     if (flecs_expr_initializer_pre_fold(script, node, desc, &can_fold)) {
         return -1;
     }
+
+    return can_fold ? flecs_expr_fold_eval(script, node_ptr, desc) : 0;
+}
+
+int flecs_expr_visit_fold_const(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_expr_node_t *node = *node_ptr;
+    if (node->kind != EcsExprInitializer ||
+        !((ecs_expr_initializer_t*)node)->is_partial)
+    {
+        return 0;
+    }
+
+    bool can_fold = true;
+    if (flecs_expr_initializer_pre_fold(
+        script, (ecs_expr_initializer_t*)node, desc, &can_fold))
+    {
+        return -1;
+    }
+
     return can_fold ? flecs_expr_fold_eval(script, node_ptr, desc) : 0;
 }
 
@@ -241,6 +273,7 @@ static int flecs_expr_identifier_visit_fold(
             flecs_expr_visit_free(script, expr);
             goto error;
         }
+
         flecs_visit_fold_replace(script, node_ptr, expr);
     }
 
@@ -328,6 +361,7 @@ static int flecs_expr_match_visit_fold(
     if (flecs_expr_fold_children(script, &node->node, desc)) {
         goto error;
     }
+
     int32_t i, count = ecs_vec_count(&node->elements);
     ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
 
@@ -374,6 +408,7 @@ static int flecs_expr_match_visit_fold(
         if (!node->any.expr) {
             return 0;
         }
+
         selected = &node->any.expr;
     }
 
@@ -435,8 +470,18 @@ int flecs_expr_visit_fold(
         if (flecs_expr_visit_fold(script, &function->left, desc)) {
             goto error;
         }
+
         return function->args ? flecs_expr_fold_children(
             script, (ecs_expr_node_t*)function->args, desc) : 0;
+    }
+    case EcsExprTemplate: {
+        ecs_expr_function_t *function = (ecs_expr_function_t*)node;
+        if (function->args && flecs_expr_visit_fold(
+            script, (ecs_expr_node_t**)&function->args, desc))
+        {
+            goto error;
+        }
+        break;
     }
     case EcsExprMember:
     case EcsExprSwizzle:

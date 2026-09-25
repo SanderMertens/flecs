@@ -153,6 +153,7 @@ const char* flecs_json_parse_large_string(
         if (!json) {
             return NULL;
         }
+
         ecs_strbuf_appendch(buf, ch_out);
     }
 
@@ -285,6 +286,7 @@ const char* flecs_json_expect_member(
     if (!json) {
         return NULL;
     }
+
     return json;
 }
 
@@ -298,11 +300,13 @@ const char* flecs_json_expect_member_name(
     if (!json) {
         return NULL;
     }
+
     if (ecs_os_strcmp(token, member_name)) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
             "expected member '%s'", member_name);
         return NULL;
     }
+
     return json;
 }
 
@@ -506,6 +510,7 @@ void flecs_json_string_escape_ctrl(
             } else {
                 ecs_strbuf_appendch(buf, ch);
             }
+
             break;
         }
     }
@@ -606,6 +611,7 @@ void flecs_json_id(
         } else {
             ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf, true);
         }
+
         ecs_strbuf_appendch(buf, '"');
     } else {
         ecs_strbuf_appendch(buf, '"');
@@ -732,9 +738,11 @@ void flecs_json_accum_type_info(
     if (!typeid || !ser_ctx || !ser_ctx->type_info_buf) {
         return;
     }
+
     if (ecs_map_get(&ser_ctx->type_info_seen, typeid) != NULL) {
         return;
     }
+
     ecs_map_ensure(&ser_ctx->type_info_seen, typeid);
 
     ecs_strbuf_t *buf = ser_ctx->type_info_buf;
@@ -778,11 +786,13 @@ void flecs_json_assemble_output(
         flecs_json_memberl(out, "type_info");
         ecs_strbuf_mergebuff(out, type_info_buf);
     }
+
     int32_t body_len = ecs_strbuf_written(body_buf);
     if (body_len > 2) {
         ecs_strbuf_list_next(out);
         ecs_strbuf_appendstrn(out, body_buf->content + 1, body_len - 2);
     }
+
     flecs_json_object_pop(out);
     ecs_strbuf_reset(body_buf);
 }

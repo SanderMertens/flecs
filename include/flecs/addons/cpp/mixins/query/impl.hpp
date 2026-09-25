@@ -80,7 +80,7 @@ struct query_base {
 
     /** Get the entity associated with the query. */
     flecs::entity entity() const {
-        return flecs::entity(query_->world, query_->entity);
+        return flecs::entity(query_->stage, query_->entity);
     }
 
     /** Get a pointer to the underlying C query. */
@@ -172,7 +172,7 @@ struct query_base {
     template <typename Func>
     void each_term(const Func& func) {
         for (int i = 0; i < query_->term_count; i ++) {
-            flecs::term t(query_->world, query_->terms[i]);
+            flecs::term t(query_->stage, query_->terms[i]);
             func(t);
             t.reset(); // prevent freeing resources
         }
@@ -180,7 +180,7 @@ struct query_base {
 
     /** Get term at the specified index. */
     flecs::term term(int32_t index) const {
-        return flecs::term(query_->world, query_->terms[index]);
+        return flecs::term(query_->stage, query_->terms[index]);
     }
 
     /** Get the number of terms in the query. */
@@ -304,7 +304,7 @@ private:
         ecs_assert(query_ != nullptr, ECS_INVALID_PARAMETER, 
             "cannot iterate invalid query");
         if (!world) {
-            world = query_->world;
+            world = query_->stage;
         }
         return ecs_query_iter(world, query_);
     }

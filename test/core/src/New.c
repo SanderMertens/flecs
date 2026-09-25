@@ -95,9 +95,9 @@ void New_recycle_empty_staged_delete(void) {
     ecs_entity_t e1 = ecs_new(world);
     test_assert(e1 != 0);
 
-    ecs_defer_begin(world);
-    ecs_delete(world, e1);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, e1);
+    ecs_merge(stage_1);
 
     ecs_entity_t e2 = ecs_new(world);
     test_assert(e2 != 0);
@@ -115,9 +115,9 @@ void New_recycle_staged_delete(void) {
     ecs_entity_t e1 = ecs_new_w(world, Position);
     test_assert(e1 != 0);
 
-    ecs_defer_begin(world);
-    ecs_delete(world, e1);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, e1);
+    ecs_merge(stage_1);
 
     ecs_entity_t e2 = ecs_new(world);
     test_assert(e2 != 0);

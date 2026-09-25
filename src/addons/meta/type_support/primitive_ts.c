@@ -78,12 +78,15 @@ int flecs_compare_string(
     if(str_a == str_b) {
         return 0;
     }
+
     if(str_a == NULL) {
         return -1;
     }
+
     if(str_b == NULL) {
         return 1;
     }
+
     return ecs_os_strcmp(str_a, str_b);
 }
 

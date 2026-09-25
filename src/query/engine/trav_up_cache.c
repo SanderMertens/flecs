@@ -221,6 +221,117 @@ static ecs_trav_up_t* flecs_trav_table_up(
     return up;
 }
 
+int flecs_query_up_reachable(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    ecs_id_t with,
+    ecs_entity_t trav,
+    ecs_component_record_t *cr_with,
+    bool match_inherited,
+    ecs_trav_up_t *out)
+{
+    if (trav != EcsChildOf) {
+        return -1;
+    }
+
+    if (cr_with->flags & EcsIdDontFragment) {
+        return -1;
+    }
+
+    if (ECS_IS_PAIR(with) && ECS_PAIR_FIRST(with) == EcsChildOf) {
+        return -1;
+    }
+
+    if (match_inherited) {
+        return -1;
+    }
+
+    ecs_entity_t parent;
+    ecs_component_record_t *cr_rel = NULL;
+    ecs_record_t *r;
+    if (table->flags & EcsTableHasParent) {
+        ecs_assert(row >= 0, ECS_INTERNAL_ERROR, NULL);
+        const EcsParent *p = flecs_query_tree_get_parents((ecs_table_range_t){
+            .table = table,
+            .offset = row,
+            .count = 1
+        });
+
+        parent = p->value;
+        r = flecs_entities_get_any(world, parent);
+    } else {
+        int16_t index = table->childof_index;
+        if (index == -1) {
+            goto not_found;
+        }
+
+        cr_rel = table->_->records[index].hdr.cr;
+        ecs_entity_index_t *entity_index = ecs_eis(world);
+        r = flecs_entity_index_get_any(entity_index, 
+            ECS_PAIR_SECOND(cr_rel->id));
+        ecs_assert(r->dense < entity_index->alive_count, 
+            ECS_INTERNAL_ERROR, NULL);
+        parent = ecs_vec_get_t(&entity_index->dense, uint64_t, r->dense)[0];
+    }
+
+    ecs_table_t *parent_table = r ? r->table : NULL;
+    if (parent_table) {
+        const ecs_table_record_t *tr = NULL;
+        if (with < FLECS_HI_COMPONENT_ID) {
+            int16_t res = parent_table->component_map[with];
+            if (res) {
+                int32_t type_index = res > 0 ?
+                    parent_table->column_map[parent_table->type.count + (res - 1)] :
+                    (-res - 1);
+                tr = &parent_table->_->records[type_index];
+            }
+        } else {
+            tr = flecs_component_get_table(cr_with, parent_table);
+        }
+
+        if (tr) {
+            out->src = parent;
+            out->tr = ECS_CONST_CAST(ecs_table_record_t*, tr);
+            out->id = with;
+            return 1;
+        }
+    }
+
+    if (!cr_rel) {
+        cr_rel = flecs_components_get(world, ecs_childof(parent));
+        if (!cr_rel) {
+            goto not_found;
+        }
+    }
+
+    const ecs_vec_t *ids = flecs_reachable_cache_get(world, cr_rel);
+    if (!ids) {
+        return -1;
+    }
+
+    const ecs_reachable_elem_t *elems = ecs_vec_first(ids);
+    int32_t i, count = ecs_vec_count(ids);
+
+    for (i = 0; i < count; i ++) {
+        if (elems[i].id == with) {
+            goto found;
+        }
+    }
+
+not_found:
+    out->src = 0;
+    out->tr = NULL;
+    out->id = 0;
+    return 0;
+
+found:
+    out->src = elems[i].src;
+    out->tr = ECS_CONST_CAST(ecs_table_record_t*, elems[i].tr);
+    out->id = elems[i].id;
+    return 1;
+}
+
 ecs_trav_up_t* flecs_query_get_up_cache(
     const ecs_query_run_ctx_t *ctx,
     ecs_trav_up_cache_t *cache,
@@ -235,7 +346,7 @@ ecs_trav_up_t* flecs_query_get_up_cache(
         flecs_query_up_cache_fini(cache);
     }
 
-    ecs_world_t *world = ctx->it->real_world;
+    ecs_world_t *world = ctx->it->world;
     ecs_allocator_t *a = flecs_query_get_allocator(ctx->it);
     ecs_map_init_if(&cache->src, a);
 
@@ -275,8 +386,16 @@ ecs_trav_up_t* flecs_query_get_up_cache(
         return NULL; /* Table doesn't have the relationship */
     }
 
-    int32_t i = tr->index, end = i + tr->count;
-    for (; i < end; i ++) {
+    int32_t i = tr->index, remaining = tr->count;
+    for (; remaining; i ++) {
+        i = flecs_table_offset_search_w_inherited(
+            world, table, i, cr_trav->id, NULL);
+        if (i == -1) {
+            break;
+        }
+
+        remaining --;
+
         ecs_id_t id = table->type.array[i];
         ecs_entity_t tgt = ECS_PAIR_SECOND(id);
         ecs_trav_up_t *result = &cache->up;

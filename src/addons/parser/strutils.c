@@ -59,6 +59,7 @@ char* flecs_chresc(
         } else {
             *bptr = in;
         }
+
         break;
     }
 
@@ -160,6 +161,7 @@ ecs_size_t flecs_stresc(
             written++;
         }
     }
+
     return written;
 error:
     return 0;

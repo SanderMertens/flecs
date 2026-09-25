@@ -117,6 +117,7 @@ static void flecs_script_future_cancel(
     if (cancel) {
         future->state = FlecsScriptFutureCancelled;
     }
+
     flecs_script_future_unlock(future);
     if (cancel && future->cancel) {
         future->cancel(&future->function_ctx, future);
@@ -152,13 +153,16 @@ void ecs_script_future_release(
     if (future->value.ptr) {
         ecs_value_fini(future->function_ctx.world, &future->value);
     }
+
     ecs_os_free(future->error);
     if (future->ctx_free) {
         future->ctx_free(future->ctx);
     }
+
     if (future->mutex) {
         ecs_os_mutex_free(future->mutex);
     }
+
     ecs_os_free(future);
 }
 
@@ -210,6 +214,7 @@ int ecs_script_future_reject_id(
         flecs_script_future_unlock(future);
         goto error;
     }
+
     future->error = ecs_os_strdup(msg ? msg : "async function failed");
     future->error_id = error;
     future->state = FlecsScriptFutureRejected;
@@ -261,6 +266,7 @@ void flecs_script_throw_clear(
         ecs_script_future_release(state->thrown);
         state->thrown = NULL;
     }
+
     state->throw_node = NULL;
 }
 
@@ -285,6 +291,7 @@ void flecs_script_report_throw(
     } else {
         flecs_script_eval_error(v, state->throw_node, "%s", msg);
     }
+
     flecs_script_throw_clear(state);
 }
 
@@ -308,11 +315,13 @@ int flecs_script_await_poll(
         async->throw_node = stmt;
         return -1;
     }
+
     if (state == FlecsScriptFutureCancelled) {
         flecs_script_eval_error(v, stmt, "awaited operation was cancelled");
         ecs_script_future_release(future);
         return -1;
     }
+
     *ready = future;
     return 0;
 }
@@ -367,6 +376,7 @@ done:
     if (result && arg_offset) {
         ecs_value_fini(v->world, &argv[0]);
     }
+
     return result;
 }
 
@@ -405,17 +415,21 @@ int32_t flecs_script_find_catch(
         if (!catches[i].error) {
             return i;
         }
+
         if (!throw_id) {
             continue;
         }
+
         ecs_entity_t e = catches[i].eval_error;
         if (catches[i].error_symbol != -1) {
             e = flecs_script_symbol_entity(v, catches[i].error_symbol);
         }
+
         if (e == throw_id) {
             return i;
         }
     }
+
     return -1;
 }
 
@@ -452,6 +466,7 @@ int flecs_script_step_await(
     if (result) {
         return result;
     }
+
     if (var) {
         result = flecs_script_await_assign_const(v, var, &future->value);
     }
@@ -491,6 +506,7 @@ static ecs_script_eval_visitor_t* flecs_script_task_visitor(
     if (task->vm) {
         return &task->vm->v;
     }
+
     return &task->runner->v;
 }
 
@@ -500,7 +516,7 @@ static void flecs_script_task_push_this(
     ecs_entity_t entity)
 {
     v->vars = flecs_script_vars_push(
-        v->vars, &runtime->stack, &runtime->allocator);
+        v->vars, &runtime->stack, runtime->allocator);
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, "this");
     var->value.type = ecs_id(ecs_entity_t);
     var->value.ptr = flecs_stack_alloc(&runtime->stack,
@@ -533,12 +549,14 @@ static void flecs_script_task_unbind(
     if (!task->bound_registered) {
         return;
     }
+
     task->bound_registered = false;
     EcsScriptAsyncTasks *bound = ecs_get_mut(
         task->script->world, task->entity, EcsScriptAsyncTasks);
     if (!bound) {
         return;
     }
+
     int32_t i, count = ecs_vec_count(&bound->tasks);
     ecs_script_task_t **tasks = ecs_vec_first(&bound->tasks);
     for (i = 0; i < count; i ++) {
@@ -607,10 +625,12 @@ static ecs_script_task_t* flecs_script_task_alloc(
     } else {
         result->runner = ECS_OFFSET(result, offset);
     }
+
     result->script = &impl->pub;
     result->sched_index = -1;
     impl->task_refcount ++;
-    ecs_script_runtime_t *runtime = ecs_script_runtime_new();
+    ecs_script_runtime_t *runtime = flecs_script_runtime_new_shared(
+        flecs_script_runtime_get(impl->pub.world));
     result->eval_desc.runtime = runtime;
     ecs_script_eval_visitor_t *v = flecs_script_task_visitor(result);
     flecs_script_eval_visit_init(impl, v, &result->eval_desc);
@@ -624,12 +644,14 @@ static int flecs_script_task_compile(
     if (impl->compiled) {
         return 0;
     }
+
     ecs_script_eval_visitor_t *v = flecs_script_task_visitor(task);
     if (flecs_script_visit_include(v, impl->root) ||
         flecs_script_visit_type(v, impl->root))
     {
         return -1;
     }
+
     impl->compiled = true;
     return 0;
 }
@@ -644,6 +666,7 @@ static int flecs_script_task_engine_init(
             flecs_script_ir_vm_fini(task->vm, &task->eval_desc);
             return -1;
         }
+
         task->vm->can_suspend = true;
         task->vm->async.entity = task->entity;
     } else {
@@ -651,6 +674,7 @@ static int flecs_script_task_engine_init(
         task->runner->can_suspend = true;
         task->runner->async.entity = task->entity;
     }
+
     return 0;
 }
 
@@ -661,6 +685,7 @@ static void flecs_script_task_dealloc(
     if (task->ctx_free) {
         task->ctx_free(task->ctx);
     }
+
     ecs_script_impl_t *impl = flecs_script_impl(task->script);
     ecs_assert(impl->task_refcount > 0, ECS_INTERNAL_ERROR, NULL);
     impl->task_refcount --;
@@ -696,25 +721,31 @@ ecs_script_task_t* ecs_script_task_new(
         result->loop = desc->loop;
         result->iterations = desc->iterations;
     }
+
     ecs_script_eval_visitor_t *v = flecs_script_task_visitor(result);
     if (result->entity) {
         flecs_script_task_push_this(v, runtime, result->entity);
         result->has_owner_vars = true;
     }
+
     if (flecs_script_task_compile(result)) {
         goto task_error;
     }
+
     result->scope = impl->root;
     if (flecs_script_task_engine_init(result)) {
         goto task_error;
     }
+
     if (result->vm) {
         result->entry = ecs_vec_get_t(&result->vm->ir->entries,
             ecs_script_ir_entry_t, result->vm->ir->root_entry);
     }
+
     if (result->entity) {
         flecs_script_task_register(result);
     }
+
     result->initial_vars = flecs_script_task_visitor(result)->vars;
     return result;
 task_error:
@@ -733,6 +764,7 @@ static ecs_script_future_t** flecs_script_task_future(
     if (task->vm) {
         return &task->vm->async.future;
     }
+
     return &task->runner->async.future;
 }
 
@@ -769,6 +801,7 @@ ecs_script_task_status_t ecs_script_task_resume(
     if (result) {
         flecs_log_capture_push(true);
     }
+
     ecs_script_runtime_t *world_rt = flecs_script_runtime_get(
         flecs_script_task_visitor(task)->world);
     bool prev_error = world_rt->error;
@@ -779,6 +812,7 @@ ecs_script_task_status_t ecs_script_task_resume(
     } else {
         status = flecs_script_runner_run_scope(task->runner, task->scope);
     }
+
     bool nested_error = world_rt->error;
     world_rt->error = prev_error;
     if (task->status == EcsScriptTaskCancelled) {
@@ -790,18 +824,22 @@ ecs_script_task_status_t ecs_script_task_resume(
     } else {
         task->status = EcsScriptTaskPending;
     }
+
     if (result) {
         result->error = flecs_log_capture_pop();
         flecs_log_get_captured_error_pos(&result->line, &result->column);
     }
+
     if (task->status == EcsScriptTaskDone) {
         bool repeat = task->loop == EcsScriptTaskLoopForever;
         if (task->loop != EcsScriptTaskLoopOnce) {
             task->completed_iterations ++;
         }
+
         if (task->loop == EcsScriptTaskLoopCount) {
             repeat = task->completed_iterations < task->iterations;
         }
+
         if (repeat) {
             ecs_assert(task->vm
                 ? task->vm->frame_count == 0
@@ -812,6 +850,7 @@ ecs_script_task_status_t ecs_script_task_resume(
             task->status = EcsScriptTaskPending;
         }
     }
+
     task->running = false;
     return task->status;
 error:
@@ -827,6 +866,7 @@ bool ecs_script_task_is_ready(
     if (!future) {
         return true;
     }
+
     return flecs_script_future_poll(future) != FlecsScriptFuturePending;
 error:
     return false;
@@ -858,6 +898,7 @@ void ecs_script_task_free(
     if (!task) {
         return;
     }
+
     flecs_script_task_unbind(task);
     if (task->running) {
         /* Async block task freed by its owner while it is being resumed. The
@@ -870,6 +911,7 @@ void ecs_script_task_free(
         task->free_pending = true;
         return;
     }
+
     ecs_script_task_cancel(task);
     flecs_script_task_unregister(task);
     flecs_script_task_sched_remove(task);
@@ -878,24 +920,29 @@ void ecs_script_task_free(
     } else {
         flecs_script_runner_abandon(task->runner);
     }
+
     ecs_script_eval_visitor_t *v = flecs_script_task_visitor(task);
     ecs_assert(v->vars == task->initial_vars, ECS_INTERNAL_ERROR, NULL);
     if (task->has_owner_vars) {
         v->vars = ecs_script_vars_pop(v->vars);
     }
+
     if (task->is_async_block) {
         while (v->vars) {
             v->vars = ecs_script_vars_pop(v->vars);
         }
     }
+
     if (task->vm) {
         flecs_script_ir_vm_fini(task->vm, &task->eval_desc);
     } else {
         flecs_script_runner_fini(task->runner, &task->eval_desc);
     }
+
     if (task->has_state) {
         flecs_script_state_fini(&task->state);
     }
+
     flecs_script_task_dealloc(task);
 error:
     return;
@@ -916,12 +963,14 @@ static ECS_DTOR(EcsScriptTask, ptr, {
             ECS_INVALID_OPERATION,
             "script still has alive tasks, free tasks before ecs_fini");
     }
+
     for (t = 0; t < task_count; t ++) {
         /* Component doesn't own tasks; cancel so the application observes a
          * cancelled status on the next resume and frees them. */
         tasks[t]->entity = 0;
         ecs_script_task_cancel(tasks[t]);
     }
+
     ecs_vec_fini_t(NULL, &ptr->tasks, ecs_script_task_t*);
 })
 
@@ -1018,6 +1067,7 @@ static void flecs_script_tasks_pending_set(
     if (!EcsScriptTasksPending || ecs_is_fini(world)) {
         return;
     }
+
     if (pending) {
         ecs_add_id(world, EcsScriptTasksPending, EcsScriptTasksPending);
     } else {
@@ -1044,6 +1094,7 @@ static void flecs_script_task_sched_remove(
     if (index < 0) {
         return;
     }
+
     task->sched_index = -1;
 
     ecs_script_runtime_t *rt = flecs_script_runtime_get(task->script->world);
@@ -1061,6 +1112,7 @@ static void flecs_script_task_sched_remove(
     if (last) {
         last->sched_index = index;
     }
+
     ecs_vec_remove_last(&rt->async_tasks);
     if (!ecs_vec_count(&rt->async_tasks)) {
         flecs_script_tasks_pending_set(task->script->world, false);
@@ -1092,6 +1144,7 @@ static ecs_script_vars_t* flecs_script_vars_snapshot(
         if (!var) {
             var = ecs_script_vars_declare(dst, NULL);
         }
+
         ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(var->sp == src_var->sp, ECS_INTERNAL_ERROR, NULL);
 
@@ -1113,10 +1166,12 @@ static ecs_script_vars_t* flecs_script_vars_snapshot(
                     break;
                 }
             }
+
             if (var->value.ptr) {
                 continue;
             }
         }
+
         if (src_var->value.ptr && ti) {
             var->value.ptr = flecs_stack_alloc(stack, ti->size, ti->alignment);
             flecs_type_info_ctor(var->value.ptr, 1, ti);
@@ -1162,6 +1217,7 @@ int flecs_script_async_spawn(
                 "async block has no template instance");
             return -1;
         }
+
         owner_instance = v->template_instance;
         owner_template = v->body_template;
         EcsScriptTemplateRoot *root = ecs_get_mut_pair(
@@ -1174,9 +1230,11 @@ int flecs_script_async_spawn(
                 ecs_vec_remove_t(&root->async_blocks, ecs_script_async_block_t, i);
                 continue;
             }
+
             if (block->entity == entity && block->scope == node->scope) {
                 return 0;
             }
+
             i ++;
         }
     } else {
@@ -1201,13 +1259,13 @@ int flecs_script_async_spawn(
     int32_t i, using_count = ecs_vec_count(&v->r->using);
     ecs_entity_t *using = ecs_vec_first(&v->r->using);
     for (i = 0; i < using_count; i ++) {
-        ecs_vec_append_t(&rt->allocator, &rt->using, ecs_entity_t)[0] =
+        ecs_vec_append_t(rt->allocator, &rt->using, ecs_entity_t)[0] =
             using[i];
     }
 
     if (v->vars) {
         tv->vars = flecs_script_vars_snapshot(
-            world, v->vars, v->instance_template, &rt->stack, &rt->allocator);
+            world, v->vars, v->instance_template, &rt->stack, rt->allocator);
     }
 
     if (owner_instance) {
@@ -1221,6 +1279,7 @@ int flecs_script_async_spawn(
     if (flecs_script_task_engine_init(task)) {
         goto error;
     }
+
     if (task->vm) {
         task->entry = flecs_script_ir_entry(task->vm->ir, node);
         if (!task->entry) {
@@ -1228,6 +1287,7 @@ int flecs_script_async_spawn(
             goto error;
         }
     }
+
     task->initial_vars = tv->vars;
 
     if (owner_template) {
@@ -1277,6 +1337,7 @@ void flecs_script_async_tasks_free(
         task->owner_template = 0;
         ecs_script_task_free(task);
     }
+
     ecs_vec_clear(tasks);
 }
 
@@ -1332,6 +1393,7 @@ void flecs_script_async_cleanup(
             i ++;
             continue;
         }
+
         ecs_vec_remove_t(&root->async_blocks, ecs_script_async_block_t, i);
         for (int32_t t = 0; t < ecs_vec_count(&root->tasks); t ++) {
             ecs_script_task_t *task = ecs_vec_get_t(
@@ -1368,9 +1430,11 @@ static void flecs_script_async_tasks_on_remove(
             array[t]->bound_registered = false;
             flecs_script_task_detach(array[t]);
         }
+
         for (int32_t t = 0; t < count; t ++) {
             ecs_script_task_free(array[t]);
         }
+
         ecs_vec_fini_t(NULL, &tasks, ecs_script_task_t*);
     }
 }
@@ -1386,10 +1450,10 @@ int32_t ecs_script_tasks_progress(
         return 0;
     }
 
-    bool is_defer = ecs_is_deferred(world);
+    bool is_readonly = ecs_stage_is_readonly(world);
     ecs_suspend_readonly_state_t srs;
     ecs_world_t *real_world = NULL;
-    if (is_defer) {
+    if (is_readonly) {
         real_world = flecs_suspend_readonly(world, &srs);
         ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
@@ -1403,6 +1467,7 @@ int32_t ecs_script_tasks_progress(
         if (!task) {
             continue;
         }
+
         if (task->status != EcsScriptTaskPending ||
             !ecs_script_task_is_ready(task))
         {
@@ -1428,6 +1493,7 @@ int32_t ecs_script_tasks_progress(
             tasks[dst ++] = tasks[i];
         }
     }
+
     ecs_vec_set_count_t(NULL, &rt->async_tasks, ecs_script_task_t*, dst);
     if (!dst) {
         flecs_script_tasks_pending_set(world, false);
@@ -1435,7 +1501,7 @@ int32_t ecs_script_tasks_progress(
 
     rt->async_progressing = false;
 
-    if (is_defer) {
+    if (is_readonly) {
         flecs_resume_readonly(real_world, &srs);
     }
 

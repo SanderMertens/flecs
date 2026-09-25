@@ -8,7 +8,7 @@
 ecs_mixins_t ecs_query_t_mixins = {
     .type_name = "ecs_query_t",
     .elems = {
-        [EcsMixinWorld] = offsetof(ecs_query_impl_t, pub.real_world),
+        [EcsMixinWorld] = offsetof(ecs_query_impl_t, pub.world),
         [EcsMixinEntity] = offsetof(ecs_query_impl_t, pub.entity),
         [EcsMixinDtor] = offsetof(ecs_query_impl_t, dtor)
     }
@@ -37,10 +37,12 @@ int32_t ecs_query_find_var(
                 var_id = 0;
             }
         }
+
         if (var_id == EcsVarNone) {
             return -1;
         }
     }
+
     return (int32_t)var_id;
 }
 
@@ -127,6 +129,7 @@ static int flecs_query_set_caching_policy(
                 "group_by/order_by/change detection");
             return -1;
         }
+
         return 0;
     }
 
@@ -195,7 +198,7 @@ static int flecs_query_create_cache(
     ecs_query_t *q = &impl->pub;
     if ((q->cache_kind != EcsQueryCacheNone) && !q->entity) {
         /* Cached queries need an entity handle for observer components */
-        q->entity = ecs_new(q->world);
+        q->entity = ecs_new(q->stage);
         desc->entity = q->entity;
     }
 
@@ -303,9 +306,9 @@ static void flecs_query_fini(
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &q->terms[i];
 
-            if (!(ecs_world_get_flags(q->world) & EcsWorldQuit)) {
+            if (!(ecs_world_get_flags(q->stage) & EcsWorldQuit)) {
                 if (!ecs_term_match_0(term)) {
-                    flecs_component_unlock(q->real_world, term->id);
+                    flecs_component_unlock(q->world, term->id);
                 }
             }
         }
@@ -342,7 +345,7 @@ static void flecs_query_add_self_ref(
         for (t = 0; t < term_count; t ++) {
             ecs_term_t *term = &terms[t];
             if (ECS_TERM_REF_ID(&term->src) == q->entity) {
-                ecs_add_id(q->world, q->entity, term->id);
+                ecs_add_id(q->stage, q->entity, term->id);
             }
         }
     }
@@ -355,7 +358,7 @@ void ecs_query_fini(
 
     if (q->entity) {
         /* If query is associated with entity, use poly dtor path */
-        ecs_delete(q->world, q->entity);
+        ecs_delete(q->stage, q->entity);
     } else {
         flecs_query_fini(flecs_query_impl(q));
     }
@@ -368,6 +371,9 @@ static ecs_query_t* flecs_query_init(
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
+    bool main_scope = false;
+    flecs_commands_begin(world, stage);
+
     ecs_query_impl_t *result = flecs_bcalloc(&stage->allocators.query_impl);
     flecs_poly_init(result, ecs_query_t);
 
@@ -376,11 +382,11 @@ static ecs_query_t* flecs_query_init(
 
     /* Initialize the query */
     result->pub.entity = entity;
-    result->pub.real_world = world;
-    result->pub.world = world_arg;
+    result->pub.world = world;
+    result->pub.stage = world_arg;
     result->stage = stage;
 
-    ecs_assert(flecs_poly_is(result->pub.real_world, ecs_world_t),
+    ecs_assert(flecs_poly_is(result->pub.world, ecs_world_t),
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(flecs_poly_is(result->stage, ecs_stage_t),
         ECS_INTERNAL_ERROR, NULL);
@@ -407,9 +413,13 @@ static ecs_query_t* flecs_query_init(
     }
 
     if (result->pub.cache_kind != EcsQueryCacheNone) {
-        flecs_check_exclusive_world_access_write(result->pub.real_world);
+        flecs_check_exclusive_world_access_write(result->pub.world);
+        if (stage != world->stages[0]) {
+            flecs_commands_begin(world, world->stages[0]);
+            main_scope = true;
+        }
     } else {
-        flecs_check_exclusive_world_access_read(result->pub.real_world);
+        flecs_check_exclusive_world_access_read(result->pub.world);
     }
 
 #ifdef FLECS_CACHED_QUERIES
@@ -433,10 +443,18 @@ static ecs_query_t* flecs_query_init(
         flecs_poly_modified(world, entity, ecs_query_t);
     }
 
+    if (main_scope) {
+        flecs_commands_end(world, world->stages[0]);
+    }
+    flecs_commands_end(world, stage);
     return &result->pub;
 error:
     result->pub.entity = 0;
     ecs_query_fini(&result->pub);
+    if (main_scope) {
+        flecs_commands_end(world, world->stages[0]);
+    }
+    flecs_commands_end(world, stage);
     return NULL;
 }
 
@@ -449,7 +467,7 @@ ecs_query_t* ecs_query_init(
     ecs_query_t *result = NULL;
     ecs_entity_t entity = const_desc->entity;
     if (entity) {
-        flecs_check_exclusive_world_access_write(world);
+        flecs_check_exclusive_world_access_write(ecs_get_world(world));
         ecs_check(!ecs_has_pair(world, entity, ecs_id(EcsPoly), EcsQuery),
             ECS_INVALID_OPERATION,
             "entity %s already is a query, use ecs_query_update() to modify",
@@ -476,19 +494,11 @@ ecs_query_t* ecs_query_update(
         ECS_INVALID_PARAMETER,
         "ecs_query_desc_t::entity does not match query entity");
 
-    flecs_check_exclusive_world_access_write(world);
+    flecs_check_exclusive_world_access_write(ecs_get_world(world));
 
     /* Remove the existing query if any. */
-    bool deferred = false;
-    if (ecs_is_deferred(world)) {
-        deferred = true;
-        /* Ensures that remove operation doesn't get applied after bind */
-        ecs_defer_suspend(world);
-    }
-    ecs_remove_pair(world, entity, ecs_id(EcsPoly), EcsQuery);
-    if (deferred) {
-        ecs_defer_resume(world);
-    }
+    ecs_remove_pair(ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world)),
+        entity, ecs_id(EcsPoly), EcsQuery);
 
     ecs_query_desc_t desc = *const_desc;
     desc.entity = entity;
@@ -507,7 +517,7 @@ bool ecs_query_has(
     flecs_poly_assert(q, ecs_query_t);
     ecs_check(q->flags & EcsQueryMatchThis, ECS_INVALID_PARAMETER, NULL);
 
-    *it = ecs_query_iter(q->world, q);
+    *it = ecs_query_iter(q->stage, q);
     ecs_iter_set_var(it, 0, entity);
     return ecs_query_next(it);
 error:
@@ -539,7 +549,7 @@ static bool flecs_query_table_has_self_ids(
             continue;
         }
 
-        if (ecs_table_get_type_index(q->real_world, table, term->id) == -1) {
+        if (ecs_table_get_type_index(q->world, table, term->id) == -1) {
             return false;
         }
     }
@@ -561,7 +571,7 @@ bool ecs_query_has_table(
         return false;
     }
 
-    *it = ecs_query_iter(q->world, q);
+    *it = ecs_query_iter(q->stage, q);
     ecs_table_range_t range = { .table = table };
     ecs_iter_set_var_as_range(it, 0, &range);
     return ecs_query_next(it);
@@ -592,7 +602,7 @@ bool ecs_query_has_range(
         return false;
     }
 
-    *it = ecs_query_iter(q->world, q);
+    *it = ecs_query_iter(q->stage, q);
 
     if (q->flags & EcsQueryMatchThis) {
         ecs_iter_set_var_as_range(it, 0, range);
@@ -642,6 +652,7 @@ bool flecs_query_count_trivial_cache(
             if (!entities && !match_empty) {
                 continue;
             }
+
             out->results ++;
             out->entities += entities;
         }
@@ -663,7 +674,7 @@ ecs_query_count_t ecs_query_count(
     if (!flecs_query_count_trivial_cache(q, &result))
 #endif
     {
-        ecs_iter_t it = flecs_query_iter(q->world, q);
+        ecs_iter_t it = flecs_query_iter(q->stage, q);
         it.flags |= EcsIterNoData;
 
         while (ecs_query_next(&it)) {
@@ -697,7 +708,7 @@ bool ecs_query_is_true(
 {
     flecs_poly_assert(q, ecs_query_t);
 
-    ecs_iter_t it = flecs_query_iter(q->world, q);
+    ecs_iter_t it = flecs_query_iter(q->stage, q);
     return ecs_iter_is_true(&it);
 }
 

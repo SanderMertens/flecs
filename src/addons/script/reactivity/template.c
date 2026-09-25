@@ -15,6 +15,170 @@ ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 ECS_DECLARE(EcsScriptTemplate);
 ECS_DECLARE(EcsScriptTemplateManual);
 ECS_DECLARE(EcsScriptTemplatePending);
+ECS_COMPONENT_DECLARE(ecs_script_template_ref_t);
+
+void flecs_script_template_ref_clear(
+    ecs_world_t *world,
+    ecs_script_template_ref_t *ref)
+{
+    if (ref->value) {
+        ecs_ptr_free(world, ref->type, ref->value);
+        ref->value = NULL;
+    }
+}
+
+void flecs_script_template_ref_set(
+    ecs_world_t *world,
+    ecs_script_template_ref_t *ref,
+    ecs_entity_t type,
+    void *value)
+{
+    flecs_script_template_ref_clear(world, ref);
+    ref->type = type;
+    ref->value = value;
+}
+
+int flecs_script_template_ref_apply(
+    ecs_world_t *world,
+    const ecs_script_template_ref_t *ref,
+    const ecs_type_info_t *ti,
+    void *dst)
+{
+    if (!ref || !ref->value) {
+        return 0;
+    }
+
+    if (ref->type != ti->component) {
+        return -1;
+    }
+
+    ecs_ptr_copy_w_type_info(world, ti, dst, ref->value);
+    return 0;
+}
+
+static void flecs_script_template_ref_copy(
+    void *dst_ptr,
+    const void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_world_t *world = ti->hooks.ctx;
+    ecs_script_template_ref_t *dst = dst_ptr;
+    const ecs_script_template_ref_t *src = src_ptr;
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        void *value = NULL;
+        if (src[i].value) {
+            value = ecs_ptr_new(world, src[i].type);
+            ecs_ptr_copy(world, src[i].type, value, src[i].value);
+        }
+
+        flecs_script_template_ref_set(world, &dst[i], src[i].type, value);
+    }
+}
+
+static void flecs_script_template_ref_move(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_world_t *world = ti->hooks.ctx;
+    ecs_script_template_ref_t *dst = dst_ptr;
+    ecs_script_template_ref_t *src = src_ptr;
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        flecs_script_template_ref_set(
+            world, &dst[i], src[i].type, src[i].value);
+        src[i].value = NULL;
+    }
+}
+
+static void flecs_script_template_ref_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_world_t *world = ti->hooks.ctx;
+    ecs_script_template_ref_t *refs = ptr;
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        flecs_script_template_ref_clear(world, &refs[i]);
+    }
+}
+
+static int flecs_script_template_ref_value_cmp(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *a,
+    const void *b)
+{
+    if (a == b) {
+        return 0;
+    }
+
+    if (!a) {
+        return -1;
+    }
+
+    if (!b) {
+        return 1;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, type);
+    if (!ti) {
+        return 0;
+    }
+
+    if (ti->hooks.cmp && !(ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL)) {
+        return flecs_type_info_cmp(a, b, ti);
+    }
+
+    if (ti->hooks.equals && !(ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL)) {
+        return flecs_type_info_equals(a, b, ti) ? 0 : 1;
+    }
+
+    return ecs_os_memcmp(a, b, ti->size);
+}
+
+static int flecs_script_template_ref_cmp(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    const ecs_script_template_ref_t *a = a_ptr;
+    const ecs_script_template_ref_t *b = b_ptr;
+    if (a->type != b->type) {
+        return a->type < b->type ? -1 : 1;
+    }
+
+    return flecs_script_template_ref_value_cmp(
+        ti->hooks.ctx, a->type, a->value, b->value);
+}
+
+static bool flecs_script_template_ref_equals(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return flecs_script_template_ref_cmp(a_ptr, b_ptr, ti) == 0;
+}
+
+static int flecs_script_template_ref_serialize(
+    const ecs_serializer_t *ser,
+    const void *ptr)
+{
+    const ecs_script_template_ref_t *ref = ptr;
+    return ser->value(ser, ecs_id(ecs_entity_t), &ref->type);
+}
+
+static void flecs_script_template_ref_assign_entity(
+    void *ptr,
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    flecs_script_template_ref_set(world, ptr, entity, NULL);
+}
 
 static void flecs_script_delete_observers(
     ecs_world_t *world,
@@ -74,7 +238,7 @@ static ECS_DTOR(EcsScriptTemplateRoot, ptr, {
 static void flecs_script_template_root_on_remove(
     ecs_iter_t *it)
 {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     EcsScriptTemplateRoot *ptr = ecs_field_w_size(
         it, sizeof(EcsScriptTemplateRoot), 0);
 
@@ -92,11 +256,14 @@ static void flecs_script_template_root_init(
     if (ecs_vec_count(&root->state.computed) != template->computed_count) {
         flecs_script_state_resize_computed(&root->state, template->computed_count);
     }
+
     if (ecs_vec_count(&root->state.symbol_slots) == template->symbol_count) {
         return;
     }
+
     ecs_vec_set_count_t(NULL, &root->state.symbol_slots,
         ecs_script_symbol_slot_t, template->symbol_count);
+
     if (template->symbol_count) {
         ecs_os_memset(ecs_vec_first(&root->state.symbol_slots), 0,
             template->symbol_count * ECS_SIZEOF(ecs_script_symbol_slot_t));
@@ -107,16 +274,338 @@ static void flecs_script_template_root_init(
             dst[i].scope_slot = src[template->symbol_offset + i].scope_slot;
         }
     }
+
     flecs_script_state_resize(&root->state, template->scope_count,
         template->component_count, template->for_count);
+}
+
+static ecs_script_template_t* flecs_script_template_get(
+    const ecs_world_t *world,
+    ecs_entity_t template_entity);
+
+static ecs_entity_t flecs_script_template_slot_src(
+    const ecs_script_state_t *state,
+    const ecs_script_component_slot_t *slot)
+{
+    if (slot->entity_slot < 0 ||
+        slot->entity_slot >= ecs_vec_count(&state->symbol_slots))
+    {
+        return 0;
+    }
+    ecs_entity_t e = ecs_vec_get_t(&state->symbol_slots,
+        ecs_script_symbol_slot_t, slot->entity_slot)->entity;
+    if (e == EcsVariable) {
+        return ECS_IS_PAIR(slot->component)
+            ? ECS_PAIR_FIRST(slot->component)
+            : slot->component & ECS_COMPONENT_MASK;
+    }
+    return e;
+}
+
+static bool flecs_script_template_chain_has(
+    const ecs_world_t *world,
+    ecs_entity_t template_entity,
+    ecs_entity_t needle)
+{
+    while (template_entity) {
+        if (template_entity == needle) {
+            return true;
+        }
+
+        ecs_script_template_t *t = flecs_script_template_get(
+            world, template_entity);
+        if (!t) {
+            break;
+        }
+
+        template_entity = t->base;
+    }
+
+    return false;
+}
+
+static bool flecs_script_template_base_in_use(
+    const ecs_world_t *world,
+    ecs_entity_t instance,
+    ecs_entity_t removed,
+    ecs_entity_t base)
+{
+    ecs_table_t *table = ecs_get_table(world, instance);
+    if (!table) {
+        return false;
+    }
+
+    ecs_id_t wc = ecs_pair(ecs_id(EcsScriptTemplateRoot), EcsWildcard);
+    ecs_id_t found = 0;
+    int32_t col = -1;
+    while ((col = ecs_search_offset(world, table, col + 1, wc, &found)) != -1) {
+        ecs_entity_t other = ecs_pair_second(world, found);
+        if (flecs_script_template_chain_has(world, removed, other)) {
+            continue;
+        }
+
+        if (flecs_script_template_chain_has(world, other, base)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+typedef struct ecs_script_template_claims_t {
+    ecs_map_t entities;
+    ecs_map_t components;
+    ecs_vec_t states;
+} ecs_script_template_claims_t;
+
+static void flecs_script_template_claims_add(
+    ecs_script_template_claims_t *claims,
+    const ecs_script_state_t *state)
+{
+    const ecs_script_symbol_slot_t *syms = ecs_vec_first(&state->symbol_slots);
+    int32_t i, count = ecs_vec_count(&state->symbol_slots);
+    for (i = 0; i < count; i ++) {
+        if (syms[i].entity) {
+            ecs_map_ensure(&claims->entities, syms[i].entity);
+        }
+    }
+
+    const ecs_script_component_slot_t *comps = ecs_vec_first(
+        &state->component_slots);
+    count = ecs_vec_count(&state->component_slots);
+    for (i = 0; i < count; i ++) {
+        if (!comps[i].component) {
+            continue;
+        }
+
+        ecs_entity_t src = flecs_script_template_slot_src(state, &comps[i]);
+        if (!src) {
+            continue;
+        }
+
+        ecs_vec_t *ids = ecs_map_ensure_alloc_t(
+            &claims->components, ecs_vec_t, src);
+        ecs_vec_init_if_t(ids, ecs_id_t);
+        ecs_vec_append_t(NULL, ids, ecs_id_t)[0] = comps[i].component;
+    }
+
+    ecs_vec_append_t(NULL, &claims->states,
+        const ecs_script_state_t*)[0] = state;
+}
+
+static void flecs_script_template_claims_fini(
+    ecs_script_template_claims_t *claims)
+{
+    ecs_map_iter_t it = ecs_map_iter(&claims->components);
+    while (ecs_map_next(&it)) {
+        ecs_vec_t *ids = ecs_map_ptr(&it);
+        ecs_vec_fini_t(NULL, ids, ecs_id_t);
+        ecs_os_free(ids);
+    }
+
+    ecs_map_fini(&claims->components);
+    ecs_map_fini(&claims->entities);
+    ecs_vec_fini_t(NULL, &claims->states, const ecs_script_state_t*);
+}
+
+static bool flecs_script_template_claims_for(
+    const ecs_script_template_claims_t *claims,
+    ecs_entity_t entity,
+    ecs_id_t component)
+{
+    const ecs_script_state_t **states = ecs_vec_first(&claims->states);
+    int32_t s, state_count = ecs_vec_count(&claims->states);
+    for (s = 0; s < state_count; s ++) {
+        const ecs_script_for_slot_t *slots = ecs_vec_first(
+            &states[s]->for_slots);
+        int32_t f, for_count = ecs_vec_count(&states[s]->for_slots);
+        for (f = 0; f < for_count; f ++) {
+            ecs_script_for_entry_t *entry = ecs_map_get_deref(
+                &slots[f].named, ecs_script_for_entry_t, entity);
+            if (!entry) {
+                continue;
+            }
+
+            if (!component) {
+                return true;
+            }
+
+            const ecs_script_for_component_t *comps = ecs_vec_first(
+                &entry->components);
+            int32_t c, count = ecs_vec_count(&entry->components);
+            for (c = 0; c < count; c ++) {
+                if (comps[c].component == component) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+static bool flecs_script_template_claims_entity(
+    const ecs_script_template_claims_t *claims,
+    ecs_entity_t entity)
+{
+    if (ecs_map_get(&claims->entities, entity)) {
+        return true;
+    }
+
+    return flecs_script_template_claims_for(claims, entity, 0);
+}
+
+static bool flecs_script_template_claims_component(
+    const ecs_script_template_claims_t *claims,
+    ecs_entity_t src,
+    ecs_id_t component)
+{
+    ecs_vec_t *ids = ecs_map_get_deref(
+        &claims->components, ecs_vec_t, src);
+    if (ids) {
+        const ecs_id_t *array = ecs_vec_first(ids);
+        int32_t i, count = ecs_vec_count(ids);
+        for (i = 0; i < count; i ++) {
+            if (array[i] == component) {
+                return true;
+            }
+        }
+    }
+
+    return flecs_script_template_claims_for(claims, src, component);
+}
+
+static void flecs_script_template_for_slot_release(
+    ecs_world_t *stage,
+    ecs_script_for_slot_t *slot,
+    const ecs_script_template_claims_t *claims)
+{
+    ecs_map_iter_t it = ecs_map_iter(&slot->named);
+    while (ecs_map_next(&it)) {
+        ecs_entity_t entity = ecs_map_key(&it);
+        if (!flecs_script_template_claims_entity(claims, entity)) {
+            continue;
+        }
+
+        ecs_script_for_entry_t *entry = ecs_map_ptr(&it);
+        const ecs_script_for_component_t *comps = ecs_vec_first(
+            &entry->components);
+        int32_t c, count = ecs_vec_count(&entry->components);
+        for (c = 0; c < count; c ++) {
+            if (!flecs_script_template_claims_component(
+                claims, entity, comps[c].component))
+            {
+                ecs_remove_id(stage, entity, comps[c].component);
+            }
+        }
+
+        ecs_vec_fini_t(NULL, &entry->components, ecs_script_for_component_t);
+        ecs_map_remove_free(&slot->named, entity);
+        slot->cache_entity = 0;
+        slot->cache_entry = NULL;
+    }
+}
+
+static void flecs_script_template_root_release_shared(
+    ecs_world_t *stage,
+    ecs_entity_t instance,
+    ecs_entity_t template_entity,
+    EcsScriptTemplateRoot *root)
+{
+    const ecs_world_t *world = ecs_get_world(stage);
+    if (!instance || !ecs_is_alive(world, instance)) {
+        return;
+    }
+
+    ecs_table_t *table = ecs_get_table(world, instance);
+    if (!table) {
+        return;
+    }
+
+    ecs_id_t wc = ecs_pair(ecs_id(EcsScriptTemplateRoot), EcsWildcard);
+    ecs_id_t found = 0;
+    int32_t col = -1;
+    bool has_claims = false;
+    ecs_script_template_claims_t claims;
+
+    while ((col = ecs_search_offset(world, table, col + 1, wc, &found)) != -1) {
+        ecs_entity_t other = ecs_pair_second(world, found);
+        if (!other) {
+            continue;
+        }
+
+        if (flecs_script_template_chain_has(world, other, template_entity) ||
+            flecs_script_template_chain_has(world, template_entity, other))
+        {
+            continue;
+        }
+
+        const EcsScriptTemplateRoot *sib = ecs_get_pair(world, instance,
+            EcsScriptTemplateRoot, other);
+        if (!sib) {
+            continue;
+        }
+
+        if (!has_claims) {
+            ecs_map_init(&claims.entities, NULL);
+            ecs_map_init(&claims.components, NULL);
+            ecs_vec_init_t(NULL, &claims.states, const ecs_script_state_t*, 0);
+            has_claims = true;
+        }
+
+        flecs_script_template_claims_add(&claims, &sib->state);
+    }
+
+    if (!has_claims) {
+        return;
+    }
+
+    ecs_script_symbol_slot_t *syms = ecs_vec_first(&root->state.symbol_slots);
+    int32_t i, count = ecs_vec_count(&root->state.symbol_slots);
+    for (i = 0; i < count; i ++) {
+        if (syms[i].entity &&
+            flecs_script_template_claims_entity(&claims, syms[i].entity))
+        {
+            syms[i].scope_slot = -1;
+        }
+    }
+
+    ecs_script_component_slot_t *comps = ecs_vec_first(
+        &root->state.component_slots);
+    count = ecs_vec_count(&root->state.component_slots);
+    for (i = 0; i < count; i ++) {
+        if (!comps[i].component) {
+            continue;
+        }
+
+        ecs_entity_t src = flecs_script_template_slot_src(
+            &root->state, &comps[i]);
+        if (src && flecs_script_template_claims_component(
+            &claims, src, comps[i].component))
+        {
+            comps[i].scope_slot = -1;
+        }
+    }
+
+    ecs_script_for_slot_t *for_slots = ecs_vec_first(&root->state.for_slots);
+    count = ecs_vec_count(&root->state.for_slots);
+    for (i = 0; i < count; i ++) {
+        flecs_script_template_for_slot_release(stage, &for_slots[i], &claims);
+    }
+
+    flecs_script_template_claims_fini(&claims);
 }
 
 static void flecs_script_template_root_clear(
     ecs_world_t *world,
     ecs_script_template_t *template,
     ecs_script_impl_t *impl,
-    EcsScriptTemplateRoot *root)
+    EcsScriptTemplateRoot *root,
+    ecs_entity_t instance,
+    ecs_entity_t template_entity)
 {
+    flecs_script_template_root_release_shared(
+        world, instance, template_entity, root);
     ecs_script_state_t state = root->state;
 
     flecs_script_template_root_tasks_free(root);
@@ -133,6 +622,7 @@ static void flecs_script_template_root_clear(
         ecs_vec_get_t(&state.symbol_slots,
             ecs_script_symbol_slot_t, root_symbol)->scope_slot = -1;
     }
+
     if (ecs_vec_count(&state.scope_slots)) {
         ecs_os_memset(ecs_vec_first(&state.scope_slots), 0,
             ecs_vec_count(&state.scope_slots) * ECS_SIZEOF(int32_t));
@@ -145,15 +635,16 @@ static void flecs_script_template_root_clear(
         .instance_template = template,
         .visit = 1
     };
+
     flecs_script_eval_cleanup(&v, true);
 }
 
 static void flecs_script_template_root_remove(
     ecs_iter_t *it)
 {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_entity_t template_entity = ecs_pair_second(
-        it->real_world, ecs_field_id(it, 0));
+        it->world, ecs_field_id(it, 0));
 
     if (!template_entity || !ecs_is_alive(world, template_entity)) {
         return;
@@ -172,7 +663,8 @@ static void flecs_script_template_root_remove(
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
-        flecs_script_template_root_clear(world, template, impl, &roots[i]);
+        flecs_script_template_root_clear(world, template, impl, &roots[i],
+            it->entities[i], template_entity);
     }
 }
 
@@ -253,6 +745,25 @@ static void flecs_script_template_muts_ctor(
     flecs_script_template_ctor(ptr, count, ti, true);
 }
 
+static void* flecs_script_template_pending_data(
+    ecs_script_template_pending_t *p)
+{
+    return p->inline_data ? p->data_storage : p->data;
+}
+
+static void flecs_script_template_pending_release(
+    ecs_script_template_pending_t *p)
+{
+    void *data = flecs_script_template_pending_data(p);
+    if (p->owns_data) {
+        flecs_type_info_dtor(data, 1, p->ti);
+    }
+
+    if (!p->inline_data) {
+        ecs_os_free(p->data);
+    }
+}
+
 /* Defer template instantiation if we're in deferred mode. */
 void flecs_script_template_pending_fini(
     ecs_vec_t *pending)
@@ -260,10 +771,9 @@ void flecs_script_template_pending_fini(
     ecs_script_template_pending_t *array = ecs_vec_first(pending);
     int32_t i, count = ecs_vec_count(pending);
     for (i = 0; i < count; i ++) {
-        if (!array[i].inline_data) {
-            ecs_os_free(array[i].data);
-        }
+        flecs_script_template_pending_release(&array[i]);
     }
+
     ecs_vec_fini_t(NULL, pending, ecs_script_template_pending_t);
 }
 
@@ -274,11 +784,13 @@ static void flecs_script_template_defer_on_set(
     const ecs_type_info_t *ti,
     void *data)
 {
-    ecs_script_runtime_t *rt = flecs_script_runtime_get(it->real_world);
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(it->world);
+    bool owns_data = ti->hooks.copy_ctor != NULL &&
+        !(ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
     bool any = false;
     int32_t i;
     for (i = 0; i < it->count; i ++) {
-        const EcsScriptTemplateRoot *root = ecs_get_pair(it->real_world,
+        const EcsScriptTemplateRoot *root = ecs_get_pair(it->world,
             it->entities[i], EcsScriptTemplateRoot, template_entity);
         uint64_t input = root && root->state.initialized
             ? root->changed
@@ -286,6 +798,7 @@ static void flecs_script_template_defer_on_set(
         if (!input) {
             continue;
         }
+
         ecs_script_template_pending_t *p = ecs_vec_append_t(NULL,
             &rt->template_pending, ecs_script_template_pending_t);
         p->entity = it->entities[i];
@@ -293,15 +806,24 @@ static void flecs_script_template_defer_on_set(
         p->component = component;
         p->input = input;
         p->depth = rt->template_depth;
+        p->ti = ti;
+        p->owns_data = owns_data;
         void *src = ECS_OFFSET(data, ti->size * i);
         if (ti->size <= ECS_TEMPLATE_SMALL_SIZE) {
             p->inline_data = true;
             p->data = NULL;
-            ecs_os_memcpy(p->data_storage, src, ti->size);
         } else {
             p->inline_data = false;
-            p->data = ecs_os_memdup(src, ti->size);
+            p->data = ecs_os_malloc(ti->size);
         }
+
+        void *dst = flecs_script_template_pending_data(p);
+        if (owns_data) {
+            flecs_type_info_copy_ctor(dst, src, 1, ti);
+        } else {
+            ecs_os_memcpy(dst, src, ti->size);
+        }
+
         any = true;
     }
 
@@ -310,7 +832,7 @@ static void flecs_script_template_defer_on_set(
     }
 
     rt->template_pending_marker = true;
-    ecs_enqueue(it->world, &(ecs_event_desc_t){
+    ecs_enqueue(it->stage, &(ecs_event_desc_t){
         .event = EcsScriptTemplateFlushEvent,
         .entity = EcsAny
     });
@@ -360,6 +882,7 @@ static void flecs_script_template_update_instance_observers(
                 break;
             }
         }
+
         if (j != resolved_count) {
             continue;
         }
@@ -432,19 +955,23 @@ const ecs_member_t* flecs_script_template_parent_member(
     if (!template || !template->parent_type) {
         return NULL;
     }
+
     const EcsScript *script = ecs_get(world, template->parent_type, EcsScript);
     if (!script || !script->template_) {
         return NULL;
     }
+
     const ecs_script_template_t *parent = script->template_;
     ecs_entity_t types[2] = {parent->props.type, parent->muts.type};
     const char *dot = strchr(name, '.');
     ecs_size_t len = dot ? flecs_ito(ecs_size_t, dot - name) : ecs_os_strlen(name);
+
     for (int32_t i = 0; i < 2; i ++) {
         const EcsStruct *st = types[i] ? ecs_get(world, types[i], EcsStruct) : NULL;
         if (!st) {
             continue;
         }
+
         const ecs_member_t *members = ecs_vec_first(&st->members);
         for (int32_t m = 0; m < ecs_vec_count(&st->members); m ++) {
             if (ecs_os_strlen(members[m].name) == len &&
@@ -455,6 +982,7 @@ const ecs_member_t* flecs_script_template_parent_member(
             }
         }
     }
+
     return NULL;
 }
 
@@ -469,8 +997,10 @@ static void flecs_script_template_instantiate_vars(
 {
     ecs_script_template_member_t *template_members =
         ecs_vec_first(&template->members);
+
     bool named = ecs_vec_count(&template->dynamic_refs) != 0;
     int32_t m, member_count = ecs_vec_count(&template->members);
+
     for (m = 0; m < member_count; m ++) {
         ecs_script_template_member_t *template_member = &template_members[m];
         const EcsStruct *st = template_member->is_mut ? muts_st : props_st;
@@ -539,14 +1069,48 @@ static int flecs_script_template_validate_interfaces(
 
         const ecs_member_t *member = ecs_vec_get_t(
             &st->members, ecs_member_t, tm->index);
-        ecs_entity_t value = *(const ecs_entity_t*)
-            ECS_OFFSET(data, member->offset);
+
+        if (tm->is_vector) {
+            const ecs_vec_t *vec = ECS_OFFSET(data, member->offset);
+            int32_t e, elem_count = ecs_vec_count(vec);
+            const ecs_script_template_ref_t *elems = ecs_vec_first(vec);
+            for (e = 0; e < elem_count; e ++) {
+                ecs_entity_t elem = elems[e].type;
+                if (elem && ecs_is_alive(world, elem) &&
+                    flecs_script_template_interface_accepts(
+                        world, elem, tm->interface))
+                {
+                    continue;
+                }
+
+                char *elem_str = elem
+                    ? ecs_get_path(world, elem)
+                    : ecs_os_strdup("0");
+                char *expected = flecs_script_template_expected_str(
+                    world, tm->interface);
+                ecs_err("invalid value '%s' at index %d of prop '%s' of "
+                    "template '%s': expected %s",
+                    elem_str, e, member->name,
+                    ecs_get_name(world, template_entity), expected);
+                ecs_os_free(expected);
+                ecs_os_free(elem_str);
+
+                return -1;
+            }
+
+            continue;
+        }
+
+        ecs_entity_t value = ((const ecs_script_template_ref_t*)
+            ECS_OFFSET(data, member->offset))->type;
 
         if (!value || !ecs_is_alive(world, value)) {
+            char *expected = flecs_script_template_expected_str(
+                world, tm->interface);
             ecs_err("missing value for prop '%s' of template '%s': expected "
-                "a template derived from '%s'", member->name,
-                ecs_get_name(world, template_entity),
-                ecs_get_name(world, tm->interface));
+                "%s", member->name, ecs_get_name(world, template_entity),
+                expected);
+            ecs_os_free(expected);
             return -1;
         }
 
@@ -554,10 +1118,12 @@ static int flecs_script_template_validate_interfaces(
             world, value, tm->interface))
         {
             char *value_path = ecs_get_path(world, value);
+            char *expected = flecs_script_template_expected_str(
+                world, tm->interface);
             ecs_err("invalid value '%s' for prop '%s' of template '%s': "
-                "expected a template derived from '%s'", value_path,
-                member->name, ecs_get_name(world, template_entity),
-                ecs_get_name(world, tm->interface));
+                "expected %s", value_path, member->name,
+                ecs_get_name(world, template_entity), expected);
+            ecs_os_free(expected);
             ecs_os_free(value_path);
             return -1;
         }
@@ -566,13 +1132,14 @@ static int flecs_script_template_validate_interfaces(
     return 0;
 }
 
-static int flecs_script_template_instantiate_now(
+static int flecs_script_template_instantiate_body(
     ecs_world_t *world,
     ecs_entity_t template_entity,
-    ecs_entity_t component,
     ecs_entity_t instance,
     void *data,
-    uint64_t input)
+    uint64_t input,
+    bool force,
+    bool *ran)
 {
     ecs_assert(!ecs_is_deferred(world), ECS_INTERNAL_ERROR, NULL);
 
@@ -618,12 +1185,14 @@ static int flecs_script_template_instantiate_now(
         if (vm->ir) {
             entry = flecs_script_ir_entry(vm->ir, template->node);
         }
+
         v = &vm->v;
     } else {
         flecs_script_eval_visit_init(impl, &runner.v, &desc);
         flecs_script_runner_init(&runner, &runner.v);
         v = &runner.v;
     }
+
     ecs_vec_t prev_using = v->r->using;
     ecs_vec_t prev_with = desc.runtime->with;
 
@@ -662,6 +1231,7 @@ static int flecs_script_template_instantiate_now(
     {
         goto done;
     }
+
     if (instance == template_entity) {
         ecs_err("cannot instantiate template '%s' on itself",
             ecs_get_name(world, template_entity));
@@ -688,9 +1258,10 @@ static int flecs_script_template_instantiate_now(
     state = root->state;
     v->state = &state;
     uint64_t run_input = root->state.initialized ? input : UINT64_MAX;
-    if (!run_input) {
+    if (!run_input && !force) {
         goto done;
     }
+
     if ((run_input == UINT64_MAX || (run_input & template->async_input)) &&
         ecs_vec_count(&root->async_blocks))
     {
@@ -698,6 +1269,13 @@ static int flecs_script_template_instantiate_now(
         root = ecs_ensure_pair(
             world, instance, EcsScriptTemplateRoot, template_entity);
     }
+
+    if (force) {
+        run_input = UINT64_MAX;
+    }
+
+    *ran = true;
+
     flecs_script_eval_begin(v, run_input, flecs_script_state_next(&root->state));
     int32_t root_symbol = template->root_symbol - template->symbol_offset;
     ecs_script_symbol_slot_t *root_slot = ecs_vec_get_t(
@@ -720,7 +1298,7 @@ static int flecs_script_template_instantiate_now(
     }
 
     ecs_script_vars_t *vars = flecs_script_vars_push(
-        NULL, &v->r->stack, &v->r->allocator);
+        NULL, &v->r->stack, v->r->allocator);
     vars->parent = template->vars;
     vars->sp = ecs_vec_count(&template->vars->vars);
 
@@ -740,7 +1318,7 @@ static int flecs_script_template_instantiate_now(
         parent_var->owned = false;
     }
 
-    void *props_data = component == template->props.type
+    void *props_data = data
         ? data
         : ECS_CONST_CAST(void*,
             ecs_get_id(world, instance, template->props.type));
@@ -786,19 +1364,21 @@ static int flecs_script_template_instantiate_now(
         run_ok = flecs_script_runner_run_scope(&runner, scope) ==
             FlecsScriptRunDone;
     }
+
     if (!run_ok) {
         result = -1;
         goto done_vars;
     }
 
     flecs_script_eval_cleanup(v, vm ? vm->dirty : true);
+
 #ifdef FLECS_SCRIPT_ASYNC
     if (!vm || vm->dirty) {
         flecs_script_async_cleanup(v);
     }
 #endif
-    root = ecs_ensure_pair(
-        world, instance, EcsScriptTemplateRoot, template_entity);
+
+    root = ecs_ensure_pair(world, instance, EcsScriptTemplateRoot, template_entity);
     root->state.initialized = true;
     root->changed = 0;
 
@@ -815,12 +1395,13 @@ done_vars:
 done:
     rt->template_depth --;
 
-    ecs_vec_fini_t(&desc.runtime->allocator,
+    ecs_vec_fini_t(desc.runtime->allocator,
         &desc.runtime->with, ecs_script_with_value_t);
 
     v->r->with = prev_with;
     v->r->using = prev_using;
     v->state = &v->base.script->state;
+
     if (vm) {
         flecs_script_ir_vm_free(vm, &desc);
     } else {
@@ -839,10 +1420,133 @@ done:
         if (!desc.runtime->error_name && script->script->name) {
             desc.runtime->error_name = ecs_os_strdup(script->script->name);
         }
+
         desc.runtime->error = true;
     }
 
     return result;
+}
+
+static const ecs_script_template_member_t* flecs_script_template_member(
+    const ecs_script_template_t *template,
+    int32_t index,
+    bool mut);
+
+static ecs_script_template_t* flecs_script_template_get(
+    const ecs_world_t *world,
+    ecs_entity_t template_entity)
+{
+    if (!template_entity || !ecs_is_alive(world, template_entity)) {
+        return NULL;
+    }
+
+    const EcsScript *script = ecs_get(world, template_entity, EcsScript);
+    return script ? script->template_ : NULL;
+}
+
+static uint64_t flecs_script_template_base_input(
+    const ecs_script_template_t *template,
+    const ecs_script_template_t *base_template,
+    uint64_t input)
+{
+    if (input == UINT64_MAX) {
+        return input;
+    }
+
+    uint64_t result = 0;
+    const ecs_script_template_member_t *members = ecs_vec_first(
+        &template->members);
+    int32_t i, count = template->inherited_count;
+    for (i = 0; i < count; i ++) {
+        if (!(members[i].input & input)) {
+            continue;
+        }
+
+        const ecs_script_template_member_t *base_member =
+            flecs_script_template_member(
+                base_template, members[i].index, members[i].is_mut);
+        if (base_member) {
+            result |= base_member->input;
+        }
+    }
+
+    return result;
+}
+
+static int flecs_script_template_instantiate_chain(
+    ecs_world_t *world,
+    ecs_entity_t template_entity,
+    ecs_entity_t input_template,
+    ecs_entity_t instance,
+    void *data,
+    uint64_t input,
+    bool *ran)
+{
+    ecs_script_template_t *template = flecs_script_template_get(
+        world, template_entity);
+    if (!template) {
+        ecs_err("template is missing script component");
+        return -1;
+    }
+
+    bool has_input = template_entity == input_template;
+    bool base_ran = false;
+    ecs_script_template_t *base_template = flecs_script_template_get(
+        world, template->base);
+    if (base_template) {
+        int result;
+        if (has_input) {
+            uint64_t base_input = flecs_script_template_base_input(
+                template, base_template, input);
+            result = flecs_script_template_instantiate_chain(world,
+                template->base, template->base, instance, data, base_input,
+                &base_ran);
+        } else {
+            result = flecs_script_template_instantiate_chain(world,
+                template->base, input_template, instance, data, input,
+                &base_ran);
+        }
+
+        if (result) {
+            return result;
+        }
+    }
+
+    if (base_ran) {
+        *ran = true;
+    }
+
+    return flecs_script_template_instantiate_body(world, template_entity,
+        instance, data, has_input ? input : 0, base_ran, ran);
+}
+
+static int flecs_script_template_instantiate_now(
+    ecs_world_t *world,
+    ecs_entity_t template_entity,
+    ecs_entity_t component,
+    ecs_entity_t instance,
+    void *data,
+    uint64_t input)
+{
+    ecs_entity_t instance_template = template_entity;
+    if (component != template_entity) {
+        data = NULL;
+    }
+
+    if (ecs_is_alive(world, instance)) {
+        ecs_id_t stored = 0;
+        if (ecs_search(world, ecs_get_table(world, instance),
+            template_entity, &stored) != -1 && stored != template_entity &&
+            flecs_script_template_get(world, stored))
+        {
+            instance_template = stored;
+            data = NULL;
+        }
+    }
+
+    bool ran = false;
+    return flecs_script_template_instantiate_chain(world, instance_template,
+        template_entity, instance, data, input, &ran);
 }
 
 static int flecs_script_template_instantiate(
@@ -859,8 +1563,10 @@ static int flecs_script_template_instantiate(
         {
             ecs_add_pair(world, instance, EcsScriptTemplatePending, template_entity);
         }
+
         return 0;
     }
+
     return flecs_script_template_instantiate_now(
         world, template_entity, component, instance, data, input);
 }
@@ -876,12 +1582,14 @@ int ecs_script_template_update(
     if (!ecs_is_alive(world, template_entity)) {
         return -1;
     }
+
     const EcsScript *script = ecs_get(world, template_entity, EcsScript);
     if (!script || !script->template_ || !ecs_is_alive(world, instance) ||
         !ecs_has_id(world, instance, template_entity))
     {
         return -1;
     }
+
     ecs_remove_pair(world, instance, EcsScriptTemplatePending, template_entity);
     const void *data = ecs_get_id(world, instance, template_entity);
     void *copy = ecs_ptr_new(world, template_entity);
@@ -889,6 +1597,7 @@ int ecs_script_template_update(
     int result = flecs_script_template_instantiate_now(
         world, template_entity, template_entity, instance, copy, UINT64_MAX);
     ecs_ptr_free(world, template_entity, copy);
+
     return result;
 error:
     return -1;
@@ -899,7 +1608,7 @@ static void flecs_script_template_ref_on_set(
 {
     ecs_script_ref_ctx_t *ctx = it->ctx;
     ecs_entity_t template_entity = ctx->script;
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
 
     if (!ecs_is_alive(world, template_entity)) {
         return;
@@ -915,10 +1624,6 @@ static void flecs_script_template_ref_on_set(
         return;
     }
 
-    bool is_deferred = ecs_is_deferred(world);
-    if (is_deferred) {
-        ecs_defer_suspend(world);
-    }
 
     /* Gather all instances first so re-instantiation doesn't invalidate the
      * iterator by modifying the tables it iterates. */
@@ -949,9 +1654,6 @@ static void flecs_script_template_ref_on_set(
 
     ecs_vec_fini_t(NULL, &instances, ecs_entity_t);
 
-    if (is_deferred) {
-        ecs_defer_resume(world);
-    }
 }
 
 static void flecs_script_template_instance_update(
@@ -979,18 +1681,11 @@ static void flecs_script_template_instance_update(
         return;
     }
 
-    bool is_deferred = ecs_is_deferred(world);
-    if (is_deferred) {
-        ecs_defer_suspend(world);
-    }
 
     flecs_script_template_instantiate(
         world, template_entity, template_entity,
         instance, data, input);
 
-    if (is_deferred) {
-        ecs_defer_resume(world);
-    }
 }
 
 static void flecs_script_template_instance_ref_on_set(
@@ -1000,29 +1695,32 @@ static void flecs_script_template_instance_ref_on_set(
     ecs_entity_t template_entity = ctx->script;
     ecs_entity_t instance = ctx->instance;
 
-    if (it->event == EcsOnRemove && ecs_is_deferred(it->world)) {
+    if ((it->event == EcsOnAdd || it->event == EcsOnRemove) &&
+        ecs_is_deferred(it->stage))
+    {
         EcsScriptTemplateInstanceUpdateEvent evt = {
             .template_entity = template_entity,
             .instance = instance,
             .input = ctx->input
         };
-        ecs_enqueue(it->world, &(ecs_event_desc_t){
+        ecs_enqueue(it->stage, &(ecs_event_desc_t){
             .event = ecs_id(EcsScriptTemplateInstanceUpdateEvent),
             .entity = EcsAny,
             .param = &evt
         });
+
         return;
     }
 
     flecs_script_template_instance_update(
-        it->real_world, template_entity, instance, ctx->input);
+        it->world, template_entity, instance, ctx->input);
 }
 
 static void flecs_on_template_instance_update_event(
     ecs_iter_t *it)
 {
     EcsScriptTemplateInstanceUpdateEvent *evt = it->param;
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
 
     flecs_script_template_instance_update(
@@ -1032,8 +1730,8 @@ static void flecs_on_template_instance_update_event(
 static void flecs_on_template_flush_event(
     ecs_iter_t *it)
 {
-    ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
-    ecs_world_t *world = it->real_world;
+    ecs_assert(ecs_is_deferred(it->stage), ECS_INTERNAL_ERROR, NULL);
+    ecs_world_t *world = it->world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
 
     ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
@@ -1042,26 +1740,25 @@ static void flecs_on_template_flush_event(
         return;
     }
 
-    ecs_defer_suspend(world);
     int32_t prev_depth = rt->template_depth;
     rt->template_pending_active = true;
     int32_t i;
+
     for (i = 0; i < ecs_vec_count(&rt->template_pending); i ++) {
         ecs_script_template_pending_t p = ecs_vec_get_t(
             &rt->template_pending, ecs_script_template_pending_t, i)[0];
         rt->template_depth = p.depth;
-        void *data = p.inline_data ? p.data_storage : p.data;
+        void *data = flecs_script_template_pending_data(&p);
         flecs_script_template_instantiate(
             world, p.template_entity, p.component,
             p.entity, data, p.input);
-        if (!p.inline_data) {
-            ecs_os_free(p.data);
-        }
+        flecs_script_template_pending_release(&p);
     }
+
     ecs_vec_clear(&rt->template_pending);
     rt->template_pending_active = false;
     rt->template_depth = prev_depth;
-    ecs_defer_resume(world);
+
 }
 
 /* Template on_set handler to update contents for new property values */
@@ -1096,7 +1793,7 @@ static void flecs_script_template_on_set(
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     void *data = ecs_field_w_size(it, flecs_ito(size_t, ti->size), 0);
 
-    if (ecs_is_deferred(it->world)) {
+    if (ecs_is_deferred(it->stage)) {
         flecs_script_template_defer_on_set(
             it, template_entity, component, ti, data);
         return;
@@ -1112,6 +1809,7 @@ static void flecs_script_template_on_set(
         if (!input) {
             continue;
         }
+
         flecs_script_template_instantiate(
             world, template_entity, component,
             it->entities[i], ECS_OFFSET(data, ti->size * i), input);
@@ -1133,11 +1831,19 @@ static void flecs_script_template_on_add(
         return;
     }
 
-    script->template_->refcount += it->count;
-
-    if (!ecs_vec_count(&script->template_->props.defaults)) {
-        flecs_script_template_on_set(it, template_entity);
+    ecs_script_template_t *template = script->template_;
+    while (template) {
+        template->refcount += it->count;
+        template = flecs_script_template_get(world, template->base);
     }
+
+    if (it->count == 1 && flecs_stage_is_ensure_add(
+        it->world, it->entities[0], template_entity))
+    {
+        return;
+    }
+
+    flecs_script_template_on_set(it, template_entity);
 }
 
 static void flecs_script_template_on_replace(
@@ -1169,17 +1875,20 @@ static void flecs_script_template_on_replace(
         if (!ecs_os_memcmp(old_ptr, new_ptr, ti->size)) {
             continue;
         }
+
         EcsScriptTemplateRoot *root = ECS_CONST_CAST(EcsScriptTemplateRoot*,
             ecs_get_pair(world, it->entities[i],
                 EcsScriptTemplateRoot, template_entity));
         if (!root || !root->state.initialized) {
             continue;
         }
+
         for (m = 0; m < member_count; m ++) {
             ecs_script_template_member_t *template_member = &members[m];
             if (template_member->is_mut != mut) {
                 continue;
             }
+
             if (!template_member->diff_ti) {
                 const ecs_member_t *member = ecs_vec_get_t(
                     &st->members, ecs_member_t, template_member->index);
@@ -1194,6 +1903,7 @@ static void flecs_script_template_on_replace(
                     !member_ti->hooks.copy && !member_ti->hooks.move &&
                     !member_ti->hooks.dtor;
             }
+
             const ecs_type_info_t *member_ti = template_member->diff_ti;
             ecs_size_t offset = template_member->diff_offset;
             ecs_size_t size = template_member->diff_size;
@@ -1241,7 +1951,7 @@ static void flecs_script_template_on_muts_replace(
     ecs_iter_t *it)
 {
     ecs_entity_t muts_entity = ecs_field_id(it, 0);
-    ecs_entity_t template_entity = ecs_get_parent(it->world, muts_entity);
+    ecs_entity_t template_entity = ecs_get_parent(it->stage, muts_entity);
     flecs_script_template_on_replace(it, template_entity, true);
 }
 
@@ -1255,7 +1965,7 @@ static void flecs_script_template_on_muts_set(
     ecs_iter_t *it)
 {
     ecs_entity_t muts_entity = ecs_field_id(it, 0);
-    ecs_entity_t template_entity = ecs_get_parent(it->world, muts_entity);
+    ecs_entity_t template_entity = ecs_get_parent(it->stage, muts_entity);
     flecs_script_template_on_set(it, template_entity);
 }
 
@@ -1270,7 +1980,7 @@ static void flecs_script_template_delete_observers(
 static void flecs_script_template_on_remove(
     ecs_iter_t *it)
 {
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->stage;
     ecs_entity_t template_entity = ecs_field_id(it, 0);
 
     if (!ecs_is_alive(world, template_entity)) {
@@ -1282,29 +1992,110 @@ static void flecs_script_template_on_remove(
         return;
     }
 
-    ecs_script_template_t *template = script->template_;
-    ecs_script_impl_t *impl = flecs_script_impl(script->script);
-
+    ecs_entity_t removed = template_entity;
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         ecs_remove_pair(world, it->entities[i],
             EcsScriptTemplatePending, template_entity);
-        EcsScriptTemplateRoot *root = ECS_CONST_CAST(EcsScriptTemplateRoot*,
-            ecs_get_pair(world, it->entities[i],
-                EcsScriptTemplateRoot, template_entity));
-        if (root) {
-            flecs_script_template_root_clear(
-                world, template, impl, root);
-        }
-        ecs_remove_pair(world, it->entities[i],
-            ecs_id(EcsScriptTemplateRoot), template_entity);
     }
 
-    template->refcount -= it->count;
-    if (template->refcount <= 0) {
-        template->refcount = 0;
-        flecs_script_template_delete_observers(world, template);
+    do {
+        ecs_script_template_t *template = script->template_;
+        ecs_script_impl_t *impl = flecs_script_impl(script->script);
+
+        for (i = 0; i < it->count; i ++) {
+            if (template_entity != removed && flecs_script_template_base_in_use(
+                ecs_get_world(world), it->entities[i], removed,
+                template_entity))
+            {
+                continue;
+            }
+
+            EcsScriptTemplateRoot *root = ECS_CONST_CAST(
+                EcsScriptTemplateRoot*, ecs_get_pair(world, it->entities[i],
+                    EcsScriptTemplateRoot, template_entity));
+            if (root) {
+                flecs_script_template_root_clear(
+                    world, template, impl, root, it->entities[i],
+                    template_entity);
+            }
+
+            ecs_remove_pair(world, it->entities[i],
+                ecs_id(EcsScriptTemplateRoot), template_entity);
+        }
+
+        template->refcount -= it->count;
+        if (template->refcount <= 0) {
+            template->refcount = 0;
+            flecs_script_template_delete_observers(world, template);
+        }
+
+        template_entity = template->base;
+        script = template_entity && ecs_is_alive(world, template_entity)
+            ? ecs_get(world, template_entity, EcsScript)
+            : NULL;
+    } while (script && script->template_);
+}
+
+static const ecs_script_template_member_t* flecs_script_template_prop_member(
+    const ecs_script_template_t *template,
+    int32_t index);
+
+static int flecs_script_template_override_var(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_var_node_t *node)
+{
+    ecs_script_template_t *template = v->template;
+    const EcsStruct *st = ecs_get(v->world, template->props.type, EcsStruct);
+    ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_member_t *members = ecs_vec_first_t(&st->members, ecs_member_t);
+    int32_t index;
+    int32_t count = template->inherited_count - template->inherited_mut_count;
+    for (index = 0; index < count; index ++) {
+        if (!ecs_os_strcmp(members[index].name, node->name)) {
+            break;
+        }
     }
+
+    ecs_assert(index < count, ECS_INTERNAL_ERROR, NULL);
+
+    if (!node->expr) {
+        flecs_script_eval_error(v, node,
+            "prop '%s' of template '%s' overrides a base prop and must "
+            "specify a default value", node->name,
+            ecs_get_name(v->world, template->props.type));
+        return -1;
+    }
+
+    ecs_entity_t member_type = flecs_script_template_member_type(
+        v->world, &members[index]);
+    const ecs_script_template_member_t *member = 
+        flecs_script_template_prop_member(template, index);
+    ecs_assert(member != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (node->eval_type != member_type || 
+        node->eval_interface != member->interface)
+    {
+        flecs_script_eval_error(v, node,
+            "type of prop '%s' of template '%s' does not match the type "
+            "of the base prop it overrides", node->name,
+            ecs_get_name(v->world, template->props.type));
+        return -1;
+    }
+
+    ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
+    ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(var->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
+        return -1;
+    }
+
+    node->sp = var->sp;
+    node->base_member = index + 1;
+
+    return 0;
 }
 
 int flecs_script_template_eval_var(
@@ -1325,20 +2116,34 @@ int flecs_script_template_eval_var(
         return -1;
     }
 
+    if (flecs_script_struct_member_is_inherited(
+        v->world, template->props.type, node->name))
+    {
+        if (mut) {
+            flecs_script_eval_error(v, node,
+                "mut '%s' of template '%s' is already defined by base type",
+                node->name, ecs_get_name(v->world, template->props.type));
+            return -1;
+        }
+
+        return flecs_script_template_override_var(v, node);
+    }
+
+    if (template->inherited_mut_count &&
+        flecs_script_struct_member_is_inherited(
+            v->world, template->muts.type, node->name))
+    {
+        flecs_script_eval_error(v, node,
+            "%s '%s' of template '%s' is already defined as mut by base type",
+            mut ? "mut" : "prop", node->name,
+            ecs_get_name(v->world, template->props.type));
+        return -1;
+    }
+
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->name);
     if (!var) {
         flecs_script_eval_error(v, node, 
             "variable '%s' redeclared", node->name);
-        return -1;
-    }
-
-    if (flecs_script_struct_member_is_inherited(
-        v->world, template->props.type, node->name))
-    {
-        flecs_script_eval_error(v, node,
-            "%s '%s' of template '%s' is already defined by base type",
-            mut ? "mut" : "prop", node->name,
-            ecs_get_name(v->world, template->props.type));
         return -1;
     }
 
@@ -1348,11 +2153,13 @@ int flecs_script_template_eval_var(
     if (!ti) {
         return -1;
     }
+
     if (ecs_set_rtt_equals(v->world, type)) {
         flecs_script_eval_error(v, node,
             "type '%s' cannot be compared", ti->name);
         return -1;
     }
+
     ti = ecs_get_type_info(v->world, type);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -1368,8 +2175,37 @@ int flecs_script_template_eval_var(
         if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
             return -1;
         }
-    } else if (node->eval_interface) {
-        *(ecs_entity_t*)var->value.ptr = node->eval_interface;
+    } else if (node->eval_interface && !node->type_is_vector &&
+        node->eval_interface != ecs_id(EcsStruct))
+    {
+        ((ecs_script_template_ref_t*)var->value.ptr)->type =
+            node->eval_interface;
+    }
+
+    if (node->type_is_vector && node->eval_interface) {
+        const ecs_vec_t *vec = var->value.ptr;
+        const ecs_script_template_ref_t *elems = ecs_vec_first(vec);
+        int32_t e, elem_count = ecs_vec_count(vec);
+        for (e = 0; e < elem_count; e ++) {
+            if (elems[e].type && flecs_script_template_interface_accepts(
+                v->world, elems[e].type, node->eval_interface))
+            {
+                continue;
+            }
+
+            char *elem_str = elems[e].type
+                ? ecs_get_path(v->world, elems[e].type)
+                : ecs_os_strdup("0");
+            char *expected = flecs_script_template_expected_str(
+                v->world, node->eval_interface);
+            flecs_script_eval_error(v, node,
+                "'%s' at index %d of prop '%s' is not %s",
+                elem_str, e, node->name, expected);
+            ecs_os_free(expected);
+            ecs_os_free(elem_str);
+
+            return -1;
+        }
     }
 
     ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator,
@@ -1406,9 +2242,10 @@ int flecs_script_template_eval_var(
     member->sp = var->sp;
     member->input = 0;
     member->is_mut = mut;
-    member->is_template = node->type_is_template && !node->eval_interface;
+    member->is_vector = node->type_is_vector;
     member->interface = node->eval_interface;
     member->diff_ti = NULL;
+
     if (member->interface) {
         template->has_interface_members = true;
     }
@@ -1418,21 +2255,22 @@ int flecs_script_template_eval_var(
 
 static void flecs_script_template_declare_inherited_vars(
     ecs_script_eval_visitor_t *v,
-    ecs_script_template_t *template)
+    ecs_script_template_vars_t *vars,
+    int32_t count)
 {
-    int32_t i, count = template->inherited_count;
     if (!count) {
         return;
     }
 
-    const EcsStruct *st = ecs_get(v->world, template->props.type, EcsStruct);
+    const EcsStruct *st = ecs_get(v->world, vars->type, EcsStruct);
     ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_vec_count(&st->members) >= count, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_vec_count(&template->props.defaults) >= count,
+    ecs_assert(ecs_vec_count(&vars->defaults) >= count,
         ECS_INTERNAL_ERROR, NULL);
 
     const ecs_member_t *members = ecs_vec_first_t(&st->members, ecs_member_t);
-    ecs_script_var_t *defaults = ecs_vec_first(&template->props.defaults);
+    ecs_script_var_t *defaults = ecs_vec_first(&vars->defaults);
+    int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_script_var_t *var = ecs_script_vars_declare(
             v->vars, members[i].name);
@@ -1445,44 +2283,125 @@ static void flecs_script_template_declare_inherited_vars(
     }
 }
 
-static ecs_entity_t flecs_script_template_prop_interface(
+static const ecs_script_template_member_t* flecs_script_template_member(
+    const ecs_script_template_t *template,
+    int32_t index,
+    bool mut)
+{
+    if (!template) {
+        return NULL;
+    }
+
+    const ecs_script_template_member_t *members = ecs_vec_first(
+        &template->members);
+    int32_t i, count = ecs_vec_count(&template->members);
+    for (i = 0; i < count; i ++) {
+        if (members[i].is_mut == mut && members[i].index == index) {
+            return &members[i];
+        }
+    }
+
+    return NULL;
+}
+
+static const ecs_script_template_member_t* flecs_script_template_prop_member(
     const ecs_script_template_t *template,
     int32_t index)
 {
-    if (!template) {
+    return flecs_script_template_member(template, index, false);
+}
+
+static int flecs_script_template_inherit_members(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_template_t *template,
+    ecs_script_template_node_t *node,
+    const ecs_script_template_t *base_template,
+    bool mut)
+{
+    ecs_world_t *world = v->world;
+    ecs_allocator_t *a = &v->base.script->allocator;
+    ecs_script_template_vars_t *vars = mut ? &template->muts : &template->props;
+
+    if (!ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = vars->type
+    })) {
+        flecs_script_eval_error(v, node,
+            "failed to inherit members of base '%s' for template '%s'",
+            node->base, node->name);
+        return -1;
+    }
+
+    const EcsStruct *st = ecs_get(world, vars->type, EcsStruct);
+    ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
+    int32_t i, count = flecs_struct_inherited_count(world, vars->type, st);
+    if (!count) {
         return 0;
     }
 
-    const ecs_script_template_member_t *members = ecs_vec_first(
-        &template->members);
-    int32_t i, count = ecs_vec_count(&template->members);
-    for (i = 0; i < count; i ++) {
-        if (!members[i].is_mut && members[i].index == index) {
-            return members[i].interface;
+    const ecs_script_var_t *base_defaults = NULL;
+    if (base_template) {
+        const ecs_script_template_vars_t *base_vars = mut
+            ? &base_template->muts : &base_template->props;
+        if (ecs_vec_count(&base_vars->defaults) != count) {
+            flecs_script_eval_error(v, node,
+                "base template '%s' has %d %s defaults, expected %d",
+                node->base, ecs_vec_count(&base_vars->defaults),
+                mut ? "mut" : "prop", count);
+            return -1;
         }
+
+        base_defaults = ecs_vec_first(&base_vars->defaults);
+    }
+
+    int32_t sp = ecs_vec_count(&template->vars->vars) + 1 +
+        (template->parent_type != 0) + template->inherited_count;
+
+    const ecs_member_t *members = ecs_vec_first_t(&st->members, ecs_member_t);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t member_type = flecs_script_template_member_type(
+            world, &members[i]);
+        const ecs_type_info_t *ti = ecs_get_type_info(world, member_type);
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_set_rtt_equals(world, member_type);
+
+        ecs_script_var_t *value = ecs_vec_append_t(
+            a, &vars->defaults, ecs_script_var_t);
+        ecs_os_zeromem(value);
+        value->name = members[i].name;
+        value->value.ptr = flecs_calloc_w_dbg_info(a, ti->size, ti->name);
+        value->value.type = member_type;
+        value->type_info = ti;
+        value->owned = false;
+        if (base_defaults) {
+            ecs_ptr_copy_w_type_info(world, ti,
+                value->value.ptr, base_defaults[i].value.ptr);
+        } else {
+            flecs_type_info_ctor(value->value.ptr, 1, ti);
+        }
+
+        ecs_script_template_member_t *member = ecs_vec_append_t(
+            a, &template->members, ecs_script_template_member_t);
+        member->index = i;
+        member->sp = sp + i;
+        member->input = 0;
+        member->is_mut = mut;
+        const ecs_script_template_member_t *base_member =
+            flecs_script_template_member(base_template, i, mut);
+        member->is_vector = base_member && base_member->is_vector;
+        member->interface = base_member ? base_member->interface : 0;
+        member->diff_ti = NULL;
+        if (member->interface) {
+            template->has_interface_members = true;
+        }
+    }
+
+    template->inherited_count += count;
+    if (mut) {
+        template->inherited_mut_count = count;
     }
 
     return 0;
-}
-
-static bool flecs_script_template_prop_is_template(
-    const ecs_script_template_t *template,
-    int32_t index)
-{
-    if (!template) {
-        return false;
-    }
-
-    const ecs_script_template_member_t *members = ecs_vec_first(
-        &template->members);
-    int32_t i, count = ecs_vec_count(&template->members);
-    for (i = 0; i < count; i ++) {
-        if (!members[i].is_mut && members[i].index == index) {
-            return members[i].is_template;
-        }
-    }
-
-    return false;
 }
 
 static int flecs_script_template_inherit(
@@ -1493,7 +2412,6 @@ static int flecs_script_template_inherit(
     ecs_world_t *world = v->world;
     ecs_entity_t base = node->eval_base;
     ecs_entity_t template_entity = template->props.type;
-    ecs_allocator_t *a = &v->base.script->allocator;
 
     const EcsScript *base_script = ecs_get(world, base, EcsScript);
     ecs_script_template_t *base_template = base_script
@@ -1514,86 +2432,37 @@ static int flecs_script_template_inherit(
 
     ecs_add_pair(world, template_entity, EcsIsA, base);
 
-    if (base_template && base_template->muts.type) {
-        ecs_remove_pair(world, template_entity, EcsWith,
-            base_template->muts.type);
+    if (base_template) {
+        template->base = base;
     }
 
-    if (!has_members) {
-        return 0;
-    }
-
-    if (!ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = template_entity
-    })) {
-        flecs_script_eval_error(v, node,
-            "failed to inherit members of base '%s' for template '%s'",
-            node->base, node->name);
+    if (has_members && flecs_script_template_inherit_members(
+        v, template, node, base_template, false))
+    {
         return -1;
     }
 
-    const EcsStruct *st = ecs_get(world, template_entity, EcsStruct);
-    ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t i, count = flecs_struct_inherited_count(world, template_entity, st);
-    template->inherited_count = count;
-    if (!count) {
+    if (!base_template || !base_template->muts.type) {
         return 0;
     }
 
-    const ecs_script_var_t *base_defaults = NULL;
-    if (base_template) {
-        if (ecs_vec_count(&base_template->props.defaults) != count) {
-            flecs_script_eval_error(v, node,
-                "base template '%s' has %d prop defaults, expected %d",
-                node->base, ecs_vec_count(&base_template->props.defaults),
-                count);
-            return -1;
+    const ecs_script_template_t *cur = base_template;
+    while (cur) {
+        if (cur->muts.type) {
+            ecs_remove_pair(world, template_entity, EcsWith, cur->muts.type);
         }
-        base_defaults = ecs_vec_first(&base_template->props.defaults);
+
+        cur = flecs_script_template_get(world, cur->base);
     }
 
-    const ecs_member_t *members = ecs_vec_first_t(&st->members, ecs_member_t);
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t member_type = flecs_script_template_member_type(
-            world, &members[i]);
-        const ecs_type_info_t *ti = ecs_get_type_info(world, member_type);
-        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    template->muts.type = ecs_entity(world, {
+        .name = "mut", .parent = template_entity
+    });
 
-        ecs_set_rtt_equals(world, member_type);
+    ecs_add_pair(world, template->muts.type, EcsIsA, base_template->muts.type);
 
-        ecs_script_var_t *value = ecs_vec_append_t(
-            a, &template->props.defaults, ecs_script_var_t);
-        ecs_os_zeromem(value);
-        value->name = members[i].name;
-        value->value.ptr = flecs_calloc_w_dbg_info(a, ti->size, ti->name);
-        value->value.type = member_type;
-        value->type_info = ti;
-        value->owned = false;
-        if (base_defaults) {
-            ecs_ptr_copy_w_type_info(world, ti,
-                value->value.ptr, base_defaults[i].value.ptr);
-        } else {
-            flecs_type_info_ctor(value->value.ptr, 1, ti);
-        }
-
-        ecs_script_template_member_t *member = ecs_vec_append_t(
-            a, &template->members, ecs_script_template_member_t);
-        member->index = i;
-        member->sp = ecs_vec_count(&template->vars->vars) + 1 +
-            (template->parent_type != 0) + i;
-        member->input = 0;
-        member->is_mut = false;
-        member->is_template = flecs_script_template_prop_is_template(
-            base_template, i);
-        member->interface = flecs_script_template_prop_interface(
-            base_template, i);
-        member->diff_ti = NULL;
-        if (member->interface) {
-            template->has_interface_members = true;
-        }
-    }
-
-    return 0;
+    return flecs_script_template_inherit_members(
+        v, template, node, base_template, true);
 }
 
 bool flecs_script_template_interface_accepts(
@@ -1601,14 +2470,58 @@ bool flecs_script_template_interface_accepts(
     ecs_entity_t value,
     ecs_entity_t interface)
 {
+    if (interface == ecs_id(EcsStruct)) {
+        return ecs_has(world, value, EcsStruct);
+    }
+
     if (value == interface) {
         return true;
     }
+
     const EcsScript *script = ecs_get(world, value, EcsScript);
     if (!script || !script->template_) {
         return false;
     }
+
     return flecs_struct_is_derived_from(world, value, interface);
+}
+
+char* flecs_script_template_expected_str(
+    const ecs_world_t *world,
+    ecs_entity_t interface)
+{
+    if (interface == ecs_id(EcsStruct)) {
+        return ecs_os_strdup("a struct type");
+    }
+
+    char *path = ecs_get_path(world, interface);
+    char *result = flecs_asprintf("a template derived from '%s'", path);
+    ecs_os_free(path);
+    return result;
+}
+
+ecs_entity_t flecs_script_template_prop_interface(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const char *member)
+{
+    const EcsScript *script = type ? ecs_get(world, type, EcsScript) : NULL;
+    const EcsStruct *st = type ? ecs_get(world, type, EcsStruct) : NULL;
+    if (!script || !script->template_ || !st || !member) {
+        return 0;
+    }
+
+    const ecs_member_t *members = ecs_vec_first(&st->members);
+    int32_t i, count = ecs_vec_count(&st->members);
+    for (i = 0; i < count; i ++) {
+        if (!ecs_os_strcmp(members[i].name, member)) {
+            const ecs_script_template_member_t *m =
+                flecs_script_template_prop_member(script->template_, i);
+            return m ? m->interface : 0;
+        }
+    }
+
+    return 0;
 }
 
 ecs_entity_t flecs_script_template_member_interface(
@@ -1618,6 +2531,7 @@ ecs_entity_t flecs_script_template_member_interface(
     if (!template) {
         return 0;
     }
+
     const ecs_script_template_member_t *members = ecs_vec_first(
         &template->members);
     int32_t i, count = ecs_vec_count(&template->members);
@@ -1626,21 +2540,27 @@ ecs_entity_t flecs_script_template_member_interface(
             return members[i].interface;
         }
     }
+
     return 0;
 }
 
-bool flecs_script_template_member_is_template(
+bool flecs_script_template_member_is_vector(
     const ecs_script_template_t *template,
     int32_t sp)
 {
+    if (!template) {
+        return false;
+    }
+
     const ecs_script_template_member_t *members = ecs_vec_first(
         &template->members);
     int32_t i, count = ecs_vec_count(&template->members);
     for (i = 0; i < count; i ++) {
         if (members[i].sp == sp) {
-            return members[i].is_template;
+            return members[i].is_vector;
         }
     }
+
     return false;
 }
 
@@ -1654,10 +2574,12 @@ static int flecs_script_visit_type_template(
     if (tnode->symbol_offset == -1) {
         tnode->symbol_offset = ecs_vec_count(&v->base.script->state.symbol_slots);
     }
+
     template->symbol_offset = tnode->symbol_offset;
     if (tnode->root_symbol == -1) {
         tnode->root_symbol = flecs_script_type_slot_new(t, -1);
     }
+
     template->root_symbol = tnode->root_symbol;
 
     int32_t old_table = t->table;
@@ -1682,7 +2604,7 @@ static int flecs_script_visit_type_template(
 
     ecs_script_vars_t *outer_vars = v->vars;
     ecs_script_vars_t *type_vars = flecs_script_vars_push(
-        NULL, &v->r->stack, &v->r->allocator);
+        NULL, &v->r->stack, v->r->allocator);
     type_vars->world = v->world;
 
     int32_t i, var_count = ecs_vec_count(&template->vars->vars);
@@ -1707,7 +2629,10 @@ static int flecs_script_visit_type_template(
         template->parent_sp = parent_var->sp;
     }
 
-    flecs_script_template_declare_inherited_vars(v, template);
+    flecs_script_template_declare_inherited_vars(v, &template->props,
+        template->inherited_count - template->inherited_mut_count);
+    flecs_script_template_declare_inherited_vars(v, &template->muts,
+        template->inherited_mut_count);
 
     int32_t table = flecs_script_type_table_new(
         t, old_table, NULL);
@@ -1725,6 +2650,7 @@ static int flecs_script_visit_type_template(
         tnode->symbol_count = ecs_vec_count(
             &v->base.script->state.symbol_slots) - template->symbol_offset;
     }
+
     template->symbol_count = tnode->symbol_count;
     return result;
 }
@@ -1777,10 +2703,12 @@ static int flecs_script_template_hoist_vars(
         if (!src->is_const) {
             continue;
         }
+
         if (ecs_script_vars_lookup(template->vars, src->name)) {
             /* If variable is masked, don't declare it twice */
             continue;
         }
+
         ecs_script_var_t *dst = ecs_script_vars_define_id(
             template->vars, src->name, src->value.type);
         ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1788,6 +2716,7 @@ static int flecs_script_template_hoist_vars(
             ecs_ptr_copy(v->world,
                 src->value.type, dst->value.ptr, src->value.ptr);
         }
+
         dst->is_const = true;
         ecs_vec_append_t(NULL, &template->capture_sp, int32_t)[0] = src->sp;
     }
@@ -1828,6 +2757,8 @@ static ecs_script_template_t* flecs_script_template_init(
     result->component_count = 0;
     result->for_count = 0;
     result->inherited_count = 0;
+    result->inherited_mut_count = 0;
+    result->base = 0;
     result->parent_type = 0;
     result->parent_sp = -1;
     result->refcount = 0;
@@ -1859,8 +2790,10 @@ void flecs_script_template_fini(
             if (ti->hooks.dtor) {
                 flecs_type_info_dtor(value->value.ptr, 1, ti);
             }
+
             flecs_free(a, ti->size, value->value.ptr);
         }
+
         ecs_vec_fini_t(a, defaults[d], ecs_script_var_t);
     }
 
@@ -1891,6 +2824,7 @@ int flecs_script_eval_template(
             flecs_script_symbol_set(v, node->symbol, template_entity);
         }
     }
+
     if (!template_entity) {
         return -1;
     }
@@ -1921,11 +2855,13 @@ int flecs_script_eval_template(
                     node->base);
                 goto error;
             }
+
             if (!template->parent_type) {
                 template->parent_type = inherited_parent;
             }
         }
     }
+
     if (template->parent_type) {
         const EcsScript *parent_script = ecs_get(
             v->world, template->parent_type, EcsScript);
@@ -1941,22 +2877,22 @@ int flecs_script_eval_template(
     }
 
     ecs_vec_t outer_annot = v->r->annot;
-    ecs_vec_init_t(&v->r->allocator,
+    ecs_vec_init_t(v->r->allocator,
         &v->r->annot, ecs_script_annot_t*, 0);
     int preprocess_result = flecs_script_template_preprocess(v, template);
-    ecs_vec_fini_t(&v->r->allocator,
+    ecs_vec_fini_t(v->r->allocator,
         &v->r->annot, ecs_script_annot_t*);
     v->r->annot = outer_annot;
     if (preprocess_result) {
         goto error;
     }
 
-    /* If template has no props, give template dummy size so we can register
-     * hooks for it. */
-    const EcsComponent *template_component = ecs_get(
-        v->world, template_entity, EcsComponent);
-    if (!template_component || !template_component->size) {
-        ecs_set(v->world, template_entity, EcsComponent, {1, 1});
+    if (!ecs_has(v->world, template_entity, EcsStruct)) {
+        if (!ecs_struct_init(v->world, &(ecs_struct_desc_t){
+            .entity = template_entity }))
+        {
+            goto error;
+        }
     }
 
     /* If template has mut properties, add those when the template is added */
@@ -1980,6 +2916,7 @@ int flecs_script_eval_template(
                         "'Parent' or 'ChildOf')", annot->expr);
                     goto error;
                 }
+
                 ecs_script_entity_t tree_node = {
                     .node = { .kind = EcsAstEntity, .pos = node->node.pos },
                     .scope = node->scope
@@ -1987,11 +2924,14 @@ int flecs_script_eval_template(
                 flecs_script_apply_tree_annot(annot, &tree_node);
                 template->non_fragmenting_parent =
                     tree_node.non_fragmenting_parent;
+
                 continue;
             }
+
             ecs_vec_append_t(&v->base.script->allocator, 
                 &template->annot, ecs_script_annot_t*)[0] = annot;
         }
+
         ecs_vec_clear(&v->r->annot);
     }
 
@@ -2003,6 +2943,7 @@ int flecs_script_eval_template(
             flecs_script_template_fini(
                 flecs_script_impl(script->script), script->template_);
         }
+
         ecs_script_free(script->script);
     }
 
@@ -2061,6 +3002,7 @@ int flecs_script_template_update_vars(
                 dst[i].name);
             return -1;
         }
+
         if (src->value.type != dst[i].value.type) {
             flecs_script_eval_error(v, node,
                 "variable '%s' captured by template has type %s, expected %s",
@@ -2069,6 +3011,7 @@ int flecs_script_template_update_vars(
                 flecs_errstr_1(ecs_get_path(v->world, dst[i].value.type)));
             return -1;
         }
+
         ecs_ptr_copy(v->world, src->value.type,
             dst[i].value.ptr, src->value.ptr);
     }
@@ -2114,6 +3057,7 @@ int flecs_script_template_update_vars(
             return -1;
         }
     }
+
     ecs_vec_fini_t(NULL, &instances, ecs_entity_t);
     return 0;
 }
@@ -2124,6 +3068,24 @@ void flecs_script_template_import(
     ECS_TAG_DEFINE(world, EcsScriptTemplateFlushEvent);
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateInstanceUpdateEvent);
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateRoot);
+    ECS_COMPONENT_DEFINE(world, ecs_script_template_ref_t);
+
+    ecs_set_hooks(world, ecs_script_template_ref_t, {
+        .ctor = flecs_default_ctor,
+        .copy = flecs_script_template_ref_copy,
+        .move = flecs_script_template_ref_move,
+        .dtor = flecs_script_template_ref_dtor,
+        .cmp = flecs_script_template_ref_cmp,
+        .equals = flecs_script_template_ref_equals,
+        .ctx = world
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(ecs_script_template_ref_t),
+        .type.as_type = ecs_id(ecs_entity_t),
+        .type.serialize = flecs_script_template_ref_serialize,
+        .type.assign_entity = flecs_script_template_ref_assign_entity
+    });
     ECS_TAG_DEFINE(world, EcsScriptTemplate);
     ECS_TAG_DEFINE(world, EcsScriptTemplateManual);
     ECS_TAG_DEFINE(world, EcsScriptTemplatePending);

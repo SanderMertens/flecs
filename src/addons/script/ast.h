@@ -63,6 +63,8 @@ struct ecs_script_scope_t {
     /* Array with component ids that are added in scope. Used to limit
      * archetype moves. */
     ecs_vec_t components; /* vec<ecs_id_t> */
+
+    ecs_vec_t set_components; /* vec<ecs_id_t> */
 };
 
 typedef struct ecs_script_id_t {
@@ -77,7 +79,6 @@ typedef struct ecs_script_id_t {
      * stack pointers so we don't have to lookup variables by name. */
     int32_t first_sp; 
     int32_t second_sp;
-    int32_t value_sp;
     int32_t first_symbol;
     int32_t second_symbol;
 
@@ -88,6 +89,11 @@ typedef struct ecs_script_id_t {
     /* In case first/second are specified as interpolated strings. */
     ecs_expr_node_t *first_expr;
     ecs_expr_node_t *second_expr;
+
+    /* If first refers to a vector template prop, this is the index expression
+     * and the stack pointer of the vector variable. */
+    ecs_expr_node_t *index_expr;
+    int32_t index_sp;
 
     /* If true, the lookup result for this id cannot be cached. This is the case
      * for entities that are defined inside of templates, which have different
@@ -181,6 +187,7 @@ typedef struct ecs_script_var_node_t {
     const char *name;
     const char *type;
     bool type_is_template;
+    bool type_is_vector;
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
     ecs_entity_t eval_interface;
@@ -188,6 +195,7 @@ typedef struct ecs_script_var_node_t {
     int32_t symbol;
     /* 0 if not cached, otherwise computed slot index + 1 */
     int32_t computed;
+    int32_t base_member;
     bool is_await;
 } ecs_script_var_node_t;
 

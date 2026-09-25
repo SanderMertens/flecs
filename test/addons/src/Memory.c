@@ -247,24 +247,24 @@ void Memory_commands_memory(void) {
     test_assert(mem.bytes_commands >= 0);
 
     /* Create deferred operations to test command memory usage */
-    ecs_defer_begin(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     
     /* Create multiple entities with components to generate commands */
     for (int i = 0; i < 10; i++) {
-        ecs_entity_t e = ecs_new(world);
-        ecs_set(world, e, Position, {i * 10.0f, i * 20.0f});
-        ecs_add(world, e, Velocity);
+        ecs_entity_t e = ecs_new(stage_1);
+        ecs_set(stage_1, e, Position, {i * 10.0f, i * 20.0f});
+        ecs_add(stage_1, e, Velocity);
         
         /* Create unique name for each entity */
         char name[32];
         sprintf(name, "TestEntity_%d", i);
-        ecs_set_name(world, e, name);
+        ecs_set_name(stage_1, e, name);
     }
     
     /* Add some more complex operations */
-    ecs_entity_t e1 = ecs_new(world);
-    ecs_entity_t e2 = ecs_new(world);
-    ecs_add_pair(world, e1, EcsChildOf, e2);
+    ecs_entity_t e1 = ecs_new(stage_1);
+    ecs_entity_t e2 = ecs_new(stage_1);
+    ecs_add_pair(stage_1, e1, EcsChildOf, e2);
     
     /* Get memory statistics while deferred (should show increased usage) */
     mem = ecs_misc_memory_get(world);
@@ -272,7 +272,7 @@ void Memory_commands_memory(void) {
     test_assert(mem.bytes_commands >= initial_commands); /* Should have command queue data */
     test_assert(mem.bytes_commands > initial_commands);
 
-    ecs_defer_end(world);
+    ecs_merge(stage_1);
     
     /* Get statistics after flush - some memory might be retained for reuse */
     mem = ecs_misc_memory_get(world);
@@ -280,17 +280,15 @@ void Memory_commands_memory(void) {
     test_assert(mem.bytes_commands >= 0);
 
     /* Test with multiple defer levels */
-    ecs_defer_begin(world);
-    ecs_defer_begin(world);
+    ecs_world_t *stage_2 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
     
-    ecs_entity_t nested_e = ecs_new(world);
-    ecs_set(world, nested_e, Position, {100.0f, 200.0f});
+    ecs_entity_t nested_e = ecs_new(stage_2);
+    ecs_set(stage_2, nested_e, Position, {100.0f, 200.0f});
     
-    mem = ecs_misc_memory_get(world);
+    mem = ecs_misc_memory_get(stage_2);
     test_assert(mem.bytes_commands >= 0);
     
-    ecs_defer_end(world);
-    ecs_defer_end(world);
+    ecs_merge(stage_2);
 
     ecs_fini(world);
 }

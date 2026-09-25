@@ -112,7 +112,8 @@ inline flecs::entity world::module(const char *name) const {
                 // Move entities that were created in the old parent to the
                 // renamed module.
                 bool has_modules = false;
-                ecs_defer_begin(world_);
+                ecs_world_t *stage = ecs_get_stage(
+                    ecs_get_world(world_), 0);
                 ecs_iter_t it = ecs_children(world_, cur);
                 while (ecs_children_next(&it)) {
                     for (int32_t i = 0; i < it.count; i ++) {
@@ -126,10 +127,10 @@ inline flecs::entity world::module(const char *name) const {
                         {
                             continue;
                         }
-                        ecs_add_pair(world_, child, EcsChildOf, result);
+                        ecs_add_pair(stage, child, EcsChildOf, result);
                     }
                 }
-                ecs_defer_end(world_);
+                ecs_merge(stage);
 
                 if (has_modules) {
                     break;

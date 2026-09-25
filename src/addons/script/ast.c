@@ -37,6 +37,7 @@ ecs_script_scope_t* flecs_script_scope_new(
         parser, ecs_script_scope_t, EcsAstScope);
     flecs_ast_vec(parser, result->stmts, ecs_script_node_t);
     ecs_vec_init_t(NULL, &result->components, ecs_id_t, 0);
+    ecs_vec_init_t(NULL, &result->set_components, ecs_id_t, 0);
     result->parent = parser->scope;
     result->scope_slot = -1;
     return result;
@@ -88,6 +89,7 @@ static bool flecs_script_name_is_path(
             if (ptr[1]) {
                 ptr ++;
             }
+
             continue;
         }
 
@@ -156,7 +158,7 @@ static int flecs_script_set_id(
     id->second = second;
     id->first_sp = -1;
     id->second_sp = -1;
-    id->value_sp = -1;
+    id->index_sp = -1;
     id->first_symbol = -1;
     id->second_symbol = -1;
 
@@ -562,6 +564,7 @@ int flecs_script_visit_scopes(
         if (result) {
             return result;
         }
+
         ecs_script_catch_t *catches = ecs_vec_first(&stmt->catches);
         for (int32_t i = 0; i < ecs_vec_count(&stmt->catches); i ++) {
             result = catches[i].scope ? action(catches[i].scope, ctx) : 0;
@@ -569,6 +572,7 @@ int flecs_script_visit_scopes(
                 return result;
             }
         }
+
         return 0;
     }
     default:
@@ -580,6 +584,7 @@ int flecs_script_visit_scopes(
             return result;
         }
     }
+
     return 0;
 }
 

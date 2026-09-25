@@ -20,7 +20,7 @@ typedef struct ecs_script_template_member_t {
     int32_t sp;
     uint64_t input;
     bool is_mut;
-    bool is_template;
+    bool is_vector;
     ecs_entity_t interface;
 
     /* Cached member layout for diffing new against old prop values */
@@ -84,6 +84,8 @@ struct ecs_script_template_t {
     int32_t component_count;
     int32_t for_count;
     int32_t inherited_count;
+    int32_t inherited_mut_count;
+    ecs_entity_t base;
     ecs_entity_t parent_type;
     int32_t parent_sp;
 
@@ -106,7 +108,9 @@ typedef struct ecs_script_template_pending_t {
     uint64_t input;
     int32_t depth;
     void *data;
+    const ecs_type_info_t *ti;
     bool inline_data;
+    bool owns_data;
     int64_t _align;
     char data_storage[ECS_TEMPLATE_SMALL_SIZE];
 } ecs_script_template_pending_t;
@@ -153,14 +157,39 @@ ecs_entity_t flecs_script_template_member_interface(
     const ecs_script_template_t *template,
     int32_t sp);
 
+ecs_entity_t flecs_script_template_prop_interface(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const char *member);
+
+bool flecs_script_template_member_is_vector(
+    const ecs_script_template_t *template,
+    int32_t sp);
+
 bool flecs_script_template_interface_accepts(
     const ecs_world_t *world,
     ecs_entity_t value,
     ecs_entity_t interface);
 
-bool flecs_script_template_member_is_template(
-    const ecs_script_template_t *template,
-    int32_t sp);
+char* flecs_script_template_expected_str(
+    const ecs_world_t *world,
+    ecs_entity_t interface);
+
+void flecs_script_template_ref_clear(
+    ecs_world_t *world,
+    ecs_script_template_ref_t *ref);
+
+void flecs_script_template_ref_set(
+    ecs_world_t *world,
+    ecs_script_template_ref_t *ref,
+    ecs_entity_t type,
+    void *value);
+
+int flecs_script_template_ref_apply(
+    ecs_world_t *world,
+    const ecs_script_template_ref_t *ref,
+    const ecs_type_info_t *ti,
+    void *dst);
 
 int flecs_script_template_update_vars(
     ecs_script_eval_visitor_t *v,

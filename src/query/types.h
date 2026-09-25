@@ -159,7 +159,7 @@ typedef struct {
     int16_t remaining;
     bool non_fragmenting;
     ecs_table_t *prev_table;
-    const ecs_table_cache_elem_t *prev_elem;
+    const ecs_table_record_t *prev_tr;
 } ecs_query_table_iter_ctx_t;
 
 /* And context */
@@ -170,7 +170,7 @@ typedef struct {
     int16_t remaining;
     bool non_fragmenting;
     ecs_table_t *prev_table;
-    const ecs_table_cache_elem_t *prev_elem;
+    const ecs_table_record_t *prev_tr;
 
     ecs_component_record_t *df_cr;
     int32_t cur;
@@ -255,11 +255,7 @@ typedef struct {
     ecs_table_t *table;
     int32_t row;
     int32_t end;
-    ecs_entity_t trav;
-    ecs_id_t with;
     ecs_id_t matched;
-    ecs_component_record_t *cr_with;
-    ecs_component_record_t *cr_trav;
 
     /* If the queried-for component is a ChildOf pair that uses the non-fragmenting
      * ChildOf storage, iterate the ordered children vector instead of tables with
@@ -285,10 +281,17 @@ typedef struct {
     /* Indirection because otherwise the ctx struct gets too large */
     ecs_query_up_impl_t *impl;
 
+    ecs_entity_t trav;
+    ecs_id_t with;
+    ecs_component_record_t *cr_with;
+    ecs_component_record_t *cr_trav;
+
     /* Data for returning tables with non-fragmenting ChildOf */
     const EcsParent *parents;
     ecs_table_range_t range;
     int32_t cur;
+    int32_t cur_count;
+    bool match_inherited;
 } ecs_query_up_ctx_t;
 
 typedef struct {
@@ -371,9 +374,9 @@ typedef struct {
 
 typedef struct {
     ecs_sparse_t **sparse;
+    ecs_sparse_t *lead_sparse;
     ecs_entity_t *entities;
     int32_t cur;
-    int8_t lead;
 } ecs_query_sparse_trivial_ctx_t;
 
 /* *From operator iterator context */
@@ -494,6 +497,11 @@ struct ecs_query_impl_t {
     /* Query plan */
     ecs_query_op_t *ops;          /* Operations */
     int32_t op_count;             /* Number of operations */
+    int16_t tree_cache_op;
+    int16_t op_ctx_zero_first;
+    int16_t op_ctx_zero_count;
+    int16_t op_ctx_fini_first;
+    int16_t op_ctx_fini_count;
 #endif
 
     /* Misc */

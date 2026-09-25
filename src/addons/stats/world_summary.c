@@ -75,7 +75,7 @@ static void UpdateWorldSummary(ecs_iter_t *it) {
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
-        flecs_copy_world_summary(it->real_world, &summary[i]);
+        flecs_copy_world_summary(it->world, &summary[i]);
     }
 }
 

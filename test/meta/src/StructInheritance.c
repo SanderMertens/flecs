@@ -496,7 +496,9 @@ void StructInheritance_non_struct_base_no_members(void) {
     test_assert(st != NULL);
     test_int(ecs_vec_count(&st->members), 0);
     const EcsComponent *c = ecs_get(world, derived, EcsComponent);
-    test_assert(c == NULL || c->size == 0);
+    test_assert(c != NULL);
+    test_int(c->size, 1);
+    test_int(c->alignment, 1);
 
     ecs_fini(world);
 }
@@ -1160,9 +1162,9 @@ void StructInheritance_deferred_isa(void) {
         .entity = ecs_entity(world, {.name = "Derived"})
     });
 
-    ecs_defer_begin(world);
-    ecs_add_pair(world, derived, EcsIsA, base);
-    ecs_defer_end(world);
+    ecs_world_t *stage_1 = ecs_is_deferred(world) ? world : ecs_get_stage(world, 0);
+    ecs_add_pair(stage_1, derived, EcsIsA, base);
+    ecs_merge(stage_1);
 
     meta_test_struct(world, derived, Base2);
     meta_test_member(world, derived, Base2, x, ecs_id(ecs_i32_t), 0);
@@ -1302,6 +1304,76 @@ void StructInheritance_cursor_set_value_unrelated_fails(void) {
     ecs_log_set_level(-1);
 
     test_int(bv.x, 0);
+
+    ecs_fini(world);
+}
+
+static ecs_entity_t create_empty_base(ecs_world_t *world) {
+    return ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Base"})
+    });
+}
+
+void StructInheritance_empty_base(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = create_empty_base(world);
+    test_assert(base != 0);
+    _meta_test_struct(world, base, 1, 1);
+
+    ecs_entity_t derived = create_derived(world, base, "Derived", "y");
+    test_assert(derived != 0);
+    test_assert(ecs_has_pair(world, derived, EcsIsA, base));
+
+    meta_test_struct(world, derived, Base1);
+    _meta_test_member(world, derived, "y", ecs_id(ecs_i32_t), 0, 0);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 1);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "y");
+
+    ecs_fini(world);
+}
+
+void StructInheritance_empty_base_empty_derived(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = create_empty_base(world);
+    test_assert(base != 0);
+
+    ecs_entity_t derived = create_derived(world, base, "Derived", NULL);
+    test_assert(derived != 0);
+    test_assert(ecs_has_pair(world, derived, EcsIsA, base));
+    _meta_test_struct(world, derived, 1, 1);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 0);
+
+    ecs_fini(world);
+}
+
+void StructInheritance_empty_base_add_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = create_empty_base(world);
+    test_assert(base != 0);
+
+    ecs_entity_t derived = create_derived(world, base, "Derived", NULL);
+    test_assert(derived != 0);
+    _meta_test_struct(world, derived, 1, 1);
+
+    test_int(ecs_struct_add_member(world, derived, &(ecs_member_t){
+        .name = "y", .type = ecs_id(ecs_i32_t)
+    }), 0);
+
+    meta_test_struct(world, derived, Base1);
+    _meta_test_member(world, derived, "y", ecs_id(ecs_i32_t), 0, 0);
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 1);
 
     ecs_fini(world);
 }

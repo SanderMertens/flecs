@@ -12,8 +12,9 @@ typedef struct ecs_script_with_value_t {
 } ecs_script_with_value_t;
 
 struct ecs_script_runtime_t {
-    ecs_allocator_t allocator;
-    ecs_expr_stack_t expr_stack;
+    ecs_script_runtime_t *parent;
+    ecs_allocator_t *allocator;
+    ecs_expr_stack_t *expr_stack;
     ecs_stack_t stack;
     ecs_vec_t using;
     ecs_vec_t with;
@@ -56,6 +57,12 @@ struct ecs_script_runtime_t {
 
 ecs_script_runtime_t* flecs_script_runtime_get(
     ecs_world_t *world);
+
+ecs_script_runtime_t* flecs_script_runtime_new_shared(
+    ecs_script_runtime_t *parent);
+
+ecs_expr_stack_t* flecs_script_runtime_expr_stack(
+    ecs_script_runtime_t *r);
 
 ecs_script_runtime_t* flecs_script_runtime_acquire_call(
     ecs_script_runtime_t *r);

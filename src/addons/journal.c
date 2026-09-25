@@ -23,6 +23,7 @@ static char* flecs_journal_entitystr(
             path = flecs_asprintf("#[normal]_%u", (uint32_t)entity);
         }
     }
+
     return path;
 }
 
@@ -91,6 +92,7 @@ void flecs_journal_begin(
         ecs_print(4, "%d: %s = #[cyan]ecs_new#[reset](world); "
             "#[grey] // %s = new()", flecs_journal_counter, var_id, path);
     }
+
     if (kind == EcsJournalSetParent) {
         ecs_entity_t parent = add->array[0];
         char *parentstr = flecs_journal_entitystr(world, parent);
@@ -110,6 +112,7 @@ void flecs_journal_begin(
                 ecs_os_free(jidstr);
             }
         }
+
         if (remove) {
             for (int i = 0; i < remove->count; i ++) {
                 char *jidstr = flecs_journal_idstr(world, remove->array[i]);

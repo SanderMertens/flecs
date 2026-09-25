@@ -164,7 +164,7 @@ world.lookup("parent::child");
 ```
 
 ## Can I add or remove components from within a system?
-You can! By default ECS operations are deferred when called from inside a system, which means that they are added to a queue and processed later when it's safe to do so. Flecs does not have a dedicated command API, if you call an operation from a system it will be automatically added to the command queue!
+Pass the system iterator’s stage to ECS operations to queue changes until a sync point. In C++, entity handles returned by the system iterator already use that stage.
 
 ## What does a LOCKED_STORAGE error mean?
 A LOCKED_STORAGE error means that you're trying to add or remove an entity to an archetype that is currently being accessed, usually during query iteration. An example:
@@ -175,12 +175,12 @@ q.each([](flecs::entity e) {
 });
 ```
 
-Most LOCKED_STORAGE errors can be resolved by putting `defer_begin` and `defer_end` around the iteration, which postpones the table-changing operations until after the iteration:
+Use an explicit stage to queue table-changing operations, then merge it after iteration:
 
 ```cpp
-world.defer_begin();
-q.each([](flecs::entity e) {
+auto stage = world.get_stage(0);
+q.iter(stage).each([](flecs::entity e) {
     e.destruct();
 });
-world.defer_end(); // OK: entities are deleted here
+stage.merge();
 ```

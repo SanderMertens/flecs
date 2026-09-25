@@ -33,6 +33,7 @@ static ecs_size_t ecs_cpp_strip_prefix(
         typeName[len - prefix_len] = '\0';
         len -= prefix_len;
     }
+
     return len;
 }
 
@@ -59,6 +60,7 @@ static void ecs_cpp_trim_type_name(
         if (!ecs_os_strncmp(&typeName[len - ECS_CONST_LEN], " const", ECS_CONST_LEN)) {
             typeName[len - ECS_CONST_LEN] = '\0';
         }
+
         len -= ECS_CONST_LEN;
     }
 
@@ -132,6 +134,7 @@ static const char* flecs_cpp_func_rchr(
     if ((r - func_name) >= (func_name_len - flecs_uto(ecs_size_t, func_back_len))) {
         return NULL;
     }
+
     return r;
 }
 
@@ -302,6 +305,7 @@ ecs_entity_t ecs_cpp_component_register(
         c = ecs_lookup_path_w_sep(world, 0, user_name, "::", "::", false);
         existing = c != 0 && ecs_has(world, c, EcsComponent);
     }
+
     ecs_set_scope(world, prev_scope);
 
     /* If entity exists, compare symbol name to ensure that the component
@@ -570,10 +574,11 @@ ecs_cpp_get_mut_t ecs_cpp_set(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
 
+    bool deferred = ecs_is_deferred(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_cpp_get_mut_t result;
 
-    if (flecs_defer_cmd(stage)) {
+    if (flecs_defer_cmd(stage, deferred)) {
         result.ptr = flecs_defer_cpp_set(world, stage, entity, id,
             flecs_utosize(size), new_ptr);
         /* Modified command is already inserted */
@@ -621,10 +626,11 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
 
+    bool deferred = ecs_is_deferred(world);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_cpp_get_mut_t result;
 
-    if (flecs_defer_cmd(stage)) {
+    if (flecs_defer_cmd(stage, deferred)) {
         result.ptr = flecs_defer_cpp_assign(
             world, stage, entity, id, flecs_uto(int32_t, size), new_ptr);
         /* Modified command is already inserted */

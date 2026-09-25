@@ -467,7 +467,7 @@ static void flecs_fini_root_tables(
                     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                     ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
                     if (ECS_RECORD_TO_ROW_FLAGS(r->row) & EcsEntityIsTarget) {
-                        ecs_delete(world, entities[i]);
+                        ecs_delete((ecs_world_t*)stage0, entities[i]);
                         queue_size++;
                         /* Flush the queue before it grows too big: */                     
                         if(queue_size >= MAX_DEFERRED_DELETE_QUEUE_SIZE) {
@@ -485,7 +485,7 @@ static void flecs_fini_root_tables(
                     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                     ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
                     if (!(ECS_RECORD_TO_ROW_FLAGS(r->row) & ~EcsEntityHasDontFragment)) {
-                        ecs_delete(world, entities[i]);
+                        ecs_delete((ecs_world_t*)stage0, entities[i]);
                         queue_size++;                     
                         /* Flush the queue before it grows too big: */                     
                         if(queue_size >= MAX_DEFERRED_DELETE_QUEUE_SIZE) {
@@ -495,10 +495,11 @@ static void flecs_fini_root_tables(
                     }
                 }
             }
+
             if(!finished) {
                 /* flush queue and restart iteration */
-                flecs_defer_end(world, stage0);
-                flecs_defer_begin(world, stage0);
+                flecs_commands_end(world, stage0);
+                flecs_commands_begin(world, stage0);
                 break;
             }
         }
@@ -508,7 +509,8 @@ static void flecs_fini_root_tables(
 static void flecs_fini_non_this_on_remove_observers(
     ecs_world_t *world)
 {
-    ecs_defer_begin(world);
+    ecs_stage_t *stage = world->stages[0];
+    flecs_commands_begin(world, stage);
 
     ecs_iter_t it = ecs_each_id(world, EcsObserver);
     while (ecs_each_next(&it)) {
@@ -529,11 +531,11 @@ static void flecs_fini_non_this_on_remove_observers(
                 continue;
             }
 
-            ecs_delete(world, it.entities[i]);
+            ecs_delete((ecs_world_t*)stage, it.entities[i]);
         }
     }
 
-    ecs_defer_end(world);
+    flecs_commands_end(world, stage);
 }
 
 static void flecs_fini_roots(
@@ -545,13 +547,13 @@ static void flecs_fini_roots(
      * regular entities first, which reduces the chance of components getting
      * destructed in random order because they got deleted before entities,
      * thereby bypassing the OnDeleteTarget policy. */
-    flecs_defer_begin(world, world->stages[0]);
+    flecs_commands_begin(world, world->stages[0]);
     flecs_fini_root_tables(world, cr, true);
-    flecs_defer_end(world, world->stages[0]);
+    flecs_commands_end(world, world->stages[0]);
 
-    flecs_defer_begin(world, world->stages[0]);
+    flecs_commands_begin(world, world->stages[0]);
     flecs_fini_root_tables(world, cr, false);
-    flecs_defer_end(world, world->stages[0]);
+    flecs_commands_end(world, world->stages[0]);
 }
 
 static void flecs_fini_store(ecs_world_t *world) {
@@ -824,6 +826,10 @@ static const ecs_build_info_t flecs_build_info = {
 };
 
 static void flecs_log_build_info(void) {
+    if (!ecs_should_log(0)) {
+        return;
+    }
+
     const ecs_build_info_t *bi = ecs_get_build_info();
     ecs_assert(bi != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -1010,9 +1016,11 @@ ecs_world_t* ecs_init_w_args(
         if (!last_elem) {
             last_elem = strrchr(app, '\\');
         }
+
         if (last_elem) {
             app = last_elem + 1;
         }
+
         ecs_set_pair(world, EcsWorld, EcsDocDescription, EcsName, {app});
     }
 #endif
@@ -1073,8 +1081,6 @@ int ecs_fini(
         "cannot fini world while it is in readonly mode");
     ecs_assert(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION,
         "cannot fini world when it is already being deleted");
-    ecs_assert(world->stages[0]->defer == 0, ECS_INVALID_OPERATION, 
-        "call defer_end before destroying world");
 
     ecs_trace("#[bold]shutting down world");
     ecs_log_push();
@@ -1114,7 +1120,7 @@ int ecs_fini(
 
     /* Operations invoked during OnRemove/destructors are deferred and
      * will be discarded after world cleanup */
-    flecs_defer_begin(world, world->stages[0]);
+    flecs_commands_begin(world, world->stages[0]);
 
     /* Run OnRemove actions for components while the store is still
      * unmodified by cleanup. */
@@ -1132,6 +1138,7 @@ int ecs_fini(
     if (world->ctx_free) {
         world->ctx_free(world->ctx);
     }
+
     if (world->binding_ctx_free) {
         world->binding_ctx_free(world->binding_ctx);
     }
@@ -1328,7 +1335,7 @@ static void flecs_process_empty_queries(
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
-    flecs_defer_begin(world, world->stages[0]);
+    flecs_commands_begin(world, world->stages[0]);
 
     FLECS_EACH_QUERY(query, {
         if (!ecs_query_is_true(query)) {
@@ -1336,7 +1343,7 @@ static void flecs_process_empty_queries(
         }
     })
 
-    flecs_defer_end(world, world->stages[0]);
+    flecs_commands_end(world, world->stages[0]);
 }
 
 void ecs_run_aperiodic(
@@ -1417,6 +1424,7 @@ int32_t ecs_delete_empty_tables(
                 if (result >= count) {
                     result = 0;
                 }
+
                 goto done;
             }
 

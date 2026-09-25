@@ -571,14 +571,14 @@ static ECS_COMPONENT_DECLARE(Velocity);
 static void OnAdd(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Velocity);
+        ecs_add(it->stage, it->entities[i], Velocity);
     }
 }
 
 static void OnAddRemove(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_remove(it->world, it->entities[i], Position);
+        ecs_remove(it->stage, it->entities[i], Position);
     }
 }
 
@@ -626,7 +626,7 @@ static void OnAddRealloc(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < 1000; i ++) {
-        ecs_set(it->world, entities[i], Velocity, {i, i * 2});
+        ecs_set(it->stage, entities[i], Velocity, {i, i * 2});
     }
 }
 
@@ -744,7 +744,7 @@ void Set_emplace_w_move(void) {
 static void OnAddMove(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], Velocity, {1, 2});
+        ecs_set(it->stage, it->entities[i], Velocity, {1, 2});
     }
 }
 

@@ -891,8 +891,8 @@ struct ecs_query_t {
     void *binding_ctx;          /**< Context to be used for language bindings. */
 
     ecs_entity_t entity;        /**< Entity associated with query (optional). */
-    ecs_world_t *real_world;    /**< Actual world. */
-    ecs_world_t *world;         /**< World or stage the query was created with. */
+    ecs_world_t *stage;         /**< World or stage the query was created with. */
+    ecs_world_t *world;         /**< Actual world. */
 
     int32_t eval_count;         /**< Number of times the query is evaluated. */
 };
@@ -1163,15 +1163,6 @@ typedef struct ecs_component_desc_t {
  * ecs_iter_t it = ecs_query_iter(world, q);
  * @endcode
  * 
- * When this code is called from a system, it is important to use the world
- * provided by its iterator object to ensure thread safety. For example:
- * 
- * @code
- * void Collide(ecs_iter_t *it) {
- *   ecs_iter_t qit = ecs_query_iter(it->world, Colliders);
- * }
- * @endcode
- * 
  * An iterator contains resources that need to be released. By default, this
  * is handled by the last call to next() that returns false. When iteration is
  * ended before iteration has completed, an application has to manually call
@@ -1190,9 +1181,8 @@ typedef struct ecs_component_desc_t {
  * @ingroup queries
  */
 struct ecs_iter_t {
-    /* World */
-    ecs_world_t *world;           /**< The world. Can point to a stage when in deferred or readonly mode. */
-    ecs_world_t *real_world;      /**< Actual world. Never points to a stage. */
+    ecs_world_t *stage;
+    ecs_world_t *world;
 
     /* Matched data */
     int32_t offset;               /**< Offset relative to the current table. */
@@ -2163,20 +2153,6 @@ ecs_flags32_t ecs_world_get_flags(
  * ecs_readonly_end() should always happen from a context where the code has
  * exclusive access to the world. The functions themselves are not thread-safe.
  * 
- * In a typical application, a (non-exhaustive) call stack that uses 
- * ecs_readonly_begin() and ecs_readonly_end() will look like this:
- * 
- * @code
- * ecs_progress()
- *   ecs_readonly_begin()
- *     ecs_defer_begin()
- * 
- *       // user code
- * 
- *   ecs_readonly_end()
- *     ecs_defer_end()
- * @endcode
- *
  * @param world The world.
  * @param multi_threaded Whether to enable multithreaded readonly mode.
  * @return Whether world is in readonly mode.
@@ -2206,103 +2182,14 @@ FLECS_API
 void ecs_merge(
     ecs_world_t *stage);
 
-/** Defer operations until the end of the frame.
- * When this operation is invoked while iterating, operations between the
- * ecs_defer_begin() and ecs_defer_end() operations are executed at the end
- * of the frame.
- *
- * This operation is thread-safe.
- *
- * @param world The world.
- * @return true if world changed from non-deferred mode to deferred mode.
- *
- * @see ecs_defer_end()
- * @see ecs_is_deferred()
- * @see ecs_defer_resume()
- * @see ecs_defer_suspend()
- * @see ecs_is_defer_suspended()
- */
-FLECS_API
-bool ecs_defer_begin(
-    ecs_world_t *world);
-
-/** End a block of operations to defer.
- * See ecs_defer_begin().
- *
- * This operation is thread-safe.
- *
- * @param world The world.
- * @return true if world changed from deferred mode to non-deferred mode.
- *
- * @see ecs_defer_begin()
- * @see ecs_is_deferred()
- * @see ecs_defer_resume()
- * @see ecs_defer_suspend()
- */
-FLECS_API
-bool ecs_defer_end(
-    ecs_world_t *world);
-
-/** Suspend deferring but do not flush queue.
- * This operation can be used to do an undeferred operation while not flushing
- * the operations in the queue.
- *
- * An application should invoke ecs_defer_resume() before ecs_defer_end() is called.
- * The operation may only be called when deferring is enabled.
- *
- * @param world The world.
- *
- * @see ecs_defer_begin()
- * @see ecs_defer_end()
- * @see ecs_is_deferred()
- * @see ecs_defer_resume()
- */
-FLECS_API
-void ecs_defer_suspend(
-    ecs_world_t *world);
-
-/** Resume deferring.
- * See ecs_defer_suspend().
- *
- * @param world The world.
- *
- * @see ecs_defer_begin()
- * @see ecs_defer_end()
- * @see ecs_is_deferred()
- * @see ecs_defer_suspend()
- */
-FLECS_API
-void ecs_defer_resume(
-    ecs_world_t *world);
-
 /** Test if deferring is enabled for the current stage.
  *
  * @param world The world.
  * @return True if deferred, false if not.
  *
- * @see ecs_defer_begin()
- * @see ecs_defer_end()
- * @see ecs_defer_resume()
- * @see ecs_defer_suspend()
- * @see ecs_is_defer_suspended()
  */
 FLECS_API
 bool ecs_is_deferred(
-    const ecs_world_t *world);
-
-/** Test if deferring is suspended for the current stage.
- *
- * @param world The world.
- * @return True if suspended, false if not.
- *
- * @see ecs_defer_begin()
- * @see ecs_defer_end()
- * @see ecs_is_deferred()
- * @see ecs_defer_resume()
- * @see ecs_defer_suspend()
- */
-FLECS_API
-bool ecs_is_defer_suspended(
     const ecs_world_t *world);
 
 /** Configure the world to have N stages.
@@ -3184,11 +3071,6 @@ FLECS_ALWAYS_INLINE void* ecs_get_sparse_id(
 /** Ensure an entity has a component and return a pointer.
  * This operation returns a mutable pointer to a component. If the entity did
  * not yet have the component, it will be added.
- *
- * If ensure() is called when the world is in deferred or read-only mode, the
- * function will:
- * - return a pointer to temporary storage if the component does not yet exist, or
- * - return a pointer to the existing component if it exists
  *
  * @param world The world.
  * @param entity The entity.
@@ -4674,23 +4556,6 @@ bool ecs_query_var_is_entity(
  * }
  * @endcode
  * 
- * The world passed into the operation must be either the actual world or the
- * current stage, when iterating from a system. The stage is accessible through
- * the it.world member.
- * 
- * Example:
- * @code
- * void MySystem(ecs_iter_t *it) {
- *   ecs_query_t *q = it->ctx; // Query passed as system context
- * 
- *   // Create query iterator from system stage
- *   ecs_iter_t qit = ecs_query_iter(it->world, q);
- *   while (ecs_query_next(&qit)) {
- *     // Iterate as usual
- *   }
- * }
- * @endcode
- * 
  * If query iteration is stopped without the last call to ecs_query_next() 
  * returning false, iterator resources need to be cleaned up explicitly
  * with ecs_iter_fini().
@@ -5127,12 +4992,6 @@ void ecs_emit(
     ecs_event_desc_t *desc);
 
 /** Enqueue an event.
- * Same as ecs_emit(), but enqueues an event in the command queue instead. The
- * event will be emitted when ecs_defer_end() is called.
- * 
- * If this operation is called when the provided world is not in deferred mode,
- * it behaves just like ecs_emit().
- * 
  * @param world The world.
  * @param desc The event parameters.
  */
@@ -5597,6 +5456,24 @@ void* ecs_field_w_size(
     size_t size,
     int8_t index);
 
+/** Get data for a field matched through component inheritance.
+ * This operation is like ecs_field_w_size(), but is used when a field is
+ * matched on a component that is derived from the queried (base) type. Because
+ * the stored (derived) component can be larger than the requested (base) type,
+ * the returned pointer must be iterated with the stride returned by
+ * ecs_field_stride().
+ *
+ * @param it The iterator.
+ * @param size The size of the field type.
+ * @param index The index of the field.
+ * @return A pointer to the data of the field.
+ */
+FLECS_API
+void* ecs_base_field_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int8_t index);
+
 /** Get data for a field at a specified row.
  * This operation should be used instead of ecs_field_w_size() for sparse 
  * component fields. This operation should be called for each returned row in a
@@ -5710,6 +5587,19 @@ ecs_entity_t ecs_field_src(
  */
 FLECS_API
 size_t ecs_field_size(
+    const ecs_iter_t *it,
+    int8_t index);
+
+/** Return the field storage stride.
+ * Like ecs_field_size(), but for a field matched through component inheritance
+ * returns the size of the stored (derived) component.
+ *
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return The storage stride for the field.
+ */
+FLECS_API
+size_t ecs_field_stride(
     const ecs_iter_t *it,
     int8_t index);
 

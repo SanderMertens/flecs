@@ -103,6 +103,7 @@ void Eval_inherit(void);
 void Eval_inherit_newline(void);
 void Eval_inherit_w_colon(void);
 void Eval_inherit_w_colon_w_scope(void);
+void Eval_inherit_w_colon_prefab_warns(void);
 void Eval_assign_component_w_value(void);
 void Eval_assign_tag_in_assign_scope(void);
 void Eval_assign_tag_in_assign_scope_same_line(void);
@@ -695,6 +696,8 @@ void Eval_ir_eval_desc(void);
 void Eval_ir_to_str(void);
 void Eval_ir_managed_script_update_keeps_runtime(void);
 void Eval_string_interpolation_of_scalar_types(void);
+void Eval_string_interpolation_of_const_parts(void);
+void Eval_string_interpolation_of_const_parts_w_leading_literal(void);
 void Eval_while_count(void);
 void Eval_while_count_vars(void);
 void Eval_while_count_1_4(void);
@@ -764,6 +767,8 @@ void Eval_mut_assign_string_to_int_fails(void);
 void Eval_mut_assign_int_to_string_fails(void);
 void Eval_mut_assign_struct_to_int_fails(void);
 void Eval_mut_assign_missing_expr_fails(void);
+void Eval_struct_wo_members(void);
+void Eval_eval_10k_statements(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -1202,6 +1207,12 @@ void Template_template_no_scope(void);
 void Template_template_no_props(void);
 void Template_template_no_props_as_tag(void);
 void Template_template_no_props_add_deferred(void);
+void Template_template_w_props_as_tag(void);
+void Template_template_w_props_as_tag_from_c(void);
+void Template_template_w_props_as_tag_from_c_deferred(void);
+void Template_template_w_props_add_twice(void);
+void Template_template_w_props_add_then_set(void);
+void Template_template_w_props_set_after_add_deferred(void);
 void Template_template_newline_before_scope(void);
 void Template_template_prop(void);
 void Template_template_prop_space_colon(void);
@@ -1370,6 +1381,27 @@ void Template_instance_w_props_scope_same_line(void);
 void Template_instance_w_props_scope_newline(void);
 void Template_instance_wo_props_scope_newline(void);
 void Template_anonymous_instance_w_props_scope_newline(void);
+void Template_template_w_vector_prop_set_deferred(void);
+void Template_template_w_vector_prop_add_set_deferred(void);
+void Template_template_w_vector_prop_script_kind_deferred(void);
+void Template_template_w_vector_prop_script_component_deferred(void);
+void Template_template_add_deferred_instantiates_once(void);
+void Template_template_add_remove_deferred_no_instantiate(void);
+void Template_template_in_scope_instantiates_once(void);
+void Template_template_in_scope_instantiates_once_deferred(void);
+void Template_template_w_prop_in_scope_instantiates_once(void);
+void Template_template_as_tag_in_scope_instantiates_once(void);
+void Template_template_interface_prop_in_scope_instantiates_once(void);
+void Template_template_interface_prop_in_scope_instantiates_once_deferred(void);
+void Template_template_vector_interface_prop_in_scope_instantiates_once(void);
+void Template_for_entity_w_child_w_template(void);
+void Template_for_entity_w_child_w_template_after(void);
+void Template_for_entity_w_named_child_w_template_after(void);
+void Template_for_entity_w_child_in_scope_w_template_after(void);
+void Template_for_entity_w_child_in_template_w_template_after(void);
+void Template_on_add_instantiates_other_entity(void);
+void Template_on_add_instantiates_other_entity_w_props(void);
+void Template_on_add_instantiates_other_entity_in_scope(void);
 
 // Testsuite 'Mut'
 void Mut_setup(void);
@@ -1544,7 +1576,6 @@ void Error_invalid_char_literal_two_chars(void);
 void Error_const_w_old_typed_syntax(void);
 void Error_struct_member_negative_count(void);
 void Error_struct_member_huge_count(void);
-void Error_struct_wo_members(void);
 void Error_struct_member_wo_name(void);
 void Error_enum_constant_w_invalid_expr(void);
 void Error_const_w_old_untyped_syntax(void);
@@ -2106,6 +2137,13 @@ void Expr_interpolate_string_w_escape_var_operator(void);
 void Expr_interpolate_string_w_escape_curly_brackets(void);
 void Expr_interpolate_string_w_func(void);
 void Expr_interpolate_string_w_func_chain(void);
+void Expr_interpolate_string_w_var_followed_by_curly_var(void);
+void Expr_interpolate_string_w_adjacent_curly_vars(void);
+void Expr_interpolate_string_w_adjacent_curly_exprs(void);
+void Expr_interpolate_string_w_adjacent_curly_vars_w_trailing_text(void);
+void Expr_interpolate_string_w_string_parts(void);
+void Expr_interpolate_string_w_part_boundary_special_chars(void);
+void Expr_interpolate_string_w_300_expressions(void);
 void Expr_interpolate_in_expr_var_name(void);
 void Expr_interpolate_in_expr_var_name_w_pre(void);
 void Expr_interpolate_in_expr_var_name_w_post(void);
@@ -2283,6 +2321,7 @@ void Vars_redeclare_in_scope(void);
 void Vars_init_fini_vars(void);
 void Vars_from_iter_17_fields(void);
 void Vars_define_large_type_no_leak(void);
+void Vars_from_iter_w_derived_component(void);
 
 // Testsuite 'Serialize'
 void Serialize_bool(void);
@@ -2602,6 +2641,10 @@ void Include_include_nested_index_parse_error_sets_error_on_parent(void);
 void Include_include_nested_error_reports_position(void);
 void Include_include_error_in_large_file_reports_position(void);
 void Include_include_missing_file_managed_sets_error_on_parent(void);
+void Include_include_nested_manifest_w_cross_file_refs(void);
+void Include_include_diamond_absolute_path_evaluates_shared_once(void);
+void Include_include_absolute_path_template_from_shared_include(void);
+void Include_include_absolute_path_unresolved_refs_no_infinite_loop(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_setup(void);
@@ -2916,6 +2959,12 @@ void Reactivity_template_non_exclusive_component_owner_fails(void);
 void Reactivity_component_in_static_and_interpolated_named_children(void);
 void Reactivity_component_in_two_interpolated_named_children(void);
 void Reactivity_component_in_matching_interpolated_named_children_fails(void);
+void Reactivity_component_in_interpolated_named_children_w_different_suffix(void);
+void Reactivity_component_in_interpolated_named_children_w_leading_interpolation(void);
+void Reactivity_component_in_template_interpolated_named_children_w_different_suffix(void);
+void Reactivity_component_in_interpolated_named_children_w_longer_prefix(void);
+void Reactivity_component_in_template_interpolated_named_children_w_longer_prefix(void);
+void Reactivity_component_in_interpolated_named_children_w_different_middle(void);
 void Reactivity_partial_assignment_does_not_own_component(void);
 void Reactivity_same_entity_in_two_non_exclusive_scopes(void);
 void Reactivity_partial_component_in_two_non_exclusive_scopes(void);
@@ -3038,6 +3087,21 @@ void Reactivity_sparse_blocks_restore_cached_constants(void);
 void Reactivity_computed_const_skips_unchanged(void);
 void Reactivity_computed_const_capture_skips_unchanged(void);
 void Reactivity_computed_const_cache_restored_and_reset(void);
+void Reactivity_component_in_interpolated_children_w_string_prefix_collision(void);
+void Reactivity_component_in_interpolated_children_w_string_suffix_collision(void);
+void Reactivity_component_in_interpolated_children_w_string_middle_collision(void);
+void Reactivity_component_in_interpolated_children_w_numeric_boundary_collision(void);
+void Reactivity_component_in_interpolated_children_w_formatted_integer(void);
+void Reactivity_component_in_interpolated_children_w_fill_collision(void);
+void Reactivity_template_switch_keeps_child_of_same_name(void);
+void Reactivity_template_switch_in_for_keeps_child_of_same_name(void);
+void Reactivity_template_switch_keeps_tag_both_templates_add(void);
+void Reactivity_template_this_has_ref_add_tag_reinstantiates(void);
+void Reactivity_template_switch_keeps_child_created_in_for_of_new_template(void);
+void Reactivity_template_switch_keeps_child_created_in_for_of_old_template(void);
+void Reactivity_template_switch_keeps_shared_base_template_state(void);
+void Reactivity_template_switch_keeps_tag_added_by_script(void);
+void Reactivity_fini_w_instance_of_derived_template(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -3201,6 +3265,8 @@ void StructInheritance_assign_base_to_derived_fails(void);
 void StructInheritance_assign_base_to_derived_component_fails(void);
 void StructInheritance_assign_unrelated_struct_fails(void);
 void StructInheritance_assign_unrelated_struct_prop_fails(void);
+void StructInheritance_empty_base(void);
+void StructInheritance_empty_base_empty_derived(void);
 
 // Testsuite 'TemplateParent'
 void TemplateParent_setup(void);
@@ -3243,7 +3309,7 @@ void TemplateInheritance_base_template_prop_default(void);
 void TemplateInheritance_base_template_prop_default_in_body(void);
 void TemplateInheritance_base_template_prop_set_at_instantiate(void);
 void TemplateInheritance_base_template_prop_w_expr_default(void);
-void TemplateInheritance_base_template_body_not_inherited(void);
+void TemplateInheritance_base_template_body(void);
 void TemplateInheritance_base_template_string_prop(void);
 void TemplateInheritance_base_template_entity_prop(void);
 void TemplateInheritance_base_struct(void);
@@ -3283,13 +3349,48 @@ void TemplateInheritance_derived_instance_set_from_c(void);
 void TemplateInheritance_const_before_prop_in_derived(void);
 void TemplateInheritance_const_after_prop_in_derived(void);
 void TemplateInheritance_derived_from_template_w_captured_const(void);
+void TemplateInheritance_derived_prop_override_base_default(void);
+void TemplateInheritance_derived_prop_override_struct_default(void);
+void TemplateInheritance_derived_prop_override_used_in_body(void);
+void TemplateInheritance_derived_prop_override_chain(void);
+void TemplateInheritance_derived_prop_override_wrong_type_fails(void);
+void TemplateInheritance_derived_prop_override_no_default_fails(void);
+void TemplateInheritance_base_body_default_props(void);
+void TemplateInheritance_base_body_partial_props(void);
+void TemplateInheritance_base_body_and_derived_body(void);
+void TemplateInheritance_base_body_multi_level(void);
+void TemplateInheritance_base_body_multi_level_default_props(void);
+void TemplateInheritance_base_body_prop_override(void);
+void TemplateInheritance_base_body_prop_override_provided_value(void);
+void TemplateInheritance_base_body_prop_override_multi_level(void);
+void TemplateInheritance_base_body_prop_override_multi_level_provided_value(void);
+void TemplateInheritance_base_body_prop_change(void);
+void TemplateInheritance_base_body_prop_change_multi_level(void);
+void TemplateInheritance_derived_body_overrides_base_component(void);
+void TemplateInheritance_base_body_children(void);
+void TemplateInheritance_remove_derived_cleans_up_base_body(void);
+void TemplateInheritance_base_mut_in_derived_body(void);
+void TemplateInheritance_base_mut_and_derived_mut(void);
+void TemplateInheritance_base_mut_multi_level(void);
+void TemplateInheritance_base_mut_init_w_prop_override(void);
+void TemplateInheritance_base_mut_set_from_c(void);
+void TemplateInheritance_mut_shadows_base_mut(void);
+void TemplateInheritance_prop_shadows_base_mut(void);
+void TemplateInheritance_base_async_block(void);
+void TemplateInheritance_base_async_block_default_props(void);
+void TemplateInheritance_base_async_block_multi_level(void);
+void TemplateInheritance_derived_async_block_assign_base_mut(void);
+void TemplateInheritance_base_async_block_mut_change_keeps_derived_block(void);
+void TemplateInheritance_base_async_block_prop_change_restarts(void);
+void TemplateInheritance_base_async_block_remove_cancels(void);
+void TemplateInheritance_base_async_block_delete_cancels(void);
+void TemplateInheritance_base_async_block_two_instances(void);
+void TemplateInheritance_template_update_w_base(void);
 
 // Testsuite 'TemplateProp'
 void TemplateProp_setup(void);
 void TemplateProp_prop_template_type(void);
 void TemplateProp_prop_template_type_default(void);
-void TemplateProp_prop_template_type_default_initializer(void);
-void TemplateProp_prop_template_type_partial_default_initializer(void);
 void TemplateProp_use_as_tag(void);
 void TemplateProp_use_as_tag_dollar(void);
 void TemplateProp_use_as_tag_default(void);
@@ -3305,6 +3406,7 @@ void TemplateProp_use_in_with_dollar(void);
 void TemplateProp_use_in_with_w_initializer(void);
 void TemplateProp_use_in_with_w_positional_initializer(void);
 void TemplateProp_member_access_in_expr(void);
+void TemplateProp_member_access_in_binary_expr_w_loop_var(void);
 void TemplateProp_prop_change_updates_children(void);
 void TemplateProp_prop_change_from_c_updates_children(void);
 void TemplateProp_multiple_template_props(void);
@@ -3360,8 +3462,8 @@ void TemplateProp_pass_unrelated_to_child_template_fails(void);
 void TemplateProp_interface_prop_invalid_value(void);
 void TemplateProp_interface_prop_unrelated_template(void);
 void TemplateProp_interface_prop_missing_value_defaults_to_interface(void);
-void TemplateProp_interface_prop_empty_initializer_fails(void);
-void TemplateProp_interface_prop_in_with_w_initializer_fails(void);
+void TemplateProp_interface_prop_empty_initializer(void);
+void TemplateProp_interface_prop_in_with_w_initializer(void);
 void TemplateProp_interface_prop_dollar_initializer(void);
 void TemplateProp_interface_prop_self_template(void);
 void TemplateProp_interface_prop_instantiates_passed_template(void);
@@ -3372,6 +3474,7 @@ void TemplateProp_interface_prop_default_template(void);
 void TemplateProp_interface_prop_default_overridden(void);
 void TemplateProp_interface_prop_default_overridden_from_c(void);
 void TemplateProp_interface_prop_as_tag(void);
+void TemplateProp_interface_prop_as_tag_instantiates(void);
 void TemplateProp_interface_prop_from_c(void);
 void TemplateProp_interface_prop_change_template(void);
 void TemplateProp_interface_prop_not_derived_fails(void);
@@ -3381,6 +3484,110 @@ void TemplateProp_interface_prop_unknown_member_fails(void);
 void TemplateProp_bool_prop_mul_flt_member(void);
 void TemplateProp_bool_prop_in_flt_member_initializer(void);
 void TemplateProp_bool_prop_mul_flt_member_const(void);
+void TemplateProp_string_prop_in_const(void);
+void TemplateProp_string_prop_in_2_consts(void);
+void TemplateProp_string_prop_in_3_consts(void);
+void TemplateProp_string_prop_in_const_w_adjacent_prop(void);
+void TemplateProp_string_prop_in_chained_consts(void);
+void TemplateProp_string_prop_in_consts_reassign(void);
+void TemplateProp_string_prop_in_consts_deferred(void);
+void TemplateProp_string_prop_in_consts_nested_template(void);
+void TemplateProp_template_ref_call_empty(void);
+void TemplateProp_template_ref_call_positional(void);
+void TemplateProp_template_ref_call_positional_inherited(void);
+void TemplateProp_template_ref_call_named(void);
+void TemplateProp_template_ref_call_named_inherited_member(void);
+void TemplateProp_template_ref_call_use_site_overrides(void);
+void TemplateProp_template_ref_call_tag_form(void);
+void TemplateProp_template_ref_call_in_with(void);
+void TemplateProp_template_ref_call_default(void);
+void TemplateProp_template_ref_call_w_const(void);
+void TemplateProp_template_ref_call_w_prop_expr(void);
+void TemplateProp_template_ref_call_update(void);
+void TemplateProp_template_ref_call_from_c_w_value(void);
+void TemplateProp_template_ref_call_too_many_args_fails(void);
+void TemplateProp_template_ref_call_unknown_member_fails(void);
+void TemplateProp_template_ref_call_not_derived_fails(void);
+void TemplateProp_template_ref_call_not_template_fails(void);
+void TemplateProp_template_ref_call_ast_to_str(void);
+void TemplateProp_template_ref_call_to_json(void);
+void TemplateProp_template_ref_nested_empty(void);
+void TemplateProp_template_ref_nested_positional(void);
+void TemplateProp_template_ref_nested_named(void);
+void TemplateProp_template_ref_nested_multiple(void);
+void TemplateProp_template_ref_nested_update(void);
+void TemplateProp_template_ref_nested_default(void);
+void TemplateProp_any_prop_template_value(void);
+void TemplateProp_any_prop_template_call_value(void);
+void TemplateProp_any_prop_struct_value(void);
+void TemplateProp_any_prop_default_template(void);
+void TemplateProp_any_prop_default_struct(void);
+void TemplateProp_any_prop_in_with(void);
+void TemplateProp_any_prop_update(void);
+void TemplateProp_any_prop_vector(void);
+void TemplateProp_any_prop_from_c(void);
+void TemplateProp_any_prop_ast_to_str(void);
+void TemplateProp_any_prop_missing_value_fails(void);
+void TemplateProp_any_prop_initializer_fails(void);
+void TemplateProp_any_prop_with_initializer_fails(void);
+void TemplateProp_any_prop_not_struct_fails(void);
+void TemplateProp_any_prop_mut_fails(void);
+void TemplateProp_template_ref_prop_call_as_template_arg(void);
+void TemplateProp_derived_template_inherits_base_defaults(void);
+void TemplateProp_template_interface_prop_default(void);
+void TemplateProp_template_interface_prop_call_as_template_arg(void);
+void TemplateProp_empty_struct_base(void);
+void TemplateProp_empty_struct_interface_prop(void);
+void TemplateProp_empty_struct_interface_prop_as_template_arg(void);
+void TemplateProp_empty_struct_in_interface_scope(void);
+void TemplateProp_empty_template_base(void);
+void TemplateProp_empty_template_interface_prop(void);
+void TemplateProp_empty_template_in_interface_scope(void);
+void TemplateProp_prop_default_from_nested_struct_const(void);
+void TemplateProp_prop_default_from_nested_struct_const_member(void);
+
+// Testsuite 'TemplateVectorProp'
+void TemplateVectorProp_setup(void);
+void TemplateVectorProp_declaration_w_default(void);
+void TemplateVectorProp_declaration_wo_default(void);
+void TemplateVectorProp_count(void);
+void TemplateVectorProp_index_instantiate_w_initializer(void);
+void TemplateVectorProp_index_tag_form(void);
+void TemplateVectorProp_index_tag_form_instantiates(void);
+void TemplateVectorProp_index_empty_initializer(void);
+void TemplateVectorProp_pass_element_to_interface_prop(void);
+void TemplateVectorProp_iterate_w_for(void);
+void TemplateVectorProp_index_by_rng(void);
+void TemplateVectorProp_override_kind_syntax(void);
+void TemplateVectorProp_override_component_syntax(void);
+void TemplateVectorProp_native_set_id(void);
+void TemplateVectorProp_expr_run_props(void);
+void TemplateVectorProp_index_out_of_range_fails(void);
+void TemplateVectorProp_index_empty_vector_fails(void);
+void TemplateVectorProp_default_not_derived_fails(void);
+void TemplateVectorProp_value_not_derived_fails(void);
+void TemplateVectorProp_value_not_derived_from_c_fails(void);
+void TemplateVectorProp_template_type_vector(void);
+void TemplateVectorProp_bare_vector_prop_as_component_fails(void);
+void TemplateVectorProp_reactive_prop_change(void);
+void TemplateVectorProp_reactive_prop_change_from_script(void);
+void TemplateVectorProp_nested_template(void);
+void TemplateVectorProp_template_inheritance(void);
+void TemplateVectorProp_index_in_interpolated_string(void);
+void TemplateVectorProp_collection_value_still_parses(void);
+void TemplateVectorProp_to_str(void);
+void TemplateVectorProp_template_ref_call_default(void);
+void TemplateVectorProp_template_ref_call_positional(void);
+void TemplateVectorProp_template_ref_call_instance(void);
+void TemplateVectorProp_template_ref_call_tag_form(void);
+void TemplateVectorProp_template_ref_call_iterate_w_for(void);
+void TemplateVectorProp_template_ref_call_pass_element_to_interface_prop(void);
+void TemplateVectorProp_template_ref_call_index_in_interpolated_string(void);
+void TemplateVectorProp_template_ref_call_update(void);
+void TemplateVectorProp_template_ref_from_c_w_value(void);
+void TemplateVectorProp_template_ref_call_nested(void);
+void TemplateVectorProp_template_ref_call_nested_ref(void);
+void TemplateVectorProp_template_ref_call_not_derived_fails(void);
 
 // Testsuite 'Scenario'
 void Scenario_setup(void);
@@ -3503,6 +3710,25 @@ void Edit_clear_unknown_edit(void);
 void Edit_set_after_clear(void);
 void Edit_count_edits(void);
 void Edit_set_for_recreated_entity_after_clear(void);
+void Edit_set_10k_statements(void);
+void Edit_from_scene_no_changes(void);
+void Edit_from_scene_no_changes_float_literal(void);
+void Edit_from_scene_changed_value(void);
+void Edit_from_scene_changed_value_named(void);
+void Edit_from_scene_preserves_layout(void);
+void Edit_from_scene_changed_child(void);
+void Edit_from_scene_multiple_entities(void);
+void Edit_from_scene_partial_initializer(void);
+void Edit_from_scene_updates_entities(void);
+void Edit_from_scene_skip_variable_expr(void);
+void Edit_from_scene_skip_removed_component(void);
+void Edit_from_scene_skip_added_component(void);
+void Edit_from_scene_skip_template_body(void);
+void Edit_from_scene_pair(void);
+void Edit_from_scene_not_a_script(void);
+void Edit_save(void);
+void Edit_save_no_filename(void);
+void Edit_save_not_a_script(void);
 
 // Testsuite 'EditTemplate'
 void EditTemplate_setup(void);
@@ -3544,6 +3770,21 @@ void EditTemplate_delete_body_entity_recorded_before_delete(void);
 void EditTemplate_clear_delete_body_entity(void);
 void EditTemplate_clear_set_body_entity(void);
 void EditTemplate_apply_update_delete_body_entity_recorded_before_delete(void);
+
+// Testsuite 'Reload'
+void Reload_setup(void);
+void Reload_added_entity(void);
+void Reload_changed_entity(void);
+void Reload_removed_entity(void);
+void Reload_removed_component(void);
+void Reload_parse_error_keeps_world(void);
+void Reload_parse_error_then_reload(void);
+void Reload_from_file(void);
+void Reload_from_file_removed_entity(void);
+void Reload_from_file_parse_error_keeps_world(void);
+void Reload_without_filename(void);
+void Reload_not_a_script(void);
+void Reload_keeps_entities_outside_script(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -3917,6 +4158,10 @@ bake_test_case Eval_testcases[] = {
     {
         "inherit_w_colon_w_scope",
         Eval_inherit_w_colon_w_scope
+    },
+    {
+        "inherit_w_colon_prefab_warns",
+        Eval_inherit_w_colon_prefab_warns
     },
     {
         "assign_component_w_value",
@@ -6287,6 +6532,14 @@ bake_test_case Eval_testcases[] = {
         Eval_string_interpolation_of_scalar_types
     },
     {
+        "string_interpolation_of_const_parts",
+        Eval_string_interpolation_of_const_parts
+    },
+    {
+        "string_interpolation_of_const_parts_w_leading_literal",
+        Eval_string_interpolation_of_const_parts_w_leading_literal
+    },
+    {
         "while_count",
         Eval_while_count
     },
@@ -6561,6 +6814,14 @@ bake_test_case Eval_testcases[] = {
     {
         "mut_assign_missing_expr_fails",
         Eval_mut_assign_missing_expr_fails
+    },
+    {
+        "struct_wo_members",
+        Eval_struct_wo_members
+    },
+    {
+        "eval_10k_statements",
+        Eval_eval_10k_statements
     }
 };
 
@@ -8252,6 +8513,30 @@ bake_test_case Template_testcases[] = {
         Template_template_no_props_add_deferred
     },
     {
+        "template_w_props_as_tag",
+        Template_template_w_props_as_tag
+    },
+    {
+        "template_w_props_as_tag_from_c",
+        Template_template_w_props_as_tag_from_c
+    },
+    {
+        "template_w_props_as_tag_from_c_deferred",
+        Template_template_w_props_as_tag_from_c_deferred
+    },
+    {
+        "template_w_props_add_twice",
+        Template_template_w_props_add_twice
+    },
+    {
+        "template_w_props_add_then_set",
+        Template_template_w_props_add_then_set
+    },
+    {
+        "template_w_props_set_after_add_deferred",
+        Template_template_w_props_set_after_add_deferred
+    },
+    {
         "template_newline_before_scope",
         Template_template_newline_before_scope
     },
@@ -8922,6 +9207,90 @@ bake_test_case Template_testcases[] = {
     {
         "anonymous_instance_w_props_scope_newline",
         Template_anonymous_instance_w_props_scope_newline
+    },
+    {
+        "template_w_vector_prop_set_deferred",
+        Template_template_w_vector_prop_set_deferred
+    },
+    {
+        "template_w_vector_prop_add_set_deferred",
+        Template_template_w_vector_prop_add_set_deferred
+    },
+    {
+        "template_w_vector_prop_script_kind_deferred",
+        Template_template_w_vector_prop_script_kind_deferred
+    },
+    {
+        "template_w_vector_prop_script_component_deferred",
+        Template_template_w_vector_prop_script_component_deferred
+    },
+    {
+        "template_add_deferred_instantiates_once",
+        Template_template_add_deferred_instantiates_once
+    },
+    {
+        "template_add_remove_deferred_no_instantiate",
+        Template_template_add_remove_deferred_no_instantiate
+    },
+    {
+        "template_in_scope_instantiates_once",
+        Template_template_in_scope_instantiates_once
+    },
+    {
+        "template_in_scope_instantiates_once_deferred",
+        Template_template_in_scope_instantiates_once_deferred
+    },
+    {
+        "template_w_prop_in_scope_instantiates_once",
+        Template_template_w_prop_in_scope_instantiates_once
+    },
+    {
+        "template_as_tag_in_scope_instantiates_once",
+        Template_template_as_tag_in_scope_instantiates_once
+    },
+    {
+        "template_interface_prop_in_scope_instantiates_once",
+        Template_template_interface_prop_in_scope_instantiates_once
+    },
+    {
+        "template_interface_prop_in_scope_instantiates_once_deferred",
+        Template_template_interface_prop_in_scope_instantiates_once_deferred
+    },
+    {
+        "template_vector_interface_prop_in_scope_instantiates_once",
+        Template_template_vector_interface_prop_in_scope_instantiates_once
+    },
+    {
+        "for_entity_w_child_w_template",
+        Template_for_entity_w_child_w_template
+    },
+    {
+        "for_entity_w_child_w_template_after",
+        Template_for_entity_w_child_w_template_after
+    },
+    {
+        "for_entity_w_named_child_w_template_after",
+        Template_for_entity_w_named_child_w_template_after
+    },
+    {
+        "for_entity_w_child_in_scope_w_template_after",
+        Template_for_entity_w_child_in_scope_w_template_after
+    },
+    {
+        "for_entity_w_child_in_template_w_template_after",
+        Template_for_entity_w_child_in_template_w_template_after
+    },
+    {
+        "on_add_instantiates_other_entity",
+        Template_on_add_instantiates_other_entity
+    },
+    {
+        "on_add_instantiates_other_entity_w_props",
+        Template_on_add_instantiates_other_entity_w_props
+    },
+    {
+        "on_add_instantiates_other_entity_in_scope",
+        Template_on_add_instantiates_other_entity_in_scope
     }
 };
 
@@ -9600,10 +9969,6 @@ bake_test_case Error_testcases[] = {
     {
         "struct_member_huge_count",
         Error_struct_member_huge_count
-    },
-    {
-        "struct_wo_members",
-        Error_struct_wo_members
     },
     {
         "struct_member_wo_name",
@@ -11832,6 +12197,34 @@ bake_test_case Expr_testcases[] = {
         Expr_interpolate_string_w_func_chain
     },
     {
+        "interpolate_string_w_var_followed_by_curly_var",
+        Expr_interpolate_string_w_var_followed_by_curly_var
+    },
+    {
+        "interpolate_string_w_adjacent_curly_vars",
+        Expr_interpolate_string_w_adjacent_curly_vars
+    },
+    {
+        "interpolate_string_w_adjacent_curly_exprs",
+        Expr_interpolate_string_w_adjacent_curly_exprs
+    },
+    {
+        "interpolate_string_w_adjacent_curly_vars_w_trailing_text",
+        Expr_interpolate_string_w_adjacent_curly_vars_w_trailing_text
+    },
+    {
+        "interpolate_string_w_string_parts",
+        Expr_interpolate_string_w_string_parts
+    },
+    {
+        "interpolate_string_w_part_boundary_special_chars",
+        Expr_interpolate_string_w_part_boundary_special_chars
+    },
+    {
+        "interpolate_string_w_300_expressions",
+        Expr_interpolate_string_w_300_expressions
+    },
+    {
         "interpolate_in_expr_var_name",
         Expr_interpolate_in_expr_var_name
     },
@@ -12524,6 +12917,10 @@ bake_test_case Vars_testcases[] = {
     {
         "define_large_type_no_leak",
         Vars_define_large_type_no_leak
+    },
+    {
+        "from_iter_w_derived_component",
+        Vars_from_iter_w_derived_component
     }
 };
 
@@ -13777,6 +14174,22 @@ bake_test_case Include_testcases[] = {
     {
         "include_missing_file_managed_sets_error_on_parent",
         Include_include_missing_file_managed_sets_error_on_parent
+    },
+    {
+        "include_nested_manifest_w_cross_file_refs",
+        Include_include_nested_manifest_w_cross_file_refs
+    },
+    {
+        "include_diamond_absolute_path_evaluates_shared_once",
+        Include_include_diamond_absolute_path_evaluates_shared_once
+    },
+    {
+        "include_absolute_path_template_from_shared_include",
+        Include_include_absolute_path_template_from_shared_include
+    },
+    {
+        "include_absolute_path_unresolved_refs_no_infinite_loop",
+        Include_include_absolute_path_unresolved_refs_no_infinite_loop
     }
 };
 
@@ -15008,6 +15421,30 @@ bake_test_case Reactivity_testcases[] = {
         Reactivity_component_in_matching_interpolated_named_children_fails
     },
     {
+        "component_in_interpolated_named_children_w_different_suffix",
+        Reactivity_component_in_interpolated_named_children_w_different_suffix
+    },
+    {
+        "component_in_interpolated_named_children_w_leading_interpolation",
+        Reactivity_component_in_interpolated_named_children_w_leading_interpolation
+    },
+    {
+        "component_in_template_interpolated_named_children_w_different_suffix",
+        Reactivity_component_in_template_interpolated_named_children_w_different_suffix
+    },
+    {
+        "component_in_interpolated_named_children_w_longer_prefix",
+        Reactivity_component_in_interpolated_named_children_w_longer_prefix
+    },
+    {
+        "component_in_template_interpolated_named_children_w_longer_prefix",
+        Reactivity_component_in_template_interpolated_named_children_w_longer_prefix
+    },
+    {
+        "component_in_interpolated_named_children_w_different_middle",
+        Reactivity_component_in_interpolated_named_children_w_different_middle
+    },
+    {
         "partial_assignment_does_not_own_component",
         Reactivity_partial_assignment_does_not_own_component
     },
@@ -15494,6 +15931,66 @@ bake_test_case Reactivity_testcases[] = {
     {
         "computed_const_cache_restored_and_reset",
         Reactivity_computed_const_cache_restored_and_reset
+    },
+    {
+        "component_in_interpolated_children_w_string_prefix_collision",
+        Reactivity_component_in_interpolated_children_w_string_prefix_collision
+    },
+    {
+        "component_in_interpolated_children_w_string_suffix_collision",
+        Reactivity_component_in_interpolated_children_w_string_suffix_collision
+    },
+    {
+        "component_in_interpolated_children_w_string_middle_collision",
+        Reactivity_component_in_interpolated_children_w_string_middle_collision
+    },
+    {
+        "component_in_interpolated_children_w_numeric_boundary_collision",
+        Reactivity_component_in_interpolated_children_w_numeric_boundary_collision
+    },
+    {
+        "component_in_interpolated_children_w_formatted_integer",
+        Reactivity_component_in_interpolated_children_w_formatted_integer
+    },
+    {
+        "component_in_interpolated_children_w_fill_collision",
+        Reactivity_component_in_interpolated_children_w_fill_collision
+    },
+    {
+        "template_switch_keeps_child_of_same_name",
+        Reactivity_template_switch_keeps_child_of_same_name
+    },
+    {
+        "template_switch_in_for_keeps_child_of_same_name",
+        Reactivity_template_switch_in_for_keeps_child_of_same_name
+    },
+    {
+        "template_switch_keeps_tag_both_templates_add",
+        Reactivity_template_switch_keeps_tag_both_templates_add
+    },
+    {
+        "template_this_has_ref_add_tag_reinstantiates",
+        Reactivity_template_this_has_ref_add_tag_reinstantiates
+    },
+    {
+        "template_switch_keeps_child_created_in_for_of_new_template",
+        Reactivity_template_switch_keeps_child_created_in_for_of_new_template
+    },
+    {
+        "template_switch_keeps_child_created_in_for_of_old_template",
+        Reactivity_template_switch_keeps_child_created_in_for_of_old_template
+    },
+    {
+        "template_switch_keeps_shared_base_template_state",
+        Reactivity_template_switch_keeps_shared_base_template_state
+    },
+    {
+        "template_switch_keeps_tag_added_by_script",
+        Reactivity_template_switch_keeps_tag_added_by_script
+    },
+    {
+        "fini_w_instance_of_derived_template",
+        Reactivity_fini_w_instance_of_derived_template
     }
 };
 
@@ -16119,6 +16616,14 @@ bake_test_case StructInheritance_testcases[] = {
     {
         "assign_unrelated_struct_prop_fails",
         StructInheritance_assign_unrelated_struct_prop_fails
+    },
+    {
+        "empty_base",
+        StructInheritance_empty_base
+    },
+    {
+        "empty_base_empty_derived",
+        StructInheritance_empty_base_empty_derived
     }
 };
 
@@ -16271,8 +16776,8 @@ bake_test_case TemplateInheritance_testcases[] = {
         TemplateInheritance_base_template_prop_w_expr_default
     },
     {
-        "base_template_body_not_inherited",
-        TemplateInheritance_base_template_body_not_inherited
+        "base_template_body",
+        TemplateInheritance_base_template_body
     },
     {
         "base_template_string_prop",
@@ -16429,6 +16934,154 @@ bake_test_case TemplateInheritance_testcases[] = {
     {
         "derived_from_template_w_captured_const",
         TemplateInheritance_derived_from_template_w_captured_const
+    },
+    {
+        "derived_prop_override_base_default",
+        TemplateInheritance_derived_prop_override_base_default
+    },
+    {
+        "derived_prop_override_struct_default",
+        TemplateInheritance_derived_prop_override_struct_default
+    },
+    {
+        "derived_prop_override_used_in_body",
+        TemplateInheritance_derived_prop_override_used_in_body
+    },
+    {
+        "derived_prop_override_chain",
+        TemplateInheritance_derived_prop_override_chain
+    },
+    {
+        "derived_prop_override_wrong_type_fails",
+        TemplateInheritance_derived_prop_override_wrong_type_fails
+    },
+    {
+        "derived_prop_override_no_default_fails",
+        TemplateInheritance_derived_prop_override_no_default_fails
+    },
+    {
+        "base_body_default_props",
+        TemplateInheritance_base_body_default_props
+    },
+    {
+        "base_body_partial_props",
+        TemplateInheritance_base_body_partial_props
+    },
+    {
+        "base_body_and_derived_body",
+        TemplateInheritance_base_body_and_derived_body
+    },
+    {
+        "base_body_multi_level",
+        TemplateInheritance_base_body_multi_level
+    },
+    {
+        "base_body_multi_level_default_props",
+        TemplateInheritance_base_body_multi_level_default_props
+    },
+    {
+        "base_body_prop_override",
+        TemplateInheritance_base_body_prop_override
+    },
+    {
+        "base_body_prop_override_provided_value",
+        TemplateInheritance_base_body_prop_override_provided_value
+    },
+    {
+        "base_body_prop_override_multi_level",
+        TemplateInheritance_base_body_prop_override_multi_level
+    },
+    {
+        "base_body_prop_override_multi_level_provided_value",
+        TemplateInheritance_base_body_prop_override_multi_level_provided_value
+    },
+    {
+        "base_body_prop_change",
+        TemplateInheritance_base_body_prop_change
+    },
+    {
+        "base_body_prop_change_multi_level",
+        TemplateInheritance_base_body_prop_change_multi_level
+    },
+    {
+        "derived_body_overrides_base_component",
+        TemplateInheritance_derived_body_overrides_base_component
+    },
+    {
+        "base_body_children",
+        TemplateInheritance_base_body_children
+    },
+    {
+        "remove_derived_cleans_up_base_body",
+        TemplateInheritance_remove_derived_cleans_up_base_body
+    },
+    {
+        "base_mut_in_derived_body",
+        TemplateInheritance_base_mut_in_derived_body
+    },
+    {
+        "base_mut_and_derived_mut",
+        TemplateInheritance_base_mut_and_derived_mut
+    },
+    {
+        "base_mut_multi_level",
+        TemplateInheritance_base_mut_multi_level
+    },
+    {
+        "base_mut_init_w_prop_override",
+        TemplateInheritance_base_mut_init_w_prop_override
+    },
+    {
+        "base_mut_set_from_c",
+        TemplateInheritance_base_mut_set_from_c
+    },
+    {
+        "mut_shadows_base_mut",
+        TemplateInheritance_mut_shadows_base_mut
+    },
+    {
+        "prop_shadows_base_mut",
+        TemplateInheritance_prop_shadows_base_mut
+    },
+    {
+        "base_async_block",
+        TemplateInheritance_base_async_block
+    },
+    {
+        "base_async_block_default_props",
+        TemplateInheritance_base_async_block_default_props
+    },
+    {
+        "base_async_block_multi_level",
+        TemplateInheritance_base_async_block_multi_level
+    },
+    {
+        "derived_async_block_assign_base_mut",
+        TemplateInheritance_derived_async_block_assign_base_mut
+    },
+    {
+        "base_async_block_mut_change_keeps_derived_block",
+        TemplateInheritance_base_async_block_mut_change_keeps_derived_block
+    },
+    {
+        "base_async_block_prop_change_restarts",
+        TemplateInheritance_base_async_block_prop_change_restarts
+    },
+    {
+        "base_async_block_remove_cancels",
+        TemplateInheritance_base_async_block_remove_cancels
+    },
+    {
+        "base_async_block_delete_cancels",
+        TemplateInheritance_base_async_block_delete_cancels
+    },
+    {
+        "base_async_block_two_instances",
+        TemplateInheritance_base_async_block_two_instances
+    },
+    {
+        "template_update_w_base",
+        TemplateInheritance_template_update_w_base
     }
 };
 
@@ -16440,14 +17093,6 @@ bake_test_case TemplateProp_testcases[] = {
     {
         "prop_template_type_default",
         TemplateProp_prop_template_type_default
-    },
-    {
-        "prop_template_type_default_initializer",
-        TemplateProp_prop_template_type_default_initializer
-    },
-    {
-        "prop_template_type_partial_default_initializer",
-        TemplateProp_prop_template_type_partial_default_initializer
     },
     {
         "use_as_tag",
@@ -16508,6 +17153,10 @@ bake_test_case TemplateProp_testcases[] = {
     {
         "member_access_in_expr",
         TemplateProp_member_access_in_expr
+    },
+    {
+        "member_access_in_binary_expr_w_loop_var",
+        TemplateProp_member_access_in_binary_expr_w_loop_var
     },
     {
         "prop_change_updates_children",
@@ -16730,12 +17379,12 @@ bake_test_case TemplateProp_testcases[] = {
         TemplateProp_interface_prop_missing_value_defaults_to_interface
     },
     {
-        "interface_prop_empty_initializer_fails",
-        TemplateProp_interface_prop_empty_initializer_fails
+        "interface_prop_empty_initializer",
+        TemplateProp_interface_prop_empty_initializer
     },
     {
-        "interface_prop_in_with_w_initializer_fails",
-        TemplateProp_interface_prop_in_with_w_initializer_fails
+        "interface_prop_in_with_w_initializer",
+        TemplateProp_interface_prop_in_with_w_initializer
     },
     {
         "interface_prop_dollar_initializer",
@@ -16778,6 +17427,10 @@ bake_test_case TemplateProp_testcases[] = {
         TemplateProp_interface_prop_as_tag
     },
     {
+        "interface_prop_as_tag_instantiates",
+        TemplateProp_interface_prop_as_tag_instantiates
+    },
+    {
         "interface_prop_from_c",
         TemplateProp_interface_prop_from_c
     },
@@ -16812,6 +17465,413 @@ bake_test_case TemplateProp_testcases[] = {
     {
         "bool_prop_mul_flt_member_const",
         TemplateProp_bool_prop_mul_flt_member_const
+    },
+    {
+        "string_prop_in_const",
+        TemplateProp_string_prop_in_const
+    },
+    {
+        "string_prop_in_2_consts",
+        TemplateProp_string_prop_in_2_consts
+    },
+    {
+        "string_prop_in_3_consts",
+        TemplateProp_string_prop_in_3_consts
+    },
+    {
+        "string_prop_in_const_w_adjacent_prop",
+        TemplateProp_string_prop_in_const_w_adjacent_prop
+    },
+    {
+        "string_prop_in_chained_consts",
+        TemplateProp_string_prop_in_chained_consts
+    },
+    {
+        "string_prop_in_consts_reassign",
+        TemplateProp_string_prop_in_consts_reassign
+    },
+    {
+        "string_prop_in_consts_deferred",
+        TemplateProp_string_prop_in_consts_deferred
+    },
+    {
+        "string_prop_in_consts_nested_template",
+        TemplateProp_string_prop_in_consts_nested_template
+    },
+    {
+        "template_ref_call_empty",
+        TemplateProp_template_ref_call_empty
+    },
+    {
+        "template_ref_call_positional",
+        TemplateProp_template_ref_call_positional
+    },
+    {
+        "template_ref_call_positional_inherited",
+        TemplateProp_template_ref_call_positional_inherited
+    },
+    {
+        "template_ref_call_named",
+        TemplateProp_template_ref_call_named
+    },
+    {
+        "template_ref_call_named_inherited_member",
+        TemplateProp_template_ref_call_named_inherited_member
+    },
+    {
+        "template_ref_call_use_site_overrides",
+        TemplateProp_template_ref_call_use_site_overrides
+    },
+    {
+        "template_ref_call_tag_form",
+        TemplateProp_template_ref_call_tag_form
+    },
+    {
+        "template_ref_call_in_with",
+        TemplateProp_template_ref_call_in_with
+    },
+    {
+        "template_ref_call_default",
+        TemplateProp_template_ref_call_default
+    },
+    {
+        "template_ref_call_w_const",
+        TemplateProp_template_ref_call_w_const
+    },
+    {
+        "template_ref_call_w_prop_expr",
+        TemplateProp_template_ref_call_w_prop_expr
+    },
+    {
+        "template_ref_call_update",
+        TemplateProp_template_ref_call_update
+    },
+    {
+        "template_ref_call_from_c_w_value",
+        TemplateProp_template_ref_call_from_c_w_value
+    },
+    {
+        "template_ref_call_too_many_args_fails",
+        TemplateProp_template_ref_call_too_many_args_fails
+    },
+    {
+        "template_ref_call_unknown_member_fails",
+        TemplateProp_template_ref_call_unknown_member_fails
+    },
+    {
+        "template_ref_call_not_derived_fails",
+        TemplateProp_template_ref_call_not_derived_fails
+    },
+    {
+        "template_ref_call_not_template_fails",
+        TemplateProp_template_ref_call_not_template_fails
+    },
+    {
+        "template_ref_call_ast_to_str",
+        TemplateProp_template_ref_call_ast_to_str
+    },
+    {
+        "template_ref_call_to_json",
+        TemplateProp_template_ref_call_to_json
+    },
+    {
+        "template_ref_nested_empty",
+        TemplateProp_template_ref_nested_empty
+    },
+    {
+        "template_ref_nested_positional",
+        TemplateProp_template_ref_nested_positional
+    },
+    {
+        "template_ref_nested_named",
+        TemplateProp_template_ref_nested_named
+    },
+    {
+        "template_ref_nested_multiple",
+        TemplateProp_template_ref_nested_multiple
+    },
+    {
+        "template_ref_nested_update",
+        TemplateProp_template_ref_nested_update
+    },
+    {
+        "template_ref_nested_default",
+        TemplateProp_template_ref_nested_default
+    },
+    {
+        "any_prop_template_value",
+        TemplateProp_any_prop_template_value
+    },
+    {
+        "any_prop_template_call_value",
+        TemplateProp_any_prop_template_call_value
+    },
+    {
+        "any_prop_struct_value",
+        TemplateProp_any_prop_struct_value
+    },
+    {
+        "any_prop_default_template",
+        TemplateProp_any_prop_default_template
+    },
+    {
+        "any_prop_default_struct",
+        TemplateProp_any_prop_default_struct
+    },
+    {
+        "any_prop_in_with",
+        TemplateProp_any_prop_in_with
+    },
+    {
+        "any_prop_update",
+        TemplateProp_any_prop_update
+    },
+    {
+        "any_prop_vector",
+        TemplateProp_any_prop_vector
+    },
+    {
+        "any_prop_from_c",
+        TemplateProp_any_prop_from_c
+    },
+    {
+        "any_prop_ast_to_str",
+        TemplateProp_any_prop_ast_to_str
+    },
+    {
+        "any_prop_missing_value_fails",
+        TemplateProp_any_prop_missing_value_fails
+    },
+    {
+        "any_prop_initializer_fails",
+        TemplateProp_any_prop_initializer_fails
+    },
+    {
+        "any_prop_with_initializer_fails",
+        TemplateProp_any_prop_with_initializer_fails
+    },
+    {
+        "any_prop_not_struct_fails",
+        TemplateProp_any_prop_not_struct_fails
+    },
+    {
+        "any_prop_mut_fails",
+        TemplateProp_any_prop_mut_fails
+    },
+    {
+        "template_ref_prop_call_as_template_arg",
+        TemplateProp_template_ref_prop_call_as_template_arg
+    },
+    {
+        "derived_template_inherits_base_defaults",
+        TemplateProp_derived_template_inherits_base_defaults
+    },
+    {
+        "template_interface_prop_default",
+        TemplateProp_template_interface_prop_default
+    },
+    {
+        "template_interface_prop_call_as_template_arg",
+        TemplateProp_template_interface_prop_call_as_template_arg
+    },
+    {
+        "empty_struct_base",
+        TemplateProp_empty_struct_base
+    },
+    {
+        "empty_struct_interface_prop",
+        TemplateProp_empty_struct_interface_prop
+    },
+    {
+        "empty_struct_interface_prop_as_template_arg",
+        TemplateProp_empty_struct_interface_prop_as_template_arg
+    },
+    {
+        "empty_struct_in_interface_scope",
+        TemplateProp_empty_struct_in_interface_scope
+    },
+    {
+        "empty_template_base",
+        TemplateProp_empty_template_base
+    },
+    {
+        "empty_template_interface_prop",
+        TemplateProp_empty_template_interface_prop
+    },
+    {
+        "empty_template_in_interface_scope",
+        TemplateProp_empty_template_in_interface_scope
+    },
+    {
+        "prop_default_from_nested_struct_const",
+        TemplateProp_prop_default_from_nested_struct_const
+    },
+    {
+        "prop_default_from_nested_struct_const_member",
+        TemplateProp_prop_default_from_nested_struct_const_member
+    }
+};
+
+bake_test_case TemplateVectorProp_testcases[] = {
+    {
+        "declaration_w_default",
+        TemplateVectorProp_declaration_w_default
+    },
+    {
+        "declaration_wo_default",
+        TemplateVectorProp_declaration_wo_default
+    },
+    {
+        "count",
+        TemplateVectorProp_count
+    },
+    {
+        "index_instantiate_w_initializer",
+        TemplateVectorProp_index_instantiate_w_initializer
+    },
+    {
+        "index_tag_form",
+        TemplateVectorProp_index_tag_form
+    },
+    {
+        "index_tag_form_instantiates",
+        TemplateVectorProp_index_tag_form_instantiates
+    },
+    {
+        "index_empty_initializer",
+        TemplateVectorProp_index_empty_initializer
+    },
+    {
+        "pass_element_to_interface_prop",
+        TemplateVectorProp_pass_element_to_interface_prop
+    },
+    {
+        "iterate_w_for",
+        TemplateVectorProp_iterate_w_for
+    },
+    {
+        "index_by_rng",
+        TemplateVectorProp_index_by_rng
+    },
+    {
+        "override_kind_syntax",
+        TemplateVectorProp_override_kind_syntax
+    },
+    {
+        "override_component_syntax",
+        TemplateVectorProp_override_component_syntax
+    },
+    {
+        "native_set_id",
+        TemplateVectorProp_native_set_id
+    },
+    {
+        "expr_run_props",
+        TemplateVectorProp_expr_run_props
+    },
+    {
+        "index_out_of_range_fails",
+        TemplateVectorProp_index_out_of_range_fails
+    },
+    {
+        "index_empty_vector_fails",
+        TemplateVectorProp_index_empty_vector_fails
+    },
+    {
+        "default_not_derived_fails",
+        TemplateVectorProp_default_not_derived_fails
+    },
+    {
+        "value_not_derived_fails",
+        TemplateVectorProp_value_not_derived_fails
+    },
+    {
+        "value_not_derived_from_c_fails",
+        TemplateVectorProp_value_not_derived_from_c_fails
+    },
+    {
+        "template_type_vector",
+        TemplateVectorProp_template_type_vector
+    },
+    {
+        "bare_vector_prop_as_component_fails",
+        TemplateVectorProp_bare_vector_prop_as_component_fails
+    },
+    {
+        "reactive_prop_change",
+        TemplateVectorProp_reactive_prop_change
+    },
+    {
+        "reactive_prop_change_from_script",
+        TemplateVectorProp_reactive_prop_change_from_script
+    },
+    {
+        "nested_template",
+        TemplateVectorProp_nested_template
+    },
+    {
+        "template_inheritance",
+        TemplateVectorProp_template_inheritance
+    },
+    {
+        "index_in_interpolated_string",
+        TemplateVectorProp_index_in_interpolated_string
+    },
+    {
+        "collection_value_still_parses",
+        TemplateVectorProp_collection_value_still_parses
+    },
+    {
+        "to_str",
+        TemplateVectorProp_to_str
+    },
+    {
+        "template_ref_call_default",
+        TemplateVectorProp_template_ref_call_default
+    },
+    {
+        "template_ref_call_positional",
+        TemplateVectorProp_template_ref_call_positional
+    },
+    {
+        "template_ref_call_instance",
+        TemplateVectorProp_template_ref_call_instance
+    },
+    {
+        "template_ref_call_tag_form",
+        TemplateVectorProp_template_ref_call_tag_form
+    },
+    {
+        "template_ref_call_iterate_w_for",
+        TemplateVectorProp_template_ref_call_iterate_w_for
+    },
+    {
+        "template_ref_call_pass_element_to_interface_prop",
+        TemplateVectorProp_template_ref_call_pass_element_to_interface_prop
+    },
+    {
+        "template_ref_call_index_in_interpolated_string",
+        TemplateVectorProp_template_ref_call_index_in_interpolated_string
+    },
+    {
+        "template_ref_call_update",
+        TemplateVectorProp_template_ref_call_update
+    },
+    {
+        "template_ref_from_c_w_value",
+        TemplateVectorProp_template_ref_from_c_w_value
+    },
+    {
+        "template_ref_call_nested",
+        TemplateVectorProp_template_ref_call_nested
+    },
+    {
+        "template_ref_call_nested_ref",
+        TemplateVectorProp_template_ref_call_nested_ref
+    },
+    {
+        "template_ref_call_not_derived_fails",
+        TemplateVectorProp_template_ref_call_not_derived_fails
     }
 };
 
@@ -17282,6 +18342,82 @@ bake_test_case Edit_testcases[] = {
     {
         "set_for_recreated_entity_after_clear",
         Edit_set_for_recreated_entity_after_clear
+    },
+    {
+        "set_10k_statements",
+        Edit_set_10k_statements
+    },
+    {
+        "from_scene_no_changes",
+        Edit_from_scene_no_changes
+    },
+    {
+        "from_scene_no_changes_float_literal",
+        Edit_from_scene_no_changes_float_literal
+    },
+    {
+        "from_scene_changed_value",
+        Edit_from_scene_changed_value
+    },
+    {
+        "from_scene_changed_value_named",
+        Edit_from_scene_changed_value_named
+    },
+    {
+        "from_scene_preserves_layout",
+        Edit_from_scene_preserves_layout
+    },
+    {
+        "from_scene_changed_child",
+        Edit_from_scene_changed_child
+    },
+    {
+        "from_scene_multiple_entities",
+        Edit_from_scene_multiple_entities
+    },
+    {
+        "from_scene_partial_initializer",
+        Edit_from_scene_partial_initializer
+    },
+    {
+        "from_scene_updates_entities",
+        Edit_from_scene_updates_entities
+    },
+    {
+        "from_scene_skip_variable_expr",
+        Edit_from_scene_skip_variable_expr
+    },
+    {
+        "from_scene_skip_removed_component",
+        Edit_from_scene_skip_removed_component
+    },
+    {
+        "from_scene_skip_added_component",
+        Edit_from_scene_skip_added_component
+    },
+    {
+        "from_scene_skip_template_body",
+        Edit_from_scene_skip_template_body
+    },
+    {
+        "from_scene_pair",
+        Edit_from_scene_pair
+    },
+    {
+        "from_scene_not_a_script",
+        Edit_from_scene_not_a_script
+    },
+    {
+        "save",
+        Edit_save
+    },
+    {
+        "save_no_filename",
+        Edit_save_no_filename
+    },
+    {
+        "save_not_a_script",
+        Edit_save_not_a_script
     }
 };
 
@@ -17440,6 +18576,57 @@ bake_test_case EditTemplate_testcases[] = {
     }
 };
 
+bake_test_case Reload_testcases[] = {
+    {
+        "added_entity",
+        Reload_added_entity
+    },
+    {
+        "changed_entity",
+        Reload_changed_entity
+    },
+    {
+        "removed_entity",
+        Reload_removed_entity
+    },
+    {
+        "removed_component",
+        Reload_removed_component
+    },
+    {
+        "parse_error_keeps_world",
+        Reload_parse_error_keeps_world
+    },
+    {
+        "parse_error_then_reload",
+        Reload_parse_error_then_reload
+    },
+    {
+        "from_file",
+        Reload_from_file
+    },
+    {
+        "from_file_removed_entity",
+        Reload_from_file_removed_entity
+    },
+    {
+        "from_file_parse_error_keeps_world",
+        Reload_from_file_parse_error_keeps_world
+    },
+    {
+        "without_filename",
+        Reload_without_filename
+    },
+    {
+        "not_a_script",
+        Reload_not_a_script
+    },
+    {
+        "keeps_entities_outside_script",
+        Reload_keeps_entities_outside_script
+    }
+};
+
 const char* Eval_ir_param[] = {"disabled", "enabled"};
 bake_test_param Eval_params[] = {
     {"ir", (char**)Eval_ir_param, 2}
@@ -17562,6 +18749,11 @@ bake_test_param TemplateProp_params[] = {
     {"ir", (char**)TemplateProp_ir_param, 2}
 };
 
+const char* TemplateVectorProp_ir_param[] = {"disabled", "enabled"};
+bake_test_param TemplateVectorProp_params[] = {
+    {"ir", (char**)TemplateVectorProp_ir_param, 2}
+};
+
 const char* Scenario_ir_param[] = {"disabled", "enabled"};
 bake_test_param Scenario_params[] = {
     {"ir", (char**)Scenario_ir_param, 2}
@@ -17582,7 +18774,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        754,
+        759,
         Eval_testcases,
         1,
         Eval_params
@@ -17645,7 +18837,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        176,
+        203,
         Template_testcases,
         1,
         Template_params
@@ -17663,7 +18855,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        230,
+        229,
         Error_testcases,
         1,
         Error_params
@@ -17681,7 +18873,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        418,
+        425,
         Expr_testcases,
         2,
         Expr_params
@@ -17699,7 +18891,7 @@ static bake_test_suite suites[] = {
         "Vars",
         NULL,
         NULL,
-        16,
+        17,
         Vars_testcases
     },
     {
@@ -17722,7 +18914,7 @@ static bake_test_suite suites[] = {
         "Include",
         Include_setup,
         NULL,
-        56,
+        60,
         Include_testcases,
         1,
         Include_params
@@ -17749,7 +18941,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        149,
+        170,
         Reactivity_testcases,
         1,
         Reactivity_params
@@ -17776,7 +18968,7 @@ static bake_test_suite suites[] = {
         "StructInheritance",
         StructInheritance_setup,
         NULL,
-        59,
+        61,
         StructInheritance_testcases,
         1,
         StructInheritance_params
@@ -17794,7 +18986,7 @@ static bake_test_suite suites[] = {
         "TemplateInheritance",
         TemplateInheritance_setup,
         NULL,
-        47,
+        84,
         TemplateInheritance_testcases,
         1,
         TemplateInheritance_params
@@ -17803,10 +18995,19 @@ static bake_test_suite suites[] = {
         "TemplateProp",
         TemplateProp_setup,
         NULL,
-        95,
+        156,
         TemplateProp_testcases,
         1,
         TemplateProp_params
+    },
+    {
+        "TemplateVectorProp",
+        TemplateVectorProp_setup,
+        NULL,
+        40,
+        TemplateVectorProp_testcases,
+        1,
+        TemplateVectorProp_params
     },
     {
         "Scenario",
@@ -17821,7 +19022,7 @@ static bake_test_suite suites[] = {
         "Edit",
         Edit_setup,
         NULL,
-        102,
+        121,
         Edit_testcases,
         1,
         Edit_params
@@ -17834,9 +19035,16 @@ static bake_test_suite suites[] = {
         EditTemplate_testcases,
         1,
         EditTemplate_params
+    },
+    {
+        "Reload",
+        Reload_setup,
+        NULL,
+        12,
+        Reload_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 29);
+    return bake_test_run("script", argc, argv, suites, 31);
 }

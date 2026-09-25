@@ -30,12 +30,6 @@ typedef enum ecs_cmd_kind_t {
     EcsCmdSkip
 } ecs_cmd_kind_t;
 
-/* Entity specific metadata for command in queue */
-typedef struct ecs_cmd_entry_t {
-    int32_t first;
-    int32_t last;                    /* If -1, a delete command was inserted */
-} ecs_cmd_entry_t;
-
 typedef struct ecs_cmd_1_t {
     void *value;                     /* Component value (used by set / ensure) */
     ecs_size_t size;                 /* Size of value */
@@ -81,10 +75,13 @@ void flecs_commands_fini(
 
 /* Begin deferring, or return whether already deferred. */
 bool flecs_defer_cmd(
+    ecs_stage_t *stage,
+    bool deferred);
+
+void flecs_commands_grow(
     ecs_stage_t *stage);
 
-/* Begin deferred mode. */
-bool flecs_defer_begin(
+bool flecs_commands_flush(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
@@ -96,12 +93,14 @@ bool flecs_defer_purge(
 /* Insert modified command. */
 bool flecs_defer_modified(
     ecs_stage_t *stage,
+    bool deferred,
     ecs_entity_t entity,
     ecs_entity_t component);
 
 /* Insert clone command. */
 bool flecs_defer_clone(
     ecs_stage_t *stage,
+    bool deferred,
     ecs_entity_t entity,
     ecs_entity_t src,
     bool clone_value);
@@ -110,6 +109,7 @@ bool flecs_defer_clone(
 bool flecs_defer_bulk_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
+    bool deferred,
     int32_t count,
     ecs_id_t id,
     const ecs_entity_t **ids_out);
@@ -124,16 +124,19 @@ bool flecs_defer_path(
 /* Insert delete command. */
 bool flecs_defer_delete(
     ecs_stage_t *stage,
+    bool deferred,
     ecs_entity_t entity);
 
 /* Insert clear command. */
 bool flecs_defer_clear(
     ecs_stage_t *stage,
+    bool deferred,
     ecs_entity_t entity);
 
 /* Insert delete_with/remove_all command. */
 bool flecs_defer_on_delete_action(
     ecs_stage_t *stage,
+    bool deferred,
     ecs_id_t id,
     ecs_entity_t action,
     bool force_delete);
@@ -141,6 +144,7 @@ bool flecs_defer_on_delete_action(
 /* Insert enable command (component toggling). */
 bool flecs_defer_enable(
     ecs_stage_t *stage,
+    bool deferred,
     ecs_entity_t entity,
     ecs_entity_t component,
     bool enable);    
@@ -148,12 +152,14 @@ bool flecs_defer_enable(
 /* Insert add component command. */
 bool flecs_defer_add(
     ecs_stage_t *stage,
+    bool deferred,
     ecs_entity_t entity,
     ecs_id_t id);
 
 /* Insert remove component command. */
 bool flecs_defer_remove(
     ecs_stage_t *stage,
+    bool deferred,
     ecs_entity_t entity,
     ecs_id_t id);
 

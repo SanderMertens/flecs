@@ -1280,3 +1280,61 @@ void StructTypes_redefine_member_after_nested_type_changed(void) {
 
     ecs_fini(world);
 }
+
+void StructTypes_struct_wo_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"})
+    });
+    test_assert(t != 0);
+
+    const EcsStruct *st = ecs_get(world, t, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 0);
+
+    _meta_test_struct(world, t, 1, 1);
+    test_assert(ecs_get_type_info(world, t) != NULL);
+
+    const EcsTypeSerializer *ser = ecs_get(world, t, EcsTypeSerializer);
+    test_assert(ser != NULL);
+    test_int(ecs_vec_count(&ser->ops), 2);
+    test_int(ecs_vec_get_t(&ser->ops, ecs_meta_op_t, 0)->kind, EcsOpPushStruct);
+    test_int(ecs_vec_get_t(&ser->ops, ecs_meta_op_t, 1)->kind, EcsOpPop);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, t);
+    test_assert(ecs_has_id(world, e, t));
+    test_assert(ecs_get_id(world, e, t) != NULL);
+
+    ecs_fini(world);
+}
+
+void StructTypes_struct_wo_members_add_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"})
+    });
+    test_assert(t != 0);
+    _meta_test_struct(world, t, 1, 1);
+
+    test_int(ecs_struct_add_member(world, t, &(ecs_member_t){
+        .name = "x", .type = ecs_id(ecs_i32_t)
+    }), 0);
+
+    const EcsStruct *st = ecs_get(world, t, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 1);
+    _meta_test_struct(world, t, 4, 4);
+    _meta_test_member(world, t, "x", ecs_id(ecs_i32_t), 0, 0);
+    test_assert(ecs_get_type_info(world, t) != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    int32_t *ptr = ecs_ensure_id(world, e, t, 4);
+    test_assert(ptr != NULL);
+    *ptr = 10;
+    test_int(*(const int32_t*)ecs_get_id(world, e, t), 10);
+
+    ecs_fini(world);
+}

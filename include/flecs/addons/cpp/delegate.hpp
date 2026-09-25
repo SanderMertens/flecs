@@ -30,6 +30,7 @@ struct component_binding_ctx {
 // Utility to convert a template argument pack to an array of term pointers.
 struct field_ptr {
     void *ptr = nullptr;
+    int32_t stride = 0;
     int8_t index = 0;
     bool is_ref = false;
     bool is_row = false;
@@ -60,10 +61,15 @@ private:
                 fields_[index].is_ref = true;
                 fields_[index].index = static_cast<int8_t>(index);
             } else {
-                fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
+                /* Use base field, as the matched (derived) component can be
+                 * larger than A when matched through component inheritance. */
+                fields_[index].ptr = ecs_base_field_w_size(iter, sizeof(A), 
                     static_cast<int8_t>(index));
                 fields_[index].is_ref = iter->sources[index] != 0;
             }
+
+            fields_[index].stride = static_cast<int32_t>(
+                ecs_field_stride(iter, static_cast<int8_t>(index)));
         }
     }
 
@@ -108,23 +114,40 @@ struct each_field {
         if constexpr (is_empty<A>::value && !is_pointer<T>::value) {
             return T(A());
         } else {
+            using E = remove_pointer_t<A>;
             size_t row = row_;
             if constexpr (Ref) {
                 if (field_.is_ref) {
                     row = 0;
                 }
                 if (field_.is_row) {
-                    field_.ptr = ecs_field_at_w_size(iter_,
-                        sizeof(remove_pointer_t<A>), field_.index,
-                        static_cast<int32_t>(row_));
+                    field_.ptr = ecs_field_at_w_size(iter_, sizeof(E),
+                        field_.index, static_cast<int32_t>(row_));
                 }
             }
+
             if constexpr (is_pointer<T>::value) {
-                return field_.ptr ? &static_cast<A>(field_.ptr)[row] : nullptr;
-            } else if constexpr (is_actual<T>::value) {
-                return static_cast<T*>(field_.ptr)[row];
+                if (!field_.ptr) {
+                    return static_cast<A>(nullptr);
+                }
+            }
+
+            E *elem;
+            if constexpr (Ref) {
+                /* Fields matched through component inheritance store a derived
+                 * component, which has its own (larger) stride. */
+                elem = static_cast<E*>(ECS_OFFSET(field_.ptr, 
+                    row * static_cast<size_t>(field_.stride)));
             } else {
-                return T(static_cast<A*>(field_.ptr)[row]);
+                elem = &static_cast<E*>(field_.ptr)[row];
+            }
+
+            if constexpr (is_pointer<T>::value) {
+                return elem;
+            } else if constexpr (is_actual<T>::value) {
+                return *elem;
+            } else {
+                return T(*elem);
             }
         }
     }
@@ -191,7 +214,9 @@ protected:
     flecs::entity invoke_until(ecs_iter_t *iter) const {
         field_ptrs<Components...> terms;
         iter->flags |= EcsIterCppEach;
-        if (Shared && (iter->ref_fields | iter->up_fields)) {
+        if (Shared && (iter->ref_fields | iter->up_fields |
+            (iter->flags & EcsIterComponentInheritance)))
+        {
             terms.populate(iter);
             return invoke_rows<Find, true>(iter, terms.fields_,
                 std::index_sequence_for<Components...>{});
@@ -210,7 +235,7 @@ private:
         if constexpr (std::is_invocable_v<const Func&, flecs::entity, Args...>) {
             ecs_assert(iter->entities != nullptr, ECS_INVALID_PARAMETER,
                 "query does not return entities ($this variable is not populated)");
-            return func(flecs::entity(iter->world, iter->entities[i]),
+            return func(flecs::entity(iter->stage, iter->entities[i]),
                 FLECS_FWD(args)...);
         } else if constexpr (std::is_invocable_v<
             const Func&, flecs::iter&, size_t&, Args...>)
@@ -226,7 +251,7 @@ private:
     flecs::entity invoke_rows(ecs_iter_t *iter, Terms& terms,
         std::index_sequence<I...>) const
     {
-        ECS_TABLE_LOCK(iter->world, iter->table);
+        ECS_TABLE_LOCK(iter->stage, iter->table);
         size_t count = static_cast<size_t>(iter->count);
         if constexpr (Find) {
             if constexpr (!std::is_invocable_v<const Func&, flecs::entity,
@@ -248,7 +273,7 @@ private:
                     each_field<remove_reference_t<Components>, Ref>(
                         iter, terms[I], i).get_row()...))
                 {
-                    result = flecs::entity(iter->world, iter->entities[i]);
+                    result = flecs::entity(iter->stage, iter->entities[i]);
                     break;
                 }
             } else {
@@ -257,7 +282,7 @@ private:
                         iter, terms[I], i).get_row()...);
             }
         }
-        ECS_TABLE_UNLOCK(iter->world, iter->table);
+        ECS_TABLE_UNLOCK(iter->stage, iter->table);
         return result;
     }
 
@@ -357,7 +382,7 @@ private:
     template <typename... Args>
     void invoke(ecs_iter_t *iter, Args&... args) const {
         if constexpr (std::is_invocable_v<const Func&, flecs::entity, Args&...>) {
-            func_(flecs::entity(iter->world, ecs_field_src(iter, 0)), args...);
+            func_(flecs::entity(iter->stage, ecs_field_src(iter, 0)), args...);
         } else {
             func_(args...);
         }

@@ -11,7 +11,7 @@ static void flecs_query_iter_run_ctx_init(
 {
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
-    ctx->world = it->real_world;
+    ctx->world = it->world;
     ctx->query = impl;
     ctx->it = it;
 #ifdef FLECS_QUERY_PLANS
@@ -61,7 +61,8 @@ void flecs_query_iter_constrain(
     /* This function can be called multiple times when setting variables, so
      * reset flags before setting them. */
     it->flags &= ~(EcsIterTrivialTest|EcsIterTrivialCached|
-        EcsIterTrivialSearch|EcsIterTrivialSparse);
+        EcsIterTrivialSearch|EcsIterTrivialSparse|EcsIterTreeCached|
+        EcsIterCached);
 
     /* Figure out whether this query can utilize specialized iterator modes for
      * improved performance. */
@@ -104,6 +105,13 @@ void flecs_query_iter_constrain(
                     it->flags |= EcsIterTrivialTest|EcsIterCached;
                 }
             }
+        } else if (query->tree_cache_op != -1) {
+            int32_t i, op_count = query->op_count;
+            for (i = query->tree_cache_op + 1; i < op_count; i ++) {
+                ctx.written[i] |= 1ull;
+            }
+
+            it->flags |= EcsIterTreeCached;
 #endif
         }
     } else {
@@ -139,6 +147,13 @@ void flecs_query_iter_constrain(
                     it->flags |= EcsIterTrivialSearch|EcsIterCached;
                 }
             }
+        } else if (query->tree_cache_op != -1) {
+            int32_t i, op_count = query->op_count;
+            for (i = query->tree_cache_op + 1; i < op_count; i ++) {
+                ctx.written[i] |= 1ull;
+            }
+
+            it->flags |= EcsIterTreeCached;
 #endif
         }
     }
@@ -182,6 +197,7 @@ void flecs_query_iter_constrain(
                 EcsIterTrivialSearch;
             it->flags |= EcsIterCached;
         }
+
         return;
     }
 #endif
@@ -287,8 +303,10 @@ void flecs_query_op_ctx_fini(
             } else {
                 flecs_query_up_cache_fini(cache);
             }
+
             flecs_free_t(a, ecs_query_up_impl_t, impl);
         }
+
         break;
     }
     default:
@@ -301,16 +319,141 @@ static void flecs_query_iter_fini_ctx(
     ecs_query_iter_t *qit)
 {
     const ecs_query_impl_t *query = flecs_query_impl(it->query);
-    int32_t i, count = query->op_count;
+    int32_t i, first = query->op_ctx_fini_first;
+    int32_t last = first + query->op_ctx_fini_count;
     ecs_query_op_t *ops = query->ops;
     ecs_query_op_ctx_t *ctx = qit->op_ctx;
     if (!ctx) {
         return;
     }
 
-    for (i = 0; i < count; i ++) {
+    for (i = first; i < last; i ++) {
         ecs_query_op_t *op = &ops[i];
         flecs_query_op_ctx_fini(it, op, &ctx[i]);
+    }
+}
+
+#define FLECS_QUERY_ITER_CURSOR_SIZE \
+    ECS_ALIGN(ECS_SIZEOF(ecs_stack_cursor_t), ECS_ALIGNOF(ecs_query_op_ctx_t))
+
+typedef struct ecs_query_iter_layout_t {
+    ecs_size_t written_size;
+    ecs_size_t vars_size;
+    ecs_size_t fields_size;
+    ecs_size_t op_ctx_offset;
+    ecs_size_t op_ctx_size;
+    ecs_size_t total;
+    int32_t field_count;
+    bool op_ctx;
+    bool op_ctx_split;
+} ecs_query_iter_layout_t;
+
+static void flecs_query_iter_layout(
+    const ecs_query_impl_t *impl,
+    ecs_query_iter_layout_t *l)
+{
+    const ecs_query_t *q = &impl->pub;
+    int32_t field_count = q->field_count;
+    bool op_ctx = true;
+#ifdef FLECS_CACHED_QUERIES
+    if (impl->cache) {
+        if ((q->flags & EcsQueryIsCacheable) &&
+            !(q->flags & EcsQueryCacheWithFilter))
+        {
+            field_count = 0;
+        }
+        op_ctx = impl->ops != NULL;
+    }
+#endif
+    int32_t op_count = impl->op_count ? impl->op_count : 1;
+    l->field_count = field_count;
+    l->op_ctx = op_ctx;
+    l->written_size = ECS_SIZEOF(ecs_write_flags_t) * op_count;
+    l->vars_size = ECS_SIZEOF(ecs_var_t) * impl->var_count;
+    l->fields_size = (ECS_SIZEOF(ecs_id_t) + ECS_SIZEOF(ecs_entity_t) +
+        ECS_SIZEOF(ecs_table_record_t*)) * field_count;
+    ecs_size_t cols_size = ECS_SIZEOF(int16_t) * field_count;
+    l->op_ctx_offset = ECS_ALIGN(l->written_size + l->vars_size +
+        l->fields_size + cols_size, ECS_ALIGNOF(ecs_query_op_ctx_t));
+    l->op_ctx_size = op_ctx ? ECS_SIZEOF(ecs_query_op_ctx_t) * op_count : 0;
+    l->total = l->op_ctx_offset + l->op_ctx_size;
+    l->op_ctx_split = false;
+    if ((l->total + FLECS_QUERY_ITER_CURSOR_SIZE) > FLECS_STACK_PAGE_SIZE) {
+        l->op_ctx_split = true;
+        l->total = l->op_ctx_offset;
+    }
+}
+
+static void flecs_query_iter_alloc(
+    ecs_iter_t *it,
+    const ecs_query_impl_t *impl)
+{
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
+    ecs_query_iter_layout_t l;
+    flecs_query_iter_layout(impl, &l);
+
+    ecs_world_t *world = it->stage;
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_stack_t *stack = &stage->allocators.iter_stack;
+    char *buf;
+    if (!l.op_ctx_split) {
+        void *data;
+        it->priv_.stack_cursor = flecs_stack_get_cursor_w_alloc(stack, l.total,
+            ECS_ALIGNOF(ecs_query_op_ctx_t), &data);
+        buf = data;
+    } else {
+        it->priv_.stack_cursor = flecs_stack_get_cursor(stack);
+        buf = flecs_stack_alloc(stack, l.total, ECS_ALIGNOF(ecs_query_op_ctx_t));
+        it->flags |= EcsIterOpCtxSplit;
+    }
+
+    {
+        uint64_t *words = (uint64_t*)(void*)buf;
+        int32_t w, word_count = (l.written_size + l.vars_size + l.fields_size) / 
+            ECS_SIZEOF(uint64_t);
+        for (w = 0; w < word_count; w ++) {
+            words[w] = 0;
+        }
+    }
+
+    qit->written = (ecs_write_flags_t*)(void*)buf;
+    qit->vars = impl->var_count ?
+        (ecs_var_t*)(void*)(buf + l.written_size) : NULL;
+
+    int32_t i, field_count = l.field_count;
+    if (field_count) {
+        ecs_assert(it->ids == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(it->sources == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(it->trs == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(it->columns == NULL, ECS_INTERNAL_ERROR, NULL);
+
+        char *fields = buf + l.written_size + l.vars_size;
+        it->ids = (ecs_id_t*)(void*)fields;
+        it->sources = (ecs_entity_t*)(void*)(fields +
+            ECS_SIZEOF(ecs_id_t) * field_count);
+        it->trs = (const ecs_table_record_t**)(void*)(fields +
+            (ECS_SIZEOF(ecs_id_t) + ECS_SIZEOF(ecs_entity_t)) * field_count);
+        int16_t *columns = (int16_t*)(void*)(fields + l.fields_size);
+        for (i = 0; i < field_count; i ++) {
+            columns[i] = -1;
+        }
+        it->columns = columns;
+    }
+
+    if (l.op_ctx) {
+        ecs_query_op_ctx_t *op_ctx;
+        if (l.op_ctx_split) {
+            op_ctx = flecs_iter_alloc(it, l.op_ctx_size,
+                ECS_ALIGNOF(ecs_query_op_ctx_t));
+        } else {
+            op_ctx = (ecs_query_op_ctx_t*)(void*)(buf + l.op_ctx_offset);
+        }
+        int32_t zero_count = impl->op_ctx_zero_count;
+        if (zero_count) {
+            ecs_os_memset(&op_ctx[impl->op_ctx_zero_first], 0,
+                ECS_SIZEOF(ecs_query_op_ctx_t) * zero_count);
+        }
+        qit->op_ctx = op_ctx;
     }
 }
 
@@ -331,11 +474,26 @@ bool ecs_query_next(
         ECS_INVALID_PARAMETER, NULL);
 #endif
 
+#ifdef FLECS_CACHED_QUERIES
+    if ((it->flags & (EcsIterTrivialCached|EcsIterTrivialSearch)) ==
+        (EcsIterTrivialCached|EcsIterTrivialSearch))
+    {
+        return flecs_query_trivial_cached_next(it);
+    }
+#endif
+
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
     (void)impl;
     ecs_assert(impl != NULL, ECS_INVALID_OPERATION,
         "cannot call ecs_query_next on invalid iterator");
+
+    if (!impl->pub.term_count) {
+        it->flags |= EcsIterSkip;
+        ecs_iter_fini(it);
+        ecs_os_linc(&it->world->info.queries_ran_total);
+        return false;
+    }
 
     ecs_query_run_ctx_t ctx;
     flecs_query_iter_run_ctx_init(it, &ctx);
@@ -385,6 +543,10 @@ bool ecs_query_next(
             if (flecs_query_is_cache_test(&ctx, redo)) {
                 goto yield;
             }
+        }
+    } else if (it->flags & EcsIterTreeCached) {
+        if (flecs_query_tree_cache_search(&ctx, redo)) {
+            goto yield;
         }
     } else
 #endif
@@ -438,7 +600,9 @@ bool ecs_query_next(
 
     /* Done iterating */
 #ifdef FLECS_CACHED_QUERIES
-    flecs_query_mark_fixed_fields_dirty(impl, it);
+    if (impl->pub.write_fields & impl->pub.fixed_fields) {
+        flecs_query_mark_fixed_fields_dirty(impl, it);
+    }
     if (ctx.query->monitor) {
         flecs_query_update_fixed_monitor(
             ECS_CONST_CAST(ecs_query_impl_t*, ctx.query));
@@ -448,7 +612,7 @@ bool ecs_query_next(
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
-    ecs_os_linc(&it->real_world->info.queries_ran_total);
+    ecs_os_linc(&it->world->info.queries_ran_total);
     return false;
 
 #ifdef FLECS_CACHED_QUERIES
@@ -498,7 +662,7 @@ bool flecs_query_trivial_cached_next(
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
-    ecs_os_linc(&it->real_world->info.queries_ran_total);
+    ecs_os_linc(&it->world->info.queries_ran_total);
     return false;
 }
 
@@ -516,14 +680,12 @@ static void flecs_query_iter_fini(
     flecs_poly_assert(q, ecs_query_t);
 
 #ifdef FLECS_CACHED_QUERIES
-    if (it->flags & EcsIterIsValid) {
+    if ((it->flags & (EcsIterIsValid|EcsIterSkip)) == EcsIterIsValid) {
         flecs_query_change_detection(it, qit, flecs_query_impl(q));
     }
 #endif
 
 #ifdef FLECS_QUERY_PLANS
-    int32_t op_count = flecs_query_impl(q)->op_count;
-    int32_t var_count = flecs_query_impl(q)->var_count;
 
 #ifdef FLECS_DEBUG
     if (it->flags & EcsIterProfile) {
@@ -532,8 +694,14 @@ static void flecs_query_iter_fini(
         ecs_os_free(str);
     }
 
+    int32_t op_count = flecs_query_impl(q)->op_count;
     flecs_iter_free_n(qit->profile, ecs_query_op_profile_t, op_count);
 #endif
+
+    if (!q->term_count) {
+        it->query = NULL;
+        return;
+    }
 
     if ((it->flags & EcsIterTrivialSparse) && qit->op_ctx) {
         ecs_query_sparse_trivial_ctx_t *op_ctx =
@@ -544,10 +712,17 @@ static void flecs_query_iter_fini(
         }
     }
 
-    flecs_query_iter_fini_ctx(it, qit);
-    flecs_iter_free_n(qit->vars, ecs_var_t, var_count);
-    flecs_iter_free_n(qit->written, ecs_write_flags_t, op_count);
-    flecs_iter_free_n(qit->op_ctx, ecs_query_op_ctx_t, op_count);
+    if (it->flags & EcsIterOpCtxFini) {
+        flecs_query_iter_fini_ctx(it, qit);
+    }
+
+    if (it->flags & EcsIterOpCtxSplit) {
+        ecs_query_iter_layout_t l;
+        flecs_query_iter_layout(flecs_query_impl(q), &l);
+        ecs_assert(l.op_ctx_split, ECS_INTERNAL_ERROR, NULL);
+        flecs_iter_free(qit->op_ctx, l.op_ctx_size);
+        flecs_iter_free(qit->written, l.total);
+    }
 
     qit->vars = NULL;
     qit->written = NULL;
@@ -564,7 +739,7 @@ static void flecs_query_validate_final_fields(
     (void)q;
 #ifdef FLECS_DEBUG
     ecs_query_impl_t *impl = flecs_query_impl(q);
-    ecs_world_t *world = q->real_world;
+    ecs_world_t *world = q->world;
 
     if (!impl->final_terms) {
         return;
@@ -622,7 +797,7 @@ ecs_iter_t flecs_query_iter(
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
 
 #ifdef FLECS_DEBUG
-    flecs_check_exclusive_world_access_write(q->real_world);
+    flecs_check_exclusive_world_access_write(q->world);
 #endif
 
 #ifdef FLECS_QUERY_PLANS
@@ -634,21 +809,21 @@ ecs_iter_t flecs_query_iter(
     ecs_query_impl_t *impl = flecs_query_impl(q);
 #endif
 
-    it.world = ECS_CONST_CAST(ecs_world_t*, world);
+    it.stage = ECS_CONST_CAST(ecs_world_t*, world);
 
     /* If world passed to iterator is the real world, but query was created from
      * a stage, stage takes precedence. */
-    if (flecs_poly_is(it.world, ecs_world_t) &&
-        flecs_poly_is(q->world, ecs_stage_t))
+    if (flecs_poly_is(it.stage, ecs_world_t) &&
+        flecs_poly_is(q->stage, ecs_stage_t))
     {
-        it.world = ECS_CONST_CAST(ecs_world_t*, q->world);
+        it.stage = ECS_CONST_CAST(ecs_world_t*, q->stage);
     }
 
-    it.real_world = q->real_world;
-    ecs_assert(flecs_poly_is(it.real_world, ecs_world_t),
+    it.world = q->world;
+    ecs_assert(flecs_poly_is(it.world, ecs_world_t),
         ECS_INTERNAL_ERROR, NULL);
-    ecs_check(!(it.real_world->flags & EcsWorldMultiThreaded) ||
-        it.world != it.real_world, ECS_INVALID_PARAMETER,
+    ecs_check(!(it.world->flags & EcsWorldMultiThreaded) ||
+        it.stage != it.world, ECS_INVALID_PARAMETER,
             "create iterator for stage when world is in multithreaded mode");
 
     it.query = q;
@@ -663,12 +838,16 @@ ecs_iter_t flecs_query_iter(
     it.up_fields = 0;
     flecs_query_apply_iter_flags(&it, q);
 
-#ifdef FLECS_CACHED_QUERIES
+#ifdef FLECS_QUERY_PLANS
+    if (!q->term_count) {
+        flecs_iter_init(it.stage, &it, false);
+    }
+#elif defined(FLECS_CACHED_QUERIES)
     bool fully_cached = (q->flags & EcsQueryIsCacheable) &&
         !(q->flags & EcsQueryCacheWithFilter);
-    flecs_iter_init(it.world, &it, !impl->cache || !fully_cached);
+    flecs_iter_init(it.stage, &it, !impl->cache || !fully_cached);
 #else
-    flecs_iter_init(it.world, &it, true);
+    flecs_iter_init(it.stage, &it, true);
 #endif
 
 #ifdef FLECS_QUERY_PLANS
@@ -685,18 +864,20 @@ ecs_iter_t flecs_query_iter(
 #endif
 
 #ifdef FLECS_QUERY_PLANS
-    int32_t i, var_count = impl->var_count;
-    int32_t op_count = impl->op_count ? impl->op_count : 1;
-    if (var_count) {
-        qit->vars = flecs_iter_calloc_n(&it, ecs_var_t, var_count);
+    if (!q->term_count) {
+#ifdef FLECS_DEBUG
+        int32_t op_count = impl->op_count ? impl->op_count : 1;
+        qit->profile = flecs_iter_calloc_n(
+            &it, ecs_query_op_profile_t, op_count);
+#endif
+        return it;
     }
-    qit->written = flecs_iter_calloc_n(&it, ecs_write_flags_t, op_count);
 
-    if (impl->ops || !impl->cache) {
-        qit->op_ctx = flecs_iter_calloc_n(&it, ecs_query_op_ctx_t, op_count);
-    }
+    int32_t i, var_count = impl->var_count;
+    flecs_query_iter_alloc(&it, impl);
 
 #ifdef FLECS_DEBUG
+    int32_t op_count = impl->op_count ? impl->op_count : 1;
     qit->profile = flecs_iter_calloc_n(&it, ecs_query_op_profile_t, op_count);
 #endif
 
@@ -756,10 +937,11 @@ int flecs_query_trivial_has_range(
         if (type_mismatch) {
             *type_mismatch = true;
         }
+
         return 0;
     }
 
-    const ecs_world_t *real_world = q->real_world;
+    const ecs_world_t *real_world = q->world;
     const ecs_term_t *terms = q->terms;
     const ecs_table_record_t *term_trs[FLECS_TERM_COUNT_MAX];
     ecs_entity_t term_srcs[FLECS_TERM_COUNT_MAX] = {0};
@@ -782,7 +964,9 @@ int flecs_query_trivial_has_range(
         bool is_not = terms[t].oper == EcsNot;
         const ecs_table_record_t *tr = NULL;
 
-        if (term_id < FLECS_HI_COMPONENT_ID) {
+        if (term_id < FLECS_HI_COMPONENT_ID && 
+           !(terms[t].flags_ & EcsTermIdInherited)) 
+        {
             int16_t res = component_map[term_id];
             if (res) {
                 int32_t type_index = res > 0 ?
@@ -800,6 +984,7 @@ int flecs_query_trivial_has_range(
         if (!(terms[t].src.id & EcsSelf)) {
             tr = NULL;
         }
+
         ecs_entity_t source = 0;
         if (!tr && up) {
             ecs_table_record_t *base_tr = NULL;
@@ -812,11 +997,14 @@ int flecs_query_trivial_has_range(
             if (type_mismatch && !source && (is_not || !up)) {
                 *type_mismatch = true;
             }
+
             return 0;
         }
+
         if (source && !isa_ok) {
             goto not_trivial;
         }
+
         term_trs[t] = tr;
         term_srcs[t] = source;
         any_from_base |= source != 0;
@@ -827,8 +1015,8 @@ int flecs_query_trivial_has_range(
     }
 
     ecs_iter_t lit = {0};
-    lit.world = ECS_CONST_CAST(ecs_world_t*, world);
-    lit.real_world = ECS_CONST_CAST(ecs_world_t*, real_world);
+    lit.stage = ECS_CONST_CAST(ecs_world_t*, world);
+    lit.world = ECS_CONST_CAST(ecs_world_t*, real_world);
     lit.query = q;
     lit.system = q->entity;
     lit.field_count = q->field_count;
@@ -838,8 +1026,10 @@ int flecs_query_trivial_has_range(
     lit.offset = offset;
     lit.count = count;
 
-    flecs_iter_init(lit.world, &lit, true);
+    flecs_iter_init(lit.stage, &lit, true);
     lit.flags |= EcsIterIsValid;
+    ECS_BIT_COND(lit.flags, EcsIterComponentInheritance,
+        ECS_BIT_IS_SET(flags, EcsQueryHasComponentInheritance));
 
     ecs_os_memcpy_n(ECS_CONST_CAST(ecs_id_t*, lit.ids), q->ids,
         ecs_id_t, q->field_count);
@@ -850,6 +1040,7 @@ int flecs_query_trivial_has_range(
         if (!term_trs[t]) {
             continue;
         }
+
         lit.trs[field_index] = term_trs[t];
         if (term_srcs[t]) {
             lit.sources[field_index] = term_srcs[t];

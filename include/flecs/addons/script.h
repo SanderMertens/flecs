@@ -82,6 +82,14 @@ extern ECS_DECLARE(EcsScriptVectorType);
 /* Script template. */
 typedef struct ecs_script_template_t ecs_script_template_t;
 
+typedef struct ecs_script_template_ref_t {
+    ecs_entity_t type;
+    void *value;
+} ecs_script_template_ref_t;
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(ecs_script_template_ref_t);
+
 /** Script variable. */
 typedef struct ecs_script_var_t {
     const char *name;                    /**< Variable name. */
@@ -822,6 +830,30 @@ int ecs_script_update(
     ecs_entity_t instance,
     const char *code);
 
+/** Reload script from new code or from the file it was loaded from.
+ * This operation re-runs a managed script and reconciles the entities it owns:
+ * entities that the new version no longer defines are deleted, entities that
+ * changed are updated and entities that were added are created.
+ *
+ * When code is NULL the script is reloaded from EcsScript::filename, which is
+ * set when the script is created with ecs_script_desc_t::filename. When the
+ * script has no filename the operation fails.
+ *
+ * Unlike ecs_script_update(), the new code is parsed before the entities of the
+ * old version are deleted. When parsing fails the world is left untouched and
+ * the parser error is stored in EcsScript::error.
+ *
+ * @param world The world.
+ * @param script The script entity.
+ * @param code The script code, or NULL to reload from file.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_reload(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    const char *code);
+
 /** Clear all entities associated with script.
  *
  * @param world The world.
@@ -833,6 +865,46 @@ void ecs_script_clear(
     ecs_world_t *world,
     ecs_entity_t script,
     ecs_entity_t instance);
+
+/** Update the code of a managed script with the current values of its entities.
+ * This operation iterates the entities created by a managed script, and for
+ * each component statement in the scope of an entity statement compares the
+ * value the statement assigns with the current value of the component. When the
+ * values differ, the statement is updated with ecs_script_edits_set(), which
+ * preserves the rest of the source code.
+ *
+ * Only statements with a constant value are compared. A statement whose value
+ * depends on a variable, a function call or another non-constant expression is
+ * left untouched. Statements in template bodies, components that the entity
+ * no longer has and components that are added or removed after evaluation are
+ * ignored.
+ *
+ * When there are changes, the script is reloaded with the new code (see
+ * ecs_script_reload()), which updates EcsScript::code. When there are no
+ * changes the script is left untouched.
+ *
+ * @param world The world.
+ * @param script The script entity.
+ * @return 1 if the script was updated, 0 if there were no changes, -1 if
+ *   failed.
+ */
+FLECS_API
+int ecs_script_from_scene(
+    ecs_world_t *world,
+    ecs_entity_t script);
+
+/** Save the code of a managed script to the file it was loaded from.
+ * This operation writes EcsScript::code to EcsScript::filename. When the
+ * script was not loaded from a file the operation does nothing.
+ *
+ * @param world The world.
+ * @param script The script entity.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_save(
+    ecs_world_t *world,
+    ecs_entity_t script);
 
 
 /* Script variables */

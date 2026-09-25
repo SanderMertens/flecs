@@ -205,6 +205,7 @@ void flecs_query_trivial_set_iter_this(
         if (!count) {
             count = ecs_table_count(table);
         }
+
         it->table = table;
         it->offset = range->offset;
         it->count = count;

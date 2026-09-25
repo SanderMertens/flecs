@@ -11,7 +11,7 @@ ECS_COMPONENT_DECLARE(Velocity);
 
 void SetVelocity(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], Velocity, {1, 2});
+        ecs_set(it->stage, it->entities[i], Velocity, {1, 2});
     }
 }
 
@@ -29,7 +29,7 @@ void PrintPosition(ecs_iter_t *it) {
     const Position *p = ecs_field(it, const Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
-        printf("%s: {%f, %f}\n", ecs_get_name(it->world, it->entities[i]), 
+        printf("%s: {%f, %f}\n", ecs_get_name(it->stage, it->entities[i]),
             p[i].x, p[i].y);
     }
 }

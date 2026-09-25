@@ -101,6 +101,7 @@ struct ecs_query_cache_t {
     ecs_ctx_free_t group_by_ctx_free;
 
     int32_t cascade_by;              /* Identify cascade term */
+    int32_t parent_table_count;
     int32_t match_count;             /* How often have tables been (un)matched */
     int32_t prev_match_count;        /* Track if sorting is needed */
     
