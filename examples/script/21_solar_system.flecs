@@ -1,0 +1,308 @@
+using flecs.script
+
+struct Position(x: f32, y: f32, z: f32)
+struct Sphere(radius: f32)
+struct Rgb(r: u8, g: u8, b: u8)
+
+struct Size(radius: {f64, unit: flecs.units.Length.KiloMeters})
+struct Mass(value: {f64, unit: flecs.units.Mass.KiloGrams})
+struct Orbit(
+  semi_major_axis: {f64, unit: flecs.units.Length.KiloMeters},
+  period: {f64, unit: flecs.units.Duration.Days},
+  eccentricity: f64,
+  inclination: {f64, unit: flecs.units.Angle.Degrees}
+)
+
+const scale = 0.02
+const minVisualRadius = 0.1
+const days = 1000
+
+const mercury: Rgb = {140, 136, 132}
+const venus: Rgb = {226, 200, 150}
+const earth: Rgb = {64, 110, 190}
+const mars: Rgb = {193, 86, 52}
+const jupiter: Rgb = {214, 176, 138}
+const saturn: Rgb = {226, 202, 150}
+const uranus: Rgb = {172, 218, 226}
+const neptune: Rgb = {72, 108, 210}
+
+const ceres: Rgb = {130, 125, 120}
+const pluto: Rgb = {210, 180, 150}
+const haumea: Rgb = {235, 235, 235}
+const makemake: Rgb = {200, 140, 110}
+const eris: Rgb = {238, 238, 234}
+
+const moon: Rgb = {170, 168, 165}
+const phobos: Rgb = {105, 95, 88}
+const deimos: Rgb = {140, 125, 110}
+const io: Rgb = {232, 208, 96}
+const europa: Rgb = {222, 206, 178}
+const ganymede: Rgb = {150, 138, 124}
+const callisto: Rgb = {98, 88, 78}
+const amalthea: Rgb = {168, 92, 62}
+const mimas: Rgb = {190, 188, 184}
+const enceladus: Rgb = {250, 250, 250}
+const tethys: Rgb = {236, 236, 232}
+const dione: Rgb = {214, 212, 208}
+const rhea: Rgb = {200, 198, 192}
+const titan: Rgb = {222, 164, 72}
+const hyperion: Rgb = {182, 160, 130}
+const iapetus: Rgb = {150, 132, 112}
+const phoebe: Rgb = {62, 58, 54}
+const miranda: Rgb = {186, 186, 184}
+const ariel: Rgb = {204, 202, 200}
+const umbriel: Rgb = {108, 106, 104}
+const titania: Rgb = {172, 166, 160}
+const oberon: Rgb = {150, 142, 136}
+const triton: Rgb = {226, 208, 198}
+const nereid: Rgb = {160, 158, 156}
+const proteus: Rgb = {92, 90, 88}
+const charon: Rgb = {150, 140, 135}
+const dysnomia: Rgb = {70, 66, 62}
+
+const ice: Rgb = {220, 220, 214}
+const rock: Rgb = {128, 120, 112}
+const redRock: Rgb = {150, 108, 88}
+const darkRock: Rgb = {84, 80, 76}
+
+template Body {
+  prop radius: f64 = 0
+  prop mass: f64 = 0
+  prop orbit: Orbit = {}
+  prop color: Rgb = {}
+
+  const angle = 2 * math.PI * days / orbit.period
+  const tilt = orbit.inclination * math.PI / 180
+  const distance = scale * math.sqrt(orbit.semi_major_axis)
+
+  Size: {radius}
+  Mass: {mass}
+  Orbit: orbit
+  Rgb: color
+  Sphere: {math.max(scale * math.sqrt(radius), minVisualRadius)}
+  Position: {
+    distance * math.cos(angle),
+    distance * math.sin(angle) * math.sin(tilt),
+    distance * math.sin(angle) * math.cos(tilt)
+  }
+}
+
+template Planet : Body { }
+template DwarfPlanet : Body { }
+template Satellite : Body { }
+
+Sun {
+  Size: {695700}
+  Mass: {1.9885e30}
+  Rgb: {255, 210, 90}
+  Sphere: {scale * math.sqrt(695700)}
+  Position: {}
+
+  Planet Mercury(2439.7, 3.3011e23, {57909050, 87.9691, 0.20563, 7.005}, mercury)
+
+  Planet Venus(6051.8, 4.8675e24, {108208000, 224.701, 0.006772, 3.39458}, venus)
+
+  Planet Earth(6371, 5.9722e24, {149598023, 365.256363, 0.0167086, 0.00005}, earth) {
+    Satellite Moon(1737.4, 7.346e22, {384399, 27.321661, 0.0549, 5.145}, moon)
+  }
+
+  Planet Mars(3389.5, 6.4171e23, {227939366, 686.98, 0.0934, 1.85}, mars) {
+    Satellite Phobos(11.08, 1.0638e16, {9376,    0.31891023, 0.0151,  1.093}, phobos)
+    Satellite Deimos(6.27,  1.51e15,   {23463.2, 1.263,      0.00033, 0.93},  deimos)
+  }
+
+  DwarfPlanet Ceres(469.7, 9.3839e20, {413794000, 1680.3, 0.0785, 10.588}, ceres)
+
+  Planet Jupiter(69911, 1.8982e27, {778479000, 4332.59, 0.0489, 1.303}, jupiter) {
+    Satellite Metis(21.5,      6.2e16,    {128000,   0.2948, 0.0002, 0.06},  redRock)
+    Satellite Adrastea(8.2,    2.3e15,    {129000,   0.2983, 0.0015, 0.03},  redRock)
+    Satellite Amalthea(83.5,   2.08e18,   {181366,   0.499,  0.0032, 0.374}, amalthea)
+    Satellite Thebe(49.3,      7.1e17,    {221889,   0.6761, 0.0175, 1.076}, redRock)
+    Satellite Io(1821.3,       8.9285e22, {421700,   1.7693, 0.004,  0.05},  io)
+    Satellite Europa(1560.8,   4.7988e22, {670900,   3.5504, 0.009,  0.47},  europa)
+    Satellite Ganymede(2634.1, 1.4819e23, {1070400,  7.1556, 0.0013, 0.2},   ganymede)
+    Satellite Callisto(2410.3, 1.0759e23, {1882700,  16.69,  0.0074, 0.192}, callisto)
+    Satellite Themisto(4.5,    3.8e14,    {7397000,  129.97, 0.257,  44.3},  rock)
+    Satellite Leda(10.75,      5.2e15,    {11145200, 240.33, 0.162,  28.2},  rock)
+    Satellite Ersa(1.5,        1.4e13,    {11399400, 248.62, 0.117,  29},    rock)
+    Satellite Himalia(69.8,    4.2e18,    {11439000, 249.91, 0.16,   28.4},  rock)
+    Satellite Pandia(1.5,      1.4e13,    {11479600, 251.23, 0.178,  28.9},  rock)
+    Satellite Lysithea(21.1,   3.9e16,    {11699100, 258.5,  0.117,  27.7},  rock)
+    Satellite Elara(39.95,     2.7e17,    {11710700, 258.89, 0.212,  27.8},  rock)
+    Satellite Dia(2,           3.4e13,    {12257900, 277.25, 0.232,  29.1},  rock)
+    Satellite Carpo(1.5,       1.4e13,    {17039500, 454.4,  0.415,  53.3},  rock)
+    Satellite Valetudo(0.5,    5.2e11,    {18690100, 522.07, 0.217,  34.5},  rock)
+    Satellite Euporie(1,       4.2e12,    {19261900, 546.18, 0.148,  145.5}, rock)
+    Satellite Eupheme(1,       4.2e12,    {20763400, 611.32, 0.234,  147.9}, rock)
+    Satellite Mneme(1,         4.2e12,    {20815800, 613.61, 0.24,   147.8}, rock)
+    Satellite Euanthe(1.5,     1.4e13,    {20822900, 613.93, 0.243,  148.1}, rock)
+    Satellite Harpalyke(2,     3.4e13,    {20887500, 616.78, 0.239,  147.8}, rock)
+    Satellite Orthosie(1,      4.2e12,    {20897800, 617.23, 0.294,  144.2}, rock)
+    Satellite Helike(2,        3.4e13,    {20911400, 617.86, 0.155,  154.4}, rock)
+    Satellite Praxidike(3.5,   1.8e14,    {20931100, 618.72, 0.245,  148.2}, rock)
+    Satellite Thelxinoe(1,     4.2e12,    {20972300, 620.55, 0.229,  150.7}, rock)
+    Satellite Thyone(2,        3.4e13,    {20972700, 620.59, 0.235,  147.6}, rock)
+    Satellite Ananke(14.55,    1.3e16,    {21029500, 623.11, 0.238,  147.6}, rock)
+    Satellite Iocaste(2.5,     6.5e13,    {21062300, 624.55, 0.223,  148.7}, rock)
+    Satellite Hermippe(2,      3.4e13,    {21103600, 626.38, 0.22,   150.2}, rock)
+    Satellite Philophrosyne(1, 4.2e12,    {22600200, 694.2,  0.221,  146.1}, rock)
+    Satellite Pasithee(1,      4.2e12,    {22840800, 705.41, 0.274,  164.5}, redRock)
+    Satellite Eurydome(1.5,    1.4e13,    {22894500, 707.86, 0.287,  148.9}, rock)
+    Satellite Chaldene(2,      3.4e13,    {22926300, 709.36, 0.261,  164.7}, redRock)
+    Satellite Isonoe(2,        3.4e13,    {22976300, 711.66, 0.249,  164.9}, redRock)
+    Satellite Kallichore(1.9,  2.9e13,    {23017100, 713.59, 0.253,  164.7}, redRock)
+    Satellite Erinome(1.5,     1.4e13,    {23027200, 714.05, 0.272,  164.3}, redRock)
+    Satellite Kale(1,          4.2e12,    {23047800, 715.02, 0.262,  164.6}, redRock)
+    Satellite Eirene(2,        3.4e13,    {23051300, 715.19, 0.263,  164.7}, redRock)
+    Satellite Aitne(1.5,       1.4e13,    {23059400, 715.54, 0.273,  164.5}, redRock)
+    Satellite Eukelade(2,      3.4e13,    {23062400, 715.69, 0.274,  164.7}, redRock)
+    Satellite Arche(1.5,       1.4e13,    {23093200, 717.11, 0.263,  164.5}, redRock)
+    Satellite Taygete(2.5,     6.5e13,    {23103400, 717.59, 0.257,  164.7}, redRock)
+    Satellite Carme(23.35,     5.3e16,    {23139200, 719.28, 0.261,  164.6}, redRock)
+    Satellite Herse(1,         4.2e12,    {23146700, 719.63, 0.258,  164.4}, redRock)
+    Satellite Kalyke(3.45,     1.7e14,    {23298000, 726.7,  0.261,  164.7}, redRock)
+    Satellite Hegemone(1.5,    1.4e13,    {23342600, 728.77, 0.357,  152.5}, rock)
+    Satellite Pasiphae(28.9,   1e17,      {23463200, 734.42, 0.412,  148.3}, rock)
+    Satellite Sponde(1,        4.2e12,    {23538700, 737.95, 0.323,  149.4}, rock)
+    Satellite Megaclite(3,     1.1e14,    {23640100, 742.77, 0.421,  149.9}, rock)
+    Satellite Cyllene(1,       4.2e12,    {23650000, 743.21, 0.421,  146.8}, rock)
+    Satellite Sinope(17.5,     2.2e16,    {23679300, 744.6,  0.262,  157.3}, rock)
+    Satellite Aoede(2,         3.4e13,    {23773100, 749.07, 0.437,  155.7}, rock)
+    Satellite Autonoe(2,       3.4e13,    {23785200, 749.61, 0.326,  150.7}, rock)
+    Satellite Callirrhoe(4.8,  4.6e14,    {23789400, 749.79, 0.29,   144.9}, rock)
+    Satellite Kore(1,          4.2e12,    {24203300, 769.42, 0.338,  141.7}, rock)
+  }
+
+  Planet Saturn(58232, 5.6834e26, {1433530000, 10759.22, 0.0565, 2.485}, saturn) {
+    Satellite Pan(14.1,        4.3e15,    {133600,   0.57505,  0,     0},     ice)
+    Satellite Daphnis(3.8,     6.8e13,    {136500,   0.59408,  0,     0},     ice)
+    Satellite Atlas(15.1,      5.49e15,   {137700,   0.6046,   0.001, 0},     ice)
+    Satellite Prometheus(43.1, 1.5972e17, {139400,   0.61588,  0.002, 0},     ice)
+    Satellite Pandora(40.7,    1.357e17,  {141700,   0.63137,  0.004, 0},     ice)
+    Satellite Epimetheus(58.1, 5.2561e17, {151400,   0.69701,  0.02,  0.3},   ice)
+    Satellite Janus(89.5,      1.8939e18, {151500,   0.69735,  0.007, 0.2},   ice)
+    Satellite Aegaeon(0.33,    7.82e10,   {167500,   0.80812,  0,     0},     ice)
+    Satellite Mimas(198.2,     3.7509e19, {186000,   0.94242,  0.02,  1.6},   mimas)
+    Satellite Methone(1.45,    3.92e12,   {194700,   1.00955,  0.002, 0},     ice)
+    Satellite Anthe(0.9,       1.5e12,    {198100,   1.0389,   0.002, 0},     ice)
+    Satellite Pallene(2.22,    2.3e13,    {212300,   1.15606,  0.004, 0.2},   ice)
+    Satellite Enceladus(252.1, 1.0803e20, {238400,   1.37022,  0.005, 0},     enceladus)
+    Satellite Tethys(531.1,    6.175e20,  {295000,   1.887802, 0.001, 1.1},   tethys)
+    Satellite Telesto(12.4,    3.9e15,    {295000,   1.887802, 0.001, 1.2},   ice)
+    Satellite Calypso(10.7,    1.8e15,    {295000,   1.887803, 0.001, 1.5},   ice)
+    Satellite Helene(17.6,     7.1e15,    {377600,   2.73692,  0.007, 0.2},   ice)
+    Satellite Polydeuces(1.3,  7.5e12,    {377600,   2.73692,  0.019, 0.2},   ice)
+    Satellite Dione(561.4,     1.0955e21, {377700,   2.73692,  0.002, 0},     dione)
+    Satellite Rhea(763.8,      2.3065e21, {527200,   4.5175,   0.001, 0.3},   rhea)
+    Satellite Titan(2574.73,   1.3452e23, {1221900,  15.9454,  0.029, 0.3},   titan)
+    Satellite Hyperion(135,    5.551e18,  {1481500,  21.2767,  0.105, 0.6},   hyperion)
+    Satellite Iapetus(734.3,   1.8057e21, {3561700,  79.331,   0.028, 7.6},   iapetus)
+    Satellite Kiviuq(8.5,      3.6e15,    {11307400, 448.91,   0.275, 48},    redRock)
+    Satellite Ijiraq(6.5,      1.8e15,    {11344700, 451.12,   0.293, 49.2},  redRock)
+    Satellite Phoebe(106.5,    8.3123e18, {12929400, 550.3,    0.164, 175.2}, phoebe)
+    Satellite Paaliaq(12.5,    1.4e16,    {14997700, 685.72,   0.378, 48.5},  redRock)
+    Satellite Skathi(4,        3.8e14,    {15575400, 725.73,   0.281, 151.6}, darkRock)
+    Satellite Albiorix(14.3,   1.2e16,    {16329200, 779.07,   0.482, 36.8},  redRock)
+    Satellite Bebhionn(3,      1.8e14,    {17027300, 829.64,   0.459, 38.6},  redRock)
+    Satellite Erriapus(5,      9.5e14,    {17506900, 864.92,   0.475, 37.1},  redRock)
+    Satellite Skoll(2.5,       1.1e14,    {17623400, 873.57,   0.463, 159.4}, darkRock)
+    Satellite Tarqeq(3.5,      1.8e14,    {17751000, 882.85,   0.144, 48.7},  redRock)
+    Satellite Siarnaq(19.65,   3.2e16,    {17881100, 892.68,   0.308, 47.8},  redRock)
+    Satellite Tarvos(7.5,      2.1e15,    {18216600, 917.98,   0.522, 37.8},  redRock)
+    Satellite Hyrrokkin(4,     3.8e14,    {18340900, 927.46,   0.336, 149.9}, darkRock)
+    Satellite Greip(2.5,       1.1e14,    {18380000, 930.44,   0.317, 174.2}, darkRock)
+    Satellite Mundilfari(3.5,  2.7e14,    {18588200, 946.29,   0.211, 167.1}, darkRock)
+    Satellite Gridr(2,         6.5e13,    {19250600, 997.33,   0.187, 163.9}, darkRock)
+    Satellite Bergelmir(2.5,   1.1e14,    {19268100, 998.62,   0.145, 158.8}, darkRock)
+    Satellite Jarnsaxa(3,      6.5e13,    {19273500, 999.13,   0.218, 163},   darkRock)
+    Satellite Narvi(3.5,       2.7e14,    {19285000, 999.94,   0.441, 142.2}, darkRock)
+    Satellite Suttungr(3.5,    2.7e14,    {19391900, 1008.25,  0.116, 175.7}, darkRock)
+    Satellite Hati(2.5,        1.1e14,    {19695000, 1032.02,  0.372, 165.4}, darkRock)
+    Satellite Eggther(3,       1.1e14,    {19844600, 1043.8,   0.157, 165},   darkRock)
+    Satellite Farbauti(2.5,    6.5e13,    {20290700, 1079.12,  0.249, 156.2}, darkRock)
+    Satellite Thrymr(4,        3.8e14,    {20330500, 1082.23,  0.467, 175},   darkRock)
+    Satellite Bestla(3.5,      2.7e14,    {20337800, 1082.94,  0.486, 138.3}, darkRock)
+    Satellite Angrboda(2,      3.4e13,    {20591500, 1103.2,   0.216, 177.7}, darkRock)
+    Satellite Aegir(3,         6.5e13,    {20664400, 1109.13,  0.255, 166.1}, darkRock)
+    Satellite Beli(2,          3.4e13,    {20703700, 1112.27,  0.087, 158.9}, darkRock)
+    Satellite Gerd(2,          3.4e13,    {20947500, 1131.91,  0.517, 174.4}, darkRock)
+    Satellite Gunnlod(2,       6.5e13,    {21141800, 1147.74,  0.251, 160.4}, darkRock)
+    Satellite Skrymir(2,       6.5e13,    {21447400, 1172.72,  0.437, 175.6}, darkRock)
+    Satellite Alvaldi(3,       6.5e13,    {21993800, 1217.8,   0.238, 177.4}, darkRock)
+    Satellite Kari(3,          2.7e14,    {22032100, 1220.98,  0.469, 153},   darkRock)
+    Satellite Geirrod(2,       3.4e13,    {22259400, 1240.05,  0.539, 154.4}, darkRock)
+    Satellite Fenrir(2,        3.4e13,    {22330800, 1245.92,  0.137, 164.5}, darkRock)
+    Satellite Surtur(3,        6.5e13,    {22748000, 1281.14,  0.448, 168.4}, darkRock)
+    Satellite Loge(2.5,        1.1e14,    {22919200, 1295.52,  0.191, 168.1}, darkRock)
+    Satellite Ymir(9.5,        5.6e15,    {22955600, 1298.68,  0.338, 172.3}, darkRock)
+    Satellite Thiazzi(2,       3.4e13,    {23577500, 1351.83,  0.511, 158.8}, darkRock)
+    Satellite Fornjot(3,       1.1e14,    {24936800, 1470.36,  0.213, 170},   darkRock)
+  }
+
+  Planet Uranus(25362, 8.681e25, {2870972000, 30688.5, 0.04717, 0.773}, uranus) {
+    Satellite Cordelia(19.8,   6.08e16,   {49755,    0.3347,  0,      0.2},   darkRock)
+    Satellite Ophelia(21.65,   3.57e16,   {53765,    0.3764,  0.011,  0.2},   darkRock)
+    Satellite Bianca(25.45,    6.9e16,    {59170,    0.4347,  0.006,  2.3},   darkRock)
+    Satellite Cressida(39.5,   1.839e17,  {61770,    0.4639,  0.004,  1.8},   darkRock)
+    Satellite Desdemona(32.15, 1.4e17,    {62663,    0.4736,  0.007,  3.1},   darkRock)
+    Satellite Juliet(47.2,     4.4e17,    {64362,    0.4931,  0.006,  3},     darkRock)
+    Satellite Portia(67.45,    1.3e18,    {66101,    0.5132,  0.004,  2.7},   darkRock)
+    Satellite Rosalind(36,     2e17,      {69930,    0.5583,  0.003,  1.7},   darkRock)
+    Satellite Cupid(8.9,       3e15,      {74396,    0.6125,  0.007,  2},     darkRock)
+    Satellite Belinda(40.1,    2.7e17,    {75258,    0.6236,  0.002,  1.4},   darkRock)
+    Satellite Perdita(13.3,    9.9e15,    {76418,    0.6382,  0.005,  1.6},   darkRock)
+    Satellite Puck(81,         2.2e18,    {86004,    0.76183, 0.0001, 0.327}, darkRock)
+    Satellite Mab(6,           9e14,      {97737,    0.9229,  0.006,  1.8},   darkRock)
+    Satellite Miranda(235,     6.293e19,  {129846,   1.4135,  0.0014, 4.421}, miranda)
+    Satellite Ariel(578.5,     1.2331e21, {190929,   2.5204,  0.0014, 0.026}, ariel)
+    Satellite Umbriel(582.4,   1.2885e21, {265986,   4.1442,  0.0039, 0.083}, umbriel)
+    Satellite Titania(788.5,   3.455e21,  {436298,   8.7059,  0.0016, 0.114}, titania)
+    Satellite Oberon(761,      3.1104e21, {583511,   13.463,  0.0016, 0.125}, oberon)
+    Satellite Francisco(11,    5.6e15,    {4275700,  267,     0.144,  146.8}, rock)
+    Satellite Caliban(21,      3.9e16,    {7167000,  580,     0.2,    141.4}, redRock)
+    Satellite Stephano(16,     1.7e16,    {7951400,  677,     0.235,  143.6}, rock)
+    Satellite Trinculo(9,      3.1e15,    {8502600,  749,     0.22,   167.1}, rock)
+    Satellite Sycorax(78.5,    2e18,      {12193200, 1286,    0.52,   157},   redRock)
+    Satellite Margaret(10,     4.2e15,    {14425000, 1655,    0.642,  60.5},  rock)
+    Satellite Prospero(25,     6.5e16,    {16221000, 1974,    0.441,  149.4}, rock)
+    Satellite Setebos(23.5,    5.4e16,    {17519800, 2215,    0.579,  153.9}, rock)
+    Satellite Ferdinand(10.5,  4.8e15,    {20421400, 2788,    0.395,  169.2}, rock)
+  }
+
+  Planet Neptune(24622, 1.0241e26, {4498400000, 60195, 0.008678, 1.77}, neptune) {
+    Satellite Naiad(33,       1.2e17,   {48228,    0.2943923, 0.00014, 4.728},   darkRock)
+    Satellite Thalassa(41,    3.5e17,   {50075,    0.3114836, 0.00019, 0.168},   darkRock)
+    Satellite Despina(75,     1.1e18,   {52526,    0.3346555, 0.00027, 0.039},   darkRock)
+    Satellite Galatea(88,     2.12e18,  {61953,    0.428744,  0.0002,  0.01},    darkRock)
+    Satellite Larissa(97,     3.8e18,   {73548,    0.554653,  0.00121, 0.214},   darkRock)
+    Satellite Hippocamp(17.4, 2.2e16,   {105283,   0.950104,  0.00001, 0.002},   darkRock)
+    Satellite Proteus(210,    2.3e19,   {117647,   1.12231,   0.00047, 0.042},   proteus)
+    Satellite Triton(1352.5,  2.139e22, {354758,   5.876854,  0.00001, 156.834}, triton)
+    Satellite Nereid(170,     2.1e19,   {5513782,  360.1336,  0.75067, 7.108},   nereid)
+    Satellite Halimede(30.5,  1.2e17,   {16590500, 1879.08,   0.521,   119.6},   rock)
+    Satellite Sao(20,         3.4e16,   {22239900, 2912.72,   0.296,   50.2},    rock)
+    Satellite Laomedeia(20,   3.4e16,   {23499900, 3171.33,   0.419,   36.9},    rock)
+    Satellite Psamathe(19,    2.9e16,   {47646600, 9149.514,  0.413,   127.8},   rock)
+    Satellite Neso(30,        1.1e17,   {49897800, 9794.705,  0.455,   128.4},   rock)
+  }
+
+  DwarfPlanet Pluto(1188.3, 1.3025e22, {5906380000, 90560, 0.2488, 17.16}, pluto) {
+    Satellite Charon(606, 1.5897e21, {19595.764, 6.387221, 0.000161, 0.08},  charon)
+    Satellite Styx(5.2,   7.5e15,    {42656,     20.16155, 0.005787, 0.809}, ice)
+    Satellite Nix(18.5,   2.6e16,    {48694,     24.85463, 0.002036, 0.133}, ice)
+    Satellite Kerberos(6, 1.65e16,   {57783,     32.16756, 0.00328,  0.389}, ice)
+    Satellite Hydra(19,   3.01e16,   {64738,     38.20177, 0.005862, 0.242}, ice)
+  }
+
+  DwarfPlanet Haumea(772, 3.952e21, {6450062000, 103410, 0.19642, 28.2137}, haumea) {
+    Satellite Namaka(75,  1.18e18, {25506, 18.2783, 0.2179, 12.79}, ice)
+    @name Hiʻiaka
+    Satellite Hiiaka(185, 1.6e19,  {49371, 49.462,  0.0542, 1.01},  ice)
+  }
+
+  DwarfPlanet Makemake(715, 2.69e21, {6806554000, 112022, 0.1604, 29.002}, makemake)
+
+  DwarfPlanet Eris(1163, 1.638e22, {10126280000, 204796, 0.44, 44.18}, eris) {
+    Satellite Dysnomia(307.5, 8.2e19, {37273, 15.785899, 0.0062, 0}, dysnomia)
+  }
+}
