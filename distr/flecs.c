@@ -22430,7 +22430,7 @@ static void MonitorAlerts(ecs_iter_t *it) {
         ecs_id_t member_id = alert[i].id;
         const EcsMemberRanges *ranges = NULL;
         if (member_id) {
-            ranges = ecs_ref_get(world, &alert[i].ranges, EcsMemberRanges);
+            ranges = ecs_ref_get(it->world, &alert[i].ranges, EcsMemberRanges);
         }
 
         ecs_iter_t rit = ecs_query_iter(world, q);
@@ -22556,7 +22556,7 @@ static void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_id_t member_id = alert->id;
     const EcsMemberRanges *ranges = NULL;
     if (member_id) {
-        ranges = ecs_ref_get(world, &alert->ranges, EcsMemberRanges);
+        ranges = ecs_ref_get(it->world, &alert->ranges, EcsMemberRanges);
     }
 
     ecs_script_vars_t *vars = ecs_script_vars_init(it->stage);
@@ -25901,7 +25901,7 @@ static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
             continue;
         }
 
-        const void *ptr = ecs_ref_get_id(world, ref, mi[i].id);
+        const void *ptr = ecs_ref_get_id(it->world, ref, mi[i].id);
         if (ptr) {
             ptr = ECS_OFFSET(ptr, ctx->offset);
             if (!counter) {
