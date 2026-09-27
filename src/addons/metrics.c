@@ -268,7 +268,7 @@ static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
             continue;
         }
 
-        const void *ptr = ecs_ref_get_id(world, ref, mi[i].id);
+        const void *ptr = ecs_ref_get_id(it->world, ref, mi[i].id);
         if (ptr) {
             ptr = ECS_OFFSET(ptr, ctx->offset);
             if (!counter) {
