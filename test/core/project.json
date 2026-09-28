@@ -1536,7 +1536,9 @@
                 "empty_after_remove",
                 "remove_target_no_intermediate_table",
                 "remove_target_no_intermediate_table_3_pairs",
-                "delete_parent_w_isa_base_that_inherits_from_disabled_child"
+                "delete_parent_w_isa_base_that_inherits_from_disabled_child",
+                "delete_parent_from_on_remove_during_delete_w_queued_child_remove",
+                "delete_with_deletes_children_before_parent"
             ]
         }, {
             "id": "Set",
@@ -2572,7 +2574,8 @@
                 "single_term_observer_w_var_get_var_pair_second_w_generation",
                 "single_term_observer_w_var_get_var_nested_invoke",
                 "single_term_observer_w_var_get_var_pair_second_on_delete_target",
-                "single_term_observer_wo_var_invoked_once_per_event"
+                "single_term_observer_wo_var_invoked_once_per_event",
+                "on_set_up_then_parent_move_add_grandchild"
             ]
         }, {
             "id": "ObserverOnSet",

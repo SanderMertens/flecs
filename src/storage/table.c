@@ -1082,13 +1082,6 @@ static void flecs_table_dtor_all(
     ecs_assert(!column_count || table->data.columns != NULL, 
         ECS_INTERNAL_ERROR, NULL);
 
-    if (table->_->traversable_count) {
-        /* If table contains monitored entities with traversable relationships,
-         * make sure to invalidate observer cache */
-        flecs_emit_propagate_invalidate(world, table, 0, count);
-    }
-
-    /* If table has components with destructors, iterate component columns */
     if (table->flags & EcsTableHasDtors) {
         /* Run on_remove callbacks first before destructing components */
         for (c = 0; c < column_count; c++) {
@@ -1099,7 +1092,16 @@ static void flecs_table_dtor_all(
                     column, &entities[0], 0, count);
             }
         }
+    }
 
+    if (table->_->traversable_count) {
+        /* If table contains monitored entities with traversable relationships,
+         * make sure to invalidate observer cache */
+        flecs_emit_propagate_invalidate(world, table, 0, count);
+    }
+
+    /* If table has components with destructors, iterate component columns */
+    if (table->flags & EcsTableHasDtors) {
         /* Destruct components */
         for (c = 0; c < column_count; c++) {
             flecs_table_invoke_dtor(&table->data.columns[c], 0, count);
@@ -2070,6 +2072,8 @@ void flecs_table_merge(
         return;
     }
 
+    int32_t src_traversable_count = src_table->_->traversable_count;
+
     ecs_entity_t *src_entities = src_table->data.entities;
     for (int32_t i = 0; i < src_count; i ++) {
         ecs_record_t *r = flecs_entities_get(world, src_entities[i]);
@@ -2142,6 +2146,10 @@ void flecs_table_merge(
 
     flecs_table_check_sanity(src_table);
     flecs_table_check_sanity(dst_table);
+
+    if (src_traversable_count) {
+        flecs_emit_propagate_invalidate(world, dst_table, dst_count, src_count);
+    }
 }
 
 static int32_t flecs_table_get_toggle_column(
