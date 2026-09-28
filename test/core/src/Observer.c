@@ -15455,3 +15455,39 @@ void Observer_single_term_observer_wo_var_invoked_once_per_event(void) {
 
     ecs_fini(world);
 }
+
+void Observer_on_set_up_then_parent_move_add_grandchild(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Mark);
+    ECS_TAG(world, Other);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position), .src.id = EcsUp }},
+        .events = { EcsOnSet },
+        .callback = Observer_dummy
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = Mark, .src.id = EcsUp }},
+        .events = { EcsOnAdd },
+        .callback = Observer_dummy
+    });
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {1, 2});
+    ecs_add(world, p, Mark);
+
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_set(world, c, Position, {1, 2});
+    ecs_new_w_pair(world, EcsChildOf, c);
+
+    ecs_set(world, p, Position, {3, 4});
+    ecs_add(world, p, Other);
+
+    ecs_entity_t g = ecs_new_w_pair(world, EcsChildOf, c);
+    test_assert(ecs_has_pair(world, g, EcsChildOf, c));
+
+    ecs_fini(world);
+}
