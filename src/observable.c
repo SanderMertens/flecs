@@ -482,7 +482,7 @@ static void flecs_emit_propagate(
 
     if (ecs_should_log_3()) {
         char *idstr = ecs_id_str(world, tgt_cr->id);
-        ecs_dbg_3("propagate events/invalidate cache for %s", idstr);
+        ecs_dbg_3("propagate events for %s", idstr);
         ecs_os_free(idstr);
     }
 
@@ -491,8 +491,6 @@ static void flecs_emit_propagate(
     /* Propagate to records of traversable relationships */
     ecs_component_record_t *cur = tgt_cr;
     while ((cur = flecs_component_trav_next(cur))) {
-        cur->pair->reachable.generation ++; /* Invalidate cache */
-
         /* Get traversed relationship */
         ecs_entity_t trav = ECS_PAIR_FIRST(cur->id);
         if (propagate_trav && propagate_trav != trav) {
