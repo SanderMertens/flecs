@@ -77,9 +77,15 @@ void flecs_spawner_instantiate(
     ecs_entity_t instance,
     const ecs_instantiate_ctx_t *ctx);
 
+void flecs_tree_spawner_fini(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
 void EcsTreeSpawner_free(
     EcsTreeSpawner *ptr);
 
+#else
+#define flecs_tree_spawner_fini(world, parent)
 #endif
 
 

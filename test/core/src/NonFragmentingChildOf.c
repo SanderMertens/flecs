@@ -7250,6 +7250,92 @@ void NonFragmentingChildOf_fini_w_instantiated_prefab_non_fragmenting_child(void
     test_assert(true);
 }
 
+void NonFragmentingChildOf_delete_instantiated_prefab_non_fragmenting_child(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {prefab}));
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    ecs_delete(world, instance);
+    ecs_delete(world, prefab);
+
+    test_assert(!ecs_is_alive(world, prefab));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_delete_instanced_prefab_non_fragmenting_child(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {prefab}));
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    test_assert(ecs_is_alive(world, instance));
+
+    ecs_delete(world, prefab);
+
+    test_assert(!ecs_is_alive(world, prefab));
+    test_assert(!ecs_is_alive(world, child));
+
+    test_assert(ecs_is_alive(world, instance));
+    test_assert(!ecs_has_pair(world, instance, EcsIsA, prefab));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_delete_instanced_nested_prefab_non_fragmenting_child(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t outer = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t inner = ecs_insert(world, ecs_value(EcsParent, {outer}));
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {inner}));
+
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, inner);
+    ecs_entity_t outer_instance = ecs_new_w_pair(world, EcsIsA, outer);
+
+    test_assert(ecs_is_alive(world, instance));
+
+    ecs_delete(world, outer);
+
+    test_assert(!ecs_is_alive(world, outer));
+    test_assert(!ecs_is_alive(world, inner));
+    test_assert(!ecs_is_alive(world, child));
+
+    test_assert(ecs_is_alive(world, instance));
+    test_assert(!ecs_has_pair(world, instance, EcsIsA, inner));
+
+    test_assert(ecs_is_alive(world, outer_instance));
+    test_assert(!ecs_has_pair(world, outer_instance, EcsIsA, outer));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_delete_nested_prefab_after_delete_instance_and_shrink(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t outer = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t inner = ecs_insert(world, ecs_value(EcsParent, {outer}));
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {inner}));
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, inner);
+
+    ecs_delete(world, instance);
+    /* Remove the empty IsA table so inner's non-fragmenting children */
+    /* are deleted through the optimized recursive path. */
+    ecs_shrink(world);
+
+    ecs_delete(world, outer);
+
+    test_assert(!ecs_is_alive(world, outer));
+    test_assert(!ecs_is_alive(world, inner));
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(!ecs_is_alive(world, instance));
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_convert_childof_to_parent(void) {
     ecs_world_t *world = ecs_mini();
 

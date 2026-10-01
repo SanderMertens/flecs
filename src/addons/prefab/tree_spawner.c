@@ -360,6 +360,31 @@ void flecs_fini_prefab(
     }
 }
 
+void flecs_tree_spawner_fini(
+    ecs_world_t *world,
+    ecs_entity_t parent)
+{
+    ecs_record_t *r = flecs_entities_get_any(world, parent);
+    if (!r->table) {
+        return;
+    }
+
+    ecs_entity_t id = ecs_id(EcsTreeSpawner);
+    if (!world->non_trivial_lookup[id] &&
+        r->table->component_map[id] <= 0) {
+        return;
+    }
+
+    EcsTreeSpawner* ts = flecs_get_mut(
+        world, parent, ecs_id(EcsTreeSpawner), r,
+        sizeof(EcsTreeSpawner)).ptr;
+
+    if (ts) {
+        EcsTreeSpawner_free(ts);
+        ecs_os_zeromem(ts);
+    }
+}
+
 #else
 
 #ifdef FLECS_DEBUG
