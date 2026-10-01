@@ -1847,6 +1847,8 @@ void flecs_bootstrap_prefab(
 void flecs_fini_prefab(
     ecs_world_t *world);
 
+#define flecs_tree_spawner_fini(world, parent)
+
 #endif
 
 #ifndef FLECS_OBSERVABLE_H
@@ -14408,6 +14410,10 @@ static void flecs_component_delete_non_fragmenting_childof(
     ecs_component_record_t *cr,
     bool force_delete)
 {
+    if (force_delete) {
+        flecs_tree_spawner_fini(world, ECS_PAIR_SECOND(cr->id));
+    }
+
     cr->flags |= EcsIdMarkedForDelete;
 
     ecs_pair_record_t *pr = cr->pair;
@@ -14501,6 +14507,10 @@ static bool flecs_component_mark_non_fragmenting_childof(
         flecs_component_delete_non_fragmenting_childof(
             world, childof_cr, force_delete);
         return true;
+    }
+
+    if (force_delete) {
+        flecs_tree_spawner_fini(world, tgt);
     }
 
     flecs_marked_id_push(world, childof_cr, EcsDelete, true);

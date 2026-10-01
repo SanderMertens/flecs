@@ -967,6 +967,10 @@ void NonFragmentingChildOf_prefab_get_target_after_delete_instance_child(void);
 void NonFragmentingChildOf_defer_remove_add_batched_w_sibling_in_table(void);
 void NonFragmentingChildOf_instantiate_tree_after_rename_child(void);
 void NonFragmentingChildOf_fini_w_instantiated_prefab_non_fragmenting_child(void);
+void NonFragmentingChildOf_delete_instantiated_prefab_non_fragmenting_child(void);
+void NonFragmentingChildOf_delete_instanced_prefab_non_fragmenting_child(void);
+void NonFragmentingChildOf_delete_instanced_nested_prefab_non_fragmenting_child(void);
+void NonFragmentingChildOf_delete_nested_prefab_after_delete_instance_and_shrink(void);
 void NonFragmentingChildOf_convert_childof_to_parent(void);
 void NonFragmentingChildOf_convert_childof_to_parent_3_children(void);
 void NonFragmentingChildOf_convert_childof_to_parent_3_children_remove_childof_first(void);
@@ -7237,6 +7241,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "fini_w_instantiated_prefab_non_fragmenting_child",
         NonFragmentingChildOf_fini_w_instantiated_prefab_non_fragmenting_child
+    },
+    {
+        "delete_instantiated_prefab_non_fragmenting_child",
+        NonFragmentingChildOf_delete_instantiated_prefab_non_fragmenting_child
+    },
+    {
+        "delete_instanced_prefab_non_fragmenting_child",
+        NonFragmentingChildOf_delete_instanced_prefab_non_fragmenting_child
+    },
+    {
+        "delete_instanced_nested_prefab_non_fragmenting_child",
+        NonFragmentingChildOf_delete_instanced_nested_prefab_non_fragmenting_child
+    },
+    {
+        "delete_nested_prefab_after_delete_instance_and_shrink",
+        NonFragmentingChildOf_delete_nested_prefab_after_delete_instance_and_shrink
     },
     {
         "convert_childof_to_parent",
@@ -17130,7 +17150,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        286,
+        290,
         NonFragmentingChildOf_testcases
     },
     {

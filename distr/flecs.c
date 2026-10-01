@@ -3212,9 +3212,15 @@ void flecs_spawner_instantiate(
     ecs_entity_t instance,
     const ecs_instantiate_ctx_t *ctx);
 
+void flecs_tree_spawner_fini(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
 void EcsTreeSpawner_free(
     EcsTreeSpawner *ptr);
 
+#else
+#define flecs_tree_spawner_fini(world, parent)
 #endif
 
 #endif
@@ -16452,6 +16458,10 @@ static void flecs_component_delete_non_fragmenting_childof(
     ecs_component_record_t *cr,
     bool force_delete)
 {
+    if (force_delete) {
+        flecs_tree_spawner_fini(world, ECS_PAIR_SECOND(cr->id));
+    }
+
     cr->flags |= EcsIdMarkedForDelete;
 
     ecs_pair_record_t *pr = cr->pair;
@@ -16545,6 +16555,10 @@ static bool flecs_component_mark_non_fragmenting_childof(
         flecs_component_delete_non_fragmenting_childof(
             world, childof_cr, force_delete);
         return true;
+    }
+
+    if (force_delete) {
+        flecs_tree_spawner_fini(world, tgt);
     }
 
     flecs_marked_id_push(world, childof_cr, EcsDelete, true);
@@ -62700,6 +62714,31 @@ void flecs_fini_prefab(
         for (i = 0; i < it.count; i ++) {
             EcsTreeSpawner_free(&t[i]);
         }
+    }
+}
+
+void flecs_tree_spawner_fini(
+    ecs_world_t *world,
+    ecs_entity_t parent)
+{
+    ecs_record_t *r = flecs_entities_get_any(world, parent);
+    if (!r->table) {
+        return;
+    }
+
+    ecs_entity_t id = ecs_id(EcsTreeSpawner);
+    if (!world->non_trivial_lookup[id] &&
+        r->table->component_map[id] <= 0) {
+        return;
+    }
+
+    EcsTreeSpawner* ts = flecs_get_mut(
+        world, parent, ecs_id(EcsTreeSpawner), r,
+        sizeof(EcsTreeSpawner)).ptr;
+
+    if (ts) {
+        EcsTreeSpawner_free(ts);
+        ecs_os_zeromem(ts);
     }
 }
 
