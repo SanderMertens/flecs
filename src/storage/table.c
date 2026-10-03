@@ -1133,7 +1133,7 @@ static void flecs_table_dtor_all(
 }
 
 #define FLECS_LOCKED_STORAGE_MSG(operation) \
-    "a " #operation " operation failed because the table is locked, pass a stage to the operation and merge it after iteration"
+    "a " #operation " failed because the table is locked, to defer pass a stage to the operation instead of a world"
 
 /* Cleanup table storage */
 static void flecs_table_fini_data(

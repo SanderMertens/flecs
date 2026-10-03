@@ -128,18 +128,24 @@ ecs_entity_t flecs_run_system(
 #ifdef FLECS_CACHED_QUERIES
                 if (qit.flags & EcsIterTrivialCached) {
                     while (flecs_query_trivial_cached_next(&qit)) {
+                        ECS_TABLE_LOCK(world, qit.table);
                         action(&qit);
+                        ECS_TABLE_UNLOCK(world, qit.table);
                     }
                 } else
 #endif
                 {
                     while (ecs_query_next(&qit)) {
+                        ECS_TABLE_LOCK(world, qit.table);
                         action(&qit);
+                        ECS_TABLE_UNLOCK(world, qit.table);
                     }
                 }
             } else {
                 while (ecs_iter_next(it)) {
+                    ECS_TABLE_LOCK(world, qit.table);
                     action(it);
+                    ECS_TABLE_UNLOCK(world, qit.table);
                 }
             }
         } else {

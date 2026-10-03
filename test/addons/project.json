@@ -205,7 +205,19 @@
                 "register_run_after_callback_ctx",
                 "set_group",
                 "run_w_query_next",
-                "missing_callback"
+                "missing_callback",
+                "locked_storage_cached",
+                "locked_storage_mixed",
+                "locked_storage_cached_immediate",
+                "locked_storage_mixed_immediate",
+                "locked_storage_cached_immediate_w_stage",
+                "locked_storage_mixed_immediate_w_stage",
+                "locked_storage_cached_other",
+                "locked_storage_mixed_other",
+                "locked_storage_cached_immediate_other",
+                "locked_storage_mixed_immediate_other",
+                "locked_storage_cached_immediate_w_stage_other",
+                "locked_storage_mixed_immediate_w_stage_other"
             ]
         }, {
             "id": "SystemPeriodic",

@@ -14281,7 +14281,7 @@ static void flecs_emit_propagate(
 
     if (ecs_should_log_3()) {
         char *idstr = ecs_id_str(world, tgt_cr->id);
-        ecs_dbg_3("propagate events/invalidate cache for %s", idstr);
+        ecs_dbg_3("propagate events for %s", idstr);
         ecs_os_free(idstr);
     }
 
@@ -14290,8 +14290,6 @@ static void flecs_emit_propagate(
     /* Propagate to records of traversable relationships */
     ecs_component_record_t *cur = tgt_cr;
     while ((cur = flecs_component_trav_next(cur))) {
-        cur->pair->reachable.generation ++; /* Invalidate cache */
-
         /* Get traversed relationship */
         ecs_entity_t trav = ECS_PAIR_FIRST(cur->id);
         if (propagate_trav && propagate_trav != trav) {
@@ -41436,13 +41434,6 @@ static void flecs_table_dtor_all(
     ecs_assert(!column_count || table->data.columns != NULL, 
         ECS_INTERNAL_ERROR, NULL);
 
-    if (table->_->traversable_count) {
-        /* If table contains monitored entities with traversable relationships,
-         * make sure to invalidate observer cache */
-        flecs_emit_propagate_invalidate(world, table, 0, count);
-    }
-
-    /* If table has components with destructors, iterate component columns */
     if (table->flags & EcsTableHasDtors) {
         /* Run on_remove callbacks first before destructing components */
         for (c = 0; c < column_count; c++) {
@@ -41453,7 +41444,16 @@ static void flecs_table_dtor_all(
                     column, &entities[0], 0, count);
             }
         }
+    }
 
+    if (table->_->traversable_count) {
+        /* If table contains monitored entities with traversable relationships,
+         * make sure to invalidate observer cache */
+        flecs_emit_propagate_invalidate(world, table, 0, count);
+    }
+
+    /* If table has components with destructors, iterate component columns */
+    if (table->flags & EcsTableHasDtors) {
         /* Destruct components */
         for (c = 0; c < column_count; c++) {
             flecs_table_invoke_dtor(&table->data.columns[c], 0, count);
@@ -41485,7 +41485,7 @@ static void flecs_table_dtor_all(
 }
 
 #define FLECS_LOCKED_STORAGE_MSG(operation) \
-    "a " #operation " operation failed because the table is locked, pass a stage to the operation and merge it after iteration"
+    "a " #operation " failed because the table is locked, to defer pass a stage to the operation instead of a world"
 
 /* Cleanup table storage */
 static void flecs_table_fini_data(
@@ -42424,6 +42424,8 @@ void flecs_table_merge(
         return;
     }
 
+    int32_t src_traversable_count = src_table->_->traversable_count;
+
     ecs_entity_t *src_entities = src_table->data.entities;
     for (int32_t i = 0; i < src_count; i ++) {
         ecs_record_t *r = flecs_entities_get(world, src_entities[i]);
@@ -42496,6 +42498,10 @@ void flecs_table_merge(
 
     flecs_table_check_sanity(src_table);
     flecs_table_check_sanity(dst_table);
+
+    if (src_traversable_count) {
+        flecs_emit_propagate_invalidate(world, dst_table, dst_count, src_count);
+    }
 }
 
 static int32_t flecs_table_get_toggle_column(
@@ -75302,18 +75308,24 @@ ecs_entity_t flecs_run_system(
 #ifdef FLECS_CACHED_QUERIES
                 if (qit.flags & EcsIterTrivialCached) {
                     while (flecs_query_trivial_cached_next(&qit)) {
+                        ECS_TABLE_LOCK(world, qit.table);
                         action(&qit);
+                        ECS_TABLE_UNLOCK(world, qit.table);
                     }
                 } else
 #endif
                 {
                     while (ecs_query_next(&qit)) {
+                        ECS_TABLE_LOCK(world, qit.table);
                         action(&qit);
+                        ECS_TABLE_UNLOCK(world, qit.table);
                     }
                 }
             } else {
                 while (ecs_iter_next(it)) {
+                    ECS_TABLE_LOCK(world, qit.table);
                     action(it);
+                    ECS_TABLE_UNLOCK(world, qit.table);
                 }
             }
         } else {
