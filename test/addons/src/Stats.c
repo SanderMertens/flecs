@@ -58,8 +58,9 @@ void Stats_get_pipeline_stats_after_progress_no_systems(void) {
     ecs_pipeline_stats_t stats = {0};
     test_bool(ecs_pipeline_stats_get(world, pipeline, &stats), true);
 
-    test_int(ecs_vec_count(&stats.systems), 1);
-    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], 0); /* merge */
+    test_int(ecs_vec_count(&stats.systems), 2);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], ecs_lookup(world, "flecs.script.ProgressTasks"));
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
 
     ecs_pipeline_stats_fini(&stats);
 
@@ -82,9 +83,11 @@ void Stats_get_pipeline_stats_after_progress_1_system(void) {
     ecs_pipeline_stats_t stats = {0};
     test_bool(ecs_pipeline_stats_get(world, pipeline, &stats), true);
 
-    test_int(ecs_vec_count(&stats.systems), 2);
-    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], ecs_id(FooSys));
+    test_int(ecs_vec_count(&stats.systems), 4);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], ecs_lookup(world, "flecs.script.ProgressTasks"));
     test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[2], ecs_id(FooSys));
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[3], 0); /* merge */
 
     ecs_progress(world, 0);
 
@@ -109,8 +112,9 @@ void Stats_get_pipeline_stats_after_progress_1_inactive_system(void) {
     ecs_pipeline_stats_t stats = {0};
     test_bool(ecs_pipeline_stats_get(world, pipeline, &stats), true);
 
-    test_int(ecs_vec_count(&stats.systems), 1);
-    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], 0); /* merge */
+    test_int(ecs_vec_count(&stats.systems), 2);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], ecs_lookup(world, "flecs.script.ProgressTasks"));
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
 
     ecs_progress(world, 0);
 
@@ -135,10 +139,12 @@ void Stats_get_pipeline_stats_after_progress_2_systems(void) {
     ecs_pipeline_stats_t stats = {0};
     test_bool(ecs_pipeline_stats_get(world, pipeline, &stats), true);
 
-    test_int(ecs_vec_count(&stats.systems), 3);
-    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], ecs_id(FooSys));
-    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[1], ecs_id(BarSys));
-    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[2], 0); /* merge */
+    test_int(ecs_vec_count(&stats.systems), 5);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], ecs_lookup(world, "flecs.script.ProgressTasks"));
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[2], ecs_id(FooSys));
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[3], ecs_id(BarSys));
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
 
     ecs_progress(world, 0);
 
@@ -169,11 +175,13 @@ void Stats_get_pipeline_stats_after_progress_2_systems_one_merge(void) {
     ecs_pipeline_stats_t stats = {0};
     test_bool(ecs_pipeline_stats_get(world, pipeline, &stats), true);
 
-    test_int(ecs_vec_count(&stats.systems), 4);
-    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], ecs_id(FooSys));
+    test_int(ecs_vec_count(&stats.systems), 6);
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[0], ecs_lookup(world, "flecs.script.ProgressTasks"));
     test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
-    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[2], ecs_id(BarSys));
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[2], ecs_id(FooSys));
     test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[3], 0); /* merge */
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[4], ecs_id(BarSys));
+    test_int(ecs_vec_get_t(&stats.systems, ecs_entity_t, 0)[5], 0); /* merge */
 
     ecs_progress(world, 0);
 
