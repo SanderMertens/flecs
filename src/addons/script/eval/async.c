@@ -15,7 +15,6 @@
 #include "../script.h"
 
 ECS_COMPONENT_DECLARE(EcsScriptTask);
-static ECS_TAG_DECLARE(EcsScriptTasksPending);
 
 typedef struct EcsScriptAsyncTasks {
     ecs_vec_t tasks;
@@ -1057,34 +1056,12 @@ static size_t flecs_script_task_component_count(
 
 /* Async blocks */
 
-/* The ProgressTasks system matches this tag, which is added to the tag entity
- * itself while async block tasks exist. This keeps the system inactive (and
- * free) for worlds that don't use async blocks. */
-static void flecs_script_tasks_pending_set(
-    ecs_world_t *world,
-    bool pending)
-{
-    if (!EcsScriptTasksPending || ecs_is_fini(world)) {
-        return;
-    }
-
-    if (pending) {
-        ecs_add_id(world, EcsScriptTasksPending, EcsScriptTasksPending);
-    } else {
-        ecs_remove_id(world, EcsScriptTasksPending, EcsScriptTasksPending);
-    }
-}
-
 static void flecs_script_task_sched_add(
     ecs_script_task_t *task)
 {
-    ecs_world_t *world = task->script->world;
-    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(task->script->world);
     task->sched_index = ecs_vec_count(&rt->async_tasks);
     ecs_vec_append_t(NULL, &rt->async_tasks, ecs_script_task_t*)[0] = task;
-    if (task->sched_index == 0) {
-        flecs_script_tasks_pending_set(world, true);
-    }
 }
 
 static void flecs_script_task_sched_remove(
@@ -1114,9 +1091,6 @@ static void flecs_script_task_sched_remove(
     }
 
     ecs_vec_remove_last(&rt->async_tasks);
-    if (!ecs_vec_count(&rt->async_tasks)) {
-        flecs_script_tasks_pending_set(task->script->world, false);
-    }
 }
 
 static ecs_script_vars_t* flecs_script_vars_snapshot(
@@ -1495,9 +1469,6 @@ int32_t ecs_script_tasks_progress(
     }
 
     ecs_vec_set_count_t(NULL, &rt->async_tasks, ecs_script_task_t*, dst);
-    if (!dst) {
-        flecs_script_tasks_pending_set(world, false);
-    }
 
     rt->async_progressing = false;
 
@@ -1514,7 +1485,13 @@ error:
 static void flecs_script_progress_tasks_system(
     ecs_iter_t *it)
 {
-    ecs_script_tasks_progress(it->world);
+    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(it->world));
+    ecs_script_runtime_t *rt = world->stages[0]->runtime;
+    if (!rt || !ecs_vec_count(&rt->async_tasks)) {
+        return;
+    }
+
+    ecs_script_tasks_progress(world);
 }
 #endif
 
@@ -1532,7 +1509,6 @@ void flecs_script_async_import(
     });
     ecs_add_pair(world, ecs_id(EcsScriptAsyncTasks),
         EcsOnInstantiate, EcsDontInherit);
-    ECS_TAG_DEFINE(world, EcsScriptTasksPending);
 
 #ifdef FLECS_PIPELINE
     ECS_IMPORT(world, FlecsPipeline);
@@ -1540,10 +1516,6 @@ void flecs_script_async_import(
     ecs_system(world, {
         .entity = ecs_entity(world, { .name = "ProgressTasks" }),
         .phase = EcsPreUpdate,
-        .query.terms = {{
-            .id = EcsScriptTasksPending,
-            .inout = EcsInOutNone
-        }},
         .callback = flecs_script_progress_tasks_system,
         .immediate = true
     });

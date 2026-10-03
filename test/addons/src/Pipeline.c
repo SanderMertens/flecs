@@ -84,7 +84,7 @@ void Pipeline_system_order_same_phase(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 3);
+    test_int(stats->systems_ran_total, 4);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -118,7 +118,7 @@ void Pipeline_system_order_same_phase_after_disable(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 3);
+    test_int(stats->systems_ran_total, 4);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -147,7 +147,7 @@ void Pipeline_system_order_different_phase(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 3);
+    test_int(stats->systems_ran_total, 4);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -181,7 +181,7 @@ void Pipeline_system_order_different_phase_after_disable(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 3);
+    test_int(stats->systems_ran_total, 4);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -215,7 +215,7 @@ void Pipeline_system_order_same_phase_after_activate(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 3);
+    test_int(stats->systems_ran_total, 4);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -253,7 +253,7 @@ void Pipeline_system_order_different_phase_after_activate(void) {
 
     test_assert( !ecs_has_id(world, SysB, EcsEmpty));
 
-    test_int(stats->systems_ran_total, 3);
+    test_int(stats->systems_ran_total, 4);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -293,7 +293,7 @@ void Pipeline_system_order_after_new_system_lower_id(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 3);
+    test_int(stats->systems_ran_total, 4);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -333,7 +333,7 @@ void Pipeline_system_order_after_new_system_inbetween_id(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 3);
+    test_int(stats->systems_ran_total, 4);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -373,7 +373,7 @@ void Pipeline_system_order_after_new_system_higher_id(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 3);
+    test_int(stats->systems_ran_total, 4);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -478,7 +478,7 @@ void Pipeline_merge_after_staged_out(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 2);
+    test_int(stats->systems_ran_total, 3);
     test_int(stats->merge_count_total, 2);
     test_int(stats->pipeline_build_count_total, 2);
 
@@ -507,7 +507,7 @@ void Pipeline_merge_after_not_out(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 2);
+    test_int(stats->systems_ran_total, 3);
     test_int(stats->merge_count_total, 2);
     test_int(stats->pipeline_build_count_total, 2);
 
@@ -537,7 +537,7 @@ void Pipeline_no_merge_after_main_out(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 2);
+    test_int(stats->systems_ran_total, 3);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -569,7 +569,7 @@ void Pipeline_merge_after_staged_in_out(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 2);
+    test_int(stats->systems_ran_total, 3);
     test_int(stats->merge_count_total, 2);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -675,7 +675,7 @@ void Pipeline_merge_after_staged_inout_main_implicit_inout(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 1);
+    test_int(stats->systems_ran_total, 2);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -699,7 +699,7 @@ void Pipeline_merge_after_staged_inout_main_inout(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 2);
+    test_int(stats->systems_ran_total, 3);
     test_int(stats->merge_count_total, 2);
     test_int(stats->pipeline_build_count_total, 1);
 
@@ -728,7 +728,7 @@ void Pipeline_merge_after_staged_out_before_owned(void) {
 
     ecs_progress(world, 1);
 
-    test_int(stats->systems_ran_total, 2);
+    test_int(stats->systems_ran_total, 3);
     test_int(stats->merge_count_total, 2);
     test_int(stats->pipeline_build_count_total, 2);
 
@@ -794,7 +794,7 @@ void Pipeline_run_pipeline(void) {
 
     ecs_progress(world, 0);
 
-    test_int(stats->systems_ran_total, 3);
+    test_int(stats->systems_ran_total, 4);
     test_int(stats->merge_count_total, 1);
     test_int(stats->pipeline_build_count_total, 1);
 
