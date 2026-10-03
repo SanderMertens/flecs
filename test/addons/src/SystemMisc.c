@@ -2114,3 +2114,326 @@ void SystemMisc_missing_callback(void) {
     test_expect_abort();
     ecs_system_init(world, &(ecs_system_desc_t){0});
 }
+
+static ECS_DECLARE(Foo);
+static ECS_DECLARE(Bar);
+
+static void AddTag(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Bar);
+    }
+}
+
+static void AddTag_Stage(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add(it->stage, it->entities[i], Bar);
+    }
+}
+
+void SystemMisc_locked_storage_cached(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    ecs_system(world, {
+        .query = { .terms = { { Foo } } },
+        .callback = AddTag,
+        .phase = EcsOnUpdate
+    });
+
+    test_expect_abort();
+    ecs_progress(world, 0);
+}
+
+void SystemMisc_locked_storage_mixed(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    ecs_system(world, {
+        .query = { .terms = { { Foo } } },
+        .callback = AddTag,
+        .phase = EcsOnUpdate
+    });
+
+    test_expect_abort();
+    ecs_progress(world, 0);
+}
+
+void SystemMisc_locked_storage_cached_immediate(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    ecs_system(world, {
+        .query = { .terms = { { Foo } } },
+        .callback = AddTag,
+        .phase = EcsOnUpdate,
+        .immediate = true
+    });
+
+    test_expect_abort();
+    ecs_progress(world, 0);
+}
+
+void SystemMisc_locked_storage_mixed_immediate(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Foo, ecs_new(world));
+
+    ecs_system(world, {
+        .query = { 
+            .terms = { { .first.id = Foo, .second.name = "$foo" } } 
+        },
+        .callback = AddTag,
+        .phase = EcsOnUpdate,
+        .immediate = true
+    });
+
+    test_expect_abort();
+    ecs_progress(world, 0);
+}
+
+void SystemMisc_locked_storage_cached_immediate_w_stage(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    ecs_system(world, {
+        .query = { .terms = { { Foo } } },
+        .callback = AddTag_Stage,
+        .phase = EcsOnUpdate,
+        .immediate = true
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, e, Bar));
+
+    ecs_fini(world);
+}
+
+void SystemMisc_locked_storage_mixed_immediate_w_stage(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Foo, ecs_new(world));
+
+    ecs_system(world, {
+        .query = { 
+            .terms = { { .first.id = Foo, .second.name = "$foo" } } 
+        },
+        .callback = AddTag_Stage,
+        .phase = EcsOnUpdate,
+        .immediate = true
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, e, Bar));
+
+    ecs_fini(world);
+}
+
+static ecs_entity_t other = 0;
+
+static void AddTag_Other(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add(it->world, other, Bar);
+    }
+}
+
+static void AddTag_Stage_Other(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add(it->stage, other, Bar);
+    }
+}
+
+void SystemMisc_locked_storage_cached_other(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    other = ecs_new(world);
+
+    ecs_system(world, {
+        .query = { .terms = { { Foo } } },
+        .callback = AddTag_Other,
+        .phase = EcsOnUpdate
+    });
+
+    test_expect_abort();
+    ecs_progress(world, 0);
+}
+
+void SystemMisc_locked_storage_mixed_other(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    other = ecs_new(world);
+
+    ecs_system(world, {
+        .query = { .terms = { { Foo } } },
+        .callback = AddTag_Other,
+        .phase = EcsOnUpdate
+    });
+
+    test_expect_abort();
+    ecs_progress(world, 0);
+}
+
+void SystemMisc_locked_storage_cached_immediate_other(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    other = ecs_new(world);
+
+    ecs_system(world, {
+        .query = { .terms = { { Foo } } },
+        .callback = AddTag_Other,
+        .phase = EcsOnUpdate,
+        .immediate = true
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, other, Bar));
+
+    ecs_fini(world);
+}
+
+void SystemMisc_locked_storage_mixed_immediate_other(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Foo, ecs_new(world));
+
+    other = ecs_new(world);
+
+    ecs_system(world, {
+        .query = { 
+            .terms = { { .first.id = Foo, .second.name = "$foo" } } 
+        },
+        .callback = AddTag_Other,
+        .phase = EcsOnUpdate,
+        .immediate = true
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, other, Bar));
+
+    ecs_fini(world);
+}
+
+void SystemMisc_locked_storage_cached_immediate_w_stage_other(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    other = ecs_new(world);
+
+    ecs_system(world, {
+        .query = { .terms = { { Foo } } },
+        .callback = AddTag_Stage_Other,
+        .phase = EcsOnUpdate,
+        .immediate = true
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, other, Bar));
+
+    ecs_fini(world);
+}
+
+void SystemMisc_locked_storage_mixed_immediate_w_stage_other(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Foo, ecs_new(world));
+
+    other = ecs_new(world);
+
+    ecs_system(world, {
+        .query = { 
+            .terms = { { .first.id = Foo, .second.name = "$foo" } } 
+        },
+        .callback = AddTag_Stage_Other,
+        .phase = EcsOnUpdate,
+        .immediate = true
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, other, Bar));
+
+    ecs_fini(world);
+}
