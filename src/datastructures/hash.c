@@ -134,9 +134,11 @@ static inline uint64_t wyhash(const void *key, size_t len, uint64_t seed, const 
       }while(likely_(i>48));
       seed^=see1^see2;
     }
+
     while(unlikely_(i>16)){  seed=wymix_(wyr8_(p)^secret[1],wyr8_(p+8)^seed);  i-=16; p+=16;  }
     a=wyr8_(p+i-16);  b=wyr8_(p+i-8);
   }
+
   a^=secret[1]; b^=seed;  wymum_(&a,&b);
   return  wymix_(a^secret[0]^len,b^secret[1]);
 }

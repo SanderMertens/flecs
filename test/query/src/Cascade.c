@@ -1421,19 +1421,9 @@ void Cascade_parent_component_n_children(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
+    test_int(2, it.count);
     test_uint(c0_1, it.entities[0]);
-    test_uint(p0, ecs_field_src(&it, 0));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 10); test_int(p->y, 20);
-    }
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(c0_2, it.entities[0]);
+    test_uint(c0_2, it.entities[1]);
     test_uint(p0, ecs_field_src(&it, 0));
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
@@ -1454,19 +1444,9 @@ void Cascade_parent_component_n_children(void) {
     }
 
     test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
+    test_int(2, it.count);
     test_uint(c1_1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 0));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 11); test_int(p->y, 21);
-    }
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(c1_2, it.entities[0]);
+    test_uint(c1_2, it.entities[1]);
     test_uint(p1, ecs_field_src(&it, 0));
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
@@ -1487,19 +1467,9 @@ void Cascade_parent_component_n_children(void) {
     }
 
     test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
+    test_int(2, it.count);
     test_uint(c2_1, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 0));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 12); test_int(p->y, 22);
-    }
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(c2_2, it.entities[0]);
+    test_uint(c2_2, it.entities[1]);
     test_uint(p2, ecs_field_src(&it, 0));
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
@@ -1546,8 +1516,9 @@ void Cascade_parent_component_n_parents_for_depth(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
+    test_int(2, it.count);
     test_uint(c0_1, it.entities[0]);
+    test_uint(c0_2, it.entities[1]);
     test_uint(p0, ecs_field_src(&it, 0));
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
@@ -1557,30 +1528,9 @@ void Cascade_parent_component_n_parents_for_depth(void) {
     }
 
     test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(c0_2, it.entities[0]);
-    test_uint(p0, ecs_field_src(&it, 0));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 10); test_int(p->y, 21);
-    }
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
+    test_int(2, it.count);
     test_uint(p1_1, it.entities[0]);
-    test_uint(p0, ecs_field_src(&it, 0));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 10); test_int(p->y, 21);
-    }
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(p1_2, it.entities[0]);
+    test_uint(p1_2, it.entities[1]);
     test_uint(p0, ecs_field_src(&it, 0));
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
@@ -1752,8 +1702,9 @@ void Cascade_parent_component_n_children_after_query(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
+    test_int(2, it.count);
     test_uint(c0_1, it.entities[0]);
+    test_uint(c0_2, it.entities[1]);
     test_uint(p0, ecs_field_src(&it, 0));
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
@@ -1763,19 +1714,9 @@ void Cascade_parent_component_n_children_after_query(void) {
     }
 
     test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(c0_2, it.entities[0]);
-    test_uint(p0, ecs_field_src(&it, 0));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 10); test_int(p->y, 20);
-    }
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
+    test_int(2, it.count);
     test_uint(c1_1, it.entities[0]);
+    test_uint(c1_2, it.entities[1]);
     test_uint(p1, ecs_field_src(&it, 0));
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
@@ -1785,30 +1726,9 @@ void Cascade_parent_component_n_children_after_query(void) {
     }
 
     test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(c1_2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 0));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 11); test_int(p->y, 21);
-    }
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
+    test_int(2, it.count);
     test_uint(c2_1, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 0));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 12); test_int(p->y, 22);
-    }
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(c2_2, it.entities[0]);
+    test_uint(c2_2, it.entities[1]);
     test_uint(p2, ecs_field_src(&it, 0));
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {

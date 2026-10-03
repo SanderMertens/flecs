@@ -19,6 +19,7 @@ static ecs_hm_bucket_t* flecs_hashmap_find_key(
             return bucket;
         }
     }
+
     return NULL;
 }
 
@@ -95,6 +96,7 @@ void flecs_hashmap_copy(
             ecs_os_memcpy(*ptr, src_bucket, dst->bucket_size);
             ptr = &(*ptr)->next;
         }
+
         *ptr = NULL;
     }
 }
@@ -136,6 +138,7 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
         bucket = *r = flecs_hm_bucket_new(map);
         ecs_os_memcpy(flecs_hm_bucket_key(bucket), key, key_size);
     }
+
     return (flecs_hashmap_result_t){
         .key = flecs_hm_bucket_key(bucket),
         .value = flecs_hm_bucket_value(map, bucket), .hash = hash
@@ -164,6 +167,7 @@ void flecs_hm_bucket_remove(
     if (!*head) {
         ecs_map_remove(&map->impl, hash);
     }
+
     flecs_hm_bucket_free(map, bucket);
 }
 
@@ -207,11 +211,14 @@ void* flecs_hashmap_next_(
         if (!ecs_map_next(&it->it)) {
             return NULL;
         }
+
         bucket = ecs_map_ptr(&it->it);
     }
+
     it->bucket = bucket->next;
     if (key_out) {
         *(void**)key_out = flecs_hm_bucket_key(bucket);
     }
+
     return flecs_hm_bucket_value(it->map, bucket);
 }

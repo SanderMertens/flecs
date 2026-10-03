@@ -38,6 +38,11 @@ int flecs_expr_visit_fold(
     ecs_expr_node_t **node,
     const ecs_expr_eval_desc_t *desc);
 
+int flecs_expr_visit_fold_const(
+    ecs_script_t *script,
+    ecs_expr_node_t **node,
+    const ecs_expr_eval_desc_t *desc);
+
 int flecs_expr_visit_eval(
     const ecs_script_t *script,
     ecs_expr_node_t *node,

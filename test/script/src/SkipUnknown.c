@@ -9,6 +9,7 @@ void SkipUnknown_setup(void) {
     ir_enabled = ir_param && !strcmp(ir_param, "enabled");
     ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
     skip_unknown_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled, .skip_unknown = true };
+    ecs_log_set_level(-3);
 }
 
 static int skip_unknown_warn_count = 0;
@@ -25,20 +26,6 @@ static void skip_unknown_warn_callback(
     if (level == -2) {
         skip_unknown_warn_count ++;
     }
-}
-
-static void skip_unknown_warn_capture(void) {
-    ecs_os_set_api_defaults();
-    ecs_os_api_t os_api = ecs_os_api;
-    os_api.log_ = skip_unknown_warn_callback;
-    ecs_os_set_api(&os_api);
-    ecs_log_set_level(-2);
-    skip_unknown_warn_count = 0;
-}
-
-static void skip_unknown_warn_release(void) {
-    ecs_os_set_api_defaults();
-    ecs_log_set_level(-1);
 }
 
 void SkipUnknown_unknown_tag(void) {
@@ -281,7 +268,12 @@ void SkipUnknown_unknown_function_in_for(void) {
 }
 
 void SkipUnknown_warn_once_per_name(void) {
-    skip_unknown_warn_capture();
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = skip_unknown_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    skip_unknown_warn_count = 0;
 
     ecs_world_t *world = ecs_init();
 
@@ -295,11 +287,17 @@ void SkipUnknown_warn_once_per_name(void) {
 
     ecs_fini(world);
 
-    skip_unknown_warn_release();
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
 }
 
 void SkipUnknown_warn_per_distinct_name(void) {
-    skip_unknown_warn_capture();
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = skip_unknown_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    skip_unknown_warn_count = 0;
 
     ecs_world_t *world = ecs_init();
 
@@ -314,7 +312,8 @@ void SkipUnknown_warn_per_distinct_name(void) {
 
     ecs_fini(world);
 
-    skip_unknown_warn_release();
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
 }
 
 void SkipUnknown_strict_unknown_tag_errors(void) {
@@ -933,18 +932,6 @@ typedef struct Label {
     int32_t size;
 } Label;
 
-static ecs_entity_t skip_unknown_label_component(
-    ecs_world_t *world)
-{
-    return ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Label"}),
-        .members = {
-            {"text", ecs_id(ecs_string_t)},
-            {"size", ecs_id(ecs_i32_t)}
-        }
-    });
-}
-
 void SkipUnknown_unknown_using(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1085,7 +1072,13 @@ void SkipUnknown_strict_unknown_fn_param_type_errors(void) {
 void SkipUnknown_unknown_component_read_member_in_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "hud {"
@@ -1119,7 +1112,13 @@ void SkipUnknown_unknown_component_read_member_in_expr(void) {
 void SkipUnknown_unknown_component_read_member_in_interpolated_string(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "hud {"
@@ -1153,7 +1152,13 @@ void SkipUnknown_unknown_component_read_member_in_interpolated_string(void) {
 void SkipUnknown_unknown_component_read_member_in_binary_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "hud {"
@@ -1182,7 +1187,13 @@ void SkipUnknown_unknown_component_read_member_in_binary_expr(void) {
 void SkipUnknown_unknown_component_read_member_in_fn_arg(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "fn twice(k: i32) -> i32 {"
@@ -1256,7 +1267,13 @@ void SkipUnknown_unknown_component_read_member_in_for(void) {
 void SkipUnknown_unknown_component_read_member_in_template(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Hud {"
@@ -1300,7 +1317,13 @@ void SkipUnknown_unknown_component_read_member_in_template(void) {
 void SkipUnknown_template_w_unknown_prop_type_member_in_interpolated_string(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Sheet {"
@@ -1356,7 +1379,13 @@ void SkipUnknown_unknown_component_on_known_entity_member(void) {
         }
     });
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "foo {"
@@ -1396,7 +1425,13 @@ void SkipUnknown_unknown_component_on_known_entity_member_in_string(void) {
         }
     });
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "foo {"
@@ -1436,7 +1471,13 @@ void SkipUnknown_unknown_member_on_known_component_read(void) {
         }
     });
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "foo {"
@@ -1474,7 +1515,13 @@ void SkipUnknown_unknown_member_on_known_component_read_in_string(void) {
         }
     });
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "foo {"
@@ -1512,7 +1559,13 @@ void SkipUnknown_known_component_read_member_in_string(void) {
         }
     });
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "foo {"
@@ -1546,7 +1599,14 @@ void SkipUnknown_strict_unknown_member_on_known_component_read_errors(void) {
         }
     });
 
-    ecs_entity_t ecs_id(Label) = skip_unknown_label_component(world);
+    ecs_entity_t ecs_id(Label) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Label"}),
+        .members = {
+            {"text", ecs_id(ecs_string_t)},
+            {"size", ecs_id(ecs_i32_t)}
+        }
+    });
+
     (void)ecs_id(Label);
 
     const char *expr =
@@ -1580,7 +1640,12 @@ void SkipUnknown_template_unresolved_base_errors(void) {
 }
 
 void SkipUnknown_warn_once_for_unknown_using(void) {
-    skip_unknown_warn_capture();
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = skip_unknown_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    skip_unknown_warn_count = 0;
 
     ecs_world_t *world = ecs_init();
 
@@ -1595,5 +1660,6 @@ void SkipUnknown_warn_once_for_unknown_using(void) {
 
     ecs_fini(world);
 
-    skip_unknown_warn_release();
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
 }

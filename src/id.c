@@ -61,6 +61,7 @@ bool ecs_id_match(
                 if (ECS_PAIR_FIRST(id) == pattern_second) {
                     return true;
                 }
+
                 if (ECS_PAIR_SECOND(id) == pattern_second) {
                     return true;
                 }
@@ -138,6 +139,7 @@ const char* flecs_id_invalid_reason(
     if (!id) {
         return "components cannot be 0 (is the component registered?)";
     }
+
     if (ecs_id_is_wildcard(id)) {
         return "cannot add wildcards";
     }
@@ -150,9 +152,11 @@ const char* flecs_id_invalid_reason(
         if (!ECS_PAIR_FIRST(id) && !ECS_PAIR_SECOND(id)) {
             return "invalid pair: both elements are 0";
         }
+
         if (!ECS_PAIR_FIRST(id)) {
             return "invalid pair: first element is 0 (is the relationship registered?)";
         }
+
         if (!ECS_PAIR_SECOND(id)) {
             return "invalid pair: second element is 0";
         }
@@ -198,6 +202,7 @@ ecs_id_t ecs_id_from_str(
         ecs_log_set_level(prev_level);
         return 0;
     }
+
     ecs_log_set_level(prev_level);
     return result;
 #else
@@ -266,6 +271,7 @@ void ecs_id_str_buf(
             if ((e = ecs_get_alive(world, tgt))) {
                 tgt = e;
             }
+
             ecs_get_path_w_sep_buf(world, 0, tgt, NULL, NULL, buf, false);
         }
 
@@ -345,6 +351,7 @@ ecs_entity_t ecs_get_typeid(
         ecs_assert(ti->component != 0, ECS_INTERNAL_ERROR, NULL);
         return ti->component;
     }
+
 error:
     return 0;
 }

@@ -8,22 +8,53 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
-ecs_script_runtime_t* ecs_script_runtime_new(void)
+ecs_script_runtime_t* flecs_script_runtime_new_shared(
+    ecs_script_runtime_t *parent)
 {
     ecs_script_runtime_t *r = ecs_os_calloc_t(ecs_script_runtime_t);
-    flecs_expr_stack_init(&r->expr_stack);
-    flecs_allocator_init(&r->allocator);
+    if (parent) {
+        while (parent->parent) {
+            parent = parent->parent;
+        }
+
+        r->parent = parent;
+        r->allocator = parent->allocator;
+    } else {
+        r->allocator = ecs_os_calloc_t(ecs_allocator_t);
+        flecs_allocator_init(r->allocator);
+    }
+
     flecs_stack_init(&r->stack);
-    ecs_vec_init_t(&r->allocator, &r->using, ecs_entity_t, 0);
-    ecs_vec_init_t(&r->allocator, &r->with, ecs_script_with_value_t, 0);
-    ecs_vec_init_t(&r->allocator, &r->annot, ecs_script_annot_t*, 0);
-    ecs_vec_init_t(&r->allocator, &r->pending_resolves, ecs_entity_t, 0);
+    ecs_vec_init_t(r->allocator, &r->using, ecs_entity_t, 0);
+    ecs_vec_init_t(r->allocator, &r->with, ecs_script_with_value_t, 0);
+    ecs_vec_init_t(r->allocator, &r->annot, ecs_script_annot_t*, 0);
+    ecs_vec_init_t(r->allocator, &r->pending_resolves, ecs_entity_t, 0);
     ecs_vec_init_t(NULL, &r->ir_vms, ecs_script_ir_vm_t*, 0);
     ecs_vec_init_t(NULL, &r->call_runtimes, ecs_script_runtime_t*, 0);
     ecs_vec_init_t(NULL, &r->template_pending,
         ecs_script_template_pending_t, 0);
     ecs_vec_init_t(NULL, &r->async_tasks, void*, 0);
     return r;
+}
+
+ecs_script_runtime_t* ecs_script_runtime_new(void)
+{
+    return flecs_script_runtime_new_shared(NULL);
+}
+
+ecs_expr_stack_t* flecs_script_runtime_expr_stack(
+    ecs_script_runtime_t *r)
+{
+    if (r->parent) {
+        r = r->parent;
+    }
+
+    if (!r->expr_stack) {
+        r->expr_stack = ecs_os_calloc_t(ecs_expr_stack_t);
+        flecs_expr_stack_init(r->expr_stack);
+    }
+
+    return r->expr_stack;
 }
 
 void ecs_script_runtime_free(
@@ -34,16 +65,25 @@ void ecs_script_runtime_free(
     for (i = 0; i < count; i ++) {
         ecs_script_runtime_free(calls[i]);
     }
+
     ecs_vec_fini_t(NULL, &r->call_runtimes, ecs_script_runtime_t*);
-    flecs_expr_stack_fini(&r->expr_stack);
+    if (r->expr_stack) {
+        flecs_expr_stack_fini(r->expr_stack);
+        ecs_os_free(r->expr_stack);
+    }
+
     flecs_script_ir_vm_pool_fini(r);
     flecs_script_template_pending_fini(&r->template_pending);
     ecs_vec_fini_t(NULL, &r->async_tasks, void*);
-    ecs_vec_fini_t(&r->allocator, &r->pending_resolves, ecs_entity_t);
-    ecs_vec_fini_t(&r->allocator, &r->annot, ecs_script_annot_t*);
-    ecs_vec_fini_t(&r->allocator, &r->with, ecs_script_with_value_t);
-    ecs_vec_fini_t(&r->allocator, &r->using, ecs_entity_t);
-    flecs_allocator_fini(&r->allocator);
+    ecs_vec_fini_t(r->allocator, &r->pending_resolves, ecs_entity_t);
+    ecs_vec_fini_t(r->allocator, &r->annot, ecs_script_annot_t*);
+    ecs_vec_fini_t(r->allocator, &r->with, ecs_script_with_value_t);
+    ecs_vec_fini_t(r->allocator, &r->using, ecs_entity_t);
+    if (!r->parent) {
+        flecs_allocator_fini(r->allocator);
+        ecs_os_free(r->allocator);
+    }
+
     flecs_stack_fini(&r->stack);
     ecs_os_free(r->error_name);
     ecs_os_free(r);
@@ -56,6 +96,7 @@ ecs_script_runtime_t* flecs_script_runtime_acquire_call(
         return ((ecs_script_runtime_t**)r->call_runtimes.array)
             [-- r->call_runtimes.count];
     }
+
     return ecs_script_runtime_new();
 }
 

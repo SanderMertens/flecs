@@ -9,14 +9,6 @@ void TemplateParent_setup(void) {
     };
 }
 
-static int32_t value(ecs_world_t *world, const char *path) {
-    ecs_entity_t e = ecs_lookup(world, path);
-    test_assert(e != 0);
-    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
-    test_assert(ptr != NULL);
-    return *ptr;
-}
-
 void TemplateParent_props(void) {
     ecs_world_t *world = ecs_init();
     test_int(ecs_script_run_w_desc(world, NULL,
@@ -27,11 +19,23 @@ void TemplateParent_props(void) {
         LINE "}"
         LINE "Building b() { Facade f() }",
         &ir_desc, NULL), 0);
-    test_int(value(world, "b.f"), 10);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
     ecs_entity_t building = ecs_lookup(world, "Building");
     ecs_entity_t b = ecs_lookup(world, "b");
     ecs_set_id(world, b, building, sizeof(int32_t), &(int32_t){20});
-    test_int(value(world, "b.f"), 20);
+
+    e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 20);
+
     ecs_fini(world);
 }
 
@@ -43,11 +47,23 @@ void TemplateParent_muts(void) {
         LINE "template Facade : parent Building { flecs.meta.i32: {height} }"
         LINE "Building b() { Facade f() }",
         &ir_desc, NULL), 0);
-    test_int(value(world, "b.f"), 10);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
     ecs_entity_t mut = ecs_lookup(world, "Building.mut");
     ecs_set_id(world, ecs_lookup(world, "b"), mut,
         sizeof(int32_t), &(int32_t){20});
-    test_int(value(world, "b.f"), 20);
+
+    e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 20);
+
     ecs_fini(world);
 }
 
@@ -75,8 +91,19 @@ void TemplateParent_mut_from_prop(void) {
     const ecs_string_t *default_value = ecs_get_id(world, options, group);
     test_assert(default_value != NULL);
     test_str(*default_value, "Maple");
-    test_int(value(world, "options.oak"), 0);
-    test_int(value(world, "options.maple"), 1);
+
+    ecs_entity_t e = ecs_lookup(world, "options.oak");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 0);
+
+    e = ecs_lookup(world, "options.maple");
+    test_assert(e != 0);
+    ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 1);
+
     ecs_fini(world);
 }
 
@@ -94,7 +121,13 @@ void TemplateParent_masking(void) {
         LINE "}"
         LINE "Building b() { Facade f() }",
         &ir_desc, NULL), 0);
-    test_int(value(world, "b.f"), 33);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 33);
+
     ecs_fini(world);
 }
 
@@ -110,7 +143,13 @@ void TemplateParent_inheritance(void) {
         LINE "}"
         LINE "Building b() { BrickFacade f() }",
         &ir_desc, NULL), 0);
-    test_int(value(world, "b.f"), 20);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 20);
+
     ecs_fini(world);
 }
 
@@ -124,7 +163,13 @@ void TemplateParent_inherited_constraint(void) {
         LINE "template BrickFacade : Facade { flecs.meta.i32: {height * width} }"
         LINE "Building b() { BrickFacade f() }",
         &ir_desc, NULL), 0);
-    test_int(value(world, "b.f"), 20);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 20);
+
     ecs_fini(world);
 }
 
@@ -149,38 +194,54 @@ void TemplateParent_radio_group(void) {
         LINE "}",
         &ir_desc, NULL), 0);
     ecs_progress(world, 0);
-    test_int(value(world, "group.a"), 0);
-    test_int(value(world, "group.b"), 1);
-    ecs_fini(world);
-}
 
-static void invalid(const char *code) {
-    ecs_world_t *world = ecs_init();
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL, code, &ir_desc, NULL) != 0);
+    ecs_entity_t e = ecs_lookup(world, "group.a");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 0);
+
+    e = ecs_lookup(world, "group.b");
+    test_assert(e != 0);
+    ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 1);
+
     ecs_fini(world);
 }
 
 void TemplateParent_missing_parent(void) {
-    invalid(HEAD "template Building {}"
-        LINE "template Facade : parent Building {}"
-        LINE "Facade f()");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "template Building {}"
+            LINE "template Facade : parent Building {}"
+            LINE "Facade f()", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }
 
 void TemplateParent_wrong_parent(void) {
-    invalid(HEAD "template Building {}"
-        LINE "template Facade : parent Building {}"
-        LINE "b { Facade f() }");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "template Building {}"
+            LINE "template Facade : parent Building {}"
+            LINE "b { Facade f() }", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }
 
 void TemplateParent_invalid_constraint(void) {
-    invalid(HEAD "struct Building(height: i32)"
-        LINE "template Facade : parent Building {}");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "struct Building(height: i32)"
+            LINE "template Facade : parent Building {}", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }
 
 void TemplateParent_duplicate_constraint(void) {
-    invalid(HEAD "template Building {}"
-        LINE "template Facade : parent Building, parent Building {}");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "template Building {}"
+            LINE "template Facade : parent Building, parent Building {}", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }
 
 void TemplateParent_empty_base(void) {
@@ -194,7 +255,13 @@ void TemplateParent_empty_base(void) {
         LINE "}"
         LINE "Building b() { BrickFacade f() }",
         &ir_desc, NULL), 0);
-    test_int(value(world, "b.f"), 10);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
     ecs_fini(world);
 }
 
@@ -209,7 +276,13 @@ void TemplateParent_parent_before_base(void) {
         LINE "}"
         LINE "Building b() { BrickFacade f(3) }",
         &ir_desc, NULL), 0);
-    test_int(value(world, "b.f"), 30);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 30);
+
     ecs_fini(world);
 }
 
@@ -226,8 +299,19 @@ void TemplateParent_nested_members(void) {
         LINE "template Roof : parent Building { flecs.meta.i32: {size.width} }"
         LINE "Building b() { Facade f(); Roof r() }",
         &ir_desc, NULL), 0);
-    test_int(value(world, "b.f"), 12);
-    test_int(value(world, "b.r"), 10);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 12);
+
+    e = ecs_lookup(world, "b.r");
+    test_assert(e != 0);
+    ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
     ecs_fini(world);
 }
 
@@ -240,13 +324,35 @@ void TemplateParent_multiple_instances(void) {
         LINE "Building a(1) { Facade f() }"
         LINE "Building b(2) { Facade f() }",
         &ir_desc, NULL), 0);
-    test_int(value(world, "a.f"), 1);
-    test_int(value(world, "b.f"), 2);
+
+    ecs_entity_t e = ecs_lookup(world, "a.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 1);
+
+    e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 2);
+
     ecs_entity_t building = ecs_lookup(world, "Building");
     ecs_set_id(world, ecs_lookup(world, "a"), building,
         sizeof(int32_t), &(int32_t){3});
-    test_int(value(world, "a.f"), 3);
-    test_int(value(world, "b.f"), 2);
+
+    e = ecs_lookup(world, "a.f");
+    test_assert(e != 0);
+    ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 3);
+
+    e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 2);
+
     ecs_fini(world);
 }
 
@@ -266,7 +372,13 @@ void TemplateParent_qualified_assignment(void) {
         LINE "Building b() { Facade f() }",
         &ir_desc, NULL), 0);
     ecs_script_tasks_progress(world);
-    test_int(value(world, "b.f"), 22);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 22);
+
     ecs_fini(world);
 }
 
@@ -316,46 +428,67 @@ void TemplateParent_async_mut_read(void) {
     ecs_script_future_release(pending);
     ecs_script_tasks_progress(world);
     test_int(fetch_count, 1);
-    test_int(value(world, "b.f"), 21);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 21);
+
     ecs_fini(world);
 }
 
 void TemplateParent_assign_prop(void) {
-    invalid(HEAD "template Building { prop height: i32 = 10"
-        LINE "}"
-        LINE "template Facade : parent Building {"
-        LINE "  async {"
-        LINE "    height = 20"
-        LINE "  }"
-        LINE "}");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "template Building { prop height: i32 = 10"
+            LINE "}"
+            LINE "template Facade : parent Building {"
+            LINE "  async {"
+            LINE "    height = 20"
+            LINE "  }"
+            LINE "}", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }
 
 void TemplateParent_assign_masked_const(void) {
-    invalid(HEAD "template Building { mut height: i32 = 10"
-        LINE "}"
-        LINE "template Facade : parent Building {"
-        LINE "  const height = 1"
-        LINE "  async {"
-        LINE "    height = 20"
-        LINE "  }"
-        LINE "}");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "template Building { mut height: i32 = 10"
+            LINE "}"
+            LINE "template Facade : parent Building {"
+            LINE "  const height = 1"
+            LINE "  async {"
+            LINE "    height = 20"
+            LINE "  }"
+            LINE "}", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }
 
 void TemplateParent_conflicting_constraint(void) {
-    invalid(HEAD "template Building {}"
-        LINE "template Other {}"
-        LINE "template Facade : parent Building {}"
-        LINE "template BrickFacade : Facade, parent Other {}");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "template Building {}"
+            LINE "template Other {}"
+            LINE "template Facade : parent Building {}"
+            LINE "template BrickFacade : Facade, parent Other {}", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }
 
 void TemplateParent_unknown_constraint(void) {
-    invalid(HEAD "template Facade : parent Missing {}");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "template Facade : parent Missing {}", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }
 
 void TemplateParent_parent_is_immediate(void) {
-    invalid(HEAD "template Building {}"
-        LINE "template Facade : parent Building {}"
-        LINE "Building b() { child { Facade f() } }");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "template Building {}"
+            LINE "template Facade : parent Building {}"
+            LINE "Building b() { child { Facade f() } }", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }
 
 void TemplateParent_radio_events(void) {
@@ -381,8 +514,19 @@ void TemplateParent_radio_events(void) {
         LINE "}",
         &ir_desc, NULL), 0);
     ecs_script_tasks_progress(world);
-    test_int(value(world, "group.a"), 1);
-    test_int(value(world, "group.b"), 0);
+
+    ecs_entity_t e = ecs_lookup(world, "group.a");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 1);
+
+    e = ecs_lookup(world, "group.b");
+    test_assert(e != 0);
+    ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 0);
+
     for (int32_t i = 0; i < 4; i ++) {
         bool select_b = !(i % 2);
         ecs_entity_t target = ecs_lookup(world, select_b ? "group.b" : "group.a");
@@ -392,8 +536,19 @@ void TemplateParent_radio_events(void) {
         ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
             .target = target, .buttons = 0
         });
-        test_int(value(world, "group.a"), !select_b);
-        test_int(value(world, "group.b"), select_b);
+
+        e = ecs_lookup(world, "group.a");
+        test_assert(e != 0);
+        ptr = ecs_get(world, e, ecs_i32_t);
+        test_assert(ptr != NULL);
+        test_int(*ptr, !select_b);
+
+        e = ecs_lookup(world, "group.b");
+        test_assert(e != 0);
+        ptr = ecs_get(world, e, ecs_i32_t);
+        test_assert(ptr != NULL);
+        test_int(*ptr, select_b);
+
     }
     ecs_fini(world);
 }
@@ -433,13 +588,19 @@ void TemplateParent_native_instantiation(void) {
         &ir_desc, NULL), 0);
     ecs_entity_t building = ecs_lookup(world, "Building");
     ecs_entity_t facade = ecs_lookup(world, "Facade");
-    ecs_defer_begin(world);
-    ecs_entity_t b = ecs_entity(world, { .name = "b" });
-    ecs_set_id(world, b, building, sizeof(int32_t), &(int32_t){30});
-    ecs_entity_t f = ecs_entity(world, { .name = "f", .parent = b });
-    ecs_add_id(world, f, facade);
-    ecs_defer_end(world);
-    test_int(value(world, "b.f"), 30);
+    ecs_world_t *stage_1 = ecs_get_stage(world, 0);
+    ecs_entity_t b = ecs_entity(stage_1, { .name = "b" });
+    ecs_set_id(stage_1, b, building, sizeof(int32_t), &(int32_t){30});
+    ecs_entity_t f = ecs_entity(stage_1, { .name = "f", .parent = b });
+    ecs_add_id(stage_1, f, facade);
+    ecs_merge(stage_1);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 30);
+
     ecs_fini(world);
 }
 
@@ -452,30 +613,51 @@ void TemplateParent_non_fragmenting_parent(void) {
         LINE "@tree Parent"
         LINE "Building b() { Facade f() }",
         &ir_desc, NULL), 0);
-    test_int(value(world, "b.f"), 10);
+
+    ecs_entity_t e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
     ecs_entity_t f = ecs_lookup(world, "b.f");
     test_assert(ecs_has(world, f, EcsParent));
     ecs_set_id(world, ecs_lookup(world, "b"), ecs_lookup(world, "Building"),
         sizeof(int32_t), &(int32_t){20});
-    test_int(value(world, "b.f"), 20);
+
+    e = ecs_lookup(world, "b.f");
+    test_assert(e != 0);
+    ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 20);
+
     ecs_fini(world);
 }
 
 void TemplateParent_missing_constraint_name(void) {
-    invalid(HEAD "template Facade : parent {}");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "template Facade : parent {}", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }
 
 void TemplateParent_unknown_member(void) {
-    invalid(HEAD "template Building {}"
-        LINE "template Facade : parent Building { flecs.meta.i32: {parent.missing} }");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "template Building {}"
+            LINE "template Facade : parent Building { flecs.meta.i32: {parent.missing} }", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }
 
 void TemplateParent_assign_unknown_member(void) {
-    invalid(HEAD "template Building { mut height: i32 = 10"
-        LINE "}"
-        LINE "template Facade : parent Building {"
-        LINE "  async {"
-        LINE "    parent.height.missing = 20"
-        LINE "  }"
-        LINE "}");
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, HEAD "template Building { mut height: i32 = 10"
+            LINE "}"
+            LINE "template Facade : parent Building {"
+            LINE "  async {"
+            LINE "    parent.height.missing = 20"
+            LINE "  }"
+            LINE "}", &ir_desc, NULL) != 0);
+    ecs_fini(world);
 }

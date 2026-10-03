@@ -33,6 +33,7 @@ static ecs_entity_t flecs_expr_ref_entity(
                     identifier->symbol)->entity;
             }
         }
+
         return entity;
     }
 
@@ -70,6 +71,7 @@ static int flecs_expr_ref_visit(
     if (!node) {
         return 0;
     }
+
     flecs_expr_ref_ctx_t *ctx = ptr;
     const ecs_script_t *script = ctx->script;
     switch(node->kind) {
@@ -82,14 +84,18 @@ static int flecs_expr_ref_visit(
             };
             return ctx->action(&ref, NULL, ctx->ctx);
         }
+
         break;
     }
+    case EcsExprTemplate:
+        return flecs_expr_visit_children(node, flecs_expr_ref_visit, ctx);
     case EcsExprFunction:
     case EcsExprMethod: {
         ecs_expr_function_t *n = (ecs_expr_function_t*)node;
         if (flecs_expr_visit_children(node, flecs_expr_ref_visit, ctx)) {
             return -1;
         }
+
         if (n->calldata.is.callback == flecs_script_user_function_callback)
         {
             const EcsScriptFunction *fn = ecs_get(
@@ -105,6 +111,7 @@ static int flecs_expr_ref_visit(
                 }
             }
         }
+
         return 0;
     }
     case EcsExprComponent:
@@ -122,10 +129,12 @@ static int flecs_expr_ref_visit(
             if (!ref.entity) {
                 ref.name = flecs_expr_ref_var_name(left);
             }
+
             if (ctx->action(&ref, ref.entity ? NULL : node, ctx->ctx)) {
                 return -1;
             }
         }
+
         return flecs_expr_ref_visit(&left, ctx);
     }
     default:

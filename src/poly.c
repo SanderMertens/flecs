@@ -154,19 +154,12 @@ EcsPoly* flecs_poly_bind_(
     }
 
     /* Never defer creation of a poly object */
-    bool deferred = false;
-    if (ecs_is_deferred(world)) {
-        deferred = true;
-        ecs_defer_suspend(world);
-    }
+    world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
 
     /* If this is a new poly, leave the actual creation up to the caller so they
      * can tell the difference between a create or an update */
     EcsPoly *result = ecs_ensure_pair(world, entity, EcsPoly, tag);
 
-    if (deferred) {
-        ecs_defer_resume(world);
-    }
 
     return result;
 }
@@ -196,6 +189,7 @@ ecs_poly_t* flecs_poly_get_(
     if (p) {
         return p->poly;
     }
+
     return NULL;
 }
 
@@ -223,6 +217,7 @@ const ecs_world_t* ecs_get_world(
     if (((const ecs_header_t*)poly)->type == ecs_world_t_magic) {
         return poly;
     }
+
     return *(ecs_world_t**)assert_mixin(poly, EcsMixinWorld);
 }
 
@@ -252,9 +247,11 @@ void flecs_poly_update_ctx(
             *ctx_free = NULL;
         }
     }
+
     if (value) {
         *ctx = value;
     }
+
     if (free_value) {
         *ctx_free = free_value;
     }

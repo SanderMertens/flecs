@@ -37,6 +37,7 @@ bool flecs_type_info_ctor(
         ctor(ptr, count, ti);
         return true;
     }
+
     return false;
 }
 
@@ -53,6 +54,7 @@ bool flecs_type_info_dtor(
         dtor(ptr, count, ti);
         return true;
     }
+
     return false;
 }
 
@@ -353,21 +355,27 @@ static bool flecs_type_hooks_storage_equal(
     if ((a->flags & flags) != (b->flags & flags)) {
         return false;
     }
+
     if ((a->on_add != NULL) != (b->on_add != NULL)) {
         return false;
     }
+
     if ((a->on_set != NULL) != (b->on_set != NULL)) {
         return false;
     }
+
     if ((a->on_remove != NULL) != (b->on_remove != NULL)) {
         return false;
     }
+
     if ((a->on_replace != NULL) != (b->on_replace != NULL)) {
         return false;
     }
+
     if ((a->on_validate != NULL) != (b->on_validate != NULL)) {
         return false;
     }
+
     return true;
 }
 
@@ -379,33 +387,43 @@ static ecs_flags32_t flecs_type_hooks_specified(
     if (hooks->ctor && (!exclude_illegal || hooks->ctor != flecs_ctor_illegal)) {
         result |= ECS_TYPE_HOOK_CTOR_ILLEGAL;
     }
+
     if (hooks->dtor && (!exclude_illegal || hooks->dtor != flecs_dtor_illegal)) {
         result |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
     }
+
     if (hooks->copy && (!exclude_illegal || hooks->copy != flecs_copy_illegal)) {
         result |= ECS_TYPE_HOOK_COPY_ILLEGAL;
     }
+
     if (hooks->move && (!exclude_illegal || hooks->move != flecs_move_illegal)) {
         result |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
     }
+
     if (hooks->copy_ctor && (!exclude_illegal || hooks->copy_ctor != flecs_copy_ctor_illegal)) {
         result |= ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL;
     }
+
     if (hooks->move_ctor && (!exclude_illegal || hooks->move_ctor != flecs_move_ctor_illegal)) {
         result |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
     }
+
     if (hooks->ctor_move_dtor && (!exclude_illegal || hooks->ctor_move_dtor != flecs_move_ctor_illegal)) {
         result |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
     }
+
     if (hooks->move_dtor && (!exclude_illegal || hooks->move_dtor != flecs_move_ctor_illegal)) {
         result |= ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
     }
+
     if (hooks->cmp && (!exclude_illegal || hooks->cmp != flecs_comp_illegal)) {
         result |= ECS_TYPE_HOOK_CMP_ILLEGAL;
     }
+
     if (hooks->equals && (!exclude_illegal || hooks->equals != flecs_equals_illegal)) {
         result |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
     }
+
     return result;
 }
 
@@ -539,6 +557,7 @@ void ecs_set_hooks_id(
                 }
             }
         }
+
         if(flags & illegal_check) {
             flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
         }
@@ -560,6 +579,7 @@ void ecs_set_hooks_id(
                 hooks.move_dtor = flecs_default_dtor;
             }
         }
+
         if(flags & illegal_check) {
             flags |= ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
         }
@@ -639,12 +659,15 @@ static void flecs_type_info_fini(
     if (ti->hooks.ctx_free) {
         ti->hooks.ctx_free(ti->hooks.ctx);
     }
+
     if (ti->hooks.binding_ctx_free) {
         ti->hooks.binding_ctx_free(ti->hooks.binding_ctx);
     }
+
     if (ti->hooks.lifecycle_ctx_free) {
         ti->hooks.lifecycle_ctx_free(ti->hooks.lifecycle_ctx);
     }
+
     if (ti->name) {
         /* Safe to cast away const, world has ownership over string */
         ecs_os_free(ECS_CONST_CAST(char*, ti->name));
@@ -840,6 +863,7 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
     if (ti) {
         return &ti->hooks;
     }
+
     return NULL;
 }
 
@@ -891,6 +915,7 @@ const ecs_type_info_t* ecs_get_type_info(
     } else {
         return flecs_determine_type_info_for_component(world, id);
     }
+
 error:
     return NULL;
 }

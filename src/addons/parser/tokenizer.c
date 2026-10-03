@@ -16,6 +16,7 @@ int64_t flecs_parser_errpos(
     if (parser->fixed_pos) {
         return parser->fixed_pos - parser->code;
     }
+
     return pos - parser->code;
 }
 
@@ -33,6 +34,10 @@ static bool flecs_keyword_boundary(
     }
 
     if (isspace(pos[0])) {
+        return true;
+    }
+
+    if (pos[0] == '[') {
         return true;
     }
 
@@ -155,6 +160,7 @@ const char* flecs_token_kind_str(
     if ((unsigned)kind < EcsTokLast && flecs_tokens[kind].description) {
         return flecs_tokens[kind].description;
     }
+
     return "<corrupt>";
 }
 
@@ -164,12 +170,15 @@ const char* flecs_token_str(
     if (kind == EcsTokMod) {
         return "%%";
     }
+
     if (kind == EcsTokMember) {
         return "member";
     }
+
     if ((unsigned)kind < EcsTokLast && flecs_tokens[kind].spelling) {
         return flecs_tokens[kind].spelling;
     }
+
     return "<corrupt>";
 }
 
@@ -198,6 +207,7 @@ static const char* flecs_scan_line_comment(
     ecs_assert(pos[0] == '/' && pos[1] == '/', ECS_INTERNAL_ERROR, NULL);
 
     for (pos = pos + 2; pos[0] && pos[0] != '\n'; pos ++) { }
+
     return pos;
 }
 
@@ -208,6 +218,7 @@ static const char* flecs_scan_whitespace_and_comment(
     if (!pos) {
         return NULL;
     }
+
     const char *newline = NULL;
     bool collapse = false;
     for (;;) {
@@ -216,12 +227,15 @@ static const char* flecs_scan_whitespace_and_comment(
             if (!collapse) {
                 return pos;
             }
+
             newline = pos ++;
             continue;
         }
+
         if (!flecs_is_comment(pos)) {
             return newline ? newline : pos;
         }
+
         if (pos[1] == '/') {
             pos = flecs_scan_line_comment(pos);
             if (parser->significant_newline && pos[0] == '\n') {
@@ -234,16 +248,19 @@ static const char* flecs_scan_whitespace_and_comment(
                 if (newline) {
                     return newline;
                 }
+
                 ecs_parser_error(parser->name, parser->code,
                     flecs_parser_errpos(parser, pos),
                     "missing */ for multiline comment");
                 return NULL;
             }
+
             pos = end + 2;
             const char *next = pos;
             if (next[0] == '\r' && next[1] == '\n') {
                 next ++;
             }
+
             if (parser->significant_newline && next[0] == '\n' &&
                 flecs_is_comment(flecs_scan_whitespace(parser, next + 1)))
             {
@@ -340,6 +357,7 @@ const char* flecs_tokenizer_identifier(
                     if (outpos) {
                         outpos = flecs_tokenizer_write(parser, outpos, c);
                     }
+
                     pos ++;
 
                     if (!indent) {
@@ -410,14 +428,17 @@ static const char* flecs_script_number(
     if (*pos == '-') {
         pos ++;
     }
+
     if (pos[0] == '0') {
         if (pos[1] == 'x' || pos[1] == 'X') {
             base = 16;
         } else if (pos[1] == 'b' || pos[1] == 'B') {
             base = 2;
         }
+
         pos += base != 10 ? 2 : 0;
     }
+
     const char *digits = pos;
     pos = flecs_script_digits(pos, base);
     bool has_digits = pos != digits;
@@ -426,6 +447,7 @@ static const char* flecs_script_number(
         pos = flecs_script_digits(pos, base);
         has_digits |= pos != digits;
     }
+
     if (base == 10 && (*pos == 'e' || *pos == 'E')) {
         digits = pos + 1;
         digits += *digits == '+' || *digits == '-';
@@ -433,11 +455,13 @@ static const char* flecs_script_number(
             pos = flecs_script_digits(digits, base);
         }
     }
+
     if (!has_digits && base != 10) {
         ecs_parser_error(parser->name, parser->code,
             flecs_parser_errpos(parser, pos), "missing digits in number literal");
         return NULL;
     }
+
     ecs_size_t length = flecs_ito(ecs_size_t, pos - start);
     ecs_assert(!parser->token_end || parser->token_cur + length < parser->token_end,
         ECS_INVALID_OPERATION, "out of parser token storage");
@@ -484,6 +508,7 @@ static const char* flecs_tokenizer_emit(
     for (i = 0; i < len; i ++) {
         outpos = flecs_tokenizer_write(parser, outpos, pos[i + 1]);
     }
+
     outpos = flecs_tokenizer_write(parser, outpos, '\0');
 
     out->kind = kind;
@@ -546,6 +571,7 @@ static const char* flecs_script_multiline_string(
         if (ch == '\\' && end[1] == '`') {
             end ++;
         }
+
         end ++;
     }
 
@@ -604,6 +630,7 @@ const char* flecs_tokenizer_until(
     for (i = 0; i < len; i ++) {
         outpos = flecs_tokenizer_write(parser, outpos, start[i]);
     }
+
     out->value = parser->token_cur;
     parser->token_cur = outpos;
 
@@ -627,6 +654,7 @@ static const char* flecs_token_scan(
             ecs_parser_error(parser->name, parser->code, 0,
                 "unexpected end of parser state");
         }
+
         return NULL;
     }
 
@@ -677,6 +705,7 @@ static const char* flecs_token_scan(
                 return pos + 2;
             }
         }
+
         if (flecs_tokens[ch].spelling &&
             (!flecs_tokens[ch].description[0] || ch == '.'))
         {

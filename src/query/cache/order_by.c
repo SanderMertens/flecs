@@ -82,7 +82,7 @@ static void flecs_query_cache_build_sorted_table_range(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group)
 {
-    ecs_world_t *world = cache->query->world;
+    ecs_world_t *world = cache->query->stage;
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(!(world->flags & EcsWorldMultiThreaded), ECS_UNSUPPORTED,
         "cannot sort query in multithreaded mode");
@@ -140,6 +140,7 @@ static void flecs_query_cache_build_sorted_table_range(
                 helper[to_sort].elem_size = size;
                 helper[to_sort].shared = true;
             }
+
             ecs_assert(helper[to_sort].ptr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(helper[to_sort].elem_size != 0, ECS_INTERNAL_ERROR, NULL);
         } else {

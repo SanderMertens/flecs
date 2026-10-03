@@ -29,6 +29,7 @@ static void* flecs_vec_alloc(
             return ecs_os_malloc(size * elem_count);
         }
     }
+
     return NULL;
 }
 
@@ -93,6 +94,7 @@ void ecs_vec_fini(
         } else {
             ecs_os_free(v->array);
         }
+
         v->array = NULL;
         v->count = 0;
         v->size = 0;
@@ -110,6 +112,7 @@ ecs_vec_t* ecs_vec_reset(
         ecs_san_assert(size == v->elem_size, ECS_INTERNAL_ERROR, NULL);
         ecs_vec_clear(v);
     }
+
     return v;
 }
 
@@ -131,6 +134,7 @@ ecs_vec_t ecs_vec_copy(
     } else {
         array = ecs_os_memdup(v->array, size * v->size);
     }
+
     return (ecs_vec_t) {
         .count = v->count,
         .size = v->size,
@@ -164,6 +168,7 @@ void ecs_vec_reclaim(
                 ecs_os_free(v->array);
                 v->array = new_array;
             }
+
             v->size = count;
         } else {
             ecs_vec_fini(allocator, v, size);
@@ -193,9 +198,11 @@ void ecs_vec_set_size(
         if (new_count < 2) {
             new_count = 2;
         }
+
         if (new_count < elem_count || new_count > max_count) {
             new_count = max_count;
         }
+
         elem_count = new_count;
 
         if (elem_count != v->size) {
@@ -211,6 +218,7 @@ void ecs_vec_set_size(
             } else {
                 v->array = ecs_os_realloc(v->array, size * elem_count);
             }
+
             v->size = elem_count;
         }
     }
@@ -329,13 +337,16 @@ void ecs_vec_set_count_w_type_info(
             if (old_count) {
                 flecs_type_info_ctor_move_dtor(array, v->array, old_count, ti);
             }
+
             flecs_vec_free(allocator, size, v->size, v->array);
             v->array = array;
             v->size = new_size;
         }
+
         flecs_type_info_ctor(ECS_ELEM(v->array, size, old_count),
             elem_count - old_count, ti);
     }
+
     v->count = elem_count;
 }
 
@@ -362,6 +373,7 @@ void* ecs_vec_append(
     if (v->size == count) {
         ecs_vec_set_size(allocator, v, size, count + 1);
     }
+
     v->count = count + 1;
     return ECS_ELEM(v->array, size, count);
 }

@@ -2034,36 +2034,6 @@ void Collection_missing_in_keyword(void) {
     ecs_fini(world);
 }
 
-static ecs_value_t collection_get_var(
-    ecs_world_t *world,
-    const char *name,
-    const char *type_name,
-    ecs_entity_t elem_type,
-    int32_t count)
-{
-    ecs_entity_t var = ecs_lookup(world, name);
-    test_assert(var != 0);
-
-    ecs_value_t value = ecs_const_var_get(world, var);
-    test_assert(value.type != 0);
-    test_assert(value.ptr != NULL);
-
-    if (type_name) {
-        test_str(ecs_get_name(world, value.type), type_name);
-        ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
-        test_assert(typecache != 0);
-        test_assert(ecs_get_parent(world, value.type) == typecache);
-    }
-
-    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
-    test_assert(vt != NULL);
-    test_assert(vt->type == elem_type);
-
-    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), count);
-
-    return value;
-}
-
 void Collection_vector_literal_bool(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2072,8 +2042,23 @@ void Collection_vector_literal_bool(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<bool>", ecs_id(ecs_bool_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<bool>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_bool_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     bool *elems = ecs_vec_first(value.ptr);
     test_bool(elems[0], true);
@@ -2090,8 +2075,23 @@ void Collection_vector_literal_char(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<char>", ecs_id(ecs_char_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<char>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_char_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     char *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 'a');
@@ -2110,8 +2110,23 @@ void Collection_vector_literal_u8(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<u8>", ecs_id(ecs_u8_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<u8>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_u8_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     uint8_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 10);
@@ -2130,8 +2145,23 @@ void Collection_vector_literal_u16(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<u16>", ecs_id(ecs_u16_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<u16>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_u16_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     uint16_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 10);
@@ -2150,8 +2180,23 @@ void Collection_vector_literal_u32(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<u32>", ecs_id(ecs_u32_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<u32>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_u32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     uint32_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 10);
@@ -2170,8 +2215,23 @@ void Collection_vector_literal_u64(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<u64>", ecs_id(ecs_u64_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<u64>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_u64_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     uint64_t *elems = ecs_vec_first(value.ptr);
     test_uint(elems[0], 10);
@@ -2190,8 +2250,23 @@ void Collection_vector_literal_uptr(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<uptr>", ecs_id(ecs_uptr_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<uptr>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_uptr_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     uintptr_t *elems = ecs_vec_first(value.ptr);
     test_uint(elems[0], 10);
@@ -2210,8 +2285,23 @@ void Collection_vector_literal_i8(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<i8>", ecs_id(ecs_i8_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i8>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i8_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     int8_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 10);
@@ -2230,8 +2320,23 @@ void Collection_vector_literal_i16(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<i16>", ecs_id(ecs_i16_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i16>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i16_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     int16_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 10);
@@ -2250,8 +2355,23 @@ void Collection_vector_literal_i32(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i32>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     int32_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 10);
@@ -2270,8 +2390,23 @@ void Collection_vector_literal_i64(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<i64>", ecs_id(ecs_i64_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i64>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i64_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     int64_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 10);
@@ -2290,8 +2425,23 @@ void Collection_vector_literal_iptr(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<iptr>", ecs_id(ecs_iptr_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<iptr>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_iptr_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     intptr_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 10);
@@ -2310,8 +2460,23 @@ void Collection_vector_literal_f32(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<f32>", ecs_id(ecs_f32_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<f32>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_f32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     float *elems = ecs_vec_first(value.ptr);
     test_flt(elems[0], 10.5);
@@ -2328,8 +2493,23 @@ void Collection_vector_literal_f64(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<f64>", ecs_id(ecs_f64_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<f64>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_f64_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     double *elems = ecs_vec_first(value.ptr);
     test_flt(elems[0], 10.5);
@@ -2346,8 +2526,23 @@ void Collection_vector_literal_int(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<i64>", ecs_id(ecs_i64_t), 3);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i64>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i64_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 3);
 
     int64_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 10);
@@ -2365,8 +2560,23 @@ void Collection_vector_literal_string(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<string>", ecs_id(ecs_string_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<string>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_string_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     char **elems = ecs_vec_first(value.ptr);
     test_str(elems[0], "foo");
@@ -2385,8 +2595,23 @@ void Collection_vector_literal_entity(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<entity>", ecs_id(ecs_entity_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<entity>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_entity_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     ecs_entity_t *elems = ecs_vec_first(value.ptr);
     test_uint(elems[0], ecs_lookup(world, "e1"));
@@ -2403,8 +2628,23 @@ void Collection_vector_literal_int_float(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<f64>", ecs_id(ecs_f64_t), 3);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<f64>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_f64_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 3);
 
     double *elems = ecs_vec_first(value.ptr);
     test_flt(elems[0], 10);
@@ -2422,8 +2662,23 @@ void Collection_vector_literal_float_int(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<f64>", ecs_id(ecs_f64_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<f64>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_f64_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     double *elems = ecs_vec_first(value.ptr);
     test_flt(elems[0], 10.5);
@@ -2442,8 +2697,23 @@ void Collection_vector_literal_mixed_int(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<i64>", ecs_id(ecs_i64_t), 2);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i64>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i64_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 2);
 
     int64_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 10);
@@ -2646,8 +2916,23 @@ void Collection_range_literal(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 9);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i32>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 9);
 
     int32_t i, *elems = ecs_vec_first(value.ptr);
     for (i = 0; i < 9; i ++) {
@@ -2665,8 +2950,23 @@ void Collection_range_literal_no_spaces(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 3);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i32>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 3);
 
     int32_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 1);
@@ -2684,7 +2984,23 @@ void Collection_range_literal_empty(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    collection_get_var(world, "v", "vector<i32>", ecs_id(ecs_i32_t), 0);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i32>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 0);
 
     ecs_fini(world);
 }
@@ -2697,7 +3013,23 @@ void Collection_range_literal_reverse_empty(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    collection_get_var(world, "v", "vector<i32>", ecs_id(ecs_i32_t), 0);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i32>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 0);
 
     ecs_fini(world);
 }
@@ -2710,8 +3042,23 @@ void Collection_range_literal_negative(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 4);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i32>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 4);
 
     int32_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], -2);
@@ -2732,8 +3079,23 @@ void Collection_range_literal_w_vars(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 3);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i32>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 3);
 
     int32_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 1);
@@ -2751,8 +3113,23 @@ void Collection_range_literal_w_exprs(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
 
-    ecs_value_t value = collection_get_var(
-        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 4);
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_str(ecs_get_name(world, value.type), "vector<i32>");
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_get_parent(world, value.type) == typecache);
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i32_t));
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), 4);
 
     int32_t *elems = ecs_vec_first(value.ptr);
     test_int(elems[0], 2);

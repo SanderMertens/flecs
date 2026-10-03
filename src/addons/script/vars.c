@@ -24,6 +24,7 @@ ecs_script_vars_t* flecs_script_vars_push(
         ecs_check(stack == parent->stack, ECS_INVALID_PARAMETER, 
             "provided stack allocator is different from parent scope");
     }
+
     if (!allocator) {
         allocator = parent->allocator;
     } else if (parent) {
@@ -42,6 +43,7 @@ ecs_script_vars_t* flecs_script_vars_push(
     } else {
         result->sp = 0;
     }
+
     result->stack = stack;
     result->allocator = allocator;
     result->cursor = cursor;
@@ -205,6 +207,7 @@ ecs_script_var_t* ecs_script_vars_lookup(
         if (vars->parent) {
             return ecs_script_vars_lookup(vars->parent, name);
         }
+
         return NULL;
     }
 
@@ -292,12 +295,15 @@ void ecs_script_vars_from_iter(
                 continue;
             }
 
-            void *ptr = ecs_field_w_size(it, flecs_itosize(size), i);
+            void *ptr = ecs_base_field_w_size(it, flecs_itosize(size), i);
             if (!ptr) {
                 continue;
             }
 
-            ptr = ECS_OFFSET(ptr, offset * size);
+            if (!it->sources[i]) {
+                ptr = ECS_OFFSET(ptr, 
+                    offset * flecs_uto(ecs_size_t, ecs_field_stride(it, i)));
+            }
 
             const char *name = flecs_script_iter_field_names[i];
             ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
@@ -310,6 +316,7 @@ void ecs_script_vars_from_iter(
                 ecs_check(var->value.type == it->ids[i], 
                     ECS_INVALID_PARAMETER, NULL);
             }
+
             var->value.ptr = ptr;
             var->owned = false;
         }
@@ -334,6 +341,7 @@ void ecs_script_vars_from_iter(
                         e_ptr = &entities[range->offset];
                     }
                 }
+
                 if (!e_ptr) {
                     continue;
                 }

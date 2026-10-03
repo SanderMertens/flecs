@@ -3,6 +3,21 @@
 
 static bool ir_enabled = false;
 static ecs_script_eval_desc_t ir_desc = {0};
+static int eval_prefab_warn_count = 0;
+
+static void eval_prefab_warn_callback(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    (void)file;
+    (void)line;
+
+    if (level == -2 && strstr(msg, "Prefab")) {
+        eval_prefab_warn_count ++;
+    }
+}
 
 void Eval_setup(void) {
     const char *ir_param = test_param("ir");
@@ -2000,6 +2015,30 @@ void Eval_inherit_w_colon_w_scope(void) {
     test_assert(ecs_has_pair(world, child, EcsChildOf, foo));
 
     ecs_fini(world);
+}
+
+void Eval_inherit_w_colon_prefab_warns(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = eval_prefab_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    eval_prefab_warn_count = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo : Prefab {}";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(eval_prefab_warn_count, 1);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
 }
 
 void Eval_assign_component_w_value(void) {
@@ -16417,9 +16456,9 @@ void Eval_component_expr_member(void) {
     ecs_fini(world);
 }
 
-static ecs_entity_t flecs_swizzle_register_vec3(
-    ecs_world_t *world)
-{
+void Eval_component_expr_swizzle(void) {
+    ecs_world_t *world = ecs_init();
+
     ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Vec3" }),
         .members = {
@@ -16428,13 +16467,7 @@ static ecs_entity_t flecs_swizzle_register_vec3(
             {"z", ecs_id(ecs_f32_t)}
         }
     });
-    return ecs_id(Vec3);
-}
 
-void Eval_component_expr_swizzle(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
     test_assert(ecs_id(Vec3) != 0);
 
     const char *expr =
@@ -16460,7 +16493,15 @@ void Eval_component_expr_swizzle(void) {
 void Eval_component_expr_swizzle_reorder(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Vec3) != 0);
 
     const char *expr =
@@ -16486,7 +16527,15 @@ void Eval_component_expr_swizzle_reorder(void) {
 void Eval_component_expr_swizzle_repeat(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Vec3) != 0);
 
     const char *expr =
@@ -16512,7 +16561,15 @@ void Eval_component_expr_swizzle_repeat(void) {
 void Eval_component_expr_swizzle_subset(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Vec3) != 0);
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -16580,7 +16637,15 @@ void Eval_component_expr_swizzle_rgb(void) {
 void Eval_component_expr_swizzle_no_target_type(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Vec3) != 0);
 
     const char *expr =
@@ -16609,7 +16674,15 @@ void Eval_component_expr_swizzle_incompatible_target(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Vec3) != 0);
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -16637,7 +16710,15 @@ void Eval_component_expr_unresolved_member(void) {
 
     ecs_log_set_level(-4);
 
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Vec3) != 0);
 
     const char *expr =
@@ -16654,7 +16735,15 @@ void Eval_component_expr_unresolved_member(void) {
 void Eval_component_expr_swizzle_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Vec3) != 0);
 
     const char *expr =
@@ -16680,7 +16769,15 @@ void Eval_component_expr_swizzle_var(void) {
 void Eval_component_expr_swizzle_var_reorder(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Vec3) != 0);
 
     const char *expr =
@@ -16706,7 +16803,15 @@ void Eval_component_expr_swizzle_var_reorder(void) {
 void Eval_component_expr_swizzle_var_repeat(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Vec3) != 0);
 
     const char *expr =
@@ -16732,7 +16837,15 @@ void Eval_component_expr_swizzle_var_repeat(void) {
 void Eval_component_expr_swizzle_var_subset(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Vec3) != 0);
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -16800,7 +16913,15 @@ void Eval_component_expr_swizzle_var_rgb(void) {
 void Eval_component_expr_swizzle_var_no_target_type(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Vec3) != 0);
 
     const char *expr =
@@ -16824,9 +16945,10 @@ void Eval_component_expr_swizzle_var_no_target_type(void) {
     ecs_fini(world);
 }
 
-static ecs_entity_t flecs_swizzle_register_rgba(
-    ecs_world_t *world)
-{
+void Eval_component_expr_swizzle_initializer_r(void) {
+    typedef struct { float r; float g; float b; float a; } Rgba;
+    ecs_world_t *world = ecs_init();
+
     ecs_entity_t ecs_id(Rgba) = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Rgba" }),
         .members = {
@@ -16836,14 +16958,7 @@ static ecs_entity_t flecs_swizzle_register_rgba(
             {"a", ecs_id(ecs_f32_t)}
         }
     });
-    return ecs_id(Rgba);
-}
 
-void Eval_component_expr_swizzle_initializer_r(void) {
-    typedef struct { float r; float g; float b; float a; } Rgba;
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
     test_assert(ecs_id(Rgba) != 0);
 
     const char *expr =
@@ -16871,7 +16986,16 @@ void Eval_component_expr_swizzle_initializer_rg(void) {
     typedef struct { float r; float g; float b; float a; } Rgba;
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
+    ecs_entity_t ecs_id(Rgba) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Rgba" }),
+        .members = {
+            {"r", ecs_id(ecs_f32_t)},
+            {"g", ecs_id(ecs_f32_t)},
+            {"b", ecs_id(ecs_f32_t)},
+            {"a", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Rgba) != 0);
 
     const char *expr =
@@ -16899,7 +17023,16 @@ void Eval_component_expr_swizzle_initializer_rgb(void) {
     typedef struct { float r; float g; float b; float a; } Rgba;
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
+    ecs_entity_t ecs_id(Rgba) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Rgba" }),
+        .members = {
+            {"r", ecs_id(ecs_f32_t)},
+            {"g", ecs_id(ecs_f32_t)},
+            {"b", ecs_id(ecs_f32_t)},
+            {"a", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Rgba) != 0);
 
     const char *expr =
@@ -16927,7 +17060,16 @@ void Eval_component_expr_swizzle_initializer_rgba(void) {
     typedef struct { float r; float g; float b; float a; } Rgba;
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
+    ecs_entity_t ecs_id(Rgba) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Rgba" }),
+        .members = {
+            {"r", ecs_id(ecs_f32_t)},
+            {"g", ecs_id(ecs_f32_t)},
+            {"b", ecs_id(ecs_f32_t)},
+            {"a", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Rgba) != 0);
 
     const char *expr =
@@ -16955,7 +17097,16 @@ void Eval_component_expr_swizzle_initializer_add_assign(void) {
     typedef struct { float r; float g; float b; float a; } Rgba;
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
+    ecs_entity_t ecs_id(Rgba) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Rgba" }),
+        .members = {
+            {"r", ecs_id(ecs_f32_t)},
+            {"g", ecs_id(ecs_f32_t)},
+            {"b", ecs_id(ecs_f32_t)},
+            {"a", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Rgba) != 0);
 
     const char *init =
@@ -16992,7 +17143,16 @@ void Eval_component_expr_swizzle_initializer_mul_assign(void) {
     typedef struct { float r; float g; float b; float a; } Rgba;
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
+    ecs_entity_t ecs_id(Rgba) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Rgba" }),
+        .members = {
+            {"r", ecs_id(ecs_f32_t)},
+            {"g", ecs_id(ecs_f32_t)},
+            {"b", ecs_id(ecs_f32_t)},
+            {"a", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_assert(ecs_id(Rgba) != 0);
 
     const char *init =
@@ -17048,8 +17208,6 @@ void Eval_component_expr_member_no_var(void) {
 
     ecs_fini(world);
 }
-
-
 
 void Eval_map_i64_i32_component(void) {
     ecs_world_t *world = ecs_init();
@@ -19944,9 +20102,9 @@ static void script_update_on_remove(ecs_iter_t *it) {
     script_update_on_remove_invoked += it->count;
 
     if (script_entity_under_update &&
-        ecs_is_alive(it->world, script_entity_under_update))
+        ecs_is_alive(it->stage, script_entity_under_update))
     {
-        ecs_add_id(it->world,
+        ecs_add_id(it->stage,
             script_entity_under_update, script_update_marker);
     }
 }
@@ -21266,6 +21424,72 @@ void Eval_string_interpolation_of_scalar_types(void) {
     ecs_fini(world);
 }
 
+void Eval_string_interpolation_of_const_parts(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "const p0 = \"<svg viewBox=\\\"0 0 8 8\\\">\""
+    LINE "const p1 = \"<defs><mask id=\\\"m\\\">\""
+    LINE "const p2 = \"<rect width=\\\"8\\\" height=\\\"8\\\"/>\""
+    LINE "const p3 = \"</mask></defs>\""
+    LINE "const p4 = \"<g mask=\\\"url(#m)\\\">\""
+    LINE "const p5 = \"<path d=\\\"M0 0 L8 8\\\"/>\""
+    LINE "const p6 = \"</g>\""
+    LINE "const p7 = \"<g><circle cx=\\\"4\\\" cy=\\\"4\\\" r=\\\"2\\\"/></g>\""
+    LINE "e { Label: {\"{p0}{p1}{p2}{p3}{p4}{p5}{p6}{p7}</svg>\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0],
+        "<svg viewBox=\"0 0 8 8\">"
+        "<defs><mask id=\"m\">"
+        "<rect width=\"8\" height=\"8\"/>"
+        "</mask></defs>"
+        "<g mask=\"url(#m)\">"
+        "<path d=\"M0 0 L8 8\"/>"
+        "</g>"
+        "<g><circle cx=\"4\" cy=\"4\" r=\"2\"/></g>"
+        "</svg>");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_string_interpolation_of_const_parts_w_leading_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Label(text: string)"
+    LINE "const p0 = \"one\""
+    LINE "const p1 = \"two\""
+    LINE "const p2 = \"three\""
+    LINE "e { Label: {\"start{p0}{p1}{p2}\"} }";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t label = ecs_lookup(world, "Label");
+    test_assert(label != 0);
+    const char **text = ecs_get_id(world, e, label);
+    test_assert(text != NULL);
+    test_str(text[0], "startonetwothree");
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
 void Eval_semicolon_after_scope_close(void) {
     ecs_world_t *world = ecs_init();
 
@@ -21361,7 +21585,843 @@ static void eval_cancel_callback(
     eval_cancel_count ++;
 }
 
-static void eval_async_setup(ecs_world_t *world) {
+void Eval_while_count(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = 0"
+            LINE "  child { Position: {i, i * 2} }"
+            LINE "  async {"
+            LINE "    while i < 3 {"
+            LINE "      i = i + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 0);
+
+    ecs_entity_t inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    ecs_entity_t pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    const Position *p = ecs_get_id(world, inst, pos);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 3);
+
+    inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    p = ecs_get_id(world, inst, pos);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+
+    inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    p = ecs_get_id(world, inst, pos);
+    test_assert(p != NULL);
+    test_int(p->y, 6);
+
+    test_int(ecs_script_tasks_progress(world), 0);
+
+    ecs_fini(world);
+}
+
+void Eval_while_count_vars(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "const x = 0"
+            LINE "const y = 3"
+            LINE "template T {"
+            LINE "  mut i = x"
+            LINE "  mut sum = 0"
+            LINE "  async {"
+            LINE "    while i < y {"
+            LINE "      sum = sum + i"
+            LINE "      i = i + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 3);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "sum"), 0);
+    test_int(ecs_meta_get_int(&cur), 3);
+
+    ecs_fini(world);
+}
+
+void Eval_while_count_1_4(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = 1"
+            LINE "  mut sum = 0"
+            LINE "  async {"
+            LINE "    while i < 4 {"
+            LINE "      sum = sum + i"
+            LINE "      i = i + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 4);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "sum"), 0);
+    test_int(ecs_meta_get_int(&cur), 6);
+
+    ecs_fini(world);
+}
+
+void Eval_while_count_min_1_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = -1"
+            LINE "  mut sum = 0"
+            LINE "  async {"
+            LINE "    while i < 2 {"
+            LINE "      sum = sum + i"
+            LINE "      i = i + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 2);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "sum"), 0);
+    test_int(ecs_meta_get_int(&cur), 0);
+
+    ecs_fini(world);
+}
+
+void Eval_while_newline_before_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = 0"
+            LINE "  async {"
+            LINE "    while i < 3"
+            LINE "    {"
+            LINE "      i = i + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 3);
+
+    ecs_fini(world);
+}
+
+void Eval_while_paren_cond(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = 0"
+            LINE "  async {"
+            LINE "    while (i < 3) {"
+            LINE "      i = i + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 3);
+
+    ecs_fini(world);
+}
+
+void Eval_while_false(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = 10"
+            LINE "  mut ran = false"
+            LINE "  async {"
+            LINE "    while i < 3 {"
+            LINE "      ran = true"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 10);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "ran"), 0);
+    test_bool(*(bool*)ecs_meta_get_ptr(&cur), false);
+
+    ecs_fini(world);
+}
+
+void Eval_while_bool_cond(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut go = true"
+            LINE "  mut i = 0"
+            LINE "  async {"
+            LINE "    while go {"
+            LINE "      i = i + 1"
+            LINE "      if i == 4 {"
+            LINE "        go = false"
+            LINE "      }"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 4);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "go"), 0);
+    test_bool(*(bool*)ecs_meta_get_ptr(&cur), false);
+
+    ecs_fini(world);
+}
+
+void Eval_while_continue(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = 0"
+            LINE "  mut sum = 0"
+            LINE "  async {"
+            LINE "    while i < 5 {"
+            LINE "      i = i + 1"
+            LINE "      if i == 2 {"
+            LINE "        continue"
+            LINE "      }"
+            LINE "      sum = sum + i"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 5);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "sum"), 0);
+    test_int(ecs_meta_get_int(&cur), 13);
+
+    ecs_fini(world);
+}
+
+void Eval_while_continue_same_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = 0"
+            LINE "  mut sum = 0"
+            LINE "  async {"
+            LINE "    while i < 3 { i = i + 1; if i == 2 { continue }; sum = sum + i }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 3);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "sum"), 0);
+    test_int(ecs_meta_get_int(&cur), 4);
+
+    ecs_fini(world);
+}
+
+void Eval_while_continue_nested_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = 0"
+            LINE "  mut sum = 0"
+            LINE "  async {"
+            LINE "    while i < 3 {"
+            LINE "      i = i + 1"
+            LINE "      if i > 0 {"
+            LINE "        if i == 2 {"
+            LINE "          continue"
+            LINE "        }"
+            LINE "        sum = sum + i"
+            LINE "      }"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 3);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "sum"), 0);
+    test_int(ecs_meta_get_int(&cur), 4);
+
+    ecs_fini(world);
+}
+
+void Eval_while_continue_nested_while(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = 0"
+            LINE "  mut j = 0"
+            LINE "  mut sum = 0"
+            LINE "  mut done = 0"
+            LINE "  async {"
+            LINE "    while i < 2 {"
+            LINE "      i = i + 1"
+            LINE "      j = 0"
+            LINE "      while j < 3 {"
+            LINE "        j = j + 1"
+            LINE "        if j == 2 {"
+            LINE "          continue"
+            LINE "        }"
+            LINE "        sum = sum + j"
+            LINE "      }"
+            LINE "      done = done + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 2);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "j"), 0);
+    test_int(ecs_meta_get_int(&cur), 3);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "sum"), 0);
+    test_int(ecs_meta_get_int(&cur), 8);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "done"), 0);
+    test_int(ecs_meta_get_int(&cur), 2);
+
+    ecs_fini(world);
+}
+
+void Eval_while_continue_nested_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = 0"
+            LINE "  mut sum = 0"
+            LINE "  mut done = 0"
+            LINE "  async {"
+            LINE "    while i < 2 {"
+            LINE "      i = i + 1"
+            LINE "      for j in 0..3 {"
+            LINE "        if j == 1 {"
+            LINE "          continue"
+            LINE "        }"
+            LINE "        sum = sum + j"
+            LINE "      }"
+            LINE "      done = done + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 2);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "sum"), 0);
+    test_int(ecs_meta_get_int(&cur), 4);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "done"), 0);
+    test_int(ecs_meta_get_int(&cur), 2);
+
+    ecs_fini(world);
+}
+
+void Eval_for_continue_nested_while(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut j = 0"
+            LINE "  mut sum = 0"
+            LINE "  mut done = 0"
+            LINE "  async {"
+            LINE "    for i in 0..2 {"
+            LINE "      j = 0"
+            LINE "      while j < 3 {"
+            LINE "        j = j + 1"
+            LINE "        if j == 2 {"
+            LINE "          continue"
+            LINE "        }"
+            LINE "        sum = sum + j"
+            LINE "      }"
+            LINE "      if i == 0 {"
+            LINE "        continue"
+            LINE "      }"
+            LINE "      done = done + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "sum"), 0);
+    test_int(ecs_meta_get_int(&cur), 8);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "done"), 0);
+    test_int(ecs_meta_get_int(&cur), 1);
+
+    ecs_fini(world);
+}
+
+void Eval_while_w_await(void) {
+    ecs_world_t *world = ecs_init();
+
     eval_future_count = 0;
     eval_cancel_count = 0;
     ecs_os_zeromem(eval_futures);
@@ -21374,524 +22434,24 @@ static void eval_async_setup(ecs_world_t *world) {
         .callback = eval_fetch_callback,
         .cancel = eval_cancel_callback
     });
-}
 
-static void eval_resolve(int32_t index, int32_t value) {
-    ecs_value_t v = ecs_value(ecs_i32_t, {value});
-    test_int(ecs_script_future_resolve(eval_futures[index], &v), 0);
-    ecs_script_future_release(eval_futures[index]);
-}
-
-static ecs_entity_t eval_managed_script(ecs_world_t *world, const char *code) {
     ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
-        .code = code
+        .code = HEAD "template T {"
+            LINE "  mut i = 0"
+            LINE "  async {"
+            LINE "    while i < 2 {"
+            LINE "      const r = await fetch(i)"
+            LINE "      i = r"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
     });
     test_assert(script != 0);
     const EcsScript *s = ecs_get(world, script, EcsScript);
     test_assert(s != NULL);
     test_assert(s->error == NULL);
-    return script;
-}
-
-static const void* eval_mut_ptr(
-    ecs_world_t *world,
-    ecs_entity_t instance,
-    const char *template_name,
-    const char *member)
-{
-    ecs_entity_t t = ecs_lookup(world, template_name);
-    test_assert(t != 0);
-    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
-    test_assert(mut != 0);
-    const void *ptr = ecs_get_id(world, instance, mut);
-    test_assert(ptr != NULL);
-    ecs_meta_cursor_t cur = ecs_meta_cursor(
-        world, mut, ECS_CONST_CAST(void*, ptr));
-    test_int(ecs_meta_push(&cur), 0);
-    test_int(ecs_meta_member(&cur, member), 0);
-    return ecs_meta_get_ptr(&cur);
-}
-
-static int64_t eval_mut_int(
-    ecs_world_t *world,
-    ecs_entity_t instance,
-    const char *template_name,
-    const char *member)
-{
-    ecs_entity_t t = ecs_lookup(world, template_name);
-    test_assert(t != 0);
-    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
-    test_assert(mut != 0);
-    const void *ptr = ecs_get_id(world, instance, mut);
-    test_assert(ptr != NULL);
-    ecs_meta_cursor_t cur = ecs_meta_cursor(
-        world, mut, ECS_CONST_CAST(void*, ptr));
-    test_int(ecs_meta_push(&cur), 0);
-    test_int(ecs_meta_member(&cur, member), 0);
-    return ecs_meta_get_int(&cur);
-}
-
-static double eval_mut_float(
-    ecs_world_t *world,
-    ecs_entity_t instance,
-    const char *template_name,
-    const char *member)
-{
-    ecs_entity_t t = ecs_lookup(world, template_name);
-    test_assert(t != 0);
-    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
-    test_assert(mut != 0);
-    const void *ptr = ecs_get_id(world, instance, mut);
-    test_assert(ptr != NULL);
-    ecs_meta_cursor_t cur = ecs_meta_cursor(
-        world, mut, ECS_CONST_CAST(void*, ptr));
-    test_int(ecs_meta_push(&cur), 0);
-    test_int(ecs_meta_member(&cur, member), 0);
-    return ecs_meta_get_float(&cur);
-}
-
-static const Position* eval_position(
-    ecs_world_t *world,
-    const char *path)
-{
-    ecs_entity_t e = ecs_lookup(world, path);
-    test_assert(e != 0);
-    ecs_entity_t pos = ecs_lookup(world, "Position");
-    test_assert(pos != 0);
-    const Position *p = ecs_get_id(world, e, pos);
-    test_assert(p != NULL);
-    return p;
-}
-
-static void eval_register_position(ecs_world_t *world) {
-    ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-}
-
-void Eval_while_count(void) {
-    ecs_world_t *world = ecs_init();
-    eval_register_position(world);
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 0"
-        LINE "  child { Position: {i, i * 2} }"
-        LINE "  async {"
-        LINE "    while i < 3 {"
-        LINE "      i = i + 1"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-    test_int(eval_mut_int(world, e, "T", "i"), 0);
-    test_int(eval_position(world, "e.child")->x, 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 3);
-    test_int(eval_position(world, "e.child")->x, 3);
-    test_int(eval_position(world, "e.child")->y, 6);
-
-    test_int(ecs_script_tasks_progress(world), 0);
-
-    ecs_fini(world);
-}
-
-void Eval_while_count_vars(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "const x = 0"
-        LINE "const y = 3"
-        LINE "template T {"
-        LINE "  mut i = x"
-        LINE "  mut sum = 0"
-        LINE "  async {"
-        LINE "    while i < y {"
-        LINE "      sum = sum + i"
-        LINE "      i = i + 1"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 3);
-    test_int(eval_mut_int(world, e, "T", "sum"), 3);
-
-    ecs_fini(world);
-}
-
-void Eval_while_count_1_4(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 1"
-        LINE "  mut sum = 0"
-        LINE "  async {"
-        LINE "    while i < 4 {"
-        LINE "      sum = sum + i"
-        LINE "      i = i + 1"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 4);
-    test_int(eval_mut_int(world, e, "T", "sum"), 6);
-
-    ecs_fini(world);
-}
-
-void Eval_while_count_min_1_2(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = -1"
-        LINE "  mut sum = 0"
-        LINE "  async {"
-        LINE "    while i < 2 {"
-        LINE "      sum = sum + i"
-        LINE "      i = i + 1"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 2);
-    test_int(eval_mut_int(world, e, "T", "sum"), 0);
-
-    ecs_fini(world);
-}
-
-void Eval_while_newline_before_scope(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 0"
-        LINE "  async {"
-        LINE "    while i < 3"
-        LINE "    {"
-        LINE "      i = i + 1"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 3);
-
-    ecs_fini(world);
-}
-
-void Eval_while_paren_cond(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 0"
-        LINE "  async {"
-        LINE "    while (i < 3) {"
-        LINE "      i = i + 1"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 3);
-
-    ecs_fini(world);
-}
-
-void Eval_while_false(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 10"
-        LINE "  mut ran = false"
-        LINE "  async {"
-        LINE "    while i < 3 {"
-        LINE "      ran = true"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 10);
-    test_bool(*(bool*)eval_mut_ptr(world, e, "T", "ran"), false);
-
-    ecs_fini(world);
-}
-
-void Eval_while_bool_cond(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut go = true"
-        LINE "  mut i = 0"
-        LINE "  async {"
-        LINE "    while go {"
-        LINE "      i = i + 1"
-        LINE "      if i == 4 {"
-        LINE "        go = false"
-        LINE "      }"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 4);
-    test_bool(*(bool*)eval_mut_ptr(world, e, "T", "go"), false);
-
-    ecs_fini(world);
-}
-
-void Eval_while_continue(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 0"
-        LINE "  mut sum = 0"
-        LINE "  async {"
-        LINE "    while i < 5 {"
-        LINE "      i = i + 1"
-        LINE "      if i == 2 {"
-        LINE "        continue"
-        LINE "      }"
-        LINE "      sum = sum + i"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 5);
-    test_int(eval_mut_int(world, e, "T", "sum"), 13);
-
-    ecs_fini(world);
-}
-
-void Eval_while_continue_same_line(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 0"
-        LINE "  mut sum = 0"
-        LINE "  async {"
-        LINE "    while i < 3 { i = i + 1; if i == 2 { continue }; sum = sum + i }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 3);
-    test_int(eval_mut_int(world, e, "T", "sum"), 4);
-
-    ecs_fini(world);
-}
-
-void Eval_while_continue_nested_scope(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 0"
-        LINE "  mut sum = 0"
-        LINE "  async {"
-        LINE "    while i < 3 {"
-        LINE "      i = i + 1"
-        LINE "      if i > 0 {"
-        LINE "        if i == 2 {"
-        LINE "          continue"
-        LINE "        }"
-        LINE "        sum = sum + i"
-        LINE "      }"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 3);
-    test_int(eval_mut_int(world, e, "T", "sum"), 4);
-
-    ecs_fini(world);
-}
-
-void Eval_while_continue_nested_while(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 0"
-        LINE "  mut j = 0"
-        LINE "  mut sum = 0"
-        LINE "  mut done = 0"
-        LINE "  async {"
-        LINE "    while i < 2 {"
-        LINE "      i = i + 1"
-        LINE "      j = 0"
-        LINE "      while j < 3 {"
-        LINE "        j = j + 1"
-        LINE "        if j == 2 {"
-        LINE "          continue"
-        LINE "        }"
-        LINE "        sum = sum + j"
-        LINE "      }"
-        LINE "      done = done + 1"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 2);
-    test_int(eval_mut_int(world, e, "T", "j"), 3);
-    test_int(eval_mut_int(world, e, "T", "sum"), 8);
-    test_int(eval_mut_int(world, e, "T", "done"), 2);
-
-    ecs_fini(world);
-}
-
-void Eval_while_continue_nested_for(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 0"
-        LINE "  mut sum = 0"
-        LINE "  mut done = 0"
-        LINE "  async {"
-        LINE "    while i < 2 {"
-        LINE "      i = i + 1"
-        LINE "      for j in 0..3 {"
-        LINE "        if j == 1 {"
-        LINE "          continue"
-        LINE "        }"
-        LINE "        sum = sum + j"
-        LINE "      }"
-        LINE "      done = done + 1"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 2);
-    test_int(eval_mut_int(world, e, "T", "sum"), 4);
-    test_int(eval_mut_int(world, e, "T", "done"), 2);
-
-    ecs_fini(world);
-}
-
-void Eval_for_continue_nested_while(void) {
-    ecs_world_t *world = ecs_init();
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut j = 0"
-        LINE "  mut sum = 0"
-        LINE "  mut done = 0"
-        LINE "  async {"
-        LINE "    for i in 0..2 {"
-        LINE "      j = 0"
-        LINE "      while j < 3 {"
-        LINE "        j = j + 1"
-        LINE "        if j == 2 {"
-        LINE "          continue"
-        LINE "        }"
-        LINE "        sum = sum + j"
-        LINE "      }"
-        LINE "      if i == 0 {"
-        LINE "        continue"
-        LINE "      }"
-        LINE "      done = done + 1"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "sum"), 8);
-    test_int(eval_mut_int(world, e, "T", "done"), 1);
-
-    ecs_fini(world);
-}
-
-void Eval_while_w_await(void) {
-    ecs_world_t *world = ecs_init();
-    eval_async_setup(world);
-
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 0"
-        LINE "  async {"
-        LINE "    while i < 2 {"
-        LINE "      const r = await fetch(i)"
-        LINE "      i = r"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -21900,16 +22460,44 @@ void Eval_while_w_await(void) {
     test_int(eval_future_count, 1);
     test_int(eval_args[0], 0);
 
-    eval_resolve(0, 1);
+    ecs_value_t v = ecs_value(ecs_i32_t, {1});
+    test_int(ecs_script_future_resolve(eval_futures[0], &v), 0);
+    ecs_script_future_release(eval_futures[0]);
+
     test_int(ecs_script_tasks_progress(world), 1);
     test_int(eval_future_count, 2);
     test_int(eval_args[1], 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 1);
 
-    eval_resolve(1, 2);
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 1);
+
+    v = ecs_value(ecs_i32_t, {2});
+    test_int(ecs_script_future_resolve(eval_futures[1], &v), 0);
+    ecs_script_future_release(eval_futures[1]);
+
     test_int(ecs_script_tasks_progress(world), 1);
     test_int(eval_future_count, 2);
-    test_int(eval_mut_int(world, e, "T", "i"), 2);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 2);
 
     test_int(ecs_script_tasks_progress(world), 0);
 
@@ -21918,20 +22506,42 @@ void Eval_while_w_await(void) {
 
 void Eval_while_true_in_script_block(void) {
     ecs_world_t *world = ecs_init();
-    eval_async_setup(world);
 
-    ecs_entity_t script = eval_managed_script(world,
-        HEAD "async {"
-        LINE "  while true {"
-        LINE "    await fetch(1)"
-        LINE "  }"
-        LINE "}");
+    eval_future_count = 0;
+    eval_cancel_count = 0;
+    ecs_os_zeromem(eval_futures);
+    ecs_os_zeromem(eval_args);
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = eval_fetch_callback,
+        .cancel = eval_cancel_callback
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "async {"
+            LINE "  while true {"
+            LINE "    await fetch(1)"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     int32_t i;
     for (i = 0; i < 3; i ++) {
         test_int(ecs_script_tasks_progress(world), 1);
         test_int(eval_future_count, i + 1);
-        eval_resolve(i, 0);
+
+        ecs_value_t v = ecs_value(ecs_i32_t, {0});
+        test_int(ecs_script_future_resolve(eval_futures[i], &v), 0);
+        ecs_script_future_release(eval_futures[i]);
+
     }
 
     test_int(ecs_script_tasks_progress(world), 1);
@@ -21949,22 +22559,39 @@ void Eval_while_true_in_script_block(void) {
 void Eval_while_updates_managed_script(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t script = eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut i = 0"
-        LINE "  async {"
-        LINE "    while i < 3 {"
-        LINE "      i = i + 1"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut i = 0"
+            LINE "  async {"
+            LINE "    while i < 3 {"
+            LINE "      i = i + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 3);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 3);
 
     test_int(ecs_script_update(world, script, 0,
         HEAD "template T {"
@@ -21979,10 +22606,32 @@ void Eval_while_updates_managed_script(void) {
 
     e = ecs_lookup(world, "e");
     test_assert(e != 0);
-    test_int(eval_mut_int(world, e, "T", "i"), 0);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "i"), 5);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 5);
 
     ecs_fini(world);
 }
@@ -21990,18 +22639,24 @@ void Eval_while_updates_managed_script(void) {
 void Eval_while_two_instances(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  prop max = 1"
-        LINE "  mut i = 0"
-        LINE "  async {"
-        LINE "    while i < max {"
-        LINE "      i = i + 1"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "a { T: {max: 2} }"
-        LINE "b { T: {max: 5} }");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  prop max = 1"
+            LINE "  mut i = 0"
+            LINE "  async {"
+            LINE "    while i < max {"
+            LINE "      i = i + 1"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "a { T: {max: 2} }"
+            LINE "b { T: {max: 5} }"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t a = ecs_lookup(world, "a");
     ecs_entity_t b = ecs_lookup(world, "b");
@@ -22009,15 +22664,44 @@ void Eval_while_two_instances(void) {
     test_assert(b != 0);
 
     test_int(ecs_script_tasks_progress(world), 2);
-    test_int(eval_mut_int(world, a, "T", "i"), 2);
-    test_int(eval_mut_int(world, b, "T", "i"), 5);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, a, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 2);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, b, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "i"), 0);
+    test_int(ecs_meta_get_int(&cur), 5);
 
     ecs_fini(world);
 }
 
 void Eval_while_cond_struct_fails(void) {
     ecs_world_t *world = ecs_init();
-    eval_register_position(world);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run_w_desc(world, NULL,
@@ -22193,21 +22877,49 @@ void Eval_while_to_str(void) {
 void Eval_mut_assign_int(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m = 1"
-        LINE "  async {"
-        LINE "    m = 10"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m = 1"
+            LINE "  async {"
+            LINE "    m = 10"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
-    test_int(eval_mut_int(world, e, "T", "m"), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 1);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 10);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 10);
 
     ecs_fini(world);
 }
@@ -22215,20 +22927,37 @@ void Eval_mut_assign_int(void) {
 void Eval_mut_assign_typed_i32(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m: i32 = 1"
-        LINE "  async {"
-        LINE "    m = 10"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m: i32 = 1"
+            LINE "  async {"
+            LINE "    m = 10"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(*(int32_t*)eval_mut_ptr(world, e, "T", "m"), 10);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(*(int32_t*)ecs_meta_get_ptr(&cur), 10);
 
     ecs_fini(world);
 }
@@ -22236,20 +22965,37 @@ void Eval_mut_assign_typed_i32(void) {
 void Eval_mut_assign_f32_from_int(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m: f32 = 1"
-        LINE "  async {"
-        LINE "    m = 10"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m: f32 = 1"
+            LINE "  async {"
+            LINE "    m = 10"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_flt(*(float*)eval_mut_ptr(world, e, "T", "m"), 10);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_flt(*(float*)ecs_meta_get_ptr(&cur), 10);
 
     ecs_fini(world);
 }
@@ -22257,20 +23003,37 @@ void Eval_mut_assign_f32_from_int(void) {
 void Eval_mut_assign_f32_from_f64_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m: f32 = 1"
-        LINE "  async {"
-        LINE "    m = 2.5 * 2"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m: f32 = 1"
+            LINE "  async {"
+            LINE "    m = 2.5 * 2"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_flt(*(float*)eval_mut_ptr(world, e, "T", "m"), 5);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_flt(*(float*)ecs_meta_get_ptr(&cur), 5);
 
     ecs_fini(world);
 }
@@ -22278,21 +23041,38 @@ void Eval_mut_assign_f32_from_f64_expr(void) {
 void Eval_mut_assign_int_from_f32(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m = 1"
-        LINE "  mut f: f32 = 2.5"
-        LINE "  async {"
-        LINE "    m = f * 2"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m = 1"
+            LINE "  mut f: f32 = 2.5"
+            LINE "  async {"
+            LINE "    m = f * 2"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 5);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 5);
 
     ecs_fini(world);
 }
@@ -22300,21 +23080,49 @@ void Eval_mut_assign_int_from_f32(void) {
 void Eval_mut_assign_bool(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m = false"
-        LINE "  async {"
-        LINE "    m = true"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m = false"
+            LINE "  async {"
+            LINE "    m = true"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
-    test_bool(*(bool*)eval_mut_ptr(world, e, "T", "m"), false);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_bool(*(bool*)ecs_meta_get_ptr(&cur), false);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_bool(*(bool*)eval_mut_ptr(world, e, "T", "m"), true);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_bool(*(bool*)ecs_meta_get_ptr(&cur), true);
 
     ecs_fini(world);
 }
@@ -22322,21 +23130,49 @@ void Eval_mut_assign_bool(void) {
 void Eval_mut_assign_string(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m = \"hello\""
-        LINE "  async {"
-        LINE "    m = \"world\""
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m = \"hello\""
+            LINE "  async {"
+            LINE "    m = \"world\""
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
-    test_str(*(char**)eval_mut_ptr(world, e, "T", "m"), "hello");
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_str(*(char**)ecs_meta_get_ptr(&cur), "hello");
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_str(*(char**)eval_mut_ptr(world, e, "T", "m"), "world");
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_str(*(char**)ecs_meta_get_ptr(&cur), "world");
 
     ecs_fini(world);
 }
@@ -22344,21 +23180,38 @@ void Eval_mut_assign_string(void) {
 void Eval_mut_assign_string_interpolated(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  prop v = 5"
-        LINE "  mut m = \"\""
-        LINE "  async {"
-        LINE "    m = \"value_{v}\""
-        LINE "  }"
-        LINE "}"
-        LINE "e { T: {v: 7} }");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  prop v = 5"
+            LINE "  mut m = \"\""
+            LINE "  async {"
+            LINE "    m = \"value_{v}\""
+            LINE "  }"
+            LINE "}"
+            LINE "e { T: {v: 7} }"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_str(*(char**)eval_mut_ptr(world, e, "T", "m"), "value_7");
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_str(*(char**)ecs_meta_get_ptr(&cur), "value_7");
 
     ecs_fini(world);
 }
@@ -22366,16 +23219,22 @@ void Eval_mut_assign_string_interpolated(void) {
 void Eval_mut_assign_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "Foo {}"
-        LINE "Bar {}"
-        LINE "template T {"
-        LINE "  mut m = Foo"
-        LINE "  async {"
-        LINE "    m = Bar"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "Foo {}"
+            LINE "Bar {}"
+            LINE "template T {"
+            LINE "  mut m = Foo"
+            LINE "  async {"
+            LINE "    m = Bar"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -22383,10 +23242,32 @@ void Eval_mut_assign_entity(void) {
     test_assert(e != 0);
     test_assert(foo != 0);
     test_assert(bar != 0);
-    test_uint(*(ecs_entity_t*)eval_mut_ptr(world, e, "T", "m"), foo);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_uint(*(ecs_entity_t*)ecs_meta_get_ptr(&cur), foo);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_uint(*(ecs_entity_t*)eval_mut_ptr(world, e, "T", "m"), bar);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_uint(*(ecs_entity_t*)ecs_meta_get_ptr(&cur), bar);
 
     ecs_fini(world);
 }
@@ -22394,78 +23275,180 @@ void Eval_mut_assign_entity(void) {
 void Eval_mut_assign_this(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m: entity = 0"
-        LINE "  async {"
-        LINE "    m = this"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m: entity = 0"
+            LINE "  async {"
+            LINE "    m = this"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
-    test_uint(*(ecs_entity_t*)eval_mut_ptr(world, e, "T", "m"), 0);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_uint(*(ecs_entity_t*)ecs_meta_get_ptr(&cur), 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_uint(*(ecs_entity_t*)eval_mut_ptr(world, e, "T", "m"), e);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_uint(*(ecs_entity_t*)ecs_meta_get_ptr(&cur), e);
 
     ecs_fini(world);
 }
 
 void Eval_mut_assign_struct(void) {
     ecs_world_t *world = ecs_init();
-    eval_register_position(world);
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m: Position = {1, 2}"
-        LINE "  child { Position: m }"
-        LINE "  async {"
-        LINE "    m = {3, 4}"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m: Position = {1, 2}"
+            LINE "  child { Position: m }"
+            LINE "  async {"
+            LINE "    m = {3, 4}"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
     {
-        const Position *p = eval_mut_ptr(world, e, "T", "m");
+        ecs_entity_t t = ecs_lookup(world, "T");
+        test_assert(t != 0);
+        ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+        test_assert(mut != 0);
+        const void *ptr = ecs_get_id(world, e, mut);
+        test_assert(ptr != NULL);
+        ecs_meta_cursor_t cur = ecs_meta_cursor(
+            world, mut, ECS_CONST_CAST(void*, ptr));
+        test_int(ecs_meta_push(&cur), 0);
+        test_int(ecs_meta_member(&cur, "m"), 0);
+        const Position *p = ecs_meta_get_ptr(&cur);
+
         test_int(p->x, 1);
         test_int(p->y, 2);
     }
 
     test_int(ecs_script_tasks_progress(world), 1);
     {
-        const Position *p = eval_mut_ptr(world, e, "T", "m");
+        ecs_entity_t t = ecs_lookup(world, "T");
+        test_assert(t != 0);
+        ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+        test_assert(mut != 0);
+        const void *ptr = ecs_get_id(world, e, mut);
+        test_assert(ptr != NULL);
+        ecs_meta_cursor_t cur = ecs_meta_cursor(
+            world, mut, ECS_CONST_CAST(void*, ptr));
+        test_int(ecs_meta_push(&cur), 0);
+        test_int(ecs_meta_member(&cur, "m"), 0);
+        const Position *p = ecs_meta_get_ptr(&cur);
+
         test_int(p->x, 3);
         test_int(p->y, 4);
     }
-    test_int(eval_position(world, "e.child")->x, 3);
-    test_int(eval_position(world, "e.child")->y, 4);
+
+    ecs_entity_t inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    ecs_entity_t pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    const Position *pv = ecs_get_id(world, inst, pos);
+    test_assert(pv != NULL);
+    test_int(pv->x, 3);
+
+    inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    pv = ecs_get_id(world, inst, pos);
+    test_assert(pv != NULL);
+    test_int(pv->y, 4);
 
     ecs_fini(world);
 }
 
 void Eval_mut_assign_struct_from_var(void) {
     ecs_world_t *world = ecs_init();
-    eval_register_position(world);
 
-    eval_managed_script(world,
-        HEAD "const p: Position = {3, 4}"
-        LINE "template T {"
-        LINE "  mut m: Position = {1, 2}"
-        LINE "  async {"
-        LINE "    m = p"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "const p: Position = {3, 4}"
+            LINE "template T {"
+            LINE "  mut m: Position = {1, 2}"
+            LINE "  async {"
+            LINE "    m = p"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    const Position *p = eval_mut_ptr(world, e, "T", "m");
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    const Position *p = ecs_meta_get_ptr(&cur);
+
     test_int(p->x, 3);
     test_int(p->y, 4);
 
@@ -22475,21 +23458,38 @@ void Eval_mut_assign_struct_from_var(void) {
 void Eval_mut_assign_from_prop(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  prop v = 1"
-        LINE "  mut m = 0"
-        LINE "  async {"
-        LINE "    m = v * 2"
-        LINE "  }"
-        LINE "}"
-        LINE "e { T: {v: 5} }");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  prop v = 1"
+            LINE "  mut m = 0"
+            LINE "  async {"
+            LINE "    m = v * 2"
+            LINE "  }"
+            LINE "}"
+            LINE "e { T: {v: 5} }"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 10);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 10);
 
     ecs_fini(world);
 }
@@ -22497,22 +23497,50 @@ void Eval_mut_assign_from_prop(void) {
 void Eval_mut_assign_from_mut(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut a = 3"
-        LINE "  mut b = 0"
-        LINE "  async {"
-        LINE "    b = a + 1"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut a = 3"
+            LINE "  mut b = 0"
+            LINE "  async {"
+            LINE "    b = a + 1"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "a"), 3);
-    test_int(eval_mut_int(world, e, "T", "b"), 4);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "a"), 0);
+    test_int(ecs_meta_get_int(&cur), 3);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "b"), 0);
+    test_int(ecs_meta_get_int(&cur), 4);
 
     ecs_fini(world);
 }
@@ -22520,23 +23548,40 @@ void Eval_mut_assign_from_mut(void) {
 void Eval_mut_assign_from_const(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "const g = 100"
-        LINE "template T {"
-        LINE "  prop v = 1"
-        LINE "  mut m = 0"
-        LINE "  const c = v * 3"
-        LINE "  async {"
-        LINE "    m = g + c"
-        LINE "  }"
-        LINE "}"
-        LINE "e { T: {v: 2} }");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "const g = 100"
+            LINE "template T {"
+            LINE "  prop v = 1"
+            LINE "  mut m = 0"
+            LINE "  const c = v * 3"
+            LINE "  async {"
+            LINE "    m = g + c"
+            LINE "  }"
+            LINE "}"
+            LINE "e { T: {v: 2} }"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 106);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 106);
 
     ecs_fini(world);
 }
@@ -22544,22 +23589,39 @@ void Eval_mut_assign_from_const(void) {
 void Eval_mut_assign_from_local_const(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m = 0"
-        LINE "  async {"
-        LINE "    const x = 5"
-        LINE "    const y = x * 2"
-        LINE "    m = y + 1"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m = 0"
+            LINE "  async {"
+            LINE "    const x = 5"
+            LINE "    const y = x * 2"
+            LINE "    m = y + 1"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 11);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 11);
 
     ecs_fini(world);
 }
@@ -22567,21 +23629,38 @@ void Eval_mut_assign_from_local_const(void) {
 void Eval_mut_assign_twice(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m = 1"
-        LINE "  async {"
-        LINE "    m = m + 1"
-        LINE "    m = m * 10"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m = 1"
+            LINE "  async {"
+            LINE "    m = m + 1"
+            LINE "    m = m * 10"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 20);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 20);
 
     ecs_fini(world);
 }
@@ -22589,50 +23668,119 @@ void Eval_mut_assign_twice(void) {
 void Eval_mut_assign_two_muts(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut a = 1"
-        LINE "  mut b = 2"
-        LINE "  async {"
-        LINE "    a = 10"
-        LINE "    b = 20"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut a = 1"
+            LINE "  mut b = 2"
+            LINE "  async {"
+            LINE "    a = 10"
+            LINE "    b = 20"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "a"), 10);
-    test_int(eval_mut_int(world, e, "T", "b"), 20);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "a"), 0);
+    test_int(ecs_meta_get_int(&cur), 10);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "b"), 0);
+    test_int(ecs_meta_get_int(&cur), 20);
 
     ecs_fini(world);
 }
 
 void Eval_mut_assign_updates_child(void) {
     ecs_world_t *world = ecs_init();
-    eval_register_position(world);
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  prop v = 1"
-        LINE "  mut m = 0"
-        LINE "  child { Position: {v, m} }"
-        LINE "  async {"
-        LINE "    m = 7"
-        LINE "  }"
-        LINE "}"
-        LINE "e { T: {v: 5} }");
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  prop v = 1"
+            LINE "  mut m = 0"
+            LINE "  child { Position: {v, m} }"
+            LINE "  async {"
+            LINE "    m = 7"
+            LINE "  }"
+            LINE "}"
+            LINE "e { T: {v: 5} }"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
-    test_int(eval_position(world, "e.child")->x, 5);
-    test_int(eval_position(world, "e.child")->y, 0);
+
+    ecs_entity_t inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    ecs_entity_t pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    const Position *p = ecs_get_id(world, inst, pos);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+
+    inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    p = ecs_get_id(world, inst, pos);
+    test_assert(p != NULL);
+    test_int(p->y, 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_position(world, "e.child")->x, 5);
-    test_int(eval_position(world, "e.child")->y, 7);
+
+    inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    p = ecs_get_id(world, inst, pos);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+
+    inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    p = ecs_get_id(world, inst, pos);
+    test_assert(p != NULL);
+    test_int(p->y, 7);
 
     ecs_fini(world);
 }
@@ -22640,19 +23788,25 @@ void Eval_mut_assign_updates_child(void) {
 void Eval_mut_assign_updates_conditional(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut hover = false"
-        LINE "  if hover {"
-        LINE "    on {}"
-        LINE "  } else {"
-        LINE "    off {}"
-        LINE "  }"
-        LINE "  async {"
-        LINE "    hover = true"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut hover = false"
+            LINE "  if hover {"
+            LINE "    on {}"
+            LINE "  } else {"
+            LINE "    off {}"
+            LINE "  }"
+            LINE "  async {"
+            LINE "    hover = true"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     test_assert(ecs_lookup(world, "e.on") == 0);
     test_assert(ecs_lookup(world, "e.off") != 0);
@@ -22666,17 +23820,30 @@ void Eval_mut_assign_updates_conditional(void) {
 
 void Eval_mut_assign_same_value_no_update(void) {
     ecs_world_t *world = ecs_init();
-    eval_register_position(world);
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m = 5"
-        LINE "  child { Position: {m, 0} }"
-        LINE "  async {"
-        LINE "    m = 5"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m = 5"
+            LINE "  child { Position: {m, 0} }"
+            LINE "  async {"
+            LINE "    m = 5"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -22686,37 +23853,99 @@ void Eval_mut_assign_same_value_no_update(void) {
     const Position *before = ecs_get_id(world, child, pos);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 5);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 5);
+
     test_assert(ecs_lookup(world, "e.child") == child);
     test_assert(ecs_get_id(world, child, pos) == before);
-    test_int(eval_position(world, "e.child")->x, 5);
+
+    ecs_entity_t inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    ecs_entity_t pos_1 = ecs_lookup(world, "Position");
+    test_assert(pos_1 != 0);
+    const Position *p = ecs_get_id(world, inst, pos_1);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
 
     ecs_fini(world);
 }
 
 void Eval_mut_assign_after_await(void) {
     ecs_world_t *world = ecs_init();
-    eval_async_setup(world);
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m = 0"
-        LINE "  async {"
-        LINE "    const r = await fetch(1)"
-        LINE "    m = r * 2"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    eval_future_count = 0;
+    eval_cancel_count = 0;
+    ecs_os_zeromem(eval_futures);
+    ecs_os_zeromem(eval_args);
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = eval_fetch_callback,
+        .cancel = eval_cancel_callback
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m = 0"
+            LINE "  async {"
+            LINE "    const r = await fetch(1)"
+            LINE "    m = r * 2"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 0);
 
-    eval_resolve(0, 21);
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 0);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {21});
+    test_int(ecs_script_future_resolve(eval_futures[0], &v), 0);
+    ecs_script_future_release(eval_futures[0]);
+
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 42);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 42);
 
     ecs_fini(world);
 }
@@ -22724,20 +23953,26 @@ void Eval_mut_assign_after_await(void) {
 void Eval_mut_assign_in_if(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  prop v = 1"
-        LINE "  mut m = 0"
-        LINE "  async {"
-        LINE "    if v > 3 {"
-        LINE "      m = 1"
-        LINE "    } else {"
-        LINE "      m = 2"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "a { T: {v: 5} }"
-        LINE "b { T: {v: 1} }");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  prop v = 1"
+            LINE "  mut m = 0"
+            LINE "  async {"
+            LINE "    if v > 3 {"
+            LINE "      m = 1"
+            LINE "    } else {"
+            LINE "      m = 2"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "a { T: {v: 5} }"
+            LINE "b { T: {v: 1} }"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t a = ecs_lookup(world, "a");
     ecs_entity_t b = ecs_lookup(world, "b");
@@ -22745,8 +23980,30 @@ void Eval_mut_assign_in_if(void) {
     test_assert(b != 0);
 
     test_int(ecs_script_tasks_progress(world), 2);
-    test_int(eval_mut_int(world, a, "T", "m"), 1);
-    test_int(eval_mut_int(world, b, "T", "m"), 2);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, a, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 1);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, b, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 2);
 
     ecs_fini(world);
 }
@@ -22754,55 +24011,112 @@ void Eval_mut_assign_in_if(void) {
 void Eval_mut_assign_in_for(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m = 0"
-        LINE "  async {"
-        LINE "    for i in 1..4 {"
-        LINE "      m = m + i"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m = 0"
+            LINE "  async {"
+            LINE "    for i in 1..4 {"
+            LINE "      m = m + i"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 6);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 6);
 
     ecs_fini(world);
 }
 
 void Eval_mut_assign_in_try_catch(void) {
     ecs_world_t *world = ecs_init();
-    eval_async_setup(world);
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m = 0"
-        LINE "  async {"
-        LINE "    try {"
-        LINE "      m = 1"
-        LINE "      await fetch(1)"
-        LINE "      m = 2"
-        LINE "    } catch {"
-        LINE "      m = 3"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    eval_future_count = 0;
+    eval_cancel_count = 0;
+    ecs_os_zeromem(eval_futures);
+    ecs_os_zeromem(eval_args);
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = eval_fetch_callback,
+        .cancel = eval_cancel_callback
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m = 0"
+            LINE "  async {"
+            LINE "    try {"
+            LINE "      m = 1"
+            LINE "      await fetch(1)"
+            LINE "      m = 2"
+            LINE "    } catch {"
+            LINE "      m = 3"
+            LINE "    }"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 1);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 1);
 
     test_int(ecs_script_future_reject(eval_futures[0], "failed"), 0);
     ecs_script_future_release(eval_futures[0]);
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_mut_int(world, e, "T", "m"), 3);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, e, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 3);
 
     ecs_fini(world);
 }
@@ -22810,16 +24124,22 @@ void Eval_mut_assign_in_try_catch(void) {
 void Eval_mut_assign_two_instances(void) {
     ecs_world_t *world = ecs_init();
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  prop v = 1"
-        LINE "  mut m = 0"
-        LINE "  async {"
-        LINE "    m = v * 10"
-        LINE "  }"
-        LINE "}"
-        LINE "a { T: {v: 1} }"
-        LINE "b { T: {v: 2} }");
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  prop v = 1"
+            LINE "  mut m = 0"
+            LINE "  async {"
+            LINE "    m = v * 10"
+            LINE "  }"
+            LINE "}"
+            LINE "a { T: {v: 1} }"
+            LINE "b { T: {v: 2} }"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t a = ecs_lookup(world, "a");
     ecs_entity_t b = ecs_lookup(world, "b");
@@ -22827,37 +24147,86 @@ void Eval_mut_assign_two_instances(void) {
     test_assert(b != 0);
 
     test_int(ecs_script_tasks_progress(world), 2);
-    test_int(eval_mut_int(world, a, "T", "m"), 10);
-    test_int(eval_mut_int(world, b, "T", "m"), 20);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    const void *ptr = ecs_get_id(world, a, mut);
+    test_assert(ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 10);
+
+    t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    mut = ecs_lookup_child(world, t, "mut");
+    test_assert(mut != 0);
+    ptr = ecs_get_id(world, b, mut);
+    test_assert(ptr != NULL);
+    cur = ecs_meta_cursor(
+        world, mut, ECS_CONST_CAST(void*, ptr));
+    test_int(ecs_meta_push(&cur), 0);
+    test_int(ecs_meta_member(&cur, "m"), 0);
+    test_int(ecs_meta_get_int(&cur), 20);
 
     ecs_fini(world);
 }
 
 void Eval_mut_assign_then_set_from_c(void) {
     ecs_world_t *world = ecs_init();
-    eval_register_position(world);
 
-    eval_managed_script(world,
-        HEAD "template T {"
-        LINE "  mut m: i32 = 0"
-        LINE "  child { Position: {m, 0} }"
-        LINE "  async {"
-        LINE "    m = 7"
-        LINE "  }"
-        LINE "}"
-        LINE "T e");
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "template T {"
+            LINE "  mut m: i32 = 0"
+            LINE "  child { Position: {m, 0} }"
+            LINE "  async {"
+            LINE "    m = 7"
+            LINE "  }"
+            LINE "}"
+            LINE "T e"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_int(ecs_script_tasks_progress(world), 1);
-    test_int(eval_position(world, "e.child")->x, 7);
+
+    ecs_entity_t inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    ecs_entity_t pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    const Position *p = ecs_get_id(world, inst, pos);
+    test_assert(p != NULL);
+    test_int(p->x, 7);
 
     ecs_entity_t mut = ecs_lookup(world, "T.mut");
     test_assert(mut != 0);
     int32_t v = 9;
     ecs_set_id(world, e, mut, sizeof(int32_t), &v);
-    test_int(eval_position(world, "e.child")->x, 9);
+
+    inst = ecs_lookup(world, "e.child");
+    test_assert(inst != 0);
+    pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    p = ecs_get_id(world, inst, pos);
+    test_assert(p != NULL);
+    test_int(p->x, 9);
 
     ecs_fini(world);
 }
@@ -23007,7 +24376,14 @@ void Eval_mut_assign_unknown_var_fails(void) {
 
 void Eval_mut_assign_member_fails(void) {
     ecs_world_t *world = ecs_init();
-    eval_register_position(world);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run_w_desc(world, NULL,
@@ -23056,7 +24432,14 @@ void Eval_mut_assign_int_to_string_fails(void) {
 
 void Eval_mut_assign_struct_to_int_fails(void) {
     ecs_world_t *world = ecs_init();
-    eval_register_position(world);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run_w_desc(world, NULL,
@@ -23084,6 +24467,105 @@ void Eval_mut_assign_missing_expr_fails(void) {
         LINE "  }"
         LINE "}", &ir_desc, NULL) == NULL);
     ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}
+
+void Eval_struct_wo_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Facade()"
+    LINE "e { Facade }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t facade = ecs_lookup(world, "Facade");
+    test_assert(facade != 0);
+
+    const EcsStruct *st = ecs_get(world, facade, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 0);
+
+    const EcsComponent *c = ecs_get(world, facade, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 1);
+    test_int(c->alignment, 1);
+
+    const EcsType *t = ecs_get(world, facade, EcsType);
+    test_assert(t != NULL);
+    test_assert(t->kind == EcsStructType);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, facade));
+
+    char dummy = 0;
+    char *str = ecs_ptr_to_expr(world, facade, &dummy);
+    test_str(str, "{}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void Eval_eval_10k_statements(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    int32_t i;
+    for (i = 0; i < 10000; i ++) {
+        ecs_strbuf_append(&buf,
+            "e%d {\n  Position: {%d, 0}\n  Velocity: {1, 2}\n}\n", i, i);
+    }
+
+    char *expr = ecs_strbuf_get(&buf);
+
+    ecs_time_t t = {0};
+    ecs_time_measure(&t);
+
+    ecs_entity_t script = ecs_script(world, {
+        .code = expr,
+        .ir = ir_enabled
+    });
+
+    test_assert(script != 0);
+
+    double elapsed = ecs_time_measure(&t);
+    test_assert(elapsed < 1.0);
+
+    ecs_entity_t e = ecs_lookup(world, "e9999");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 9999);
+    test_int(p->y, 0);
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_os_free(expr);
 
     ecs_fini(world);
 }

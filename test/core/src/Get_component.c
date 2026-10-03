@@ -84,7 +84,7 @@ static void Test_main_stage(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert(ecs_get_type(it->world, e)->array[0] == ecs_id(Position));
+        test_assert(ecs_get_type(it->stage, e)->array[0] == ecs_id(Position));
     }
 }
 
@@ -112,8 +112,8 @@ static void Add_in_progress(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_add(it->world, e, Velocity);
-        test_assert(!ecs_has(it->world, e, Velocity));
+        ecs_add(it->stage, e, Velocity);
+        test_assert(!ecs_has(it->stage, e, Velocity));
     }
 }
 
@@ -141,8 +141,8 @@ static void Add_in_progress_test_main(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert(ecs_get_type(it->world, e)->array[0] == ecs_id(Position));
-        ecs_add(it->world, e, Velocity);
+        test_assert(ecs_get_type(it->stage, e)->array[0] == ecs_id(Position));
+        ecs_add(it->stage, e, Velocity);
     }
 }
 
@@ -172,9 +172,9 @@ static void Add_remove_in_progress_test_main(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert(ecs_get_type(it->world, e)->array[0] == ecs_id(Position));        
-        ecs_add(it->world, e, Velocity);
-        ecs_remove(it->world, e, Position);
+        test_assert(ecs_get_type(it->stage, e)->array[0] == ecs_id(Position));
+        ecs_add(it->stage, e, Velocity);
+        ecs_remove(it->stage, e, Position);
     }
 }
 

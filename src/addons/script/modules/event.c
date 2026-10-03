@@ -61,6 +61,7 @@ static ECS_DTOR(EcsScriptEventState, state, {
     for (int32_t w = 0; w < ecs_vec_count(&state->waiters); w ++) {
         ecs_script_future_release(waiters[w].future);
     }
+
     ecs_vec_fini_t(NULL, &state->waiters, flecs_script_event_waiter_t);
 })
 
@@ -70,6 +71,7 @@ static EcsScriptEventState* flecs_script_event_state(
     if (!ecs_id(EcsScriptEventState) || ecs_is_fini(world)) {
         return NULL;
     }
+
     return ecs_singleton_get_mut(world, EcsScriptEventState);
 }
 
@@ -104,6 +106,7 @@ static void flecs_script_event_cancel(
     if (!state) {
         return;
     }
+
     flecs_script_event_waiter_t *waiters = ecs_vec_first(&state->waiters);
     for (int32_t i = 0; i < ecs_vec_count(&state->waiters); i ++) {
         if (waiters[i].future == future) {
@@ -131,6 +134,7 @@ static int32_t flecs_script_event_deliver_one(
             i ++;
             continue;
         }
+
         ecs_script_future_t *future = w->future;
         ecs_vec_remove_ordered_t(
             &state->waiters, flecs_script_event_waiter_t, i);
@@ -139,6 +143,7 @@ static int32_t flecs_script_event_deliver_one(
         ecs_script_future_release(future);
         resolved ++;
     }
+
     return resolved;
 }
 
@@ -158,6 +163,7 @@ static int32_t flecs_script_event_deliver(
         resolved += flecs_script_event_deliver_one(
             state, kind, target, type, value);
     }
+
     return resolved;
 }
 
@@ -173,6 +179,7 @@ static bool flecs_script_event_is_ancestor_or_self(
             return true;
         }
     }
+
     return false;
 }
 
@@ -215,6 +222,7 @@ bool ecs_script_mouse_event(
             e.delta_x = e.local_x - state->last.local_x;
             e.delta_y = e.local_y - state->last.local_y;
         }
+
         state->pressed_mask = e.buttons & ~state->last.buttons;
         state->released_mask = state->last.buttons & ~e.buttons;
         state->prev_hover = state->hover;
@@ -222,10 +230,12 @@ bool ecs_script_mouse_event(
         if (!state->last.buttons) {
             state->pressed = 0;
         }
+
         if (state->pressed_mask) {
             state->pressed = e.target;
             state->focus = e.target;
         }
+
         state->last = e;
         state->has_last = true;
 
@@ -313,6 +323,7 @@ void ecs_script_keyboard_event(
     {
         ecs_script_tasks_progress(world);
     }
+
 error:
     return;
 }

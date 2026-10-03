@@ -88,10 +88,23 @@ void flecs_query_var_set_entity(
     ecs_entity_t entity,
     const ecs_query_run_ctx_t *ctx);
 
-void flecs_query_set_vars(
+void flecs_query_set_vars_w_var_refs(
     const ecs_query_op_t *op,
     ecs_id_t id,
     const ecs_query_run_ctx_t *ctx);
+
+static inline
+void flecs_query_set_vars(
+    const ecs_query_op_t *op,
+    ecs_id_t id,
+    const ecs_query_run_ctx_t *ctx)
+{
+    if (op->flags & ((EcsQueryIsVar << EcsQueryFirst)|
+        (EcsQueryIsVar << EcsQuerySecond)))
+    {
+        flecs_query_set_vars_w_var_refs(op, id, ctx);
+    }
+}
 
 ecs_table_range_t flecs_get_ref_range(
     const ecs_query_ref_t *ref,
@@ -361,6 +374,30 @@ bool flecs_query_up_select(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_up_select_trav_kind_t trav_kind,
     ecs_query_up_select_kind_t kind);
+
+bool flecs_query_up_init(
+    const ecs_query_op_t *op,
+    const ecs_query_run_ctx_t *ctx,
+    ecs_query_up_ctx_t *op_ctx);
+
+void flecs_query_up_parent_begin(
+    const ecs_query_op_t *op,
+    const ecs_query_run_ctx_t *ctx,
+    ecs_query_up_ctx_t *op_ctx,
+    ecs_table_range_t range);
+
+bool flecs_query_up_parent_next(
+    const ecs_query_op_t *op,
+    const ecs_query_run_ctx_t *ctx,
+    ecs_query_up_ctx_t *op_ctx,
+    ecs_trav_up_t *up,
+    bool *found);
+
+void flecs_query_up_set_fields(
+    const ecs_query_op_t *op,
+    const ecs_query_run_ctx_t *ctx,
+    const ecs_query_up_ctx_t *op_ctx,
+    const ecs_trav_up_t *up);
 
 bool flecs_query_up_with(
     const ecs_query_op_t *op,

@@ -140,6 +140,16 @@ bool flecs_component_set_type_info(
     ecs_component_record_t *cr,
     const ecs_type_info_t *ti);
 
+/* Update the EcsIdHasBases flag for entities that got an IsA pair added or
+ * removed. Used to track which components have base components, so that tables
+ * can register records for the base ids of the components they store. */
+void flecs_components_on_isa_change(
+    ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_entity_t *entities,
+    int32_t count,
+    bool has_bases);
+
 /* Return next (R, *) record */
 ecs_component_record_t* flecs_component_first_next(
     ecs_component_record_t *cr);

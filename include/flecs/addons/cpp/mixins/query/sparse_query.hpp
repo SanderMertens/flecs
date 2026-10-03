@@ -5,6 +5,39 @@
 
 namespace flecs {
 
+namespace _ {
+
+FLECS_ALWAYS_INLINE inline void* field_at_sparse(
+    const ecs_sparse_t *sparse, size_t size, uint64_t entity, bool checked)
+{
+    ecs_assert(sparse != nullptr, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(size == static_cast<size_t>(sparse->size),
+        ECS_INVALID_PARAMETER, NULL);
+
+    int32_t page_index = FLECS_SPARSE_PAGE(entity);
+    if (checked && page_index >= sparse->pages.count) {
+        return nullptr;
+    }
+
+    ecs_sparse_page_t *page = &static_cast<ecs_sparse_page_t*>(
+        sparse->pages.array)[page_index];
+    int32_t offset = FLECS_SPARSE_OFFSET(entity);
+    if (checked) {
+        if (!page->sparse) {
+            return nullptr;
+        }
+
+        int32_t dense = page->sparse[offset];
+        if (!dense || dense >= sparse->count) {
+            return nullptr;
+        }
+    }
+
+    return ECS_OFFSET(page->data, size * static_cast<size_t>(offset));
+}
+
+}
+
 /** @defgroup cpp_queries Sparse queries
  * @ingroup cpp_core
  * Direct iteration of sparse component storages. @{ */
@@ -62,15 +95,43 @@ private:
             }
         }
 
-        const uint64_t *entities = flecs_sparse_ids(sparse[lead]);
-        int32_t count = sparse[lead]->count - 1;
+        each_impl_dispatch<0>(lead, sparse,
+            std::index_sequence<Is...>{}, func);
+    }
+
+    template <size_t Lead, size_t ... Is, typename Func>
+    void each_impl_dispatch(
+        size_t lead,
+        ecs_sparse_t *const *sparse,
+        std::index_sequence<Is...> seq,
+        const Func& func) const
+    {
+        if (lead == Lead) {
+            each_impl_lead<Lead>(sparse, seq, func);
+            return;
+        }
+
+        if constexpr (Lead + 1 < sizeof...(Components)) {
+            each_impl_dispatch<Lead + 1>(lead, sparse, seq, func);
+        }
+    }
+
+    template <size_t Lead, size_t ... Is, typename Func>
+    void each_impl_lead(
+        ecs_sparse_t *const *sparse,
+        std::index_sequence<Is...>,
+        const Func& func) const
+    {
+        const uint64_t *entities = static_cast<const uint64_t*>(
+            sparse[Lead]->dense.array) + 1;
+        int32_t count = sparse[Lead]->count - 1;
 
         for (int32_t i = 0; i < count; i ++) {
             uint64_t e = entities[i];
-            void *ptrs[n];
-            if (!(... && (ptrs[Is] = flecs_sparse_get_w_check(
+            void *ptrs[sizeof...(Components)];
+            if (!(... && (ptrs[Is] = _::field_at_sparse(
                 sparse[Is], ECS_SIZEOF(remove_reference_t<Components>), e, 
-                Is != lead))))
+                Is != Lead))))
             {
                 continue;
             }

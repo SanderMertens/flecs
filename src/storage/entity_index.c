@@ -50,6 +50,7 @@ void flecs_entity_index_fini(
     for (i = 0; i < count; i ++) {
         ecs_os_free(pages[i]);
     }
+
     ecs_vec_fini_t(index->allocator, &index->pages, ecs_entity_index_page_t*);
 
 #ifdef FLECS_ENTITY_RANGES
@@ -116,10 +117,12 @@ ecs_record_t* flecs_entity_index_try_get(
         if (r->dense >= index->alive_count) {
             return NULL;
         }
+
         if (ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0] != entity) {
             return NULL;
         }
     }
+
     return r;
 }
 
@@ -236,6 +239,7 @@ uint64_t flecs_entity_index_get_alive(
             return ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0];
         }
     }
+
     return 0;
 }
 

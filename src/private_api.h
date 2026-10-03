@@ -64,6 +64,12 @@ extern const ecs_entity_t EcsFlag;
 void flecs_bootstrap(
     ecs_world_t *world);
 
+/* Assert that a relationship isn't in use, so that its traits can be changed. */
+void flecs_assert_relation_unused(
+    ecs_world_t *world,
+    ecs_entity_t rel,
+    ecs_entity_t trait);
+
 #define flecs_bootstrap_component(world, id_)\
     ecs_component_init(world, &(ecs_component_desc_t){\
         .entity = ecs_entity(world, { .id = ecs_id(id_), .name = #id_, .symbol = #id_ }),\
@@ -209,6 +215,21 @@ bool flecs_type_can_inherit_id(
     const ecs_table_t *table,
     const ecs_component_record_t *cr,
     ecs_id_t id);
+
+/* Search table type from offset for an id. */
+int32_t flecs_table_offset_search(
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_id_t *id_out);
+
+/* Search table type from offset, also matching derived components. */
+int32_t flecs_table_offset_search_w_inherited(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_id_t *id_out);
 
 /* Cleanup type info data. */
 void flecs_fini_type_info(

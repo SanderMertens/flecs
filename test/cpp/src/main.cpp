@@ -8,6 +8,7 @@
 
 #include <cpp.h>
 
+// Testsuite 'Script'
 void Script_function(void);
 void Script_function_scope_and_ctx(void);
 void Script_method(void);
@@ -885,6 +886,12 @@ void Query_sparse_query_convert_to_query_1_term(void);
 void Query_sparse_query_convert_to_query_3_terms(void);
 void Query_world_each_sparse(void);
 void Query_world_each_sparse_w_entity(void);
+void Query_component_inheritance_each(void);
+void Query_component_inheritance_each_multiple_derived(void);
+void Query_component_inheritance_each_entity(void);
+void Query_component_inheritance_base_field(void);
+void Query_component_inheritance_field_asserts(void);
+void Query_component_inheritance_virtual(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -1187,6 +1194,7 @@ void Observer_untyped_field(void);
 void Observer_reuse_observer_builder(void);
 void Observer_single_term_observer_w_var_get_var_pair_second(void);
 void Observer_single_term_observer_w_var_get_var_pair_first(void);
+void Observer_component_inheritance_each_multi_entity(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -5203,6 +5211,30 @@ bake_test_case Query_testcases[] = {
     {
         "world_each_sparse_w_entity",
         Query_world_each_sparse_w_entity
+    },
+    {
+        "component_inheritance_each",
+        Query_component_inheritance_each
+    },
+    {
+        "component_inheritance_each_multiple_derived",
+        Query_component_inheritance_each_multiple_derived
+    },
+    {
+        "component_inheritance_each_entity",
+        Query_component_inheritance_each_entity
+    },
+    {
+        "component_inheritance_base_field",
+        Query_component_inheritance_base_field
+    },
+    {
+        "component_inheritance_field_asserts",
+        Query_component_inheritance_field_asserts
+    },
+    {
+        "component_inheritance_virtual",
+        Query_component_inheritance_virtual
     }
 };
 
@@ -6392,6 +6424,10 @@ bake_test_case Observer_testcases[] = {
     {
         "single_term_observer_w_var_get_var_pair_first",
         Observer_single_term_observer_w_var_get_var_pair_first
+    },
+    {
+        "component_inheritance_each_multi_entity",
+        Observer_component_inheritance_each_multi_entity
     }
 };
 
@@ -8680,7 +8716,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        168,
+        174,
         Query_testcases
     },
     {
@@ -8703,7 +8739,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        75,
+        76,
         Observer_testcases
     },
     {

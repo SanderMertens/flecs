@@ -18,6 +18,7 @@ static ecs_entity_t flecs_script_typecache_get(
         ecs_add_id(world, result, EcsModule);
         ecs_set_scope(world, prev_scope);
     }
+
     return result;
 }
 
@@ -46,6 +47,7 @@ ecs_entity_t flecs_script_array_type(
             ecs_os_free(name);
             return existing;
         }
+
         ecs_os_free(name);
         name = NULL;
     }
@@ -83,6 +85,7 @@ ecs_entity_t flecs_script_vector_type(
             ecs_os_free(name);
             return existing;
         }
+
         ecs_os_free(name);
         name = NULL;
     }

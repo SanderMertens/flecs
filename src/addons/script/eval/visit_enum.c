@@ -184,7 +184,7 @@ static int flecs_script_constants_visit(
 
             ecs_modified_id(world, c, ecs_pair(EcsConstant, underlying));
 
-            if (!ecs_is_deferred(world) && !flecs_script_constant_registered(
+            if (!ecs_is_stage(world) && !flecs_script_constant_registered(
                 world, ctx->entity, c))
             {
                 flecs_expr_visit_error(script, elem->value,
@@ -209,7 +209,7 @@ static int flecs_script_constants_visit(
 
             ecs_add_id(world, c, EcsConstant);
 
-            if (!ecs_is_deferred(world) && !flecs_script_constant_registered(
+            if (!ecs_is_stage(world) && !flecs_script_constant_registered(
                 world, ctx->entity, c))
             {
                 flecs_expr_visit_error(script, elem->value,

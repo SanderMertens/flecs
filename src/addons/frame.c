@@ -228,6 +228,7 @@ void ecs_measure_frame_time(
     if (ECS_EQZERO(world->info.target_fps) || enable) {
         ECS_BIT_COND(world->flags, EcsWorldMeasureFrameTime, enable);
     }
+
 error:
     return;
 }

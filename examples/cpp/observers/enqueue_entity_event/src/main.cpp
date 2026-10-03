@@ -38,19 +38,18 @@ int main(int, char *[]) {
                   << p.width << ", " << p.height << "}!\n"; 
     });
 
-    // We can only call enqueue events while the world is deferred mode.
-    ecs.defer_begin();
+    flecs::world stage_1 = ecs.get_stage(0);
 
     // Emit the Click event
-    widget.enqueue<Click>();
+    widget.mut(stage_1).enqueue<Click>();
 
     // Emit the Resize event
-    widget.enqueue<Resize>({100, 200});
+    widget.mut(stage_1).enqueue<Resize>({100, 200});
 
     std::cout << "Events enqueued!\n";
 
     // Flushes the queue, and invokes the observer
-    ecs.defer_end();
+    stage_1.merge();
 
     // Output
     //   Events enqueued!

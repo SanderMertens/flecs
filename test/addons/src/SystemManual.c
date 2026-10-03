@@ -88,7 +88,7 @@ static int dummy_ran = 0;
 
 void DummySystem(ecs_iter_t *it) {
     ecs_entity_t Tag = ecs_field_id(it, 0);
-    ecs_add_id(it->world, Tag, Tag);
+    ecs_add_id(it->stage, Tag, Tag);
     dummy_ran ++;
 }
 

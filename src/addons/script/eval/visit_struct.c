@@ -46,12 +46,16 @@ int flecs_script_struct_visit(
             return 0;
         }
 
-        flecs_script_eval_error(v, NULL,
-            "struct '%s' must have at least one member "
-            "('struct %s(name: type)')",
-                ecs_get_name(world, ctx->entity),
+        if (!ecs_struct_init(world, &(ecs_struct_desc_t){
+            .entity = ctx->entity }))
+        {
+            flecs_script_eval_error(v, NULL,
+                "invalid layout for struct '%s'",
                 ecs_get_name(world, ctx->entity));
-        return -1;
+            return -1;
+        }
+
+        return 0;
     }
 
     const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(EcsMember));

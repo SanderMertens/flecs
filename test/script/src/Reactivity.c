@@ -11,7 +11,7 @@ void Reactivity_setup(void) {
 
 static void reactivity_reentrant_set(ecs_iter_t *it) {
     ecs_entity_t *ctx = it->ctx;
-    ecs_set_id(it->world, ctx[0], ctx[1],
+    ecs_set_id(it->stage, ctx[0], ctx[1],
         sizeof(Mass), &(Mass){40});
 }
 
@@ -1080,6 +1080,268 @@ void Reactivity_component_in_matching_interpolated_named_children_fails(void) {
     test_assert(strstr(script_data->error,
         "component can only be created in one scope or "
         "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_named_children_w_different_suffix(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "for i in 0..2 {"
+            LINE "  \"x_{i}_a\" { Position: {1, 2} }"
+            LINE "  \"x_{i}_b\" { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t x_0_a = ecs_lookup(world, "x_0_a");
+    ecs_entity_t x_0_b = ecs_lookup(world, "x_0_b");
+    ecs_entity_t x_1_a = ecs_lookup(world, "x_1_a");
+    ecs_entity_t x_1_b = ecs_lookup(world, "x_1_b");
+    test_assert(x_0_a != 0);
+    test_assert(x_0_b != 0);
+    test_assert(x_1_a != 0);
+    test_assert(x_1_b != 0);
+
+    const Position *p = ecs_get_id(world, x_0_a, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, x_0_b, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
+    p = ecs_get_id(world, x_1_a, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, x_1_b, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_named_children_w_leading_interpolation(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "for i in 0..2 {"
+            LINE "  \"{i}_a\" { Position: {1, 2} }"
+            LINE "  \"{i}_b\" { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t e_0_a = ecs_lookup(world, "0_a");
+    ecs_entity_t e_1_b = ecs_lookup(world, "1_b");
+    test_assert(e_0_a != 0);
+    test_assert(e_1_b != 0);
+
+    const Position *p = ecs_get_id(world, e_0_a, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, e_1_b, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_template_interpolated_named_children_w_different_suffix(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Panel {"
+            LINE "  for i in 0..2 {"
+            LINE "    \"x_{i}_a\" { Position: {1, 2} }"
+            LINE "    \"x_{i}_b\" { Position: {3, 4} }"
+            LINE "  }"
+            LINE "}"
+            LINE "Panel instance()"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t x_0_a = ecs_lookup(world, "instance.x_0_a");
+    ecs_entity_t x_1_b = ecs_lookup(world, "instance.x_1_b");
+    test_assert(x_0_a != 0);
+    test_assert(x_1_b != 0);
+
+    const Position *p = ecs_get_id(world, x_0_a, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, x_1_b, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_named_children_w_longer_prefix(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "for side in 0..2 {"
+            LINE "  \"post_{side}\" { Position: {1, 2} }"
+            LINE "  \"post_top_{side}\" { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t post_0 = ecs_lookup(world, "post_0");
+    ecs_entity_t post_top_0 = ecs_lookup(world, "post_top_0");
+    ecs_entity_t post_1 = ecs_lookup(world, "post_1");
+    ecs_entity_t post_top_1 = ecs_lookup(world, "post_top_1");
+    test_assert(post_0 != 0);
+    test_assert(post_top_0 != 0);
+    test_assert(post_1 != 0);
+    test_assert(post_top_1 != 0);
+
+    const Position *p = ecs_get_id(world, post_0, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, post_top_0, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
+    p = ecs_get_id(world, post_1, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, post_top_1, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_template_interpolated_named_children_w_longer_prefix(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Facade {"
+            LINE "  for b in 0..2 {"
+            LINE "    \"up_{b}\" { Position: {1, 2} }"
+            LINE "  }"
+            LINE "  for b in 0..2 {"
+            LINE "    \"up_back_{b}\" { Position: {3, 4} }"
+            LINE "  }"
+            LINE "}"
+            LINE "Facade instance()"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t up_0 = ecs_lookup(world, "instance.up_0");
+    ecs_entity_t up_back_1 = ecs_lookup(world, "instance.up_back_1");
+    test_assert(up_0 != 0);
+    test_assert(up_back_1 != 0);
+
+    const Position *p = ecs_get_id(world, up_0, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, up_back_1, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_named_children_w_different_middle(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "for i in 0..2 {"
+            LINE "  \"a_{i}_m_{i}\" { Position: {1, 2} }"
+            LINE "  \"a_{i}_n_{i}\" { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error == NULL);
+
+    ecs_entity_t a_0_m_0 = ecs_lookup(world, "a_0_m_0");
+    ecs_entity_t a_1_n_1 = ecs_lookup(world, "a_1_n_1");
+    test_assert(a_0_m_0 != 0);
+    test_assert(a_1_n_1 != 0);
+
+    const Position *p = ecs_get_id(world, a_0_m_0, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 1); test_flt(p->y, 2);
+    p = ecs_get_id(world, a_1_n_1, position);
+    test_assert(p != NULL);
+    test_flt(p->x, 3); test_flt(p->y, 4);
 
     ecs_fini(world);
 }
@@ -3026,7 +3288,7 @@ static void reactivity_delete_script(ecs_iter_t *it) {
         return;
     }
     reactivity_delete_script_target = 0;
-    ecs_delete(it->world, script);
+    ecs_delete(it->stage, script);
 }
 
 void Reactivity_script_deleted_while_evaluating(void) {
@@ -6149,18 +6411,6 @@ void Reactivity_component_ref_via_var_entity_in_if_is_reactive(void) {
     ecs_fini(world);
 }
 
-static int32_t script_child_count(
-    ecs_world_t *world,
-    ecs_entity_t script)
-{
-    int32_t count = 0;
-    ecs_iter_t it = ecs_children(world, script);
-    while (ecs_children_next(&it)) {
-        count += it.count;
-    }
-    return count;
-}
-
 void Reactivity_two_dyn_refs_alternating_updates(void) {
     typedef struct {
         ecs_entity_t items[2];
@@ -6220,7 +6470,11 @@ void Reactivity_two_dyn_refs_alternating_updates(void) {
     test_str(*(char**)ecs_get_id(world, rowa, text), "a 10");
     test_str(*(char**)ecs_get_id(world, rowb, text), "b 11");
 
-    int32_t child_count = script_child_count(world, script);
+    int32_t child_count = 0;
+    ecs_iter_t it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+    }
 
     ecs_set_id(world, it0, icon, sizeof(Icon), &(Icon){20});
     test_str(*(char**)ecs_get_id(world, rowa, text), "a 20");
@@ -6244,7 +6498,12 @@ void Reactivity_two_dyn_refs_alternating_updates(void) {
     ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){41});
     test_str(*(char**)ecs_get_id(world, rowb, text), "b 41");
 
-    test_int(script_child_count(world, script), child_count);
+    int32_t count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_fini(world);
 }
@@ -6314,7 +6573,11 @@ void Reactivity_three_dyn_refs_alternating_updates(void) {
     test_str(*(char**)ecs_get_id(world, rowb, text), "b 11");
     test_str(*(char**)ecs_get_id(world, rowc, text), "c 12");
 
-    int32_t child_count = script_child_count(world, script);
+    int32_t child_count = 0;
+    ecs_iter_t it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+    }
 
     ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){21});
     test_str(*(char**)ecs_get_id(world, rowa, text), "a 10");
@@ -6338,7 +6601,12 @@ void Reactivity_three_dyn_refs_alternating_updates(void) {
     test_str(*(char**)ecs_get_id(world, rowb, text), "b 31");
     test_str(*(char**)ecs_get_id(world, rowc, text), "c 32");
 
-    test_int(script_child_count(world, script), child_count);
+    int32_t count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_fini(world);
 }
@@ -6551,12 +6819,22 @@ void Reactivity_dyn_ref_var_retargeting(void) {
     test_assert(row != 0);
     test_str(*(char**)ecs_get_id(world, row, text), "icon 10");
 
-    int32_t child_count = script_child_count(world, script);
+    int32_t child_count = 0;
+    ecs_iter_t it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+    }
 
     ecs_set_id(world, source, items, sizeof(Items),
         &(Items){{it1, it0}, 2});
     test_str(*(char**)ecs_get_id(world, row, text), "icon 11");
-    test_int(script_child_count(world, script), child_count);
+
+    int32_t count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){99});
     test_str(*(char**)ecs_get_id(world, row, text), "icon 99");
@@ -6571,7 +6849,12 @@ void Reactivity_dyn_ref_var_retargeting(void) {
     ecs_set_id(world, it0, icon, sizeof(Icon), &(Icon){66});
     test_str(*(char**)ecs_get_id(world, row, text), "icon 66");
 
-    test_int(script_child_count(world, script), child_count);
+    count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_fini(world);
 }
@@ -6785,7 +7068,11 @@ void Reactivity_dyn_ref_in_for_rows_are_independent(void) {
     test_str(*(char**)ecs_get_id(world, ecs_lookup(world, "list.r2"), text),
         "icon 12");
 
-    int32_t child_count = script_child_count(world, script);
+    int32_t child_count = 0;
+    ecs_iter_t it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+    }
 
     ecs_set_id(world, it1, icon, sizeof(Icon), &(Icon){21});
     test_str(*(char**)ecs_get_id(world, ecs_lookup(world, "list.r0"), text),
@@ -6807,7 +7094,12 @@ void Reactivity_dyn_ref_in_for_rows_are_independent(void) {
     test_str(*(char**)ecs_get_id(world, ecs_lookup(world, "list.r1"), text),
         "icon 31");
 
-    test_int(script_child_count(world, script), child_count);
+    int32_t count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_fini(world);
 }
@@ -6883,7 +7175,11 @@ void Reactivity_dyn_ref_in_nested_for(void) {
     test_str(*(char**)ecs_get_id(world,
         ecs_lookup(world, "list.o1.c1"), text), "11-21");
 
-    int32_t child_count = script_child_count(world, script);
+    int32_t child_count = 0;
+    ecs_iter_t it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+    }
 
     ecs_set_id(world, a1, icon, sizeof(Icon), &(Icon){31});
     test_str(*(char**)ecs_get_id(world,
@@ -6909,7 +7205,12 @@ void Reactivity_dyn_ref_in_nested_for(void) {
     test_str(*(char**)ecs_get_id(world,
         ecs_lookup(world, "list.o1.c0"), text), "31-60");
 
-    test_int(script_child_count(world, script), child_count);
+    int32_t count_1 = 0;
+    it = ecs_children(world, script);
+    while (ecs_children_next(&it)) {
+        count_1 += it.count;
+    }
+    test_int(count_1, child_count);
 
     ecs_fini(world);
 }
@@ -7526,10 +7827,10 @@ static void ReactivitySetFromSystem(ecs_iter_t *it) {
         return;
     }
     reactivity_sys_done = true;
-    ecs_f32_t *ptr = ecs_ensure_id(it->world, reactivity_sys_target,
+    ecs_f32_t *ptr = ecs_ensure_id(it->stage, reactivity_sys_target,
         reactivity_sys_component, sizeof(ecs_f32_t));
     ptr[0] = 30;
-    ecs_modified_id(it->world, reactivity_sys_target,
+    ecs_modified_id(it->stage, reactivity_sys_target,
         reactivity_sys_component);
 }
 
@@ -7539,7 +7840,7 @@ static void ReactivitySetValueFromSystem(ecs_iter_t *it) {
     }
     reactivity_sys_done = true;
     ecs_f32_t value = 30;
-    ecs_set_id(it->world, reactivity_sys_target, reactivity_sys_component,
+    ecs_set_id(it->stage, reactivity_sys_target, reactivity_sys_component,
         sizeof(ecs_f32_t), &value);
 }
 
@@ -8307,7 +8608,7 @@ static void reactivity_const_on_set(ecs_iter_t *it) {
     *count += it->count;
 }
 
-static void reactivity_const_threshold(bool capture) {
+void Reactivity_computed_const_skips_unchanged(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ecs_struct(world, {
@@ -8328,23 +8629,17 @@ static void reactivity_const_threshold(bool capture) {
     ecs_entity_t source = ecs_entity(world, {.name = "source"});
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
 
-    const char *code = capture
-        ? HEAD "const x: bool = source[Mass].value < 0.5"
-          LINE "template Panel {"
-          LINE "  const lit = x * 2"
-          LINE "  child { Position: {lit, 1} }"
-          LINE "}"
-          LINE "Panel output()"
-        : HEAD "const x: bool = source[Mass].value < 0.5"
-          LINE "const lit = x * 2"
-          LINE "@brief Computed output"
-          LINE "output { Position: {lit, 1} }";
+    const char *code =
+    HEAD "const x: bool = source[Mass].value < 0.5"
+    LINE "const lit = x * 2"
+    LINE "@brief Computed output"
+    LINE "output { Position: {lit, 1} }";
     ecs_entity_t script = ecs_script(world, {.ir = ir_enabled, .code = code});
     test_assert(script != 0);
     const EcsScript *sc = ecs_get(world, script, EcsScript);
     test_assert(sc != NULL);
     test_assert(sc->error == NULL);
-    ecs_entity_t output = ecs_lookup(world, capture ? "output.child" : "output");
+    ecs_entity_t output = ecs_lookup(world, "output");
     test_assert(output != 0);
     test_int(count, 1);
     test_flt(ecs_get(world, output, Position)->x, 2);
@@ -8361,19 +8656,63 @@ static void reactivity_const_threshold(bool capture) {
     ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
     test_int(count, 3);
     test_flt(ecs_get(world, output, Position)->x, 2);
-    test_uint(ecs_lookup(world, capture ? "output.child" : "output"), output);
-    if (!capture) {
-        test_str(ecs_doc_get_brief(world, output), "Computed output");
-    }
+    test_uint(ecs_lookup(world, "output"), output);
+    test_str(ecs_doc_get_brief(world, output), "Computed output");
     ecs_fini(world);
 }
 
-void Reactivity_computed_const_skips_unchanged(void) {
-    reactivity_const_threshold(false);
-}
-
 void Reactivity_computed_const_capture_skips_unchanged(void) {
-    reactivity_const_threshold(true);
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+    ecs_entity_t mass = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Mass"}),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+    int32_t count = 0;
+    ecs_observer(world, {
+        .query.terms = {{ecs_id(Position)}},
+        .events = {EcsOnSet},
+        .callback = reactivity_const_on_set,
+        .ctx = &count
+    });
+    ecs_entity_t source = ecs_entity(world, {.name = "source"});
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
+
+    const char *code =
+    HEAD "const x: bool = source[Mass].value < 0.5"
+    LINE "template Panel {"
+    LINE "  const lit = x * 2"
+    LINE "  child { Position: {lit, 1} }"
+    LINE "}"
+    LINE "Panel output()";
+    ecs_entity_t script = ecs_script(world, {.ir = ir_enabled, .code = code});
+    test_assert(script != 0);
+    const EcsScript *sc = ecs_get(world, script, EcsScript);
+    test_assert(sc != NULL);
+    test_assert(sc->error == NULL);
+    ecs_entity_t output = ecs_lookup(world, "output.child");
+    test_assert(output != 0);
+    test_int(count, 1);
+    test_flt(ecs_get(world, output, Position)->x, 2);
+
+    for (int32_t i = 2; i <= 4; i ++) {
+        ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){i * 0.1f});
+        test_int(count, 1);
+    }
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.6});
+    test_int(count, 2);
+    test_flt(ecs_get(world, output, Position)->x, 0);
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.7});
+    test_int(count, 2);
+    ecs_set_id(world, source, mass, sizeof(Mass), &(Mass){0.1});
+    test_int(count, 3);
+    test_flt(ecs_get(world, output, Position)->x, 2);
+    test_uint(ecs_lookup(world, "output.child"), output);
+    ecs_fini(world);
 }
 
 void Reactivity_computed_const_cache_restored_and_reset(void) {
@@ -8547,29 +8886,20 @@ void Reactivity_count_template_prop_is_reactive(void) {
     ecs_fini(world);
 }
 
-static void reactivity_count_array(bool inline_array) {
+void Reactivity_count_array_is_reactive(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t type = ecs_entity(world, { .name = "Values" });
-    if (inline_array) {
-        ecs_struct(world, {
-            .entity = type,
-            .members = {{"values", ecs_id(ecs_i32_t), .count = 3}}
-        });
-    } else {
-        ecs_array(world, {
-            .entity = type, .type = ecs_id(ecs_i32_t), .count = 3
-        });
-    }
+    ecs_array(world, {
+        .entity = type, .type = ecs_id(ecs_i32_t), .count = 3
+    });
     ecs_entity_t source = ecs_entity(world, { .name = "source" });
     int32_t values[3] = {10, 20, 30};
     ecs_set_id(world, source, type, sizeof(values), values);
 
     ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
-        .code = inline_array
-            ? HEAD "const values = source[Values].values"
-              LINE "item { i32: {values[values.count() - 1]} }"
-            : HEAD "const values = source[Values]"
-              LINE "item { i32: {values[values.count() - 1]} }"
+        .code =
+        HEAD "const values = source[Values]"
+        LINE "item { i32: {values[values.count() - 1]} }"
     });
     test_assert(script != 0);
     ecs_entity_t item = ecs_lookup(world, "item");
@@ -8587,12 +8917,36 @@ static void reactivity_count_array(bool inline_array) {
     ecs_fini(world);
 }
 
-void Reactivity_count_array_is_reactive(void) {
-    reactivity_count_array(false);
-}
-
 void Reactivity_count_inline_array_is_reactive(void) {
-    reactivity_count_array(true);
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t type = ecs_entity(world, { .name = "Values" });
+    ecs_struct(world, {
+        .entity = type,
+        .members = {{"values", ecs_id(ecs_i32_t), .count = 3}}
+    });
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    int32_t values[3] = {10, 20, 30};
+    ecs_set_id(world, source, type, sizeof(values), values);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .code =
+        HEAD "const values = source[Values].values"
+        LINE "item { i32: {values[values.count() - 1]} }"
+    });
+    test_assert(script != 0);
+    ecs_entity_t item = ecs_lookup(world, "item");
+    test_assert(item != 0);
+    const int32_t *value = ecs_get(world, item, ecs_i32_t);
+    test_assert(value != NULL);
+    test_int(*value, 30);
+
+    values[2] = 60;
+    ecs_set_id(world, source, type, sizeof(values), values);
+    value = ecs_get(world, item, ecs_i32_t);
+    test_assert(value != NULL);
+    test_int(*value, 60);
+
+    ecs_fini(world);
 }
 
 void Reactivity_count_range_is_reactive(void) {
@@ -8613,6 +8967,678 @@ void Reactivity_count_range_is_reactive(void) {
         test_assert(count != NULL);
         test_int(*count, counts[i]);
     }
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_children_w_string_prefix_collision(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            "using flecs.meta\n"
+            "struct Position(x: f32, y: f32)\n"
+            "template Panel {\n"
+            "  prop name: string = \"top_0\"\n"
+            "  \"post_{name}\" { Position: {1, 2} }\n"
+            "  for i in 0..1 {\n"
+            "    \"post_top_{i}\" { Position: {3, 4} }\n"
+            "  }\n"
+            "}\n"
+            "Panel e()\n"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error != NULL);
+    test_assert(strstr(data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_children_w_string_suffix_collision(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            "using flecs.meta\n"
+            "struct Position(x: f32, y: f32)\n"
+            "template Panel {\n"
+            "  prop name: string = \"0_top\"\n"
+            "  \"post_{name}\" { Position: {1, 2} }\n"
+            "  for i in 0..1 {\n"
+            "    \"post_{i}_top\" { Position: {3, 4} }\n"
+            "  }\n"
+            "}\n"
+            "Panel e()\n"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error != NULL);
+    test_assert(strstr(data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_children_w_string_middle_collision(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            "using flecs.meta\n"
+            "struct Position(x: f32, y: f32)\n"
+            "template Panel {\n"
+            "  prop name: string = \"0_m_0\"\n"
+            "  \"post_{name}\" { Position: {1, 2} }\n"
+            "  for i in 0..1 {\n"
+            "    \"post_{i}_m_{i}\" { Position: {3, 4} }\n"
+            "  }\n"
+            "}\n"
+            "Panel e()\n"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error != NULL);
+    test_assert(strstr(data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_children_w_numeric_boundary_collision(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            "using flecs.meta\n"
+            "struct Position(x: f32, y: f32)\n"
+            "template Panel {\n"
+            "  prop index: i32 = 1\n"
+            "  \"post_{index}0\" { Position: {1, 2} }\n"
+            "  for i in 0..1 {\n"
+            "    \"post_1{i}\" { Position: {3, 4} }\n"
+            "  }\n"
+            "}\n"
+            "Panel e()\n"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error != NULL);
+    test_assert(strstr(data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_children_w_formatted_integer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "using flecs.meta"
+            LINE "struct Position(x: f32, y: f32)"
+            LINE "for i in 0..2 {"
+            LINE "  \"post_{i:02}\" { Position: {1, 2} }"
+            LINE "  \"post_top_{i:02}\" { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error == NULL);
+    test_assert(ecs_lookup(world, "post_00") != 0);
+    test_assert(ecs_lookup(world, "post_01") != 0);
+    test_assert(ecs_lookup(world, "post_top_00") != 0);
+    test_assert(ecs_lookup(world, "post_top_01") != 0);
+
+    ecs_fini(world);
+}
+
+void Reactivity_component_in_interpolated_children_w_fill_collision(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_log_set_level(-4);
+
+    ecs_entity_t script = ecs_script(world, {
+        .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "using flecs.meta"
+            LINE "struct Position(x: f32, y: f32)"
+            LINE "for i in 0..1 {"
+            LINE "  \"post_{i:a>3}\" { Position: {1, 2} }"
+            LINE "  \"post_aa{i}\" { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *data = ecs_get(world, script, EcsScript);
+    test_assert(data != NULL);
+    test_assert(data->error != NULL);
+    test_assert(strstr(data->error,
+        "component can only be created in one scope or "
+        "mutually exclusive scopes") != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_keeps_child_of_same_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Ta {}"
+            LINE "Tb {}"
+            LINE "template A {"
+            LINE "  child { Ta }"
+            LINE "}"
+            LINE "template B {"
+            LINE "  child { Tb }"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  A x()"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    ecs_entity_t child = ecs_lookup(world, "x.child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, tb));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    child = ecs_lookup(world, "x.child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, ta));
+    test_assert(!ecs_has_id(world, child, tb));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_in_for_keeps_child_of_same_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Ta {}"
+            LINE "Tb {}"
+            LINE "template A {"
+            LINE "  child { Ta }"
+            LINE "}"
+            LINE "template B {"
+            LINE "  child { Tb }"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "for i in 0..2 {"
+            LINE "  if cfg.flag {"
+            LINE "    A \"x_{i}\"()"
+            LINE "  } else {"
+            LINE "    B \"x_{i}\"()"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x_0");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    ecs_entity_t child = ecs_lookup(world, "x_0.child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, tb));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x_0") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    child = ecs_lookup(world, "x_0.child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, ta));
+    test_assert(!ecs_has_id(world, child, tb));
+
+    ecs_entity_t x1 = ecs_lookup(world, "x_1");
+    test_assert(x1 != 0);
+    test_assert(ecs_has_id(world, x1, a));
+    child = ecs_lookup(world, "x_1.child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, ta));
+    test_assert(!ecs_has_id(world, child, tb));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_keeps_tag_both_templates_add(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Shared {}"
+            LINE "Ta {}"
+            LINE "Tb {}"
+            LINE "template A {"
+            LINE "  Shared"
+            LINE "  Ta"
+            LINE "}"
+            LINE "template B {"
+            LINE "  Shared"
+            LINE "  Tb"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  A x()"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t shared = ecs_lookup(world, "Shared");
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, shared));
+    test_assert(ecs_has_id(world, x, tb));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, ta));
+    test_assert(!ecs_has_id(world, x, tb));
+    test_assert(ecs_has_id(world, x, shared));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_this_has_ref_add_tag_reinstantiates(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Hovered {}"
+            LINE "Hot {}"
+            LINE "Cold {}"
+            LINE "template A {"
+            LINE "  if this?[Hovered] {"
+            LINE "    Hot"
+            LINE "  } else {"
+            LINE "    Cold"
+            LINE "  }"
+            LINE "}"
+            LINE "A x()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t hovered = ecs_lookup(world, "Hovered");
+    ecs_entity_t hot = ecs_lookup(world, "Hot");
+    ecs_entity_t cold = ecs_lookup(world, "Cold");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, cold));
+    test_assert(!ecs_has_id(world, x, hot));
+
+    ecs_add_id(world, x, hovered);
+    test_assert(ecs_has_id(world, x, hot));
+    test_assert(!ecs_has_id(world, x, cold));
+
+    ecs_remove_id(world, x, hovered);
+    test_assert(ecs_has_id(world, x, cold));
+    test_assert(!ecs_has_id(world, x, hot));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_keeps_child_created_in_for_of_new_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Ta {}"
+            LINE "Tb {}"
+            LINE "template A {"
+            LINE "  for i in 0..1 {"
+            LINE "    \"child_{i}\" { Ta }"
+            LINE "  }"
+            LINE "}"
+            LINE "template B {"
+            LINE "  child_0 { Tb }"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  A x()"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    ecs_entity_t child = ecs_lookup(world, "x.child_0");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, tb));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    child = ecs_lookup(world, "x.child_0");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, ta));
+    test_assert(!ecs_has_id(world, child, tb));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_keeps_child_created_in_for_of_old_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Ta {}"
+            LINE "Tb {}"
+            LINE "template A {"
+            LINE "  child_0 { Ta }"
+            LINE "}"
+            LINE "template B {"
+            LINE "  for i in 0..1 {"
+            LINE "    \"child_{i}\" { Tb }"
+            LINE "  }"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  A x()"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    ecs_entity_t child = ecs_lookup(world, "x.child_0");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, tb));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    child = ecs_lookup(world, "x.child_0");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, ta));
+    test_assert(!ecs_has_id(world, child, tb));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_keeps_shared_base_template_state(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Shared {}"
+            LINE "Ta {}"
+            LINE "Tb {}"
+            LINE "template Base {"
+            LINE "  Shared"
+            LINE "  base_child { Shared }"
+            LINE "}"
+            LINE "template A : Base {"
+            LINE "  Ta"
+            LINE "}"
+            LINE "template B : Base {"
+            LINE "  Tb"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  A x()"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t shared = ecs_lookup(world, "Shared");
+    ecs_entity_t ta = ecs_lookup(world, "Ta");
+    ecs_entity_t tb = ecs_lookup(world, "Tb");
+    ecs_entity_t a = ecs_lookup(world, "A");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, shared));
+    test_assert(ecs_has_id(world, x, tb));
+    ecs_entity_t child = ecs_lookup(world, "x.base_child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, shared));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(ecs_has_id(world, x, a));
+    test_assert(!ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, ta));
+    test_assert(!ecs_has_id(world, x, tb));
+    test_assert(ecs_has_id(world, x, shared));
+    child = ecs_lookup(world, "x.base_child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, shared));
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_switch_keeps_tag_added_by_script(void) {
+    test_quarantine("23 Sep 2026");
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t config = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Config" }),
+        .members = {
+            {"flag", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    bool flag = false;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "Shared {}"
+            LINE "template B {"
+            LINE "  Shared"
+            LINE "}"
+            LINE "const cfg = Config[Config]"
+            LINE "if cfg.flag {"
+            LINE "  x { Shared }"
+            LINE "} else {"
+            LINE "  B x()"
+            LINE "}"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t shared = ecs_lookup(world, "Shared");
+    ecs_entity_t b = ecs_lookup(world, "B");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, shared));
+
+    flag = true;
+    ecs_set_id(world, config, config, sizeof(flag), &flag);
+
+    test_assert(ecs_lookup(world, "x") == x);
+    test_assert(!ecs_has_id(world, x, b));
+    test_assert(ecs_has_id(world, x, shared));
+
+    ecs_fini(world);
+}
+
+void Reactivity_fini_w_instance_of_derived_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_add_id(world, parent, EcsModule);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main", .parent = parent }),
+        .code =
+            HEAD "module templates"
+            LINE "Ta {}"
+            LINE "Tb {}"
+            LINE "template Base {"
+            LINE "  prop flag = true"
+            LINE "  if flag {"
+            LINE "    Ta"
+            LINE "  }"
+            LINE "}"
+            LINE "template A : Base {"
+            LINE "  Tb"
+            LINE "}"
+            LINE "A x()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t ta = ecs_lookup(world, "templates.Ta");
+    ecs_entity_t tb = ecs_lookup(world, "templates.Tb");
+    ecs_entity_t x = ecs_lookup(world, "templates.x");
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, ta));
+    test_assert(ecs_has_id(world, x, tb));
+
+    ecs_entity_t a = ecs_lookup(world, "templates.A");
+    test_assert(a != 0);
+    ecs_add_id(world, a, ecs_entity(world, { .name = "templates.Tc" }));
 
     ecs_fini(world);
 }

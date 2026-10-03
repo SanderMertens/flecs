@@ -313,25 +313,72 @@
     return shape;
   }
 
-  function worldShapes(results) {
+  var clockStart = performance.now();
+
+  function clock() {
+    return (performance.now() - clockStart) / 1000;
+  }
+
+  function resetClock() {
+    clockStart = performance.now();
+  }
+
+  function number(v) {
+    if (typeof v === "string") v = parseFloat(v);
+    return typeof v === "number" && isFinite(v) ? v : undefined;
+  }
+
+  function orbitOf(comps) {
+    var o = struct(comps, "Orbit");
+    if (!o) return null;
+    var period = number(o.period);
+    if (!period) return null;
+    return {
+      period: period,
+      e: clamp(number(o.eccentricity) || 0, 0, 0.99),
+      inclination: (number(o.inclination) || 0) * Math.PI / 180
+    };
+  }
+
+  function orbitOffset(o, p, t) {
+    var M = 2 * Math.PI * t / o.period;
+    var E = M;
+    for (var i = 0; i < 8; i++) E -= (E - o.e * Math.sin(E) - M) / (1 - o.e * Math.cos(E));
+    var nu = 2 * Math.atan2(Math.sqrt(1 + o.e) * Math.sin(E / 2), Math.sqrt(1 - o.e) * Math.cos(E / 2));
+    var scale = 1 - o.e * Math.cos(E);
+    var kx = 0, ky = -Math.cos(o.inclination), kz = Math.sin(o.inclination);
+    var cos = Math.cos(nu), sin = Math.sin(nu);
+    var dot = kx * p.x + ky * p.y + kz * p.z;
+    var cx = ky * p.z - kz * p.y, cy = kz * p.x - kx * p.z, cz = kx * p.y - ky * p.x;
+    return {
+      x: (p.x * cos + cx * sin + kx * dot * (1 - cos)) * scale,
+      y: (p.y * cos + cy * sin + ky * dot * (1 - cos)) * scale,
+      z: (p.z * cos + cz * sin + kz * dot * (1 - cos)) * scale
+    };
+  }
+
+  function worldShapes(results, time) {
     var byPath = {};
+    var animated = false;
     results.forEach(function (r) {
       var p = resultPath(r);
       if (p) byPath[p] = r;
       if (r.id !== undefined) byPath["#" + r.id] = r;
+      if (r.components && orbitOf(r.components)) animated = true;
     });
-    var memo = {};
-    function worldTransform(path) {
+    var memo;
+    function worldTransform(path, t) {
       if (memo[path]) return memo[path];
       var r = byPath[path];
-      var base = r && r.parent ? worldTransform(r.parent) : {
+      var base = r && r.parent ? worldTransform(r.parent, t) : {
         x: 0, y: 0, z: 0, rotation: [1, 0, 0, 0, 1, 0, 0, 0, 1]
       };
       var comps = r ? r.components || {} : {};
       var pos = struct(comps, "Position"), rot = struct(comps, "Rotation");
-      var offset = rotatePoint(base.rotation, {
-        x: member(pos, ["x"], 0, 0), y: member(pos, ["y"], 1, 0), z: member(pos, ["z"], 2, 0)
-      });
+      var p = { x: member(pos, ["x"], 0, 0), y: member(pos, ["y"], 1, 0), z: member(pos, ["z"], 2, 0) };
+      var orbit = orbitOf(comps);
+      if (orbit) p = orbitOffset(orbit, p, t);
+      var offset = rotatePoint(base.rotation, p);
       var rx = member(rot, ["x"], -1, 0), ry = member(rot, ["y"], -1, 0), rz = member(rot, ["z"], -1, 0);
       var a = Math.cos(rx), b = Math.sin(rx), c = Math.cos(ry), d = Math.sin(ry), e = Math.cos(rz), f = Math.sin(rz);
       var local = [c * e, -c * f, d, a * f + b * e * d, a * e - b * f * d, -b * c,
@@ -349,34 +396,43 @@
     results.forEach(function (r) {
       if ((r.tags || []).indexOf("flecs.core.Prefab") !== -1) return;
       var s = shapeOf(r);
-      if (!s) return;
-      var wp = worldTransform(s.path || s.key);
-      s.rotation = wp.rotation;
-      var offset = rotatePoint(s.rotation, { x: s.ox, y: 0, z: 0 });
-      s.x = wp.x + offset.x; s.y = wp.y + offset.y; s.z = wp.z + offset.z;
-      shapes.push(s);
+      if (s) shapes.push(s);
     });
 
-    /* Bounds of every entity that has shapes in its subtree, and the parent
-     * of every entity, for propagating pointer events up the tree with
-     * coordinates relative to each parent. */
-    var entities = {};
-    function entity(key) {
-      if (!entities[key]) {
-        var r = byPath[key];
-        entities[key] = { parent: r && r.parent ? r.parent : null, minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+    function layout(t) {
+      memo = {};
+      shapes.forEach(function (s) {
+        var wp = worldTransform(s.path || s.key, t);
+        s.rotation = wp.rotation;
+        var offset = rotatePoint(s.rotation, { x: s.ox, y: 0, z: 0 });
+        s.x = wp.x + offset.x; s.y = wp.y + offset.y; s.z = wp.z + offset.z;
+      });
+
+      /* Bounds of every entity that has shapes in its subtree, and the parent
+       * of every entity, for propagating pointer events up the tree with
+       * coordinates relative to each parent. */
+      var entities = {};
+      function entity(key) {
+        if (!entities[key]) {
+          var r = byPath[key];
+          entities[key] = { parent: r && r.parent ? r.parent : null, minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+        }
+        return entities[key];
       }
-      return entities[key];
+      shapes.forEach(function (s) {
+        var e = halfExtent(s);
+        for (var key = s.path || s.key; key; key = entity(key).parent) {
+          var b = entity(key);
+          b.minX = Math.min(b.minX, s.x - e.x); b.maxX = Math.max(b.maxX, s.x + e.x);
+          b.minY = Math.min(b.minY, s.y - e.y); b.maxY = Math.max(b.maxY, s.y + e.y);
+        }
+      });
+      shapes.entities = entities;
     }
-    shapes.forEach(function (s) {
-      var e = halfExtent(s);
-      for (var key = s.path || s.key; key; key = entity(key).parent) {
-        var b = entity(key);
-        b.minX = Math.min(b.minX, s.x - e.x); b.maxX = Math.max(b.maxX, s.x + e.x);
-        b.minY = Math.min(b.minY, s.y - e.y); b.maxY = Math.max(b.maxY, s.y + e.y);
-      }
-    });
-    shapes.entities = entities;
+
+    layout(time === undefined ? clock() : time);
+    shapes.animated = animated;
+    shapes.layout = layout;
     return shapes;
   }
 
@@ -457,13 +513,20 @@
     return isEmissive(s) ? displayColor(linearShapeColor(s), 1) : s;
   }
 
-  function canvasChrome(host) {
+  function canvasChrome(host, onFit) {
     var tip = el("div", { class: "pg-canvas-tip" });
     tip.hidden = true;
     var empty = el("div", { class: "pg-canvas-empty", text: "No drawable entities" });
     empty.hidden = true;
+    var fit = el("button", { class: "pg-canvas-fit", type: "button", text: "Fit", title: "Fit view to contents" });
+    fit.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+    fit.addEventListener("click", function (e) {
+      e.stopPropagation();
+      onFit();
+    });
     host.appendChild(tip);
     host.appendChild(empty);
+    host.appendChild(fit);
     return {
       tip: tip,
       empty: empty,
@@ -635,13 +698,28 @@
     var host = el("div", { class: "pg-view pg-view-canvas pg-view-2d" });
     var canvas = el("canvas", { class: "pg-canvas" });
     host.appendChild(canvas);
-    var chrome = canvasChrome(host);
+    var chrome = canvasChrome(host, function () { fitted = false; fit(); });
     container.appendChild(host);
     var ctx = canvas.getContext("2d");
     var cam = { x: 0, y: 0, zoom: 20 };
     var shapes = [], selected = null, hover = null, fitted = false;
-    var width = 0, height = 0, dpr = 1, drag = null;
+    var width = 0, height = 0, dpr = 1, drag = null, animating = false;
     var bloom = null, bloomLoading = false, bloomFailed = false;
+
+    function isShown() {
+      return !host.hidden && host.isConnected && !!host.offsetParent;
+    }
+
+    function animate() {
+      if (animating || !shapes.animated || !isShown()) return;
+      animating = true;
+      requestAnimationFrame(function step() {
+        if (!shapes.animated || !isShown()) { animating = false; return; }
+        shapes.layout(clock());
+        draw();
+        requestAnimationFrame(step);
+      });
+    }
 
     function ensureBloom() {
       if (bloom || bloomLoading || bloomFailed) return;
@@ -704,6 +782,11 @@
     }
 
     function render() {
+      draw();
+      animate();
+    }
+
+    function draw() {
       if (!width || !height || host.hidden) return;
       var c = theme();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -883,6 +966,7 @@
       },
       setSelected: function (path) { selected = path; render(); },
       fit: fit,
+      refit: function () { fitted = false; fit(); },
       reset: function () { fitted = false; },
       resize: function () {
         var r = host.getBoundingClientRect();
@@ -1036,7 +1120,10 @@
 
   function createView3D(container, onSelect, input) {
     var host = el("div", { class: "pg-view pg-view-canvas pg-view-3d" });
-    var chrome = canvasChrome(host);
+    var chrome = canvasChrome(host, function () {
+      fitted = false;
+      if (T && shapes.length) fit();
+    });
     var status = el("div", { class: "pg-canvas-status", text: "Loading three.js…" });
     host.appendChild(status);
     container.appendChild(host);
@@ -1059,7 +1146,15 @@
           return;
         }
         T = window.THREE;
-        setup();
+        try {
+          setup();
+        } catch (err) {
+          T = null;
+          failed = true;
+          status.hidden = false;
+          status.textContent = "The 3D view could not be created: " + (err && err.message ? err.message : err);
+          return;
+        }
         cb();
       });
     }
@@ -1279,12 +1374,7 @@
           m.userData.gk = gk;
         }
         m.userData.shape = s;
-        m.position.set(s.x, s.y, s.z);
-        if (s.kind !== "text") {
-          var r = s.rotation;
-          m.quaternion.setFromRotationMatrix(new T.Matrix4().set(
-            r[0], r[1], r[2], 0, r[3], r[4], r[5], 0, r[6], r[7], r[8], 0, 0, 0, 0, 1));
-        }
+        placeMesh(m, s);
         applyMaterial(m, c);
       });
       Object.keys(meshes).forEach(function (k) {
@@ -1387,12 +1477,32 @@
       composer.render();
     }
 
+    function placeMesh(m, s) {
+      m.position.set(s.x, s.y, s.z);
+      if (s.kind !== "text") {
+        var r = s.rotation;
+        m.quaternion.setFromRotationMatrix(new T.Matrix4().set(
+          r[0], r[1], r[2], 0, r[3], r[4], r[5], 0, r[6], r[7], r[8], 0, 0, 0, 0, 1));
+      }
+    }
+
+    function moveShapes() {
+      shapes.layout(clock());
+      shapes.forEach(function (s) {
+        var m = meshes[s.key];
+        if (m) placeMesh(m, s);
+      });
+    }
+
     function requestRender() {
       if (!T || pendingFrame || !visible) return;
       pendingFrame = true;
       requestAnimationFrame(function () {
         pendingFrame = false;
+        if (!visible) return;
+        if (shapes.animated) moveShapes();
         draw();
+        if (shapes.animated) requestRender();
       });
     }
 
@@ -1566,6 +1676,10 @@
       },
       setSelected: function (path) { selected = path; if (T) refreshHighlights(); },
       fit: function () { if (T) fit(); },
+      refit: function () {
+        fitted = false;
+        if (T && shapes.length) fit();
+      },
       reset: function () {
         fitted = false;
         orbit.theta = 0.7;
@@ -1642,6 +1756,7 @@
     var shapes = [];
     var matched = null;
     var refitPending = true;
+    var exclude = opts.exclude || function () { return false; };
 
     var editor = ace.edit(editorHost);
     editor.setOptions({
@@ -1725,7 +1840,10 @@
 
     function showResults(reply, tab) {
       clearError();
-      var results = reply.results || [];
+      var results = (reply.results || []).filter(function (r) {
+        return !exclude(r);
+      });
+      reply.results = results;
       setCount(results.length + (results.length === 1 ? " result" : " results"));
       if (tab === "table") {
         view.table.update(reply);
@@ -1834,6 +1952,7 @@
       refresh: function () { refresh(true); },
       setWorld: function (results) {
         world = results || [];
+        if (refitPending) resetClock();
         shapes = worldShapes(world);
         if (refitPending && shapes.length) {
           refitPending = false;
@@ -1867,5 +1986,126 @@
     };
   }
 
-  window.flecsPlaygroundQuery = { createPanel: createPanel };
+  /* Preview: a standalone 2D/3D view of a set of entities, used by the
+   * inspector to show a template instance. */
+
+  var PREVIEW_TABS = [
+    { id: "2d", label: "2D" },
+    { id: "3d", label: "3D" }
+  ];
+
+  function createPreview(opts) {
+    opts = opts || {};
+    var tabs = el("span", { class: "pg-tabs pg-preview-tabs", role: "tablist" });
+    var views = el("div", { class: "pg-preview-views" });
+    var status = el("div", { class: "pg-canvas-status pg-preview-status" });
+    status.hidden = true;
+    var root = el("div", { class: "pg-section pg-preview" }, [
+      el("p", { class: "pg-section-title" }, [
+        el("span", { text: opts.title || "Preview" }),
+        tabs
+      ]),
+      views
+    ]);
+    var input = { mouse: function () {}, key: function () {} };
+    var noSelect = function () {};
+    var view = {
+      "2d": createView2D(views, noSelect, input),
+      "3d": createView3D(views, noSelect, input)
+    };
+    views.appendChild(status);
+    var tabButtons = {};
+    PREVIEW_TABS.forEach(function (t) {
+      var b = el("button", { class: "pg-tab", type: "button", role: "tab", text: t.label });
+      b.addEventListener("click", function () { setTab(t.id); });
+      tabButtons[t.id] = b;
+      tabs.appendChild(b);
+    });
+    var activeTab = null, visible = false, autoTab = true, fitPending = true, shapes = [];
+
+    function resize() {
+      if (activeTab) view[activeTab].resize();
+    }
+
+    function setTab(id) {
+      if (activeTab === id) return;
+      var previous = activeTab;
+      activeTab = id;
+      PREVIEW_TABS.forEach(function (t) {
+        var active = t.id === id;
+        tabButtons[t.id].classList.toggle("pg-active", active);
+        tabButtons[t.id].setAttribute("aria-selected", active ? "true" : "false");
+        view[t.id].host.hidden = !active;
+      });
+      if (previous === "3d") view["3d"].hide();
+      if (id === "3d" && visible) view["3d"].show();
+      resize();
+      view[id].refit();
+    }
+
+    function apply(list) {
+      shapes = list;
+      if (autoTab && shapes.length) {
+        autoTab = false;
+        setTab(shapes.some(function (s) { return s.d > 0 || s.kind === "sphere"; }) ? "3d" : "2d");
+      }
+      view["2d"].update(shapes);
+      view["3d"].update(shapes);
+      if (fitPending && shapes.length) {
+        fitPending = false;
+        view["2d"].refit();
+        view["3d"].refit();
+      }
+    }
+
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () { resize(); }).observe(views);
+    } else {
+      window.addEventListener("resize", resize);
+    }
+
+    new MutationObserver(function () {
+      view["2d"].render();
+      view["3d"].render();
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+    setTab("2d");
+
+    return {
+      root: root,
+      views: views,
+      update: function (results) {
+        status.hidden = true;
+        apply(worldShapes(results || []));
+      },
+      setHeight: function (px) {
+        views.style.height = px + "px";
+        resize();
+      },
+      message: function (text) {
+        apply([]);
+        status.textContent = text;
+        status.hidden = false;
+      },
+      reset: function () {
+        autoTab = true;
+        fitPending = true;
+        view["2d"].reset();
+        view["3d"].reset();
+      },
+      show: function () {
+        visible = true;
+        if (activeTab === "3d") view["3d"].show();
+        resize();
+      },
+      hide: function () {
+        visible = false;
+        view["3d"].hide();
+      },
+      resize: resize,
+      setTab: setTab
+    };
+  }
+
+  window.flecsPlaygroundQuery = { createPanel: createPanel, createPreview: createPreview };
 })();

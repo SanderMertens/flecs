@@ -10,64 +10,6 @@ void Edit_setup(void) {
     ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
 }
 
-static ecs_entity_t edit_position(ecs_world_t *world) {
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    return ecs_id(Position);
-}
-
-static ecs_entity_t edit_velocity(ecs_world_t *world) {
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Velocity),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    return ecs_id(Velocity);
-}
-
-static void edit_tag(ecs_world_t *world, const char *name) {
-    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = name });
-}
-
-static ecs_entity_t edit_health(ecs_world_t *world) {
-    ecs_entity_t h = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .name = "Health" });
-    ecs_primitive_init(world, &(ecs_primitive_desc_t){
-        .entity = h, .kind = EcsF32 });
-    return h;
-}
-
-static ecs_script_t* edit_parse(ecs_world_t *world, const char *code) {
-    ecs_script_t *script = ecs_script_parse(world, "test", code, &ir_desc, NULL);
-    test_assert(script != NULL);
-    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
-    return script;
-}
-
-static char* edit_span(const ecs_script_t *script, ecs_entity_t e) {
-    ecs_script_source_t src = {0};
-    if (!ecs_script_entity_source(script, e, &src)) {
-        return NULL;
-    }
-    char *result = ecs_os_malloc(src.length + 1);
-    ecs_os_memcpy(result, &script->code[src.offset], src.length);
-    result[src.length] = '\0';
-    return result;
-}
-
 void Edit_source_entity(void) {
     ecs_world_t *world = ecs_init();
 
@@ -75,13 +17,29 @@ void Edit_source_entity(void) {
     HEAD "foo {}"
     LINE "bar {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "foo {}");
     ecs_os_free(span);
 
-    span = edit_span(script, ecs_lookup(world, "bar"));
+    src = (ecs_script_source_t){0};
+    span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "bar"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "bar {}");
     ecs_os_free(span);
 
@@ -92,7 +50,7 @@ void Edit_source_entity(void) {
 void Edit_source_entity_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_tag(world, "Tag");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "foo {"
@@ -100,9 +58,18 @@ void Edit_source_entity_w_scope(void) {
     LINE "}"
     LINE "bar {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "foo {\n  Tag\n}");
     ecs_os_free(span);
 
@@ -113,15 +80,24 @@ void Edit_source_entity_w_scope(void) {
 void Edit_source_entity_w_kind(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_tag(world, "Kind");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Kind" });
 
     const char *expr =
     HEAD "Kind foo"
     LINE "Kind bar";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "Kind foo");
     ecs_os_free(span);
 
@@ -132,16 +108,25 @@ void Edit_source_entity_w_kind(void) {
 void Edit_source_entity_w_kind_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_tag(world, "Kind");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Kind" });
 
     const char *expr =
     HEAD "Kind foo {"
     LINE "}"
     LINE "Kind bar";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "Kind foo {\n}");
     ecs_os_free(span);
 
@@ -152,17 +137,26 @@ void Edit_source_entity_w_kind_scope(void) {
 void Edit_source_entity_w_base(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_tag(world, "Kind");
-    edit_tag(world, "Base");
-    edit_tag(world, "Base2");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Kind" });
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Base" });
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Base2" });
 
     const char *expr =
     HEAD "Kind foo : Base, Base2"
     LINE "Kind bar";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "Kind foo : Base, Base2");
     ecs_os_free(span);
 
@@ -173,17 +167,26 @@ void Edit_source_entity_w_base(void) {
 void Edit_source_entity_w_base_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_tag(world, "Base");
-    edit_tag(world, "Tag");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Base" });
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "foo : Base {"
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "foo : Base {\n  Tag\n}");
     ecs_os_free(span);
 
@@ -194,15 +197,32 @@ void Edit_source_entity_w_base_scope(void) {
 void Edit_source_entity_w_paren(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "Position foo(x: 10, y: 20)"
     LINE "bar {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "Position foo(x: 10, y: 20)");
     ecs_os_free(span);
 
@@ -213,18 +233,35 @@ void Edit_source_entity_w_paren(void) {
 void Edit_source_entity_w_paren_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_position(world);
+    ECS_COMPONENT(world, Position);
 
-    edit_tag(world, "Tag");
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "Position foo(10, 20) {"
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "Position foo(10, 20) {\n  Tag\n}");
     ecs_os_free(span);
 
@@ -235,14 +272,25 @@ void Edit_source_entity_w_paren_scope(void) {
 void Edit_source_anonymous_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
 
     const char *expr =
     HEAD "{"
     LINE "  Position: {10, 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_query_t *q = ecs_query(world, { .terms = {{ ecs_id(Position) }}});
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -252,7 +300,14 @@ void Edit_source_anonymous_entity(void) {
     test_bool(false, ecs_query_next(&it));
     ecs_query_fini(q);
 
-    char *span = edit_span(script, e);
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, e, &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "{\n  Position: {10, 20}\n}");
     ecs_os_free(span);
 
@@ -270,13 +325,29 @@ void Edit_source_child_entity(void) {
     LINE "  }"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo.bar.zoo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo.bar.zoo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "zoo {}");
     ecs_os_free(span);
 
-    span = edit_span(script, ecs_lookup(world, "foo.bar"));
+    src = (ecs_script_source_t){0};
+    span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo.bar"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "bar {\n    zoo {}\n  }");
     ecs_os_free(span);
 
@@ -292,9 +363,18 @@ void Edit_source_entity_w_trailing_comment(void) {
     LINE "foo {} // trailing"
     LINE "bar {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "foo {}");
     ecs_os_free(span);
 
@@ -305,16 +385,25 @@ void Edit_source_entity_w_trailing_comment(void) {
 void Edit_source_entity_in_with_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_tag(world, "Tag");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "with Tag {"
     LINE "  foo {}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "foo {}");
     ecs_os_free(span);
 
@@ -325,7 +414,15 @@ void Edit_source_entity_in_with_scope(void) {
 void Edit_source_template_instance(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Ship {"
@@ -337,9 +434,18 @@ void Edit_source_template_instance(void) {
     LINE ""
     LINE "Ship foo(size: 20)";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "Ship foo(size: 20)");
     ecs_os_free(span);
 
@@ -350,7 +456,15 @@ void Edit_source_template_instance(void) {
 void Edit_source_template_body_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Ship {"
@@ -361,7 +475,9 @@ void Edit_source_template_body_entity(void) {
     LINE ""
     LINE "Ship foo()";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t child = ecs_lookup(world, "foo.child");
     test_assert(child != 0);
@@ -370,7 +486,14 @@ void Edit_source_template_body_entity(void) {
     test_bool(true, ecs_script_entity_source(script, child, &src));
     test_uint(ecs_lookup(world, "Ship"), src.template_);
 
-    char *span = edit_span(script, child);
+    ecs_script_source_t src_1 = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, child, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span, "child {\n    Position: {10, 20}\n  }");
     ecs_os_free(span);
 
@@ -386,7 +509,9 @@ void Edit_source_for_loop_entity(void) {
     LINE "  \"e_{i}\" {}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t e = ecs_lookup(world, "e_1");
     test_assert(e != 0);
@@ -399,12 +524,17 @@ void Edit_source_for_loop_entity(void) {
 void Edit_source_foreign_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_script_t *script = edit_parse(world, "foo {}");
+    ecs_script_t *script = ecs_script_parse(world, "test", "foo {}", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t e = ecs_entity(world, { .name = "other" });
     test_bool(false, ecs_script_entity_source(script, e, NULL));
 
-    ecs_script_t *script2 = edit_parse(world, "zoo {}");
+    ecs_script_t *script2 = ecs_script_parse(world, "test", "zoo {}", &ir_desc, NULL);
+    test_assert(script2 != NULL);
+    test_int(0, ecs_script_eval(script2, &ir_desc, NULL));
+
     test_bool(false, ecs_script_entity_source(
         script, ecs_lookup(world, "zoo"), NULL));
     test_bool(true, ecs_script_entity_source(
@@ -418,7 +548,9 @@ void Edit_source_foreign_entity(void) {
 void Edit_source_unknown_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_script_t *script = edit_parse(world, "foo {}");
+    ecs_script_t *script = ecs_script_parse(world, "test", "foo {}", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     test_bool(false, ecs_script_entity_source(script, 0, NULL));
     test_bool(false, ecs_script_entity_source(script, 100000, NULL));
@@ -430,8 +562,8 @@ void Edit_source_unknown_entity(void) {
 void Edit_source_entity_declared_twice(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_tag(world, "TagA");
-    edit_tag(world, "TagB");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "TagA" });
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "TagB" });
 
     const char *expr =
     HEAD "foo {"
@@ -441,9 +573,18 @@ void Edit_source_entity_declared_twice(void) {
     LINE "  TagB"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "foo {\n  TagA\n}");
     ecs_os_free(span);
 
@@ -506,7 +647,7 @@ static void edit_fclose(FILE *file) {
     edit_default_fclose(file);
 }
 
-static void edit_files_init(void) {
+void Edit_source_include_entity(void) {
     ecs_os_set_api_defaults();
     edit_default_fopen = ecs_os_api.fopen_;
     edit_default_fread = ecs_os_api.fread_;
@@ -517,19 +658,7 @@ static void edit_files_init(void) {
     api.fread_ = edit_fread;
     api.fclose_ = edit_fclose;
     ecs_os_set_api(&api);
-}
 
-static void edit_files_fini(void) {
-    ecs_os_api_t api = ecs_os_api;
-    api.fopen_ = edit_default_fopen;
-    api.fread_ = edit_default_fread;
-    api.fclose_ = edit_default_fclose;
-    ecs_os_set_api(&api);
-    memset(edit_files, 0, sizeof(edit_files));
-}
-
-void Edit_source_include_entity(void) {
-    edit_files_init();
     edit_files[0].name = "included.flecs";
     edit_files[0].content = "included_entity {}\n";
 
@@ -539,7 +668,9 @@ void Edit_source_include_entity(void) {
     HEAD "include included.flecs"
     LINE "own_entity {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     test_assert(ecs_lookup(world, "included_entity") != 0);
     test_assert(ecs_lookup(world, "own_entity") != 0);
@@ -552,7 +683,12 @@ void Edit_source_include_entity(void) {
     ecs_script_free(script);
     ecs_fini(world);
 
-    edit_files_fini();
+    api = ecs_os_api;
+    api.fopen_ = edit_default_fopen;
+    api.fread_ = edit_default_fread;
+    api.fclose_ = edit_default_fclose;
+    ecs_os_set_api(&api);
+    memset(edit_files, 0, sizeof(edit_files));
 }
 
 void Edit_source_managed_script(void) {
@@ -571,7 +707,14 @@ void Edit_source_managed_script(void) {
     test_assert(sc != NULL);
     test_assert(sc->script != NULL);
 
-    char *span = edit_span(sc->script, ecs_lookup(world, "foo.bar"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(sc->script, ecs_lookup(world, "foo.bar"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &sc->script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "bar {}");
     ecs_os_free(span);
 
@@ -581,7 +724,7 @@ void Edit_source_managed_script(void) {
 void Edit_source_line_column(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_tag(world, "Kind");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Kind" });
 
     const char *expr =
     HEAD "Kind foo"
@@ -589,7 +732,9 @@ void Edit_source_line_column(void) {
     LINE "  bar {"
     LINE "  }";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_source_t src = {0};
     test_bool(true, ecs_script_entity_source(
@@ -613,7 +758,15 @@ void Edit_source_line_column(void) {
 void Edit_source_component_stmt_ends(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "foo {"
@@ -626,13 +779,29 @@ void Edit_source_component_stmt_ends(void) {
     LINE "  }"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    char *span = edit_span(script, ecs_lookup(world, "foo"));
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "foo"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "foo {\n  Position: {10, 20}\n}");
     ecs_os_free(span);
 
-    span = edit_span(script, ecs_lookup(world, "bar"));
+    src = (ecs_script_source_t){0};
+    span = NULL;
+    if (ecs_script_entity_source(script, ecs_lookup(world, "bar"), &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "bar {\n  Position: {\n    x: 10,\n    y: 20\n  }\n}");
     ecs_os_free(span);
 
@@ -643,14 +812,26 @@ void Edit_source_component_stmt_ends(void) {
 void Edit_set_named_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "  Position: {x: 10, y: 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -672,14 +853,26 @@ void Edit_set_named_initializer(void) {
 void Edit_set_positional_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "  Position: {10, 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -701,14 +894,26 @@ void Edit_set_positional_initializer(void) {
 void Edit_set_empty_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "  Position: {}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -730,14 +935,26 @@ void Edit_set_empty_initializer(void) {
 void Edit_set_partial_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "  Position: {y: 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -759,7 +976,17 @@ void Edit_set_partial_initializer(void) {
 void Edit_set_multi_line_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
@@ -769,7 +996,9 @@ void Edit_set_multi_line_initializer(void) {
     LINE "  }"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -791,14 +1020,19 @@ void Edit_set_multi_line_initializer(void) {
 void Edit_set_value_form(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t h = edit_health(world);
+    ecs_entity_t h = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "Health" });
+    ecs_primitive_init(world, &(ecs_primitive_desc_t){
+        .entity = h, .kind = EcsF32 });
 
     const char *expr =
     HEAD "foo {"
     LINE "  Health: 10"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     float v = 20;
@@ -820,8 +1054,19 @@ void Edit_set_value_form(void) {
 void Edit_set_collection_form(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    edit_tag(world, "Tag");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "foo {"
@@ -829,7 +1074,9 @@ void Edit_set_collection_form(void) {
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_set_expr(
@@ -851,12 +1098,24 @@ void Edit_set_collection_form(void) {
 void Edit_set_paren_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "Position foo(x: 10, y: 20)";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -875,8 +1134,19 @@ void Edit_set_paren_initializer(void) {
 void Edit_set_preserves_comments(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    edit_tag(world, "Tag");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "// header comment"
@@ -886,7 +1156,9 @@ void Edit_set_preserves_comments(void) {
     LINE "}"
     LINE "// footer comment";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -911,7 +1183,17 @@ void Edit_set_preserves_comments(void) {
 void Edit_set_preserves_blank_lines_and_indent(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD ""
@@ -922,7 +1204,9 @@ void Edit_set_preserves_blank_lines_and_indent(void) {
     LINE "}"
     LINE "";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -948,15 +1232,38 @@ void Edit_set_preserves_blank_lines_and_indent(void) {
 void Edit_set_tabs_indent(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    ecs_entity_t v_id = edit_velocity(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t v_id = ecs_id(Velocity);
 
     const char *expr =
     HEAD "foo {"
     LINE "\tPosition: {10, 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -982,15 +1289,28 @@ void Edit_set_tabs_indent(void) {
 void Edit_set_append_to_existing_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    edit_tag(world, "Tag");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "foo {"
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -1013,13 +1333,25 @@ void Edit_set_append_to_existing_scope(void) {
 void Edit_set_append_to_empty_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -1041,15 +1373,28 @@ void Edit_set_append_to_empty_scope(void) {
 void Edit_set_append_no_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    edit_tag(world, "Kind");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Kind" });
 
     const char *expr =
     HEAD "parent {"
     LINE "  Kind foo"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -1075,10 +1420,22 @@ void Edit_set_append_w_using(void) {
 
     ecs_entity_t scope = ecs_entity(world, { .name = "game" });
     ecs_entity_t prev = ecs_set_scope(world, scope);
-    ecs_entity_t p = edit_position(world);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
     ecs_set_scope(world, prev);
 
-    edit_tag(world, "Tag");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "using game"
@@ -1087,7 +1444,9 @@ void Edit_set_append_w_using(void) {
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -1112,9 +1471,19 @@ void Edit_set_append_w_using(void) {
 void Edit_set_append_w_module(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
 
-    edit_tag(world, "Tag");
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "module game"
@@ -1123,7 +1492,9 @@ void Edit_set_append_w_module(void) {
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -1148,14 +1519,26 @@ void Edit_set_append_w_module(void) {
 void Edit_set_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "  Position: {10, 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_set_expr(
@@ -1176,15 +1559,28 @@ void Edit_set_expr(void) {
 void Edit_set_expr_append(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    edit_tag(world, "Tag");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "foo {"
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_set_expr(
@@ -1206,7 +1602,17 @@ void Edit_set_expr_append(void) {
 void Edit_set_nested_child(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "a {"
@@ -1217,7 +1623,9 @@ void Edit_set_nested_child(void) {
     LINE "  }"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {1, 2};
@@ -1243,14 +1651,26 @@ void Edit_set_nested_child(void) {
 void Edit_set_anonymous_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "{"
     LINE "  Position: {10, 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_query_t *q = ecs_query(world, { .terms = {{ p }}});
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1279,8 +1699,19 @@ void Edit_set_anonymous_entity(void) {
 void Edit_set_in_with_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    edit_tag(world, "Tag");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "with Tag {"
@@ -1289,7 +1720,9 @@ void Edit_set_in_with_scope(void) {
     LINE "  }"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {1, 2};
@@ -1313,14 +1746,26 @@ void Edit_set_in_with_scope(void) {
 void Edit_set_float_roundtrip(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "  Position: {0, 0}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {1.0f / 3.0f, -12345.678f};
@@ -1331,7 +1776,15 @@ void Edit_set_float_roundtrip(void) {
     test_assert(result != NULL);
 
     ecs_world_t *world2 = ecs_init();
-    ecs_entity_t p2 = edit_position(world2);
+
+    ecs_entity_t p2 = ecs_struct(world2, {
+        .entity = ecs_entity(world2, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_int(0, ecs_script_run_w_desc(world2, "test", result, &ir_desc, NULL));
 
     ecs_entity_t foo = ecs_lookup(world2, "foo");
@@ -1352,7 +1805,17 @@ void Edit_set_float_roundtrip(void) {
 void Edit_set_template_body_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "template Ship {"
@@ -1363,7 +1826,9 @@ void Edit_set_template_body_entity(void) {
     LINE ""
     LINE "Ship foo()";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t child = ecs_lookup(world, "foo.child");
     test_assert(child != 0);
@@ -1391,7 +1856,17 @@ void Edit_set_template_body_entity(void) {
 void Edit_set_for_loop_entity_fails(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "for i in 0..3 {"
@@ -1400,7 +1875,9 @@ void Edit_set_for_loop_entity_fails(void) {
     LINE "  }"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t e = ecs_lookup(world, "e_1");
     test_assert(e != 0);
@@ -1409,7 +1886,7 @@ void Edit_set_for_loop_entity_fails(void) {
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {1, 2};
     test_int(-1, ecs_script_edits_set(edits, e, p, &v));
-    ecs_log_set_level(0);
+    ecs_log_set_level(-1);
 
     ecs_script_edits_free(edits);
     ecs_script_free(script);
@@ -1419,9 +1896,21 @@ void Edit_set_for_loop_entity_fails(void) {
 void Edit_set_foreign_entity_fails(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
 
-    ecs_script_t *script = edit_parse(world, "foo {}");
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_script_t *script = ecs_script_parse(world, "test", "foo {}", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t other = ecs_entity(world, { .name = "other" });
 
@@ -1431,7 +1920,7 @@ void Edit_set_foreign_entity_fails(void) {
     test_int(-1, ecs_script_edits_set(edits, other, p, &v));
     test_int(-1, ecs_script_edits_remove(edits, other, p));
     test_int(-1, ecs_script_edits_delete(edits, other));
-    ecs_log_set_level(0);
+    ecs_log_set_level(-1);
 
     ecs_script_edits_free(edits);
     ecs_script_free(script);
@@ -1441,14 +1930,26 @@ void Edit_set_foreign_entity_fails(void) {
 void Edit_set_twice_same_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "  Position: {10, 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v1 = {1, 2};
@@ -1473,8 +1974,19 @@ void Edit_set_twice_same_component(void) {
 void Edit_remove_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    edit_tag(world, "Tag");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "foo {"
@@ -1482,7 +1994,9 @@ void Edit_remove_component(void) {
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_remove(edits, ecs_lookup(world, "foo"), p));
@@ -1502,8 +2016,19 @@ void Edit_remove_component(void) {
 void Edit_remove_component_multi_line(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    edit_tag(world, "Tag");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "foo {"
@@ -1514,7 +2039,9 @@ void Edit_remove_component_multi_line(void) {
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_remove(edits, ecs_lookup(world, "foo"), p));
@@ -1534,15 +2061,28 @@ void Edit_remove_component_multi_line(void) {
 void Edit_remove_missing_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    edit_tag(world, "Tag");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "foo {"
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_remove(edits, ecs_lookup(world, "foo"), p));
@@ -1559,8 +2099,8 @@ void Edit_remove_missing_component(void) {
 void Edit_remove_tag(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_tag(world, "Tag");
-    edit_tag(world, "Other");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Other" });
 
     const char *expr =
     HEAD "foo {"
@@ -1568,7 +2108,9 @@ void Edit_remove_tag(void) {
     LINE "  Other"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_remove(edits,
@@ -1589,7 +2131,7 @@ void Edit_remove_tag(void) {
 void Edit_delete_first(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_tag(world, "Tag");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "foo {"
@@ -1598,7 +2140,9 @@ void Edit_delete_first(void) {
     LINE "bar {}"
     LINE "zoo {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "foo")));
@@ -1617,7 +2161,7 @@ void Edit_delete_first(void) {
 void Edit_delete_middle(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_tag(world, "Tag");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "foo {}"
@@ -1626,7 +2170,9 @@ void Edit_delete_middle(void) {
     LINE "}"
     LINE "zoo {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "bar")));
@@ -1649,7 +2195,9 @@ void Edit_delete_last(void) {
     HEAD "foo {}"
     LINE "bar {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "bar")));
@@ -1674,7 +2222,9 @@ void Edit_delete_nested_child(void) {
     LINE "  }"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "a.b.c")));
@@ -1696,7 +2246,17 @@ void Edit_delete_nested_child(void) {
 void Edit_delete_entity_w_edits_inside(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "a {"
@@ -1706,7 +2266,9 @@ void Edit_delete_entity_w_edits_inside(void) {
     LINE "}"
     LINE "c {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {1, 2};
@@ -1730,7 +2292,9 @@ void Edit_delete_w_trailing_comment(void) {
     HEAD "foo {} // comment"
     LINE "bar {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "foo")));
@@ -1752,7 +2316,9 @@ void Edit_delete_preserves_preceding_comment(void) {
     LINE "foo {}"
     LINE "bar {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "foo")));
@@ -1771,9 +2337,31 @@ void Edit_delete_preserves_preceding_comment(void) {
 void Edit_multiple_edits_one_apply(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    ecs_entity_t vel = edit_velocity(world);
-    edit_tag(world, "Tag");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t vel = ecs_id(Velocity);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "a {"
@@ -1786,7 +2374,9 @@ void Edit_multiple_edits_one_apply(void) {
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position pa = {10, 20};
@@ -1818,7 +2408,17 @@ void Edit_multiple_edits_one_apply(void) {
 void Edit_apply_twice_same_result(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "a {"
@@ -1826,7 +2426,9 @@ void Edit_apply_twice_same_result(void) {
     LINE "}"
     LINE "b {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position pa = {10, 20};
@@ -1852,8 +2454,19 @@ void Edit_apply_twice_same_result(void) {
 void Edit_apply_result_runs(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    edit_tag(world, "Tag");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "a {"
@@ -1863,7 +2476,9 @@ void Edit_apply_result_runs(void) {
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position pa = {10, 20};
@@ -1875,8 +2490,16 @@ void Edit_apply_result_runs(void) {
     test_assert(result != NULL);
 
     ecs_world_t *world2 = ecs_init();
-    ecs_entity_t p2 = edit_position(world2);
-    edit_tag(world2, "Tag");
+
+    ecs_entity_t p2 = ecs_struct(world2, {
+        .entity = ecs_entity(world2, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_init(world2, &(ecs_entity_desc_t){ .name = "Tag" });
     test_int(0, ecs_script_run_w_desc(world2, "test", result, &ir_desc, NULL));
 
     const Position *ptr = ecs_get_id(world2, ecs_lookup(world2, "a"), p2);
@@ -1937,7 +2560,9 @@ void Edit_apply_no_edits(void) {
     LINE "bar {"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     char *result = ecs_script_edits_apply(edits);
@@ -1954,7 +2579,19 @@ void Edit_set_in_module_script(void) {
 
     ecs_entity_t scope = ecs_entity(world, { .name = "game" });
     ecs_entity_t prev = ecs_set_scope(world, scope);
-    ecs_entity_t p = edit_position(world);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
     ecs_set_scope(world, prev);
 
     const char *expr =
@@ -1964,7 +2601,9 @@ void Edit_set_in_module_script(void) {
     LINE "  Position: {10, 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {1, 2};
@@ -1988,8 +2627,19 @@ void Edit_set_in_module_script(void) {
 void Edit_set_replaces_tag_stmt(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    edit_tag(world, "Tag");
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "foo {"
@@ -1997,7 +2647,9 @@ void Edit_set_replaces_tag_stmt(void) {
     LINE "  Tag"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {30, 40};
@@ -2021,44 +2673,33 @@ void Edit_explore(void) {
 }
 
 
-static ecs_entity_t edit_point64(ecs_world_t *world) {
-    ecs_entity_t p = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .name = "Point64" });
-    return ecs_struct(world, {
-        .entity = p,
+void Edit_set_f32_shortest_repr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
         .members = {
-            {"x", ecs_id(ecs_f64_t)},
-            {"y", ecs_id(ecs_f64_t)}
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
         }
     });
-}
 
-static char* edit_set_position(
-    ecs_world_t *world,
-    const char *code,
-    float x,
-    float y)
-{
     ecs_entity_t p = ecs_lookup(world, "Position");
-    ecs_script_t *script = edit_parse(world, code);
+
+    ecs_script_t *script = ecs_script_parse(world, "test", HEAD "foo {"
+                LINE "  Position: {0, 0}"
+                LINE "}", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
+
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
-    Position v = {x, y};
+    Position v = {1.2345f, 0.1f};
     test_int(0, ecs_script_edits_set(edits, ecs_lookup(world, "foo"), p, &v));
     char *result = ecs_script_edits_apply(edits);
     ecs_script_edits_free(edits);
     ecs_script_free(script);
-    return result;
-}
-
-void Edit_set_f32_shortest_repr(void) {
-    ecs_world_t *world = ecs_init();
-
-    edit_position(world);
-
-    char *result = edit_set_position(world,
-        HEAD "foo {"
-        LINE "  Position: {0, 0}"
-        LINE "}", 1.2345f, 0.1f);
 
     test_str(result,
         HEAD "foo {"
@@ -2072,12 +2713,30 @@ void Edit_set_f32_shortest_repr(void) {
 void Edit_set_f32_integral_no_fraction(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_position(world);
+    ECS_COMPONENT(world, Position);
 
-    char *result = edit_set_position(world,
-        HEAD "foo {"
-        LINE "  Position: {0, 0}"
-        LINE "}", 1.0f, -0.5f);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_lookup(world, "Position");
+
+    ecs_script_t *script = ecs_script_parse(world, "test", HEAD "foo {"
+                LINE "  Position: {0, 0}"
+                LINE "}", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    Position v = {1.0f, -0.5f};
+    test_int(0, ecs_script_edits_set(edits, ecs_lookup(world, "foo"), p, &v));
+    char *result = ecs_script_edits_apply(edits);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
 
     test_str(result,
         HEAD "foo {"
@@ -2091,12 +2750,30 @@ void Edit_set_f32_integral_no_fraction(void) {
 void Edit_set_f32_negative_zero(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_position(world);
+    ECS_COMPONENT(world, Position);
 
-    char *result = edit_set_position(world,
-        HEAD "foo {"
-        LINE "  Position: {1, 1}"
-        LINE "}", -0.0f, 0.0f);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_lookup(world, "Position");
+
+    ecs_script_t *script = ecs_script_parse(world, "test", HEAD "foo {"
+                LINE "  Position: {1, 1}"
+                LINE "}", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    Position v = {-0.0f, 0.0f};
+    test_int(0, ecs_script_edits_set(edits, ecs_lookup(world, "foo"), p, &v));
+    char *result = ecs_script_edits_apply(edits);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
 
     test_str(result,
         HEAD "foo {"
@@ -2110,14 +2787,32 @@ void Edit_set_f32_negative_zero(void) {
 void Edit_set_f32_third(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     float value = 1.0f / 3.0f;
 
-    char *result = edit_set_position(world,
-        HEAD "foo {"
-        LINE "  Position: {0, 0}"
-        LINE "}", value, value);
+    ecs_entity_t p = ecs_lookup(world, "Position");
+
+    ecs_script_t *script = ecs_script_parse(world, "test", HEAD "foo {"
+                LINE "  Position: {0, 0}"
+                LINE "}", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    Position v = {value, value};
+    test_int(0, ecs_script_edits_set(edits, ecs_lookup(world, "foo"), p, &v));
+    char *result = ecs_script_edits_apply(edits);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
 
     test_str(result,
         HEAD "foo {"
@@ -2133,14 +2828,32 @@ void Edit_set_f32_third(void) {
 void Edit_set_f32_small_exponent(void) {
     ecs_world_t *world = ecs_init();
 
-    edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     float value = 1e-7f;
 
-    char *result = edit_set_position(world,
-        HEAD "foo {"
-        LINE "  Position: {0, 0}"
-        LINE "}", value, 1.5f);
+    ecs_entity_t p = ecs_lookup(world, "Position");
+
+    ecs_script_t *script = ecs_script_parse(world, "test", HEAD "foo {"
+                LINE "  Position: {0, 0}"
+                LINE "}", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    Position v = {value, 1.5f};
+    test_int(0, ecs_script_edits_set(edits, ecs_lookup(world, "foo"), p, &v));
+    char *result = ecs_script_edits_apply(edits);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
 
     test_str(result,
         HEAD "foo {"
@@ -2154,14 +2867,26 @@ void Edit_set_f32_small_exponent(void) {
 void Edit_set_f32_roundtrips_in_script(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "  Position: {0, 0}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {3.14159f, 1e-7f};
@@ -2174,7 +2899,15 @@ void Edit_set_f32_roundtrips_in_script(void) {
     test_assert(strstr(result, "3.1415901184") == NULL);
 
     ecs_world_t *world2 = ecs_init();
-    ecs_entity_t p2 = edit_position(world2);
+
+    ecs_entity_t p2 = ecs_struct(world2, {
+        .entity = ecs_entity(world2, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
     test_int(0, ecs_script_run_w_desc(world2, "test", result, &ir_desc, NULL));
 
     const Position *ptr = ecs_get_id(world2, ecs_lookup(world2, "foo"), p2);
@@ -2192,14 +2925,24 @@ void Edit_set_f32_roundtrips_in_script(void) {
 void Edit_set_f64_shortest_repr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_point64(world);
+    ecs_entity_t pos = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "Point64" });
+    ecs_entity_t p = ecs_struct(world, {
+        .entity = pos,
+        .members = {
+            {"x", ecs_id(ecs_f64_t)},
+            {"y", ecs_id(ecs_f64_t)}
+        }
+    });
 
     const char *expr =
     HEAD "foo {"
     LINE "  Point64: {0, 0}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     double v[2] = {0.1, 2.0};
@@ -2228,7 +2971,9 @@ void Edit_delete_blank_line_before_and_after(void) {
     LINE ""
     LINE "zoo {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "bar")));
@@ -2253,7 +2998,9 @@ void Edit_delete_blank_line_first_in_file(void) {
     LINE ""
     LINE "bar {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "foo")));
@@ -2276,7 +3023,9 @@ void Edit_delete_blank_line_last_in_file(void) {
     LINE "bar {}"
     LINE "";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "bar")));
@@ -2300,7 +3049,9 @@ void Edit_delete_blank_line_first_in_scope(void) {
     LINE "  c {}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "a.b")));
@@ -2327,7 +3078,9 @@ void Edit_delete_blank_line_last_in_scope(void) {
     LINE "  c {}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "a.c")));
@@ -2356,7 +3109,9 @@ void Edit_delete_blank_line_middle_in_scope(void) {
     LINE "  d {}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "a.c")));
@@ -2384,7 +3139,9 @@ void Edit_delete_blank_line_only_after(void) {
     LINE ""
     LINE "zoo {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "bar")));
@@ -2410,7 +3167,9 @@ void Edit_delete_blank_line_only_before(void) {
     LINE "bar {}"
     LINE "zoo {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(edits, ecs_lookup(world, "bar")));
@@ -2459,7 +3218,17 @@ void Edit_source_two_managed_code_scripts(void) {
 void Edit_edit_two_managed_code_scripts(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     ecs_entity_t a = ecs_script(world, { .ir = ir_enabled, .code =
         HEAD "a_entity {"
@@ -2504,7 +3273,17 @@ void Edit_edit_two_managed_code_scripts(void) {
 }
 
 void Edit_source_two_managed_file_scripts(void) {
-    edit_files_init();
+    ecs_os_set_api_defaults();
+    edit_default_fopen = ecs_os_api.fopen_;
+    edit_default_fread = ecs_os_api.fread_;
+    edit_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t api = ecs_os_api;
+    api.fopen_ = edit_fopen;
+    api.fread_ = edit_fread;
+    api.fclose_ = edit_fclose;
+    ecs_os_set_api(&api);
+
     edit_files[0].name = "a.flecs";
     edit_files[0].content = "a_entity {}\n";
     edit_files[1].name = "b.flecs";
@@ -2535,11 +3314,27 @@ void Edit_source_two_managed_file_scripts(void) {
     test_uint(a, ecs_script_entity_owner(world, ecs_lookup(world, "a_entity")));
 
     ecs_fini(world);
-    edit_files_fini();
+
+    api = ecs_os_api;
+    api.fopen_ = edit_default_fopen;
+    api.fread_ = edit_default_fread;
+    api.fclose_ = edit_default_fclose;
+    ecs_os_set_api(&api);
+    memset(edit_files, 0, sizeof(edit_files));
 }
 
 void Edit_include_creates_managed_script(void) {
-    edit_files_init();
+    ecs_os_set_api_defaults();
+    edit_default_fopen = ecs_os_api.fopen_;
+    edit_default_fread = ecs_os_api.fread_;
+    edit_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t api = ecs_os_api;
+    api.fopen_ = edit_fopen;
+    api.fread_ = edit_fread;
+    api.fclose_ = edit_fclose;
+    ecs_os_set_api(&api);
+
     edit_files[0].name = "scene/child.flecs";
     edit_files[0].content = "included_entity {}\n";
     edit_files[1].name = "scene/parent.flecs";
@@ -2581,11 +3376,27 @@ void Edit_include_creates_managed_script(void) {
     test_uint(s, ecs_script_entity_owner(world, oe));
 
     ecs_fini(world);
-    edit_files_fini();
+
+    api = ecs_os_api;
+    api.fopen_ = edit_default_fopen;
+    api.fread_ = edit_default_fread;
+    api.fclose_ = edit_default_fclose;
+    ecs_os_set_api(&api);
+    memset(edit_files, 0, sizeof(edit_files));
 }
 
 void Edit_include_resolves_relative_to_script_dir(void) {
-    edit_files_init();
+    ecs_os_set_api_defaults();
+    edit_default_fopen = ecs_os_api.fopen_;
+    edit_default_fread = ecs_os_api.fread_;
+    edit_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t api = ecs_os_api;
+    api.fopen_ = edit_fopen;
+    api.fread_ = edit_fread;
+    api.fclose_ = edit_fclose;
+    ecs_os_set_api(&api);
+
     edit_files[0].name = "scene/child.flecs";
     edit_files[0].content = "included_entity {}\n";
     edit_files[1].name = "child.flecs";
@@ -2605,11 +3416,27 @@ void Edit_include_resolves_relative_to_script_dir(void) {
         world, 0, "scene/child.flecs", "/", NULL, false) != 0);
 
     ecs_fini(world);
-    edit_files_fini();
+
+    api = ecs_os_api;
+    api.fopen_ = edit_default_fopen;
+    api.fread_ = edit_default_fread;
+    api.fclose_ = edit_default_fclose;
+    ecs_os_set_api(&api);
+    memset(edit_files, 0, sizeof(edit_files));
 }
 
 void Edit_include_edit_applies_to_included_file(void) {
-    edit_files_init();
+    ecs_os_set_api_defaults();
+    edit_default_fopen = ecs_os_api.fopen_;
+    edit_default_fread = ecs_os_api.fread_;
+    edit_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t api = ecs_os_api;
+    api.fopen_ = edit_fopen;
+    api.fread_ = edit_fread;
+    api.fclose_ = edit_fclose;
+    ecs_os_set_api(&api);
+
     edit_files[0].name = "scene/child.flecs";
     edit_files[0].content =
         "included_entity {\n"
@@ -2624,7 +3451,17 @@ void Edit_include_edit_applies_to_included_file(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     ecs_entity_t s = ecs_script(world, {
         .ir = ir_enabled, .filename = "scene/parent.flecs" });
@@ -2665,11 +3502,27 @@ void Edit_include_edit_applies_to_included_file(void) {
     ecs_os_free(result);
     ecs_script_edits_free(edits);
     ecs_fini(world);
-    edit_files_fini();
+
+    api = ecs_os_api;
+    api.fopen_ = edit_default_fopen;
+    api.fread_ = edit_default_fread;
+    api.fclose_ = edit_default_fclose;
+    ecs_os_set_api(&api);
+    memset(edit_files, 0, sizeof(edit_files));
 }
 
 void Edit_include_parent_update_keeps_included_script(void) {
-    edit_files_init();
+    ecs_os_set_api_defaults();
+    edit_default_fopen = ecs_os_api.fopen_;
+    edit_default_fread = ecs_os_api.fread_;
+    edit_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t api = ecs_os_api;
+    api.fopen_ = edit_fopen;
+    api.fread_ = edit_fread;
+    api.fclose_ = edit_fclose;
+    ecs_os_set_api(&api);
+
     edit_files[0].name = "scene/child.flecs";
     edit_files[0].content = "included_entity {}\n";
     edit_files[1].name = "scene/parent.flecs";
@@ -2717,11 +3570,27 @@ void Edit_include_parent_update_keeps_included_script(void) {
     }
 
     ecs_fini(world);
-    edit_files_fini();
+
+    api = ecs_os_api;
+    api.fopen_ = edit_default_fopen;
+    api.fread_ = edit_default_fread;
+    api.fclose_ = edit_default_fclose;
+    ecs_os_set_api(&api);
+    memset(edit_files, 0, sizeof(edit_files));
 }
 
 void Edit_include_update_included_script(void) {
-    edit_files_init();
+    ecs_os_set_api_defaults();
+    edit_default_fopen = ecs_os_api.fopen_;
+    edit_default_fread = ecs_os_api.fread_;
+    edit_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t api = ecs_os_api;
+    api.fopen_ = edit_fopen;
+    api.fread_ = edit_fread;
+    api.fclose_ = edit_fclose;
+    ecs_os_set_api(&api);
+
     edit_files[0].name = "scene/child.flecs";
     edit_files[0].content = "included_entity {}\n";
     edit_files[1].name = "scene/parent.flecs";
@@ -2748,11 +3617,27 @@ void Edit_include_update_included_script(void) {
         world, ecs_lookup(world, "other_entity")));
 
     ecs_fini(world);
-    edit_files_fini();
+
+    api = ecs_os_api;
+    api.fopen_ = edit_default_fopen;
+    api.fread_ = edit_default_fread;
+    api.fclose_ = edit_default_fclose;
+    ecs_os_set_api(&api);
+    memset(edit_files, 0, sizeof(edit_files));
 }
 
 void Edit_include_clear_parent_keeps_included_script(void) {
-    edit_files_init();
+    ecs_os_set_api_defaults();
+    edit_default_fopen = ecs_os_api.fopen_;
+    edit_default_fread = ecs_os_api.fread_;
+    edit_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t api = ecs_os_api;
+    api.fopen_ = edit_fopen;
+    api.fread_ = edit_fread;
+    api.fclose_ = edit_fclose;
+    ecs_os_set_api(&api);
+
     edit_files[0].name = "scene/child.flecs";
     edit_files[0].content = "included_entity {}\n";
     edit_files[1].name = "scene/parent.flecs";
@@ -2785,7 +3670,13 @@ void Edit_include_clear_parent_keeps_included_script(void) {
     test_assert(ecs_is_alive(world, inc));
 
     ecs_fini(world);
-    edit_files_fini();
+
+    api = ecs_os_api;
+    api.fopen_ = edit_default_fopen;
+    api.fread_ = edit_default_fread;
+    api.fclose_ = edit_default_fclose;
+    ecs_os_set_api(&api);
+    memset(edit_files, 0, sizeof(edit_files));
 }
 
 void Edit_entity_owner_plain(void) {
@@ -2818,7 +3709,9 @@ void Edit_entity_owner_no_script(void) {
 void Edit_entity_owner_unmanaged_script(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_script_t *script = edit_parse(world, "foo {}");
+    ecs_script_t *script = ecs_script_parse(world, "test", "foo {}", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     test_uint(0, ecs_script_entity_owner(world, ecs_lookup(world, "foo")));
 
@@ -2850,7 +3743,9 @@ void Edit_delete_recorded_before_entity_deleted(void) {
     HEAD "foo {}"
     LINE "bar {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -2877,7 +3772,9 @@ void Edit_clear_delete_after_entity_deleted(void) {
     HEAD "foo {}"
     LINE "bar {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -2903,14 +3800,26 @@ void Edit_clear_delete_after_entity_deleted(void) {
 void Edit_clear_set(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "  Position: {10, 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -2935,14 +3844,26 @@ void Edit_clear_set(void) {
 void Edit_clear_unknown_edit(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "  Position: {10, 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -2967,14 +3888,26 @@ void Edit_clear_unknown_edit(void) {
 void Edit_set_after_clear(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "foo {"
     LINE "  Position: {10, 20}"
     LINE "}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -3003,8 +3936,29 @@ void Edit_set_after_clear(void) {
 void Edit_count_edits(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
-    ecs_entity_t v = edit_velocity(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t v = ecs_id(Velocity);
 
     const char *expr =
     HEAD "foo {"
@@ -3013,7 +3967,9 @@ void Edit_count_edits(void) {
     LINE "}"
     LINE "bar {}";
 
-    ecs_script_t *script = edit_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     ecs_entity_t bar = ecs_lookup(world, "bar");
@@ -3056,7 +4012,17 @@ void Edit_count_edits(void) {
 void Edit_set_for_recreated_entity_after_clear(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = edit_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
         HEAD "foo {"
@@ -3124,7 +4090,11 @@ void Edit_set_positional_enum_map(void) {
         .entity = ecs_entity(world, {.name = "Container"}),
         .members = {{"values", map_type}}
     });
-    ecs_script_t *script = edit_parse(world, "foo { Container: {[Red: 10]} }");
+
+    ecs_script_t *script = ecs_script_parse(world, "test", "foo { Container: {[Red: 10]} }", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
+
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     ecs_map_t map;
     ecs_map_init(&map, NULL);
@@ -3137,5 +4107,724 @@ void Edit_set_positional_enum_map(void) {
     ecs_map_fini(&map);
     ecs_script_edits_free(edits);
     ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_set_10k_statements(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    int32_t i;
+    for (i = 0; i < 10000; i ++) {
+        ecs_strbuf_append(&buf, "e%d {\n  Position: {%d, 0}\n}\n", i, i);
+    }
+
+    char *expr = ecs_strbuf_get(&buf);
+
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
+
+    ecs_entity_t *entities = ecs_os_malloc_n(ecs_entity_t, 10000);
+    for (i = 0; i < 10000; i ++) {
+        char name[32];
+        ecs_os_snprintf(name, sizeof(name), "e%d", i);
+        entities[i] = ecs_lookup(world, name);
+        test_assert(entities[i] != 0);
+    }
+
+    ecs_time_t t = {0};
+    ecs_time_measure(&t);
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    for (i = 0; i < 10000; i ++) {
+        ecs_script_source_t src = {0};
+        test_assert(ecs_script_entity_source(script, entities[i], &src));
+        test_int(src.line, (i * 3) + 1);
+        Position v = {(float)i, 1};
+        test_int(0, ecs_script_edits_set(edits, entities[i], p, &v));
+    }
+
+    test_int(10000, ecs_script_edits_count(edits));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_assert(result != NULL);
+
+    double elapsed = ecs_time_measure(&t);
+    test_assert(elapsed < 0.25);
+
+    test_assert(strstr(result, "e9999 {\n  Position: {9999, 1}\n}") != NULL);
+    test_assert(strstr(result, "e0 {\n  Position: {0, 1}\n}") != NULL);
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_os_free(entities);
+    ecs_os_free(expr);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_from_scene_no_changes(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "foo {"
+    LINE "  Position: {10, 20}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    const char *code_before = sc->code;
+    ecs_script_t *script_before = sc->script;
+
+    test_int(0, ecs_script_from_scene(world, s));
+
+    sc = ecs_get(world, s, EcsScript);
+    test_assert(sc->code == code_before);
+    test_assert(sc->script == script_before);
+    test_str(sc->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_no_changes_float_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "foo {"
+    LINE "  Position: {10.0, 20.50}"
+    LINE "}"
+    LINE "bar {"
+    LINE "  Position: {x: 0.1, y: -1.25}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    test_int(0, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_changed_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {10, 20}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {30, 40});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "foo {"
+        LINE "  Position: {30, 40}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_changed_value_named(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {x: 10, y: 20}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {1.5, 20});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "foo {"
+        LINE "  Position: {x: 1.5, y: 20}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_preserves_layout(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "// The foo entity"
+            LINE "foo {"
+            LINE "    Tag"
+            LINE "    Position: {10, 20} // position"
+            LINE "}"
+            LINE ""
+            LINE "/* bar */"
+            LINE "bar {"
+            LINE "    Position: {1, 2}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {11, 20});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "// The foo entity"
+        LINE "foo {"
+        LINE "    Tag"
+        LINE "    Position: {11, 20} // position"
+        LINE "}"
+        LINE ""
+        LINE "/* bar */"
+        LINE "bar {"
+        LINE "    Position: {1, 2}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_changed_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "parent {"
+            LINE "  Position: {1, 2}"
+            LINE "  child {"
+            LINE "    Position: {3, 4}"
+            LINE "  }"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t child = ecs_lookup(world, "parent.child");
+    test_assert(child != 0);
+    ecs_set(world, child, Position, {5, 6});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "parent {"
+        LINE "  Position: {1, 2}"
+        LINE "  child {"
+        LINE "    Position: {5, 6}"
+        LINE "  }"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_multiple_entities(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "a {"
+            LINE "  Position: {1, 2}"
+            LINE "  Velocity: {3, 4}"
+            LINE "}"
+            LINE "b {"
+            LINE "  Position: {5, 6}"
+            LINE "}"
+            LINE "c {"
+            LINE "  Velocity: {7, 8}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t c = ecs_lookup(world, "c");
+    test_assert(a != 0);
+    test_assert(c != 0);
+    ecs_set(world, a, Velocity, {30, 40});
+    ecs_set(world, c, Velocity, {70, 80});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "a {"
+        LINE "  Position: {1, 2}"
+        LINE "  Velocity: {30, 40}"
+        LINE "}"
+        LINE "b {"
+        LINE "  Position: {5, 6}"
+        LINE "}"
+        LINE "c {"
+        LINE "  Velocity: {70, 80}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_partial_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "foo {"
+    LINE "  Position: {x: 10}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    test_int(0, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, code);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {10, 20});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "foo {"
+        LINE "  Position: {x: 10, y: 20}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_updates_entities(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {10, 20}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {30, 40});
+
+    test_int(1, ecs_script_from_scene(world, s));
+    foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_script_source_t src = {0};
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_assert(ecs_script_entity_source(sc->script, foo, &src));
+    test_int(src.line, 1);
+
+    const char *code_before = sc->code;
+    test_int(0, ecs_script_from_scene(world, s));
+    test_assert(ecs_get(world, s, EcsScript)->code == code_before);
+
+    ecs_set(world, foo, Position, {50, 60});
+    test_int(1, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code,
+        HEAD "foo {"
+        LINE "  Position: {50, 60}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_skip_variable_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "const v = 10"
+    LINE "foo {"
+    LINE "  Position: {$v, 20}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {30, 40});
+
+    test_int(0, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_skip_removed_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "foo {"
+    LINE "  Position: {10, 20}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_remove(world, foo, Position);
+
+    test_int(0, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_skip_added_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "foo {"
+    LINE "  Position: {10, 20}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Velocity, {1, 2});
+
+    test_int(0, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_skip_template_body(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *code =
+    HEAD "template Tree {"
+    LINE "  trunk {"
+    LINE "    Position: {1, 2}"
+    LINE "  }"
+    LINE "}"
+    LINE "tree {"
+    LINE "  Tree: {}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = code, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    ecs_entity_t trunk = ecs_lookup(world, "tree.trunk");
+    test_assert(trunk != 0);
+    ecs_set(world, trunk, Position, {3, 4});
+
+    test_int(0, ecs_script_from_scene(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, code);
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            HEAD "foo {"
+            LINE "  (Position, Tgt): {10, 20}"
+            LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set_pair(world, foo, Position, Tgt, {30, 40});
+
+    test_int(1, ecs_script_from_scene(world, s));
+
+    const EcsScript *sc = ecs_get(world, s, EcsScript);
+    test_str(sc->code,
+        HEAD "foo {"
+        LINE "  (Position, Tgt): {30, 40}"
+        LINE "}");
+
+    ecs_fini(world);
+}
+
+void Edit_from_scene_not_a_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_log_set_level(-4);
+    test_int(-1, ecs_script_from_scene(world, e));
+
+    ecs_fini(world);
+}
+
+void Edit_save(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *filename = "edit_save_test.flecs";
+    FILE *f = fopen(filename, "w");
+    test_assert(f != NULL);
+    fputs(
+        HEAD "// comment"
+        LINE "foo {"
+        LINE "  Position: {10, 20}"
+        LINE "}"
+        LINE, f);
+    fclose(f);
+
+    ecs_entity_t s = ecs_script(world, {
+        .filename = filename, .ir = ir_enabled });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    ecs_set(world, foo, Position, {30, 40});
+
+    test_int(1, ecs_script_from_scene(world, s));
+    test_int(0, ecs_script_save(world, s));
+
+    char *saved = flecs_load_from_file(filename);
+    test_str(saved,
+        HEAD "// comment"
+        LINE "foo {"
+        LINE "  Position: {30, 40}"
+        LINE "}"
+        LINE);
+    ecs_os_free(saved);
+
+    remove(filename);
+
+    ecs_fini(world);
+}
+
+void Edit_save_no_filename(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = "foo {}", .ir = ir_enabled });
+    test_assert(s != 0);
+
+    test_int(0, ecs_script_save(world, s));
+    test_str(ecs_get(world, s, EcsScript)->code, "foo {}");
+
+    ecs_fini(world);
+}
+
+void Edit_save_not_a_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_log_set_level(-4);
+    test_int(-1, ecs_script_save(world, e));
+
     ecs_fini(world);
 }

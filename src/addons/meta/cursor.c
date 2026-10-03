@@ -27,6 +27,7 @@ ecs_size_t ecs_meta_op_get_elem_count(
     } else if (op->kind == EcsOpPushMap) {
         return ecs_map_count((const ecs_map_t*)ptr);
     }
+
     ecs_throw(ECS_INVALID_OPERATION, 
         "cannot get element count for %s operation",
         flecs_meta_op_kind_str(op->kind));
@@ -54,6 +55,7 @@ static ecs_meta_scope_t* flecs_cursor_restore_scope(
     if (scope->prev_depth) {
         cursor->depth = scope->prev_depth;
     }
+
 error:
     return (ecs_meta_scope_t*)&cursor->scope[cursor->depth];
 }
@@ -145,6 +147,7 @@ static void* flecs_meta_cursor_get_ptr(
             if (!v) {
                 return NULL;
             }
+
             ecs_assert(v->ptr != NULL, ECS_INTERNAL_ERROR, NULL);
             return ECS_OFFSET(v->ptr, op->offset);
         } else {
@@ -347,11 +350,13 @@ static int flecs_meta_cursor_lookup(
         } else {
             *out = ecs_lookup_from(cursor->world, 0, value);
         }
+
         if (!*out) {
             ecs_err("unresolved entity identifier '%s'", value);
             return -1;
         }
     }
+
     return 0;
 }
 
@@ -392,6 +397,7 @@ static int flecs_meta_cursor_from_str(
             ecs_err("expected number, got '%s'", value);
             goto error;
         }
+
         break;
     }
     case EcsOpEnum:
@@ -433,6 +439,7 @@ static int flecs_meta_cursor_from_str(
             ecs_err("invalid value for boolean '%s'", value);
             goto error;
         }
+
         break;
     case EcsOpI8:
     case EcsOpU8:
@@ -474,6 +481,7 @@ static int flecs_meta_cursor_from_str(
         if (*(ecs_string_t*)ptr == value) {
             break;
         }
+
         ecs_os_free(*(ecs_string_t*)ptr);
         char *result = ecs_os_strdup(value);
         flecs_meta_set_t(ecs_string_t, ptr, result);
@@ -485,6 +493,7 @@ static int flecs_meta_cursor_from_str(
         {
             goto error;
         }
+
         break;
     }
     case EcsOpBitmask:
@@ -499,6 +508,7 @@ static int flecs_meta_cursor_from_str(
         if (flecs_meta_cursor_lookup(cursor, value, &e)) {
             goto error;
         }
+
         flecs_meta_set_t(ecs_entity_t, ptr, e);
         break;
     }
@@ -534,6 +544,7 @@ static int flecs_meta_cursor_from_str(
             if (flecs_meta_cursor_lookup(cursor, value, &e)) {
                 goto error;
             }
+
             opaque->assign_entity(ptr, 
                 ECS_CONST_CAST(ecs_world_t*, cursor->world), e);
             break;
@@ -579,6 +590,7 @@ static int flecs_meta_cursor_parse_map_key(
             ecs_err("unresolved enum constant '%s' for map key", value);
             return -1;
         }
+
         *key_out = key;
     } else if (kind == EcsOpBitmask) {
         uint32_t key = 0;
@@ -587,6 +599,7 @@ static int flecs_meta_cursor_parse_map_key(
         {
             return -1;
         }
+
         *key_out = key;
         return 0;
     } else {
@@ -628,6 +641,7 @@ static int flecs_meta_map_ensure_key(
         if (!*val) {
             *val = (ecs_map_val_t)(uintptr_t)ecs_os_calloc(vti->size);
         }
+
         ptr = (void*)(uintptr_t)*val;
     }
 
@@ -671,9 +685,11 @@ static bool flecs_meta_op_is_value(
     if (op->kind == EcsOpPushValue) {
         return true;
     }
+
     if (op->kind == EcsOpForward && op->type == ecs_id(ecs_value_t)) {
         return true;
     }
+
     return false;
 }
 
@@ -1471,6 +1487,7 @@ static int flecs_meta_assign_opaque_number(
             opaque->assign_bool(ptr, value);
             return 0;
         }
+
         break;
     }
     case EcsChar: {
@@ -1485,6 +1502,7 @@ static int flecs_meta_assign_opaque_number(
             opaque->assign_int(ptr, value);
             return 0;
         }
+
         break;
     }
     case EcsI64: {
@@ -1502,6 +1520,7 @@ static int flecs_meta_assign_opaque_number(
             opaque->assign_char(ptr, flecs_ito(char, value));
             return 0;
         }
+
         break;
     }
     case EcsU64: {
@@ -1519,6 +1538,7 @@ static int flecs_meta_assign_opaque_number(
             opaque->assign_char(ptr, flecs_uto(char, value));
             return 0;
         }
+
         break;
     }
     case EcsF64: {
@@ -1540,6 +1560,7 @@ static int flecs_meta_assign_opaque_number(
                     (ecs_entity_t)value);
             return 0;
         }
+
         break;
     }
     case EcsEntity: {
@@ -1549,6 +1570,7 @@ static int flecs_meta_assign_opaque_number(
                 ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
             return 0;
         }
+
         break;
     }
     case EcsId: {
@@ -1558,6 +1580,7 @@ static int flecs_meta_assign_opaque_number(
                 ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
             return 0;
         }
+
         break;
     }
     default:
@@ -1587,6 +1610,7 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
     if (from == EcsI64 || from == EcsU64 || from == EcsF64) {
         ecs_assert(ptr != NULL, ECS_INVALID_OPERATION, "no object to assign");
     }
+
     if (flecs_meta_op_is_value(op)) {
         kind = (ecs_meta_op_kind_t)(EcsOpPrimitive + (int)from);
         ptr = flecs_meta_cursor_value_ensure(cursor, ptr,
@@ -1597,12 +1621,15 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
     } else if (kind == EcsOpEnum) {
         kind = op->underlying_kind;
     }
+
     if (kind == EcsOpOpaqueValue) {
         if (!flecs_meta_assign_opaque_number(cursor, op, ptr, from, number)) {
             return 0;
         }
+
         goto error;
     }
+
     if (kind == EcsOpString) {
         char *result = NULL;
         switch (from) {
@@ -1619,12 +1646,14 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
         *(char**)ptr = result;
         return 0;
     }
+
     if ((from == EcsEntity && kind != EcsOpEntity &&
         kind != EcsOpId && kind != EcsOpBool) ||
         (from == EcsId && kind != EcsOpId))
     {
         goto error;
     }
+
     if (from == EcsChar && op->kind != EcsOpEnum &&
         kind != EcsOpBool && kind != EcsOpChar && kind != EcsOpI8 &&
         kind != EcsOpI16 && kind != EcsOpI32 && kind != EcsOpI64 &&
@@ -1632,6 +1661,7 @@ static FLECS_ALWAYS_INLINE int flecs_meta_set_number(
     {
         goto error;
     }
+
     switch (from) {
     case EcsBool:
     case EcsChar:
@@ -1760,11 +1790,13 @@ int ecs_meta_set_value(
             ecs_err("no object to assign");
             return -1;
         }
+
         if (type == ecs_id(ecs_value_t)) {
             ecs_value_copy(cursor->world, ptr, value->ptr);
         } else {
             ecs_value_set(cursor->world, ptr, type, value->ptr);
         }
+
         return 0;
     }
 
@@ -1802,6 +1834,7 @@ int ecs_meta_set_value(
             if (!str) {
                 return ecs_meta_set_null(cursor);
             }
+
             return ecs_meta_set_string(cursor, str);
         }
         case EcsEntity: return ecs_meta_set_entity(cursor, *(ecs_entity_t*)value->ptr);
@@ -1848,11 +1881,21 @@ int ecs_meta_set_value(
             {
                 return ecs_ptr_copy(cursor->world, op->type, ptr, value->ptr);
             }
+
+            if (mt->kind == EcsOpaqueType && op->kind == EcsOpString) {
+                char *str = ecs_ptr_to_str(
+                    cursor->world, value->type, value->ptr);
+                int result = ecs_meta_set_string(cursor, str);
+                ecs_os_free(str);
+                return result;
+            }
+
             char *type_str = ecs_get_path(cursor->world, value->type);
             flecs_meta_conversion_error(cursor, op, type_str);
             ecs_os_free(type_str);
             goto error;
         }
+
         return ecs_ptr_copy(cursor->world, value->type, ptr, value->ptr);
     }
 
@@ -1882,6 +1925,7 @@ int ecs_meta_set_string(
         if (!ptr) {
             goto error;
         }
+
         ecs_os_free(*(ecs_string_t*)ptr);
         flecs_meta_set_t(ecs_string_t, ptr, ecs_os_strdup(value));
         return 0;
@@ -1947,6 +1991,7 @@ int ecs_meta_set_null(
         ecs_err("no object to assign");
         goto error;
     }
+
     switch (op->kind) {
     case EcsOpString:
         ecs_os_free(*(char**)ptr);
@@ -1958,6 +2003,7 @@ int ecs_meta_set_null(
             ot->assign_null(ptr);
             return 0;
         }
+
         break;
     }
     default:
@@ -1986,12 +2032,14 @@ static FLECS_ALWAYS_INLINE flecs_meta_number_t flecs_meta_to_number(
     {
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for %s", name);
     }
+
     if ((kind == EcsOpEntity || kind == EcsOpId) &&
         (to == EcsI64 || to == EcsF64))
     {
         ecs_throw(ECS_INVALID_PARAMETER, "invalid conversion from %s to %s",
             kind == EcsOpEntity ? "entity" : "id", name);
     }
+
     switch (kind) {
     case EcsOpBool: value.i = *(const ecs_bool_t*)ptr; break;
     case EcsOpChar: value.i = *(const ecs_char_t*)ptr; break;
@@ -2033,6 +2081,7 @@ static FLECS_ALWAYS_INLINE flecs_meta_number_t flecs_meta_to_number(
         } else {
             value.i = atoi(*(const char*const*)ptr);
         }
+
         break;
     default:
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for %s", name);
@@ -2112,6 +2161,7 @@ static int ecs_meta_get_string_value_from_opaque(
          ecs_err("Expected value call for opaque type to be a string");
          return -1;
     }
+
     char*** ctx = (char ***) ser->ctx;
     *ctx = ECS_CONST_CAST(char**, value);
     return 0;

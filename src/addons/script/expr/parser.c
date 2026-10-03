@@ -58,6 +58,7 @@ static bool flecs_has_precedence(
     if (!flecs_expr_precedence[first]) {
         return false;
     }
+
     return flecs_expr_precedence[first] <= flecs_expr_precedence[second];
 }
 
@@ -179,9 +180,11 @@ const char* flecs_script_parse_initializer(
                 if ((char)lookahead_token.kind != until) {
                     Error("expected '%c'", until);
                 }
+
                 if (first) {
                     node->node.kind = EcsExprEmptyInitializer;
                 }
+
                 pos = lookahead - 1;
                 EndOfRule;
             })
@@ -291,6 +294,7 @@ const char* flecs_script_parse_initializer(
                     if ((char)lookahead_token.kind != until) {
                         Error("expected '%c'", until);
                     }
+
                     EndOfRule;
                 }
 
@@ -361,6 +365,7 @@ static const char* flecs_script_parse_rhs(
                 } else {
                     Error("unexpected number");
                 }
+
             case EcsTokAdd:
             case EcsTokSub:
             case EcsTokMul:
@@ -565,6 +570,7 @@ static const char* flecs_script_parse_lhs(
                 *out = (ecs_expr_node_t*)flecs_expr_uint(parser, 
                     strtoull(expr, &end, base));
             }
+
             break;
         }
 
@@ -580,6 +586,7 @@ static const char* flecs_script_parse_lhs(
             } else {
                 *out = (ecs_expr_node_t*)flecs_expr_string(parser, Token(0));
             }
+
             break;
         }
 
@@ -692,6 +699,7 @@ static const char* flecs_script_parse_lhs(
                 parser->significant_newline = old_significant_newline;
                 goto error;
             }
+
             parser->function_token = old_function_token;
             parser->significant_newline = old_significant_newline;
 
@@ -737,6 +745,7 @@ static const char* flecs_script_parse_lhs(
                 if (!node->script) {
                     goto error;
                 }
+
                 break;
             })
 
@@ -772,6 +781,7 @@ static const char* flecs_script_parse_lhs(
             {
                 ((ecs_expr_initializer_t*)node)->is_collection = true;
             }
+
             *out = node;
 
             Parse(
@@ -831,6 +841,7 @@ const char* flecs_script_parse_expr(
             flecs_script_parser_expr_free(parser, *out);
             *out = NULL;
         }
+
         return NULL;
     }
 
@@ -986,6 +997,7 @@ char* ecs_script_string_interpolate(
             ecs_os_free(result);
             return NULL;
         }
+
         return result;
     }
 

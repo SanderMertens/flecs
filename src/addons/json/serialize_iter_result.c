@@ -201,6 +201,7 @@ static int flecs_json_serialize_entity_alerts(
                 flecs_json_memberl(buf, "message");
                 flecs_json_string(buf, alert->message);
             }
+
             flecs_json_memberl(buf, "severity");
             flecs_json_string(buf, severity);
             
@@ -211,6 +212,7 @@ static int flecs_json_serialize_entity_alerts(
                 ecs_os_free(path);
             }
         }
+
         flecs_json_object_pop(buf);
     }
 
@@ -281,6 +283,7 @@ int flecs_json_serialize_alerts(
     if (alerts) {
         flecs_json_serialize_entity_alerts(world, buf, entity, alerts, true);
     }
+
     flecs_json_serialize_children_alerts(world, buf, entity);
     flecs_json_array_pop(buf);
 #endif
@@ -333,7 +336,7 @@ bool flecs_json_serialize_iter_this(
     ecs_json_ser_ctx_t *ser_ctx)
 {
     ecs_assert(row < it->count, ECS_INTERNAL_ERROR, NULL);
-    ecs_world_t *world = it->real_world;
+    ecs_world_t *world = it->world;
 
     ecs_assert(this_data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(this_data->ids != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -509,28 +512,28 @@ int flecs_json_serialize_iter_result(
 
             /* Fetch name column once vs. calling ecs_get_name for each row */
             if (table->flags & EcsTableHasName) {
-                this_data.names = ecs_table_get_id(it->world, it->table, 
+                this_data.names = ecs_table_get_id(it->stage, it->table,
                     ecs_pair_t(EcsIdentifier, EcsName), it->offset);
             }
 
             /* Same for Parent column */
             if (table->flags & EcsTableHasParent) {
-                this_data.parents = ecs_table_get_id(it->world, it->table,
+                this_data.parents = ecs_table_get_id(it->stage, it->table,
                     ecs_id(EcsParent), it->offset);
             }
 
             /* Get entity labels */
 #ifdef FLECS_DOC
             if (desc && desc->serialize_doc) {
-                this_data.label = ecs_table_get_id(it->world, it->table, 
+                this_data.label = ecs_table_get_id(it->stage, it->table,
                     ecs_pair_t(EcsDocDescription, EcsName), it->offset);
-                this_data.brief = ecs_table_get_id(it->world, it->table, 
+                this_data.brief = ecs_table_get_id(it->stage, it->table,
                     ecs_pair_t(EcsDocDescription, EcsDocBrief), it->offset);
-                this_data.detail = ecs_table_get_id(it->world, it->table, 
+                this_data.detail = ecs_table_get_id(it->stage, it->table,
                     ecs_pair_t(EcsDocDescription, EcsDocDetail), it->offset);
-                this_data.color = ecs_table_get_id(it->world, it->table, 
+                this_data.color = ecs_table_get_id(it->stage, it->table,
                     ecs_pair_t(EcsDocDescription, EcsDocColor), it->offset);
-                this_data.link = ecs_table_get_id(it->world, it->table, 
+                this_data.link = ecs_table_get_id(it->stage, it->table,
                     ecs_pair_t(EcsDocDescription, EcsDocLink), it->offset);
             }
 #endif

@@ -7,12 +7,20 @@
 
 #ifdef FLECS_CACHED_QUERIES
 
+static bool flecs_query_cache_borrows_columns(
+    const ecs_query_cache_t *cache)
+{
+    const ecs_query_t *query = cache->query;
+    return flecs_query_cache_is_trivial(cache) &&
+        query->field_count == 1 && query->terms[0].oper == EcsAnd;
+}
+
 /* Free cache entry element. */
 static void flecs_query_cache_match_elem_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *qm)
 {
-    if (qm->base.columns) {
+    if (qm->base.columns && !flecs_query_cache_borrows_columns(cache)) {
         flecs_bfree(&cache->allocators.columns, qm->base.columns);
     }
 
@@ -51,7 +59,7 @@ void flecs_query_cache_match_fini(
                 flecs_query_cache_match_elem_fini(cache, &elems[i]);
             }
 
-            ecs_allocator_t *a = &cache->query->real_world->allocator;
+            ecs_allocator_t *a = &cache->query->world->allocator;
             ecs_vec_fini_t(a, qm->wildcard_matches, ecs_query_cache_match_t);
             flecs_free_t(a, ecs_vec_t, qm->wildcard_matches);
         }
@@ -72,11 +80,23 @@ static void flecs_query_cache_match_set(
     qm->base.table = it->table;
     qm->base.set_fields = it->set_fields;
 
+    if (flecs_query_cache_borrows_columns(cache)) {
+        ecs_assert(it->trs[0] != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(it->trs[0]->column == it->columns[0],
+            ECS_INTERNAL_ERROR, NULL);
+        qm->base.columns = ECS_CONST_CAST(int16_t*, &it->trs[0]->column);
+        return;
+    }
+
     if (!qm->base.columns) {
         qm->base.columns = flecs_balloc(&cache->allocators.columns);
     }
 
     ecs_os_memcpy_n(qm->base.columns, it->columns, int16_t, field_count);
+
+    if (trivial_cache) {
+        return;
+    }
 
     /* Find out whether to store result-specific ids array or fixed array */
     ecs_id_t *ids = cache->query->ids;
@@ -91,6 +111,7 @@ static void flecs_query_cache_match_set(
             if (qm->_ids == ids || !qm->_ids) {
                 qm->_ids = flecs_balloc(&cache->allocators.ids);
             }
+
             ecs_os_memcpy_n(qm->_ids, it->ids, ecs_id_t, field_count);
         } else {
             if (qm->_ids != ids) {
@@ -112,6 +133,7 @@ static void flecs_query_cache_match_set(
             if (qm->_sources == cache->sources || !qm->_sources) {
                 qm->_sources = flecs_balloc(&cache->allocators.ids);
             }
+
             ecs_os_memcpy_n(qm->_sources, it->sources, ecs_entity_t, field_count);
         } else {
             if (qm->_sources != cache->sources) {
@@ -125,6 +147,7 @@ static void flecs_query_cache_match_set(
         if (!qm->_trs) {
             qm->_trs = flecs_balloc(&cache->allocators.pointers);
         }
+
         for (i = 0; i < field_count; i ++) {
             if (it->trs[i] && !it->sources[i] &&
                 !(it->up_fields & (1llu << i)))
@@ -159,7 +182,7 @@ bool flecs_query_cache_match_next(
     ecs_query_cache_match_t *qm = first;
 
     ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
-    ecs_allocator_t *a = &cache->query->real_world->allocator;
+    ecs_allocator_t *a = &cache->query->world->allocator;
 
     do {
         flecs_query_cache_match_set(cache, qm, it);
@@ -198,7 +221,7 @@ static bool flecs_query_cache_rematch_next(
     ecs_query_cache_match_t *qm = first;
     
     ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
-    ecs_allocator_t *a = &cache->query->real_world->allocator;
+    ecs_allocator_t *a = &cache->query->world->allocator;
     ecs_vec_t *wildcard_matches = first->wildcard_matches;
     int32_t wildcard_elem = 0;
 
@@ -306,6 +329,10 @@ void flecs_query_revalidate_table(
     ecs_table_t *table = flecs_sparse_get_t(
         &world->store.tables, ecs_table_t, table_id);
     if (!table) {
+        return;
+    }
+
+    if (table->flags & EcsTableMarkedForDelete) {
         return;
     }
 

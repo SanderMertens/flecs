@@ -7,6 +7,9 @@
 
   var WASM_IMAGE = "flecs_playground.wasm";
   var SCRIPT_ENTITY = "playground";
+  var PREVIEW_SCRIPT = "playground_preview";
+  var PREVIEW_INSTANCE = "preview";
+  var HIDDEN_ROOTS = [SCRIPT_ENTITY, PREVIEW_SCRIPT];
   var EDITOR_LATENCY_BUDGET_MS = 250;
   var QUERY_LATENCY_BUDGET_MS = 250;
   var HEAD_H = 44;
@@ -112,6 +115,19 @@
       squiggleMarker = editor.session.addMarker(new Range(row, start, row, end), "pg-error-squiggle", "text");
     }
 
+    var jumpMarker, jumpTimer;
+    function reveal(row, col) {
+      if (jumpMarker !== undefined) { editor.session.removeMarker(jumpMarker); jumpMarker = undefined; }
+      clearTimeout(jumpTimer);
+      editor.selection.clearSelection();
+      editor.moveCursorTo(row, col);
+      editor.scrollToLine(row, false, true);
+      jumpMarker = editor.session.addMarker(new Range(row, 0, row, Infinity), "pg-jump-line", "fullLine");
+      jumpTimer = setTimeout(function () {
+        if (jumpMarker !== undefined) { editor.session.removeMarker(jumpMarker); jumpMarker = undefined; }
+      }, 1200);
+    }
+
     return {
       get: function () { return editor.getValue(); },
       set: function (value) {
@@ -122,6 +138,7 @@
         clearMarkers();
       },
       setError: setError,
+      reveal: reveal,
       resize: function (keepCursor) {
         editor.resize();
         if (keepCursor) editor.renderer.scrollCursorIntoView();
@@ -133,6 +150,98 @@
     };
   }
 
+  /* Definition lookup. Scans the script for the statement that declares an
+   * entity, tracking the scope opened by each brace so that nested entities
+   * resolve to the declaration inside their parent rather than the first
+   * entity with the same name. */
+
+  var DEF_KEYWORDS = { prefab: 1, template: 1, struct: 1, enum: 1, bitmask: 1, module: 1, primitive: 1, array: 1, vector: 1, opaque: 1 };
+  var SKIP_KEYWORDS = { "if": 1, "else": 1, using: 1, include: 1, "const": 1, prop: 1, mut: 1, "with": 1, slot: 1, "for": 1, "in": 1, match: 1, "new": 1, "export": 1, fn: 1, await: 1, "try": 1, "catch": 1, "continue": 1, async: 1, "while": 1, script: 1 };
+
+  function stripCode(line) {
+    return line
+      .replace(/"(?:[^"\\]|\\.)*"/g, function (m) { return Array(m.length + 1).join(" "); })
+      .replace(/\/\/.*$/, "");
+  }
+
+  function findDefinition(code, path) {
+    var lines = code.split("\n");
+    var leaf = path.slice(path.lastIndexOf(".") + 1);
+    var scope = [];
+    var best = null;
+
+    function scopePath() {
+      var parts = [];
+      for (var i = 0; i < scope.length; i++) if (scope[i].name) parts.push(scope[i].name);
+      return parts.join(".");
+    }
+
+    function candidate(row, col, name, keyword, opener) {
+      if (name.slice(name.lastIndexOf(".") + 1) !== leaf) return;
+      var scoped = scopePath();
+      var full = scoped ? scoped + "." + name : name;
+      var score = (full === path ? 4 : 0) + (keyword ? 2 : 0) + (opener ? 1 : 0);
+      if (!best || score > best.score) best = { row: row, col: col, score: score };
+    }
+
+    lines.forEach(function (raw, row) {
+      var line = stripCode(raw);
+      var scopeName = null;
+      var sticky = false;
+      var m = /^(\s*)([A-Za-z_][\w.]*)(?:\s+([A-Za-z_][\w.]*))?\s*([\s\S]*)$/.exec(line);
+      if (/^\s*\{/.test(line)) {
+        scopeName = "#";
+      } else if (m && !/^\s*@/.test(line)) {
+        var first = m[2], second = m[3], rest = m[4];
+        var opener = /^[{:(]/.test(rest);
+        if (SKIP_KEYWORDS[first]) {
+          scopeName = null;
+        } else if (DEF_KEYWORDS[first]) {
+          if (second) {
+            var col = line.indexOf(second, m[1].length + first.length);
+            candidate(row, col, second, true, opener);
+            scopeName = second;
+            sticky = first === "module" && line.indexOf("{") === -1;
+            if ((first === "enum" || first === "bitmask") && rest.charAt(0) === "(") {
+              var inner = rest.slice(1, rest.indexOf(")") === -1 ? undefined : rest.indexOf(")"));
+              var offset = line.indexOf(rest) + 1;
+              scope.push({ name: second });
+              inner.split(",").forEach(function (part) {
+                var cm = /^\s*([A-Za-z_]\w*)/.exec(part);
+                if (cm) candidate(row, offset + part.indexOf(cm[1]), cm[1], false, false);
+                offset += part.length + 1;
+              });
+              scope.pop();
+            }
+          }
+        } else if (second) {
+          if (opener || rest === "") {
+            candidate(row, line.indexOf(second, m[1].length + first.length), second, false, opener);
+            scopeName = second;
+          }
+        } else if (rest.charAt(0) === "(") {
+          scopeName = "#";
+        } else if (rest === "" || /^[{:=,]/.test(rest)) {
+          candidate(row, m[1].length, first, false, opener);
+          scopeName = first;
+        }
+      }
+      if (sticky) scope.push({ name: scopeName, sticky: true });
+      var opened = false;
+      for (var i = 0; i < line.length; i++) {
+        var c = line.charAt(i);
+        if (c === "{") {
+          scope.push({ name: opened ? null : scopeName });
+          opened = true;
+        } else if (c === "}") {
+          while (scope.length && scope[scope.length - 1].sticky) scope.pop();
+          scope.pop();
+        }
+      }
+    });
+    return best ? { row: best.row, col: best.col } : null;
+  }
+
   /* Entity tree */
 
   function isTemplate(e) {
@@ -140,26 +249,88 @@
     return !!comps["flecs.core.Component"] && Object.prototype.hasOwnProperty.call(comps, "flecs.script.Script");
   }
 
+  function entityPath(e) {
+    if (e.name === undefined) return null;
+    return e.parent ? e.parent + "." + e.name : e.name;
+  }
+
+  function isHiddenPath(path) {
+    if (!path) return false;
+    return HIDDEN_ROOTS.some(function (root) {
+      return path === root || path.indexOf(root + ".") === 0;
+    });
+  }
+
+  /* Entities whose parent chain starts at an entity matched by isRoot. The
+   * world serializer refers to anonymous parents by id ("#123"), so the
+   * subtree is collected by both path and id. Returns the matched entities
+   * and the set of keys (paths and ids) that identify them. */
+  function collectSubtree(results, isRoot) {
+    var keys = {};
+    var matched = [];
+    var pending = results.slice();
+    var changed = true;
+    while (changed) {
+      changed = false;
+      pending = pending.filter(function (r) {
+        var path = entityPath(r);
+        if (!isRoot(r) && !(r.parent && keys[r.parent])) return true;
+        if (path) keys[path] = true;
+        if (r.id !== undefined) keys["#" + r.id] = true;
+        matched.push(r);
+        changed = true;
+        return false;
+      });
+    }
+    return { results: matched, keys: keys };
+  }
+
+  var GROUPS = [
+    { id: "types", title: "Types" },
+    { id: "assets", title: "Assets" },
+    { id: "queries", title: "Queries" },
+    { id: "entities", title: "Entities" }
+  ];
+
+  function hasPoly(e, target) {
+    var tags = e.tags || [];
+    var comps = e.components || {};
+    if (tags.indexOf(target) !== -1) return true;
+    if (Object.prototype.hasOwnProperty.call(comps, "(flecs.core.Poly," + target + ")")) return true;
+    var poly = (e.pairs || {})["flecs.core.Poly"];
+    if (!poly) return false;
+    return (Array.isArray(poly) ? poly : [poly]).indexOf(target) !== -1;
+  }
+
   function kindOf(e, usedAsTag) {
     var tags = e.tags || [];
     var comps = e.components || {};
-    if (tags.indexOf("flecs.core.Disabled") !== -1) return { kind: "disabled", hint: "disabled" };
-    if (tags.indexOf("flecs.core.Module") !== -1) return { kind: "module", hint: "module" };
-    if (tags.indexOf("flecs.core.Prefab") !== -1) return { kind: "prefab", hint: "prefab" };
-    if (isTemplate(e)) return { kind: "template", hint: "template" };
-    if (comps["flecs.core.Component"]) {
+    var info;
+    if (tags.indexOf("flecs.core.Module") !== -1) info = { kind: "module", hint: "module", group: "types" };
+    else if (tags.indexOf("flecs.core.Prefab") !== -1) info = { kind: "prefab", hint: "prefab", group: "assets" };
+    else if (isTemplate(e)) info = { kind: "template", hint: "template", group: "assets" };
+    else if (hasPoly(e, "flecs.system.System")) info = { kind: "system", hint: "system", group: "queries" };
+    else if (hasPoly(e, "flecs.core.Observer")) info = { kind: "observer", hint: "observer", group: "queries" };
+    else if (hasPoly(e, "flecs.core.Query")) info = { kind: "query", hint: "query", group: "queries" };
+    else if (comps["flecs.core.Component"]) {
       var type = comps["flecs.meta.type"];
       var kind = type && type.kind ? type.kind.replace(/Type$/, "").toLowerCase() : "component";
-      return { kind: "component", hint: kind };
+      info = { kind: "component", hint: kind, group: "types" };
     }
-    if (usedAsTag) return { kind: "tag", hint: "tag" };
-    return { kind: "entity", hint: "" };
+    else if (usedAsTag) info = { kind: "tag", hint: "tag", group: "types" };
+    else info = { kind: "entity", hint: "", group: "entities" };
+    if (tags.indexOf("flecs.core.Disabled") !== -1) {
+      info.kind = "disabled";
+      info.hint = info.hint ? "disabled " + info.hint : "disabled";
+    }
+    return info;
   }
 
   function createTree(container, onSelect) {
     var list = el("div", { class: "pg-tree" });
     container.appendChild(list);
     var expanded = {};
+    var groupOpen = {};
     var selected = null;
     var nodes = {};
 
@@ -177,9 +348,8 @@
       nodes = {};
       var roots = [];
       results.forEach(function (e) {
-        if (!e.parent && e.name === SCRIPT_ENTITY) return;
-        if (e.parent && (e.parent === SCRIPT_ENTITY || e.parent.indexOf(SCRIPT_ENTITY + ".") === 0)) return;
-        var path = e.parent ? e.parent + "." + e.name : e.name;
+        var path = entityPath(e);
+        if (isHiddenPath(path)) return;
         var info = kindOf(e, used[path]);
         var instances = Object.keys(e.components || {}).concat(e.tags || []).filter(function (id) {
           return templates[id];
@@ -188,7 +358,7 @@
         if (isTemplate(e) && info.kind !== "template") hints.push("template");
         if (instances.length) hints.push(instances.join(", "));
         nodes[path] = { name: e.name, path: path, parent: e.parent || null, kind: info.kind,
-          hint: hints.join(" · "), children: [], id: e.id || 0 };
+          group: info.group, hint: hints.join(" · "), children: [], id: e.id || 0 };
       });
       var byId = {};
       Object.keys(nodes).forEach(function (path) {
@@ -249,11 +419,41 @@
           row.classList.toggle("pg-open", now);
         });
       }
-      row.addEventListener("click", function () { select(n.path); });
+      row.addEventListener("click", function () { select(n.path, false, true); });
+      return li;
+    }
+
+    function renderGroup(group, members) {
+      var li = el("li", { class: "pg-group" });
+      var head = el("div", { class: "pg-group-head", "data-group": group.id, role: "button", tabindex: "0" }, [
+        el("span", { class: "pg-group-chevron", html: CHEVRON }),
+        el("span", { class: "pg-group-title", text: group.title }),
+        el("span", { class: "pg-group-count", text: String(members.length) })
+      ]);
+      var ul = el("ul", { role: "group" });
+      members.forEach(function (n) { ul.appendChild(renderNode(n)); });
+      li.appendChild(head);
+      li.appendChild(ul);
+      var setOpen = function (open) {
+        groupOpen[group.id] = open;
+        ul.hidden = !open;
+        head.classList.toggle("pg-open", open);
+      };
+      setOpen(groupOpen[group.id] !== false);
+      head.addEventListener("click", function () { setOpen(!groupOpen[group.id]); });
+      head.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(!groupOpen[group.id]); }
+      });
       return li;
     }
 
     function reveal(path) {
+      var root = nodes[path];
+      while (root && root.parent && nodes[root.parent]) root = nodes[root.parent];
+      if (root && groupOpen[root.group] === false) {
+        var head = list.querySelector('.pg-group-head[data-group="' + root.group + '"]');
+        if (head) head.click();
+      }
       var parts = path.split(".");
       for (var i = 1; i < parts.length; i++) {
         var slice = parts.slice(0, i).join(".");
@@ -270,29 +470,37 @@
       if (target && target.scrollIntoView) target.scrollIntoView({ block: "nearest" });
     }
 
-    function select(path, show) {
+    function select(path, show, jump) {
       selected = path;
       if (show && path) reveal(path);
       list.querySelectorAll(".pg-node").forEach(function (r) {
         r.classList.toggle("pg-selected", r.getAttribute("data-path") === path);
       });
-      onSelect(path);
+      onSelect(path, !!jump);
     }
 
     return {
-      update: function (results) {
+      update: function (results, keepSelection) {
         var roots = build(results);
         list.innerHTML = "";
         if (!roots.length) {
           list.appendChild(el("div", { class: "pg-empty", text: "No entities yet. Create some in the editor!" }));
         } else {
           var ul = el("ul", { role: "tree" });
-          roots.forEach(function (n) { ul.appendChild(renderNode(n)); });
+          GROUPS.forEach(function (group) {
+            var members = roots.filter(function (n) { return n.group === group.id; });
+            members.sort(function (a, b) {
+              return a.name.localeCompare(b.name, undefined, { sensitivity: "base" }) || a.id - b.id;
+            });
+            if (members.length) ul.appendChild(renderGroup(group, members));
+          });
           list.appendChild(ul);
         }
         if (selected && !nodes[selected]) {
-          selected = null;
-          onSelect(null);
+          if (!keepSelection) {
+            selected = null;
+            onSelect(null);
+          }
         } else if (selected) {
           onSelect(selected);
         }
@@ -516,9 +724,10 @@
     return {
       clear: function () { empty("Select an entity to inspect."); },
       error: function (text) { empty(text); },
-      show: function (path, e) {
+      show: function (path, e, extra) {
         body.innerHTML = "";
         body.appendChild(header(path, e));
+        if (extra) body.appendChild(extra);
 
         var tags = (e.tags || []).map(function (t) { return chip(t); });
         var pairs = [];
@@ -650,25 +859,108 @@
     var runPending = false;
     var pendingRequest = null;
 
+    /* Template preview: a dummy instance of the selected template is created
+     * by a second managed script, serialized through the world endpoint and
+     * shown in the inspector. The instance is deleted whenever the script
+     * changes or another entity is selected. */
+    var previewWidget = window.flecsPlaygroundQuery.createPreview({ title: "Preview" });
+    var preview = { template: null, created: false };
+    previewWidget.root.appendChild(createSplitter(true, {
+      get: function () { return previewWidget.views.getBoundingClientRect().height; },
+      set: function (v) {
+        var max = Math.max(window.innerHeight - HEAD_H * 2 - 160, 120);
+        previewWidget.setHeight(Math.round(Math.max(120, Math.min(v, max))));
+      }
+    }));
+
+    function previewCode(template) {
+      return PREVIEW_SCRIPT + " {\n  " + template + " " + PREVIEW_INSTANCE + "()\n}\n";
+    }
+
+    function loadPreview(template) {
+      conn.world(function (msg) {
+        if (preview.template !== template || !preview.created) return;
+        var data = JSON.parse(msg);
+        var root = PREVIEW_SCRIPT + "." + PREVIEW_INSTANCE;
+        var subtree = collectSubtree(data.results || [], function (r) {
+          return entityPath(r) === root;
+        });
+        previewWidget.update(subtree.results);
+      }, function () {});
+    }
+
+    function updatePreview(template) {
+      if (!connected) return;
+      if (preview.template === template && preview.created) {
+        loadPreview(template);
+        return;
+      }
+      preview.template = template;
+      preview.created = true;
+      previewWidget.reset();
+      previewWidget.update([]);
+      conn.scriptUpdate(PREVIEW_SCRIPT, previewCode(template), { try: true }, function (reply) {
+        if (preview.template !== template || !preview.created) return;
+        if (reply && reply.error) {
+          previewWidget.message("Cannot preview template: " + reply.error);
+          return;
+        }
+        var bridge = window.flecsPlayground;
+        if (bridge && bridge.set) {
+          bridge.set(PREVIEW_SCRIPT + "." + PREVIEW_INSTANCE, "Position", "{0, 0, 0}");
+        }
+        loadPreview(template);
+      }, function (reply) {
+        if (preview.template !== template || !preview.created) return;
+        previewWidget.message("Cannot preview template: " + (reply && reply.error ? reply.error : "unknown error"));
+      });
+    }
+
+    function clearPreview() {
+      previewWidget.hide();
+      if (!preview.created) return;
+      preview.created = false;
+      preview.template = null;
+      if (connected) conn.scriptUpdate(PREVIEW_SCRIPT, "", { try: true }, function () {}, function () {});
+    }
+
     function inspect(path) {
-      if (!path) { inspector.clear(); return; }
+      if (!path) { clearPreview(); inspector.clear(); return; }
       conn.entity(path, { values: true, type_info: true, inherited: true, doc: true, entity_id: true },
-        function (e) { inspector.show(path, e); },
-        function (err) { inspector.error(err && err.error ? err.error : "Failed to load entity"); });
+        function (e) {
+          if (isTemplate(e)) {
+            inspector.show(path, e, previewWidget.root);
+            previewWidget.show();
+            updatePreview(path);
+          } else {
+            clearPreview();
+            inspector.show(path, e);
+          }
+        },
+        function (err) {
+          clearPreview();
+          inspector.error(err && err.error ? err.error : "Failed to load entity");
+        });
+    }
+
+    function jumpToDefinition(path) {
+      var def = findDefinition(editor.get(), path);
+      if (def) editor.reveal(def.row, def.col);
     }
 
     function navigate(path) {
       if (!path) tree.select(null);
-      else if (tree.has(path)) tree.select(path, true);
+      else if (tree.has(path)) tree.select(path, true, true);
       else { queryPanel.setSelected(path); inspect(path); }
     }
 
     var inspector = createInspector(inspectorPane, navigate);
     inspector.clear();
 
-    var tree = createTree(treePane, function (path) {
+    var tree = createTree(treePane, function (path, jump) {
       queryPanel.setSelected(path);
       inspect(path);
+      if (jump && path) jumpToDefinition(path);
     });
 
     var editor = createEditor(editorPanel, function () {
@@ -710,9 +1002,17 @@
       queueRefresh();
     }
 
+    var hiddenKeys = {};
+    function isHiddenResult(r) {
+      var path = entityPath(r);
+      return isHiddenPath(path) || !!hiddenKeys[path] ||
+        (r.id !== undefined && !!hiddenKeys["#" + r.id]);
+    }
+
     var queryPanel = window.flecsPlaygroundQuery.createPanel({
       conn: function () { return connected ? conn : null; },
       latencyBudget: QUERY_LATENCY_BUDGET_MS,
+      exclude: isHiddenResult,
       onSelect: navigate,
       onMouse: mouseEvent,
       onKey: keyEvent,
@@ -805,13 +1105,20 @@
     }
 
     var lastWorld = null;
-    function refreshTree(skipUnchanged) {
+    function refreshTree(skipUnchanged, keepSelection) {
       conn.world(function (msg) {
         if (skipUnchanged && msg === lastWorld) return;
         var data = JSON.parse(msg);
-        var n = tree.update(data.results || []);
+        var hidden = collectSubtree(data.results || [], function (r) {
+          return isHiddenPath(entityPath(r));
+        });
+        hiddenKeys = hidden.keys;
+        var results = (data.results || []).filter(function (e) {
+          return !isHiddenResult(e);
+        });
+        var n = tree.update(results, keepSelection);
         count.textContent = n ? n + (n === 1 ? " entity" : " entities") : "";
-        queryPanel.setWorld(data.results || []);
+        queryPanel.setWorld(results);
         lastWorld = msg;
       }, function () {});
     }
@@ -820,19 +1127,21 @@
       if (!connected) { runPending = true; return; }
       runPending = false;
       if (pendingRequest) { pendingRequest.abort(); pendingRequest = null; }
+      clearPreview();
       pendingRequest = conn.scriptUpdate(SCRIPT_ENTITY, editor.get(), {
         try: true,
         latency_budget_ms: immediate ? undefined : EDITOR_LATENCY_BUDGET_MS
       }, function (reply) {
         pendingRequest = null;
-        if (reply && reply.error) showError(reply.error);
+        var failed = !!(reply && reply.error);
+        if (failed) showError(reply.error);
         else clearError();
-        refreshTree();
+        refreshTree(false, failed);
         queryPanel.refresh();
       }, function (reply) {
         pendingRequest = null;
         showError(reply && reply.error ? reply.error : "Failed to run script");
-        refreshTree();
+        refreshTree(false, true);
         queryPanel.refresh();
       });
     }

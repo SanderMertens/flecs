@@ -183,6 +183,7 @@ char* flecs_to_snake_case(const char *str) {
         if (isupper(ch)) {
             upper_count ++;
         }
+
         len ++;
     }
 
@@ -193,6 +194,7 @@ char* flecs_to_snake_case(const char *str) {
                 out_ptr[0] = '_';
                 out_ptr ++;
             }
+
             out_ptr[0] = (char)tolower(ch);
             out_ptr ++;
         } else {

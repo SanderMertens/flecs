@@ -76,9 +76,9 @@ inline flecs::entity entity_view::mut(const flecs::world& stage) const {
 }
 
 inline flecs::entity entity_view::mut(const flecs::iter& it) const {
-    ecs_assert(!it.world().is_readonly(), ECS_INVALID_PARAMETER, 
+    ecs_assert(!it.stage().is_readonly(), ECS_INVALID_PARAMETER,
         "cannot use iterator created for read-only world/stage to create mutable handle");
-    return flecs::entity(id_).set_stage(it.world().c_ptr());
+    return flecs::entity(id_).set_stage(it.stage().c_ptr());
 }
 
 inline flecs::entity entity_view::mut(const flecs::entity_view& e) const {

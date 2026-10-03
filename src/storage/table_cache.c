@@ -71,6 +71,7 @@ static int32_t flecs_table_cache_find(
         if (!r) {
             return -1;
         }
+
         return flecs_uto(int32_t, *r);
     }
 
@@ -129,6 +130,7 @@ void ecs_table_cache_insert(
     slot->tr = (ecs_table_record_t*)result;
     slot->column = -1;
     slot->index = ((ecs_table_record_t*)result)->index;
+    slot->count = ((ecs_table_record_t*)result)->count;
 
     if (ecs_map_is_init(&cache->index)) {
         ecs_map_insert(&cache->index, table->id, flecs_ito(uint64_t, index));
@@ -229,6 +231,7 @@ void* ecs_table_cache_remove(
                 break;
             }
         }
+
         ecs_assert(index <= last, ECS_INTERNAL_ERROR, NULL);
     }
 

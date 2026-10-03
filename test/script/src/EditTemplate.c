@@ -9,42 +9,6 @@ void EditTemplate_setup(void) {
     ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
 }
 
-static ecs_entity_t et_position(ecs_world_t *world) {
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    return ecs_id(Position);
-}
-
-static void et_tag(ecs_world_t *world, const char *name) {
-    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = name });
-}
-
-static ecs_script_t* et_parse(ecs_world_t *world, const char *code) {
-    ecs_script_t *script = ecs_script_parse(world, "test", code, &ir_desc, NULL);
-    test_assert(script != NULL);
-    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
-    return script;
-}
-
-static char* et_span(const ecs_script_t *script, ecs_entity_t e) {
-    ecs_script_source_t src = {0};
-    if (!ecs_script_entity_source(script, e, &src)) {
-        return NULL;
-    }
-    char *result = ecs_os_malloc(src.length + 1);
-    ecs_os_memcpy(result, &script->code[src.offset], src.length);
-    result[src.length] = '\0';
-    return result;
-}
-
 typedef struct et_file_t {
     const char *name;
     const char *content;
@@ -100,32 +64,18 @@ static void et_fclose(FILE *file) {
     et_default_fclose(file);
 }
 
-static void et_files_init(void) {
-    ecs_os_set_api_defaults();
-    et_default_fopen = ecs_os_api.fopen_;
-    et_default_fread = ecs_os_api.fread_;
-    et_default_fclose = ecs_os_api.fclose_;
-
-    ecs_os_api_t api = ecs_os_api;
-    api.fopen_ = et_fopen;
-    api.fread_ = et_fread;
-    api.fclose_ = et_fclose;
-    ecs_os_set_api(&api);
-}
-
-static void et_files_fini(void) {
-    ecs_os_api_t api = ecs_os_api;
-    api.fopen_ = et_default_fopen;
-    api.fread_ = et_default_fread;
-    api.fclose_ = et_default_fclose;
-    ecs_os_set_api(&api);
-    memset(et_files, 0, sizeof(et_files));
-}
-
 void EditTemplate_source_body_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -136,7 +86,9 @@ void EditTemplate_source_body_entity(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
     test_assert(trunk != 0);
@@ -148,7 +100,14 @@ void EditTemplate_source_body_entity(void) {
     test_int(2, src.line);
     test_int(3, src.column);
 
-    char *span = et_span(script, trunk);
+    ecs_script_source_t src_1 = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, trunk, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span, "trunk {\n    Position: {0, 1}\n  }");
     ecs_os_free(span);
 
@@ -159,7 +118,7 @@ void EditTemplate_source_body_entity(void) {
 void EditTemplate_source_body_entity_no_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    et_tag(world, "Tag");
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "template Tree {"
@@ -168,7 +127,9 @@ void EditTemplate_source_body_entity_no_scope(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
     test_assert(trunk != 0);
@@ -177,7 +138,14 @@ void EditTemplate_source_body_entity_no_scope(void) {
     test_bool(true, ecs_script_entity_source(script, trunk, &src));
     test_bool(false, src.has_scope);
 
-    char *span = et_span(script, trunk);
+    ecs_script_source_t src_1 = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, trunk, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span, "Tag trunk");
     ecs_os_free(span);
 
@@ -188,7 +156,15 @@ void EditTemplate_source_body_entity_no_scope(void) {
 void EditTemplate_source_body_entity_nested(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -201,7 +177,9 @@ void EditTemplate_source_body_entity_nested(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t knot = ecs_lookup(world, "t1.trunk.knot");
     test_assert(knot != 0);
@@ -210,7 +188,14 @@ void EditTemplate_source_body_entity_nested(void) {
     test_bool(true, ecs_script_entity_source(script, knot, &src));
     test_uint(ecs_lookup(world, "Tree"), src.template_);
 
-    char *span = et_span(script, knot);
+    ecs_script_source_t src_1 = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, knot, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span, "knot {\n      Position: {2, 3}\n    }");
     ecs_os_free(span);
 
@@ -221,7 +206,17 @@ void EditTemplate_source_body_entity_nested(void) {
 void EditTemplate_source_body_entity_anonymous(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "template Tree {"
@@ -231,7 +226,9 @@ void EditTemplate_source_body_entity_anonymous(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t t1 = ecs_lookup(world, "t1");
     test_assert(t1 != 0);
@@ -254,11 +251,25 @@ void EditTemplate_source_body_entity_anonymous(void) {
     test_assert(first != 0);
     test_assert(second != 0);
 
-    char *span = et_span(script, first);
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, first, &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "_ { Position: {1, 2} }");
     ecs_os_free(span);
 
-    span = et_span(script, second);
+    src = (ecs_script_source_t){0};
+    span = NULL;
+    if (ecs_script_entity_source(script, second, &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "_ { Position: {3, 4} }");
     ecs_os_free(span);
 
@@ -269,8 +280,17 @@ void EditTemplate_source_body_entity_anonymous(void) {
 void EditTemplate_source_body_entity_in_with_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    et_tag(world, "Tag");
-    et_position(world);
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -283,12 +303,21 @@ void EditTemplate_source_body_entity_in_with_scope(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
     test_assert(trunk != 0);
 
-    char *span = et_span(script, trunk);
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, trunk, &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "trunk {\n      Position: {0, 1}\n    }");
     ecs_os_free(span);
 
@@ -299,7 +328,15 @@ void EditTemplate_source_body_entity_in_with_scope(void) {
 void EditTemplate_source_body_entity_in_if_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -313,12 +350,21 @@ void EditTemplate_source_body_entity_in_if_scope(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
     test_assert(trunk != 0);
 
-    char *span = et_span(script, trunk);
+    ecs_script_source_t src = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, trunk, &src)) {
+        span = ecs_os_malloc(src.length + 1);
+        ecs_os_memcpy(span, &script->code[src.offset], src.length);
+        span[src.length] = '\0';
+    }
+
     test_str(span, "trunk {\n      Position: {0, 1}\n    }");
     ecs_os_free(span);
 
@@ -329,7 +375,15 @@ void EditTemplate_source_body_entity_in_if_scope(void) {
 void EditTemplate_source_body_for_loop_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -340,7 +394,9 @@ void EditTemplate_source_body_for_loop_entity(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t child = ecs_lookup(world, "t1.child_1");
     test_assert(child != 0);
@@ -355,7 +411,15 @@ void EditTemplate_source_body_for_loop_entity(void) {
 void EditTemplate_source_instance_stmt_has_no_template(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -364,7 +428,9 @@ void EditTemplate_source_instance_stmt_has_no_template(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_source_t src = {0};
     test_bool(true, ecs_script_entity_source(
@@ -378,7 +444,15 @@ void EditTemplate_source_instance_stmt_has_no_template(void) {
 void EditTemplate_source_body_entity_two_instances(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -388,7 +462,9 @@ void EditTemplate_source_body_entity_two_instances(void) {
     LINE "Tree t1()"
     LINE "Tree t2()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_source_t src1 = {0}, src2 = {0};
     test_bool(true, ecs_script_entity_source(
@@ -407,7 +483,15 @@ void EditTemplate_source_body_entity_two_instances(void) {
 void EditTemplate_source_nested_template_instance(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Knot {"
@@ -420,7 +504,9 @@ void EditTemplate_source_nested_template_instance(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t knot1 = ecs_lookup(world, "t1.knot1");
     test_assert(knot1 != 0);
@@ -429,7 +515,14 @@ void EditTemplate_source_nested_template_instance(void) {
     test_bool(true, ecs_script_entity_source(script, knot1, &src));
     test_uint(ecs_lookup(world, "Tree"), src.template_);
 
-    char *span = et_span(script, knot1);
+    ecs_script_source_t src_1 = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, knot1, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span, "Knot knot1()");
     ecs_os_free(span);
 
@@ -440,7 +533,14 @@ void EditTemplate_source_nested_template_instance(void) {
     test_bool(true, ecs_script_entity_source(script, bump, &src));
     test_uint(ecs_lookup(world, "Knot"), src.template_);
 
-    span = et_span(script, bump);
+    src_1 = (ecs_script_source_t){0};
+    span = NULL;
+    if (ecs_script_entity_source(script, bump, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span, "bump { Position: {5, 6} }");
     ecs_os_free(span);
 
@@ -451,16 +551,27 @@ void EditTemplate_source_nested_template_instance(void) {
 void EditTemplate_source_body_entity_other_script(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
 
-    ecs_script_t *script = et_parse(world,
-        HEAD "template Tree {"
-        LINE "  trunk { Position: {0, 1} }"
-        LINE "}"
-        LINE ""
-        LINE "Tree t1()");
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
-    ecs_script_t *other = et_parse(world, "foo {}");
+    ecs_script_t *script = ecs_script_parse(world, "test", HEAD "template Tree {"
+            LINE "  trunk { Position: {0, 1} }"
+            LINE "}"
+            LINE ""
+            LINE "Tree t1()", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
+
+    ecs_script_t *other = ecs_script_parse(world, "test", "foo {}", &ir_desc, NULL);
+    test_assert(other != NULL);
+    test_int(0, ecs_script_eval(other, &ir_desc, NULL));
 
     ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
     test_assert(trunk != 0);
@@ -476,7 +587,17 @@ void EditTemplate_source_body_entity_other_script(void) {
 void EditTemplate_set_body_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "template Tree {"
@@ -487,7 +608,9 @@ void EditTemplate_set_body_entity(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {10, 20};
@@ -513,7 +636,17 @@ void EditTemplate_set_body_entity(void) {
 void EditTemplate_set_body_entity_replaces_prop_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "template Tree {"
@@ -525,7 +658,9 @@ void EditTemplate_set_body_entity_replaces_prop_expr(void) {
     LINE ""
     LINE "Tree t1(x: 3)";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {10, 20};
@@ -552,7 +687,17 @@ void EditTemplate_set_body_entity_replaces_prop_expr(void) {
 void EditTemplate_set_body_entity_empty_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "template Tree {"
@@ -562,7 +707,9 @@ void EditTemplate_set_body_entity_empty_scope(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     Position v = {10, 20};
@@ -588,7 +735,17 @@ void EditTemplate_set_body_entity_empty_scope(void) {
 void EditTemplate_set_body_entity_via_either_instance(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "template Tree {"
@@ -600,7 +757,9 @@ void EditTemplate_set_body_entity_via_either_instance(void) {
     LINE "Tree t1()"
     LINE "Tree t2()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     Position v = {10, 20};
 
@@ -627,7 +786,15 @@ void EditTemplate_set_body_entity_via_either_instance(void) {
 void EditTemplate_delete_body_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -641,7 +808,9 @@ void EditTemplate_delete_body_entity(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_delete(
@@ -666,9 +835,19 @@ void EditTemplate_delete_body_entity(void) {
 void EditTemplate_remove_body_entity_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
 
-    et_tag(world, "Tag");
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
 
     const char *expr =
     HEAD "template Tree {"
@@ -680,7 +859,9 @@ void EditTemplate_remove_body_entity_component(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_script_edits_t *edits = ecs_script_edits_new(script);
     test_int(0, ecs_script_edits_remove(
@@ -705,7 +886,17 @@ void EditTemplate_remove_body_entity_component(void) {
 void EditTemplate_apply_update_all_instances(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
         HEAD "template Tree {"
@@ -755,7 +946,17 @@ void EditTemplate_apply_update_all_instances(void) {
 void EditTemplate_apply_update_instance_override_wins(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
         HEAD "template Tree {"
@@ -809,7 +1010,15 @@ void EditTemplate_apply_update_instance_override_wins(void) {
 void EditTemplate_apply_update_delete_removes_from_all(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
         HEAD "template Tree {"
@@ -854,7 +1063,15 @@ void EditTemplate_apply_update_delete_removes_from_all(void) {
 void EditTemplate_entity_owner_body_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
         HEAD "template Tree {"
@@ -877,14 +1094,23 @@ void EditTemplate_entity_owner_body_entity(void) {
 void EditTemplate_entity_owner_body_entity_unmanaged(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
 
-    ecs_script_t *script = et_parse(world,
-        HEAD "template Tree {"
-        LINE "  trunk { Position: {0, 1} }"
-        LINE "}"
-        LINE ""
-        LINE "Tree t1()");
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, "test", HEAD "template Tree {"
+            LINE "  trunk { Position: {0, 1} }"
+            LINE "}"
+            LINE ""
+            LINE "Tree t1()", &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     test_uint(0, ecs_script_entity_owner(world, ecs_lookup(world, "t1")));
     test_uint(0, ecs_script_entity_owner(world, ecs_lookup(world, "t1.trunk")));
@@ -894,7 +1120,17 @@ void EditTemplate_entity_owner_body_entity_unmanaged(void) {
 }
 
 void EditTemplate_source_template_in_included_file(void) {
-    et_files_init();
+    ecs_os_set_api_defaults();
+    et_default_fopen = ecs_os_api.fopen_;
+    et_default_fread = ecs_os_api.fread_;
+    et_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t api = ecs_os_api;
+    api.fopen_ = et_fopen;
+    api.fread_ = et_fread;
+    api.fclose_ = et_fclose;
+    ecs_os_set_api(&api);
+
     et_files[0].name = "scene/templates.flecs";
     et_files[0].content =
         "template Tree {\n"
@@ -909,7 +1145,15 @@ void EditTemplate_source_template_in_included_file(void) {
 
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .ir = ir_enabled, .filename = "scene/main.flecs" });
@@ -934,11 +1178,27 @@ void EditTemplate_source_template_in_included_file(void) {
     test_uint(s, ecs_script_entity_owner(world, ecs_lookup(world, "t1")));
 
     ecs_fini(world);
-    et_files_fini();
+
+    api = ecs_os_api;
+    api.fopen_ = et_default_fopen;
+    api.fread_ = et_default_fread;
+    api.fclose_ = et_default_fclose;
+    ecs_os_set_api(&api);
+    memset(et_files, 0, sizeof(et_files));
 }
 
 void EditTemplate_edit_template_in_included_file(void) {
-    et_files_init();
+    ecs_os_set_api_defaults();
+    et_default_fopen = ecs_os_api.fopen_;
+    et_default_fread = ecs_os_api.fread_;
+    et_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t api = ecs_os_api;
+    api.fopen_ = et_fopen;
+    api.fread_ = et_fread;
+    api.fclose_ = et_fclose;
+    ecs_os_set_api(&api);
+
     et_files[0].name = "scene/templates.flecs";
     et_files[0].content =
         "template Tree {\n"
@@ -953,7 +1213,17 @@ void EditTemplate_edit_template_in_included_file(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     ecs_entity_t s = ecs_script(world, {
         .ir = ir_enabled, .filename = "scene/main.flecs" });
@@ -998,13 +1268,27 @@ void EditTemplate_edit_template_in_included_file(void) {
     test_int(20, ptr[1]);
 
     ecs_fini(world);
-    et_files_fini();
+
+    api = ecs_os_api;
+    api.fopen_ = et_default_fopen;
+    api.fread_ = et_default_fread;
+    api.fclose_ = et_default_fclose;
+    ecs_os_set_api(&api);
+    memset(et_files, 0, sizeof(et_files));
 }
 
 void EditTemplate_source_body_entity_computed_name(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -1016,7 +1300,9 @@ void EditTemplate_source_body_entity_computed_name(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
     test_assert(trunk != 0);
@@ -1031,7 +1317,17 @@ void EditTemplate_source_body_entity_computed_name(void) {
 void EditTemplate_edit_body_for_loop_entity_fails(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "template Tree {"
@@ -1042,7 +1338,9 @@ void EditTemplate_edit_body_for_loop_entity_fails(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t child = ecs_lookup(world, "t1.child_1");
     test_assert(child != 0);
@@ -1064,25 +1362,22 @@ void EditTemplate_edit_body_for_loop_entity_fails(void) {
     ecs_fini(world);
 }
 
-static bool et_has_template(
-    ecs_world_t *world,
-    const char *path,
-    const char *template_name)
-{
-    ecs_entity_t e = ecs_lookup(world, path);
-    test_assert(e != 0);
-    ecs_entity_t t = ecs_lookup(world, template_name);
-    test_assert(t != 0);
-    return ecs_has_pair(world, e, EcsScriptTemplate, t);
-}
-
 void EditTemplate_body_entity_template_pair_in_nested_scopes(void) {
     ecs_world_t *world = ecs_init();
 
-    et_tag(world, "Tag");
-    et_tag(world, "Rel");
-    et_tag(world, "Obj");
-    et_position(world);
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Rel" });
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Obj" });
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -1109,15 +1404,51 @@ void EditTemplate_body_entity_template_pair_in_nested_scopes(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
-    test_bool(true, et_has_template(world, "t1.body", "Tree"));
-    test_bool(true, et_has_template(world, "t1.body.shell", "Tree"));
-    test_bool(true, et_has_template(world, "t1.body.shell.base", "Tree"));
-    test_bool(true, et_has_template(world, "t1.body.shell.cut_0", "Tree"));
-    test_bool(true, et_has_template(world, "t1.body.shell.cut_1", "Tree"));
-    test_bool(true, et_has_template(world, "t1.body.trim", "Tree"));
-    test_bool(true, et_has_template(world, "t1.body.knob", "Tree"));
+    ecs_entity_t e = ecs_lookup(world, "t1.body");
+    test_assert(e != 0);
+    ecs_entity_t t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "t1.body.shell");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "t1.body.shell.base");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "t1.body.shell.cut_0");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "t1.body.shell.cut_1");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "t1.body.trim");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "t1.body.knob");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
 
     test_assert(ecs_has_id(world, ecs_lookup(world, "t1.body.trim"),
         ecs_lookup(world, "Tag")));
@@ -1131,7 +1462,15 @@ void EditTemplate_body_entity_template_pair_in_nested_scopes(void) {
 void EditTemplate_source_body_entity_nested_in_if_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -1151,20 +1490,43 @@ void EditTemplate_source_body_entity_nested_in_if_scope(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t shell = ecs_lookup(world, "t1.body.shell");
     test_assert(shell != 0);
 
-    test_bool(true, et_has_template(world, "t1.body.shell", "Tree"));
-    test_bool(true, et_has_template(world, "t1.body.shell.base", "Tree"));
-    test_bool(true, et_has_template(world, "t1.body.shell.cut_0", "Tree"));
+    ecs_entity_t e = ecs_lookup(world, "t1.body.shell");
+    test_assert(e != 0);
+    ecs_entity_t t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "t1.body.shell.base");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "t1.body.shell.cut_0");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
 
     ecs_script_source_t src = {0};
     test_bool(true, ecs_script_entity_source(script, shell, &src));
     test_uint(ecs_lookup(world, "Tree"), src.template_);
 
-    char *span = et_span(script, shell);
+    ecs_script_source_t src_1 = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, shell, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span,
         "shell {\n"
         "        Position: {1, 2}\n"
@@ -1182,7 +1544,14 @@ void EditTemplate_source_body_entity_nested_in_if_scope(void) {
     test_bool(true, ecs_script_entity_source(script, base, &src));
     test_uint(ecs_lookup(world, "Tree"), src.template_);
 
-    span = et_span(script, base);
+    src_1 = (ecs_script_source_t){0};
+    span = NULL;
+    if (ecs_script_entity_source(script, base, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span, "base { Position: {2, 3} }");
     ecs_os_free(span);
 
@@ -1198,7 +1567,15 @@ void EditTemplate_source_body_entity_nested_in_if_scope(void) {
 void EditTemplate_source_body_entity_in_else_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -1215,7 +1592,9 @@ void EditTemplate_source_body_entity_in_else_scope(void) {
     LINE "Tree t1(big: true)"
     LINE "Tree t2(big: false)";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t shell = ecs_lookup(world, "t1.body.shell");
     test_assert(shell != 0);
@@ -1225,14 +1604,30 @@ void EditTemplate_source_body_entity_in_else_scope(void) {
     test_assert(hollow != 0);
     test_assert(ecs_lookup(world, "t2.body.shell") == 0);
 
-    test_bool(true, et_has_template(world, "t1.body.shell", "Tree"));
-    test_bool(true, et_has_template(world, "t2.body.hollow", "Tree"));
+    ecs_entity_t e = ecs_lookup(world, "t1.body.shell");
+    test_assert(e != 0);
+    ecs_entity_t t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "t2.body.hollow");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
 
     ecs_script_source_t src = {0};
     test_bool(true, ecs_script_entity_source(script, shell, &src));
     test_uint(ecs_lookup(world, "Tree"), src.template_);
 
-    char *span = et_span(script, shell);
+    ecs_script_source_t src_1 = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, shell, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span, "shell { Position: {1, 2} }");
     ecs_os_free(span);
 
@@ -1240,7 +1635,14 @@ void EditTemplate_source_body_entity_in_else_scope(void) {
     test_bool(true, ecs_script_entity_source(script, hollow, &src));
     test_uint(ecs_lookup(world, "Tree"), src.template_);
 
-    span = et_span(script, hollow);
+    src_1 = (ecs_script_source_t){0};
+    span = NULL;
+    if (ecs_script_entity_source(script, hollow, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span, "hollow { Position: {3, 4} }");
     ecs_os_free(span);
 
@@ -1251,8 +1653,17 @@ void EditTemplate_source_body_entity_in_else_scope(void) {
 void EditTemplate_source_body_entity_in_with_scope_nested(void) {
     ecs_world_t *world = ecs_init();
 
-    et_tag(world, "Tag");
-    et_position(world);
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Tag" });
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -1268,19 +1679,37 @@ void EditTemplate_source_body_entity_in_with_scope_nested(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t knot = ecs_lookup(world, "t1.body.trunk.knot");
     test_assert(knot != 0);
 
-    test_bool(true, et_has_template(world, "t1.body.trunk", "Tree"));
-    test_bool(true, et_has_template(world, "t1.body.trunk.knot", "Tree"));
+    ecs_entity_t e = ecs_lookup(world, "t1.body.trunk");
+    test_assert(e != 0);
+    ecs_entity_t t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "t1.body.trunk.knot");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
 
     ecs_script_source_t src = {0};
     test_bool(true, ecs_script_entity_source(script, knot, &src));
     test_uint(ecs_lookup(world, "Tree"), src.template_);
 
-    char *span = et_span(script, knot);
+    ecs_script_source_t src_1 = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(script, knot, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span, "knot { Position: {2, 3} }");
     ecs_os_free(span);
 
@@ -1291,7 +1720,15 @@ void EditTemplate_source_body_entity_in_with_scope_nested(void) {
 void EditTemplate_entity_owner_nested_template_component_assignment(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
         HEAD "template Roof {"
@@ -1329,10 +1766,29 @@ void EditTemplate_entity_owner_nested_template_component_assignment(void) {
     test_assert(shell != 0);
     test_assert(base != 0);
 
-    test_bool(true, et_has_template(world, "h1.roof", "House"));
-    test_bool(true, et_has_template(world, "h1.roof.body", "Roof"));
-    test_bool(true, et_has_template(world, "h1.roof.body.shell", "Roof"));
-    test_bool(true, et_has_template(world, "h1.roof.body.shell.base", "Roof"));
+    ecs_entity_t e = ecs_lookup(world, "h1.roof");
+    test_assert(e != 0);
+    ecs_entity_t t = ecs_lookup(world, "House");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "h1.roof.body");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Roof");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "h1.roof.body.shell");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Roof");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "h1.roof.body.shell.base");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Roof");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
 
     test_uint(s, ecs_script_entity_owner(world, roof));
     test_uint(s, ecs_script_entity_owner(world, body));
@@ -1347,7 +1803,14 @@ void EditTemplate_entity_owner_nested_template_component_assignment(void) {
     test_bool(true, ecs_script_entity_source(sc->script, shell, &src));
     test_uint(ecs_lookup(world, "Roof"), src.template_);
 
-    char *span = et_span(sc->script, shell);
+    ecs_script_source_t src_1 = {0};
+    char *span = NULL;
+    if (ecs_script_entity_source(sc->script, shell, &src_1)) {
+        span = ecs_os_malloc(src_1.length + 1);
+        ecs_os_memcpy(span, &sc->script->code[src_1.offset], src_1.length);
+        span[src_1.length] = '\0';
+    }
+
     test_str(span,
         "shell {\n"
         "        Position: {1, 2}\n"
@@ -1361,7 +1824,15 @@ void EditTemplate_entity_owner_nested_template_component_assignment(void) {
 void EditTemplate_entity_owner_body_entity_in_for_loop_rows(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
         HEAD "template Roof {"
@@ -1401,8 +1872,17 @@ void EditTemplate_entity_owner_body_entity_in_for_loop_rows(void) {
     test_assert(h0 != 0);
     test_assert(h1 != 0);
 
-    test_bool(true, et_has_template(world, "r1.h0", "Row"));
-    test_bool(true, et_has_template(world, "r1.h1", "Row"));
+    ecs_entity_t e = ecs_lookup(world, "r1.h0");
+    test_assert(e != 0);
+    ecs_entity_t t = ecs_lookup(world, "Row");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "r1.h1");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Row");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
 
     test_bool(false, ecs_script_entity_source(sc->script, h0, NULL));
     test_uint(0, ecs_script_entity_owner(world, h0));
@@ -1411,9 +1891,23 @@ void EditTemplate_entity_owner_body_entity_in_for_loop_rows(void) {
     test_assert(shell != 0);
     test_assert(ecs_lookup(world, "r1.h1.roof.body.shell") != 0);
 
-    test_bool(true, et_has_template(world, "r1.h0.roof", "House"));
-    test_bool(true, et_has_template(world, "r1.h0.roof.body", "Roof"));
-    test_bool(true, et_has_template(world, "r1.h0.roof.body.shell", "Roof"));
+    e = ecs_lookup(world, "r1.h0.roof");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "House");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "r1.h0.roof.body");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Roof");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "r1.h0.roof.body.shell");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Roof");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
 
     test_uint(s, ecs_script_entity_owner(world, ecs_lookup(world, "r1.h0.roof")));
     test_uint(s, ecs_script_entity_owner(world, shell));
@@ -1428,7 +1922,15 @@ void EditTemplate_entity_owner_body_entity_in_for_loop_rows(void) {
 void EditTemplate_source_body_entity_not_in_scene_script(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t kit = ecs_script(world, { .ir = ir_enabled, .code =
         HEAD "template Roof {"
@@ -1478,10 +1980,29 @@ void EditTemplate_source_body_entity_not_in_scene_script(void) {
 
     test_uint(scene, ecs_get_target(world, shell, ecs_id(EcsScript), 0));
 
-    test_bool(true, et_has_template(world, "h1.roof", "House"));
-    test_bool(true, et_has_template(world, "h1.roof.body", "Roof"));
-    test_bool(true, et_has_template(world, "h1.roof.body.shell", "Roof"));
-    test_bool(true, et_has_template(world, "h1.roof.body.shell.base", "Roof"));
+    ecs_entity_t e = ecs_lookup(world, "h1.roof");
+    test_assert(e != 0);
+    ecs_entity_t t = ecs_lookup(world, "House");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "h1.roof.body");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Roof");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "h1.roof.body.shell");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Roof");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "h1.roof.body.shell.base");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Roof");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
 
     test_bool(false, ecs_script_entity_source(scene_sc->script, roof, NULL));
     test_bool(false, ecs_script_entity_source(scene_sc->script, body, NULL));
@@ -1506,7 +2027,17 @@ void EditTemplate_source_body_entity_not_in_scene_script(void) {
 void EditTemplate_apply_update_body_entity_in_if_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
         HEAD "template Tree {"
@@ -1557,8 +2088,17 @@ void EditTemplate_apply_update_body_entity_in_if_scope(void) {
         test_int(20, ptr[1]);
     }
 
-    test_bool(true, et_has_template(world, "t1.body.shell", "Tree"));
-    test_bool(true, et_has_template(world, "t2.body.shell", "Tree"));
+    ecs_entity_t e = ecs_lookup(world, "t1.body.shell");
+    test_assert(e != 0);
+    ecs_entity_t t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
+
+    e = ecs_lookup(world, "t2.body.shell");
+    test_assert(e != 0);
+    t = ecs_lookup(world, "Tree");
+    test_assert(t != 0);
+    test_bool(true, ecs_has_pair(world, e, EcsScriptTemplate, t));
 
     ecs_fini(world);
 }
@@ -1566,7 +2106,15 @@ void EditTemplate_apply_update_body_entity_in_if_scope(void) {
 void EditTemplate_delete_body_entity_recorded_before_delete(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -1580,7 +2128,9 @@ void EditTemplate_delete_body_entity_recorded_before_delete(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
     test_assert(trunk != 0);
@@ -1611,7 +2161,15 @@ void EditTemplate_delete_body_entity_recorded_before_delete(void) {
 void EditTemplate_clear_delete_body_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     const char *expr =
     HEAD "template Tree {"
@@ -1625,7 +2183,9 @@ void EditTemplate_clear_delete_body_entity(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
     test_assert(trunk != 0);
@@ -1652,7 +2212,17 @@ void EditTemplate_clear_delete_body_entity(void) {
 void EditTemplate_clear_set_body_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p = et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t p = ecs_id(Position);
 
     const char *expr =
     HEAD "template Tree {"
@@ -1663,7 +2233,9 @@ void EditTemplate_clear_set_body_entity(void) {
     LINE ""
     LINE "Tree t1()";
 
-    ecs_script_t *script = et_parse(world, expr);
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
 
     ecs_entity_t trunk = ecs_lookup(world, "t1.trunk");
     test_assert(trunk != 0);
@@ -1703,7 +2275,15 @@ void EditTemplate_clear_set_body_entity(void) {
 void EditTemplate_apply_update_delete_body_entity_recorded_before_delete(void) {
     ecs_world_t *world = ecs_init();
 
-    et_position(world);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled, .code =
         HEAD "template Tree {"

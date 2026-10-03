@@ -6,7 +6,7 @@
 
 // Dummy system
 void Sys(ecs_iter_t *it) {
-    printf("system %s\n", ecs_get_name(it->world, it->system));
+    printf("system %s\n", ecs_get_name(it->stage, it->system));
 }
 
 int main(int argc, char *argv[]) {

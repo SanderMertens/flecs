@@ -15,7 +15,7 @@ typedef struct test_file_t {
     size_t pos;
 } test_file_t;
 
-#define TEST_FILE_MAX (8)
+#define TEST_FILE_MAX (64)
 
 static test_file_t test_files[TEST_FILE_MAX];
 
@@ -74,7 +74,7 @@ static void test_fclose(FILE *file) {
     }
 }
 
-static void test_files_install_ex(bool with_abort, ecs_os_api_log_t log) {
+void Include_include_cycle(void) {
     memset(test_files, 0, sizeof(test_files));
     test_fopen_remap_from = NULL;
     test_fopen_remap_to = NULL;
@@ -88,40 +88,10 @@ static void test_files_install_ex(bool with_abort, ecs_os_api_log_t log) {
     os_api.fopen_ = test_fopen;
     os_api.fread_ = test_fread;
     os_api.fclose_ = test_fclose;
-    if (with_abort) {
-        os_api.abort_ = test_abort;
-    }
-    if (log) {
-        os_api.log_ = log;
-    }
     ecs_os_set_api(&os_api);
 
-    if (with_abort) {
-        ecs_log_set_level(-5);
-    }
-}
-
-static void test_files_install(void) {
-    test_files_install_ex(false, NULL);
-}
-
-static void test_file_add(const char *name, const char *content) {
-    int32_t i;
-    for (i = 0; i < TEST_FILE_MAX; i ++) {
-        if (!test_files[i].name) {
-            test_files[i].name = name;
-            test_files[i].content = content;
-            test_files[i].pos = 0;
-            return;
-        }
-    }
-    test_assert(false);
-}
-
-void Include_include_cycle(void) {
-    test_files_install();
-    test_file_add("a.flecs", "include b.flecs\nFoo{}\n");
-    test_file_add("b.flecs", "include a.flecs\nBar{}\n");
+    test_files[0] = (test_file_t){ "a.flecs", "include b.flecs\nFoo{}\n", 0 };
+    test_files[1] = (test_file_t){ "b.flecs", "include a.flecs\nBar{}\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -133,9 +103,23 @@ void Include_include_cycle(void) {
 }
 
 void Include_include_simple(void) {
-    test_files_install();
-    test_file_add("child.flecs", "Foo{}\n");
-    test_file_add("parent.flecs", "include child.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "Foo{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -147,9 +131,23 @@ void Include_include_simple(void) {
 }
 
 void Include_include_subdir(void) {
-    test_files_install();
-    test_file_add("sub/child.flecs", "Bar{}\n");
-    test_file_add("parent.flecs", "include sub/child.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "sub/child.flecs", "Bar{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include sub/child.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -160,8 +158,25 @@ void Include_include_subdir(void) {
 }
 
 void Include_include_missing_file(void) {
-    test_files_install_ex(true, NULL);
-    test_file_add("parent.flecs", "include does_not_exist.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    os_api.abort_ = test_abort;
+    ecs_os_set_api(&os_api);
+
+    ecs_log_set_level(-5);
+
+    test_files[0] = (test_file_t){ "parent.flecs", "include does_not_exist.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -171,8 +186,25 @@ void Include_include_missing_file(void) {
 }
 
 void Include_include_parent_dir_not_allowed(void) {
-    test_files_install_ex(true, NULL);
-    test_file_add("parent.flecs", "include ../other.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    os_api.abort_ = test_abort;
+    ecs_os_set_api(&os_api);
+
+    ecs_log_set_level(-5);
+
+    test_files[0] = (test_file_t){ "parent.flecs", "include ../other.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -182,10 +214,24 @@ void Include_include_parent_dir_not_allowed(void) {
 }
 
 void Include_include_relative_to_current_script(void) {
-    test_files_install();
-    test_file_add("sub/b.flecs", "B_entity{}\n");
-    test_file_add("sub/a.flecs", "include b.flecs\n");
-    test_file_add("parent.flecs", "include sub/a.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "sub/b.flecs", "B_entity{}\n", 0 };
+    test_files[1] = (test_file_t){ "sub/a.flecs", "include b.flecs\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include sub/a.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -196,10 +242,24 @@ void Include_include_relative_to_current_script(void) {
 }
 
 void Include_include_nested(void) {
-    test_files_install();
-    test_file_add("c.flecs", "C_entity{}\n");
-    test_file_add("b.flecs", "include c.flecs\nB_entity{}\n");
-    test_file_add("a.flecs", "include b.flecs\nA_entity{}\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "c.flecs", "C_entity{}\n", 0 };
+    test_files[1] = (test_file_t){ "b.flecs", "include c.flecs\nB_entity{}\n", 0 };
+    test_files[2] = (test_file_t){ "a.flecs", "include b.flecs\nA_entity{}\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -212,9 +272,23 @@ void Include_include_nested(void) {
 }
 
 void Include_include_managed_creates_script_entity(void) {
-    test_files_install();
-    test_file_add("child.flecs", "ChildEntity{}\n");
-    test_file_add("parent.flecs", "include child.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "ChildEntity{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
@@ -235,9 +309,23 @@ void Include_include_managed_creates_script_entity(void) {
 }
 
 void Include_include_managed_skips_existing(void) {
-    test_files_install();
-    test_file_add("child.flecs", "ChildEntity{}\n");
-    test_file_add("parent.flecs", "include child.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "ChildEntity{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
@@ -260,9 +348,23 @@ void Include_include_managed_skips_existing(void) {
 }
 
 void Include_include_managed_nested(void) {
-    test_files_install();
-    test_file_add("b.flecs", "BEntity{}\n");
-    test_file_add("a.flecs", "include b.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "b.flecs", "BEntity{}\n", 0 };
+    test_files[1] = (test_file_t){ "a.flecs", "include b.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
@@ -281,9 +383,23 @@ void Include_include_managed_nested(void) {
 }
 
 void Include_include_inline_does_not_create_script_entity(void) {
-    test_files_install();
-    test_file_add("child.flecs", "ChildInline{}\n");
-    test_file_add("parent.flecs", "include child.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "ChildInline{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
@@ -302,8 +418,25 @@ void Include_include_inline_does_not_create_script_entity(void) {
 }
 
 void Include_include_rejects_absolute_unix_path(void) {
-    test_files_install_ex(true, NULL);
-    test_file_add("parent.flecs", "include /etc/passwd\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    os_api.abort_ = test_abort;
+    ecs_os_set_api(&os_api);
+
+    ecs_log_set_level(-5);
+
+    test_files[0] = (test_file_t){ "parent.flecs", "include /etc/passwd\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -313,8 +446,25 @@ void Include_include_rejects_absolute_unix_path(void) {
 }
 
 void Include_include_rejects_windows_drive_letter(void) {
-    test_files_install_ex(true, NULL);
-    test_file_add("parent.flecs", "include C:/foo.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    os_api.abort_ = test_abort;
+    ecs_os_set_api(&os_api);
+
+    ecs_log_set_level(-5);
+
+    test_files[0] = (test_file_t){ "parent.flecs", "include C:/foo.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -324,9 +474,23 @@ void Include_include_rejects_windows_drive_letter(void) {
 }
 
 void Include_include_with_line_comment(void) {
-    test_files_install();
-    test_file_add("child.flecs", "LineCommentEntity{}\n");
-    test_file_add("parent.flecs", "include child.flecs // load the child\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "LineCommentEntity{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs // load the child\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -337,9 +501,23 @@ void Include_include_with_line_comment(void) {
 }
 
 void Include_include_with_block_comment(void) {
-    test_files_install();
-    test_file_add("child.flecs", "BlockCommentEntity{}\n");
-    test_file_add("parent.flecs", "include child.flecs /* load child */\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "BlockCommentEntity{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs /* load child */\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -350,12 +528,28 @@ void Include_include_with_block_comment(void) {
 }
 
 void Include_include_not_allowed_in_template(void) {
-    test_files_install_ex(true, NULL);
-    test_file_add("child.flecs", "TemplateChild{}\n");
-    test_file_add("parent.flecs",
-        "template MyTemplate {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    os_api.abort_ = test_abort;
+    ecs_os_set_api(&os_api);
+
+    ecs_log_set_level(-5);
+
+    test_files[0] = (test_file_t){ "child.flecs", "TemplateChild{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "template MyTemplate {\n"
         "  include child.flecs\n"
-        "}\n");
+        "}\n", 0 };
 
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
@@ -366,12 +560,28 @@ void Include_include_not_allowed_in_template(void) {
 }
 
 void Include_include_not_allowed_in_entity_scope(void) {
-    test_files_install_ex(true, NULL);
-    test_file_add("child.flecs", "Child{}\n");
-    test_file_add("parent.flecs",
-        "Parent {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    os_api.abort_ = test_abort;
+    ecs_os_set_api(&os_api);
+
+    ecs_log_set_level(-5);
+
+    test_files[0] = (test_file_t){ "child.flecs", "Child{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "Parent {\n"
         "  include child.flecs\n"
-        "}\n");
+        "}\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -381,13 +591,29 @@ void Include_include_not_allowed_in_entity_scope(void) {
 }
 
 void Include_include_not_allowed_in_with_scope(void) {
-    test_files_install_ex(true, NULL);
-    test_file_add("child.flecs", "Child{}\n");
-    test_file_add("parent.flecs",
-        "Tag {}\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    os_api.abort_ = test_abort;
+    ecs_os_set_api(&os_api);
+
+    ecs_log_set_level(-5);
+
+    test_files[0] = (test_file_t){ "child.flecs", "Child{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "Tag {}\n"
         "with Tag {\n"
         "  include child.flecs\n"
-        "}\n");
+        "}\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -397,12 +623,28 @@ void Include_include_not_allowed_in_with_scope(void) {
 }
 
 void Include_include_not_allowed_in_if_scope(void) {
-    test_files_install_ex(true, NULL);
-    test_file_add("child.flecs", "Child{}\n");
-    test_file_add("parent.flecs",
-        "if true {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    os_api.abort_ = test_abort;
+    ecs_os_set_api(&os_api);
+
+    ecs_log_set_level(-5);
+
+    test_files[0] = (test_file_t){ "child.flecs", "Child{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "if true {\n"
         "  include child.flecs\n"
-        "}\n");
+        "}\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -412,12 +654,28 @@ void Include_include_not_allowed_in_if_scope(void) {
 }
 
 void Include_include_not_allowed_in_for_scope(void) {
-    test_files_install_ex(true, NULL);
-    test_file_add("child.flecs", "Child{}\n");
-    test_file_add("parent.flecs",
-        "for i in 0 .. 1 {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    os_api.abort_ = test_abort;
+    ecs_os_set_api(&os_api);
+
+    ecs_log_set_level(-5);
+
+    test_files[0] = (test_file_t){ "child.flecs", "Child{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "for i in 0 .. 1 {\n"
         "  include child.flecs\n"
-        "}\n");
+        "}\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -427,9 +685,23 @@ void Include_include_not_allowed_in_for_scope(void) {
 }
 
 void Include_include_auto_appends_extension(void) {
-    test_files_install();
-    test_file_add("child.flecs", "AutoExtEntity{}\n");
-    test_file_add("parent.flecs", "include child\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "AutoExtEntity{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -440,9 +712,23 @@ void Include_include_auto_appends_extension(void) {
 }
 
 void Include_include_auto_appends_extension_subdir(void) {
-    test_files_install();
-    test_file_add("sub/child.flecs", "SubAutoExt{}\n");
-    test_file_add("parent.flecs", "include sub/child\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "sub/child.flecs", "SubAutoExt{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include sub/child\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -453,9 +739,23 @@ void Include_include_auto_appends_extension_subdir(void) {
 }
 
 void Include_include_keeps_explicit_extension(void) {
-    test_files_install();
-    test_file_add("child.flecs", "ExplicitExtEntity{}\n");
-    test_file_add("parent.flecs", "include child.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "ExplicitExtEntity{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -466,9 +766,23 @@ void Include_include_keeps_explicit_extension(void) {
 }
 
 void Include_include_auto_appends_extension_managed(void) {
-    test_files_install();
-    test_file_add("child.flecs", "ManagedAutoExt{}\n");
-    test_file_add("parent.flecs", "include child\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "ManagedAutoExt{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child\n", 0 };
 
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
@@ -489,8 +803,22 @@ void Include_include_auto_appends_extension_managed(void) {
 }
 
 void Include_fopen_override_remaps_filename(void) {
-    test_files_install();
-    test_file_add("actual.flecs", "RemappedEntity{}\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "actual.flecs", "RemappedEntity{}\n", 0 };
     test_fopen_remap_from = "requested.flecs";
     test_fopen_remap_to = "actual.flecs";
 
@@ -521,9 +849,24 @@ static void include_log_error_callback(
 }
 
 void Include_include_managed_eval_error_logged(void) {
-    test_files_install_ex(false, include_log_error_callback);
-    test_file_add("child.flecs", "e {\n Foo: {}\n}\n");
-    test_file_add("parent.flecs", "include child.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    os_api.log_ = include_log_error_callback;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "e {\n Foo: {}\n}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n", 0 };
 
     ecs_log_set_level(-2);
 
@@ -545,9 +888,23 @@ void Include_include_managed_eval_error_logged(void) {
 }
 
 void Include_include_managed_eval_error_set_on_script(void) {
-    test_files_install();
-    test_file_add("child.flecs", "e {\n Foo: {}\n}\n");
-    test_file_add("parent.flecs", "include child.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "e {\n Foo: {}\n}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -572,13 +929,25 @@ void Include_include_managed_eval_error_set_on_script(void) {
 }
 
 void Include_include_using_not_visible_in_parent(void) {
-    test_files_install();
-    test_file_add("child.flecs",
-        "using Foo\n"
-        "child_e { Bar }\n");
-    test_file_add("parent.flecs",
-        "include child.flecs\n"
-        "parent_e { Bar }\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "using Foo\n"
+        "child_e { Bar }\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n"
+        "parent_e { Bar }\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -599,13 +968,25 @@ void Include_include_using_not_visible_in_parent(void) {
 }
 
 void Include_include_managed_using_not_visible_in_parent(void) {
-    test_files_install();
-    test_file_add("child.flecs",
-        "using Foo\n"
-        "child_e { Bar }\n");
-    test_file_add("parent.flecs",
-        "include child.flecs\n"
-        "parent_e { Bar }\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "using Foo\n"
+        "child_e { Bar }\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n"
+        "parent_e { Bar }\n", 0 };
 
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
@@ -634,12 +1015,25 @@ void Include_include_managed_using_not_visible_in_parent(void) {
 }
 
 void Include_include_managed_keeps_implicit_meta_in_parent(void) {
-    test_files_install();
-    test_file_add("child.flecs", "Child{}\n");
-    test_file_add("parent.flecs",
-        "include child.flecs\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "Child{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n"
         "struct Position(x: f32)\n"
-        "e { Position: {10} }\n");
+        "e { Position: {10} }\n", 0 };
 
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
@@ -664,12 +1058,25 @@ void Include_include_managed_keeps_implicit_meta_in_parent(void) {
 }
 
 void Include_include_keeps_implicit_meta_in_parent(void) {
-    test_files_install();
-    test_file_add("child.flecs", "Child{}\n");
-    test_file_add("parent.flecs",
-        "include child.flecs\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "Child{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n"
         "struct Position(x: f32)\n"
-        "e { Position: {10} }\n");
+        "e { Position: {10} }\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -686,18 +1093,29 @@ void Include_include_keeps_implicit_meta_in_parent(void) {
 }
 
 void Include_include_forward_ref_to_later_include_is_retried(void) {
-    test_files_install();
-    test_file_add("user.flecs",
-        "panel { Widget w() }\n"
-        "sibling { Ui: {7} }\n");
-    test_file_add("lib.flecs",
-        "template Widget {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "user.flecs", "panel { Widget w() }\n"
+        "sibling { Ui: {7} }\n", 0 };
+    test_files[1] = (test_file_t){ "lib.flecs", "template Widget {\n"
         "  prop n: i32 = 0\n"
         "  Ui: {n}\n"
-        "}\n");
-    test_file_add("parent.flecs",
-        "include user.flecs\n"
-        "include lib.flecs\n");
+        "}\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include user.flecs\n"
+        "include lib.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -723,12 +1141,25 @@ void Include_include_forward_ref_to_later_include_is_retried(void) {
 }
 
 void Include_const_does_not_cross_include(void) {
-    test_files_install();
-    test_file_add("palette.flecs", "const Amber: Ui = {240}\n");
-    test_file_add("parent.flecs",
-        "include palette.flecs\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "palette.flecs", "const Amber: Ui = {240}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include palette.flecs\n"
         "a { Ui: Amber }\n"
-        "b { Ui: {1} }\n");
+        "b { Ui: {1} }\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -750,17 +1181,28 @@ void Include_const_does_not_cross_include(void) {
 }
 
 void Include_export_const_in_scope_crosses_include(void) {
-    test_files_install();
-    test_file_add("cfg.flecs",
-        "cfg {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "cfg.flecs", "cfg {\n"
         "  export const maxBays: i32 = 4\n"
         "  export const rate: f32 = 1.5\n"
-        "}\n");
-    test_file_add("use.flecs",
-        "d { Text: {text: \"bays {cfg.maxBays} rate {cfg.rate:.1}\"} }\n");
-    test_file_add("parent.flecs",
-        "include cfg.flecs\n"
-        "include use.flecs\n");
+        "}\n", 0 };
+    test_files[1] = (test_file_t){ "use.flecs", "d { Text: {text: \"bays {cfg.maxBays} rate {cfg.rate:.1}\"} }\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include cfg.flecs\n"
+        "include use.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
 
@@ -783,18 +1225,29 @@ void Include_export_const_in_scope_crosses_include(void) {
 }
 
 void Include_include_forward_ref_to_later_include_inline(void) {
-    test_files_install();
-    test_file_add("user.flecs",
-        "panel { Widget w() }\n"
-        "sibling { Ui: {7} }\n");
-    test_file_add("lib.flecs",
-        "template Widget {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "user.flecs", "panel { Widget w() }\n"
+        "sibling { Ui: {7} }\n", 0 };
+    test_files[1] = (test_file_t){ "lib.flecs", "template Widget {\n"
         "  prop n: i32 = 0\n"
         "  Ui: {n}\n"
-        "}\n");
-    test_file_add("parent.flecs",
-        "include user.flecs\n"
-        "include lib.flecs\n");
+        "}\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include user.flecs\n"
+        "include lib.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -824,19 +1277,29 @@ void Include_include_forward_ref_to_later_include_inline(void) {
 }
 
 void Include_include_forward_ref_to_nested_later_include(void) {
-    test_files_install();
-    test_file_add("user.flecs",
-        "panel { Widget w(n: 5) }\n");
-    test_file_add("lib.flecs",
-        "template Widget {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "user.flecs", "panel { Widget w(n: 5) }\n", 0 };
+    test_files[1] = (test_file_t){ "lib.flecs", "template Widget {\n"
         "  prop n: i32 = 0\n"
         "  Ui: {n}\n"
-        "}\n");
-    test_file_add("mid.flecs",
-        "include lib.flecs\n");
-    test_file_add("parent.flecs",
-        "include user.flecs\n"
-        "include mid.flecs\n");
+        "}\n", 0 };
+    test_files[2] = (test_file_t){ "mid.flecs", "include lib.flecs\n", 0 };
+    test_files[3] = (test_file_t){ "parent.flecs", "include user.flecs\n"
+        "include mid.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -871,19 +1334,29 @@ void Include_include_forward_ref_to_nested_later_include(void) {
 }
 
 void Include_include_forward_ref_from_nested_include(void) {
-    test_files_install();
-    test_file_add("user.flecs",
-        "panel { Widget w(n: 5) }\n");
-    test_file_add("mid.flecs",
-        "include user.flecs\n");
-    test_file_add("lib.flecs",
-        "template Widget {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "user.flecs", "panel { Widget w(n: 5) }\n", 0 };
+    test_files[1] = (test_file_t){ "mid.flecs", "include user.flecs\n", 0 };
+    test_files[2] = (test_file_t){ "lib.flecs", "template Widget {\n"
         "  prop n: i32 = 0\n"
         "  Ui: {n}\n"
-        "}\n");
-    test_file_add("parent.flecs",
-        "include mid.flecs\n"
-        "include lib.flecs\n");
+        "}\n", 0 };
+    test_files[3] = (test_file_t){ "parent.flecs", "include mid.flecs\n"
+        "include lib.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -918,22 +1391,32 @@ void Include_include_forward_ref_from_nested_include(void) {
 }
 
 void Include_include_forward_ref_chain_requires_multiple_passes(void) {
-    test_files_install();
-    test_file_add("a.flecs",
-        "pa { B_t x() }\n");
-    test_file_add("b.flecs",
-        "template B_t {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "a.flecs", "pa { B_t x() }\n", 0 };
+    test_files[1] = (test_file_t){ "b.flecs", "template B_t {\n"
         "  Ui: {1}\n"
         "}\n"
-        "pb { C_t y() }\n");
-    test_file_add("c.flecs",
-        "template C_t {\n"
+        "pb { C_t y() }\n", 0 };
+    test_files[2] = (test_file_t){ "c.flecs", "template C_t {\n"
         "  Ui: {2}\n"
-        "}\n");
-    test_file_add("parent.flecs",
-        "include a.flecs\n"
+        "}\n", 0 };
+    test_files[3] = (test_file_t){ "parent.flecs", "include a.flecs\n"
         "include b.flecs\n"
-        "include c.flecs\n");
+        "include c.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -972,14 +1455,25 @@ void Include_include_forward_ref_chain_requires_multiple_passes(void) {
 }
 
 void Include_include_forward_ref_never_resolved_reports_error(void) {
-    test_files_install();
-    test_file_add("user.flecs",
-        "panel { Widget w() }\n");
-    test_file_add("other.flecs",
-        "other_e {}\n");
-    test_file_add("parent.flecs",
-        "include user.flecs\n"
-        "include other.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "user.flecs", "panel { Widget w() }\n", 0 };
+    test_files[1] = (test_file_t){ "other.flecs", "other_e {}\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include user.flecs\n"
+        "include other.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1010,14 +1504,25 @@ void Include_include_forward_ref_never_resolved_reports_error(void) {
 }
 
 void Include_include_forward_ref_never_resolved_inline_reports_error(void) {
-    test_files_install();
-    test_file_add("user.flecs",
-        "panel { Widget w() }\n");
-    test_file_add("other.flecs",
-        "other_e {}\n");
-    test_file_add("parent.flecs",
-        "include user.flecs\n"
-        "include other.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "user.flecs", "panel { Widget w() }\n", 0 };
+    test_files[1] = (test_file_t){ "other.flecs", "other_e {}\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include user.flecs\n"
+        "include other.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1032,16 +1537,26 @@ void Include_include_forward_ref_never_resolved_inline_reports_error(void) {
 }
 
 void Include_include_diamond_evaluates_shared_once(void) {
-    test_files_install();
-    test_file_add("shared.flecs",
-        "_ { Ui: {3} }\n");
-    test_file_add("a.flecs",
-        "include shared.flecs\n");
-    test_file_add("b.flecs",
-        "include shared.flecs\n");
-    test_file_add("parent.flecs",
-        "include a.flecs\n"
-        "include b.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "shared.flecs", "_ { Ui: {3} }\n", 0 };
+    test_files[1] = (test_file_t){ "a.flecs", "include shared.flecs\n", 0 };
+    test_files[2] = (test_file_t){ "b.flecs", "include shared.flecs\n", 0 };
+    test_files[3] = (test_file_t){ "parent.flecs", "include a.flecs\n"
+        "include b.flecs\n", 0 };
 
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
@@ -1068,22 +1583,31 @@ void Include_include_diamond_evaluates_shared_once(void) {
 }
 
 void Include_include_diamond_forward_ref_is_retried(void) {
-    test_files_install();
-    test_file_add("shared.flecs",
-        "_ { Widget w(n: 4) }\n");
-    test_file_add("a.flecs",
-        "include shared.flecs\n");
-    test_file_add("b.flecs",
-        "include shared.flecs\n");
-    test_file_add("lib.flecs",
-        "template Widget {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "shared.flecs", "_ { Widget w(n: 4) }\n", 0 };
+    test_files[1] = (test_file_t){ "a.flecs", "include shared.flecs\n", 0 };
+    test_files[2] = (test_file_t){ "b.flecs", "include shared.flecs\n", 0 };
+    test_files[3] = (test_file_t){ "lib.flecs", "template Widget {\n"
         "  prop n: i32 = 0\n"
         "  Ui: {n}\n"
-        "}\n");
-    test_file_add("parent.flecs",
-        "include a.flecs\n"
+        "}\n", 0 };
+    test_files[4] = (test_file_t){ "parent.flecs", "include a.flecs\n"
         "include b.flecs\n"
-        "include lib.flecs\n");
+        "include lib.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1113,14 +1637,25 @@ void Include_include_diamond_forward_ref_is_retried(void) {
 }
 
 void Include_include_forward_ref_to_struct_in_later_include(void) {
-    test_files_install();
-    test_file_add("use.flecs",
-        "e { Position: {x: 10, y: 20} }\n");
-    test_file_add("types.flecs",
-        "struct Position(x: f32, y: f32)\n");
-    test_file_add("parent.flecs",
-        "include use.flecs\n"
-        "include types.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "use.flecs", "e { Position: {x: 10, y: 20} }\n", 0 };
+    test_files[1] = (test_file_t){ "types.flecs", "struct Position(x: f32, y: f32)\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include use.flecs\n"
+        "include types.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1151,16 +1686,27 @@ void Include_include_forward_ref_to_struct_in_later_include(void) {
 }
 
 void Include_include_forward_ref_to_const_in_later_include(void) {
-    test_files_install();
-    test_file_add("use.flecs",
-        "d { Text: {text: \"bays {cfg.maxBays}\"} }\n");
-    test_file_add("cfg.flecs",
-        "cfg {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "use.flecs", "d { Text: {text: \"bays {cfg.maxBays}\"} }\n", 0 };
+    test_files[1] = (test_file_t){ "cfg.flecs", "cfg {\n"
         "  export const maxBays: i32 = 4\n"
-        "}\n");
-    test_file_add("parent.flecs",
-        "include use.flecs\n"
-        "include cfg.flecs\n");
+        "}\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include use.flecs\n"
+        "include cfg.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1194,15 +1740,26 @@ void Include_include_forward_ref_to_const_in_later_include(void) {
 }
 
 void Include_include_forward_ref_to_entity_in_later_include(void) {
-    test_files_install();
-    test_file_add("use.flecs",
-        "e { (Likes, Bob) }\n");
-    test_file_add("defs.flecs",
-        "Likes {}\n"
-        "Bob {}\n");
-    test_file_add("parent.flecs",
-        "include use.flecs\n"
-        "include defs.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "use.flecs", "e { (Likes, Bob) }\n", 0 };
+    test_files[1] = (test_file_t){ "defs.flecs", "Likes {}\n"
+        "Bob {}\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include use.flecs\n"
+        "include defs.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1232,21 +1789,32 @@ void Include_include_forward_ref_to_entity_in_later_include(void) {
 }
 
 void Include_include_retried_script_keeps_scope_and_components(void) {
-    test_files_install();
-    test_file_add("user.flecs",
-        "parent_e {\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "user.flecs", "parent_e {\n"
         "  Tag\n"
         "  child_e { Widget w(n: 5) }\n"
         "}\n"
-        "sibling_e { Ui: {7} }\n");
-    test_file_add("lib.flecs",
-        "template Widget {\n"
+        "sibling_e { Ui: {7} }\n", 0 };
+    test_files[1] = (test_file_t){ "lib.flecs", "template Widget {\n"
         "  prop n: i32 = 0\n"
         "  Ui: {n}\n"
-        "}\n");
-    test_file_add("parent.flecs",
-        "include user.flecs\n"
-        "include lib.flecs\n");
+        "}\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include user.flecs\n"
+        "include lib.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1297,12 +1865,25 @@ void Include_include_retried_script_keeps_scope_and_components(void) {
 }
 
 void Include_include_error_reports_failing_file(void) {
-    test_files_install();
-    test_file_add("good.flecs", "GoodEntity {}\n");
-    test_file_add("bad.flecs", "BadEntity {\n  ~~~\n}\n");
-    test_file_add("parent.flecs",
-        "include good.flecs\n"
-        "include bad.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "good.flecs", "GoodEntity {}\n", 0 };
+    test_files[1] = (test_file_t){ "bad.flecs", "BadEntity {\n  ~~~\n}\n", 0 };
+    test_files[2] = (test_file_t){ "parent.flecs", "include good.flecs\n"
+        "include bad.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1327,9 +1908,23 @@ void Include_include_error_reports_failing_file(void) {
 }
 
 void Include_include_parse_error_sets_error_on_parent(void) {
-    test_files_install();
-    test_file_add("bad.flecs", "BadEntity {\n  ~~~\n}\n");
-    test_file_add("parent.flecs", "include bad.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "bad.flecs", "BadEntity {\n  ~~~\n}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include bad.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1353,9 +1948,24 @@ void Include_include_parse_error_sets_error_on_parent(void) {
 }
 
 void Include_include_parse_error_logs_error(void) {
-    test_files_install_ex(false, include_log_error_callback);
-    test_file_add("bad.flecs", "BadEntity {\n  ~~~\n}\n");
-    test_file_add("parent.flecs", "include bad.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    os_api.log_ = include_log_error_callback;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "bad.flecs", "BadEntity {\n  ~~~\n}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include bad.flecs\n", 0 };
 
     ecs_log_set_level(-2);
 
@@ -1376,9 +1986,23 @@ void Include_include_parse_error_logs_error(void) {
 }
 
 void Include_include_eval_error_sets_error_on_parent(void) {
-    test_files_install();
-    test_file_add("child.flecs", "e {\n Foo: {}\n}\n");
-    test_file_add("parent.flecs", "include child.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "e {\n Foo: {}\n}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1400,10 +2024,24 @@ void Include_include_eval_error_sets_error_on_parent(void) {
 }
 
 void Include_include_nested_parse_error_sets_error_on_parent(void) {
-    test_files_install();
-    test_file_add("c.flecs", "BadEntity {\n  ~~~\n}\n");
-    test_file_add("b.flecs", "include c.flecs\n");
-    test_file_add("a.flecs", "include b.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "c.flecs", "BadEntity {\n  ~~~\n}\n", 0 };
+    test_files[1] = (test_file_t){ "b.flecs", "include c.flecs\n", 0 };
+    test_files[2] = (test_file_t){ "a.flecs", "include b.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1427,9 +2065,23 @@ void Include_include_nested_parse_error_sets_error_on_parent(void) {
 }
 
 void Include_include_parse_error_run_file_fails(void) {
-    test_files_install();
-    test_file_add("bad.flecs", "BadEntity {\n  ~~~\n}\n");
-    test_file_add("parent.flecs", "include bad.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "bad.flecs", "BadEntity {\n  ~~~\n}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include bad.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1442,15 +2094,28 @@ void Include_include_parse_error_run_file_fails(void) {
 }
 
 void Include_include_nested_index_parse_error_sets_error_on_parent(void) {
-    test_files_install();
-    test_file_add("good1.flecs", "GoodOne {}\n");
-    test_file_add("bad.flecs", "BadEntity {\n  ~~~\n}\n");
-    test_file_add("good2.flecs", "GoodTwo {}\n");
-    test_file_add("index.flecs",
-        "include good1.flecs\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "good1.flecs", "GoodOne {}\n", 0 };
+    test_files[1] = (test_file_t){ "bad.flecs", "BadEntity {\n  ~~~\n}\n", 0 };
+    test_files[2] = (test_file_t){ "good2.flecs", "GoodTwo {}\n", 0 };
+    test_files[3] = (test_file_t){ "index.flecs", "include good1.flecs\n"
         "include bad.flecs\n"
-        "include good2.flecs\n");
-    test_file_add("parent.flecs", "include index.flecs\n");
+        "include good2.flecs\n", 0 };
+    test_files[4] = (test_file_t){ "parent.flecs", "include index.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1472,18 +2137,30 @@ void Include_include_nested_index_parse_error_sets_error_on_parent(void) {
 }
 
 void Include_include_nested_error_reports_position(void) {
-    test_files_install();
-    test_file_add("bad.flecs",
-        "GoodOne {}\n"
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "bad.flecs", "GoodOne {}\n"
         "GoodTwo {}\n"
         "BadEntity {\n"
         "  ~~~\n"
-        "}\n");
-    test_file_add("other.flecs", "OtherEntity {}\n");
-    test_file_add("index.flecs",
-        "include other.flecs\n"
-        "include bad.flecs\n");
-    test_file_add("parent.flecs", "include index.flecs\n");
+        "}\n", 0 };
+    test_files[1] = (test_file_t){ "other.flecs", "OtherEntity {}\n", 0 };
+    test_files[2] = (test_file_t){ "index.flecs", "include other.flecs\n"
+        "include bad.flecs\n", 0 };
+    test_files[3] = (test_file_t){ "parent.flecs", "include index.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1504,22 +2181,32 @@ void Include_include_nested_error_reports_position(void) {
     ecs_fini(world);
 }
 
-static char* include_make_large_script(int32_t lines, const char *last) {
+void Include_include_error_in_large_file_reports_position(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     int32_t i;
-    for (i = 0; i < lines; i ++) {
+    for (i = 0; i < 2000; i ++) {
         ecs_strbuf_appendlit(&buf, "// filler line to grow the script file\n");
     }
-    ecs_strbuf_appendstr(&buf, last);
-    return ecs_strbuf_get(&buf);
-}
+    ecs_strbuf_appendstr(&buf, "BadEntity {\n  ~~~\n}\n");
+    char *bad = ecs_strbuf_get(&buf);
 
-void Include_include_error_in_large_file_reports_position(void) {
-    test_files_install();
-
-    char *bad = include_make_large_script(2000, "BadEntity {\n  ~~~\n}\n");
-    test_file_add("bad.flecs", bad);
-    test_file_add("parent.flecs", "include bad.flecs\n");
+    test_files[0] = (test_file_t){ "bad.flecs", bad, 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include bad.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1544,8 +2231,22 @@ void Include_include_error_in_large_file_reports_position(void) {
 }
 
 void Include_include_missing_file_managed_sets_error_on_parent(void) {
-    test_files_install();
-    test_file_add("parent.flecs", "include does_not_exist.flecs\n");
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "parent.flecs", "include does_not_exist.flecs\n", 0 };
 
     ecs_log_set_level(-4);
 
@@ -1562,6 +2263,301 @@ void Include_include_missing_file_managed_sets_error_on_parent(void) {
         test_assert(s->error != NULL);
         test_assert(strstr(s->error, "does_not_exist.flecs") != NULL);
     }
+
+    ecs_fini(world);
+}
+
+void Include_include_nested_manifest_w_cross_file_refs(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    char *names[6];
+    char *contents[6];
+    ecs_strbuf_t manifest = ECS_STRBUF_INIT;
+    int32_t i;
+
+    ecs_strbuf_appendlit(&manifest, "include cfg.flecs\n");
+
+    for (i = 0; i < 6; i ++) {
+        char buf[64];
+        ecs_os_snprintf(buf, 64, "city/f%d.flecs", i);
+        names[i] = ecs_os_strdup(buf);
+
+        ecs_strbuf_t file = ECS_STRBUF_INIT;
+        ecs_strbuf_append(&file,
+            "grp%d {\n"
+            "  export const v%d: f32 = cfg.pitch * %d\n"
+            "}\n",
+            i, i, i);
+
+        if (i + 1 < 6) {
+            ecs_strbuf_append(&file,
+                "const local%d: f32 = grp%d.v%d + cfg.half\n",
+                i, i + 1, i + 1);
+        } else {
+            ecs_strbuf_append(&file,
+                "const local%d: f32 = cfg.half\n", i);
+        }
+
+        ecs_strbuf_append(&file,
+            "template T%d {\n"
+            "  prop x: f32 = 0\n"
+            "  Position: {x: $x + local%d, y: cfg.half + grp%d.v%d}\n"
+            "}\n",
+            i, i, i, i);
+
+        contents[i] = ecs_strbuf_get(&file);
+        test_files[i] = (test_file_t){ names[i], contents[i], 0 };
+
+        ecs_strbuf_append(&manifest, "include f%d.flecs\n", i);
+    }
+
+    ecs_strbuf_appendlit(&manifest, "include agg.flecs\n");
+
+    ecs_strbuf_t agg = ECS_STRBUF_INIT;
+    ecs_strbuf_appendlit(&agg,
+        "template Agg {\n"
+        "  prop x: f32 = 0\n");
+    for (i = 0; i < 4; i ++) {
+        ecs_strbuf_append(&agg, "  child%d { T%d: {x: $x} }\n", i, i);
+    }
+    ecs_strbuf_appendlit(&agg, "}\n");
+    char *agg_str = ecs_strbuf_get(&agg);
+    char *manifest_str = ecs_strbuf_get(&manifest);
+
+    test_files[6] = (test_file_t){ "city/cfg.flecs", "using flecs.meta\n"
+        "struct Position(x: f32, y: f32)\n"
+        "cfg {\n"
+        "  export const half: f32 = 60\n"
+        "  export const pitch: f32 = 120\n"
+        "}\n", 0 };
+    test_files[7] = (test_file_t){ "city/agg.flecs", agg_str, 0 };
+    test_files[8] = (test_file_t){ "city/city.flecs", manifest_str, 0 };
+    test_files[9] = (test_file_t){ "parent.flecs", "include city/city.flecs\n"
+        "e { Agg: {x: 1} }\n", 0 };
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .filename = "parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t templates[6];
+    for (i = 0; i < 6; i ++) {
+        char buf[64];
+        ecs_os_snprintf(buf, 64, "T%d", i);
+        templates[i] = ecs_lookup(world, buf);
+        test_assert(templates[i] != 0);
+        test_assert(ecs_is_alive(world, templates[i]));
+        test_assert(ecs_has(world, templates[i], EcsScript));
+    }
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    for (i = 0; i < 4; i ++) {
+        char buf[64];
+        ecs_os_snprintf(buf, 64, "e.child%d", i);
+        ecs_entity_t child = ecs_lookup(world, buf);
+        test_assert(child != 0);
+        test_assert(ecs_has_id(world, child, templates[i]));
+    }
+
+    ecs_fini(world);
+
+    for (i = 0; i < 6; i ++) {
+        ecs_os_free(names[i]);
+        ecs_os_free(contents[i]);
+    }
+    ecs_os_free(agg_str);
+    ecs_os_free(manifest_str);
+}
+
+void Include_include_diamond_absolute_path_evaluates_shared_once(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "/tmp/inc/shared.flecs", "_ { Ui: {3} }\n", 0 };
+    test_files[1] = (test_file_t){ "/tmp/inc/a.flecs", "include shared.flecs\n", 0 };
+    test_files[2] = (test_file_t){ "/tmp/inc/b.flecs", "include shared.flecs\n", 0 };
+    test_files[3] = (test_file_t){ "/tmp/inc/parent.flecs", "include a.flecs\n"
+        "include b.flecs\n", 0 };
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .filename = "/tmp/inc/parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t shared = ecs_lookup_path_w_sep(
+        world, 0, "/tmp/inc/shared.flecs", "/", "/", false);
+    test_assert(shared != 0);
+    test_assert(ecs_has(world, shared, EcsScript));
+
+    test_int(ecs_count_id(world, ui), 1);
+
+    ecs_fini(world);
+}
+
+void Include_include_absolute_path_template_from_shared_include(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "/tmp/inc/shared.flecs",
+        "template Base {\n"
+        "  Ui: {3}\n"
+        "}\n", 0 };
+    test_files[1] = (test_file_t){ "/tmp/inc/a.flecs",
+        "include shared.flecs\n"
+        "template Derived {\n"
+        "  Base child\n"
+        "}\n", 0 };
+    test_files[2] = (test_file_t){ "/tmp/inc/b.flecs", "include shared.flecs\n", 0 };
+    test_files[3] = (test_file_t){ "/tmp/inc/parent.flecs",
+        "include a.flecs\n"
+        "include b.flecs\n"
+        "export mut show = false\n"
+        "if show {\n"
+        "  Derived inst\n"
+        "}\n", 0 };
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t ui = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .filename = "/tmp/inc/parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    test_assert(base != 0);
+
+    test_int(ecs_mut_var_set_t(world, "show", ecs_bool_t, {true}), 0);
+
+    test_assert(ecs_lookup(world, "inst") != 0);
+    test_assert(ecs_lookup(world, "inst.child") != 0);
+    test_assert(ecs_has_id(world, ecs_lookup(world, "inst.child"), ui));
+    test_assert(ecs_lookup(world, "Base") == base);
+
+    ecs_fini(world);
+}
+
+void Include_include_absolute_path_unresolved_refs_no_infinite_loop(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    ecs_log_set_level(-4);
+
+    test_files[0] = (test_file_t){ "/tmp/inc/theme.flecs",
+        "module theme\n"
+        "export const spacing = 2\n"
+        "export const pad = 4\n", 0 };
+    test_files[1] = (test_file_t){ "/tmp/inc/a.flecs",
+        "include theme\n"
+        "_ { Ui: {spacing} }\n", 0 };
+    test_files[2] = (test_file_t){ "/tmp/inc/b.flecs",
+        "include theme\n"
+        "_ { Ui: {pad} }\n", 0 };
+    test_files[3] = (test_file_t){ "/tmp/inc/parent.flecs",
+        "include a\n"
+        "include b\n", 0 };
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Ui" }),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .filename = "/tmp/inc/parent.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
 
     ecs_fini(world);
 }

@@ -53,6 +53,7 @@ static ECS_DTOR(EcsConstants, ptr, {
         flecs_constants_dtor(ptr->constants);
         ecs_os_free(ptr->constants);
     }
+
     flecs_ordered_constants_dtor(&ptr->ordered_constants);
 })
 
@@ -95,13 +96,16 @@ static int flecs_constants_insert(
             ecs_err("conflicting constant value for '%s' (other is '%s')",
                 path, c->name);
         }
+
         ecs_os_free(path);
         return -1;
     }
+
     if (!ptr->constants) {
         ptr->constants = ecs_os_malloc_t(ecs_map_t);
         ecs_map_init(ptr->constants, NULL);
     }
+
     ecs_map_init_if(ptr->constants, &world->allocator);
     c = ecs_map_insert_alloc_t(ptr->constants, ecs_enum_constant_t, key);
     *c = (ecs_enum_constant_t){
@@ -219,7 +223,7 @@ static int flecs_add_constant_to_enum(
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, 
             "underlying type is not a type");
         void *cptr = ecs_ensure_id(
-            world, e, ecs_pair(EcsConstant, ut), flecs_ito(size_t, ti->size));
+            ecs_get_stage(world, 0), e, ecs_pair(EcsConstant, ut), flecs_ito(size_t, ti->size));
         ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, ut, cptr);
         int ret = ut_is_unsigned ? ecs_meta_set_uint(&cur, value_unsigned) :
@@ -259,7 +263,7 @@ static int flecs_add_constant_to_bitmask(
         }
 
         const uint32_t *value_ptr = ecs_get_pair_second(
-            world, e, EcsConstant, ecs_u32_t);
+            ecs_get_stage(world, 0), e, EcsConstant, ecs_u32_t);
         ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         value = *value_ptr;
     } else {
@@ -271,11 +275,11 @@ static int flecs_add_constant_to_bitmask(
     }
 
     ecs_u32_t *cptr = ecs_ensure_pair_second(
-        world, e, EcsConstant, ecs_u32_t);
+        ecs_get_stage(world, 0), e, EcsConstant, ecs_u32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
 
-    cptr = ecs_ensure_id(world, e, type, sizeof(uint32_t));
+    cptr = ecs_ensure_id(ecs_get_stage(world, 0), e, type, sizeof(uint32_t));
     cptr[0] = value;
 
     return 0;
@@ -316,13 +320,12 @@ static void flecs_add_enum(ecs_iter_t *it) {
 }
 
 static void flecs_add_bitmask(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
 
-        if (flecs_init_type_t(world, e, EcsBitmaskType, ecs_u32_t)) {
+        if (flecs_init_type_t(it->stage, e, EcsBitmaskType, ecs_u32_t)) {
             continue;
         }
     }
@@ -420,6 +423,7 @@ ecs_entity_t ecs_enum_init(
                     ecs_os_free(path);
                     return 0;
                 }
+
                 ret = ecs_meta_set_int(&cur, m_desc->value);
             } else {
                 if (!ut_is_unsigned) {
@@ -429,6 +433,7 @@ ecs_entity_t ecs_enum_init(
                     ecs_os_free(path);
                     return 0;
                 }
+
                 ret = ecs_meta_set_uint(&cur, m_desc->value_unsigned);
             }
 

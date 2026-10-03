@@ -203,6 +203,7 @@ static void flecs_instantiate_children(
             {
                 childof_base_index ++;
             }
+
             continue;
         }
 
@@ -460,6 +461,7 @@ void flecs_instantiate(
 
         ecs_os_perf_trace_pop("flecs.instantiate");
     }
+
 error:
     return;
 }

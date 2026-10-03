@@ -130,6 +130,7 @@ static ECS_COPY(EcsScriptFunction, dst, src, {
     if (dst->binding_ctx && dst->binding_ctx_free) {
         dst->binding_ctx_free(dst->binding_ctx);
     }
+
     dst->binding_ctx = NULL;
     dst->binding_ctx_free = NULL;
     dst->return_type = src->return_type;
@@ -146,6 +147,7 @@ static ECS_MOVE(EcsScriptFunction, dst, src, {
     if (dst->binding_ctx && dst->binding_ctx_free) {
         dst->binding_ctx_free(dst->binding_ctx);
     }
+
     *dst = *src;
     ecs_os_zeromem(src);
 })
@@ -276,6 +278,7 @@ ecs_value_t flecs_script_global_var_get(
         if (component) {
             component[0] = ecs_id(EcsScriptConstVar);
         }
+
         return cv->value;
     }
 
@@ -284,6 +287,7 @@ ecs_value_t flecs_script_global_var_get(
         if (component) {
             component[0] = ecs_id(EcsScriptMutVar);
         }
+
         return mv->value;
     }
 
@@ -587,6 +591,7 @@ ecs_entity_t ecs_function_init(
     if (result) {
         ecs_modified(world, result, EcsScriptFunction);
     }
+
     return result;
 }
 
@@ -632,6 +637,7 @@ ecs_entity_t ecs_method_init(
     if (result) {
         ecs_modified(world, result, EcsScriptMethod);
     }
+
     return result;
 }
 
@@ -690,6 +696,7 @@ static int flecs_script_function_call(
         if (argc) {
             ecs_os_memcpy_n(&method_argv[1], argv, ecs_value_t, argc);
         }
+
         call_argv = method_argv;
     }
 
@@ -707,6 +714,7 @@ static int flecs_script_function_call(
         if (result_allocated) {
             ecs_value_fini(world, result);
         }
+
         goto error;
     }
 

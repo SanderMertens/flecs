@@ -107,7 +107,8 @@ typedef struct ecs_table_cache_elem_t {
     ecs_table_t *table;                            /* Table associated with element */
     ecs_table_record_t *tr;                        /* Table record for element */
     int16_t column;                                /* Column for the table record */
-    int16_t index;                                 /* Index of element in table cache */
+    int16_t index;                                 /* First type index of the id */
+    int16_t count;                                 /* Number of ids matched in table */
 } ecs_table_cache_elem_t;
 
 /* Convenience struct to iterate a table array for an ID. */
@@ -183,11 +184,23 @@ typedef struct ecs_iter_private_t {
     ecs_stack_cursor_t *stack_cursor; /* Stack cursor to restore to. */
 } ecs_iter_private_t;
 
+typedef struct ecs_cmd_entry_t {
+    int32_t first;
+    int32_t last;
+} ecs_cmd_entry_t;
+
 /* Data structures that store the command queue. */
 typedef struct ecs_commands_t {
+    struct ecs_commands_t *prev;
+    struct ecs_commands_t *next;
     ecs_vec_t queue;
     ecs_stack_t stack;          /* Temp memory used by deferred commands. */
     ecs_sparse_t entries;       /* <entity, op_entry_t> - command batching. */
+    ecs_entity_t entity;
+    ecs_cmd_entry_t entry;
+    int32_t cursor;
+    ecs_entity_t second_entity;
+    ecs_cmd_entry_t second_entry;
 } ecs_commands_t;
 
 #ifdef __cplusplus

@@ -133,6 +133,7 @@ ecs_entity_t ecs_import_from_library(
         if (module != module_name) {
             ecs_os_free(module);
         }
+
         return 0;
     } else {
         ecs_trace("found file '%s' for library '%s'", 

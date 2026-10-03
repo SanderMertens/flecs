@@ -36,6 +36,7 @@ typedef struct ecs_script_eval_visitor_t {
     int32_t scope_slot;
     int32_t for_slot;
     bool force;
+    const ecs_script_template_ref_t *id_ref;
 } ecs_script_eval_visitor_t;
 
 int flecs_script_eval(
@@ -75,6 +76,19 @@ struct flecs_script_entity_state_t {
     int32_t for_slot;
     bool created;
 };
+
+void flecs_script_add_entity_kind(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_entity_t kind,
+    bool w_expr);
+
+void flecs_script_scope_add_ids(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity,
+    ecs_script_scope_t *scope,
+    const ecs_id_t *ids,
+    int32_t count);
 
 FLECS_API
 int flecs_script_eval_entity_enter(
@@ -424,11 +438,24 @@ void flecs_script_track_component(
     int32_t component_slot,
     ecs_id_t component);
 
-const ecs_script_var_t* flecs_script_template_prop_var(
+const ecs_vec_t* flecs_script_vector_prop_vec(
     ecs_script_eval_visitor_t *v,
-    const void *node,
-    int32_t sp,
-    ecs_id_t id);
+    int32_t sp);
+
+typedef enum flecs_script_vector_prop_result_t {
+    FlecsScriptVectorPropOk,
+    FlecsScriptVectorPropOutOfRange,
+    FlecsScriptVectorPropInvalid
+} flecs_script_vector_prop_result_t;
+
+int flecs_script_vector_prop_elem(
+    ecs_script_eval_visitor_t *v,
+    const ecs_vec_t *vec,
+    int32_t index,
+    ecs_entity_t interface,
+    ecs_entity_t *out,
+    int32_t *count_out);
+
 
 bool flecs_script_scope_visited(
     ecs_script_eval_visitor_t *v,

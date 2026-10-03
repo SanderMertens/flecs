@@ -198,6 +198,18 @@ void SystemMisc_register_run_after_callback_ctx(void);
 void SystemMisc_set_group(void);
 void SystemMisc_run_w_query_next(void);
 void SystemMisc_missing_callback(void);
+void SystemMisc_locked_storage_cached(void);
+void SystemMisc_locked_storage_mixed(void);
+void SystemMisc_locked_storage_cached_immediate(void);
+void SystemMisc_locked_storage_mixed_immediate(void);
+void SystemMisc_locked_storage_cached_immediate_w_stage(void);
+void SystemMisc_locked_storage_mixed_immediate_w_stage(void);
+void SystemMisc_locked_storage_cached_other(void);
+void SystemMisc_locked_storage_mixed_other(void);
+void SystemMisc_locked_storage_cached_immediate_other(void);
+void SystemMisc_locked_storage_mixed_immediate_other(void);
+void SystemMisc_locked_storage_cached_immediate_w_stage_other(void);
+void SystemMisc_locked_storage_mixed_immediate_w_stage_other(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -360,9 +372,11 @@ void Run_run_w_param(void);
 void Run_run_no_match(void);
 void Run_run_w_interrupt(void);
 void Run_run_staging(void);
+void Run_run_with_stage(void);
 
 // Testsuite 'MultiThread'
 void MultiThread_setup(void);
+void MultiThread_create_query_from_stage(void);
 void MultiThread_2_thread_1_entity(void);
 void MultiThread_2_thread_2_entity(void);
 void MultiThread_2_thread_5_entity(void);
@@ -1347,6 +1361,54 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "missing_callback",
         SystemMisc_missing_callback
+    },
+    {
+        "locked_storage_cached",
+        SystemMisc_locked_storage_cached
+    },
+    {
+        "locked_storage_mixed",
+        SystemMisc_locked_storage_mixed
+    },
+    {
+        "locked_storage_cached_immediate",
+        SystemMisc_locked_storage_cached_immediate
+    },
+    {
+        "locked_storage_mixed_immediate",
+        SystemMisc_locked_storage_mixed_immediate
+    },
+    {
+        "locked_storage_cached_immediate_w_stage",
+        SystemMisc_locked_storage_cached_immediate_w_stage
+    },
+    {
+        "locked_storage_mixed_immediate_w_stage",
+        SystemMisc_locked_storage_mixed_immediate_w_stage
+    },
+    {
+        "locked_storage_cached_other",
+        SystemMisc_locked_storage_cached_other
+    },
+    {
+        "locked_storage_mixed_other",
+        SystemMisc_locked_storage_mixed_other
+    },
+    {
+        "locked_storage_cached_immediate_other",
+        SystemMisc_locked_storage_cached_immediate_other
+    },
+    {
+        "locked_storage_mixed_immediate_other",
+        SystemMisc_locked_storage_mixed_immediate_other
+    },
+    {
+        "locked_storage_cached_immediate_w_stage_other",
+        SystemMisc_locked_storage_cached_immediate_w_stage_other
+    },
+    {
+        "locked_storage_mixed_immediate_w_stage_other",
+        SystemMisc_locked_storage_mixed_immediate_w_stage_other
     }
 };
 
@@ -1923,10 +1985,18 @@ bake_test_case Run_testcases[] = {
     {
         "run_staging",
         Run_run_staging
+    },
+    {
+        "run_with_stage",
+        Run_run_with_stage
     }
 };
 
 bake_test_case MultiThread_testcases[] = {
+    {
+        "create_query_from_stage",
+        MultiThread_create_query_from_stage
+    },
     {
         "2_thread_1_entity",
         MultiThread_2_thread_1_entity
@@ -2838,7 +2908,6 @@ const char* MultiThread_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThread_params[] = {
     {"worker_kind", (char**)MultiThread_worker_kind_param, 2}
 };
-
 const char* MultiThreadStaging_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThreadStaging_params[] = {
     {"worker_kind", (char**)MultiThreadStaging_worker_kind_param, 2}
@@ -2863,7 +2932,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        79,
+        91,
         SystemMisc_testcases
     },
     {
@@ -2947,14 +3016,14 @@ static bake_test_suite suites[] = {
         "Run",
         Run_setup,
         NULL,
-        5,
+        6,
         Run_testcases
     },
     {
         "MultiThread",
         MultiThread_setup,
         NULL,
-        50,
+        51,
         MultiThread_testcases,
         1,
         MultiThread_params

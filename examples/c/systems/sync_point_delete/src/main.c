@@ -21,8 +21,8 @@ void DeleteEntity(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
         if (p[i].x >= 3) {
             ecs_entity_t e = it->entities[i];
-            printf("Delete entity %s\n", ecs_get_name(it->world, e));
-            ecs_delete(it->world, e);
+            printf("Delete entity %s\n", ecs_get_name(it->stage, e));
+            ecs_delete(it->stage, e);
         }
     }
 }
@@ -31,7 +31,7 @@ void PrintPosition(ecs_iter_t *it) {
     const Position *p = ecs_field(it, const Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
-        printf("%s: {%f, %f}\n", ecs_get_name(it->world, it->entities[i]), 
+        printf("%s: {%f, %f}\n", ecs_get_name(it->stage, it->entities[i]),
             p[i].x, p[i].y);
     }
 }

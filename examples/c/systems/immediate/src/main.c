@@ -21,7 +21,7 @@ ECS_DECLARE(Plate);
 // plate assignments are assigned directly (not deferred) to waiters, which 
 // ensures that we won't assign plates to the same waiter more than once.
 void AssignPlate(ecs_iter_t *it) {
-    ecs_world_t *ecs = it->world;
+    ecs_world_t *ecs = it->stage;
     ecs_query_t *q_waiter = it->ctx; // Get query from system context
 
     // Iterate unassigned plates
@@ -34,29 +34,14 @@ void AssignPlate(ecs_iter_t *it) {
         if (waiter) {
             // An available waiter was found, assign a plate to it so that the
             // next plate will no longer find it.
-            // The defer_suspend function temporarily suspends deferring 
-            // operations, which ensures that our plate is assigned immediately.
-            // Even though this is an immediate system, deferring is still
-            // enabled by default, as adding/removing components to the entities
-            // being iterated would interfere with the system iterator.
-            ecs_defer_suspend(ecs);
-            ecs_add_pair(ecs, waiter, Plate, plate);
-            ecs_defer_resume(ecs);
+            ecs_add_pair(it->world, waiter, Plate, plate);
 
-            // Now that deferring is resumed, we can safely also add the waiter
-            // to the plate. We can't do this while deferring is suspended,
-            // because the plate is the entity we're currently iterating, and
-            // we don't want to move it to a different table while we're 
-            // iterating it.
             ecs_add_pair(ecs, plate, Waiter, waiter);
 
             printf("Assigned %s to %s!\n",
                 ecs_get_name(ecs, waiter),
                 ecs_get_name(ecs, plate));
 
-            // Note that we use defer suspend/resume here instead of end/begin.
-            // This ensures that we don't merge the enqueued commands for the
-            // plates, which shouldn't be merged before we're done iterating.
         } else {
             // No available waiters, can't assign the plate
         }

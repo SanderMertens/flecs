@@ -21,6 +21,7 @@ static int flecs_meta_ser_scalar(
         } else {
             ecs_strbuf_appendlit(str, "false");
         }
+
         break;
     case EcsOpChar: {
         char chbuf[3];
@@ -33,6 +34,7 @@ static int flecs_meta_ser_scalar(
         } else {
             ecs_strbuf_appendch(str, '0');
         }
+
         break;
     }
     case EcsOpByte:
@@ -99,6 +101,7 @@ static int flecs_meta_ser_scalar(
         } else {
             ecs_strbuf_appendlit(str, "null");
         }
+
         break;
     }
     case EcsOpEntity: {
@@ -108,6 +111,7 @@ static int flecs_meta_ser_scalar(
         } else {
             ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str, false);
         }
+
         break;
     }
     case EcsOpId: {
@@ -117,6 +121,7 @@ static int flecs_meta_ser_scalar(
         } else {
             ecs_id_str_buf(world, id, str);
         }
+
         break;
     }
     case EcsOpEnum:
@@ -167,6 +172,7 @@ ecs_entity_t flecs_meta_primitive_type(
     if (kind < EcsBool || kind > EcsPrimitiveKindLast) {
         return 0;
     }
+
     return *types[kind];
 }
 
@@ -176,6 +182,7 @@ ecs_meta_op_kind_t flecs_meta_primitive_to_op_kind(
     if (kind < EcsBool || kind > EcsPrimitiveKindLast) {
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
+
     return (ecs_meta_op_kind_t)(EcsOpPrimitive + (int)kind);
 }
 
@@ -187,11 +194,13 @@ ecs_entity_t flecs_meta_op_kind_to_type(
     } else if (kind == EcsOpI64) {
         kind = EcsOpU64;
     }
+
     ecs_entity_t type = flecs_meta_primitive_type(
         (ecs_primitive_kind_t)(kind - EcsOpPrimitive));
     if (!type) {
         ecs_err("cannot convert kind to type");
     }
+
     return type;
 }
 
@@ -586,6 +595,7 @@ int flecs_meta_parse_enum(
         if (flecs_meta_find_constant(world, constants, value, &constant)) {
             goto error;
         }
+
         *(uint64_t*)out = constant;
         return 0;
     }
