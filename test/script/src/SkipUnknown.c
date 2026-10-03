@@ -9,6 +9,7 @@ void SkipUnknown_setup(void) {
     ir_enabled = ir_param && !strcmp(ir_param, "enabled");
     ir_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled };
     skip_unknown_desc = (ecs_script_eval_desc_t){ .ir = ir_enabled, .skip_unknown = true };
+    ecs_log_set_level(-3);
 }
 
 static int skip_unknown_warn_count = 0;
