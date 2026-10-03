@@ -198,6 +198,18 @@ void SystemMisc_register_run_after_callback_ctx(void);
 void SystemMisc_set_group(void);
 void SystemMisc_run_w_query_next(void);
 void SystemMisc_missing_callback(void);
+void SystemMisc_locked_storage_cached(void);
+void SystemMisc_locked_storage_mixed(void);
+void SystemMisc_locked_storage_cached_immediate(void);
+void SystemMisc_locked_storage_mixed_immediate(void);
+void SystemMisc_locked_storage_cached_immediate_w_stage(void);
+void SystemMisc_locked_storage_mixed_immediate_w_stage(void);
+void SystemMisc_locked_storage_cached_other(void);
+void SystemMisc_locked_storage_mixed_other(void);
+void SystemMisc_locked_storage_cached_immediate_other(void);
+void SystemMisc_locked_storage_mixed_immediate_other(void);
+void SystemMisc_locked_storage_cached_immediate_w_stage_other(void);
+void SystemMisc_locked_storage_mixed_immediate_w_stage_other(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -1349,6 +1361,54 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "missing_callback",
         SystemMisc_missing_callback
+    },
+    {
+        "locked_storage_cached",
+        SystemMisc_locked_storage_cached
+    },
+    {
+        "locked_storage_mixed",
+        SystemMisc_locked_storage_mixed
+    },
+    {
+        "locked_storage_cached_immediate",
+        SystemMisc_locked_storage_cached_immediate
+    },
+    {
+        "locked_storage_mixed_immediate",
+        SystemMisc_locked_storage_mixed_immediate
+    },
+    {
+        "locked_storage_cached_immediate_w_stage",
+        SystemMisc_locked_storage_cached_immediate_w_stage
+    },
+    {
+        "locked_storage_mixed_immediate_w_stage",
+        SystemMisc_locked_storage_mixed_immediate_w_stage
+    },
+    {
+        "locked_storage_cached_other",
+        SystemMisc_locked_storage_cached_other
+    },
+    {
+        "locked_storage_mixed_other",
+        SystemMisc_locked_storage_mixed_other
+    },
+    {
+        "locked_storage_cached_immediate_other",
+        SystemMisc_locked_storage_cached_immediate_other
+    },
+    {
+        "locked_storage_mixed_immediate_other",
+        SystemMisc_locked_storage_mixed_immediate_other
+    },
+    {
+        "locked_storage_cached_immediate_w_stage_other",
+        SystemMisc_locked_storage_cached_immediate_w_stage_other
+    },
+    {
+        "locked_storage_mixed_immediate_w_stage_other",
+        SystemMisc_locked_storage_mixed_immediate_w_stage_other
     }
 };
 
@@ -2848,7 +2908,6 @@ const char* MultiThread_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThread_params[] = {
     {"worker_kind", (char**)MultiThread_worker_kind_param, 2}
 };
-
 const char* MultiThreadStaging_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThreadStaging_params[] = {
     {"worker_kind", (char**)MultiThreadStaging_worker_kind_param, 2}
@@ -2873,7 +2932,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        79,
+        91,
         SystemMisc_testcases
     },
     {
