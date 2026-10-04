@@ -1042,11 +1042,11 @@ e.add(likes, apples);
 e.set(new Eats(1), apples);
 
 // Begin is a tag and Position is a type, so (Begin, Position) has type Position
-e.setSecond(Position.class, begin, (PositionView view) -> {
+e.setSecond(Position.class, begin, (PositionMutView view) -> {
     view.x(0);
     view.y(0);
 });
-e.setSecond(Position.class, end, (PositionView view) -> {
+e.setSecond(Position.class, end, (PositionMutView view) -> {
     view.x(10);
     view.y(20);
 }); // Same for End

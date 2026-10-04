@@ -778,7 +778,7 @@ q.each([](Position& p, const flecs::Parent& parent) {
 Query q = world.query(Position.class, FlecsParent.class);
 
 q.each(Position.class, FlecsParent.class, (p, parent) -> {
-    Position pParent = world.obtainEntityView(parent.value()).get(Position.class);
+    Position pParent = world.obtainEntity(parent.value()).get(Position.class);
     // logic as usual
 });
 ```
@@ -908,7 +908,7 @@ for (int depth = 0; depth < 16; depth++) {
             Field<Position> positions = it.field(Position.class, 0);
             Field<Position> parents = it.field(Position.class, 1);
             for (int i = 0; i < it.count(); i++) {
-                PositionView p = positions.getMutView(i);
+                PositionMutView p = positions.getMutView(i);
                 Position pParent = parents.get(i);
                 p.x(p.x() + pParent.x());
             }
@@ -921,8 +921,8 @@ for (int depth = 0; depth < 16; depth++) {
             Field<Position> positions = it.field(Position.class, 0);
             Field<FlecsParent> parents = it.field(FlecsParent.class, 1);
             for (int i = 0; i < it.count(); i++) {
-                PositionView p = positions.getMutView(i);
-                Position pParent = world.obtainEntityView(parents.get(i).value()).get(Position.class);
+                PositionMutView p = positions.getMutView(i);
+                Position pParent = world.obtainEntity(parents.get(i).value()).get(Position.class);
                 p.x(p.x() + pParent.x());
             }
         }

@@ -1148,10 +1148,10 @@ Entity apples = world.obtainEntity(world.entity()).childOf(food);
 Entity fork = world.obtainEntity(world.entity());
 
 // This is ok, Apples is a child of Food
-Entity a = world.obtainEntity(world.entity()).add(food, apples);
+Entity a = world.obtainEntity(world.entity()).add(food, apples.id());
 
 // This is not ok, Fork is not a child of Food
-Entity b = world.obtainEntity(world.entity()).add(food, fork);
+Entity b = world.obtainEntity(world.entity()).add(food, fork.id());
 ```
 
 </li>
@@ -1244,10 +1244,10 @@ Entity apples = world.obtainEntity(world.entity()).childOf(food);
 Entity fork = world.obtainEntity(world.entity());
 
 // This is ok, Apples is a child of Food
-Entity a = world.obtainEntity(world.entity()).add(eats, apples);
+Entity a = world.obtainEntity(world.entity()).add(eats, apples.id());
 
 // This is not ok, Fork is not a child of Food
-Entity b = world.obtainEntity(world.entity()).add(eats, fork);
+Entity b = world.obtainEntity(world.entity()).add(eats, fork.id());
 ```
 
 </li>
@@ -1539,7 +1539,7 @@ Entity inst = world.obtainEntity(world.entity()).isA(base);
 
 assert !inst.has(Mass.class);
 assert !inst.owns(Mass.class);
-assert inst.get(Mass.class) == null;
+assert inst.tryGet(Mass.class) == null;
 ```
 
 </li>
@@ -2271,7 +2271,7 @@ long marriedTo = world.entity();
 world.obtainEntity(marriedTo).add(Flecs.Symmetric);
 Entity bob = world.obtainEntity(world.entity());
 Entity alice = world.obtainEntity(world.entity());
-bob.add(marriedTo, alice); // Also adds (MarriedTo, Bob) to Alice
+bob.add(marriedTo, alice.id()); // Also adds (MarriedTo, Bob) to Alice
 ```
 
 </li>
@@ -2686,7 +2686,7 @@ Entity loves = world.obtainEntity(world.entity()).add(Flecs.With, likes);
 long pears = world.entity();
 
 // Create new entity with both (Loves, Pears) and (Likes, Pears)
-Entity e = world.obtainEntity(world.entity()).add(loves, pears);
+Entity e = world.obtainEntity(world.entity()).add(loves.id(), pears);
 ```
 
 </li>

@@ -373,7 +373,7 @@ Query q = world.query(Position.class, Velocity.class);
 Queries provide a type safe way to iterate components:
 
 ```java
-q.eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> {
+q.eachView(Position.class, Velocity.class, (PositionMutView p, VelocityView v) -> {
     p.x(p.x() + v.dx());
     p.y(p.y() + v.dy());
 });
@@ -696,14 +696,14 @@ Code ran by a system is deferred by default.
 
 Java has two main iteration functions, `each` and `iter`. The `each` function is the default and most convenient approach for iterating a query in Java. Both `each` and `iter` have several overloads that offer slightly different functionality.
 
-`each` passes immutable component records and is read-only, while `eachView` passes mutable component views (`ComponentView`), which allow updating component values in place. In `run`/`iter` callbacks the same distinction applies between `Field.get(i)` (record) and `Field.getMutView(i)` (view).
+`each` passes immutable component records and is read-only, while `eachView` passes mutable component views (`ComponentMutView`) that allow updating component values in place. In `run`/`iter` callbacks, `Field.get(i)` reads an immutable record, `Field.getView(i)` returns a read-only view and `Field.getMutView(i)` returns a mutable view.
 
 An example:
 
 ```java
 Query q = world.query(Position.class, Velocity.class);
 
-q.eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> {
+q.eachView(Position.class, Velocity.class, (PositionMutView p, VelocityView v) -> {
     p.x(p.x() + v.dx());
     p.y(p.y() + v.dy());
 });
@@ -779,7 +779,7 @@ q.run(it -> {
 
         // Inner loop
         for (int i = 0; i < it.count(); i++) {
-            PositionView p = positions.getMutView(i);
+            PositionMutView p = positions.getMutView(i);
             Velocity v = velocities.get(i);
             p.x(p.x() + v.dx());
             p.y(p.y() + v.dy());
@@ -1069,7 +1069,7 @@ Query q = world.query(Position.class, Velocity.class);
 This changes the returned query type, which determines the type of the function used to iterate the query:
 
 ```java
-q.eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> { });
+q.eachView(Position.class, Velocity.class, (PositionMutView p, VelocityView v) -> { });
 ```
 
 The builder API makes it possible to add components to a query without modifying the query type:
@@ -1566,7 +1566,7 @@ Query q = world.query()
     .build();
 
 // The value of the pair is accessed and mutated with the Eats view
-q.eachView(Eats.class, (EatsView eats) -> {
+q.eachView(Eats.class, (EatsMutView eats) -> {
     eats.value(eats.value() + 1);
 });
 ```
@@ -3182,7 +3182,7 @@ q.run(it -> {
         Field<SimTime> simTimes = it.field(SimTime.class, 2);
 
         for (int i = 0; i < it.count(); i++) {
-            PositionView p = positions.getMutView(i);
+            PositionMutView p = positions.getMutView(i);
             Velocity v = velocities.get(i);
             SimTime st = simTimes.get(0); // fixed source, single value
             p.x(p.x() + v.dx() * st.value());
@@ -3200,7 +3200,7 @@ Query q = world.queryBuilder(Position.class, Velocity.class, SimTime.class)
     .build();
 
 // Because all components are now part of the query terms, we can use eachView
-q.eachView(Position.class, Velocity.class, SimTime.class, (p, v, st) -> {
+q.eachView(Position.class, Velocity.class, SimTime.class, (PositionMutView p, VelocityView v, SimTimeView st) -> {
     p.x(p.x() + v.dx() * st.value());
     p.y(p.y() + v.dy() * st.value());
 });
@@ -3216,24 +3216,24 @@ Query q = world.queryBuilder(SimConfig.class, SimTime.class)
     .termAt(1).src(game)
     .build();
 
-// Ok (note that it.count() will be 0)
+
 q.run(it -> {
     while (it.next()) {
         Field<SimConfig> simConfigs = it.field(SimConfig.class, 0);
         Field<SimTime> simTimes = it.field(SimTime.class, 1);
-        SimTimeView st = simTimes.getMutView(0);
-        SimConfig sc = simConfigs.get(0);
+        SimTimeMutView st = simTimes.getMutView(0);
+        SimConfigView sc = simConfigs.getView(0);
         st.value(st.value() + sc.simSpeed());
     }
 });
 
 // Ok
-q.eachView(SimConfig.class, SimTime.class, (SimConfigView sc, SimTimeView st) -> {
+q.eachView(SimConfig.class, SimTime.class, (SimConfigView sc, SimTimeMutView st) -> {
     st.value(st.value() + sc.simSpeed());
 });
 
 // Ok
-q.eachView(SimConfig.class, SimTime.class, (Iter it, int index, SimConfigView sc, SimTimeView st) -> {
+q.eachView(SimConfig.class, SimTime.class, (Iter it, int index, SimConfigView sc, SimTimeMutView st) -> {
     st.value(st.value() + sc.simSpeed());
 });
 
@@ -3781,7 +3781,7 @@ Entity containedBy = world.obtainEntity(world.entity()).add(Flecs.Traversable);
 
 Entity parent = world.obtainEntity(world.entity()).add(Position.class);
 
-Entity child = world.obtainEntity(world.entity()).add(containedBy, parent);
+Entity child = world.obtainEntity(world.entity()).add(containedBy.id(), parent.id());
 
 Query q = world.queryBuilder(Position.class)
     .termAt(0).up(containedBy.id())
@@ -4048,7 +4048,11 @@ Query q = world.query()
 Alternatively, variables can also be specified using the `var` method:
 
 ```java
-// TODO: term-level .second().var("Location") is not exposed
+Query q = world.query()
+    .with(SpaceShip.class)
+    .with(DockedTo.class).second().var("Location") // matches DockedTo($Location)
+    .with(Planet.class).src().var("Location") // matches Planet($Location)
+    .build();
 ```
 
 An application can constrain the results of the query by setting the variable before starting iteration:
