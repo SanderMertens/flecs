@@ -401,7 +401,7 @@ e1.destruct();
 
 e1.isValid(); // False
 e2.isValid(); // True
-world.obtainEntity(0).isValid(); // False
+world.obtainEntity(100000L).isValid(); // False
 ```
 
 </li>
@@ -899,7 +899,7 @@ Entity e = world.obtainEntity(world.entity("Child")).childOf(p);
 System.out.println(e.name()); // Child
 
 // Returns entity path
-System.out.println(e.path()); // Parent::Child
+System.out.println(e.path()); // ::Parent::Child
 ```
 
 </li>

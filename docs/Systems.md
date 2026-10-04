@@ -82,7 +82,7 @@ world
 ```java
 // System declaration
 FlecsSystem sys = world.system("Move", Position.class, Velocity.class)
-    .eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> {
+    .eachView(Position.class, Velocity.class, (PositionMutView p, VelocityView v) -> {
         p.x(p.x() + v.dx());
         p.y(p.y() + v.dy());
     });
@@ -410,14 +410,14 @@ Note that there is no significant performance difference between `run` and `each
 </li>
 <li><b class="tab-title">Java</b>
 
-Java components are immutable records: `each` passes a read-only record, while `eachView` passes a mutable view. In `run`/`iter` callbacks, `Field.get(i)` reads a record and `Field.getMutView(i)` returns a mutable view.
+Java components are immutable records: `each` passes a read-only record, while `eachView` passes a mutable view (`ComponentMutView`). In `run`/`iter` callbacks, `Field.get(i)` reads a record, `Field.getView(i)` returns a read-only view and `Field.getMutView(i)` returns a mutable view.
 
 ```java
 // Query iteration (each): components are read-only records
 query.each(Position.class, (entityId, p) -> { /* ... */ });
 
 // Query iteration (eachView): components are mutable views
-query.eachView(Position.class, (PositionView p) -> {
+query.eachView(Position.class, (PositionMutView p) -> {
     p.x(p.x() + 1);
 });
 
@@ -427,7 +427,7 @@ world.system("Move", Position.class, Velocity.class)
 
 // System iteration (eachView)
 world.system("Move", Position.class, Velocity.class)
-    .eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> {
+    .eachView(Position.class, Velocity.class, (PositionMutView p, VelocityView v) -> {
         p.x(p.x() + v.dx());
         p.y(p.y() + v.dy());
     });
@@ -440,8 +440,8 @@ query.run(it -> {
         Field<Velocity> velocities = it.field(Velocity.class, 1);
 
         for (int i = 0; i < it.count(); i++) {
-            PositionView p = positions.getMutView(i); // mutable view
-            Velocity v = velocities.get(i); // read-only record
+            PositionMutView p = positions.getMutView(i); // mutable view
+            VelocityView v = velocities.getView(i); // read-only view
             p.x(p.x() + v.dx());
             p.y(p.y() + v.dy());
         }
@@ -456,7 +456,7 @@ world.system("Move", Position.class, Velocity.class)
             Field<Velocity> velocities = it.field(Velocity.class, 1);
 
             for (int i = 0; i < it.count(); i++) {
-                PositionView p = positions.getMutView(i); // mutable view
+                PositionMutView p = positions.getMutView(i); // mutable view
                 Velocity v = velocities.get(i); // read-only record
                 p.x(p.x() + v.dx());
                 p.y(p.y() + v.dy());
@@ -559,7 +559,7 @@ world
 
 ```java
 world.system("Move", Position.class, Velocity.class)
-    .eachView(Position.class, Velocity.class, (Iter it, int index, PositionView p, VelocityView v) -> {
+    .eachView(Position.class, Velocity.class, (Iter it, int index, PositionMutView p, VelocityView v) -> {
         p.x(p.x() + v.dx() * it.deltaTime());
         p.y(p.y() + v.dy() * it.deltaTime());
     });
@@ -571,7 +571,7 @@ world.system("Move", Position.class, Velocity.class)
             Field<Velocity> velocities = it.field(Velocity.class, 1);
 
             for (int i = 0; i < it.count(); i++) {
-                PositionView p = positions.getMutView(i);
+                PositionMutView p = positions.getMutView(i);
                 Velocity v = velocities.get(i);
                 p.x(p.x() + v.dx() * it.deltaTime());
                 p.y(p.y() + v.dy() * it.deltaTime());

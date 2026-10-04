@@ -67,11 +67,11 @@ let world = World::new();
 <li><b class="tab-title">Java</b>
 
 ```java
-World world = new World();
+try (World world = new World()) {
 
-// Do the ECS stuff
+    // Do the ECS stuff
 
-world.destroy();
+}
 ```
 </li>
 </ul>
@@ -391,7 +391,7 @@ e.set(new Position(10, 20))
 Position p = e.get(Position.class);
 
 // Get mutable:
-// PositionView p = e.getMutView(Position.class);
+// PositionMutView p = e.getMutView(Position.class);
 
 // Remove component
 e.remove(Position.class);
@@ -1786,7 +1786,7 @@ q.run(|mut it| {
 
 ```java
 // For simple queries the world each() / eachView() functions can be used
-world.eachView(Position.class, Velocity.class, (PositionView p, VelocityView v) -> {
+world.eachView(Position.class, Velocity.class, (PositionMutView p, VelocityView v) -> {
     p.x(p.x() + v.dx());
     p.y(p.y() + v.dy());
 });
@@ -2012,7 +2012,7 @@ move_sys.run();
 ```java
 // Use the eachView() function that iterates each individual entity
 FlecsSystem moveSys = world.system(Position.class, Velocity.class)
-    .eachView(Position.class, Velocity.class, (Iter it, int index, PositionView p, VelocityView v) -> {
+    .eachView(Position.class, Velocity.class, (Iter it, int index, PositionMutView p, VelocityView v) -> {
         p.x(p.x() + v.dx() * it.deltaTime());
         p.y(p.y() + v.dy() * it.deltaTime());
     });
