@@ -74,6 +74,19 @@ world.set(flecs::rest::Rest::default());
 while world.progress() {}
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Optional, gather statistics for explorer
+world.importModule(Flecs.Stats);
+
+// Creates REST server on default port (27750)
+world.set(new Rest());
+
+// Runs the system serving up REST requests
+while (world.progress()) { }
+```
+</li>
 </ul>
 </div>
 
@@ -127,6 +140,16 @@ world
     .run();
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.app()
+    // Optional, gather statistics for explorer
+    .enableStats()
+    .enableRest()
+    .run();
+```
+</li>
 </ul>
 </div>
 
@@ -164,6 +187,18 @@ if (!json) {
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+World world = new World();
+
+String json = world.toJson();
+if (json == null) {
+    // error
+}
+```
+
+</li>
 </ul>
 </div>
 
@@ -188,6 +223,13 @@ int res = world.from_json(json);
 if (res) {
     // error
 }
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.fromJson(json); // throws on failure
 ```
 
 </li>
@@ -232,6 +274,20 @@ if (res) {
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity()).set(...);
+
+String json = e.toJson();
+if (json == null) {
+    // error
+}
+
+e.fromJson(json); // throws on failure
+```
+
+</li>
 </ul>
 </div>
 
@@ -262,6 +318,18 @@ auto q = world.query<Position, Velocity>();
 
 char *json = q.to_json();
 if (!json) {
+    // error
+}
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.query(Position.class, Velocity.class);
+
+String json = q.toJson();
+if (json == null) {
     // error
 }
 ```
@@ -345,6 +413,19 @@ world.set(flecs::rest::Rest::default());
 while world.progress() {}
 ```
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Optional, gather statistics for explorer
+world.importModule(Flecs.Stats);
+
+// Creates REST server on default port (27750)
+world.set(new Rest());
+
+// Runs the system serving up REST requests
+while (world.progress()) { }
+```
+</li>
 </ul>
 </div>
 
@@ -373,6 +454,17 @@ world.app()
   .enable_stats()
   .enable_rest()
   .run();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.app()
+    // Optional, gather statistics for explorer
+    .enableStats()
+    .enableRest()
+    .run();
 ```
 
 </li>
@@ -516,6 +608,16 @@ auto json = e.to_json();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long e = world.lookup("Sun::Earth");
+
+String json = world.obtainEntity(e).toJson();
+// ...
+```
+
+</li>
 </ul>
 </div>
 
@@ -583,6 +685,18 @@ ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
 desc.serialize_entity_id = true;
 desc.serialize_type_info = true;
 auto json = e.to_json(&desc);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.lookup("Sun::Earth"));
+
+EntityToJsonDesc desc = new EntityToJsonDesc()
+    .serializeEntityId(true)
+    .serializeTypeInfo(true);
+String json = e.toJson(desc);
 ```
 
 </li>
@@ -673,6 +787,17 @@ auto json = e.to_json(&desc);
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.lookup("Sun::Earth"));
+
+EntityToJsonDesc desc = new EntityToJsonDesc()
+    .serializeInherited(true);
+String json = e.toJson(desc);
+```
+
+</li>
 </ul>
 </div>
 
@@ -748,6 +873,15 @@ auto json = e.to_json(&desc);
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long e = world.lookup("Sun::Earth");
+
+String json = world.obtainEntity(e).toJson(false);
+```
+
+</li>
 </ul>
 </div>
 
@@ -806,6 +940,13 @@ flecs::entity e = world.entity("Sun.Earth");
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long e = world.entity("Sun.Earth");
+```
+
+</li>
 </ul>
 </div>
 
@@ -850,6 +991,14 @@ ecs_delete(world, e);
 ```cpp
 flecs::entity e = world.lookup("Sun::Earth");
 e.destruct();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+long e = world.lookup("Sun::Earth");
+world.obtainEntity(e).destruct();
 ```
 
 </li>
@@ -908,6 +1057,15 @@ auto json = world.to_json(c, ptr);
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.lookup("Sun::Earth"));
+long c = world.lookup("planets::Mass");
+String json = e.toJson(c);
+```
+
+</li>
 </ul>
 </div>
 
@@ -961,6 +1119,15 @@ e.add(c);
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.lookup("Sun::Earth"));
+long c = world.lookup("planets::Mass");
+e.add(c);
+```
+
+</li>
 </ul>
 </div>
 
@@ -1002,6 +1169,15 @@ flecs::entity e = world.lookup("Sun::Earth");
 flecs::entity c = world.lookup("planets::Mass");
 void *ptr = e.get_mut(c);
 world.from_json(c, ptr, "{\"x\": 10}");
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.lookup("Sun::Earth"));
+long c = world.lookup("planets::Mass");
+e.fromJson(c, "{\"x\": 10}");
 ```
 
 </li>
@@ -1055,6 +1231,15 @@ e.remove(c);
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.lookup("Sun::Earth"));
+long c = world.lookup("planets::Mass");
+e.remove(c);
+```
+
+</li>
 </ul>
 </div>
 
@@ -1104,6 +1289,14 @@ e.disable();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+long e = world.lookup("Sun::Earth");
+world.obtainEntity(e).disable();
+```
+
+</li>
 </ul>
 </div>
 
@@ -1142,6 +1335,15 @@ ecs_enable_id(world, e, c, false);
 ```cpp
 flecs::entity e = world.lookup("Sun::Earth");
 flecs::entity c = world.lookup("Position");
+e.disable(c);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.lookup("Sun::Earth"));
+long c = world.lookup("Position");
 e.disable(c);
 ```
 
@@ -1226,6 +1428,15 @@ flecs::query<> q = world.query_builder()
   .build();
 
 auto json = q.iter().to_json();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.query().expr("Position, Velocity").build();
+
+String json = q.toJson();
 ```
 
 </li>
@@ -1319,6 +1530,17 @@ flecs::query<> q = world.query_builder()
 ecs_iter_to_json_t desc = ECS_ITER_TO_JSON_INIT;
 desc.serialize_table = true;
 auto json = q.iter().to_json(&desc);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.query().expr("Position, Velocity").build();
+
+IterToJsonDesc desc = new IterToJsonDesc()
+    .serializeTable(true);
+String json = q.toJson(desc);
 ```
 
 </li>
@@ -1420,6 +1642,15 @@ flecs::query<> q = world.query_builder()
   .build();
 
 auto json = q.iter().to_json();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.query().expr("Position, ?Position(up)").build();
+
+String json = q.toJson();
 ```
 
 </li>
@@ -1534,6 +1765,18 @@ auto json = q.iter().to_json(&desc);
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.query().expr("Position, ?Position(up)").build();
+
+IterToJsonDesc desc = new IterToJsonDesc()
+    .serializeFields(true)
+    .serializeEntityIds(true);
+String json = q.toJson(desc);
+```
+
+</li>
 </ul>
 </div>
 
@@ -1603,6 +1846,15 @@ flecs::query<> q = world.query_builder()
   .build();
 
 auto json = q.iter().to_json();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.query().expr("Position, (ChildOf, $p)").build();
+
+String json = q.toJson();
 ```
 
 </li>
@@ -1721,6 +1973,19 @@ desc.serialize_query_info = true;
 desc.serialize_field_info = true;
 desc.serialize_results = true;
 auto json = q.iter().to_json(&desc);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Query q = world.query().expr("Position, ?Mass(up)").build();
+
+IterToJsonDesc desc = new IterToJsonDesc()
+    .serializeQueryInfo(true)
+    .serializeFieldInfo(true)
+    .serializeResults(true);
+String json = q.toJson(desc);
 ```
 
 </li>
@@ -1850,6 +2115,13 @@ ecs_os_free(json);
 
 ```cpp
 auto json = world.to_json();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+String json = world.toJson();
 ```
 
 </li>
@@ -2040,6 +2312,14 @@ ecs_script_update(world, s, 0, "SpaceShip{}");
 ```cpp
 flecs::entity s = world.lookup("main.flecs");
 ecs_script_update(world, s, 0, "SpaceShip{}");
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity s = world.obtainEntity(world.lookup("main.flecs"));
+world.script(null).update(s, "SpaceShip{}");
 ```
 
 </li>

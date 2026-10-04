@@ -77,6 +77,21 @@ world.entity().set(Position { x: 10.0, y: 20.0 }); // Invokes observer
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Create observer that is invoked whenever Position is set
+world.observer()
+    .event(Flecs.OnSet)
+    .with(Position.class)
+    .each(Position.class, (entityId, position) -> {
+        System.out.println("Position set: {" + position.x() + ", " + position.y() + "}");
+    });
+
+world.obtainEntity(world.entity()).set(new Position(10, 20)); // Invokes observer
+```
+
+</li>
 </ul>
 </div>
 
@@ -187,6 +202,19 @@ e.add::<Position>();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity());
+
+// OnAdd observer fires
+e.add(Position.class);
+
+// OnAdd observer doesn't fire, entity already has component
+e.add(Position.class);
+```
+
+</li>
 </ul>
 </div>
 
@@ -249,6 +277,19 @@ e.set(Position { x: 10.0, y: 20.0 });
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity());
+
+// OnAdd observer fires first, then OnSet observer fires
+e.set(new Position(10, 20));
+
+// OnAdd observer doesn't fire, OnSet observer fires
+e.set(new Position(10, 20));
+```
+
+</li>
 </ul>
 </div>
 
@@ -298,6 +339,16 @@ let p = world.prefab().set(Position { x: 10.0, y: 20.0 });
 
 // Produces OnSet event for Position
 let i = world.entity().is_a_id(p);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity p = world.obtainEntity(world.prefab()).set(new Position(10, 20));
+
+// Produces OnSet event for Position
+Entity i = world.obtainEntity(world.entity()).isA(p);
 ```
 
 </li>
@@ -378,6 +429,22 @@ i.remove::<Position>();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity p = world.obtainEntity(world.prefab()).set(new Position(10, 20));
+
+// Produces OnSet event for inherited Position component
+Entity i = world.obtainEntity(world.entity()).isA(p);
+
+// Override component. Produces regular OnSet event.
+i.set(new Position(20, 30));
+
+// Reexposes inherited component, produces OnSet event
+i.remove(Position.class);
+```
+
+</li>
 </ul>
 </div>
 
@@ -426,6 +493,16 @@ let p = world.prefab().set(Position { x: 10.0, y: 20.0 });
 
 // Produces OnSet event for Position
 let i = world.entity().is_a_id(p);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity p = world.obtainEntity(world.prefab()).set(new Position(10, 20));
+
+// Produces OnSet event for Position
+Entity i = world.obtainEntity(world.entity()).isA(p);
 ```
 
 </li>
@@ -489,6 +566,19 @@ e.remove::<Position>();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity()).set(new Position(10, 20));
+
+// OnRemove observer fires
+e.remove(Position.class);
+
+// OnRemove observer doesn't fire, entity doesn't have the component
+e.remove(Position.class);
+```
+
+</li>
 </ul>
 </div>
 
@@ -546,6 +636,20 @@ world
     .each_entity(|e, p| {
 // ...
 });
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Observer that listens for both OnAdd and OnRemove events
+world.observer()
+    .event(Flecs.OnAdd)
+    .event(Flecs.OnRemove)
+    .with(Position.class)
+    .each(Position.class, (entityId, position) -> {
+        // ...
+    });
 ```
 
 </li>
@@ -618,6 +722,22 @@ world
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.observer(Position.class)
+    .event(Flecs.OnAdd)
+    .event(Flecs.OnRemove)
+    .each(Position.class, (Iter it, int index, Position p) -> {
+        if (it.event() == Flecs.OnAdd) {
+            // ...
+        } else if (it.event() == Flecs.OnRemove) {
+            // ...
+        }
+    });
+```
+
+</li>
 </ul>
 </div>
 
@@ -669,6 +789,19 @@ world.Observer<Position>()
 world
     .observer::<flecs::Wildcard, &Position>()
     .each_entity(|e, p| {
+        // ...
+    });
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Observer that listens for all events for Position
+world.observer()
+    .event(Flecs.Wildcard)
+    .with(Position.class)
+    .each(Position.class, (entityId, position) -> {
         // ...
     });
 ```
@@ -740,6 +873,18 @@ world
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Observer that listens for entities with both Position and Velocity
+world.observer(Position.class, Velocity.class)
+    .event(Flecs.OnAdd)
+    .each(Position.class, Velocity.class, (entityId, position, velocity) -> {
+        // ...
+    });
+```
+
+</li>
 </ul>
 </div>
 
@@ -796,6 +941,19 @@ e.add::<Position>();
 
 // Entity now matches "Position, Velocity" query, triggers observer
 e.add::<Velocity>();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+Entity e = world.obtainEntity(world.entity());
+
+// Does not trigger "Position, Velocity" observer
+e.add(Position.class);
+
+// Entity now matches "Position, Velocity" query, triggers observer
+e.add(Velocity.class);
 ```
 
 </li>
@@ -909,6 +1067,30 @@ e.set(Position { x: 20.0, y: 30.0 });
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Observer that only triggers on Position, not on Velocity
+world.observer(Position.class)
+    .with(Velocity.class).filter()
+    .event(Flecs.OnAdd)
+    .each(Position.class, (entityId, position) -> {
+        // ...
+    });
+
+Entity e = world.obtainEntity(world.entity());
+
+// Doesn't trigger, entity doesn't have Velocity
+e.set(new Position(10, 20));
+
+// Doesn't trigger, Velocity is a filter term
+e.set(new Velocity(1, 2));
+
+// Triggers, entity now matches observer query
+e.set(new Position(20, 30));
+```
+
+</li>
 </ul>
 </div>
 
@@ -999,6 +1181,26 @@ world
     .with_first_name::<DockedTo>("$object")
     .with::<Planet>().set_src_name("$object")
     .each_entity(|e| {
+        // ...
+    });
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Observer that listens for spaceships docked to planets. The observer triggers
+// only when the SpaceShip tag or DockedTo pair is added to an entity. It will
+// not trigger when Planet is added to the target of a DockedTo pair.
+//
+// The DSL notation for this query is
+//   SpaceShip, (DockedTo, $object), Planet($object)
+world.observer()
+    .with(SpaceShip.class)
+    .with(DockedTo.class, "objectt")
+    .with(Planet.class).src("$object")
+    .event(Flecs.OnAdd)
+    .each(entityId -> {
         // ...
     });
 ```
@@ -1111,6 +1313,30 @@ e.set(Position { x: 20.0, y: 30.0 });
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// OnSet observer with both component and tag
+world.observer(Position.class)
+    .with(Npc.class) // Tag
+    .event(Flecs.OnSet)
+    .each(Position.class, (entityId, position) -> {
+        // ...
+    });
+
+Entity e = world.obtainEntity(world.entity());
+
+// Doesn't trigger, entity doesn't have Npc
+e.set(new Position(10, 20));
+
+// Produces and OnAdd event & triggers observer
+e.add(Npc.class);
+
+// Produces an OnSet event & triggers observer
+e.set(new Position(20, 30));
+```
+
+</li>
 </ul>
 </div>
 
@@ -1215,6 +1441,30 @@ e.set(Velocity { x: 1.0, y: 2.0 });
 
 // Triggers the observer, as the Velocity term was inverted to OnRemove
 e.remove::<Velocity>();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Observer with a Not term
+world.observer(Position.class)
+    .without(Velocity.class)
+    .event(Flecs.OnAdd)
+    .each(Position.class, (entityId, position) -> {
+        // ...
+    });
+
+Entity e = world.obtainEntity(world.entity());
+
+// Triggers the observer
+e.set(new Position(10, 20));
+
+// Doesn't trigger the observer, entity doesn't match the observer query
+e.set(new Velocity(1, 2));
+
+// Triggers the observer, as the Velocity term was inverted to OnRemove
+e.remove(Velocity.class);
 ```
 
 </li>
@@ -1373,6 +1623,39 @@ e.remove::<Position>();
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Monitor observer for Position, (ChildOf, *)
+world.observer(Position.class)
+    .with(Flecs.ChildOf, Flecs.Wildcard)
+    .event(Flecs.Monitor)
+    .each(Position.class, (Iter it, int index, Position p) -> {
+        if (it.event() == Flecs.OnAdd) {
+            // Entity started matching query
+        } else if (it.event() == Flecs.OnRemove) {
+            // Entity stopped matching query
+        }
+    });
+
+Entity pA = world.obtainEntity(world.entity());
+Entity pB = world.obtainEntity(world.entity());
+Entity e = world.obtainEntity(world.entity());
+
+// Doesn't trigger the monitor, entity doesn't match
+e.set(new Position(10, 20));
+
+// Entity now matches, triggers monitor with OnAdd event
+e.childOf(pA);
+
+// Entity still matches the query, monitor doesn't trigger
+e.childOf(pB);
+
+// Entity no longer matches, triggers monitor with OnRemove event
+e.remove(Position.class);
+```
+
+</li>
 </ul>
 </div>
 
@@ -1479,6 +1762,27 @@ let e2 = world.entity().set(Position { x: 10.0, y: 20.0 });
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Entity created before the observer
+Entity e1 = world.obtainEntity(world.entity()).set(new Position(10, 20));
+
+// Yield existing observer
+world.observer(Position.class, Velocity.class)
+    .event(Flecs.OnAdd)
+    .yieldExisting()
+    .each(Position.class, Velocity.class, (Iter it, int index, Position position, Velocity velocity) -> {
+        // ...
+    });
+
+// Observer is invoked for e1
+
+// Fires observer as usual
+Entity e2 = world.obtainEntity(world.entity()).set(new Position(10, 20));
+```
+
+</li>
 </ul>
 </div>
 
@@ -1534,6 +1838,19 @@ world.observer<Position, Velocity>()
 
 ```rust
 // TODO
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Yield existing observer that only yields on observer deletion
+world.observer(Position.class, Velocity.class)
+    .event(Flecs.OnAdd)
+    .observerFlags(Flecs.ObserverYieldOnDelete)
+    .each(Position.class, Velocity.class, (Iter it, int index, Position position, Velocity velocity) -> {
+        // ...
+    });
 ```
 
 </li>
@@ -1636,6 +1953,28 @@ let e = world.entity().set(TimeOfDay { value: 0.0 });
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Entity used for fixed source
+Entity game = world.obtainEntity(world.entity()).set(new TimeOfDay(0));
+
+// Observer with fixed source
+world.observer(TimeOfDay.class)
+    .termAt(0).src(game) // Match TimeOfDay on Game
+    .event(Flecs.OnSet)
+    .each(TimeOfDay.class, (Iter it, int index, TimeOfDay t) -> {
+        // ...
+    });
+
+// Triggers observer
+game.set(new TimeOfDay(1));
+
+// Does not trigger observer
+Entity e = world.obtainEntity(world.entity()).set(new TimeOfDay(0));
+```
+
+</li>
 </ul>
 </div>
 
@@ -1726,6 +2065,25 @@ parent.set(Position { x: 10.0, y: 20.0 });
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Create an observer that matches OnSet(Position) events on self and a parent
+world.observer(Position.class)
+    .termAt(0).self().up() // .trav(Flecs.ChildOf) (default)
+    .event(Flecs.OnSet)
+    .each(Position.class, (entityId, position) -> {
+        // ...
+    });
+
+Entity parent = world.obtainEntity(world.entity());
+Entity child = world.obtainEntity(world.entity()).childOf(parent);
+
+// Invokes observer twice: once for the parent and once for the child
+parent.set(new Position(10, 20));
+```
+
+</li>
 </ul>
 </div>
 
@@ -1812,6 +2170,24 @@ let parent = world.entity().set(Position { x: 10.0, y: 20.0 });
 
 // Forwards OnAdd event for Position to child
 let child = world.entity().child_of_id(parent);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Create an observer that matches OnAdd(Position) events on a parent
+world.observer(Position.class)
+    .termAt(0).up() // .trav(Flecs.ChildOf) (default)
+    .event(Flecs.OnAdd)
+    .each(Position.class, (entityId, position) -> {
+        // ...
+    });
+
+Entity parent = world.obtainEntity(world.entity()).set(new Position(10, 20));
+
+// Forwards OnAdd event for Position to child
+Entity child = world.obtainEntity(world.entity()).childOf(parent);
 ```
 
 </li>
@@ -1951,6 +2327,29 @@ world
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Create a custom event
+long synchronizedEvent = world.entity();
+
+// Alternatively, a component can also be used as event
+
+// Create an observer that matches a custom event
+world.observer()
+    .event(synchronizedEvent)
+    .with(Position.class)
+    .each(entityId -> {
+        // ...
+    });
+
+Entity e = world.obtainEntity(world.entity()).set(new Position(10, 20));
+
+// Emit custom event
+e.emit(synchronizedEvent, Position.class);
+```
+
+</li>
 </ul>
 </div>
 
@@ -2041,6 +2440,25 @@ widget.observe::<Clicked>(|| {
 
 // Emit entity event
 widget.emit(&Clicked);
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Create a custom event
+long clicked = world.entity();
+
+// Create entity
+Entity widget = world.obtainEntity(world.entity("widget"));
+
+// Create an entity observer
+widget.observe(clicked, () -> {
+    // ...
+});
+
+// Emit entity event
+widget.emit(clicked);
 ```
 
 </li>
@@ -2146,6 +2564,26 @@ height: 200,
 ```
 
 </li>
+<li><b class="tab-title">Java</b>
+
+```java
+// Create a custom event (a component used as event)
+@Component
+record Resize(float width, float height) { }
+
+// Create entity
+Entity widget = world.obtainEntity(world.entity("widget"));
+
+// Create an entity observer
+widget.observe(Resize.class, resize -> {
+    // ...
+});
+
+// Emit entity event with payload
+widget.emit(Resize.class, new Resize(100, 200));
+```
+
+</li>
 </ul>
 </div>
 
@@ -2235,6 +2673,25 @@ world.defer_begin();
 e.set(Position { x: 20.0, y: 30.0 });
 // Operation is delayed until here, observer is also invoked here
 world.defer_end();
+```
+
+</li>
+<li><b class="tab-title">Java</b>
+
+```java
+world.observer(Position.class)
+    .event(Flecs.OnSet)
+    .each(Position.class, (entityId, position) -> {
+        // ...
+    });
+
+// Observer is invoked as part of operation
+e.set(new Position(10, 20));
+
+world.deferBegin();
+e.set(new Position(20, 30));
+// Operation is delayed until here, observer is also invoked here
+world.deferEnd();
 ```
 
 </li>
