@@ -337,11 +337,13 @@ const ecs_entity_t* flecs_bulk_new(
                     ptr = flecs_component_sparse_get(
                         world, cr, table, entities[e]);
 
+                    ECS_TABLE_LOCK(world, table);
                     if (is_move) {
                         flecs_type_info_move(ptr, src_ptr, 1, ti);
                     } else {
                         flecs_type_info_copy(ptr, src_ptr, 1, ti);
                     }
+                    ECS_TABLE_UNLOCK(world, table);
 
                     flecs_notify_on_set(world, table, row + e, id, true, ptr);
 
@@ -366,11 +368,13 @@ const ecs_entity_t* flecs_bulk_new(
                 ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
                 ptr = ECS_ELEM(column->data, size, row);
 
+                ECS_TABLE_LOCK(world, table);
                 if (is_move) {
                     flecs_type_info_move(ptr, src_ptr, count, ti);
                 } else {
                     flecs_type_info_copy(ptr, src_ptr, count, ti);
                 }
+                ECS_TABLE_UNLOCK(world, table);
             }
         };
 
@@ -834,7 +838,9 @@ static void flecs_copy_id(
             world, r->table, entity, component, dst_ptr, src_ptr, ti);
     }
 
+    ECS_TABLE_LOCK(world, r->table);
     flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
+    ECS_TABLE_UNLOCK(world, r->table);
 
     flecs_table_mark_dirty(world, r->table, component);
 
@@ -1520,7 +1526,9 @@ ecs_entity_t ecs_clone(
 
             const void *src_ptr = ecs_get_id(world, src, component);
             const ecs_type_info_t *ti = dst_table->data.columns[i].ti;
+            ECS_TABLE_LOCK(world, dst_table);
             flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
+            ECS_TABLE_UNLOCK(world, dst_table);
 
             flecs_notify_on_set(world, dst_table, row, component, true,
                 dst_ptr);
@@ -1981,12 +1989,14 @@ void flecs_set_id_move(
             world, r->table, entity, component, dst.ptr, ptr, ti);
     }
 
+    ECS_TABLE_LOCK(world, r->table);
     if (cmd_kind != EcsCmdEmplace) {
         /* ctor will have happened by ensure */
         flecs_type_info_move_dtor(dst.ptr, ptr, 1, ti);
     } else {
         flecs_type_info_ctor_move_dtor(dst.ptr, ptr, 1, ti);
     }
+    ECS_TABLE_UNLOCK(world, r->table);
 
     flecs_table_mark_dirty(world, r->table, component);
 

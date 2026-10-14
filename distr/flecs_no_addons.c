@@ -4388,7 +4388,9 @@ static FLECS_ALWAYS_INLINE void* flecs_defer_set_impl(
         }
 
         if (copy) {
+            ECS_TABLE_LOCK(world, r->table);
             flecs_type_info_copy(ptr.ptr, value, 1, ti);
+            ECS_TABLE_UNLOCK(world, r->table);
         }
     }
 
@@ -4848,10 +4850,12 @@ static void flecs_cmd_batch_for_entity(
                     }
 
                     bool move_hook = ti->hooks.move != NULL;
+                    ECS_TABLE_LOCK(world, r->table);
                     flecs_type_info_move(dst.ptr, ptr, 1, ti);
                     if (move_hook) {
                         flecs_type_info_dtor(ptr, 1, ti);
                     }
+                    ECS_TABLE_UNLOCK(world, r->table);
 
                     flecs_stack_free(ptr, cmd->is._1.size);
                     cmd->is._1.value = NULL;
@@ -5297,7 +5301,9 @@ void flecs_invoke_hook(
     it.offset = row;
     it.flags = EcsIterIsValid;
 
+    ECS_TABLE_LOCK(world, table);
     hook(&it);
+    ECS_TABLE_UNLOCK(world, table);
 
 }
 
@@ -5338,7 +5344,9 @@ void flecs_invoke_replace_hook(
     it.offset = 0; /* Don't set row because we don't want to offset ptrs */
     it.flags = EcsIterIsValid;
 
+    ECS_TABLE_LOCK(world, table);
     ti->hooks.on_replace(&it);
+    ECS_TABLE_UNLOCK(world, table);
 
 }
 
@@ -6482,11 +6490,13 @@ const ecs_entity_t* flecs_bulk_new(
                     ptr = flecs_component_sparse_get(
                         world, cr, table, entities[e]);
 
+                    ECS_TABLE_LOCK(world, table);
                     if (is_move) {
                         flecs_type_info_move(ptr, src_ptr, 1, ti);
                     } else {
                         flecs_type_info_copy(ptr, src_ptr, 1, ti);
                     }
+                    ECS_TABLE_UNLOCK(world, table);
 
                     flecs_notify_on_set(world, table, row + e, id, true, ptr);
 
@@ -6511,11 +6521,13 @@ const ecs_entity_t* flecs_bulk_new(
                 ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
                 ptr = ECS_ELEM(column->data, size, row);
 
+                ECS_TABLE_LOCK(world, table);
                 if (is_move) {
                     flecs_type_info_move(ptr, src_ptr, count, ti);
                 } else {
                     flecs_type_info_copy(ptr, src_ptr, count, ti);
                 }
+                ECS_TABLE_UNLOCK(world, table);
             }
         };
 
@@ -6979,7 +6991,9 @@ static void flecs_copy_id(
             world, r->table, entity, component, dst_ptr, src_ptr, ti);
     }
 
+    ECS_TABLE_LOCK(world, r->table);
     flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
+    ECS_TABLE_UNLOCK(world, r->table);
 
     flecs_table_mark_dirty(world, r->table, component);
 
@@ -7665,7 +7679,9 @@ ecs_entity_t ecs_clone(
 
             const void *src_ptr = ecs_get_id(world, src, component);
             const ecs_type_info_t *ti = dst_table->data.columns[i].ti;
+            ECS_TABLE_LOCK(world, dst_table);
             flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
+            ECS_TABLE_UNLOCK(world, dst_table);
 
             flecs_notify_on_set(world, dst_table, row, component, true,
                 dst_ptr);
@@ -8126,12 +8142,14 @@ void flecs_set_id_move(
             world, r->table, entity, component, dst.ptr, ptr, ti);
     }
 
+    ECS_TABLE_LOCK(world, r->table);
     if (cmd_kind != EcsCmdEmplace) {
         /* ctor will have happened by ensure */
         flecs_type_info_move_dtor(dst.ptr, ptr, 1, ti);
     } else {
         flecs_type_info_ctor_move_dtor(dst.ptr, ptr, 1, ti);
     }
+    ECS_TABLE_UNLOCK(world, r->table);
 
     flecs_table_mark_dirty(world, r->table, component);
 
@@ -29520,9 +29538,11 @@ static void flecs_table_dtor_all(
     /* If table has components with destructors, iterate component columns */
     if (table->flags & EcsTableHasDtors) {
         /* Destruct components */
+        ECS_TABLE_LOCK(world, table);
         for (c = 0; c < column_count; c++) {
             flecs_table_invoke_dtor(&table->data.columns[c], 0, count);
-        }       
+        }
+        ECS_TABLE_UNLOCK(world, table);
 
         for (i = 0; i < count; i ++) {
             /* Update entity index after invoking destructors so that entity can
@@ -29951,6 +29971,7 @@ static FLECS_ALWAYS_INLINE int32_t flecs_table_grow_data(
     table->data.count = entities.count;
     table->data.size = entities.size;
 
+    ECS_TABLE_LOCK(world, table);
     for (int32_t i = 0; i < table->column_count; i ++) {
         ecs_column_t *column = &table->data.columns[i];
         const ecs_type_info_t *ti = column->ti;
@@ -29964,6 +29985,7 @@ static FLECS_ALWAYS_INLINE int32_t flecs_table_grow_data(
                 EcsOnAdd, column, e, count, to_add);
         }
     }
+    ECS_TABLE_UNLOCK(world, table);
 
     for (int32_t i = 0; i < table->_->bs_count; i ++) {
         flecs_bitset_addn(&table->_->bs_columns[i], to_add);
@@ -30096,6 +30118,8 @@ void flecs_table_delete(
         return;
     }
 
+    ECS_TABLE_LOCK(world, table);
+
     /* Last element, destruct & remove */
     if (row == count) {
         /* If table has component destructors, invoke */
@@ -30146,6 +30170,8 @@ void flecs_table_delete(
             flecs_table_fast_delete(table, row);
         }
     }
+
+    ECS_TABLE_UNLOCK(world, table);
 
     /* Remove elements from bitset columns */
     ecs_table__t *meta = table->_;
@@ -30226,6 +30252,9 @@ void flecs_table_move(
 
     flecs_table_update_overrides(world, dst_table);
 
+    ECS_TABLE_LOCK(world, dst_table);
+    ECS_TABLE_LOCK(world, src_table);
+
     flecs_table_move_bitset_columns(
         dst_table, dst_index, src_table, src_index, 1, false);
 
@@ -30288,6 +30317,9 @@ void flecs_table_move(
         flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old], 
             &src_entity, src_index, 1, use_move_dtor);
     }
+
+    ECS_TABLE_UNLOCK(world, src_table);
+    ECS_TABLE_UNLOCK(world, dst_table);
 
     flecs_table_check_sanity(dst_table);
     flecs_table_check_sanity(src_table);
@@ -30444,6 +30476,7 @@ static void flecs_table_swap(
     void* tmp = ecs_os_alloca(temp_buffer_size);
 
     /* Swap columns */
+    ECS_TABLE_LOCK(world, table);
     for (i = 0; i < column_count; i ++) {
         int32_t size = columns[i].ti->size;
         ecs_column_t *column = &columns[i];
@@ -30467,6 +30500,7 @@ static void flecs_table_swap(
             flecs_type_info_move_dtor(el_2, tmp, 1, ti);
         }
     }
+    ECS_TABLE_UNLOCK(world, table);
 
     flecs_table_check_sanity(table);
 }
@@ -30511,6 +30545,9 @@ void flecs_table_merge(
         entities.size = src_table->data.size;
     }
 
+    ECS_TABLE_LOCK(world, dst_table);
+    ECS_TABLE_LOCK(world, src_table);
+
     int32_t dst_i = 0;
     for (int32_t src_i = 0; src_i < src_table->column_count; src_i ++) {
         ecs_column_t *src = &src_table->data.columns[src_i];
@@ -30540,6 +30577,9 @@ void flecs_table_merge(
 
         src->data = NULL;
     }
+
+    ECS_TABLE_UNLOCK(world, src_table);
+    ECS_TABLE_UNLOCK(world, dst_table);
 
     ecs_assert(dst_i == dst_table->column_count, ECS_INTERNAL_ERROR, NULL);
 

@@ -56,7 +56,9 @@ void flecs_invoke_hook(
     it.offset = row;
     it.flags = EcsIterIsValid;
 
+    ECS_TABLE_LOCK(world, table);
     hook(&it);
+    ECS_TABLE_UNLOCK(world, table);
 
 }
 
@@ -97,7 +99,9 @@ void flecs_invoke_replace_hook(
     it.offset = 0; /* Don't set row because we don't want to offset ptrs */
     it.flags = EcsIterIsValid;
 
+    ECS_TABLE_LOCK(world, table);
     ti->hooks.on_replace(&it);
+    ECS_TABLE_UNLOCK(world, table);
 
 }
 

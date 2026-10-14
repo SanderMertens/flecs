@@ -2195,7 +2195,17 @@ static bool flecs_rest_reply(
     return false;
 }
 
-ecs_http_server_t* ecs_rest_server_init(
+static void flecs_rest_set_build_info(
+    ecs_world_t *world)
+{
+    ecs_id_t build_info = ecs_lookup(world, "flecs.core.BuildInfo");
+    if (build_info) {
+        const ecs_build_info_t *bi = ecs_get_build_info();
+        ecs_set_id(world, EcsWorld, build_info, sizeof(ecs_build_info_t), bi);
+    }
+}
+
+static ecs_http_server_t* flecs_rest_server_init(
     ecs_world_t *world,
     const ecs_http_server_desc_t *desc)
 {
@@ -2218,11 +2228,17 @@ ecs_http_server_t* ecs_rest_server_init(
     srv_ctx->srv = srv;
     srv_ctx->rc = 1;
 
-    /* Set build info on world so clients know which version they're using */
-    ecs_id_t build_info = ecs_lookup(world, "flecs.core.BuildInfo");
-    if (build_info) {
-        const ecs_build_info_t *bi = ecs_get_build_info();
-        ecs_set_id(world, EcsWorld, build_info, sizeof(ecs_build_info_t), bi);
+    return srv;
+}
+
+ecs_http_server_t* ecs_rest_server_init(
+    ecs_world_t *world,
+    const ecs_http_server_desc_t *desc)
+{
+    ecs_http_server_t *srv = flecs_rest_server_init(world, desc);
+    if (srv) {
+        /* Set build info on world so clients know which version they're using */
+        flecs_rest_set_build_info(world);
     }
 
     return srv;
@@ -2238,33 +2254,31 @@ void ecs_rest_server_fini(
 }
 
 static void flecs_on_set_rest(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
+    EcsRest *rest = ecs_field(it, EcsRest, 0);
 
     int i;
-    for(i = it->count - 1; i >= 0; i --) {
-        ecs_entity_t e = it->entities[i];
-        EcsRest *rest = ecs_get_mut(world, e, EcsRest);
-        if (!rest->port) {
-            rest->port = ECS_REST_DEFAULT_PORT;
+    for(i = 0; i < it->count; i ++) {
+        if (!rest[i].port) {
+            rest[i].port = ECS_REST_DEFAULT_PORT;
         }
 
-        ecs_http_server_t *srv = ecs_rest_server_init(world,
-            &(ecs_http_server_desc_t){
-                .ipaddr = rest->ipaddr,
-                .port = rest->port,
+        ecs_http_server_t *srv = flecs_rest_server_init(it->world,
+            &(ecs_http_server_desc_t){ 
+                .ipaddr = rest[i].ipaddr, 
+                .port = rest[i].port,
                 .cache_timeout = 0.2
             });
 
-        rest = ecs_get_mut(world, e, EcsRest);
-
         if (!srv) {
-            const char *ipaddr = rest->ipaddr ? rest->ipaddr : "0.0.0.0";
-            ecs_err("failed to create REST server on %s:%u",
-                ipaddr, rest->port);
+            const char *ipaddr = rest[i].ipaddr ? rest[i].ipaddr : "0.0.0.0";
+            ecs_err("failed to create REST server on %s:%u", 
+                ipaddr, rest[i].port);
             continue;
         }
 
-        rest->impl = ecs_http_server_ctx(srv);
+        flecs_rest_set_build_info(it->stage);
+
+        rest[i].impl = ecs_http_server_ctx(srv);
 
         ecs_http_server_start(srv);
     }

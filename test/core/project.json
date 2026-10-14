@@ -1907,7 +1907,19 @@
                 "fini_w_cached_query_in_component_on_entity",
                 "fini_w_cached_query_in_component_on_remove_observer",
                 "fini_w_uncached_query_in_component",
-                "delete_component_w_cached_query_in_component"
+                "delete_component_w_cached_query_in_component",
+                "locked_storage_on_add",
+                "locked_storage_on_set",
+                "locked_storage_on_remove",
+                "locked_storage_on_replace",
+                "locked_storage_ctor",
+                "locked_storage_dtor",
+                "locked_storage_copy",
+                "locked_storage_move",
+                "locked_storage_copy_ctor",
+                "locked_storage_move_ctor",
+                "locked_storage_ctor_move_dtor",
+                "locked_storage_move_dtor"
             ]
         }, {
             "id": "Pairs",
