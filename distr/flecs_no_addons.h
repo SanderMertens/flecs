@@ -1940,10 +1940,12 @@ extern "C" {
 #define FLECS_SPARSE_PAGE_SIZE (1 << FLECS_SPARSE_PAGE_BITS)
 
 /** Compute the page index from an ID by stripping the first 12 bits. */
-#define FLECS_SPARSE_PAGE(index) ((int32_t)((uint32_t)index >> FLECS_SPARSE_PAGE_BITS))
+#define FLECS_SPARSE_PAGE(index)\
+    ECS_CAST(int32_t, ECS_CAST(uint32_t, index) >> FLECS_SPARSE_PAGE_BITS)
 
 /** Compute the offset of an index inside a page. */
-#define FLECS_SPARSE_OFFSET(index) ((int32_t)index & (FLECS_SPARSE_PAGE_SIZE - 1))
+#define FLECS_SPARSE_OFFSET(index)\
+    (ECS_CAST(int32_t, index) & (FLECS_SPARSE_PAGE_SIZE - 1))
 
 /** A page in the sparse set containing a sparse-to-dense mapping and data. */
 typedef struct ecs_sparse_page_t {
