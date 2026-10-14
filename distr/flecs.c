@@ -111770,6 +111770,7 @@ FLECS_MATH_INTRINSIC(ceil, ceil(x))
 FLECS_MATH_INTRINSIC(floor, floor(x))
 FLECS_MATH_INTRINSIC(round, round(x))
 FLECS_MATH_INTRINSIC(abs, fabs(x))
+FLECS_MATH_INTRINSIC(log2, log2(x))
 
 static const flecs_math_function_t flecs_math_functions[] = {
     {"cos", "Compute cosine", .unary = cos},
@@ -111790,7 +111791,7 @@ static const flecs_math_function_t flecs_math_functions[] = {
     {"log", "Compute natural logarithm", .unary = log},
     {"log10", "Compute common logarithm", .unary = log10},
     {"exp2", "Compute binary exponential function", .unary = exp2},
-    {"log2", "Compute binary logarithm", .unary = log2},
+    {"log2", "Compute binary logarithm", .callback = flecs_math_log2},
     {"pow", "Raise to power", .binary = pow},
     {"sqrt", "Compute square root", .callback = flecs_math_sqrt},
     {"sqr", "Compute square", .callback = flecs_math_sqr},
