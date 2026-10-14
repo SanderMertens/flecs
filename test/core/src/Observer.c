@@ -17,6 +17,16 @@ static void Observer(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 }
 
+static void Observer_w_not_term_check_pos(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+    for (int i = 0; i < it->count; i ++) {
+        test_int(p[i].x, (float)(uint32_t)it->entities[i]);
+    }
+}
+
 static void Observer_is_deferred(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
     test_assert(ecs_is_stage(it->stage));
@@ -15488,6 +15498,156 @@ void Observer_on_set_up_then_parent_move_add_grandchild(void) {
 
     ecs_entity_t g = ecs_new_w_pair(world, EcsChildOf, c);
     test_assert(ecs_has_pair(world, g, EcsChildOf, c));
+
+    ecs_fini(world);
+}
+
+void Observer_not_term_on_remove_add_negated_id_in_populated_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { Tag, .oper = EcsNot }},
+        .events = { EcsOnRemove },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Position, {10, 20});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, e1, Tag);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_uint(ctx.e[0], e1);
+
+    ecs_add(world, e2, Tag);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_uint(ctx.e[1], e2);
+
+    ecs_add(world, e3, Tag);
+    test_int(ctx.invoked, 3);
+    test_int(ctx.count, 3);
+    test_uint(ctx.e[2], e3);
+
+    ecs_fini(world);
+}
+
+void Observer_not_term_on_add_remove_negated_id_in_populated_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { Tag, .oper = EcsNot }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Tag);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_entity_t e2 = ecs_new_w_id(world, Tag);
+    ecs_set(world, e2, Position, {10, 20});
+    ecs_entity_t e3 = ecs_new_w_id(world, Tag);
+    ecs_set(world, e3, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e3, Tag);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_uint(ctx.e[0], e3);
+
+    ecs_remove(world, e1, Tag);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_uint(ctx.e[1], e1);
+
+    ecs_remove(world, e2, Tag);
+    test_int(ctx.invoked, 3);
+    test_int(ctx.count, 3);
+    test_uint(ctx.e[2], e2);
+
+    ecs_fini(world);
+}
+
+void Observer_not_term_on_remove_add_negated_id_in_populated_table_w_data(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { Tag, .oper = EcsNot }},
+        .events = { EcsOnRemove },
+        .callback = Observer_w_not_term_check_pos,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {(float)(uint32_t)e1, 0});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Position, {(float)(uint32_t)e2, 0});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Position, {(float)(uint32_t)e3, 0});
+
+    ecs_add(world, e2, Tag);
+    ecs_add(world, e3, Tag);
+    ecs_add(world, e1, Tag);
+    test_int(ctx.invoked, 3);
+    test_int(ctx.count, 3);
+    test_uint(ctx.e[0], e2);
+    test_uint(ctx.e[1], e3);
+    test_uint(ctx.e[2], e1);
+
+    ecs_fini(world);
+}
+
+void Observer_not_term_on_add_remove_negated_id_in_populated_table_w_data(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { Tag, .oper = EcsNot }},
+        .events = { EcsOnAdd },
+        .callback = Observer_w_not_term_check_pos,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Tag);
+    ecs_set(world, e1, Position, {(float)(uint32_t)e1, 0});
+    ecs_entity_t e2 = ecs_new_w_id(world, Tag);
+    ecs_set(world, e2, Position, {(float)(uint32_t)e2, 0});
+    ecs_entity_t e3 = ecs_new_w_id(world, Tag);
+    ecs_set(world, e3, Position, {(float)(uint32_t)e3, 0});
+
+    ecs_remove(world, e2, Tag);
+    ecs_remove(world, e3, Tag);
+    ecs_remove(world, e1, Tag);
+    test_int(ctx.invoked, 3);
+    test_int(ctx.count, 3);
+    test_uint(ctx.e[0], e2);
+    test_uint(ctx.e[1], e3);
+    test_uint(ctx.e[2], e1);
 
     ecs_fini(world);
 }
