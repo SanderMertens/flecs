@@ -112942,7 +112942,6 @@ FLECS_SCRIPT_FOR_EACH_NUMERIC(FLECS_SCRIPT_DOT)
 FLECS_SCRIPT_NORMALIZE(float)
 FLECS_SCRIPT_NORMALIZE(double)
 
-
 static const flecs_math_function_t flecs_math_functions[] = {
     {"cos", "Compute cosine", .unary = cos},
     {"sin", "Compute sine", .unary = sin},
