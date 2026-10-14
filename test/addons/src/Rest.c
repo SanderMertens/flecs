@@ -1389,3 +1389,29 @@ void Rest_call_argument_expression(void) {
     ecs_rest_server_fini(srv);
     ecs_fini(world);
 }
+
+void Rest_app_enable_rest(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ecs_app_run(world, &(ecs_app_desc_t){
+        .enable_rest = true,
+        .port = 27761,
+        .frames = 1
+    }), 0);
+
+    const EcsRest *rest = ecs_get(world, EcsWorld, EcsRest);
+    test_assert(rest != NULL);
+    test_uint(rest->port, 27761);
+    test_assert(rest->impl != NULL);
+    test_assert(rest->impl->srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(ecs_http_server_request(rest->impl->srv, "GET",
+        "/entity/flecs/core", NULL, &reply), 0);
+    test_int(reply.code, 200);
+    char *body = ecs_strbuf_get(&reply.body);
+    test_assert(body != NULL);
+    ecs_os_free(body);
+
+    ecs_fini(world);
+}

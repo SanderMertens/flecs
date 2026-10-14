@@ -29443,29 +29443,33 @@ void ecs_rest_server_fini(
 }
 
 static void flecs_on_set_rest(ecs_iter_t *it) {
-    EcsRest *rest = ecs_field(it, EcsRest, 0);
+    ecs_world_t *world = it->world;
 
     int i;
-    for(i = 0; i < it->count; i ++) {
-        if (!rest[i].port) {
-            rest[i].port = ECS_REST_DEFAULT_PORT;
+    for(i = it->count - 1; i >= 0; i --) {
+        ecs_entity_t e = it->entities[i];
+        EcsRest *rest = ecs_get_mut(world, e, EcsRest);
+        if (!rest->port) {
+            rest->port = ECS_REST_DEFAULT_PORT;
         }
 
-        ecs_http_server_t *srv = ecs_rest_server_init(it->world,
-            &(ecs_http_server_desc_t){ 
-                .ipaddr = rest[i].ipaddr, 
-                .port = rest[i].port,
+        ecs_http_server_t *srv = ecs_rest_server_init(world,
+            &(ecs_http_server_desc_t){
+                .ipaddr = rest->ipaddr,
+                .port = rest->port,
                 .cache_timeout = 0.2
             });
 
+        rest = ecs_get_mut(world, e, EcsRest);
+
         if (!srv) {
-            const char *ipaddr = rest[i].ipaddr ? rest[i].ipaddr : "0.0.0.0";
-            ecs_err("failed to create REST server on %s:%u", 
-                ipaddr, rest[i].port);
+            const char *ipaddr = rest->ipaddr ? rest->ipaddr : "0.0.0.0";
+            ecs_err("failed to create REST server on %s:%u",
+                ipaddr, rest->port);
             continue;
         }
 
-        rest[i].impl = ecs_http_server_ctx(srv);
+        rest->impl = ecs_http_server_ctx(srv);
 
         ecs_http_server_start(srv);
     }
