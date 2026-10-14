@@ -451,8 +451,8 @@ static void flecs_irc_compile_binary(
 
     int32_t right = flecs_irc_compile_tmp(c, node->right);
     int32_t op = flecs_irc_emit(c, EcsIrBinary, dst, left, right, node);
-    flecs_irc_op(c, op)->flags = (uint16_t)(node->operator |
-        (in_place ? EcsIrBinaryInPlace : 0));
+    flecs_irc_op(c, op)->flags = (uint16_t)((uint32_t)node->operator |
+        (in_place ? EcsIrBinaryInPlace : 0u));
 
     int32_t size;
     flecs_expr_num_class_t class = flecs_expr_num_class(
