@@ -62007,7 +62007,9 @@ static const char* flecs_token_scan(
 
     } else if (flecs_script_is_identifier(pos[0])) {
         pos = flecs_tokenizer_identifier(parser, pos, out);
-        for (ecs_token_kind_t k = EcsTokKeywordWith; pos && k < EcsTokLast; k ++) {
+        for (ecs_token_kind_t k = EcsTokKeywordWith;
+            pos && out->value && k < EcsTokLast; k ++)
+        {
             if (!ecs_os_strcmp(out->value, flecs_tokens[k].spelling)) {
                 parser->token_cur = ECS_CONST_CAST(char*, out->value);
                 out->kind = k;
