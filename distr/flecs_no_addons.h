@@ -6735,11 +6735,11 @@ FLECS_API
 void ecs_merge(
     ecs_world_t *stage);
 
-/** Test if deferring is enabled for the current stage.
+/** Test whether a world object is a stage.
+ * Operations on a stage are enqueued until the stage is merged.
  *
- * @param world The world.
- * @return True if deferred, false if not.
- *
+ * @param world The world or stage.
+ * @return True if stage, false if world.
  */
 FLECS_API
 bool ecs_is_stage(

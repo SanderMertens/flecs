@@ -494,19 +494,7 @@ q.each([](flecs::entity e, Position&) {
 });
 ```
 
-This can be addressed by deferring operations while the query is being iterated:
-
-```cpp
-auto q = world.query<Position>();
-
-world.defer([&](flecs::world& stage) {
-    q.iter(stage).each([](flecs::entity e, Position&) {
-        e.add<Velocity>(); // OK
-    });
-}); // operations are executed here
-```
-
-An application can also select a stage and merge it after iteration:
+This can be addressed by iterating the query with a stage, which enqueues the operations, and merging the stage after iteration:
 
 ```cpp
 auto q = world.query<Position>();
