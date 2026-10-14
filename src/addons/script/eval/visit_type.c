@@ -842,19 +842,19 @@ static int flecs_script_type_ensure_node(
         return -1;
     }
 
-    const char *name = node->name;
     ecs_value_t value = {0};
     if (node->name_expr) {
-        value.type = ecs_id(ecs_string_t);
+        value.type = node->name_expr->type;
         if (flecs_script_eval_expr(t->v, &node->name_expr, &value)) {
             return -1;
         }
-
-        name = *(char**)value.ptr;
     }
 
-    current = flecs_script_new_entity(t->v, parent, name,
-        parent_node && parent_node->non_fragmenting_parent);
+    current = value.ptr && value.type == ecs_id(ecs_entity_t)
+        ? *(ecs_entity_t*)value.ptr
+        : flecs_script_new_entity(t->v, parent,
+            value.ptr ? *(char**)value.ptr : node->name,
+            parent_node && parent_node->non_fragmenting_parent);
     if (value.ptr) {
         ecs_ptr_free(t->v->world, value.type, value.ptr);
     }
@@ -1828,6 +1828,32 @@ done:
     return result;
 }
 
+static bool flecs_script_type_entity_name_ref(
+    ecs_script_type_visitor_t *t,
+    ecs_script_entity_t *node)
+{
+    if (!flecs_script_is_var_name(node->name)) {
+        return false;
+    }
+
+    ecs_script_var_t *var = ecs_script_vars_lookup(t->v->vars, &node->name[1]);
+    if (!var || var->value.type != ecs_id(ecs_entity_t) ||
+        flecs_script_type_var_interface(t, var->sp))
+    {
+        return false;
+    }
+
+    ecs_expr_node_t *expr = node->name_expr;
+    if (expr->kind == EcsExprInterpolatedString) {
+        ecs_script_t *script = &t->v->base.script->pub;
+        node->name_expr = (ecs_expr_node_t*)flecs_expr_variable_from(
+            script, expr, &node->name[1]);
+        flecs_expr_visit_free(script, expr);
+    }
+
+    return true;
+}
+
 static int flecs_script_type_entity(
     ecs_script_type_visitor_t *t,
     ecs_script_entity_t *node,
@@ -1853,7 +1879,9 @@ static int flecs_script_type_entity(
     }
 
     if (node->name_expr) {
-        ecs_entity_t type = ecs_id(ecs_string_t);
+        ecs_entity_t type = flecs_script_type_entity_name_ref(t, node)
+            ? ecs_id(ecs_entity_t)
+            : ecs_id(ecs_string_t);
         int result = flecs_script_type_check_expr(t, &node->name_expr, &type);
         if (result) {
             return result == 1 ? 0 : -1;

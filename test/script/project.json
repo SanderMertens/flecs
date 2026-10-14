@@ -810,7 +810,8 @@
                 "ir_to_str_before_eval",
                 "ir_to_str_w_async_block",
                 "tree_parent_w_annot_before_entity",
-                "update_script_from_system"
+                "update_script_from_system",
+                "update_scope_anonymous_new_var"
             ]
         }, {
             "id": "Collection",

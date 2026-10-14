@@ -84,7 +84,7 @@ int flecs_script_eval_entity_enter(
 int flecs_script_eval_entity_enter_w_name(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
-    const char *name,
+    const ecs_value_t *name,
     flecs_script_entity_state_t *state);
 
 void flecs_script_eval_entity_leave(

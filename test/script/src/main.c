@@ -804,6 +804,7 @@ void Eval_ir_to_str_before_eval(void);
 void Eval_ir_to_str_w_async_block(void);
 void Eval_tree_parent_w_annot_before_entity(void);
 void Eval_update_script_from_system(void);
+void Eval_update_scope_anonymous_new_var(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -7090,6 +7091,10 @@ bake_test_case Eval_testcases[] = {
     {
         "update_script_from_system",
         Eval_update_script_from_system
+    },
+    {
+        "update_scope_anonymous_new_var",
+        Eval_update_scope_anonymous_new_var
     }
 };
 
@@ -19414,7 +19419,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        794,
+        795,
         Eval_testcases,
         1,
         Eval_params
