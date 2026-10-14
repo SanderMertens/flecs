@@ -352,7 +352,9 @@ bool flecs_defer_remove(
                                     ti->size * ECS_RECORD_TO_ROW(r->row));
                                 const void *src = ecs_ref_get_id(
                                     world, &o->refs[tr->column], id);
+                                ECS_TABLE_LOCK(world, table);
                                 flecs_type_info_copy(dst, src, 1, ti);
+                                ECS_TABLE_UNLOCK(world, table);
                             }
                         }
                     }
@@ -652,7 +654,9 @@ static FLECS_ALWAYS_INLINE void* flecs_defer_set_impl(
         }
 
         if (copy) {
+            ECS_TABLE_LOCK(world, r->table);
             flecs_type_info_copy(ptr.ptr, value, 1, ti);
+            ECS_TABLE_UNLOCK(world, r->table);
         }
     }
 
@@ -1113,10 +1117,12 @@ static void flecs_cmd_batch_for_entity(
                     }
 
                     bool move_hook = ti->hooks.move != NULL;
+                    ECS_TABLE_LOCK(world, r->table);
                     flecs_type_info_move(dst.ptr, ptr, 1, ti);
                     if (move_hook) {
                         flecs_type_info_dtor(ptr, 1, ti);
                     }
+                    ECS_TABLE_UNLOCK(world, r->table);
 
                     flecs_stack_free(ptr, cmd->is._1.size);
                     cmd->is._1.value = NULL;

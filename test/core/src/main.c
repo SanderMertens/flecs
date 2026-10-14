@@ -1491,6 +1491,8 @@ void OnDelete_empty_after_remove(void);
 void OnDelete_remove_target_no_intermediate_table(void);
 void OnDelete_remove_target_no_intermediate_table_3_pairs(void);
 void OnDelete_delete_parent_w_isa_base_that_inherits_from_disabled_child(void);
+void OnDelete_delete_parent_from_on_remove_during_delete_w_queued_child_remove(void);
+void OnDelete_delete_with_deletes_children_before_parent(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -1845,6 +1847,18 @@ void ComponentLifecycle_fini_w_cached_query_in_component_on_entity(void);
 void ComponentLifecycle_fini_w_cached_query_in_component_on_remove_observer(void);
 void ComponentLifecycle_fini_w_uncached_query_in_component(void);
 void ComponentLifecycle_delete_component_w_cached_query_in_component(void);
+void ComponentLifecycle_locked_storage_on_add(void);
+void ComponentLifecycle_locked_storage_on_set(void);
+void ComponentLifecycle_locked_storage_on_remove(void);
+void ComponentLifecycle_locked_storage_on_replace(void);
+void ComponentLifecycle_locked_storage_ctor(void);
+void ComponentLifecycle_locked_storage_dtor(void);
+void ComponentLifecycle_locked_storage_copy(void);
+void ComponentLifecycle_locked_storage_move(void);
+void ComponentLifecycle_locked_storage_copy_ctor(void);
+void ComponentLifecycle_locked_storage_move_ctor(void);
+void ComponentLifecycle_locked_storage_ctor_move_dtor(void);
+void ComponentLifecycle_locked_storage_move_dtor(void);
 
 // Testsuite 'Pairs'
 void Pairs_disable_toggle_component_and_toggle_pair(void);
@@ -2510,6 +2524,7 @@ void Observer_single_term_observer_w_var_get_var_pair_second_w_generation(void);
 void Observer_single_term_observer_w_var_get_var_nested_invoke(void);
 void Observer_single_term_observer_w_var_get_var_pair_second_on_delete_target(void);
 void Observer_single_term_observer_wo_var_invoked_once_per_event(void);
+void Observer_on_set_up_then_parent_move_add_grandchild(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -9359,6 +9374,14 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_parent_w_isa_base_that_inherits_from_disabled_child",
         OnDelete_delete_parent_w_isa_base_that_inherits_from_disabled_child
+    },
+    {
+        "delete_parent_from_on_remove_during_delete_w_queued_child_remove",
+        OnDelete_delete_parent_from_on_remove_during_delete_w_queued_child_remove
+    },
+    {
+        "delete_with_deletes_children_before_parent",
+        OnDelete_delete_with_deletes_children_before_parent
     }
 };
 
@@ -10742,6 +10765,54 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "delete_component_w_cached_query_in_component",
         ComponentLifecycle_delete_component_w_cached_query_in_component
+    },
+    {
+        "locked_storage_on_add",
+        ComponentLifecycle_locked_storage_on_add
+    },
+    {
+        "locked_storage_on_set",
+        ComponentLifecycle_locked_storage_on_set
+    },
+    {
+        "locked_storage_on_remove",
+        ComponentLifecycle_locked_storage_on_remove
+    },
+    {
+        "locked_storage_on_replace",
+        ComponentLifecycle_locked_storage_on_replace
+    },
+    {
+        "locked_storage_ctor",
+        ComponentLifecycle_locked_storage_ctor
+    },
+    {
+        "locked_storage_dtor",
+        ComponentLifecycle_locked_storage_dtor
+    },
+    {
+        "locked_storage_copy",
+        ComponentLifecycle_locked_storage_copy
+    },
+    {
+        "locked_storage_move",
+        ComponentLifecycle_locked_storage_move
+    },
+    {
+        "locked_storage_copy_ctor",
+        ComponentLifecycle_locked_storage_copy_ctor
+    },
+    {
+        "locked_storage_move_ctor",
+        ComponentLifecycle_locked_storage_move_ctor
+    },
+    {
+        "locked_storage_ctor_move_dtor",
+        ComponentLifecycle_locked_storage_ctor_move_dtor
+    },
+    {
+        "locked_storage_move_dtor",
+        ComponentLifecycle_locked_storage_move_dtor
     }
 };
 
@@ -13387,6 +13458,10 @@ bake_test_case Observer_testcases[] = {
     {
         "single_term_observer_wo_var_invoked_once_per_event",
         Observer_single_term_observer_wo_var_invoked_once_per_event
+    },
+    {
+        "on_set_up_then_parent_move_add_grandchild",
+        Observer_on_set_up_then_parent_move_add_grandchild
     }
 };
 
@@ -17623,7 +17698,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        130,
+        132,
         OnDelete_testcases
     },
     {
@@ -17658,7 +17733,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        171,
+        183,
         ComponentLifecycle_testcases
     },
     {
@@ -17679,7 +17754,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        399,
+        400,
         Observer_testcases
     },
     {

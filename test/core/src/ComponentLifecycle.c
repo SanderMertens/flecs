@@ -5663,3 +5663,374 @@ void ComponentLifecycle_delete_component_w_cached_query_in_component(void) {
 
     test_int(query_holder_dtor_invoked, 1);
 }
+
+static ecs_world_t *locked_storage_world;
+static ecs_entity_t locked_storage_entity;
+static ecs_entity_t locked_storage_tag;
+
+static void locked_storage_abort(void) {
+    test_int(ecs_log_last_error(), ECS_LOCKED_STORAGE);
+    test_abort();
+}
+
+static void locked_storage_hook(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add_id(it->world, it->entities[i], locked_storage_tag);
+    }
+}
+
+static void locked_storage_xtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_entity_t e = locked_storage_entity;
+    if (e) {
+        locked_storage_entity = 0;
+        ecs_add_id(locked_storage_world, e, locked_storage_tag);
+    }
+}
+
+static void locked_storage_noop_xtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti) { }
+
+static void locked_storage_copy(
+    void *dst_ptr,
+    const void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_os_memcpy(dst_ptr, src_ptr, ti->size * count);
+    ecs_entity_t e = locked_storage_entity;
+    if (e) {
+        locked_storage_entity = 0;
+        ecs_add_id(locked_storage_world, e, locked_storage_tag);
+    }
+}
+
+static void locked_storage_move(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_os_memcpy(dst_ptr, src_ptr, ti->size * count);
+    ecs_entity_t e = locked_storage_entity;
+    if (e) {
+        locked_storage_entity = 0;
+        ecs_add_id(locked_storage_world, e, locked_storage_tag);
+    }
+}
+
+void ComponentLifecycle_locked_storage_on_add(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = locked_storage_hook
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_add(world, e, Position);
+}
+
+void ComponentLifecycle_locked_storage_on_set(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = locked_storage_hook
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_set(world, e, Position, {10, 20});
+}
+
+void ComponentLifecycle_locked_storage_on_remove(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = locked_storage_hook
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    test_expect_abort();
+    ecs_remove(world, e, Position);
+}
+
+void ComponentLifecycle_locked_storage_on_replace(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .on_replace = locked_storage_hook
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_set(world, e, Position, {10, 20});
+}
+
+void ComponentLifecycle_locked_storage_ctor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = locked_storage_xtor
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    locked_storage_entity = e;
+
+    test_expect_abort();
+    ecs_add(world, e, Position);
+}
+
+void ComponentLifecycle_locked_storage_dtor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .dtor = locked_storage_xtor
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    locked_storage_entity = e;
+
+    test_expect_abort();
+    ecs_remove(world, e, Position);
+}
+
+void ComponentLifecycle_locked_storage_copy(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .copy = locked_storage_copy
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    locked_storage_entity = e;
+
+    test_expect_abort();
+    ecs_set(world, e, Position, {30, 40});
+}
+
+void ComponentLifecycle_locked_storage_move(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .move = locked_storage_move
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_set(stage, e, Position, {10, 20});
+    locked_storage_entity = e;
+
+    test_expect_abort();
+    ecs_merge(stage);
+}
+
+void ComponentLifecycle_locked_storage_copy_ctor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsOverride);
+
+    ecs_set_hooks(world, Position, {
+        .copy_ctor = locked_storage_copy
+    });
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t inst = ecs_new(world);
+    locked_storage_entity = inst;
+
+    test_expect_abort();
+    ecs_add_pair(world, inst, EcsIsA, base);
+}
+
+void ComponentLifecycle_locked_storage_move_ctor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Foo);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .move_ctor = locked_storage_move
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    locked_storage_entity = e1;
+
+    test_expect_abort();
+    ecs_add(world, e1, Foo);
+}
+
+void ComponentLifecycle_locked_storage_ctor_move_dtor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Foo);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .ctor_move_dtor = locked_storage_move
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    locked_storage_entity = e;
+
+    test_expect_abort();
+    ecs_add(world, e, Foo);
+}
+
+void ComponentLifecycle_locked_storage_move_dtor(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = locked_storage_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+    locked_storage_world = world;
+    locked_storage_entity = 0;
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    locked_storage_tag = ecs_new(world);
+
+    ecs_set_hooks(world, Position, {
+        .dtor = locked_storage_noop_xtor,
+        .move_dtor = locked_storage_move
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    locked_storage_entity = e2;
+
+    test_expect_abort();
+    ecs_delete(world, e1);
+}
