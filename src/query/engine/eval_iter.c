@@ -837,12 +837,14 @@ ecs_iter_t flecs_query_iter(
     if (!q->term_count) {
         flecs_iter_init(it.stage, &it, false);
     }
-#elif defined(FLECS_CACHED_QUERIES)
+#else
+#ifdef FLECS_CACHED_QUERIES
     bool fully_cached = (q->flags & EcsQueryIsCacheable) &&
         !(q->flags & EcsQueryCacheWithFilter);
     flecs_iter_init(it.stage, &it, !impl->cache || !fully_cached);
 #else
     flecs_iter_init(it.stage, &it, true);
+#endif
 #endif
 
 #ifdef FLECS_QUERY_PLANS
