@@ -2434,7 +2434,7 @@ typedef struct ecs_stack_t {
 #define FLECS_STACK_PAGE_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_page_t), 16)
 
 /** Size of usable data within a stack page. */
-#define FLECS_STACK_PAGE_SIZE (4096 - FLECS_STACK_PAGE_OFFSET)
+#define FLECS_STACK_PAGE_SIZE (1024 - FLECS_STACK_PAGE_OFFSET)
 
 /** Initialize a stack allocator.
  *
