@@ -586,7 +586,8 @@
                 "world_builtin",
                 "world_modules",
                 "world_builtin_and_modules",
-                "world_explicit_false"
+                "world_explicit_false",
+                "app_enable_rest"
             ]
         }, {
             "id": "Metrics",

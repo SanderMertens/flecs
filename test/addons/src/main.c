@@ -537,6 +537,7 @@ void Rest_world_builtin(void);
 void Rest_world_modules(void);
 void Rest_world_builtin_and_modules(void);
 void Rest_world_explicit_false(void);
+void Rest_app_enable_rest(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2603,6 +2604,10 @@ bake_test_case Rest_testcases[] = {
     {
         "world_explicit_false",
         Rest_world_explicit_false
+    },
+    {
+        "app_enable_rest",
+        Rest_app_enable_rest
     }
 };
 
@@ -3063,7 +3068,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        49,
+        50,
         Rest_testcases
     },
     {
