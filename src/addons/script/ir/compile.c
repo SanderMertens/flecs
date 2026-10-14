@@ -21,13 +21,13 @@ typedef struct ecs_script_ir_compiler_t {
     int32_t force_depth;
 } ecs_script_ir_compiler_t;
 
-static int flecs_irc_compile_expr(
+static void flecs_irc_compile_expr(
     ecs_script_ir_compiler_t *c,
     ecs_expr_node_t *node,
     int32_t dst,
     bool in_place);
 
-static int flecs_irc_compile_scope(
+static void flecs_irc_compile_scope(
     ecs_script_ir_compiler_t *c,
     ecs_script_scope_t *scope,
     uint16_t flags);
@@ -98,145 +98,37 @@ static int32_t flecs_irc_entry_add(
     return count;
 }
 
-static ecs_script_ir_num_class_t flecs_irc_num_class(
-    ecs_entity_t type,
-    int32_t *size)
+static int32_t flecs_irc_compile_tmp(
+    ecs_script_ir_compiler_t *c,
+    ecs_expr_node_t *node)
 {
-    if (type == ecs_id(ecs_i8_t))  { *size = 1; return EcsIrNumSigned; }
-
-    if (type == ecs_id(ecs_i16_t)) { *size = 2; return EcsIrNumSigned; }
-
-    if (type == ecs_id(ecs_i32_t)) { *size = 4; return EcsIrNumSigned; }
-
-    if (type == ecs_id(ecs_i64_t)) { *size = 8; return EcsIrNumSigned; }
-
-    if (type == ecs_id(ecs_iptr_t)) {
-        *size = ECS_SIZEOF(ecs_iptr_t); return EcsIrNumSigned;
+    if (!node) {
+        return -1;
     }
 
-    if (type == ecs_id(ecs_u8_t))  { *size = 1; return EcsIrNumUnsigned; }
-
-    if (type == ecs_id(ecs_u16_t)) { *size = 2; return EcsIrNumUnsigned; }
-
-    if (type == ecs_id(ecs_u32_t)) { *size = 4; return EcsIrNumUnsigned; }
-
-    if (type == ecs_id(ecs_u64_t)) { *size = 8; return EcsIrNumUnsigned; }
-
-    if (type == ecs_id(ecs_uptr_t)) {
-        *size = ECS_SIZEOF(ecs_uptr_t); return EcsIrNumUnsigned;
-    }
-
-    if (type == ecs_id(ecs_f32_t)) { *size = 4; return EcsIrNumFloat; }
-
-    if (type == ecs_id(ecs_f64_t)) { *size = 8; return EcsIrNumFloat; }
-
-    *size = 0;
-    return EcsIrNumNone;
+    int32_t reg = flecs_irc_reg(c);
+    flecs_irc_compile_expr(c, node, reg, false);
+    return reg;
 }
-
-#define FLECS_IR_CAST(S, D)\
-static void flecs_irc_cast_##S##_##D(void *dst, const void *src) {\
-    *(D*)dst = (D)*(const S*)src;\
-}
-
-#define FLECS_IR_CAST_TARGETS(M, S)\
-    M(S, int8_t)\
-    M(S, int16_t)\
-    M(S, int32_t)\
-    M(S, int64_t)\
-    M(S, uint8_t)\
-    M(S, uint16_t)\
-    M(S, uint32_t)\
-    M(S, uint64_t)\
-    M(S, float)\
-    M(S, double)
-
-FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, int8_t)
-FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, int16_t)
-FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, int32_t)
-FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, int64_t)
-FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, uint8_t)
-FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, uint16_t)
-FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, uint32_t)
-FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, uint64_t)
-FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, float)
-FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, double)
-FLECS_IR_CAST_TARGETS(FLECS_IR_CAST, bool)
-
-#undef FLECS_IR_CAST
-#define FLECS_IR_CAST_ENTRY(S, D) flecs_irc_cast_##S##_##D,
-
-static ecs_script_ir_cast_t flecs_irc_cast_handler(
-    ecs_entity_t from,
-    ecs_entity_t to)
-{
-    static const ecs_script_ir_cast_t handlers[11][10] = {
-        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, int8_t)},
-        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, int16_t)},
-        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, int32_t)},
-        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, int64_t)},
-        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, uint8_t)},
-        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, uint16_t)},
-        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, uint32_t)},
-        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, uint64_t)},
-        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, float)},
-        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, double)},
-        {FLECS_IR_CAST_TARGETS(FLECS_IR_CAST_ENTRY, bool)},
-    };
-    static const int8_t indexes[4][9] = {
-        [EcsIrNumSigned] = { [1] = 0, [2] = 1, [4] = 2, [8] = 3 },
-        [EcsIrNumUnsigned] = { [1] = 4, [2] = 5, [4] = 6, [8] = 7 },
-        [EcsIrNumFloat] = { [4] = 8, [8] = 9 }
-    };
-    int32_t from_size, to_size;
-    ecs_script_ir_num_class_t from_class = flecs_irc_num_class(from, &from_size);
-    ecs_script_ir_num_class_t to_class = flecs_irc_num_class(to, &to_size);
-    bool from_bool = from == ecs_id(ecs_bool_t);
-    ecs_assert((from_class || from_bool) && to_class, ECS_INTERNAL_ERROR, NULL);
-    return handlers[from_bool ? 10 : indexes[from_class][from_size]]
-        [indexes[to_class][to_size]];
-}
-
-#undef FLECS_IR_CAST_ENTRY
-#undef FLECS_IR_CAST_TARGETS
 
 static int32_t flecs_irc_id(
     ecs_script_ir_compiler_t *c,
     ecs_script_id_t *id,
-    void *node,
     bool is_component,
     int32_t component_slot)
 {
-    int32_t first_reg = -1, second_reg = -1, index_reg = -1;
-    if (id->index_expr) {
-        index_reg = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, id->index_expr, index_reg, false)) {
-            return -1;
-        }
-    }
-
-    if (id->first_expr) {
-        first_reg = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, id->first_expr, first_reg, false)) {
-            return -1;
-        }
-    }
-
-    if (id->second_expr) {
-        second_reg = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, id->second_expr, second_reg, false)) {
-            return -1;
-        }
-    }
+    int32_t index_reg = flecs_irc_compile_tmp(c, id->index_expr);
+    int32_t first_reg = flecs_irc_compile_tmp(c, id->first_expr);
+    int32_t second_reg = flecs_irc_compile_tmp(c, id->second_expr);
 
     ecs_script_ir_id_t *desc = ecs_vec_append_t(
         NULL, &c->ir->ids, ecs_script_ir_id_t);
     ecs_os_zeromem(desc);
+    desc->id = id;
     desc->eval = id->eval;
     desc->flag = id->flag;
     desc->first_eval = id->first_eval;
     desc->second_eval = id->second_eval;
-    desc->interface = id->interface;
     desc->first = id->first;
     desc->second = id->second;
     desc->first_symbol = id->first_symbol;
@@ -246,7 +138,6 @@ static int32_t flecs_irc_id(
     desc->first_reg = first_reg;
     desc->second_reg = second_reg;
     desc->index_reg = index_reg;
-    desc->index_sp = id->index_expr ? id->index_sp : -1;
     desc->component_slot = component_slot;
     desc->resolved = id->eval != 0;
     desc->has_second = id->second != NULL;
@@ -267,7 +158,6 @@ static int32_t flecs_irc_id(
         }
     }
 
-    (void)node;
     return ecs_vec_count(&c->ir->ids) - 1;
 }
 
@@ -278,12 +168,12 @@ static bool flecs_irc_id_needs_expr(
         id->index_expr != NULL;
 }
 
-static int flecs_irc_compile_initializer(
+static void flecs_irc_compile_initializer(
     ecs_script_ir_compiler_t *c,
     ecs_expr_initializer_t *node,
     int32_t dst);
 
-static int flecs_irc_compile_dynamic_initializer(
+static void flecs_irc_compile_dynamic_initializer(
     ecs_script_ir_compiler_t *c,
     ecs_expr_initializer_t *node,
     int32_t dst)
@@ -300,11 +190,7 @@ static int flecs_irc_compile_dynamic_initializer(
         }
 
         if (elem->key) {
-            int32_t key = flecs_irc_reg(c);
-            if (flecs_irc_compile_expr(c, elem->key, key, false)) {
-                return -1;
-            }
-
+            int32_t key = flecs_irc_compile_tmp(c, elem->key);
             flecs_irc_emit(c, EcsIrDynKey, key, 0, 0, node);
         } else if (elem->member) {
             int32_t op = flecs_irc_emit(c, EcsIrDynMember, 0, 0, 0, node);
@@ -312,41 +198,28 @@ static int flecs_irc_compile_dynamic_initializer(
         }
 
         if (elem->value->kind == EcsExprInitializer) {
-            if (flecs_irc_compile_dynamic_initializer(
-                c, (ecs_expr_initializer_t*)elem->value, dst))
-            {
-                return -1;
-            }
-
+            flecs_irc_compile_dynamic_initializer(
+                c, (ecs_expr_initializer_t*)elem->value, dst);
             continue;
         }
 
         ecs_expr_swizzle_t *swizzle = flecs_expr_expand_swizzle_get(
             elem->value);
         if (swizzle) {
-            int32_t left = flecs_irc_reg(c);
-            if (flecs_irc_compile_expr(c, swizzle->left, left, false)) {
-                return -1;
-            }
-
+            int32_t left = flecs_irc_compile_tmp(c, swizzle->left);
             int32_t op = flecs_irc_emit(c, EcsIrDynSwizzle, left, 0, 0, node);
             flecs_irc_op(c, op)->imm.ptr = swizzle;
             continue;
         }
 
-        int32_t value = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, elem->value, value, false)) {
-            return -1;
-        }
-
+        int32_t value = flecs_irc_compile_tmp(c, elem->value);
         flecs_irc_emit(c, EcsIrDynSet, value, 0, 0, node);
     }
 
     flecs_irc_emit(c, EcsIrDynPop, dst, 0, 0, node);
-    return 0;
 }
 
-static int flecs_irc_compile_static_initializer(
+static void flecs_irc_compile_static_initializer(
     ecs_script_ir_compiler_t *c,
     ecs_expr_initializer_t *node,
     int32_t dst)
@@ -365,16 +238,9 @@ static int flecs_irc_compile_static_initializer(
             if (inner->is_dynamic) {
                 int32_t member = flecs_irc_reg(c);
                 flecs_irc_emit(c, EcsIrMember, member, dst, offset, inner);
-                flecs_irc_emit(c, EcsIrDynBegin, member, 0, 0, inner);
-                if (flecs_irc_compile_dynamic_initializer(c, inner, member)) {
-                    return -1;
-                }
-
-                flecs_irc_emit(c, EcsIrDynEnd, member, 0, 0, inner);
+                flecs_irc_compile_initializer(c, inner, member);
             } else {
-                if (flecs_irc_compile_static_initializer(c, inner, dst)) {
-                    return -1;
-                }
+                flecs_irc_compile_static_initializer(c, inner, dst);
             }
 
             continue;
@@ -383,11 +249,7 @@ static int flecs_irc_compile_static_initializer(
         ecs_expr_swizzle_t *swizzle = flecs_expr_expand_swizzle_get(
             elem->value);
         if (swizzle) {
-            int32_t left = flecs_irc_reg(c);
-            if (flecs_irc_compile_expr(c, swizzle->left, left, false)) {
-                return -1;
-            }
-
+            int32_t left = flecs_irc_compile_tmp(c, swizzle->left);
             int32_t op = flecs_irc_emit(
                 c, EcsIrInitSwizzle, dst, offset, left, node);
             flecs_irc_op(c, op)->imm.ptr = swizzle;
@@ -402,45 +264,31 @@ static int flecs_irc_compile_static_initializer(
             continue;
         }
 
-        int32_t value = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, elem->value, value, false)) {
-            return -1;
-        }
-
-        if (!elem->operator) {
-            int32_t op = flecs_irc_emit(
-                c, EcsIrInitAssign, dst, offset, value, elem->value);
-            flecs_irc_op(c, op)->imm.ptr = node;
-        } else {
-            int32_t op = flecs_irc_emit(
-                c, EcsIrInitOp, dst, offset, value, elem->value);
-            flecs_irc_op(c, op)->flags = (uint16_t)elem->operator;
-            flecs_irc_op(c, op)->imm.ptr = node;
-        }
+        int32_t value = flecs_irc_compile_tmp(c, elem->value);
+        int32_t op = flecs_irc_emit(c,
+            elem->operator ? EcsIrInitOp : EcsIrInitAssign,
+            dst, offset, value, elem->value);
+        flecs_irc_op(c, op)->flags = (uint16_t)elem->operator;
+        flecs_irc_op(c, op)->imm.ptr = node;
     }
-
-    return 0;
 }
 
-static int flecs_irc_compile_initializer(
+static void flecs_irc_compile_initializer(
     ecs_script_ir_compiler_t *c,
     ecs_expr_initializer_t *node,
     int32_t dst)
 {
-    if (node->is_dynamic) {
-        flecs_irc_emit(c, EcsIrDynBegin, dst, 0, 0, node);
-        if (flecs_irc_compile_dynamic_initializer(c, node, dst)) {
-            return -1;
-        }
-
-        flecs_irc_emit(c, EcsIrDynEnd, dst, 0, 0, node);
-        return 0;
+    if (!node->is_dynamic) {
+        flecs_irc_compile_static_initializer(c, node, dst);
+        return;
     }
 
-    return flecs_irc_compile_static_initializer(c, node, dst);
+    flecs_irc_emit(c, EcsIrDynBegin, dst, 0, 0, node);
+    flecs_irc_compile_dynamic_initializer(c, node, dst);
+    flecs_irc_emit(c, EcsIrDynEnd, dst, 0, 0, node);
 }
 
-static int flecs_irc_compile_interpolated_string(
+static void flecs_irc_compile_interpolated_string(
     ecs_script_ir_compiler_t *c,
     ecs_expr_interpolated_string_t *node,
     int32_t dst)
@@ -467,58 +315,28 @@ static int flecs_irc_compile_interpolated_string(
             expr->type == ecs_id(ecs_string_t))
         {
             ecs_expr_node_t *inner = ((ecs_expr_cast_t*)expr)->expr;
-            ecs_entity_t it = inner->type;
-            uint16_t cls = 0;
-            int32_t sz = 0;
-            if (it == ecs_id(ecs_char_t)) {
-                cls = 4;
-                sz = 1;
-            } else if (it != ecs_id(ecs_bool_t) && it != ecs_id(ecs_byte_t)) {
-                ecs_script_ir_num_class_t nc = flecs_irc_num_class(it, &sz);
-                if (nc == EcsIrNumSigned) {
-                    cls = 1;
-                } else if (nc == EcsIrNumUnsigned) {
-                    cls = 2;
-                } else if (nc == EcsIrNumFloat) {
-                    cls = 3;
-                }
-            }
-
+            int32_t size;
+            flecs_expr_num_class_t cls = inner->type == ecs_id(ecs_char_t)
+                ? EcsExprNumChar : flecs_expr_num_class(inner->type, &size);
             if (cls) {
-                int32_t src = flecs_irc_reg(c);
-                if (flecs_irc_compile_expr(c, inner, src, false)) {
-                    return -1;
+                int32_t src = flecs_irc_compile_tmp(c, inner);
+                int32_t op = flecs_irc_emit(c, EcsIrStrCast, src, 0, 0, inner);
+                flecs_irc_op(c, op)->flags = (uint16_t)cls;
+                if (cls != EcsExprNumChar) {
+                    flecs_irc_op(c, op)->imm.cast = flecs_expr_cast_handler(
+                        inner->type, cls == EcsExprNumSigned ? ecs_id(ecs_i64_t)
+                            : cls == EcsExprNumUnsigned ? ecs_id(ecs_u64_t)
+                            : ecs_id(ecs_f64_t));
                 }
 
-                int32_t op = flecs_irc_emit(c, EcsIrStrCast, src, sz, 0, inner);
-                flecs_irc_op(c, op)->flags = cls;
                 continue;
             }
         }
 
-        int32_t value = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, expr, value, false)) {
-            return -1;
-        }
-
+        int32_t value = flecs_irc_compile_tmp(c, expr);
         if (format->is_present) {
-            int32_t width = -1, precision = -1;
-            if (format->width) {
-                width = flecs_irc_reg(c);
-                if (flecs_irc_compile_expr(c, format->width, width, false)) {
-                    return -1;
-                }
-            }
-
-            if (format->precision) {
-                precision = flecs_irc_reg(c);
-                if (flecs_irc_compile_expr(
-                    c, format->precision, precision, false))
-                {
-                    return -1;
-                }
-            }
-
+            int32_t width = flecs_irc_compile_tmp(c, format->width);
+            int32_t precision = flecs_irc_compile_tmp(c, format->precision);
             int32_t op = flecs_irc_emit(
                 c, EcsIrStrFormat, value, width, precision, expr);
             flecs_irc_op(c, op)->imm.ptr = format;
@@ -528,61 +346,66 @@ static int flecs_irc_compile_interpolated_string(
     }
 
     flecs_irc_emit(c, EcsIrStrEnd, dst, 0, 0, node);
-    return 0;
 }
 
-static int flecs_irc_compile_call(
+static int32_t flecs_irc_compile_args(
     ecs_script_ir_compiler_t *c,
     ecs_expr_function_t *node,
-    int32_t dst,
-    bool in_place,
-    bool method)
+    int32_t *count)
 {
-    int32_t argc = ecs_vec_count(&node->args->elements);
-    int32_t total = argc + (method ? 1 : 0);
+    int32_t method = node->node.kind == EcsExprMethod;
+    int32_t i, argc = ecs_vec_count(&node->args->elements);
     int32_t first = c->reg_count;
-    int32_t i;
-    for (i = 0; i < total; i ++) {
+    *count = argc + method;
+    for (i = 0; i < *count; i ++) {
         flecs_irc_reg(c);
     }
 
-    int32_t arg_reg = first;
     if (method) {
-        if (!node->left) {
-            return 0;
-        }
-
-        if (flecs_irc_compile_expr(c, node->left, first, false)) {
-            return -1;
-        }
-
-        arg_reg ++;
+        flecs_irc_compile_expr(c, node->left, first, false);
     }
 
     ecs_expr_initializer_element_t *elems = ecs_vec_first(
         &node->args->elements);
     for (i = 0; i < argc; i ++) {
-        if (flecs_irc_compile_expr(c, elems[i].value, arg_reg + i, false)) {
-            return -1;
-        }
+        flecs_irc_compile_expr(c, elems[i].value, first + method + i, false);
     }
 
-    int32_t op = flecs_irc_emit(c, EcsIrCall, dst, first, total, node);
-    flecs_irc_op(c, op)->flags = (uint16_t)(
-        (in_place ? EcsIrInPlace : 0) | (method ? EcsIrCallMethod : 0));
-    return 0;
+    return first;
 }
 
-static int flecs_irc_compile_match(
+static void flecs_irc_compile_call(
+    ecs_script_ir_compiler_t *c,
+    ecs_expr_function_t *node,
+    int32_t dst,
+    bool in_place)
+{
+    int32_t count, first = flecs_irc_compile_args(c, node, &count);
+    int32_t op = flecs_irc_emit(c, EcsIrCall, dst, first, count, node);
+    flecs_irc_op(c, op)->flags = (uint16_t)((in_place ? EcsIrInPlace : 0) |
+        (node->node.kind == EcsExprMethod ? EcsIrCallMethod : 0));
+}
+
+static void flecs_irc_patch_jumps(
+    ecs_script_ir_compiler_t *c,
+    ecs_vec_t *jumps)
+{
+    int32_t i, end = flecs_irc_pc(c);
+    int32_t *jump_ops = ecs_vec_first(jumps);
+    for (i = 0; i < ecs_vec_count(jumps); i ++) {
+        flecs_irc_op(c, jump_ops[i])->a = end;
+    }
+
+    ecs_vec_fini_t(NULL, jumps, int32_t);
+}
+
+static void flecs_irc_compile_match(
     ecs_script_ir_compiler_t *c,
     ecs_expr_match_t *node,
     int32_t dst,
     bool in_place)
 {
-    int32_t value = flecs_irc_reg(c);
-    if (flecs_irc_compile_expr(c, node->expr, value, false)) {
-        return -1;
-    }
+    int32_t value = flecs_irc_compile_tmp(c, node->expr);
 
     ecs_vec_t jumps;
     ecs_vec_init_t(NULL, &jumps, int32_t, 0);
@@ -590,52 +413,31 @@ static int flecs_irc_compile_match(
     int32_t i, count = ecs_vec_count(&node->elements);
     ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
     for (i = 0; i < count; i ++) {
-        int32_t compare = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, elems[i].compare, compare, false)) {
-            goto error;
-        }
-
+        int32_t compare = flecs_irc_compile_tmp(c, elems[i].compare);
         int32_t cmp = flecs_irc_emit(c, EcsIrMatchCmp, value, compare, 0, node);
-        if (flecs_irc_compile_expr(c, elems[i].expr, dst, in_place)) {
-            goto error;
-        }
-
+        flecs_irc_compile_expr(c, elems[i].expr, dst, in_place);
         ecs_vec_append_t(NULL, &jumps, int32_t)[0] =
             flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
         flecs_irc_op(c, cmp)->c = flecs_irc_pc(c);
     }
 
     if (node->any.expr) {
-        if (flecs_irc_compile_expr(c, node->any.expr, dst, in_place)) {
-            goto error;
-        }
+        flecs_irc_compile_expr(c, node->any.expr, dst, in_place);
     } else {
         flecs_irc_emit(c, EcsIrMatchFail, value, 0, 0, node);
     }
 
-    int32_t end = flecs_irc_pc(c);
-    int32_t *jump_ops = ecs_vec_first(&jumps);
-    for (i = 0; i < ecs_vec_count(&jumps); i ++) {
-        flecs_irc_op(c, jump_ops[i])->a = end;
-    }
-
-    ecs_vec_fini_t(NULL, &jumps, int32_t);
-    return 0;
-error:
-    ecs_vec_fini_t(NULL, &jumps, int32_t);
-    return -1;
+    flecs_irc_patch_jumps(c, &jumps);
 }
 
-static int flecs_irc_compile_binary(
+static void flecs_irc_compile_binary(
     ecs_script_ir_compiler_t *c,
     ecs_expr_binary_t *node,
     int32_t dst,
     bool in_place)
 {
-    int32_t left = flecs_irc_reg(c);
-    if (flecs_irc_compile_expr(c, node->left, left, false)) {
-        return -1;
-    }
+    uint16_t place = in_place ? EcsIrInPlace : 0;
+    int32_t left = flecs_irc_compile_tmp(c, node->left);
 
     int32_t skip = -1;
     if (!node->vector_count && node->left->type == ecs_id(ecs_bool_t) &&
@@ -644,66 +446,42 @@ static int flecs_irc_compile_binary(
         skip = flecs_irc_emit(c,
             node->operator == EcsTokAnd ? EcsIrJumpIfFalse : EcsIrJumpIfTrue,
             left, 0, dst, node);
-        flecs_irc_op(c, skip)->flags = in_place ? EcsIrInPlace : 0;
+        flecs_irc_op(c, skip)->flags = place;
     }
 
-    int32_t right = flecs_irc_reg(c);
-    if (flecs_irc_compile_expr(c, node->right, right, false)) {
-        return -1;
+    int32_t right = flecs_irc_compile_tmp(c, node->right);
+    int32_t op = flecs_irc_emit(c, EcsIrBinary, dst, left, right, node);
+    flecs_irc_op(c, op)->flags = (uint16_t)(node->operator |
+        (in_place ? EcsIrBinaryInPlace : 0));
+
+    int32_t size;
+    flecs_expr_num_class_t class = flecs_expr_num_class(
+        node->left->type, &size);
+    if (!node->vector_count && class && (node->node.type == node->left->type ||
+        node->node.type == ecs_id(ecs_bool_t)))
+    {
+        static const uint16_t kinds[4][9] = {
+            [EcsExprNumSigned] = {
+                [1] = EcsIrBinaryI8, [2] = EcsIrBinaryI16,
+                [4] = EcsIrBinaryI32, [8] = EcsIrBinaryI64
+            },
+            [EcsExprNumUnsigned] = {
+                [1] = EcsIrBinaryU8, [2] = EcsIrBinaryU16,
+                [4] = EcsIrBinaryU32, [8] = EcsIrBinaryU64
+            },
+            [EcsExprNumFloat] = {
+                [4] = EcsIrBinaryF32, [8] = EcsIrBinaryF64
+            }
+        };
+        flecs_irc_op(c, op)->kind = kinds[class][size];
     }
-
-    ecs_script_ir_op_kind_t kind = EcsIrBinary;
-    if (!node->vector_count) {
-        ecs_entity_t lt = node->left->type, rt = node->node.type;
-        bool cmp = rt == ecs_id(ecs_bool_t);
-        int32_t size;
-        ecs_script_ir_num_class_t class = flecs_irc_num_class(lt, &size);
-        if (class && (cmp || rt == lt)) {
-            static const ecs_script_ir_op_kind_t kinds[4][9] = {
-                [EcsIrNumSigned] = {
-                    [1] = EcsIrBinaryI8, [2] = EcsIrBinaryI16,
-                    [4] = EcsIrBinaryI32, [8] = EcsIrBinaryI64
-                },
-                [EcsIrNumUnsigned] = {
-                    [1] = EcsIrBinaryU8, [2] = EcsIrBinaryU16,
-                    [4] = EcsIrBinaryU32, [8] = EcsIrBinaryU64
-                },
-                [EcsIrNumFloat] = {
-                    [4] = EcsIrBinaryF32, [8] = EcsIrBinaryF64
-                }
-            };
-            kind = kinds[class][size];
-        }
-
-        if (kind != EcsIrBinary && (node->operator == EcsTokAddAssign ||
-            node->operator == EcsTokMulAssign || node->operator == EcsTokAnd ||
-            node->operator == EcsTokOr))
-        {
-            kind = EcsIrBinary;
-        }
-
-        if ((kind == EcsIrBinaryF64 || kind == EcsIrBinaryF32) &&
-            (node->operator == EcsTokMod || node->operator == EcsTokBitwiseAnd ||
-             node->operator == EcsTokBitwiseOr ||
-             node->operator == EcsTokShiftLeft ||
-             node->operator == EcsTokShiftRight))
-        {
-            kind = EcsIrBinary;
-        }
-    }
-
-    int32_t op = flecs_irc_emit(c, kind, dst, left, right, node);
-    ecs_script_ir_op_t *ptr = flecs_irc_op(c, op);
-    ptr->flags = (uint16_t)(node->operator | (in_place ? 0x8000 : 0));
 
     if (skip != -1) {
         flecs_irc_op(c, skip)->b = flecs_irc_pc(c);
     }
-
-    return 0;
 }
 
-static int flecs_irc_compile_expr(
+static void flecs_irc_compile_expr(
     ecs_script_ir_compiler_t *c,
     ecs_expr_node_t *node,
     int32_t dst,
@@ -711,91 +489,65 @@ static int flecs_irc_compile_expr(
 {
     ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
     uint16_t place = in_place ? EcsIrInPlace : 0;
+    int32_t op;
 
     switch(node->kind) {
-    case EcsExprValue: {
-        ecs_expr_value_node_t *n = (ecs_expr_value_node_t*)node;
-        int32_t op = flecs_irc_emit(c, EcsIrLoadConst, dst, 0, 0, node);
-        flecs_irc_op(c, op)->imm.ptr = n->ptr;
-        return 0;
-    }
+    case EcsExprValue:
+        op = flecs_irc_emit(c, EcsIrLoadConst, dst, 0, 0, node);
+        flecs_irc_op(c, op)->imm.ptr = ((ecs_expr_value_node_t*)node)->ptr;
+        return;
     case EcsExprInterpolatedString:
-        return flecs_irc_compile_interpolated_string(
+        flecs_irc_compile_interpolated_string(
             c, (ecs_expr_interpolated_string_t*)node, dst);
-    case EcsExprInitializer: {
+        return;
+    case EcsExprInitializer:
+    case EcsExprEmptyInitializer:
         if (!in_place) {
             flecs_irc_emit(c, EcsIrInitAlloc, dst, 0, 0, node);
         }
 
-        return flecs_irc_compile_initializer(
-            c, (ecs_expr_initializer_t*)node, dst);
-    }
-    case EcsExprEmptyInitializer: {
-        ecs_expr_initializer_t *n = (ecs_expr_initializer_t*)node;
-        if (!in_place) {
-            flecs_irc_emit(c, EcsIrInitAlloc, dst, 0, 0, node);
-        }
-
-        if (n->is_dynamic) {
-            flecs_irc_emit(c, EcsIrDynBegin, dst, 0, 0, node);
-            flecs_irc_emit(c, EcsIrDynPush, dst, 0, 0, node);
-            flecs_irc_emit(c, EcsIrDynPop, dst, 0, 0, node);
-            flecs_irc_emit(c, EcsIrDynEnd, dst, 0, 0, node);
-        }
-
-        return 0;
-    }
+        flecs_irc_compile_initializer(c, (ecs_expr_initializer_t*)node, dst);
+        return;
     case EcsExprUnary: {
-        ecs_expr_unary_t *n = (ecs_expr_unary_t*)node;
-        int32_t src = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, n->expr, src, false)) {
-            return -1;
-        }
-
-        int32_t op = flecs_irc_emit(c, EcsIrUnary, dst, src, 0, node);
+        int32_t src = flecs_irc_compile_tmp(
+            c, ((ecs_expr_unary_t*)node)->expr);
+        op = flecs_irc_emit(c, EcsIrUnary, dst, src, 0, node);
         flecs_irc_op(c, op)->flags = place;
-        return 0;
+        return;
     }
     case EcsExprBinary:
-        return flecs_irc_compile_binary(
-            c, (ecs_expr_binary_t*)node, dst, in_place);
+        flecs_irc_compile_binary(c, (ecs_expr_binary_t*)node, dst, in_place);
+        return;
     case EcsExprIdentifier: {
         ecs_expr_identifier_t *n = (ecs_expr_identifier_t*)node;
         if (n->expr) {
-            return flecs_irc_compile_expr(c, n->expr, dst, in_place);
-        } else if (n->symbol != -1) {
-            int32_t op = flecs_irc_emit(
-                c, EcsIrLoadSymbol, dst, n->symbol, 0, node);
-            flecs_irc_op(c, op)->flags = (uint16_t)(place |
-                (node->type == ecs_id(ecs_entity_t) ? EcsIrIdDirect : 0));
-        } else {
-            int32_t op = flecs_irc_emit(c, EcsIrLookup, dst, 0, 0, node);
-            flecs_irc_op(c, op)->imm.str = n->value;
-            flecs_irc_op(c, op)->flags = (uint16_t)(place |
-                (node->type == ecs_id(ecs_entity_t) ? EcsIrIdDirect : 0));
+            flecs_irc_compile_expr(c, n->expr, dst, in_place);
+            return;
         }
 
-        return 0;
+        op = flecs_irc_emit(c, n->symbol != -1 ? EcsIrLoadSymbol : EcsIrLookup,
+            dst, n->symbol, 0, node);
+        flecs_irc_op(c, op)->imm.str = n->value;
+        flecs_irc_op(c, op)->flags = (uint16_t)(place |
+            (node->type == ecs_id(ecs_entity_t) ? EcsIrIdDirect : 0));
+        return;
     }
-    case EcsExprVariable: {
-        ecs_expr_variable_t *n = (ecs_expr_variable_t*)node;
-        flecs_irc_emit(c, EcsIrLoadVar, dst, n->sp, 0, node);
-        return 0;
-    }
+    case EcsExprVariable:
+        flecs_irc_emit(c, EcsIrLoadVar, dst,
+            ((ecs_expr_variable_t*)node)->sp, 0, node);
+        return;
     case EcsExprGlobalVariable: {
         ecs_expr_variable_t *n = (ecs_expr_variable_t*)node;
-        int32_t op = flecs_irc_emit(c, EcsIrLoadGlobal, dst, 0, 0, node);
+        op = flecs_irc_emit(c, EcsIrLoadGlobal, dst, 0, 0, node);
         flecs_irc_op(c, op)->imm.entity = n->global;
         flecs_irc_op(c, op)->flags =
-            n->global_component == ecs_id(EcsScriptMutVar) ? 1 : 0;
-        return 0;
+            n->global_component == ecs_id(EcsScriptMutVar) ? EcsIrGlobalMut : 0;
+        return;
     }
     case EcsExprFunction:
-        return flecs_irc_compile_call(
-            c, (ecs_expr_function_t*)node, dst, in_place, false);
     case EcsExprMethod:
-        return flecs_irc_compile_call(
-            c, (ecs_expr_function_t*)node, dst, in_place, true);
+        flecs_irc_compile_call(c, (ecs_expr_function_t*)node, dst, in_place);
+        return;
     case EcsExprTemplate: {
         ecs_expr_function_t *n = (ecs_expr_function_t*)node;
         ecs_expr_node_t *args = (ecs_expr_node_t*)n->args;
@@ -803,23 +555,13 @@ static int flecs_irc_compile_expr(
         bool has_args = n->args && ecs_vec_count(&n->args->elements) != 0;
         bool from_var = flecs_expr_template_ref_var(n->left) != NULL;
         if (!from_var && node->type != ecs_id(ecs_script_template_ref_t)) {
-            return flecs_irc_compile_expr(c, args, dst, in_place);
+            flecs_irc_compile_expr(c, args, dst, in_place);
+            return;
         }
 
-        int32_t src = -1;
-        if (from_var) {
-            src = flecs_irc_reg(c);
-            if (flecs_irc_compile_expr(c, n->left, src, false)) {
-                return -1;
-            }
-        } else if (has_type) {
-            src = flecs_irc_reg(c);
-            if (flecs_irc_compile_expr(c, args, src, false)) {
-                return -1;
-            }
-        }
-
-        int32_t op = flecs_irc_emit(c, EcsIrTemplateRef, dst, src, 0, node);
+        int32_t src = flecs_irc_compile_tmp(
+            c, from_var ? n->left : (has_type ? args : NULL));
+        op = flecs_irc_emit(c, EcsIrTemplateRef, dst, src, 0, node);
         flecs_irc_op(c, op)->flags = (uint16_t)(place |
             (from_var ? EcsIrTemplateRefVar : 0));
         flecs_irc_op(c, op)->imm.entity = n->calldata.function;
@@ -827,46 +569,30 @@ static int flecs_irc_compile_expr(
         if (from_var && has_args) {
             int32_t value = flecs_irc_reg(c);
             flecs_irc_emit(c, EcsIrTemplateRefValue, value, dst, 0, args);
-            return flecs_irc_compile_expr(c, args, value, true);
+            flecs_irc_compile_expr(c, args, value, true);
         }
 
-        return 0;
+        return;
     }
     case EcsExprMember: {
         ecs_expr_member_t *n = (ecs_expr_member_t*)node;
-        int32_t src = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, n->left, src, false)) {
-            return -1;
-        }
-
+        int32_t src = flecs_irc_compile_tmp(c, n->left);
         flecs_irc_emit(c, EcsIrMember, dst, src,
             flecs_uto(int32_t, n->offset), node);
-        return 0;
+        return;
     }
     case EcsExprSwizzle: {
-        ecs_expr_swizzle_t *n = (ecs_expr_swizzle_t*)node;
-        int32_t src = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, n->left, src, false)) {
-            return -1;
-        }
-
-        int32_t op = flecs_irc_emit(c, EcsIrSwizzle, dst, src, 0, node);
+        int32_t src = flecs_irc_compile_tmp(
+            c, ((ecs_expr_swizzle_t*)node)->left);
+        op = flecs_irc_emit(c, EcsIrSwizzle, dst, src, 0, node);
         flecs_irc_op(c, op)->flags = place;
-        return 0;
+        return;
     }
     case EcsExprElement: {
         ecs_expr_element_t *n = (ecs_expr_element_t*)node;
-        int32_t left = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, n->left, left, false)) {
-            return -1;
-        }
-
-        int32_t index = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, n->index, index, false)) {
-            return -1;
-        }
-
-        int32_t op = flecs_irc_emit(c, EcsIrElement, dst, left, index, node);
+        int32_t left = flecs_irc_compile_tmp(c, n->left);
+        int32_t index = flecs_irc_compile_tmp(c, n->index);
+        op = flecs_irc_emit(c, EcsIrElement, dst, left, index, node);
         const EcsType *type = ecs_get(c->world, n->left->type, EcsType);
         if (type && type->kind == EcsMapType) {
             flecs_irc_op(c, op)->flags = EcsIrElementMap;
@@ -874,14 +600,11 @@ static int flecs_irc_compile_expr(
             flecs_irc_op(c, op)->flags = EcsIrElementVector;
         }
 
-        return 0;
+        return;
     }
     case EcsExprComponent: {
         ecs_expr_element_t *n = (ecs_expr_element_t*)node;
-        int32_t left = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, n->left, left, false)) {
-            return -1;
-        }
+        int32_t left = flecs_irc_compile_tmp(c, n->left);
 
         ecs_expr_node_t *index = n->index;
         if (index && index->kind == EcsExprIdentifier) {
@@ -896,90 +619,59 @@ static int flecs_irc_compile_expr(
             component = node->type;
         }
 
-        int32_t op = flecs_irc_emit(c, EcsIrComponentGet, dst, left, 0, node);
+        op = flecs_irc_emit(c, EcsIrComponentGet, dst, left, 0, node);
         flecs_irc_op(c, op)->imm.entity = component;
-        return 0;
+        return;
     }
     case EcsExprHas: {
         ecs_expr_has_t *n = (ecs_expr_has_t*)node;
-        int32_t left = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, n->left, left, false)) {
-            return -1;
-        }
-
-        int32_t op = flecs_irc_emit(c, EcsIrHas, dst, left, 0, node);
+        int32_t left = flecs_irc_compile_tmp(c, n->left);
+        op = flecs_irc_emit(c, EcsIrHas, dst, left, 0, node);
         flecs_irc_op(c, op)->imm.id = n->id;
         flecs_irc_op(c, op)->flags = place;
-        return 0;
+        return;
     }
-    case EcsExprCast: {
-        ecs_expr_cast_t *n = (ecs_expr_cast_t*)node;
-        int32_t src = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, n->expr, src, false)) {
-            return -1;
-        }
-
-        int32_t rsize = 0;
-        ecs_script_ir_num_class_t rclass = flecs_irc_num_class(
-            node->type, &rsize);
-        if (n->expr->type == ecs_id(ecs_bool_t) && rclass != EcsIrNumNone) {
-            int32_t op = flecs_irc_emit(c, EcsIrCastNumber, dst, src, 0, node);
-            flecs_irc_op(c, op)->flags = place;
-            flecs_irc_op(c, op)->imm.cast = flecs_irc_cast_handler(
-                n->expr->type, node->type);
-            return 0;
-        }
-
-        int32_t op = flecs_irc_emit(c, EcsIrCast, dst, src, 0, node);
-        flecs_irc_op(c, op)->flags = place;
-        return 0;
-    }
+    case EcsExprCast:
     case EcsExprCastNumber: {
         ecs_expr_cast_t *n = (ecs_expr_cast_t*)node;
-        int32_t src = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, n->expr, src, false)) {
-            return -1;
+        int32_t src = flecs_irc_compile_tmp(c, n->expr);
+        int32_t size;
+        bool number = node->kind == EcsExprCastNumber ||
+            (n->expr->type == ecs_id(ecs_bool_t) &&
+                flecs_expr_num_class(node->type, &size) != EcsExprNumNone);
+        op = flecs_irc_emit(c, number ? EcsIrCastNumber : EcsIrCast,
+            dst, src, 0, node);
+        flecs_irc_op(c, op)->flags = place;
+        if (number) {
+            flecs_irc_op(c, op)->imm.cast = flecs_expr_cast_handler(
+                n->expr->type, node->type);
         }
 
-        int32_t op = flecs_irc_emit(c, EcsIrCastNumber, dst, src, 0, node);
-        flecs_irc_op(c, op)->flags = place;
-        flecs_irc_op(c, op)->imm.cast = flecs_irc_cast_handler(
-            n->expr->type, node->type);
-        return 0;
+        return;
     }
     case EcsExprMatch:
-        return flecs_irc_compile_match(
-            c, (ecs_expr_match_t*)node, dst, in_place);
+        flecs_irc_compile_match(c, (ecs_expr_match_t*)node, dst, in_place);
+        return;
     case EcsExprRange: {
         ecs_expr_range_t *n = (ecs_expr_range_t*)node;
-        int32_t from = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, n->from, from, false)) {
-            return -1;
-        }
-
-        int32_t to = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, n->to, to, false)) {
-            return -1;
-        }
-
-        int32_t op = flecs_irc_emit(c, EcsIrRange, dst, from, to, node);
+        int32_t from = flecs_irc_compile_tmp(c, n->from);
+        int32_t to = flecs_irc_compile_tmp(c, n->to);
+        op = flecs_irc_emit(c, EcsIrRange, dst, from, to, node);
         flecs_irc_op(c, op)->flags = place;
-        return 0;
+        return;
     }
     case EcsExprNew: {
-        ecs_expr_new_t *n = (ecs_expr_new_t*)node;
-        int32_t entry = flecs_irc_entry_add(c, n->entity, EcsIrEntryEntity);
-        int32_t op = flecs_irc_emit(c, EcsIrNew, dst, entry, 0, node);
+        int32_t entry = flecs_irc_entry_add(
+            c, ((ecs_expr_new_t*)node)->entity, EcsIrEntryEntity);
+        op = flecs_irc_emit(c, EcsIrNew, dst, entry, 0, node);
         flecs_irc_op(c, op)->flags = place;
-        return 0;
+        return;
     }
-    case EcsExprScript: {
-        ecs_expr_script_t *n = (ecs_expr_script_t*)node;
-        int32_t op = flecs_irc_emit(c, EcsIrScript, dst, 0, 0, node);
-        flecs_irc_op(c, op)->imm.ptr = n->script;
+    case EcsExprScript:
+        op = flecs_irc_emit(c, EcsIrScript, dst, 0, 0, node);
+        flecs_irc_op(c, op)->imm.ptr = ((ecs_expr_script_t*)node)->script;
         flecs_irc_op(c, op)->flags = place;
-        return 0;
-    }
+        return;
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt expression node kind");
@@ -1062,44 +754,55 @@ static void flecs_irc_expr_end(
     }
 }
 
-static int flecs_irc_compile_tag(
+static void flecs_irc_compile_body(
+    ecs_script_ir_compiler_t *c,
+    ecs_script_scope_t *scope,
+    uint16_t flags)
+{
+    int32_t floor = c->reg_floor, count = c->reg_count;
+    c->reg_floor = count;
+    flecs_irc_compile_scope(c, scope, flags);
+    c->reg_floor = floor;
+    c->reg_count = count;
+}
+
+static void flecs_irc_compile_id_op(
+    ecs_script_ir_compiler_t *c,
+    const void *node,
+    ecs_script_id_t *id,
+    int32_t component_slot,
+    ecs_script_ir_op_kind_t kind)
+{
+    bool expr = flecs_irc_id_needs_expr(id);
+    int32_t begin = expr ? flecs_irc_expr_begin(c, node) : -1;
+    int32_t index = flecs_irc_id(c, id, false, component_slot);
+    int32_t op = flecs_irc_emit(c, kind, index, 0, 0, node);
+    if (expr) {
+        bool scope = kind == EcsIrPairScopeEnter;
+        flecs_irc_expr_end(c, begin, !scope);
+        flecs_irc_op(c, op)->flags = scope ? EcsIrEndsExpr : 0;
+    }
+}
+
+static void flecs_irc_compile_tag(
     ecs_script_ir_compiler_t *c,
     ecs_script_tag_t *node,
     bool with)
 {
-    bool expr = flecs_irc_id_needs_expr(&node->id);
-    int32_t begin = -1;
-    if (expr) {
-        begin = flecs_irc_expr_begin(c, node);
-    }
-
-    int32_t id = flecs_irc_id(c, &node->id, node, false, node->component_slot);
-    if (id == -1) {
-        return -1;
-    }
-
-    flecs_irc_emit(c, with ? EcsIrWithTag : EcsIrTag, id, 0, 0, node);
-    if (expr) {
-        flecs_irc_expr_end(c, begin, true);
-    }
-
-    return 0;
+    flecs_irc_compile_id_op(c, node, &node->id, node->component_slot,
+        with ? EcsIrWithTag : EcsIrTag);
 }
 
-static int flecs_irc_compile_component(
+static void flecs_irc_compile_component(
     ecs_script_ir_compiler_t *c,
     ecs_script_component_t *node,
     bool with)
 {
-    int32_t begin = flecs_irc_expr_begin(c, node);
-    int32_t id = flecs_irc_id(c, &node->id, node, true, node->component_slot);
-    if (id == -1) {
-        return -1;
-    }
-
-    ecs_script_ir_id_t desc_copy = *ecs_vec_get_t(
+    bool expr = node->expr || flecs_irc_id_needs_expr(&node->id);
+    int32_t begin = expr ? flecs_irc_expr_begin(c, node) : -1;
+    int32_t id = flecs_irc_id(c, &node->id, true, node->component_slot);
+    const ecs_script_ir_id_t *desc = ecs_vec_get_t(
         &c->ir->ids, ecs_script_ir_id_t, id);
-    const ecs_script_ir_id_t *desc = &desc_copy;
 
     bool partial = false;
     if (node->expr && node->expr->kind == EcsExprInitializer) {
@@ -1110,7 +813,7 @@ static int flecs_irc_compile_component(
     if (!with && !desc->has_second && (desc->visitor || desc->dynamic)) {
         visitor = flecs_irc_emit(c, EcsIrComponentVisitor, id, 0, 0, node);
         if (desc->visitor) {
-            flecs_irc_op(c, visitor)->flags = 1;
+            flecs_irc_op(c, visitor)->flags = EcsIrVisitorStatic;
         }
     }
 
@@ -1130,55 +833,41 @@ static int flecs_irc_compile_component(
                 node->expr->kind == EcsExprEmptyInitializer;
         }
 
-        int32_t value = tmp;
-        if (!in_place) {
-            value = flecs_irc_reg(c);
-        }
-
-        if (flecs_irc_compile_expr(c, node->expr, value, in_place)) {
-            return -1;
-        }
-
+        int32_t value = in_place ? tmp : flecs_irc_reg(c);
+        flecs_irc_compile_expr(c, node->expr, value, in_place);
         flecs_irc_emit(c,
             with ? EcsIrWithComponentEnd : EcsIrComponentEnd,
             id, value, tmp, node);
+    } else if (with) {
+        flecs_irc_emit(c, EcsIrWithComponentBegin, id, -1, 0, node);
     } else {
-        if (with) {
-            flecs_irc_emit(
-                c, EcsIrWithComponentBegin, id, -1, 0, node);
-        } else {
-            flecs_irc_emit(c, EcsIrComponentEnd, id, -1, -1, node);
-        }
+        flecs_irc_emit(c, EcsIrComponentEnd, id, -1, -1, node);
     }
 
     if (visitor != -1) {
         flecs_irc_op(c, visitor)->b = flecs_irc_pc(c);
     }
 
-    flecs_irc_expr_end(c, begin, true);
-    return 0;
+    if (expr) {
+        flecs_irc_expr_end(c, begin, true);
+    }
 }
 
-static int flecs_irc_compile_const(
+static void flecs_irc_compile_const(
     ecs_script_ir_compiler_t *c,
     ecs_script_var_node_t *node)
 {
     int32_t begin = flecs_irc_expr_begin(c, node);
-    int32_t value = flecs_irc_reg(c);
-    if (flecs_irc_compile_expr(c, node->expr, value, false)) {
-        return -1;
-    }
-
+    int32_t value = flecs_irc_compile_tmp(c, node->expr);
     int32_t op = flecs_irc_emit(c, EcsIrConstEnd, value,
         node->computed - 1, 0, node);
     flecs_irc_op(c, op)->imm.ptr = node->eval_type
         ? ECS_CONST_CAST(void*, ecs_get_type_info(c->world, node->eval_type))
         : NULL;
     flecs_irc_expr_end(c, begin, true);
-    return 0;
 }
 
-static int flecs_irc_compile_await(
+static void flecs_irc_compile_await(
     ecs_script_ir_compiler_t *c,
     ecs_script_node_t *stmt)
 {
@@ -1201,40 +890,11 @@ static int flecs_irc_compile_await(
         flecs_irc_op(c, op)->flags = flags;
     } else {
         ecs_expr_function_t *call = (ecs_expr_function_t*)expr;
-        bool method = expr->kind == EcsExprMethod;
-        int32_t argc = ecs_vec_count(&call->args->elements);
-        int32_t total = argc + (method ? 1 : 0);
-
         int32_t begin = flecs_irc_expr_begin(c, stmt);
-        int32_t first = c->reg_count;
-        int32_t i;
-        for (i = 0; i < total; i ++) {
-            flecs_irc_reg(c);
-        }
-
-        int32_t arg_reg = first;
-        if (method) {
-            if (flecs_irc_compile_expr(c, call->left, first, false)) {
-                return -1;
-            }
-
-            arg_reg ++;
-        }
-
-        ecs_expr_initializer_element_t *elems = ecs_vec_first(
-            &call->args->elements);
-        for (i = 0; i < argc; i ++) {
-            if (flecs_irc_compile_expr(
-                c, elems[i].value, arg_reg + i, false))
-            {
-                return -1;
-            }
-        }
-
+        int32_t count, first = flecs_irc_compile_args(c, call, &count);
         int32_t launch = flecs_irc_emit(
-            c, EcsIrAwaitLaunch, first, total, 0, stmt);
-        flecs_irc_op(c, launch)->flags = (uint16_t)(
-            flags | (method ? EcsIrAwaitMethod : 0));
+            c, EcsIrAwaitLaunch, first, count, 0, stmt);
+        flecs_irc_op(c, launch)->flags = flags;
         flecs_irc_op(c, launch)->imm.ptr = call;
         flecs_irc_expr_end(c, begin, true);
     }
@@ -1242,74 +902,34 @@ static int flecs_irc_compile_await(
     flecs_irc_op(c, check)->b = flecs_irc_pc(c);
     int32_t poll = flecs_irc_emit(c, EcsIrAwaitPoll, 0, 0, 0, stmt);
     flecs_irc_op(c, poll)->flags = flags;
-    return 0;
 }
 
-static int flecs_irc_compile_entity(
+static void flecs_irc_compile_entity(
     ecs_script_ir_compiler_t *c,
     ecs_script_entity_t *node)
 {
-    int32_t name = -1, begin = -1;
-    if (node->name_expr) {
-        begin = flecs_irc_expr_begin(c, node);
-        name = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, node->name_expr, name, false)) {
-            return -1;
-        }
-    }
-
+    int32_t begin = node->name_expr ? flecs_irc_expr_begin(c, node) : -1;
+    int32_t name = flecs_irc_compile_tmp(c, node->name_expr);
     int32_t op = flecs_irc_emit(c, EcsIrEntityEnter, name, 0, 0, node);
     if (name != -1) {
         flecs_irc_expr_end(c, begin, false);
-        flecs_irc_op(c, op)->flags = 1;
+        flecs_irc_op(c, op)->flags = EcsIrEndsExpr;
     }
 
-    int32_t floor = c->reg_floor;
-    c->reg_floor = c->reg_count;
-    int result = flecs_irc_compile_scope(c, node->scope, EcsIrScopeEntity);
-    c->reg_floor = floor;
-    if (result) {
-        return -1;
-    }
-
+    flecs_irc_compile_body(c, node->scope, EcsIrScopeEntity);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameEntity, 0, 0, node);
-    return 0;
 }
 
-static int flecs_irc_compile_pair_scope(
+static void flecs_irc_compile_pair_scope(
     ecs_script_ir_compiler_t *c,
     ecs_script_pair_scope_t *node)
 {
-    bool expr = flecs_irc_id_needs_expr(&node->id);
-    int32_t begin = -1;
-    if (expr) {
-        begin = flecs_irc_expr_begin(c, node);
-    }
-
-    int32_t id = flecs_irc_id(c, &node->id, node, false, -1);
-    if (id == -1) {
-        return -1;
-    }
-
-    int32_t op = flecs_irc_emit(c, EcsIrPairScopeEnter, id, 0, 0, node);
-    if (expr) {
-        flecs_irc_expr_end(c, begin, false);
-        flecs_irc_op(c, op)->flags = 1;
-    }
-
-    int32_t floor = c->reg_floor;
-    c->reg_floor = c->reg_count;
-    int result = flecs_irc_compile_scope(c, node->scope, 0);
-    c->reg_floor = floor;
-    if (result) {
-        return -1;
-    }
-
+    flecs_irc_compile_id_op(c, node, &node->id, -1, EcsIrPairScopeEnter);
+    flecs_irc_compile_body(c, node->scope, 0);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFramePairScope, 0, 0, node);
-    return 0;
 }
 
-static int flecs_irc_compile_with(
+static void flecs_irc_compile_with(
     ecs_script_ir_compiler_t *c,
     ecs_script_with_t *node)
 {
@@ -1325,114 +945,62 @@ static int flecs_irc_compile_with(
         }
 
         if (stmt->kind == EcsAstWithTag) {
-            if (flecs_irc_compile_tag(c, (ecs_script_tag_t*)stmt, true)) {
-                return -1;
-            }
-        } else if (stmt->kind == EcsAstWithComponent) {
-            if (flecs_irc_compile_component(
-                c, (ecs_script_component_t*)stmt, true))
-            {
-                return -1;
-            }
+            flecs_irc_compile_tag(c, (ecs_script_tag_t*)stmt, true);
         } else {
-            ecs_err("invalid statement in with expression");
-            return -1;
+            ecs_assert(stmt->kind == EcsAstWithComponent,
+                ECS_INTERNAL_ERROR, NULL);
+            flecs_irc_compile_component(
+                c, (ecs_script_component_t*)stmt, true);
         }
     }
 
     flecs_irc_emit(c, EcsIrWithBody, 0, 0, 0, node);
-
-    int32_t floor = c->reg_floor;
-    c->reg_floor = c->reg_count;
-    int result = flecs_irc_compile_scope(c, node->scope, 0);
-    c->reg_floor = floor;
-    if (result) {
-        return -1;
-    }
-
+    flecs_irc_compile_body(c, node->scope, 0);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameWith, 0, 0, node);
-    return 0;
 }
 
-static int flecs_irc_compile_if(
+static void flecs_irc_compile_if(
     ecs_script_ir_compiler_t *c,
     ecs_script_if_t *node)
 {
     int32_t begin = flecs_irc_expr_begin(c, node);
-    int32_t cond = flecs_irc_reg(c);
-    if (flecs_irc_compile_expr(c, node->expr, cond, false)) {
-        return -1;
-    }
-
+    int32_t cond = flecs_irc_compile_tmp(c, node->expr);
     flecs_irc_emit(c, EcsIrToBool, cond, 0, 0, node);
     flecs_irc_expr_end(c, begin, true);
 
     int32_t enter = flecs_irc_emit(c, EcsIrIfEnter, 0, 0, 0, node);
-
-    int32_t floor = c->reg_floor;
-    c->reg_floor = c->reg_count;
-    if (flecs_irc_compile_scope(c, node->if_true, 0)) {
-        return -1;
-    }
-
+    flecs_irc_compile_body(c, node->if_true, 0);
     int32_t jump = flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
     flecs_irc_op(c, enter)->b = flecs_irc_pc(c);
-    if (flecs_irc_compile_scope(c, node->if_false, 0)) {
-        return -1;
-    }
-
-    c->reg_floor = floor;
+    flecs_irc_compile_body(c, node->if_false, 0);
     flecs_irc_op(c, jump)->a = flecs_irc_pc(c);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameIf, 0, 0, node);
-    return 0;
 }
 
-static int flecs_irc_compile_for(
+static void flecs_irc_compile_for(
     ecs_script_ir_compiler_t *c,
     ecs_script_for_t *node)
 {
     int32_t begin = flecs_irc_expr_begin(c, node);
-    int32_t from = -1, to = -1;
-    if (!node->expr) {
-        from = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, node->from, from, false)) {
-            return -1;
-        }
-
-        to = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, node->to, to, false)) {
-            return -1;
-        }
-    } else {
-        from = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, node->expr, from, false)) {
-            return -1;
-        }
-    }
-
+    int32_t from = flecs_irc_compile_tmp(
+        c, node->expr ? node->expr : node->from);
+    int32_t to = flecs_irc_compile_tmp(c, node->expr ? NULL : node->to);
     flecs_irc_expr_end(c, begin, false);
 
     flecs_irc_emit(c, EcsIrForEnter, from, to, 0, node);
     int32_t next = flecs_irc_emit(c, EcsIrForNext, 0, 0, 0, node);
 
-    int32_t floor = c->reg_floor;
-    c->reg_floor = c->reg_count;
     c->force_depth ++;
-    int result = flecs_irc_compile_scope(c, node->scope, 0);
+    flecs_irc_compile_body(c, node->scope, 0);
     c->force_depth --;
-    c->reg_floor = floor;
-    if (result) {
-        return -1;
-    }
 
     flecs_irc_emit(c, EcsIrJump, next, 0, 0, node);
     flecs_irc_op(c, next)->a = flecs_irc_pc(c);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameFor, 0, 0, node);
     flecs_irc_emit(c, EcsIrExprEnd, 0, 0, 0, node);
-    return 0;
 }
 
-static int flecs_irc_compile_try(
+static void flecs_irc_compile_try(
     ecs_script_ir_compiler_t *c,
     ecs_script_try_t *node)
 {
@@ -1448,12 +1016,7 @@ static int flecs_irc_compile_try(
     ecs_vec_t jumps;
     ecs_vec_init_t(NULL, &jumps, int32_t, 0);
 
-    int32_t floor = c->reg_floor;
-    c->reg_floor = c->reg_count;
-    if (flecs_irc_compile_scope(c, node->try_scope, 0)) {
-        goto error;
-    }
-
+    flecs_irc_compile_body(c, node->try_scope, 0);
     ecs_vec_append_t(NULL, &jumps, int32_t)[0] =
         flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
 
@@ -1462,42 +1025,17 @@ static int flecs_irc_compile_try(
             &node->catches, ecs_script_catch_t, i);
         ecs_vec_get_t(&c->ir->catches, int32_t,
             catch_first + i)[0] = flecs_irc_pc(c);
-        if (flecs_irc_compile_scope(c, catch_->scope, 0)) {
-            goto error;
-        }
-
+        flecs_irc_compile_body(c, catch_->scope, 0);
         ecs_vec_append_t(NULL, &jumps, int32_t)[0] =
             flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
     }
 
-    c->reg_floor = floor;
-
-    int32_t end = flecs_irc_pc(c);
-    int32_t *jump_ops = ecs_vec_first(&jumps);
-    for (i = 0; i < ecs_vec_count(&jumps); i ++) {
-        flecs_irc_op(c, jump_ops[i])->a = end;
-    }
-
-    flecs_irc_op(c, enter)->c = end;
+    flecs_irc_patch_jumps(c, &jumps);
+    flecs_irc_op(c, enter)->c = flecs_irc_pc(c);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameTry, 0, 0, node);
-    ecs_vec_fini_t(NULL, &jumps, int32_t);
-    return 0;
-error:
-    c->reg_floor = floor;
-    ecs_vec_fini_t(NULL, &jumps, int32_t);
-    return -1;
 }
 
-static bool flecs_irc_stmt_always(
-    ecs_script_node_t *node)
-{
-    return (node->kind == EcsAstConst &&
-            !((ecs_script_var_node_t*)node)->computed) ||
-        node->kind == EcsAstUsing ||
-        node->kind == EcsAstModule;
-}
-
-static int flecs_irc_compile_while(
+static void flecs_irc_compile_while(
     ecs_script_ir_compiler_t *c,
     ecs_script_while_t *node)
 {
@@ -1505,48 +1043,32 @@ static int flecs_irc_compile_while(
     int32_t cond_pc = flecs_irc_pc(c);
 
     int32_t begin = flecs_irc_expr_begin(c, node);
-    int32_t cond = flecs_irc_reg(c);
-    if (flecs_irc_compile_expr(c, node->expr, cond, false)) {
-        return -1;
-    }
-
+    int32_t cond = flecs_irc_compile_tmp(c, node->expr);
     flecs_irc_emit(c, EcsIrToBool, cond, 0, 0, node);
     flecs_irc_expr_end(c, begin, true);
 
     int32_t next = flecs_irc_emit(c, EcsIrWhileNext, 0, 0, 0, node);
 
-    int32_t floor = c->reg_floor;
-    c->reg_floor = c->reg_count;
     c->force_depth ++;
-    int result = flecs_irc_compile_scope(c, node->scope, 0);
+    flecs_irc_compile_body(c, node->scope, 0);
     c->force_depth --;
-    c->reg_floor = floor;
-    if (result) {
-        return -1;
-    }
 
     flecs_irc_emit(c, EcsIrJump, cond_pc, 0, 0, node);
     flecs_irc_op(c, next)->a = flecs_irc_pc(c);
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameWhile, 0, 0, node);
-    return 0;
 }
 
-static int flecs_irc_compile_assign(
+static void flecs_irc_compile_assign(
     ecs_script_ir_compiler_t *c,
     ecs_script_assign_t *node)
 {
     int32_t begin = flecs_irc_expr_begin(c, node);
-    int32_t value = flecs_irc_reg(c);
-    if (flecs_irc_compile_expr(c, node->expr, value, false)) {
-        return -1;
-    }
-
+    int32_t value = flecs_irc_compile_tmp(c, node->expr);
     flecs_irc_emit(c, EcsIrAssign, value, 0, 0, node);
     flecs_irc_expr_end(c, begin, true);
-    return 0;
 }
 
-static int flecs_irc_compile_stmt(
+static void flecs_irc_compile_stmt(
     ecs_script_ir_compiler_t *c,
     ecs_script_scope_t *scope,
     int32_t index)
@@ -1564,34 +1086,30 @@ static int flecs_irc_compile_stmt(
         ecs_script_ir_op_t *op = flecs_irc_op(c, stmt);
         op->imm.u64 = node->input;
         op->flags = (uint16_t)(
-            (flecs_irc_stmt_always(node) ? EcsIrStmtAlways : 0) |
+            (flecs_script_stmt_support(node) ? EcsIrStmtAlways : 0) |
             (node->skip ? EcsIrStmtSkip : 0));
     }
 
     if (node->skip) {
         flecs_irc_op(c, stmt)->b = flecs_irc_pc(c);
-        return 0;
+        return;
     }
 
-    int result = 0;
     switch(node->kind) {
     case EcsAstScope:
-        result = flecs_irc_compile_scope(c, (ecs_script_scope_t*)node, 0);
+        flecs_irc_compile_scope(c, (ecs_script_scope_t*)node, 0);
         break;
     case EcsAstTag:
-        result = flecs_irc_compile_tag(c, (ecs_script_tag_t*)node, false);
+        flecs_irc_compile_tag(c, (ecs_script_tag_t*)node, false);
         break;
     case EcsAstComponent:
-        result = flecs_irc_compile_component(
-            c, (ecs_script_component_t*)node, false);
+        flecs_irc_compile_component(c, (ecs_script_component_t*)node, false);
         break;
     case EcsAstWithTag:
     case EcsAstWithComponent:
-        ecs_err("invalid context for with expression");
-        result = -1;
-        break;
+        ecs_abort(ECS_INTERNAL_ERROR, "invalid context for with expression");
     case EcsAstWith:
-        result = flecs_irc_compile_with(c, (ecs_script_with_t*)node);
+        flecs_irc_compile_with(c, (ecs_script_with_t*)node);
         break;
     case EcsAstUsing:
         flecs_irc_emit(c, EcsIrUsing, 0, 0, 0, node);
@@ -1613,12 +1131,10 @@ static int flecs_irc_compile_stmt(
 
         break;
     }
-    case EcsAstTemplate: {
-        ecs_script_template_node_t *n = (ecs_script_template_node_t*)node;
-        flecs_irc_entry_add(c, n, EcsIrEntryTemplate);
+    case EcsAstTemplate:
+        flecs_irc_entry_add(c, node, EcsIrEntryTemplate);
         flecs_irc_emit(c, EcsIrTemplate, 0, 0, 0, node);
         break;
-    }
     case EcsAstProp:
         break;
     case EcsAstMut:
@@ -1627,18 +1143,19 @@ static int flecs_irc_compile_stmt(
     case EcsAstConst: {
         ecs_script_var_node_t *n = (ecs_script_var_node_t*)node;
         if (n->is_await) {
-            result = flecs_irc_compile_await(c, node);
-        } else {
-            result = flecs_irc_compile_const(c, n);
-            if (!result && n->computed && stmt != -1) {
-                int32_t jump = flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
-                flecs_irc_op(c, stmt)->b = flecs_irc_pc(c);
-                flecs_irc_op(c, stmt)->flags |= EcsIrStmtCached;
-                flecs_irc_emit(c, EcsIrConstCached,
-                    n->computed - 1, stmt + 1, 0, node);
-                flecs_irc_op(c, jump)->a = flecs_irc_pc(c);
-                stmt = -1;
-            }
+            flecs_irc_compile_await(c, node);
+            break;
+        }
+
+        flecs_irc_compile_const(c, n);
+        if (n->computed && stmt != -1) {
+            int32_t jump = flecs_irc_emit(c, EcsIrJump, 0, 0, 0, node);
+            flecs_irc_op(c, stmt)->b = flecs_irc_pc(c);
+            flecs_irc_op(c, stmt)->flags |= EcsIrStmtCached;
+            flecs_irc_emit(c, EcsIrConstCached,
+                n->computed - 1, stmt + 1, 0, node);
+            flecs_irc_op(c, jump)->a = flecs_irc_pc(c);
+            stmt = -1;
         }
 
         break;
@@ -1648,26 +1165,26 @@ static int flecs_irc_compile_stmt(
         break;
     case EcsAstEntity: {
         ecs_script_entity_t *n = (ecs_script_entity_t*)node;
-        if (n->is_type) {
-            flecs_irc_emit(c, EcsIrAnnotClear, 0, 0, 0, node);
-            if (marks != -1) {
-                flecs_irc_emit(c, EcsIrMark, 0, 0, marks, node);
-            }
-        } else {
-            result = flecs_irc_compile_entity(c, n);
+        if (!n->is_type) {
+            flecs_irc_compile_entity(c, n);
+            break;
+        }
+
+        flecs_irc_emit(c, EcsIrAnnotClear, 0, 0, 0, node);
+        if (marks != -1) {
+            flecs_irc_emit(c, EcsIrMark, 0, 0, marks, node);
         }
 
         break;
     }
     case EcsAstPairScope:
-        result = flecs_irc_compile_pair_scope(
-            c, (ecs_script_pair_scope_t*)node);
+        flecs_irc_compile_pair_scope(c, (ecs_script_pair_scope_t*)node);
         break;
     case EcsAstIf:
-        result = flecs_irc_compile_if(c, (ecs_script_if_t*)node);
+        flecs_irc_compile_if(c, (ecs_script_if_t*)node);
         break;
     case EcsAstFor:
-        result = flecs_irc_compile_for(c, (ecs_script_for_t*)node);
+        flecs_irc_compile_for(c, (ecs_script_for_t*)node);
         break;
     case EcsAstInclude:
         break;
@@ -1675,10 +1192,10 @@ static int flecs_irc_compile_stmt(
         flecs_irc_entry_add(c, node, EcsIrEntryFunction);
         break;
     case EcsAstAwait:
-        result = flecs_irc_compile_await(c, node);
+        flecs_irc_compile_await(c, node);
         break;
     case EcsAstTry:
-        result = flecs_irc_compile_try(c, (ecs_script_try_t*)node);
+        flecs_irc_compile_try(c, (ecs_script_try_t*)node);
         break;
     case EcsAstContinue:
         flecs_irc_emit(c, EcsIrContinue, 0, 0, 0, node);
@@ -1688,22 +1205,16 @@ static int flecs_irc_compile_stmt(
         flecs_irc_emit(c, EcsIrAsync, 0, 0, 0, node);
         break;
     case EcsAstWhile:
-        result = flecs_irc_compile_while(c, (ecs_script_while_t*)node);
+        flecs_irc_compile_while(c, (ecs_script_while_t*)node);
         break;
     case EcsAstAssign:
-        result = flecs_irc_compile_assign(c, (ecs_script_assign_t*)node);
+        flecs_irc_compile_assign(c, (ecs_script_assign_t*)node);
         break;
-    }
-
-    if (result) {
-        return -1;
     }
 
     if (stmt != -1) {
         flecs_irc_op(c, stmt)->b = flecs_irc_pc(c);
     }
-
-    return 0;
 }
 
 static int32_t flecs_irc_scope_var_count(
@@ -1720,19 +1231,14 @@ static int32_t flecs_irc_scope_var_count(
     return result;
 }
 
-static int flecs_irc_compile_scope(
+static void flecs_irc_compile_scope(
     ecs_script_ir_compiler_t *c,
     ecs_script_scope_t *scope,
     uint16_t flags)
 {
-    int32_t var_count = flecs_irc_scope_var_count(scope);
-    if (c->scope && !var_count) {
-        var_count = -1;
-    }
-
-    int32_t component_count = ecs_vec_count(&scope->components);
-    int32_t enter = flecs_irc_emit(
-        c, EcsIrScopeEnter, scope->scope_slot, var_count, component_count, scope);
+    int32_t enter = flecs_irc_emit(c, EcsIrScopeEnter, scope->scope_slot,
+        flecs_irc_scope_var_count(scope), ecs_vec_count(&scope->components),
+        scope);
     flecs_irc_op(c, enter)->flags = flags;
     flecs_irc_op(c, enter)->imm.ptr = ecs_vec_first(&scope->components);
 
@@ -1754,10 +1260,7 @@ static int flecs_irc_compile_scope(
         }
 
         int32_t stmt = flecs_irc_pc(c);
-        if (flecs_irc_compile_stmt(c, scope, i)) {
-            c->scope = prev;
-            return -1;
-        }
+        flecs_irc_compile_stmt(c, scope, i);
 
         if (block != -1) {
             const ecs_script_ir_op_t *stmt_op = flecs_irc_op(c, stmt);
@@ -1783,10 +1286,9 @@ static int flecs_irc_compile_scope(
 
     c->scope = prev;
     flecs_irc_emit(c, EcsIrLeave, EcsIrFrameScope, 0, 0, scope);
-    return 0;
 }
 
-static int flecs_irc_compile_function(
+static void flecs_irc_compile_function(
     ecs_script_ir_compiler_t *c,
     ecs_script_function_node_t *node)
 {
@@ -1796,10 +1298,7 @@ static int flecs_irc_compile_function(
 
     int32_t i, count = ecs_vec_count(&body->stmts);
     for (i = 0; i < count; i ++) {
-        if (flecs_irc_compile_stmt(c, body, i)) {
-            c->scope = NULL;
-            return -1;
-        }
+        flecs_irc_compile_stmt(c, body, i);
     }
 
     c->scope = NULL;
@@ -1807,19 +1306,13 @@ static int flecs_irc_compile_function(
 
     if (node->return_expr) {
         int32_t begin = flecs_irc_expr_begin(c, node);
-        int32_t value = flecs_irc_reg(c);
-        if (flecs_irc_compile_expr(c, node->return_expr, value, false)) {
-            return -1;
-        }
-
+        int32_t value = flecs_irc_compile_tmp(c, node->return_expr);
         flecs_irc_expr_end(c, begin, false);
         flecs_irc_emit(c, EcsIrReturn, value, 0, 0, node);
     }
-
-    return 0;
 }
 
-static int flecs_irc_compile_entry(
+static void flecs_irc_compile_entry(
     ecs_script_ir_compiler_t *c,
     int32_t index)
 {
@@ -1835,38 +1328,33 @@ static int flecs_irc_compile_entry(
     c->scope = NULL;
     c->force_depth = 0;
 
-    int result = 0;
     switch(kind) {
     case EcsIrEntryRoot:
-        result = flecs_irc_compile_scope(
+        flecs_irc_compile_scope(
             c, ECS_CONST_CAST(ecs_script_scope_t*, node), 0);
         break;
-    case EcsIrEntryTemplate: {
-        ecs_script_template_node_t *n =
-            ECS_CONST_CAST(ecs_script_template_node_t*, node);
-        result = flecs_irc_compile_scope(c, n->scope, 0);
+    case EcsIrEntryTemplate:
+        flecs_irc_compile_scope(c, ((const ecs_script_template_node_t*)
+            node)->scope, 0);
         break;
-    }
     case EcsIrEntryEntity:
-        result = flecs_irc_compile_entity(
+        flecs_irc_compile_entity(
             c, ECS_CONST_CAST(ecs_script_entity_t*, node));
         break;
     case EcsIrEntryFunction:
-        result = flecs_irc_compile_function(
+        flecs_irc_compile_function(
             c, ECS_CONST_CAST(ecs_script_function_node_t*, node));
         break;
-    case EcsIrEntryAsync: {
-        ecs_script_async_t *n = ECS_CONST_CAST(ecs_script_async_t*, node);
-        result = flecs_irc_compile_scope(c, n->scope, 0);
+    case EcsIrEntryAsync:
+        flecs_irc_compile_scope(
+            c, ((const ecs_script_async_t*)node)->scope, 0);
         break;
-    }
     }
 
     flecs_irc_emit(c, EcsIrEnd, 0, 0, 0, node);
 
     entry = ecs_vec_get_t(&c->ir->entries, ecs_script_ir_entry_t, index);
     entry->reg_count = c->reg_max;
-    return result;
 }
 
 static void flecs_irc_init(
@@ -1911,10 +1399,7 @@ ecs_script_ir_t* flecs_script_ir_compile(
 
     int32_t i;
     for (i = 0; i < ecs_vec_count(&ir->entries); i ++) {
-        if (flecs_irc_compile_entry(&c, i)) {
-            flecs_script_ir_free(ir);
-            return NULL;
-        }
+        flecs_irc_compile_entry(&c, i);
     }
 
     return ir;

@@ -82,6 +82,8 @@
                 "newline_w_whitespace_before_scope_open",
                 "2_newline_before_scope_open",
                 "2_newline_w_whitespace_before_scope_open",
+                "3_newline_before_scope_open",
+                "3_newline_w_comment_before_scope_open",
                 "hierarchy_2_levels",
                 "hierarchy_2_levels_2_subtrees",
                 "create_in_scope",
@@ -93,6 +95,7 @@
                 "entity_after_hierarchy_custom_relation",
                 "entity_after_hierarchy_custom_relation_2_levels",
                 "with_tag",
+                "with_many_tags",
                 "with_tag_2_entities",
                 "with_tag_same_line",
                 "with_tag_2_levels",
@@ -186,6 +189,7 @@
                 "name_annotation",
                 "name_annotation_crlf",
                 "link_annotation",
+                "link_annotation_w_url",
                 "color_annotation",
                 "uuid_annotation",
                 "multiple_annotations",
@@ -285,6 +289,7 @@
                 "on_replace_w_single_assign_scoped_w_value",
                 "if_true",
                 "if_true_no_else",
+                "if_no_space_before_paren",
                 "if_newline_before_scope",
                 "if_multiline_cond_newline_before_scope",
                 "if_newline_before_else",
@@ -329,6 +334,7 @@
                 "if_tab_after_keyword",
                 "if_else_if",
                 "if_else_if_else",
+                "if_else_no_space_before_scope",
                 "if_else_if_and_short_circuit",
                 "if_else_if_or_short_circuit",
                 "if_else_if_div_by_zero_short_circuit",
@@ -495,6 +501,8 @@
                 "assign_new_w_component_to_entity_member_w_newlines",
                 "assign_new_w_component_w_vars_to_entity_member",
                 "assign_new_w_kind_to_entity_member",
+                "new_w_kind_in_vector",
+                "new_w_kind_and_name_in_vector",
                 "assign_new_w_name_to_entity_member",
                 "assign_new_w_name_w_component_to_entity_member",
                 "assign_new_w_name_w_component_w_vars_to_entity_member",
@@ -711,6 +719,7 @@
                 "while_count_min_1_2",
                 "while_newline_before_scope",
                 "while_paren_cond",
+                "while_no_space_before_paren",
                 "while_false",
                 "while_bool_cond",
                 "while_continue",
@@ -775,7 +784,33 @@
                 "mut_assign_struct_to_int_fails",
                 "mut_assign_missing_expr_fails",
                 "struct_wo_members",
-                "eval_10k_statements"
+                "typed_var_w_semicolon",
+                "typed_var_w_semicolon_in_scope",
+                "typed_var_before_scope_close",
+                "typed_var_w_trailing_whitespace",
+                "typed_var_w_trailing_comment",
+                "typed_var_w_trailing_multiline_comment",
+                "typed_var_w_crlf",
+                "export_typed_var_w_semicolon",
+                "new_entity_members_newline_separated",
+                "newline_separated_numbers",
+                "newline_separated_negative_numbers",
+                "newline_separated_vector_numbers",
+                "newline_separated_nested_vectors",
+                "newline_separated_array_members",
+                "newline_separated_template_args",
+                "newline_separated_function_args",
+                "multiline_string_escaped_backslash",
+                "multiline_string_escaped_backtick",
+                "with_newline_after_comma",
+                "pair_scope_open_on_next_line",
+                "if_not_wo_space",
+                "keyword_member_w_space_before_colon",
+                "using_wildcard_long_name",
+                "ir_to_str_before_eval",
+                "ir_to_str_w_async_block",
+                "tree_parent_w_annot_before_entity",
+                "update_script_from_system"
             ]
         }, {
             "id": "Collection",
@@ -787,6 +822,7 @@
                 "range_bracketed",
                 "range_bare",
                 "range_bracketed_index_value",
+                "range_bracketed_index_value_no_space_before_paren",
                 "range_bare_index_value",
                 "range_w_expr_endpoints",
                 "range_w_vars",
@@ -813,6 +849,7 @@
                 "vector_struct_elem",
                 "vector_member_elem_w_member_index",
                 "vector_string_elem",
+                "vector_literal_elem",
                 "vector_member_w_string_elems",
                 "vector_empty",
                 "vector_nested",
@@ -839,7 +876,6 @@
                 "iterate_undefined_var",
                 "duplicate_loop_vars",
                 "duplicate_loop_vars_map",
-                "collection_literal_not_supported",
                 "missing_in_keyword",
                 "vector_literal_bool",
                 "vector_literal_char",
@@ -955,7 +991,8 @@
                 "await_in_template_body_fails_task",
                 "deep_scope_resume",
                 "deep_scope_cancel",
-                "many_live_strings_resume_and_cancel"
+                "many_live_strings_resume_and_cancel",
+                "eval_after_task_removes_stale_components"
             ]
         }, {
             "id": "AsyncBlock",
@@ -977,6 +1014,7 @@
                 "template_mut_sparse_external_update",
                 "template_resolved_block_cancelled_before_resume",
                 "parse_async_block",
+                "parse_async_block_no_space_before_scope",
                 "parse_while",
                 "script_block_runs_on_progress",
                 "script_two_blocks",
@@ -1047,7 +1085,9 @@
                 "error_component_in_async",
                 "error_mut_in_async",
                 "error_parse_async_missing_scope",
-                "error_parse_while_missing_scope"
+                "error_parse_while_missing_scope",
+                "delete_script_from_await_callback",
+                "update_script_from_await_callback"
             ]
         }, {
             "id": "Event",
@@ -1105,6 +1145,7 @@
             "setup": true,
             "testcases": [
                 "parse_try_catch_all",
+                "parse_try_catch_no_space_before_scope",
                 "parse_try_catch_typed",
                 "parse_try_multiple_catch",
                 "parse_try_missing_catch",
@@ -1139,7 +1180,8 @@
                 "vars_preserved_across_catch",
                 "free_while_pending_in_try",
                 "free_while_pending_in_catch",
-                "this_var_in_catch"
+                "this_var_in_catch",
+                "parse_catch_on_next_line"
             ]
         }, {
             "id": "Function",
@@ -1164,6 +1206,7 @@
                 "struct_return",
                 "struct_arg_and_return",
                 "match_expr",
+                "match_no_space_before_paren",
                 "recursion",
                 "undefined_var_in_body",
                 "runtime_error_propagation",
@@ -1232,7 +1275,17 @@
                 "redeclare_function_no_leak",
                 "redeclare_method_no_leak",
                 "repeated_nested_calls_with_strings",
-                "repeated_calls_after_error"
+                "repeated_calls_after_error",
+                "semicolon_separated_body",
+                "member_of_call_result",
+                "fn_after_nested_template_in_scope",
+                "fn_body_unresolved_const",
+                "fn_return_unresolved",
+                "method_call_collection_count",
+                "struct_return_w_dtor_no_move",
+                "struct_component_from_fn_w_dtor_no_move",
+                "match_struct_w_dtor_no_move",
+                "struct_member_from_fn_w_dtor_no_move"
             ]
         }, {
             "id": "Template",
@@ -1443,7 +1496,16 @@
                 "for_entity_w_child_in_template_w_template_after",
                 "on_add_instantiates_other_entity",
                 "on_add_instantiates_other_entity_w_props",
-                "on_add_instantiates_other_entity_in_scope"
+                "on_add_instantiates_other_entity_in_scope",
+                "typed_prop_single_line",
+                "typed_prop_w_semicolon",
+                "typed_prop_w_trailing_comment",
+                "redefine_w_ref_observer",
+                "redefine_w_ref_observer_add_remove_instance",
+                "redefine_w_conditional_existing_instance",
+                "manual_derived_base_ref_change",
+                "manual_base_derived_base_ref_change",
+                "ref_change_readds_annotation_w_shared_table"
             ]
         }, {
             "id": "Mut",
@@ -1526,7 +1588,9 @@
                 "get_struct_from_stage",
                 "set_from_stage",
                 "set_struct_from_stage",
-                "modified_from_stage"
+                "modified_from_stage",
+                "typed_mut_single_line",
+                "typed_mut_w_semicolon"
             ]
         }, {
             "id": "Error",
@@ -1536,6 +1600,7 @@
             "setup": true,
             "testcases": [
                 "missing_separator_between_components",
+                "unexpected_mod_token",
                 "missing_separator_between_component_and_tag",
                 "missing_separator_between_component_and_pair",
                 "missing_separator_after_scope",
@@ -1642,6 +1707,7 @@
                 "unresolved_component_error_w_script_eval",
                 "unresolved_component_error_w_script_eval_multiple_times",
                 "annotation_without_newline",
+                "annotation_at_end_of_script",
                 "annotation_without_entity",
                 "annotation_to_unresolved_identifier",
                 "annotation_to_unresolved_identifier_managed_parse_twice",
@@ -1763,7 +1829,35 @@
                 "component_on_missing_entity",
                 "component_member_on_entity_without_component",
                 "component_member_on_var_w_missing_entity",
-                "component_member_on_missing_entity_in_template"
+                "component_member_on_missing_entity_in_template",
+                "typed_var_expected_newline_message",
+                "missing_comma_between_named_members",
+                "missing_comma_between_positional_members",
+                "missing_comma_between_entity_members",
+                "missing_comma_in_typed_var",
+                "missing_comma_in_typed_var_wo_braces",
+                "missing_comma_after_typed_scalar_var",
+                "missing_comma_in_vector",
+                "missing_comma_in_template_args",
+                "missing_comma_in_struct_definition",
+                "missing_comma_in_enum_definition",
+                "unterminated_string_after_if_reported_once",
+                "nested_index_exceeds_max_depth",
+                "match_missing_scope_open_no_leak",
+                "new_non_entity_stmt_no_leak",
+                "new_in_component_value_error_column",
+                "nested_script_error_line",
+                "nested_script_error_line_w_using",
+                "nested_script_eval_error_line",
+                "unsigned_literal_out_of_range",
+                "signed_literal_out_of_range",
+                "unary_minus_string",
+                "prop_any_template_non_template_value",
+                "number_literal_w_suffix",
+                "pair_scope_unresolved_first",
+                "pair_scope_unresolved_second",
+                "compare_vector_types",
+                "divide_strings"
             ]
         }, {
             "id": "Format",
@@ -1961,6 +2055,8 @@
                 "mul_no_space_var",
                 "add_no_space_var_reverse",
                 "sub_no_space_var_reverse",
+                "sub_space_before_operator",
+                "sub_space_before_operator_var",
                 "div_no_space_var_reverse",
                 "mul_no_space_var_reverse",
                 "div_by_0",
@@ -2093,6 +2189,8 @@
                 "min_lparen_int_add_int_rparen",
                 "min_number_hex",
                 "min_number_bin",
+                "number_hex_w_fraction",
+                "number_bin_w_fraction",
                 "min_var",
                 "min_lparen_int_rparen_to_i64",
                 "min_lparen_int_rparen_to_i32",
@@ -2353,7 +2451,23 @@
                 "bool_var_mul_flt",
                 "bool_var_mul_flt_lvalue",
                 "iptr_var_mul_flt",
-                "uptr_var_mul_flt"
+                "uptr_var_mul_flt",
+                "uptr_var_add_uptr_var",
+                "iptr_var_add_iptr_var",
+                "byte_var_eq_byte_var",
+                "id_var_eq_id_var",
+                "entity_var_add_entity_var",
+                "match_w_large_var_case",
+                "match_w_string_var_case",
+                "initializer_w_many_var_elements",
+                "dynamic_initializer_w_many_var_elements",
+                "method_into_existing_string",
+                "interpolated_string_into_existing_string",
+                "entity_method_on_0_entity",
+                "entity_method_on_dead_entity",
+                "collection_literal_types_w_same_short_name",
+                "id_var_eq_literal",
+                "vector_func_array_of_struct_error_type_name"
             ]
         }, {
             "id": "ExprAst",
@@ -2365,6 +2479,7 @@
                 "binary_f32_var_add_f32_var",
                 "binary_f32_var_add_int",
                 "binary_f32_var_div_int",
+                "binary_i32_var_mod_int",
                 "binary_f32_var_add_flt",
                 "binary_f32_var_div_by_int_sub_int",
                 "interpolated_string_var",
@@ -2391,7 +2506,9 @@
                 "init_fini_vars",
                 "from_iter_17_fields",
                 "define_large_type_no_leak",
-                "from_iter_w_derived_component"
+                "from_iter_w_derived_component",
+                "from_iter_w_pair",
+                "from_iter_w_pair_wildcard"
             ]
         }, {
             "id": "Serialize",
@@ -2726,7 +2843,9 @@
                 "include_nested_manifest_w_cross_file_refs",
                 "include_diamond_absolute_path_evaluates_shared_once",
                 "include_absolute_path_template_from_shared_include",
-                "include_absolute_path_unresolved_refs_no_infinite_loop"
+                "include_absolute_path_unresolved_refs_no_infinite_loop",
+                "include_w_semicolon",
+                "include_wo_trailing_newline"
             ]
         }, {
             "id": "Fuzzing",
@@ -3020,7 +3139,9 @@
                 "delete_script_while_waiting",
                 "wait_for_has_unresolved_component",
                 "wait_for_has_unresolved_entity",
-                "has_ref_resolve_observer_on_add"
+                "has_ref_resolve_observer_on_add",
+                "update_script_during_ref_eval",
+                "delete_script_during_ref_eval"
             ]
         }, {
             "id": "Reactivity",
@@ -3309,7 +3430,10 @@
                 "known_component_read_member_in_string",
                 "strict_unknown_member_on_known_component_read_errors",
                 "template_unresolved_base_errors",
-                "warn_once_for_unknown_using"
+                "warn_once_for_unknown_using",
+                "unknown_fn_body_const",
+                "unknown_fn_body_const_type",
+                "unknown_fn_return_expr"
             ]
         }, {
             "id": "StructInheritance",
@@ -3669,7 +3793,9 @@
                 "empty_template_interface_prop",
                 "empty_template_in_interface_scope",
                 "prop_default_from_nested_struct_const",
-                "prop_default_from_nested_struct_const_member"
+                "prop_default_from_nested_struct_const_member",
+                "interface_prop_deleted_template",
+                "interface_prop_as_tag_deleted_template"
             ]
         }, {
             "id": "TemplateVectorProp",
@@ -3868,7 +3994,9 @@
                 "from_scene_not_a_script",
                 "save",
                 "save_no_filename",
-                "save_not_a_script"
+                "save_not_a_script",
+                "set_append_no_scope_two_components",
+                "set_append_to_one_line_scope_two_components"
             ]
         }, {
             "id": "EditTemplate",

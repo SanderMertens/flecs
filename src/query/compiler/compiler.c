@@ -942,7 +942,7 @@ static int16_t flecs_query_find_tree_cache_op(
         return -1;
     }
 
-#ifdef FLECS_DEBUG
+#if defined(FLECS_DEBUG) && defined(FLECS_CACHED_QUERIES)
     {
         ecs_query_cache_t *cache = query->cache;
         int32_t f, field_count = cache->query->field_count;

@@ -4191,3 +4191,48 @@ void Await_replace_async_function_with_sync(void) {
     test_int(value, 42);
     ecs_fini(world);
 }
+
+void Await_eval_after_task_removes_stale_components(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+
+    ecs_entity_t cfg = ecs_entity(world, { .name = "cfg" });
+    ecs_set(world, cfg, Mass, {20});
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        HEAD "e { if cfg[Mass].value > 10 { Position: {1, 2} } }"
+        LINE "if cfg[Mass].value > 10 { f {} }", &ir_desc, NULL);
+    test_assert(script != NULL);
+
+    ecs_script_task_t *task = ecs_script_task_new(script, NULL);
+    test_assert(task != NULL);
+    test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskDone);
+    ecs_script_task_free(task);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_lookup(world, "f") != 0);
+
+    ecs_set(world, cfg, Mass, {5});
+    test_int(ecs_script_eval(script, &ir_desc, NULL), 0);
+
+    test_assert(ecs_lookup(world, "e") == e);
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(ecs_lookup(world, "f") == 0);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}

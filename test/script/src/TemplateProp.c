@@ -6257,3 +6257,92 @@ void TemplateProp_prop_default_from_nested_struct_const_member(void) {
 
     ecs_fini(world);
 }
+
+static void delete_template_on_trigger(
+    ecs_iter_t *it)
+{
+    ecs_entity_t *tmpl = it->ctx;
+    if (*tmpl) {
+        ecs_entity_t t = *tmpl;
+        *tmpl = 0;
+        ecs_delete(it->world, t);
+    }
+}
+
+void TemplateProp_interface_prop_deleted_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Trigger);
+
+    const char *expr =
+    HEAD "struct StreetLight(on_off: bool)"
+    LINE "template MyStreetLight : StreetLight {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    test_assert(light != 0);
+
+    ecs_entity_t tmpl = light;
+    ecs_observer(world, {
+        .query.terms = {{ Trigger }},
+        .events = { EcsOnAdd },
+        .callback = delete_template_on_trigger,
+        .ctx = &tmpl
+    });
+
+    const char *road =
+    HEAD "template Road {"
+    LINE "  prop street_light : template StreetLight = MyStreetLight"
+    LINE "  trigger { Trigger }"
+    LINE "  lamp { street_light: {on_off: true} }"
+    LINE "}"
+    LINE "r { Road }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, road, &ir_desc, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    test_assert(!ecs_is_alive(world, light));
+
+    ecs_fini(world);
+}
+
+void TemplateProp_interface_prop_as_tag_deleted_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Trigger);
+
+    const char *expr =
+    HEAD "struct StreetLight(on_off: bool)"
+    LINE "template MyStreetLight : StreetLight {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t light = ecs_lookup(world, "MyStreetLight");
+    test_assert(light != 0);
+
+    ecs_entity_t tmpl = light;
+    ecs_observer(world, {
+        .query.terms = {{ Trigger }},
+        .events = { EcsOnAdd },
+        .callback = delete_template_on_trigger,
+        .ctx = &tmpl
+    });
+
+    const char *road =
+    HEAD "template Road {"
+    LINE "  prop street_light : template StreetLight = MyStreetLight"
+    LINE "  trigger { Trigger }"
+    LINE "  lamp { street_light }"
+    LINE "}"
+    LINE "r { Road }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, road, &ir_desc, NULL) != 0);
+    ecs_log_set_level(-1);
+
+    test_assert(!ecs_is_alive(world, light));
+
+    ecs_fini(world);
+}

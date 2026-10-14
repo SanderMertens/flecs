@@ -8,119 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
-int flecs_script_for_collection_kind(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_for_t *node,
-    ecs_entity_t type,
-    flecs_script_for_kind_t *kind,
-    ecs_entity_t *key_type,
-    ecs_entity_t *elem_type)
-{
-    const EcsType *type_ptr = ecs_get(v->world, type, EcsType);
-    if (type_ptr) {
-        if (type_ptr->kind == EcsArrayType) {
-            const EcsArray *array = ecs_get(v->world, type, EcsArray);
-            ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
-            *kind = FlecsScriptForArray;
-            *elem_type = array->type;
-            return 0;
-        } else if (type_ptr->kind == EcsVectorType) {
-            const EcsVector *vector = ecs_get(v->world, type, EcsVector);
-            ecs_assert(vector != NULL, ECS_INTERNAL_ERROR, NULL);
-            *kind = FlecsScriptForVector;
-            *elem_type = vector->type;
-            return 0;
-        } else if (type_ptr->kind == EcsMapType) {
-            const EcsMap *map = ecs_get(v->world, type, EcsMap);
-            ecs_assert(map != NULL, ECS_INTERNAL_ERROR, NULL);
-            *kind = FlecsScriptForMap;
-            *key_type = map->key_type;
-            *elem_type = map->type;
-            return 0;
-        }
-    }
-
-    char *type_str = ecs_get_path(v->world, type);
-    flecs_script_eval_error(v, node,
-        "for loop cannot iterate value of type '%s': "
-        "not an array, vector or map", type_str);
-    ecs_os_free(type_str);
-    return -1;
-}
-
-int flecs_script_for_check_var_count(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_for_t *node,
-    flecs_script_for_kind_t kind)
-{
-    int32_t max_vars = (kind == FlecsScriptForMap) ? 3 : 2;
-    if (node->loop_var_count > max_vars) {
-        if (kind == FlecsScriptForRange) {
-            flecs_script_eval_error(v, node,
-                "too many loop variables for range "
-                "(expected 'value' or '(index, value)')");
-        } else if (kind == FlecsScriptForMap) {
-            flecs_script_eval_error(v, node,
-                "too many loop variables for map (expected 'elem', "
-                "'(key, elem)' or '(key, index, elem)')");
-        } else {
-            flecs_script_eval_error(v, node,
-                "too many loop variables for %s "
-                "(expected 'elem' or '(index, elem)')",
-                kind == FlecsScriptForArray ? "array" : "vector");
-        }
-
-        return -1;
-    }
-
-    return 0;
-}
-
-bool flecs_script_for_has_index_var(
-    flecs_script_for_kind_t kind,
-    int32_t loop_var_count)
-{
-    if (kind == FlecsScriptForMap) {
-        return loop_var_count == 3;
-    }
-
-    return loop_var_count == 2;
-}
-
-ecs_script_var_t* flecs_script_for_declare_var(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_for_t *node,
-    const char *name,
-    ecs_entity_t type,
-    bool alloc)
-{
-    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, name);
-    if (!var) {
-        flecs_script_eval_error(v, node,
-            "duplicate loop variable '%s'", name);
-        return NULL;
-    }
-
-    var->value.type = type;
-
-    if (alloc) {
-        const ecs_type_info_t *ti = ecs_get_type_info(v->world, type);
-        if (!ti) {
-            flecs_script_eval_error(v, node,
-                "invalid type for loop variable '%s'", name);
-            return NULL;
-        }
-
-        var->value.ptr = flecs_stack_calloc(
-            &v->r->stack, ti->size, ti->alignment);
-        var->type_info = ti;
-        var->owned = true;
-    }
-
-    return var;
-}
-
-static int flecs_script_for_enter(
+void flecs_script_for_prepare(
     ecs_script_eval_visitor_t *v,
     ecs_script_for_t *node,
     flecs_script_for_state_t *state)
@@ -143,119 +31,200 @@ static int flecs_script_for_enter(
             flecs_script_for_slot_clear(v->world, slot, false);
         }
     }
+}
 
-    ecs_entity_t key_type = 0;
-    ecs_entity_t elem_type = ecs_id(ecs_i32_t);
-
-    if (!node->expr) {
-        int32_t from, to;
-        ecs_value_t from_val = { .type = ecs_id(ecs_i32_t), .ptr = &from };
-        ecs_value_t to_val = { .type = ecs_id(ecs_i32_t), .ptr = &to };
-
-        if (flecs_script_eval_expr(v, &node->from, &from_val)) {
-            return -1;
-        }
-
-        if (flecs_script_eval_expr(v, &node->to, &to_val)) {
-            return -1;
-        }
-
-        state->kind = FlecsScriptForRange;
-        state->from = from;
-        state->count = to;
-    } else {
-        if (flecs_script_eval_expr(v, &node->expr, &state->collection)) {
-            return -1;
-        }
-
-        if (flecs_script_for_collection_kind(v, node, state->collection.type,
-            &state->kind, &key_type, &elem_type))
-        {
-            goto error;
-        }
-
-        if (state->kind == FlecsScriptForArray) {
-            const EcsArray *array = ecs_get(
-                v->world, state->collection.type, EcsArray);
-            state->elems = state->collection.ptr;
+int flecs_script_for_init(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_for_t *node,
+    flecs_script_for_state_t *state,
+    const ecs_value_t *collection)
+{
+    ecs_entity_t key_type = 0, elem_type = ecs_id(ecs_i32_t);
+    if (collection) {
+        ecs_entity_t type = collection->type;
+        const EcsType *type_ptr = ecs_get(v->world, type, EcsType);
+        switch(type_ptr ? type_ptr->kind : EcsPrimitiveType) {
+        case EcsArrayType: {
+            const EcsArray *array = ecs_get(v->world, type, EcsArray);
+            ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
+            state->kind = FlecsScriptForArray;
+            state->elems = collection->ptr;
             state->count = array->count;
-        } else if (state->kind == FlecsScriptForVector) {
-            ecs_vec_t *vec = state->collection.ptr;
-            state->elems = ecs_vec_first(vec);
-            state->count = ecs_vec_count(vec);
-        } else {
-            state->map_it = ecs_map_iter(state->collection.ptr);
+            elem_type = array->type;
+            break;
+        }
+        case EcsVectorType: {
+            const EcsVector *vector = ecs_get(v->world, type, EcsVector);
+            ecs_assert(vector != NULL, ECS_INTERNAL_ERROR, NULL);
+            state->kind = FlecsScriptForVector;
+            if (collection->ptr) {
+                state->elems = ecs_vec_first(collection->ptr);
+                state->count = ecs_vec_count(collection->ptr);
+            }
+
+            elem_type = vector->type;
+            break;
+        }
+        case EcsMapType: {
+            const EcsMap *map = ecs_get(v->world, type, EcsMap);
+            ecs_assert(map != NULL, ECS_INTERNAL_ERROR, NULL);
+            state->kind = FlecsScriptForMap;
+            if (collection->ptr) {
+                state->map_it = ecs_map_iter(collection->ptr);
+            }
+
+            key_type = map->key_type;
+            elem_type = map->type;
+            break;
+        }
+        default:
+            flecs_script_eval_error(v, node,
+                "for loop cannot iterate value of type '%s': "
+                "not an array, vector or map",
+                flecs_errstr(ecs_get_path(v->world, type)));
+            return -1;
         }
     }
 
-    if (flecs_script_for_check_var_count(v, node, state->kind)) {
-        goto error;
+    bool map = state->kind == FlecsScriptForMap;
+    int32_t var_count = node->loop_var_count;
+    if (var_count > (map ? 3 : 2)) {
+        if (state->kind == FlecsScriptForRange) {
+            flecs_script_eval_error(v, node,
+                "too many loop variables for range "
+                "(expected 'value' or '(index, value)')");
+        } else if (map) {
+            flecs_script_eval_error(v, node,
+                "too many loop variables for map (expected 'elem', "
+                "'(key, elem)' or '(key, index, elem)')");
+        } else {
+            flecs_script_eval_error(v, node,
+                "too many loop variables for %s "
+                "(expected 'elem' or '(index, elem)')",
+                state->kind == FlecsScriptForArray ? "array" : "vector");
+        }
+
+        return -1;
     }
 
     const ecs_type_info_t *elem_ti = ecs_get_type_info(v->world, elem_type);
     if (!elem_ti) {
         flecs_script_eval_error(v, node,
             "for loop element type is not a valid type");
-        goto error;
+        return -1;
     }
 
     state->elem_size = elem_ti->size;
 
-    v->vars = flecs_script_vars_push(v->vars, &v->r->stack, v->r->allocator);
-
-    /* Reserve space for the loop variables, so that declaring them does not
-     * resize the variable vector and invalidate the variables that were
-     * declared before it. */
-    ecs_script_vars_set_size(v->vars, node->loop_var_count);
-
-    int32_t var_i = 0;
-
-    if (state->kind == FlecsScriptForMap && node->loop_var_count >= 2) {
+    int32_t i = 0;
+    state->key_var = state->index_var = -1;
+    if (map && var_count >= 2) {
         const ecs_type_info_t *key_ti = ecs_get_type_info(v->world, key_type);
         ecs_assert(key_ti != NULL, ECS_INTERNAL_ERROR, NULL);
         state->key_size = key_ti->size;
-        state->key_var = flecs_script_for_declare_var(
-            v, node, node->loop_vars[var_i ++], key_type, true);
-        if (!state->key_var) {
-            goto error_pop;
-        }
+        state->var_types[i] = key_type;
+        state->key_var = i ++;
     }
 
-    if (flecs_script_for_has_index_var(state->kind, node->loop_var_count)) {
-        state->index_var = flecs_script_for_declare_var(
-            v, node, node->loop_vars[var_i ++], ecs_id(ecs_i32_t), true);
-        if (!state->index_var) {
-            goto error_pop;
-        }
+    if (var_count == (map ? 3 : 2)) {
+        state->var_types[i] = ecs_id(ecs_i32_t);
+        state->index_var = i ++;
     }
 
-    state->elem_var = flecs_script_for_declare_var(
-        v, node, node->loop_vars[var_i], elem_type,
-        state->kind == FlecsScriptForRange);
-    if (!state->elem_var) {
-        goto error_pop;
+    state->var_types[i] = elem_type;
+    state->elem_var = i;
+    return 0;
+}
+
+int flecs_script_for_declare_vars(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_for_t *node,
+    flecs_script_for_state_t *state,
+    bool alloc_elem)
+{
+    v->vars = flecs_script_vars_push(v->vars, &v->r->stack, v->r->allocator);
+    ecs_script_vars_set_size(v->vars, node->loop_var_count);
+    state->vars = v->vars;
+    state->var_base = 0;
+
+    int32_t i;
+    for (i = 0; i < node->loop_var_count; i ++) {
+        const char *name = node->loop_vars[i];
+        ecs_script_var_t *var = ecs_script_vars_declare(v->vars, name);
+        if (!var) {
+            flecs_script_eval_error(v, node,
+                "duplicate loop variable '%s'", name);
+            goto error;
+        }
+
+        var->value.type = state->var_types[i];
+        if (!alloc_elem && i == state->elem_var) {
+            continue;
+        }
+
+        const ecs_type_info_t *ti = ecs_get_type_info(
+            v->world, var->value.type);
+        if (!ti) {
+            flecs_script_eval_error(v, node,
+                "invalid type for loop variable '%s'", name);
+            goto error;
+        }
+
+        var->value.ptr = flecs_stack_calloc(
+            &v->r->stack, ti->size, ti->alignment);
+        var->type_info = ti;
+        var->owned = true;
+    }
+
+    return 0;
+error:
+    v->vars = ecs_script_vars_pop(v->vars);
+    return -1;
+}
+
+static int flecs_script_for_enter(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_for_t *node,
+    flecs_script_for_state_t *state)
+{
+    flecs_script_for_prepare(v, node, state);
+
+    if (!node->expr) {
+        ecs_value_t from = { .type = ecs_id(ecs_i32_t), .ptr = &state->from };
+        ecs_value_t to = { .type = ecs_id(ecs_i32_t), .ptr = &state->count };
+        if (flecs_script_eval_expr(v, &node->from, &from) ||
+            flecs_script_eval_expr(v, &node->to, &to))
+        {
+            return -1;
+        }
+    } else if (flecs_script_eval_expr(v, &node->expr, &state->collection)) {
+        return -1;
+    }
+
+    if (flecs_script_for_init(v, node, state,
+            node->expr ? &state->collection : NULL) ||
+        flecs_script_for_declare_vars(v, node, state,
+            state->kind == FlecsScriptForRange))
+    {
+        if (state->collection.type) {
+            ecs_ptr_free(v->world, state->collection.type,
+                state->collection.ptr);
+        }
+
+        return -1;
     }
 
     v->for_slot = node->for_slot;
     v->force = true;
-
     return 0;
-error_pop:
-    v->vars = ecs_script_vars_pop(v->vars);
-error:
-    v->for_slot = state->for_slot;
-    v->force = state->force;
-    if (state->collection.type) {
-        ecs_ptr_free(v->world, state->collection.type, state->collection.ptr);
-        state->collection = (ecs_value_t){0, NULL};
-    }
-
-    return -1;
 }
 
-static bool flecs_script_for_next(
+bool flecs_script_for_next(
     flecs_script_for_state_t *state)
 {
+    ecs_script_var_t *vars = &((ecs_script_var_t*)
+        state->vars->vars.array)[state->var_base];
+    ecs_script_var_t *elem = &vars[state->elem_var];
     int32_t i = state->index;
 
     switch(state->kind) {
@@ -265,7 +234,7 @@ static bool flecs_script_for_next(
             return false;
         }
 
-        *(int32_t*)state->elem_var->value.ptr = value;
+        *(int32_t*)elem->value.ptr = value;
         break;
     }
     case FlecsScriptForArray:
@@ -273,31 +242,31 @@ static bool flecs_script_for_next(
         if (i >= state->count) {
             return false;
         }
-        state->elem_var->value.ptr = ECS_OFFSET(
-            state->elems, state->elem_size * i);
-        state->elem_var->owned = false;
+        elem->value.ptr = ECS_OFFSET(state->elems, state->elem_size * i);
+        elem->owned = false;
         break;
     case FlecsScriptForMap:
         if (!ecs_map_next(&state->map_it)) {
             return false;
         }
-        if (state->key_var) {
+        if (state->key_var != -1) {
             ecs_map_key_t key = ecs_map_key(&state->map_it);
-            ecs_os_memcpy(state->key_var->value.ptr, &key, state->key_size);
+            ecs_os_memcpy(vars[state->key_var].value.ptr, &key,
+                state->key_size);
         }
 
         if (state->elem_size > ECS_SIZEOF(ecs_map_val_t)) {
-            state->elem_var->value.ptr = ecs_map_ptr(&state->map_it);
+            elem->value.ptr = ecs_map_ptr(&state->map_it);
         } else {
-            state->elem_var->value.ptr = &state->map_it.res[1];
+            elem->value.ptr = &state->map_it.res[1];
         }
 
-        state->elem_var->owned = false;
+        elem->owned = false;
         break;
     }
 
-    if (state->index_var) {
-        *(int32_t*)state->index_var->value.ptr = i;
+    if (state->index_var != -1) {
+        *(int32_t*)vars[state->index_var].value.ptr = i;
     }
 
     state->index = i + 1;
@@ -314,7 +283,6 @@ void flecs_script_eval_for_leave(
 
     if (state->collection.type) {
         ecs_ptr_free(v->world, state->collection.type, state->collection.ptr);
-        state->collection = (ecs_value_t){0, NULL};
     }
 }
 

@@ -2561,3 +2561,60 @@ void Include_include_absolute_path_unresolved_refs_no_infinite_loop(void) {
 
     ecs_fini(world);
 }
+
+void Include_include_w_semicolon(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "Foo{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs; Bar {}\n", 0 };
+
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
+
+    test_assert(ecs_lookup(world, "Foo") != 0);
+    test_assert(ecs_lookup(world, "Bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Include_include_wo_trailing_newline(void) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    ecs_os_set_api(&os_api);
+
+    test_files[0] = (test_file_t){ "child.flecs", "Foo{}\n", 0 };
+    test_files[1] = (test_file_t){ "parent.flecs", "include child.flecs", 0 };
+
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_file_w_desc(world, "parent.flecs", &ir_desc) == 0);
+
+    test_assert(ecs_lookup(world, "Foo") != 0);
+
+    ecs_fini(world);
+}

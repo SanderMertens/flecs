@@ -18,6 +18,10 @@ typedef struct flecs_term_parser_t {
 
 static bool flecs_term_next(flecs_term_parser_t *p) {
     p->pos = flecs_token(p->parser, p->pos, &p->token, false);
+    if (p->pos && p->token.kind >= EcsTokKeywordWith) {
+        p->token.kind = EcsTokIdentifier;
+    }
+
     return p->pos != NULL;
 }
 
@@ -522,13 +526,13 @@ static const char* flecs_query_args_parse(
     bool has_paren = false;
     LookAhead(
         case '\0':
-            pos = lookahead;
+            Consume();
             EndOfRule;
         case '(': {
-            pos = lookahead;
+            Consume();
             has_paren = true;
             LookAhead_1(')',
-                pos = lookahead;
+                Consume();
                 EndOfRule;
             )
         }

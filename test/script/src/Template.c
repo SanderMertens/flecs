@@ -9957,3 +9957,449 @@ void Template_on_add_instantiates_other_entity_in_scope(void) {
 
     ecs_fini(world);
 }
+
+void Template_typed_prop_single_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Tree { prop height: f32 = 10 }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 1);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+
+    ecs_fini(world);
+}
+
+void Template_typed_prop_w_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop height: f32 = 10; Position: {height, 20}"
+    LINE "}"
+    LINE "Tree t";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t t = ecs_lookup(world, "t");
+    test_assert(t != 0);
+
+    const Position *p = ecs_get(world, t, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_typed_prop_w_trailing_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop height: f32 = 10 // comment"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 1);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+
+    ecs_fini(world);
+}
+
+static int redefine_set_count = 0;
+static ecs_entity_t redefine_inst = 0;
+
+static void RedefineOnSetPosition(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        if (it->entities[i] == redefine_inst) {
+            redefine_set_count ++;
+        }
+    }
+}
+
+void Template_redefine_w_ref_observer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = RedefineOnSetPosition
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    const char *expr =
+    HEAD "template Bar {"
+    LINE "  Position: {e[Mass].value, 0}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, "s1", expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    redefine_inst = ecs_new(world);
+    ecs_add_id(world, redefine_inst, bar);
+
+    test_assert(ecs_script_run_w_desc(world, "s2", expr, &ir_desc, NULL) == 0);
+    test_assert(ecs_script_run_w_desc(world, "s3", expr, &ir_desc, NULL) == 0);
+
+    {
+        const Position *p = ecs_get(world, redefine_inst, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+    }
+
+    redefine_set_count = 0;
+    ecs_set(world, e, Mass, {20});
+    test_int(redefine_set_count, 1);
+
+    {
+        const Position *p = ecs_get(world, redefine_inst, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Template_redefine_w_ref_observer_add_remove_instance(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    const char *expr =
+    HEAD "template Bar {"
+    LINE "  Position: {e[Mass].value, 0}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, "s1", expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    ecs_entity_t inst_1 = ecs_new(world);
+    ecs_add_id(world, inst_1, bar);
+
+    test_assert(ecs_script_run_w_desc(world, "s2", expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t inst_2 = ecs_new(world);
+    ecs_add_id(world, inst_2, bar);
+    ecs_remove_id(world, inst_2, bar);
+
+    ecs_set(world, e, Mass, {20});
+
+    const Position *p = ecs_get(world, inst_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    ecs_fini(world);
+}
+
+void Template_redefine_w_conditional_existing_instance(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    test_assert(ecs_script_run_w_desc(world, "s1",
+        HEAD "template Bar {"
+        LINE "  prop v: i32 = 0"
+        LINE "  Position: {1, 2}"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    ecs_entity_t old = ecs_new(world);
+    ecs_add_id(world, old, bar);
+
+    test_assert(ecs_script_run_w_desc(world, "s2",
+        HEAD "template Bar {"
+        LINE "  prop v: i32 = 0"
+        LINE "  if v == 1 {"
+        LINE "    Mass: {3}"
+        LINE "  }"
+        LINE "}", &ir_desc, NULL) == 0);
+
+    ecs_entity_t fresh = ecs_new(world);
+    ecs_add_id(world, fresh, bar);
+
+    ecs_set_id(world, old, bar, sizeof(int32_t), &(int32_t){1});
+    ecs_set_id(world, fresh, bar, sizeof(int32_t), &(int32_t){1});
+    test_assert(ecs_has(world, old, Mass));
+    test_assert(ecs_has(world, fresh, Mass));
+
+    ecs_set_id(world, old, bar, sizeof(int32_t), &(int32_t){0});
+    ecs_set_id(world, fresh, bar, sizeof(int32_t), &(int32_t){0});
+    test_assert(!ecs_has(world, fresh, Mass));
+    test_assert(!ecs_has(world, old, Mass));
+
+    ecs_fini(world);
+}
+
+void Template_manual_derived_base_ref_change(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    test_int(ecs_script_run_w_desc(world, NULL,
+        HEAD "template Base {"
+        LINE "  Position: {e[Mass].value, 0}"
+        LINE "}"
+        LINE "template Derived : Base {}", &ir_desc, NULL), 0);
+
+    ecs_entity_t derived = ecs_lookup(world, "Derived");
+    test_assert(derived != 0);
+    ecs_add_id(world, derived, EcsScriptTemplateManual);
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_add_id(world, inst, derived);
+    test_assert(ecs_has_pair(world, inst, EcsScriptTemplatePending, derived));
+    test_assert(!ecs_has(world, inst, Position));
+
+    test_int(ecs_script_template_update(world, inst, derived), 0);
+    test_assert(!ecs_has_pair(world, inst, EcsScriptTemplatePending, EcsWildcard));
+    {
+        const Position *p = ecs_get(world, inst, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+    }
+
+    ecs_set(world, e, Mass, {20});
+    test_assert(ecs_has_pair(world, inst, EcsScriptTemplatePending, derived));
+    {
+        const Position *p = ecs_get(world, inst, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+    }
+
+    test_int(ecs_script_template_update(world, inst, derived), 0);
+    test_assert(!ecs_has_pair(world, inst, EcsScriptTemplatePending, EcsWildcard));
+    {
+        const Position *p = ecs_get(world, inst, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Template_manual_base_derived_base_ref_change(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    test_int(ecs_script_run_w_desc(world, NULL,
+        HEAD "template Base {"
+        LINE "  Position: {e[Mass].value, 0}"
+        LINE "}"
+        LINE "template Derived : Base {}", &ir_desc, NULL), 0);
+
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    test_assert(base != 0);
+    ecs_entity_t derived = ecs_lookup(world, "Derived");
+    test_assert(derived != 0);
+    ecs_add_id(world, base, EcsScriptTemplateManual);
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_add_id(world, inst, derived);
+    test_int(ecs_script_template_update(world, inst, derived), 0);
+    test_assert(!ecs_has_pair(world, inst, EcsScriptTemplatePending, EcsWildcard));
+    {
+        const Position *p = ecs_get(world, inst, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+    }
+
+    ecs_set(world, e, Mass, {20});
+
+    test_int(ecs_script_template_update(world, inst, derived), 0);
+    test_assert(!ecs_has_pair(world, inst, EcsScriptTemplatePending, EcsWildcard));
+    {
+        const Position *p = ecs_get(world, inst, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+    }
+
+    ecs_remove_id(world, inst, derived);
+    test_assert(!ecs_has_pair(world, inst, EcsScriptTemplatePending, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Template_ref_change_readds_annotation_w_shared_table(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    test_int(ecs_script_run_w_desc(world, NULL,
+        HEAD "@brief A description"
+        LINE "template T {"
+        LINE "  prop x: f32 = 0"
+        LINE "  if e[Mass].value > 10 {"
+        LINE "    child { Position: {$x, 0} }"
+        LINE "  }"
+        LINE "}"
+        LINE "i1 { T: {x: 1} }"
+        LINE "i2 { T: {x: 2} }"
+        LINE "i3 { T: {x: 3} }", &ir_desc, NULL), 0);
+
+    ecs_entity_t i1 = ecs_lookup(world, "i1");
+    ecs_entity_t i2 = ecs_lookup(world, "i2");
+    test_assert(i1 != 0);
+    test_assert(i2 != 0);
+    test_assert(ecs_lookup(world, "i1.child") == 0);
+
+    ecs_remove_pair(world, i1, ecs_id(EcsDocDescription), EcsDocBrief);
+    ecs_remove_pair(world, i2, ecs_id(EcsDocDescription), EcsDocBrief);
+
+    ecs_set(world, e, Mass, {20});
+
+    {
+        ecs_entity_t child = ecs_lookup(world, "i1.child");
+        test_assert(child != 0);
+        const Position *p = ecs_get(world, child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+    }
+    {
+        ecs_entity_t child = ecs_lookup(world, "i2.child");
+        test_assert(child != 0);
+        const Position *p = ecs_get(world, child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 2);
+    }
+    {
+        ecs_entity_t child = ecs_lookup(world, "i3.child");
+        test_assert(child != 0);
+        const Position *p = ecs_get(world, child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 3);
+    }
+
+    test_str(ecs_doc_get_brief(world, i1), "A description");
+
+    ecs_fini(world);
+}

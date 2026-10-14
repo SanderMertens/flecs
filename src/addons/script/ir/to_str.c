@@ -66,14 +66,14 @@ static const struct {
     [EcsIrBinary] = {"Binary", {"dst", "left", "right"}},
     [EcsIrBinaryI8] = {"BinaryI8", {"dst", "left", "right"}},
     [EcsIrBinaryI16] = {"BinaryI16", {"dst", "left", "right"}},
+    [EcsIrBinaryI32] = {"BinaryI32", {"dst", "left", "right"}},
+    [EcsIrBinaryI64] = {"BinaryI64", {"dst", "left", "right"}},
     [EcsIrBinaryU8] = {"BinaryU8", {"dst", "left", "right"}},
     [EcsIrBinaryU16] = {"BinaryU16", {"dst", "left", "right"}},
     [EcsIrBinaryU32] = {"BinaryU32", {"dst", "left", "right"}},
     [EcsIrBinaryU64] = {"BinaryU64", {"dst", "left", "right"}},
-    [EcsIrBinaryI64] = {"BinaryI64", {"dst", "left", "right"}},
-    [EcsIrBinaryI32] = {"BinaryI32", {"dst", "left", "right"}},
-    [EcsIrBinaryF64] = {"BinaryF64", {"dst", "left", "right"}},
     [EcsIrBinaryF32] = {"BinaryF32", {"dst", "left", "right"}},
+    [EcsIrBinaryF64] = {"BinaryF64", {"dst", "left", "right"}},
     [EcsIrJumpIfFalse] = {"JumpIfFalse", {"condition", "target", "result"}},
     [EcsIrJumpIfTrue] = {"JumpIfTrue", {"condition", "target", "result"}},
     [EcsIrCast] = {"Cast", {"dst", "src"}},
@@ -96,7 +96,7 @@ static const struct {
     [EcsIrStrBegin] = {"StrBegin", {NULL}},
     [EcsIrStrFrag] = {"StrFrag", {NULL}},
     [EcsIrStrValue] = {"StrValue", {"value"}},
-    [EcsIrStrCast] = {"StrCast", {"value", "size"}},
+    [EcsIrStrCast] = {"StrCast", {"value"}},
     [EcsIrStrFormat] = {"StrFormat", {"value", "width", "precision"}},
     [EcsIrStrEnd] = {"StrEnd", {"dst"}},
     [EcsIrMatchCmp] = {"MatchCmp", {"value", "compare", "else"}},
@@ -209,40 +209,41 @@ static void flecs_irs_payload_to_buf(
 
         break;
     }
+    case EcsIrUnary:
+        ecs_strbuf_append(buf, " operator=%s", flecs_token_str(
+            ((const ecs_expr_unary_t*)op->node)->operator));
+        break;
     default:
         break;
     }
-    if ((op->kind >= EcsIrBinary && op->kind <= EcsIrBinaryF32) ||
-        op->kind == EcsIrInitOp || op->kind == EcsIrUnary)
+
+    if ((op->kind >= EcsIrBinary && op->kind <= EcsIrBinaryF64) ||
+        op->kind == EcsIrInitOp)
     {
-        ecs_token_kind_t token = op->kind == EcsIrUnary
-            ? ((const ecs_expr_unary_t*)op->node)->operator
-            : (ecs_token_kind_t)(op->flags & 0x7fff);
-        ecs_strbuf_append(buf, " operator=%s", flecs_token_str(token));
+        ecs_strbuf_append(buf, " operator=%s", flecs_token_str(
+            (ecs_token_kind_t)(op->flags & ~EcsIrBinaryInPlace)));
     }
 
-    if (op->node && op->kind != EcsIrJump && op->kind != EcsIrEnd) {
-        const char *pos;
-        if (op->kind >= EcsIrLoadConst && op->kind < EcsIrToBool) {
-            pos = expr->pos;
-            if (expr->type) {
-                const char *type = ecs_get_name(world, expr->type);
-                if (type) {
-                    ecs_strbuf_appendlit(buf, " type=");
-                    ecs_strbuf_appendstr(buf, type);
-                }
-            }
-        } else {
-            pos = ((const ecs_script_node_t*)op->node)->pos;
-        }
+    if (!op->node) {
+        return;
+    }
 
-        if (pos && op->kind == EcsIrStmt) {
-            int32_t length = 0;
-            while (length < 80 && pos[length] && pos[length] != '\n') {
-                length ++;
-            }
-            ecs_strbuf_append(buf, " ; %.*s", length, pos);
+    if (op->kind >= EcsIrLoadConst && op->kind < EcsIrToBool && expr->type) {
+        const char *type = ecs_get_name(world, expr->type);
+        if (type) {
+            ecs_strbuf_appendlit(buf, " type=");
+            ecs_strbuf_appendstr(buf, type);
         }
+    }
+
+    const char *pos = op->kind == EcsIrStmt
+        ? ((const ecs_script_node_t*)op->node)->pos : NULL;
+    if (pos) {
+        int32_t length = 0;
+        while (length < 80 && pos[length] && pos[length] != '\n') {
+            length ++;
+        }
+        ecs_strbuf_append(buf, " ; %.*s", length, pos);
     }
 }
 
@@ -267,7 +268,7 @@ void flecs_script_ir_to_buf(
         for (int32_t e = 0; e < entry_count; e ++) {
             if (entries[e].pc == i) {
                 static const char *const kinds[] = {
-                    "root", "template", "entity", "fn"
+                    "root", "template", "entity", "fn", "async"
                 };
                 ecs_strbuf_append(buf, "%s%s block %d (regs=%d)\n",
                     i ? "\n" : "", kinds[entries[e].kind], e,

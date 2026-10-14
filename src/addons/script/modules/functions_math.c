@@ -179,6 +179,21 @@ static void flecs_script_max(
     *(double*)result->ptr = (a > b) ? a : b;
 }
 
+#define FLECS_SCRIPT_FOR_EACH_NUMERIC(M)\
+    M(int8_t) M(int16_t) M(int32_t) M(int64_t)\
+    M(uint8_t) M(uint16_t) M(uint32_t) M(uint64_t)\
+    M(float) M(double)
+
+#define FLECS_SCRIPT_NUMERIC_CALLBACKS(fn) {\
+    [EcsI8] = fn##_int8_t, [EcsI16] = fn##_int16_t,\
+    [EcsI32] = fn##_int32_t, [EcsI64] = fn##_int64_t,\
+    [EcsU8] = fn##_uint8_t, [EcsU16] = fn##_uint16_t,\
+    [EcsU32] = fn##_uint32_t, [EcsU64] = fn##_uint64_t,\
+    [EcsF32] = fn##_float, [EcsF64] = fn##_double }
+
+#define FLECS_SCRIPT_FLOAT_CALLBACKS(fn) {\
+    [EcsF32] = fn##_float, [EcsF64] = fn##_double }
+
 #define FLECS_SCRIPT_LERP(type)\
     static void flecs_script_lerp_##type(\
         const ecs_function_ctx_t *ctx,\
@@ -245,16 +260,32 @@ FLECS_SCRIPT_SMOOTHSTEP(double)
         }\
     }
 
-FLECS_SCRIPT_CLAMP(int8_t)
-FLECS_SCRIPT_CLAMP(int16_t)
-FLECS_SCRIPT_CLAMP(int32_t)
-FLECS_SCRIPT_CLAMP(int64_t)
-FLECS_SCRIPT_CLAMP(uint8_t)
-FLECS_SCRIPT_CLAMP(uint16_t)
-FLECS_SCRIPT_CLAMP(uint32_t)
-FLECS_SCRIPT_CLAMP(uint64_t)
-FLECS_SCRIPT_CLAMP(float)
-FLECS_SCRIPT_CLAMP(double)
+FLECS_SCRIPT_FOR_EACH_NUMERIC(FLECS_SCRIPT_CLAMP)
+
+typedef struct flecs_math_function_t {
+    const char *name;
+    const char *brief;
+    double (*unary)(double);
+    double (*binary)(double, double);
+    double (*exponent)(double, int);
+} flecs_math_function_t;
+
+#define FLECS_MATH_UNARY(name, expr)\
+    static double flecs_math_##name(\
+        double x)\
+    {\
+        return expr;\
+    }
+
+FLECS_MATH_UNARY(sqrt, sqrt(x))
+FLECS_MATH_UNARY(sqr, x * x)
+FLECS_MATH_UNARY(ceil, ceil(x))
+FLECS_MATH_UNARY(floor, floor(x))
+FLECS_MATH_UNARY(round, round(x))
+FLECS_MATH_UNARY(abs, fabs(x))
+FLECS_MATH_UNARY(log2, log2(x))
+
+static const flecs_math_function_t flecs_math_length = { .unary = flecs_math_sqrt };
 
 #define FLECS_SCRIPT_DOT(type)\
     static void flecs_script_dot_##type(\
@@ -264,84 +295,17 @@ FLECS_SCRIPT_CLAMP(double)
         ecs_value_t *result,\
         int32_t elem_count)\
     {\
-        (void)ctx; (void)argc;\
-        type *a = argv[0].ptr;\
-        type *b = argv[1].ptr;\
-        double *r = result->ptr;\
-        for (int i = 0; i < elem_count; i ++) {\
-            double x = (double)a[i], y = (double)b[i];\
-            *r += x * y;\
-        }\
-    }
-
-FLECS_SCRIPT_DOT(int8_t)
-FLECS_SCRIPT_DOT(int16_t)
-FLECS_SCRIPT_DOT(int32_t)
-FLECS_SCRIPT_DOT(int64_t)
-FLECS_SCRIPT_DOT(uint8_t)
-FLECS_SCRIPT_DOT(uint16_t)
-FLECS_SCRIPT_DOT(uint32_t)
-FLECS_SCRIPT_DOT(uint64_t)
-FLECS_SCRIPT_DOT(float)
-FLECS_SCRIPT_DOT(double)
-
-#define FLECS_SCRIPT_LENGTH(type)\
-    static void flecs_script_length_##type(\
-        const ecs_function_ctx_t *ctx,\
-        int32_t argc,\
-        const ecs_value_t *argv,\
-        ecs_value_t *result,\
-        int32_t elem_count)\
-    {\
-        (void)ctx; (void)argc;\
-        type *v = argv[0].ptr;\
-        double *r = result->ptr;\
+        const type *a = argv[0].ptr;\
+        const type *b = argv[argc - 1].ptr;\
         double sum = 0;\
         for (int i = 0; i < elem_count; i ++) {\
-            double x = (double)v[i];\
-            sum += x * x;\
+            sum += (double)a[i] * (double)b[i];\
         }\
-        *r = sqrt(sum);\
+        const flecs_math_function_t *fn = ctx->ctx;\
+        *(double*)result->ptr = fn ? fn->unary(sum) : sum;\
     }
 
-FLECS_SCRIPT_LENGTH(int8_t)
-FLECS_SCRIPT_LENGTH(int16_t)
-FLECS_SCRIPT_LENGTH(int32_t)
-FLECS_SCRIPT_LENGTH(int64_t)
-FLECS_SCRIPT_LENGTH(uint8_t)
-FLECS_SCRIPT_LENGTH(uint16_t)
-FLECS_SCRIPT_LENGTH(uint32_t)
-FLECS_SCRIPT_LENGTH(uint64_t)
-FLECS_SCRIPT_LENGTH(float)
-FLECS_SCRIPT_LENGTH(double)
-
-#define FLECS_SCRIPT_LENGTH_SQ(type)\
-    static void flecs_script_length_sq_##type(\
-        const ecs_function_ctx_t *ctx,\
-        int32_t argc,\
-        const ecs_value_t *argv,\
-        ecs_value_t *result,\
-        int32_t elem_count)\
-    {\
-        (void)ctx; (void)argc;\
-        type *v = argv[0].ptr;\
-        double *r = result->ptr;\
-        for (int i = 0; i < elem_count; i ++) {\
-            double x = (double)v[i];\
-            *r += x * x;\
-        }\
-    }
-
-FLECS_SCRIPT_LENGTH_SQ(int8_t)
-FLECS_SCRIPT_LENGTH_SQ(int16_t)
-FLECS_SCRIPT_LENGTH_SQ(int32_t)
-FLECS_SCRIPT_LENGTH_SQ(int64_t)
-FLECS_SCRIPT_LENGTH_SQ(uint8_t)
-FLECS_SCRIPT_LENGTH_SQ(uint16_t)
-FLECS_SCRIPT_LENGTH_SQ(uint32_t)
-FLECS_SCRIPT_LENGTH_SQ(uint64_t)
-FLECS_SCRIPT_LENGTH_SQ(float)
-FLECS_SCRIPT_LENGTH_SQ(double)
+FLECS_SCRIPT_FOR_EACH_NUMERIC(FLECS_SCRIPT_DOT)
 
 #define FLECS_SCRIPT_NORMALIZE(type)\
     static void flecs_script_normalize_##type(\
@@ -372,32 +336,6 @@ FLECS_SCRIPT_LENGTH_SQ(double)
 FLECS_SCRIPT_NORMALIZE(float)
 FLECS_SCRIPT_NORMALIZE(double)
 
-typedef struct flecs_math_function_t {
-    const char *name;
-    const char *brief;
-    double (*unary)(double);
-    double (*binary)(double, double);
-    double (*exponent)(double, int);
-    ecs_function_callback_t callback;
-} flecs_math_function_t;
-
-#define FLECS_MATH_INTRINSIC(name, expr)\
-    static void flecs_math_##name(\
-        const ecs_function_ctx_t *ctx, int32_t argc,\
-        const ecs_value_t *argv, ecs_value_t *result)\
-    {\
-        (void)ctx; (void)argc;\
-        double x = *(double*)argv[0].ptr;\
-        *(double*)result->ptr = expr;\
-    }
-
-FLECS_MATH_INTRINSIC(sqrt, sqrt(x))
-FLECS_MATH_INTRINSIC(sqr, x * x)
-FLECS_MATH_INTRINSIC(ceil, ceil(x))
-FLECS_MATH_INTRINSIC(floor, floor(x))
-FLECS_MATH_INTRINSIC(round, round(x))
-FLECS_MATH_INTRINSIC(abs, fabs(x))
-FLECS_MATH_INTRINSIC(log2, log2(x))
 
 static const flecs_math_function_t flecs_math_functions[] = {
     {"cos", "Compute cosine", .unary = cos},
@@ -418,14 +356,14 @@ static const flecs_math_function_t flecs_math_functions[] = {
     {"log", "Compute natural logarithm", .unary = log},
     {"log10", "Compute common logarithm", .unary = log10},
     {"exp2", "Compute binary exponential function", .unary = exp2},
-    {"log2", "Compute binary logarithm", .callback = flecs_math_log2},
+    {"log2", "Compute binary logarithm", .unary = flecs_math_log2},
     {"pow", "Raise to power", .binary = pow},
-    {"sqrt", "Compute square root", .callback = flecs_math_sqrt},
-    {"sqr", "Compute square", .callback = flecs_math_sqr},
-    {"ceil", "Round up value", .callback = flecs_math_ceil},
-    {"floor", "Round down value", .callback = flecs_math_floor},
-    {"round", "Round to nearest", .callback = flecs_math_round},
-    {"abs", "Compute absolute value", .callback = flecs_math_abs},
+    {"sqrt", "Compute square root", .unary = flecs_math_sqrt},
+    {"sqr", "Compute square", .unary = flecs_math_sqr},
+    {"ceil", "Round up value", .unary = flecs_math_ceil},
+    {"floor", "Round down value", .unary = flecs_math_floor},
+    {"round", "Round to nearest", .unary = flecs_math_round},
+    {"abs", "Compute absolute value", .unary = flecs_math_abs},
 };
 
 static void flecs_math_call(
@@ -479,7 +417,7 @@ void FlecsScriptMathImport(
             .parent = ecs_id(FlecsScriptMath),
             .return_type = ecs_id(ecs_f64_t),
             .params = {{ .name = "x", .type = ecs_id(ecs_f64_t) }},
-            .callback = fn->callback ? fn->callback : flecs_math_call,
+            .callback = flecs_math_call,
             .ctx = ECS_CONST_CAST(flecs_math_function_t*, fn)
         };
         if (fn->binary || fn->exponent) {
@@ -560,18 +498,7 @@ void FlecsScriptMathImport(
             { .name = "a", .type = EcsScriptVectorType },
             { .name = "b", .type = EcsScriptVectorType },
         },
-        .vector_callbacks = {
-            [EcsI8]  = flecs_script_dot_int8_t,
-            [EcsI16] = flecs_script_dot_int16_t,
-            [EcsI32] = flecs_script_dot_int32_t,
-            [EcsI64] = flecs_script_dot_int64_t,
-            [EcsU8]  = flecs_script_dot_uint8_t,
-            [EcsU16] = flecs_script_dot_uint16_t,
-            [EcsU32] = flecs_script_dot_uint32_t,
-            [EcsU64] = flecs_script_dot_uint64_t,
-            [EcsF32] = flecs_script_dot_float,
-            [EcsF64] = flecs_script_dot_double
-        }
+        .vector_callbacks = FLECS_SCRIPT_NUMERIC_CALLBACKS(flecs_script_dot)
     });
 
     ecs_function(world, {
@@ -581,18 +508,8 @@ void FlecsScriptMathImport(
         .params = {
             { .name = "v", .type = EcsScriptVectorType }
         },
-        .vector_callbacks = {
-            [EcsI8]  = flecs_script_length_int8_t,
-            [EcsI16] = flecs_script_length_int16_t,
-            [EcsI32] = flecs_script_length_int32_t,
-            [EcsI64] = flecs_script_length_int64_t,
-            [EcsU8]  = flecs_script_length_uint8_t,
-            [EcsU16] = flecs_script_length_uint16_t,
-            [EcsU32] = flecs_script_length_uint32_t,
-            [EcsU64] = flecs_script_length_uint64_t,
-            [EcsF32] = flecs_script_length_float,
-            [EcsF64] = flecs_script_length_double
-        }
+        .vector_callbacks = FLECS_SCRIPT_NUMERIC_CALLBACKS(flecs_script_dot),
+        .ctx = ECS_CONST_CAST(flecs_math_function_t*, &flecs_math_length)
     });
 
     ecs_function(world, {
@@ -602,18 +519,7 @@ void FlecsScriptMathImport(
         .params = {
             { .name = "v", .type = EcsScriptVectorType }
         },
-        .vector_callbacks = {
-            [EcsI8]  = flecs_script_length_sq_int8_t,
-            [EcsI16] = flecs_script_length_sq_int16_t,
-            [EcsI32] = flecs_script_length_sq_int32_t,
-            [EcsI64] = flecs_script_length_sq_int64_t,
-            [EcsU8]  = flecs_script_length_sq_uint8_t,
-            [EcsU16] = flecs_script_length_sq_uint16_t,
-            [EcsU32] = flecs_script_length_sq_uint32_t,
-            [EcsU64] = flecs_script_length_sq_uint64_t,
-            [EcsF32] = flecs_script_length_sq_float,
-            [EcsF64] = flecs_script_length_sq_double
-        }
+        .vector_callbacks = FLECS_SCRIPT_NUMERIC_CALLBACKS(flecs_script_dot)
     });
 
     ecs_function(world, {
@@ -623,10 +529,7 @@ void FlecsScriptMathImport(
         .params = {
             { .name = "v", .type = EcsScriptVectorType }
         },
-        .vector_callbacks = {
-            [EcsF32] = flecs_script_normalize_float,
-            [EcsF64] = flecs_script_normalize_double
-        }
+        .vector_callbacks = FLECS_SCRIPT_FLOAT_CALLBACKS(flecs_script_normalize)
     });
 
     ecs_function(world, {
@@ -638,10 +541,7 @@ void FlecsScriptMathImport(
             { .name = "b", .type = EcsScriptVectorType },
             { .name = "t", .type = ecs_id(ecs_f64_t) }
         },
-        .vector_callbacks = {
-            [EcsF32] = flecs_script_lerp_float,
-            [EcsF64] = flecs_script_lerp_double
-        }
+        .vector_callbacks = FLECS_SCRIPT_FLOAT_CALLBACKS(flecs_script_lerp)
     });
 
     ecs_function(world, {
@@ -653,10 +553,7 @@ void FlecsScriptMathImport(
             { .name = "b", .type = EcsScriptVectorType },
             { .name = "t", .type = ecs_id(ecs_f64_t) }
         },
-        .vector_callbacks = {
-            [EcsF32] = flecs_script_smoothstep_float,
-            [EcsF64] = flecs_script_smoothstep_double
-        }
+        .vector_callbacks = FLECS_SCRIPT_FLOAT_CALLBACKS(flecs_script_smoothstep)
     });
 
     ecs_function(world, {
@@ -668,18 +565,7 @@ void FlecsScriptMathImport(
             { .name = "min", .type = ecs_id(ecs_f64_t) },
             { .name = "max", .type = ecs_id(ecs_f64_t) }
         },
-        .vector_callbacks = {
-            [EcsI8] = flecs_script_clamp_int8_t,
-            [EcsI16] = flecs_script_clamp_int16_t,
-            [EcsI32] = flecs_script_clamp_int32_t,
-            [EcsI64] = flecs_script_clamp_int64_t,
-            [EcsU8] = flecs_script_clamp_uint8_t,
-            [EcsU16] = flecs_script_clamp_uint16_t,
-            [EcsU32] = flecs_script_clamp_uint32_t,
-            [EcsU64] = flecs_script_clamp_uint64_t,
-            [EcsF32] = flecs_script_clamp_float,
-            [EcsF64] = flecs_script_clamp_double
-        }
+        .vector_callbacks = FLECS_SCRIPT_NUMERIC_CALLBACKS(flecs_script_clamp)
     });
 
     FlecsScriptMathPerlinImport(world);

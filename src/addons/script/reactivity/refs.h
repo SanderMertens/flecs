@@ -30,19 +30,17 @@ typedef struct EcsScriptUpdateEvent {
 
 extern ECS_COMPONENT_DECLARE(EcsScriptUpdateEvent);
 
+ecs_script_ref_t* flecs_script_ref_add(
+    ecs_vec_t *refs,
+    const ecs_script_ref_t *value,
+    bool match_input);
+
 ecs_script_ref_t* flecs_script_ref_ensure(
     ecs_vec_t *refs,
     const ecs_script_ref_t *value);
 
-ecs_entity_t flecs_script_create_ref_observer(
-    ecs_world_t *world,
-    ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_entity_t entity,
-    ecs_id_t component,
-    uint64_t input,
-    bool is_has,
-    ecs_iter_action_t callback);
+const char* flecs_script_name_leaf(
+    const char *name);
 
 void flecs_script_update_ref_observers(
     ecs_world_t *world,

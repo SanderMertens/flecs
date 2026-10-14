@@ -38,28 +38,20 @@ static char* flecs_script_include_resolve(
     const char *script_name,
     const char *include_path)
 {
-    const char *dir_end = NULL;
-    if (script_name) {
-        const char *p = script_name;
-        while (p[0]) {
-            if (p[0] == '/' || p[0] == '\\') {
-                dir_end = p + 1;
-            }
-
-            p ++;
+    int32_t i, dir_len = 0;
+    for (i = 0; script_name && script_name[i]; i ++) {
+        if (script_name[i] == '/' || script_name[i] == '\\') {
+            dir_len = i + 1;
         }
     }
 
-    if (dir_end) {
-        ecs_size_t dir_len = flecs_ito(ecs_size_t, dir_end - script_name);
-        ecs_size_t incl_len = ecs_os_strlen(include_path);
-        char *result = ecs_os_malloc(dir_len + incl_len + 1);
-        ecs_os_memcpy(result, script_name, dir_len);
-        ecs_os_memcpy(result + dir_len, include_path, incl_len + 1);
-        return result;
-    } else {
-        return ecs_os_strdup(include_path);
-    }
+    static const char ext[] = ".flecs";
+    ecs_size_t len = ecs_os_strlen(include_path);
+    ecs_size_t ext_len = ECS_SIZEOF(ext) - 1;
+    bool has_ext = len >= ext_len &&
+        !ecs_os_strcmp(include_path + len - ext_len, ext);
+    return flecs_asprintf("%.*s%s%s", dir_len, script_name ? script_name : "",
+        include_path, has_ext ? "" : ext);
 }
 
 static bool flecs_script_include_is_absolute(
@@ -100,12 +92,9 @@ static int flecs_script_include_node(
         return -1;
     }
 
-    bool is_managed = v->script_entity != 0;
-    ecs_entity_t parent_script_entity = v->script_entity;
-
     const char *script_name = NULL;
-    if (parent_script_entity) {
-        const EcsScript *sc = ecs_get(v->world, parent_script_entity, EcsScript);
+    if (v->script_entity) {
+        const EcsScript *sc = ecs_get(v->world, v->script_entity, EcsScript);
         if (sc && sc->filename) {
             script_name = sc->filename;
         }
@@ -115,27 +104,13 @@ static int flecs_script_include_node(
         script_name = v->base.script->pub.name;
     }
 
-    const char *include_path = node->filename;
-    char *with_ext = NULL;
-    static const char ext[] = ".flecs";
-    ecs_size_t fn_len = ecs_os_strlen(include_path);
-    ecs_size_t ext_len = sizeof(ext) - 1;
-    if (fn_len < ext_len || ecs_os_strcmp(
-        include_path + fn_len - ext_len, ext))
-    {
-        with_ext = ecs_os_malloc(fn_len + ext_len + 1);
-        ecs_os_memcpy(with_ext, include_path, fn_len);
-        ecs_os_memcpy(with_ext + fn_len, ext, ext_len + 1);
-        include_path = with_ext;
-    }
-
-    char *resolved = flecs_script_include_resolve(script_name, include_path);
-    ecs_os_free(with_ext);
+    char *resolved = flecs_script_include_resolve(
+        script_name, node->filename);
 
     int result = 0;
     rt->include_nesting ++;
 
-    if (is_managed) {
+    if (v->script_entity) {
         ecs_entity_t existing = ecs_lookup_path_w_sep(
             v->world, 0, resolved, "/", "/", false);
         if (existing && ecs_has(v->world, existing, EcsScript)) {
@@ -147,16 +122,15 @@ static int flecs_script_include_node(
         }
 
         ecs_entity_t prev_scope = ecs_set_scope(v->world, 0);
-        ecs_script_runtime_t *runtime = flecs_script_runtime_get(v->world);
-        runtime->include_depth ++;
+        rt->include_depth ++;
         ecs_entity_t e = ecs_script_init(v->world, &(ecs_script_desc_t){
             .filename = resolved,
             .ir = v->base.script->ir_enabled
         });
-        runtime->include_depth --;
+        rt->include_depth --;
         ecs_set_scope(v->world, prev_scope);
 
-        if (!runtime->include_depth) {
+        if (!rt->include_depth) {
             flecs_script_run_pending_resolves(v->world);
         }
 

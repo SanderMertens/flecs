@@ -1253,7 +1253,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_DEPRECATED(msg)
 #endif
 
-#define ECS_ALIGN(size, alignment) (ecs_size_t)((((((size_t)size) - 1) / ((size_t)alignment)) + 1) * ((size_t)alignment))
+#define ECS_ALIGN(size, alignment) (ecs_size_t)((((((size_t)(size)) - 1) / ((size_t)(alignment))) + 1) * ((size_t)(alignment)))
 
 /* Simple utility for determining the max of two values. */
 #define ECS_MAX(a, b) (((a) > (b)) ? a : b)

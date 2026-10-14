@@ -400,7 +400,7 @@ bool flecs_query_tree_cache_search(
     ecs_query_iter_t *qit = ctx->qit;
     const ecs_query_impl_t *impl = ctx->query;
     const ecs_query_op_t *ops = qit->ops;
-    int32_t cache_op = impl->tree_cache_op;
+    ecs_query_lbl_t cache_op = impl->tree_cache_op;
     int32_t last_op = impl->op_count - 1;
     bool test = (it->constrained_vars & 1) != 0;
     ecs_assert(cache_op >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -484,8 +484,8 @@ bool flecs_query_tree_cache_search(
             return true;
         }
 
-        if (flecs_query_run_until(false, ctx, ops, cache_op, cache_op + 1, 
-            last_op))
+        if (flecs_query_run_until(false, ctx, ops, cache_op,
+            flecs_itolbl(cache_op + 1), last_op))
         {
             qit->op = flecs_itolbl(ctx->op_index - 1);
             flecs_query_set_iter_this(it, ctx);

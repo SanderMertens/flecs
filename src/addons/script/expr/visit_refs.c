@@ -87,8 +87,6 @@ static int flecs_expr_ref_visit(
 
         break;
     }
-    case EcsExprTemplate:
-        return flecs_expr_visit_children(node, flecs_expr_ref_visit, ctx);
     case EcsExprFunction:
     case EcsExprMethod: {
         ecs_expr_function_t *n = (ecs_expr_function_t*)node;

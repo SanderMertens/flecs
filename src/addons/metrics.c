@@ -255,7 +255,6 @@ static void ClearMetricInstance(ecs_iter_t *it) {
 
 /** Update member metric */
 static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
-    ecs_world_t *world = it->stage;
     EcsMetricValue *m = ecs_field(it, EcsMetricValue, 0);
     EcsMetricMemberInstance *mi = ecs_field(it, EcsMetricMemberInstance, 1);
     ecs_ftime_t dt = it->delta_time;

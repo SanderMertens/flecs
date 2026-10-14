@@ -83,6 +83,30 @@ void ExprAst_binary_f32_var_div_int(void) {
     ecs_fini(world);
 }
 
+void ExprAst_binary_i32_var_mod_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_i32_t);
+    *(ecs_i32_t*)foo->value.ptr = 10;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .type = ecs_id(ecs_i32_t) };
+    ecs_script_t *expr = ecs_expr_parse(world, "$foo % 3", &desc);
+
+    char *ast = ecs_script_ast_to_str(expr, false);
+    test_str(ast, "(i64($foo) % 3)");
+    ecs_os_free(ast);
+
+    int32_t v;
+    test_int(0, ecs_expr_eval(expr, &ecs_value_ptr(ecs_i32_t, &v), &desc));
+    test_int(v, 1);
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(expr);
+
+    ecs_fini(world);
+}
+
 void ExprAst_binary_f32_var_add_flt(void) {
     ecs_world_t *world = ecs_init();
 

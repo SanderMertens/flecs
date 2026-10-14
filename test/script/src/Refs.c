@@ -7552,3 +7552,135 @@ void Refs_has_ref_resolve_observer_on_add(void) {
 
     ecs_fini(world);
 }
+
+static void update_script_on_position_set(
+    ecs_iter_t *it)
+{
+    ecs_entity_t *script = it->ctx;
+    Position *p = ecs_field_w_size(it, sizeof(Position), 0);
+    if (*script && p[0].x == 20) {
+        ecs_entity_t s = *script;
+        *script = 0;
+        ecs_script_update(it->world, s, 0, "foo { Position: {30, 0} }");
+    }
+}
+
+void Refs_update_script_during_ref_eval(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {e[Mass].value, 0}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t script = s;
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = update_script_on_position_set,
+        .ctx = &script
+    });
+
+    ecs_set(world, e, Mass, {20});
+    test_int(script, 0);
+    test_assert(ecs_is_alive(world, s));
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+    }
+
+    ecs_set(world, e, Mass, {40});
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+    }
+
+    ecs_fini(world);
+}
+
+static void delete_script_on_position_set(
+    ecs_iter_t *it)
+{
+    ecs_entity_t *script = it->ctx;
+    Position *p = ecs_field_w_size(it, sizeof(Position), 0);
+    if (*script && p[0].x == 20) {
+        ecs_entity_t s = *script;
+        *script = 0;
+        ecs_delete(it->world, s);
+    }
+}
+
+void Refs_delete_script_during_ref_eval(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {e[Mass].value, 0}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t script = s;
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = delete_script_on_position_set,
+        .ctx = &script
+    });
+
+    ecs_set(world, e, Mass, {20});
+    test_int(script, 0);
+    test_assert(!ecs_is_alive(world, s));
+
+    ecs_set(world, e, Mass, {40});
+
+    ecs_fini(world);
+}

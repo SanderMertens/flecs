@@ -1663,3 +1663,53 @@ void SkipUnknown_warn_once_for_unknown_using(void) {
     ecs_os_set_api_defaults();
     ecs_log_set_level(-1);
 }
+
+void SkipUnknown_unknown_fn_body_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn f(a: i32) -> i32 {"
+    LINE "  const x = NsUnknown"
+    LINE "  a"
+    LINE "}"
+    LINE "a {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &skip_unknown_desc, NULL) == 0);
+    test_assert(ecs_lookup(world, "f") == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+
+    ecs_fini(world);
+}
+
+void SkipUnknown_unknown_fn_body_const_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn f(a: i32) -> i32 {"
+    LINE "  const x: NsUnknown = 10"
+    LINE "  a"
+    LINE "}"
+    LINE "a {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &skip_unknown_desc, NULL) == 0);
+    test_assert(ecs_lookup(world, "f") == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+
+    ecs_fini(world);
+}
+
+void SkipUnknown_unknown_fn_return_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn f() -> i32 {"
+    LINE "  NsUnknown"
+    LINE "}"
+    LINE "a {}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &skip_unknown_desc, NULL) == 0);
+    test_assert(ecs_lookup(world, "f") == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+
+    ecs_fini(world);
+}
