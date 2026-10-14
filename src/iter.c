@@ -98,15 +98,6 @@ void ecs_iter_fini(
         return;
     }
 
-    /* Make sure arrays are below stack page size, which means they don't have
-     * to get freed explicitly. */
-    ecs_assert(ECS_SIZEOF(ecs_id_t) * it->field_count < FLECS_STACK_PAGE_SIZE,
-        ECS_UNSUPPORTED, NULL);
-    ecs_assert(ECS_SIZEOF(ecs_entity_t) * it->field_count < FLECS_STACK_PAGE_SIZE,
-        ECS_UNSUPPORTED, NULL);
-    ecs_assert(ECS_SIZEOF(ecs_table_record_t*) * it->field_count < FLECS_STACK_PAGE_SIZE,
-        ECS_UNSUPPORTED, NULL);
-
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
         it->priv_.stack_cursor);
