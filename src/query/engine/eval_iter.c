@@ -407,14 +407,7 @@ static void flecs_query_iter_alloc(
         it->flags |= EcsIterOpCtxSplit;
     }
 
-    {
-        uint64_t *words = (uint64_t*)(void*)buf;
-        int32_t w, word_count = (l.written_size + l.vars_size + l.fields_size) / 
-            ECS_SIZEOF(uint64_t);
-        for (w = 0; w < word_count; w ++) {
-            words[w] = 0;
-        }
-    }
+    ecs_os_memset(buf, 0, l.written_size + l.vars_size + l.fields_size);
 
     qit->written = (ecs_write_flags_t*)(void*)buf;
     qit->vars = impl->var_count ?
@@ -544,10 +537,12 @@ bool ecs_query_next(
                 goto yield;
             }
         }
+#ifdef FLECS_QUERY_PLANS
     } else if (it->flags & EcsIterTreeCached) {
         if (flecs_query_tree_cache_search(&ctx, redo)) {
             goto yield;
         }
+#endif
     } else
 #endif
     {

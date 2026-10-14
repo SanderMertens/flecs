@@ -58,9 +58,6 @@ int flecs_script_struct_visit(
         return 0;
     }
 
-    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(EcsMember));
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     int32_t i, count = ecs_vec_count(&node->elements);
 
@@ -99,70 +96,41 @@ int flecs_script_struct_visit(
             return -1;
         }
 
-        if (elem->value->kind == EcsExprInitializer ||
-            elem->value->kind == EcsExprEmptyInitializer)
-        {
-            /* Evaluate into temporary storage. Evaluating the expression can
-             * move the member entity, which would invalidate a pointer into
-             * the component storage. */
-            ecs_value_t value = {
-                .ptr = ecs_os_alloca(ti->size),
-                .type = ecs_id(EcsMember)
-            };
-
-            ecs_os_memset(value.ptr, 0, ti->size);
-
-            if (flecs_script_eval_expr(v, &elem->value, &value)) {
-                return -1;
-            }
-
-            const EcsMember *mval = value.ptr;
-            if (mval->type == ctx->entity) {
-                flecs_expr_visit_error(script, elem->value,
-                    "member '%s' of struct '%s' cannot be of its own type",
-                    elem->member, ecs_get_name(world, ctx->entity));
-                return -1;
-            }
-
-            if (mval->count < 0) {
-                flecs_expr_visit_error(script, elem->value,
-                    "invalid count %d for member '%s' of struct '%s'",
-                    mval->count, elem->member,
-                    ecs_get_name(world, ctx->entity));
-                return -1;
-            }
-
-            void *dst = ecs_ensure_id(world, m, ecs_id(EcsMember),
-                flecs_ito(size_t, ti->size));
-            ecs_os_memcpy(dst, value.ptr, ti->size);
-
-            ecs_modified(world, m, EcsMember);
-        } else {
-            ecs_entity_t type = 0;
-            ecs_value_t value = {
-                .ptr = &type,
-                .type = ecs_id(ecs_entity_t)
-            };
-
-            if (flecs_script_eval_expr(v, &elem->value, &value)) {
-                return -1;
-            }
-
-            if (!type) {
-                flecs_expr_visit_error(script, elem->value,
-                    "invalid type for struct member '%s'", elem->member);
-                return -1;
-            }
-
-            if (type == ctx->entity) {
-                flecs_expr_visit_error(script, elem->value,
-                    "member '%s' of struct '%s' cannot be of its own type",
-                    elem->member, ecs_get_name(world, ctx->entity));
-                return -1;
-            }
-
-            ecs_set(world, m, EcsMember, { .type = type });
+        /* Evaluate into temporary storage. Evaluating the expression can
+         * move the member entity, which would invalidate a pointer into
+         * the component storage. */
+        EcsMember member = {0};
+        bool is_init = elem->value->kind == EcsExprInitializer ||
+            elem->value->kind == EcsExprEmptyInitializer;
+        ecs_value_t value = is_init
+            ? (ecs_value_t){ .ptr = &member, .type = ecs_id(EcsMember) }
+            : (ecs_value_t){ .ptr = &member.type, .type = ecs_id(ecs_entity_t) };
+        if (flecs_script_eval_expr(v, &elem->value, &value)) {
+            return -1;
         }
+
+        if (!is_init && !member.type) {
+            flecs_expr_visit_error(script, elem->value,
+                "invalid type for struct member '%s'", elem->member);
+            return -1;
+        }
+
+        if (member.type == ctx->entity) {
+            flecs_expr_visit_error(script, elem->value,
+                "member '%s' of struct '%s' cannot be of its own type",
+                elem->member, ecs_get_name(world, ctx->entity));
+            return -1;
+        }
+
+        if (member.count < 0) {
+            flecs_expr_visit_error(script, elem->value,
+                "invalid count %d for member '%s' of struct '%s'",
+                member.count, elem->member,
+                ecs_get_name(world, ctx->entity));
+            return -1;
+        }
+
+        ecs_set_ptr(world, m, EcsMember, &member);
     }
 
     const EcsComponent *comp = ecs_get(world, ctx->entity, EcsComponent);

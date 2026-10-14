@@ -17,17 +17,16 @@ ECS_COMPONENT_DECLARE(EcsScriptMethod);
 ECS_DECLARE(EcsScriptVectorType);
 
 static void flecs_script_component_fini(
-    EcsScript *ptr,
-    const EcsScript *next)
+    EcsScript *ptr)
 {
-    if (ptr->template_ && (!next || ptr->template_ != next->template_)) {
+    if (ptr->template_) {
         flecs_script_template_fini(
             flecs_script_impl(ptr->script), ptr->template_);
     }
 
     if (ptr->script) {
 #ifdef FLECS_SCRIPT_ASYNC
-        if (!ptr->template_ && (!next || ptr->script != next->script)) {
+        if (!ptr->template_) {
             flecs_script_async_tasks_free(
                 &flecs_script_impl(ptr->script)->async_tasks);
         }
@@ -35,46 +34,21 @@ static void flecs_script_component_fini(
         ecs_script_free(ptr->script);
     }
 
-    if (!next || ptr->filename != next->filename) {
-        ecs_os_free(ptr->filename);
-    }
-
-    if (!next || ptr->code != next->code) {
-        ecs_os_free(ptr->code);
-    }
-
-    if (!next || ptr->error != next->error) {
-        ecs_os_free(ptr->error);
-    }
-
+    ecs_os_free(ptr->filename);
+    ecs_os_free(ptr->code);
+    ecs_os_free(ptr->error);
     flecs_script_ref_observers_fini(&ptr->observers);
     flecs_script_ref_observers_fini(&ptr->dyn_observers);
 }
 
 static ECS_MOVE(EcsScript, dst, src, {
-    flecs_script_component_fini(dst, src);
-
-    dst->filename = src->filename;
-    dst->code = src->code;
-    dst->error = src->error;
-    dst->script = src->script;
-    dst->template_ = src->template_;
-    dst->observers = src->observers;
-    dst->dyn_observers = src->dyn_observers;
-    dst->skip_unknown = src->skip_unknown;
-    dst->ir = src->ir;
-
-    src->filename = NULL;
-    src->code = NULL;
-    src->error = NULL;
-    src->script = NULL;
-    src->template_ = NULL;
-    ecs_os_zeromem(&src->observers);
-    ecs_os_zeromem(&src->dyn_observers);
+    flecs_script_component_fini(dst);
+    *dst = *src;
+    ecs_os_zeromem(src);
 })
 
 static ECS_DTOR(EcsScript, ptr, {
-    flecs_script_component_fini(ptr, NULL);
+    flecs_script_component_fini(ptr);
 })
 
 static ecs_id_t flecs_script_tag(
@@ -116,7 +90,14 @@ char* ecs_script_ir_to_str(
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_script_impl_t *impl = flecs_script_impl(
         ECS_CONST_CAST(ecs_script_t*, script));
-    ecs_script_ir_t *ir = flecs_script_ir_ensure(impl);
+    int r = 0;
+    if (!impl->compiled) {
+        ecs_entity_t prev_scope = ecs_set_scope(script->world, 0);
+        r = flecs_script_eval(script, NULL, 0, 0, NULL);
+        ecs_set_scope(script->world, prev_scope);
+    }
+
+    ecs_script_ir_t *ir = r ? NULL : flecs_script_ir_ensure(impl);
     if (!ir) {
         goto error;
     }
@@ -173,6 +154,20 @@ void flecs_script_pos_to_line_col(
     column[0] = flecs_ito(int32_t, pos - line_start) + 1;
 }
 
+void flecs_script_unresolved_ref_add(
+    ecs_script_impl_t *impl,
+    const char *pos,
+    const char *name,
+    flecs_script_unresolved_kind_t kind)
+{
+    ecs_script_unresolved_ref_t *ref = ecs_vec_append_t(
+        NULL, &impl->unresolved_refs, ecs_script_unresolved_ref_t);
+    ref->name = name;
+    ref->kind = kind;
+    flecs_script_pos_to_line_col(impl->pub.code, pos, &ref->line, &ref->column);
+    ref->offset = ref->line ? (int32_t)(pos - impl->pub.code) : -1;
+}
+
 void ecs_script_clear(
     ecs_world_t *world,
     ecs_entity_t script,
@@ -227,19 +222,12 @@ int ecs_script_run_w_desc(
 {
     ecs_script_t *script = ecs_script_parse(world, name, code, desc, result);
     if (!script) {
-        goto error;
+        return -1;
     }
 
-    if (ecs_script_eval(script, desc, result)) {
-        goto error_free;
-    }
-
+    int r = ecs_script_eval(script, desc, result);
     ecs_script_free(script);
-    return 0;
-error_free:
-    ecs_script_free(script);
-error:
-    return -1;
+    return r;
 }
 
 int ecs_script_run(
@@ -320,9 +308,19 @@ error:
     return;
 }
 
-/* Parse new code for a script before the old version is cleared. When parsing
- * fails the error is stored on the script and the world is left untouched. */
-static ecs_script_t* flecs_script_reload_parse(
+static EcsScript* flecs_script_set_error(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    char *error,
+    const char *fallback)
+{
+    EcsScript *s = ecs_ensure(world, e, EcsScript);
+    ecs_os_free(s->error);
+    s->error = error ? error : ecs_os_strdup(fallback);
+    return s;
+}
+
+static ecs_script_t* flecs_script_update_parse_code(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *code)
@@ -340,14 +338,9 @@ static ecs_script_t* flecs_script_reload_parse(
     ecs_script_t *parsed = ecs_script_parse(
         world, name, code, &parse_desc, &parse_result);
     if (!parsed) {
-        EcsScript *script = ecs_ensure(world, e, EcsScript);
-        ecs_os_free(script->error);
-        script->error = parse_result.error;
-        if (!script->error) {
-            script->error = ecs_os_strdup("failed to parse script");
-        }
-
-        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", script->error);
+        s = flecs_script_set_error(
+            world, e, parse_result.error, "failed to parse script");
+        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
     }
 
     return parsed;
@@ -360,18 +353,14 @@ static int flecs_script_update_parse(
     const char *code,
     ecs_script_t *parsed)
 {
-    const char *name = ecs_get_name(world, e);
     EcsScript *s = ecs_ensure(world, e, EcsScript);
     if (s->template_) {
         char *template_name = ecs_get_path(world, s->template_->props.type);
-        ecs_err("cannot update scripts for individual templates, "
-            "update parent script instead (tried to update '%s')",
-                template_name);
-        ecs_os_free(s->error);
-        s->error = flecs_asprintf(
+        flecs_script_set_error(world, e, flecs_asprintf(
             "cannot update scripts for individual templates, "
             "update parent script instead (tried to update '%s')",
-                template_name);
+                template_name), NULL);
+        ecs_err("%s", s->error);
         ecs_os_free(template_name);
         if (parsed) {
             ecs_script_free(parsed);
@@ -379,16 +368,10 @@ static int flecs_script_update_parse(
         return -1;
     }
 
-    if (s->code) {
-        ecs_os_free(s->code);
-    }
-
+    ecs_os_free(s->code);
     s->code = ecs_os_strdup(code);
-
-    if (s->error) {
-        ecs_os_free(s->error);
-        s->error = NULL;
-    }
+    ecs_os_free(s->error);
+    s->error = NULL;
 
     if (s->script) {
 #ifdef FLECS_SCRIPT_ASYNC
@@ -398,26 +381,13 @@ static int flecs_script_update_parse(
         ecs_script_free(s->script);
     }
 
-    ecs_script_eval_result_t eval_result = {0};
-    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
-    flecs_script_runtime_error_reset(runtime);
-
-    if (parsed) {
-        s->script = parsed;
-    } else {
-        ecs_script_eval_desc_t parse_desc = {
-            .skip_unknown = s->skip_unknown,
-            .ir = s->ir
-        };
-        s->script = ecs_script_parse(
-            world, name, code, &parse_desc, &eval_result);
+    flecs_script_runtime_error_reset(flecs_script_runtime_get(world));
+    if (!parsed) {
+        parsed = flecs_script_update_parse_code(world, e, code);
     }
 
-    if (s->script != NULL) {
-        flecs_script_impl(s->script)->entity = e;
-    } else {
-        s->error = eval_result.error;
-        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
+    s->script = parsed;
+    if (!parsed) {
         if (!instance) {
             flecs_script_ref_observers_clear(world, &s->observers);
             flecs_script_ref_observers_clear(world, &s->dyn_observers);
@@ -426,6 +396,7 @@ static int flecs_script_update_parse(
         return -1;
     }
 
+    flecs_script_impl(parsed)->entity = e;
     return 0;
 }
 
@@ -438,11 +409,8 @@ static void flecs_script_update_error(
     char *error)
 {
     ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
-    EcsScript *s = ecs_ensure(world, e, EcsScript);
-    s->error = error;
-    if (!s->error) {
-        s->error = ecs_os_strdup("failed to evaluate script");
-    }
+    EcsScript *s = flecs_script_set_error(
+        world, e, error, "failed to evaluate script");
 
     if (runtime->error_name && runtime->include_depth) {
         ecs_log_(-3, NULL, 0, "%s: %s: %s",
@@ -511,20 +479,20 @@ static int flecs_script_update_impl(
     ecs_assert(code != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int result = 0;
-    bool is_defer = ecs_is_stage(world);
+    bool is_defer = ecs_is_stage(world) || ecs_stage_is_readonly(world);
     ecs_suspend_readonly_state_t srs;
     ecs_world_t *real_world = NULL;
     if (is_defer) {
-        ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
         real_world = flecs_suspend_readonly(world, &srs);
         ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
+        world = real_world;
     }
 
     /* Parse the new version before anything in the world is deleted, so a
      * script that does not parse leaves the previous version in place. */
     ecs_script_t *preparsed = NULL;
     if (preparse) {
-        preparsed = flecs_script_reload_parse(world, e, code);
+        preparsed = flecs_script_update_parse_code(world, e, code);
         if (!preparsed) {
             result = -1;
             goto done;
@@ -649,12 +617,10 @@ ecs_entity_t ecs_script_init(
     ecs_world_t *world,
     const ecs_script_desc_t *desc)
 {
-    const char *script = NULL;
-    ecs_entity_t e = desc->entity;
-    
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(desc != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_entity_t e = desc->entity;
     if (!e) {
         if (desc->filename) {
             e = ecs_new_from_path_w_sep(world, 0, desc->filename, "/", "/");
@@ -669,11 +635,15 @@ ecs_entity_t ecs_script_init(
         comp->ir = desc->ir;
     }
 
-    script = desc->code;
+    const char *script = desc->code;
     if (!script && desc->filename) {
         script = flecs_load_from_file(desc->filename);
         if (!script) {
-            goto error;
+            if (!desc->entity) {
+                ecs_delete(world, e);
+            }
+
+            return 0;
         }
 
         EcsScript *comp = ecs_ensure(world, e, EcsScript);
@@ -689,14 +659,6 @@ ecs_entity_t ecs_script_init(
 
     return e;
 error:
-    if (script != desc->code) {
-        /* Safe cast, only happens when script is loaded from file */
-        ecs_os_free(ECS_CONST_CAST(char*, script));
-    }
-    if (!desc->entity) {
-        ecs_delete(world, e);
-    }
-
     return 0;
 }
 

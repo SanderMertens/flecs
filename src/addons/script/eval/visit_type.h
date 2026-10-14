@@ -34,10 +34,11 @@ typedef struct ecs_script_type_visitor_t {
     ecs_vec_t interface_vars;
     ecs_hashmap_t names;
 
-    ecs_script_node_t *stmt_node;
     int32_t table;
     int32_t control_depth;
     int32_t for_depth;
+    int32_t skip_count;
+    int32_t annot_start;
     bool template_scope;
     bool function_scope;
     bool async_scope;

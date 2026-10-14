@@ -2124,3 +2124,50 @@ void Mut_modified_from_stage(void) {
     ecs_merge(stage);
     ecs_fini(world);
 }
+
+void Mut_typed_mut_single_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Foo { mut value: i32 = 10 }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, foo, "mut");
+    test_assert(mut != 0);
+
+    const EcsStruct *st = ecs_get(world, mut, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 1);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "value");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type,
+        ecs_id(ecs_i32_t));
+
+    ecs_fini(world);
+}
+
+void Mut_typed_mut_w_semicolon(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  mut value: i32 = 10; mut other: i32 = 20"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    ecs_entity_t mut = ecs_lookup_child(world, foo, "mut");
+    test_assert(mut != 0);
+
+    const EcsStruct *st = ecs_get(world, mut, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "value");
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "other");
+
+    ecs_fini(world);
+}

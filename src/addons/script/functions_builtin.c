@@ -33,6 +33,19 @@ static void flecs_meta_collection_count(
     *(ecs_i32_t*)result->ptr = count;
 }
 
+static bool flecs_meta_entity_valid(
+    const ecs_function_ctx_t *ctx,
+    ecs_entity_t entity)
+{
+    if (entity && ecs_is_alive(ctx->world, entity)) {
+        return true;
+    }
+
+    ecs_err("invalid entity %u passed to method", (uint32_t)entity);
+    flecs_script_runtime_get(ctx->world)->error = true;
+    return false;
+}
+
 static void flecs_meta_entity_name(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -41,6 +54,10 @@ static void flecs_meta_entity_name(
 {
     (void)argc;
     ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
+    if (!flecs_meta_entity_valid(ctx, entity)) {
+        return;
+    }
+
     *(char**)result->ptr = ecs_os_strdup(ecs_get_name(ctx->world, entity));
 }
 
@@ -52,6 +69,10 @@ static void flecs_meta_entity_path(
 {
     (void)argc;
     ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
+    if (!flecs_meta_entity_valid(ctx, entity)) {
+        return;
+    }
+
     *(char**)result->ptr = ecs_get_path(ctx->world, entity);
 }
 
@@ -63,6 +84,10 @@ static void flecs_meta_entity_parent(
 {
     (void)argc;
     ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
+    if (!flecs_meta_entity_valid(ctx, entity)) {
+        return;
+    }
+
     *(ecs_entity_t*)result->ptr = ecs_get_parent(ctx->world, entity);
 }
 
@@ -74,6 +99,10 @@ static void flecs_meta_entity_has(
 {
     (void)argc;
     ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
+    if (!flecs_meta_entity_valid(ctx, entity)) {
+        return;
+    }
+
     ecs_id_t id = *(ecs_id_t*)argv[1].ptr;
     *(ecs_bool_t*)result->ptr = ecs_has_id(ctx->world, entity, id);
 }
@@ -122,6 +151,9 @@ static void flecs_meta_core_pair(
     {\
         (void)argc;\
         ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;\
+        if (!flecs_meta_entity_valid(ctx, entity)) {\
+            return;\
+        }\
         *(char**)result->ptr = \
             ecs_os_strdup(ecs_doc_get_##name(ctx->world, entity));\
     }
@@ -135,59 +167,17 @@ FLECS_DOC_FUNC(color)
 
 #undef FLECS_DOC_FUNC
 
-static void flecs_script_register_builtin_doc_functions(
-    ecs_world_t *world)
-{
-    ecs_method(world, {
-        .name = "doc_name",
-        .parent = ecs_id(ecs_entity_t),
-        .return_type = ecs_id(ecs_string_t),
-        .callback = flecs_meta_entity_doc_name
-    });
-
-    ecs_method(world, {
-        .name = "doc_uuid",
-        .parent = ecs_id(ecs_entity_t),
-        .return_type = ecs_id(ecs_string_t),
-        .callback = flecs_meta_entity_doc_uuid
-    });
-
-    ecs_method(world, {
-        .name = "doc_brief",
-        .parent = ecs_id(ecs_entity_t),
-        .return_type = ecs_id(ecs_string_t),
-        .callback = flecs_meta_entity_doc_brief
-    });
-
-    ecs_method(world, {
-        .name = "doc_detail",
-        .parent = ecs_id(ecs_entity_t),
-        .return_type = ecs_id(ecs_string_t),
-        .callback = flecs_meta_entity_doc_detail
-    });
-
-    ecs_method(world, {
-        .name = "doc_link",
-        .parent = ecs_id(ecs_entity_t),
-        .return_type = ecs_id(ecs_string_t),
-        .callback = flecs_meta_entity_doc_link
-    });
-
-    ecs_method(world, {
-        .name = "doc_color",
-        .parent = ecs_id(ecs_entity_t),
-        .return_type = ecs_id(ecs_string_t),
-        .callback = flecs_meta_entity_doc_color
-    });
-}
-
-#else
-
-static void flecs_script_register_builtin_doc_functions(
-    ecs_world_t *world)
-{
-    (void)world;
-}
+static const struct {
+    const char *name;
+    ecs_function_callback_t callback;
+} flecs_script_doc_methods[] = {
+    { "doc_name", flecs_meta_entity_doc_name },
+    { "doc_uuid", flecs_meta_entity_doc_uuid },
+    { "doc_brief", flecs_meta_entity_doc_brief },
+    { "doc_detail", flecs_meta_entity_doc_detail },
+    { "doc_link", flecs_meta_entity_doc_link },
+    { "doc_color", flecs_meta_entity_doc_color }
+};
 
 #endif
 
@@ -201,46 +191,36 @@ void flecs_script_register_builtin_functions(
         .callback = flecs_meta_collection_count
     });
 
-    ecs_method(world, {
+    ecs_function_desc_t entity_methods[] = {{
         .name = "name",
-        .parent = ecs_id(ecs_entity_t),
         .return_type = ecs_id(ecs_string_t),
         .callback = flecs_meta_entity_name
-    });
-
-    ecs_method(world, {
+    }, {
         .name = "path",
-        .parent = ecs_id(ecs_entity_t),
         .return_type = ecs_id(ecs_string_t),
         .callback = flecs_meta_entity_path
-    });
-
-    ecs_method(world, {
+    }, {
         .name = "parent",
-        .parent = ecs_id(ecs_entity_t),
         .return_type = ecs_id(ecs_entity_t),
         .callback = flecs_meta_entity_parent
-    });
-
-    ecs_method(world, {
+    }, {
         .name = "has",
-        .parent = ecs_id(ecs_entity_t),
-        .params = {
-            { .name = "component", .type = ecs_id(ecs_id_t) }
-        },
+        .params = {{ .name = "component", .type = ecs_id(ecs_id_t) }},
         .return_type = ecs_id(ecs_bool_t),
         .callback = flecs_meta_entity_has
-    });
-
-    ecs_method(world, {
+    }, {
         .name = "lookup",
-        .parent = ecs_id(ecs_entity_t),
-        .params = {
-            { .name = "path", .type = ecs_id(ecs_string_t) }
-        },
+        .params = {{ .name = "path", .type = ecs_id(ecs_string_t) }},
         .return_type = ecs_id(ecs_entity_t),
         .callback = flecs_meta_entity_lookup
-    });
+    }};
+
+    int32_t i, count = (int32_t)(
+        sizeof(entity_methods) / sizeof(entity_methods[0]));
+    for (i = 0; i < count; i ++) {
+        entity_methods[i].parent = ecs_id(ecs_entity_t);
+        ecs_method_init(world, &entity_methods[i]);
+    }
 
     ecs_function(world, {
         .name = "pair",
@@ -253,7 +233,18 @@ void flecs_script_register_builtin_functions(
         .callback = flecs_meta_core_pair
     });
 
-    flecs_script_register_builtin_doc_functions(world);
+#ifdef FLECS_DOC
+    count = (int32_t)(sizeof(flecs_script_doc_methods) /
+        sizeof(flecs_script_doc_methods[0]));
+    for (i = 0; i < count; i ++) {
+        ecs_method(world, {
+            .name = flecs_script_doc_methods[i].name,
+            .parent = ecs_id(ecs_entity_t),
+            .return_type = ecs_id(ecs_string_t),
+            .callback = flecs_script_doc_methods[i].callback
+        });
+    }
+#endif
 }
 
 #endif

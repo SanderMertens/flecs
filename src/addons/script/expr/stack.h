@@ -14,22 +14,11 @@
 typedef union ecs_expr_small_value_t {
     bool bool_;
     char char_;
-    ecs_byte_t byte_;
-    int8_t i8;
-    int16_t i16;
-    int32_t i32;
     int64_t i64;
-    intptr_t iptr;
-    uint8_t u8;
-    uint16_t u16;
-    uint32_t u32;
     uint64_t u64;
-    uintptr_t uptr;
-    double f32;
     double f64;
     char *string;
     ecs_entity_t entity;
-    ecs_id_t id;
 
     /* Avoid allocations for small trivial types */
     char small_data[FLECS_EXPR_SMALL_DATA_SIZE];

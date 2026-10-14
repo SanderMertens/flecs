@@ -144,18 +144,29 @@ static int flecs_script_constants_visit(
             continue;
         }
 
-        if (elem->member) {
-            if (elem->operator) {
+        const char *name = elem->member;
+        if (!name) {
+            if (!elem->value || elem->value->kind != EcsExprIdentifier) {
                 flecs_expr_visit_error(script, elem->value,
-                    "invalid operator for constant '%s'", elem->member);
+                    "invalid constant for %s '%s' (expected identifier or "
+                    "'name: value')", kind_str,
+                        ecs_get_name(world, ctx->entity));
                 return -1;
             }
 
-            ecs_entity_t c = flecs_script_create_entity(v, elem->member);
-            if (!c) {
-                return -1;
-            }
+            name = ((ecs_expr_identifier_t*)elem->value)->value;
+        } else if (elem->operator) {
+            flecs_expr_visit_error(script, elem->value,
+                "invalid operator for constant '%s'", elem->member);
+            return -1;
+        }
 
+        ecs_entity_t c = flecs_script_create_entity(v, name);
+        if (!c) {
+            return -1;
+        }
+
+        if (elem->member) {
             const ecs_type_info_t *ti = ecs_get_type_info(world, underlying);
             if (!ti) {
                 flecs_expr_visit_error(script, elem->value,
@@ -177,46 +188,19 @@ static int flecs_script_constants_visit(
                 return -1;
             }
 
-            void *dst = ecs_ensure_id(world, c,
-                ecs_pair(EcsConstant, underlying),
-                    flecs_ito(size_t, ti->size));
-            ecs_os_memcpy(dst, value.ptr, ti->size);
-
-            ecs_modified_id(world, c, ecs_pair(EcsConstant, underlying));
-
-            if (!ecs_is_stage(world) && !flecs_script_constant_registered(
-                world, ctx->entity, c))
-            {
-                flecs_expr_visit_error(script, elem->value,
-                    "failed to add constant '%s' to %s '%s'", elem->member,
-                        kind_str, ecs_get_name(world, ctx->entity));
-                return -1;
-            }
+            ecs_set_id(world, c, ecs_pair(EcsConstant, underlying),
+                flecs_ito(size_t, ti->size), value.ptr);
         } else {
-            if (!elem->value || elem->value->kind != EcsExprIdentifier) {
-                flecs_expr_visit_error(script, elem->value,
-                    "invalid constant for %s '%s' (expected identifier or "
-                    "'name: value')", kind_str,
-                        ecs_get_name(world, ctx->entity));
-                return -1;
-            }
-
-            const char *name = ((ecs_expr_identifier_t*)elem->value)->value;
-            ecs_entity_t c = flecs_script_create_entity(v, name);
-            if (!c) {
-                return -1;
-            }
-
             ecs_add_id(world, c, EcsConstant);
+        }
 
-            if (!ecs_is_stage(world) && !flecs_script_constant_registered(
-                world, ctx->entity, c))
-            {
-                flecs_expr_visit_error(script, elem->value,
-                    "failed to add constant '%s' to %s '%s'", name,
-                        kind_str, ecs_get_name(world, ctx->entity));
-                return -1;
-            }
+        if (!ecs_is_stage(world) && !flecs_script_constant_registered(
+            world, ctx->entity, c))
+        {
+            flecs_expr_visit_error(script, elem->value,
+                "failed to add constant '%s' to %s '%s'", name,
+                    kind_str, ecs_get_name(world, ctx->entity));
+            return -1;
         }
     }
 

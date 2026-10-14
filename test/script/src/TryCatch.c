@@ -61,6 +61,28 @@ void TryCatch_parse_try_catch_all(void) {
     ecs_fini(world);
 }
 
+void TryCatch_parse_try_catch_no_space_before_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "try{\n"
+        "  await fail()\n"
+        "} catch{\n"
+        "  Handled {}\n"
+        "}", &ir_desc, NULL);
+    test_assert(script != NULL);
+
+    char *str = ecs_script_ast_to_str(script, false);
+    test_assert(strstr(str, "try") != NULL);
+    test_assert(strstr(str, "catch") != NULL);
+    test_assert(strstr(str, "Handled") != NULL);
+    test_assert(strstr(str, "entity: try") == NULL);
+    ecs_os_free(str);
+
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
 void TryCatch_parse_try_catch_typed(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1469,6 +1491,27 @@ void TryCatch_this_var_in_catch(void) {
         EcsScriptTaskDone);
 
     ecs_script_task_free(task);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void TryCatch_parse_catch_on_next_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "try {\n"
+        "  await fail()\n"
+        "}\n"
+        "catch {\n"
+        "  Handled {}\n"
+        "}", &ir_desc, NULL);
+    test_assert(script != NULL);
+
+    char *str = ecs_script_ast_to_str(script, false);
+    test_assert(strstr(str, "catch") != NULL);
+    test_assert(strstr(str, "Handled") != NULL);
+    ecs_os_free(str);
+
     ecs_script_free(script);
     ecs_fini(world);
 }

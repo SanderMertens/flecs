@@ -122,7 +122,6 @@ struct ecs_script_entity_t {
     ecs_script_entity_t *parent;
     const char *kind;
     const char *name;
-    bool name_is_var;
     bool kind_w_expr;
     bool non_fragmenting_parent;
     int32_t type_index;
@@ -286,9 +285,6 @@ typedef struct ecs_script_function_node_t {
     ecs_entity_t eval_return_type;
     int32_t symbol;
 } ecs_script_function_node_t;
-
-#define ecs_script_node(kind, node)\
-    ((ecs_script_##kind##_t*)node)
 
 bool flecs_scope_is_empty(
     ecs_script_scope_t *scope);

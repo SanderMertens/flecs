@@ -16,6 +16,14 @@ typedef struct ecs_script_ir_t ecs_script_ir_t;
 
 #define flecs_script_impl(script) ((ecs_script_impl_t*)script)
 
+#if defined(ECS_TARGET_GNU) || defined(ECS_TARGET_CLANG)
+#define FLECS_SCRIPT_NOINLINE __attribute__((noinline))
+#elif defined(ECS_TARGET_MSVC)
+#define FLECS_SCRIPT_NOINLINE __declspec(noinline)
+#else
+#define FLECS_SCRIPT_NOINLINE
+#endif
+
 /* Context passed to script visitor callbacks. */
 typedef struct ecs_script_visitor_ctx_t {
     ecs_world_t *world;
@@ -170,6 +178,12 @@ void flecs_script_pos_to_line_col(
     int32_t *line,
     int32_t *column);
 
+void flecs_script_unresolved_ref_add(
+    ecs_script_impl_t *impl,
+    const char *pos,
+    const char *name,
+    flecs_script_unresolved_kind_t kind);
+
 int flecs_script_update(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -243,10 +257,14 @@ const char* flecs_script_stmt_w_separator(
     ecs_parser_t *parser,
     const char *pos);
 
-ecs_script_t* flecs_script_parse_nested(
+ecs_script_t* flecs_script_parse_init(
     ecs_world_t *world,
     const char *name,
-    const char *using_code,
+    const char *code,
+    ecs_parser_t *parser);
+
+ecs_script_t* flecs_script_parse_nested(
+    const ecs_parser_t *outer,
     const char *code,
     const char **next);
 

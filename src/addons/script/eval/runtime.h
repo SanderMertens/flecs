@@ -77,4 +77,64 @@ void flecs_script_runtime_error_reset(
 void ecs_script_runtime_clear(
     ecs_script_runtime_t *r);
 
+static inline FLECS_ALWAYS_INLINE
+int flecs_function_calldata_invoke(
+    ecs_world_t *world,
+    const ecs_function_calldata_t *calldata,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    ecs_function_ctx_t ctx = {
+        .world = world,
+        .function = calldata->function,
+        .ctx = calldata->ctx
+    };
+
+    if (calldata->vector_elem_count) {
+        calldata->is.vector_callback(&ctx, argc, argv, result,
+            calldata->vector_elem_count);
+    } else {
+        calldata->is.callback(&ctx, argc, argv, result);
+    }
+
+    ecs_script_runtime_t *r = flecs_script_runtime_get(world);
+    if (r->error) {
+        r->error = false;
+        return -1;
+    }
+
+    return 0;
+}
+
+static inline FLECS_ALWAYS_INLINE
+int flecs_expr_function_call(
+    const ecs_script_t *script,
+    const ecs_expr_function_t *node,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *out)
+{
+    const char *kind = node->node.kind == EcsExprMethod
+        ? "method" : "function";
+
+#ifdef FLECS_SCRIPT_ASYNC
+    if (node->calldata.async_callback) {
+        flecs_expr_visit_error(script, node,
+            "async %s '%s' requires await", kind, node->function_name);
+        return -1;
+    }
+#endif
+
+    if (flecs_function_calldata_invoke(
+        script->world, &node->calldata, argc, argv, out))
+    {
+        flecs_expr_visit_error(script, node,
+            "error in script %s '%s'", kind, node->function_name);
+        return -1;
+    }
+
+    return 0;
+}
+
 #endif

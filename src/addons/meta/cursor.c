@@ -1882,6 +1882,7 @@ int ecs_meta_set_value(
                 return ecs_ptr_copy(cursor->world, op->type, ptr, value->ptr);
             }
 
+#ifdef FLECS_SCRIPT
             if (mt->kind == EcsOpaqueType && op->kind == EcsOpString) {
                 char *str = ecs_ptr_to_str(
                     cursor->world, value->type, value->ptr);
@@ -1889,6 +1890,7 @@ int ecs_meta_set_value(
                 ecs_os_free(str);
                 return result;
             }
+#endif
 
             char *type_str = ecs_get_path(cursor->world, value->type);
             flecs_meta_conversion_error(cursor, op, type_str);

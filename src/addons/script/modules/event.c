@@ -83,7 +83,8 @@ static void flecs_script_event_wait(
 {
     flecs_script_event_kind_t kind =
         (flecs_script_event_kind_t)(uintptr_t)ctx->ctx;
-    ecs_entity_t target = argc == 1 ? *(ecs_entity_t*)argv[0].ptr : 0;
+    (void)argc;
+    ecs_entity_t target = *(ecs_entity_t*)argv[0].ptr;
     EcsScriptEventState *state = flecs_script_event_state(ctx->world);
     if (!target || !state) {
         char msg[64];
@@ -264,36 +265,23 @@ bool ecs_script_mouse_event(
 
     bool captured = flecs_script_event_is_ancestor_or_self(
         world, target, state->pressed);
+    bool released = state->released_mask && captured;
+    bool deliver[] = {
+        [FlecsScriptEventPress] = state->pressed_mask != 0,
+        [FlecsScriptEventDrag] = state->pressed_mask ||
+            (e.buttons && !state->released_mask && captured),
+        [FlecsScriptEventRelease] = released,
+        [FlecsScriptEventClick] = released && state->hover == state->pressed,
+        [FlecsScriptEventMove] = !e.buttons && !state->released_mask,
+        [FlecsScriptEventEnter] = !flecs_script_event_is_ancestor_or_self(
+            world, target, state->prev_hover)
+    };
 
-    if (state->pressed_mask) {
-        resolved += flecs_script_event_deliver_one(
-            state, FlecsScriptEventPress, target, type, &e);
-        resolved += flecs_script_event_deliver_one(
-            state, FlecsScriptEventDrag, target, type, &e);
-    } else if (e.buttons && !state->released_mask && captured) {
-        resolved += flecs_script_event_deliver_one(
-            state, FlecsScriptEventDrag, target, type, &e);
-    }
-
-    if (state->released_mask && captured) {
-        resolved += flecs_script_event_deliver_one(
-            state, FlecsScriptEventRelease, target, type, &e);
-        if (state->hover == state->pressed) {
+    for (int32_t k = FlecsScriptEventPress; k <= FlecsScriptEventEnter; k ++) {
+        if (deliver[k]) {
             resolved += flecs_script_event_deliver_one(
-                state, FlecsScriptEventClick, target, type, &e);
+                state, (flecs_script_event_kind_t)k, target, type, &e);
         }
-    }
-
-    if (!e.buttons && !state->released_mask) {
-        resolved += flecs_script_event_deliver_one(
-            state, FlecsScriptEventMove, target, type, &e);
-    }
-
-    if (!flecs_script_event_is_ancestor_or_self(
-        world, target, state->prev_hover))
-    {
-        resolved += flecs_script_event_deliver_one(
-            state, FlecsScriptEventEnter, target, type, &e);
     }
 
 done:

@@ -338,6 +338,10 @@ bool flecs_expr_explicit_cast_allowed(
         return true;
     }
 
+    if (to == ecs_id(ecs_script_template_ref_t)) {
+        return from == ecs_id(ecs_entity_t) || from == ecs_id(ecs_string_t);
+    }
+
     const EcsType *from_type = ecs_get(world, from, EcsType);
     const EcsType *to_type = ecs_get(world, to, EcsType);
     ecs_assert(from_type != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -389,16 +393,6 @@ bool flecs_expr_explicit_cast_allowed(
         return false;
     }
 
-    /* Anything can be cast to a number */
-    if (flecs_expr_is_type_number(to)) {
-        return true;
-    }
-
-    /* Anything can be cast to a string */
-    if (to == ecs_id(ecs_string_t)) {
-        return true;
-    }
-
     return true;
 }
 
@@ -408,12 +402,15 @@ ecs_expr_cast_t* flecs_expr_cast(
     ecs_entity_t type)
 {
     if (!flecs_expr_explicit_cast_allowed(script->world, expr->type, type)) {
-        char *from = ecs_id_str(script->world, expr->type);
-        char *to = ecs_id_str(script->world, type);
-        flecs_expr_visit_error(script, expr, "invalid cast from %s to %s", 
-            from, to);
-        ecs_os_free(from);
-        ecs_os_free(to);
+        if (type == ecs_id(ecs_script_template_ref_t)) {
+            flecs_expr_visit_error(script, expr, "expected template or struct, got value of type %s",
+                flecs_errstr(ecs_id_str(script->world, expr->type)));
+            return NULL;
+        }
+
+        flecs_expr_visit_error(script, expr, "invalid cast from %s to %s",
+            flecs_errstr(ecs_id_str(script->world, expr->type)),
+            flecs_errstr_1(ecs_id_str(script->world, type)));
         return NULL;
     }
 
@@ -425,6 +422,7 @@ ecs_expr_cast_t* flecs_expr_cast(
         flecs_expr_is_type_number(type)) 
     {
         result->node.kind = EcsExprCastNumber;
+        result->cast = flecs_expr_cast_handler(expr->type, type);
     }
 
     result->node.pos = expr->pos;

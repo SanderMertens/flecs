@@ -22,6 +22,8 @@ typedef struct flecs_script_edit_t {
     int32_t offset;
     int32_t length;
     int32_t seq;
+    int32_t open_len;  /* Length of scope open text that inserts can share */
+    int32_t close_len; /* Length of scope close text that inserts can share */
     char *text;
 } flecs_script_edit_t;
 
@@ -338,15 +340,7 @@ static ecs_script_entity_t* flecs_script_edit_find_in_instance(
     flecs_script_edit_walk_t walk = {flecs_script_edit_find_symbol, &find};
     flecs_script_edit_walk(template->node->scope, &walk);
     ecs_script_entity_t *node = find.node;
-    if (!node) {
-        return NULL;
-    }
-
-    if (node->name_expr) {
-        return NULL;
-    }
-
-    if (!node->node.pos || !node->node.end) {
+    if (!node || node->name_expr || !node->node.pos || !node->node.end) {
         return NULL;
     }
 
@@ -399,11 +393,15 @@ static ecs_script_entity_t* flecs_script_edit_find_w_template(
     }
 
     ecs_script_entity_t *node = flecs_script_edit_find(impl, entity);
-    if (node) {
-        return node;
+    if (!node) {
+        node = flecs_script_edit_find_in_template(impl, entity, template_out);
     }
 
-    return flecs_script_edit_find_in_template(impl, entity, template_out);
+    if (!node || !node->node.pos || !node->node.end) {
+        return NULL;
+    }
+
+    return node;
 }
 
 bool ecs_script_entity_source(
@@ -423,10 +421,6 @@ bool ecs_script_entity_source(
         return false;
     }
 
-    if (!node->node.pos || !node->node.end) {
-        return false;
-    }
-
     if (source) {
         source->offset = flecs_ito(int32_t, node->node.pos - script->code);
         source->length = flecs_ito(int32_t, node->node.end - node->node.pos);
@@ -441,6 +435,31 @@ error:
     return false;
 }
 
+static ecs_entity_t flecs_script_edit_template_owner(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t src,
+    ecs_entity_t rel,
+    bool *has_template)
+{
+    ecs_entity_t template_entity;
+    int32_t i = 0;
+    while ((template_entity = ecs_get_target(world, src, rel, i ++))) {
+        *has_template = true;
+        const EcsScript *sc = ecs_get(world, template_entity, EcsScript);
+        if (!sc || !sc->script) {
+            continue;
+        }
+
+        ecs_entity_t owner = flecs_script_impl(sc->script)->entity;
+        if (owner && ecs_script_entity_source(sc->script, entity, NULL)) {
+            return owner;
+        }
+    }
+
+    return 0;
+}
+
 ecs_entity_t ecs_script_entity_owner(
     const ecs_world_t *stage,
     ecs_entity_t entity)
@@ -452,32 +471,11 @@ ecs_entity_t ecs_script_entity_owner(
         return 0;
     }
 
-    ecs_entity_t template_entity;
     bool in_template_body = false;
-    int32_t i = 0;
-
-    while ((template_entity = ecs_get_target(
-        world, entity, EcsScriptTemplate, i ++)))
-    {
-        in_template_body = true;
-
-        const EcsScript *sc = ecs_get(world, template_entity, EcsScript);
-        if (!sc || !sc->script) {
-            continue;
-        }
-
-        ecs_entity_t owner = flecs_script_impl(sc->script)->entity;
-        if (!owner) {
-            continue;
-        }
-
-        if (ecs_script_entity_source(sc->script, entity, NULL)) {
-            return owner;
-        }
-    }
-
-    if (in_template_body) {
-        return 0;
+    ecs_entity_t owner = flecs_script_edit_template_owner(
+        world, entity, entity, EcsScriptTemplate, &in_template_body);
+    if (owner || in_template_body) {
+        return owner;
     }
 
     ecs_entity_t script_entity = ecs_get_target(
@@ -491,30 +489,13 @@ ecs_entity_t ecs_script_entity_owner(
         }
     }
 
-    ecs_entity_t instance = ecs_get_target(world, entity, EcsChildOf, 0);
-
-    while (instance) {
-        i = 0;
-
-        while ((template_entity = ecs_get_target(
-            world, instance, ecs_id(EcsScriptTemplateRoot), i ++)))
-        {
-            const EcsScript *sc = ecs_get(world, template_entity, EcsScript);
-            if (!sc || !sc->script) {
-                continue;
-            }
-
-            ecs_entity_t owner = flecs_script_impl(sc->script)->entity;
-            if (!owner) {
-                continue;
-            }
-
-            if (ecs_script_entity_source(sc->script, entity, NULL)) {
-                return owner;
-            }
+    ecs_entity_t instance = entity;
+    while ((instance = ecs_get_target(world, instance, EcsChildOf, 0))) {
+        owner = flecs_script_edit_template_owner(world, entity, instance,
+            ecs_id(EcsScriptTemplateRoot), &in_template_body);
+        if (owner) {
+            return owner;
         }
-
-        instance = ecs_get_target(world, instance, EcsChildOf, 0);
     }
 
     return 0;
@@ -704,9 +685,14 @@ static char* flecs_script_edit_value_str(
     ecs_world_t *world,
     ecs_id_t component,
     const void *value,
+    const char *str,
     flecs_script_value_style_t style,
     bool parens)
 {
+    if (str) {
+        return ecs_os_strdup(str);
+    }
+
     ecs_entity_t type = ecs_get_typeid(world, component);
     if (!type) {
         char *idstr = ecs_id_str(world, component);
@@ -772,30 +758,20 @@ static const char* flecs_script_edit_line_start(
     return pos;
 }
 
-static void flecs_script_edit_indent(
+static char* flecs_script_edit_indent_str(
     const char *code,
-    const char *pos,
-    ecs_strbuf_t *buf)
+    const char *pos)
 {
     const char *start = flecs_script_edit_line_start(code, pos);
     const char *cur = start;
     while (cur < pos && (cur[0] == ' ' || cur[0] == '\t')) {
         cur ++;
     }
-    ecs_strbuf_appendstrn(buf, start, flecs_ito(int32_t, cur - start));
-}
 
-static char* flecs_script_edit_indent_str(
-    const char *code,
-    const char *pos)
-{
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    flecs_script_edit_indent(code, pos, &buf);
-    char *result = ecs_strbuf_get(&buf);
-    if (!result) {
-        result = ecs_os_strdup("");
-    }
-
+    int32_t len = flecs_ito(int32_t, cur - start);
+    char *result = ecs_os_malloc_n(char, len + 1);
+    ecs_os_memcpy(result, start, len);
+    result[len] = '\0';
     return result;
 }
 
@@ -989,7 +965,7 @@ void ecs_script_edits_free(
     ecs_os_free(edits);
 }
 
-static void flecs_script_edit_add(
+static flecs_script_edit_t* flecs_script_edit_add(
     ecs_script_edits_t *edits,
     ecs_entity_t entity,
     ecs_id_t component,
@@ -1010,8 +986,10 @@ static void flecs_script_edit_add(
         elem->kind = kind;
         elem->offset = offset;
         elem->length = length;
+        elem->open_len = 0;
+        elem->close_len = 0;
         elem->text = text;
-        return;
+        return elem;
     }
 
     flecs_script_edit_t *elem = ecs_vec_append_t(
@@ -1022,8 +1000,11 @@ static void flecs_script_edit_add(
     elem->offset = offset;
     elem->length = length;
     elem->seq = edits->seq ++;
+    elem->open_len = 0;
+    elem->close_len = 0;
     elem->text = text;
     index[0] = ecs_vec_count(&edits->edits);
+    return elem;
 }
 
 static ecs_script_entity_t* flecs_script_edit_entity(
@@ -1033,7 +1014,7 @@ static ecs_script_entity_t* flecs_script_edit_entity(
     ecs_script_impl_t *impl = flecs_script_impl(edits->script);
     ecs_script_entity_t *node = flecs_script_edit_find_w_template(
         impl, entity, NULL);
-    if (!node || !node->node.pos || !node->node.end) {
+    if (!node) {
         char *path = ecs_get_path(edits->script->world, entity);
         ecs_err("entity '%s' is not declared by an editable statement in "
             "script '%s'", path ? path : "?", edits->script->name);
@@ -1101,16 +1082,10 @@ static int flecs_script_edit_set_text(
                 value_pos ++;
             }
 
-            char *text;
-            if (expr) {
-                text = ecs_os_strdup(expr);
-            } else {
-                flecs_script_value_style_t style =
-                    flecs_script_edit_value_style(value_pos, value_end);
-                text = flecs_script_edit_value_str(script->world, component,
-                    value, style, value_pos[0] == '(');
-            }
-
+            flecs_script_value_style_t style =
+                flecs_script_edit_value_style(value_pos, value_end);
+            char *text = flecs_script_edit_value_str(script->world, component,
+                value, expr, style, value_pos[0] == '(');
             if (!text) {
                 return -1;
             }
@@ -1135,31 +1110,24 @@ static int flecs_script_edit_set_text(
         return -1;
     }
 
-    char *value_str;
-    if (expr) {
-        value_str = ecs_os_strdup(expr);
-    } else {
-        value_str = flecs_script_edit_value_str(script->world, component,
-            value, FlecsScriptValueNamed, false);
-    }
-
+    char *value_str = flecs_script_edit_value_str(script->world, component,
+        value, expr, FlecsScriptValueNamed, false);
     if (!value_str) {
         return -1;
     }
 
-    if (stmt && stmt->kind == EcsAstTag && stmt->pos && stmt->end) {
-        ecs_strbuf_t tag_buf = ECS_STRBUF_INIT;
-        ecs_strbuf_appendstr(&tag_buf, id_str);
-        ecs_strbuf_appendlit(&tag_buf, ": ");
-        ecs_strbuf_appendstr(&tag_buf, value_str);
+    ecs_strbuf_t stmt_buf = ECS_STRBUF_INIT;
+    ecs_strbuf_appendstr(&stmt_buf, id_str);
+    ecs_strbuf_appendlit(&stmt_buf, ": ");
+    ecs_strbuf_appendstr(&stmt_buf, value_str);
+    ecs_os_free(value_str);
+    char *stmt_str = ecs_strbuf_get(&stmt_buf);
 
+    if (stmt && stmt->kind == EcsAstTag && stmt->pos && stmt->end) {
         flecs_script_edit_add(edits, entity, component, FlecsScriptEditValue,
             flecs_ito(int32_t, stmt->pos - code),
             flecs_ito(int32_t, stmt->end - stmt->pos),
-            ecs_strbuf_get(&tag_buf));
-
-        ecs_os_free(value_str);
-
+            stmt_str);
         return 0;
     }
 
@@ -1168,7 +1136,7 @@ static int flecs_script_edit_set_text(
 
     ecs_script_scope_t *scope = node->scope;
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    int32_t offset;
+    int32_t offset, open_len = 0, close_len = 0;
 
     if (scope && scope->open && scope->node.end) {
         const char *close = scope->node.end - 1;
@@ -1202,43 +1170,43 @@ static int flecs_script_edit_set_text(
             }
         }
 
-        if (newline) {
-            ecs_strbuf_appendstr(&buf, last_indent);
-            ecs_strbuf_appendstr(&buf, id_str);
-            ecs_strbuf_appendlit(&buf, ": ");
-            ecs_strbuf_appendstr(&buf, value_str);
+        if (!newline) {
             ecs_strbuf_appendlit(&buf, "\n");
+        }
+
+        ecs_strbuf_appendstr(&buf, last_indent);
+        ecs_strbuf_appendstr(&buf, stmt_str);
+        ecs_strbuf_appendlit(&buf, "\n");
+        if (newline) {
             offset = flecs_ito(int32_t, (newline + 1) - code);
         } else {
-            ecs_strbuf_appendlit(&buf, "\n");
-            ecs_strbuf_appendstr(&buf, last_indent);
-            ecs_strbuf_appendstr(&buf, id_str);
-            ecs_strbuf_appendlit(&buf, ": ");
-            ecs_strbuf_appendstr(&buf, value_str);
-            ecs_strbuf_appendlit(&buf, "\n");
             ecs_strbuf_appendstr(&buf, indent);
             offset = flecs_ito(int32_t, close - code);
+            open_len = 1;
+            close_len = ecs_os_strlen(indent);
         }
 
         ecs_os_free(stmt_indent);
     } else {
         ecs_strbuf_appendlit(&buf, " {\n");
         ecs_strbuf_appendstr(&buf, child_indent);
-        ecs_strbuf_appendstr(&buf, id_str);
-        ecs_strbuf_appendlit(&buf, ": ");
-        ecs_strbuf_appendstr(&buf, value_str);
+        ecs_strbuf_appendstr(&buf, stmt_str);
         ecs_strbuf_appendlit(&buf, "\n");
         ecs_strbuf_appendstr(&buf, indent);
         ecs_strbuf_appendlit(&buf, "}");
         offset = flecs_ito(int32_t, node->node.end - code);
+        open_len = 3;
+        close_len = ecs_os_strlen(indent) + 1;
     }
 
-    ecs_os_free(value_str);
+    ecs_os_free(stmt_str);
     ecs_os_free(indent);
     ecs_os_free(child_indent);
 
-    flecs_script_edit_add(edits, entity, component, FlecsScriptEditValue,
-        offset, 0, ecs_strbuf_get(&buf));
+    flecs_script_edit_t *edit = flecs_script_edit_add(edits, entity, component,
+        FlecsScriptEditValue, offset, 0, ecs_strbuf_get(&buf));
+    edit->open_len = open_len;
+    edit->close_len = close_len;
 
     return 0;
 error:
@@ -1448,7 +1416,37 @@ char* ecs_script_edits_apply(
         }
 
         ecs_strbuf_appendstrn(&buf, &code[cursor], edit->offset - cursor);
-        if (edit->text && edit->text[0]) {
+
+        /* Inserts that open a scope for the same entity at the same offset
+         * share the scope open and close text of the first insert. */
+        int32_t last = i;
+        if (!edit->length && (edit->open_len || edit->close_len)) {
+            while ((last + 1) < count) {
+                flecs_script_edit_t *next = &sorted[last + 1];
+                if (next->offset != edit->offset || next->length ||
+                    next->entity != edit->entity ||
+                    (!next->open_len && !next->close_len))
+                {
+                    break;
+                }
+
+                last ++;
+            }
+        }
+
+        if (last != i) {
+            ecs_strbuf_appendstrn(&buf, edit->text, edit->open_len);
+            int32_t j;
+            for (j = i; j <= last; j ++) {
+                flecs_script_edit_t *e = &sorted[j];
+                ecs_strbuf_appendstrn(&buf, &e->text[e->open_len],
+                    ecs_os_strlen(e->text) - e->open_len - e->close_len);
+            }
+
+            ecs_strbuf_appendstr(&buf,
+                &edit->text[ecs_os_strlen(edit->text) - edit->close_len]);
+            i = last;
+        } else if (edit->text && edit->text[0]) {
             ecs_strbuf_appendstr(&buf, edit->text);
         }
 
@@ -1697,32 +1695,24 @@ int ecs_script_from_scene(
         return -1;
     }
 
-    ecs_vec_t entities;
-    ecs_vec_init_t(NULL, &entities, ecs_entity_t, 0);
+    int result = 0;
+    char *code = NULL;
+    ecs_script_edits_t *edits = ecs_script_edits_new(s->script);
+    if (!edits) {
+        return -1;
+    }
 
     ecs_iter_t it = ecs_each_pair_t(world, EcsScript, script);
     while (ecs_each_next(&it)) {
         int32_t i;
         for (i = 0; i < it.count; i ++) {
-            ecs_vec_append_t(NULL, &entities, ecs_entity_t)[0] =
-                it.entities[i];
-        }
-    }
-
-    int result = 0;
-    char *code = NULL;
-    ecs_script_edits_t *edits = ecs_script_edits_new(s->script);
-    if (!edits) {
-        result = -1;
-        goto done;
-    }
-
-    ecs_entity_t *elems = ecs_vec_first(&entities);
-    int32_t i, count = ecs_vec_count(&entities);
-    for (i = 0; i < count; i ++) {
-        if (flecs_script_edit_entity_from_scene(world, edits, elems[i])) {
-            result = -1;
-            goto done;
+            if (flecs_script_edit_entity_from_scene(
+                world, edits, it.entities[i]))
+            {
+                ecs_iter_fini(&it);
+                result = -1;
+                goto done;
+            }
         }
     }
 
@@ -1753,7 +1743,6 @@ int ecs_script_from_scene(
 done:
     ecs_script_edits_free(edits);
     ecs_os_free(code);
-    ecs_vec_fini_t(NULL, &entities, ecs_entity_t);
     return result;
 error:
     return -1;
@@ -1785,7 +1774,7 @@ int ecs_script_save(
     }
 
     const char *code = s->code ? s->code : "";
-    size_t len = ecs_os_strlen(code);
+    size_t len = (size_t)ecs_os_strlen(code);
     int result = 0;
     if (len && fwrite(code, len, 1, file) != 1) {
         ecs_err("failed to write file '%s'", s->filename);

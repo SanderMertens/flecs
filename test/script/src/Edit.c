@@ -4791,14 +4791,18 @@ void Edit_save(void) {
     test_int(1, ecs_script_from_scene(world, s));
     test_int(0, ecs_script_save(world, s));
 
-    char *saved = flecs_load_from_file(filename);
+    f = ecs_os_fopen(filename, "r");
+    test_assert(f != NULL);
+    char saved[256];
+    size_t read = ecs_os_fread(saved, 1, sizeof(saved) - 1, f);
+    saved[read] = '\0';
+    ecs_os_fclose(f);
     test_str(saved,
         HEAD "// comment"
         LINE "foo {"
         LINE "  Position: {30, 40}"
         LINE "}"
         LINE);
-    ecs_os_free(saved);
 
     remove(filename);
 
@@ -4826,5 +4830,113 @@ void Edit_save_not_a_script(void) {
     ecs_log_set_level(-4);
     test_int(-1, ecs_script_save(world, e));
 
+    ecs_fini(world);
+}
+
+void Edit_set_append_no_scope_two_components(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_init(world, &(ecs_entity_desc_t){ .name = "Kind" });
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  Kind foo"
+    LINE "}";
+
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    Position p = {30, 40};
+    Velocity v = {1, 2};
+    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
+    test_int(0, ecs_script_edits_set(edits, foo, ecs_id(Position), &p));
+    test_int(0, ecs_script_edits_set(edits, foo, ecs_id(Velocity), &v));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "parent {"
+        LINE "  Kind foo {"
+        LINE "      Position: {x: 30, y: 40}"
+        LINE "      Velocity: {x: 1, y: 2}"
+        LINE "  }"
+        LINE "}");
+
+    ecs_script_t *reparsed = ecs_script_parse(world, "test", result, NULL, NULL);
+    test_assert(reparsed != NULL);
+    ecs_script_free(reparsed);
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Edit_set_append_to_one_line_scope_two_components(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "bar {}";
+
+    ecs_script_t *script = ecs_script_parse(world, "test", expr, &ir_desc, NULL);
+    test_assert(script != NULL);
+    test_int(0, ecs_script_eval(script, &ir_desc, NULL));
+
+    ecs_script_edits_t *edits = ecs_script_edits_new(script);
+    Position p = {30, 40};
+    Velocity v = {1, 2};
+    ecs_entity_t bar = ecs_lookup(world, "bar");
+    test_int(0, ecs_script_edits_set(edits, bar, ecs_id(Position), &p));
+    test_int(0, ecs_script_edits_set(edits, bar, ecs_id(Velocity), &v));
+
+    char *result = ecs_script_edits_apply(edits);
+    test_str(result,
+        HEAD "bar {"
+        LINE "    Position: {x: 30, y: 40}"
+        LINE "    Velocity: {x: 1, y: 2}"
+        LINE "}");
+
+    ecs_os_free(result);
+    ecs_script_edits_free(edits);
+    ecs_script_free(script);
     ecs_fini(world);
 }

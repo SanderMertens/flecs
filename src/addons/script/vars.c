@@ -76,11 +76,7 @@ ecs_script_vars_t* ecs_script_vars_push(
     ecs_script_vars_t *parent)
 {
     ecs_check(parent != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stack_t *stack = parent->stack;
-    ecs_allocator_t *allocator = parent->allocator;
-    ecs_check(stack != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(allocator != NULL, ECS_INVALID_PARAMETER, NULL);
-    return flecs_script_vars_push(parent, stack, allocator);
+    return flecs_script_vars_push(parent, NULL, NULL);
 error:
     return NULL;
 }
@@ -100,11 +96,7 @@ ecs_script_vars_t* ecs_script_vars_pop(
             }
 
             ecs_assert(var->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            if (var->type_info->hooks.dtor) {
-                flecs_type_info_dtor(var->value.ptr, 1, var->type_info);
-            }
-
+            flecs_type_info_dtor(var->value.ptr, 1, var->type_info);
             flecs_stack_free(var->value.ptr, var->type_info->size);
         }
 
@@ -264,6 +256,27 @@ static const char* flecs_script_iter_field_names[] = {
     "24", "25", "26", "27", "28", "29", "30", "31"
 };
 
+static int flecs_script_vars_set_ref(
+    ecs_script_vars_t *vars,
+    const char *name,
+    ecs_entity_t type,
+    void *ptr)
+{
+    ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
+    if (!var) {
+        var = ecs_script_vars_declare(vars, name);
+        var->value.type = type;
+    } else {
+        ecs_check(var->value.type == type, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    var->value.ptr = ptr;
+    var->owned = false;
+    return 0;
+error:
+    return -1;
+}
+
 void ecs_script_vars_from_iter(
     const ecs_iter_t *it,
     ecs_script_vars_t *vars,
@@ -275,15 +288,12 @@ void ecs_script_vars_from_iter(
 
     /* Set variable for $this */
     if (it->count) {
-        ecs_script_var_t *var = ecs_script_vars_lookup(vars, "this");
-        if (!var) {
-            var = ecs_script_vars_declare(vars, "this");
-            var->value.type = ecs_id(ecs_entity_t);
-        }
-
         /* Safe, variable value will never be written */
-        var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, &it->entities[offset]);
-        var->owned = false;
+        if (flecs_script_vars_set_ref(vars, "this", ecs_id(ecs_entity_t),
+            ECS_CONST_CAST(ecs_entity_t*, &it->entities[offset])))
+        {
+            goto error;
+        }
     }
 
     /* Set variables for fields */
@@ -305,20 +315,11 @@ void ecs_script_vars_from_iter(
                     offset * flecs_uto(ecs_size_t, ecs_field_stride(it, i)));
             }
 
-            const char *name = flecs_script_iter_field_names[i];
-            ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
-            if (!var) {
-                var = ecs_script_vars_declare(vars, name);
-                ecs_assert(ecs_script_vars_lookup(vars, name) != NULL,  
-                    ECS_INTERNAL_ERROR, NULL);
-                var->value.type = it->ids[i];
-            } else {
-                ecs_check(var->value.type == it->ids[i], 
-                    ECS_INVALID_PARAMETER, NULL);
+            if (flecs_script_vars_set_ref(vars, flecs_script_iter_field_names[i],
+                ecs_get_typeid(it->world, it->ids[i]), ptr))
+            {
+                goto error;
             }
-
-            var->value.ptr = ptr;
-            var->owned = false;
         }
     }
 
@@ -346,19 +347,12 @@ void ecs_script_vars_from_iter(
                     continue;
                 }
 
-                ecs_script_var_t *var = ecs_script_vars_lookup(
-                    vars, variable_names[i]);
-                if (!var) {
-                    var = ecs_script_vars_declare(vars, variable_names[i]);
-                    var->value.type = ecs_id(ecs_entity_t);
-                } else {
-                    ecs_check(var->value.type == ecs_id(ecs_entity_t), 
-                        ECS_INVALID_PARAMETER, NULL);
-                }
-
                 /* Safe, variable value will never be written */
-                var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, e_ptr);
-                var->owned = false;
+                if (flecs_script_vars_set_ref(vars, variable_names[i],
+                    ecs_id(ecs_entity_t), ECS_CONST_CAST(ecs_entity_t*, e_ptr)))
+                {
+                    goto error;
+                }
             }
         }
     }

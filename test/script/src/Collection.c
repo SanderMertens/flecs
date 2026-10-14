@@ -157,6 +157,51 @@ void Collection_range_bracketed_index_value(void) {
     ecs_fini(world);
 }
 
+void Collection_range_bracketed_index_value_no_space_before_paren(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for(i, v) in [2..5] {"
+    LINE "  \"e_{i}\" {"
+    LINE "    Position: {v, v * 2}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    ecs_entity_t e_2 = ecs_lookup(world, "e_2");
+    ecs_entity_t e_3 = ecs_lookup(world, "e_3");
+
+    test_assert(e_0 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 == 0);
+
+    {
+        const Position *p = ecs_get(world, e_0, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 2);
+        test_int(p->y, 4);
+    }
+
+    {
+        const Position *p = ecs_get(world, e_2, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 4);
+        test_int(p->y, 8);
+    }
+
+    ecs_fini(world);
+}
+
 void Collection_range_bare_index_value(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1168,6 +1213,23 @@ void Collection_vector_string_elem(void) {
     ecs_fini(world);
 }
 
+void Collection_vector_literal_elem(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "for elem in [10, 20, 30] {"
+    LINE "  \"e_{elem}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e_10") != 0);
+    test_assert(ecs_lookup(world, "e_20") != 0);
+    test_assert(ecs_lookup(world, "e_30") != 0);
+
+    ecs_fini(world);
+}
+
 void Collection_vector_empty(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1998,20 +2060,6 @@ void Collection_duplicate_loop_vars_map(void) {
     HEAD "const m: Map = [1: 10]"
     LINE "for (a, b, a) in m {"
     LINE "  \"e_{a}\" {}"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-
-    ecs_fini(world);
-}
-
-void Collection_collection_literal_not_supported(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "for e in [1, 2, 3] {"
-    LINE "  \"e_{e}\" {}"
     LINE "}";
 
     ecs_log_set_level(-4);

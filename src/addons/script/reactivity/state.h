@@ -55,6 +55,14 @@ typedef struct ecs_script_state_t {
     bool initialized;
 } ecs_script_state_t;
 
+void flecs_script_slots_reset(
+    ecs_vec_t *slots,
+    ecs_size_t size,
+    int32_t count);
+
+#define flecs_script_slots_reset_t(slots, T, count)\
+    flecs_script_slots_reset(slots, ECS_SIZEOF(T), count)
+
 void flecs_script_state_init(
     ecs_script_state_t *state);
 
@@ -82,13 +90,6 @@ void flecs_script_state_mark(
     const ecs_script_region_t *region,
     int32_t visit);
 
-void flecs_script_for_slots_init(
-    ecs_vec_t *for_slots,
-    int32_t count);
-
-void flecs_script_for_slots_fini(
-    ecs_vec_t *for_slots);
-
 void flecs_script_for_slot_clear(
     ecs_world_t *world,
     ecs_script_for_slot_t *slot,
@@ -96,10 +97,6 @@ void flecs_script_for_slot_clear(
 
 void flecs_script_for_slot_purge(
     ecs_world_t *world,
-    ecs_script_for_slot_t *slot,
-    int32_t visit);
-
-void flecs_script_for_slot_mark(
     ecs_script_for_slot_t *slot,
     int32_t visit);
 

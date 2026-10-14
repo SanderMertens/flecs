@@ -29,12 +29,15 @@ struct ecs_script_future_t {
     flecs_script_future_state_t state;
 };
 
-ecs_script_future_t* flecs_script_future_start(
+ecs_expr_function_t* flecs_script_await_call(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_node_t *stmt,
+    ecs_expr_node_t *expr);
+
+void flecs_script_await_launch(
     ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t type,
-    ecs_function_calldata_t *calldata,
-    int32_t argc,
+    flecs_script_async_state_t *async,
+    const ecs_expr_function_t *call,
     ecs_value_t *argv);
 
 flecs_script_future_state_t flecs_script_future_poll(
@@ -52,9 +55,9 @@ bool flecs_script_try_catch(
     ecs_script_runner_t *r,
     flecs_script_frame_t *frame);
 
-int32_t flecs_script_find_catch(
+int32_t flecs_script_catch(
     ecs_script_eval_visitor_t *v,
-    const flecs_script_async_state_t *state,
+    flecs_script_async_state_t *state,
     const ecs_script_try_t *node);
 
 int flecs_script_await_poll(
