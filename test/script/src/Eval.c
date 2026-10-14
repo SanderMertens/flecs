@@ -25497,3 +25497,23 @@ void Eval_update_script_from_system(void) {
 
     ecs_fini(world);
 }
+
+void Eval_update_scope_anonymous_new_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const root = new {}"
+    LINE "$root {}"
+    LINE "";
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = expr,
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+
+    test_int(ecs_script_update(world, s, 0, expr), 0);
+    test_int(ecs_script_update(world, s, 0, expr), 0);
+
+    ecs_fini(world);
+}

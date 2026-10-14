@@ -1979,7 +1979,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             flecs_script_entity_state_t state;
             res = flecs_script_eval_entity_enter_w_name(v, ECS_CONST_CAST(
                 ecs_script_entity_t*, (const void*)op->node),
-                flecs_ir_name(vm, op->a), &state);
+                op->a != -1 ? &flecs_ir_reg(vm, op->a)->value : NULL, &state);
 #ifdef FLECS_SCRIPT_IR_PROFILE
             if (op->a == -1) {
                 flecs_ir_prof(state.created ?

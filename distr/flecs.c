@@ -48864,7 +48864,7 @@ int flecs_script_eval_entity_enter(
 int flecs_script_eval_entity_enter_w_name(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
-    const char *name,
+    const ecs_value_t *name,
     flecs_script_entity_state_t *state);
 
 void flecs_script_eval_entity_leave(
@@ -93978,7 +93978,7 @@ static int flecs_script_self_template_check(
 int flecs_script_eval_entity_enter_w_name(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
-    const char *name,
+    const ecs_value_t *name,
     flecs_script_entity_state_t *state)
 {
     state->node = node;
@@ -94042,17 +94042,22 @@ int flecs_script_eval_entity_enter_w_name(
 
     bool apply_with = state->eval != 0;
     if (node->name_expr) {
-        if (!name) {
+        bool is_ref = name && name->type == ecs_id(ecs_entity_t);
+        if (!name || (!is_ref && !*(char**)name->ptr)) {
             flecs_script_eval_error(v, node, "failed to evaluate entity name");
             return -1;
         }
 
-        ecs_entity_t eval = flecs_script_create_entity(v, name);
+        ecs_entity_t eval = is_ref
+            ? *(ecs_entity_t*)name->ptr
+            : flecs_script_create_entity(v, *(char**)name->ptr);
         if (!eval) {
             return -1;
         }
 
-        if (state->eval && state->eval != eval &&
+        if (is_ref) {
+            flecs_script_apply_with(v, eval);
+        } else if (state->eval && state->eval != eval &&
             ecs_is_alive(v->world, state->eval))
         {
             ecs_delete(v->world, state->eval);
@@ -94134,14 +94139,18 @@ int flecs_script_eval_entity_enter(
     ecs_script_entity_t *node,
     flecs_script_entity_state_t *state)
 {
-    char *name = NULL;
-    if (node->name_expr && flecs_script_eval_name(v, &node->name_expr, &name)) {
-        return -1;
+    ecs_value_t name = {0};
+    if (node->name_expr) {
+        name.type = node->name_expr->type;
+        if (flecs_script_eval_expr(v, &node->name_expr, &name)) {
+            return -1;
+        }
     }
 
-    int result = flecs_script_eval_entity_enter_w_name(v, node, name, state);
-    if (name) {
-        ecs_os_free(name);
+    int result = flecs_script_eval_entity_enter_w_name(
+        v, node, name.ptr ? &name : NULL, state);
+    if (name.ptr) {
+        ecs_ptr_free(v->world, name.type, name.ptr);
     }
 
     return result;
@@ -97852,19 +97861,19 @@ static int flecs_script_type_ensure_node(
         return -1;
     }
 
-    const char *name = node->name;
     ecs_value_t value = {0};
     if (node->name_expr) {
-        value.type = ecs_id(ecs_string_t);
+        value.type = node->name_expr->type;
         if (flecs_script_eval_expr(t->v, &node->name_expr, &value)) {
             return -1;
         }
-
-        name = *(char**)value.ptr;
     }
 
-    current = flecs_script_new_entity(t->v, parent, name,
-        parent_node && parent_node->non_fragmenting_parent);
+    current = value.ptr && value.type == ecs_id(ecs_entity_t)
+        ? *(ecs_entity_t*)value.ptr
+        : flecs_script_new_entity(t->v, parent,
+            value.ptr ? *(char**)value.ptr : node->name,
+            parent_node && parent_node->non_fragmenting_parent);
     if (value.ptr) {
         ecs_ptr_free(t->v->world, value.type, value.ptr);
     }
@@ -98838,6 +98847,32 @@ done:
     return result;
 }
 
+static bool flecs_script_type_entity_name_ref(
+    ecs_script_type_visitor_t *t,
+    ecs_script_entity_t *node)
+{
+    if (!flecs_script_is_var_name(node->name)) {
+        return false;
+    }
+
+    ecs_script_var_t *var = ecs_script_vars_lookup(t->v->vars, &node->name[1]);
+    if (!var || var->value.type != ecs_id(ecs_entity_t) ||
+        flecs_script_type_var_interface(t, var->sp))
+    {
+        return false;
+    }
+
+    ecs_expr_node_t *expr = node->name_expr;
+    if (expr->kind == EcsExprInterpolatedString) {
+        ecs_script_t *script = &t->v->base.script->pub;
+        node->name_expr = (ecs_expr_node_t*)flecs_expr_variable_from(
+            script, expr, &node->name[1]);
+        flecs_expr_visit_free(script, expr);
+    }
+
+    return true;
+}
+
 static int flecs_script_type_entity(
     ecs_script_type_visitor_t *t,
     ecs_script_entity_t *node,
@@ -98863,7 +98898,9 @@ static int flecs_script_type_entity(
     }
 
     if (node->name_expr) {
-        ecs_entity_t type = ecs_id(ecs_string_t);
+        ecs_entity_t type = flecs_script_type_entity_name_ref(t, node)
+            ? ecs_id(ecs_entity_t)
+            : ecs_id(ecs_string_t);
         int result = flecs_script_type_check_expr(t, &node->name_expr, &type);
         if (result) {
             return result == 1 ? 0 : -1;
@@ -111363,7 +111400,7 @@ static flecs_script_run_status_t flecs_ir_exec(
             flecs_script_entity_state_t state;
             res = flecs_script_eval_entity_enter_w_name(v, ECS_CONST_CAST(
                 ecs_script_entity_t*, (const void*)op->node),
-                flecs_ir_name(vm, op->a), &state);
+                op->a != -1 ? &flecs_ir_reg(vm, op->a)->value : NULL, &state);
 #ifdef FLECS_SCRIPT_IR_PROFILE
             if (op->a == -1) {
                 flecs_ir_prof(state.created ?

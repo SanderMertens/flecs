@@ -892,7 +892,7 @@ static int flecs_script_self_template_check(
 int flecs_script_eval_entity_enter_w_name(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
-    const char *name,
+    const ecs_value_t *name,
     flecs_script_entity_state_t *state)
 {
     state->node = node;
@@ -956,17 +956,22 @@ int flecs_script_eval_entity_enter_w_name(
 
     bool apply_with = state->eval != 0;
     if (node->name_expr) {
-        if (!name) {
+        bool is_ref = name && name->type == ecs_id(ecs_entity_t);
+        if (!name || (!is_ref && !*(char**)name->ptr)) {
             flecs_script_eval_error(v, node, "failed to evaluate entity name");
             return -1;
         }
 
-        ecs_entity_t eval = flecs_script_create_entity(v, name);
+        ecs_entity_t eval = is_ref
+            ? *(ecs_entity_t*)name->ptr
+            : flecs_script_create_entity(v, *(char**)name->ptr);
         if (!eval) {
             return -1;
         }
 
-        if (state->eval && state->eval != eval &&
+        if (is_ref) {
+            flecs_script_apply_with(v, eval);
+        } else if (state->eval && state->eval != eval &&
             ecs_is_alive(v->world, state->eval))
         {
             ecs_delete(v->world, state->eval);
@@ -1048,14 +1053,18 @@ int flecs_script_eval_entity_enter(
     ecs_script_entity_t *node,
     flecs_script_entity_state_t *state)
 {
-    char *name = NULL;
-    if (node->name_expr && flecs_script_eval_name(v, &node->name_expr, &name)) {
-        return -1;
+    ecs_value_t name = {0};
+    if (node->name_expr) {
+        name.type = node->name_expr->type;
+        if (flecs_script_eval_expr(v, &node->name_expr, &name)) {
+            return -1;
+        }
     }
 
-    int result = flecs_script_eval_entity_enter_w_name(v, node, name, state);
-    if (name) {
-        ecs_os_free(name);
+    int result = flecs_script_eval_entity_enter_w_name(
+        v, node, name.ptr ? &name : NULL, state);
+    if (name.ptr) {
+        ecs_ptr_free(v->world, name.type, name.ptr);
     }
 
     return result;
