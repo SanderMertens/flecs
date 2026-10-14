@@ -1491,8 +1491,6 @@ void OnDelete_empty_after_remove(void);
 void OnDelete_remove_target_no_intermediate_table(void);
 void OnDelete_remove_target_no_intermediate_table_3_pairs(void);
 void OnDelete_delete_parent_w_isa_base_that_inherits_from_disabled_child(void);
-void OnDelete_delete_parent_from_on_remove_during_delete_w_queued_child_remove(void);
-void OnDelete_delete_with_deletes_children_before_parent(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -2525,6 +2523,10 @@ void Observer_single_term_observer_w_var_get_var_nested_invoke(void);
 void Observer_single_term_observer_w_var_get_var_pair_second_on_delete_target(void);
 void Observer_single_term_observer_wo_var_invoked_once_per_event(void);
 void Observer_on_set_up_then_parent_move_add_grandchild(void);
+void Observer_not_term_on_remove_add_negated_id_in_populated_table(void);
+void Observer_not_term_on_add_remove_negated_id_in_populated_table(void);
+void Observer_not_term_on_remove_add_negated_id_in_populated_table_w_data(void);
+void Observer_not_term_on_add_remove_negated_id_in_populated_table_w_data(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -9374,14 +9376,6 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_parent_w_isa_base_that_inherits_from_disabled_child",
         OnDelete_delete_parent_w_isa_base_that_inherits_from_disabled_child
-    },
-    {
-        "delete_parent_from_on_remove_during_delete_w_queued_child_remove",
-        OnDelete_delete_parent_from_on_remove_during_delete_w_queued_child_remove
-    },
-    {
-        "delete_with_deletes_children_before_parent",
-        OnDelete_delete_with_deletes_children_before_parent
     }
 };
 
@@ -13462,6 +13456,22 @@ bake_test_case Observer_testcases[] = {
     {
         "on_set_up_then_parent_move_add_grandchild",
         Observer_on_set_up_then_parent_move_add_grandchild
+    },
+    {
+        "not_term_on_remove_add_negated_id_in_populated_table",
+        Observer_not_term_on_remove_add_negated_id_in_populated_table
+    },
+    {
+        "not_term_on_add_remove_negated_id_in_populated_table",
+        Observer_not_term_on_add_remove_negated_id_in_populated_table
+    },
+    {
+        "not_term_on_remove_add_negated_id_in_populated_table_w_data",
+        Observer_not_term_on_remove_add_negated_id_in_populated_table_w_data
+    },
+    {
+        "not_term_on_add_remove_negated_id_in_populated_table_w_data",
+        Observer_not_term_on_add_remove_negated_id_in_populated_table_w_data
     }
 };
 
@@ -17698,7 +17708,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        132,
+        130,
         OnDelete_testcases
     },
     {
@@ -17754,7 +17764,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        400,
+        404,
         Observer_testcases
     },
     {

@@ -15899,7 +15899,11 @@ static void flecs_multi_observer_invoke(
              * data from the table the entity is still stored in. */
             user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
             ecs_iter_fini(&user_it);
-            ecs_table_range_t prev_range = { .table = prev_table };
+            ecs_table_range_t prev_range = {
+                .table = prev_table,
+                .offset = it->offset,
+                .count = it->count
+            };
             match = flecs_observer_query_has_range(
                 impl->not_query, &prev_range, term, it->event_id, &user_it);
 
