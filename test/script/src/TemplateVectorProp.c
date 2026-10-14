@@ -903,12 +903,13 @@ void TemplateVectorProp_reactive_prop_change(void) {
     test_assert(glass != 0);
 
     ecs_vec_t vec;
-    ecs_vec_init_t(NULL, &vec, ecs_entity_t, 1);
-    ecs_vec_append_t(NULL, &vec, ecs_entity_t)[0] = glass;
+    ecs_vec_init_t(NULL, &vec, ecs_script_template_ref_t, 1);
+    ecs_vec_append_t(NULL, &vec, ecs_script_template_ref_t)[0] =
+        (ecs_script_template_ref_t){ .type = glass };
 
     ecs_entity_t e = ecs_lookup(world, "e");
     ecs_set_id(world, e, building, ECS_SIZEOF(ecs_vec_t), &vec);
-    ecs_vec_fini_t(NULL, &vec, ecs_entity_t);
+    ecs_vec_fini_t(NULL, &vec, ecs_script_template_ref_t);
 
     inst = ecs_lookup(world, "e.a");
     test_assert(inst != 0);
