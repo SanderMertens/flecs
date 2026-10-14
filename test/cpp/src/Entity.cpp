@@ -3573,10 +3573,10 @@ void Entity_defer_new_w_name(void) {
 
     flecs::entity e;
 
-    ecs.defer([&](flecs::world& stage_1) {
-        e = stage_1.entity("Foo");
-        test_assert(e != 0);
-    });
+    flecs::world stage_1 = ecs.get_stage(0);
+    e = stage_1.entity("Foo");
+    test_assert(e != 0);
+    stage_1.merge();
 
     test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Foo");
@@ -3587,10 +3587,10 @@ void Entity_defer_new_w_nested_name(void) {
 
     flecs::entity e;
 
-    ecs.defer([&](flecs::world& stage_1) {
-        e = stage_1.entity("Foo::Bar");
-        test_assert(e != 0);
-    });
+    flecs::world stage_1 = ecs.get_stage(0);
+    e = stage_1.entity("Foo::Bar");
+    test_assert(e != 0);
+    stage_1.merge();
 
     test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Bar");
@@ -3603,12 +3603,12 @@ void Entity_defer_new_w_scope_name(void) {
 
     flecs::entity e, parent = ecs.entity("Parent");
 
-    ecs.defer([&](flecs::world& stage_1) {
-        parent.scope([&]{
-            e = stage_1.entity("Foo");
-            test_assert(e != 0);
-        });
+    flecs::world stage_1 = ecs.get_stage(0);
+    parent.scope([&]{
+        e = stage_1.entity("Foo");
+        test_assert(e != 0);
     });
+    stage_1.merge();
 
     test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Foo");
@@ -3620,12 +3620,12 @@ void Entity_defer_new_w_scope_nested_name(void) {
 
     flecs::entity e, parent = ecs.entity("Parent");
 
-    ecs.defer([&](flecs::world& stage_1) {
-        parent.scope([&]{
-            e = stage_1.entity("Foo::Bar");
-            test_assert(e != 0);
-        });
+    flecs::world stage_1 = ecs.get_stage(0);
+    parent.scope([&]{
+        e = stage_1.entity("Foo::Bar");
+        test_assert(e != 0);
     });
+    stage_1.merge();
 
     test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Bar");
@@ -3637,12 +3637,12 @@ void Entity_defer_new_w_deferred_scope_nested_name(void) {
 
     flecs::entity e, parent;
 
-    ecs.defer([&](flecs::world& stage_1) {
-        parent = stage_1.entity("Parent").scope([&]{
-            e = stage_1.entity("Foo::Bar");
-            test_assert(e != 0);
-        });
+    flecs::world stage_1 = ecs.get_stage(0);
+    parent = stage_1.entity("Parent").scope([&]{
+        e = stage_1.entity("Foo::Bar");
+        test_assert(e != 0);
     });
+    stage_1.merge();
 
     test_assert(parent.has<flecs::Identifier>(flecs::Name));
     test_str(parent.name(), "Parent");
@@ -3658,12 +3658,12 @@ void Entity_defer_new_w_scope(void) {
 
     flecs::entity e, parent = ecs.entity();
 
-    ecs.defer([&](flecs::world& stage_1) {
-        parent.scope([&]{
-            e = stage_1.entity();
-            test_assert(e != 0);
-        });
+    flecs::world stage_1 = ecs.get_stage(0);
+    parent.scope([&]{
+        e = stage_1.entity();
+        test_assert(e != 0);
     });
+    stage_1.merge();
 
     test_assert(e.has(flecs::ChildOf, parent));
 }
@@ -3676,17 +3676,17 @@ void Entity_defer_suspend_resume(void) {
 
     flecs::entity e = ecs.entity();
 
-    ecs.defer([&](flecs::world& stage_1) {
-        e.mut(stage_1).add<TagA>();
-        test_assert(!e.has<TagA>());
+    flecs::world stage_1 = ecs.get_stage(0);
+    e.mut(stage_1).add<TagA>();
+    test_assert(!e.has<TagA>());
 
-        e.add<TagB>();
-        test_assert(!e.has<TagA>());
-        test_assert(e.has<TagB>());
+    e.add<TagB>();
+    test_assert(!e.has<TagA>());
+    test_assert(e.has<TagB>());
 
-        test_assert(!e.has<TagA>());
-        test_assert(e.has<TagB>());
-    });
+    test_assert(!e.has<TagA>());
+    test_assert(e.has<TagB>());
+    stage_1.merge();
 
     test_assert(e.has<TagA>());
     test_assert(e.has<TagB>());

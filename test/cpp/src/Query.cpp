@@ -3145,12 +3145,12 @@ void Query_not_w_write(void) {
     auto e = ecs.entity().add<A>();
 
     int32_t count = 0;
-    ecs.defer([&](flecs::world& stage_1) {
-        q.each([&](flecs::entity e) {
-            e.mut(stage_1).add<B>();
-            count ++;
-        });
+    flecs::world stage_1 = ecs.get_stage(0);
+    q.each([&](flecs::entity e) {
+        e.mut(stage_1).add<B>();
+        count ++;
     });
+    stage_1.merge();
 
     test_int(1, count);
     test_assert(e.has<B>());

@@ -266,17 +266,6 @@ struct world {
         ecs_readonly_end(world_);
     }
 
-    /** Test whether deferring is enabled.
-     *
-     * @return True if deferred, false if not.
-     *
-     * @see ecs_is_stage()
-     * @see flecs::world::defer()
-     */
-    bool is_deferred() const {
-        return ecs_is_stage(world_);
-    }
-
     /** Configure world to have N stages.
      * This initializes N stages, which allows applications to defer operations to
      * multiple isolated defer queues. This is typically used for applications with
@@ -726,13 +715,6 @@ struct world {
     template <typename... T, typename... Args>
     void remove_all(Args... args) const {
         ecs_remove_all(world_, _::make_id<T...>(world_, args...).id);
-    }
-
-    template <typename Func>
-    void defer(const Func& func) const {
-        flecs::world stage = get_stage(0);
-        func(stage);
-        stage.merge();
     }
 
     /** Check if entity ID exists in the world.
