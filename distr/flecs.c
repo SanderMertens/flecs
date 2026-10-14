@@ -104508,6 +104508,14 @@ static int flecs_expr_visit_type_priv(
     return flecs_expr_visit_type_ex(script, node_ptr, cur, desc, false);
 }
 
+static void flecs_expr_visit_type_cursor(
+    const ecs_world_t *world,
+    ecs_meta_cursor_t *cur,
+    ecs_entity_t type)
+{
+    *cur = ecs_meta_cursor(world, type, NULL);
+}
+
 static int flecs_expr_cast_to(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -105975,7 +105983,8 @@ static int flecs_expr_binary_visit_type(
     {
         /* If the left hand side is an enum, interpret untyped identifiers
          * on the right hand side as enum constants of the same type. */
-        operand_cur[1] = ecs_meta_cursor(script->world, node->left->type, NULL);
+        flecs_expr_visit_type_cursor(
+            script->world, &operand_cur[1], node->left->type);
     }
 
     if (flecs_expr_visit_type_priv(
@@ -107628,7 +107637,7 @@ static int flecs_expr_visit_type_ex(
     /* Every node produces a value of its own type. Rebase the cursor on that
      * type so that members and elements resolved on the value get an offset
      * that is relative to the value. */
-    *cur = ecs_meta_cursor(script->world, node->type, NULL);
+    flecs_expr_visit_type_cursor(script->world, cur, node->type);
 
     return 0;
 }
