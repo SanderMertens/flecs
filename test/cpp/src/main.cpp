@@ -8,6 +8,7 @@
 
 #include <cpp.h>
 
+// Testsuite 'Script'
 void Script_function(void);
 void Script_function_scope_and_ctx(void);
 void Script_method(void);

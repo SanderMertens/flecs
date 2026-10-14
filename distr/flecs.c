@@ -83800,6 +83800,7 @@ bool flecs_query_tree_up_post(
 
             if (op_ctx->cur >= (op_ctx->range.offset + op_ctx->range.count)) {
                 flecs_query_src_set_range(op, &op_ctx->range, ctx);
+                ctx->it->sources[op->field_index] = op_ctx->tgt;
                 return false;
             }
 
@@ -83823,6 +83824,7 @@ bool flecs_query_tree_up_post(
 
         if (op_ctx->cur >= (op_ctx->range.offset + op_ctx->range.count)) {
             flecs_query_src_set_range(op, &op_ctx->range, ctx);
+            ctx->it->sources[op->field_index] = op_ctx->tgt;
             return false;
         }
 
@@ -83845,11 +83847,18 @@ bool flecs_query_tree_up_post(
 
         return true;
     } else {
+        bool result;
         if (self) {
-            return flecs_query_self_up_with(op, redo, ctx);
+            result = flecs_query_self_up_with(op, redo, ctx);
         } else {
-            return flecs_query_up_with(op, redo, ctx);
+            result = flecs_query_up_with(op, redo, ctx);
         }
+
+        if (!result) {
+            ctx->it->sources[op->field_index] = op_ctx->tgt;
+        }
+
+        return result;
     }
 }
 
