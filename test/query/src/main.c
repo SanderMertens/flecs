@@ -2784,6 +2784,10 @@ void NonFragmentingChildOf_fixed_src_self_up_childof_any_expr(void);
 void NonFragmentingChildOf_var_src_childof_parent_ordered_children(void);
 void NonFragmentingChildOf_var_src_childof_wildcard_ordered_children(void);
 void NonFragmentingChildOf_this_src_not_childof_self_up_w_not_self_up(void);
+void NonFragmentingChildOf_this_2_up_parents_in_same_table(void);
+void NonFragmentingChildOf_this_2_self_up_parents_in_same_table(void);
+void NonFragmentingChildOf_this_up_optional_up_parents_in_same_table(void);
+void NonFragmentingChildOf_this_up_not_up_parents_in_same_table(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -13876,6 +13880,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "this_src_not_childof_self_up_w_not_self_up",
         NonFragmentingChildOf_this_src_not_childof_self_up_w_not_self_up
+    },
+    {
+        "this_2_up_parents_in_same_table",
+        NonFragmentingChildOf_this_2_up_parents_in_same_table
+    },
+    {
+        "this_2_self_up_parents_in_same_table",
+        NonFragmentingChildOf_this_2_self_up_parents_in_same_table
+    },
+    {
+        "this_up_optional_up_parents_in_same_table",
+        NonFragmentingChildOf_this_up_optional_up_parents_in_same_table
+    },
+    {
+        "this_up_not_up_parents_in_same_table",
+        NonFragmentingChildOf_this_up_not_up_parents_in_same_table
     }
 };
 
@@ -14696,7 +14716,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        346,
+        350,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params
