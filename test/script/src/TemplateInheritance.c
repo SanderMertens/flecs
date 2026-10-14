@@ -1836,9 +1836,9 @@ void TemplateInheritance_derived_prop_override_struct_default(void) {
 
     const float *v = ecs_get_id(world, ecs_lookup(world, "t.child"), rgb);
     test_assert(v != NULL);
-    test_flt(v[0], 0.1);
-    test_flt(v[1], 0.2);
-    test_flt(v[2], 0.3);
+    test_flt(v[0], 0.1f);
+    test_flt(v[1], 0.2f);
+    test_flt(v[2], 0.3f);
 
     v = ecs_get_id(world, ecs_lookup(world, "l"), light);
     test_assert(v != NULL);
