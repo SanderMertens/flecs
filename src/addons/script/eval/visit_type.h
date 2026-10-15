@@ -19,6 +19,7 @@ typedef struct ecs_script_type_entity_t {
     int32_t slot;
     bool in_template;
     bool in_for;
+    bool oneof;
 } ecs_script_type_entity_t;
 
 typedef struct ecs_script_type_interface_var_t {

@@ -178,6 +178,11 @@ void Eval_assign_pair_component_after_int_component(void);
 void Eval_assign_pair_component_after_entity_component(void);
 void Eval_set_entity_names(void);
 void Eval_oneof(void);
+void Eval_oneof_target_in_reopened_relationship(void);
+void Eval_oneof_existing_target_in_reopened_relationship(void);
+void Eval_oneof_target_in_reopened_relationship_w_using(void);
+void Eval_oneof_target_in_script_oneof_relationship(void);
+void Eval_oneof_target_in_reopened_script_oneof_relationship(void);
 void Eval_brief_annotation(void);
 void Eval_name_annotation(void);
 void Eval_name_annotation_crlf(void);
@@ -1718,6 +1723,8 @@ void Error_entity_comma_list(void);
 void Error_entity_comma_list_in_scope(void);
 void Error_entity_comma_list_w_trailing_comma(void);
 void Error_oneof_pair_target_shadowed_by_script_entity(void);
+void Error_oneof_pair_target_shadowed_in_reopened_relationship(void);
+void Error_oneof_pair_target_shadowed_in_script_oneof_relationship(void);
 void Error_any_as_pair_first(void);
 void Error_any_as_pair_second(void);
 void Error_any_as_pair_first_from_template_prop(void);
@@ -4587,6 +4594,26 @@ bake_test_case Eval_testcases[] = {
     {
         "oneof",
         Eval_oneof
+    },
+    {
+        "oneof_target_in_reopened_relationship",
+        Eval_oneof_target_in_reopened_relationship
+    },
+    {
+        "oneof_existing_target_in_reopened_relationship",
+        Eval_oneof_existing_target_in_reopened_relationship
+    },
+    {
+        "oneof_target_in_reopened_relationship_w_using",
+        Eval_oneof_target_in_reopened_relationship_w_using
+    },
+    {
+        "oneof_target_in_script_oneof_relationship",
+        Eval_oneof_target_in_script_oneof_relationship
+    },
+    {
+        "oneof_target_in_reopened_script_oneof_relationship",
+        Eval_oneof_target_in_reopened_script_oneof_relationship
     },
     {
         "brief_annotation",
@@ -10666,6 +10693,14 @@ bake_test_case Error_testcases[] = {
     {
         "oneof_pair_target_shadowed_by_script_entity",
         Error_oneof_pair_target_shadowed_by_script_entity
+    },
+    {
+        "oneof_pair_target_shadowed_in_reopened_relationship",
+        Error_oneof_pair_target_shadowed_in_reopened_relationship
+    },
+    {
+        "oneof_pair_target_shadowed_in_script_oneof_relationship",
+        Error_oneof_pair_target_shadowed_in_script_oneof_relationship
     },
     {
         "any_as_pair_first",
@@ -19419,7 +19454,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        795,
+        800,
         Eval_testcases,
         1,
         Eval_params
@@ -19500,7 +19535,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        259,
+        261,
         Error_testcases,
         1,
         Error_params
