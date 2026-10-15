@@ -563,6 +563,85 @@ void flecs_observers_invoke_skip_up_notify(
         FlecsObserversInvokeSkipUpNotify);
 }
 
+static void flecs_multi_observer_invoke_user_it(
+    ecs_observer_t *o,
+    ecs_iter_t *it,
+    ecs_iter_t *user_it,
+    ecs_table_t *lock_table)
+{
+    ecs_world_t *world = it->world;
+    int8_t pivot_term = it->term_index;
+    int8_t pivot_field = o->query->terms[pivot_term].field_index;
+    ecs_termset_t pivot_field_bit = ((ecs_termset_t)1 << pivot_field);
+    (void)lock_table;
+
+    /* Patch data from original iterator. If the observer query has
+     * wildcards which triggered the original event, the component id that
+     * got matched by ecs_query_has_range may not be the same as the one
+     * that caused the event. We need to make sure to communicate the
+     * component id that actually triggered the observer. */
+    ecs_assert(pivot_field >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(pivot_field < user_it->field_count, ECS_INTERNAL_ERROR, NULL);
+    user_it->ids[pivot_field] = it->event_id;
+    user_it->trs[pivot_field] = it->trs[0];
+    user_it->sources[pivot_field] = it->sources[0];
+    ECS_CONST_CAST(int16_t*, user_it->columns)[pivot_field] =
+        (it->sources[0] || !(user_it->set_fields & pivot_field_bit))
+            ? -1 : it->columns[0];
+    user_it->term_index = pivot_term;
+
+    user_it->stage = it->stage;
+    user_it->ctx = o->ctx;
+    user_it->callback_ctx = o->callback_ctx;
+    user_it->run_ctx = o->run_ctx;
+    user_it->param = it->param;
+    user_it->callback = o->callback;
+    user_it->system = o->entity;
+    user_it->event = it->event;
+    user_it->event_id = it->event_id;
+    user_it->other_table = it->other_table;
+
+    ecs_entity_t old_system = flecs_stage_set_system(
+        world->stages[0], o->entity);
+    ECS_TABLE_LOCK(it->stage, lock_table);
+
+    if (o->run) {
+        ecs_iter_next_action_t next = user_it->next;
+        user_it->next = flecs_default_next_callback;
+        o->run(user_it);
+        user_it->next = next;
+        user_it->interrupted_by = 0;
+    } else {
+        user_it->callback(user_it);
+    }
+
+    ECS_TABLE_UNLOCK(it->stage, lock_table);
+    flecs_stage_set_system(world->stages[0], old_system);
+}
+
+static void flecs_multi_observer_invoke_fixed_src(
+    ecs_observer_t *o,
+    ecs_iter_t *it)
+{
+    ecs_observer_impl_t *impl = flecs_observer_impl(o);
+    ecs_termset_t pivot_field_bit = (ecs_termset_t)1 << 
+        o->query->terms[it->term_index].field_index;
+
+    bool match = false;
+    ecs_iter_t user_it = ecs_query_iter(it->stage, o->query);
+    while (ecs_query_next(&user_it)) {
+        match = true;
+        impl->last_event_id[0] = it->event_cur;
+        impl->last_event_field = pivot_field_bit;
+        flecs_multi_observer_invoke_user_it(o, it, &user_it, user_it.table);
+        user_it.flags |= EcsIterSkip;
+    }
+
+    if (!match) {
+        o->query->eval_count --;
+    }
+}
+
 static void flecs_multi_observer_invoke(
     ecs_iter_t *it) 
 {
@@ -584,10 +663,17 @@ static void flecs_multi_observer_invoke(
         return;
     }
 
+    bool is_not = term->oper == EcsNot;
+    if (!is_not && !ecs_term_match_this(term) &&
+        (o->query->flags & EcsQueryMatchThis))
+    {
+        flecs_multi_observer_invoke_fixed_src(o, it);
+        return;
+    }
+
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
 
-    bool is_not = term->oper == EcsNot;
     if (is_not) {
         table = it->other_table;
         prev_table = it->table;
@@ -665,48 +751,10 @@ static void flecs_multi_observer_invoke(
         impl->last_event_id[0] = it->event_cur;
         impl->last_event_field = pivot_field_bit;
 
-        /* Patch data from original iterator. If the observer query has
-         * wildcards which triggered the original event, the component id that
-         * got matched by ecs_query_has_range may not be the same as the one
-         * that caused the event. We need to make sure to communicate the
-         * component id that actually triggered the observer. */
-        ecs_assert(pivot_field >= 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(pivot_field < user_it.field_count, ECS_INTERNAL_ERROR, NULL);
-        user_it.ids[pivot_field] = it->event_id;
-        user_it.trs[pivot_field] = it->trs[0];
-        user_it.sources[pivot_field] = it->sources[0];
-        ECS_CONST_CAST(int16_t*, user_it.columns)[pivot_field] =
-            (it->sources[0] || !(user_it.set_fields & pivot_field_bit))
-                ? -1 : it->columns[0];
-        user_it.term_index = pivot_term;
-
-        user_it.stage = it->stage;
-        user_it.ctx = o->ctx;
-        user_it.callback_ctx = o->callback_ctx;
-        user_it.run_ctx = o->run_ctx;
-        user_it.param = it->param;
-        user_it.callback = o->callback;
-        user_it.system = o->entity;
-        user_it.event = it->event;
-        user_it.event_id = it->event_id;
-        user_it.other_table = it->other_table;
-
-        ecs_entity_t old_system = flecs_stage_set_system(
-            world->stages[0], o->entity);
-        ECS_TABLE_LOCK(it->stage, lock_table);
-
-        if (o->run) {
-            user_it.next = flecs_default_next_callback;
-            o->run(&user_it);
-        } else {
-            user_it.callback(&user_it);
-        }
+        flecs_multi_observer_invoke_user_it(o, it, &user_it, lock_table);
 
         user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
         ecs_iter_fini(&user_it);
-
-        ECS_TABLE_UNLOCK(it->stage, lock_table);
-        flecs_stage_set_system(world->stages[0], old_system);
     } else {
         /* While the observer query was strictly speaking evaluated, it's more
          * useful to measure how often the observer was actually invoked. */

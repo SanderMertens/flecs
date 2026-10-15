@@ -2400,6 +2400,11 @@ void Observer_yield_existing_on_remove(void);
 void Observer_yield_existing_on_remove_singleton(void);
 void Observer_yield_existing_on_remove_static_source(void);
 void Observer_on_set_singleton_set_component_named_entity(void);
+void Observer_on_add_this_w_singleton_set_after_this(void);
+void Observer_on_add_this_w_singleton_set_before_this(void);
+void Observer_on_add_this_w_fixed_src_set_after_this(void);
+void Observer_on_set_this_w_singleton_set_after_2_entities(void);
+void Observer_on_remove_this_w_singleton_remove_singleton(void);
 void Observer_1_term_field_size(void);
 void Observer_2_terms_field_size(void);
 void Observer_1_up_term_field_size(void);
@@ -12966,6 +12971,26 @@ bake_test_case Observer_testcases[] = {
         Observer_on_set_singleton_set_component_named_entity
     },
     {
+        "on_add_this_w_singleton_set_after_this",
+        Observer_on_add_this_w_singleton_set_after_this
+    },
+    {
+        "on_add_this_w_singleton_set_before_this",
+        Observer_on_add_this_w_singleton_set_before_this
+    },
+    {
+        "on_add_this_w_fixed_src_set_after_this",
+        Observer_on_add_this_w_fixed_src_set_after_this
+    },
+    {
+        "on_set_this_w_singleton_set_after_2_entities",
+        Observer_on_set_this_w_singleton_set_after_2_entities
+    },
+    {
+        "on_remove_this_w_singleton_remove_singleton",
+        Observer_on_remove_this_w_singleton_remove_singleton
+    },
+    {
         "1_term_field_size",
         Observer_1_term_field_size
     },
@@ -17764,7 +17789,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        404,
+        409,
         Observer_testcases
     },
     {

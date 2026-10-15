@@ -1639,7 +1639,9 @@ let e = world.entity().set(TimeOfDay { value: 0.0 });
 </ul>
 </div>
 
-Observers may match terms on multiple different sources. However, when an observer matches components both on the `$this` source (default) and on a fixed source, the fixed source terms will not match events. The reason for this is that otherwise emitting an event for a fixed source term would mean iterating all matching entities for the `$this` term. If an observer only has fixed source terms, events will be matched for each of the terms.
+Observers may match terms on multiple different sources. When an observer matches components both on the `$this` source (default) and on a fixed source (this includes singletons), an event for a fixed source term invokes the observer for all entities that match the `$this` terms. This means that emitting an event for a fixed source term iterates all matching entities for the `$this` terms. If an observer only has fixed source terms, events will be matched for each of the terms.
+
+To prevent this behavior, add `EcsInOutFilter` to the fixed source term which will prevent it from producing events (see Filter Terms).
 
 ## Event Propagation
 When an observer has a query that uses (up) relationship traversal, events are propagated along the relationship edge. For example, when an observer requests component `Position` from a parent entity, setting `Position` on the parent will propagate an `OnSet` event along the `ChildOf` edge, notifying all child entities of the parent. 
