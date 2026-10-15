@@ -4376,6 +4376,133 @@ void Eval_oneof(void) {
     ecs_fini(world);
 }
 
+void Eval_oneof_target_in_reopened_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, rel, EcsOneOf);
+
+    const char *expr =
+    HEAD "Rel {"
+    LINE "  X {}"
+    LINE "}"
+    LINE "e { (Rel, X) }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t x = ecs_lookup(world, "Rel.X");
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    test_assert(x != 0);
+    test_assert(e != 0);
+    test_assert(ecs_lookup(world, "X") == 0);
+    test_assert(ecs_has_pair(world, e, rel, x));
+
+    ecs_fini(world);
+}
+
+void Eval_oneof_existing_target_in_reopened_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, rel, EcsOneOf);
+    ecs_entity_t x = ecs_entity(world, { .name = "X", .parent = rel });
+
+    const char *expr =
+    HEAD "Rel {"
+    LINE "  Y {}"
+    LINE "}"
+    LINE "e { (Rel, X) }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_lookup(world, "Rel.Y") != 0);
+    test_assert(ecs_has_pair(world, e, rel, x));
+
+    ecs_fini(world);
+}
+
+void Eval_oneof_target_in_reopened_relationship_w_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ns = ecs_entity(world, { .name = "ns" });
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel", .parent = ns });
+    ecs_add_id(world, rel, EcsOneOf);
+
+    const char *expr =
+    HEAD "using ns"
+    LINE "ns {"
+    LINE "  Rel {"
+    LINE "    X {}"
+    LINE "  }"
+    LINE "}"
+    LINE "e { (Rel, X) }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t x = ecs_lookup(world, "ns.Rel.X");
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    test_assert(x != 0);
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, rel, x));
+
+    ecs_fini(world);
+}
+
+void Eval_oneof_target_in_script_oneof_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Rel {"
+    LINE "  OneOf"
+    LINE "  X {}"
+    LINE "}"
+    LINE "e { (Rel, X) }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    ecs_entity_t x = ecs_lookup(world, "Rel.X");
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    test_assert(rel != 0);
+    test_assert(x != 0);
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, rel, EcsOneOf));
+    test_assert(ecs_has_pair(world, e, rel, x));
+
+    ecs_fini(world);
+}
+
+void Eval_oneof_target_in_reopened_script_oneof_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Rel {"
+    LINE "  OneOf"
+    LINE "}"
+    LINE "Rel {"
+    LINE "  X {}"
+    LINE "}"
+    LINE "e { (Rel, X) }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    ecs_entity_t x = ecs_lookup(world, "Rel.X");
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    test_assert(rel != 0);
+    test_assert(x != 0);
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, rel, x));
+
+    ecs_fini(world);
+}
+
 void Eval_brief_annotation(void) {
     ecs_world_t *world = ecs_init();
 

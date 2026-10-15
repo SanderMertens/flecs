@@ -3622,6 +3622,57 @@ void Error_oneof_pair_target_shadowed_by_script_entity(void) {
     ecs_fini(world);
 }
 
+void Error_oneof_pair_target_shadowed_in_reopened_relationship(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, rel, EcsOneOf);
+
+    const char *expr =
+    HEAD "Rel {"
+    LINE "  A {}"
+    LINE "}"
+    LINE "X {}"
+    LINE "e { (Rel, X) }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "not found in parent") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    if (e) {
+        test_assert(!ecs_has_pair(world, e, rel, EcsWildcard));
+    }
+
+    ecs_fini(world);
+}
+
+void Error_oneof_pair_target_shadowed_in_script_oneof_relationship(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Rel {"
+    LINE "  OneOf"
+    LINE "  A {}"
+    LINE "}"
+    LINE "X {}"
+    LINE "e { (Rel, X) }";
+
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "not found in parent") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
 void Error_any_as_pair_first(void) {
     ecs_log_set_level(-4);
 

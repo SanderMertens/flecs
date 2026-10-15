@@ -262,6 +262,7 @@ static ecs_script_type_entity_t* flecs_script_type_declare(
     entity->slot = flecs_script_type_slot_new(t, *slot);
     entity->in_template = t->template_scope;
     entity->in_for = t->for_depth != 0;
+    entity->oneof = false;
     int32_t index = ecs_vec_count(&t->entities) - 1;
     flecs_script_type_name_t key = {name, (uint64_t)t->table, length, true};
     flecs_hashmap_result_t result = flecs_hashmap_ensure(
@@ -317,6 +318,91 @@ static ecs_script_type_entity_t* flecs_script_type_entity_from_node(
 {
     return node->type_index ? ecs_vec_get_t(
         &t->entities, ecs_script_type_entity_t, node->type_index - 1) : NULL;
+}
+
+static ecs_entity_t flecs_script_type_lookup_entity(
+    ecs_script_type_visitor_t *t,
+    ecs_script_type_entity_t *entity)
+{
+    if (!entity || !entity->node) {
+        return 0;
+    }
+
+    ecs_entity_t result = flecs_script_symbol_entity(t->v, entity->slot);
+    if (result) {
+        return result;
+    }
+
+    ecs_entity_t parent = entity->parent;
+    if (entity->parent_node) {
+        parent = flecs_script_type_lookup_entity(t,
+            flecs_script_type_entity_from_node(t, entity->parent_node));
+        if (!parent) {
+            return 0;
+        }
+    }
+
+    return ecs_lookup_child(t->v->world, parent, entity->node->name);
+}
+
+static ecs_script_type_entity_t* flecs_script_type_find_child(
+    ecs_script_type_visitor_t *t,
+    ecs_entity_t parent,
+    const char *name)
+{
+    ecs_size_t length = ecs_os_strlen(name);
+    ecs_script_type_entity_t *result = flecs_script_type_find_in(
+        t, parent, false, name, length);
+    if (result || !parent) {
+        return result;
+    }
+
+    const char *parent_name = ecs_get_name(t->v->world, parent);
+    if (!parent_name) {
+        return NULL;
+    }
+
+    ecs_script_type_entity_t *scope = flecs_script_type_find_child(t,
+        ecs_get_parent(t->v->world, parent), parent_name);
+    if (!scope || scope->child_table == -1) {
+        return NULL;
+    }
+
+    return flecs_script_type_find_in(
+        t, (uint64_t)scope->child_table, true, name, length);
+}
+
+static int flecs_script_type_oneof_target(
+    ecs_script_type_visitor_t *t,
+    ecs_script_id_t *id,
+    void *node,
+    ecs_script_type_entity_t *scope,
+    const char *name,
+    ecs_entity_t *eval,
+    int32_t *slot)
+{
+    if (scope->child_table != -1) {
+        ecs_script_type_entity_t *target = flecs_script_type_find_in(t,
+            (uint64_t)scope->child_table, true, name, ecs_os_strlen(name));
+        if (target) {
+            *slot = target->slot;
+            id->dynamic = true;
+            return 0;
+        }
+    }
+
+    ecs_entity_t parent = flecs_script_type_lookup_entity(t, scope);
+    if (parent) {
+        *eval = ecs_lookup_path_w_sep(
+            t->v->world, parent, name, NULL, NULL, false);
+        if (*eval) {
+            return 0;
+        }
+    }
+
+    flecs_script_eval_error(t->v, node,
+        "target '%s' not found in parent '%s'", name, scope->node->name);
+    return -1;
 }
 
 static int flecs_script_type_lookup(
@@ -584,6 +670,7 @@ static int flecs_script_type_id_elem(
     const char *name,
     ecs_expr_node_t **name_expr,
     ecs_entity_t first,
+    ecs_script_type_entity_t *oneof,
     ecs_entity_t *eval,
     int32_t *slot,
     int32_t *sp)
@@ -619,10 +706,24 @@ static int flecs_script_type_id_elem(
 
     ecs_entity_t from;
     flecs_script_symbol_t symbol;
-    if (flecs_script_type_lookup(
-        t, first, name, FlecsScriptLookupAll, &from, &symbol))
+    if (flecs_script_type_lookup(t, first, name,
+        oneof ? FlecsScriptLookupVariable : FlecsScriptLookupAll,
+        &from, &symbol))
     {
+        if (oneof) {
+            return flecs_script_type_oneof_target(
+                t, id, node, oneof, name, eval, slot);
+        }
+
         if (from) {
+            ecs_script_type_entity_t *target =
+                flecs_script_type_find_child(t, from, name);
+            if (target) {
+                *slot = target->slot;
+                id->dynamic = true;
+                return 0;
+            }
+
             char *parent_str = ecs_id_str(t->v->world, from);
             flecs_script_eval_error(t->v, node,
                 "target '%s' not found in parent '%s'", name, parent_str);
@@ -748,7 +849,7 @@ static int flecs_script_type_id(
     }
 
     int result = flecs_script_type_id_elem(t, id, node, id->first,
-        &id->first_expr, 0, &id->first_eval, &id->first_symbol,
+        &id->first_expr, 0, NULL, &id->first_eval, &id->first_symbol,
         &id->first_sp);
     if (result) {
         return result;
@@ -762,9 +863,24 @@ static int flecs_script_type_id(
     }
 
     if (id->second) {
+        /* A relationship declared by the script isn't created yet, so its
+         * OneOf scope comes from its existing entity or its declaration. */
+        ecs_entity_t rel = first;
+        ecs_script_type_entity_t *oneof = NULL;
+        if (id->first_symbol != -1) {
+            ecs_script_type_entity_t *decl = flecs_script_type_find(
+                t, id->first);
+            if (!rel) {
+                rel = flecs_script_type_lookup_entity(t, decl);
+            }
+            if (decl && decl->oneof) {
+                oneof = decl;
+            }
+        }
+
         result = flecs_script_type_id_elem(t, id, node, id->second,
-            &id->second_expr, first, &id->second_eval, &id->second_symbol,
-            &id->second_sp);
+            &id->second_expr, rel, oneof, &id->second_eval,
+            &id->second_symbol, &id->second_sp);
         if (result) {
             return result;
         }
@@ -924,6 +1040,18 @@ static int flecs_script_type_tag(
             node->id.first);
         return -1;
     }
+
+#ifdef FLECS_CONSTRAINT_TRAITS
+    if (node->id.eval == EcsOneOf && !t->control_depth && !t->for_depth &&
+        !t->template_scope)
+    {
+        ecs_script_type_entity_t *entry = flecs_script_type_entity_from_node(
+            t, t->v->entity->node);
+        if (entry) {
+            entry->oneof = true;
+        }
+    }
+#endif
 
     return 0;
 }
