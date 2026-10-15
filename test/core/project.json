@@ -1119,6 +1119,8 @@
                 "tree_iter_1_table",
                 "tree_iter_2_tables",
                 "tree_iter_parent_0",
+                "tree_iter_parent_wildcard",
+                "tree_iter_parent_any",
                 "path_depth_0",
                 "path_depth_1",
                 "path_depth_2",

@@ -6101,6 +6101,10 @@ ecs_iter_t ecs_children_w_rel(
         .next = ecs_children_next
     };
 
+    if (parent == EcsWildcard || parent == EcsAny) {
+        return (ecs_iter_t){0};
+    }
+
     ecs_component_record_t *cr = flecs_components_get(
         world, ecs_pair(relationship, parent));
     if (!cr) {
