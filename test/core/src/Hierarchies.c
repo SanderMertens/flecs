@@ -186,6 +186,24 @@ void Hierarchies_tree_iter_parent_0(void) {
     ecs_fini(world);
 }
 
+void Hierarchies_tree_iter_parent_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_iter_t it = ecs_children(world, EcsWildcard);
+    test_assert( !ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Hierarchies_tree_iter_parent_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_iter_t it = ecs_children(world, EcsAny);
+    test_assert( !ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
 void Hierarchies_path_depth_0(void) {
     ecs_world_t *world = ecs_mini();
 
