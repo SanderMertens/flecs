@@ -11640,6 +11640,208 @@ void Observer_on_set_singleton_set_component_named_entity(void) {
     ecs_fini(world);
 }
 
+void Observer_on_add_this_w_singleton_set_after_this(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_id(Velocity));
+    test_int(ctx.term_count, 2);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_id(Velocity));
+    test_int(ctx.s[0][1], ecs_id(Velocity));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_this_w_singleton_set_before_this(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_count, 2);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_id(Velocity));
+    test_int(ctx.s[0][1], ecs_id(Velocity));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_this_w_fixed_src_set_after_this(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_entity_t src = ecs_new(world);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity), .src.id = src }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, src, Velocity, {1, 2});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_id(Velocity));
+    test_int(ctx.term_count, 2);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_id(Velocity));
+    test_int(ctx.s[0][1], src);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_this_w_singleton_set_after_2_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    ECS_TAG(world, Tag);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Position, {30, 40});
+    ecs_add(world, e2, Tag);
+    test_int(ctx.invoked, 0);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Velocity));
+    test_int(ctx.term_count, 2);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_id(Velocity));
+    test_int(ctx.s[0][1], ecs_id(Velocity));
+    test_int(ctx.c[1][0], ecs_id(Position));
+    test_int(ctx.s[1][0], 0);
+    test_int(ctx.c[1][1], ecs_id(Velocity));
+    test_int(ctx.s[1][1], ecs_id(Velocity));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_singleton_set(world, Velocity, {3, 4});
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_this_w_singleton_remove_singleton(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnRemove },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_singleton_remove(world, Velocity);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, ecs_id(Velocity));
+    test_int(ctx.term_count, 2);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_id(Velocity));
+    test_int(ctx.s[0][1], ecs_id(Velocity));
+
+    ecs_os_zeromem(&ctx);
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
 void Observer_1_term_field_size(void) {
     ecs_world_t *world = ecs_mini();
 
