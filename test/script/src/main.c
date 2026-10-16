@@ -810,6 +810,12 @@ void Eval_struct_member_w_array_type_declared_in_same_script(void);
 void Eval_vector_type_w_member_struct_declared_in_same_script(void);
 void Eval_vector_type_decl_as_component_in_same_script(void);
 void Eval_array_type_decl_as_component_in_same_script(void);
+void Eval_struct_member_w_map_type_declared_in_same_script(void);
+void Eval_struct_member_w_primitive_type_declared_in_same_script(void);
+void Eval_map_type_w_member_struct_declared_in_same_script(void);
+void Eval_map_type_decl_as_component_in_same_script(void);
+void Eval_primitive_type_decl_as_component_in_same_script(void);
+void Eval_primitive_type_w_kind_u64_in_same_script(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -7120,6 +7126,30 @@ bake_test_case Eval_testcases[] = {
     {
         "array_type_decl_as_component_in_same_script",
         Eval_array_type_decl_as_component_in_same_script
+    },
+    {
+        "struct_member_w_map_type_declared_in_same_script",
+        Eval_struct_member_w_map_type_declared_in_same_script
+    },
+    {
+        "struct_member_w_primitive_type_declared_in_same_script",
+        Eval_struct_member_w_primitive_type_declared_in_same_script
+    },
+    {
+        "map_type_w_member_struct_declared_in_same_script",
+        Eval_map_type_w_member_struct_declared_in_same_script
+    },
+    {
+        "map_type_decl_as_component_in_same_script",
+        Eval_map_type_decl_as_component_in_same_script
+    },
+    {
+        "primitive_type_decl_as_component_in_same_script",
+        Eval_primitive_type_decl_as_component_in_same_script
+    },
+    {
+        "primitive_type_w_kind_u64_in_same_script",
+        Eval_primitive_type_w_kind_u64_in_same_script
     }
 };
 
@@ -19444,7 +19474,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        800,
+        806,
         Eval_testcases,
         1,
         Eval_params

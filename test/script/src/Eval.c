@@ -25658,3 +25658,178 @@ void Eval_array_type_decl_as_component_in_same_script(void) {
 
     ecs_fini(world);
 }
+
+void Eval_struct_member_w_map_type_declared_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "map Lookup(key_type: i32, type: f32)"
+    LINE "struct Body(values: Lookup)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t lookup = ecs_lookup(world, "Lookup");
+    test_assert(lookup != 0);
+    const EcsMap *map = ecs_get(world, lookup, EcsMap);
+    test_assert(map != NULL);
+    test_uint(map->key_type, ecs_id(ecs_i32_t));
+    test_uint(map->type, ecs_id(ecs_f32_t));
+
+    ecs_entity_t body = ecs_lookup(world, "Body");
+    test_assert(body != 0);
+    ecs_entity_t values = ecs_lookup(world, "Body.values");
+    test_assert(values != 0);
+    const EcsMember *m = ecs_get(world, values, EcsMember);
+    test_assert(m != NULL);
+    test_uint(m->type, lookup);
+
+    const EcsComponent *c = ecs_get(world, body, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, ECS_SIZEOF(ecs_map_t));
+
+    ecs_fini(world);
+}
+
+void Eval_struct_member_w_primitive_type_declared_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "primitive Float(kind: F64)"
+    LINE "struct Body(mass: Float)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t flt = ecs_lookup(world, "Float");
+    test_assert(flt != 0);
+    const EcsPrimitive *p = ecs_get(world, flt, EcsPrimitive);
+    test_assert(p != NULL);
+    test_int(p->kind, EcsF64);
+
+    ecs_entity_t body = ecs_lookup(world, "Body");
+    test_assert(body != 0);
+    ecs_entity_t mass = ecs_lookup(world, "Body.mass");
+    test_assert(mass != 0);
+    const EcsMember *m = ecs_get(world, mass, EcsMember);
+    test_assert(m != NULL);
+    test_uint(m->type, flt);
+
+    const EcsComponent *c = ecs_get(world, body, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, ECS_SIZEOF(double));
+
+    ecs_fini(world);
+}
+
+void Eval_map_type_w_member_struct_declared_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "Elem { x { member: {type: f32} } }"
+    LINE "Lookup { map: {key_type: i32, type: Elem} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t elem = ecs_lookup(world, "Elem");
+    test_assert(elem != 0);
+    ecs_entity_t lookup = ecs_lookup(world, "Lookup");
+    test_assert(lookup != 0);
+    const EcsMap *map = ecs_get(world, lookup, EcsMap);
+    test_assert(map != NULL);
+    test_uint(map->key_type, ecs_id(ecs_i32_t));
+    test_uint(map->type, elem);
+
+    ecs_fini(world);
+}
+
+void Eval_map_type_decl_as_component_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "map Lookup(key_type: i32, type: f32)"
+    LINE "e { Lookup: [10: 1, 20: 2] }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t lookup = ecs_lookup(world, "Lookup");
+    test_assert(lookup != 0);
+    const EcsMap *map = ecs_get(world, lookup, EcsMap);
+    test_assert(map != NULL);
+    test_uint(map->key_type, ecs_id(ecs_i32_t));
+    test_uint(map->type, ecs_id(ecs_f32_t));
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const ecs_map_t *v = ecs_get_id(world, e, lookup);
+    test_assert(v != NULL);
+    test_int(ecs_map_count(v), 2);
+    ecs_map_val_t *elem = ecs_map_get(v, 10);
+    test_assert(elem != NULL);
+    test_flt(*(float*)elem, 1);
+    elem = ecs_map_get(v, 20);
+    test_assert(elem != NULL);
+    test_flt(*(float*)elem, 2);
+
+    ecs_fini(world);
+}
+
+void Eval_primitive_type_decl_as_component_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "primitive Float(kind: F32)"
+    LINE "e { Float: 10.5 }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t flt = ecs_lookup(world, "Float");
+    test_assert(flt != 0);
+    const EcsPrimitive *p = ecs_get(world, flt, EcsPrimitive);
+    test_assert(p != NULL);
+    test_int(p->kind, EcsF32);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const float *v = ecs_get_id(world, e, flt);
+    test_assert(v != NULL);
+    test_flt(*v, 10.5);
+
+    ecs_fini(world);
+}
+
+void Eval_primitive_type_w_kind_u64_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "primitive Big(kind: U64)"
+    LINE "primitive Ptr(kind: UPtr)"
+    LINE "struct Body(a: Big, b: Ptr)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t big = ecs_lookup(world, "Big");
+    test_assert(big != 0);
+    const EcsPrimitive *p = ecs_get(world, big, EcsPrimitive);
+    test_assert(p != NULL);
+    test_int(p->kind, EcsU64);
+
+    ecs_entity_t ptr = ecs_lookup(world, "Ptr");
+    test_assert(ptr != 0);
+    p = ecs_get(world, ptr, EcsPrimitive);
+    test_assert(p != NULL);
+    test_int(p->kind, EcsUPtr);
+
+    ecs_entity_t body = ecs_lookup(world, "Body");
+    test_assert(body != 0);
+    const EcsComponent *c = ecs_get(world, body, EcsComponent);
+    test_assert(c != NULL);
+    typedef struct { uint64_t a; uintptr_t b; } Body;
+    test_int(c->size, ECS_SIZEOF(Body));
+
+    ecs_fini(world);
+}

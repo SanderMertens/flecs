@@ -1080,10 +1080,10 @@ static int flecs_script_type_constants_expr(
     return 0;
 }
 
-static int flecs_script_type_collection_expr(
+static int flecs_script_type_meta_type_expr(
     ecs_script_type_visitor_t *t,
     ecs_expr_node_t *expr,
-    bool is_array)
+    ecs_entity_t kind)
 {
     if (!expr || (expr->kind != EcsExprInitializer &&
         expr->kind != EcsExprEmptyInitializer))
@@ -1100,12 +1100,9 @@ static int flecs_script_type_collection_expr(
             continue;
         }
 
-        bool is_count = elems[i].member
-            ? !ecs_os_strcmp(elems[i].member, "count")
-            : i == 1;
-        ecs_entity_t type = is_array && is_count
-            ? ecs_id(ecs_i32_t)
-            : ecs_id(ecs_entity_t);
+        const ecs_member_t *m = flecs_script_meta_type_member(
+            t->v->world, kind, elems[i].member, i);
+        ecs_entity_t type = m ? m->type : ecs_id(ecs_entity_t);
         int result = flecs_script_type_check_expr(
             t, &elems[i].value, &type);
         if (result) {
@@ -1132,12 +1129,13 @@ static int flecs_script_type_visitor_expr(
         return flecs_script_type_constants_expr(t, node->expr, true);
     }
 
-    if (node->id.eval == ecs_id(EcsVector)) {
-        return flecs_script_type_collection_expr(t, node->expr, false);
-    }
-
-    if (node->id.eval == ecs_id(EcsArray)) {
-        return flecs_script_type_collection_expr(t, node->expr, true);
+    if (node->id.eval == ecs_id(EcsVector) ||
+        node->id.eval == ecs_id(EcsArray) ||
+        node->id.eval == ecs_id(EcsMap) ||
+        node->id.eval == ecs_id(EcsPrimitive))
+    {
+        return flecs_script_type_meta_type_expr(
+            t, node->expr, node->id.eval);
     }
 
     return 0;
