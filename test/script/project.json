@@ -816,7 +816,13 @@
                 "struct_member_w_array_type_declared_in_same_script",
                 "vector_type_w_member_struct_declared_in_same_script",
                 "vector_type_decl_as_component_in_same_script",
-                "array_type_decl_as_component_in_same_script"
+                "array_type_decl_as_component_in_same_script",
+                "struct_member_w_map_type_declared_in_same_script",
+                "struct_member_w_primitive_type_declared_in_same_script",
+                "map_type_w_member_struct_declared_in_same_script",
+                "map_type_decl_as_component_in_same_script",
+                "primitive_type_decl_as_component_in_same_script",
+                "primitive_type_w_kind_u64_in_same_script"
             ]
         }, {
             "id": "Collection",
