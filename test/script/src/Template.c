@@ -10403,3 +10403,32 @@ void Template_ref_change_readds_annotation_w_shared_table(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_string_w_escape_and_interpolation(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t text = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Text" }),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop n: i32 = 3"
+    LINE "  Text: {\"\\$PATH/{n}.json\"}"
+    LINE "}"
+    LINE "Foo e()";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_string_t *value = ecs_get_id(world, e, text);
+    test_assert(value != NULL);
+    test_str(*value, "$PATH/3.json");
+
+    ecs_fini(world);
+}

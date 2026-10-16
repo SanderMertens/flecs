@@ -105887,6 +105887,14 @@ static int flecs_expr_interpolated_string_visit_type(
             (ecs_expr_fragment_t){.text = frag};
     }
 
+    ecs_expr_fragment_t *fragments = ecs_vec_first(&node->fragments);
+    int32_t i, count = ecs_vec_count(&node->fragments);
+    for (i = 0; i < count; i ++) {
+        if (fragments[i].text && !flecs_string_escape(fragments[i].text)) {
+            goto error;
+        }
+    }
+
     return 0;
 error:
     return -1;

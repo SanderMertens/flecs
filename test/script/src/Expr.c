@@ -7104,6 +7104,63 @@ void Expr_interpolate_string_w_escape_curly_brackets(void) {
     ecs_fini(world);
 }
 
+void Expr_interpolate_string_w_escape_var_operator_and_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
+    test_assert(v != NULL);
+    *(int32_t*)v->value.ptr = 10;
+
+    char *result = ecs_script_string_interpolate(
+        world, "Hello \\$foo $foo World", vars);
+    test_assert(result != NULL);
+    test_str(result, "Hello $foo 10 World");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_string_w_escape_curly_brackets_and_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *result = ecs_script_string_interpolate(
+        world, "Hello \\{10} {10 + 20}", NULL);
+    test_assert(result != NULL);
+    test_str(result, "Hello {10} 30");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_string_w_escape_sequence_and_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *result = ecs_script_string_interpolate(
+        world, "Hello\\t{10 + 20}\\n", NULL);
+    test_assert(result != NULL);
+    test_str(result, "Hello\t30\n");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_string_w_escaped_backslash_and_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *result = ecs_script_string_interpolate(
+        world, "a\\\\b {10}", NULL);
+    test_assert(result != NULL);
+    test_str(result, "a\\b 10");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
 void Expr_interpolate_string_w_func(void) {
     ecs_world_t *world = ecs_init();
 
