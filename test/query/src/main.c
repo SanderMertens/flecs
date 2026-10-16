@@ -2482,6 +2482,12 @@ void DontFragment_1_sparse_written_self_up_w_non_fragmenting_childof(void);
 void DontFragment_src_var_w_trait_on_dont_fragment_tag(void);
 void DontFragment_src_var_w_trait_on_dont_fragment_tag_anonymous(void);
 void DontFragment_this_pair_tgt_var_w_dont_fragment_tag_on_var(void);
+void DontFragment_1_this_sparse_second_wildcard_w_empty_tgt(void);
+void DontFragment_1_var_sparse_second_wildcard_w_empty_tgt(void);
+void DontFragment_1_fixed_sparse_second_wildcard_w_empty_tgt(void);
+void DontFragment_1_this_sparse_written_second_wildcard_w_empty_tgt(void);
+void DontFragment_1_this_sparse_first_wildcard_w_empty_rel(void);
+void DontFragment_this_wildcard_wildcard_pair_w_empty_pair(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
@@ -12726,6 +12732,30 @@ bake_test_case DontFragment_testcases[] = {
     {
         "this_pair_tgt_var_w_dont_fragment_tag_on_var",
         DontFragment_this_pair_tgt_var_w_dont_fragment_tag_on_var
+    },
+    {
+        "1_this_sparse_second_wildcard_w_empty_tgt",
+        DontFragment_1_this_sparse_second_wildcard_w_empty_tgt
+    },
+    {
+        "1_var_sparse_second_wildcard_w_empty_tgt",
+        DontFragment_1_var_sparse_second_wildcard_w_empty_tgt
+    },
+    {
+        "1_fixed_sparse_second_wildcard_w_empty_tgt",
+        DontFragment_1_fixed_sparse_second_wildcard_w_empty_tgt
+    },
+    {
+        "1_this_sparse_written_second_wildcard_w_empty_tgt",
+        DontFragment_1_this_sparse_written_second_wildcard_w_empty_tgt
+    },
+    {
+        "1_this_sparse_first_wildcard_w_empty_rel",
+        DontFragment_1_this_sparse_first_wildcard_w_empty_rel
+    },
+    {
+        "this_wildcard_wildcard_pair_w_empty_pair",
+        DontFragment_this_wildcard_wildcard_pair_w_empty_pair
     }
 };
 
@@ -14955,7 +14985,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        142,
+        148,
         DontFragment_testcases,
         1,
         DontFragment_params
