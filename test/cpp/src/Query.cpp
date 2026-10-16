@@ -228,6 +228,96 @@ void Query_term_each_pair_object_wildcard(void) {
     test_int(count, 3);
 }
 
+void Query_term_each_sparse_component(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>().add(flecs::Sparse);
+
+    auto e_1 = ecs.entity().set<Position>({1, 2});
+    auto e_2 = ecs.entity().set<Position>({3, 4});
+    auto e_3 = ecs.entity().set<Position>({5, 6});
+
+    e_3.add<Tag>();
+
+    int32_t count = 0;
+    ecs.each<Position>([&](flecs::entity e, Position& p) {
+        if (e == e_1) {
+            test_int(p.x, 1);
+            test_int(p.y, 2);
+            count ++;
+        }
+        if (e == e_2) {
+            test_int(p.x, 3);
+            test_int(p.y, 4);
+            count ++;
+        }
+        if (e == e_3) {
+            test_int(p.x, 5);
+            test_int(p.y, 6);
+            count ++;
+        }
+    });
+
+    test_int(count, 3);
+}
+
+void Query_term_each_dont_fragment_component(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>().add(flecs::DontFragment);
+
+    auto e_1 = ecs.entity().set<Position>({1, 2});
+    auto e_2 = ecs.entity().set<Position>({3, 4});
+    auto e_3 = ecs.entity().set<Position>({5, 6});
+
+    e_3.add<Tag>();
+
+    int32_t count = 0;
+    ecs.each<Position>([&](flecs::entity e, Position& p) {
+        if (e == e_1) {
+            test_int(p.x, 1);
+            test_int(p.y, 2);
+            count ++;
+        }
+        if (e == e_2) {
+            test_int(p.x, 3);
+            test_int(p.y, 4);
+            count ++;
+        }
+        if (e == e_3) {
+            test_int(p.x, 5);
+            test_int(p.y, 6);
+            count ++;
+        }
+    });
+
+    test_int(count, 3);
+}
+
+void Query_term_each_dont_fragment_pair_object_wildcard(void) {
+    flecs::world ecs;
+
+    auto rel = ecs.entity().add(flecs::DontFragment);
+    auto obj_1 = ecs.entity();
+    auto obj_2 = ecs.entity();
+
+    auto e_1 = ecs.entity().add(rel, obj_1);
+    auto e_2 = ecs.entity().add(rel, obj_1);
+    e_2.remove(rel, obj_1);
+    e_2.add(rel, obj_2);
+    e_2.remove(rel, obj_2);
+    e_2.add(rel, obj_1);
+
+    int32_t count = 0;
+    ecs.each(ecs.pair(rel, flecs::Wildcard), [&](flecs::entity e) {
+        if (e == e_1 || e == e_2) {
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
+}
+
 void Query_default_ctor_no_assign(void) {
     flecs::query<> f;
     

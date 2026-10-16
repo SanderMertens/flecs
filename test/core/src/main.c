@@ -215,6 +215,17 @@ void Each_each_pair_rel_wildcard(void);
 void Each_each_pair_tgt_wildcard(void);
 void Each_each_root_entities(void);
 void Each_each_empty_root_entities(void);
+void Each_each_sparse_component(void);
+void Each_each_sparse_pair_rel_wildcard(void);
+void Each_each_dont_fragment_tag(void);
+void Each_each_dont_fragment_component(void);
+void Each_each_dont_fragment_pair(void);
+void Each_each_dont_fragment_pair_rel_wildcard(void);
+void Each_each_dont_fragment_pair_rel_wildcard_w_empty_tgt(void);
+void Each_each_dont_fragment_exclusive_pair_rel_wildcard(void);
+void Each_each_dont_fragment_pair_tgt_wildcard(void);
+void Each_each_dont_fragment_wildcard_wildcard(void);
+void Each_each_dont_fragment_empty(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -1273,6 +1284,9 @@ void Count_count_w_entity_0(void);
 void Count_count_1_component(void);
 void Count_count_disabled(void);
 void Count_count_prefab(void);
+void Count_count_sparse_pair_rel_wildcard(void);
+void Count_count_dont_fragment_component(void);
+void Count_count_dont_fragment_pair_rel_wildcard(void);
 
 // Testsuite 'Get_component'
 void Get_component_setup(void);
@@ -4410,6 +4424,50 @@ bake_test_case Each_testcases[] = {
     {
         "each_empty_root_entities",
         Each_each_empty_root_entities
+    },
+    {
+        "each_sparse_component",
+        Each_each_sparse_component
+    },
+    {
+        "each_sparse_pair_rel_wildcard",
+        Each_each_sparse_pair_rel_wildcard
+    },
+    {
+        "each_dont_fragment_tag",
+        Each_each_dont_fragment_tag
+    },
+    {
+        "each_dont_fragment_component",
+        Each_each_dont_fragment_component
+    },
+    {
+        "each_dont_fragment_pair",
+        Each_each_dont_fragment_pair
+    },
+    {
+        "each_dont_fragment_pair_rel_wildcard",
+        Each_each_dont_fragment_pair_rel_wildcard
+    },
+    {
+        "each_dont_fragment_pair_rel_wildcard_w_empty_tgt",
+        Each_each_dont_fragment_pair_rel_wildcard_w_empty_tgt
+    },
+    {
+        "each_dont_fragment_exclusive_pair_rel_wildcard",
+        Each_each_dont_fragment_exclusive_pair_rel_wildcard
+    },
+    {
+        "each_dont_fragment_pair_tgt_wildcard",
+        Each_each_dont_fragment_pair_tgt_wildcard
+    },
+    {
+        "each_dont_fragment_wildcard_wildcard",
+        Each_each_dont_fragment_wildcard_wildcard
+    },
+    {
+        "each_dont_fragment_empty",
+        Each_each_dont_fragment_empty
     }
 };
 
@@ -8555,6 +8613,18 @@ bake_test_case Count_testcases[] = {
     {
         "count_prefab",
         Count_count_prefab
+    },
+    {
+        "count_sparse_pair_rel_wildcard",
+        Count_count_sparse_pair_rel_wildcard
+    },
+    {
+        "count_dont_fragment_component",
+        Count_count_dont_fragment_component
+    },
+    {
+        "count_dont_fragment_pair_rel_wildcard",
+        Count_count_dont_fragment_pair_rel_wildcard
     }
 };
 
@@ -17668,7 +17738,7 @@ static bake_test_suite suites[] = {
         "Each",
         NULL,
         NULL,
-        7,
+        18,
         Each_testcases
     },
     {
@@ -17775,7 +17845,7 @@ static bake_test_suite suites[] = {
         "Count",
         NULL,
         NULL,
-        5,
+        8,
         Count_testcases
     },
     {

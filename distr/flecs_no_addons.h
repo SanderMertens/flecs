@@ -4717,6 +4717,7 @@ typedef struct ecs_each_iter_t {
     ecs_size_t sizes;
     int16_t columns;
     const ecs_table_record_t* trs;
+    ecs_component_record_t *cr;
 } ecs_each_iter_t;
 
 typedef struct ecs_query_op_profile_t {

@@ -728,6 +728,9 @@ void Query_term_each_pair_type(void);
 void Query_term_each_pair_id(void);
 void Query_term_each_pair_relation_wildcard(void);
 void Query_term_each_pair_object_wildcard(void);
+void Query_term_each_sparse_component(void);
+void Query_term_each_dont_fragment_component(void);
+void Query_term_each_dont_fragment_pair_object_wildcard(void);
 void Query_term_get_id(void);
 void Query_term_get_subj(void);
 void Query_term_get_pred(void);
@@ -4583,6 +4586,18 @@ bake_test_case Query_testcases[] = {
     {
         "term_each_pair_object_wildcard",
         Query_term_each_pair_object_wildcard
+    },
+    {
+        "term_each_sparse_component",
+        Query_term_each_sparse_component
+    },
+    {
+        "term_each_dont_fragment_component",
+        Query_term_each_dont_fragment_component
+    },
+    {
+        "term_each_dont_fragment_pair_object_wildcard",
+        Query_term_each_dont_fragment_pair_object_wildcard
     },
     {
         "term_get_id",
@@ -8736,7 +8751,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        175,
+        178,
         Query_testcases
     },
     {
