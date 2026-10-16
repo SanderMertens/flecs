@@ -117,6 +117,14 @@ public:
         return 0;
     }
 
+    size_t frame_offset() const {
+        ecs_check(iter_->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+            "operation invalid before calling next()");
+        return static_cast<size_t>(iter_->frame_offset);
+    error:
+        return 0;
+    }
+
     /** Get the time elapsed since the last frame.
      *
      * @return The delta time.

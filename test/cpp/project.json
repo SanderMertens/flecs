@@ -701,7 +701,8 @@
                 "lookup_and_update_run",
                 "lookup_and_update_ctx",
                 "set_group",
-                "run_w_0_src_query"
+                "run_w_0_src_query",
+                "multithread_system_frame_offset"
             ]
         }, {
             "id": "Event",
@@ -744,7 +745,9 @@
                 "page_each",
                 "page_iter",
                 "worker_each",
-                "worker_iter"
+                "worker_iter",
+                "frame_offset",
+                "worker_frame_offset"
             ]
         }, {
             "id": "Query",
