@@ -64,3 +64,54 @@ void Count_count_prefab(void) {
 
     ecs_fini(world);
 }
+
+void Count_count_sparse_pair_rel_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, Rel, EcsSparse);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_add_pair(world, e1, Rel, TgtB);
+    ecs_new_w_pair(world, Rel, TgtA);
+
+    test_int(ecs_count_id(world, ecs_pair(Rel, EcsWildcard)), 3);
+
+    ecs_fini(world);
+}
+
+void Count_count_dont_fragment_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_new_w(world, Position);
+    ecs_new_w(world, Position);
+
+    test_int(ecs_count(world, Position), 2);
+
+    ecs_fini(world);
+}
+
+void Count_count_dont_fragment_pair_rel_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_add_pair(world, e1, Rel, TgtB);
+    ecs_new_w_pair(world, Rel, TgtA);
+
+    test_int(ecs_count_id(world, ecs_pair(Rel, EcsWildcard)), 3);
+
+    ecs_fini(world);
+}

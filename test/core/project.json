@@ -223,7 +223,18 @@
                 "each_pair_rel_wildcard",
                 "each_pair_tgt_wildcard",
                 "each_root_entities",
-                "each_empty_root_entities"
+                "each_empty_root_entities",
+                "each_sparse_component",
+                "each_sparse_pair_rel_wildcard",
+                "each_dont_fragment_tag",
+                "each_dont_fragment_component",
+                "each_dont_fragment_pair",
+                "each_dont_fragment_pair_rel_wildcard",
+                "each_dont_fragment_pair_rel_wildcard_w_empty_tgt",
+                "each_dont_fragment_exclusive_pair_rel_wildcard",
+                "each_dont_fragment_pair_tgt_wildcard",
+                "each_dont_fragment_wildcard_wildcard",
+                "each_dont_fragment_empty"
             ]
         }, {
             "id": "Iter",
@@ -1314,7 +1325,10 @@
                 "count_w_entity_0",
                 "count_1_component",
                 "count_disabled",
-                "count_prefab"
+                "count_prefab",
+                "count_sparse_pair_rel_wildcard",
+                "count_dont_fragment_component",
+                "count_dont_fragment_pair_rel_wildcard"
             ]
         }, {
             "id": "Get_component",
