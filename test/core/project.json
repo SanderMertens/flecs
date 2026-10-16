@@ -1919,7 +1919,19 @@
                 "locked_storage_copy_ctor",
                 "locked_storage_move_ctor",
                 "locked_storage_ctor_move_dtor",
-                "locked_storage_move_dtor"
+                "locked_storage_move_dtor",
+                "delete_nonlast_w_ctor_move_dtor_no_move_ctor",
+                "delete_last_w_ctor_move_dtor_no_move_ctor",
+                "delete_nonlast_w_ctor_move_dtor_no_move_ctor_deferred",
+                "remove_nonlast_w_ctor_move_dtor_no_move_ctor",
+                "remove_nonlast_w_ctor_move_dtor_no_move_ctor_interleaved",
+                "remove_last_w_ctor_move_dtor_no_move_ctor",
+                "remove_nonlast_w_ctor_move_dtor_no_move_ctor_deferred",
+                "add_nonlast_w_ctor_move_dtor_no_move_ctor",
+                "delete_nonlast_dtor_only",
+                "remove_nonlast_dtor_only",
+                "remove_other_nonlast_dtor_only",
+                "add_nonlast_dtor_only"
             ]
         }, {
             "id": "Pairs",

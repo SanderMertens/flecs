@@ -6034,3 +6034,492 @@ void ComponentLifecycle_locked_storage_move_dtor(void) {
     test_expect_abort();
     ecs_delete(world, e1);
 }
+
+typedef struct Owned {
+    int32_t *value;
+} Owned;
+
+static int32_t owned_alive = 0;
+
+static void owned_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    (void)info;
+    Owned *o = ptr;
+    int i;
+    for (i = 0; i < count; i ++) {
+        if (o[i].value) {
+            ecs_os_free(o[i].value);
+            owned_alive --;
+        }
+        o[i].value = NULL;
+    }
+}
+
+static void owned_move_dtor(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    (void)info;
+    Owned *dst = dst_ptr, *src = src_ptr;
+    int i;
+    for (i = 0; i < count; i ++) {
+        if (dst[i].value) {
+            ecs_os_free(dst[i].value);
+            owned_alive --;
+        }
+        dst[i].value = src[i].value;
+        src[i].value = NULL;
+    }
+}
+
+static void owned_ctor_move_dtor(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    (void)info;
+    Owned *dst = dst_ptr, *src = src_ptr;
+    int i;
+    for (i = 0; i < count; i ++) {
+        dst[i].value = src[i].value;
+        src[i].value = NULL;
+    }
+}
+
+void ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_delete(world, e1);
+    test_int(owned_alive, 2);
+    test_assert(!ecs_is_alive(world, e1));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_delete_last_w_ctor_move_dtor_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_delete(world, e3);
+    test_int(owned_alive, 2);
+    test_assert(!ecs_is_alive(world, e3));
+    test_int(*ecs_get(world, e1, Owned)->value, 1);
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    ecs_delete(stage_1, e1);
+    test_int(owned_alive, 3);
+    ecs_merge(stage_1);
+
+    test_int(owned_alive, 2);
+    test_assert(!ecs_is_alive(world, e1));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+    test_assert(ecs_id(Position) < ecs_id(Owned));
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_remove(world, e1, Owned);
+    test_int(owned_alive, 2);
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Owned));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_interleaved(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Owned);
+    ECS_COMPONENT(world, Position);
+    test_assert(ecs_id(Owned) < ecs_id(Position));
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_remove(world, e1, Owned);
+    test_int(owned_alive, 2);
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Owned));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_last_w_ctor_move_dtor_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_remove(world, e3, Owned);
+    test_int(owned_alive, 2);
+    test_assert(ecs_has(world, e3, Position));
+    test_assert(!ecs_has(world, e3, Owned));
+    test_int(*ecs_get(world, e1, Owned)->value, 1);
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    ecs_remove(stage_1, e1, Owned);
+    test_int(owned_alive, 3);
+    ecs_merge(stage_1);
+
+    test_int(owned_alive, 2);
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Owned));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_add_nonlast_w_ctor_move_dtor_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor,
+        .move_dtor = owned_move_dtor,
+        .ctor_move_dtor = owned_ctor_move_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_add(world, e1, Position);
+    test_int(owned_alive, 3);
+    test_assert(ecs_has(world, e1, Position));
+    test_int(*ecs_get(world, e1, Owned)->value, 1);
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_delete_nonlast_dtor_only(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_delete(world, e1);
+    test_int(owned_alive, 2);
+    test_assert(!ecs_is_alive(world, e1));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_nonlast_dtor_only(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_remove(world, e1, Owned);
+    test_int(owned_alive, 2);
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Owned));
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_remove_other_nonlast_dtor_only(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_remove(world, e1, Position);
+    test_int(owned_alive, 3);
+    test_assert(!ecs_has(world, e1, Position));
+    test_int(*ecs_get(world, e1, Owned)->value, 1);
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
+
+void ComponentLifecycle_add_nonlast_dtor_only(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Owned);
+
+    ecs_set_hooks(world, Owned, {
+        .dtor = owned_dtor
+    });
+
+    int32_t *v1 = ecs_os_malloc_t(int32_t); *v1 = 1;
+    int32_t *v2 = ecs_os_malloc_t(int32_t); *v2 = 2;
+    int32_t *v3 = ecs_os_malloc_t(int32_t); *v3 = 3;
+    owned_alive = 3;
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Owned, {v1});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Owned, {v2});
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Owned, {v3});
+
+    ecs_add(world, e1, Position);
+    test_int(owned_alive, 3);
+    test_assert(ecs_has(world, e1, Position));
+    test_int(*ecs_get(world, e1, Owned)->value, 1);
+    test_int(*ecs_get(world, e2, Owned)->value, 2);
+    test_int(*ecs_get(world, e3, Owned)->value, 3);
+
+    ecs_fini(world);
+    test_int(owned_alive, 0);
+}
