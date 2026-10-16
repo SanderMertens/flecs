@@ -677,6 +677,7 @@ void System_lookup_and_update_run(void);
 void System_lookup_and_update_ctx(void);
 void System_set_group(void);
 void System_run_w_0_src_query(void);
+void System_multithread_system_frame_offset(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -716,6 +717,8 @@ void Iterable_page_each(void);
 void Iterable_page_iter(void);
 void Iterable_worker_each(void);
 void Iterable_worker_iter(void);
+void Iterable_frame_offset(void);
+void Iterable_worker_frame_offset(void);
 
 // Testsuite 'Query'
 void Query_term_each_component(void);
@@ -4391,6 +4394,10 @@ bake_test_case System_testcases[] = {
     {
         "run_w_0_src_query",
         System_run_w_0_src_query
+    },
+    {
+        "multithread_system_frame_offset",
+        System_multithread_system_frame_offset
     }
 };
 
@@ -4537,6 +4544,14 @@ bake_test_case Iterable_testcases[] = {
     {
         "worker_iter",
         Iterable_worker_iter
+    },
+    {
+        "frame_offset",
+        Iterable_frame_offset
+    },
+    {
+        "worker_frame_offset",
+        Iterable_worker_frame_offset
     }
 };
 
@@ -8700,7 +8715,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        79,
+        80,
         System_testcases
     },
     {
@@ -8714,7 +8729,7 @@ static bake_test_suite suites[] = {
         "Iterable",
         NULL,
         NULL,
-        4,
+        6,
         Iterable_testcases
     },
     {

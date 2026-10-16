@@ -2527,3 +2527,49 @@ void System_run_w_0_src_query(void) {
     world.progress();
     test_int(count, 1);
 }
+
+void System_multithread_system_frame_offset(void) {
+    flecs::world world;
+
+    world.set_threads(4);
+
+    for (int i = 0; i < 100; i ++) {
+        auto e = world.entity().set<Position>({(float)i, 0});
+        if (!(i % 3)) {
+            e.set<Velocity>({0, 0});
+        }
+        if (!(i % 5)) {
+            e.set<Mass>({0});
+        }
+    }
+
+    auto q = world.query<Position>();
+    test_int(q.count(), 100);
+
+    std::vector<flecs::entity_t> expect(100, 0);
+    q.run([&](flecs::iter it) {
+        while (it.next()) {
+            for (auto i : it) {
+                expect[it.frame_offset() + i] = it.entity(i);
+            }
+        }
+    });
+
+    std::vector<flecs::entity_t> actual(100, 0);
+    world.system<Position>()
+        .multi_threaded()
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                for (auto i : it) {
+                    actual[it.frame_offset() + i] = it.entity(i);
+                }
+            }
+        });
+
+    world.progress();
+
+    for (int i = 0; i < 100; i ++) {
+        test_assert(expect[i] != 0);
+        test_uint(actual[i], expect[i]);
+    }
+}
