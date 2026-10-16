@@ -2481,6 +2481,7 @@ void DontFragment_1_sparse_written_up_w_non_fragmenting_childof(void);
 void DontFragment_1_sparse_written_self_up_w_non_fragmenting_childof(void);
 void DontFragment_src_var_w_trait_on_dont_fragment_tag(void);
 void DontFragment_src_var_w_trait_on_dont_fragment_tag_anonymous(void);
+void DontFragment_this_pair_tgt_var_w_dont_fragment_tag_on_var(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
@@ -12721,6 +12722,10 @@ bake_test_case DontFragment_testcases[] = {
     {
         "src_var_w_trait_on_dont_fragment_tag_anonymous",
         DontFragment_src_var_w_trait_on_dont_fragment_tag_anonymous
+    },
+    {
+        "this_pair_tgt_var_w_dont_fragment_tag_on_var",
+        DontFragment_this_pair_tgt_var_w_dont_fragment_tag_on_var
     }
 };
 
@@ -14950,7 +14955,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        141,
+        142,
         DontFragment_testcases,
         1,
         DontFragment_params
