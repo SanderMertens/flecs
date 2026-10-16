@@ -1725,7 +1725,7 @@ void flecs_table_delete(
                  * non-destructive move semantics are not supported for this 
                  * type. In such cases, use ctor_move_dtor for destructive move
                  * semantics to ensure compatibility with language bindings. */
-                if (!ti->hooks.move_ctor && ti->hooks.ctor_move_dtor) {
+                if (!destruct && !ti->hooks.move_ctor) {
                     flecs_type_info_ctor_move_dtor(dst, src, 1, ti);
                 } else {
                     flecs_type_info_move_dtor(dst, src, 1, ti);
@@ -1864,7 +1864,8 @@ void flecs_table_move(
                     i_new, &dst_entity, dst_index, 1, dst_id != emplace_id);
             } else {
                 flecs_table_invoke_remove_hooks(world, src_table,
-                    src_column, &src_entity, src_index, 1, use_move_dtor);
+                    src_column, &src_entity, src_index, 1,
+                    use_move_dtor || !src_column->ti->hooks.move_ctor);
             }
         }
 
@@ -1879,8 +1880,10 @@ void flecs_table_move(
     }
 
     for (; (i_old < src_column_count); i_old ++) {
-        flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old], 
-            &src_entity, src_index, 1, use_move_dtor);
+        ecs_column_t *src_column = &src_columns[i_old];
+        flecs_table_invoke_remove_hooks(world, src_table, src_column,
+            &src_entity, src_index, 1,
+            use_move_dtor || !src_column->ti->hooks.move_ctor);
     }
 
     ECS_TABLE_UNLOCK(world, src_table);

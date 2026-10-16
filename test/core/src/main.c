@@ -1859,6 +1859,18 @@ void ComponentLifecycle_locked_storage_copy_ctor(void);
 void ComponentLifecycle_locked_storage_move_ctor(void);
 void ComponentLifecycle_locked_storage_ctor_move_dtor(void);
 void ComponentLifecycle_locked_storage_move_dtor(void);
+void ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor(void);
+void ComponentLifecycle_delete_last_w_ctor_move_dtor_no_move_ctor(void);
+void ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor_deferred(void);
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor(void);
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_interleaved(void);
+void ComponentLifecycle_remove_last_w_ctor_move_dtor_no_move_ctor(void);
+void ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_deferred(void);
+void ComponentLifecycle_add_nonlast_w_ctor_move_dtor_no_move_ctor(void);
+void ComponentLifecycle_delete_nonlast_dtor_only(void);
+void ComponentLifecycle_remove_nonlast_dtor_only(void);
+void ComponentLifecycle_remove_other_nonlast_dtor_only(void);
+void ComponentLifecycle_add_nonlast_dtor_only(void);
 
 // Testsuite 'Pairs'
 void Pairs_disable_toggle_component_and_toggle_pair(void);
@@ -10822,6 +10834,54 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "locked_storage_move_dtor",
         ComponentLifecycle_locked_storage_move_dtor
+    },
+    {
+        "delete_nonlast_w_ctor_move_dtor_no_move_ctor",
+        ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor
+    },
+    {
+        "delete_last_w_ctor_move_dtor_no_move_ctor",
+        ComponentLifecycle_delete_last_w_ctor_move_dtor_no_move_ctor
+    },
+    {
+        "delete_nonlast_w_ctor_move_dtor_no_move_ctor_deferred",
+        ComponentLifecycle_delete_nonlast_w_ctor_move_dtor_no_move_ctor_deferred
+    },
+    {
+        "remove_nonlast_w_ctor_move_dtor_no_move_ctor",
+        ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor
+    },
+    {
+        "remove_nonlast_w_ctor_move_dtor_no_move_ctor_interleaved",
+        ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_interleaved
+    },
+    {
+        "remove_last_w_ctor_move_dtor_no_move_ctor",
+        ComponentLifecycle_remove_last_w_ctor_move_dtor_no_move_ctor
+    },
+    {
+        "remove_nonlast_w_ctor_move_dtor_no_move_ctor_deferred",
+        ComponentLifecycle_remove_nonlast_w_ctor_move_dtor_no_move_ctor_deferred
+    },
+    {
+        "add_nonlast_w_ctor_move_dtor_no_move_ctor",
+        ComponentLifecycle_add_nonlast_w_ctor_move_dtor_no_move_ctor
+    },
+    {
+        "delete_nonlast_dtor_only",
+        ComponentLifecycle_delete_nonlast_dtor_only
+    },
+    {
+        "remove_nonlast_dtor_only",
+        ComponentLifecycle_remove_nonlast_dtor_only
+    },
+    {
+        "remove_other_nonlast_dtor_only",
+        ComponentLifecycle_remove_other_nonlast_dtor_only
+    },
+    {
+        "add_nonlast_dtor_only",
+        ComponentLifecycle_add_nonlast_dtor_only
     }
 };
 
@@ -17778,7 +17838,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        183,
+        195,
         ComponentLifecycle_testcases
     },
     {
