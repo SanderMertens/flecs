@@ -49598,7 +49598,7 @@ int flecs_script_eval_include(
     ecs_script_eval_visitor_t *v,
     ecs_script_include_t *node);
 
-/* Type visitors (implement struct/enum/bitmask initializer syntax) */
+/* Type visitors (implement struct/enum/bitmask/vector/array initializer syntax) */
 
 int flecs_script_struct_visit(
     const ecs_script_visitor_ctx_t *ctx);
@@ -49612,6 +49612,12 @@ int flecs_script_enum_visit(
     const ecs_script_visitor_ctx_t *ctx);
 
 int flecs_script_bitmask_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+int flecs_script_vector_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+int flecs_script_array_visit(
     const ecs_script_visitor_ctx_t *ctx);
 
 /* User functions (functions defined in scripts) */
@@ -70722,6 +70728,14 @@ void FlecsScriptImport(
 
     ecs_set(world, ecs_id(EcsBitmask), EcsScriptVisitor, {
         .visit = flecs_script_bitmask_visit
+    });
+
+    ecs_set(world, ecs_id(EcsVector), EcsScriptVisitor, {
+        .visit = flecs_script_vector_visit
+    });
+
+    ecs_set(world, ecs_id(EcsArray), EcsScriptVisitor, {
+        .visit = flecs_script_array_visit
     });
 
     ecs_set_hooks(world, EcsScript, {
@@ -92934,6 +92948,152 @@ ecs_script_runtime_t* flecs_script_runtime_get(
 
 #ifdef FLECS_SCRIPT
 
+static int flecs_script_collection_visit(
+    const ecs_script_visitor_ctx_t *ctx,
+    ecs_entity_t *elem_type,
+    int32_t *elem_count,
+    const char *kind_str)
+{
+    ecs_world_t *world = ctx->world;
+    ecs_script_eval_visitor_t *v = ctx->eval;
+    ecs_script_t *script = &v->base.script->pub;
+    ecs_expr_initializer_t *node = ctx->initializer;
+    const char *name = ecs_get_name(world, ctx->entity);
+
+    if (!node || node->node.kind == EcsExprEmptyInitializer ||
+        !ecs_vec_count(&node->elements))
+    {
+        flecs_script_eval_error(v, NULL,
+            "missing element type for %s '%s'", kind_str, name);
+        return -1;
+    }
+
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
+    int32_t i, count = ecs_vec_count(&node->elements);
+    bool has_type = false, has_count = false;
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_initializer_element_t *elem = &elems[i];
+
+        if (elem->operator) {
+            flecs_expr_visit_error(script, elem->value,
+                "invalid operator for %s '%s'", kind_str, name);
+            return -1;
+        }
+
+        if (!elem->value) {
+            flecs_expr_visit_error(script, NULL,
+                "missing value for %s '%s'", kind_str, name);
+            return -1;
+        }
+
+        bool is_type, is_count;
+        if (elem->member) {
+            is_type = !ecs_os_strcmp(elem->member, "type");
+            is_count = elem_count && !ecs_os_strcmp(elem->member, "count");
+        } else {
+            is_type = i == 0;
+            is_count = elem_count && i == 1;
+        }
+
+        if (!is_type && !is_count) {
+            if (elem->member) {
+                flecs_expr_visit_error(script, elem->value,
+                    "unknown member '%s' for %s '%s'",
+                        elem->member, kind_str, name);
+            } else {
+                flecs_expr_visit_error(script, elem->value,
+                    "too many elements for %s '%s'", kind_str, name);
+            }
+            return -1;
+        }
+
+        if ((is_type && has_type) || (is_count && has_count)) {
+            flecs_expr_visit_error(script, elem->value,
+                "%s specified more than once for %s '%s'",
+                    is_type ? "type" : "count", kind_str, name);
+            return -1;
+        }
+
+        ecs_value_t value = is_type
+            ? (ecs_value_t){ .ptr = elem_type, .type = ecs_id(ecs_entity_t) }
+            : (ecs_value_t){ .ptr = elem_count, .type = ecs_id(ecs_i32_t) };
+        if (flecs_script_eval_expr(v, &elem->value, &value)) {
+            return -1;
+        }
+
+        has_type |= is_type;
+        has_count |= is_count;
+    }
+
+    if (!*elem_type) {
+        flecs_script_eval_error(v, NULL,
+            "missing element type for %s '%s'", kind_str, name);
+        return -1;
+    }
+
+    if (*elem_type == ctx->entity) {
+        flecs_script_eval_error(v, NULL,
+            "%s '%s' cannot have itself as element type", kind_str, name);
+        return -1;
+    }
+
+    if (elem_count && *elem_count <= 0) {
+        flecs_script_eval_error(v, NULL,
+            "invalid count %d for %s '%s'", *elem_count, kind_str, name);
+        return -1;
+    }
+
+    return 0;
+}
+
+static int flecs_script_collection_layout_check(
+    const ecs_script_visitor_ctx_t *ctx,
+    const char *kind_str)
+{
+    const EcsComponent *comp = ecs_get(ctx->world, ctx->entity, EcsComponent);
+    if (!comp || comp->size <= 0) {
+        flecs_script_eval_error(ctx->eval, NULL,
+            "invalid layout for %s '%s'",
+                kind_str, ecs_get_name(ctx->world, ctx->entity));
+        return -1;
+    }
+
+    return 0;
+}
+
+int flecs_script_vector_visit(
+    const ecs_script_visitor_ctx_t *ctx)
+{
+    EcsVector vector = {0};
+    if (flecs_script_collection_visit(ctx, &vector.type, NULL, "vector")) {
+        return -1;
+    }
+
+    ecs_set_ptr(ctx->world, ctx->entity, EcsVector, &vector);
+
+    return flecs_script_collection_layout_check(ctx, "vector");
+}
+
+int flecs_script_array_visit(
+    const ecs_script_visitor_ctx_t *ctx)
+{
+    EcsArray array = {0};
+    if (flecs_script_collection_visit(
+        ctx, &array.type, &array.count, "array"))
+    {
+        return -1;
+    }
+
+    ecs_set_ptr(ctx->world, ctx->entity, EcsArray, &array);
+
+    return flecs_script_collection_layout_check(ctx, "array");
+}
+
+#endif
+
+#ifdef FLECS_SCRIPT
+
 static bool flecs_script_constant_registered(
     const ecs_world_t *world,
     ecs_entity_t type,
@@ -98151,6 +98311,42 @@ static int flecs_script_type_constants_expr(
     return 0;
 }
 
+static int flecs_script_type_collection_expr(
+    ecs_script_type_visitor_t *t,
+    ecs_expr_node_t *expr,
+    bool is_array)
+{
+    if (!expr || (expr->kind != EcsExprInitializer &&
+        expr->kind != EcsExprEmptyInitializer))
+    {
+        return 0;
+    }
+
+    ecs_expr_initializer_t *initializer = (ecs_expr_initializer_t*)expr;
+    int32_t i, count = ecs_vec_count(&initializer->elements);
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(
+        &initializer->elements);
+    for (i = 0; i < count; i ++) {
+        if (!elems[i].value) {
+            continue;
+        }
+
+        bool is_count = elems[i].member
+            ? !ecs_os_strcmp(elems[i].member, "count")
+            : i == 1;
+        ecs_entity_t type = is_array && is_count
+            ? ecs_id(ecs_i32_t)
+            : ecs_id(ecs_entity_t);
+        int result = flecs_script_type_check_expr(
+            t, &elems[i].value, &type);
+        if (result) {
+            return result;
+        }
+    }
+
+    return 0;
+}
+
 static int flecs_script_type_visitor_expr(
     ecs_script_type_visitor_t *t,
     ecs_script_component_t *node)
@@ -98165,6 +98361,14 @@ static int flecs_script_type_visitor_expr(
 
     if (node->id.eval == ecs_id(EcsBitmask)) {
         return flecs_script_type_constants_expr(t, node->expr, true);
+    }
+
+    if (node->id.eval == ecs_id(EcsVector)) {
+        return flecs_script_type_collection_expr(t, node->expr, false);
+    }
+
+    if (node->id.eval == ecs_id(EcsArray)) {
+        return flecs_script_type_collection_expr(t, node->expr, true);
     }
 
     return 0;
@@ -108577,7 +108781,8 @@ static void flecs_irc_compile_component(
         }
     }
 
-    if (node->expr) {
+    bool static_visitor = visitor != -1 && desc->visitor;
+    if (!static_visitor && node->expr) {
         int32_t tmp = flecs_irc_reg(c);
         int32_t op = flecs_irc_emit(c,
             with ? EcsIrWithComponentBegin : EcsIrComponentBegin,
@@ -108598,9 +108803,9 @@ static void flecs_irc_compile_component(
         flecs_irc_emit(c,
             with ? EcsIrWithComponentEnd : EcsIrComponentEnd,
             id, value, tmp, node);
-    } else if (with) {
+    } else if (!static_visitor && with) {
         flecs_irc_emit(c, EcsIrWithComponentBegin, id, -1, 0, node);
-    } else {
+    } else if (!static_visitor) {
         flecs_irc_emit(c, EcsIrComponentEnd, id, -1, -1, node);
     }
 

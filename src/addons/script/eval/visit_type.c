@@ -1080,6 +1080,42 @@ static int flecs_script_type_constants_expr(
     return 0;
 }
 
+static int flecs_script_type_collection_expr(
+    ecs_script_type_visitor_t *t,
+    ecs_expr_node_t *expr,
+    bool is_array)
+{
+    if (!expr || (expr->kind != EcsExprInitializer &&
+        expr->kind != EcsExprEmptyInitializer))
+    {
+        return 0;
+    }
+
+    ecs_expr_initializer_t *initializer = (ecs_expr_initializer_t*)expr;
+    int32_t i, count = ecs_vec_count(&initializer->elements);
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(
+        &initializer->elements);
+    for (i = 0; i < count; i ++) {
+        if (!elems[i].value) {
+            continue;
+        }
+
+        bool is_count = elems[i].member
+            ? !ecs_os_strcmp(elems[i].member, "count")
+            : i == 1;
+        ecs_entity_t type = is_array && is_count
+            ? ecs_id(ecs_i32_t)
+            : ecs_id(ecs_entity_t);
+        int result = flecs_script_type_check_expr(
+            t, &elems[i].value, &type);
+        if (result) {
+            return result;
+        }
+    }
+
+    return 0;
+}
+
 static int flecs_script_type_visitor_expr(
     ecs_script_type_visitor_t *t,
     ecs_script_component_t *node)
@@ -1094,6 +1130,14 @@ static int flecs_script_type_visitor_expr(
 
     if (node->id.eval == ecs_id(EcsBitmask)) {
         return flecs_script_type_constants_expr(t, node->expr, true);
+    }
+
+    if (node->id.eval == ecs_id(EcsVector)) {
+        return flecs_script_type_collection_expr(t, node->expr, false);
+    }
+
+    if (node->id.eval == ecs_id(EcsArray)) {
+        return flecs_script_type_collection_expr(t, node->expr, true);
     }
 
     return 0;

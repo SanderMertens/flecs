@@ -716,6 +716,14 @@ void FlecsScriptImport(
         .visit = flecs_script_bitmask_visit
     });
 
+    ecs_set(world, ecs_id(EcsVector), EcsScriptVisitor, {
+        .visit = flecs_script_vector_visit
+    });
+
+    ecs_set(world, ecs_id(EcsArray), EcsScriptVisitor, {
+        .visit = flecs_script_array_visit
+    });
+
     ecs_set_hooks(world, EcsScript, {
         .ctor = flecs_default_ctor,
         .move = ecs_move(EcsScript),

@@ -805,6 +805,11 @@ void Eval_ir_to_str_w_async_block(void);
 void Eval_tree_parent_w_annot_before_entity(void);
 void Eval_update_script_from_system(void);
 void Eval_update_scope_anonymous_new_var(void);
+void Eval_struct_member_w_vector_type_declared_in_same_script(void);
+void Eval_struct_member_w_array_type_declared_in_same_script(void);
+void Eval_vector_type_w_member_struct_declared_in_same_script(void);
+void Eval_vector_type_decl_as_component_in_same_script(void);
+void Eval_array_type_decl_as_component_in_same_script(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -7095,6 +7100,26 @@ bake_test_case Eval_testcases[] = {
     {
         "update_scope_anonymous_new_var",
         Eval_update_scope_anonymous_new_var
+    },
+    {
+        "struct_member_w_vector_type_declared_in_same_script",
+        Eval_struct_member_w_vector_type_declared_in_same_script
+    },
+    {
+        "struct_member_w_array_type_declared_in_same_script",
+        Eval_struct_member_w_array_type_declared_in_same_script
+    },
+    {
+        "vector_type_w_member_struct_declared_in_same_script",
+        Eval_vector_type_w_member_struct_declared_in_same_script
+    },
+    {
+        "vector_type_decl_as_component_in_same_script",
+        Eval_vector_type_decl_as_component_in_same_script
+    },
+    {
+        "array_type_decl_as_component_in_same_script",
+        Eval_array_type_decl_as_component_in_same_script
     }
 };
 
@@ -19419,7 +19444,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        795,
+        800,
         Eval_testcases,
         1,
         Eval_params

@@ -817,7 +817,8 @@ static void flecs_irc_compile_component(
         }
     }
 
-    if (node->expr) {
+    bool static_visitor = visitor != -1 && desc->visitor;
+    if (!static_visitor && node->expr) {
         int32_t tmp = flecs_irc_reg(c);
         int32_t op = flecs_irc_emit(c,
             with ? EcsIrWithComponentBegin : EcsIrComponentBegin,
@@ -838,9 +839,9 @@ static void flecs_irc_compile_component(
         flecs_irc_emit(c,
             with ? EcsIrWithComponentEnd : EcsIrComponentEnd,
             id, value, tmp, node);
-    } else if (with) {
+    } else if (!static_visitor && with) {
         flecs_irc_emit(c, EcsIrWithComponentBegin, id, -1, 0, node);
-    } else {
+    } else if (!static_visitor) {
         flecs_irc_emit(c, EcsIrComponentEnd, id, -1, -1, node);
     }
 

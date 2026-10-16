@@ -90,6 +90,7 @@ flecs_src = files(
     'src/addons/script/visit_free.c',
     'src/addons/script/visit_to_str.c',
     'src/addons/script/eval/async.c',
+    'src/addons/script/eval/visit_collection.c',
     'src/addons/script/eval/runtime.c',
     'src/addons/script/eval/visit_enum.c',
     'src/addons/script/eval/visit_eval.c',
