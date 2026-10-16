@@ -7365,3 +7365,40 @@ void DontFragment_trivial_sparse_desc_terms(void) {
 
     ecs_fini(world);
 }
+
+void DontFragment_this_pair_tgt_var_w_dont_fragment_tag_on_var(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Rel = ecs_new_w_id(world, EcsRelationship);
+    ecs_entity_t Tag = ecs_new_w_id(world, EcsDontFragment);
+
+    ecs_entity_t tgt = ecs_new_w_id(world, Tag);
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .first.id = Rel, .second.name = "$x" },
+            { .id = Tag, .src.name = "$x" }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair(Rel, tgt), ecs_field_id(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(tgt, ecs_field_src(&it, 1));
+    test_uint(tgt, ecs_iter_get_var(&it, x_var));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
