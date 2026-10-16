@@ -1404,6 +1404,7 @@ void Template_template_w_module_qualified_entity_ref(void);
 void Template_injected_child_order_w_ordered_children(void);
 void Template_template_prop_default_from_const(void);
 void Template_template_root_component_w_string_mut(void);
+void Template_template_string_w_escape_and_interpolation(void);
 void Template_template_root_component_after_component_w_mut(void);
 void Template_template_root_component_w_string_mut_in_nested_if(void);
 void Template_template_root_component_w_string_mut_in_match_in_if(void);
@@ -2245,6 +2246,10 @@ void Expr_interpolate_string_w_curly_brackets_expr_w_var(void);
 void Expr_interpolate_string_w_curly_brackets_expr_w_composite_var(void);
 void Expr_interpolate_string_w_escape_var_operator(void);
 void Expr_interpolate_string_w_escape_curly_brackets(void);
+void Expr_interpolate_string_w_escape_var_operator_and_var(void);
+void Expr_interpolate_string_w_escape_curly_brackets_and_expr(void);
+void Expr_interpolate_string_w_escape_sequence_and_expr(void);
+void Expr_interpolate_string_w_escaped_backslash_and_expr(void);
 void Expr_interpolate_string_w_func(void);
 void Expr_interpolate_string_w_func_chain(void);
 void Expr_interpolate_string_w_var_followed_by_curly_var(void);
@@ -9441,6 +9446,10 @@ bake_test_case Template_testcases[] = {
         Template_template_root_component_w_string_mut
     },
     {
+        "template_string_w_escape_and_interpolation",
+        Template_template_string_w_escape_and_interpolation
+    },
+    {
         "template_root_component_after_component_w_mut",
         Template_template_root_component_after_component_w_mut
     },
@@ -12767,6 +12776,22 @@ bake_test_case Expr_testcases[] = {
     {
         "interpolate_string_w_escape_curly_brackets",
         Expr_interpolate_string_w_escape_curly_brackets
+    },
+    {
+        "interpolate_string_w_escape_var_operator_and_var",
+        Expr_interpolate_string_w_escape_var_operator_and_var
+    },
+    {
+        "interpolate_string_w_escape_curly_brackets_and_expr",
+        Expr_interpolate_string_w_escape_curly_brackets_and_expr
+    },
+    {
+        "interpolate_string_w_escape_sequence_and_expr",
+        Expr_interpolate_string_w_escape_sequence_and_expr
+    },
+    {
+        "interpolate_string_w_escaped_backslash_and_expr",
+        Expr_interpolate_string_w_escaped_backslash_and_expr
     },
     {
         "interpolate_string_w_func",
@@ -19537,7 +19562,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        212,
+        213,
         Template_testcases,
         1,
         Template_params
@@ -19573,7 +19598,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        445,
+        449,
         Expr_testcases,
         2,
         Expr_params
