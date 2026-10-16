@@ -2567,7 +2567,13 @@
                 "1_sparse_written_self_up_w_non_fragmenting_childof",
                 "src_var_w_trait_on_dont_fragment_tag",
                 "src_var_w_trait_on_dont_fragment_tag_anonymous",
-                "this_pair_tgt_var_w_dont_fragment_tag_on_var"
+                "this_pair_tgt_var_w_dont_fragment_tag_on_var",
+                "1_this_sparse_second_wildcard_w_empty_tgt",
+                "1_var_sparse_second_wildcard_w_empty_tgt",
+                "1_fixed_sparse_second_wildcard_w_empty_tgt",
+                "1_this_sparse_written_second_wildcard_w_empty_tgt",
+                "1_this_sparse_first_wildcard_w_empty_rel",
+                "this_wildcard_wildcard_pair_w_empty_pair"
             ]
         }, {
             "id": "NonFragmentingChildOf",

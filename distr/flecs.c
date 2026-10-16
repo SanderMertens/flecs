@@ -84797,7 +84797,12 @@ static FLECS_ALWAYS_INLINE bool flecs_query_sparse_wildcard(
     while (op_ctx->cr) {
         ecs_id_t actual_id = op_ctx->cr->id;
         if (!redo && !flecs_query_sparse_init_sparse(op_ctx, op_ctx->cr)) {
-            return !all && not;
+            if (!all && not) {
+                return true;
+            }
+
+            op_ctx->cr = flecs_query_sparse_next_component(op_ctx->cr, id);
+            continue;
         }
 
         bool result = select
