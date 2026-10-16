@@ -811,7 +811,12 @@
                 "ir_to_str_w_async_block",
                 "tree_parent_w_annot_before_entity",
                 "update_script_from_system",
-                "update_scope_anonymous_new_var"
+                "update_scope_anonymous_new_var",
+                "struct_member_w_vector_type_declared_in_same_script",
+                "struct_member_w_array_type_declared_in_same_script",
+                "vector_type_w_member_struct_declared_in_same_script",
+                "vector_type_decl_as_component_in_same_script",
+                "array_type_decl_as_component_in_same_script"
             ]
         }, {
             "id": "Collection",

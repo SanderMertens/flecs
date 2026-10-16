@@ -34,7 +34,7 @@ int flecs_script_eval_include(
     ecs_script_eval_visitor_t *v,
     ecs_script_include_t *node);
 
-/* Type visitors (implement struct/enum/bitmask initializer syntax) */
+/* Type visitors (implement struct/enum/bitmask/vector/array initializer syntax) */
 
 int flecs_script_struct_visit(
     const ecs_script_visitor_ctx_t *ctx);
@@ -48,6 +48,12 @@ int flecs_script_enum_visit(
     const ecs_script_visitor_ctx_t *ctx);
 
 int flecs_script_bitmask_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+int flecs_script_vector_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+int flecs_script_array_visit(
     const ecs_script_visitor_ctx_t *ctx);
 
 /* User functions (functions defined in scripts) */

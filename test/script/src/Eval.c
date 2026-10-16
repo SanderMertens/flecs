@@ -25517,3 +25517,144 @@ void Eval_update_scope_anonymous_new_var(void) {
 
     ecs_fini(world);
 }
+
+void Eval_struct_member_w_vector_type_declared_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "vector Points(type: f32)"
+    LINE "struct Body(trail: Points)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t points = ecs_lookup(world, "Points");
+    test_assert(points != 0);
+    const EcsVector *vec = ecs_get(world, points, EcsVector);
+    test_assert(vec != NULL);
+    test_uint(vec->type, ecs_id(ecs_f32_t));
+
+    ecs_entity_t body = ecs_lookup(world, "Body");
+    test_assert(body != 0);
+    ecs_entity_t trail = ecs_lookup(world, "Body.trail");
+    test_assert(trail != 0);
+    const EcsMember *m = ecs_get(world, trail, EcsMember);
+    test_assert(m != NULL);
+    test_uint(m->type, points);
+
+    const EcsComponent *c = ecs_get(world, body, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, ECS_SIZEOF(ecs_vec_t));
+
+    ecs_fini(world);
+}
+
+void Eval_struct_member_w_array_type_declared_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "array Points(type: f32, count: 3)"
+    LINE "struct Body(trail: Points)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t points = ecs_lookup(world, "Points");
+    test_assert(points != 0);
+    const EcsArray *arr = ecs_get(world, points, EcsArray);
+    test_assert(arr != NULL);
+    test_uint(arr->type, ecs_id(ecs_f32_t));
+    test_int(arr->count, 3);
+
+    ecs_entity_t body = ecs_lookup(world, "Body");
+    test_assert(body != 0);
+    ecs_entity_t trail = ecs_lookup(world, "Body.trail");
+    test_assert(trail != 0);
+    const EcsMember *m = ecs_get(world, trail, EcsMember);
+    test_assert(m != NULL);
+    test_uint(m->type, points);
+
+    const EcsComponent *c = ecs_get(world, body, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 3 * ECS_SIZEOF(float));
+
+    ecs_fini(world);
+}
+
+void Eval_vector_type_w_member_struct_declared_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "Elem { x { member: {type: f32} } }"
+    LINE "Points { vector: {type: Elem} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t elem = ecs_lookup(world, "Elem");
+    test_assert(elem != 0);
+    ecs_entity_t points = ecs_lookup(world, "Points");
+    test_assert(points != 0);
+    const EcsVector *vec = ecs_get(world, points, EcsVector);
+    test_assert(vec != NULL);
+    test_uint(vec->type, elem);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_type_decl_as_component_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "vector Points(type: f32)"
+    LINE "e { Points: [1, 2, 3] }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t points = ecs_lookup(world, "Points");
+    test_assert(points != 0);
+    const EcsVector *vec = ecs_get(world, points, EcsVector);
+    test_assert(vec != NULL);
+    test_uint(vec->type, ecs_id(ecs_f32_t));
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const ecs_vec_t *v = ecs_get_id(world, e, points);
+    test_assert(v != NULL);
+    test_int(ecs_vec_count(v), 3);
+    const float *elems = ecs_vec_first(v);
+    test_flt(elems[0], 1);
+    test_flt(elems[1], 2);
+    test_flt(elems[2], 3);
+
+    ecs_fini(world);
+}
+
+void Eval_array_type_decl_as_component_in_same_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "array Points(type: f32, count: 3)"
+    LINE "e { Points: [1, 2, 3] }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t points = ecs_lookup(world, "Points");
+    test_assert(points != 0);
+    const EcsArray *arr = ecs_get(world, points, EcsArray);
+    test_assert(arr != NULL);
+    test_uint(arr->type, ecs_id(ecs_f32_t));
+    test_int(arr->count, 3);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const float *elems = ecs_get_id(world, e, points);
+    test_assert(elems != NULL);
+    test_flt(elems[0], 1);
+    test_flt(elems[1], 2);
+    test_flt(elems[2], 3);
+
+    ecs_fini(world);
+}
