@@ -439,6 +439,7 @@ static void flecs_fini_root_tables(
     ecs_stage_t *stage0 = world->stages[0];
     bool finished = false;
     const ecs_size_t MAX_DEFERRED_DELETE_QUEUE_SIZE = 4096;
+    const int32_t MAX_DEFERRED_DELETE_ENTRIES = 1024 * 1024;
     while (!finished) {
         ecs_table_cache_iter_t it;
         ecs_size_t queue_size = 0;
@@ -500,6 +501,11 @@ static void flecs_fini_root_tables(
                 /* flush queue and restart iteration */
                 flecs_commands_end(world, stage0);
                 flecs_commands_begin(world, stage0);
+                if (flecs_sparse_count(&stage0->cmd->entries) >=
+                    MAX_DEFERRED_DELETE_ENTRIES)
+                {
+                    flecs_commands_reset_entries(stage0, stage0->cmd);
+                }
                 break;
             }
         }

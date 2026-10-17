@@ -73,6 +73,10 @@ void flecs_commands_fini(
     ecs_stage_t *stage,
     ecs_commands_t *cmd);
 
+void flecs_commands_reset_entries(
+    ecs_stage_t *stage,
+    ecs_commands_t *cmd);
+
 /* Begin deferring, or return whether already deferred. */
 bool flecs_defer_cmd(
     ecs_stage_t *stage,

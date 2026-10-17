@@ -4757,6 +4757,7 @@ typedef struct ecs_iter_private_t {
 typedef struct ecs_cmd_entry_t {
     int32_t first;
     int32_t last;
+    ecs_id_t removed;
 } ecs_cmd_entry_t;
 
 /* Data structures that store the command queue. */
@@ -4769,8 +4770,11 @@ typedef struct ecs_commands_t {
     ecs_entity_t entity;
     ecs_cmd_entry_t entry;
     int32_t cursor;
+    bool has_remove;
     ecs_entity_t second_entity;
     ecs_cmd_entry_t second_entry;
+    ecs_entity_t last_entity;
+    ecs_cmd_entry_t *last_entry;
 } ecs_commands_t;
 
 #ifdef __cplusplus
