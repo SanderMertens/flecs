@@ -807,6 +807,8 @@
                 "defer_ensure_modified_w_sparse_w_observer",
                 "defer_remove_override",
                 "defer_remove_add_override",
+                "defer_remove_override_on_remove_value",
+                "defer_remove_set",
                 "fini_w_dont_fragment_pair_prefab_exclusive_delete_with",
                 "remove_childof_pair_w_dont_fragment_component",
                 "remove_zeroes_storage",
@@ -3493,7 +3495,19 @@
                 "on_replace_w_set_batched_grow_table_in_hook",
                 "defer_batched_add_after_delete",
                 "defer_add_remove_childof_w_dont_fragment",
-                "defer_remove_dont_fragment_on_cascade_deleted_child"
+                "defer_remove_dont_fragment_on_cascade_deleted_child",
+                "defer_remove_override_on_remove_value",
+                "defer_remove_add_on_remove_on_add",
+                "defer_remove_add_remove_on_remove_count",
+                "defer_remove_set_other",
+                "defer_remove_two_set_removed",
+                "defer_remove_two_set_other",
+                "defer_remove_ensure_other",
+                "defer_remove_two_ensure_other",
+                "defer_remove_two_ensure_removed_override",
+                "defer_remove_ensure_removed_override",
+                "defer_remove_wildcard_set_pair",
+                "defer_set_interleaved_entities"
             ]
         }, {
             "id": "SingleThreadStaging",

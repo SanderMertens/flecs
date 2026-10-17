@@ -7560,11 +7560,73 @@ void Sparse_defer_remove_override(void) {
     {
         const Velocity *v = ecs_get(stage_1, e, Velocity);
         test_assert(v != NULL);
-        test_int(v->x, 1); test_int(v->y, 2);
+        test_int(v->x, 2); test_int(v->y, 4);
     }
     ecs_merge(stage_1);
 
     test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+static void OnRemoveStoreVelocity(ecs_iter_t *it) {
+    Velocity *result = it->ctx;
+    test_int(it->count, 1);
+    *result = *ecs_field_at(it, Velocity, 0, 0);
+}
+
+void Sparse_defer_remove_override_on_remove_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Velocity), EcsDontFragment);
+
+    Velocity removed = {0, 0};
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Velocity) }},
+        .events = { EcsOnRemove },
+        .callback = OnRemoveStoreVelocity,
+        .ctx = &removed
+    });
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, prefab, Velocity, {1, 2});
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+    ecs_set(world, e, Velocity, {2, 4});
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Velocity);
+    test_int(removed.x, 0);
+    ecs_merge(stage);
+
+    test_int(removed.x, 2);
+    test_int(removed.y, 4);
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_remove_set(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Velocity), EcsDontFragment);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Velocity, {1, 2}));
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Velocity);
+    ecs_set(stage, e, Velocity, {3, 4});
+    ecs_merge(stage);
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 3);
+    test_int(v->y, 4);
 
     ecs_fini(world);
 }
@@ -7597,7 +7659,7 @@ void Sparse_defer_remove_add_override(void) {
     {
         const Velocity *v = ecs_get(stage_1, e, Velocity);
         test_assert(v != NULL);
-        test_int(v->x, 1); test_int(v->y, 2);
+        test_int(v->x, 2); test_int(v->y, 4);
     }
     ecs_merge(stage_1);
 
