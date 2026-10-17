@@ -302,6 +302,11 @@ static void flecs_table_diff_build_add_type_to_vec(
         return;
     }
 
+    if (add->count == 1) {
+        ecs_vec_append_t(&world->allocator, vec, ecs_id_t)[0] = add->array[0];
+        return;
+    }
+
     int32_t offset = vec->count;
     ecs_vec_grow_t(&world->allocator, vec, ecs_id_t, add->count);
     ecs_os_memcpy_n(ecs_vec_get_t(vec, ecs_id_t, offset),

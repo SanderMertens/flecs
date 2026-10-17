@@ -775,6 +775,8 @@ void Sparse_defer_set_w_sparse_w_observer(void);
 void Sparse_defer_ensure_modified_w_sparse_w_observer(void);
 void Sparse_defer_remove_override(void);
 void Sparse_defer_remove_add_override(void);
+void Sparse_defer_remove_override_on_remove_value(void);
+void Sparse_defer_remove_set(void);
 void Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with(void);
 void Sparse_remove_childof_pair_w_dont_fragment_component(void);
 void Sparse_remove_zeroes_storage(void);
@@ -3405,6 +3407,18 @@ void Commands_on_replace_w_set_batched_grow_table_in_hook(void);
 void Commands_defer_batched_add_after_delete(void);
 void Commands_defer_add_remove_childof_w_dont_fragment(void);
 void Commands_defer_remove_dont_fragment_on_cascade_deleted_child(void);
+void Commands_defer_remove_override_on_remove_value(void);
+void Commands_defer_remove_add_on_remove_on_add(void);
+void Commands_defer_remove_add_remove_on_remove_count(void);
+void Commands_defer_remove_set_other(void);
+void Commands_defer_remove_two_set_removed(void);
+void Commands_defer_remove_two_set_other(void);
+void Commands_defer_remove_ensure_other(void);
+void Commands_defer_remove_two_ensure_other(void);
+void Commands_defer_remove_two_ensure_removed_override(void);
+void Commands_defer_remove_ensure_removed_override(void);
+void Commands_defer_remove_wildcard_set_pair(void);
+void Commands_defer_set_interleaved_entities(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -6606,6 +6620,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "defer_remove_add_override",
         Sparse_defer_remove_add_override
+    },
+    {
+        "defer_remove_override_on_remove_value",
+        Sparse_defer_remove_override_on_remove_value
+    },
+    {
+        "defer_remove_set",
+        Sparse_defer_remove_set
     },
     {
         "fini_w_dont_fragment_pair_prefab_exclusive_delete_with",
@@ -16946,6 +16968,54 @@ bake_test_case Commands_testcases[] = {
     {
         "defer_remove_dont_fragment_on_cascade_deleted_child",
         Commands_defer_remove_dont_fragment_on_cascade_deleted_child
+    },
+    {
+        "defer_remove_override_on_remove_value",
+        Commands_defer_remove_override_on_remove_value
+    },
+    {
+        "defer_remove_add_on_remove_on_add",
+        Commands_defer_remove_add_on_remove_on_add
+    },
+    {
+        "defer_remove_add_remove_on_remove_count",
+        Commands_defer_remove_add_remove_on_remove_count
+    },
+    {
+        "defer_remove_set_other",
+        Commands_defer_remove_set_other
+    },
+    {
+        "defer_remove_two_set_removed",
+        Commands_defer_remove_two_set_removed
+    },
+    {
+        "defer_remove_two_set_other",
+        Commands_defer_remove_two_set_other
+    },
+    {
+        "defer_remove_ensure_other",
+        Commands_defer_remove_ensure_other
+    },
+    {
+        "defer_remove_two_ensure_other",
+        Commands_defer_remove_two_ensure_other
+    },
+    {
+        "defer_remove_two_ensure_removed_override",
+        Commands_defer_remove_two_ensure_removed_override
+    },
+    {
+        "defer_remove_ensure_removed_override",
+        Commands_defer_remove_ensure_removed_override
+    },
+    {
+        "defer_remove_wildcard_set_pair",
+        Commands_defer_remove_wildcard_set_pair
+    },
+    {
+        "defer_set_interleaved_entities",
+        Commands_defer_set_interleaved_entities
     }
 };
 
@@ -17808,7 +17878,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        239,
+        241,
         Sparse_testcases,
         1,
         Sparse_params
@@ -18006,7 +18076,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        187,
+        199,
         Commands_testcases
     },
     {

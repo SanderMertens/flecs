@@ -5749,3 +5749,367 @@ void Commands_nested_observer_command_queues(void) {
     test_int(count, 32);
     ecs_fini(world);
 }
+
+static void OnRemoveStorePosition(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 0);
+    Position *result = it->ctx;
+    test_int(it->count, 1);
+    *result = p[0];
+}
+
+void Commands_defer_remove_override_on_remove_value(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Position removed = {0, 0};
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = OnRemoveStorePosition,
+        .ctx = &removed
+    });
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, prefab, Position, {20, 0});
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+    ecs_set(world, e, Position, {40, 0});
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Position);
+    test_int(removed.x, 0);
+    ecs_merge(stage);
+
+    test_int(removed.x, 40);
+
+    ecs_fini(world);
+}
+
+static void CountEvent(ecs_iter_t *it) {
+    int32_t *count = it->ctx;
+    (*count) += it->count;
+}
+
+void Commands_defer_remove_add_on_remove_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    int32_t on_add = 0, on_remove = 0;
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position) }},
+        .events = { EcsOnAdd },
+        .callback = CountEvent,
+        .ctx = &on_add
+    });
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = CountEvent,
+        .ctx = &on_remove
+    });
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    test_int(on_add, 1);
+    test_int(on_remove, 0);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Position);
+    ecs_add(stage, e, Position);
+    ecs_merge(stage);
+
+    test_int(on_add, 2);
+    test_int(on_remove, 1);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Commands_defer_remove_add_remove_on_remove_count(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    int32_t on_remove = 0;
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = CountEvent,
+        .ctx = &on_remove
+    });
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Position);
+    ecs_add(stage, e, Position);
+    ecs_remove(stage, e, Position);
+    ecs_merge(stage);
+
+    test_int(on_remove, 1);
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Commands_defer_remove_set_other(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {1, 2});
+    ecs_set(world, e, Velocity, {3, 4});
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Velocity);
+    ecs_set(stage, e, Position, {5, 6});
+    ecs_merge(stage);
+
+    test_assert(!ecs_has(world, e, Velocity));
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void Commands_defer_remove_two_set_removed(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {1, 2});
+    ecs_set(world, e, Velocity, {3, 4});
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Position);
+    ecs_remove(stage, e, Velocity);
+    ecs_set(stage, e, Position, {5, 6});
+    ecs_merge(stage);
+
+    test_assert(!ecs_has(world, e, Velocity));
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void Commands_defer_remove_two_set_other(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {1, 2});
+    ecs_set(world, e, Velocity, {3, 4});
+    ecs_set(world, e, Mass, {5});
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Velocity);
+    ecs_remove(stage, e, Mass);
+    ecs_set(stage, e, Position, {5, 6});
+    ecs_merge(stage);
+
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_has(world, e, Mass));
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void Commands_defer_remove_ensure_other(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {1, 2});
+    ecs_set(world, e, Velocity, {3, 4});
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Velocity);
+    Position *p = ecs_ensure(stage, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+    p->x ++;
+    ecs_merge(stage);
+
+    test_assert(!ecs_has(world, e, Velocity));
+    const Position *pp = ecs_get(world, e, Position);
+    test_assert(pp != NULL);
+    test_int(pp->x, 2);
+    test_int(pp->y, 2);
+
+    ecs_fini(world);
+}
+
+void Commands_defer_remove_two_ensure_other(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {1, 2});
+    ecs_set(world, e, Velocity, {3, 4});
+    ecs_set(world, e, Mass, {5});
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Velocity);
+    ecs_remove(stage, e, Mass);
+    Position *p = ecs_ensure(stage, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+    p->x ++;
+    ecs_merge(stage);
+
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(!ecs_has(world, e, Mass));
+    const Position *pp = ecs_get(world, e, Position);
+    test_assert(pp != NULL);
+    test_int(pp->x, 2);
+    test_int(pp->y, 2);
+
+    ecs_fini(world);
+}
+
+void Commands_defer_remove_two_ensure_removed_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, e, Position, {1, 2});
+    ecs_set(world, e, Velocity, {3, 4});
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Velocity);
+    ecs_remove(stage, e, Position);
+    Position *p = ecs_ensure(stage, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    ecs_merge(stage);
+
+    test_assert(!ecs_has(world, e, Velocity));
+    test_assert(ecs_owns(world, e, Position));
+    const Position *pp = ecs_get(world, e, Position);
+    test_assert(pp != NULL);
+    test_int(pp->x, 10);
+    test_int(pp->y, 20);
+
+    ecs_fini(world);
+}
+
+void Commands_defer_remove_wildcard_set_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_pair(world, e, Position, TgtA, {1, 2});
+    ecs_set_pair(world, e, Position, TgtB, {3, 4});
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove_pair(stage, e, ecs_id(Position), EcsWildcard);
+    ecs_set_pair(stage, e, Position, TgtA, {5, 6});
+    ecs_merge(stage);
+
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtB));
+    const Position *p = ecs_get_pair(world, e, Position, TgtA);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void Commands_defer_set_interleaved_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_set(stage, e1, Position, {1, 2});
+    ecs_set(stage, e2, Position, {3, 4});
+    ecs_set(stage, e3, Position, {5, 6});
+    ecs_set(stage, e3, Velocity, {7, 8});
+    ecs_set(stage, e1, Velocity, {9, 10});
+    ecs_remove(stage, e2, Position);
+    ecs_set(stage, e2, Velocity, {11, 12});
+    ecs_merge(stage);
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e2, Position));
+    test_assert(ecs_has(world, e3, Position));
+
+    const Position *p = ecs_get(world, e1, Position);
+    test_int(p->x, 1); test_int(p->y, 2);
+    p = ecs_get(world, e3, Position);
+    test_int(p->x, 5); test_int(p->y, 6);
+
+    const Velocity *v = ecs_get(world, e1, Velocity);
+    test_int(v->x, 9); test_int(v->y, 10);
+    v = ecs_get(world, e2, Velocity);
+    test_int(v->x, 11); test_int(v->y, 12);
+    v = ecs_get(world, e3, Velocity);
+    test_int(v->x, 7); test_int(v->y, 8);
+
+    ecs_fini(world);
+}
+
+void Commands_defer_remove_ensure_removed_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, e, Position, {1, 2});
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_remove(stage, e, Position);
+    Position *p = ecs_ensure(stage, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    ecs_merge(stage);
+
+    test_assert(ecs_owns(world, e, Position));
+    const Position *pp = ecs_get(world, e, Position);
+    test_assert(pp != NULL);
+    test_int(pp->x, 10);
+    test_int(pp->y, 20);
+
+    ecs_fini(world);
+}
