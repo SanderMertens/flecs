@@ -300,6 +300,15 @@ static void flecs_query_rematch_table(
         return;
     }
 
+    ecs_flags32_t query_flags = cache->query->flags;
+    if (((table->flags & EcsTableIsPrefab) &&
+            !(query_flags & EcsQueryMatchPrefab)) ||
+        ((table->flags & EcsTableIsDisabled) &&
+            !(query_flags & EcsQueryMatchDisabled)))
+    {
+        return;
+    }
+
     ecs_iter_t it = flecs_query_iter(world, cache->query);
     ECS_BIT_SET(it.flags, EcsIterNoData);
 
