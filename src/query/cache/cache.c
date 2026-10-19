@@ -553,11 +553,11 @@ static void flecs_query_cache_on_event(
     ecs_observer_t *o = it->ctx;
     ecs_observer_impl_t *o_impl = flecs_observer_impl(o);
     if (o_impl->last_event_id) {
-        if (o_impl->last_event_id[0] == world->event_id) {
+        if (o_impl->last_event_id[0] == it->event_cur) {
             return;
         }
 
-        o_impl->last_event_id[0] = world->event_id;
+        o_impl->last_event_id[0] = it->event_cur;
     }
 
     ecs_query_impl_t *impl = o->ctx;

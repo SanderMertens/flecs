@@ -8863,3 +8863,105 @@ void Cached_fini_w_optional_cascade_query_and_nested_parent(void) {
 
     ecs_fini(world);
 }
+
+void Cached_delete_disabled_child_table_after_rematch(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = Foo },
+            { .id = Bar, .src.id = EcsUp, .trav = EcsChildOf, 
+              .oper = EcsOptional }
+        },
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t child_a = ecs_new_w_pair(world, EcsChildOf, parent_a);
+    ecs_add(world, child_a, Foo);
+
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t child_b = ecs_new_w_pair(world, EcsChildOf, parent_b);
+    ecs_add(world, child_b, Foo);
+    ecs_add_id(world, child_b, EcsDisabled);
+
+    ecs_add(world, parent_b, Bar);
+    test_int(ecs_query_count(q).entities, 1);
+
+    ecs_delete(world, parent_b);
+    test_assert(!ecs_is_alive(world, child_b));
+    test_int(ecs_query_count(q).entities, 1);
+
+    ecs_delete(world, parent_a);
+    test_assert(!ecs_is_alive(world, child_a));
+    test_int(ecs_query_count(q).entities, 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+static void Cached_on_table_delete_new_child(ecs_iter_t *it) {
+    ecs_entity_t *ctx = it->ctx;
+    ecs_entity_t e = ecs_new_w_pair(it->world, EcsChildOf, ctx[0]);
+    ecs_add_id(it->world, e, ctx[1]);
+    ecs_add_id(it->world, e, ctx[2]);
+}
+
+void Cached_delete_table_w_on_table_delete_observer_creating_tables(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = Foo, .oper = EcsNot }
+        },
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t child_a = ecs_new_w_pair(world, EcsChildOf, parent_a);
+    ecs_set(world, child_a, Position, {10, 20});
+
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t child_b = ecs_new_w_pair(world, EcsChildOf, parent_b);
+    ecs_set(world, child_b, Position, {10, 20});
+    ecs_set(world, child_b, Velocity, {1, 2});
+
+    ecs_entity_t parent_c = ecs_new(world);
+
+    ecs_entity_t ctx[] = { parent_c, ecs_id(Position), Bar };
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Velocity) }},
+        .events = { EcsOnTableDelete },
+        .callback = Cached_on_table_delete_new_child,
+        .ctx = ctx
+    });
+
+    test_int(ecs_query_count(q).entities, 2);
+
+    ecs_delete(world, parent_b);
+    test_assert(!ecs_is_alive(world, child_b));
+    test_int(ecs_query_count(q).entities, 2);
+
+    ecs_delete(world, parent_c);
+    test_int(ecs_query_count(q).entities, 1);
+
+    ecs_delete(world, parent_a);
+    test_assert(!ecs_is_alive(world, child_a));
+    test_int(ecs_query_count(q).entities, 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

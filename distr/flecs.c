@@ -75957,11 +75957,11 @@ static void flecs_query_cache_on_event(
     ecs_observer_t *o = it->ctx;
     ecs_observer_impl_t *o_impl = flecs_observer_impl(o);
     if (o_impl->last_event_id) {
-        if (o_impl->last_event_id[0] == world->event_id) {
+        if (o_impl->last_event_id[0] == it->event_cur) {
             return;
         }
 
-        o_impl->last_event_id[0] = world->event_id;
+        o_impl->last_event_id[0] = it->event_cur;
     }
 
     ecs_query_impl_t *impl = o->ctx;
@@ -78166,6 +78166,15 @@ static void flecs_query_rematch_table(
     ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INTERNAL_ERROR, NULL);
 
     if (table->flags & EcsTableNotQueryable) {
+        return;
+    }
+
+    ecs_flags32_t query_flags = cache->query->flags;
+    if (((table->flags & EcsTableIsPrefab) &&
+            !(query_flags & EcsQueryMatchPrefab)) ||
+        ((table->flags & EcsTableIsDisabled) &&
+            !(query_flags & EcsQueryMatchDisabled)))
+    {
         return;
     }
 
