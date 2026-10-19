@@ -3507,7 +3507,9 @@
                 "defer_remove_two_ensure_removed_override",
                 "defer_remove_ensure_removed_override",
                 "defer_remove_wildcard_set_pair",
-                "defer_set_interleaved_entities"
+                "defer_set_interleaved_entities",
+                "defer_ensure_remove_wildcard_ensure_pair",
+                "defer_remove_two_set_other_get_before_merge"
             ]
         }, {
             "id": "SingleThreadStaging",

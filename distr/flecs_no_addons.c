@@ -4152,16 +4152,10 @@ static ecs_cmd_entry_t* flecs_cmd_entry_get(
 }
 
 static bool flecs_defer_has_remove(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
+    ecs_commands_t *commands,
+    const ecs_cmd_entry_t *entry,
     ecs_id_t id)
 {
-    ecs_commands_t *commands = stage->cmd;
-    ecs_cmd_entry_t *entry = flecs_cmd_entry_get(commands, entity);
-    if (!entry) {
-        return false;
-    }
-
     ecs_cmd_t *cmds = ecs_vec_first_t(&commands->queue, ecs_cmd_t);
     int32_t cur = entry->first;
     do {
@@ -4180,26 +4174,33 @@ static bool flecs_defer_has_remove(
     return false;
 }
 
-static FLECS_ALWAYS_INLINE void flecs_defer_skip_removed(
+static FLECS_ALWAYS_INLINE bool flecs_defer_skip_removed(
     ecs_stage_t *stage,
-    const ecs_cmd_entry_t *entry,
     ecs_entity_t entity,
     ecs_id_t id,
-    bool exact,
     flecs_component_ptr_t *ptr)
 {
-    ecs_id_t removed = entry->removed;
-    if (!ptr->ptr || !removed) {
-        return;
+    ecs_commands_t *commands = stage->cmd;
+    if (!ptr->ptr || !commands->has_remove) {
+        return false;
     }
 
-    if (removed != FLECS_CMD_REMOVED_MANY) {
-        if (id == removed) {
-            ptr->ptr = NULL;
-        }
-    } else if (!exact || flecs_defer_has_remove(stage, entity, id)) {
-        ptr->ptr = NULL;
+    const ecs_cmd_entry_t *entry = flecs_cmd_entry_get(commands, entity);
+    if (!entry || !entry->removed) {
+        return false;
     }
+
+    ecs_id_t removed = entry->removed;
+    if (removed != FLECS_CMD_REMOVED_MANY) {
+        if (id != removed) {
+            return false;
+        }
+    } else if (!flecs_defer_has_remove(commands, entry, id)) {
+        return false;
+    }
+
+    ptr->ptr = NULL;
+    return true;
 }
 
 /* Return existing component pointer & type info */
@@ -4248,18 +4249,17 @@ void* flecs_defer_emplace(
     ecs_size_t size,
     bool *is_new)
 {
-    ecs_cmd_entry_t *entry;
-    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity, &entry);
-    cmd->entity = entity;
-    cmd->id = id;
-
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_component_ptr_t ptr = flecs_defer_get_existing(
         world, entity, r, id, size);
-    flecs_defer_skip_removed(stage, entry, entity, id, false, &ptr);
+    flecs_defer_skip_removed(stage, entity, id, &ptr);
+
+    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity, NULL);
+    cmd->entity = entity;
+    cmd->id = id;
 
     const ecs_type_info_t *ti = ptr.ti;
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER,
         "provided component is not a type");
     ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER,
         "mismatching size specified for component in ensure/emplace/set");
@@ -4312,7 +4312,7 @@ void* flecs_defer_find_cmd_value(
             }
             break;
         case EcsCmdRemove:
-            if (cmd->id == id) {
+            if (ecs_id_match(id, cmd->id)) {
                 result = NULL;
             }
             break;
@@ -4354,14 +4354,7 @@ void* flecs_defer_ensure(
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_component_ptr_t ptr = flecs_defer_get_existing(
         world, entity, r, id, size);
-    bool removed = false;
-    if (ptr.ptr && stage->cmd->has_remove) {
-        const ecs_cmd_entry_t *entry = flecs_cmd_entry_get(stage->cmd, entity);
-        if (entry) {
-            flecs_defer_skip_removed(stage, entry, entity, id, true, &ptr);
-            removed = ptr.ptr == NULL;
-        }
-    }
+    bool removed = flecs_defer_skip_removed(stage, entity, id, &ptr);
 
     const ecs_type_info_t *ti = ptr.ti;
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER,
@@ -4443,16 +4436,15 @@ static FLECS_ALWAYS_INLINE void* flecs_defer_set_impl(
     ecs_assert(value != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_cmd_entry_t *entry;
-    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity, &entry);
-    ecs_assert(cmd != NULL, ECS_INTERNAL_ERROR, NULL);
-    cmd->entity = entity;
-    cmd->id = id;
-
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_component_ptr_t ptr = flecs_defer_get_existing(
         world, entity, r, id, size);
-    flecs_defer_skip_removed(stage, entry, entity, id, false, &ptr);
+    flecs_defer_skip_removed(stage, entity, id, &ptr);
+
+    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity, NULL);
+    ecs_assert(cmd != NULL, ECS_INTERNAL_ERROR, NULL);
+    cmd->entity = entity;
+    cmd->id = id;
 
     if (copy && world->stage_count != 1) {
 

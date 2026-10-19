@@ -3419,6 +3419,8 @@ void Commands_defer_remove_two_ensure_removed_override(void);
 void Commands_defer_remove_ensure_removed_override(void);
 void Commands_defer_remove_wildcard_set_pair(void);
 void Commands_defer_set_interleaved_entities(void);
+void Commands_defer_ensure_remove_wildcard_ensure_pair(void);
+void Commands_defer_remove_two_set_other_get_before_merge(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -17016,6 +17018,14 @@ bake_test_case Commands_testcases[] = {
     {
         "defer_set_interleaved_entities",
         Commands_defer_set_interleaved_entities
+    },
+    {
+        "defer_ensure_remove_wildcard_ensure_pair",
+        Commands_defer_ensure_remove_wildcard_ensure_pair
+    },
+    {
+        "defer_remove_two_set_other_get_before_merge",
+        Commands_defer_remove_two_set_other_get_before_merge
     }
 };
 
@@ -18076,7 +18086,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        199,
+        201,
         Commands_testcases
     },
     {
