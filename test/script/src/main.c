@@ -1477,6 +1477,16 @@ void Template_redefine_w_conditional_existing_instance(void);
 void Template_manual_derived_base_ref_change(void);
 void Template_manual_base_derived_base_ref_change(void);
 void Template_ref_change_readds_annotation_w_shared_table(void);
+void Template_template_in_entity_scope(void);
+void Template_template_in_entity_scope_w_props(void);
+void Template_template_in_entity_scope_w_children(void);
+void Template_template_in_nested_entity_scope(void);
+void Template_template_in_entity_scope_newline_before_scope(void);
+void Template_template_in_kind_entity_scope(void);
+void Template_template_in_root_scope_no_name(void);
+void Template_template_in_anonymous_entity_scope(void);
+void Template_template_in_interpolated_entity_scope(void);
+void Template_template_in_if_scope_in_entity_scope(void);
 
 // Testsuite 'Mut'
 void Mut_setup(void);
@@ -3527,6 +3537,10 @@ void TemplateInheritance_base_async_block_remove_cancels(void);
 void TemplateInheritance_base_async_block_delete_cancels(void);
 void TemplateInheritance_base_async_block_two_instances(void);
 void TemplateInheritance_template_update_w_base(void);
+void TemplateInheritance_template_in_entity_scope_w_base(void);
+void TemplateInheritance_template_in_entity_scope_w_base_body(void);
+void TemplateInheritance_template_in_kind_entity_scope_w_base(void);
+void TemplateInheritance_template_in_entity_scope_w_two_bases(void);
 
 // Testsuite 'TemplateProp'
 void TemplateProp_setup(void);
@@ -9736,6 +9750,46 @@ bake_test_case Template_testcases[] = {
     {
         "ref_change_readds_annotation_w_shared_table",
         Template_ref_change_readds_annotation_w_shared_table
+    },
+    {
+        "template_in_entity_scope",
+        Template_template_in_entity_scope
+    },
+    {
+        "template_in_entity_scope_w_props",
+        Template_template_in_entity_scope_w_props
+    },
+    {
+        "template_in_entity_scope_w_children",
+        Template_template_in_entity_scope_w_children
+    },
+    {
+        "template_in_nested_entity_scope",
+        Template_template_in_nested_entity_scope
+    },
+    {
+        "template_in_entity_scope_newline_before_scope",
+        Template_template_in_entity_scope_newline_before_scope
+    },
+    {
+        "template_in_kind_entity_scope",
+        Template_template_in_kind_entity_scope
+    },
+    {
+        "template_in_root_scope_no_name",
+        Template_template_in_root_scope_no_name
+    },
+    {
+        "template_in_anonymous_entity_scope",
+        Template_template_in_anonymous_entity_scope
+    },
+    {
+        "template_in_interpolated_entity_scope",
+        Template_template_in_interpolated_entity_scope
+    },
+    {
+        "template_in_if_scope_in_entity_scope",
+        Template_template_in_if_scope_in_entity_scope
     }
 };
 
@@ -17791,6 +17845,22 @@ bake_test_case TemplateInheritance_testcases[] = {
     {
         "template_update_w_base",
         TemplateInheritance_template_update_w_base
+    },
+    {
+        "template_in_entity_scope_w_base",
+        TemplateInheritance_template_in_entity_scope_w_base
+    },
+    {
+        "template_in_entity_scope_w_base_body",
+        TemplateInheritance_template_in_entity_scope_w_base_body
+    },
+    {
+        "template_in_kind_entity_scope_w_base",
+        TemplateInheritance_template_in_kind_entity_scope_w_base
+    },
+    {
+        "template_in_entity_scope_w_two_bases",
+        TemplateInheritance_template_in_entity_scope_w_two_bases
     }
 };
 
@@ -19562,7 +19632,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        213,
+        223,
         Template_testcases,
         1,
         Template_params
@@ -19711,7 +19781,7 @@ static bake_test_suite suites[] = {
         "TemplateInheritance",
         TemplateInheritance_setup,
         NULL,
-        84,
+        88,
         TemplateInheritance_testcases,
         1,
         TemplateInheritance_params
