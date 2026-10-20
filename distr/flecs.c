@@ -48027,6 +48027,7 @@ struct ecs_script_entity_t {
     bool kind_w_expr;
     bool non_fragmenting_parent;
     int32_t type_index;
+    int32_t base_count;
     ecs_script_scope_t *scope;
     ecs_expr_node_t *name_expr;
 
@@ -68852,6 +68853,63 @@ static const char* flecs_script_entity_scope(
     return flecs_script_scope(parser, entity->scope, pos);
 }
 
+static const char* flecs_script_entity_template(
+    ecs_parser_t *parser,
+    const char *pos)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_script_scope_t *parent = scope->parent;
+    ecs_script_entity_t *entity = NULL;
+
+    if (parent) {
+        ecs_script_node_t **stmts = ecs_vec_first(&parent->stmts);
+        int32_t i = ecs_vec_count(&parent->stmts);
+        while (i --) {
+            if (stmts[i]->kind == EcsAstEntity &&
+                ((ecs_script_entity_t*)stmts[i])->scope == scope)
+            {
+                entity = (ecs_script_entity_t*)stmts[i];
+                break;
+            }
+        }
+    }
+
+    if (!entity) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, pos - 1),
+            "template without a name must be declared in an entity scope");
+        return NULL;
+    }
+
+    if (!entity->name || entity->name_expr) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, pos - 1),
+            "template without a name must be declared in the scope of an "
+            "entity with a static name");
+        return NULL;
+    }
+
+    if (entity->base_count > 1) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, pos - 1),
+            "multiple template bases are not supported");
+        return NULL;
+    }
+
+    parser->scope = parent;
+    ecs_script_template_node_t *template = flecs_script_insert_template(
+        parser, entity->name);
+    parser->scope = scope;
+
+    if (entity->base_count) {
+        ecs_script_tag_t *base = ecs_vec_first_t(
+            &scope->stmts, ecs_script_tag_t*)[0];
+        template->base = base->id.second;
+    }
+
+    return flecs_script_scope(parser, template->scope, pos);
+}
+
 /* Parse base list (bases separated by ',') */
 static const char* flecs_script_base_list(
     ecs_parser_t *parser,
@@ -68865,6 +68923,7 @@ static const char* flecs_script_base_list(
     parser->scope = entity->scope;
 
     flecs_script_insert_pair_tag(parser, "IsA", base);
+    entity->base_count ++;
 
     Loop(
         LookAhead_1(',',
@@ -68874,6 +68933,7 @@ static const char* flecs_script_base_list(
             LookAhead_1(EcsTokIdentifier,
                 Consume();
                 flecs_script_insert_pair_tag(parser, "IsA", Token(1));
+                entity->base_count ++;
                 continue;
             )
         )
@@ -69548,8 +69608,13 @@ module_stmt: {
 
 // template
 template_stmt: {
+    LookAheadSkipNewlines_1('{',
+        Consume();
+        return flecs_script_entity_template(parser, pos);
+    )
+
     // template SpaceShip
-    Parse_1(EcsTokIdentifier, 
+    Parse_1(EcsTokIdentifier,
         ecs_script_template_node_t *template = flecs_script_insert_template(
             parser, Token(1));
 

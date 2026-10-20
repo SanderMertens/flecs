@@ -1518,7 +1518,17 @@
                 "redefine_w_conditional_existing_instance",
                 "manual_derived_base_ref_change",
                 "manual_base_derived_base_ref_change",
-                "ref_change_readds_annotation_w_shared_table"
+                "ref_change_readds_annotation_w_shared_table",
+                "template_in_entity_scope",
+                "template_in_entity_scope_w_props",
+                "template_in_entity_scope_w_children",
+                "template_in_nested_entity_scope",
+                "template_in_entity_scope_newline_before_scope",
+                "template_in_kind_entity_scope",
+                "template_in_root_scope_no_name",
+                "template_in_anonymous_entity_scope",
+                "template_in_interpolated_entity_scope",
+                "template_in_if_scope_in_entity_scope"
             ]
         }, {
             "id": "Mut",
@@ -3646,7 +3656,11 @@
                 "base_async_block_remove_cancels",
                 "base_async_block_delete_cancels",
                 "base_async_block_two_instances",
-                "template_update_w_base"
+                "template_update_w_base",
+                "template_in_entity_scope_w_base",
+                "template_in_entity_scope_w_base_body",
+                "template_in_kind_entity_scope_w_base",
+                "template_in_entity_scope_w_two_bases"
             ]
         }, {
             "id": "TemplateProp",

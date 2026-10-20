@@ -2015,6 +2015,51 @@ Templates are commonly used in combination with the kind syntax:
 Square my_entity
 ```
 
+#### Templates in entity scopes
+A template without a name can be declared in the scope of an entity. This creates a template with the same name as the entity:
+
+```cpp
+Square {
+  Position: {10, 20}
+
+  template {
+    Color: {255, 0, 0}
+    Rectangle: {width: 100, height: 100}
+  }
+}
+
+// is equivalent to
+
+Square {
+  Position: {10, 20}
+}
+
+template Square {
+  Color: {255, 0, 0}
+  Rectangle: {width: 100, height: 100}
+}
+```
+
+If the entity has a base, the template inherits from the same base (see [inheritance](#inheritance)):
+
+```cpp
+VictorianFacade : Facade {
+  template {
+    // ...
+  }
+}
+
+// is equivalent to
+
+VictorianFacade : Facade { }
+
+template VictorianFacade : Facade {
+  // ...
+}
+```
+
+The entity must have a name that is not anonymous or interpolated, and the template must be declared directly in the scope of the entity.
+
 #### Prop variables
 Templates can be parameterized with prop variables. To create a prop variable, use the `prop` keyword. Example:
 

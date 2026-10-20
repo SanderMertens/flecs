@@ -3552,3 +3552,155 @@ void TemplateInheritance_template_update_w_base(void) {
 
     ecs_fini(world);
 }
+
+void TemplateInheritance_template_in_entity_scope_w_base(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Base {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "Derived : Base {"
+    LINE "  template {"
+    LINE "    prop z: f32 = 3"
+    LINE "  }"
+    LINE "}"
+    LINE "e { Derived: {x: 10, z: 30} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    ecs_entity_t derived = ecs_lookup(world, "Derived");
+    test_assert(base != 0);
+    test_assert(derived != 0);
+    test_assert(ecs_has_pair(world, derived, EcsIsA, base));
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const float *v = ecs_get_id(world, e, derived);
+    test_assert(v != NULL);
+    test_flt(v[0], 10);
+    test_flt(v[1], 30);
+
+    ecs_fini(world);
+}
+
+void TemplateInheritance_template_in_entity_scope_w_base_body(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, PositionBase);
+
+    ecs_struct(world, {
+        .entity = ecs_id(PositionBase),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Base {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "Derived : Base {"
+    LINE "  PositionBase: {10, 20}"
+    LINE "  template {"
+    LINE "    prop y: f32 = 2"
+    LINE "    PositionBase: {x, y}"
+    LINE "  }"
+    LINE "}"
+    LINE "Derived e(x: 30, y: 40)";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t derived = ecs_lookup(world, "Derived");
+    test_assert(derived != 0);
+    test_assert(ecs_has(world, derived, EcsComponent));
+    {
+        const PositionBase *p = ecs_get(world, derived, PositionBase);
+        test_assert(p != NULL);
+        test_flt(p->x, 10);
+        test_flt(p->y, 20);
+    }
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const PositionBase *p = ecs_get(world, e, PositionBase);
+        test_assert(p != NULL);
+        test_flt(p->x, 30);
+        test_flt(p->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void TemplateInheritance_template_in_kind_entity_scope_w_base(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Kind);
+
+    const char *expr =
+    HEAD "template Base {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "Kind Derived : Base {"
+    LINE "  template {"
+    LINE "    prop z: f32 = 3"
+    LINE "  }"
+    LINE "}"
+    LINE "e { Derived: {x: 10, z: 30} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    ecs_entity_t derived = ecs_lookup(world, "Derived");
+    test_assert(base != 0);
+    test_assert(derived != 0);
+    test_assert(ecs_has(world, derived, Kind));
+    test_assert(ecs_has_pair(world, derived, EcsIsA, base));
+
+    const EcsStruct *st = ecs_get(world, derived, EcsStruct);
+    test_assert(st != NULL);
+    test_int(ecs_vec_count(&st->members), 2);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    const float *v = ecs_get_id(world, e, derived);
+    test_assert(v != NULL);
+    test_flt(v[0], 10);
+    test_flt(v[1], 30);
+
+    ecs_fini(world);
+}
+
+void TemplateInheritance_template_in_entity_scope_w_two_bases(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template BaseA {"
+    LINE "  prop x: f32 = 1"
+    LINE "}"
+    LINE "template BaseB {"
+    LINE "  prop y: f32 = 2"
+    LINE "}"
+    LINE "Derived : BaseA, BaseB {"
+    LINE "  template {"
+    LINE "    prop z: f32 = 3"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
