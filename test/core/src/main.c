@@ -788,6 +788,9 @@ void Sparse_fini_w_dont_fragment_component_on_prefab_child_w_up_query(void);
 void Sparse_fini_w_dont_fragment_component_w_isa_in_module(void);
 void Sparse_fini_w_dont_fragment_inherit_component_w_isa_in_module(void);
 void Sparse_fini_w_dont_fragment_component_w_isa_prefab_in_module(void);
+void Sparse_add_dont_fragment_tag_w_with(void);
+void Sparse_add_dont_fragment_tag_w_with_deferred(void);
+void Sparse_add_dont_fragment_tag_w_with_dont_fragment(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
@@ -6680,6 +6683,18 @@ bake_test_case Sparse_testcases[] = {
     {
         "fini_w_dont_fragment_component_w_isa_prefab_in_module",
         Sparse_fini_w_dont_fragment_component_w_isa_prefab_in_module
+    },
+    {
+        "add_dont_fragment_tag_w_with",
+        Sparse_add_dont_fragment_tag_w_with
+    },
+    {
+        "add_dont_fragment_tag_w_with_deferred",
+        Sparse_add_dont_fragment_tag_w_with_deferred
+    },
+    {
+        "add_dont_fragment_tag_w_with_dont_fragment",
+        Sparse_add_dont_fragment_tag_w_with_dont_fragment
     }
 };
 
@@ -17918,7 +17933,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        241,
+        244,
         Sparse_testcases,
         1,
         Sparse_params
