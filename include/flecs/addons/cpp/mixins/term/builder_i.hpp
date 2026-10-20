@@ -73,7 +73,7 @@ struct term_ref_builder_i {
     /** Override the term ID flags. */
     Base& flags(flecs::flags64_t flags) {
         this->assert_term_ref();
-        term_ref_->id = flags;
+        term_ref_->id = (term_ref_->id & ~EcsTermRefFlags) | flags;
         return *this;
     }
 

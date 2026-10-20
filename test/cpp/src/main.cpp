@@ -1092,6 +1092,7 @@ void QueryBuilder_pred_eq(void);
 void QueryBuilder_pred_eq_name(void);
 void QueryBuilder_pred_match(void);
 void QueryBuilder_value_pair_w_0_value(void);
+void QueryBuilder_term_ref_flags_preserve_id(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -6033,6 +6034,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "value_pair_w_0_value",
         QueryBuilder_value_pair_w_0_value
+    },
+    {
+        "term_ref_flags_preserve_id",
+        QueryBuilder_term_ref_flags_preserve_id
     }
 };
 
@@ -8758,7 +8763,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        190,
+        191,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params
