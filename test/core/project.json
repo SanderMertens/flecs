@@ -2945,6 +2945,8 @@
                 "delete_with",
                 "prefab_children_after_adding_prefab",
                 "add_base_w_exclusive_override",
+                "add_base_w_exclusive_dont_fragment_override",
+                "add_base_w_exclusive_dont_fragment_override_w_value",
                 "fini_w_prefab_child_exclusive_pair_delete_with",
                 "delete_with_component_used_by_prefab",
                 "delete_component_used_by_prefab",

@@ -64025,6 +64025,17 @@ void flecs_instantiate_dont_fragment(
             !ecs_id_is_wildcard(cur->id)) 
         {
             if (flecs_component_sparse_has(cur, base)) {
+                if (cur->flags & EcsIdExclusive) {
+                    ecs_component_record_t *cr_wc = flecs_components_get(
+                        world, ecs_pair(ECS_PAIR_FIRST(cur->id), EcsWildcard));
+                    if (cr_wc && cr_wc->sparse &&
+                        flecs_sparse_has(cr_wc->sparse, instance))
+                    {
+                        cur = cur->non_fragmenting.next;
+                        continue;
+                    }
+                }
+
                 void *base_ptr = flecs_component_sparse_get(
                     world, cur, NULL, base);
                 const ecs_type_info_t *ti = cur->type_info;
