@@ -107,12 +107,12 @@ ecs_entity_t ecs_module_init(
         desc.entity = ecs_id(id);\
         ecs_id(id) = ecs_module_init(world, #id, &desc);\
         ecs_set_scope(world, ecs_id(id));\
-    }
+    }\
+    (void)ecs_id(id)
 
 /** Create a module. */
 #define ECS_MODULE(world, id)\
-    ecs_entity_t ecs_id(id) = 0; ECS_MODULE_DEFINE(world, id)\
-    (void)ecs_id(id)
+    ecs_entity_t ecs_id(id) = 0; ECS_MODULE_DEFINE(world, id)
 
 /** Wrapper around ecs_import().
  * This macro provides a convenient way to load a module with the world. It can

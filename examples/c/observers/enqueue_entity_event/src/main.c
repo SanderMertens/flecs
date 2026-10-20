@@ -65,10 +65,11 @@ int main(int argc, char *argv[]) {
     });
 
     // Emit the Resize event
+    Resize payload = {100, 200};
     ecs_enqueue(stage_1, &(ecs_event_desc_t) {
         .event = ecs_id(Resize),
         .entity = widget,
-        .param = &(Resize){100, 200} // pass payload
+        .param = &payload // pass payload
     });
 
     printf("Events enqueued\n");

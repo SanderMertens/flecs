@@ -84,8 +84,9 @@
         desc.type.size = ECS_SIZEOF(id_); \
         desc.type.alignment = ECS_ALIGNOF(id_); \
         ecs_id(id_) = ecs_component_init(world, &desc);\
+        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create component %s", #id_);\
     }\
-    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create component %s", #id_)
+    (void)ecs_id(id_)
 
 /** Declare and define a component.
  *
@@ -123,7 +124,8 @@
         desc.events[0] = kind;\
         ecs_id(id_) = ecs_observer_init(world, &desc);\
         ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create observer %s", #id_);\
-    }
+    }\
+    (void)ecs_id(id_)
 
 /** Declare and define an observer.
  *
@@ -160,7 +162,8 @@
         desc.expr = #__VA_ARGS__;\
         name_ = ecs_query_init(world, &desc);\
         ecs_assert(name_ != NULL, ECS_INVALID_PARAMETER, "failed to create query %s", #name_);\
-    }
+    }\
+    (void)name_
 
 /** Declare and define a query.
  *
