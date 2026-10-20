@@ -1116,7 +1116,11 @@
                 "remove_childof_after_convert_sibling",
                 "up_not_observer_defer_remove_add_batched",
                 "multi_term_up_observer_visits_all_siblings",
-                "multi_term_up_observer_propagates_to_subtree"
+                "multi_term_up_observer_propagates_to_subtree",
+                "instantiate_prefab_child_w_nested_children",
+                "delete_root_of_instantiated_prefab_child_w_nested_children",
+                "delete_root_of_prefab_child_w_mixed_children_and_other_targets",
+                "delete_root_of_child_w_mixed_children_and_other_targets_cleanup_order"
             ]
         }, {
             "id": "Hierarchies",

@@ -1083,6 +1083,10 @@ void NonFragmentingChildOf_remove_childof_after_convert_sibling(void);
 void NonFragmentingChildOf_up_not_observer_defer_remove_add_batched(void);
 void NonFragmentingChildOf_multi_term_up_observer_visits_all_siblings(void);
 void NonFragmentingChildOf_multi_term_up_observer_propagates_to_subtree(void);
+void NonFragmentingChildOf_instantiate_prefab_child_w_nested_children(void);
+void NonFragmentingChildOf_delete_root_of_instantiated_prefab_child_w_nested_children(void);
+void NonFragmentingChildOf_delete_root_of_prefab_child_w_mixed_children_and_other_targets(void);
+void NonFragmentingChildOf_delete_root_of_child_w_mixed_children_and_other_targets_cleanup_order(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -7849,6 +7853,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "multi_term_up_observer_propagates_to_subtree",
         NonFragmentingChildOf_multi_term_up_observer_propagates_to_subtree
+    },
+    {
+        "instantiate_prefab_child_w_nested_children",
+        NonFragmentingChildOf_instantiate_prefab_child_w_nested_children
+    },
+    {
+        "delete_root_of_instantiated_prefab_child_w_nested_children",
+        NonFragmentingChildOf_delete_root_of_instantiated_prefab_child_w_nested_children
+    },
+    {
+        "delete_root_of_prefab_child_w_mixed_children_and_other_targets",
+        NonFragmentingChildOf_delete_root_of_prefab_child_w_mixed_children_and_other_targets
+    },
+    {
+        "delete_root_of_child_w_mixed_children_and_other_targets_cleanup_order",
+        NonFragmentingChildOf_delete_root_of_child_w_mixed_children_and_other_targets_cleanup_order
     }
 };
 
@@ -17897,7 +17917,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        293,
+        297,
         NonFragmentingChildOf_testcases
     },
     {

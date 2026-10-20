@@ -15288,7 +15288,8 @@ static bool flecs_is_childof_tgt_only(
 static void flecs_component_delete_non_fragmenting_childof(
     ecs_world_t *world,
     ecs_component_record_t *cr,
-    bool force_delete)
+    bool force_delete,
+    bool release_tgt)
 {
     if (force_delete) {
         flecs_tree_spawner_fini(world, ECS_PAIR_SECOND(cr->id));
@@ -15321,13 +15322,13 @@ static void flecs_component_delete_non_fragmenting_childof(
                 !(child_cr->flags & EcsIdMarkedForDelete) &&
                 flecs_component_has_non_fragmenting_childof(child_cr))
             {
-                if (!flecs_is_childof_tgt_only(child_cr)) {
-                    /* Entity is used as target with other relationships, go
-                     * through regular cleanup path. */
-                    flecs_target_mark_for_delete(world, e, force_delete);
+                if (flecs_is_childof_tgt_only(child_cr)) {
+                    flecs_component_delete_non_fragmenting_childof(
+                        world, child_cr, force_delete, true);
                 } else {
                     flecs_component_delete_non_fragmenting_childof(
-                        world, child_cr, force_delete);
+                        world, child_cr, force_delete, false);
+                    flecs_target_mark_for_delete(world, e, force_delete);
                 }
             } else {
                 /* Entity is a target but is not a (non-fragmenting) ChildOf
@@ -15349,9 +15350,11 @@ static void flecs_component_delete_non_fragmenting_childof(
 
     ecs_vec_fini_t(&world->allocator, &children_vec, ecs_entity_t);
 
-    ecs_component_record_t *tgt_wc = pr->second.prev;
-    ecs_assert(ECS_PAIR_FIRST(tgt_wc->id) == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
-    flecs_component_release(world, tgt_wc);
+    if (release_tgt) {
+        ecs_component_record_t *tgt_wc = pr->second.prev;
+        ecs_assert(ECS_PAIR_FIRST(tgt_wc->id) == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
+        flecs_component_release(world, tgt_wc);
+    }
 }
 
 static bool flecs_component_mark_non_fragmenting_childof(
@@ -15388,7 +15391,7 @@ static bool flecs_component_mark_non_fragmenting_childof(
     if (flecs_is_childof_tgt_only(childof_cr)) {
         /* Entity is only used as ChildOf target */
         flecs_component_delete_non_fragmenting_childof(
-            world, childof_cr, force_delete);
+            world, childof_cr, force_delete, true);
         return true;
     }
 
