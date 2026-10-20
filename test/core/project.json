@@ -819,7 +819,10 @@
                 "fini_w_dont_fragment_component_on_prefab_child_w_up_query",
                 "fini_w_dont_fragment_component_w_isa_in_module",
                 "fini_w_dont_fragment_inherit_component_w_isa_in_module",
-                "fini_w_dont_fragment_component_w_isa_prefab_in_module"
+                "fini_w_dont_fragment_component_w_isa_prefab_in_module",
+                "add_dont_fragment_tag_w_with",
+                "add_dont_fragment_tag_w_with_deferred",
+                "add_dont_fragment_tag_w_with_dont_fragment"
             ]
         }, {
             "id": "NonFragmentingChildOf",

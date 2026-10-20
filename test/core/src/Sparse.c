@@ -7980,3 +7980,53 @@ void Sparse_fini_w_dont_fragment_component_w_isa_prefab_in_module(void) {
 
     test_assert(true);
 }
+
+void Sparse_add_dont_fragment_tag_w_with(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag_a = ecs_new(world);
+    ecs_entity_t tag_b = ecs_new(world);
+    ecs_add_id(world, tag_b, EcsDontFragment);
+    ecs_add_pair(world, tag_b, EcsWith, tag_a);
+
+    ecs_entity_t e = ecs_new_w_id(world, tag_b);
+    test_assert(ecs_has_id(world, e, tag_b));
+    test_assert(ecs_has_id(world, e, tag_a));
+
+    ecs_fini(world);
+}
+
+void Sparse_add_dont_fragment_tag_w_with_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag_a = ecs_new(world);
+    ecs_entity_t tag_b = ecs_new(world);
+    ecs_add_id(world, tag_b, EcsDontFragment);
+    ecs_add_pair(world, tag_b, EcsWith, tag_a);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_add_id(stage, e, tag_b);
+    ecs_merge(stage);
+
+    test_assert(ecs_has_id(world, e, tag_b));
+    test_assert(ecs_has_id(world, e, tag_a));
+
+    ecs_fini(world);
+}
+
+void Sparse_add_dont_fragment_tag_w_with_dont_fragment(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag_a = ecs_new(world);
+    ecs_add_id(world, tag_a, EcsDontFragment);
+    ecs_entity_t tag_b = ecs_new(world);
+    ecs_add_pair(world, tag_b, EcsWith, tag_a);
+
+    ecs_entity_t e = ecs_new_w_id(world, tag_b);
+    test_assert(ecs_has_id(world, e, tag_b));
+    test_assert(ecs_has_id(world, e, tag_a));
+
+    ecs_fini(world);
+}
