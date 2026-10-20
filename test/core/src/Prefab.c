@@ -6308,6 +6308,56 @@ void Prefab_add_base_w_exclusive_override(void) {
     ecs_fini(world);
 }
 
+void Prefab_add_base_w_exclusive_dont_fragment_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsExclusive);
+    ecs_add_id(world, Rel, EcsDontFragment);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, base, Rel, TgtA);
+
+    ecs_entity_t i = ecs_new(world);
+    ecs_add_pair(world, i, Rel, TgtB);
+    ecs_add_pair(world, i, EcsIsA, base);
+
+    test_assert(ecs_has_pair(world, i, Rel, TgtB));
+    test_assert(!ecs_has_pair(world, i, Rel, TgtA));
+    test_assert(ecs_has_pair(world, base, Rel, TgtA));
+
+    ecs_fini(world);
+}
+
+void Prefab_add_base_w_exclusive_dont_fragment_override_w_value(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsExclusive);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set_pair(world, base, Position, TgtA, {10, 20});
+
+    ecs_entity_t i = ecs_new(world);
+    ecs_set_pair(world, i, Position, TgtB, {30, 40});
+    ecs_add_pair(world, i, EcsIsA, base);
+
+    test_assert(ecs_has_pair(world, i, ecs_id(Position), TgtB));
+    test_assert(!ecs_has_pair(world, i, ecs_id(Position), TgtA));
+
+    const Position *p = ecs_get_pair(world, i, Position, TgtB);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
 void Prefab_fini_w_prefab_child_exclusive_pair_delete_with(void) {
     ecs_world_t *world = ecs_mini();
 

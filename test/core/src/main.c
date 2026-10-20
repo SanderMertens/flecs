@@ -2866,6 +2866,8 @@ void Prefab_remove_all(void);
 void Prefab_delete_with(void);
 void Prefab_prefab_children_after_adding_prefab(void);
 void Prefab_add_base_w_exclusive_override(void);
+void Prefab_add_base_w_exclusive_dont_fragment_override(void);
+void Prefab_add_base_w_exclusive_dont_fragment_override_w_value(void);
 void Prefab_fini_w_prefab_child_exclusive_pair_delete_with(void);
 void Prefab_delete_with_component_used_by_prefab(void);
 void Prefab_delete_component_used_by_prefab(void);
@@ -14845,6 +14847,14 @@ bake_test_case Prefab_testcases[] = {
         Prefab_add_base_w_exclusive_override
     },
     {
+        "add_base_w_exclusive_dont_fragment_override",
+        Prefab_add_base_w_exclusive_dont_fragment_override
+    },
+    {
+        "add_base_w_exclusive_dont_fragment_override_w_value",
+        Prefab_add_base_w_exclusive_dont_fragment_override_w_value
+    },
+    {
         "fini_w_prefab_child_exclusive_pair_delete_with",
         Prefab_fini_w_prefab_child_exclusive_pair_delete_with
     },
@@ -18071,7 +18081,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        207,
+        209,
         Prefab_testcases
     },
     {
