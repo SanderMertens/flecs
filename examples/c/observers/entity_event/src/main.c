@@ -70,10 +70,11 @@ int main(int argc, char *argv[]) {
     });
 
     // Emit the Resize event
+    Resize payload = {100, 200};
     ecs_emit(ecs, &(ecs_event_desc_t) {
         .event = ecs_id(Resize),
         .entity = widget,
-        .param = &(Resize){100, 200} // pass payload
+        .param = &payload // pass payload
     });
 
     ecs_fini(ecs);

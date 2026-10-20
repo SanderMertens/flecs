@@ -6134,4 +6134,12 @@ void ecs_table_clear_entities(
 
 #include "flecs/private/addons.h"
 
+#if defined(ECS_TARGET_CLANG)
+#pragma clang diagnostic pop
+#elif defined(ECS_TARGET_GNU)
+#pragma GCC diagnostic pop
+#elif defined(ECS_TARGET_MSVC)
+#pragma warning(pop)
+#endif
+
 #endif

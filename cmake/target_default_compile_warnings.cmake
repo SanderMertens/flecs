@@ -33,7 +33,9 @@ function(target_default_compile_warnings_c THIS)
                     -Wno-implicit-int-enum-cast
                     -Wno-jump-misses-init
                     -Wno-nrvo
-                    -Wno-shadow-header)
+                    -Wno-shadow-header
+                    -Wno-switch-default
+                    -Wno-unsafe-buffer-usage)
 
         elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 

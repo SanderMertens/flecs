@@ -8,10 +8,12 @@ typedef struct {
 // Order by x member of Position
 int compare_position(
     ecs_entity_t e1,
-    const Position *p1,
+    const void *ptr1,
     ecs_entity_t e2,
-    const Position *p2)
+    const void *ptr2)
 {
+    const Position *p1 = ptr1;
+    const Position *p2 = ptr2;
     (void)e1;
     (void)e2;
     return (p1->x > p2->x) - (p1->x < p2->x);
@@ -47,7 +49,7 @@ int main(int argc, char *argv[]) {
     ecs_entity_t sys = ecs_system(ecs, {
         .query = {
             .terms = {{ .id = ecs_id(Position) }},
-            .order_by_callback = (ecs_order_by_action_t)compare_position,
+            .order_by_callback = compare_position,
             .order_by = ecs_id(Position) 
         },
         .callback = print_position
@@ -56,7 +58,7 @@ int main(int argc, char *argv[]) {
     // Create sorted query
     ecs_query_t *q = ecs_query(ecs, {
         .terms = {{ .id = ecs_id(Position) }},
-        .order_by_callback = (ecs_order_by_action_t)compare_position,
+        .order_by_callback = compare_position,
         .order_by = ecs_id(Position)
     });
 

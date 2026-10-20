@@ -16,6 +16,7 @@
 #include <stddef.h>
 
 #include "flecs.h"
+#include "ignored_warnings.h"
 
 #ifdef ECS_TARGET_WINDOWS
 #ifndef WIN32_LEAN_AND_MEAN
