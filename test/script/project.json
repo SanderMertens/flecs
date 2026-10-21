@@ -822,7 +822,15 @@
                 "map_type_w_member_struct_declared_in_same_script",
                 "map_type_decl_as_component_in_same_script",
                 "primitive_type_decl_as_component_in_same_script",
-                "primitive_type_w_kind_u64_in_same_script"
+                "primitive_type_w_kind_u64_in_same_script",
+                "reopen_entity_overwrite_component_warns",
+                "reopen_entity_different_component_no_warn",
+                "reopen_entity_overwrite_pair_warns",
+                "named_entity_in_for_loop_warns",
+                "named_child_in_for_loop_warns",
+                "interpolated_name_in_for_loop_no_warn",
+                "child_of_interpolated_name_in_for_loop_no_warn",
+                "named_entity_w_tag_in_for_loop_no_warn"
             ]
         }, {
             "id": "Collection",

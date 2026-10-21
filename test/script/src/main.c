@@ -816,6 +816,14 @@ void Eval_map_type_w_member_struct_declared_in_same_script(void);
 void Eval_map_type_decl_as_component_in_same_script(void);
 void Eval_primitive_type_decl_as_component_in_same_script(void);
 void Eval_primitive_type_w_kind_u64_in_same_script(void);
+void Eval_reopen_entity_overwrite_component_warns(void);
+void Eval_reopen_entity_different_component_no_warn(void);
+void Eval_reopen_entity_overwrite_pair_warns(void);
+void Eval_named_entity_in_for_loop_warns(void);
+void Eval_named_child_in_for_loop_warns(void);
+void Eval_interpolated_name_in_for_loop_no_warn(void);
+void Eval_child_of_interpolated_name_in_for_loop_no_warn(void);
+void Eval_named_entity_w_tag_in_for_loop_no_warn(void);
 
 // Testsuite 'Collection'
 void Collection_setup(void);
@@ -7169,6 +7177,38 @@ bake_test_case Eval_testcases[] = {
     {
         "primitive_type_w_kind_u64_in_same_script",
         Eval_primitive_type_w_kind_u64_in_same_script
+    },
+    {
+        "reopen_entity_overwrite_component_warns",
+        Eval_reopen_entity_overwrite_component_warns
+    },
+    {
+        "reopen_entity_different_component_no_warn",
+        Eval_reopen_entity_different_component_no_warn
+    },
+    {
+        "reopen_entity_overwrite_pair_warns",
+        Eval_reopen_entity_overwrite_pair_warns
+    },
+    {
+        "named_entity_in_for_loop_warns",
+        Eval_named_entity_in_for_loop_warns
+    },
+    {
+        "named_child_in_for_loop_warns",
+        Eval_named_child_in_for_loop_warns
+    },
+    {
+        "interpolated_name_in_for_loop_no_warn",
+        Eval_interpolated_name_in_for_loop_no_warn
+    },
+    {
+        "child_of_interpolated_name_in_for_loop_no_warn",
+        Eval_child_of_interpolated_name_in_for_loop_no_warn
+    },
+    {
+        "named_entity_w_tag_in_for_loop_no_warn",
+        Eval_named_entity_w_tag_in_for_loop_no_warn
     }
 };
 
@@ -19569,7 +19609,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        806,
+        814,
         Eval_testcases,
         1,
         Eval_params

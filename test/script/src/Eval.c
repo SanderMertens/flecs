@@ -19,6 +19,22 @@ static void eval_prefab_warn_callback(
     }
 }
 
+static int eval_overwrite_warn_count = 0;
+
+static void eval_overwrite_warn_callback(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    (void)file;
+    (void)line;
+
+    if (level == -2 && strstr(msg, "overwrit")) {
+        eval_overwrite_warn_count ++;
+    }
+}
+
 void Eval_setup(void) {
     const char *ir_param = test_param("ir");
     ir_enabled = ir_param && !strcmp(ir_param, "enabled");
@@ -25832,4 +25848,298 @@ void Eval_primitive_type_w_kind_u64_in_same_script(void) {
     test_int(c->size, ECS_SIZEOF(Body));
 
     ecs_fini(world);
+}
+
+void Eval_reopen_entity_overwrite_component_warns(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = eval_overwrite_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    eval_overwrite_warn_count = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Position: {10, 20}"
+    LINE "  Velocity: {1, 2}"
+    LINE "}"
+    LINE "e {"
+    LINE "  Position: {20, 30}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(eval_overwrite_warn_count, 1);
+
+    ecs_fini(world);
+
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
+}
+
+void Eval_reopen_entity_different_component_no_warn(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = eval_overwrite_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    eval_overwrite_warn_count = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    LINE "e {"
+    LINE "  Velocity: {1, 2}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(eval_overwrite_warn_count, 0);
+
+    ecs_fini(world);
+
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
+}
+
+void Eval_reopen_entity_overwrite_pair_warns(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = eval_overwrite_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    eval_overwrite_warn_count = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (Position, Rel): {10, 20}"
+    LINE "  (Position, Tgt): {10, 20}"
+    LINE "}"
+    LINE "e {"
+    LINE "  (Position, Tgt): {20, 30}"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(eval_overwrite_warn_count, 1);
+
+    ecs_fini(world);
+
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
+}
+
+void Eval_named_entity_in_for_loop_warns(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = eval_overwrite_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    eval_overwrite_warn_count = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for i in 0..10 {"
+    LINE "  e {"
+    LINE "    Position: {20, 30}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(eval_overwrite_warn_count, 1);
+
+    ecs_fini(world);
+
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
+}
+
+void Eval_named_child_in_for_loop_warns(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = eval_overwrite_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    eval_overwrite_warn_count = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for i in 0..10 {"
+    LINE "  parent {"
+    LINE "    child {"
+    LINE "      Position: {i, 30}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(eval_overwrite_warn_count, 1);
+
+    ecs_fini(world);
+
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
+}
+
+void Eval_interpolated_name_in_for_loop_no_warn(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = eval_overwrite_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    eval_overwrite_warn_count = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for i in 0..10 {"
+    LINE "  \"e_{i}\" {"
+    LINE "    Position: {i, 30}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(eval_overwrite_warn_count, 0);
+
+    ecs_fini(world);
+
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
+}
+
+void Eval_child_of_interpolated_name_in_for_loop_no_warn(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = eval_overwrite_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    eval_overwrite_warn_count = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for i in 0..10 {"
+    LINE "  \"parent_{i}\" {"
+    LINE "    child {"
+    LINE "      Position: {i, 30}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(eval_overwrite_warn_count, 0);
+
+    ecs_fini(world);
+
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
+}
+
+void Eval_named_entity_w_tag_in_for_loop_no_warn(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = eval_overwrite_warn_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    eval_overwrite_warn_count = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    const char *expr =
+    HEAD "for i in 0..10 {"
+    LINE "  e {"
+    LINE "    Tag"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+    test_int(eval_overwrite_warn_count, 0);
+
+    ecs_fini(world);
+
+    ecs_os_set_api_defaults();
+    ecs_log_set_level(-1);
 }

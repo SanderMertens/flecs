@@ -233,6 +233,15 @@ void flecs_script_eval_error_(
 #define flecs_script_eval_error(v, node, ...)\
     flecs_script_eval_error_(v, (const ecs_script_node_t*)node, __VA_ARGS__)
 
+void flecs_script_eval_warn_(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_node_t *node,
+    const char *fmt,
+    ...);
+
+#define flecs_script_eval_warn(v, node, ...)\
+    flecs_script_eval_warn_(v, (const ecs_script_node_t*)node, __VA_ARGS__)
+
 bool flecs_script_is_builtin(
     const ecs_world_t *world,
     ecs_entity_t e);

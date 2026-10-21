@@ -42,6 +42,9 @@ typedef struct ecs_script_type_visitor_t {
     bool template_scope;
     bool function_scope;
     bool async_scope;
+    ecs_script_entity_t *reopened;
+    bool for_static;
+    bool for_entity;
 } ecs_script_type_visitor_t;
 
 int flecs_script_type_scope(
