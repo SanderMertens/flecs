@@ -36,16 +36,14 @@ static bool flecs_script_valid_lookup_path(
     return template_nesting == 0;
 }
 
-void flecs_script_eval_error_(
+static void flecs_script_eval_log(
     ecs_script_eval_visitor_t *v,
     const ecs_script_node_t *node,
+    bool warn,
     const char *fmt,
-    ...)
+    va_list args)
 {
-    va_list args;
-    va_start(args, fmt);
     char *msg = flecs_vasprintf(fmt, args);
-    va_end(args);
 
     if (!node && v->base.depth > 0) {
         node = v->base.nodes[v->base.depth - 1];
@@ -55,13 +53,44 @@ void flecs_script_eval_error_(
     const char *code = v->base.script->pub.code;
     const char *pos = node ? node->pos : NULL;
 
+    int64_t column = 0;
     if (code && pos && (pos >= code) && (pos <= &code[ecs_os_strlen(code)])) {
-        ecs_parser_error(name, code, pos - code, "%s", msg);
+        column = pos - code;
     } else {
-        ecs_parser_error(name, NULL, 0, "%s", msg);
+        code = NULL;
+    }
+
+    if (warn) {
+        ecs_parser_warning(name, code, column, "%s", msg);
+    } else {
+        ecs_parser_error(name, code, column, "%s", msg);
     }
 
     ecs_os_free(msg);
+}
+
+void flecs_script_eval_error_(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_node_t *node,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    flecs_script_eval_log(v, node, false, fmt, args);
+    va_end(args);
+}
+
+void flecs_script_eval_warn_(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_node_t *node,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    flecs_script_eval_log(v, node, true, fmt, args);
+    va_end(args);
 }
 
 ecs_value_t* flecs_script_with_append(

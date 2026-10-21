@@ -49476,6 +49476,15 @@ void flecs_script_eval_error_(
 #define flecs_script_eval_error(v, node, ...)\
     flecs_script_eval_error_(v, (const ecs_script_node_t*)node, __VA_ARGS__)
 
+void flecs_script_eval_warn_(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_node_t *node,
+    const char *fmt,
+    ...);
+
+#define flecs_script_eval_warn(v, node, ...)\
+    flecs_script_eval_warn_(v, (const ecs_script_node_t*)node, __VA_ARGS__)
+
 bool flecs_script_is_builtin(
     const ecs_world_t *world,
     ecs_entity_t e);
@@ -49869,6 +49878,9 @@ typedef struct ecs_script_type_visitor_t {
     bool template_scope;
     bool function_scope;
     bool async_scope;
+    ecs_script_entity_t *reopened;
+    bool for_static;
+    bool for_entity;
 } ecs_script_type_visitor_t;
 
 int flecs_script_type_scope(
@@ -93942,16 +93954,14 @@ static bool flecs_script_valid_lookup_path(
     return template_nesting == 0;
 }
 
-void flecs_script_eval_error_(
+static void flecs_script_eval_log(
     ecs_script_eval_visitor_t *v,
     const ecs_script_node_t *node,
+    bool warn,
     const char *fmt,
-    ...)
+    va_list args)
 {
-    va_list args;
-    va_start(args, fmt);
     char *msg = flecs_vasprintf(fmt, args);
-    va_end(args);
 
     if (!node && v->base.depth > 0) {
         node = v->base.nodes[v->base.depth - 1];
@@ -93961,13 +93971,44 @@ void flecs_script_eval_error_(
     const char *code = v->base.script->pub.code;
     const char *pos = node ? node->pos : NULL;
 
+    int64_t column = 0;
     if (code && pos && (pos >= code) && (pos <= &code[ecs_os_strlen(code)])) {
-        ecs_parser_error(name, code, pos - code, "%s", msg);
+        column = pos - code;
     } else {
-        ecs_parser_error(name, NULL, 0, "%s", msg);
+        code = NULL;
+    }
+
+    if (warn) {
+        ecs_parser_warning(name, code, column, "%s", msg);
+    } else {
+        ecs_parser_error(name, code, column, "%s", msg);
     }
 
     ecs_os_free(msg);
+}
+
+void flecs_script_eval_error_(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_node_t *node,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    flecs_script_eval_log(v, node, false, fmt, args);
+    va_end(args);
+}
+
+void flecs_script_eval_warn_(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_node_t *node,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    flecs_script_eval_log(v, node, true, fmt, args);
+    va_end(args);
 }
 
 ecs_value_t* flecs_script_with_append(
@@ -99043,6 +99084,51 @@ static int flecs_script_type_with_component(
     return flecs_script_type_check_component_expr(t, node, &type);
 }
 
+static void flecs_script_type_check_overwrite(
+    ecs_script_type_visitor_t *t,
+    ecs_script_component_t *node)
+{
+    ecs_script_id_t *id = &node->id;
+    if (id->first_expr || id->second_expr || id->first_sp != -1 ||
+        id->second_sp != -1)
+    {
+        return;
+    }
+
+    const char *name = t->v->entity->node->name;
+    if (t->for_entity) {
+        flecs_script_eval_warn(t->v, node,
+            "value of '%s' for entity '%s' is overwritten in each loop "
+            "iteration: a named entity in a loop body refers to the same "
+            "entity in every iteration", id->first, name);
+        return;
+    }
+
+    if (!t->reopened) {
+        return;
+    }
+
+    int32_t i, count = ecs_vec_count(&t->reopened->scope->stmts);
+    ecs_script_node_t **stmts = ecs_vec_first(&t->reopened->scope->stmts);
+    for (i = 0; i < count; i ++) {
+        if (stmts[i]->kind != EcsAstComponent) {
+            continue;
+        }
+
+        ecs_script_id_t *prev = &((ecs_script_component_t*)stmts[i])->id;
+        if (!ecs_os_strcmp(prev->first, id->first) &&
+            (prev->second == id->second || (prev->second && id->second &&
+                !ecs_os_strcmp(prev->second, id->second))))
+        {
+            flecs_script_eval_warn(t->v, node,
+                "value of '%s' for entity '%s' overwrites the value set by a "
+                "previous scope: opening a scope for an existing entity does "
+                "not create a new entity", id->first, name);
+            return;
+        }
+    }
+}
+
 static int flecs_script_type_component(
     ecs_script_type_visitor_t *t,
     ecs_script_component_t *node)
@@ -99071,6 +99157,8 @@ static int flecs_script_type_component(
     if (flecs_script_type_untyped_template_check(t, node)) {
         return -1;
     }
+
+    flecs_script_type_check_overwrite(t, node);
 
     if (!node->id.second && node->id.eval && ecs_has(
         t->v->world, node->id.eval, EcsScriptVisitor))
@@ -99470,9 +99558,15 @@ static int flecs_script_type_for(
         iv->interface = elem_interface;
     }
 
+    bool old_for_static = t->for_static;
+    bool old_for_entity = t->for_entity;
+    t->for_static = true;
+    t->for_entity = false;
     t->for_depth ++;
     int result = flecs_script_type_control_scope(t, node->scope);
     t->for_depth --;
+    t->for_static = old_for_static;
+    t->for_entity = old_for_entity;
     ecs_vec_set_count_t(NULL, &t->interface_vars,
         ecs_script_type_interface_var_t, interface_var_count);
     t->v->vars = ecs_script_vars_pop(t->v->vars);
@@ -99837,6 +99931,12 @@ static int flecs_script_type_entity(
     t->v->entity = &state;
     t->v->is_with_scope = false;
 
+    bool old_for_static = t->for_static;
+    bool old_for_entity = t->for_entity;
+    ecs_script_entity_t *old_reopened = t->reopened;
+    t->for_static = t->for_entity = t->for_static && entry;
+    t->reopened = entry && entry->node != node ? entry->node : NULL;
+
     if (!node->is_type) {
         ecs_vec_clear(&t->v->r->annot);
     }
@@ -99847,6 +99947,9 @@ static int flecs_script_type_entity(
         t, node->scope, child_table, true, true);
     t->v->entity = old_entity;
     t->v->is_with_scope = old_with;
+    t->for_static = old_for_static;
+    t->for_entity = old_for_entity;
+    t->reopened = old_reopened;
     if (result) {
         return -1;
     }
