@@ -1041,6 +1041,9 @@ void NonFragmentingChildOf_defer_set_parent_to_deleted_w_on_remove(void);
 void NonFragmentingChildOf_defer_set_parent_to_deleted_batched_w_on_remove(void);
 void NonFragmentingChildOf_defer_set_existing_parent_to_deleted(void);
 void NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched(void);
+void NonFragmentingChildOf_defer_reparent_to_deleted_parent_two_stages(void);
+void NonFragmentingChildOf_defer_reparent_to_deleted_parent_two_stages_batched(void);
+void NonFragmentingChildOf_defer_reparent_named_child_to_deleted_parent_two_stages(void);
 void NonFragmentingChildOf_defer_remove_set_parent_different_stages(void);
 void NonFragmentingChildOf_defer_remove_set_parent_different_stages_batched(void);
 void NonFragmentingChildOf_defer_remove_set_parent_different_stages_w_observer(void);
@@ -7698,6 +7701,18 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "defer_set_existing_parent_to_deleted_batched",
         NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched
+    },
+    {
+        "defer_reparent_to_deleted_parent_two_stages",
+        NonFragmentingChildOf_defer_reparent_to_deleted_parent_two_stages
+    },
+    {
+        "defer_reparent_to_deleted_parent_two_stages_batched",
+        NonFragmentingChildOf_defer_reparent_to_deleted_parent_two_stages_batched
+    },
+    {
+        "defer_reparent_named_child_to_deleted_parent_two_stages",
+        NonFragmentingChildOf_defer_reparent_named_child_to_deleted_parent_two_stages
     },
     {
         "defer_remove_set_parent_different_stages",
@@ -17982,7 +17997,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        297,
+        300,
         NonFragmentingChildOf_testcases
     },
     {
