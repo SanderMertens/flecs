@@ -727,6 +727,7 @@ static void flecs_compute_table_diff(
             diff->removed_flags |= EcsTableEdgeReparent;
         }
     } else if (diff->removed.count && (next->flags & EcsTableHasParent)) {
+        ecs_assert(diff->removed.array != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t i;
         for (i = 0; i < diff->removed.count; i ++) {
             if (ECS_HAS_RELATION(diff->removed.array[i], EcsChildOf)) {

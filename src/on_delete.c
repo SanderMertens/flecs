@@ -254,12 +254,10 @@ static void flecs_component_delete_non_fragmenting_childof(
                 !(child_cr->flags & EcsIdMarkedForDelete) &&
                 flecs_component_has_non_fragmenting_childof(child_cr))
             {
-                if (flecs_is_childof_tgt_only(child_cr)) {
-                    flecs_component_delete_non_fragmenting_childof(
-                        world, child_cr, force_delete, true);
-                } else {
-                    flecs_component_delete_non_fragmenting_childof(
-                        world, child_cr, force_delete, false);
+                bool tgt_only = flecs_is_childof_tgt_only(child_cr);
+                flecs_component_delete_non_fragmenting_childof(
+                    world, child_cr, force_delete, tgt_only);
+                if (!tgt_only) {
                     flecs_target_mark_for_delete(world, e, force_delete);
                 }
             } else {
@@ -306,23 +304,11 @@ static bool flecs_component_mark_non_fragmenting_childof(
 
     ecs_component_record_t *childof_cr = flecs_components_get(
         world, ecs_childof(tgt));
-    if (!childof_cr) {
+    if (!childof_cr || (childof_cr->flags & EcsIdMarkedForDelete) ||
+        !flecs_component_has_non_fragmenting_childof(childof_cr))
+    {
         return false;
     }
-
-    ecs_flags32_t flags = childof_cr->flags;
-
-    if (flags & EcsIdMarkedForDelete) {
-        return false;
-    }
-
-    if (!flecs_component_has_non_fragmenting_childof(childof_cr)) {
-        return false;
-    }
-
-    childof_cr->flags |= EcsIdMarkedForDelete;
-
-    ecs_pair_record_t *pr = childof_cr->pair;
 
     if (flecs_is_childof_tgt_only(childof_cr)) {
         /* Entity is only used as ChildOf target */
@@ -331,11 +317,15 @@ static bool flecs_component_mark_non_fragmenting_childof(
         return true;
     }
 
+    childof_cr->flags |= EcsIdMarkedForDelete;
+
     if (force_delete) {
         flecs_tree_spawner_fini(world, tgt);
     }
 
     flecs_marked_id_push(world, childof_cr, EcsDelete, true);
+
+    ecs_pair_record_t *pr = childof_cr->pair;
 
     int32_t i, count = ecs_vec_count(&pr->ordered_children);
     ecs_entity_t *children = ecs_vec_first(&pr->ordered_children);

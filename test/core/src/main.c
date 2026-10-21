@@ -827,6 +827,7 @@ void NonFragmentingChildOf_delete_parent(void);
 void NonFragmentingChildOf_delete_parent_2_children(void);
 void NonFragmentingChildOf_mixed_childof(void);
 void NonFragmentingChildOf_convert_childof_to_parent_keeps_order(void);
+void NonFragmentingChildOf_convert_childof_to_parent_other_parent_and_back_appends(void);
 void NonFragmentingChildOf_set_same_parent_twice_keeps_order(void);
 void NonFragmentingChildOf_add_childof_to_parent_component_keeps_order(void);
 void NonFragmentingChildOf_deferred_set_same_parent_keeps_order(void);
@@ -1108,6 +1109,7 @@ void NonFragmentingChildOf_instantiate_prefab_child_w_nested_children(void);
 void NonFragmentingChildOf_delete_root_of_instantiated_prefab_child_w_nested_children(void);
 void NonFragmentingChildOf_delete_root_of_prefab_child_w_mixed_children_and_other_targets(void);
 void NonFragmentingChildOf_delete_root_of_child_w_mixed_children_and_other_targets_cleanup_order(void);
+void NonFragmentingChildOf_delete_target_of_children_w_different_parents_childof_observer(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -6862,6 +6864,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_convert_childof_to_parent_keeps_order
     },
     {
+        "convert_childof_to_parent_other_parent_and_back_appends",
+        NonFragmentingChildOf_convert_childof_to_parent_other_parent_and_back_appends
+    },
+    {
         "set_same_parent_twice_keeps_order",
         NonFragmentingChildOf_set_same_parent_twice_keeps_order
     },
@@ -7984,6 +7990,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "delete_root_of_child_w_mixed_children_and_other_targets_cleanup_order",
         NonFragmentingChildOf_delete_root_of_child_w_mixed_children_and_other_targets_cleanup_order
+    },
+    {
+        "delete_target_of_children_w_different_parents_childof_observer",
+        NonFragmentingChildOf_delete_target_of_children_w_different_parents_childof_observer
     }
 };
 
@@ -18072,7 +18082,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        315,
+        317,
         NonFragmentingChildOf_testcases
     },
     {
