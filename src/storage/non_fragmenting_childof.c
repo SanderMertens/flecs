@@ -210,6 +210,12 @@ static void flecs_on_replace_parent(ecs_iter_t *it) {
         /* This can happen when a child is parented to a parent that is deleted
          * in the same command queue. */
         if (!flecs_entities_is_alive(world, new_parent)) {
+            flecs_remove_non_fragmenting_child(world, old_parent, e);
+            if (names) {
+                flecs_on_reparent_update_name(
+                    world, e, &names[i], old_parent, NULL);
+            }
+
             /* So cleanup code can see this is a child of a deleted parent */
             old[i].value = new_parent;
             ecs_delete(it->stage, e);

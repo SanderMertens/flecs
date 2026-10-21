@@ -5043,6 +5043,17 @@ static void flecs_cmd_batch_for_entity(
         }
     }
 
+    bool update_parent_records = !table_diff.removed.count ||
+        !(start_table->flags & EcsTableHasParent);
+    if (added.count && update_parent_records &&
+        (start_table->flags & EcsTableHasParent) &&
+        (table->flags & EcsTableHasParent))
+    {
+        flecs_on_non_fragmenting_child_move_add(
+            world, table, start_table, ECS_RECORD_TO_ROW(r->row), 1);
+        update_parent_records = false;
+    }
+
     /* If the batch contains set commands, copy the component value from the 
      * temporary command storage to the actual component storage before OnSet
      * observers are invoked. This ensures that for multi-component OnSet 
@@ -5155,9 +5166,6 @@ static void flecs_cmd_batch_for_entity(
         ecs_table_diff_t add_diff = ECS_TABLE_DIFF_INIT;
         add_diff.added = added;
         add_diff.added_flags = table_diff.added_flags;
-
-        bool update_parent_records = !table_diff.removed.count ||
-            !(start_table->flags & EcsTableHasParent);
 
         flecs_commands_begin(world, world->stages[0]);
         flecs_actions_move_add(world, r->table, start_table,
@@ -10017,11 +10025,13 @@ void ecs_on_set(EcsIdentifier)(
                 ECS_INVALID_OPERATION,
                     "cannot rename flecs.core module");
 
-            if (has_parent) {
+            if (has_parent && (evt == EcsOnSet || cur->index)) {
                 ecs_component_record_t *cr = flecs_components_get(
                     world, ecs_childof(parents[i].value));
                 ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
                 index = flecs_component_name_index_ensure(world, cr);
+            } else if (has_parent) {
+                index = NULL;
             }
         }
 
@@ -27946,6 +27956,12 @@ static void flecs_on_replace_parent(ecs_iter_t *it) {
         /* This can happen when a child is parented to a parent that is deleted
          * in the same command queue. */
         if (!flecs_entities_is_alive(world, new_parent)) {
+            flecs_remove_non_fragmenting_child(world, old_parent, e);
+            if (names) {
+                flecs_on_reparent_update_name(
+                    world, e, &names[i], old_parent, NULL);
+            }
+
             /* So cleanup code can see this is a child of a deleted parent */
             old[i].value = new_parent;
             ecs_delete(it->stage, e);

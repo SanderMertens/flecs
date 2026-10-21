@@ -6368,6 +6368,105 @@ void NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_defer_reparent_to_deleted_parent_two_stages(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_set_stage_count(world, 2);
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent_a, NULL);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_delete(stage, parent_b);
+    ecs_set(stage, child, EcsParent, {parent_b});
+    ecs_merge(stage);
+
+    test_assert(ecs_is_alive(world, parent_a));
+    test_assert(!ecs_is_alive(world, parent_b));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_delete(world, parent_a);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_reparent_to_deleted_parent_two_stages_batched(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_set_stage_count(world, 2);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent_a, NULL);
+    ecs_entity_t sibling = ecs_new_w_parent(world, parent_a, NULL);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_delete(stage, parent_b);
+    ecs_add(stage, child, Foo);
+    ecs_set(stage, child, EcsParent, {parent_b});
+    ecs_add(stage, child, Bar);
+    ecs_merge(stage);
+
+    test_assert(ecs_is_alive(world, parent_a));
+    test_assert(!ecs_is_alive(world, parent_b));
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(ecs_is_alive(world, sibling));
+
+    ecs_entities_t children = ecs_get_ordered_children(world, parent_a);
+    test_int(children.count, 1);
+    test_uint(children.ids[0], sibling);
+
+    const ecs_component_record_t *cr = flecs_components_get(
+        world, ecs_childof(parent_a));
+    const ecs_parent_record_t *pr = flecs_component_get_parent_record(
+        cr, ecs_get_table(world, sibling));
+    test_assert(pr != NULL);
+    test_int(pr->count, 1);
+
+    ecs_delete(world, parent_a);
+    test_assert(!ecs_is_alive(world, sibling));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_reparent_named_child_to_deleted_parent_two_stages(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_set_stage_count(world, 2);
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent_a, "child");
+    ecs_entity_t sibling = ecs_new_w_parent(world, parent_a, "sibling");
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_delete(stage, parent_b);
+    ecs_set(stage, child, EcsParent, {parent_b});
+    ecs_merge(stage);
+
+    test_assert(ecs_is_alive(world, parent_a));
+    test_assert(!ecs_is_alive(world, parent_b));
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(ecs_is_alive(world, sibling));
+    test_assert(ecs_lookup_child(world, parent_a, "child") == 0);
+    test_uint(ecs_lookup_child(world, parent_a, "sibling"), sibling);
+
+    ecs_entities_t children = ecs_get_ordered_children(world, parent_a);
+    test_int(children.count, 1);
+    test_uint(children.ids[0], sibling);
+
+    ecs_entity_t replacement = ecs_new_w_parent(world, parent_a, "child");
+    test_assert(ecs_is_alive(world, replacement));
+    test_uint(ecs_lookup_child(world, parent_a, "child"), replacement);
+
+    ecs_delete(world, parent_a);
+    test_assert(!ecs_is_alive(world, sibling));
+    test_assert(!ecs_is_alive(world, replacement));
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_defer_remove_set_parent_different_stages(void) {
     ecs_world_t *world = ecs_mini();
     ecs_set_stage_count(world, 2);

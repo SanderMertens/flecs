@@ -450,11 +450,13 @@ void ecs_on_set(EcsIdentifier)(
                 ECS_INVALID_OPERATION,
                     "cannot rename flecs.core module");
 
-            if (has_parent) {
+            if (has_parent && (evt == EcsOnSet || cur->index)) {
                 ecs_component_record_t *cr = flecs_components_get(
                     world, ecs_childof(parents[i].value));
                 ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
                 index = flecs_component_name_index_ensure(world, cr);
+            } else if (has_parent) {
+                index = NULL;
             }
         }
 
