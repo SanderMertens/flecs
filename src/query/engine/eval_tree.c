@@ -11,7 +11,7 @@ const EcsParent* flecs_query_tree_get_parents(
     ecs_table_range_t range)
 {
     int32_t parent_column = range.table->component_map[ecs_id(EcsParent)];
-    ecs_assert(parent_column != -1, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(parent_column > 0, ECS_INTERNAL_ERROR, NULL);
     return ecs_table_get_column(range.table, parent_column - 1, range.offset);
 }
 
@@ -487,9 +487,12 @@ bool flecs_query_tree_with(
 
             ecs_vec_t *children = &cr->pair->ordered_children;
             int32_t count = ecs_vec_count(children);
-            if (count < range.count &&
-                (!ctx->query->cache || !ctx->query->cache->order_by_callback))
-            {
+            bool ordered = false;
+#ifdef FLECS_CACHED_QUERIES
+            ordered = ctx->query->cache &&
+                ctx->query->cache->order_by_callback;
+#endif
+            if (count < range.count && !ordered) {
                 op_ctx->entities = ecs_vec_first_t(children, ecs_entity_t);
                 op_ctx->count = count;
                 op_ctx->cur = 0;
@@ -757,7 +760,7 @@ bool flecs_query_tree_post(
     ecs_table_range_t range = flecs_query_get_range(
         op, &op->src, EcsQuerySrc, ctx);
 
-    if (range.table->flags & (EcsTableHasChildOf)) {
+    if (range.table->flags & EcsTableHasChildOf) {
         return !redo;
     }
 
@@ -941,9 +944,6 @@ bool flecs_query_tree_up_post(
     if (term->oper != EcsNot && op_ctx->tgt != EcsWildcard) {
         return !redo;
     }
-
-    /* Shouldn't have gotten here if the table has neither ChildOf nor Parent */
-    ecs_assert(range.table->flags & EcsTableHasParent, ECS_INTERNAL_ERROR, NULL);
 
     bool result;
     if (term->oper == EcsNot) {

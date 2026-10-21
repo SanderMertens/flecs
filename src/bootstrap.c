@@ -401,10 +401,7 @@ static void flecs_register_ordered_children(ecs_iter_t *it) {
             ecs_component_record_t *cr = flecs_components_ensure(
                 it->world, ecs_childof(parent));
             if (!(cr->flags & EcsIdOrderedChildren)) {
-                /* Also flags existing child tables so children added after the
-                 * trait are tracked in the ordered list. */
-                flecs_component_ordered_children_init(it->world, cr);
-                flecs_ordered_children_populate(it->world, cr);
+                flecs_ordered_children_init(it->world, cr);
             }
         }
     } else if (!(it->world->flags & EcsWorldFini) && it->other_table) {
@@ -414,8 +411,7 @@ static void flecs_register_ordered_children(ecs_iter_t *it) {
             ecs_component_record_t *cr = flecs_components_get(
                 it->world, ecs_childof(parent));
             if (cr && (cr->flags & EcsIdOrderedChildren)) {
-                flecs_ordered_children_clear(cr);
-                cr->flags &= ~EcsIdOrderedChildren;
+                flecs_ordered_children_clear(it->world, cr);
             }
         }
     }

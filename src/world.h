@@ -101,6 +101,16 @@ struct ecs_world_t {
 
     int32_t non_fragmenting_child_count;
 
+    /* A child that switches between the ChildOf pair and Parent component
+     * representations is removed from ordered_children by the table move and
+     * added back by the hooks of the new representation. When the parent didn't
+     * change the child must keep its old position, so remember where it was. */
+    struct {
+        ecs_component_record_t *cr;
+        ecs_entity_t entity;
+        int32_t index;
+    } ordered_pending;
+
     /* Set once any table has dirty state allocated for change detection */
     bool has_dirty_state;
 

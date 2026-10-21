@@ -668,6 +668,41 @@ void NonFragmentingChildOf_convert_childof_to_parent_keeps_order(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_convert_childof_to_parent_other_parent_and_back_appends(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+    ecs_entity_t other = ecs_new(world);
+
+    ecs_entity_t child_a = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t child_b = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t child_c = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_set(world, child_b, EcsParent, { other });
+    test_uint(ecs_get_parent(world, child_b), other);
+
+    {
+        const ecs_entities_t children = ecs_get_ordered_children(world, parent);
+        test_int(children.count, 2);
+        test_int(children.ids[0], child_a);
+        test_int(children.ids[1], child_c);
+    }
+
+    ecs_set(world, child_b, EcsParent, { parent });
+    test_uint(ecs_get_parent(world, child_b), parent);
+
+    {
+        const ecs_entities_t children = ecs_get_ordered_children(world, parent);
+        test_int(children.count, 3);
+        test_int(children.ids[0], child_a);
+        test_int(children.ids[1], child_c);
+        test_int(children.ids[2], child_b);
+    }
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_set_same_parent_twice_keeps_order(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -8522,5 +8557,58 @@ void NonFragmentingChildOf_convert_storage_childof_observer(void) {
     test_int(add_count, 1);
     test_int(remove_count, 1);
     test_int(world->non_fragmenting_child_count, 1);
+    ecs_fini(world);
+}
+
+static void RecordChildOfOnRemove(ecs_iter_t *it) {
+    ecs_entity_t *records = it->ctx;
+    ecs_entity_t parent = ecs_pair_second(it->world, ecs_field_id(it, 0));
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        int32_t index = (int32_t)records[0] * 2 + 1;
+        records[index] = it->entities[i];
+        records[index + 1] = parent;
+        records[0] ++;
+    }
+}
+
+void NonFragmentingChildOf_delete_target_of_children_w_different_parents_childof_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Within);
+    ecs_add_pair(world, Within, EcsOnDeleteTarget, EcsDelete);
+
+    ecs_entity_t records[5] = {0};
+    ecs_entity_t observer = ecs_observer(world, {
+        .query.terms = {{ .id = ecs_pair(EcsChildOf, EcsWildcard) }},
+        .events = { EcsOnRemove },
+        .callback = RecordChildOfOnRemove,
+        .ctx = records
+    });
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world);
+    ecs_entity_t box = ecs_new(world);
+
+    ecs_entity_t a = ecs_new_w_pair(world, Within, box);
+    ecs_set(world, a, EcsParent, { p1 });
+    ecs_entity_t b = ecs_new_w_pair(world, Within, box);
+    ecs_set(world, b, EcsParent, { p2 });
+
+    ecs_delete(world, box);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+    test_assert(ecs_is_alive(world, p1));
+    test_assert(ecs_is_alive(world, p2));
+
+    test_uint(records[0], 2);
+    test_uint(records[1], a);
+    test_uint(records[2], p1);
+    test_uint(records[3], b);
+    test_uint(records[4], p2);
+
+    ecs_delete(world, observer);
+
     ecs_fini(world);
 }

@@ -2209,6 +2209,21 @@ error:
     return (ecs_entities_t){0};
 }
 
+static bool flecs_parent_matches_childof(
+    ecs_table_t *table,
+    const ecs_record_t *r,
+    ecs_id_t component)
+{
+    if (ECS_PAIR_SECOND(component) == EcsWildcard) {
+        return true;
+    }
+
+    int32_t column = table->component_map[ecs_id(EcsParent)];
+    EcsParent *p = flecs_table_get_component(
+        table, column - 1, ECS_RECORD_TO_ROW(r->row)).ptr;
+    return (uint32_t)p->value == ECS_PAIR_SECOND(component);
+}
+
 bool ecs_has_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -2252,17 +2267,10 @@ bool ecs_has_id(
             }
         }
 
-        if (ECS_PAIR_FIRST(component) == EcsChildOf) {
-            if (table->flags & EcsTableHasParent) {
-                if (ECS_PAIR_SECOND(component) == EcsWildcard) {
-                    return true;
-                }
-
-                int32_t column = table->component_map[ecs_id(EcsParent)];
-                EcsParent *p = flecs_table_get_component(
-                    table, column - 1, ECS_RECORD_TO_ROW(r->row)).ptr;
-                return (uint32_t)p->value == ECS_PAIR_SECOND(component);
-            }
+        if ((ECS_PAIR_FIRST(component) == EcsChildOf) &&
+            (table->flags & EcsTableHasParent))
+        {
+            return flecs_parent_matches_childof(table, r, component);
         }
 
         can_inherit = cr->flags & EcsIdOnInstantiateInherit;
@@ -2332,17 +2340,10 @@ bool ecs_owns_id(
             return flecs_component_sparse_has(cr, entity);
         }
 
-        if (ECS_PAIR_FIRST(component) == EcsChildOf) {
-            if (table->flags & EcsTableHasParent) {
-                if (ECS_PAIR_SECOND(component) == EcsWildcard) {
-                    return true;
-                }
-
-                int32_t column = table->component_map[ecs_id(EcsParent)];
-                EcsParent *p = flecs_table_get_component(
-                    table, column - 1, ECS_RECORD_TO_ROW(r->row)).ptr;
-                return (uint32_t)p->value == ECS_PAIR_SECOND(component);
-            }
+        if ((ECS_PAIR_FIRST(component) == EcsChildOf) &&
+            (table->flags & EcsTableHasParent))
+        {
+            return flecs_parent_matches_childof(table, r, component);
         }
     }
 
@@ -2501,6 +2502,10 @@ ecs_entity_t ecs_new_w_parent(
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(!(world->flags & EcsWorldMultiThreaded), ECS_INVALID_OPERATION,
         "cannot create new entity while world is multithreaded");
+    ecs_check(parent != 0, ECS_INVALID_OPERATION,
+        "cannot set Parent component with 0 entity");
+    ecs_check(ecs_is_alive(world, parent), ECS_INVALID_OPERATION,
+        "cannot set Parent component to entity that is not alive");
 
     ecs_component_record_t *cr = flecs_components_ensure(
         world, ecs_childof(parent));
@@ -2588,11 +2593,8 @@ ecs_entity_t ecs_new_w_parent(
 
     flecs_actions_new(world, table, row, 1, &table_diff, 0, true, EcsWildcard);
 
-
     if (name) {
-
         flecs_set_identifier(world, NULL, entity, EcsName, name);
-
     }
 
     flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
@@ -2605,6 +2607,8 @@ ecs_entity_t ecs_new_w_parent(
 
     flecs_commands_end(world, stage);
     return entity;
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_get_target_for_id(
