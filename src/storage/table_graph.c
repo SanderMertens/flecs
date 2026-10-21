@@ -1151,6 +1151,52 @@ void flecs_table_clear_edges_for_id(
     }
 }
 
+void flecs_table_clear_edges_for_base(
+    ecs_world_t *world,
+    ecs_entity_t base)
+{
+    ecs_id_t id = ecs_pair(EcsIsA, base);
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (!cr) {
+        return;
+    }
+
+    ecs_table_cache_iter_t it;
+    if (!flecs_table_cache_iter(
+        &cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty))
+    {
+        return;
+    }
+
+    const ecs_table_cache_elem_t *elem;
+    while ((elem = flecs_table_cache_next(&it))) {
+        ecs_table_t *table = elem->tr->hdr.table;
+
+        ecs_graph_edge_t *edge = table->node.incoming[0];
+        while (edge) {
+            ecs_graph_edge_t *next = edge->next;
+            if (edge->id == id) {
+                ecs_map_remove(edge->from->hi, id);
+                flecs_table_disconnect_edge(world, id, edge);
+            }
+            edge = next;
+        }
+
+        if (!table->_->traversable_count) {
+            continue;
+        }
+
+        const ecs_entity_t *entities = ecs_table_entities(table);
+        int32_t i, count = ecs_table_count(table);
+        for (i = 0; i < count; i ++) {
+            ecs_record_t *r = flecs_entities_get(world, entities[i]);
+            if (r->row & EcsEntityIsBase) {
+                flecs_table_clear_edges_for_base(world, entities[i]);
+            }
+        }
+    }
+}
+
 ecs_table_t* flecs_find_table_add(
     ecs_world_t *world,
     ecs_table_t *table,

@@ -681,6 +681,7 @@ extern "C" {
 #define EcsEntityIsTarget             (1u << 30)
 #define EcsEntityIsTraversable        (1u << 29)
 #define EcsEntityHasDontFragment      (1u << 28)
+#define EcsEntityIsBase               (1u << 27)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// ID flags (used by ecs_component_record_t::flags)
@@ -1255,7 +1256,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 //// Entity ID macros
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_ROW_MASK                  (0x0FFFFFFFu)
+#define ECS_ROW_MASK                  (0x07FFFFFFu)
 #define ECS_ROW_FLAGS_MASK            (~ECS_ROW_MASK)
 #define ECS_RECORD_TO_ROW(v)          (ECS_CAST(int32_t, (ECS_CAST(uint32_t, v) & ECS_ROW_MASK)))
 #define ECS_RECORD_TO_ROW_FLAGS(v)    (ECS_CAST(uint32_t, v) & ECS_ROW_FLAGS_MASK)

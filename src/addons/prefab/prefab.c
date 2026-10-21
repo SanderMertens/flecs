@@ -186,6 +186,7 @@ void flecs_bootstrap_prefab(
     ecs_add_pair(world, EcsDontFragment, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsChildOf, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsIdentifier), EcsOnInstantiate, EcsDontInherit);
+    ecs_add_id(world, ecs_id(EcsTreeSpawner), EcsDontFragment);
     ecs_add_pair(world, ecs_id(EcsTreeSpawner), EcsOnInstantiate, EcsDontInherit);
 
     /* Inherited components */

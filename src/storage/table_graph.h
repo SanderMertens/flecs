@@ -113,4 +113,8 @@ void flecs_table_clear_edges_for_id(
     ecs_table_t *table,
     ecs_id_t component);
 
+void flecs_table_clear_edges_for_base(
+    ecs_world_t *world,
+    ecs_entity_t base);
+
 #endif

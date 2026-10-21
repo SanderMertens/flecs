@@ -43,6 +43,7 @@ extern "C" {
 #define EcsEntityIsTarget             (1u << 30)
 #define EcsEntityIsTraversable        (1u << 29)
 #define EcsEntityHasDontFragment      (1u << 28)
+#define EcsEntityIsBase               (1u << 27)
 
 
 ////////////////////////////////////////////////////////////////////////////////
