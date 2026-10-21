@@ -9,20 +9,18 @@
 void flecs_bootstrap_parent_component(
     ecs_world_t *world);
 
-void flecs_on_non_fragmenting_child_move_add(
+void flecs_non_fragmenting_childof_count(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    const ecs_table_t *table,
+    int32_t count);
+
+void flecs_non_fragmenting_childof_move(
     ecs_world_t *world,
     const ecs_table_t *dst,
     const ecs_table_t *src,
     int32_t row,
     int32_t count);
-
-void flecs_on_non_fragmenting_child_move_remove(
-    ecs_world_t *world,
-    const ecs_table_t *dst,
-    const ecs_table_t *src,
-    int32_t row,
-    int32_t count,
-    bool update_parent_records);
 
 void flecs_non_fragmenting_childof_reparent(
     ecs_world_t *world,
@@ -33,7 +31,6 @@ void flecs_non_fragmenting_childof_reparent(
 
 void flecs_non_fragmenting_childof_unparent(
     ecs_world_t *world,
-    const ecs_table_t *dst,
     const ecs_table_t *src,
     int32_t row,
     int32_t count);

@@ -826,7 +826,21 @@
             ]
         }, {
             "id": "NonFragmentingChildOf",
-            "testcases": [ 
+            "testcases": [
+                "convert_storage_childof_observer",
+                "convert_storage_keeps_membership",
+                "defer_convert_storage_keeps_membership",
+                "convert_storage_reparents",
+                "defer_convert_storage_reparents",
+                "remove_all_childof_preserves_prefabs",
+                "remove_all_target_preserves_prefabs",
+                "delete_with_childof_preserves_prefabs",
+                "delete_with_target_preserves_prefabs",
+                "remove_all_childof_mixed",
+                "remove_all_target_mixed",
+                "delete_parent_w_child_used_as_tag",
+                "remove_all_parent_w_childof_observer",
+                "child_count_after_delete_parent",
                 "set_parent_no_ordered_children",
                 "add_ordered_children_before_set_parent",
                 "add_ordered_children_after_set_parent",
@@ -836,6 +850,7 @@
                 "remove_parent",
                 "clear_child",
                 "delete_child",
+                "delete_named_child_recycle_id",
                 "reparent",
                 "set_parent_2_children",
                 "remove_parent_2_children",

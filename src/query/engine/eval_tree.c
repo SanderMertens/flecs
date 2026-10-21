@@ -15,6 +15,36 @@ const EcsParent* flecs_query_tree_get_parents(
     return ecs_table_get_column(range.table, parent_column - 1, range.offset);
 }
 
+static bool flecs_query_children_need_filter(
+    const ecs_query_op_t *op,
+    ecs_component_record_t *cr)
+{
+    uint32_t filter = flecs_ito(uint32_t, op->other) &
+        (EcsTableIsDisabled|EcsTableIsPrefab);
+    if (!filter) {
+        return false;
+    }
+
+    ecs_pair_record_t *pr = cr->pair;
+    if (((filter & EcsTableIsDisabled) && pr->disabled_children) ||
+        ((filter & EcsTableIsPrefab) && pr->prefab_children))
+    {
+        return true;
+    }
+
+    ecs_table_cache_iter_t it;
+    if (flecs_table_cache_iter(&cr->cache, &it, EcsTableNotEmpty)) {
+        const ecs_table_cache_elem_t *elem;
+        while ((elem = flecs_table_cache_next(&it))) {
+            if (elem->table->flags & filter) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 static bool flecs_query_tree_select_tgt(
     const ecs_query_op_t *op,
     bool redo,
@@ -22,6 +52,7 @@ static bool flecs_query_tree_select_tgt(
 {
     ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
 
+next:
     if (redo) {
         op_ctx->cur ++;
         if (op_ctx->cur >= op_ctx->range.count) {
@@ -33,10 +64,52 @@ static bool flecs_query_tree_select_tgt(
     ecs_assert(child != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_range_t range = flecs_range_from_entity(ctx->world, child);
+    if (flecs_query_table_filter(range.table, op->other, 
+        (EcsTableIsDisabled|EcsTableIsPrefab))) 
+    {
+        redo = true;
+        goto next;
+    }
+
     flecs_query_var_set_range(op, op->src.var, 
         range.table, range.offset, range.count, ctx);
 
     return true;
+}
+
+static bool flecs_query_tree_with_children(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
+    ecs_table_range_t range = op_ctx->range;
+
+    if (redo) {
+        op_ctx->cur ++;
+    }
+
+    for (; op_ctx->cur < op_ctx->count; op_ctx->cur ++) {
+        ecs_entity_t child = op_ctx->entities[op_ctx->cur];
+        ecs_record_t *r = flecs_entities_get(ctx->world, child);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (r->table != range.table) {
+            continue;
+        }
+
+        int32_t row = ECS_RECORD_TO_ROW(r->row);
+        if (row < range.offset || row >= range.offset + range.count) {
+            continue;
+        }
+
+        flecs_query_iter_set_id(ctx->it, op->field_index,
+            ecs_childof(op_ctx->tgt));
+        flecs_query_src_set_single(op, row, ctx);
+        return true;
+    }
+
+    flecs_query_src_set_range(op, &op_ctx->range, ctx);
+    return false;
 }
 
 static bool flecs_query_tree_with_parent(
@@ -67,7 +140,7 @@ repeat:
     flecs_query_iter_set_id(it, op->field_index, ecs_childof(parent));
 
     if (tgt != EcsWildcard) {
-        if (parent != op_ctx->tgt) {
+        if ((uint32_t)parent != op_ctx->tgt) {
             redo = true;
             goto repeat;
         }
@@ -226,7 +299,7 @@ next:
         if (cr->flags & EcsIdOrderedChildren) {
             ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_vec_t *v_children = &cr->pair->ordered_children;
-            if (bulk_return) {
+            if (bulk_return && !flecs_query_children_need_filter(op, cr)) {
                 op_ctx->state = EcsQueryTreeIterNext;
                 it->table = NULL;
                 it->offset = 0;
@@ -259,7 +332,10 @@ next:
             goto next;
         } else {
             ecs_table_t *table = tr->hdr.table;
-            if (!ecs_table_count(table) || (table->flags & EcsTableNotQueryable)) {
+            if (!ecs_table_count(table) || (table->flags & EcsTableNotQueryable) ||
+                flecs_query_table_filter(table, op->other, 
+                    (EcsTableIsDisabled|EcsTableIsPrefab)))
+            {
                 goto next;
             }
 
@@ -279,6 +355,12 @@ next:
             ecs_entity_t child = op_ctx->entities[op_ctx->cur];
             ecs_assert(child != 0, ECS_INTERNAL_ERROR, NULL);
             ecs_table_range_t range = flecs_range_from_entity(ctx->world, child);
+            if (flecs_query_table_filter(range.table, op->other, 
+                (EcsTableIsDisabled|EcsTableIsPrefab))) 
+            {
+                goto next;
+            }
+
             flecs_query_var_set_range(op, op->src.var, 
                 range.table, range.offset, range.count, ctx);
             goto done;
@@ -300,6 +382,9 @@ bool flecs_query_tree_with(
 
     if (redo) {
         if (op_ctx->tgt) {
+            if (op_ctx->state == EcsQueryTreeIterEntities) {
+                return flecs_query_tree_with_children(op, redo, ctx);
+            }
             return flecs_query_tree_with_parent(op, redo, ctx);
         }
 
@@ -314,6 +399,8 @@ bool flecs_query_tree_with(
     }
 
     op_ctx->range = range;
+    op_ctx->tgt = 0;
+    op_ctx->state = EcsQueryTreeIterTables;
 
     ecs_table_t *table = range.table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -394,33 +481,23 @@ bool flecs_query_tree_with(
                 return false;
             }
 
-            ecs_parent_record_t *pr = flecs_component_get_parent_record(
-                cr, range.table);
-            if (!pr) {
-                /* Table doesn't have entities with parent */
+            if (!flecs_component_has_non_fragmenting_childof(cr)) {
                 return false;
             }
 
-            ecs_entity_t child = pr->entity;
-            if (child) {
-                ecs_assert(pr->count == 1, ECS_INTERNAL_ERROR, NULL);
-                ecs_record_t *r = flecs_entities_get_any(ctx->world, child);
-                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(r->table == range.table, ECS_INTERNAL_ERROR, NULL);
-                int32_t cur = ECS_RECORD_TO_ROW(r->row);
-
-                /* Table contains a single entity for parent */
-                if ((range.offset > cur) || ((range.offset + range.count) <= cur)) {
-                    /* Entity does not fall within range */
-                    return false;
-                }
-                
-                flecs_query_iter_set_id(it, op->field_index, ecs_childof(tgt));
-                flecs_query_src_set_single(op, cur, ctx);
-                return true;
+            ecs_vec_t *children = &cr->pair->ordered_children;
+            int32_t count = ecs_vec_count(children);
+            if (count < range.count &&
+                (!ctx->query->cache || !ctx->query->cache->order_by_callback))
+            {
+                op_ctx->entities = ecs_vec_first_t(children, ecs_entity_t);
+                op_ctx->count = count;
+                op_ctx->cur = 0;
+                op_ctx->tgt = tgt;
+                op_ctx->state = EcsQueryTreeIterEntities;
+                return flecs_query_tree_with_children(op, redo, ctx);
             }
 
-            /* Table contains multiple entities for same parent, scan */
             op_ctx->parents = parents;
             op_ctx->tgt = tgt;
             op_ctx->cur = range.offset;
@@ -497,11 +574,8 @@ static bool flecs_query_children_select(
         ecs_pair_record_t *pr = cr->pair;
         ecs_assert(pr != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_vec_t *v_children = &pr->ordered_children;
-        uint32_t filter = flecs_ito(uint32_t, op->other);
 
-        if ((!pr->disabled_tables || !(filter & EcsTableIsDisabled)) &&
-            (!pr->prefab_tables || !(filter & EcsTableIsPrefab))) 
-        {
+        if (!flecs_query_children_need_filter(op, cr)) {
             it->table = NULL;
             it->offset = 0;
             it->entities = ecs_vec_first_t(v_children, ecs_entity_t);

@@ -198,7 +198,7 @@ static void flecs_move_entity(
     flecs_table_delete(world, src_table, src_row, false);
 
     flecs_actions_move_add(world, dst_table, src_table, dst_row, 1, diff,
-        evt_flags, true, emplace_id, true);
+        evt_flags, true, emplace_id);
 
     if (!diff->added.count && (record->row & EcsEntityIsTraversable)) {
         flecs_emit_propagate_invalidate(world, dst_table, dst_row, 1);
@@ -243,7 +243,7 @@ void flecs_commit(
 
             flecs_actions_move_add(world, src_table, src_table,
                 ECS_RECORD_TO_ROW(record->row), 1, diff, evt_flags,
-                    true, emplace_id, true);
+                    true, emplace_id);
 
             flecs_actions_move_remove(world, src_table, src_table,
                 ECS_RECORD_TO_ROW(record->row), 1, diff);
@@ -306,7 +306,7 @@ const ecs_entity_t* flecs_bulk_new(
     }
 
     flecs_actions_move_add(world, table, NULL, row, count, diff,
-        (component_data == NULL) ? 0 : EcsEventNoOnSet, true, 0, true);
+        (component_data == NULL) ? 0 : EcsEventNoOnSet, true, 0);
 
     if (component_data) {
         int32_t c_i;

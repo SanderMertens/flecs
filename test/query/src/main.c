@@ -2493,6 +2493,16 @@ void DontFragment_this_wildcard_wildcard_pair_w_empty_pair(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
+void NonFragmentingChildOf_wildcard_children_w_disabled_parent_child(void);
+void NonFragmentingChildOf_wildcard_children_w_prefab_parent_child(void);
+void NonFragmentingChildOf_wildcard_children_w_disabled_mixed_child(void);
+void NonFragmentingChildOf_wildcard_children_w_prefab_mixed_child(void);
+void NonFragmentingChildOf_wildcard_children_w_disabled_pair_child(void);
+void NonFragmentingChildOf_wildcard_children_w_prefab_pair_child(void);
+void NonFragmentingChildOf_sparse_parent_across_tables(void);
+void NonFragmentingChildOf_sparse_parent_order_by(void);
+void NonFragmentingChildOf_mixed_children_w_disabled_childof_child(void);
+void NonFragmentingChildOf_mixed_children_w_prefab_childof_child(void);
 void NonFragmentingChildOf_optional_up_set_var_2nd_child(void);
 void NonFragmentingChildOf_self_up_never_populated_table(void);
 void NonFragmentingChildOf_0_src_childof_parent(void);
@@ -12771,6 +12781,46 @@ bake_test_case DontFragment_testcases[] = {
 
 bake_test_case NonFragmentingChildOf_testcases[] = {
     {
+        "wildcard_children_w_disabled_parent_child",
+        NonFragmentingChildOf_wildcard_children_w_disabled_parent_child
+    },
+    {
+        "wildcard_children_w_prefab_parent_child",
+        NonFragmentingChildOf_wildcard_children_w_prefab_parent_child
+    },
+    {
+        "wildcard_children_w_disabled_mixed_child",
+        NonFragmentingChildOf_wildcard_children_w_disabled_mixed_child
+    },
+    {
+        "wildcard_children_w_prefab_mixed_child",
+        NonFragmentingChildOf_wildcard_children_w_prefab_mixed_child
+    },
+    {
+        "wildcard_children_w_disabled_pair_child",
+        NonFragmentingChildOf_wildcard_children_w_disabled_pair_child
+    },
+    {
+        "wildcard_children_w_prefab_pair_child",
+        NonFragmentingChildOf_wildcard_children_w_prefab_pair_child
+    },
+    {
+        "sparse_parent_across_tables",
+        NonFragmentingChildOf_sparse_parent_across_tables
+    },
+    {
+        "sparse_parent_order_by",
+        NonFragmentingChildOf_sparse_parent_order_by
+    },
+    {
+        "mixed_children_w_disabled_childof_child",
+        NonFragmentingChildOf_mixed_children_w_disabled_childof_child
+    },
+    {
+        "mixed_children_w_prefab_childof_child",
+        NonFragmentingChildOf_mixed_children_w_prefab_childof_child
+    },
+    {
         "optional_up_set_var_2nd_child",
         NonFragmentingChildOf_optional_up_set_var_2nd_child
     },
@@ -15004,7 +15054,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        352,
+        362,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

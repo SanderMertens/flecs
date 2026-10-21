@@ -208,6 +208,7 @@ typedef struct {
     ecs_table_range_t range;
     int32_t cur;
     ecs_query_tree_iter_state_t state;
+    int32_t count;
 } ecs_query_tree_ctx_t;
 
 typedef struct {
