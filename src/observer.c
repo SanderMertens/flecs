@@ -152,16 +152,11 @@ static void flecs_inc_observer_count(
     }
 
     if (ECS_PAIR_FIRST(id) == EcsChildOf) {
-        ecs_observable_t *observable = &world->observable;
-        if (event == EcsOnAdd) {
-            ecs_event_record_t *er_onset =
-                flecs_event_record_ensure(observable, EcsOnSet);
-            flecs_inc_observer_count(
-                world, EcsOnSet, er_onset, ecs_id(EcsParent), value, up_notify);
-        } else {
-            flecs_inc_observer_count(
-                world, event, evt, ecs_id(EcsParent), value, up_notify);
-        }
+        ecs_entity_t parent_event = event == EcsOnAdd ? EcsOnSet : event;
+        ecs_event_record_t *parent_er = event == EcsOnAdd
+            ? flecs_event_record_ensure(&world->observable, EcsOnSet) : evt;
+        flecs_inc_observer_count(world, parent_event, parent_er,
+            ecs_id(EcsParent), value, up_notify);
     }
 }
 

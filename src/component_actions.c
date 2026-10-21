@@ -131,7 +131,7 @@ static void flecs_on_unparent(
         }
 
         flecs_non_fragmenting_childof_unparent(
-            world, other_table, table, row, count);
+            world, table, row, count);
     }
 
     if (table->flags & EcsTableHasOrderedChildren) {
@@ -484,8 +484,7 @@ void flecs_actions_move_add(
     const ecs_table_diff_t *diff,
     ecs_flags32_t flags,
     bool sparse,
-    ecs_id_t emplace_id,
-    bool update_parent_records)
+    ecs_id_t emplace_id)
 {
     ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_t *added = &diff->added;
@@ -495,11 +494,6 @@ void flecs_actions_move_add(
 
         if (table_flags & EcsTableHasTraversable) {
             flecs_emit_propagate_invalidate(world, table, row, count);
-        }
-
-        if (update_parent_records && (table_flags & EcsTableHasParent)) {
-            flecs_on_non_fragmenting_child_move_add(
-                world, table, other_table, row, count);
         }
 
         flecs_actions_on_add_intern(world, table, other_table, row, count, diff,
@@ -518,22 +512,15 @@ void flecs_actions_move_remove(
     ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
+    if (table != other_table && (table->flags & EcsTableHasParent)) {
+        flecs_non_fragmenting_childof_move(
+            world, other_table, table, row, count);
+    }
+
     if (diff->removed.count) {
         ecs_flags32_t table_flags = table->flags;
         if (table_flags & EcsTableHasTraversable) {
             flecs_emit_propagate_invalidate(world, table, row, count);
-        }
-
-        if (table_flags & EcsTableHasParent) {
-            bool update_parent_records = true;
-            if (diff->added.count && other_table &&
-                (other_table->flags & EcsTableHasParent))
-            {
-                update_parent_records = false;
-            }
-
-            flecs_on_non_fragmenting_child_move_remove(
-                world, other_table, table, row, count, update_parent_records);
         }
 
         flecs_actions_on_remove_intern_w_reparent(

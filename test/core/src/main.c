@@ -793,6 +793,20 @@ void Sparse_add_dont_fragment_tag_w_with_deferred(void);
 void Sparse_add_dont_fragment_tag_w_with_dont_fragment(void);
 
 // Testsuite 'NonFragmentingChildOf'
+void NonFragmentingChildOf_convert_storage_childof_observer(void);
+void NonFragmentingChildOf_convert_storage_keeps_membership(void);
+void NonFragmentingChildOf_defer_convert_storage_keeps_membership(void);
+void NonFragmentingChildOf_convert_storage_reparents(void);
+void NonFragmentingChildOf_defer_convert_storage_reparents(void);
+void NonFragmentingChildOf_remove_all_childof_preserves_prefabs(void);
+void NonFragmentingChildOf_remove_all_target_preserves_prefabs(void);
+void NonFragmentingChildOf_delete_with_childof_preserves_prefabs(void);
+void NonFragmentingChildOf_delete_with_target_preserves_prefabs(void);
+void NonFragmentingChildOf_remove_all_childof_mixed(void);
+void NonFragmentingChildOf_remove_all_target_mixed(void);
+void NonFragmentingChildOf_delete_parent_w_child_used_as_tag(void);
+void NonFragmentingChildOf_remove_all_parent_w_childof_observer(void);
+void NonFragmentingChildOf_child_count_after_delete_parent(void);
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
 void NonFragmentingChildOf_add_ordered_children_before_set_parent(void);
 void NonFragmentingChildOf_add_ordered_children_after_set_parent(void);
@@ -802,6 +816,7 @@ void NonFragmentingChildOf_insert_parent(void);
 void NonFragmentingChildOf_remove_parent(void);
 void NonFragmentingChildOf_clear_child(void);
 void NonFragmentingChildOf_delete_child(void);
+void NonFragmentingChildOf_delete_named_child_recycle_id(void);
 void NonFragmentingChildOf_reparent(void);
 void NonFragmentingChildOf_set_parent_2_children(void);
 void NonFragmentingChildOf_remove_parent_2_children(void);
@@ -6711,6 +6726,62 @@ bake_test_case Sparse_testcases[] = {
 
 bake_test_case NonFragmentingChildOf_testcases[] = {
     {
+        "convert_storage_childof_observer",
+        NonFragmentingChildOf_convert_storage_childof_observer
+    },
+    {
+        "convert_storage_keeps_membership",
+        NonFragmentingChildOf_convert_storage_keeps_membership
+    },
+    {
+        "defer_convert_storage_keeps_membership",
+        NonFragmentingChildOf_defer_convert_storage_keeps_membership
+    },
+    {
+        "convert_storage_reparents",
+        NonFragmentingChildOf_convert_storage_reparents
+    },
+    {
+        "defer_convert_storage_reparents",
+        NonFragmentingChildOf_defer_convert_storage_reparents
+    },
+    {
+        "remove_all_childof_preserves_prefabs",
+        NonFragmentingChildOf_remove_all_childof_preserves_prefabs
+    },
+    {
+        "remove_all_target_preserves_prefabs",
+        NonFragmentingChildOf_remove_all_target_preserves_prefabs
+    },
+    {
+        "delete_with_childof_preserves_prefabs",
+        NonFragmentingChildOf_delete_with_childof_preserves_prefabs
+    },
+    {
+        "delete_with_target_preserves_prefabs",
+        NonFragmentingChildOf_delete_with_target_preserves_prefabs
+    },
+    {
+        "remove_all_childof_mixed",
+        NonFragmentingChildOf_remove_all_childof_mixed
+    },
+    {
+        "remove_all_target_mixed",
+        NonFragmentingChildOf_remove_all_target_mixed
+    },
+    {
+        "delete_parent_w_child_used_as_tag",
+        NonFragmentingChildOf_delete_parent_w_child_used_as_tag
+    },
+    {
+        "remove_all_parent_w_childof_observer",
+        NonFragmentingChildOf_remove_all_parent_w_childof_observer
+    },
+    {
+        "child_count_after_delete_parent",
+        NonFragmentingChildOf_child_count_after_delete_parent
+    },
+    {
         "set_parent_no_ordered_children",
         NonFragmentingChildOf_set_parent_no_ordered_children
     },
@@ -6745,6 +6816,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "delete_child",
         NonFragmentingChildOf_delete_child
+    },
+    {
+        "delete_named_child_recycle_id",
+        NonFragmentingChildOf_delete_named_child_recycle_id
     },
     {
         "reparent",
@@ -17997,7 +18072,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        300,
+        315,
         NonFragmentingChildOf_testcases
     },
     {

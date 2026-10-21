@@ -1149,17 +1149,6 @@ static void flecs_cmd_batch_for_entity(
         }
     }
 
-    bool update_parent_records = !table_diff.removed.count ||
-        !(start_table->flags & EcsTableHasParent);
-    if (added.count && update_parent_records &&
-        (start_table->flags & EcsTableHasParent) &&
-        (table->flags & EcsTableHasParent))
-    {
-        flecs_on_non_fragmenting_child_move_add(
-            world, table, start_table, ECS_RECORD_TO_ROW(r->row), 1);
-        update_parent_records = false;
-    }
-
     /* If the batch contains set commands, copy the component value from the 
      * temporary command storage to the actual component storage before OnSet
      * observers are invoked. This ensures that for multi-component OnSet 
@@ -1275,8 +1264,7 @@ static void flecs_cmd_batch_for_entity(
 
         flecs_commands_begin(world, world->stages[0]);
         flecs_actions_move_add(world, r->table, start_table,
-            ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, false, 0,
-            update_parent_records);
+            ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, false, 0);
         flecs_commands_end(world, world->stages[0]);
     }
 
