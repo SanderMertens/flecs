@@ -868,6 +868,10 @@ void flecs_table_clear_edges_for_id(
     ecs_table_t *table,
     ecs_id_t component);
 
+void flecs_table_clear_edges_for_base(
+    ecs_world_t *world,
+    ecs_entity_t base);
+
 #endif
 
 #ifdef FLECS_SANITIZE
@@ -3355,13 +3359,8 @@ ecs_entity_t flecs_get_prefab_instance_child(
 void flecs_tree_spawner_assert_not_instantiated(
     ecs_world_t *world,
     ecs_entity_t parent);
-void flecs_prefab_assert_not_instantiated(
-    ecs_world_t *world,
-    ecs_entity_t prefab,
-    const ecs_table_diff_t *diff);
 #else
 #define flecs_tree_spawner_assert_not_instantiated(world, parent)
-#define flecs_prefab_assert_not_instantiated(world, prefab, diff)
 #endif
 
 /* Called during bootstrap to register spawner entities with the world. */
@@ -8438,6 +8437,10 @@ static void flecs_move_entity(
         flecs_emit_propagate_invalidate(world, dst_table, dst_row, 1);
     }
 
+    if (record->row & EcsEntityIsBase) {
+        flecs_table_clear_edges_for_base(world, entity);
+    }
+
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
 }
 
@@ -8487,10 +8490,6 @@ void flecs_commit(
 
     ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_table_traversable_add(dst_table, is_trav);
-
-    if (src_table->flags & EcsTableIsPrefab) {
-        flecs_prefab_assert_not_instantiated(world, entity, diff);
-    }
 
     flecs_move_entity(world, entity, record, dst_table, diff,
         emplace_id, evt_flags);
@@ -38328,6 +38327,10 @@ static ecs_component_record_t* flecs_component_new(
                 /* Enable flag that indicates entity is a target. */
                 flecs_record_add_flag(tgt_r, EcsEntityIsTarget);
 
+                if (rel == EcsIsA) {
+                    flecs_record_add_flag(tgt_r, EcsEntityIsBase);
+                }
+
                 /* ChildOf records can be created often and since we already know
                  * the traits a ChildOf record will have, set them directly. */
                 if (rel == EcsChildOf) {
@@ -44949,6 +44952,52 @@ void flecs_table_clear_edges_for_id(
         if (edge) {
             ecs_map_remove(edges->hi, component);
             flecs_table_disconnect_edge(world, component, edge);
+        }
+    }
+}
+
+void flecs_table_clear_edges_for_base(
+    ecs_world_t *world,
+    ecs_entity_t base)
+{
+    ecs_id_t id = ecs_pair(EcsIsA, base);
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (!cr) {
+        return;
+    }
+
+    ecs_table_cache_iter_t it;
+    if (!flecs_table_cache_iter(
+        &cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty))
+    {
+        return;
+    }
+
+    const ecs_table_cache_elem_t *elem;
+    while ((elem = flecs_table_cache_next(&it))) {
+        ecs_table_t *table = elem->tr->hdr.table;
+
+        ecs_graph_edge_t *edge = table->node.incoming[0];
+        while (edge) {
+            ecs_graph_edge_t *next = edge->next;
+            if (edge->id == id) {
+                ecs_map_remove(edge->from->hi, id);
+                flecs_table_disconnect_edge(world, id, edge);
+            }
+            edge = next;
+        }
+
+        if (!table->_->traversable_count) {
+            continue;
+        }
+
+        const ecs_entity_t *entities = ecs_table_entities(table);
+        int32_t i, count = ecs_table_count(table);
+        for (i = 0; i < count; i ++) {
+            ecs_record_t *r = flecs_entities_get(world, entities[i]);
+            if (r->row & EcsEntityIsBase) {
+                flecs_table_clear_edges_for_base(world, entities[i]);
+            }
         }
     }
 }
@@ -64173,6 +64222,7 @@ void flecs_instantiate_dont_fragment(
         ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
         bool inherit = (cur->flags & EcsIdOnInstantiateInherit) != 0;
         if (cur->sparse && (!has_isa || !inherit) && 
+            !(cur->flags & EcsIdOnInstantiateDontInherit) &&
             !ecs_id_is_wildcard(cur->id)) 
         {
             if (flecs_component_sparse_has(cur, base)) {
@@ -64279,6 +64329,8 @@ void flecs_instantiate(
         return;
     }
 
+    ECS_TABLE_LOCK(world, base_table);
+
     ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(base));
     if (cr) {
         ecs_os_perf_trace_push("flecs.instantiate");
@@ -64297,6 +64349,7 @@ void flecs_instantiate(
                 }
 
                 ecs_os_perf_trace_pop("flecs.instantiate");
+                ECS_TABLE_UNLOCK(world, base_table);
                 return;
             }
 
@@ -64334,6 +64387,7 @@ void flecs_instantiate(
         ecs_os_perf_trace_pop("flecs.instantiate");
     }
 
+    ECS_TABLE_UNLOCK(world, base_table);
 error:
     return;
 }
@@ -64622,6 +64676,7 @@ void flecs_bootstrap_prefab(
     ecs_add_pair(world, EcsDontFragment, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsChildOf, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsIdentifier), EcsOnInstantiate, EcsDontInherit);
+    ecs_add_id(world, ecs_id(EcsTreeSpawner), EcsDontFragment);
     ecs_add_pair(world, ecs_id(EcsTreeSpawner), EcsOnInstantiate, EcsDontInherit);
 
     /* Inherited components */
@@ -65014,10 +65069,9 @@ void flecs_fini_prefab(
 {
     ecs_iter_t it = ecs_each(world, EcsTreeSpawner);
     while (ecs_each_next(&it)) {
-        EcsTreeSpawner *t = ecs_field(&it, EcsTreeSpawner, 0);
         int32_t i;
         for (i = 0; i < it.count; i ++) {
-            EcsTreeSpawner_free(&t[i]);
+            EcsTreeSpawner_free(ecs_field_at(&it, EcsTreeSpawner, 0, i));
         }
     }
 }
@@ -65059,58 +65113,6 @@ void flecs_tree_spawner_assert_not_instantiated(
 }
 #endif
 
-#endif
-
-#ifdef FLECS_DEBUG
-static bool flecs_prefab_diff_has_override(
-    ecs_world_t *world,
-    const ecs_type_t *type)
-{
-    int32_t i;
-    for (i = 0; i < type->count; i ++) {
-        ecs_id_t id = type->array[i];
-        if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
-            return true;
-        }
-
-        ecs_component_record_t *cr = flecs_components_get(world, id);
-        if (cr && !(cr->flags &
-            (EcsIdOnInstantiateInherit|EcsIdOnInstantiateDontInherit)))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void flecs_prefab_assert_not_instantiated(
-    ecs_world_t *world,
-    ecs_entity_t prefab,
-    const ecs_table_diff_t *diff)
-{
-    if (world->flags & EcsWorldQuit) {
-        return;
-    }
-
-    ecs_component_record_t *cr = flecs_components_get(
-        world, ecs_pair(EcsIsA, prefab));
-    if (!cr || !flecs_table_cache_count(&cr->cache)) {
-        return;
-    }
-
-    if (!flecs_prefab_diff_has_override(world, &diff->added) &&
-        !flecs_prefab_diff_has_override(world, &diff->removed))
-    {
-        return;
-    }
-
-    char *path = ecs_get_path(world, prefab);
-    ecs_abort(ECS_ALREADY_IN_USE,
-        "cannot add or remove auto-overridden components of prefab '%s' "
-        "after it has been instantiated", path);
-    ecs_os_free(path);
-}
 #endif
 
 #ifdef FLECS_QUERY_DSL
@@ -73345,14 +73347,14 @@ static void flecs_tree_spawner_memory_get(
 {
     ecs_iter_t it = ecs_each(world, EcsTreeSpawner);
     while (ecs_each_next(&it)) {
-        EcsTreeSpawner *t = ecs_field(&it, EcsTreeSpawner, 0);
         for (int32_t i = 0; i < it.count; i ++) {
+            EcsTreeSpawner *t = ecs_field_at(&it, EcsTreeSpawner, 0, i);
             for (int32_t depth = 0; 
                  depth < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; 
                  depth ++) 
             {
                 result->bytes_tree_spawner += 
-                    ecs_vec_count(&t[i].data[depth].children) * 
+                    ecs_vec_count(&t->data[depth].children) * 
                         ECS_SIZEOF(ecs_tree_spawner_child_t);
             }
         }

@@ -204,6 +204,10 @@ static void flecs_move_entity(
         flecs_emit_propagate_invalidate(world, dst_table, dst_row, 1);
     }
 
+    if (record->row & EcsEntityIsBase) {
+        flecs_table_clear_edges_for_base(world, entity);
+    }
+
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
 }
 
@@ -253,10 +257,6 @@ void flecs_commit(
 
     ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_table_traversable_add(dst_table, is_trav);
-
-    if (src_table->flags & EcsTableIsPrefab) {
-        flecs_prefab_assert_not_instantiated(world, entity, diff);
-    }
 
     flecs_move_entity(world, entity, record, dst_table, diff,
         emplace_id, evt_flags);

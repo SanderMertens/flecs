@@ -837,6 +837,10 @@ void flecs_table_clear_edges_for_id(
     ecs_table_t *table,
     ecs_id_t component);
 
+void flecs_table_clear_edges_for_base(
+    ecs_world_t *world,
+    ecs_entity_t base);
+
 #endif
 
 #define ecs_vec_from_entities(table) {\
@@ -1963,13 +1967,8 @@ ecs_entity_t flecs_get_prefab_instance_child(
 void flecs_tree_spawner_assert_not_instantiated(
     ecs_world_t *world,
     ecs_entity_t parent);
-void flecs_prefab_assert_not_instantiated(
-    ecs_world_t *world,
-    ecs_entity_t prefab,
-    const ecs_table_diff_t *diff);
 #else
 #define flecs_tree_spawner_assert_not_instantiated(world, parent)
-#define flecs_prefab_assert_not_instantiated(world, prefab, diff)
 #endif
 
 /* Called during bootstrap to register spawner entities with the world. */
@@ -6773,6 +6772,10 @@ static void flecs_move_entity(
         flecs_emit_propagate_invalidate(world, dst_table, dst_row, 1);
     }
 
+    if (record->row & EcsEntityIsBase) {
+        flecs_table_clear_edges_for_base(world, entity);
+    }
+
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
 }
 
@@ -6822,10 +6825,6 @@ void flecs_commit(
 
     ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_table_traversable_add(dst_table, is_trav);
-
-    if (src_table->flags & EcsTableIsPrefab) {
-        flecs_prefab_assert_not_instantiated(world, entity, diff);
-    }
 
     flecs_move_entity(world, entity, record, dst_table, diff,
         emplace_id, evt_flags);
@@ -26549,6 +26548,10 @@ static ecs_component_record_t* flecs_component_new(
                 /* Enable flag that indicates entity is a target. */
                 flecs_record_add_flag(tgt_r, EcsEntityIsTarget);
 
+                if (rel == EcsIsA) {
+                    flecs_record_add_flag(tgt_r, EcsEntityIsBase);
+                }
+
                 /* ChildOf records can be created often and since we already know
                  * the traits a ChildOf record will have, set them directly. */
                 if (rel == EcsChildOf) {
@@ -33007,6 +33010,52 @@ void flecs_table_clear_edges_for_id(
     }
 }
 
+void flecs_table_clear_edges_for_base(
+    ecs_world_t *world,
+    ecs_entity_t base)
+{
+    ecs_id_t id = ecs_pair(EcsIsA, base);
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (!cr) {
+        return;
+    }
+
+    ecs_table_cache_iter_t it;
+    if (!flecs_table_cache_iter(
+        &cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty))
+    {
+        return;
+    }
+
+    const ecs_table_cache_elem_t *elem;
+    while ((elem = flecs_table_cache_next(&it))) {
+        ecs_table_t *table = elem->tr->hdr.table;
+
+        ecs_graph_edge_t *edge = table->node.incoming[0];
+        while (edge) {
+            ecs_graph_edge_t *next = edge->next;
+            if (edge->id == id) {
+                ecs_map_remove(edge->from->hi, id);
+                flecs_table_disconnect_edge(world, id, edge);
+            }
+            edge = next;
+        }
+
+        if (!table->_->traversable_count) {
+            continue;
+        }
+
+        const ecs_entity_t *entities = ecs_table_entities(table);
+        int32_t i, count = ecs_table_count(table);
+        for (i = 0; i < count; i ++) {
+            ecs_record_t *r = flecs_entities_get(world, entities[i]);
+            if (r->row & EcsEntityIsBase) {
+                flecs_table_clear_edges_for_base(world, entities[i]);
+            }
+        }
+    }
+}
+
 ecs_table_t* flecs_find_table_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -33749,58 +33798,6 @@ void flecs_tree_spawner_assert_not_instantiated(
 {
     (void)world;
     (void)parent;
-}
-#endif
-
-#ifdef FLECS_DEBUG
-static bool flecs_prefab_diff_has_override(
-    ecs_world_t *world,
-    const ecs_type_t *type)
-{
-    int32_t i;
-    for (i = 0; i < type->count; i ++) {
-        ecs_id_t id = type->array[i];
-        if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
-            return true;
-        }
-
-        ecs_component_record_t *cr = flecs_components_get(world, id);
-        if (cr && !(cr->flags &
-            (EcsIdOnInstantiateInherit|EcsIdOnInstantiateDontInherit)))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void flecs_prefab_assert_not_instantiated(
-    ecs_world_t *world,
-    ecs_entity_t prefab,
-    const ecs_table_diff_t *diff)
-{
-    if (world->flags & EcsWorldQuit) {
-        return;
-    }
-
-    ecs_component_record_t *cr = flecs_components_get(
-        world, ecs_pair(EcsIsA, prefab));
-    if (!cr || !flecs_table_cache_count(&cr->cache)) {
-        return;
-    }
-
-    if (!flecs_prefab_diff_has_override(world, &diff->added) &&
-        !flecs_prefab_diff_has_override(world, &diff->removed))
-    {
-        return;
-    }
-
-    char *path = ecs_get_path(world, prefab);
-    ecs_abort(ECS_ALREADY_IN_USE,
-        "cannot add or remove auto-overridden components of prefab '%s' "
-        "after it has been instantiated", path);
-    ecs_os_free(path);
 }
 #endif
 

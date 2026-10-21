@@ -958,14 +958,14 @@ static void flecs_tree_spawner_memory_get(
 {
     ecs_iter_t it = ecs_each(world, EcsTreeSpawner);
     while (ecs_each_next(&it)) {
-        EcsTreeSpawner *t = ecs_field(&it, EcsTreeSpawner, 0);
         for (int32_t i = 0; i < it.count; i ++) {
+            EcsTreeSpawner *t = ecs_field_at(&it, EcsTreeSpawner, 0, i);
             for (int32_t depth = 0; 
                  depth < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; 
                  depth ++) 
             {
                 result->bytes_tree_spawner += 
-                    ecs_vec_count(&t[i].data[depth].children) * 
+                    ecs_vec_count(&t->data[depth].children) * 
                         ECS_SIZEOF(ecs_tree_spawner_child_t);
             }
         }

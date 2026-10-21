@@ -503,6 +503,10 @@ static ecs_component_record_t* flecs_component_new(
                 /* Enable flag that indicates entity is a target. */
                 flecs_record_add_flag(tgt_r, EcsEntityIsTarget);
 
+                if (rel == EcsIsA) {
+                    flecs_record_add_flag(tgt_r, EcsEntityIsBase);
+                }
+
                 /* ChildOf records can be created often and since we already know
                  * the traits a ChildOf record will have, set them directly. */
                 if (rel == EcsChildOf) {

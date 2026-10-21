@@ -2894,6 +2894,14 @@ void Prefab_add_inherit_component_to_prefab_after_instantiate(void);
 void Prefab_remove_inherit_component_from_prefab_after_instantiate(void);
 void Prefab_add_dont_inherit_component_to_prefab_after_instantiate(void);
 void Prefab_add_override_trait_component_to_prefab_after_instantiate(void);
+void Prefab_add_component_to_prefab_after_instantiate_new_instance_same_table(void);
+void Prefab_add_component_to_prefab_after_instantiate_existing_dst_table(void);
+void Prefab_remove_component_from_prefab_after_instantiate_new_instance(void);
+void Prefab_add_component_to_nested_prefab_after_instantiate_new_instance(void);
+void Prefab_add_inherit_w_override_with_to_prefab_after_instantiate(void);
+void Prefab_add_component_to_prefab_during_instantiate(void);
+void Prefab_add_component_to_prefab_during_instantiate_w_parent(void);
+void Prefab_dont_inherit_dont_fragment_component(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -14960,6 +14968,38 @@ bake_test_case Prefab_testcases[] = {
     {
         "add_override_trait_component_to_prefab_after_instantiate",
         Prefab_add_override_trait_component_to_prefab_after_instantiate
+    },
+    {
+        "add_component_to_prefab_after_instantiate_new_instance_same_table",
+        Prefab_add_component_to_prefab_after_instantiate_new_instance_same_table
+    },
+    {
+        "add_component_to_prefab_after_instantiate_existing_dst_table",
+        Prefab_add_component_to_prefab_after_instantiate_existing_dst_table
+    },
+    {
+        "remove_component_from_prefab_after_instantiate_new_instance",
+        Prefab_remove_component_from_prefab_after_instantiate_new_instance
+    },
+    {
+        "add_component_to_nested_prefab_after_instantiate_new_instance",
+        Prefab_add_component_to_nested_prefab_after_instantiate_new_instance
+    },
+    {
+        "add_inherit_w_override_with_to_prefab_after_instantiate",
+        Prefab_add_inherit_w_override_with_to_prefab_after_instantiate
+    },
+    {
+        "add_component_to_prefab_during_instantiate",
+        Prefab_add_component_to_prefab_during_instantiate
+    },
+    {
+        "add_component_to_prefab_during_instantiate_w_parent",
+        Prefab_add_component_to_prefab_during_instantiate_w_parent
+    },
+    {
+        "dont_inherit_dont_fragment_component",
+        Prefab_dont_inherit_dont_fragment_component
     }
 };
 
@@ -18096,7 +18136,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        209,
+        217,
         Prefab_testcases
     },
     {
