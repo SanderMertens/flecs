@@ -135,8 +135,7 @@ static void flecs_on_unparent(
     }
 
     if (table->flags & EcsTableHasOrderedChildren) {
-        flecs_ordered_children_unparent(
-            world, table, other_table, row, count);
+        flecs_ordered_children_unparent(world, table, row, count);
     }
 }
 

@@ -181,6 +181,10 @@ static void flecs_move_entity(
     /* Invoke remove actions for removed components */
     flecs_actions_move_remove(world, src_table, dst_table, src_row, 1, diff);
 
+    /* Remove actions can delete entities from the source table, which can
+     * move the entity to a different row. */
+    src_row = ECS_RECORD_TO_ROW(record->row);
+
     /* Append new row to destination table. This has to happen after the remove
      * actions, as the components of the new row are only initialized by the
      * move below. Appending before the remove actions would expose a row with
@@ -1397,11 +1401,10 @@ void ecs_delete(
                 .removed_flags = table->flags & EcsTableRemoveEdgeFlags
             };
 
-            int32_t row = ECS_RECORD_TO_ROW(r->row);
-            flecs_actions_move_remove(
-                world, table, &world->store.root, row, 1, &diff);
+            flecs_actions_move_remove(world, table, &world->store.root,
+                ECS_RECORD_TO_ROW(r->row), 1, &diff);
             flecs_entity_remove_non_fragmenting(world, entity, r);
-            flecs_table_delete(world, table, row, true);
+            flecs_table_delete(world, table, ECS_RECORD_TO_ROW(r->row), true);
 
             if (row_flags & EcsEntityIsTraversable) {
                 flecs_table_traversable_add(table, -1);
@@ -2034,10 +2037,10 @@ void ecs_set_id(
             flecs_errstr_1(ecs_id_str(world, entity)));
 
     if (component == ecs_id(EcsParent)) {
-        ecs_check(!((const EcsParent*)ptr)->value ||
+        ecs_check(((const EcsParent*)ptr)->value != 0 &&
             ecs_is_alive(world, ((const EcsParent*)ptr)->value),
             ECS_INVALID_OPERATION,
-            "cannot set Parent component to entity that is not alive");
+            "cannot set Parent component to 0 or to entity that is not alive");
     }
 
     bool deferred = ecs_is_stage(world);

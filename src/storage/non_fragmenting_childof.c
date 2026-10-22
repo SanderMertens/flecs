@@ -69,11 +69,8 @@ static ecs_component_record_t* flecs_remove_non_fragmenting_child(
     ecs_component_record_t *cr = flecs_components_get(world,
         ecs_pair(EcsChildOf, parent));
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (cr->flags & EcsIdMarkedForDelete) {
-        return NULL;
-    }
 
-    flecs_ordered_entities_remove(world, cr, entity, false);
+    flecs_ordered_entities_remove(world, cr, entity);
     flecs_non_fragmenting_childof_count(world, cr, r->table, -1);
     flecs_tree_spawner_assert_not_instantiated(world, parent);
 
@@ -134,21 +131,9 @@ static void flecs_on_replace_parent(ecs_iter_t *it) {
 
         ecs_check(new_parent != 0, ECS_INVALID_OPERATION,
             "cannot set Parent component with 0 entity");
-
-        /* This can happen when a child is parented to a parent that is deleted
-         * in the same command queue. */
-        if (!flecs_entities_is_alive(world, new_parent)) {
-            flecs_remove_non_fragmenting_child(world, old_parent, r, e);
-            if (names) {
-                flecs_on_reparent_update_name(
-                    world, e, &names[i], old_parent, NULL);
-            }
-
-            /* So cleanup code can see this is a child of a deleted parent */
-            old[i].value = new_parent;
-            ecs_delete(it->stage, e);
-            continue;
-        }
+        ecs_check(flecs_entities_is_alive(world, new_parent),
+            ECS_INVALID_OPERATION,
+            "cannot set Parent component to entity that is not alive");
 
         /* Setting the parent a child already has is a no-op. Without this
          * check the child would be removed from and appended to the ordered
@@ -221,20 +206,22 @@ void flecs_non_fragmenting_childof_move(
     int32_t row,
     int32_t count)
 {
-    bool keep_parent = dst && (dst->flags & EcsTableHasParent);
+    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    bool keep_parent = dst->flags & EcsTableHasParent;
     if (keep_parent &&
         !((src->flags ^ dst->flags) & (EcsTableIsDisabled|EcsTableIsPrefab)))
     {
         return;
     }
 
-    bool dst_childof = dst && (dst->flags & EcsTableHasChildOf);
+    bool dst_childof = dst->flags & EcsTableHasChildOf;
 
     EcsIdentifier *names = NULL;
     ecs_component_record_t *cr_name_dst = NULL;
     if (!keep_parent && (src->flags & EcsTableHasName)) {
         names = ecs_table_get_pair(world, src, EcsIdentifier, EcsName, 0);
-        if (dst && (dst->flags & EcsTableHasName) && !dst_childof) {
+        if ((dst->flags & EcsTableHasName) && !dst_childof) {
             cr_name_dst = world->cr_childof_0;
         }
     }
@@ -245,9 +232,8 @@ void flecs_non_fragmenting_childof_move(
     for (; i < end; i ++) {
         ecs_entity_t e = entities[i];
         ecs_entity_t p = parents[i].value;
-        if (!flecs_entities_is_alive(world, p)) {
-            continue;
-        }
+        ecs_assert(flecs_entities_is_alive(world, p),
+            ECS_INTERNAL_ERROR, NULL);
 
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(p));
@@ -260,11 +246,7 @@ void flecs_non_fragmenting_childof_move(
             continue;
         }
 
-        /* When the child moves to a table with a ChildOf pair for the same
-         * parent it switched representation without being reparented, and
-         * has to keep its position in the ordered children vector. */
-        flecs_ordered_entities_remove(world, cr, e,
-            dst_childof && flecs_table_get_childof_cr(world, dst) == cr);
+        flecs_ordered_entities_remove(world, cr, e);
 
         flecs_tree_spawner_assert_not_instantiated(world, p);
 

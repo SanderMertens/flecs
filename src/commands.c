@@ -941,6 +941,18 @@ static bool flecs_remove_invalid(
     return true;
 }
 
+static bool flecs_cmd_parent_is_alive(
+    ecs_world_t *world,
+    const ecs_cmd_t *cmd)
+{
+    if (cmd->id != ecs_id(EcsParent) || !cmd->is._1.value) {
+        return true;
+    }
+
+    const EcsParent *p = cmd->is._1.value;
+    return flecs_entities_is_alive(world, p->value);
+}
+
 static bool flecs_cmd_table_has_id(
     const ecs_table_t *table,
     ecs_id_t id,
@@ -1007,6 +1019,13 @@ static void flecs_cmd_batch_for_entity(
                 }
 
                 continue;
+            }
+
+            if (!flecs_cmd_parent_is_alive(world, cmd)) {
+                cmd->kind = EcsCmdSkip;
+                ecs_delete(world, entity);
+                flecs_table_diff_builder_clear(diff);
+                return;
             }
 
             if (flecs_remove_invalid(world, id, &id)) {
@@ -1361,6 +1380,15 @@ resume:
         }
 
         ecs_id_t id = cmd->id;
+
+        if ((kind == EcsCmdSet || kind == EcsCmdEnsure ||
+            kind == EcsCmdEmplace) && !flecs_cmd_parent_is_alive(world, cmd))
+        {
+            world->info.cmd.discard_count ++;
+            flecs_discard_cmd(world, cmd);
+            ecs_delete(world, e);
+            goto next;
+        }
 
         switch(kind) {
         case EcsCmdAdd:

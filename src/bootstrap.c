@@ -411,7 +411,7 @@ static void flecs_register_ordered_children(ecs_iter_t *it) {
             ecs_component_record_t *cr = flecs_components_get(
                 it->world, ecs_childof(parent));
             if (cr && (cr->flags & EcsIdOrderedChildren)) {
-                flecs_ordered_children_clear(it->world, cr);
+                flecs_ordered_children_clear(cr);
             }
         }
     }
