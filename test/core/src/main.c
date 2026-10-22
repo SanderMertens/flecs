@@ -826,12 +826,12 @@ void NonFragmentingChildOf_reparent_2_children(void);
 void NonFragmentingChildOf_delete_parent(void);
 void NonFragmentingChildOf_delete_parent_2_children(void);
 void NonFragmentingChildOf_mixed_childof(void);
-void NonFragmentingChildOf_convert_childof_to_parent_keeps_order(void);
+void NonFragmentingChildOf_convert_childof_to_parent_appends(void);
 void NonFragmentingChildOf_convert_childof_to_parent_other_parent_and_back_appends(void);
 void NonFragmentingChildOf_set_same_parent_twice_keeps_order(void);
-void NonFragmentingChildOf_add_childof_to_parent_component_keeps_order(void);
+void NonFragmentingChildOf_add_childof_to_parent_component_appends(void);
 void NonFragmentingChildOf_deferred_set_same_parent_keeps_order(void);
-void NonFragmentingChildOf_deferred_convert_childof_to_parent_keeps_order(void);
+void NonFragmentingChildOf_deferred_convert_childof_to_parent_appends(void);
 void NonFragmentingChildOf_remove_parent_then_add_childof_appends_last(void);
 void NonFragmentingChildOf_reparent_to_other_parent_appends_last(void);
 void NonFragmentingChildOf_delete_parent_w_mixed_childof(void);
@@ -1110,6 +1110,10 @@ void NonFragmentingChildOf_delete_root_of_instantiated_prefab_child_w_nested_chi
 void NonFragmentingChildOf_delete_root_of_prefab_child_w_mixed_children_and_other_targets(void);
 void NonFragmentingChildOf_delete_root_of_child_w_mixed_children_and_other_targets_cleanup_order(void);
 void NonFragmentingChildOf_delete_target_of_children_w_different_parents_childof_observer(void);
+void NonFragmentingChildOf_delete_parent_w_observer_deleting_sibling(void);
+void NonFragmentingChildOf_delete_parent_w_observer_reparenting_sibling(void);
+void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_deleting_sibling(void);
+void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_sibling(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -2589,6 +2593,8 @@ void Observer_not_term_on_remove_add_negated_id_in_populated_table(void);
 void Observer_not_term_on_add_remove_negated_id_in_populated_table(void);
 void Observer_not_term_on_remove_add_negated_id_in_populated_table_w_data(void);
 void Observer_not_term_on_add_remove_negated_id_in_populated_table_w_data(void);
+void Observer_on_remove_delete_other_in_same_table_on_delete(void);
+void Observer_on_remove_delete_other_in_same_table_on_remove(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -6860,8 +6866,8 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_mixed_childof
     },
     {
-        "convert_childof_to_parent_keeps_order",
-        NonFragmentingChildOf_convert_childof_to_parent_keeps_order
+        "convert_childof_to_parent_appends",
+        NonFragmentingChildOf_convert_childof_to_parent_appends
     },
     {
         "convert_childof_to_parent_other_parent_and_back_appends",
@@ -6872,16 +6878,16 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_set_same_parent_twice_keeps_order
     },
     {
-        "add_childof_to_parent_component_keeps_order",
-        NonFragmentingChildOf_add_childof_to_parent_component_keeps_order
+        "add_childof_to_parent_component_appends",
+        NonFragmentingChildOf_add_childof_to_parent_component_appends
     },
     {
         "deferred_set_same_parent_keeps_order",
         NonFragmentingChildOf_deferred_set_same_parent_keeps_order
     },
     {
-        "deferred_convert_childof_to_parent_keeps_order",
-        NonFragmentingChildOf_deferred_convert_childof_to_parent_keeps_order
+        "deferred_convert_childof_to_parent_appends",
+        NonFragmentingChildOf_deferred_convert_childof_to_parent_appends
     },
     {
         "remove_parent_then_add_childof_appends_last",
@@ -7994,6 +8000,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "delete_target_of_children_w_different_parents_childof_observer",
         NonFragmentingChildOf_delete_target_of_children_w_different_parents_childof_observer
+    },
+    {
+        "delete_parent_w_observer_deleting_sibling",
+        NonFragmentingChildOf_delete_parent_w_observer_deleting_sibling
+    },
+    {
+        "delete_parent_w_observer_reparenting_sibling",
+        NonFragmentingChildOf_delete_parent_w_observer_reparenting_sibling
+    },
+    {
+        "delete_parent_used_as_target_w_observer_deleting_sibling",
+        NonFragmentingChildOf_delete_parent_used_as_target_w_observer_deleting_sibling
+    },
+    {
+        "delete_parent_used_as_target_w_observer_reparenting_sibling",
+        NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_sibling
     }
 };
 
@@ -13806,6 +13828,14 @@ bake_test_case Observer_testcases[] = {
     {
         "not_term_on_add_remove_negated_id_in_populated_table_w_data",
         Observer_not_term_on_add_remove_negated_id_in_populated_table_w_data
+    },
+    {
+        "on_remove_delete_other_in_same_table_on_delete",
+        Observer_on_remove_delete_other_in_same_table_on_delete
+    },
+    {
+        "on_remove_delete_other_in_same_table_on_remove",
+        Observer_on_remove_delete_other_in_same_table_on_remove
     }
 };
 
@@ -18082,7 +18112,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        317,
+        321,
         NonFragmentingChildOf_testcases
     },
     {
@@ -18194,7 +18224,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        409,
+        411,
         Observer_testcases
     },
     {

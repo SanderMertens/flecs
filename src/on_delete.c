@@ -182,10 +182,9 @@ static void flecs_simple_delete(
         .removed_flags = table->flags & EcsTableRemoveEdgeFlags
     };
 
-    int32_t row = ECS_RECORD_TO_ROW(r->row);
-    flecs_actions_delete_tree(world, table, row, 1, &diff);
+    flecs_actions_delete_tree(world, table, ECS_RECORD_TO_ROW(r->row), 1, &diff);
     flecs_entity_remove_non_fragmenting(world, entity, r);
-    flecs_table_delete(world, table, row, true);
+    flecs_table_delete(world, table, ECS_RECORD_TO_ROW(r->row), true);
 
     flecs_entities_remove(world, entity);
 
@@ -227,16 +226,18 @@ static void flecs_component_delete_non_fragmenting_childof(
 
     ecs_pair_record_t *pr = cr->pair;
 
-    /* Detach ordered_children so observers fired during cleanup don't see
-     * entries for siblings that have already been deleted in the loop. */
-    ecs_vec_t children_vec = pr->ordered_children;
-    pr->ordered_children = (ecs_vec_t){0};
+    /* Remove each child from ordered_children before deleting it, so that
+     * observers fired during cleanup only see children that are still alive,
+     * and can delete or reparent them. */
+    ecs_vec_t *children = &pr->ordered_children;
+    int32_t count;
+    while ((count = ecs_vec_count(children))) {
+        ecs_entity_t e = ecs_vec_get_t(children, ecs_entity_t, count - 1)[0];
+        ecs_vec_remove_last(children);
+        if (cr->flags & EcsIdPrefabChildren) {
+            ecs_map_remove(&world->prefab_child_indices, e);
+        }
 
-    int32_t i, count = ecs_vec_count(&children_vec);
-    ecs_entity_t *children = ecs_vec_first_t(&children_vec, ecs_entity_t);
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = children[i];
         ecs_assert(ecs_is_alive(world, e), ECS_INTERNAL_ERROR, NULL);
 
         ecs_record_t *r = flecs_entities_get_any(world, e);
@@ -281,8 +282,6 @@ static void flecs_component_delete_non_fragmenting_childof(
             }
         }
     }
-
-    ecs_vec_fini_t(&world->allocator, &children_vec, ecs_entity_t);
 
     if (release_tgt) {
         ecs_component_record_t *tgt_wc = pr->second.prev;

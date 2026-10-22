@@ -5,13 +5,6 @@
 
 #include "../private_api.h"
 
-static void flecs_ordered_children_clear_pending(
-    ecs_world_t *world)
-{
-    world->ordered_pending.cr = NULL;
-    world->ordered_pending.entity = 0;
-}
-
 static void flecs_ordered_children_set_table_flags(
     ecs_component_record_t *cr,
     bool value)
@@ -55,16 +48,11 @@ void flecs_ordered_children_fini(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
-    if (world->ordered_pending.cr == cr) {
-        flecs_ordered_children_clear_pending(world);
-    }
-
     ecs_vec_fini_t(
         &world->allocator, &cr->pair->ordered_children, ecs_entity_t);
 }
 
 void flecs_ordered_children_clear(
-    ecs_world_t *world,
     ecs_component_record_t *cr)
 {
     ecs_assert(cr->flags & EcsIdOrderedChildren, ECS_INTERNAL_ERROR, NULL);
@@ -74,10 +62,6 @@ void flecs_ordered_children_clear(
             ECS_UNSUPPORTED,
             "cannot remove OrderedChildren trait from parent that has "
             "children which use the Parent component");
-
-        if (world->ordered_pending.cr == cr) {
-            flecs_ordered_children_clear_pending(world);
-        }
 
         ecs_vec_clear(&cr->pair->ordered_children);
     }
@@ -95,35 +79,11 @@ void flecs_ordered_entities_append(
     ecs_vec_init_if_t(vec, ecs_entity_t);
     ecs_vec_append_t(&world->allocator, vec, ecs_entity_t)[0] = e;
 
-    int32_t count = ecs_vec_count(vec);
-    int32_t index = count - 1;
-    ecs_entity_t *array = ecs_vec_first_t(vec, ecs_entity_t);
-
-    if (world->ordered_pending.cr == cr || world->ordered_pending.entity == e) {
-        if (world->ordered_pending.cr == cr &&
-            world->ordered_pending.entity == e)
-        {
-            /* Child switched representation without changing parent. Move it
-             * back to the position it had before the table move. */
-            index = world->ordered_pending.index;
-            ecs_assert(index < count, ECS_INTERNAL_ERROR, NULL);
-            ecs_os_memmove_n(&array[index + 1], &array[index],
-                ecs_entity_t, count - 1 - index);
-            array[index] = e;
-        }
-
-        flecs_ordered_children_clear_pending(world);
-    }
-
     if (cr->flags & EcsIdPrefabChildren) {
         /* Register index of prefab child so that it can be used to lookup
-         * corresponding instance child. Entities after the inserted child
-         * shifted up, so their indices have to be updated as well. */
-        int32_t i;
-        for (i = index; i < count; i ++) {
-            ecs_map_ensure(&world->prefab_child_indices, array[i])[0] =
-                flecs_ito(uint64_t, i);
-        }
+         * corresponding instance child. */
+        ecs_map_ensure(&world->prefab_child_indices, e)[0] =
+            flecs_ito(uint64_t, ecs_vec_count(vec) - 1);
 #ifdef FLECS_PREFAB
     } else {
         ecs_assert(
@@ -136,8 +96,7 @@ void flecs_ordered_entities_append(
 void flecs_ordered_entities_remove(
     ecs_world_t *world,
     ecs_component_record_t *cr,
-    ecs_entity_t e,
-    bool keep_position)
+    ecs_entity_t e)
 {
     ecs_vec_t *vec = &cr->pair->ordered_children;
     int32_t i, count = ecs_vec_count(vec);
@@ -154,14 +113,6 @@ void flecs_ordered_entities_remove(
     ecs_vec_remove_ordered_t(vec, ecs_entity_t, i);
     if (cr->flags & EcsIdPrefabChildren) {
         ecs_map_remove(&world->prefab_child_indices, e);
-    }
-
-    if (keep_position) {
-        world->ordered_pending.cr = cr;
-        world->ordered_pending.entity = e;
-        world->ordered_pending.index = i;
-    } else if (world->ordered_pending.cr == cr) {
-        flecs_ordered_children_clear_pending(world);
     }
 }
 
@@ -188,13 +139,12 @@ static void flecs_ordered_entities_remove_range(
     ecs_world_t *world,
     const ecs_table_t *table,
     const ecs_entity_t *entities,
-    int32_t count,
-    bool keep_position)
+    int32_t count)
 {
     ecs_component_record_t *cr = flecs_table_get_childof_cr(world, table);
     int32_t i;
     for (i = 0; i < count; i ++) {
-        flecs_ordered_entities_remove(world, cr, entities[i], keep_position);
+        flecs_ordered_entities_remove(world, cr, entities[i]);
     }
 }
 
@@ -208,8 +158,7 @@ void flecs_ordered_children_reparent(
     const ecs_entity_t *entities = &ecs_table_entities(dst)[row];
 
     if (src && (src->flags & EcsTableHasOrderedChildren)) {
-        flecs_ordered_entities_remove_range(
-            world, src, entities, count, false);
+        flecs_ordered_entities_remove_range(world, src, entities, count);
     }
 
     if (dst->flags & EcsTableHasOrderedChildren) {
@@ -224,22 +173,14 @@ void flecs_ordered_children_reparent(
 void flecs_ordered_children_unparent(
     ecs_world_t *world,
     const ecs_table_t *src,
-    const ecs_table_t *dst,
     int32_t row,
     int32_t count)
 {
     ecs_assert(src->flags & EcsTableHasOrderedChildren,
         ECS_INTERNAL_ERROR, NULL);
 
-    /* When the child moves to a table with a Parent component it may still
-     * be a child of the same parent, in which case the Parent hooks add it
-     * back. Only done for single entities, as switching a child to the
-     * Parent component is a per-entity operation. */
-    bool keep_position = count == 1 && dst &&
-        (dst->flags & EcsTableHasParent);
-
     flecs_ordered_entities_remove_range(world, src,
-        &ecs_table_entities(src)[row], count, keep_position);
+        &ecs_table_entities(src)[row], count);
 }
 
 void flecs_ordered_children_reorder(

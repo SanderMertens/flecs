@@ -18,7 +18,6 @@ void flecs_ordered_children_fini(
 
 /* Disable ordered children storage. */
 void flecs_ordered_children_clear(
-    ecs_world_t *world,
     ecs_component_record_t *cr);
 
 /* Reparent entities in ordered children storage. */
@@ -33,7 +32,6 @@ void flecs_ordered_children_reparent(
 void flecs_ordered_children_unparent(
     ecs_world_t *world,
     const ecs_table_t *src,
-    const ecs_table_t *dst,
     int32_t row,
     int32_t count);
 
@@ -55,13 +53,10 @@ void flecs_ordered_entities_append(
     ecs_component_record_t *cr,
     ecs_entity_t e);
 
-/* Directly remove child from ordered children array. If keep_position is true,
- * the child gets its old position back when it is re-added to the same parent
- * with a different ChildOf representation. */
+/* Directly remove child from ordered children array. */
 void flecs_ordered_entities_remove(
     ecs_world_t *world,
     ecs_component_record_t *cr,
-    ecs_entity_t e,
-    bool keep_position);
+    ecs_entity_t e);
 
 #endif

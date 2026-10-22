@@ -15853,3 +15853,68 @@ void Observer_not_term_on_add_remove_negated_id_in_populated_table_w_data(void) 
 
     ecs_fini(world);
 }
+
+static ecs_entity_t delete_other_victim;
+
+static void DeleteOtherObserver(ecs_iter_t *it) {
+    if (delete_other_victim) {
+        ecs_entity_t victim = delete_other_victim;
+        delete_other_victim = 0;
+        ecs_delete(it->world, victim);
+    }
+}
+
+void Observer_on_remove_delete_other_in_same_table_on_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnRemove },
+        .callback = DeleteOtherObserver
+    });
+
+    ecs_entity_t a = ecs_new_w(world, Foo);
+    ecs_entity_t b = ecs_new_w(world, Foo);
+    ecs_entity_t c = ecs_new_w(world, Foo);
+
+    delete_other_victim = a;
+    ecs_delete(world, c);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(ecs_is_alive(world, b));
+    test_assert(!ecs_is_alive(world, c));
+    test_assert(ecs_has(world, b, Foo));
+    test_int(ecs_count(world, Foo), 1);
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_delete_other_in_same_table_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnRemove },
+        .callback = DeleteOtherObserver
+    });
+
+    ecs_entity_t a = ecs_new_w(world, Foo);
+    ecs_entity_t b = ecs_new_w(world, Foo);
+    ecs_entity_t c = ecs_new_w(world, Foo);
+
+    delete_other_victim = a;
+    ecs_remove(world, c, Foo);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(ecs_is_alive(world, b));
+    test_assert(ecs_is_alive(world, c));
+    test_assert(ecs_has(world, b, Foo));
+    test_assert(!ecs_has(world, c, Foo));
+    test_int(ecs_count(world, Foo), 1);
+
+    ecs_fini(world);
+}
