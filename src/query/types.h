@@ -175,7 +175,6 @@ typedef struct {
     ecs_component_record_t *df_cr;
     int32_t cur;
     int32_t row;
-    int32_t count;
 } ecs_query_and_ctx_t;
 
 /* Sparse context */

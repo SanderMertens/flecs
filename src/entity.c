@@ -235,20 +235,13 @@ void flecs_commit(
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (src_table == dst_table) {
-        /* If source and destination table are the same no action is needed.
-         * However, if a component was added in the process of traversing a
-         * table, this suggests that a non-fragmenting component could have
-         * changed. */
-        ecs_flags32_t non_fragment_flags =
-            src_table->flags & EcsTableHasDontFragment;
-        if (non_fragment_flags) {
-            diff->added_flags |= non_fragment_flags;
-            diff->removed_flags |= non_fragment_flags;
-
+        if (diff->added_flags & EcsTableEdgeDontFragment) {
             flecs_actions_move_add(world, src_table, src_table,
                 ECS_RECORD_TO_ROW(record->row), 1, diff, evt_flags,
                     true, emplace_id);
+        }
 
+        if (diff->removed_flags & EcsTableEdgeDontFragment) {
             flecs_actions_move_remove(world, src_table, src_table,
                 ECS_RECORD_TO_ROW(record->row), 1, diff);
         }

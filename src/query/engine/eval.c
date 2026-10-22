@@ -315,17 +315,6 @@ repeat:
     }
 }
 
-static ecs_table_t* flecs_query_select_dont_fragment_table(
-    ecs_world_t *world,
-    int32_t index)
-{
-    if (!index) {
-        return &world->store.root;
-    }
-
-    return flecs_sparse_get_dense_t(&world->store.tables, ecs_table_t, index);
-}
-
 static bool flecs_query_select_dont_fragment(
     const ecs_query_op_t *op,
     bool redo,
@@ -335,93 +324,48 @@ static bool flecs_query_select_dont_fragment(
     ecs_world_t *world = ctx->world;
     ecs_iter_t *it = ctx->it;
     int8_t field_index = op->field_index;
-    ecs_sparse_t *tables = &world->store.tables;
-    ecs_table_t *table;
-    ecs_id_t id = 0;
 
     if (!redo) {
-        op_ctx->cur = -1;
-        goto next_table;
-    } else {
-        table = flecs_query_select_dont_fragment_table(world, op_ctx->cur);
-        goto next_component;
+        op_ctx->df_cr = world->cr_non_fragmenting_head;
+        op_ctx->row = -1;
     }
 
-next_table:
-    op_ctx->cur ++;
-    if (op_ctx->cur >= flecs_sparse_count(tables)) {
-        return false;
-    }
+    for (; op_ctx->df_cr; op_ctx->df_cr = op_ctx->df_cr->non_fragmenting.next) {
+        ecs_component_record_t *cr = op_ctx->df_cr;
+        if (ecs_id_is_wildcard(cr->id) || !cr->sparse) {
+            continue;
+        }
 
-    table = flecs_query_select_dont_fragment_table(world, op_ctx->cur);
-    if (!(table->flags & EcsTableHasDontFragment) || !ecs_table_count(table)) {
-        goto next_table;
-    }
+        const uint64_t *entities = flecs_sparse_ids(cr->sparse);
+        int32_t count = flecs_sparse_count(cr->sparse);
 
-    if (flecs_query_table_filter(table, op->other,
-        (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
-    {
-        goto next_table;
-    }
+        while (++ op_ctx->row < count) {
+            ecs_record_t *r = flecs_entities_get(world, entities[op_ctx->row]);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_table_t *table = r->table;
 
-    op_ctx->row = -1;
-    op_ctx->count = ecs_table_count(table);
-
-next_entity:
-    op_ctx->row ++;
-    if (op_ctx->row >= op_ctx->count) {
-        goto next_table;
-    }
-
-    op_ctx->column = -1;
-    op_ctx->df_cr = NULL;
-    goto this_component;
-
-next_component:
-    if (op_ctx->df_cr) {
-        op_ctx->df_cr = op_ctx->df_cr->non_fragmenting.next;
-        goto next_dont_fragment;
-    }
-
-this_component:
-    op_ctx->column ++;
-    if (op_ctx->column < table->type.count) {
-        flecs_query_var_set_range(op, op->src.var, table, op_ctx->row, 1, ctx);
-        flecs_query_set_match(op, table, op_ctx->column, ctx);
-        return true;
-    }
-
-    op_ctx->df_cr = world->cr_non_fragmenting_head;
-
-next_dont_fragment:
-    {
-        ecs_entity_t e = ecs_table_entities(table)[op_ctx->row];
-        while (op_ctx->df_cr) {
-            ecs_component_record_t *df_cr = op_ctx->df_cr;
-            if (!ecs_id_is_wildcard(df_cr->id) && df_cr->sparse &&
-                flecs_sparse_has(df_cr->sparse, e))
+            if (flecs_query_table_filter(table, op->other,
+                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
             {
-                id = df_cr->id;
-                break;
+                continue;
             }
 
-            op_ctx->df_cr = df_cr->non_fragmenting.next;
+            flecs_query_var_set_range(op, op->src.var, table,
+                ECS_RECORD_TO_ROW(r->row), 1, ctx);
+            if (field_index != -1) {
+                it->ids[field_index] = cr->id;
+                flecs_query_it_set_tr(it, field_index, NULL);
+            }
+
+            flecs_query_set_vars(op, cr->id, ctx);
+
+            return true;
         }
+
+        op_ctx->row = -1;
     }
 
-    if (!op_ctx->df_cr) {
-        goto next_entity;
-    }
-
-    flecs_query_var_set_range(op, op->src.var, table, op_ctx->row, 1, ctx);
-    if (field_index != -1) {
-        it->ids[field_index] = id;
-        flecs_query_it_set_tr(it, field_index, NULL);
-    }
-
-    flecs_query_set_vars(op, id, ctx);
-
-    return true;
+    return false;
 }
 
 bool flecs_query_and(

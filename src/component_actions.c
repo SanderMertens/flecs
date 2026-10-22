@@ -368,7 +368,7 @@ static void flecs_actions_on_remove_intern(
 
     ecs_assert(diff_flags != 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (diff_flags & EcsTableHasDontFragment) {
+    if (diff_flags & EcsTableEdgeDontFragment) {
         if (flecs_dont_fragment_on_remove(
             world, table, row, count, removed))
         {
