@@ -482,40 +482,30 @@ error:
     return result;
 }
 
-static void flecs_table_graph_edge_memory_get(
-    const ecs_graph_edge_t *edge,
-    ecs_table_memory_t *result)
-{
-    result->bytes_edges += ECS_SIZEOF(ecs_graph_edge_t);
-    if (edge->diff) {
-        result->bytes_edges += ECS_SIZEOF(ecs_table_diff_t);
-        result->bytes_edges += 
-            edge->diff->added.count * ECS_SIZEOF(ecs_id_t);
-        result->bytes_edges += 
-            edge->diff->removed.count * ECS_SIZEOF(ecs_id_t);
-    }
-}
-
 static void flecs_table_graph_edges_memory_get(
     const ecs_graph_edges_t *edges,
+    const ecs_vec_t *incoming,
     ecs_table_memory_t *result)
 {
-    if (edges->lo) {
-        int32_t i;
-        for (i = 0; i < FLECS_HI_COMPONENT_ID; i++) {
-            ecs_graph_edge_t *edge = &edges->lo[i];
-            flecs_table_graph_edge_memory_get(edge, result);
-        }
+    if (incoming) {
+        result->bytes_edges +=
+            ecs_vec_size(incoming) * ECS_SIZEOF(ecs_graph_incoming_t);
     }
 
-    if (edges->hi) {
-        result->bytes_edges += ECS_SIZEOF(ecs_map_t);
-        result->bytes_edges += flecs_map_memory_get(edges->hi, 0);
+    if (!edges->data) {
+        return;
+    }
 
-        ecs_map_iter_t it = ecs_map_iter(edges->hi);
-        while (ecs_map_next(&it)) {
-            ecs_graph_edge_t *edge = ecs_map_ptr(&it);
-            flecs_table_graph_edge_memory_get(edge, result);
+    int32_t i, size = flecs_flatmap_size(edges);
+    result->bytes_edges += size * ECS_SIZEOF(ecs_graph_edge_t);
+
+    for (i = 0; i < size; i++) {
+        const ecs_table_diff_t *diff = edges->data[i].diff;
+        if (diff) {
+            result->bytes_edges += ECS_SIZEOF(ecs_table_diff_t);
+            result->bytes_edges +=
+                (diff->added.count + diff->removed.count) *
+                    ECS_SIZEOF(ecs_id_t);
         }
     }
 }
@@ -571,8 +561,10 @@ void ecs_table_memory_get(
             (column_count + 1) * ECS_SIZEOF(int32_t);
     }
     
-    flecs_table_graph_edges_memory_get(&table->node.add, result);
-    flecs_table_graph_edges_memory_get(&table->node.remove, result);
+    flecs_table_graph_edges_memory_get(&table->node.add,
+        table->_ ? &table->_->incoming[0] : NULL, result);
+    flecs_table_graph_edges_memory_get(&table->node.remove,
+        table->_ ? &table->_->incoming[1] : NULL, result);
 }
 
 ecs_table_memory_t ecs_tables_memory_get(
@@ -1062,10 +1054,6 @@ ecs_allocator_memory_t ecs_allocator_memory_get(
     
     ecs_allocator_memory_t result = {0};
 
-    result.bytes_graph_edge = flecs_ballocator_memory_get(
-        &world->allocators.graph_edge_lo);
-    result.bytes_graph_edge += flecs_ballocator_memory_get(
-        &world->allocators.graph_edge);
     result.bytes_component_record = flecs_ballocator_memory_get(
         &world->allocators.component_record);
     result.bytes_pair_record = flecs_ballocator_memory_get(

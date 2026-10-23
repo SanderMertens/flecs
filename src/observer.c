@@ -58,7 +58,6 @@ static ecs_flags32_t flecs_id_flag_for_event(
 }
 
 static void flecs_observer_set_table_flags(
-    ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
     ecs_flags32_t flags)
@@ -67,7 +66,7 @@ static void flecs_observer_set_table_flags(
     if (id && (flags == EcsTableHasOnAdd || flags == EcsTableHasOnRemove ||
         flags == EcsTableHasUpNotify))
     {
-        flecs_table_edges_add_flags(world, table, id, flags);
+        flecs_table_edges_add_flags(table, id, flags);
     }
 }
 
@@ -83,8 +82,8 @@ static void flecs_observer_set_tables_flags(
     if (!id || id == EcsAny) {
         ecs_sparse_t *tables = &world->store.tables;
         int32_t count = flecs_sparse_count(tables);
-        for (int32_t i = 0; i < count; i ++) {
-            flecs_observer_set_table_flags(world,
+        for (int32_t i = 1; i < count; i ++) {
+            flecs_observer_set_table_flags(
                 flecs_sparse_get_dense_t(tables, ecs_table_t, i), id, flags);
         }
     } else {
@@ -94,7 +93,7 @@ static void flecs_observer_set_tables_flags(
             flecs_table_cache_iter(&cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty);
             const ecs_table_cache_elem_t *elem;
             while ((elem = flecs_table_cache_next(&it))) {
-                flecs_observer_set_table_flags(world, elem->table, id, flags);
+                flecs_observer_set_table_flags(elem->table, id, flags);
             }
         }
     }

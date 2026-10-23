@@ -587,8 +587,6 @@ static void flecs_world_allocators_init(
 
     flecs_allocator_init(&world->allocator);
 
-    flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
-    flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
     flecs_ballocator_init_t(&a->component_record, ecs_component_record_t);
     flecs_ballocator_init_t(&a->pair_record, ecs_pair_record_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
@@ -601,8 +599,6 @@ static void flecs_world_allocators_fini(
 {
     ecs_world_allocators_t *a = &world->allocators;
 
-    flecs_ballocator_fini(&a->graph_edge_lo);
-    flecs_ballocator_fini(&a->graph_edge);
     flecs_ballocator_fini(&a->component_record);
     flecs_ballocator_fini(&a->pair_record);
     flecs_ballocator_fini(&a->sparse_chunk);
