@@ -153,4 +153,13 @@ void flecs_observer_set_disable_bit(
     ecs_flags32_t bit,
     bool cond);
 
+/* Update disabled state of observers and modules after Disabled was added to
+ * or removed from entities in table. */
+void flecs_observer_table_disable(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    bool should_disable);
+
 #endif

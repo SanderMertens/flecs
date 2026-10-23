@@ -2256,6 +2256,15 @@ void flecs_observer_set_disable_bit(
     ecs_flags32_t bit,
     bool cond);
 
+/* Update disabled state of observers and modules after Disabled was added to
+ * or removed from entities in table. */
+void flecs_observer_table_disable(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    bool should_disable);
+
 #endif
 
 #ifndef FLECS_ITER_H
@@ -3397,57 +3406,6 @@ static void flecs_ensure_module_tag(ecs_iter_t *it) {
     }
 }
 
-static void flecs_disable_module_observers(
-    ecs_world_t *world,
-    ecs_entity_t module,
-    bool should_disable)
-{
-    ecs_iter_t child_it = ecs_children(world, module);
-    while (ecs_children_next(&child_it)) {
-        ecs_table_t *table = child_it.table;
-        bool table_disabled = table->flags & EcsTableIsDisabled;
-        int32_t i;
-
-        /* Recursively walk modules, don't propagate to disabled modules */
-        if (ecs_table_has_id(world, table, EcsModule) && !table_disabled) {
-            for (i = 0; i < child_it.count; i ++) {
-                flecs_disable_module_observers(
-                    world, child_it.entities[i], should_disable);
-            }
-
-            continue;
-        }
-
-        /* Only disable observers */
-        if (!ecs_table_has_id(world, table, EcsObserver)) {
-            continue;
-        }
-
-        for (i = 0; i < child_it.count; i ++) {
-            flecs_observer_set_disable_bit(world, child_it.entities[i],
-                EcsObserverIsParentDisabled, should_disable);
-        }
-    }
-}
-
-static void flecs_disable_observer(
-    ecs_iter_t *it)
-{
-    ecs_world_t *world = it->world;
-    bool should_disable = it->event == EcsOnAdd;
-
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        flecs_observer_set_disable_bit(
-            world, e, EcsObserverIsDisabled, should_disable);
-
-        if (ecs_owns_id(world, e, EcsModule)) {
-            flecs_disable_module_observers(world, e, should_disable);
-        }
-    }
-}
-
 static void flecs_register_ordered_children(ecs_iter_t *it) {
     int32_t i;
     if (it->event == EcsOnAdd) {
@@ -3959,14 +3917,6 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_ensure_module_tag,
-        .global_observer = true
-    });
-
-    /* Observer that tracks whether observers are disabled */
-    ecs_observer(world, {
-        .query.terms = {{ .id = EcsDisabled }},
-        .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_disable_observer,
         .global_observer = true
     });
 
@@ -6077,6 +6027,12 @@ void flecs_actions_move_add(
         flecs_emit_propagate_invalidate(world, table, row, count);
     }
 
+    if (other_table &&
+        ((table->flags & ~other_table->flags) & EcsTableIsDisabled))
+    {
+        flecs_observer_table_disable(world, table, row, count, true);
+    }
+
     flecs_actions_on_add_intern(world, table, other_table, row, count, diff,
         flags, sparse, emplace_id);
 }
@@ -6095,6 +6051,10 @@ void flecs_actions_move_remove(
 
     ecs_flags32_t diff_flags = diff->removed_flags;
     ecs_flags32_t table_flags = table->flags;
+    if ((table_flags & ~other_table->flags) & EcsTableIsDisabled) {
+        flecs_observer_table_disable(world, table, row, count, false);
+    }
+
     if (!((table_flags & EcsTableRemoveActionFlags) | diff_flags)) {
         return;
     }
@@ -15227,6 +15187,65 @@ void flecs_observer_set_disable_bit(
     } else {
         flecs_poly_assert(o, ecs_observer_t);
         ECS_BIT_COND(impl->flags, bit, cond);
+    }
+}
+
+static void flecs_observer_disable_module(
+    ecs_world_t *world,
+    ecs_entity_t module,
+    bool should_disable)
+{
+    ecs_iter_t child_it = ecs_children(world, module);
+    while (ecs_children_next(&child_it)) {
+        ecs_table_t *table = child_it.table;
+        bool table_disabled = table->flags & EcsTableIsDisabled;
+        int32_t i;
+
+        /* Recursively walk modules, don't propagate to disabled modules */
+        if (ecs_table_has_id(world, table, EcsModule) && !table_disabled) {
+            for (i = 0; i < child_it.count; i ++) {
+                flecs_observer_disable_module(
+                    world, child_it.entities[i], should_disable);
+            }
+
+            continue;
+        }
+
+        /* Only disable observers */
+        if (!ecs_table_has_id(world, table, EcsObserver)) {
+            continue;
+        }
+
+        for (i = 0; i < child_it.count; i ++) {
+            flecs_observer_set_disable_bit(world, child_it.entities[i],
+                EcsObserverIsParentDisabled, should_disable);
+        }
+    }
+}
+
+void flecs_observer_table_disable(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    bool should_disable)
+{
+    bool is_module = (table->flags & EcsTableHasModule) &&
+        ecs_table_has_id(world, table, EcsModule);
+    if (!is_module && !ecs_table_has_id(world, table, EcsObserver)) {
+        return;
+    }
+
+    const ecs_entity_t *entities = &ecs_table_entities(table)[row];
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = entities[i];
+        flecs_observer_set_disable_bit(
+            world, e, EcsObserverIsDisabled, should_disable);
+
+        if (is_module) {
+            flecs_observer_disable_module(world, e, should_disable);
+        }
     }
 }
 
