@@ -105,7 +105,7 @@ static inline uint32_t flecs_flatmap_slot(
             name##_rehash(allocator, map, FLECS_FLATMAP_MIN_SIZE_LOG2);\
         } else if (((map->count + 1) * 2) > flecs_flatmap_size(map)) {\
             name##_rehash(allocator, map,\
-                flecs_ito(int32_t, 64 - map->shift + 1));\
+                flecs_uto(int32_t, 64 - map->shift + 1));\
         }\
         \
         T *elem = name##_find_slot(map->data, map->shift, key);\
