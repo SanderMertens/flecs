@@ -195,8 +195,6 @@ void flecs_component_record_init_dont_fragment(
     }
 
     flecs_component_init_sparse(world, cr);
-
-    ecs_vec_init_t(&world->allocator, &cr->dont_fragment_tables, uint64_t, 0);
 }
 
 static void flecs_component_record_fini_dont_fragment(
@@ -216,27 +214,17 @@ static void flecs_component_record_fini_dont_fragment(
         cr->non_fragmenting.next->non_fragmenting.prev = 
             cr->non_fragmenting.prev;
     }
+}
 
-    int32_t i, count = ecs_vec_count(&cr->dont_fragment_tables);
-    uint64_t *tables = ecs_vec_first(&cr->dont_fragment_tables);
-    for (i = 0; i < count; i ++) {
-        uint64_t table_id = tables[i];
-        ecs_table_t *table = NULL;
-        if (table_id) {
-            table = flecs_sparse_get_t(
-                &world->store.tables, ecs_table_t, table_id);
-        } else {
-            table = &world->store.root;
-        }
-
-        if (table) {
-            flecs_table_clear_edges_for_id(world, table, cr->id);
-        } else {
-            /* Table was deleted */
-        }
+void flecs_component_dont_fragment_with_invalidate(
+    ecs_world_t *world)
+{
+    ecs_component_record_t *cr = world->cr_non_fragmenting_head;
+    while (cr) {
+        flecs_type_free(world, &cr->dont_fragment_with);
+        cr->dont_fragment_with = (ecs_type_t){0};
+        cr = cr->non_fragmenting.next;
     }
-
-    ecs_vec_fini_t(&world->allocator, &cr->dont_fragment_tables, uint64_t);
 }
 
 void flecs_component_record_init_exclusive(
@@ -662,6 +650,8 @@ static void flecs_component_free(
     if (cr->flags & EcsIdDontFragment) {
         flecs_component_record_fini_dont_fragment(world, cr);
     }
+
+    flecs_type_free(world, &cr->dont_fragment_with);
 
     /* Update counters */
     world->info.id_delete_total ++;

@@ -767,8 +767,7 @@ struct ecs_component_record_t {
     /* Storage for sparse components */
     void *sparse;
 
-    /* Backref to tables with edges to non-fragmenting component ids */
-    ecs_vec_t dont_fragment_tables;
+    ecs_type_t dont_fragment_with;
 
     /* Pair data */
     ecs_pair_record_t *pair;
@@ -871,6 +870,9 @@ void flecs_component_delete_sparse(
 void flecs_component_record_init_dont_fragment(
     ecs_world_t *world,
     ecs_component_record_t *cr);
+
+void flecs_component_dont_fragment_with_invalidate(
+    ecs_world_t *world);
 
 void flecs_component_record_init_exclusive(
     ecs_world_t *world,
@@ -996,11 +998,6 @@ ecs_table_t* flecs_find_table_add(
 void flecs_table_hashmap_init(
     ecs_world_t *world,
     ecs_hashmap_t *hm);
-
-void flecs_table_clear_edges_for_id(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t component);
 
 void flecs_table_clear_edges_for_base(
     ecs_world_t *world,
@@ -4977,6 +4974,65 @@ static void flecs_register_trait_pair(ecs_iter_t *it) {
         it, ecs_pair_first(it->world, it->ids[0]), ctx->flag, ctx->not_flag, 0);
 }
 
+static void flecs_register_with(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        if (!ecs_owns_id(world, e, EcsDontFragment)) {
+            continue;
+        }
+
+        if (it->event == EcsOnAdd) {
+            ecs_entity_t tgt = ecs_pair_second(world, it->ids[0]);
+            ecs_check(ecs_owns_id(world, tgt, EcsDontFragment),
+                ECS_INVALID_OPERATION,
+                "cannot add (With, %s) to non-fragmenting component '%s': "
+                "target must also be non-fragmenting",
+                    flecs_errstr(ecs_get_path(world, tgt)),
+                    flecs_errstr_1(ecs_get_path(world, e)));
+            (void)tgt;
+        }
+
+        flecs_component_dont_fragment_with_invalidate(world);
+    }
+
+    flecs_register_trait_pair(it);
+error:
+    return;
+}
+
+static void flecs_register_dont_fragment(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        const ecs_type_t *type = ecs_get_type(world, e);
+        int32_t j;
+        for (j = 0; j < type->count; j ++) {
+            ecs_id_t id = type->array[j];
+            if (!ECS_HAS_RELATION(id, EcsWith)) {
+                continue;
+            }
+
+            ecs_entity_t tgt = ecs_pair_second(world, id);
+            ecs_check(ecs_owns_id(world, tgt, EcsDontFragment),
+                ECS_INVALID_OPERATION,
+                "cannot add DontFragment to component '%s' with "
+                "(With, %s): target must also be non-fragmenting",
+                    flecs_errstr(ecs_get_path(world, e)),
+                    flecs_errstr_1(ecs_get_path(world, tgt)));
+            (void)tgt;
+        }
+    }
+
+    flecs_register_trait(it);
+error:
+    return;
+}
+
 static void flecs_on_component(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsComponent *c = ecs_field(it, EcsComponent, 0);
@@ -5497,8 +5553,8 @@ void flecs_bootstrap(
     ecs_observer(world, {
         .query.terms = { { .id = ecs_pair(EcsWith, EcsWildcard) }, },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnAdd},
-        .callback = flecs_register_trait_pair,
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = flecs_register_with,
         .ctx = &with_trait,
         .global_observer = true
     });
@@ -5518,7 +5574,7 @@ void flecs_bootstrap(
         .query.terms = {{ .id = EcsDontFragment }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_trait,
+        .callback = flecs_register_dont_fragment,
         .ctx = &dont_fragment_trait,
         .global_observer = true
     });
@@ -38118,8 +38174,6 @@ void flecs_component_record_init_dont_fragment(
     }
 
     flecs_component_init_sparse(world, cr);
-
-    ecs_vec_init_t(&world->allocator, &cr->dont_fragment_tables, uint64_t, 0);
 }
 
 static void flecs_component_record_fini_dont_fragment(
@@ -38139,27 +38193,17 @@ static void flecs_component_record_fini_dont_fragment(
         cr->non_fragmenting.next->non_fragmenting.prev = 
             cr->non_fragmenting.prev;
     }
+}
 
-    int32_t i, count = ecs_vec_count(&cr->dont_fragment_tables);
-    uint64_t *tables = ecs_vec_first(&cr->dont_fragment_tables);
-    for (i = 0; i < count; i ++) {
-        uint64_t table_id = tables[i];
-        ecs_table_t *table = NULL;
-        if (table_id) {
-            table = flecs_sparse_get_t(
-                &world->store.tables, ecs_table_t, table_id);
-        } else {
-            table = &world->store.root;
-        }
-
-        if (table) {
-            flecs_table_clear_edges_for_id(world, table, cr->id);
-        } else {
-            /* Table was deleted */
-        }
+void flecs_component_dont_fragment_with_invalidate(
+    ecs_world_t *world)
+{
+    ecs_component_record_t *cr = world->cr_non_fragmenting_head;
+    while (cr) {
+        flecs_type_free(world, &cr->dont_fragment_with);
+        cr->dont_fragment_with = (ecs_type_t){0};
+        cr = cr->non_fragmenting.next;
     }
-
-    ecs_vec_fini_t(&world->allocator, &cr->dont_fragment_tables, uint64_t);
 }
 
 void flecs_component_record_init_exclusive(
@@ -38585,6 +38629,8 @@ static void flecs_component_free(
     if (cr->flags & EcsIdDontFragment) {
         flecs_component_record_fini_dont_fragment(world, cr);
     }
+
+    flecs_type_free(world, &cr->dont_fragment_with);
 
     /* Update counters */
     world->info.id_delete_total ++;
@@ -44271,6 +44317,9 @@ static void flecs_add_with_property(
                     flecs_type_add(world, dst_type, a);
                 }
             } else if (dont_fragment_type) {
+                if (check_id != a) {
+                    flecs_components_ensure(world, a);
+                }
                 flecs_type_add(world, dont_fragment_type, a);
             }
 
@@ -44314,14 +44363,6 @@ static void flecs_compute_table_diff(
 
         flecs_add_with_property(world, flecs_components_get(world,
             ecs_pair(EcsWith, EcsWildcard)), NULL, &dont_fragment, r, o);
-    }
-
-    if (flecs_table_graph_id_flags(cr, id) & EcsIdDontFragment) {
-        ecs_assert(!is_remove && (cr->flags & EcsIdWith),
-            ECS_INTERNAL_ERROR, NULL);
-        ecs_vec_append_t(&world->allocator,
-            &cr->dont_fragment_tables, uint64_t)[0] = node->id;
-        flecs_type_add(world, &dont_fragment, id);
     }
 
     ecs_type_t added = {0}, removed = {0};
@@ -44476,15 +44517,10 @@ static ecs_table_t* flecs_find_table_with(
     }
 
     if (!replaced) {
-        if (cr->flags & EcsIdDontFragment) {
-            ecs_assert(cr->flags & EcsIdWith, ECS_INTERNAL_ERROR, NULL);
-            dst_type = flecs_type_copy(world, &node->type);
-        } else {
-            /* Create sequence with new id */
-            int res = flecs_type_new_with(world, &dst_type, &node->type, with);
-            if (res == -1) {
-                return node; /* Current table already has id */
-            }
+        /* Create sequence with new id */
+        int res = flecs_type_new_with(world, &dst_type, &node->type, with);
+        if (res == -1) {
+            return node; /* Current table already has id */
         }
     }
 
@@ -44555,9 +44591,7 @@ static ecs_graph_edge_t* flecs_table_create_edge(
         : flecs_find_table_with(world, table, id);
 
     ecs_graph_edge_t result = { .id = id, .to = to, .incoming = -1 };
-    if (table != to || (!remove && (flecs_table_graph_id_flags(
-        flecs_components_ensure(world, id), id) & EcsIdDontFragment)))
-    {
+    if (table != to) {
         flecs_compute_table_diff(world, table, to, &result, id, remove);
     }
 
@@ -44608,11 +44642,25 @@ static bool flecs_table_traverse_dont_fragment(
             .removed = { .array = id_ptr, .count = 1 },
             .removed_flags = EcsTableEdgeDontFragment|EcsTableHasSparse
         };
-    } else {
-        if (flags & EcsIdWith) {
-            return false;
+    } else if (flags & EcsIdWith) {
+        if (!cr->dont_fragment_with.count) {
+            ecs_entity_t r = id, o = 0;
+            if (ECS_IS_PAIR(id)) {
+                r = ECS_PAIR_FIRST(id);
+                o = ECS_PAIR_SECOND(id);
+            }
+
+            flecs_add_with_property(world, flecs_components_get(world,
+                ecs_pair(EcsWith, EcsWildcard)), NULL,
+                    &cr->dont_fragment_with, r, o);
+            flecs_type_add(world, &cr->dont_fragment_with, id);
         }
 
+        *diff = (ecs_table_diff_t){
+            .added = cr->dont_fragment_with,
+            .added_flags = EcsTableEdgeDontFragment|EcsTableHasSparse
+        };
+    } else {
         *diff = (ecs_table_diff_t){
             .added = { .array = id_ptr, .count = 1 },
             .added_flags = EcsTableEdgeDontFragment|EcsTableHasSparse
@@ -44854,15 +44902,6 @@ void flecs_table_clear_edges(
 {
     flecs_table_clear_edge_set(world, table, false);
     flecs_table_clear_edge_set(world, table, true);
-}
-
-void flecs_table_clear_edges_for_id(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t component)
-{
-    flecs_graph_edge_remove(world, table, component, false);
-    flecs_graph_edge_remove(world, table, component, true);
 }
 
 void flecs_table_clear_edges_for_base(

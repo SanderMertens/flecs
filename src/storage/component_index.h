@@ -77,8 +77,7 @@ struct ecs_component_record_t {
     /* Storage for sparse components */
     void *sparse;
 
-    /* Backref to tables with edges to non-fragmenting component ids */
-    ecs_vec_t dont_fragment_tables;
+    ecs_type_t dont_fragment_with;
 
     /* Pair data */
     ecs_pair_record_t *pair;
@@ -181,6 +180,9 @@ void flecs_component_delete_sparse(
 void flecs_component_record_init_dont_fragment(
     ecs_world_t *world,
     ecs_component_record_t *cr);
+
+void flecs_component_dont_fragment_with_invalidate(
+    ecs_world_t *world);
 
 void flecs_component_record_init_exclusive(
     ecs_world_t *world,

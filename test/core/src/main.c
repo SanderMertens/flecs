@@ -793,6 +793,13 @@ void Sparse_add_dont_fragment_tag_w_with_deferred(void);
 void Sparse_add_dont_fragment_tag_w_with_dont_fragment(void);
 void Sparse_remove_before_add_remove(void);
 void Sparse_remove_before_add_remove_other_entity(void);
+void Sparse_dont_fragment_tag_w_with_dont_fragment_tag(void);
+void Sparse_dont_fragment_tag_w_with_dont_fragment_tag_deferred(void);
+void Sparse_dont_fragment_tag_w_with_dont_fragment_tag_chain(void);
+void Sparse_dont_fragment_tag_w_with_added_after_use(void);
+void Sparse_dont_fragment_pair_w_with_dont_fragment_pair(void);
+void Sparse_dont_fragment_tag_w_with_fragmenting_tag(void);
+void Sparse_dont_fragment_added_to_tag_w_with_fragmenting_tag(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_convert_storage_childof_observer(void);
@@ -6743,6 +6750,34 @@ bake_test_case Sparse_testcases[] = {
     {
         "remove_before_add_remove_other_entity",
         Sparse_remove_before_add_remove_other_entity
+    },
+    {
+        "dont_fragment_tag_w_with_dont_fragment_tag",
+        Sparse_dont_fragment_tag_w_with_dont_fragment_tag
+    },
+    {
+        "dont_fragment_tag_w_with_dont_fragment_tag_deferred",
+        Sparse_dont_fragment_tag_w_with_dont_fragment_tag_deferred
+    },
+    {
+        "dont_fragment_tag_w_with_dont_fragment_tag_chain",
+        Sparse_dont_fragment_tag_w_with_dont_fragment_tag_chain
+    },
+    {
+        "dont_fragment_tag_w_with_added_after_use",
+        Sparse_dont_fragment_tag_w_with_added_after_use
+    },
+    {
+        "dont_fragment_pair_w_with_dont_fragment_pair",
+        Sparse_dont_fragment_pair_w_with_dont_fragment_pair
+    },
+    {
+        "dont_fragment_tag_w_with_fragmenting_tag",
+        Sparse_dont_fragment_tag_w_with_fragmenting_tag
+    },
+    {
+        "dont_fragment_added_to_tag_w_with_fragmenting_tag",
+        Sparse_dont_fragment_added_to_tag_w_with_fragmenting_tag
     }
 };
 
@@ -18133,7 +18168,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        246,
+        253,
         Sparse_testcases,
         1,
         Sparse_params

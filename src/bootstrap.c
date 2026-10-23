@@ -292,6 +292,65 @@ static void flecs_register_trait_pair(ecs_iter_t *it) {
         it, ecs_pair_first(it->world, it->ids[0]), ctx->flag, ctx->not_flag, 0);
 }
 
+static void flecs_register_with(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        if (!ecs_owns_id(world, e, EcsDontFragment)) {
+            continue;
+        }
+
+        if (it->event == EcsOnAdd) {
+            ecs_entity_t tgt = ecs_pair_second(world, it->ids[0]);
+            ecs_check(ecs_owns_id(world, tgt, EcsDontFragment),
+                ECS_INVALID_OPERATION,
+                "cannot add (With, %s) to non-fragmenting component '%s': "
+                "target must also be non-fragmenting",
+                    flecs_errstr(ecs_get_path(world, tgt)),
+                    flecs_errstr_1(ecs_get_path(world, e)));
+            (void)tgt;
+        }
+
+        flecs_component_dont_fragment_with_invalidate(world);
+    }
+
+    flecs_register_trait_pair(it);
+error:
+    return;
+}
+
+static void flecs_register_dont_fragment(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        const ecs_type_t *type = ecs_get_type(world, e);
+        int32_t j;
+        for (j = 0; j < type->count; j ++) {
+            ecs_id_t id = type->array[j];
+            if (!ECS_HAS_RELATION(id, EcsWith)) {
+                continue;
+            }
+
+            ecs_entity_t tgt = ecs_pair_second(world, id);
+            ecs_check(ecs_owns_id(world, tgt, EcsDontFragment),
+                ECS_INVALID_OPERATION,
+                "cannot add DontFragment to component '%s' with "
+                "(With, %s): target must also be non-fragmenting",
+                    flecs_errstr(ecs_get_path(world, e)),
+                    flecs_errstr_1(ecs_get_path(world, tgt)));
+            (void)tgt;
+        }
+    }
+
+    flecs_register_trait(it);
+error:
+    return;
+}
+
 static void flecs_on_component(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsComponent *c = ecs_field(it, EcsComponent, 0);
@@ -812,8 +871,8 @@ void flecs_bootstrap(
     ecs_observer(world, {
         .query.terms = { { .id = ecs_pair(EcsWith, EcsWildcard) }, },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnAdd},
-        .callback = flecs_register_trait_pair,
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = flecs_register_with,
         .ctx = &with_trait,
         .global_observer = true
     });
@@ -833,7 +892,7 @@ void flecs_bootstrap(
         .query.terms = {{ .id = EcsDontFragment }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_trait,
+        .callback = flecs_register_dont_fragment,
         .ctx = &dont_fragment_trait,
         .global_observer = true
     });
