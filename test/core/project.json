@@ -824,7 +824,14 @@
                 "add_dont_fragment_tag_w_with_deferred",
                 "add_dont_fragment_tag_w_with_dont_fragment",
                 "remove_before_add_remove",
-                "remove_before_add_remove_other_entity"
+                "remove_before_add_remove_other_entity",
+                "dont_fragment_tag_w_with_dont_fragment_tag",
+                "dont_fragment_tag_w_with_dont_fragment_tag_deferred",
+                "dont_fragment_tag_w_with_dont_fragment_tag_chain",
+                "dont_fragment_tag_w_with_added_after_use",
+                "dont_fragment_pair_w_with_dont_fragment_pair",
+                "dont_fragment_tag_w_with_fragmenting_tag",
+                "dont_fragment_added_to_tag_w_with_fragmenting_tag"
             ]
         }, {
             "id": "NonFragmentingChildOf",

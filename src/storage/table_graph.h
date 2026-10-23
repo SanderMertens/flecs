@@ -105,11 +105,6 @@ void flecs_table_hashmap_init(
     ecs_world_t *world,
     ecs_hashmap_t *hm);
 
-void flecs_table_clear_edges_for_id(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t component);
-
 void flecs_table_clear_edges_for_base(
     ecs_world_t *world,
     ecs_entity_t base);

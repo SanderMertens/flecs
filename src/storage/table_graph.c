@@ -623,6 +623,9 @@ static void flecs_add_with_property(
                     flecs_type_add(world, dst_type, a);
                 }
             } else if (dont_fragment_type) {
+                if (check_id != a) {
+                    flecs_components_ensure(world, a);
+                }
                 flecs_type_add(world, dont_fragment_type, a);
             }
 
@@ -666,14 +669,6 @@ static void flecs_compute_table_diff(
 
         flecs_add_with_property(world, flecs_components_get(world,
             ecs_pair(EcsWith, EcsWildcard)), NULL, &dont_fragment, r, o);
-    }
-
-    if (flecs_table_graph_id_flags(cr, id) & EcsIdDontFragment) {
-        ecs_assert(!is_remove && (cr->flags & EcsIdWith),
-            ECS_INTERNAL_ERROR, NULL);
-        ecs_vec_append_t(&world->allocator,
-            &cr->dont_fragment_tables, uint64_t)[0] = node->id;
-        flecs_type_add(world, &dont_fragment, id);
     }
 
     ecs_type_t added = {0}, removed = {0};
@@ -828,15 +823,10 @@ static ecs_table_t* flecs_find_table_with(
     }
 
     if (!replaced) {
-        if (cr->flags & EcsIdDontFragment) {
-            ecs_assert(cr->flags & EcsIdWith, ECS_INTERNAL_ERROR, NULL);
-            dst_type = flecs_type_copy(world, &node->type);
-        } else {
-            /* Create sequence with new id */
-            int res = flecs_type_new_with(world, &dst_type, &node->type, with);
-            if (res == -1) {
-                return node; /* Current table already has id */
-            }
+        /* Create sequence with new id */
+        int res = flecs_type_new_with(world, &dst_type, &node->type, with);
+        if (res == -1) {
+            return node; /* Current table already has id */
         }
     }
 
@@ -907,9 +897,7 @@ static ecs_graph_edge_t* flecs_table_create_edge(
         : flecs_find_table_with(world, table, id);
 
     ecs_graph_edge_t result = { .id = id, .to = to, .incoming = -1 };
-    if (table != to || (!remove && (flecs_table_graph_id_flags(
-        flecs_components_ensure(world, id), id) & EcsIdDontFragment)))
-    {
+    if (table != to) {
         flecs_compute_table_diff(world, table, to, &result, id, remove);
     }
 
@@ -960,11 +948,25 @@ static bool flecs_table_traverse_dont_fragment(
             .removed = { .array = id_ptr, .count = 1 },
             .removed_flags = EcsTableEdgeDontFragment|EcsTableHasSparse
         };
-    } else {
-        if (flags & EcsIdWith) {
-            return false;
+    } else if (flags & EcsIdWith) {
+        if (!cr->dont_fragment_with.count) {
+            ecs_entity_t r = id, o = 0;
+            if (ECS_IS_PAIR(id)) {
+                r = ECS_PAIR_FIRST(id);
+                o = ECS_PAIR_SECOND(id);
+            }
+
+            flecs_add_with_property(world, flecs_components_get(world,
+                ecs_pair(EcsWith, EcsWildcard)), NULL,
+                    &cr->dont_fragment_with, r, o);
+            flecs_type_add(world, &cr->dont_fragment_with, id);
         }
 
+        *diff = (ecs_table_diff_t){
+            .added = cr->dont_fragment_with,
+            .added_flags = EcsTableEdgeDontFragment|EcsTableHasSparse
+        };
+    } else {
         *diff = (ecs_table_diff_t){
             .added = { .array = id_ptr, .count = 1 },
             .added_flags = EcsTableEdgeDontFragment|EcsTableHasSparse
@@ -1208,15 +1210,6 @@ void flecs_table_clear_edges(
 {
     flecs_table_clear_edge_set(world, table, false);
     flecs_table_clear_edge_set(world, table, true);
-}
-
-void flecs_table_clear_edges_for_id(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t component)
-{
-    flecs_graph_edge_remove(world, table, component, false);
-    flecs_graph_edge_remove(world, table, component, true);
 }
 
 void flecs_table_clear_edges_for_base(
