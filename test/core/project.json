@@ -1149,7 +1149,8 @@
                 "delete_parent_w_observer_deleting_sibling",
                 "delete_parent_w_observer_reparenting_sibling",
                 "delete_parent_used_as_target_w_observer_deleting_sibling",
-                "delete_parent_used_as_target_w_observer_reparenting_sibling"
+                "delete_parent_used_as_target_w_observer_reparenting_sibling",
+                "emit_parent_for_table_forwards_childof"
             ]
         }, {
             "id": "Hierarchies",

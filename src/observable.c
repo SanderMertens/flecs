@@ -1171,7 +1171,7 @@ repeat_event:
 
             const EcsParent *parents = ecs_table_get_column(table,
                 table->component_map[ecs_id(EcsParent)] - 1, it.offset);
-            int32_t pcount = desc->count;
+            int32_t pcount = count;
             pdesc.count = 1;
             for (int32_t p = 0; p < pcount; p ++) {
                 ecs_entity_t parent = parents[p].value;

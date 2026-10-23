@@ -8798,3 +8798,44 @@ void NonFragmentingChildOf_delete_parent_used_as_target_w_observer_reparenting_s
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_emit_parent_for_table_forwards_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t a = ecs_new_w_parent(world, parent, NULL);
+    ecs_entity_t b = ecs_new_w_parent(world, parent, NULL);
+    ecs_table_t *table = ecs_get_table(world, a);
+    test_assert(table == ecs_get_table(world, b));
+    test_int(ecs_table_count(table), 2);
+
+    int32_t count = 0;
+    ecs_observer(world, {
+        .query.terms = {{ ecs_childof(parent) }},
+        .events = { evt },
+        .callback = CountChildOfOnRemove,
+        .ctx = &count
+    });
+
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = evt,
+        .ids = &(ecs_type_t){ .count = 1, .array = (ecs_id_t[]){ ecs_id(EcsParent) } },
+        .table = table,
+        .count = 2,
+        .observable = world
+    });
+
+    test_int(count, 2);
+
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = evt,
+        .ids = &(ecs_type_t){ .count = 1, .array = (ecs_id_t[]){ ecs_id(EcsParent) } },
+        .table = table,
+        .observable = world
+    });
+
+    test_int(count, 4);
+
+    ecs_fini(world);
+}
