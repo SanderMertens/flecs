@@ -791,6 +791,8 @@ void Sparse_fini_w_dont_fragment_component_w_isa_prefab_in_module(void);
 void Sparse_add_dont_fragment_tag_w_with(void);
 void Sparse_add_dont_fragment_tag_w_with_deferred(void);
 void Sparse_add_dont_fragment_tag_w_with_dont_fragment(void);
+void Sparse_remove_before_add_remove(void);
+void Sparse_remove_before_add_remove_other_entity(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_convert_storage_childof_observer(void);
@@ -6733,6 +6735,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "add_dont_fragment_tag_w_with_dont_fragment",
         Sparse_add_dont_fragment_tag_w_with_dont_fragment
+    },
+    {
+        "remove_before_add_remove",
+        Sparse_remove_before_add_remove
+    },
+    {
+        "remove_before_add_remove_other_entity",
+        Sparse_remove_before_add_remove_other_entity
     }
 };
 
@@ -18123,7 +18133,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        244,
+        246,
         Sparse_testcases,
         1,
         Sparse_params

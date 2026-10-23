@@ -44590,16 +44590,6 @@ static bool flecs_table_traverse_dont_fragment(
     ecs_component_record_t *cr = flecs_components_get(world, id);
     if (!cr) {
         if (remove) {
-            if (!ECS_IS_PAIR(id)) {
-                return false;
-            }
-
-            cr = flecs_components_get(world,
-                ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
-            if (!cr || !(cr->flags & EcsIdDontFragment)) {
-                return false;
-            }
-
             *diff = (ecs_table_diff_t)ECS_TABLE_DIFF_INIT;
             return true;
         }
