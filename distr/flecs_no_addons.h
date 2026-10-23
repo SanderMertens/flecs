@@ -718,6 +718,7 @@ extern "C" {
 #define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUpNotify)
 #define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse | EcsTableHasUpNotify)
 #define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasOrderedChildren | EcsTableHasUpNotify)
+#define EcsTableRemoveActionFlags (EcsTableHasParent | EcsTableHasOrderedChildren | EcsTableHasTraversable | EcsTableHasBuiltins)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Aperiodic action flags (used by ecs_run_aperiodic())
