@@ -31,6 +31,7 @@
 
 #include "flecs/datastructures/bitset.h"
 #include "datastructures/name_index.h"
+#include "datastructures/flatmap.h"
 #include "storage/entity_index.h"
 #include "storage/table_cache.h"
 #include "storage/component_index.h"

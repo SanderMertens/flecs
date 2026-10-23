@@ -50,6 +50,7 @@ typedef struct ecs_table__t {
     ecs_bitset_t *bs_columns;        /* Bitset columns */
 
     struct ecs_table_record_t *records; /* Array with table records */
+    ecs_vec_t incoming[2];
 
 #ifdef FLECS_DEBUG_INFO
     /* Fields used for debug visualization */

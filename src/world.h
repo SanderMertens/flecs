@@ -14,8 +14,6 @@
 
 /* World-level allocators are for operations that are not multithreaded */
 typedef struct ecs_world_allocators_t {
-    ecs_block_allocator_t graph_edge_lo;
-    ecs_block_allocator_t graph_edge;
     ecs_block_allocator_t component_record;
     ecs_block_allocator_t pair_record;
     ecs_block_allocator_t sparse_chunk;
