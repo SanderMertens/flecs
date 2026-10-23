@@ -2095,7 +2095,8 @@
                 "mark_fixed_fields_dirty_w_tag_before",
                 "query_changed_after_wildcard_matched_table_emptied",
                 "detect_w_not_cached_fixed_src_term",
-                "detect_changes_w_order_by"
+                "detect_changes_w_order_by",
+                "query_changed_after_iter_simple_query_w_tag"
             ]
         }, {
             "id": "GroupBy",
@@ -2997,7 +2998,8 @@
                 "order_empty_table_only_2_tables",
                 "sort_w_or_term_before_order_by_term",
                 "sort_after_set_shared_component",
-                "sort_w_scope_term"
+                "sort_w_scope_term",
+                "no_resort_after_iter_simple_query_w_tag"
             ]
         }, {
             "id": "OrderByEntireTable",

@@ -1551,9 +1551,6 @@ bool flecs_query_finalize_simple(
     term_count = i;
     ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
 
-    /* All fields are InOut */
-    q->write_fields = UINT32_MAX >> (32 - term_count);
-
     /* Simple query that only queries for component ids */
 
     /* Populate terms */
@@ -1714,6 +1711,7 @@ bool flecs_query_finalize_simple(
     q->field_count = term_count;
     q->set_fields = (ecs_termset_t)((1llu << i) - 1);
     q->static_id_fields = (ecs_termset_t)((1llu << i) - 1);
+    q->write_fields = q->data_fields;
 
     if (has_this) {
         q->flags |= EcsQueryHasTableThisVar|EcsQueryMatchThis;

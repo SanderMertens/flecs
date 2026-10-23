@@ -2032,6 +2032,7 @@ void ChangeDetection_mark_fixed_fields_dirty_w_tag_before(void);
 void ChangeDetection_query_changed_after_wildcard_matched_table_emptied(void);
 void ChangeDetection_detect_w_not_cached_fixed_src_term(void);
 void ChangeDetection_detect_changes_w_order_by(void);
+void ChangeDetection_query_changed_after_iter_simple_query_w_tag(void);
 
 // Testsuite 'GroupBy'
 void GroupBy_group_by(void);
@@ -2905,6 +2906,7 @@ void OrderBy_order_empty_table_only_2_tables(void);
 void OrderBy_sort_w_or_term_before_order_by_term(void);
 void OrderBy_sort_after_set_shared_component(void);
 void OrderBy_sort_w_scope_term(void);
+void OrderBy_no_resort_after_iter_simple_query_w_tag(void);
 
 // Testsuite 'OrderByEntireTable'
 void OrderByEntireTable_sort_by_component(void);
@@ -10985,6 +10987,10 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "detect_changes_w_order_by",
         ChangeDetection_detect_changes_w_order_by
+    },
+    {
+        "query_changed_after_iter_simple_query_w_tag",
+        ChangeDetection_query_changed_after_iter_simple_query_w_tag
     }
 };
 
@@ -14422,6 +14428,10 @@ bake_test_case OrderBy_testcases[] = {
     {
         "sort_w_scope_term",
         OrderBy_sort_w_scope_term
+    },
+    {
+        "no_resort_after_iter_simple_query_w_tag",
+        OrderBy_no_resort_after_iter_simple_query_w_tag
     }
 };
 
@@ -15004,7 +15014,7 @@ static bake_test_suite suites[] = {
         "ChangeDetection",
         NULL,
         NULL,
-        78,
+        79,
         ChangeDetection_testcases
     },
     {
@@ -15063,7 +15073,7 @@ static bake_test_suite suites[] = {
         "OrderBy",
         NULL,
         NULL,
-        48,
+        49,
         OrderBy_testcases
     },
     {

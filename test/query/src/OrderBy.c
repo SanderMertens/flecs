@@ -2415,3 +2415,91 @@ void OrderBy_sort_w_scope_term(void) {
 
     ecs_fini(world);
 }
+
+static int compare_position_invoked = 0;
+
+static int compare_position_count(
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
+    const void *ptr2)
+{
+    compare_position_invoked ++;
+    const Position *p1 = ptr1;
+    const Position *p2 = ptr2;
+    return (p1->x > p2->x) - (p1->x < p2->x);
+}
+
+void OrderBy_no_resort_after_iter_simple_query_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {3, 0});
+    ecs_set(world, e1, Velocity, {0, 0});
+    ecs_add(world, e1, Tag);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Position, {1, 0});
+    ecs_set(world, e2, Velocity, {0, 0});
+    ecs_add(world, e2, Tag);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_set(world, e3, Position, {2, 0});
+    ecs_set(world, e3, Velocity, {0, 0});
+    ecs_add(world, e3, Tag);
+
+    ecs_query_t *q_sorted = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .inout = EcsIn }},
+        .order_by = ecs_id(Position),
+        .order_by_callback = compare_position_count
+    });
+    test_assert(q_sorted != NULL);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Velocity) }, { Tag }}
+    });
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_sorted);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 3);
+        test_uint(it.entities[0], e2);
+        test_uint(it.entities[1], e3);
+        test_uint(it.entities[2], e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    test_assert(compare_position_invoked != 0);
+    compare_position_invoked = 0;
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_sorted);
+        while (ecs_query_next(&it)) { }
+    }
+
+    test_int(compare_position_invoked, 0);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 3);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_sorted);
+        while (ecs_query_next(&it)) { }
+    }
+
+    test_int(compare_position_invoked, 0);
+
+    ecs_query_fini(q);
+    ecs_query_fini(q_sorted);
+
+    ecs_fini(world);
+}
