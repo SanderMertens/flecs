@@ -26,7 +26,10 @@ static void flecs_sync_worker(
     }
 
     /* Wait until main thread signals that thread can continue */
-    ecs_os_cond_wait(world->worker_cond, world->sync_mutex);
+    uint32_t signal = world->workers_signal;
+    while (signal == world->workers_signal) {
+        ecs_os_cond_wait(world->worker_cond, world->sync_mutex);
+    }
     ecs_os_mutex_unlock(world->sync_mutex);
 }
 
@@ -45,7 +48,10 @@ static void* flecs_worker(void *arg) {
     ecs_os_mutex_lock(world->sync_mutex);
     world->workers_running ++;
 
-    if (!(world->flags & EcsWorldQuitWorkers)) {
+    uint32_t signal = world->workers_signal;
+    while (!(world->flags & EcsWorldQuitWorkers) &&
+        signal == world->workers_signal)
+    {
         ecs_os_cond_wait(world->worker_cond, world->sync_mutex);
     }
 
@@ -148,7 +154,7 @@ void flecs_wait_for_sync(
     ecs_dbg_3("#[bold]pipeline: waiting for worker sync");
 
     ecs_os_mutex_lock(world->sync_mutex);
-    if (world->workers_waiting != (stage_count - 1)) {
+    while (world->workers_waiting != (stage_count - 1)) {
         ecs_os_cond_wait(world->sync_cond, world->sync_mutex);
     }
 
@@ -173,6 +179,7 @@ void flecs_signal_workers(
 
     ecs_dbg_3("#[bold]pipeline: signal workers");
     ecs_os_mutex_lock(world->sync_mutex);
+    world->workers_signal ++;
     ecs_os_cond_broadcast(world->worker_cond);
     ecs_os_mutex_unlock(world->sync_mutex);
 }

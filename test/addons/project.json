@@ -463,7 +463,8 @@
                 "bulk_new_in_no_readonly_w_multithread",
                 "bulk_new_in_no_readonly_w_multithread_2",
                 "run_first_worker_on_main",
-                "run_single_thread_on_main"
+                "run_single_thread_on_main",
+                "spurious_wakeup_in_wait_for_sync"
             ]
         }, {
             "id": "MultiThreadStaging",

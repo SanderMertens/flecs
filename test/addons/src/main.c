@@ -427,6 +427,7 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread(void);
 void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void);
 void MultiThread_run_first_worker_on_main(void);
 void MultiThread_run_single_thread_on_main(void);
+void MultiThread_spurious_wakeup_in_wait_for_sync(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -2197,6 +2198,10 @@ bake_test_case MultiThread_testcases[] = {
     {
         "run_single_thread_on_main",
         MultiThread_run_single_thread_on_main
+    },
+    {
+        "spurious_wakeup_in_wait_for_sync",
+        MultiThread_spurious_wakeup_in_wait_for_sync
     }
 };
 
@@ -3029,7 +3034,7 @@ static bake_test_suite suites[] = {
         "MultiThread",
         MultiThread_setup,
         NULL,
-        51,
+        52,
         MultiThread_testcases,
         1,
         MultiThread_params

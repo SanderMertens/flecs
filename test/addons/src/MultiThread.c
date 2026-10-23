@@ -1404,3 +1404,53 @@ void MultiThread_create_query_from_stage(void) {
     }
     ecs_fini(world);
 }
+
+static ecs_os_api_cond_wait_t real_cond_wait;
+static ecs_os_thread_id_t spurious_wakeup_thread;
+static int32_t spurious_wakeups;
+
+static void spurious_cond_wait(
+    ecs_os_cond_t cond,
+    ecs_os_mutex_t mutex)
+{
+    if (spurious_wakeups && ecs_os_thread_self() == spurious_wakeup_thread) {
+        spurious_wakeups --;
+        return;
+    }
+    real_cond_wait(cond, mutex);
+}
+
+static void SlowOnWorker(ecs_iter_t *it) {
+    if (ecs_stage_get_id(it->world) != 0) {
+        ecs_os_sleep(0, 100 * 1000 * 1000);
+    }
+}
+
+void MultiThread_spurious_wakeup_in_wait_for_sync(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ECS_SYSTEM(world, SlowOnWorker, EcsOnUpdate, Position);
+    ecs_system_update(world, SlowOnWorker, &(ecs_system_desc_t){
+        .multi_threaded = true
+    });
+
+    ecs_insert(world, ecs_value(Position, {0, 0}));
+    ecs_insert(world, ecs_value(Position, {1, 1}));
+
+    set_worker_kind(world, 2);
+
+    real_cond_wait = ecs_os_api.cond_wait_;
+    spurious_wakeup_thread = ecs_os_thread_self();
+    spurious_wakeups = 1;
+    ecs_os_api.cond_wait_ = spurious_cond_wait;
+
+    ecs_progress(world, 0);
+
+    ecs_os_api.cond_wait_ = real_cond_wait;
+
+    test_int(spurious_wakeups, 0);
+
+    ecs_fini(world);
+}

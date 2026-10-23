@@ -2686,6 +2686,7 @@ struct ecs_world_t {
     ecs_os_mutex_t sync_mutex;       /* Mutex for job_cond */
     int32_t workers_running;         /* Number of threads running */
     int32_t workers_waiting;         /* Number of workers waiting on sync */
+    uint32_t workers_signal;
     ecs_pipeline_state_t* pq;        /* Pointer to the pipeline for the workers to execute */
     bool workers_use_task_api;       /* Workers are short-lived tasks, not long-running threads */
 
@@ -13417,7 +13418,7 @@ repeat_event:
 
             const EcsParent *parents = ecs_table_get_column(table,
                 table->component_map[ecs_id(EcsParent)] - 1, it.offset);
-            int32_t pcount = desc->count;
+            int32_t pcount = count;
             pdesc.count = 1;
             for (int32_t p = 0; p < pcount; p ++) {
                 ecs_entity_t parent = parents[p].value;
@@ -25796,9 +25797,6 @@ bool flecs_query_finalize_simple(
     term_count = i;
     ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
 
-    /* All fields are InOut */
-    q->write_fields = UINT32_MAX >> (32 - term_count);
-
     /* Simple query that only queries for component ids */
 
     /* Populate terms */
@@ -25938,6 +25936,7 @@ bool flecs_query_finalize_simple(
     q->field_count = term_count;
     q->set_fields = (ecs_termset_t)((1llu << i) - 1);
     q->static_id_fields = (ecs_termset_t)((1llu << i) - 1);
+    q->write_fields = q->data_fields;
 
     if (has_this) {
         q->flags |= EcsQueryHasTableThisVar|EcsQueryMatchThis;
