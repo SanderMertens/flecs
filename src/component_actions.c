@@ -416,6 +416,12 @@ void flecs_actions_move_add(
         flecs_emit_propagate_invalidate(world, table, row, count);
     }
 
+    if (other_table &&
+        ((table->flags & ~other_table->flags) & EcsTableIsDisabled))
+    {
+        flecs_observer_table_disable(world, table, row, count, true);
+    }
+
     flecs_actions_on_add_intern(world, table, other_table, row, count, diff,
         flags, sparse, emplace_id);
 }
@@ -434,6 +440,10 @@ void flecs_actions_move_remove(
 
     ecs_flags32_t diff_flags = diff->removed_flags;
     ecs_flags32_t table_flags = table->flags;
+    if ((table_flags & ~other_table->flags) & EcsTableIsDisabled) {
+        flecs_observer_table_disable(world, table, row, count, false);
+    }
+
     if (!((table_flags & EcsTableRemoveActionFlags) | diff_flags)) {
         return;
     }

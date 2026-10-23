@@ -342,57 +342,6 @@ static void flecs_ensure_module_tag(ecs_iter_t *it) {
     }
 }
 
-static void flecs_disable_module_observers(
-    ecs_world_t *world,
-    ecs_entity_t module,
-    bool should_disable)
-{
-    ecs_iter_t child_it = ecs_children(world, module);
-    while (ecs_children_next(&child_it)) {
-        ecs_table_t *table = child_it.table;
-        bool table_disabled = table->flags & EcsTableIsDisabled;
-        int32_t i;
-
-        /* Recursively walk modules, don't propagate to disabled modules */
-        if (ecs_table_has_id(world, table, EcsModule) && !table_disabled) {
-            for (i = 0; i < child_it.count; i ++) {
-                flecs_disable_module_observers(
-                    world, child_it.entities[i], should_disable);
-            }
-
-            continue;
-        }
-
-        /* Only disable observers */
-        if (!ecs_table_has_id(world, table, EcsObserver)) {
-            continue;
-        }
-
-        for (i = 0; i < child_it.count; i ++) {
-            flecs_observer_set_disable_bit(world, child_it.entities[i],
-                EcsObserverIsParentDisabled, should_disable);
-        }
-    }
-}
-
-static void flecs_disable_observer(
-    ecs_iter_t *it)
-{
-    ecs_world_t *world = it->world;
-    bool should_disable = it->event == EcsOnAdd;
-
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        flecs_observer_set_disable_bit(
-            world, e, EcsObserverIsDisabled, should_disable);
-
-        if (ecs_owns_id(world, e, EcsModule)) {
-            flecs_disable_module_observers(world, e, should_disable);
-        }
-    }
-}
-
 static void flecs_register_ordered_children(ecs_iter_t *it) {
     int32_t i;
     if (it->event == EcsOnAdd) {
@@ -904,14 +853,6 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_ensure_module_tag,
-        .global_observer = true
-    });
-
-    /* Observer that tracks whether observers are disabled */
-    ecs_observer(world, {
-        .query.terms = {{ .id = EcsDisabled }},
-        .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_disable_observer,
         .global_observer = true
     });
 

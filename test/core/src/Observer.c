@@ -7596,6 +7596,157 @@ void Observer_disable_multi_observer_and_module(void) {
     ecs_fini(ecs);
 }
 
+void Observer_disable_observer_deferred(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_TAG(ecs, Foo);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(ecs, {
+        .query.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_world_t *stage = ecs_get_stage(ecs, 0);
+
+    ecs_enable(stage, o, false);
+    ecs_add(stage, o, Foo);
+    ecs_merge(stage);
+    test_assert(ecs_has_id(ecs, o, EcsDisabled));
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(stage, o, true);
+    ecs_remove(stage, o, Foo);
+    ecs_merge(stage);
+    test_assert(!ecs_has_id(ecs, o, EcsDisabled));
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_fini(ecs);
+}
+
+void Observer_disable_observer_module_deferred(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+
+    ecs_entity_t module = ecs_new_w_id(ecs, EcsModule);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(ecs, {
+        .entity = ecs_entity(ecs, { .parent = module }),
+        .query.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_world_t *stage = ecs_get_stage(ecs, 0);
+
+    ecs_enable(stage, module, false);
+    ecs_merge(stage);
+    test_assert(ecs_has_id(ecs, module, EcsDisabled));
+    test_assert(!ecs_has_id(ecs, o, EcsDisabled));
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(stage, module, true);
+    ecs_merge(stage);
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_fini(ecs);
+}
+
+void Observer_enable_observer_w_remove_all(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(ecs, {
+        .query.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_enable(ecs, o, false);
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_remove_all(ecs, EcsDisabled);
+    test_assert(!ecs_has_id(ecs, o, EcsDisabled));
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_fini(ecs);
+}
+
+void Observer_enable_observer_module_w_remove_all(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+
+    ecs_entity_t module = ecs_new_w_id(ecs, EcsModule);
+
+    Probe ctx = {0};
+    ecs_observer(ecs, {
+        .entity = ecs_entity(ecs, { .parent = module }),
+        .query.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_enable(ecs, module, false);
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_remove_all(ecs, EcsDisabled);
+    test_assert(!ecs_has_id(ecs, module, EcsDisabled));
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_fini(ecs);
+}
+
 void Observer_tag_w_on_set_and_on_add(void) {
     ecs_world_t *world = ecs_mini();
     

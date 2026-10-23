@@ -2376,6 +2376,10 @@ void Observer_disable_multi_observer(void);
 void Observer_disable_multi_observer_module(void);
 void Observer_disable_multi_observer_module_nested(void);
 void Observer_disable_multi_observer_and_module(void);
+void Observer_disable_observer_deferred(void);
+void Observer_disable_observer_module_deferred(void);
+void Observer_enable_observer_w_remove_all(void);
+void Observer_enable_observer_module_w_remove_all(void);
 void Observer_tag_w_on_set_and_on_add(void);
 void Observer_tag_w_on_set_and_on_add_reverse(void);
 void Observer_on_add_pair_w_rel_any(void);
@@ -12962,6 +12966,22 @@ bake_test_case Observer_testcases[] = {
         Observer_disable_multi_observer_and_module
     },
     {
+        "disable_observer_deferred",
+        Observer_disable_observer_deferred
+    },
+    {
+        "disable_observer_module_deferred",
+        Observer_disable_observer_module_deferred
+    },
+    {
+        "enable_observer_w_remove_all",
+        Observer_enable_observer_w_remove_all
+    },
+    {
+        "enable_observer_module_w_remove_all",
+        Observer_enable_observer_module_w_remove_all
+    },
+    {
         "tag_w_on_set_and_on_add",
         Observer_tag_w_on_set_and_on_add
     },
@@ -18224,7 +18244,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        411,
+        415,
         Observer_testcases
     },
     {
