@@ -822,7 +822,9 @@
                 "fini_w_dont_fragment_component_w_isa_prefab_in_module",
                 "add_dont_fragment_tag_w_with",
                 "add_dont_fragment_tag_w_with_deferred",
-                "add_dont_fragment_tag_w_with_dont_fragment"
+                "add_dont_fragment_tag_w_with_dont_fragment",
+                "remove_before_add_remove",
+                "remove_before_add_remove_other_entity"
             ]
         }, {
             "id": "NonFragmentingChildOf",

@@ -8030,3 +8030,48 @@ void Sparse_add_dont_fragment_tag_w_with_dont_fragment(void) {
 
     ecs_fini(world);
 }
+
+void Sparse_remove_before_add_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_set(world, e, Position, {1, 2});
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(NULL == ecs_get(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Sparse_remove_before_add_remove_other_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_remove(world, e1, Position);
+    test_assert(!ecs_has(world, e1, Position));
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Position, {3, 4});
+    test_assert(ecs_has(world, e2, Position));
+
+    ecs_remove(world, e2, Position);
+    test_assert(!ecs_has(world, e2, Position));
+    test_assert(NULL == ecs_get(world, e2, Position));
+
+    ecs_fini(world);
+}
