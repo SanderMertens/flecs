@@ -1107,7 +1107,8 @@
                 "error_parse_async_missing_scope",
                 "error_parse_while_missing_scope",
                 "delete_script_from_await_callback",
-                "update_script_from_await_callback"
+                "update_script_from_await_callback",
+                "script_reads_mut_assigned_by_template_block"
             ]
         }, {
             "id": "Event",

@@ -50200,6 +50200,10 @@ bool flecs_script_template_interface_accepts(
     ecs_entity_t value,
     ecs_entity_t interface);
 
+bool flecs_script_template_is_mut_type(
+    const ecs_world_t *world,
+    ecs_id_t component);
+
 char* flecs_script_template_expected_str(
     const ecs_world_t *world,
     ecs_entity_t interface);
@@ -70799,7 +70803,9 @@ static void flecs_script_update_observers(
     ecs_script_ref_t *refs = ecs_vec_first(script_refs);
     int32_t i;
     for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
-        if (refs[i].component == ecs_id(EcsScriptMutVar)) {
+        if (refs[i].component == ecs_id(EcsScriptMutVar) ||
+            flecs_script_template_is_mut_type(world, refs[i].component))
+        {
             continue;
         }
 
@@ -116148,6 +116154,7 @@ void flecs_script_update_dyn_observers(
         }
 
         if (new_refs[i].component != ecs_id(EcsScriptMutVar) &&
+            !flecs_script_template_is_mut_type(world, new_refs[i].component) &&
             ecs_has_pair(world, new_refs[i].entity, ecs_id(EcsScript), script))
         {
             continue;
@@ -118685,6 +118692,21 @@ static int flecs_script_template_inherit(
 
     return flecs_script_template_inherit_members(
         v, template, node, base_template, true);
+}
+
+bool flecs_script_template_is_mut_type(
+    const ecs_world_t *world,
+    ecs_id_t component)
+{
+    if (!component || ECS_IS_PAIR(component) ||
+        !ecs_is_alive(world, component))
+    {
+        return false;
+    }
+
+    const ecs_script_template_t *template = flecs_script_template_get(
+        world, ecs_get_parent(world, component));
+    return template && template->muts.type == component;
 }
 
 bool flecs_script_template_interface_accepts(

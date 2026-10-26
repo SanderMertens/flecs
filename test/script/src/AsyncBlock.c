@@ -5989,3 +5989,78 @@ void AsyncBlock_update_script_from_await_callback(void) {
 
     ecs_fini(world);
 }
+
+void AsyncBlock_script_reads_mut_assigned_by_template_block(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ecs_os_zeromem(ab_entities);
+    ecs_os_zeromem(ab_entity_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "template T {"
+            LINE "  mut m: i32 = 0"
+            LINE "  async {"
+            LINE "    const r = await fetch(1)"
+            LINE "    m = r"
+            LINE "  }"
+            LINE "}"
+            LINE "e { T: {} }"
+            LINE "const v = e[T.mut].m"
+            LINE "out { Position: {v, 0} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t out = ecs_lookup(world, "out");
+    test_assert(out != 0);
+    const ab_Position *p = ecs_get_id(world, out, position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+    test_int(ab_future_count, 1);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {7});
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    ecs_script_future_release(ab_futures[0]);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t mut = ecs_lookup(world, "T.mut");
+    test_assert(mut != 0);
+    const ecs_i32_t *m = ecs_get_id(world, e, mut);
+    test_assert(m != NULL);
+    test_int(*m, 7);
+
+    test_uint(ecs_lookup(world, "out"), out);
+    p = ecs_get_id(world, out, position);
+    test_assert(p != NULL);
+    test_int(p->x, 7);
+
+    ecs_fini(world);
+}
