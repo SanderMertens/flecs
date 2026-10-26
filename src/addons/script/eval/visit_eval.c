@@ -2112,6 +2112,26 @@ int flecs_script_assign_value(
     const void *src)
 {
     ecs_world_t *world = v->world;
+    if (node->global) {
+        EcsScriptMutVar *mv = NULL;
+        if (ecs_is_alive(world, node->global)) {
+            mv = ecs_get_mut(world, node->global, EcsScriptMutVar);
+        }
+
+        if (!mv || mv->value.type != node->eval_type) {
+            flecs_script_eval_error(v, node,
+                "cannot assign to '%s': mut variable is no longer alive",
+                node->name);
+            return -1;
+        }
+
+        const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_ptr_copy_w_type_info(world, ti, mv->value.ptr, src);
+        ecs_modified(world, node->global, EcsScriptMutVar);
+        return 0;
+    }
+
     ecs_entity_t instance = v->template_instance;
     if (node->parent && instance && ecs_is_alive(world, instance)) {
         instance = ecs_get_parent(world, instance);

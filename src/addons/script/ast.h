@@ -238,6 +238,7 @@ typedef struct ecs_script_assign_t {
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
     ecs_entity_t component;
+    ecs_entity_t global;
     int32_t offset;
     int32_t sp;
     bool parent;

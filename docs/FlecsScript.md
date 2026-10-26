@@ -1524,6 +1524,16 @@ world.set_mut_var("difficulty", 2.0f);
 </ul>
 </div>
 
+Mut variables can also be assigned from async blocks. This notifies reactive scripts in the same way:
+
+```cpp
+export mut score = 0
+
+async {
+  score = await fetch_score()
+}
+```
+
 ## Control flow
 
 ### If statement

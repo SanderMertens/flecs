@@ -776,7 +776,7 @@
                 "mut_assign_to_this_fails",
                 "mut_assign_outside_async_fails",
                 "mut_assign_in_script_root_fails",
-                "mut_assign_in_script_async_fails",
+                "mut_assign_in_script_async",
                 "mut_assign_unknown_var_fails",
                 "mut_assign_member_fails",
                 "mut_assign_string_to_int_fails",
@@ -1108,7 +1108,11 @@
                 "error_parse_while_missing_scope",
                 "delete_script_from_await_callback",
                 "update_script_from_await_callback",
-                "script_reads_mut_assigned_by_template_block"
+                "script_reads_mut_assigned_by_template_block",
+                "assign_export_mut",
+                "assign_export_mut_from_template",
+                "assign_extern_mut_var",
+                "error_assign_to_export_const"
             ]
         }, {
             "id": "Event",
