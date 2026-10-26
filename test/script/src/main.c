@@ -769,7 +769,7 @@ void Eval_mut_assign_to_local_const_fails(void);
 void Eval_mut_assign_to_this_fails(void);
 void Eval_mut_assign_outside_async_fails(void);
 void Eval_mut_assign_in_script_root_fails(void);
-void Eval_mut_assign_in_script_async_fails(void);
+void Eval_mut_assign_in_script_async(void);
 void Eval_mut_assign_unknown_var_fails(void);
 void Eval_mut_assign_member_fails(void);
 void Eval_mut_assign_string_to_int_fails(void);
@@ -1087,6 +1087,10 @@ void AsyncBlock_error_parse_while_missing_scope(void);
 void AsyncBlock_delete_script_from_await_callback(void);
 void AsyncBlock_update_script_from_await_callback(void);
 void AsyncBlock_script_reads_mut_assigned_by_template_block(void);
+void AsyncBlock_assign_export_mut(void);
+void AsyncBlock_assign_export_mut_from_template(void);
+void AsyncBlock_assign_extern_mut_var(void);
+void AsyncBlock_error_assign_to_export_const(void);
 
 // Testsuite 'Event'
 void Event_setup(void);
@@ -6992,8 +6996,8 @@ bake_test_case Eval_testcases[] = {
         Eval_mut_assign_in_script_root_fails
     },
     {
-        "mut_assign_in_script_async_fails",
-        Eval_mut_assign_in_script_async_fails
+        "mut_assign_in_script_async",
+        Eval_mut_assign_in_script_async
     },
     {
         "mut_assign_unknown_var_fails",
@@ -8235,6 +8239,22 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "script_reads_mut_assigned_by_template_block",
         AsyncBlock_script_reads_mut_assigned_by_template_block
+    },
+    {
+        "assign_export_mut",
+        AsyncBlock_assign_export_mut
+    },
+    {
+        "assign_export_mut_from_template",
+        AsyncBlock_assign_export_mut_from_template
+    },
+    {
+        "assign_extern_mut_var",
+        AsyncBlock_assign_extern_mut_var
+    },
+    {
+        "error_assign_to_export_const",
+        AsyncBlock_error_assign_to_export_const
     }
 };
 
@@ -19641,7 +19661,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        88,
+        92,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params

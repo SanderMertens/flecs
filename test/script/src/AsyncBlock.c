@@ -6064,3 +6064,232 @@ void AsyncBlock_script_reads_mut_assigned_by_template_block(void) {
 
     ecs_fini(world);
 }
+
+void AsyncBlock_assign_export_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ecs_os_zeromem(ab_entities);
+    ecs_os_zeromem(ab_entity_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut m: i32 = 0"
+            LINE "async {"
+            LINE "  const r = await fetch(1)"
+            LINE "  m = r"
+            LINE "}"
+            LINE "out { Position: {m, 0} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t out = ecs_lookup(world, "out");
+    test_assert(out != 0);
+    const ab_Position *p = ecs_get_id(world, out, position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+    test_int(ab_future_count, 1);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {7});
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    ecs_script_future_release(ab_futures[0]);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t m = ecs_lookup(world, "m");
+    test_assert(m != 0);
+    ecs_value_t mv = ecs_mut_var_get(world, m);
+    test_assert(mv.ptr != NULL);
+    test_uint(mv.type, ecs_id(ecs_i32_t));
+    test_int(*(ecs_i32_t*)mv.ptr, 7);
+
+    test_uint(ecs_lookup(world, "out"), out);
+    p = ecs_get_id(world, out, position);
+    test_assert(p != NULL);
+    test_int(p->x, 7);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_assign_export_mut_from_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ecs_os_zeromem(ab_entities);
+    ecs_os_zeromem(ab_entity_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "export mut m: i32 = 0"
+            LINE "template T {"
+            LINE "  async {"
+            LINE "    const r = await fetch(1)"
+            LINE "    m = r"
+            LINE "  }"
+            LINE "}"
+            LINE "e { T: {} }"
+            LINE "out { Position: {m, 0} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t out = ecs_lookup(world, "out");
+    test_assert(out != 0);
+    const ab_Position *p = ecs_get_id(world, out, position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+    test_int(ab_future_count, 1);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {7});
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    ecs_script_future_release(ab_futures[0]);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t m = ecs_lookup(world, "m");
+    test_assert(m != 0);
+    ecs_value_t mv = ecs_mut_var_get(world, m);
+    test_assert(mv.ptr != NULL);
+    test_int(*(ecs_i32_t*)mv.ptr, 7);
+
+    test_uint(ecs_lookup(world, "out"), out);
+    p = ecs_get_id(world, out, position);
+    test_assert(p != NULL);
+    test_int(p->x, 7);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_assign_extern_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(ab_futures);
+    ecs_os_zeromem(ab_args);
+    ecs_os_zeromem(ab_entities);
+    ecs_os_zeromem(ab_entity_args);
+    ab_future_count = 0;
+    ab_cancel_count = 0;
+
+    ecs_entity_t position = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"v", ecs_id(ecs_i32_t)}},
+        .callback = ab_fetch_callback,
+        .cancel = ab_cancel_callback
+    });
+
+    ecs_i32_t value = 0;
+    ecs_entity_t m = ecs_mut_var(world, {
+        .name = "m",
+        .type = ecs_id(ecs_i32_t),
+        .value = &value
+    });
+    test_assert(m != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = HEAD "async {"
+            LINE "  const r = await fetch(1)"
+            LINE "  m = r + 1"
+            LINE "}"
+            LINE "out { Position: {m, 0} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t out = ecs_lookup(world, "out");
+    test_assert(out != 0);
+    const ab_Position *p = ecs_get_id(world, out, position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+    test_int(ab_future_count, 1);
+
+    ecs_value_t v = ecs_value(ecs_i32_t, {7});
+    test_int(ecs_script_future_resolve(ab_futures[0], &v), 0);
+    ecs_script_future_release(ab_futures[0]);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_value_t mv = ecs_mut_var_get(world, m);
+    test_assert(mv.ptr != NULL);
+    test_int(*(ecs_i32_t*)mv.ptr, 8);
+
+    test_uint(ecs_lookup(world, "out"), out);
+    p = ecs_get_id(world, out, position);
+    test_assert(p != NULL);
+    test_int(p->x, 8);
+
+    ecs_fini(world);
+}
+
+void AsyncBlock_error_assign_to_export_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        HEAD "export const c: i32 = 0"
+        LINE "async {"
+        LINE "  c = 5"
+        LINE "}", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}

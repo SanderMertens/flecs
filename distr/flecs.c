@@ -48157,6 +48157,7 @@ typedef struct ecs_script_assign_t {
     ecs_expr_node_t *expr;
     ecs_entity_t eval_type;
     ecs_entity_t component;
+    ecs_entity_t global;
     int32_t offset;
     int32_t sp;
     bool parent;
@@ -95866,6 +95867,26 @@ int flecs_script_assign_value(
     const void *src)
 {
     ecs_world_t *world = v->world;
+    if (node->global) {
+        EcsScriptMutVar *mv = NULL;
+        if (ecs_is_alive(world, node->global)) {
+            mv = ecs_get_mut(world, node->global, EcsScriptMutVar);
+        }
+
+        if (!mv || mv->value.type != node->eval_type) {
+            flecs_script_eval_error(v, node,
+                "cannot assign to '%s': mut variable is no longer alive",
+                node->name);
+            return -1;
+        }
+
+        const ecs_type_info_t *ti = ecs_get_type_info(world, node->eval_type);
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_ptr_copy_w_type_info(world, ti, mv->value.ptr, src);
+        ecs_modified(world, node->global, EcsScriptMutVar);
+        return 0;
+    }
+
     ecs_entity_t instance = v->template_instance;
     if (node->parent && instance && ecs_is_alive(world, instance)) {
         instance = ecs_get_parent(world, instance);
@@ -100054,6 +100075,7 @@ static int flecs_script_type_assign(
     ecs_entity_t component = 0;
     const ecs_member_t *m = NULL;
     node->parent = false;
+    node->global = 0;
     if ((!var || qualified) && template && template->parent_type) {
         const char *name = qualified ? node->name + 7 : node->name;
         if (strchr(name, '.')) {
@@ -100084,15 +100106,35 @@ static int flecs_script_type_assign(
         }
     }
 
-    if (!m) {
+    ecs_value_t global = {0};
+    if (!m && !var) {
+        ecs_expr_eval_desc_t desc = flecs_script_expr_desc(v, 0);
+        flecs_script_symbol_t symbol;
+        ecs_id_t global_component = 0;
+        if (!flecs_script_symbol_lookup(&v->base.script->pub, &desc, 0,
+            node->name, FlecsScriptLookupEntity, &symbol) &&
+            symbol.kind == FlecsScriptSymbolGlobalVariable)
+        {
+            global = flecs_script_global_var_get(
+                v->world, symbol.entity, &global_component);
+        }
+
+        if (global_component == ecs_id(EcsScriptMutVar)) {
+            node->global = symbol.entity;
+        }
+    }
+
+    if (!m && !node->global) {
         flecs_script_eval_error(v, node,
-            "cannot assign to '%s': only mut variables of a template can be "
-            "assigned", node->name);
+            "cannot assign to '%s': only mut variables of a template or "
+            "exported mut variables can be assigned", node->name);
         return -1;
     }
 
-    ecs_entity_t var_type = node->parent ? m->type : var->value.type;
-    int32_t sp = node->parent ? template->parent_sp : var->sp;
+    ecs_entity_t var_type = node->global ? global.type
+        : node->parent ? m->type : var->value.type;
+    int32_t sp = node->global ? -1
+        : node->parent ? template->parent_sp : var->sp;
     ecs_entity_t type = var_type;
     int result = flecs_script_type_check_expr(t, &node->expr, &type);
     if (result) {
@@ -100119,8 +100161,8 @@ static int flecs_script_type_assign(
 
     node->eval_type = type;
     node->sp = sp;
-    node->component = component;
-    node->offset = m->offset;
+    node->component = node->global ? ecs_id(EcsScriptMutVar) : component;
+    node->offset = m ? m->offset : 0;
     return 0;
 }
 

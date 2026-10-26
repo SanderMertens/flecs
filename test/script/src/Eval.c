@@ -24628,16 +24628,30 @@ void Eval_mut_assign_in_script_root_fails(void) {
     ecs_fini(world);
 }
 
-void Eval_mut_assign_in_script_async_fails(void) {
+void Eval_mut_assign_in_script_async(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run_w_desc(world, NULL,
-        HEAD "export mut m = 1"
-        LINE "async {"
-        LINE "  m = 2"
-        LINE "}", &ir_desc, NULL) != 0);
-    ecs_log_set_level(-1);
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = HEAD "export mut m = 1"
+            LINE "async {"
+            LINE "  m = 2"
+            LINE "}"
+    });
+    test_assert(script != 0);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t m = ecs_lookup(world, "m");
+    test_assert(m != 0);
+
+    ecs_script_tasks_progress(world);
+
+    ecs_value_t v = ecs_mut_var_get(world, m);
+    test_assert(v.ptr != NULL);
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, v.type, v.ptr);
+    test_int(ecs_meta_get_int(&cur), 2);
 
     ecs_fini(world);
 }
