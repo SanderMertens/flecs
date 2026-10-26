@@ -745,7 +745,7 @@ static int flecs_ir_component_alloc(
             return -1;
         }
     } else if (op->flags & EcsIrComponentPartial) {
-        ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, id);
+        ecs_entity_t src = flecs_script_get_src(v->world, v->entity->eval, id);
         const void *existing = ecs_get_id(v->world, src, id);
         if (existing) {
             ecs_ptr_copy_w_type_info(v->world, ti, ptr, existing);
@@ -821,7 +821,7 @@ static int flecs_ir_component_end(
         }
     }
 
-    ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, id);
+    ecs_entity_t src = flecs_script_get_src(v->world, v->entity->eval, id);
     flecs_ir_prof(EcsIrProfileComponentSet);
     if (desc->needs_set || (!desc->ti && ti->hooks.on_replace)) {
         ecs_set_id(v->world, src, id, flecs_itosize(ti->size), value);
@@ -2634,25 +2634,6 @@ void flecs_script_ir_vm_pool_fini(
     ecs_vec_fini_t(NULL, &r->ir_vms, ecs_script_ir_vm_t*);
 }
 
-ecs_script_ir_vm_t* flecs_script_ir_vm_new(
-    ecs_script_impl_t *script,
-    const ecs_script_eval_desc_t *desc)
-{
-    ecs_script_ir_vm_t *vm = flecs_ir_vm_acquire(
-        desc ? desc->runtime : NULL, flecs_script_ir_ensure(script));
-    flecs_script_eval_visit_init(script, &vm->v, desc);
-    return vm;
-}
-
-void flecs_script_ir_vm_free(
-    ecs_script_ir_vm_t *vm,
-    const ecs_script_eval_desc_t *desc)
-{
-    ecs_script_runtime_t *r = desc ? desc->runtime : NULL;
-    flecs_script_eval_visit_fini(&vm->v, desc);
-    flecs_ir_vm_release(r, vm);
-}
-
 void flecs_script_ir_vm_init(
     ecs_script_ir_vm_t *vm)
 {
@@ -2732,16 +2713,17 @@ const char* flecs_script_ir_vm_stmt_pos(
     return NULL;
 }
 
-int flecs_script_ir_eval_root(
+int flecs_script_ir_eval(
     ecs_script_eval_visitor_t *v,
-    ecs_script_impl_t *script)
+    ecs_script_impl_t *script,
+    const ecs_script_node_t *node)
 {
     ecs_script_ir_t *ir = flecs_script_ir_ensure(script);
     ecs_script_ir_vm_t *vm = flecs_ir_vm_acquire(v->r, ir);
     vm->v = *v;
 
-    const ecs_script_ir_entry_t *entry = ecs_vec_get_t(
-        &ir->entries, ecs_script_ir_entry_t, ir->root_entry);
+    const ecs_script_ir_entry_t *entry = ir
+        ? flecs_script_ir_entry(ir, node) : NULL;
     flecs_script_run_status_t status = flecs_script_ir_vm_run(vm, entry);
     int result = -1;
     if (status == FlecsScriptRunDone) {

@@ -533,8 +533,8 @@ const void* flecs_expr_component_get(
         return NULL;
     }
 
-    if (node->dyn_input && v && v->script_entity && !v->instance_template) {
-        flecs_script_record_dyn_ref(v->base.script, entity, component,
+    if (node->dyn_input && v && v->run_refs) {
+        flecs_script_record_dyn_ref(v->run_refs, entity, component,
             node->dyn_input, false);
     }
 
@@ -560,8 +560,8 @@ bool flecs_expr_has_eval(
         return false;
     }
 
-    if (node->dyn_input && v && v->script_entity && !v->instance_template) {
-        flecs_script_record_dyn_ref(v->base.script, entity, node->id,
+    if (node->dyn_input && v && v->run_refs) {
+        flecs_script_record_dyn_ref(v->run_refs, entity, node->id,
             node->dyn_input, true);
     }
 

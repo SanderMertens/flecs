@@ -9,14 +9,6 @@
 #include "../script.h"
 #include "../../meta/meta.h"
 
-static ecs_script_symbol_slot_t* flecs_script_runtime_symbol_slot(
-    ecs_script_eval_visitor_t *v,
-    int32_t slot);
-
-static ecs_entity_t flecs_script_component_slot_src(
-    ecs_script_eval_visitor_t *v,
-    const ecs_script_component_slot_t *slot);
-
 static bool flecs_script_valid_lookup_path(
     const char *path)
 {
@@ -1121,13 +1113,13 @@ void flecs_script_eval_entity_leave(
 }
 
 ecs_entity_t flecs_script_get_src(
-    ecs_script_eval_visitor_t *v,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
 {
     if (entity == EcsVariable) {
         if (ECS_IS_PAIR(id)) {
-            return ecs_pair_first(v->world, id);
+            return ecs_pair_first(world, id);
         } else {
             return id & ECS_COMPONENT_MASK;
         }
@@ -1182,7 +1174,8 @@ void flecs_script_track_component(
         (slot->component != component ||
          slot->entity_slot != entity_slot))
     {
-        ecs_entity_t src = flecs_script_component_slot_src(v, slot);
+        ecs_entity_t src = flecs_script_state_component_src(
+            v->world, v->state, slot);
         if (src && ecs_is_alive(v->world, src)) {
             ecs_remove_id(v->world, src, slot->component);
         }
@@ -1315,7 +1308,7 @@ int flecs_script_eval_tag_id(
         return -1;
     }
 
-    ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, id);
+    ecs_entity_t src = flecs_script_get_src(v->world, v->entity->eval, id);
     if (node->id.interface && v->id_ref && v->id_ref->value) {
         if (flecs_script_set_template_ref(v, node, src, id)) {
             return -1;
@@ -1351,7 +1344,7 @@ int flecs_script_eval_component_check(
     }
 
     ecs_assert(v->entity != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (flecs_script_get_src(v, v->entity->eval, id) == id) {
+    if (flecs_script_get_src(v->world, v->entity->eval, id) == id) {
         return flecs_script_self_template_check(v, node, id, node->id.first);
     }
 
@@ -1399,7 +1392,7 @@ int flecs_script_eval_component_add(
     const ecs_script_component_t *node,
     ecs_id_t id)
 {
-    ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, id);
+    ecs_entity_t src = flecs_script_get_src(v->world, v->entity->eval, id);
     if (node->id.interface) {
         if (flecs_script_set_template_ref(v, node, src, id)) {
             return -1;
@@ -1441,7 +1434,8 @@ static int flecs_script_eval_component(
         return -1;
     }
 
-    ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, node->id.eval);
+    ecs_entity_t src = flecs_script_get_src(
+        v->world, v->entity->eval, node->id.eval);
 
     if (node->expr) {
         const ecs_type_info_t *ti = flecs_script_get_type_info(
@@ -2971,18 +2965,6 @@ void flecs_script_eval_begin(
     v->force = input == UINT64_MAX;
 }
 
-static ecs_script_symbol_slot_t* flecs_script_runtime_symbol_slot(
-    ecs_script_eval_visitor_t *v,
-    int32_t slot)
-{
-    ecs_vec_t *slots = &v->state->symbol_slots;
-    if (slot < 0 || slot >= ecs_vec_count(slots)) {
-        return NULL;
-    }
-
-    return ecs_vec_get_t(slots, ecs_script_symbol_slot_t, slot);
-}
-
 static bool flecs_script_slot_visited(
     const ecs_vec_t *scope_slots,
     int32_t visit,
@@ -3000,19 +2982,6 @@ bool flecs_script_scope_visited(
     int32_t slot)
 {
     return flecs_script_slot_visited(&v->state->scope_slots, v->visit, slot);
-}
-
-static ecs_entity_t flecs_script_component_slot_src(
-    ecs_script_eval_visitor_t *v,
-    const ecs_script_component_slot_t *slot)
-{
-    ecs_script_symbol_slot_t *symbol = flecs_script_runtime_symbol_slot(
-        v, slot->entity_slot);
-    if (!symbol || !symbol->entity) {
-        return 0;
-    }
-
-    return flecs_script_get_src(v, symbol->entity, slot->component);
 }
 
 static void flecs_script_cleanup_slots(
@@ -3034,7 +3003,8 @@ static void flecs_script_cleanup_slots(
                 continue;
             }
 
-            ecs_entity_t src = flecs_script_component_slot_src(v, slot);
+            ecs_entity_t src = flecs_script_state_component_src(
+                v->world, v->state, slot);
             bool active = false;
             for (j = 0; j < count; j ++) {
                 if (i == j || slots[j].component != slot->component) {
@@ -3052,8 +3022,8 @@ static void flecs_script_cleanup_slots(
                     break;
                 }
 
-                if (src && flecs_script_component_slot_src(
-                    v, &slots[j]) == src)
+                if (src && flecs_script_state_component_src(
+                    v->world, v->state, &slots[j]) == src)
                 {
                     active = true;
                     break;
@@ -3115,6 +3085,12 @@ void flecs_script_eval_cleanup(
         flecs_script_cleanup_slots(v);
     }
 
+#ifdef FLECS_SCRIPT_ASYNC
+    if (dirty && v->template_instance) {
+        flecs_script_async_cleanup(v);
+    }
+#endif
+
     {
         ecs_script_for_slot_t *slots = ecs_vec_first(&v->state->for_slots);
         int32_t i, count = ecs_vec_count(&v->state->for_slots);
@@ -3145,6 +3121,26 @@ void flecs_script_eval_pop_vars(
     ecs_script_eval_visitor_t *v)
 {
     v->vars = ecs_script_vars_pop(v->vars);
+}
+
+int flecs_script_eval_run(
+    ecs_script_runner_t *runner,
+    ecs_script_node_t *node)
+{
+    ecs_script_impl_t *impl = runner->v.base.script;
+    if (impl->ir_enabled) {
+        return flecs_script_ir_eval(&runner->v, impl, node);
+    }
+
+    ecs_script_scope_t *scope = node->kind == EcsAstTemplate
+        ? ((ecs_script_template_node_t*)node)->scope
+        : (ecs_script_scope_t*)node;
+    if (flecs_script_runner_run_scope(runner, scope) != FlecsScriptRunDone) {
+        return -1;
+    }
+
+    flecs_script_eval_cleanup(&runner->v, true);
+    return 0;
 }
 
 int flecs_script_compile(
@@ -3206,19 +3202,10 @@ int flecs_script_eval(
     flecs_script_runner_init(&runner, &runner.v);
     int r = flecs_script_compile(&runner.v);
     if (!r && input) {
+        runner.v.run_refs = &impl->run_refs;
         flecs_script_eval_begin(&runner.v, input,
             flecs_script_state_next(&impl->state));
-        if (use_ir) {
-            if (flecs_script_ir_eval_root(&runner.v, impl)) {
-                r = -1;
-            }
-        } else if (flecs_script_runner_run_scope(&runner, impl->root) !=
-            FlecsScriptRunDone)
-        {
-            r = -1;
-        } else {
-            flecs_script_eval_cleanup(&runner.v, true);
-        }
+        r = flecs_script_eval_run(&runner, &impl->root->node);
     }
 
     flecs_script_runner_fini(&runner, &priv_desc);

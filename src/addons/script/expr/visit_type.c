@@ -1745,10 +1745,6 @@ static int flecs_expr_parent_member_visit_type(
     }
 
     node->node.type = node->expr->type;
-    flecs_script_ref_ensure(&template->dynamic_refs, &(ecs_script_ref_t){
-        .name = "#parent",
-        .component = component
-    });
     return 0;
 }
 

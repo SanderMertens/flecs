@@ -72,15 +72,17 @@ void flecs_script_state_fini(
 void flecs_script_state_clear_computed(
     ecs_script_state_t *state);
 
-void flecs_script_state_resize_computed(
-    ecs_script_state_t *state,
-    int32_t count);
-
 void flecs_script_state_resize(
     ecs_script_state_t *state,
     int32_t scope_count,
     int32_t component_count,
-    int32_t for_count);
+    int32_t for_count,
+    int32_t computed_count);
+
+ecs_entity_t flecs_script_state_component_src(
+    const ecs_world_t *world,
+    const ecs_script_state_t *state,
+    const ecs_script_component_slot_t *slot);
 
 int32_t flecs_script_state_next(
     ecs_script_state_t *state);

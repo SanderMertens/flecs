@@ -1062,8 +1062,8 @@ static void flecs_script_task_state_init(
     flecs_script_state_resize(state,
         ecs_vec_count(&src->scope_slots),
         ecs_vec_count(&src->component_slots),
-        ecs_vec_count(&src->for_slots));
-    flecs_script_state_resize_computed(state, ecs_vec_count(&src->computed));
+        ecs_vec_count(&src->for_slots),
+        ecs_vec_count(&src->computed));
     ecs_vec_fini_t(NULL, &state->symbol_slots, ecs_script_symbol_slot_t);
     state->symbol_slots = ecs_vec_copy_t(
         NULL, &src->symbol_slots, ecs_script_symbol_slot_t);

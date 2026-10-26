@@ -62,11 +62,6 @@ struct ecs_script_template_t {
     /* Statically known component references used in the template body */
     ecs_vec_t refs;
 
-    /* Observers monitoring the refs, shared by all template instances */
-    ecs_vec_t observers;
-
-    ecs_vec_t dynamic_refs;
-
     uint64_t async_input;
     int32_t symbol_offset;
     int32_t symbol_count;
@@ -92,17 +87,6 @@ struct ecs_script_template_t {
     bool has_interface_members;
 };
 
-/* Deferred template instance update, queued by the template on_set hook */
-typedef struct ecs_script_template_pending_t {
-    ecs_entity_t entity;
-    ecs_entity_t template_entity;
-    uint64_t input;
-    int32_t depth;
-} ecs_script_template_pending_t;
-
-void flecs_script_template_pending_fini(
-    ecs_vec_t *pending);
-
 typedef struct ecs_script_async_block_t {
     ecs_entity_t entity;
     ecs_script_scope_t *scope;
@@ -116,6 +100,7 @@ typedef struct EcsScriptTemplateRoot {
     ecs_vec_t async_blocks;
     uint64_t changed;
     int32_t generation;
+    bool evaluating;
 } EcsScriptTemplateRoot;
 
 const ecs_member_t* flecs_script_template_parent_member(
@@ -175,6 +160,12 @@ int flecs_script_template_ref_apply(
     const ecs_script_template_ref_t *ref,
     const ecs_type_info_t *ti,
     void *dst);
+
+void flecs_script_template_reeval(
+    ecs_world_t *world,
+    ecs_entity_t template_entity,
+    ecs_entity_t instance,
+    uint64_t input);
 
 int flecs_script_template_update_vars(
     ecs_script_eval_visitor_t *v,

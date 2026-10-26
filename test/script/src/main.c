@@ -3263,6 +3263,7 @@ void Reactivity_template_switch_keeps_child_created_in_for_of_old_template(void)
 void Reactivity_template_switch_keeps_shared_base_template_state(void);
 void Reactivity_template_switch_keeps_tag_added_by_script(void);
 void Reactivity_fini_w_instance_of_derived_template(void);
+void Reactivity_template_update_reads_own_component(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -16807,6 +16808,10 @@ bake_test_case Reactivity_testcases[] = {
     {
         "fini_w_instance_of_derived_template",
         Reactivity_fini_w_instance_of_derived_template
+    },
+    {
+        "template_update_reads_own_component",
+        Reactivity_template_update_reads_own_component
     }
 };
 
@@ -19801,7 +19806,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        170,
+        171,
         Reactivity_testcases,
         1,
         Reactivity_params

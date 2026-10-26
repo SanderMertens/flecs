@@ -118,24 +118,38 @@ void flecs_script_state_fini(
     flecs_script_for_slots_fini(&state->for_slots);
 }
 
-void flecs_script_state_resize_computed(
-    ecs_script_state_t *state,
-    int32_t count)
-{
-    flecs_script_state_clear_computed(state);
-    flecs_script_slots_reset_t(&state->computed, ecs_script_computed_t, count);
-}
-
 void flecs_script_state_resize(
     ecs_script_state_t *state,
     int32_t scope_count,
     int32_t component_count,
-    int32_t for_count)
+    int32_t for_count,
+    int32_t computed_count)
 {
+    flecs_script_state_clear_computed(state);
+    flecs_script_slots_reset_t(&state->computed, ecs_script_computed_t,
+        computed_count);
     flecs_script_slots_reset_t(&state->scope_slots, int32_t, scope_count);
     flecs_script_slots_reset_t(&state->component_slots,
         ecs_script_component_slot_t, component_count);
     flecs_script_for_slots_init(&state->for_slots, for_count);
+}
+
+ecs_entity_t flecs_script_state_component_src(
+    const ecs_world_t *world,
+    const ecs_script_state_t *state,
+    const ecs_script_component_slot_t *slot)
+{
+    if (slot->entity_slot < 0 ||
+        slot->entity_slot >= ecs_vec_count(&state->symbol_slots))
+    {
+        return 0;
+    }
+
+    ecs_entity_t entity = ecs_vec_get_t(&state->symbol_slots,
+        ecs_script_symbol_slot_t, slot->entity_slot)->entity;
+    return entity
+        ? flecs_script_get_src(world, entity, slot->component)
+        : 0;
 }
 
 int32_t flecs_script_state_next(
