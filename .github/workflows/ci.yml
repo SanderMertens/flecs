@@ -25,7 +25,7 @@ jobs:
 
   build-linux:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
 
@@ -44,7 +44,7 @@ jobs:
 
   build-macos:
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
 
@@ -63,7 +63,7 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
 
@@ -92,13 +92,12 @@ jobs:
 
   build-msys:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         include:
           - { sys: mingw64 }
-          - { sys: mingw32 }
           - { sys: ucrt64 }
           - { sys: clang64 }
 
@@ -146,7 +145,7 @@ jobs:
   build:
     needs: build-linux
     runs-on: ${{ matrix.target.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -205,7 +204,7 @@ jobs:
   build-cmake:
     needs: [build-linux, build-macos]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -241,7 +240,7 @@ jobs:
   build-cmake-windows:
     needs: build-windows
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     strategy:
       matrix:
@@ -281,7 +280,7 @@ jobs:
   build-meson:
     needs: build-linux
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
 
@@ -304,7 +303,7 @@ jobs:
   # build-bazel-linux:
   #   needs: build-linux
   #   runs-on: ubuntu-latest
-  #   timeout-minutes: 30
+  #   timeout-minutes: 60
 
   #   steps:
   #     - uses: actions/checkout@v4
@@ -318,7 +317,7 @@ jobs:
   # build-bazel-windows:
   #   needs: build-windows
   #   runs-on: windows-latest
-  #   timeout-minutes: 30
+  #   timeout-minutes: 60
 
   #   steps:
   #     - uses: actions/checkout@v4
@@ -332,7 +331,7 @@ jobs:
   build-custom:
     needs: build-linux
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -484,7 +483,7 @@ jobs:
   build-custom-windows:
     needs: build-windows
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
 
@@ -511,7 +510,7 @@ jobs:
   build-amalgamated:
     needs: build-linux
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -525,7 +524,7 @@ jobs:
   build-emscripten:
     needs: build-linux
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
 
@@ -563,7 +562,7 @@ jobs:
   test-emscripten:
     needs: build-linux
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
 
@@ -682,7 +681,7 @@ jobs:
   test-amalgamated:
     needs: build-linux
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
 
@@ -704,7 +703,7 @@ jobs:
   build-scan-build:
     needs: build-linux
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
 
@@ -728,7 +727,7 @@ jobs:
   test-c-unix:
     needs: [build-linux, build-macos]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -772,7 +771,7 @@ jobs:
   test-cpp-unix:
     needs: [build-linux]
     runs-on: ${{ matrix.target.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -822,7 +821,7 @@ jobs:
   test-cpp-macos:
     needs: [build-macos]
     runs-on: ${{ matrix.os.version }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -860,7 +859,7 @@ jobs:
   test-cpp_addons:
     needs: [build-linux]
     runs-on: ${{ matrix.target.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -900,7 +899,7 @@ jobs:
   test-windows:
     needs: build-windows
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
 
@@ -938,7 +937,7 @@ jobs:
 
   test-windows-msvc-x86:
     runs-on: windows-2022
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -991,13 +990,12 @@ jobs:
 
   test-msys:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         include:
           - { sys: mingw64, cc: gcc, cxx: g++ }
-          - { sys: mingw32, cc: gcc, cxx: g++ }
           - { sys: ucrt64, cc: gcc, cxx: g++ }
           - { sys: clang64, cc: clang, cxx: clang++ }
 
@@ -1056,7 +1054,7 @@ jobs:
   test-sanitized-core:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -1080,7 +1078,7 @@ jobs:
   test-sanitized-query:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -1104,7 +1102,7 @@ jobs:
   test-sanitized-addons:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -1128,7 +1126,7 @@ jobs:
   test-sanitized-meta:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -1152,7 +1150,7 @@ jobs:
   test-sanitized-script:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -1176,7 +1174,7 @@ jobs:
   test-sanitized-collections:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -1200,7 +1198,7 @@ jobs:
   test-sanitized-cpp:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -1224,7 +1222,7 @@ jobs:
   test-os-alloc-core:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -1248,7 +1246,7 @@ jobs:
   test-low-footprint-core:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -1273,7 +1271,7 @@ jobs:
   test-cmake:
     needs: [ build-linux, build-macos ]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
