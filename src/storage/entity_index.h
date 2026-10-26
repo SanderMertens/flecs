@@ -131,15 +131,6 @@ ecs_entity_index_page_t* flecs_entity_index_ensure_page(
     uint32_t id);
 
 #ifdef FLECS_ENTITY_RANGES
-/* Initialize entity range state. */
-void flecs_entity_ranges_init(
-    ecs_allocator_t *allocator,
-    ecs_entity_index_t *index);
-
-/* Deinitialize entity range state. */
-void flecs_entity_ranges_fini(
-    ecs_entity_index_t *index);
-
 void flecs_entity_ranges_on_ensure(
     ecs_entity_index_t *index,
     uint32_t id);

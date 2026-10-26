@@ -849,6 +849,239 @@ void World_range_prefab_spawn_deferred_after_range_switch(void) {
     ecs_fini(world);
 }
 
+void World_range_new_from_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    const ecs_entity_range_t *range_a = ecs_entity_range_new(world, 1000, 2000);
+    const ecs_entity_range_t *range_b = ecs_entity_range_new(world, 3000, 4000);
+
+    ecs_entity_range_set(world, range_a);
+
+    ecs_entity_t e1 = ecs_new_from_range(world, range_b);
+    test_uint(e1, 3000);
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(ecs_entity_range_get(world) == range_a);
+
+    ecs_entity_t e2 = ecs_new_from_range(world, range_b);
+    test_uint(e2, 3001);
+    test_assert(ecs_is_alive(world, e2));
+
+    ecs_add(world, e1, Foo);
+    test_assert(ecs_has(world, e1, Foo));
+
+    ecs_entity_t e3 = ecs_new(world);
+    test_uint(e3, 1000);
+
+    ecs_fini(world);
+}
+
+void World_range_new_from_range_active(void) {
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_entity_range_t *range_a = ecs_entity_range_new(world, 1000, 2000);
+    ecs_entity_range_new(world, 3000, 4000);
+
+    ecs_entity_range_set(world, range_a);
+
+    ecs_entity_t e1 = ecs_new_from_range(world, range_a);
+    test_uint(e1, 1000);
+    test_assert(ecs_is_alive(world, e1));
+
+    ecs_entity_t e2 = ecs_new(world);
+    test_uint(e2, 1001);
+
+    ecs_entity_t e3 = ecs_new_from_range(world, range_a);
+    test_uint(e3, 1002);
+
+    ecs_delete(world, e3);
+    ecs_entity_t e4 = ecs_new_from_range(world, range_a);
+    test_uint((uint32_t)e4, 1002);
+    test_assert(e4 != e3);
+    test_assert(ecs_is_alive(world, e4));
+    test_assert(!ecs_is_alive(world, e3));
+
+    ecs_fini(world);
+}
+
+void World_range_new_from_range_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_entity_range_t *range_a = ecs_entity_range_new(world, 1000, 2000);
+    const ecs_entity_range_t *range_b = ecs_entity_range_new(world, 3000, 4000);
+
+    ecs_entity_range_set(world, range_b);
+    ecs_entity_t e1 = ecs_new(world);
+    test_uint(e1, 3000);
+
+    ecs_entity_range_set(world, range_a);
+    ecs_delete(world, e1);
+    test_assert(!ecs_is_alive(world, e1));
+
+    ecs_entity_t e2 = ecs_new_from_range(world, range_b);
+    test_uint((uint32_t)e2, 3000);
+    test_assert(e2 != e1);
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, e1));
+
+    ecs_entity_t e3 = ecs_new_from_range(world, range_b);
+    test_uint(e3, 3001);
+
+    ecs_entity_t e4 = ecs_new(world);
+    test_uint(e4, 1000);
+
+    ecs_fini(world);
+}
+
+void World_range_new_from_range_recycled_after_switch(void) {
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_entity_range_t *range_a = ecs_entity_range_new(world, 1000, 2000);
+    const ecs_entity_range_t *range_b = ecs_entity_range_new(world, 3000, 4000);
+
+    ecs_entity_range_set(world, range_b);
+    ecs_entity_t e1 = ecs_new(world);
+    test_uint(e1, 3000);
+    ecs_entity_t e2 = ecs_new(world);
+    test_uint(e2, 3001);
+    ecs_delete(world, e1);
+
+    ecs_entity_range_set(world, range_a);
+
+    ecs_entity_t e3 = ecs_new_from_range(world, range_b);
+    test_uint((uint32_t)e3, 3000);
+    test_assert(e3 != e1);
+    test_assert(ecs_is_alive(world, e3));
+
+    ecs_entity_t e4 = ecs_new_from_range(world, range_b);
+    test_uint(e4, 3002);
+
+    ecs_entity_range_set(world, range_b);
+    ecs_entity_t e5 = ecs_new(world);
+    test_uint(e5, 3003);
+
+    ecs_fini(world);
+}
+
+void World_range_new_from_range_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_entity_range_t *range_a = ecs_entity_range_new(world, 1000, 2000);
+    const ecs_entity_range_t *range_b = ecs_entity_range_new(world, 3000, 4000);
+
+    ecs_entity_range_set(world, range_a);
+
+    ecs_entity_t e1 = ecs_new_from_range(world, range_b);
+    test_uint(e1, 3000);
+    ecs_delete(world, e1);
+    test_assert(!ecs_is_alive(world, e1));
+
+    ecs_entity_t e2 = ecs_new(world);
+    test_uint(e2, 1000);
+
+    ecs_entity_range_set(world, range_b);
+    ecs_entity_t e3 = ecs_new(world);
+    test_uint((uint32_t)e3, 3000);
+    test_assert(e3 != e1);
+    test_assert(ecs_is_alive(world, e3));
+
+    ecs_entity_t e4 = ecs_new(world);
+    test_uint(e4, 3001);
+
+    ecs_fini(world);
+}
+
+void World_range_new_from_range_then_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_entity_range_t *range_a = ecs_entity_range_new(world, 1000, 2000);
+    const ecs_entity_range_t *range_b = ecs_entity_range_new(world, 3000, 4000);
+
+    ecs_entity_range_set(world, range_a);
+
+    ecs_entity_t e1 = ecs_new_from_range(world, range_b);
+    test_uint(e1, 3000);
+    ecs_entity_t e2 = ecs_new_from_range(world, range_b);
+    test_uint(e2, 3001);
+
+    ecs_entity_range_set(world, range_b);
+    ecs_entity_t e3 = ecs_new(world);
+    test_uint(e3, 3002);
+
+    ecs_entity_range_set(world, range_a);
+    ecs_entity_t e4 = ecs_new(world);
+    test_uint(e4, 1000);
+
+    ecs_fini(world);
+}
+
+void World_range_new_from_range_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    const ecs_entity_range_t *range_a = ecs_entity_range_new(world, 1000, 2000);
+    const ecs_entity_range_t *range_b = ecs_entity_range_new(world, 3000, 4000);
+
+    ecs_entity_range_set(world, range_a);
+
+    ecs_world_t *stage_1 = ecs_is_stage(world) ? world : ecs_get_stage(world, 0);
+    ecs_entity_t e1 = ecs_new_from_range(stage_1, range_b);
+    test_uint(e1, 3000);
+    test_assert(ecs_is_alive(stage_1, e1));
+    ecs_add(stage_1, e1, Foo);
+    test_assert(!ecs_has(world, e1, Foo));
+    ecs_merge(stage_1);
+
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(ecs_has(world, e1, Foo));
+
+    ecs_fini(world);
+}
+
+void World_range_new_from_range_exhausted(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_entity_range_t *range_a = ecs_entity_range_new(world, 1000, 2000);
+    const ecs_entity_range_t *range_b = ecs_entity_range_new(world, 3000, 3001);
+
+    ecs_entity_range_set(world, range_a);
+
+    ecs_entity_t e1 = ecs_new_from_range(world, range_b);
+    test_uint(e1, 3000);
+    ecs_entity_t e2 = ecs_new_from_range(world, range_b);
+    test_uint(e2, 3001);
+
+    test_expect_abort();
+    ecs_new_from_range(world, range_b);
+}
+
+void World_range_new_from_range_unknown_range(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_entity_range_t *range_a = ecs_entity_range_new(world, 1000, 2000);
+    ecs_entity_range_set(world, range_a);
+
+    ecs_entity_range_t fake_range = { .min = 3000, .max = 4000 };
+
+    test_expect_abort();
+    ecs_new_from_range(world, &fake_range);
+}
+
+void World_range_new_from_range_null(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    test_expect_abort();
+    ecs_new_from_range(world, NULL);
+}
+
 void World_get_tick(void) {
     ecs_world_t *world = ecs_init();
 

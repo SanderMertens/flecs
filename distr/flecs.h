@@ -12927,6 +12927,25 @@ void ecs_entity_range_set(
     ecs_world_t *world,
     const ecs_entity_range_t *range);
 
+/** Create a new entity from a specific range.
+ * This function creates a new entity with an id from the specified range,
+ * without changing the active range. If the range has recycled ids, a recycled
+ * id is returned, otherwise a new id is issued from the range.
+ *
+ * When the range is out of available ids, this operation will assert.
+ *
+ * The operation only accepts ranges that have been created by
+ * ecs_entity_range_new().
+ *
+ * @param world The world.
+ * @param range The range to create the entity from.
+ * @return The new entity.
+ */
+FLECS_API
+ecs_entity_t ecs_new_from_range(
+    ecs_world_t *world,
+    const ecs_entity_range_t *range);
+
 /** Get the currently active entity id range.
  * Returns the range set by ecs_entity_range_set(), or NULL if no range is
  * active.
