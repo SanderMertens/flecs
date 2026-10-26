@@ -9881,7 +9881,7 @@ void Template_for_entity_w_child_in_template_w_template_after(void) {
 static void template_add_to_other_entity(ecs_iter_t *it) {
     ecs_entity_t target = *(ecs_entity_t*)it->ctx;
     if (it->entities[0] != target) {
-        ecs_add_id(it->world, target, ecs_field_id(it, 0));
+        ecs_add_id(it->stage, target, ecs_field_id(it, 0));
     }
 }
 

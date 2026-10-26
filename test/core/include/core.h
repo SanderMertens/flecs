@@ -78,6 +78,8 @@ void probe_has_entity(Probe *probe, ecs_entity_t e);
 
 void install_test_abort(void);
 
+void test_expect_abort_code(int32_t error_code);
+
 const ecs_entity_t* bulk_new_w_type(
     ecs_world_t *world, ecs_entity_t type_ent, int32_t count);
 

@@ -559,7 +559,9 @@
                 "remove_wildcard",
                 "remove_some_wildcard_pair",
                 "remove_all_tgt_wildcard_pair",
-                "remove_all_rel_wildcard_pair"
+                "remove_all_rel_wildcard_pair",
+                "remove_w_on_remove_removing_other",
+                "remove_w_on_remove_removing_other_w_stage"
             ]
         }, {
             "id": "GlobalComponentIds",
@@ -1464,7 +1466,13 @@
                 "move_w_dtor_move",
                 "move_w_dtor_no_move",
                 "move_w_no_dtor_move",
-                "wrap_generation_count"
+                "wrap_generation_count",
+                "delete_w_on_remove_removing_other",
+                "delete_w_on_remove_removing_other_w_stage",
+                "clear_w_on_remove_removing_other",
+                "clear_w_on_remove_removing_other_w_stage",
+                "delete_w_on_remove_hook_removing_other",
+                "delete_w_on_remove_hook_removing_other_w_stage"
             ]
         }, {
             "id": "OnDelete",
@@ -1598,7 +1606,13 @@
                 "empty_after_remove",
                 "remove_target_no_intermediate_table",
                 "remove_target_no_intermediate_table_3_pairs",
-                "delete_parent_w_isa_base_that_inherits_from_disabled_child"
+                "delete_parent_w_isa_base_that_inherits_from_disabled_child",
+                "delete_with_w_on_remove_removing_other",
+                "delete_with_w_on_remove_removing_other_w_stage",
+                "remove_all_w_on_remove_removing_other",
+                "remove_all_w_on_remove_removing_other_w_stage",
+                "delete_parent_w_on_remove_removing_other_from_child",
+                "delete_parent_w_on_remove_removing_other_from_child_w_stage"
             ]
         }, {
             "id": "Set",
@@ -1640,7 +1654,9 @@
                 "emplace_w_move",
                 "emplace_w_observer_w_add",
                 "emplace_existing_w_check",
-                "emplace_pair"
+                "emplace_pair",
+                "set_w_on_add_adding_other",
+                "set_w_on_add_adding_other_w_stage"
 
             ]
         }, {

@@ -535,6 +535,8 @@ void Remove_remove_wildcard(void);
 void Remove_remove_some_wildcard_pair(void);
 void Remove_remove_all_tgt_wildcard_pair(void);
 void Remove_remove_all_rel_wildcard_pair(void);
+void Remove_remove_w_on_remove_removing_other(void);
+void Remove_remove_w_on_remove_removing_other_w_stage(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -1417,6 +1419,12 @@ void Delete_move_w_dtor_move(void);
 void Delete_move_w_dtor_no_move(void);
 void Delete_move_w_no_dtor_move(void);
 void Delete_wrap_generation_count(void);
+void Delete_delete_w_on_remove_removing_other(void);
+void Delete_delete_w_on_remove_removing_other_w_stage(void);
+void Delete_clear_w_on_remove_removing_other(void);
+void Delete_clear_w_on_remove_removing_other_w_stage(void);
+void Delete_delete_w_on_remove_hook_removing_other(void);
+void Delete_delete_w_on_remove_hook_removing_other_w_stage(void);
 
 // Testsuite 'OnDelete'
 void OnDelete_flags(void);
@@ -1549,6 +1557,12 @@ void OnDelete_empty_after_remove(void);
 void OnDelete_remove_target_no_intermediate_table(void);
 void OnDelete_remove_target_no_intermediate_table_3_pairs(void);
 void OnDelete_delete_parent_w_isa_base_that_inherits_from_disabled_child(void);
+void OnDelete_delete_with_w_on_remove_removing_other(void);
+void OnDelete_delete_with_w_on_remove_removing_other_w_stage(void);
+void OnDelete_remove_all_w_on_remove_removing_other(void);
+void OnDelete_remove_all_w_on_remove_removing_other_w_stage(void);
+void OnDelete_delete_parent_w_on_remove_removing_other_from_child(void);
+void OnDelete_delete_parent_w_on_remove_removing_other_from_child_w_stage(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -1589,6 +1603,8 @@ void Set_emplace_w_move(void);
 void Set_emplace_w_observer_w_add(void);
 void Set_emplace_existing_w_check(void);
 void Set_emplace_pair(void);
+void Set_set_w_on_add_adding_other(void);
+void Set_set_w_on_add_adding_other_w_stage(void);
 
 // Testsuite 'Lookup'
 void Lookup_setup(void);
@@ -5742,6 +5758,14 @@ bake_test_case Remove_testcases[] = {
     {
         "remove_all_rel_wildcard_pair",
         Remove_remove_all_rel_wildcard_pair
+    },
+    {
+        "remove_w_on_remove_removing_other",
+        Remove_remove_w_on_remove_removing_other
+    },
+    {
+        "remove_w_on_remove_removing_other_w_stage",
+        Remove_remove_w_on_remove_removing_other_w_stage
     }
 };
 
@@ -9200,6 +9224,30 @@ bake_test_case Delete_testcases[] = {
     {
         "wrap_generation_count",
         Delete_wrap_generation_count
+    },
+    {
+        "delete_w_on_remove_removing_other",
+        Delete_delete_w_on_remove_removing_other
+    },
+    {
+        "delete_w_on_remove_removing_other_w_stage",
+        Delete_delete_w_on_remove_removing_other_w_stage
+    },
+    {
+        "clear_w_on_remove_removing_other",
+        Delete_clear_w_on_remove_removing_other
+    },
+    {
+        "clear_w_on_remove_removing_other_w_stage",
+        Delete_clear_w_on_remove_removing_other_w_stage
+    },
+    {
+        "delete_w_on_remove_hook_removing_other",
+        Delete_delete_w_on_remove_hook_removing_other
+    },
+    {
+        "delete_w_on_remove_hook_removing_other_w_stage",
+        Delete_delete_w_on_remove_hook_removing_other_w_stage
     }
 };
 
@@ -9723,6 +9771,30 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_parent_w_isa_base_that_inherits_from_disabled_child",
         OnDelete_delete_parent_w_isa_base_that_inherits_from_disabled_child
+    },
+    {
+        "delete_with_w_on_remove_removing_other",
+        OnDelete_delete_with_w_on_remove_removing_other
+    },
+    {
+        "delete_with_w_on_remove_removing_other_w_stage",
+        OnDelete_delete_with_w_on_remove_removing_other_w_stage
+    },
+    {
+        "remove_all_w_on_remove_removing_other",
+        OnDelete_remove_all_w_on_remove_removing_other
+    },
+    {
+        "remove_all_w_on_remove_removing_other_w_stage",
+        OnDelete_remove_all_w_on_remove_removing_other_w_stage
+    },
+    {
+        "delete_parent_w_on_remove_removing_other_from_child",
+        OnDelete_delete_parent_w_on_remove_removing_other_from_child
+    },
+    {
+        "delete_parent_w_on_remove_removing_other_from_child_w_stage",
+        OnDelete_delete_parent_w_on_remove_removing_other_from_child_w_stage
     }
 };
 
@@ -9878,6 +9950,14 @@ bake_test_case Set_testcases[] = {
     {
         "emplace_pair",
         Set_emplace_pair
+    },
+    {
+        "set_w_on_add_adding_other",
+        Set_set_w_on_add_adding_other
+    },
+    {
+        "set_w_on_add_adding_other_w_stage",
+        Set_set_w_on_add_adding_other_w_stage
     }
 };
 
@@ -18204,7 +18284,7 @@ static bake_test_suite suites[] = {
         "Remove",
         NULL,
         NULL,
-        14,
+        16,
         Remove_testcases
     },
     {
@@ -18276,21 +18356,21 @@ static bake_test_suite suites[] = {
         "Delete",
         Delete_setup,
         NULL,
-        32,
+        38,
         Delete_testcases
     },
     {
         "OnDelete",
         NULL,
         NULL,
-        130,
+        136,
         OnDelete_testcases
     },
     {
         "Set",
         NULL,
         NULL,
-        38,
+        40,
         Set_testcases
     },
     {

@@ -1203,6 +1203,20 @@ void Observer_reuse_observer_builder(void);
 void Observer_single_term_observer_w_var_get_var_pair_second(void);
 void Observer_single_term_observer_w_var_get_var_pair_first(void);
 void Observer_component_inheritance_each_multi_entity(void);
+void Observer_delete_w_on_remove_removing_other_w_world(void);
+void Observer_delete_w_on_remove_removing_other_w_stage(void);
+void Observer_clear_w_on_remove_removing_other_w_world(void);
+void Observer_clear_w_on_remove_removing_other_w_stage(void);
+void Observer_delete_with_w_on_remove_removing_other_w_world(void);
+void Observer_delete_with_w_on_remove_removing_other_w_stage(void);
+void Observer_remove_all_w_on_remove_removing_other_w_world(void);
+void Observer_remove_all_w_on_remove_removing_other_w_stage(void);
+void Observer_delete_parent_w_on_remove_removing_other_from_child_w_world(void);
+void Observer_delete_parent_w_on_remove_removing_other_from_child_w_stage(void);
+void Observer_remove_w_on_remove_removing_other_w_world(void);
+void Observer_remove_w_on_remove_removing_other_w_stage(void);
+void Observer_set_w_on_add_adding_other_w_world(void);
+void Observer_set_w_on_add_adding_other_w_stage(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -1313,6 +1327,8 @@ void ComponentLifecycle_move_ctor_no_default_ctor(void);
 void ComponentLifecycle_on_validate_hook(void);
 void ComponentLifecycle_on_validate_hook_blocks_on_set(void);
 void ComponentLifecycle_on_validate_hook_blocks_observer(void);
+void ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_world(void);
+void ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_stage(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -6468,6 +6484,62 @@ bake_test_case Observer_testcases[] = {
     {
         "component_inheritance_each_multi_entity",
         Observer_component_inheritance_each_multi_entity
+    },
+    {
+        "delete_w_on_remove_removing_other_w_world",
+        Observer_delete_w_on_remove_removing_other_w_world
+    },
+    {
+        "delete_w_on_remove_removing_other_w_stage",
+        Observer_delete_w_on_remove_removing_other_w_stage
+    },
+    {
+        "clear_w_on_remove_removing_other_w_world",
+        Observer_clear_w_on_remove_removing_other_w_world
+    },
+    {
+        "clear_w_on_remove_removing_other_w_stage",
+        Observer_clear_w_on_remove_removing_other_w_stage
+    },
+    {
+        "delete_with_w_on_remove_removing_other_w_world",
+        Observer_delete_with_w_on_remove_removing_other_w_world
+    },
+    {
+        "delete_with_w_on_remove_removing_other_w_stage",
+        Observer_delete_with_w_on_remove_removing_other_w_stage
+    },
+    {
+        "remove_all_w_on_remove_removing_other_w_world",
+        Observer_remove_all_w_on_remove_removing_other_w_world
+    },
+    {
+        "remove_all_w_on_remove_removing_other_w_stage",
+        Observer_remove_all_w_on_remove_removing_other_w_stage
+    },
+    {
+        "delete_parent_w_on_remove_removing_other_from_child_w_world",
+        Observer_delete_parent_w_on_remove_removing_other_from_child_w_world
+    },
+    {
+        "delete_parent_w_on_remove_removing_other_from_child_w_stage",
+        Observer_delete_parent_w_on_remove_removing_other_from_child_w_stage
+    },
+    {
+        "remove_w_on_remove_removing_other_w_world",
+        Observer_remove_w_on_remove_removing_other_w_world
+    },
+    {
+        "remove_w_on_remove_removing_other_w_stage",
+        Observer_remove_w_on_remove_removing_other_w_stage
+    },
+    {
+        "set_w_on_add_adding_other_w_world",
+        Observer_set_w_on_add_adding_other_w_world
+    },
+    {
+        "set_w_on_add_adding_other_w_stage",
+        Observer_set_w_on_add_adding_other_w_stage
     }
 };
 
@@ -6903,6 +6975,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_validate_hook_blocks_observer",
         ComponentLifecycle_on_validate_hook_blocks_observer
+    },
+    {
+        "delete_w_on_remove_hook_removing_other_w_world",
+        ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_world
+    },
+    {
+        "delete_w_on_remove_hook_removing_other_w_stage",
+        ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_stage
     }
 };
 
@@ -8779,14 +8859,14 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        76,
+        90,
         Observer_testcases
     },
     {
         "ComponentLifecycle",
         NULL,
         NULL,
-        108,
+        110,
         ComponentLifecycle_testcases
     },
     {
