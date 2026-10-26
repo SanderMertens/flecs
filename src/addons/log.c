@@ -187,6 +187,25 @@ char* flecs_log_capture_pop(void) {
     return result;
 }
 
+void flecs_log_uncaptured(
+    int32_t level,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    if (!flecs_log_capture_depth) {
+        if (level <= ecs_os_api.log_level_) {
+            ecs_printv_(level, NULL, 0, fmt, args);
+        }
+    } else if (flecs_log_prev_fatal_log && level <= flecs_log_prev_level) {
+        char *msg = flecs_vasprintf(fmt, args);
+        flecs_log_prev_fatal_log(level, NULL, 0, msg);
+        ecs_os_free(msg);
+    }
+    va_end(args);
+}
+
 void flecs_log_get_captured_error_pos(
     int32_t *line,
     int32_t *column)
@@ -818,6 +837,15 @@ void flecs_log_capture_push(bool try) {
 
 char* flecs_log_capture_pop(void) {
     return NULL;
+}
+
+void flecs_log_uncaptured(
+    int32_t level,
+    const char *fmt,
+    ...)
+{
+    (void)level;
+    (void)fmt;
 }
 
 void flecs_log_get_captured_error_pos(

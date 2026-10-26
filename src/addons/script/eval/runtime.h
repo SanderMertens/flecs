@@ -50,6 +50,7 @@ struct ecs_script_runtime_t {
     /* Nesting level of template instantiations. Guards against templates that
      * (indirectly) instantiate themselves. */
     int32_t template_depth;
+    int32_t eval_depth;
 
     bool resolving;
     bool error;

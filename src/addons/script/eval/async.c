@@ -754,6 +754,7 @@ ecs_script_task_status_t ecs_script_task_resume(
     ecs_script_runtime_t *world_rt = flecs_script_runtime_get(task->v->world);
     bool prev_error = world_rt->error;
     world_rt->error = false;
+    world_rt->eval_depth ++;
     flecs_script_run_status_t status;
     if (task->vm) {
         status = flecs_script_ir_vm_run(task->vm, task->entry);
@@ -761,6 +762,7 @@ ecs_script_task_status_t ecs_script_task_resume(
         status = flecs_script_runner_run_scope(task->runner, task->scope);
     }
 
+    world_rt->eval_depth --;
     bool nested_error = world_rt->error;
     world_rt->error = prev_error;
     if (task->status == EcsScriptTaskCancelled) {

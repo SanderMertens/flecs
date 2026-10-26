@@ -80,22 +80,11 @@ static void flecs_script_ref_eval(
     if (s && s->script == &impl->pub && !rc) {
         flecs_script_update_dyn_observers(world, script, 0,
             &impl->run_refs, &s->dyn_observers, input);
-        s = ecs_is_alive(world, script)
-            ? ecs_ensure(world, script, EcsScript) : NULL;
     }
 
     ecs_vec_clear(&impl->run_refs);
-    if (s && s->error) {
-        ecs_os_free(s->error);
-        s->error = NULL;
-    }
-
-    if (s && rc) {
-        s->error = result.error;
-    } else {
-        ecs_os_free(result.error);
-    }
-
+    flecs_script_report_error(
+        world, script, impl->pub.name, rc != 0, result.error);
     flecs_script_runtime_release_call(pool, runtime);
     ecs_script_free(&impl->pub);
 }

@@ -320,6 +320,27 @@ static EcsScript* flecs_script_set_error(
     return s;
 }
 
+void flecs_script_report_error(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *name,
+    bool failed,
+    char *error)
+{
+    if (!ecs_is_alive(world, e)) {
+        ecs_os_free(error);
+        return;
+    }
+
+    EcsScript *s = flecs_script_set_error(world, e, failed ? error : NULL,
+        failed ? "failed to evaluate script" : NULL);
+    if (failed) {
+        flecs_log_uncaptured(-3, "%s: %s", name ? name : "script", s->error);
+    } else {
+        ecs_os_free(error);
+    }
+}
+
 static ecs_script_t* flecs_script_update_parse_code(
     ecs_world_t *world,
     ecs_entity_t e,

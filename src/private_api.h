@@ -211,6 +211,11 @@ void flecs_log_capture_push(
 
 char* flecs_log_capture_pop(void);
 
+void flecs_log_uncaptured(
+    int32_t level,
+    const char *fmt,
+    ...);
+
 /* Check whether id can be inherited. */
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,

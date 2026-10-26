@@ -9687,3 +9687,160 @@ void Reactivity_template_update_reads_own_component(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_template_reeval_error_stored_on_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {{"x", ecs_id(ecs_i32_t)}, {"y", ecs_id(ecs_i32_t)}}
+    });
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template T {"
+            LINE "  prop d: i32 = 1"
+            LINE "  child { PositionI: {10 / d, 0} }"
+            LINE "}"
+            LINE "e { T: {d: 1} }"
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_get(world, t, EcsScript)->error == NULL);
+
+    ecs_log_set_level(-4);
+    int32_t d = 0;
+    ecs_set_id(world, e, t, sizeof(int32_t), &d);
+    ecs_log_set_level(-1);
+
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+    test_assert(ecs_get(world, t, EcsScript)->error != NULL);
+
+    d = 2;
+    ecs_set_id(world, e, t, sizeof(int32_t), &d);
+
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+    test_assert(ecs_get(world, t, EcsScript)->error == NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_reeval_error_in_other_script_eval(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position_i = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {{"x", ecs_id(ecs_i32_t)}, {"y", ecs_id(ecs_i32_t)}}
+    });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, position_i,
+        sizeof(PositionI), &(PositionI){1, 0});
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template T {"
+            LINE "  child { PositionI: {10 / (source[PositionI].x - 2), 0} }"
+            LINE "}"
+            LINE "e { T }"
+    });
+    test_assert(s != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t a = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "A" }),
+        .code =
+            HEAD "source { PositionI: {2, 0} }"
+            LINE "ok {}"
+    });
+    ecs_log_set_level(-1);
+    test_assert(a != 0);
+
+    test_assert(ecs_get(world, a, EcsScript)->error == NULL);
+    test_assert(ecs_lookup(world, "ok") != 0);
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+    test_assert(ecs_get(world, t, EcsScript)->error != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_template_first_instantiation_error_from_c(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {{"x", ecs_id(ecs_i32_t)}, {"y", ecs_id(ecs_i32_t)}}
+    });
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template T {"
+            LINE "  prop d: i32 = 1"
+            LINE "  child { PositionI: {10 / d, 0} }"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t e = ecs_new(world);
+    int32_t d = 0;
+    ecs_set_id(world, e, t, sizeof(int32_t), &d);
+    ecs_log_set_level(-1);
+
+    test_assert(ecs_get(world, s, EcsScript)->error == NULL);
+    test_assert(ecs_get(world, t, EcsScript)->error != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_script_reeval_error_in_other_script_eval(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t position_i = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {{"x", ecs_id(ecs_i32_t)}, {"y", ecs_id(ecs_i32_t)}}
+    });
+
+    ecs_entity_t source = ecs_entity(world, { .name = "source" });
+    ecs_set_id(world, source, position_i,
+        sizeof(PositionI), &(PositionI){1, 0});
+
+    ecs_entity_t b = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "B" }),
+        .code =
+            HEAD "out { PositionI: {10 / (source[PositionI].x - 2), 0} }"
+    });
+    test_assert(b != 0);
+    test_assert(ecs_get(world, b, EcsScript)->error == NULL);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t a = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "A" }),
+        .code =
+            HEAD "source { PositionI: {2, 0} }"
+            LINE "ok {}"
+    });
+    ecs_log_set_level(-1);
+    test_assert(a != 0);
+
+    test_assert(ecs_get(world, a, EcsScript)->error == NULL);
+    test_assert(ecs_lookup(world, "ok") != 0);
+    test_assert(ecs_get(world, b, EcsScript)->error != NULL);
+
+    ecs_fini(world);
+}

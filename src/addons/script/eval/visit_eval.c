@@ -3205,7 +3205,9 @@ int flecs_script_eval(
         runner.v.run_refs = &impl->run_refs;
         flecs_script_eval_begin(&runner.v, input,
             flecs_script_state_next(&impl->state));
+        runtime->eval_depth ++;
         r = flecs_script_eval_run(&runner, &impl->root->node);
+        runtime->eval_depth --;
     }
 
     flecs_script_runner_fini(&runner, &priv_desc);
