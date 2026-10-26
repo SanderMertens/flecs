@@ -443,29 +443,11 @@ static void flecs_script_update_observers(
 {
     EcsScript *s = ecs_ensure(world, e, EcsScript);
     ecs_vec_t *script_refs = &flecs_script_impl(s->script)->refs;
-    ecs_script_ref_t *refs = ecs_vec_first(script_refs);
-    int32_t i;
-    for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
-        if (refs[i].component == ecs_id(EcsScriptMutVar) ||
-            flecs_script_template_is_mut_type(world, refs[i].component))
-        {
-            continue;
-        }
-
-        if (refs[i].entity && ecs_has_pair(
-            world, refs[i].entity, ecs_id(EcsScript), e))
-        {
-            ecs_vec_remove_t(script_refs, ecs_script_ref_t, i);
-        }
-    }
-
-    flecs_script_ref_observers_clear(world, &s->observers);
-    flecs_script_update_ref_observers(world, e, 0,
-        script_refs, &s->observers, flecs_script_ref_on_set);
+    flecs_script_observe_refs(world, e, script_refs, &s->observers);
     ecs_vec_clear(script_refs);
     s = ecs_ensure(world, e, EcsScript);
-    flecs_script_update_dyn_observers(world, e,
-        flecs_script_impl(parsed), &s->dyn_observers, UINT64_MAX);
+    flecs_script_update_dyn_observers(world, e, 0,
+        &flecs_script_impl(parsed)->run_refs, &s->dyn_observers, UINT64_MAX);
     ecs_vec_clear(&flecs_script_impl(parsed)->run_refs);
 }
 

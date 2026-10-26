@@ -9642,3 +9642,48 @@ void Reactivity_fini_w_instance_of_derived_template(void) {
 
     ecs_fini(world);
 }
+
+void Reactivity_template_update_reads_own_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {{"value", ecs_id(ecs_f32_t)}}
+    });
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {{"x", ecs_id(ecs_f32_t)}, {"y", ecs_id(ecs_f32_t)}}
+    });
+
+    ecs_entity_t src = ecs_entity(world, { .name = "src" });
+    ecs_set(world, src, Mass, {1});
+
+    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "const k = src[Mass].value"
+            LINE "template T {"
+            LINE "  Mass: {k}"
+            LINE "  Position: {this[Mass].value, 0}"
+            LINE "}"
+            LINE "e { T: {} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t t = ecs_lookup(world, "T");
+    test_assert(t != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_int(ecs_get(world, e, Position)->x, 1);
+
+    ecs_set(world, src, Mass, {2});
+    test_int(ecs_get(world, e, Mass)->value, 2);
+    test_int(ecs_get(world, e, Position)->x, 2);
+
+    test_int(ecs_script_template_update(world, e, t), 0);
+    test_int(ecs_get(world, e, Mass)->value, 2);
+    test_int(ecs_get(world, e, Position)->x, 2);
+
+    ecs_fini(world);
+}

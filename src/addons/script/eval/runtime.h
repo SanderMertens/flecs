@@ -23,12 +23,12 @@ struct ecs_script_runtime_t {
     ecs_vec_t ir_vms;
     ecs_vec_t call_runtimes;
 
-    /* Template instances with changed props whose re-evaluation is deferred
-     * until the command queue is flushed. One marker event is enqueued per
-     * flush instead of one event per instance. */
-    ecs_vec_t template_pending;
-    bool template_pending_marker;
-    bool template_pending_active;
+    /* Script and template instance updates whose evaluation is deferred until
+     * the command queue is flushed. One marker event is enqueued per flush
+     * instead of one event per update. */
+    ecs_vec_t pending;
+    bool pending_marker;
+    bool pending_active;
 
     /* Tasks created by async blocks. Only used by the world runtime, and
      * advanced by ecs_script_tasks_progress(). */

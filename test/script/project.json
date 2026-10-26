@@ -3359,7 +3359,8 @@
                 "template_switch_keeps_child_created_in_for_of_old_template",
                 "template_switch_keeps_shared_base_template_state",
                 "template_switch_keeps_tag_added_by_script",
-                "fini_w_instance_of_derived_template"
+                "fini_w_instance_of_derived_template",
+                "template_update_reads_own_component"
             ]
         }, {
             "id": "ConstVar",

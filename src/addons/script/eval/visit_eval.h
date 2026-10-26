@@ -31,6 +31,7 @@ typedef struct ecs_script_eval_visitor_t {
     uint64_t input;
     uint64_t internal;
     ecs_script_state_t *state;
+    ecs_vec_t *run_refs;
     int32_t symbol_offset;
     int32_t visit;
     int32_t scope_slot;
@@ -201,6 +202,10 @@ void flecs_script_runner_fini(
 flecs_script_run_status_t flecs_script_runner_run_scope(
     ecs_script_runner_t *r,
     ecs_script_scope_t *scope);
+
+int flecs_script_eval_run(
+    ecs_script_runner_t *r,
+    ecs_script_node_t *node);
 
 /* Evaluate an entity statement embedded in an expression, either in the
  * context of an in-progress evaluation (v != NULL) or standalone. */
@@ -495,7 +500,7 @@ void flecs_script_with_set_count(
     int32_t count);
 
 ecs_entity_t flecs_script_get_src(
-    ecs_script_eval_visitor_t *v,
+    const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
 

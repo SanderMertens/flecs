@@ -326,14 +326,6 @@ void flecs_script_ir_vm_fini(
     ecs_script_ir_vm_t *vm,
     const ecs_script_eval_desc_t *desc);
 
-ecs_script_ir_vm_t* flecs_script_ir_vm_new(
-    ecs_script_impl_t *script,
-    const ecs_script_eval_desc_t *desc);
-
-void flecs_script_ir_vm_free(
-    ecs_script_ir_vm_t *vm,
-    const ecs_script_eval_desc_t *desc);
-
 void flecs_script_ir_vm_pool_fini(
     ecs_script_runtime_t *r);
 
@@ -350,14 +342,10 @@ flecs_script_run_status_t flecs_script_ir_vm_resume(
 const char* flecs_script_ir_vm_stmt_pos(
     const ecs_script_ir_vm_t *vm);
 
-int flecs_script_ir_eval_root(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_impl_t *script);
-
-int flecs_script_ir_eval_template(
+int flecs_script_ir_eval(
     ecs_script_eval_visitor_t *v,
     ecs_script_impl_t *script,
-    ecs_script_template_t *template);
+    const ecs_script_node_t *node);
 
 void flecs_script_ir_call_function(
     const ecs_function_ctx_t *ctx,

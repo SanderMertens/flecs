@@ -131,7 +131,6 @@ struct ecs_script_impl_t {
     const char *line_index_code; /* Code the line index was built for */
     int32_t line_index_len; /* Length of the code the line index was built for */
     int32_t input_count;
-    uint64_t pending_inputs;
     bool evaluating;
     bool compiled;
     bool skip_unknown;

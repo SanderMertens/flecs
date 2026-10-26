@@ -20,7 +20,7 @@ typedef struct flecs_script_dep_ctx_t {
     ecs_script_eval_visitor_t *v;
     ecs_script_template_t *template;
     ecs_vec_t *refs;
-    ecs_vec_t *dynamic_refs;
+    ecs_vec_t dyn_refs;
     ecs_vec_t vars;
     ecs_vec_t component_owners;
     ecs_map_t owner_index;
@@ -33,6 +33,8 @@ typedef struct flecs_script_dep_ctx_t {
     int32_t computed_count;
     int32_t member;
     int32_t entity_symbol;
+    ecs_entity_t parent_muts;
+    bool reactive;
     bool no_deps;
     int32_t conditional;
     ecs_script_entity_t *entity;
@@ -613,9 +615,8 @@ static int flecs_script_dep_expr_ref(
 {
     flecs_script_dep_expr_ctx_t *expr = ptr;
     flecs_script_dep_ctx_t *ctx = expr->deps;
-    ecs_vec_t *refs = value->entity ? ctx->refs : ctx->dynamic_refs;
-    if (refs && (value->entity || value->name)) {
-        ecs_script_ref_t *ref = flecs_script_ref_ensure(refs, value);
+    if (value->entity) {
+        ecs_script_ref_t *ref = flecs_script_ref_ensure(ctx->refs, value);
         if (!ref->input && flecs_script_dep_input_new(ctx, &ref->input)) {
             return -1;
         }
@@ -623,10 +624,19 @@ static int flecs_script_dep_expr_ref(
         *expr->input |= ref->input;
     }
 
-    if (dynamic && ctx->v->script_entity && !ctx->template) {
-        uint64_t input;
-        if (flecs_script_dep_input_new(ctx, &input)) {
+    if (dynamic && ctx->reactive) {
+        ecs_script_ref_t *ref = value->name
+            ? flecs_script_ref_ensure(&ctx->dyn_refs, value)
+            : &(ecs_script_ref_t){0};
+        if (!ref->input && flecs_script_dep_input_new(ctx, &ref->input)) {
             return -1;
+        }
+
+        uint64_t input = ref->input;
+        if (value->name && value->component == ctx->parent_muts &&
+            !ecs_os_strcmp(value->name, "#parent"))
+        {
+            ctx->template->async_input &= ~input;
         }
 
         if (dynamic->kind == EcsExprHas) {
@@ -922,8 +932,8 @@ static int flecs_script_dep_node_impl(
         }
 
         if (node->kind == EcsAstConst) {
-            bool computed = (ctx->template || ctx->v->base.script->entity) &&
-                !ctx->conditional && !n->is_await && ctx->computed_count < 64;
+            bool computed = ctx->reactive && !ctx->conditional &&
+                !n->is_await && ctx->computed_count < 64;
             if (computed) {
                 int32_t slot = ctx->computed_count ++;
                 n->computed = slot + 1;
@@ -1149,9 +1159,7 @@ static int flecs_script_dep_template_init(
         }
     }
 
-    if (flecs_script_dep_assign_refs(ctx, &template->refs) ||
-        flecs_script_dep_assign_refs(ctx, &template->dynamic_refs))
-    {
+    if (flecs_script_dep_assign_refs(ctx, &template->refs)) {
         return -1;
     }
 
@@ -1160,15 +1168,7 @@ static int flecs_script_dep_template_init(
             template->parent_type, EcsScript);
         ecs_assert(parent != NULL && parent->template_ != NULL,
             ECS_INTERNAL_ERROR, NULL);
-        ecs_script_ref_t *refs = ecs_vec_first(&template->dynamic_refs);
-        int32_t ref_count = ecs_vec_count(&template->dynamic_refs);
-        for (i = 0; i < ref_count; i ++) {
-            if (refs[i].name && !ecs_os_strcmp(refs[i].name, "#parent") &&
-                refs[i].component == parent->template_->muts.type)
-            {
-                template->async_input &= ~refs[i].input;
-            }
-        }
+        ctx->parent_muts = parent->template_->muts.type;
     }
 
     int32_t *capture_sp = ecs_vec_first(&template->capture_sp);
@@ -1207,6 +1207,7 @@ static int flecs_script_dep_analyze(
     flecs_script_dep_ctx_t *outer)
 {
     ecs_vec_init_t(NULL, &ctx->vars, flecs_script_dep_var_t, 0);
+    ecs_vec_init_t(NULL, &ctx->dyn_refs, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &ctx->component_owners,
         flecs_script_component_owner_t, 0);
     ecs_map_init(&ctx->owner_index, NULL);
@@ -1221,6 +1222,7 @@ static int flecs_script_dep_analyze(
     }
 
     ecs_vec_fini_t(NULL, &ctx->vars, flecs_script_dep_var_t);
+    ecs_vec_fini_t(NULL, &ctx->dyn_refs, ecs_script_ref_t);
     ecs_vec_fini_t(NULL, &ctx->component_owners,
         flecs_script_component_owner_t);
     ecs_map_fini(&ctx->owner_index);
@@ -1251,9 +1253,9 @@ static int flecs_script_dep_template(
         .v = outer->v,
         .template = template,
         .refs = &template->refs,
-        .dynamic_refs = &template->dynamic_refs,
         .input_count = &template->input_count,
-        .entity_symbol = template->root_symbol
+        .entity_symbol = template->root_symbol,
+        .reactive = true
     };
 
     if (flecs_script_dep_analyze(&ctx, template->node->scope, outer)) {
@@ -1280,7 +1282,8 @@ int flecs_script_analyze_dependencies(
         .v = v,
         .refs = &impl->refs,
         .input_count = &impl->input_count,
-        .entity_symbol = -1
+        .entity_symbol = -1,
+        .reactive = impl->entity != 0
     };
 
     if (flecs_script_dep_analyze(&ctx, scope, NULL)) {
@@ -1288,8 +1291,7 @@ int flecs_script_analyze_dependencies(
     }
 
     flecs_script_state_resize(&impl->state, ctx.scope_count,
-        ctx.component_count, ctx.for_count);
-    flecs_script_state_resize_computed(&impl->state, ctx.computed_count);
+        ctx.component_count, ctx.for_count, ctx.computed_count);
     return 0;
 }
 
