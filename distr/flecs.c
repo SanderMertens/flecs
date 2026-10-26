@@ -4643,6 +4643,11 @@ void flecs_log_capture_push(
 
 char* flecs_log_capture_pop(void);
 
+void flecs_log_uncaptured(
+    int32_t level,
+    const char *fmt,
+    ...);
+
 /* Check whether id can be inherited. */
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
@@ -25472,6 +25477,25 @@ char* flecs_log_capture_pop(void) {
     return result;
 }
 
+void flecs_log_uncaptured(
+    int32_t level,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    if (!flecs_log_capture_depth) {
+        if (level <= ecs_os_api.log_level_) {
+            ecs_printv_(level, NULL, 0, fmt, args);
+        }
+    } else if (flecs_log_prev_fatal_log && level <= flecs_log_prev_level) {
+        char *msg = flecs_vasprintf(fmt, args);
+        flecs_log_prev_fatal_log(level, NULL, 0, msg);
+        ecs_os_free(msg);
+    }
+    va_end(args);
+}
+
 void flecs_log_get_captured_error_pos(
     int32_t *line,
     int32_t *column)
@@ -26101,6 +26125,15 @@ void flecs_log_capture_push(bool try) {
 
 char* flecs_log_capture_pop(void) {
     return NULL;
+}
+
+void flecs_log_uncaptured(
+    int32_t level,
+    const char *fmt,
+    ...)
+{
+    (void)level;
+    (void)fmt;
 }
 
 void flecs_log_get_captured_error_pos(
@@ -49034,6 +49067,7 @@ struct ecs_script_runtime_t {
     /* Nesting level of template instantiations. Guards against templates that
      * (indirectly) instantiate themselves. */
     int32_t template_depth;
+    int32_t eval_depth;
 
     bool resolving;
     bool error;
@@ -50622,6 +50656,13 @@ int flecs_script_update(
     ecs_entity_t instance,
     const char *code,
     ecs_script_runtime_t *eval_runtime);
+
+void flecs_script_report_error(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *name,
+    bool failed,
+    char *error);
 
 ecs_script_scope_t* flecs_script_scope_new(
     ecs_parser_t *parser);
@@ -70659,6 +70700,27 @@ static EcsScript* flecs_script_set_error(
     ecs_os_free(s->error);
     s->error = error ? error : ecs_os_strdup(fallback);
     return s;
+}
+
+void flecs_script_report_error(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *name,
+    bool failed,
+    char *error)
+{
+    if (!ecs_is_alive(world, e)) {
+        ecs_os_free(error);
+        return;
+    }
+
+    EcsScript *s = flecs_script_set_error(world, e, failed ? error : NULL,
+        failed ? "failed to evaluate script" : NULL);
+    if (failed) {
+        flecs_log_uncaptured(-3, "%s: %s", name ? name : "script", s->error);
+    } else {
+        ecs_os_free(error);
+    }
 }
 
 static ecs_script_t* flecs_script_update_parse_code(
@@ -92453,6 +92515,7 @@ ecs_script_task_status_t ecs_script_task_resume(
     ecs_script_runtime_t *world_rt = flecs_script_runtime_get(task->v->world);
     bool prev_error = world_rt->error;
     world_rt->error = false;
+    world_rt->eval_depth ++;
     flecs_script_run_status_t status;
     if (task->vm) {
         status = flecs_script_ir_vm_run(task->vm, task->entry);
@@ -92460,6 +92523,7 @@ ecs_script_task_status_t ecs_script_task_resume(
         status = flecs_script_runner_run_scope(task->runner, task->scope);
     }
 
+    world_rt->eval_depth --;
     bool nested_error = world_rt->error;
     world_rt->error = prev_error;
     if (task->status == EcsScriptTaskCancelled) {
@@ -96924,7 +96988,9 @@ int flecs_script_eval(
         runner.v.run_refs = &impl->run_refs;
         flecs_script_eval_begin(&runner.v, input,
             flecs_script_state_next(&impl->state));
+        runtime->eval_depth ++;
         r = flecs_script_eval_run(&runner, &impl->root->node);
+        runtime->eval_depth --;
     }
 
     flecs_script_runner_fini(&runner, &priv_desc);
@@ -115736,22 +115802,11 @@ static void flecs_script_ref_eval(
     if (s && s->script == &impl->pub && !rc) {
         flecs_script_update_dyn_observers(world, script, 0,
             &impl->run_refs, &s->dyn_observers, input);
-        s = ecs_is_alive(world, script)
-            ? ecs_ensure(world, script, EcsScript) : NULL;
     }
 
     ecs_vec_clear(&impl->run_refs);
-    if (s && s->error) {
-        ecs_os_free(s->error);
-        s->error = NULL;
-    }
-
-    if (s && rc) {
-        s->error = result.error;
-    } else {
-        ecs_os_free(result.error);
-    }
-
+    flecs_script_report_error(
+        world, script, impl->pub.name, rc != 0, result.error);
     flecs_script_runtime_release_call(pool, runtime);
     ecs_script_free(&impl->pub);
 }
@@ -117707,19 +117762,29 @@ static int flecs_script_template_instantiate_body(
 {
     ecs_assert(!ecs_is_stage(world), ECS_INTERNAL_ERROR, NULL);
 
-    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
-    if (rt->template_depth >= FLECS_SCRIPT_TEMPLATE_DEPTH_MAX) {
-        ecs_err("too many nested instantiations of template '%s', "
-            "is the template instantiating itself?",
-                ecs_get_name(world, template_entity));
-        rt->error = true;
-        return -1;
-    }
-
     int result = 0;
     if (!ecs_is_alive(world, instance) ||
         !ecs_has_id(world, instance, template_entity))
     {
+        goto observe;
+    }
+
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
+    EcsScriptTemplateRoot *root = ecs_get_mut_pair(
+        world, instance, EcsScriptTemplateRoot, template_entity);
+    bool propagate = (rt->eval_depth || rt->template_depth) &&
+        (!root || !root->state.initialized);
+    bool prev_error = rt->error, body_ran = false;
+    if (!propagate) {
+        rt->error = false;
+        flecs_log_capture_push(true);
+    }
+
+    if (rt->template_depth >= FLECS_SCRIPT_TEMPLATE_DEPTH_MAX) {
+        ecs_err("too many nested instantiations of template '%s', "
+            "is the template instantiating itself?",
+                ecs_get_name(world, template_entity));
+        result = -1;
         goto done;
     }
 
@@ -117742,7 +117807,7 @@ static int flecs_script_template_instantiate_body(
         goto done;
     }
 
-    EcsScriptTemplateRoot *root = ecs_ensure_pair(
+    root = ecs_ensure_pair(
         world, instance, EcsScriptTemplateRoot, template_entity);
     flecs_script_template_root_init(root, template);
     uint64_t run_input = root->state.initialized ? input : UINT64_MAX;
@@ -117756,7 +117821,7 @@ static int flecs_script_template_instantiate_body(
         flecs_script_template_root_tasks_free(root);
     }
 
-    *ran = true;
+    body_ran = true;
     root->evaluating = true;
     rt->template_depth ++;
     result = flecs_script_template_run(world, template_entity, template,
@@ -117769,20 +117834,34 @@ static int flecs_script_template_instantiate_body(
     }
 
 done:
+    *ran |= body_ran;
+    if (propagate) {
+        if (result) {
+            if (!rt->error_name && template->script->pub.name) {
+                rt->error_name = ecs_os_strdup(template->script->pub.name);
+            }
+
+            rt->error = true;
+        }
+    } else {
+        result = rt->error ? -1 : result;
+        rt->error = prev_error;
+        char *error = flecs_log_capture_pop();
+        if (body_ran || result) {
+            flecs_script_report_error(world, template_entity,
+                template->script->pub.name, result != 0, error);
+        } else {
+            ecs_os_free(error);
+        }
+    }
+
+observe:
     if (ecs_vec_count(&template->refs)) {
         EcsScript *s = ecs_get_mut(world, template_entity, EcsScript);
         if (!ecs_vec_count(&s->observers)) {
             flecs_script_observe_refs(world, template_entity,
                 &template->refs, &s->observers);
         }
-    }
-
-    if (result) {
-        if (!rt->error_name && template->script->pub.name) {
-            rt->error_name = ecs_os_strdup(template->script->pub.name);
-        }
-
-        rt->error = true;
     }
 
     return result;

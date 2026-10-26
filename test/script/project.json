@@ -3360,7 +3360,11 @@
                 "template_switch_keeps_shared_base_template_state",
                 "template_switch_keeps_tag_added_by_script",
                 "fini_w_instance_of_derived_template",
-                "template_update_reads_own_component"
+                "template_update_reads_own_component",
+                "template_reeval_error_stored_on_template",
+                "template_reeval_error_in_other_script_eval",
+                "template_first_instantiation_error_from_c",
+                "script_reeval_error_in_other_script_eval"
             ]
         }, {
             "id": "ConstVar",

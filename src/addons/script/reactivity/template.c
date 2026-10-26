@@ -1094,19 +1094,29 @@ static int flecs_script_template_instantiate_body(
 {
     ecs_assert(!ecs_is_stage(world), ECS_INTERNAL_ERROR, NULL);
 
-    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
-    if (rt->template_depth >= FLECS_SCRIPT_TEMPLATE_DEPTH_MAX) {
-        ecs_err("too many nested instantiations of template '%s', "
-            "is the template instantiating itself?",
-                ecs_get_name(world, template_entity));
-        rt->error = true;
-        return -1;
-    }
-
     int result = 0;
     if (!ecs_is_alive(world, instance) ||
         !ecs_has_id(world, instance, template_entity))
     {
+        goto observe;
+    }
+
+    ecs_script_runtime_t *rt = flecs_script_runtime_get(world);
+    EcsScriptTemplateRoot *root = ecs_get_mut_pair(
+        world, instance, EcsScriptTemplateRoot, template_entity);
+    bool propagate = (rt->eval_depth || rt->template_depth) &&
+        (!root || !root->state.initialized);
+    bool prev_error = rt->error, body_ran = false;
+    if (!propagate) {
+        rt->error = false;
+        flecs_log_capture_push(true);
+    }
+
+    if (rt->template_depth >= FLECS_SCRIPT_TEMPLATE_DEPTH_MAX) {
+        ecs_err("too many nested instantiations of template '%s', "
+            "is the template instantiating itself?",
+                ecs_get_name(world, template_entity));
+        result = -1;
         goto done;
     }
 
@@ -1129,7 +1139,7 @@ static int flecs_script_template_instantiate_body(
         goto done;
     }
 
-    EcsScriptTemplateRoot *root = ecs_ensure_pair(
+    root = ecs_ensure_pair(
         world, instance, EcsScriptTemplateRoot, template_entity);
     flecs_script_template_root_init(root, template);
     uint64_t run_input = root->state.initialized ? input : UINT64_MAX;
@@ -1143,7 +1153,7 @@ static int flecs_script_template_instantiate_body(
         flecs_script_template_root_tasks_free(root);
     }
 
-    *ran = true;
+    body_ran = true;
     root->evaluating = true;
     rt->template_depth ++;
     result = flecs_script_template_run(world, template_entity, template,
@@ -1156,20 +1166,34 @@ static int flecs_script_template_instantiate_body(
     }
 
 done:
+    *ran |= body_ran;
+    if (propagate) {
+        if (result) {
+            if (!rt->error_name && template->script->pub.name) {
+                rt->error_name = ecs_os_strdup(template->script->pub.name);
+            }
+
+            rt->error = true;
+        }
+    } else {
+        result = rt->error ? -1 : result;
+        rt->error = prev_error;
+        char *error = flecs_log_capture_pop();
+        if (body_ran || result) {
+            flecs_script_report_error(world, template_entity,
+                template->script->pub.name, result != 0, error);
+        } else {
+            ecs_os_free(error);
+        }
+    }
+
+observe:
     if (ecs_vec_count(&template->refs)) {
         EcsScript *s = ecs_get_mut(world, template_entity, EcsScript);
         if (!ecs_vec_count(&s->observers)) {
             flecs_script_observe_refs(world, template_entity,
                 &template->refs, &s->observers);
         }
-    }
-
-    if (result) {
-        if (!rt->error_name && template->script->pub.name) {
-            rt->error_name = ecs_os_strdup(template->script->pub.name);
-        }
-
-        rt->error = true;
     }
 
     return result;

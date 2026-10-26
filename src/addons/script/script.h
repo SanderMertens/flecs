@@ -190,6 +190,13 @@ int flecs_script_update(
     const char *code,
     ecs_script_runtime_t *eval_runtime);
 
+void flecs_script_report_error(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *name,
+    bool failed,
+    char *error);
+
 ecs_script_scope_t* flecs_script_scope_new(
     ecs_parser_t *parser);
 
