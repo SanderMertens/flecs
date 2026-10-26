@@ -2128,6 +2128,21 @@ static int flecs_script_template_inherit(
         v, template, node, base_template, true);
 }
 
+bool flecs_script_template_is_mut_type(
+    const ecs_world_t *world,
+    ecs_id_t component)
+{
+    if (!component || ECS_IS_PAIR(component) ||
+        !ecs_is_alive(world, component))
+    {
+        return false;
+    }
+
+    const ecs_script_template_t *template = flecs_script_template_get(
+        world, ecs_get_parent(world, component));
+    return template && template->muts.type == component;
+}
+
 bool flecs_script_template_interface_accepts(
     const ecs_world_t *world,
     ecs_entity_t value,

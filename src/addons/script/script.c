@@ -446,7 +446,9 @@ static void flecs_script_update_observers(
     ecs_script_ref_t *refs = ecs_vec_first(script_refs);
     int32_t i;
     for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
-        if (refs[i].component == ecs_id(EcsScriptMutVar)) {
+        if (refs[i].component == ecs_id(EcsScriptMutVar) ||
+            flecs_script_template_is_mut_type(world, refs[i].component))
+        {
             continue;
         }
 

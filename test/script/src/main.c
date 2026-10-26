@@ -1086,6 +1086,7 @@ void AsyncBlock_error_parse_async_missing_scope(void);
 void AsyncBlock_error_parse_while_missing_scope(void);
 void AsyncBlock_delete_script_from_await_callback(void);
 void AsyncBlock_update_script_from_await_callback(void);
+void AsyncBlock_script_reads_mut_assigned_by_template_block(void);
 
 // Testsuite 'Event'
 void Event_setup(void);
@@ -8230,6 +8231,10 @@ bake_test_case AsyncBlock_testcases[] = {
     {
         "update_script_from_await_callback",
         AsyncBlock_update_script_from_await_callback
+    },
+    {
+        "script_reads_mut_assigned_by_template_block",
+        AsyncBlock_script_reads_mut_assigned_by_template_block
     }
 };
 
@@ -19636,7 +19641,7 @@ static bake_test_suite suites[] = {
         "AsyncBlock",
         AsyncBlock_setup,
         NULL,
-        87,
+        88,
         AsyncBlock_testcases,
         1,
         AsyncBlock_params

@@ -471,6 +471,7 @@ void flecs_script_update_dyn_observers(
         }
 
         if (new_refs[i].component != ecs_id(EcsScriptMutVar) &&
+            !flecs_script_template_is_mut_type(world, new_refs[i].component) &&
             ecs_has_pair(world, new_refs[i].entity, ecs_id(EcsScript), script))
         {
             continue;
