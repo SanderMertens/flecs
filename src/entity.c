@@ -120,16 +120,7 @@ ecs_entity_t flecs_new_id(
     ecs_assert(!(unsafe_world->flags & EcsWorldMultiThreaded),
         ECS_INVALID_OPERATION, "cannot create entities in multithreaded mode");
 
-    ecs_entity_t entity = flecs_entities_new_id(unsafe_world);
-
-#ifdef FLECS_ENTITY_RANGES
-    ecs_assert(!ecs_eis(unsafe_world)->active_range ||
-        !ecs_eis(unsafe_world)->active_range->max ||
-        ecs_entity_t_lo(entity) <= ecs_eis(unsafe_world)->active_range->max,
-        ECS_OUT_OF_RANGE, NULL);
-#endif
-
-    return entity;
+    return flecs_entities_new_id(unsafe_world);
 }
 
 static ecs_record_t* flecs_new_entity(

@@ -2979,6 +2979,16 @@ void World_range_delete_recycled_to_correct_range(void);
 void World_range_create_small_range_from_1(void);
 void World_range_create_large_range_from_1(void);
 void World_range_prefab_spawn_deferred_after_range_switch(void);
+void World_range_new_from_range(void);
+void World_range_new_from_range_active(void);
+void World_range_new_from_range_recycled(void);
+void World_range_new_from_range_recycled_after_switch(void);
+void World_range_new_from_range_delete(void);
+void World_range_new_from_range_then_set(void);
+void World_range_new_from_range_deferred(void);
+void World_range_new_from_range_exhausted(void);
+void World_range_new_from_range_unknown_range(void);
+void World_range_new_from_range_null(void);
 void World_phases(void);
 void World_phases_w_merging(void);
 void World_phases_match_in_create(void);
@@ -15340,6 +15350,46 @@ bake_test_case World_testcases[] = {
         World_range_prefab_spawn_deferred_after_range_switch
     },
     {
+        "range_new_from_range",
+        World_range_new_from_range
+    },
+    {
+        "range_new_from_range_active",
+        World_range_new_from_range_active
+    },
+    {
+        "range_new_from_range_recycled",
+        World_range_new_from_range_recycled
+    },
+    {
+        "range_new_from_range_recycled_after_switch",
+        World_range_new_from_range_recycled_after_switch
+    },
+    {
+        "range_new_from_range_delete",
+        World_range_new_from_range_delete
+    },
+    {
+        "range_new_from_range_then_set",
+        World_range_new_from_range_then_set
+    },
+    {
+        "range_new_from_range_deferred",
+        World_range_new_from_range_deferred
+    },
+    {
+        "range_new_from_range_exhausted",
+        World_range_new_from_range_exhausted
+    },
+    {
+        "range_new_from_range_unknown_range",
+        World_range_new_from_range_unknown_range
+    },
+    {
+        "range_new_from_range_null",
+        World_range_new_from_range_null
+    },
+    {
         "phases",
         World_phases
     },
@@ -18338,7 +18388,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        183,
+        193,
         World_testcases
     },
     {
