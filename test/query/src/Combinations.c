@@ -18,7 +18,7 @@ void Combinations_setup(void) {
     const char *on_instantiate_param = test_param("on_instantiate");
     if (on_instantiate_param) {
         if (!strcmp(on_instantiate_param, "override")) {
-            on_instantiate = EcsOverride;
+            on_instantiate = EcsCopy;
         } else if (!strcmp(on_instantiate_param, "inherit")) {
             on_instantiate = EcsInherit;
         } else if (!strcmp(on_instantiate_param, "dont_inherit")) {

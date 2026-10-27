@@ -4409,7 +4409,7 @@ void Prefab_always_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsCopy);
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
@@ -4444,7 +4444,7 @@ void Prefab_always_override_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
-    ecs_add_pair(world, RelA, EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, RelA, EcsOnInstantiate, EcsCopy);
     ECS_TAG(world, RelB);
     ecs_add_pair(world, RelB, EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Position);
@@ -6861,7 +6861,7 @@ void Prefab_add_override_trait_component_to_prefab_after_instantiate(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsCopy);
 
     ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);

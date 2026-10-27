@@ -200,8 +200,8 @@ static const flecs::entity_t CanToggle = EcsCanToggle;
 /** OnInstantiate trait. */
 static const flecs::entity_t OnInstantiate = EcsOnInstantiate;
 #ifdef FLECS_PREFAB
-/** Override trait. */
-static const flecs::entity_t Override = EcsOverride;
+/** Copy trait. */
+static const flecs::entity_t Copy = EcsCopy;
 /** Inherit trait. */
 static const flecs::entity_t Inherit = EcsInherit;
 #endif

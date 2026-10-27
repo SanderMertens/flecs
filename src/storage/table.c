@@ -301,8 +301,8 @@ static void flecs_table_init_flags(
 #ifdef FLECS_PREFAB
             if (inherit_kind == EcsInherit) {
                 table->trait_flags |= EcsIdOnInstantiateInherit;
-            } else if (inherit_kind == EcsOverride) {
-                table->trait_flags |= EcsIdOnInstantiateOverride;
+            } else if (inherit_kind == EcsCopy) {
+                table->trait_flags |= EcsIdOnInstantiateCopy;
             }
 #endif
             if (inherit_kind == EcsDontInherit) {
@@ -829,7 +829,7 @@ void flecs_table_init(
             table->flags |= cr->flags & EcsIdEventMask;
 
 #ifdef FLECS_PREFAB
-            if (ECS_ID_ON_INSTANTIATE(cr->flags) == EcsOverride) {
+            if (ECS_ID_ON_INSTANTIATE(cr->flags) == EcsCopy) {
                 table->flags |= EcsTableHasOverrides;
             }
 #endif

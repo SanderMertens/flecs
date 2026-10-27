@@ -1325,8 +1325,8 @@ static void flecs_rest_append_component_traits(
         ecs_strbuf_list_appendlit(reply, "\"(OnDeleteTarget,Panic)\"");
     }
 
-    if (flags & EcsIdOnInstantiateOverride) {
-        ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,Override)\"");
+    if (flags & EcsIdOnInstantiateCopy) {
+        ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,Copy)\"");
     }
 
     if (flags & EcsIdOnInstantiateInherit) {

@@ -232,7 +232,7 @@ struct type_impl {
                 flecs::on_instantiate_trait<T>::value;
 #ifdef FLECS_PREFAB
             if constexpr (policy == flecs::on_instantiate::override) {
-                ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Override);
+                ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Copy);
             }
             if constexpr (policy == flecs::on_instantiate::inherit) {
                 ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Inherit);

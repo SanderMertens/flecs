@@ -64,7 +64,7 @@ void ComponentTraits_on_instantiate_override_explicit(void) {
     flecs::world world;
 
     auto c = world.component<TraitOnInstantiateOverride>();
-    test_assert(c.has(flecs::OnInstantiate, flecs::Override));
+    test_assert(c.has(flecs::OnInstantiate, flecs::Copy));
     test_assert(!c.has(flecs::DontFragment));
 }
 
@@ -75,7 +75,7 @@ void ComponentTraits_on_instantiate_override_implicit(void) {
     test_assert(e.has<TraitOnInstantiateOverride>());
 
     flecs::entity c(world, world.id<TraitOnInstantiateOverride>());
-    test_assert(c.has(flecs::OnInstantiate, flecs::Override));
+    test_assert(c.has(flecs::OnInstantiate, flecs::Copy));
     test_assert(!c.has(flecs::DontFragment));
 }
 
