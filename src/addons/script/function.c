@@ -580,6 +580,31 @@ ecs_entity_t ecs_method_init(
     return result;
 }
 
+static int flecs_script_function_check_args(
+    const struct ecs_script_function_t *f,
+    int32_t argc,
+    const ecs_value_t *argv)
+{
+    (void)argv;
+    ecs_check(argc >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(argc == ecs_vec_count(&f->params), ECS_INVALID_PARAMETER,
+        "expected %d arguments, got %d", ecs_vec_count(&f->params), argc);
+    ecs_check(!argc || argv != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
+    (void)params;
+    int32_t i;
+    for (i = 0; i < argc; i ++) {
+        ecs_check(argv[i].type == params[i].type, ECS_INVALID_PARAMETER,
+            "type of argument %d does not match parameter type", i);
+        ecs_check(argv[i].ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 static int flecs_script_function_call(
     ecs_world_t *world,
     ecs_entity_t function,
@@ -591,21 +616,15 @@ static int flecs_script_function_call(
 {
     ecs_check(f != NULL, ECS_INVALID_PARAMETER,
         "entity is not a script function or method");
+#ifdef FLECS_SCRIPT_ASYNC
+    ecs_check(f->async_callback == NULL, ECS_INVALID_OPERATION,
+        "async functions must be called with ecs_async_function_call()");
+#endif
     ecs_check(f->callback != NULL, ECS_UNSUPPORTED,
         "vector functions cannot be called directly");
-    ecs_check(argc >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(argc == ecs_vec_count(&f->params), ECS_INVALID_PARAMETER,
-        "expected %d arguments, got %d", ecs_vec_count(&f->params), argc);
-    ecs_check(!argc || argv != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
-    (void)params;
-    int32_t i;
-    for (i = 0; i < argc; i ++) {
-        ecs_check(argv[i].type == params[i].type, ECS_INVALID_PARAMETER,
-            "type of argument %d does not match parameter type", i);
-        ecs_check(argv[i].ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (flecs_script_function_check_args(f, argc, argv)) {
+        goto error;
     }
 
     if (instance) {
@@ -708,6 +727,41 @@ int ecs_method_call(
 error:
     return -1;
 }
+
+#ifdef FLECS_SCRIPT_ASYNC
+ecs_script_future_t* ecs_async_function_call(
+    ecs_world_t *world,
+    ecs_entity_t function,
+    int32_t argc,
+    const ecs_value_t *argv)
+{
+    ecs_world_t *real_world = world;
+    flecs_stage_from_world(&real_world);
+    ecs_check(function != 0, ECS_INVALID_PARAMETER, NULL);
+
+    const EcsScriptFunction *f = ecs_get(
+        real_world, function, EcsScriptFunction);
+    ecs_check(f != NULL, ECS_INVALID_PARAMETER,
+        "entity is not a script function");
+    ecs_check(f->async_callback != NULL, ECS_INVALID_OPERATION,
+        "function is not async, use ecs_function_call()");
+    if (flecs_script_function_check_args(f, argc, argv)) {
+        goto error;
+    }
+
+    ecs_function_calldata_t calldata = {
+        .function = function,
+        .async_callback = f->async_callback,
+        .async_cancel = f->async_cancel,
+        .ctx = f->ctx
+    };
+
+    return flecs_script_future_launch(
+        world, &calldata, f->return_type, 0, argc, argv);
+error:
+    return NULL;
+}
+#endif
 
 void flecs_function_import(
     ecs_world_t *world)

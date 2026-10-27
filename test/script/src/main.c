@@ -1003,6 +1003,19 @@ void Await_deep_scope_resume(void);
 void Await_deep_scope_cancel(void);
 void Await_many_live_strings_resume_and_cancel(void);
 void Await_eval_after_task_removes_stale_components(void);
+void Await_call_async_immediate_resolve(void);
+void Await_call_async_deferred_resolve(void);
+void Await_call_async_reject(void);
+void Await_call_async_reject_id(void);
+void Await_call_async_cancel(void);
+void Await_call_async_cancel_after_resolve(void);
+void Await_call_async_release_before_resolve(void);
+void Await_call_async_function_ctx(void);
+void Await_call_async_w_sync_function(void);
+void Await_call_sync_w_async_function(void);
+void Await_call_async_invalid_arg_count(void);
+void Await_call_async_invalid_arg_type(void);
+void Await_await_future_status_resolved(void);
 
 // Testsuite 'AsyncBlock'
 void AsyncBlock_setup(void);
@@ -7952,6 +7965,58 @@ bake_test_case Await_testcases[] = {
     {
         "eval_after_task_removes_stale_components",
         Await_eval_after_task_removes_stale_components
+    },
+    {
+        "call_async_immediate_resolve",
+        Await_call_async_immediate_resolve
+    },
+    {
+        "call_async_deferred_resolve",
+        Await_call_async_deferred_resolve
+    },
+    {
+        "call_async_reject",
+        Await_call_async_reject
+    },
+    {
+        "call_async_reject_id",
+        Await_call_async_reject_id
+    },
+    {
+        "call_async_cancel",
+        Await_call_async_cancel
+    },
+    {
+        "call_async_cancel_after_resolve",
+        Await_call_async_cancel_after_resolve
+    },
+    {
+        "call_async_release_before_resolve",
+        Await_call_async_release_before_resolve
+    },
+    {
+        "call_async_function_ctx",
+        Await_call_async_function_ctx
+    },
+    {
+        "call_async_w_sync_function",
+        Await_call_async_w_sync_function
+    },
+    {
+        "call_sync_w_async_function",
+        Await_call_sync_w_async_function
+    },
+    {
+        "call_async_invalid_arg_count",
+        Await_call_async_invalid_arg_count
+    },
+    {
+        "call_async_invalid_arg_type",
+        Await_call_async_invalid_arg_type
+    },
+    {
+        "await_future_status_resolved",
+        Await_await_future_status_resolved
     }
 };
 
@@ -19852,7 +19917,7 @@ static bake_test_suite suites[] = {
         "Await",
         Await_setup,
         NULL,
-        64,
+        77,
         Await_testcases,
         1,
         Await_params

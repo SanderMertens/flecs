@@ -182,6 +182,34 @@ static void Await_store_with_ctx_callback(
         future, &await_future_ctx, Await_future_ctx_free);
 }
 
+static void Await_sum_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_script_future_t *future)
+{
+    (void)ctx;
+
+    test_int(argc, 2);
+    ecs_value_t value = ecs_value(ecs_i32_t, {
+        *(int32_t*)argv[0].ptr + *(int32_t*)argv[1].ptr });
+    ecs_script_future_resolve(future, &value);
+    ecs_script_future_release(future);
+    await_future_count ++;
+}
+
+static void Await_sync_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    (void)argv;
+    *(int32_t*)result->ptr = 10;
+}
+
 void Await_task_new_w_deleted_entity(void) {
     install_test_abort();
 
@@ -608,7 +636,7 @@ void Await_cancel(void) {
 
     ecs_script_task_free(task);
     test_int(await_cancel_count, 1);
-    test_bool(ecs_script_future_is_cancelled(await_futures[0]), true);
+    test_int(ecs_script_future_status(await_futures[0]), EcsScriptFutureCancelled);
     ecs_script_future_release(await_futures[0]);
 
     ecs_script_free(script);
@@ -2619,7 +2647,7 @@ void Await_cancel_nested_frames(void) {
 
     ecs_script_task_cancel(task);
     test_int(await_cancel_count, 1);
-    test_bool(ecs_script_future_is_cancelled(await_futures[0]), true);
+    test_int(ecs_script_future_status(await_futures[0]), EcsScriptFutureCancelled);
     test_int(ecs_script_task_resume(task, NULL),
         EcsScriptTaskCancelled);
     ecs_script_future_release(await_futures[0]);
@@ -3826,7 +3854,7 @@ void Await_cancel_task_from_async_callback(void) {
     test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskCancelled);
     test_int(await_future_count, 1);
     test_int(await_cancel_count, 1);
-    test_bool(ecs_script_future_is_cancelled(await_futures[0]), true);
+    test_int(ecs_script_future_status(await_futures[0]), EcsScriptFutureCancelled);
 
     test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskCancelled);
     test_int(await_future_count, 1);
@@ -4108,7 +4136,7 @@ void Await_deep_scope_cancel(void) {
     test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskPending);
     ecs_script_task_cancel(task);
     test_int(await_cancel_count, 1);
-    test_assert(ecs_script_future_is_cancelled(await_futures[0]));
+    test_int(ecs_script_future_status(await_futures[0]), EcsScriptFutureCancelled);
     ecs_script_future_release(await_futures[0]);
     ecs_script_task_free(task);
     ecs_script_free(script);
@@ -4161,7 +4189,7 @@ void Await_many_live_strings_resume_and_cancel(void) {
         if (!pass) {
             ecs_script_task_cancel(task);
             test_int(await_cancel_count, 1);
-            test_assert(ecs_script_future_is_cancelled(await_futures[pass]));
+            test_int(ecs_script_future_status(await_futures[pass]), EcsScriptFutureCancelled);
             test_uint(ecs_lookup(world, "value_0"), 0);
         } else {
             ecs_value_t value = ecs_value(ecs_i32_t, {42});
@@ -4286,6 +4314,403 @@ void Await_eval_after_task_removes_stale_components(void) {
     test_assert(!ecs_has(world, e, Position));
     test_assert(ecs_lookup(world, "f") == 0);
 
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Await_call_async_immediate_resolve(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+
+    ecs_entity_t sum = ecs_async_function(world, {
+        .name = "sum",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            {"a", ecs_id(ecs_i32_t)},
+            {"b", ecs_id(ecs_i32_t)}
+        },
+        .callback = Await_sum_callback
+    });
+
+    int32_t a = 10, b = 20;
+    ecs_value_t argv[] = {
+        { .type = ecs_id(ecs_i32_t), .ptr = &a },
+        { .type = ecs_id(ecs_i32_t), .ptr = &b }
+    };
+
+    ecs_script_future_t *future = ecs_async_function_call(world, sum, 2, argv);
+    test_assert(future != NULL);
+    test_int(await_future_count, 1);
+    test_int(ecs_script_future_status(future), EcsScriptFutureResolved);
+
+    const ecs_value_t *value = ecs_script_future_get_value(future);
+    test_assert(value != NULL);
+    test_uint(value->type, ecs_id(ecs_i32_t));
+    test_int(*(int32_t*)value->ptr, 30);
+    test_assert(ecs_script_future_get_error(future) == NULL);
+    test_uint(ecs_script_future_get_error_id(future), 0);
+
+    ecs_script_future_release(future);
+    ecs_fini(world);
+}
+
+void Await_call_async_deferred_resolve(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+
+    ecs_entity_t fetch = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"id", ecs_id(ecs_i32_t)}},
+        .callback = Await_store_callback
+    });
+
+    int32_t id = 5;
+    ecs_value_t arg = { .type = ecs_id(ecs_i32_t), .ptr = &id };
+    ecs_script_future_t *future = ecs_async_function_call(world, fetch, 1, &arg);
+    test_assert(future != NULL);
+    test_int(await_future_count, 1);
+    test_assert(await_futures[0] == future);
+    test_int(await_args[0], 5);
+    test_int(ecs_script_future_status(future), EcsScriptFuturePending);
+    test_assert(ecs_script_future_get_value(future) == NULL);
+    test_assert(ecs_script_future_get_error(future) == NULL);
+
+    ecs_value_t value = ecs_value(ecs_i32_t, {50});
+    test_int(ecs_script_future_resolve(future, &value), 0);
+    ecs_script_future_release(await_futures[0]);
+    test_int(ecs_script_future_status(future), EcsScriptFutureResolved);
+
+    const ecs_value_t *result = ecs_script_future_get_value(future);
+    test_assert(result != NULL);
+    test_int(*(int32_t*)result->ptr, 50);
+
+    test_assert(ecs_script_future_resolve(future, &value) != 0);
+
+    ecs_script_future_release(future);
+    ecs_fini(world);
+}
+
+void Await_call_async_reject(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+
+    ecs_entity_t fetch = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_script_future_t *future = ecs_async_function_call(world, fetch, 0, NULL);
+    test_assert(future != NULL);
+    test_int(await_future_count, 1);
+
+    test_int(ecs_script_future_reject(future, "failed"), 0);
+    ecs_script_future_release(await_futures[0]);
+    test_int(ecs_script_future_status(future), EcsScriptFutureRejected);
+    test_assert(ecs_script_future_get_value(future) == NULL);
+    test_str(ecs_script_future_get_error(future), "failed");
+    test_uint(ecs_script_future_get_error_id(future), 0);
+
+    ecs_script_future_release(future);
+    ecs_fini(world);
+}
+
+void Await_call_async_reject_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+
+    ecs_entity_t fetch = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_entity_t timeout = ecs_entity(world, { .name = "Timeout" });
+
+    ecs_script_future_t *future = ecs_async_function_call(world, fetch, 0, NULL);
+    test_assert(future != NULL);
+
+    test_int(ecs_script_future_reject_id(future, timeout, "timed out"), 0);
+    ecs_script_future_release(await_futures[0]);
+    test_int(ecs_script_future_status(future), EcsScriptFutureRejected);
+    test_str(ecs_script_future_get_error(future), "timed out");
+    test_uint(ecs_script_future_get_error_id(future), timeout);
+
+    ecs_script_future_release(future);
+    ecs_fini(world);
+}
+
+void Await_call_async_cancel(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+
+    ecs_entity_t fetch = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback,
+        .cancel = Await_cancel_callback
+    });
+
+    ecs_script_future_t *future = ecs_async_function_call(world, fetch, 0, NULL);
+    test_assert(future != NULL);
+    test_int(ecs_script_future_status(future), EcsScriptFuturePending);
+
+    ecs_script_future_cancel(future);
+    test_int(await_cancel_count, 1);
+    test_int(ecs_script_future_status(future), EcsScriptFutureCancelled);
+    test_assert(ecs_script_future_get_value(future) == NULL);
+    test_assert(ecs_script_future_get_error(future) == NULL);
+
+    ecs_script_future_cancel(future);
+    test_int(await_cancel_count, 1);
+
+    ecs_value_t value = ecs_value(ecs_i32_t, {10});
+    test_assert(ecs_script_future_resolve(future, &value) != 0);
+    test_assert(ecs_script_future_reject(future, "failed") != 0);
+    ecs_script_future_release(await_futures[0]);
+
+    ecs_script_future_release(future);
+    ecs_fini(world);
+}
+
+void Await_call_async_cancel_after_resolve(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+
+    ecs_entity_t fetch = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_immediate_callback,
+        .cancel = Await_cancel_callback
+    });
+
+    ecs_script_future_t *future = ecs_async_function_call(world, fetch, 0, NULL);
+    test_assert(future != NULL);
+    test_int(ecs_script_future_status(future), EcsScriptFutureResolved);
+
+    ecs_script_future_cancel(future);
+    test_int(await_cancel_count, 0);
+    test_int(ecs_script_future_status(future), EcsScriptFutureResolved);
+
+    const ecs_value_t *value = ecs_script_future_get_value(future);
+    test_assert(value != NULL);
+    test_int(*(int32_t*)value->ptr, 10);
+
+    ecs_script_future_release(future);
+    ecs_fini(world);
+}
+
+void Await_call_async_release_before_resolve(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+
+    ecs_entity_t fetch = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_script_future_t *future = ecs_async_function_call(world, fetch, 0, NULL);
+    test_assert(future != NULL);
+    ecs_script_future_release(future);
+
+    test_int(ecs_script_future_status(await_futures[0]), EcsScriptFuturePending);
+    ecs_value_t value = ecs_value(ecs_i32_t, {10});
+    test_int(ecs_script_future_resolve(await_futures[0], &value), 0);
+    ecs_script_future_release(await_futures[0]);
+
+    ecs_fini(world);
+}
+
+void Await_call_async_function_ctx(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+
+    ecs_entity_t fetch = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            {"e", ecs_id(ecs_entity_t)},
+            {"v", ecs_id(ecs_i32_t)}
+        },
+        .callback = Await_record_callback
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    int32_t v = 7;
+    ecs_value_t argv[] = {
+        { .type = ecs_id(ecs_entity_t), .ptr = &e },
+        { .type = ecs_id(ecs_i32_t), .ptr = &v }
+    };
+
+    ecs_script_future_t *future = ecs_async_function_call(world, fetch, 2, argv);
+    test_assert(future != NULL);
+    test_int(await_future_count, 1);
+    test_uint(await_functions[0], fetch);
+    test_uint(await_entities[0], 0);
+    test_uint(await_entity_args[0][0], e);
+    test_int(await_i32_args[0][1], 7);
+
+    ecs_script_future_cancel(future);
+    ecs_script_future_release(await_futures[0]);
+    ecs_script_future_release(future);
+    ecs_fini(world);
+}
+
+void Await_call_async_w_sync_function(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t fetch = ecs_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_sync_callback
+    });
+
+    test_expect_abort();
+    ecs_async_function_call(world, fetch, 0, NULL);
+}
+
+void Await_call_sync_w_async_function(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t fetch = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_value_t result = {0};
+    test_expect_abort();
+    ecs_function_call(world, fetch, 0, NULL, &result);
+}
+
+void Await_call_async_invalid_arg_count(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t fetch = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"id", ecs_id(ecs_i32_t)}},
+        .callback = Await_store_callback
+    });
+
+    test_expect_abort();
+    ecs_async_function_call(world, fetch, 0, NULL);
+}
+
+void Await_call_async_invalid_arg_type(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t fetch = ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{"id", ecs_id(ecs_i32_t)}},
+        .callback = Await_store_callback
+    });
+
+    int64_t id = 5;
+    ecs_value_t arg = { .type = ecs_id(ecs_i64_t), .ptr = &id };
+
+    test_expect_abort();
+    ecs_async_function_call(world, fetch, 1, &arg);
+}
+
+void Await_await_future_status_resolved(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(
+        world, NULL, "await fetch()", &ir_desc, NULL);
+    test_assert(script != NULL);
+
+    ecs_script_task_t *task = ecs_script_task_new(script, NULL);
+    test_assert(task != NULL);
+    test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskPending);
+    test_int(await_future_count, 1);
+    test_int(ecs_script_future_status(await_futures[0]),
+        EcsScriptFuturePending);
+
+    ecs_script_future_t *future = ecs_script_future_retain(await_futures[0]);
+    ecs_value_t value = ecs_value(ecs_i32_t, {10});
+    test_int(ecs_script_future_resolve(await_futures[0], &value), 0);
+    ecs_script_future_release(await_futures[0]);
+    test_int(ecs_script_future_status(future), EcsScriptFutureResolved);
+    test_int(*(int32_t*)ecs_script_future_get_value(future)->ptr, 10);
+
+    test_int(ecs_script_task_resume(task, NULL), EcsScriptTaskDone);
+    test_int(*(int32_t*)ecs_script_future_get_value(future)->ptr, 10);
+    ecs_script_future_release(future);
+
+    ecs_script_task_free(task);
     ecs_script_free(script);
     ecs_fini(world);
 }
