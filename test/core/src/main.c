@@ -1382,6 +1382,11 @@ void Reference_recycled_table_twice(void);
 void Reference_ref_after_shrink(void);
 void Reference_ref_after_shrink_2(void);
 void Reference_ref_after_shrink_w_freed_pages(void);
+void Reference_ref_from_ptr(void);
+void Reference_ref_from_ptr_after_add(void);
+void Reference_ref_from_ptr_after_delete(void);
+void Reference_ref_from_ptr_inherited(void);
+void Reference_ref_from_ptr_invalid_ptr(void);
 
 // Testsuite 'Delete'
 void Delete_setup(void);
@@ -9069,6 +9074,26 @@ bake_test_case Reference_testcases[] = {
     {
         "ref_after_shrink_w_freed_pages",
         Reference_ref_after_shrink_w_freed_pages
+    },
+    {
+        "ref_from_ptr",
+        Reference_ref_from_ptr
+    },
+    {
+        "ref_from_ptr_after_add",
+        Reference_ref_from_ptr_after_add
+    },
+    {
+        "ref_from_ptr_after_delete",
+        Reference_ref_from_ptr_after_delete
+    },
+    {
+        "ref_from_ptr_inherited",
+        Reference_ref_from_ptr_inherited
+    },
+    {
+        "ref_from_ptr_invalid_ptr",
+        Reference_ref_from_ptr_invalid_ptr
     }
 };
 
@@ -18269,7 +18294,7 @@ static bake_test_suite suites[] = {
         "Reference",
         Reference_setup,
         NULL,
-        26,
+        31,
         Reference_testcases
     },
     {
