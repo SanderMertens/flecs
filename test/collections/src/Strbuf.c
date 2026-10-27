@@ -577,3 +577,70 @@ void Strbuf_append_flt_2_pow_63(void) {
     test_str(str, "9.22337203e18");
     ecs_os_free(str);
 }
+
+/* Allocations of at least this size fail, so that a string buffer cannot
+ * grow out of its small string. Smaller ones (such as the abort message) go
+ * to the default allocator. */
+#define STRBUF_FAIL_SIZE (ECS_STRBUF_SMALL_STRING_SIZE * 2)
+
+static ecs_os_api_malloc_t strbuf_default_malloc;
+static ecs_os_api_realloc_t strbuf_default_realloc;
+static char strbuf_fake_content[1];
+
+static void* strbuf_test_malloc(ecs_size_t size) {
+    if (size >= STRBUF_FAIL_SIZE) {
+        return NULL;
+    }
+    return strbuf_default_malloc(size);
+}
+
+static void* strbuf_test_realloc(void *ptr, ecs_size_t size) {
+    if (ptr == strbuf_fake_content) {
+        /* The requested size must not have wrapped around */
+        test_int(size, INT32_MAX);
+        return NULL;
+    }
+    if (size >= STRBUF_FAIL_SIZE) {
+        return NULL;
+    }
+    return strbuf_default_realloc(ptr, size);
+}
+
+static void strbuf_install_failing_alloc(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.abort_ = test_abort;
+    strbuf_default_malloc = os_api.malloc_;
+    strbuf_default_realloc = os_api.realloc_;
+    os_api.malloc_ = strbuf_test_malloc;
+    os_api.realloc_ = strbuf_test_realloc;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+}
+
+void Strbuf_grow_alloc_fails(void) {
+    strbuf_install_failing_alloc();
+
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+    char str[ECS_STRBUF_SMALL_STRING_SIZE * 2];
+    ecs_os_memset(str, 'a', (int)sizeof(str) - 1);
+    str[sizeof(str) - 1] = '\0';
+
+    /* Growing out of the small string fails: abort instead of writing to a
+     * NULL buffer. */
+    test_expect_abort();
+    ecs_strbuf_appendstr(&b, str);
+}
+
+void Strbuf_grow_past_1gb(void) {
+    strbuf_install_failing_alloc();
+
+    /* A buffer of 1GB that is full. Doubling its size wraps an int32_t. */
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+    b.content = strbuf_fake_content;
+    b.size = 1 << 30;
+    b.length = b.size;
+
+    test_expect_abort();
+    ecs_strbuf_appendch(&b, 'a');
+}

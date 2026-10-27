@@ -108,6 +108,8 @@ void Strbuf_append_nan_delim(void);
 void Strbuf_append_inf_delim(void);
 void Strbuf_append_int64_min(void);
 void Strbuf_append_flt_2_pow_63(void);
+void Strbuf_grow_alloc_fails(void);
+void Strbuf_grow_past_1gb(void);
 
 // Testsuite 'Allocator'
 void Allocator_setup(void);
@@ -492,6 +494,14 @@ bake_test_case Strbuf_testcases[] = {
     {
         "append_flt_2_pow_63",
         Strbuf_append_flt_2_pow_63
+    },
+    {
+        "grow_alloc_fails",
+        Strbuf_grow_alloc_fails
+    },
+    {
+        "grow_past_1gb",
+        Strbuf_grow_past_1gb
     }
 };
 
@@ -513,6 +523,7 @@ bake_test_case Vec_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "Map",
@@ -532,7 +543,7 @@ static bake_test_suite suites[] = {
         "Strbuf",
         Strbuf_setup,
         NULL,
-        38,
+        40,
         Strbuf_testcases
     },
     {
