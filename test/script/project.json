@@ -993,6 +993,7 @@
                 "await_export_mut",
                 "interleaved_tasks",
                 "await_method_receiver",
+                "await_async_method_init",
                 "task_component_added_on_task_new",
                 "task_component_not_added_without_entity",
                 "task_component_two_tasks",
@@ -1155,12 +1156,19 @@
                 "enter_leave_children_listen",
                 "enter_leave_while_dragging",
                 "leave_deleted_hover_target",
-                "returns_true",
-                "no_propagation_without_host",
                 "propagation_translates_coordinates",
                 "propagation_keeps_deltas",
                 "propagation_press_once_per_level",
-                "drag_not_propagated_to_unrelated_target"
+                "drag_not_propagated_to_unrelated_target",
+                "propagation_screen_coords_without_to_local",
+                "stop_propagation_press",
+                "stop_propagation_same_level",
+                "stop_propagation_once",
+                "stop_propagation_result",
+                "stop_propagation_key",
+                "stop_propagation_keeps_enter",
+                "stop_propagation_stale_event",
+                "stop_propagation_enter_event"
             ]
         }, {
             "id": "TryCatch",

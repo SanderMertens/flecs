@@ -356,7 +356,7 @@ FLECS_API
 void* ecs_script_future_get_ctx(
     const ecs_script_future_t *future);
 
-/** Used with ecs_async_function_init(). */
+/** Used with ecs_async_function_init() and ecs_async_method_init(). */
 typedef struct ecs_async_function_desc_t {
     /** Function name. */
     const char *name;
@@ -403,6 +403,22 @@ ecs_entity_t ecs_async_function_init(
 
 #define ecs_async_function(world, ...)\
     ecs_async_function_init(world, &(ecs_async_function_desc_t)__VA_ARGS__)
+
+/** Create new async method.
+ * Like ecs_async_function_init(), but callable on instances of the type set as
+ * parent. The callback receives the instance as argv[0].
+ *
+ * @param world The world.
+ * @param desc Async method init parameters.
+ * @return The method, or 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_async_method_init(
+    ecs_world_t *world,
+    const ecs_async_function_desc_t *desc);
+
+#define ecs_async_method(world, ...)\
+    ecs_async_method_init(world, &(ecs_async_function_desc_t)__VA_ARGS__)
 
 #ifdef __cplusplus
 }

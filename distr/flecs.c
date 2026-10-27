@@ -68335,9 +68335,10 @@ ecs_entity_t ecs_function_init(
 }
 
 #ifdef FLECS_SCRIPT_ASYNC
-ecs_entity_t ecs_async_function_init(
+static ecs_entity_t flecs_script_async_function_init(
     ecs_world_t *world,
-    const ecs_async_function_desc_t *desc)
+    const ecs_async_function_desc_t *desc,
+    ecs_entity_t component)
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -68352,18 +68353,35 @@ ecs_entity_t ecs_async_function_init(
         ecs_script_parameter_t, FLECS_SCRIPT_FUNCTION_ARGS_MAX);
 
     ecs_entity_t result = flecs_script_function_init(
-        world, &fn_desc, ecs_id(EcsScriptFunction), true);
+        world, &fn_desc, component, true);
     if (!result) {
         goto error;
     }
 
-    EcsScriptFunction *f = ecs_ensure(world, result, EcsScriptFunction);
+    EcsScriptFunction *f = ecs_ensure_id(
+        world, result, component, sizeof(EcsScriptFunction));
     f->async_callback = desc->callback;
     f->async_cancel = desc->cancel;
-    ecs_modified(world, result, EcsScriptFunction);
+    ecs_modified_id(world, result, component);
     return result;
 error:
     return 0;
+}
+
+ecs_entity_t ecs_async_function_init(
+    ecs_world_t *world,
+    const ecs_async_function_desc_t *desc)
+{
+    return flecs_script_async_function_init(
+        world, desc, ecs_id(EcsScriptFunction));
+}
+
+ecs_entity_t ecs_async_method_init(
+    ecs_world_t *world,
+    const ecs_async_function_desc_t *desc)
+{
+    return flecs_script_async_function_init(
+        world, desc, ecs_id(EcsScriptMethod));
 }
 #endif
 
@@ -113336,8 +113354,11 @@ typedef struct EcsScriptEventState {
     ecs_entity_t focus;         /* Receives keyboard events */
     ecs_entity_t hover;         /* Target of the last event */
     ecs_entity_t prev_hover;    /* Target of the event before that */
-    ecs_entity_t last_target;   /* Target of the last call */
-    bool has_last;
+    ecs_script_to_local_t to_local;
+    void *to_local_ctx;
+    uint64_t last_id;
+    uint64_t current;
+    bool stopped;
 } EcsScriptEventState;
 
 static ECS_COMPONENT_DECLARE(EcsScriptEventState);
@@ -113439,26 +113460,6 @@ static int32_t flecs_script_event_deliver_one(
     return resolved;
 }
 
-/* Resolve the listeners for an event kind on an entity and its parents */
-static int32_t flecs_script_event_deliver(
-    ecs_world_t *world,
-    EcsScriptEventState *state,
-    flecs_script_event_kind_t kind,
-    ecs_entity_t target,
-    ecs_entity_t type,
-    void *value)
-{
-    int32_t resolved = 0;
-    for (; target && ecs_is_alive(world, target);
-        target = ecs_get_target(world, target, EcsChildOf, 0))
-    {
-        resolved += flecs_script_event_deliver_one(
-            state, kind, target, type, value);
-    }
-
-    return resolved;
-}
-
 static bool flecs_script_event_is_ancestor_or_self(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -113475,25 +113476,21 @@ static bool flecs_script_event_is_ancestor_or_self(
     return false;
 }
 
-/* A call with the same pointer state as the previous call, for the parent of
- * the previous target, propagates the previous event. */
-static bool flecs_script_event_is_propagation(
+static void flecs_script_event_to_local(
     ecs_world_t *world,
     const EcsScriptEventState *state,
-    const EcsScriptMouseEvent *e)
+    ecs_entity_t entity,
+    EcsScriptMouseEvent *e)
 {
-    const EcsScriptMouseEvent *last = &state->last;
-    return state->has_last && e->target && state->last_target &&
-        ecs_is_alive(world, state->last_target) &&
-        ecs_get_target(world, state->last_target, EcsChildOf, 0) == e->target &&
-        ECS_EQ(e->screen_x, last->screen_x) &&
-        ECS_EQ(e->screen_y, last->screen_y) &&
-        e->button == last->button && e->buttons == last->buttons &&
-        e->ctrl == last->ctrl && e->shift == last->shift &&
-        e->alt == last->alt && e->meta == last->meta;
+    e->local_x = e->screen_x;
+    e->local_y = e->screen_y;
+    if (state->to_local) {
+        state->to_local(world, entity, e->screen_x, e->screen_y,
+            &e->local_x, &e->local_y, state->to_local_ctx);
+    }
 }
 
-bool ecs_script_mouse_event(
+void ecs_script_mouse_event(
     ecs_world_t *world,
     const EcsScriptMouseEvent *evt)
 {
@@ -113505,83 +113502,109 @@ bool ecs_script_mouse_event(
         "script event module is not imported");
 
     EcsScriptMouseEvent e = *evt;
+    e.id = ++ state->last_id;
     ecs_entity_t type = ecs_id(EcsScriptMouseEvent);
     int32_t resolved = 0;
 
-    if (!flecs_script_event_is_propagation(world, state, &e)) {
-        /* New pointer event: derive what happened from the previous one */
-        if (ECS_EQZERO(e.delta_x) && ECS_EQZERO(e.delta_y)) {
-            e.delta_x = e.local_x - state->last.local_x;
-            e.delta_y = e.local_y - state->last.local_y;
+    if (ECS_EQZERO(e.delta_x) && ECS_EQZERO(e.delta_y)) {
+        e.delta_x = e.local_x - state->last.local_x;
+        e.delta_y = e.local_y - state->last.local_y;
+    }
+
+    state->pressed_mask = e.buttons & ~state->last.buttons;
+    state->released_mask = state->last.buttons & ~e.buttons;
+    state->prev_hover = state->hover;
+    state->hover = e.target;
+    if (!state->last.buttons) {
+        state->pressed = 0;
+    }
+
+    if (state->pressed_mask) {
+        state->pressed = e.target;
+        state->focus = e.target;
+    }
+
+    state->last = e;
+
+    EcsScriptMouseEvent leave = e;
+    leave.id = 0;
+    ecs_entity_t prev = state->prev_hover;
+    for (; prev && ecs_is_alive(world, prev);
+        prev = ecs_get_target(world, prev, EcsChildOf, 0))
+    {
+        if (!flecs_script_event_is_ancestor_or_self(world, prev, e.target)) {
+            resolved += flecs_script_event_deliver_one(
+                state, FlecsScriptEventLeave, prev, type, &leave);
+        }
+    }
+
+    uint32_t pressed_mask = state->pressed_mask;
+    uint32_t released_mask = state->released_mask;
+    ecs_entity_t pressed = state->pressed;
+    ecs_entity_t prev_hover = state->prev_hover;
+    bool click = released_mask && e.target == pressed;
+    uint64_t current = state->current;
+    bool stopped = state->stopped;
+    state->current = e.id;
+    state->stopped = false;
+
+    ecs_entity_t cur = e.target;
+    while (cur && ecs_is_alive(world, cur)) {
+        bool entered = !flecs_script_event_is_ancestor_or_self(
+            world, cur, prev_hover);
+        if (state->stopped && !entered) {
+            break;
         }
 
-        state->pressed_mask = e.buttons & ~state->last.buttons;
-        state->released_mask = state->last.buttons & ~e.buttons;
-        state->prev_hover = state->hover;
-        state->hover = e.target;
-        if (!state->last.buttons) {
-            state->pressed = 0;
+        ecs_entity_t parent = ecs_get_target(world, cur, EcsChildOf, 0);
+        EcsScriptMouseEvent level = e;
+        if (cur != e.target) {
+            flecs_script_event_to_local(world, state, cur, &level);
         }
 
-        if (state->pressed_mask) {
-            state->pressed = e.target;
-            state->focus = e.target;
-        }
+        EcsScriptMouseEvent enter = level;
+        enter.id = 0;
 
-        state->last = e;
-        state->has_last = true;
+        bool bubble = !state->stopped;
+        bool captured = flecs_script_event_is_ancestor_or_self(
+            world, cur, pressed);
+        bool released = released_mask && captured;
+        bool deliver[] = {
+            [FlecsScriptEventPress] = bubble && pressed_mask != 0,
+            [FlecsScriptEventDrag] = bubble && (pressed_mask ||
+                (e.buttons && !released_mask && captured)),
+            [FlecsScriptEventRelease] = bubble && released,
+            [FlecsScriptEventClick] = bubble && released && click,
+            [FlecsScriptEventMove] = bubble && !e.buttons && !released_mask,
+            [FlecsScriptEventEnter] = entered
+        };
 
-        /* Leave goes to the entities that are no longer under the pointer.
-         * The host doesn't propagate over the previous target, so this walks
-         * the previous parent chain here. */
-        ecs_entity_t prev = state->prev_hover;
-        for (; prev && ecs_is_alive(world, prev);
-            prev = ecs_get_target(world, prev, EcsChildOf, 0))
-        {
-            if (!flecs_script_event_is_ancestor_or_self(world, prev, e.target)) {
+        for (int32_t k = FlecsScriptEventPress; k <= FlecsScriptEventEnter; k ++) {
+            if (deliver[k]) {
                 resolved += flecs_script_event_deliver_one(
-                    state, FlecsScriptEventLeave, prev, type, &e);
+                    state, (flecs_script_event_kind_t)k, cur, type,
+                    k == FlecsScriptEventEnter ? &enter : &level);
             }
         }
-    } else {
-        e.delta_x = state->last.delta_x;
-        e.delta_y = state->last.delta_y;
-    }
 
-    ecs_entity_t target = e.target;
-    state->last_target = target;
-    if (!target) {
-        goto done;
-    }
-
-    bool captured = flecs_script_event_is_ancestor_or_self(
-        world, target, state->pressed);
-    bool released = state->released_mask && captured;
-    bool deliver[] = {
-        [FlecsScriptEventPress] = state->pressed_mask != 0,
-        [FlecsScriptEventDrag] = state->pressed_mask ||
-            (e.buttons && !state->released_mask && captured),
-        [FlecsScriptEventRelease] = released,
-        [FlecsScriptEventClick] = released && state->hover == state->pressed,
-        [FlecsScriptEventMove] = !e.buttons && !state->released_mask,
-        [FlecsScriptEventEnter] = !flecs_script_event_is_ancestor_or_self(
-            world, target, state->prev_hover)
-    };
-
-    for (int32_t k = FlecsScriptEventPress; k <= FlecsScriptEventEnter; k ++) {
-        if (deliver[k]) {
-            resolved += flecs_script_event_deliver_one(
-                state, (flecs_script_event_kind_t)k, target, type, &e);
+        if (resolved) {
+            ecs_script_tasks_progress(world);
+            state = flecs_script_event_state(world);
+            resolved = 0;
         }
+
+        cur = parent;
     }
 
-done:
     if (resolved) {
         ecs_script_tasks_progress(world);
+        state = flecs_script_event_state(world);
     }
-    return true;
+
+    state->current = current;
+    state->stopped = stopped;
 error:
-    return false;
+    return;
 }
 
 void ecs_script_keyboard_event(
@@ -113596,15 +113619,67 @@ void ecs_script_keyboard_event(
         "script event module is not imported");
 
     EcsScriptKeyboardEvent e = *evt;
-    if (flecs_script_event_deliver(world, state,
-        e.down ? FlecsScriptEventKeyDown : FlecsScriptEventKeyUp,
-        state->focus, ecs_id(EcsScriptKeyboardEvent), &e))
-    {
-        ecs_script_tasks_progress(world);
+    e.id = ++ state->last_id;
+    flecs_script_event_kind_t kind = e.down
+        ? FlecsScriptEventKeyDown : FlecsScriptEventKeyUp;
+    uint64_t current = state->current;
+    bool stopped = state->stopped;
+    state->current = e.id;
+    state->stopped = false;
+
+    ecs_entity_t cur = state->focus;
+    while (cur && ecs_is_alive(world, cur) && !state->stopped) {
+        ecs_entity_t parent = ecs_get_target(world, cur, EcsChildOf, 0);
+        if (flecs_script_event_deliver_one(state, kind, cur,
+            ecs_id(EcsScriptKeyboardEvent), &e))
+        {
+            ecs_script_tasks_progress(world);
+            state = flecs_script_event_state(world);
+        }
+
+        cur = parent;
     }
 
+    state->current = current;
+    state->stopped = stopped;
 error:
     return;
+}
+
+void ecs_script_set_to_local(
+    ecs_world_t *world,
+    ecs_script_to_local_t callback,
+    void *ctx)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
+    EcsScriptEventState *state = flecs_script_event_state(world);
+    ecs_check(state != NULL, ECS_INVALID_OPERATION,
+        "script event module is not imported");
+    state->to_local = callback;
+    state->to_local_ctx = ctx;
+error:
+    return;
+}
+
+static void flecs_script_event_stop_propagation(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_script_future_t *future)
+{
+    (void)argc;
+    uint64_t id = *(const uint64_t*)ECS_OFFSET(
+        argv[0].ptr, (uintptr_t)ctx->ctx);
+    EcsScriptEventState *state = flecs_script_event_state(ctx->world);
+    bool stopped = state && id && state->current == id;
+    if (stopped) {
+        state->stopped = true;
+    }
+
+    ecs_script_future_resolve(future,
+        &(ecs_value_t){ .type = ecs_id(ecs_bool_t), .ptr = &stopped });
+    ecs_script_future_release(future);
 }
 
 void FlecsScriptEventImport(
@@ -113639,7 +113714,8 @@ void FlecsScriptEventImport(
             { .name = "ctrl", .type = ecs_id(ecs_bool_t) },
             { .name = "shift", .type = ecs_id(ecs_bool_t) },
             { .name = "alt", .type = ecs_id(ecs_bool_t) },
-            { .name = "meta", .type = ecs_id(ecs_bool_t) }
+            { .name = "meta", .type = ecs_id(ecs_bool_t) },
+            { .name = "id", .type = ecs_id(ecs_u64_t) }
         }
     });
 
@@ -113652,7 +113728,8 @@ void FlecsScriptEventImport(
             { .name = "ctrl", .type = ecs_id(ecs_bool_t) },
             { .name = "shift", .type = ecs_id(ecs_bool_t) },
             { .name = "alt", .type = ecs_id(ecs_bool_t) },
-            { .name = "meta", .type = ecs_id(ecs_bool_t) }
+            { .name = "meta", .type = ecs_id(ecs_bool_t) },
+            { .name = "id", .type = ecs_id(ecs_u64_t) }
         }
     });
 
@@ -113672,6 +113749,22 @@ void FlecsScriptEventImport(
             .ctx = (void*)(uintptr_t)i
         });
     }
+
+    ecs_async_method(world, {
+        .name = "stop_propagation",
+        .parent = ecs_id(EcsScriptMouseEvent),
+        .return_type = ecs_id(ecs_bool_t),
+        .callback = flecs_script_event_stop_propagation,
+        .ctx = (void*)offsetof(EcsScriptMouseEvent, id)
+    });
+
+    ecs_async_method(world, {
+        .name = "stop_propagation",
+        .parent = ecs_id(EcsScriptKeyboardEvent),
+        .return_type = ecs_id(ecs_bool_t),
+        .callback = flecs_script_event_stop_propagation,
+        .ctx = (void*)offsetof(EcsScriptKeyboardEvent, id)
+    });
 
     ecs_singleton_add(world, EcsScriptEventState);
 }

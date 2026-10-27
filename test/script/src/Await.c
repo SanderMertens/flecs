@@ -2884,6 +2884,59 @@ void Await_await_method_receiver(void) {
     ecs_fini(world);
 }
 
+void Await_await_async_method_init(void) {
+    ecs_world_t *world = ecs_init();
+
+    for (int32_t i = 0; i < 64; i ++) {
+        ecs_os_free(await_strings[i]);
+    }
+
+    ecs_os_zeromem(await_futures);
+    await_future_count = 0;
+    await_cancel_count = 0;
+    await_tracked_ctor_count = 0;
+    await_tracked_dtor_count = 0;
+    await_method_instance = 0;
+    ecs_os_zeromem(await_args);
+    ecs_os_zeromem(await_strings);
+    ecs_os_zeromem(await_functions);
+    ecs_os_zeromem(await_entities);
+    ecs_os_zeromem(await_entity_args);
+    ecs_os_zeromem(await_i32_args);
+
+    ecs_entity_t method = ecs_async_method(world, {
+        .name = "addAsync",
+        .parent = ecs_id(ecs_i64_t),
+        .return_type = ecs_id(ecs_i64_t),
+        .params = {{"value", ecs_id(ecs_i64_t)}},
+        .callback = Await_method_callback
+    });
+    test_assert(method != 0);
+    test_assert(ecs_has(world, method, EcsScriptMethod));
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "await (10).addAsync(20)", &ir_desc, NULL);
+    test_assert(script != NULL);
+
+    ecs_script_task_t *task = ecs_script_task_new(script, NULL);
+    test_assert(task != NULL);
+
+    test_int(ecs_script_task_resume(task, NULL),
+        EcsScriptTaskPending);
+    test_int(await_future_count, 1);
+    test_int(await_method_instance, 10);
+
+    ecs_value_t result = ecs_value(ecs_i64_t, {30});
+    test_int(ecs_script_future_resolve(await_futures[0], &result), 0);
+    ecs_script_future_release(await_futures[0]);
+    test_int(ecs_script_task_resume(task, NULL),
+        EcsScriptTaskDone);
+
+    ecs_script_task_free(task);
+    ecs_script_free(script);
+    ecs_fini(world);
+}
+
 void Await_task_component_added_on_task_new(void) {
     ecs_world_t *world = ecs_init();
 

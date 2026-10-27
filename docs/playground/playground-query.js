@@ -671,21 +671,23 @@
     return s ? (s.path || s.key) : null;
   }
 
-  /* Emit a pointer event for the shape under the pointer and propagate it to
-   * the parents of the shape's entity for as long as the module asks for it,
-   * with the pointer position relative to the bounds of each entity. */
+  /* Emit a pointer event for the shape under the pointer, with the pointer
+   * position relative to the bounds of the shape's entity and of each of its
+   * parents. The module propagates the event to the parents. */
   function emitPointer(onMouse, entities, s, e, w) {
     if (!s) {
-      onMouse(e, null, w ? w.x : 0, w ? w.y : 0);
+      onMouse(e, null, w ? w.x : 0, w ? w.y : 0, []);
       return;
     }
+    var chain = [];
     for (var key = s.path || s.key; key; ) {
       var b = entities[key];
       var x = w.x, y = w.y;
       if (b && b.minX !== Infinity) { x -= b.minX; y -= b.minY; }
-      if (!onMouse(e, key, x, y)) return;
+      chain.push({ key: key, x: x, y: y });
       key = b ? b.parent : null;
     }
+    onMouse(e, chain[0].key, chain[0].x, chain[0].y, chain.slice(1));
   }
 
   function listenKeys(host, input) {

@@ -517,9 +517,10 @@ ecs_entity_t ecs_function_init(
 }
 
 #ifdef FLECS_SCRIPT_ASYNC
-ecs_entity_t ecs_async_function_init(
+static ecs_entity_t flecs_script_async_function_init(
     ecs_world_t *world,
-    const ecs_async_function_desc_t *desc)
+    const ecs_async_function_desc_t *desc,
+    ecs_entity_t component)
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -534,18 +535,35 @@ ecs_entity_t ecs_async_function_init(
         ecs_script_parameter_t, FLECS_SCRIPT_FUNCTION_ARGS_MAX);
 
     ecs_entity_t result = flecs_script_function_init(
-        world, &fn_desc, ecs_id(EcsScriptFunction), true);
+        world, &fn_desc, component, true);
     if (!result) {
         goto error;
     }
 
-    EcsScriptFunction *f = ecs_ensure(world, result, EcsScriptFunction);
+    EcsScriptFunction *f = ecs_ensure_id(
+        world, result, component, sizeof(EcsScriptFunction));
     f->async_callback = desc->callback;
     f->async_cancel = desc->cancel;
-    ecs_modified(world, result, EcsScriptFunction);
+    ecs_modified_id(world, result, component);
     return result;
 error:
     return 0;
+}
+
+ecs_entity_t ecs_async_function_init(
+    ecs_world_t *world,
+    const ecs_async_function_desc_t *desc)
+{
+    return flecs_script_async_function_init(
+        world, desc, ecs_id(EcsScriptFunction));
+}
+
+ecs_entity_t ecs_async_method_init(
+    ecs_world_t *world,
+    const ecs_async_function_desc_t *desc)
+{
+    return flecs_script_async_function_init(
+        world, desc, ecs_id(EcsScriptMethod));
 }
 #endif
 
