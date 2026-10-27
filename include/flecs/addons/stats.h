@@ -582,7 +582,6 @@ typedef struct {
     ecs_size_t bytes_locked_components; /**< Locked component map. */
     ecs_size_t bytes_type_info;         /**< Bytes used for storing type information. */
     ecs_size_t bytes_commands;          /**< Command queue. */
-    ecs_size_t bytes_rematch_monitor;   /**< Memory used by monitor used to track rematches. */
     ecs_size_t bytes_component_ids;     /**< Memory used for mapping global to world-local component ids. */
     ecs_size_t bytes_reflection;        /**< Memory used for component reflection not tracked elsewhere. */
     ecs_size_t bytes_tree_spawner;      /**< Memory used for tree (prefab) spawners. */
@@ -594,10 +593,8 @@ typedef struct {
 /** Allocator memory.
  * Memory that is allocated by allocators but not in use. */
 typedef struct {
-    ecs_size_t bytes_graph_edge;        /**< Graph edge allocator. */
     ecs_size_t bytes_component_record;  /**< Component record allocator. */
     ecs_size_t bytes_pair_record;       /**< Pair record allocator. */
-    ecs_size_t bytes_table_diff;        /**< Table diff allocator. */
     ecs_size_t bytes_sparse_chunk;      /**< Sparse chunk allocator. */
     ecs_size_t bytes_allocator;         /**< Generic allocator. */
     ecs_size_t bytes_stack_allocator;   /**< Stack allocator. */
