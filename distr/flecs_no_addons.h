@@ -7589,6 +7589,24 @@ ecs_ref_t ecs_ref_init_id(
     ecs_entity_t entity,
     ecs_id_t component);
 
+/** Create a component ref from an existing pointer.
+ * Same as ecs_ref_init_id(), but uses the provided pointer instead of looking
+ * up the component. This avoids a lookup when the application already has a
+ * pointer to the component, for example from ecs_get_mut_id().
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The component to create a ref for.
+ * @param ptr Pointer to the component of the entity.
+ * @return The reference.
+ */
+FLECS_API
+ecs_ref_t ecs_ref_from_ptr(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    void *ptr);
+
 /** Get a component from a ref.
  * Get a component pointer from a ref. The ref must be created with ecs_ref_init().
  * The specified component must match the component with which the ref was 
