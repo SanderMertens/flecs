@@ -16011,7 +16011,7 @@ static void DeleteOtherObserver(ecs_iter_t *it) {
     if (delete_other_victim) {
         ecs_entity_t victim = delete_other_victim;
         delete_other_victim = 0;
-        ecs_delete(it->world, victim);
+        ecs_delete(it->stage, victim);
     }
 }
 

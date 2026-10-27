@@ -437,5 +437,7 @@ struct Struct_w_vector {
 
 void install_test_abort(void);
 
+void test_expect_abort_code(int32_t error_code);
+
 #endif
 

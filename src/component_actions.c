@@ -56,9 +56,15 @@ void flecs_invoke_hook(
     it.offset = row;
     it.flags = EcsIterIsValid;
 
-    ECS_TABLE_LOCK(world, table);
+    ecs_table_t *lock_table = NULL;
+    if (event == EcsOnAdd || event == EcsOnRemove) {
+        lock_table = table;
+    }
+    (void)lock_table;
+
+    ECS_TABLE_LOCK(world, lock_table);
     hook(&it);
-    ECS_TABLE_UNLOCK(world, table);
+    ECS_TABLE_UNLOCK(world, lock_table);
 
 }
 

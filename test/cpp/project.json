@@ -1242,7 +1242,21 @@
                 "reuse_observer_builder",
                 "single_term_observer_w_var_get_var_pair_second",
                 "single_term_observer_w_var_get_var_pair_first",
-                "component_inheritance_each_multi_entity"
+                "component_inheritance_each_multi_entity",
+                "delete_w_on_remove_removing_other_w_world",
+                "delete_w_on_remove_removing_other_w_stage",
+                "clear_w_on_remove_removing_other_w_world",
+                "clear_w_on_remove_removing_other_w_stage",
+                "delete_with_w_on_remove_removing_other_w_world",
+                "delete_with_w_on_remove_removing_other_w_stage",
+                "remove_all_w_on_remove_removing_other_w_world",
+                "remove_all_w_on_remove_removing_other_w_stage",
+                "delete_parent_w_on_remove_removing_other_from_child_w_world",
+                "delete_parent_w_on_remove_removing_other_from_child_w_stage",
+                "remove_w_on_remove_removing_other_w_world",
+                "remove_w_on_remove_removing_other_w_stage",
+                "set_w_on_add_adding_other_w_world",
+                "set_w_on_add_adding_other_w_stage"
             ]
         }, {
             "id": "ComponentLifecycle",
@@ -1354,7 +1368,9 @@
                 "move_ctor_no_default_ctor",
                 "on_validate_hook",
                 "on_validate_hook_blocks_on_set",
-                "on_validate_hook_blocks_observer"
+                "on_validate_hook_blocks_observer",
+                "delete_w_on_remove_hook_removing_other_w_world",
+                "delete_w_on_remove_hook_removing_other_w_stage"
             ]
         }, {
             "id": "Refs",

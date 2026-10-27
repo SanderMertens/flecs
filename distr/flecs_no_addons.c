@@ -5728,9 +5728,15 @@ void flecs_invoke_hook(
     it.offset = row;
     it.flags = EcsIterIsValid;
 
-    ECS_TABLE_LOCK(world, table);
+    ecs_table_t *lock_table = NULL;
+    if (event == EcsOnAdd || event == EcsOnRemove) {
+        lock_table = table;
+    }
+    (void)lock_table;
+
+    ECS_TABLE_LOCK(world, lock_table);
     hook(&it);
-    ECS_TABLE_UNLOCK(world, table);
+    ECS_TABLE_UNLOCK(world, lock_table);
 
 }
 
@@ -14180,6 +14186,16 @@ typedef enum flecs_observers_invoke_mode_t {
     FlecsObserversInvokeSkipUpNotify
 } flecs_observers_invoke_mode_t;
 
+static ecs_table_t* flecs_observer_lock_table(
+    const ecs_iter_t *it,
+    ecs_table_t *table)
+{
+    if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
+        return table;
+    }
+    return NULL;
+}
+
 static void flecs_observers_invoke_intern(
     ecs_world_t *world,
     ecs_map_t *observers,
@@ -14189,7 +14205,9 @@ static void flecs_observers_invoke_intern(
     flecs_observers_invoke_mode_t mode)
 {
     if (ecs_map_is_init(observers)) {
-        ECS_TABLE_LOCK(it->stage, table);
+        ecs_table_t *lock_table = flecs_observer_lock_table(it, table);
+        (void)lock_table;
+        ECS_TABLE_LOCK(it->world, lock_table);
 
         ecs_map_iter_t oit = ecs_map_iter(observers);
         while (ecs_map_next(&oit)) {
@@ -14212,7 +14230,7 @@ static void flecs_observers_invoke_intern(
                 "cannot create observer from observer");
         }
 
-        ECS_TABLE_UNLOCK(it->stage, table);
+        ECS_TABLE_UNLOCK(it->world, lock_table);
     }
 }
 
@@ -14289,7 +14307,7 @@ static void flecs_multi_observer_invoke_user_it(
 
     ecs_entity_t old_system = flecs_stage_set_system(
         world->stages[0], o->entity);
-    ECS_TABLE_LOCK(it->stage, lock_table);
+    ECS_TABLE_LOCK(it->world, lock_table);
 
     if (o->run) {
         ecs_iter_next_action_t next = user_it->next;
@@ -14301,7 +14319,7 @@ static void flecs_multi_observer_invoke_user_it(
         user_it->callback(user_it);
     }
 
-    ECS_TABLE_UNLOCK(it->stage, lock_table);
+    ECS_TABLE_UNLOCK(it->world, lock_table);
     flecs_stage_set_system(world->stages[0], old_system);
 }
 
@@ -14319,7 +14337,8 @@ static void flecs_multi_observer_invoke_fixed_src(
         match = true;
         impl->last_event_id[0] = it->event_cur;
         impl->last_event_field = pivot_field_bit;
-        flecs_multi_observer_invoke_user_it(o, it, &user_it, user_it.table);
+        flecs_multi_observer_invoke_user_it(o, it, &user_it,
+            flecs_observer_lock_table(it, user_it.table));
         user_it.flags |= EcsIterSkip;
     }
 
@@ -14365,7 +14384,7 @@ static void flecs_multi_observer_invoke(
         prev_table = it->table;
     }
 
-    ecs_table_t *lock_table = table;
+    ecs_table_t *lock_table = flecs_observer_lock_table(it, table);
     (void)lock_table;
     table = table ? table : &world->store.root;
     prev_table = prev_table ? prev_table : &world->store.root;
@@ -14470,7 +14489,9 @@ static void flecs_multi_observer_invoke_no_query(
 
     ecs_entity_t old_system = flecs_stage_set_system(
         world->stages[0], o->entity);
-    ECS_TABLE_LOCK(it->stage, it->table);
+    ecs_table_t *lock_table = flecs_observer_lock_table(it, it->table);
+    (void)lock_table;
+    ECS_TABLE_LOCK(it->world, lock_table);
 
     if (o->run) {
         user_it.next = flecs_default_next_callback;
@@ -14479,7 +14500,7 @@ static void flecs_multi_observer_invoke_no_query(
         user_it.callback(&user_it);
     }
 
-    ECS_TABLE_UNLOCK(it->stage, it->table);
+    ECS_TABLE_UNLOCK(it->world, lock_table);
     flecs_stage_set_system(world->stages[0], old_system);
 }
 
@@ -20348,10 +20369,10 @@ void ecs_abort_(
     const char *fmt,
     ...)
 {
-    (void)error_code;
     (void)file;
     (void)line;
     (void)fmt;
+    ecs_os_api.log_last_error_ = error_code;
 }
 
 void ecs_assert_log_(
@@ -20362,11 +20383,11 @@ void ecs_assert_log_(
     const char *fmt,
     ...)
 {
-    (void)error_code;
     (void)condition_str;
     (void)file;
     (void)line;
     (void)fmt;
+    ecs_os_api.log_last_error_ = error_code;
 }
 
 bool flecs_log_capture_set_append(bool append) {

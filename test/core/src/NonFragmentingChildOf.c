@@ -8634,7 +8634,7 @@ static void ReentrantSiblingObserver(ecs_iter_t *it) {
         if (reentrant_new_parent) {
             ecs_set(it->world, other, EcsParent, {reentrant_new_parent});
         } else {
-            ecs_delete(it->world, other);
+            ecs_delete(it->stage, other);
         }
     }
 }

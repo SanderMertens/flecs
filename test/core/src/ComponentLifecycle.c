@@ -5747,12 +5747,6 @@ void ComponentLifecycle_locked_storage_on_add(void) {
 }
 
 void ComponentLifecycle_locked_storage_on_set(void) {
-    ecs_os_set_api_defaults();
-    ecs_os_api_t os_api = ecs_os_get_api();
-    os_api.abort_ = locked_storage_abort;
-    ecs_os_set_api(&os_api);
-    ecs_log_set_level(-5);
-
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -5764,8 +5758,15 @@ void ComponentLifecycle_locked_storage_on_set(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    test_expect_abort();
     ecs_set(world, e, Position, {10, 20});
+
+    test_assert(ecs_has_id(world, e, locked_storage_tag));
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_locked_storage_on_remove(void) {

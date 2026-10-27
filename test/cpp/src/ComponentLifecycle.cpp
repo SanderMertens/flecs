@@ -2953,3 +2953,33 @@ void ComponentLifecycle_on_validate_hook_blocks_observer(void) {
     test_int(validate_count, 2);
     test_int(observer_count, 1);
 }
+
+void ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_world(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.component<Position>().on_remove(
+        [](flecs::iter& it, size_t i, Position&) {
+            it.entity(i).mut(it.world()).remove<Velocity>();
+        });
+
+    flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
+
+    test_expect_abort_code(ECS_LOCKED_STORAGE);
+    e.destruct();
+}
+
+void ComponentLifecycle_delete_w_on_remove_hook_removing_other_w_stage(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>().on_remove([](flecs::entity e, Position&) {
+        e.remove<Velocity>();
+    });
+
+    flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
+
+    e.destruct();
+
+    test_assert(!e.is_alive());
+}

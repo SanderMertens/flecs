@@ -797,10 +797,10 @@ void ecs_abort_(
     const char *fmt,
     ...)
 {
-    (void)error_code;
     (void)file;
     (void)line;
     (void)fmt;
+    ecs_os_api.log_last_error_ = error_code;
 }
 
 void ecs_assert_log_(
@@ -811,11 +811,11 @@ void ecs_assert_log_(
     const char *fmt,
     ...)
 {
-    (void)error_code;
     (void)condition_str;
     (void)file;
     (void)line;
     (void)fmt;
+    ecs_os_api.log_last_error_ = error_code;
 }
 
 bool flecs_log_capture_set_append(bool append) {
