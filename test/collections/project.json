@@ -116,7 +116,9 @@
                 "append_nan_delim",
                 "append_inf_delim",
                 "append_int64_min",
-                "append_flt_2_pow_63"
+                "append_flt_2_pow_63",
+                "grow_alloc_fails",
+                "grow_past_1gb"
             ]
         }, {
             "id": "Allocator",
