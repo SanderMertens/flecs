@@ -155,7 +155,6 @@ const uint64_t* flecs_entity_index_ids(
 #define ecs_eis(world) (&((world)->store.entity_index))
 #define flecs_entities_init(world) flecs_entity_index_init(&world->allocator, ecs_eis(world))
 #define flecs_entities_fini(world) flecs_entity_index_fini(ecs_eis(world))
-#define flecs_entities_get(world, entity) flecs_entity_index_get(ecs_eis(world), entity)
 #define flecs_entities_try(world, entity) flecs_entity_index_try_get(ecs_eis(world), entity)
 #define flecs_entities_get_any(world, entity) flecs_entity_index_get_any(ecs_eis(world), entity)
 #define flecs_entities_ensure(world, entity) flecs_entity_index_ensure(ecs_eis(world), entity)

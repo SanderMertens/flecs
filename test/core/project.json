@@ -142,6 +142,8 @@
                 "record_find_for_empty",
                 "record_find",
                 "record_find_from_stage",
+                "record_get_id",
+                "record_get_id_for_empty",
                 "make_alive_zero_gen",
                 "make_alive_nonzero_gen",
                 "make_alive_zero_gen_exists",

@@ -392,38 +392,6 @@
 #define ecs_modified_pair(world, subject, first, second)\
     ecs_modified_id(world, subject, ecs_pair(first, second))
 
-/** Get a component from a record. */
-#define ecs_record_get(world, record, T)\
-    (ECS_CAST(const T*, ecs_record_get_id(world, record, ecs_id(T))))
-
-/** Test if a record has a component. */
-#define ecs_record_has(world, record, T)\
-    (ecs_record_has_id(world, record, ecs_id(T)))
-
-/** Get the first element of a pair from a record. */
-#define ecs_record_get_pair(world, record, First, second)\
-    (ECS_CAST(const First*, ecs_record_get_id(world, record, \
-        ecs_pair(ecs_id(First), second))))
-
-/** Get the second element of a pair from a record. */
-#define ecs_record_get_pair_second(world, record, first, Second)\
-    (ECS_CAST(const Second*, ecs_record_get_id(world, record,\
-        ecs_pair(first, ecs_id(Second)))))
-
-/** Ensure a component on a record, return mutable pointer. */
-#define ecs_record_ensure(world, record, T)\
-    (ECS_CAST(T*, ecs_record_ensure_id(world, record, ecs_id(T))))
-
-/** Ensure the first element of a pair on a record, return mutable pointer. */
-#define ecs_record_ensure_pair(world, record, First, second)\
-    (ECS_CAST(First*, ecs_record_ensure_id(world, record, \
-        ecs_pair(ecs_id(First), second))))
-
-/** Ensure the second element of a pair on a record, return mutable pointer. */
-#define ecs_record_ensure_pair_second(world, record, first, Second)\
-    (ECS_CAST(Second*, ecs_record_ensure_id(world, record,\
-        ecs_pair(first, ecs_id(Second)))))
-
 /** Initialize a ref for a component. */
 #define ecs_ref_init(world, entity, T)\
     ecs_ref_init_id(world, entity, ecs_id(T))

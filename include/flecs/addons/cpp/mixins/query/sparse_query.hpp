@@ -136,7 +136,7 @@ private:
                 continue;
             }
 
-            const ecs_record_t *r = ecs_record_find(world_, e);
+            const ecs_record_t *r = flecs_entities_get(world_, e);
             if (flecs_table_flags(r->table) &
                 (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled))
             {

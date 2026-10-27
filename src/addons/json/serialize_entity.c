@@ -14,7 +14,7 @@ int flecs_entity_to_json_buf(
     const ecs_iter_to_json_desc_t *desc,
     ecs_json_ser_ctx_t *ser_ctx)
 {
-    ecs_record_t *r = ecs_record_find(world, entity);
+    ecs_record_t *r = flecs_entities_get(world, entity);
     if (!r || !r->table) {
         flecs_json_object_push(buf);
         flecs_json_member(buf, "name");

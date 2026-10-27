@@ -412,7 +412,7 @@ struct entity_with_delegate_impl<arg_list<Args...>> {
         for (auto id : ids) {
             int32_t column = ecs_table_get_column_index(real_world, table, id);
             void *ptr = column == -1 ? ecs_get_mut_id(world, entity, id) :
-                ecs_record_get_by_column(record, column, 0);
+                flecs_entity_get_column(record, column, 0);
             if (!ptr) {
                 return false;
             }
@@ -423,7 +423,7 @@ struct entity_with_delegate_impl<arg_list<Args...>> {
 
     template <typename Func>
     static bool invoke_get(world_t *world, entity_t entity, const Func& func) {
-        ecs_record_t *record = ecs_record_find(world, entity);
+        ecs_record_t *record = flecs_entities_get(ecs_get_world(world), entity);
         if (!record || !record->table) {
             return false;
         }
@@ -446,7 +446,7 @@ struct entity_with_delegate_impl<arg_list<Args...>> {
         ecs_table_t *table = nullptr;
         if (!ecs_is_stage(world)) {
             ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INVALID_PARAMETER, nullptr);
-            ecs_record_t *record = ecs_record_find(world, entity);
+            ecs_record_t *record = flecs_entities_get(world, entity);
             ecs_assert(record != nullptr, ECS_INVALID_PARAMETER, nullptr);
             flecs_add_ids(world, entity, ids.ptr(), static_cast<int32_t>(sizeof...(Args)));
             table = record->table;

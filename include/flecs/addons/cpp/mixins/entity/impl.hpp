@@ -100,7 +100,7 @@ inline flecs::table entity_view::table() const {
 }
 
 inline flecs::table_range entity_view::range() const {
-    ecs_record_t *r = ecs_record_find(world_, id_);
+    ecs_record_t *r = flecs_entities_get(ecs_get_world(world_), id_);
     if (r) {
         return flecs::table_range(world_, r->table, 
             ECS_RECORD_TO_ROW(r->row), 1);
@@ -131,7 +131,7 @@ void each_id(flecs::world_t *world, flecs::entity_t entity,
             func(id);
         }
     }
-    const ecs_record_t *r = ecs_record_find(real_world, entity);
+    const ecs_record_t *r = flecs_entities_get(real_world, entity);
     if (r && (r->row & EcsEntityHasDontFragment)) {
         for (auto cr = flecs_component_dont_fragment_first(real_world); cr;
             cr = flecs_component_dont_fragment_next(cr))

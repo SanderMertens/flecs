@@ -926,7 +926,7 @@ void Entity_record_find_for_empty(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    ecs_record_t *r = ecs_record_find(world, e);
+    ecs_record_t *r = flecs_entities_get(world, e);
     test_assert(r != NULL);
     test_assert(r->table != NULL);
     test_int(ecs_table_get_type(r->table)->count, 0);
@@ -942,7 +942,7 @@ void Entity_record_find(void) {
     ecs_entity_t e = ecs_new_w(world, TagA);
     test_assert(e != 0);
 
-    ecs_record_t *r = ecs_record_find(world, e);
+    ecs_record_t *r = flecs_entities_get(world, e);
     test_assert(r != NULL);
     test_assert(r->table != NULL);
 
@@ -961,11 +961,39 @@ void Entity_record_find_from_stage(void) {
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_record_t *r = ecs_record_find(stage, e);
+    ecs_record_t *r = flecs_entities_get(ecs_get_world(stage), e);
     test_assert(r != NULL);
     test_assert(r->table != NULL);
 
     ecs_readonly_end(world);
+
+    ecs_fini(world);
+}
+
+void Entity_record_get_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e = ecs_new_w(world, TagA);
+    test_assert(e != 0);
+
+    ecs_record_t *r = flecs_entities_get(world, e);
+    test_assert(r != NULL);
+    test_uint(flecs_entity_get_id(r), e);
+
+    ecs_fini(world);
+}
+
+void Entity_record_get_id_for_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(e != 0);
+
+    ecs_record_t *r = flecs_entities_get(world, e);
+    test_assert(r != NULL);
+    test_uint(flecs_entity_get_id(r), e);
 
     ecs_fini(world);
 }

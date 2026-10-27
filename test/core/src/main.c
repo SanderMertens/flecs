@@ -135,6 +135,8 @@ void Entity_init_w_name_staged(void);
 void Entity_record_find_for_empty(void);
 void Entity_record_find(void);
 void Entity_record_find_from_stage(void);
+void Entity_record_get_id(void);
+void Entity_record_get_id_for_empty(void);
 void Entity_make_alive_zero_gen(void);
 void Entity_make_alive_nonzero_gen(void);
 void Entity_make_alive_zero_gen_exists(void);
@@ -4212,6 +4214,14 @@ bake_test_case Entity_testcases[] = {
     {
         "record_find_from_stage",
         Entity_record_find_from_stage
+    },
+    {
+        "record_get_id",
+        Entity_record_get_id
+    },
+    {
+        "record_get_id_for_empty",
+        Entity_record_get_id_for_empty
     },
     {
         "make_alive_zero_gen",
@@ -18246,7 +18256,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        115,
+        117,
         Entity_testcases
     },
     {

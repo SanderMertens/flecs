@@ -1691,17 +1691,17 @@ void Sparse_record_get(void) {
     ecs_add(world, e, Tag);
 
     {
-        const ecs_record_t *r = ecs_record_find(world, e);
+        const ecs_record_t *r = flecs_entities_get(world, e);
         test_assert(r != NULL);
-        test_assert(NULL == ecs_record_get(world, r, Position));
+        test_assert(NULL == flecs_entity_get(world, r, ecs_id(Position)));
     }
 
     ecs_add(world, e, Position);
 
     {
-        const ecs_record_t *r = ecs_record_find(world, e);
+        const ecs_record_t *r = flecs_entities_get(world, e);
         test_assert(r != NULL);
-        const Position *p = ecs_record_get(world, r, Position);
+        const Position *p = flecs_entity_get(world, r, ecs_id(Position));
         test_assert(p != NULL);
     }
 

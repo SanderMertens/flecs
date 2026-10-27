@@ -2660,7 +2660,7 @@ void ecs_table_swap_rows(
     flecs_table_swap(world, table, row_1, row_2);
 }
 
-void* ecs_record_get_by_column(
+void* flecs_entity_get_column(
     const ecs_record_t *r,
     int32_t index,
     size_t c_size)
@@ -2676,24 +2676,6 @@ void* ecs_record_get_by_column(
         ECS_INVALID_PARAMETER, NULL);
 
     return ECS_ELEM(column->data, size, ECS_RECORD_TO_ROW(r->row));
-error:
-    return NULL;
-}
-
-ecs_record_t* ecs_record_find(
-    const ecs_world_t *world,
-    ecs_entity_t entity)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
-
-    world = ecs_get_world(world);
-
-    ecs_record_t *r = flecs_entities_get(world, entity);
-    if (r) {
-        return r;
-    }
-
 error:
     return NULL;
 }

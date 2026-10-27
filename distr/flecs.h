@@ -5667,7 +5667,7 @@ typedef struct ecs_table_diff_t {
     ecs_flags32_t removed_flags;
 } ecs_table_diff_t;
 
-/** Find the record for an entity.
+/** Get the record for an entity.
  * An entity record contains the table and row for the entity.
  * 
  * To use ecs_record_t::row as the record in the table, use:
@@ -5677,22 +5677,12 @@ typedef struct ecs_table_diff_t {
  * 
  * @param world The world.
  * @param entity The entity.
- * @return The record, NULL if the entity does not exist.
+ * @return The record for the entity.
  */
 FLECS_API
-ecs_record_t* ecs_record_find(
+FLECS_ALWAYS_INLINE ecs_record_t* flecs_entities_get(
     const ecs_world_t *world,
     ecs_entity_t entity);
-
-/** Get the entity corresponding to a record.
- * This operation only works for entities that are not empty.
- *
- * @param record The record for which to obtain the entity ID.
- * @return The entity ID for the record.
- */
-FLECS_API
-ecs_entity_t ecs_record_get_entity(
-    const ecs_record_t *record);
 
 /** Add multiple IDs to an entity.
  * This operation adds multiple IDs with at most one table move.
@@ -5709,6 +5699,16 @@ void flecs_add_ids(
     const ecs_id_t *ids,
     int32_t count);
 
+/** Get the entity ID from an entity record.
+ * This operation only works for entities that are not empty.
+ *
+ * @param record The entity record.
+ * @return The entity ID.
+ */
+FLECS_API
+ecs_entity_t flecs_entity_get_id(
+    const ecs_record_t *record);
+
 /** Get a component from an entity record.
  * This operation returns a pointer to a component for the entity
  * associated with the provided record.
@@ -5718,42 +5718,14 @@ void flecs_add_ids(
  *
  * @param world The world.
  * @param record Record to the entity.
- * @param id The (component) ID.
+ * @param component The component to get.
  * @return Pointer to component, or NULL if entity does not have the component.
- *
- * @see ecs_record_ensure_id()
  */
 FLECS_API
-const void* ecs_record_get_id(
+const void* flecs_entity_get(
     const ecs_world_t *world,
     const ecs_record_t *record,
-    ecs_id_t id);
-
-/** Same as ecs_record_get_id(), but returns a mutable pointer.
- *
- * @param world The world.
- * @param record Record to the entity.
- * @param id The (component) ID.
- * @return Pointer to component, or NULL if entity does not have the component.
- */
-FLECS_API
-void* ecs_record_ensure_id(
-    ecs_world_t *world,
-    ecs_record_t *record,
-    ecs_id_t id);
-
-/** Test if the entity for a record has a (component) ID.
- *
- * @param world The world.
- * @param record Record to the entity.
- * @param id The (component) ID.
- * @return Whether the entity has the component.
- */
-FLECS_API
-bool ecs_record_has_id(
-    ecs_world_t *world,
-    const ecs_record_t *record,
-    ecs_id_t id);
+    ecs_id_t component);
 
 /** Get a component pointer from a column and record.
  * This returns a pointer to the component using a table column index. The
@@ -5761,9 +5733,9 @@ bool ecs_record_has_id(
  * 
  * Usage:
  * @code
- * ecs_record_t *r = ecs_record_find(world, entity);
+ * ecs_record_t *r = flecs_entities_get(world, entity);
  * int32_t column = ecs_table_get_column_index(world, table, ecs_id(Position));
- * Position *ptr = ecs_record_get_by_column(r, column, sizeof(Position));
+ * Position *ptr = flecs_entity_get_column(r, column, sizeof(Position));
  * @endcode
  * 
  * @param record The record.
@@ -5772,7 +5744,7 @@ bool ecs_record_has_id(
  * @return The component pointer.
  */
 FLECS_API
-void* ecs_record_get_by_column(
+void* flecs_entity_get_column(
     const ecs_record_t *record,
     int32_t column,
     size_t size);
@@ -11468,38 +11440,6 @@ void ecs_table_clear_entities(
 /** Signal that a pair has been modified. */
 #define ecs_modified_pair(world, subject, first, second)\
     ecs_modified_id(world, subject, ecs_pair(first, second))
-
-/** Get a component from a record. */
-#define ecs_record_get(world, record, T)\
-    (ECS_CAST(const T*, ecs_record_get_id(world, record, ecs_id(T))))
-
-/** Test if a record has a component. */
-#define ecs_record_has(world, record, T)\
-    (ecs_record_has_id(world, record, ecs_id(T)))
-
-/** Get the first element of a pair from a record. */
-#define ecs_record_get_pair(world, record, First, second)\
-    (ECS_CAST(const First*, ecs_record_get_id(world, record, \
-        ecs_pair(ecs_id(First), second))))
-
-/** Get the second element of a pair from a record. */
-#define ecs_record_get_pair_second(world, record, first, Second)\
-    (ECS_CAST(const Second*, ecs_record_get_id(world, record,\
-        ecs_pair(first, ecs_id(Second)))))
-
-/** Ensure a component on a record, return mutable pointer. */
-#define ecs_record_ensure(world, record, T)\
-    (ECS_CAST(T*, ecs_record_ensure_id(world, record, ecs_id(T))))
-
-/** Ensure the first element of a pair on a record, return mutable pointer. */
-#define ecs_record_ensure_pair(world, record, First, second)\
-    (ECS_CAST(First*, ecs_record_ensure_id(world, record, \
-        ecs_pair(ecs_id(First), second))))
-
-/** Ensure the second element of a pair on a record, return mutable pointer. */
-#define ecs_record_ensure_pair_second(world, record, first, Second)\
-    (ECS_CAST(Second*, ecs_record_ensure_id(world, record,\
-        ecs_pair(first, ecs_id(Second)))))
 
 /** Initialize a ref for a component. */
 #define ecs_ref_init(world, entity, T)\
@@ -30928,7 +30868,7 @@ struct entity_with_delegate_impl<arg_list<Args...>> {
         for (auto id : ids) {
             int32_t column = ecs_table_get_column_index(real_world, table, id);
             void *ptr = column == -1 ? ecs_get_mut_id(world, entity, id) :
-                ecs_record_get_by_column(record, column, 0);
+                flecs_entity_get_column(record, column, 0);
             if (!ptr) {
                 return false;
             }
@@ -30939,7 +30879,7 @@ struct entity_with_delegate_impl<arg_list<Args...>> {
 
     template <typename Func>
     static bool invoke_get(world_t *world, entity_t entity, const Func& func) {
-        ecs_record_t *record = ecs_record_find(world, entity);
+        ecs_record_t *record = flecs_entities_get(ecs_get_world(world), entity);
         if (!record || !record->table) {
             return false;
         }
@@ -30962,7 +30902,7 @@ struct entity_with_delegate_impl<arg_list<Args...>> {
         ecs_table_t *table = nullptr;
         if (!ecs_is_stage(world)) {
             ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INVALID_PARAMETER, nullptr);
-            ecs_record_t *record = ecs_record_find(world, entity);
+            ecs_record_t *record = flecs_entities_get(world, entity);
             ecs_assert(record != nullptr, ECS_INVALID_PARAMETER, nullptr);
             flecs_add_ids(world, entity, ids.ptr(), static_cast<int32_t>(sizeof...(Args)));
             table = record->table;
@@ -32126,7 +32066,7 @@ private:
                 continue;
             }
 
-            const ecs_record_t *r = ecs_record_find(world_, e);
+            const ecs_record_t *r = flecs_entities_get(world_, e);
             if (flecs_table_flags(r->table) &
                 (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled))
             {
@@ -33121,7 +33061,7 @@ inline flecs::table entity_view::table() const {
 }
 
 inline flecs::table_range entity_view::range() const {
-    ecs_record_t *r = ecs_record_find(world_, id_);
+    ecs_record_t *r = flecs_entities_get(ecs_get_world(world_), id_);
     if (r) {
         return flecs::table_range(world_, r->table, 
             ECS_RECORD_TO_ROW(r->row), 1);
@@ -33152,7 +33092,7 @@ void each_id(flecs::world_t *world, flecs::entity_t entity,
             func(id);
         }
     }
-    const ecs_record_t *r = ecs_record_find(real_world, entity);
+    const ecs_record_t *r = flecs_entities_get(real_world, entity);
     if (r && (r->row & EcsEntityHasDontFragment)) {
         for (auto cr = flecs_component_dont_fragment_first(real_world); cr;
             cr = flecs_component_dont_fragment_next(cr))
