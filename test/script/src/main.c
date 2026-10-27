@@ -1137,6 +1137,24 @@ void Event_stop_propagation_key(void);
 void Event_stop_propagation_keeps_enter(void);
 void Event_stop_propagation_stale_event(void);
 void Event_stop_propagation_enter_event(void);
+void Event_import_focus(void);
+void Event_set_get_focus(void);
+void Event_get_focus_after_press(void);
+void Event_key_to_set_focus(void);
+void Event_focus_blur_on_press(void);
+void Event_focus_blur_on_set_focus(void);
+void Event_focus_unchanged_no_events(void);
+void Event_focus_between_children_reaches_parent(void);
+void Event_stop_propagation_focus(void);
+void Event_to_focus_reject_press(void);
+void Event_to_focus_redirect(void);
+void Event_to_focus_not_invoked_when_unchanged(void);
+void Event_remove_event_hooks(void);
+void Event_script_focus(void);
+void Event_script_focus_returns_to_focus_result(void);
+void Event_script_focus_clear(void);
+void Event_script_focus_resumes_listeners(void);
+void Event_delete_focus(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_setup(void);
@@ -8433,6 +8451,78 @@ bake_test_case Event_testcases[] = {
     {
         "stop_propagation_enter_event",
         Event_stop_propagation_enter_event
+    },
+    {
+        "import_focus",
+        Event_import_focus
+    },
+    {
+        "set_get_focus",
+        Event_set_get_focus
+    },
+    {
+        "get_focus_after_press",
+        Event_get_focus_after_press
+    },
+    {
+        "key_to_set_focus",
+        Event_key_to_set_focus
+    },
+    {
+        "focus_blur_on_press",
+        Event_focus_blur_on_press
+    },
+    {
+        "focus_blur_on_set_focus",
+        Event_focus_blur_on_set_focus
+    },
+    {
+        "focus_unchanged_no_events",
+        Event_focus_unchanged_no_events
+    },
+    {
+        "focus_between_children_reaches_parent",
+        Event_focus_between_children_reaches_parent
+    },
+    {
+        "stop_propagation_focus",
+        Event_stop_propagation_focus
+    },
+    {
+        "to_focus_reject_press",
+        Event_to_focus_reject_press
+    },
+    {
+        "to_focus_redirect",
+        Event_to_focus_redirect
+    },
+    {
+        "to_focus_not_invoked_when_unchanged",
+        Event_to_focus_not_invoked_when_unchanged
+    },
+    {
+        "remove_event_hooks",
+        Event_remove_event_hooks
+    },
+    {
+        "script_focus",
+        Event_script_focus
+    },
+    {
+        "script_focus_returns_to_focus_result",
+        Event_script_focus_returns_to_focus_result
+    },
+    {
+        "script_focus_clear",
+        Event_script_focus_clear
+    },
+    {
+        "script_focus_resumes_listeners",
+        Event_script_focus_resumes_listeners
+    },
+    {
+        "delete_focus",
+        Event_delete_focus
     }
 };
 
@@ -19685,7 +19775,7 @@ static bake_test_suite suites[] = {
         "Event",
         Event_setup,
         NULL,
-        47,
+        65,
         Event_testcases,
         1,
         Event_params
