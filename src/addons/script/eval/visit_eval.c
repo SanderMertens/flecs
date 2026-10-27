@@ -758,10 +758,16 @@ static void flecs_script_eval_scope_leave(
     v->scope_slot = state->scope_slot;
 }
 
+typedef struct flecs_script_tree_ctx_t {
+    bool non_fragmenting_parent;
+    bool annotated;
+} flecs_script_tree_ctx_t;
+
 static int flecs_script_apply_tree_scope(
     ecs_script_scope_t *scope,
     void *ctx)
 {
+    const flecs_script_tree_ctx_t *tree = ctx;
     ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
     for (int32_t i = 0; i < ecs_vec_count(&scope->stmts); i ++) {
         ecs_script_node_t *stmt = stmts[i];
@@ -770,7 +776,11 @@ static int flecs_script_apply_tree_scope(
         }
 
         if (stmt->kind == EcsAstEntity) {
-            ((ecs_script_entity_t*)stmt)->non_fragmenting_parent = *(bool*)ctx;
+            ecs_script_entity_t *entity = (ecs_script_entity_t*)stmt;
+            entity->non_fragmenting_parent = tree->non_fragmenting_parent;
+            if (tree->annotated) {
+                entity->tree_annot = true;
+            }
         }
 
         if (stmt->kind == EcsAstScope) {
@@ -783,13 +793,23 @@ static int flecs_script_apply_tree_scope(
     return 0;
 }
 
-static void flecs_script_apply_non_fragmenting_childof(
+void flecs_script_apply_tree(
     ecs_script_entity_t *node,
-    bool enabled)
+    bool non_fragmenting_parent,
+    bool annotated)
 {
-    node->non_fragmenting_parent = enabled;
+    flecs_script_tree_ctx_t ctx = {
+        .non_fragmenting_parent = non_fragmenting_parent,
+        .annotated = annotated
+    };
+
+    node->non_fragmenting_parent = non_fragmenting_parent;
+    if (annotated) {
+        node->tree_annot = true;
+    }
+
     if (node->scope) {
-        flecs_script_apply_tree_scope(node->scope, &enabled);
+        flecs_script_apply_tree_scope(node->scope, &ctx);
     }
 }
 
@@ -802,9 +822,9 @@ void flecs_script_apply_tree_annot(
     }
 
     if (!ecs_os_strcmp(annot->expr, "Parent")) {
-        flecs_script_apply_non_fragmenting_childof(node, true);
+        flecs_script_apply_tree(node, true, true);
     } else if (!ecs_os_strcmp(annot->expr, "ChildOf")) {
-        flecs_script_apply_non_fragmenting_childof(node, false);
+        flecs_script_apply_tree(node, false, true);
     }
 }
 

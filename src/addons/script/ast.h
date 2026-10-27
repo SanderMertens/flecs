@@ -124,6 +124,7 @@ struct ecs_script_entity_t {
     const char *name;
     bool kind_w_expr;
     bool non_fragmenting_parent;
+    bool tree_annot;
     int32_t type_index;
     int32_t base_count;
     ecs_script_scope_t *scope;

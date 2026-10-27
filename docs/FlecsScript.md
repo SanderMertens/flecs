@@ -97,6 +97,22 @@ my_parent {
 }
 ```
 
+Children of prefabs and templates are created using the `Parent` hierarchy storage by default. To select the `ChildOf` hierarchy storage for a prefab or template, add the `tree` annotation:
+
+```cpp
+@tree ChildOf
+prefab my_prefab {
+  my_child {}
+}
+
+@tree ChildOf
+template my_template {
+  my_child {}
+}
+```
+
+Note that when a prefab with a `Parent` hierarchy is instantiated, the names of the prefab children are not copied to the instance children.
+
 ### Tags
 A tag can be added to an entity by simply specifying the tag's identifier in an entity scope. Example:
 

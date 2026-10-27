@@ -10294,12 +10294,14 @@ void Eval_update_script_w_prefab_child(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr_a =
-    HEAD "prefab Parent {"
+    HEAD "@tree ChildOf"
+    LINE "prefab Parent {"
     LINE "  A {}"
     LINE "}";
 
     const char *expr_b =
-    HEAD "prefab Parent {"
+    HEAD "@tree ChildOf"
+    LINE "prefab Parent {"
     LINE "  B {}"
     LINE "}";
 
@@ -15965,6 +15967,213 @@ void Eval_update_after_add_remove_tree_parent(void) {
                 }
             }
         }
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_prefab_default_tree_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = 
+    HEAD "prefab p {"
+    LINE "  child {"
+    LINE "    grandchild {}"
+    LINE "  }"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t p = ecs_lookup(world, "p");
+    test_assert(p != 0);
+    test_assert(ecs_has_id(world, p, EcsPrefab));
+    test_assert(!ecs_has(world, p, EcsParent));
+
+    ecs_entity_t child = ecs_lookup_child(world, p, "child");
+    test_assert(child != 0);
+    test_assert(ecs_has_id(world, child, EcsPrefab));
+    {
+        const EcsParent *ptr = ecs_get(world, child, EcsParent);
+        test_assert(ptr != NULL);
+        test_uint(ptr->value, p);
+    }
+
+    ecs_entity_t grandchild = ecs_lookup_child(world, child, "grandchild");
+    test_assert(grandchild != 0);
+    test_assert(ecs_has_id(world, grandchild, EcsPrefab));
+    {
+        const EcsParent *ptr = ecs_get(world, grandchild, EcsParent);
+        test_assert(ptr != NULL);
+        test_uint(ptr->value, child);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_prefab_tree_childof(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = 
+    HEAD "@tree ChildOf"
+    LINE "prefab p {"
+    LINE "  child {"
+    LINE "    grandchild {}"
+    LINE "  }"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t p = ecs_lookup(world, "p");
+    test_assert(p != 0);
+    test_assert(ecs_has_id(world, p, EcsPrefab));
+
+    ecs_entity_t child = ecs_lookup_child(world, p, "child");
+    test_assert(child != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, p));
+    test_assert(!ecs_has(world, child, EcsParent));
+
+    ecs_entity_t grandchild = ecs_lookup_child(world, child, "grandchild");
+    test_assert(grandchild != 0);
+    test_assert(ecs_has_pair(world, grandchild, EcsChildOf, child));
+    test_assert(!ecs_has(world, grandchild, EcsParent));
+
+    ecs_fini(world);
+}
+
+void Eval_prefab_tree_childof_nested_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = 
+    HEAD "@tree ChildOf"
+    LINE "prefab p {"
+    LINE "  @tree Parent"
+    LINE "  child {"
+    LINE "    grandchild {}"
+    LINE "  }"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t p = ecs_lookup(world, "p");
+    test_assert(p != 0);
+
+    ecs_entity_t child = ecs_lookup_child(world, p, "child");
+    test_assert(child != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, p));
+    test_assert(!ecs_has(world, child, EcsParent));
+
+    ecs_entity_t grandchild = ecs_lookup_child(world, child, "grandchild");
+    test_assert(grandchild != 0);
+    {
+        const EcsParent *ptr = ecs_get(world, grandchild, EcsParent);
+        test_assert(ptr != NULL);
+        test_uint(ptr->value, child);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_prefab_default_tree_parent_nested_childof(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = 
+    HEAD "prefab p {"
+    LINE "  @tree ChildOf"
+    LINE "  child {"
+    LINE "    grandchild {}"
+    LINE "  }"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t p = ecs_lookup(world, "p");
+    test_assert(p != 0);
+
+    ecs_entity_t child = ecs_lookup_child(world, p, "child");
+    test_assert(child != 0);
+    {
+        const EcsParent *ptr = ecs_get(world, child, EcsParent);
+        test_assert(ptr != NULL);
+        test_uint(ptr->value, p);
+    }
+
+    ecs_entity_t grandchild = ecs_lookup_child(world, child, "grandchild");
+    test_assert(grandchild != 0);
+    test_assert(ecs_has_pair(world, grandchild, EcsChildOf, child));
+    test_assert(!ecs_has(world, grandchild, EcsParent));
+
+    ecs_fini(world);
+}
+
+void Eval_prefab_in_tree_childof_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = 
+    HEAD "@tree ChildOf"
+    LINE "parent {"
+    LINE "  prefab p {"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t p = ecs_lookup_child(world, parent, "p");
+    test_assert(p != 0);
+    test_assert(ecs_has_id(world, p, EcsPrefab));
+    test_assert(ecs_has_pair(world, p, EcsChildOf, parent));
+
+    ecs_entity_t child = ecs_lookup_child(world, p, "child");
+    test_assert(child != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, p));
+    test_assert(!ecs_has(world, child, EcsParent));
+
+    ecs_fini(world);
+}
+
+void Eval_prefab_default_tree_parent_instance(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr = 
+    HEAD "prefab p {"
+    LINE "  child {"
+    LINE "    Foo"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e : p {}"
+    LINE "";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t p = ecs_lookup(world, "p");
+    test_assert(p != 0);
+
+    ecs_entity_t p_child = ecs_lookup_child(world, p, "child");
+    test_assert(p_child != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, EcsIsA, p));
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, e);
+    test_int(entities.count, 1);
+    test_assert(ecs_has(world, entities.ids[0], Foo));
+    test_assert(ecs_has_pair(world, entities.ids[0], EcsIsA, p_child));
+    {
+        const EcsParent *ptr = ecs_get(world, entities.ids[0], EcsParent);
+        test_assert(ptr != NULL);
+        test_uint(ptr->value, e);
     }
 
     ecs_fini(world);
