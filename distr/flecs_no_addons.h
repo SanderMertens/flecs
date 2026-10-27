@@ -513,11 +513,11 @@ extern "C" {
     (EcsIdOnDeleteTargetPanic|EcsIdOnDeleteTargetRemove|\
         EcsIdOnDeleteTargetDelete)
 
-#define EcsIdOnInstantiateOverride     (1u << 6)
+#define EcsIdOnInstantiateCopy     (1u << 6)
 #define EcsIdOnInstantiateInherit      (1u << 7)
 #define EcsIdOnInstantiateDontInherit  (1u << 8)
 #define EcsIdOnInstantiateMask\
-    (EcsIdOnInstantiateOverride|EcsIdOnInstantiateInherit|\
+    (EcsIdOnInstantiateCopy|EcsIdOnInstantiateInherit|\
         EcsIdOnInstantiateDontInherit)
 
 #define EcsIdExclusive                 (1u << 9)

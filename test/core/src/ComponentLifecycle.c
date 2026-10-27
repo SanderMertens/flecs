@@ -5932,7 +5932,7 @@ void ComponentLifecycle_locked_storage_copy_ctor(void) {
     ECS_COMPONENT_DEFINE(world, Position);
     locked_storage_tag = ecs_new(world);
 
-    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsCopy);
 
     ecs_set_hooks(world, Position, {
         .copy_ctor = locked_storage_copy

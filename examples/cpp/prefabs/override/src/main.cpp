@@ -5,7 +5,7 @@
 // copied from the prefab to the instance. This behavior can be customized with
 // the OnInstantiate trait, which has three options:
 // 
-// - Override (copy to instance)
+// - Copy (copy to instance)
 // - Inherit (inherit from prefab)
 // - DontInherit (don't copy or inherit)
 //

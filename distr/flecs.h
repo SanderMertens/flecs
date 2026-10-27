@@ -700,11 +700,11 @@ extern "C" {
     (EcsIdOnDeleteTargetPanic|EcsIdOnDeleteTargetRemove|\
         EcsIdOnDeleteTargetDelete)
 
-#define EcsIdOnInstantiateOverride     (1u << 6)
+#define EcsIdOnInstantiateCopy     (1u << 6)
 #define EcsIdOnInstantiateInherit      (1u << 7)
 #define EcsIdOnInstantiateDontInherit  (1u << 8)
 #define EcsIdOnInstantiateMask\
-    (EcsIdOnInstantiateOverride|EcsIdOnInstantiateInherit|\
+    (EcsIdOnInstantiateCopy|EcsIdOnInstantiateInherit|\
         EcsIdOnInstantiateDontInherit)
 
 #define EcsIdExclusive                 (1u << 9)
@@ -747,7 +747,7 @@ extern "C" {
 /* Utilities for converting from flags to instantiate policies and vice versa. */
 #ifdef FLECS_PREFAB
 #define ECS_ID_ON_INSTANTIATE(flags) \
-    ((ecs_entity_t[]){EcsOverride, EcsOverride, EcsInherit, 0, EcsDontInherit}\
+    ((ecs_entity_t[]){EcsCopy, EcsCopy, EcsInherit, 0, EcsDontInherit}\
         [(((flags) & EcsIdOnInstantiateMask) >> 6)])
 #endif
 #define ECS_ID_ON_INSTANTIATE_FLAG(id) \
@@ -6715,10 +6715,10 @@ FLECS_API extern const ecs_entity_t EcsInheritable;
 FLECS_API extern const ecs_entity_t EcsOnInstantiate;
 
 #ifdef FLECS_PREFAB
-/** Override component on instantiate. 
+/** Copy component on instantiate. 
  * This will copy the component from the base entity `(IsA target)` to the
  * instance. The base component will never be inherited from the prefab. */
-FLECS_API extern const ecs_entity_t EcsOverride;
+FLECS_API extern const ecs_entity_t EcsCopy;
 
 /** Inherit component on instantiate. 
  * This will inherit (share) the component from the base entity `(IsA target)`.
@@ -21692,8 +21692,8 @@ static const flecs::entity_t CanToggle = EcsCanToggle;
 /** OnInstantiate trait. */
 static const flecs::entity_t OnInstantiate = EcsOnInstantiate;
 #ifdef FLECS_PREFAB
-/** Override trait. */
-static const flecs::entity_t Override = EcsOverride;
+/** Copy trait. */
+static const flecs::entity_t Copy = EcsCopy;
 /** Inherit trait. */
 static const flecs::entity_t Inherit = EcsInherit;
 #endif
@@ -31263,7 +31263,7 @@ struct type_impl {
                 flecs::on_instantiate_trait<T>::value;
 #ifdef FLECS_PREFAB
             if constexpr (policy == flecs::on_instantiate::override) {
-                ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Override);
+                ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Copy);
             }
             if constexpr (policy == flecs::on_instantiate::inherit) {
                 ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Inherit);

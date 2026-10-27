@@ -386,7 +386,7 @@ For more details, see the [Flecs script manual](FlecsScript.md).
 ## Inheritance
 In v4, components no longer inherit by default when instantiating a prefab. Instead, components by default override, which is equivalent to how auto overriding worked in v3. To inherit a component, add the `(OnInstantiate, Inherit)` trait to the component. 
 
-The `EcsDontInherit` v3 trait is equivalent to the `(OnInstantiate, DontInherit)` v4 trait. The `EcsAlwaysOverride` v3 trait is now the default in v4. It can also be explicitly specified as `(OnInstantiate, Override)`.
+The `EcsDontInherit` v3 trait is equivalent to the `(OnInstantiate, DontInherit)` v4 trait. The `EcsAlwaysOverride` v3 trait is now the default in v4. It can also be explicitly specified as `(OnInstantiate, Copy)`.
 
 An example:
 

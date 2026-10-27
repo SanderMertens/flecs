@@ -21126,7 +21126,7 @@ const ecs_entity_t EcsReflexive =                   FLECS_HI_COMPONENT_ID + 19;
 const ecs_entity_t EcsInheritable =                 FLECS_HI_COMPONENT_ID + 20;
 const ecs_entity_t EcsOnInstantiate =               FLECS_HI_COMPONENT_ID + 21;
 #ifdef FLECS_PREFAB
-const ecs_entity_t EcsOverride =                    FLECS_HI_COMPONENT_ID + 22;
+const ecs_entity_t EcsCopy =                    FLECS_HI_COMPONENT_ID + 22;
 const ecs_entity_t EcsInherit =                     FLECS_HI_COMPONENT_ID + 23;
 #endif
 const ecs_entity_t EcsDontInherit =                 FLECS_HI_COMPONENT_ID + 24;
@@ -29041,8 +29041,8 @@ static void flecs_rest_append_component_traits(
         ecs_strbuf_list_appendlit(reply, "\"(OnDeleteTarget,Panic)\"");
     }
 
-    if (flags & EcsIdOnInstantiateOverride) {
-        ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,Override)\"");
+    if (flags & EcsIdOnInstantiateCopy) {
+        ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,Copy)\"");
     }
 
     if (flags & EcsIdOnInstantiateInherit) {
@@ -40889,8 +40889,8 @@ static void flecs_table_init_flags(
 #ifdef FLECS_PREFAB
             if (inherit_kind == EcsInherit) {
                 table->trait_flags |= EcsIdOnInstantiateInherit;
-            } else if (inherit_kind == EcsOverride) {
-                table->trait_flags |= EcsIdOnInstantiateOverride;
+            } else if (inherit_kind == EcsCopy) {
+                table->trait_flags |= EcsIdOnInstantiateCopy;
             }
 #endif
             if (inherit_kind == EcsDontInherit) {
@@ -41417,7 +41417,7 @@ void flecs_table_init(
             table->flags |= cr->flags & EcsIdEventMask;
 
 #ifdef FLECS_PREFAB
-            if (ECS_ID_ON_INSTANTIATE(cr->flags) == EcsOverride) {
+            if (ECS_ID_ON_INSTANTIATE(cr->flags) == EcsCopy) {
                 table->flags |= EcsTableHasOverrides;
             }
 #endif
@@ -44322,7 +44322,7 @@ static void flecs_add_overrides_for_base(
             } else {
 #ifdef FLECS_PREFAB
                 ecs_table_record_t *tr = &base_table->_->records[i];
-                if (ECS_ID_ON_INSTANTIATE(tr->hdr.cr->flags) == EcsOverride) {
+                if (ECS_ID_ON_INSTANTIATE(tr->hdr.cr->flags) == EcsCopy) {
                     to_add = id;
                 }
 #endif
@@ -64459,12 +64459,12 @@ void flecs_bootstrap_prefab(
     ecs_world_t *world)
 {
     flecs_bootstrap_tag(world, EcsPrefab);
-    flecs_bootstrap_tag(world, EcsOverride);
+    flecs_bootstrap_tag(world, EcsCopy);
     flecs_bootstrap_tag(world, EcsInherit);
     flecs_bootstrap_trait(world, EcsOnInstantiate);
 #ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
-    ecs_add_id(world, EcsOverride, EcsTarget);
+    ecs_add_id(world, EcsCopy, EcsTarget);
     ecs_add_id(world, EcsInherit, EcsTarget);
 #endif
 

@@ -1778,10 +1778,10 @@ FLECS_API extern const ecs_entity_t EcsInheritable;
 FLECS_API extern const ecs_entity_t EcsOnInstantiate;
 
 #ifdef FLECS_PREFAB
-/** Override component on instantiate. 
+/** Copy component on instantiate. 
  * This will copy the component from the base entity `(IsA target)` to the
  * instance. The base component will never be inherited from the prefab. */
-FLECS_API extern const ecs_entity_t EcsOverride;
+FLECS_API extern const ecs_entity_t EcsCopy;
 
 /** Inherit component on instantiate. 
  * This will inherit (share) the component from the base entity `(IsA target)`.

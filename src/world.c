@@ -50,7 +50,7 @@ const ecs_entity_t EcsReflexive =                   FLECS_HI_COMPONENT_ID + 19;
 const ecs_entity_t EcsInheritable =                 FLECS_HI_COMPONENT_ID + 20;
 const ecs_entity_t EcsOnInstantiate =               FLECS_HI_COMPONENT_ID + 21;
 #ifdef FLECS_PREFAB
-const ecs_entity_t EcsOverride =                    FLECS_HI_COMPONENT_ID + 22;
+const ecs_entity_t EcsCopy =                    FLECS_HI_COMPONENT_ID + 22;
 const ecs_entity_t EcsInherit =                     FLECS_HI_COMPONENT_ID + 23;
 #endif
 const ecs_entity_t EcsDontInherit =                 FLECS_HI_COMPONENT_ID + 24;
