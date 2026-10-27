@@ -2336,6 +2336,38 @@ int flecs_script_eval_template(
         goto error;
     }
 
+    ecs_script_entity_t tree_node = {
+        .node = { .kind = EcsAstEntity, .pos = node->node.pos },
+        .scope = node->scope
+    };
+    bool tree_annotated = false;
+    int32_t i, count = ecs_vec_count(&v->r->annot);
+    ecs_script_annot_t **annots = ecs_vec_first(&v->r->annot);
+    for (i = 0; i < count ; i ++) {
+        ecs_script_annot_t *annot = annots[i];
+        if (ecs_os_strcmp(annot->name, "tree")) {
+            continue;
+        }
+
+        if (ecs_os_strcmp(annot->expr, "Parent") &&
+            ecs_os_strcmp(annot->expr, "ChildOf"))
+        {
+            flecs_script_eval_error(v, annot,
+                "invalid value for tree annotation: '%s' (expected "
+                "'Parent' or 'ChildOf')", annot->expr);
+            goto error;
+        }
+
+        flecs_script_apply_tree_annot(annot, &tree_node);
+        tree_annotated = true;
+    }
+
+    if (!tree_annotated) {
+        flecs_script_apply_tree(&tree_node, true, false);
+    }
+
+    template->non_fragmenting_parent = tree_node.non_fragmenting_parent;
+
     ecs_vec_t outer_annot = v->r->annot;
     ecs_vec_init_t(v->r->allocator,
         &v->r->annot, ecs_script_annot_t*, 0);
@@ -2362,29 +2394,12 @@ int flecs_script_eval_template(
     }
 
     /* Consume annotations, if any */
-    int32_t i, count = ecs_vec_count(&v->r->annot);
+    count = ecs_vec_count(&v->r->annot);
     if (count) {
-        ecs_script_annot_t **annots = ecs_vec_first(&v->r->annot);
+        annots = ecs_vec_first(&v->r->annot);
         for (i = 0; i < count ; i ++) {
             ecs_script_annot_t *annot = annots[i];
             if (!ecs_os_strcmp(annot->name, "tree")) {
-                if (ecs_os_strcmp(annot->expr, "Parent") &&
-                    ecs_os_strcmp(annot->expr, "ChildOf"))
-                {
-                    flecs_script_eval_error(v, annot,
-                        "invalid value for tree annotation: '%s' (expected "
-                        "'Parent' or 'ChildOf')", annot->expr);
-                    goto error;
-                }
-
-                ecs_script_entity_t tree_node = {
-                    .node = { .kind = EcsAstEntity, .pos = node->node.pos },
-                    .scope = node->scope
-                };
-                flecs_script_apply_tree_annot(annot, &tree_node);
-                template->non_fragmenting_parent =
-                    tree_node.non_fragmenting_parent;
-
                 continue;
             }
 

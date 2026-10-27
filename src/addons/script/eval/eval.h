@@ -21,6 +21,11 @@ void flecs_script_apply_tree_annot(
     ecs_script_annot_t *annot,
     ecs_script_entity_t *node);
 
+void flecs_script_apply_tree(
+    ecs_script_entity_t *node,
+    bool non_fragmenting_parent,
+    bool annotated);
+
 int flecs_script_compile(
     ecs_script_eval_visitor_t *v);
 

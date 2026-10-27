@@ -1523,6 +1523,7 @@ void Template_template_w_anonymous_parse_again(void) {
     });
 
     const char *expr =
+    LINE "@tree ChildOf"
     LINE "template Tree {"
     LINE "  prop count: i32 = 0"
     LINE "  _ { Position: {count, count * 2} }"
@@ -2813,18 +2814,21 @@ void Template_nested_templates_in_prefab(void) {
     ECS_COMPONENT(world, Position);
 
     const char *expr =
-    HEAD "template Frame {"
+    HEAD "@tree ChildOf"
+    LINE "template Frame {"
     LINE "  wall {}"
     LINE "}"
     LINE ""
     LINE "template Room { }"
     LINE ""
+    LINE "@tree ChildOf"
     LINE "template House {"
     LINE "  building {"
     LINE "    walls { Frame: {} }"
     LINE "  }"
     LINE "}"
     LINE ""
+    LINE "@tree ChildOf"
     LINE "prefab HousePrefab {"
     LINE "  House: {}"
     LINE "  room {"
@@ -4123,6 +4127,125 @@ void Template_template_w_tree_parent_change_value(void) {
             test_uint(p->value, e);
         }
     }
+
+    ecs_fini(world);
+}
+
+void Template_template_default_tree_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr =
+    HEAD "template Bar {"
+    LINE "  child {"
+    LINE "    grandchild {"
+    LINE "      Foo"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Bar e {}"
+    LINE "";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_child(world, e, "child");
+    test_assert(child != 0);
+    {
+        const EcsParent *p = ecs_get(world, child, EcsParent);
+        test_assert(p != NULL);
+        test_uint(p->value, e);
+    }
+
+    ecs_entity_t grandchild = ecs_lookup_child(world, child, "grandchild");
+    test_assert(grandchild != 0);
+    test_assert(ecs_has(world, grandchild, Foo));
+    {
+        const EcsParent *p = ecs_get(world, grandchild, EcsParent);
+        test_assert(p != NULL);
+        test_uint(p->value, child);
+    }
+
+    ecs_fini(world);
+}
+
+void Template_template_w_tree_childof(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr =
+    HEAD "@tree ChildOf"
+    LINE "template Bar {"
+    LINE "  child {"
+    LINE "    grandchild {"
+    LINE "      Foo"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Bar e {}"
+    LINE "";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_child(world, e, "child");
+    test_assert(child != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, e));
+    test_assert(!ecs_has(world, child, EcsParent));
+
+    ecs_entity_t grandchild = ecs_lookup_child(world, child, "grandchild");
+    test_assert(grandchild != 0);
+    test_assert(ecs_has(world, grandchild, Foo));
+    test_assert(ecs_has_pair(world, grandchild, EcsChildOf, child));
+    test_assert(!ecs_has(world, grandchild, EcsParent));
+
+    ecs_fini(world);
+}
+
+void Template_template_default_tree_parent_nested_childof(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr =
+    HEAD "template Bar {"
+    LINE "  @tree ChildOf"
+    LINE "  child {"
+    LINE "    grandchild {"
+    LINE "      Foo"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Bar e {}"
+    LINE "";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_child(world, e, "child");
+    test_assert(child != 0);
+    {
+        const EcsParent *p = ecs_get(world, child, EcsParent);
+        test_assert(p != NULL);
+        test_uint(p->value, e);
+    }
+
+    ecs_entity_t grandchild = ecs_lookup_child(world, child, "grandchild");
+    test_assert(grandchild != 0);
+    test_assert(ecs_has(world, grandchild, Foo));
+    test_assert(ecs_has_pair(world, grandchild, EcsChildOf, child));
+    test_assert(!ecs_has(world, grandchild, EcsParent));
 
     ecs_fini(world);
 }

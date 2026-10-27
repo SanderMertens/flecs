@@ -2042,6 +2042,12 @@ static int flecs_script_type_entity(
         return -1;
     }
 
+#ifdef FLECS_PREFAB
+    if (node->eval_kind == EcsPrefab && !node->tree_annot) {
+        flecs_script_apply_tree(node, true, false);
+    }
+#endif
+
     flecs_script_entity_state_t state = {
         .node = node,
         .eval_kind = node->eval_kind

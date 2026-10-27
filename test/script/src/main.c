@@ -570,6 +570,12 @@ void Eval_tree_parent_nested_w_for_scope(void);
 void Eval_tree_parent_nested_w_pair_scope(void);
 void Eval_tree_parent_nested_w_with_scope(void);
 void Eval_update_after_add_remove_tree_parent(void);
+void Eval_prefab_default_tree_parent(void);
+void Eval_prefab_tree_childof(void);
+void Eval_prefab_tree_childof_nested_parent(void);
+void Eval_prefab_default_tree_parent_nested_childof(void);
+void Eval_prefab_in_tree_childof_scope(void);
+void Eval_prefab_default_tree_parent_instance(void);
 void Eval_assign_eq_enum_to_component(void);
 void Eval_assign_eq_enum_to_const(void);
 void Eval_using_w_comment(void);
@@ -1384,6 +1390,9 @@ void Template_template_w_name_annotation(void);
 void Template_template_w_name_annotation_update_script(void);
 void Template_template_w_tree_parent(void);
 void Template_template_w_tree_parent_change_value(void);
+void Template_template_default_tree_parent(void);
+void Template_template_w_tree_childof(void);
+void Template_template_default_tree_parent_nested_childof(void);
 void Template_template_w_nested_template_w_with(void);
 void Template_template_w_nested_template_w_with_kind_value(void);
 void Template_pair_component_w_entity_prop_target(void);
@@ -6205,6 +6214,30 @@ bake_test_case Eval_testcases[] = {
         Eval_update_after_add_remove_tree_parent
     },
     {
+        "prefab_default_tree_parent",
+        Eval_prefab_default_tree_parent
+    },
+    {
+        "prefab_tree_childof",
+        Eval_prefab_tree_childof
+    },
+    {
+        "prefab_tree_childof_nested_parent",
+        Eval_prefab_tree_childof_nested_parent
+    },
+    {
+        "prefab_default_tree_parent_nested_childof",
+        Eval_prefab_default_tree_parent_nested_childof
+    },
+    {
+        "prefab_in_tree_childof_scope",
+        Eval_prefab_in_tree_childof_scope
+    },
+    {
+        "prefab_default_tree_parent_instance",
+        Eval_prefab_default_tree_parent_instance
+    },
+    {
         "assign_eq_enum_to_component",
         Eval_assign_eq_enum_to_component
     },
@@ -9396,6 +9429,18 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_tree_parent_change_value",
         Template_template_w_tree_parent_change_value
+    },
+    {
+        "template_default_tree_parent",
+        Template_template_default_tree_parent
+    },
+    {
+        "template_w_tree_childof",
+        Template_template_w_tree_childof
+    },
+    {
+        "template_default_tree_parent_nested_childof",
+        Template_template_default_tree_parent_nested_childof
     },
     {
         "template_w_nested_template_w_with",
@@ -19659,7 +19704,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        814,
+        820,
         Eval_testcases,
         1,
         Eval_params
@@ -19722,7 +19767,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        223,
+        226,
         Template_testcases,
         1,
         Template_params
