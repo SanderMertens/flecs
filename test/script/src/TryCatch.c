@@ -1108,7 +1108,7 @@ void TryCatch_cancel_not_caught(void) {
 
     ecs_script_task_cancel(task);
     test_int(tc_cancel_count, 1);
-    test_bool(ecs_script_future_is_cancelled(tc_futures[0]), true);
+    test_int(ecs_script_future_status(tc_futures[0]), EcsScriptFutureCancelled);
     ecs_script_future_release(tc_futures[0]);
 
     test_int(ecs_script_task_resume(task, NULL),

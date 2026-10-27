@@ -49856,13 +49856,6 @@ bool flecs_script_type_is_skipped_var(
 
 #ifdef FLECS_SCRIPT_ASYNC
 
-typedef enum flecs_script_future_state_t {
-    FlecsScriptFuturePending,
-    FlecsScriptFutureResolved,
-    FlecsScriptFutureRejected,
-    FlecsScriptFutureCancelled
-} flecs_script_future_state_t;
-
 struct ecs_script_future_t {
     ecs_entity_t type;
     ecs_value_t value;
@@ -49874,7 +49867,7 @@ struct ecs_script_future_t {
     ecs_function_ctx_t function_ctx;
     ecs_os_mutex_t mutex;
     int32_t refs;
-    flecs_script_future_state_t state;
+    ecs_script_future_status_t status;
 };
 
 ecs_expr_function_t* flecs_script_await_call(
@@ -49882,14 +49875,21 @@ ecs_expr_function_t* flecs_script_await_call(
     const ecs_script_node_t *stmt,
     ecs_expr_node_t *expr);
 
+/* Create a future and invoke the async function callback. The future is
+ * returned with two references: one for the caller and one for the callback. */
+ecs_script_future_t* flecs_script_future_launch(
+    ecs_world_t *world,
+    const ecs_function_calldata_t *calldata,
+    ecs_entity_t type,
+    ecs_entity_t entity,
+    int32_t argc,
+    const ecs_value_t *argv);
+
 void flecs_script_await_launch(
     ecs_world_t *world,
     flecs_script_async_state_t *async,
     const ecs_expr_function_t *call,
     ecs_value_t *argv);
-
-flecs_script_future_state_t flecs_script_future_poll(
-    const ecs_script_future_t *future);
 
 /* Async statement evaluation, invoked by the script runner */
 
@@ -68404,6 +68404,31 @@ ecs_entity_t ecs_method_init(
     return result;
 }
 
+static int flecs_script_function_check_args(
+    const struct ecs_script_function_t *f,
+    int32_t argc,
+    const ecs_value_t *argv)
+{
+    (void)argv;
+    ecs_check(argc >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(argc == ecs_vec_count(&f->params), ECS_INVALID_PARAMETER,
+        "expected %d arguments, got %d", ecs_vec_count(&f->params), argc);
+    ecs_check(!argc || argv != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
+    (void)params;
+    int32_t i;
+    for (i = 0; i < argc; i ++) {
+        ecs_check(argv[i].type == params[i].type, ECS_INVALID_PARAMETER,
+            "type of argument %d does not match parameter type", i);
+        ecs_check(argv[i].ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 static int flecs_script_function_call(
     ecs_world_t *world,
     ecs_entity_t function,
@@ -68415,21 +68440,15 @@ static int flecs_script_function_call(
 {
     ecs_check(f != NULL, ECS_INVALID_PARAMETER,
         "entity is not a script function or method");
+#ifdef FLECS_SCRIPT_ASYNC
+    ecs_check(f->async_callback == NULL, ECS_INVALID_OPERATION,
+        "async functions must be called with ecs_async_function_call()");
+#endif
     ecs_check(f->callback != NULL, ECS_UNSUPPORTED,
         "vector functions cannot be called directly");
-    ecs_check(argc >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(argc == ecs_vec_count(&f->params), ECS_INVALID_PARAMETER,
-        "expected %d arguments, got %d", ecs_vec_count(&f->params), argc);
-    ecs_check(!argc || argv != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
-    (void)params;
-    int32_t i;
-    for (i = 0; i < argc; i ++) {
-        ecs_check(argv[i].type == params[i].type, ECS_INVALID_PARAMETER,
-            "type of argument %d does not match parameter type", i);
-        ecs_check(argv[i].ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (flecs_script_function_check_args(f, argc, argv)) {
+        goto error;
     }
 
     if (instance) {
@@ -68532,6 +68551,41 @@ int ecs_method_call(
 error:
     return -1;
 }
+
+#ifdef FLECS_SCRIPT_ASYNC
+ecs_script_future_t* ecs_async_function_call(
+    ecs_world_t *world,
+    ecs_entity_t function,
+    int32_t argc,
+    const ecs_value_t *argv)
+{
+    ecs_world_t *real_world = world;
+    flecs_stage_from_world(&real_world);
+    ecs_check(function != 0, ECS_INVALID_PARAMETER, NULL);
+
+    const EcsScriptFunction *f = ecs_get(
+        real_world, function, EcsScriptFunction);
+    ecs_check(f != NULL, ECS_INVALID_PARAMETER,
+        "entity is not a script function");
+    ecs_check(f->async_callback != NULL, ECS_INVALID_OPERATION,
+        "function is not async, use ecs_function_call()");
+    if (flecs_script_function_check_args(f, argc, argv)) {
+        goto error;
+    }
+
+    ecs_function_calldata_t calldata = {
+        .function = function,
+        .async_callback = f->async_callback,
+        .async_cancel = f->async_cancel,
+        .ctx = f->ctx
+    };
+
+    return flecs_script_future_launch(
+        world, &calldata, f->return_type, 0, argc, argv);
+error:
+    return NULL;
+}
+#endif
 
 void flecs_function_import(
     ecs_world_t *world)
@@ -92053,54 +92107,102 @@ ecs_expr_function_t* flecs_script_await_call(
     return call;
 }
 
-void flecs_script_await_launch(
+ecs_script_future_t* flecs_script_future_launch(
     ecs_world_t *world,
-    flecs_script_async_state_t *async,
-    const ecs_expr_function_t *call,
-    ecs_value_t *argv)
+    const ecs_function_calldata_t *calldata,
+    ecs_entity_t type,
+    ecs_entity_t entity,
+    int32_t argc,
+    const ecs_value_t *argv)
 {
     ecs_script_future_t *future = ecs_os_calloc_t(ecs_script_future_t);
-    future->type = call->node.type;
-    future->cancel = call->calldata.async_cancel;
+    future->type = type;
+    future->cancel = calldata->async_cancel;
     future->function_ctx = (ecs_function_ctx_t){
         .world = world,
-        .function = call->calldata.function,
-        .entity = async->entity,
-        .ctx = call->calldata.ctx
+        .function = calldata->function,
+        .entity = entity,
+        .ctx = calldata->ctx
     };
     future->refs = 2;
     if (ecs_os_has_threading()) {
         future->mutex = ecs_os_mutex_new();
     }
 
-    call->calldata.async_callback(&future->function_ctx,
-        ecs_vec_count(&call->args->elements), argv, future);
-    async->future = future;
+    calldata->async_callback(&future->function_ctx, argc, argv, future);
+    return future;
 }
 
-flecs_script_future_state_t flecs_script_future_poll(
+void flecs_script_await_launch(
+    ecs_world_t *world,
+    flecs_script_async_state_t *async,
+    const ecs_expr_function_t *call,
+    ecs_value_t *argv)
+{
+    async->future = flecs_script_future_launch(world, &call->calldata,
+        call->node.type, async->entity,
+        ecs_vec_count(&call->args->elements), argv);
+}
+
+ecs_script_future_status_t ecs_script_future_status(
     const ecs_script_future_t *future)
 {
+    ecs_check(future != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_script_future_t *ptr = ECS_CONST_CAST(ecs_script_future_t*, future);
     flecs_script_future_lock(ptr);
-    flecs_script_future_state_t state = ptr->state;
+    ecs_script_future_status_t status = ptr->status;
     flecs_script_future_unlock(ptr);
-    return state;
+    return status;
+error:
+    return EcsScriptFutureCancelled;
 }
 
-static void flecs_script_future_cancel(
+const ecs_value_t* ecs_script_future_get_value(
+    const ecs_script_future_t *future)
+{
+    if (ecs_script_future_status(future) != EcsScriptFutureResolved) {
+        return NULL;
+    }
+
+    return &future->value;
+}
+
+const char* ecs_script_future_get_error(
+    const ecs_script_future_t *future)
+{
+    if (ecs_script_future_status(future) != EcsScriptFutureRejected) {
+        return NULL;
+    }
+
+    return future->error;
+}
+
+ecs_entity_t ecs_script_future_get_error_id(
+    const ecs_script_future_t *future)
+{
+    if (ecs_script_future_status(future) != EcsScriptFutureRejected) {
+        return 0;
+    }
+
+    return future->error_id;
+}
+
+void ecs_script_future_cancel(
     ecs_script_future_t *future)
 {
+    ecs_check(future != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_script_future_lock(future);
-    bool cancel = future->state == FlecsScriptFuturePending;
+    bool cancel = future->status == EcsScriptFuturePending;
     if (cancel) {
-        future->state = FlecsScriptFutureCancelled;
+        future->status = EcsScriptFutureCancelled;
     }
 
     flecs_script_future_unlock(future);
     if (cancel && future->cancel) {
         future->cancel(&future->function_ctx, future);
     }
+error:
+    return;
 }
 
 ecs_script_future_t* ecs_script_future_retain(
@@ -92155,7 +92257,7 @@ int ecs_script_future_resolve(
     ecs_check(value->ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     flecs_script_future_lock(future);
-    if (future->state != FlecsScriptFuturePending) {
+    if (future->status != EcsScriptFuturePending) {
         flecs_script_future_unlock(future);
         goto error;
     }
@@ -92163,7 +92265,7 @@ int ecs_script_future_resolve(
     future->value = ecs_value_new(future->function_ctx.world, future->type);
     ecs_ptr_copy(future->function_ctx.world, future->type,
         future->value.ptr, value->ptr);
-    future->state = FlecsScriptFutureResolved;
+    future->status = EcsScriptFutureResolved;
     flecs_script_future_unlock(future);
     return 0;
 error:
@@ -92189,27 +92291,18 @@ int ecs_script_future_reject_id(
     ecs_check(error || msg, ECS_INVALID_PARAMETER, NULL);
 
     flecs_script_future_lock(future);
-    if (future->state != FlecsScriptFuturePending) {
+    if (future->status != EcsScriptFuturePending) {
         flecs_script_future_unlock(future);
         goto error;
     }
 
     future->error = ecs_os_strdup(msg ? msg : "async function failed");
     future->error_id = error;
-    future->state = FlecsScriptFutureRejected;
+    future->status = EcsScriptFutureRejected;
     flecs_script_future_unlock(future);
     return 0;
 error:
     return -1;
-}
-
-bool ecs_script_future_is_cancelled(
-    const ecs_script_future_t *future)
-{
-    ecs_check(future != NULL, ECS_INVALID_PARAMETER, NULL);
-    return flecs_script_future_poll(future) == FlecsScriptFutureCancelled;
-error:
-    return false;
 }
 
 void ecs_script_future_set_ctx(
@@ -92281,21 +92374,21 @@ int flecs_script_await_poll(
     ecs_script_future_t **ready)
 {
     ecs_assert(async->future != NULL, ECS_INTERNAL_ERROR, NULL);
-    flecs_script_future_state_t state = flecs_script_future_poll(async->future);
-    if (state == FlecsScriptFuturePending) {
+    ecs_script_future_status_t status = ecs_script_future_status(async->future);
+    if (status == EcsScriptFuturePending) {
         return 1;
     }
 
     ecs_script_future_t *future = async->future;
     async->future = NULL;
-    if (state == FlecsScriptFutureRejected) {
+    if (status == EcsScriptFutureRejected) {
         flecs_script_throw_clear(async);
         async->thrown = future;
         async->throw_node = stmt;
         return -1;
     }
 
-    if (state == FlecsScriptFutureCancelled) {
+    if (status == EcsScriptFutureCancelled) {
         flecs_script_eval_error(v, stmt, "awaited operation was cancelled");
         ecs_script_future_release(future);
         return -1;
@@ -92696,7 +92789,7 @@ static void flecs_script_task_cancel_future(
     ecs_script_future_t *future = task->async->future;
     task->async->future = NULL;
     if (future) {
-        flecs_script_future_cancel(future);
+        ecs_script_future_cancel(future);
         ecs_script_future_release(future);
     }
 }
@@ -92783,7 +92876,7 @@ bool ecs_script_task_is_ready(
         return true;
     }
 
-    return flecs_script_future_poll(future) != FlecsScriptFuturePending;
+    return ecs_script_future_status(future) != EcsScriptFuturePending;
 error:
     return false;
 }

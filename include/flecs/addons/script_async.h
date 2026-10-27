@@ -28,7 +28,8 @@ FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptTask);
 
 /** Future for the result of an async function call.
- * A future is created when a script awaits an async function, and is passed to
+ * A future is created when an async function is called, either by a script
+ * that awaits the function or by ecs_async_function_call(), and is passed to
  * the async function callback. The callback (or code invoked by it, possibly
  * on another thread) completes the future with ecs_script_future_resolve() or
  * ecs_script_future_reject(), after which the awaiting task can resume.
@@ -92,6 +93,14 @@ typedef enum ecs_script_task_status_t {
     EcsScriptTaskError,      /**< Task encountered an error. */
     EcsScriptTaskCancelled   /**< Task was cancelled. */
 } ecs_script_task_status_t;
+
+/** Script future status. */
+typedef enum ecs_script_future_status_t {
+    EcsScriptFuturePending,   /**< Future hasn't been completed yet. */
+    EcsScriptFutureResolved,  /**< Future was resolved with a value. */
+    EcsScriptFutureRejected,  /**< Future was rejected with an error. */
+    EcsScriptFutureCancelled  /**< Future was cancelled. */
+} ecs_script_future_status_t;
 
 /** Script task loop mode. */
 typedef enum ecs_script_task_loop_t {
@@ -218,7 +227,7 @@ int32_t ecs_script_tasks_progress(
 
 /** Resolve future.
  * This operation completes a future with a result value. The value must be of
- * the return type of the async function, and is copied into the future. The
+ * the return type of the async function, and is copied into the future. An
  * awaiting task can afterwards be resumed with ecs_script_task_resume().
  *
  * This operation is threadsafe and may be called from a different thread than
@@ -285,20 +294,75 @@ int ecs_script_future_reject_id(
     ecs_entity_t error,
     const char *msg);
 
-/** Check if future is cancelled.
- * This operation returns whether a future was cancelled, which happens when
- * the awaiting task is cancelled or freed. Async functions that do work over
- * multiple frames or on other threads can use this to detect that the result
- * is no longer needed.
+/** Get future status.
+ * This operation returns whether a future is pending, resolved, rejected or
+ * cancelled. Applications that call ecs_async_function_call() can use it to
+ * poll for completion. Async functions can use it to detect that the result is
+ * no longer needed because the future was cancelled.
  *
  * This operation is threadsafe.
  *
  * @param future The future.
- * @return True if the future is cancelled.
+ * @return The future status.
  */
 FLECS_API
-bool ecs_script_future_is_cancelled(
+ecs_script_future_status_t ecs_script_future_status(
     const ecs_script_future_t *future);
+
+/** Get future value.
+ * This operation returns the value a future was resolved with. The value is
+ * owned by the future, and is valid until the future is released.
+ *
+ * This operation is threadsafe.
+ *
+ * @param future The future.
+ * @return The result value, or NULL if the future was not resolved.
+ */
+FLECS_API
+const ecs_value_t* ecs_script_future_get_value(
+    const ecs_script_future_t *future);
+
+/** Get future error.
+ * This operation returns the error message a future was rejected with. The
+ * message is owned by the future, and is valid until the future is released.
+ *
+ * This operation is threadsafe.
+ *
+ * @param future The future.
+ * @return The error message, or NULL if the future was not rejected.
+ */
+FLECS_API
+const char* ecs_script_future_get_error(
+    const ecs_script_future_t *future);
+
+/** Get future error id.
+ * This operation returns the error identifier a future was rejected with (see
+ * ecs_script_future_reject_id()).
+ *
+ * This operation is threadsafe.
+ *
+ * @param future The future.
+ * @return The error identifier, or 0 if the future was not rejected or was
+ *         rejected without an error identifier.
+ */
+FLECS_API
+ecs_entity_t ecs_script_future_get_error_id(
+    const ecs_script_future_t *future);
+
+/** Cancel future.
+ * This operation cancels a pending future and invokes the cancel callback of
+ * the async function (if provided). A cancelled future can no longer be
+ * resolved or rejected. Cancelling a future that already completed has no
+ * effect.
+ *
+ * Cancelling a future does not release it. Futures awaited by a task are
+ * cancelled when the task is cancelled or freed.
+ *
+ * @param future The future.
+ */
+FLECS_API
+void ecs_script_future_cancel(
+    ecs_script_future_t *future);
 
 /** Increase future refcount.
  * This operation increases the refcount of a future, which allows an async
@@ -306,7 +370,9 @@ bool ecs_script_future_is_cancelled(
  * this operation must be matched with a call to ecs_script_future_release().
  *
  * A future passed to an async function callback is already retained on behalf
- * of the callback, and must be released after the future is completed.
+ * of the callback, and must be released after the future is completed. A
+ * future returned by ecs_async_function_call() is retained on behalf of the
+ * application.
  *
  * This operation is threadsafe.
  *
@@ -383,14 +449,13 @@ typedef struct ecs_async_function_desc_t {
 } ecs_async_function_desc_t;
 
 /** Create new async function.
- * This operation creates a new async function that can be called from a
- * script. Async functions do not return their result directly, but instead
- * receive a future that can be completed at a later point in time (see
- * ecs_script_future_resolve()).
+ * This operation creates a new async function. Async functions do not return
+ * their result directly, but instead receive a future that can be completed
+ * at a later point in time (see ecs_script_future_resolve()).
  *
- * Async function calls must be prefixed with the await keyword in scripts, and
- * can only be used by scripts that are evaluated as a task (see
- * ecs_script_task_new()).
+ * Scripts call async functions with the await keyword, which can only be used
+ * by scripts that are evaluated as a task (see ecs_script_task_new()). C code
+ * calls async functions with ecs_async_function_call().
  *
  * @param world The world.
  * @param desc Async function init parameters.
@@ -419,6 +484,32 @@ ecs_entity_t ecs_async_method_init(
 
 #define ecs_async_method(world, ...)\
     ecs_async_method_init(world, &(ecs_async_function_desc_t)__VA_ARGS__)
+
+/** Call async function.
+ * This operation calls an async function from C. The function callback
+ * receives a new future, which is also returned to the application. Use
+ * ecs_script_future_status() to check whether the call completed, and
+ * ecs_script_future_get_value() or ecs_script_future_get_error() to get the
+ * result.
+ *
+ * The returned future must be released with ecs_script_future_release(). To
+ * abort a call that is still pending, use ecs_script_future_cancel().
+ *
+ * Arguments must match the function parameters, and are only valid during the
+ * callback. Async functions that need arguments later on must copy them.
+ *
+ * @param world The world.
+ * @param function The async function.
+ * @param argc The number of arguments.
+ * @param argv The arguments.
+ * @return The future, or NULL if the call failed.
+ */
+FLECS_API
+ecs_script_future_t* ecs_async_function_call(
+    ecs_world_t *world,
+    ecs_entity_t function,
+    int32_t argc,
+    const ecs_value_t *argv);
 
 #ifdef __cplusplus
 }

@@ -4518,7 +4518,7 @@ void AsyncBlock_template_child_delete_from_callback(void) {
     test_assert(!ecs_is_alive(world, child));
     test_int(ab_future_count, 1);
     test_int(ab_cancel_count, 1);
-    test_assert(ecs_script_future_is_cancelled(ab_futures[0]));
+    test_int(ecs_script_future_status(ab_futures[0]), EcsScriptFutureCancelled);
     ecs_script_future_release(ab_futures[0]);
     test_int(ecs_script_tasks_progress(world), 0);
 
@@ -4857,8 +4857,8 @@ void AsyncBlock_template_unrelated_prop_restarts_all_blocks(void) {
     int32_t props[] = {1, 10};
     ecs_set_id(world, e, t, sizeof(props), props);
     test_int(ab_cancel_count, 2);
-    test_assert(ecs_script_future_is_cancelled(ab_futures[0]));
-    test_assert(ecs_script_future_is_cancelled(ab_futures[1]));
+    test_int(ecs_script_future_status(ab_futures[0]), EcsScriptFutureCancelled);
+    test_int(ecs_script_future_status(ab_futures[1]), EcsScriptFutureCancelled);
     test_int(ecs_script_tasks_progress(world), 2);
     test_int(ab_args[2], 2);
     test_int(ab_args[3], 42);

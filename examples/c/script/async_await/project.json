@@ -1,0 +1,9 @@
+{
+    "id": "async_await",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ]
+    }
+}

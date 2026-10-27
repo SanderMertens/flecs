@@ -1019,7 +1019,20 @@
                 "deep_scope_resume",
                 "deep_scope_cancel",
                 "many_live_strings_resume_and_cancel",
-                "eval_after_task_removes_stale_components"
+                "eval_after_task_removes_stale_components",
+                "call_async_immediate_resolve",
+                "call_async_deferred_resolve",
+                "call_async_reject",
+                "call_async_reject_id",
+                "call_async_cancel",
+                "call_async_cancel_after_resolve",
+                "call_async_release_before_resolve",
+                "call_async_function_ctx",
+                "call_async_w_sync_function",
+                "call_sync_w_async_function",
+                "call_async_invalid_arg_count",
+                "call_async_invalid_arg_type",
+                "await_future_status_resolved"
             ]
         }, {
             "id": "AsyncBlock",
