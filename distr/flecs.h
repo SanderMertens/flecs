@@ -16612,11 +16612,12 @@ extern "C" {
 
 /** Mouse event.
  * The application resolves the entity under the pointer, passes it as target
- * and provides local_x and local_y relative to that entity. An event is
- * delivered to its target only; when ecs_script_mouse_event() returns true the
- * application propagates the event to the parent of the target by calling it
- * again with the parent as target and coordinates relative to the parent. A
- * propagated event keeps the same screen position and button state.
+ * and provides local_x and local_y relative to that entity. The module delivers
+ * the event to the target and then to its parents, until a script calls
+ * stop_propagation() on the event. Parents receive local_x and local_y from the
+ * callback set with ecs_script_set_to_local(), or the screen position when no
+ * callback is set. The target member is the entity under the pointer for every
+ * entity that receives the event.
  *
  * The module derives the kind of event from the button state of the previous
  * event: buttons that were not held produce press and drag, moving with a
@@ -16625,7 +16626,8 @@ extern "C" {
  * is still the pressed entity. Moving without buttons produces move. When the
  * target changes, leave is delivered to the entities that are no longer under
  * the pointer and enter to the entities that newly are, so that moving
- * between children of an entity does not leave and enter the entity.
+ * between children of an entity does not leave and enter the entity. Stopping
+ * propagation does not affect enter and leave.
  */
 typedef struct EcsScriptMouseEvent {
     ecs_entity_t target; /**< Entity under the pointer, 0 if none. */
@@ -16646,11 +16648,14 @@ typedef struct EcsScriptMouseEvent {
     bool shift;        /**< Shift key is held down. */
     bool alt;          /**< Alt/Option key is held down. */
     bool meta;         /**< Meta (Command/Windows) key is held down. */
+
+    uint64_t id;       /**< Set by the module. 0 for enter and leave. */
 } EcsScriptMouseEvent;
 
 /** Keyboard event.
  * Keyboard events are delivered to the entity that received the last mouse
- * press and to its parents.
+ * press and then to its parents, until a script calls stop_propagation() on
+ * the event.
  */
 typedef struct EcsScriptKeyboardEvent {
     char *key;         /**< Key value, for example "a", "Enter" or "ArrowLeft". Not owned. */
@@ -16661,7 +16666,30 @@ typedef struct EcsScriptKeyboardEvent {
     bool shift;        /**< Shift key is held down. */
     bool alt;          /**< Alt/Option key is held down. */
     bool meta;         /**< Meta (Command/Windows) key is held down. */
+
+    uint64_t id;       /**< Set by the module. */
 } EcsScriptKeyboardEvent;
+
+/** Converts a screen position to a position relative to an entity.
+ * Called for each parent a mouse event propagates to. local_x and local_y are
+ * initialized to the screen position.
+ *
+ * @param world The world.
+ * @param entity The entity that receives the event.
+ * @param screen_x X position in window coordinates.
+ * @param screen_y Y position in window coordinates.
+ * @param local_x Out: X position relative to entity.
+ * @param local_y Out: Y position relative to entity.
+ * @param ctx Context passed to ecs_script_set_to_local().
+ */
+typedef void (*ecs_script_to_local_t)(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    float screen_x,
+    float screen_y,
+    float *local_x,
+    float *local_y,
+    void *ctx);
 
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptMouseEvent);
@@ -16671,22 +16699,23 @@ extern ECS_COMPONENT_DECLARE(EcsScriptKeyboardEvent);
 
 /** Emit mouse event.
  * Resolves the on.press, on.drag, on.release, on.click, on.move, on.enter and
- * on.leave calls that wait for the event on its target and resumes the async
- * blocks that became ready. When delta_x and delta_y are both zero they are
- * computed from the previous event.
+ * on.leave calls that wait for the event on its target and its parents. The
+ * async blocks that became ready are resumed after each entity, before the
+ * event propagates to its parent. When delta_x and delta_y are both zero they
+ * are computed from the previous event.
  *
  * @param world The world.
  * @param evt The event.
- * @return Whether the event should be propagated to the parent of the target.
  */
 FLECS_API
-bool ecs_script_mouse_event(
+void ecs_script_mouse_event(
     ecs_world_t *world,
     const EcsScriptMouseEvent *evt);
 
 /** Emit keyboard event.
- * Resolves the on.key_down and on.key_up calls that wait for the event and
- * resumes the async blocks that became ready.
+ * Resolves the on.key_down and on.key_up calls that wait for the event on the
+ * focus and its parents. The async blocks that became ready are resumed after
+ * each entity, before the event propagates to its parent.
  *
  * @param world The world.
  * @param evt The event.
@@ -16695,6 +16724,19 @@ FLECS_API
 void ecs_script_keyboard_event(
     ecs_world_t *world,
     const EcsScriptKeyboardEvent *evt);
+
+/** Set callback for local positions of parents.
+ * Without a callback, parents receive the screen position.
+ *
+ * @param world The world.
+ * @param callback The callback, NULL to remove.
+ * @param ctx Context passed to the callback.
+ */
+FLECS_API
+void ecs_script_set_to_local(
+    ecs_world_t *world,
+    ecs_script_to_local_t callback,
+    void *ctx);
 
 /** Script event import function.
  * Usage:
@@ -17301,7 +17343,7 @@ FLECS_API
 void* ecs_script_future_get_ctx(
     const ecs_script_future_t *future);
 
-/** Used with ecs_async_function_init(). */
+/** Used with ecs_async_function_init() and ecs_async_method_init(). */
 typedef struct ecs_async_function_desc_t {
     /** Function name. */
     const char *name;
@@ -17348,6 +17390,22 @@ ecs_entity_t ecs_async_function_init(
 
 #define ecs_async_function(world, ...)\
     ecs_async_function_init(world, &(ecs_async_function_desc_t)__VA_ARGS__)
+
+/** Create new async method.
+ * Like ecs_async_function_init(), but callable on instances of the type set as
+ * parent. The callback receives the instance as argv[0].
+ *
+ * @param world The world.
+ * @param desc Async method init parameters.
+ * @return The method, or 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_async_method_init(
+    ecs_world_t *world,
+    const ecs_async_function_desc_t *desc);
+
+#define ecs_async_method(world, ...)\
+    ecs_async_method_init(world, &(ecs_async_function_desc_t)__VA_ARGS__)
 
 #ifdef __cplusplus
 }

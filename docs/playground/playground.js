@@ -984,14 +984,16 @@
       });
     }
 
-    function mouseEvent(e, target, x, y) {
+    function mouseEvent(e, target, x, y, parents) {
       var bridge = window.flecsPlayground;
-      if (!connected || !bridge || !bridge.mouse) return false;
-      var propagate = bridge.mouse(target || "", e.clientX, e.clientY, x, y,
+      if (!connected || !bridge || !bridge.mouse) return;
+      if (bridge.local) {
+        (parents || []).forEach(function (p) { bridge.local(p.key, p.x, p.y); });
+      }
+      bridge.mouse(target || "", e.clientX, e.clientY, x, y,
         e.button >= 0 ? e.button : 0, e.buttons || 0,
         e.ctrlKey ? 1 : 0, e.shiftKey ? 1 : 0, e.altKey ? 1 : 0, e.metaKey ? 1 : 0);
       queueRefresh();
-      return !!propagate;
     }
 
     function keyEvent(e, down) {

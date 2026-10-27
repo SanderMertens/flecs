@@ -7,9 +7,6 @@ void Event_setup(void) {
     ir_enabled = ir_param && !strcmp(ir_param, "enabled");
 }
 
-/* Emit an event and propagate it to the parents of the target the way a host
- * would. Parents receive the coordinates offset by 100 per level so tests can
- * tell which coordinates a listener got. */
 /* Mut variables of the Widget template of an instance */
 typedef struct {
     int64_t count;
@@ -17,6 +14,26 @@ typedef struct {
     int64_t button;
     ecs_entity_t target;
 } ev_Widget;
+
+static int32_t to_local_invoked = 0;
+static ecs_entity_t to_local_entity = 0;
+
+static void Event_to_local(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    float screen_x,
+    float screen_y,
+    float *local_x,
+    float *local_y,
+    void *ctx)
+{
+    (void)world;
+    (void)ctx;
+    to_local_invoked ++;
+    to_local_entity = entity;
+    *local_x = screen_x + 100;
+    *local_y = screen_y + 100;
+}
 
 void Event_import(void) {
     ecs_world_t *world = ecs_init();
@@ -89,14 +106,7 @@ void Event_press(void) {
         .target = e, .screen_x = 10, .screen_y = 20,
         .local_x = 10, .local_y = 20, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -159,27 +169,13 @@ void Event_press_other_target(void) {
         .target = other, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = other, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -191,14 +187,7 @@ void Event_press_other_target(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -254,27 +243,13 @@ void Event_press_no_target(void) {
         .target = 0, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = 0, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -332,14 +307,7 @@ void Event_press_bubbles_to_parent(void) {
         .target = child, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -347,7 +315,7 @@ void Event_press_bubbles_to_parent(void) {
     test_assert(w != NULL);
 
     test_int(w->count, 1);
-    test_uint(w->target, e);
+    test_uint(w->target, child);
 
     ecs_fini(world);
 }
@@ -387,14 +355,7 @@ void Event_press_two_listeners(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     const int64_t *m = ecs_get_id(world, e, ecs_lookup(world, "Widget.mut"));
     test_assert(m != NULL);
@@ -451,27 +412,13 @@ void Event_press_two_widgets(void) {
         .target = b, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = b, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -489,14 +436,7 @@ void Event_press_two_widgets(void) {
         .target = a, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -558,27 +498,13 @@ void Event_press_while_other_button_held(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 3
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -590,27 +516,13 @@ void Event_press_while_other_button_held(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 2
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -668,14 +580,7 @@ void Event_drag(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -687,14 +592,7 @@ void Event_drag(void) {
         .target = e, .screen_x = 5, .screen_y = 2,
         .local_x = 5, .local_y = 2, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -715,14 +613,7 @@ void Event_drag(void) {
         .target = other, .screen_x = 50, .screen_y = 50,
         .local_x = 50, .local_y = 50, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -734,14 +625,7 @@ void Event_drag(void) {
         .target = e, .screen_x = 50, .screen_y = 50,
         .local_x = 50, .local_y = 50, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -757,14 +641,7 @@ void Event_drag(void) {
         .target = e, .screen_x = 50, .screen_y = 50,
         .local_x = 50, .local_y = 50, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -776,27 +653,13 @@ void Event_drag(void) {
         .target = other, .screen_x = 60, .screen_y = 60,
         .local_x = 60, .local_y = 60, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = other, .screen_x = 70, .screen_y = 70,
         .local_x = 70, .local_y = 70, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -852,27 +715,13 @@ void Event_no_drag_without_button(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = e, .screen_x = 5, .screen_y = 5,
         .local_x = 5, .local_y = 5, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -930,27 +779,13 @@ void Event_release(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = e, .screen_x = 40, .screen_y = 40,
         .local_x = 40, .local_y = 40, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -964,14 +799,7 @@ void Event_release(void) {
         .target = other, .screen_x = 40, .screen_y = 40,
         .local_x = 40, .local_y = 40, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -985,27 +813,13 @@ void Event_release(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = e, .screen_x = 40, .screen_y = 40,
         .local_x = 40, .local_y = 40, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -1064,14 +878,7 @@ void Event_click(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -1083,14 +890,7 @@ void Event_click(void) {
         .target = e, .screen_x = 2, .screen_y = 2,
         .local_x = 2, .local_y = 2, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -1148,27 +948,13 @@ void Event_no_click_when_released_elsewhere(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = other, .screen_x = 40, .screen_y = 40,
         .local_x = 40, .local_y = 40, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -1180,27 +966,13 @@ void Event_no_click_when_released_elsewhere(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = 0, .screen_x = 40, .screen_y = 40,
         .local_x = 40, .local_y = 40, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -1256,14 +1028,7 @@ void Event_move(void) {
         .target = 0, .screen_x = 40, .screen_y = 40,
         .local_x = 40, .local_y = 40, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -1275,14 +1040,7 @@ void Event_move(void) {
         .target = e, .screen_x = 1, .screen_y = 2,
         .local_x = 1, .local_y = 2, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -1299,27 +1057,13 @@ void Event_move(void) {
         .target = e, .screen_x = 1, .screen_y = 2,
         .local_x = 1, .local_y = 2, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = e, .screen_x = 3, .screen_y = 4,
         .local_x = 3, .local_y = 4, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -1501,27 +1245,13 @@ void Event_key_down_up(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
         .key = ECS_CONST_CAST(char*, "Enter"), .down = true
@@ -1583,14 +1313,7 @@ void Event_key_modifiers(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
         .key = ECS_CONST_CAST(char*, "x"), .down = true, .repeat = true,
@@ -1645,27 +1368,13 @@ void Event_key_focus_follows_press(void) {
         .target = a, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = a, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
         .key = ECS_CONST_CAST(char*, "a"), .down = true
@@ -1678,27 +1387,13 @@ void Event_key_focus_follows_press(void) {
         .target = b, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = b, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
         .key = ECS_CONST_CAST(char*, "b"), .down = true
@@ -1713,27 +1408,13 @@ void Event_key_focus_follows_press(void) {
         .target = 0, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = 0, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
         .key = ECS_CONST_CAST(char*, "c"), .down = true
@@ -1777,14 +1458,7 @@ void Event_key_bubbles_to_parent(void) {
         .target = child, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
         .key = ECS_CONST_CAST(char*, "a"), .down = true
@@ -1840,14 +1514,7 @@ void Event_slider(void) {
         .target = bg, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     test_flt(*(float*)ecs_get_id(world, slider, mut), 50);
     test_flt(*(float*)ecs_get_id(world, fill, rect), 100);
@@ -1856,14 +1523,7 @@ void Event_slider(void) {
         .target = bg, .screen_x = 50, .screen_y = 0,
         .local_x = 50, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     test_flt(*(float*)ecs_get_id(world, slider, mut), 75);
     test_flt(*(float*)ecs_get_id(world, fill, rect), 150);
@@ -1932,27 +1592,13 @@ void Event_delete_listener(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
         .key = ECS_CONST_CAST(char*, "a"), .down = true
@@ -2008,14 +1654,7 @@ void Event_delete_listener_while_pressed(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_delete(world, e);
 
@@ -2023,27 +1662,13 @@ void Event_delete_listener_while_pressed(void) {
         .target = e, .screen_x = 1, .screen_y = 1,
         .local_x = 1, .local_y = 1, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = e, .screen_x = 1, .screen_y = 1,
         .local_x = 1, .local_y = 1, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
         .key = ECS_CONST_CAST(char*, "a"), .down = true
@@ -2166,14 +1791,7 @@ void Event_script_update_w_pending_listener(void) {
         .target = f, .screen_x = 3, .screen_y = 4,
         .local_x = 3, .local_y = 4, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -2231,14 +1849,7 @@ void Event_mouse_event_w_stage(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(ecs_get_stage(world, 0), &evt) && evt.target &&
-        ecs_is_alive(ecs_get_stage(world, 0), evt.target))
-    {
-        evt.target = ecs_get_target(ecs_get_stage(world, 0), evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(ecs_get_stage(world, 0), &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -2294,14 +1905,7 @@ void Event_mouse_event_in_progress(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -2315,27 +1919,13 @@ void Event_mouse_event_in_progress(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -2400,14 +1990,7 @@ void Event_enter_leave(void) {
         .target = 0, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     test_int(m[0], 0);
     test_int(m[1], 0);
@@ -2416,14 +1999,7 @@ void Event_enter_leave(void) {
         .target = e, .screen_x = 1, .screen_y = 1,
         .local_x = 1, .local_y = 1, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     m = ecs_get_id(world, e, mut);
     test_int(m[0], 1);
@@ -2435,14 +2011,7 @@ void Event_enter_leave(void) {
         .target = e, .screen_x = 2, .screen_y = 2,
         .local_x = 2, .local_y = 2, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     m = ecs_get_id(world, e, mut);
     test_int(m[0], 1);
@@ -2452,14 +2021,7 @@ void Event_enter_leave(void) {
         .target = other, .screen_x = 3, .screen_y = 3,
         .local_x = 3, .local_y = 3, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     m = ecs_get_id(world, e, mut);
     test_int(m[0], 1);
@@ -2469,14 +2031,7 @@ void Event_enter_leave(void) {
         .target = 0, .screen_x = 4, .screen_y = 4,
         .local_x = 4, .local_y = 4, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     m = ecs_get_id(world, e, mut);
     test_int(m[0], 1);
@@ -2486,27 +2041,13 @@ void Event_enter_leave(void) {
         .target = e, .screen_x = 5, .screen_y = 5,
         .local_x = 5, .local_y = 5, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = 0, .screen_x = 6, .screen_y = 6,
         .local_x = 6, .local_y = 6, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     m = ecs_get_id(world, e, mut);
     test_int(m[0], 2);
@@ -2559,14 +2100,7 @@ void Event_enter_leave_between_children(void) {
         .target = a, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     const int64_t *m = ecs_get_id(world, e, mut);
     test_int(m[0], 1);
@@ -2578,14 +2112,7 @@ void Event_enter_leave_between_children(void) {
         .target = b, .screen_x = 1, .screen_y = 1,
         .local_x = 1, .local_y = 1, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     m = ecs_get_id(world, e, mut);
     test_int(m[0], 1);
@@ -2597,14 +2124,7 @@ void Event_enter_leave_between_children(void) {
         .target = e, .screen_x = 2, .screen_y = 2,
         .local_x = 2, .local_y = 2, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     m = ecs_get_id(world, e, mut);
     test_int(m[0], 1);
@@ -2614,14 +2134,7 @@ void Event_enter_leave_between_children(void) {
         .target = 0, .screen_x = 3, .screen_y = 3,
         .local_x = 3, .local_y = 3, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     m = ecs_get_id(world, e, mut);
     test_int(m[0], 1);
@@ -2672,14 +2185,7 @@ void Event_enter_leave_children_listen(void) {
         .target = a, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     const int64_t *ma = ecs_get_id(world, a, mut);
     const int64_t *mb = ecs_get_id(world, b, mut);
@@ -2692,14 +2198,7 @@ void Event_enter_leave_children_listen(void) {
         .target = b, .screen_x = 1, .screen_y = 1,
         .local_x = 1, .local_y = 1, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ma = ecs_get_id(world, a, mut);
     mb = ecs_get_id(world, b, mut);
@@ -2758,14 +2257,7 @@ void Event_enter_leave_while_dragging(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     const int64_t *m = ecs_get_id(world, e, mut);
     test_int(m[0], 1);
@@ -2779,14 +2271,7 @@ void Event_enter_leave_while_dragging(void) {
         .target = 0, .screen_x = 10, .screen_y = 10,
         .local_x = 10, .local_y = 10, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     m = ecs_get_id(world, e, mut);
     test_int(m[0], 1);
@@ -2797,14 +2282,7 @@ void Event_enter_leave_while_dragging(void) {
         .target = e, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     m = ecs_get_id(world, e, mut);
     test_int(m[0], 2);
@@ -2850,14 +2328,7 @@ void Event_leave_deleted_hover_target(void) {
         .target = a, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_delete(world, a);
 
@@ -2865,119 +2336,9 @@ void Event_leave_deleted_hover_target(void) {
         .target = b, .screen_x = 1, .screen_y = 1,
         .local_x = 1, .local_y = 1, .buttons = 0
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     test_int(*(int64_t*)ecs_get_id(world, b, mut), 1);
-
-    ecs_fini(world);
-}
-
-void Event_returns_true(void) {
-    ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
-
-    ecs_entity_t s = ecs_script(world, {
-        .code =
-        HEAD "using flecs.script"
-        LINE "template Widget {"
-        LINE "  mut count = 0"
-        LINE "  mut x: f32 = 0"
-        LINE "  mut y: f32 = 0"
-        LINE "  mut dx: f32 = 0"
-        LINE "  mut dy: f32 = 0"
-        LINE "  mut button = -1"
-        LINE "  mut target: entity = 0"
-        LINE "  async {"
-        LINE "    while true {"
-        LINE "      const e = await on.press(this)"
-        LINE "      count = count + 1"
-        LINE "      x = e.local_x"
-        LINE "      y = e.local_y"
-        LINE "      dx = e.delta_x"
-        LINE "      dy = e.delta_y"
-        LINE "      button = e.button"
-        LINE "      target = e.target"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "Widget e",
-        .ir = ir_enabled
-    });
-    test_assert(s != 0);
-    const EcsScript *comp = ecs_get(world, s, EcsScript);
-    test_assert(comp != NULL);
-    test_assert(comp->error == NULL);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    test_bool(ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
-        .target = e, .buttons = 1 }), true);
-    test_bool(ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
-        .target = 0, .buttons = 0 }), true);
-
-    ecs_fini(world);
-}
-
-void Event_no_propagation_without_host(void) {
-    ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
-
-    ecs_entity_t s = ecs_script(world, {
-        .code =
-        HEAD "using flecs.script"
-        LINE "template Widget {"
-        LINE "  mut count = 0"
-        LINE "  mut x: f32 = 0"
-        LINE "  mut y: f32 = 0"
-        LINE "  mut dx: f32 = 0"
-        LINE "  mut dy: f32 = 0"
-        LINE "  mut button = -1"
-        LINE "  mut target: entity = 0"
-        LINE "  async {"
-        LINE "    while true {"
-        LINE "      const e = await on.press(this)"
-        LINE "      count = count + 1"
-        LINE "      x = e.local_x"
-        LINE "      y = e.local_y"
-        LINE "      dx = e.delta_x"
-        LINE "      dy = e.delta_y"
-        LINE "      button = e.button"
-        LINE "      target = e.target"
-        LINE "    }"
-        LINE "  }"
-        LINE "}"
-        LINE "Widget e { child {} }",
-        .ir = ir_enabled
-    });
-    test_assert(s != 0);
-    const EcsScript *comp = ecs_get(world, s, EcsScript);
-    test_assert(comp != NULL);
-    test_assert(comp->error == NULL);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    ecs_entity_t child = ecs_lookup(world, "e.child");
-    test_assert(e != 0);
-    test_assert(child != 0);
-
-    test_int(ecs_script_tasks_progress(world), 1);
-
-    /* The host only emits for the child: the parent doesn't get the event */
-    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
-        .target = child, .buttons = 1 });
-
-    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
-    test_assert(mut != 0);
-    const ev_Widget *w = ecs_get_id(world, e, mut);
-    test_assert(w != NULL);
-    test_int(w->count, 0);
 
     ecs_fini(world);
 }
@@ -3025,20 +2386,18 @@ void Event_propagation_translates_coordinates(void) {
 
     test_int(ecs_script_tasks_progress(world), 1);
 
+    to_local_invoked = 0;
+    to_local_entity = 0;
+    ecs_script_set_to_local(world, Event_to_local, NULL);
+
     EcsScriptMouseEvent evt = {
         .target = child, .screen_x = 2, .screen_y = 3,
-        .local_x = 2, .local_y = 3, .buttons = 1
+        .local_x = 1, .local_y = 1, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        evt.local_x += 100;
-        evt.local_y += 100;
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
+
+    test_int(to_local_invoked, 1);
+    test_uint(to_local_entity, e);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -3048,7 +2407,7 @@ void Event_propagation_translates_coordinates(void) {
     test_int(w->count, 1);
     test_flt(w->x, 102);
     test_flt(w->y, 103);
-    test_uint(w->target, e);
+    test_uint(w->target, child);
 
     ecs_fini(world);
 }
@@ -3096,35 +2455,19 @@ void Event_propagation_keeps_deltas(void) {
 
     test_int(ecs_script_tasks_progress(world), 1);
 
+    ecs_script_set_to_local(world, Event_to_local, NULL);
+
     EcsScriptMouseEvent evt = {
         .target = child, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        evt.local_x += 100;
-        evt.local_y += 100;
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     evt = (EcsScriptMouseEvent){
         .target = child, .screen_x = 5, .screen_y = 2,
         .local_x = 5, .local_y = 2, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        evt.local_x += 100;
-        evt.local_y += 100;
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -3188,14 +2531,7 @@ void Event_propagation_press_once_per_level(void) {
         .target = grandchild, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -3215,21 +2551,11 @@ void Event_propagation_press_once_per_level(void) {
     test_assert(w != NULL);
     test_int(w->count, 1);
 
-    /* Same pointer state on the same target again is a new event, not a
-     * propagation, so nothing is pressed again */
-
     evt = (EcsScriptMouseEvent){
         .target = grandchild, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -3299,14 +2625,7 @@ void Event_drag_not_propagated_to_unrelated_target(void) {
         .target = a, .screen_x = 0, .screen_y = 0,
         .local_x = 0, .local_y = 0, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     /* A host without pointer capture reports the entity under the pointer */
 
@@ -3314,14 +2633,7 @@ void Event_drag_not_propagated_to_unrelated_target(void) {
         .target = b, .screen_x = 5, .screen_y = 5,
         .local_x = 5, .local_y = 5, .buttons = 1
     };
-    while (ecs_script_mouse_event(world, &evt) && evt.target &&
-        ecs_is_alive(world, evt.target))
-    {
-        evt.target = ecs_get_target(world, evt.target, EcsChildOf, 0);
-        if (!evt.target) {
-            break;
-        }
-    }
+    ecs_script_mouse_event(world, &evt);
 
     ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
     test_assert(mut != 0);
@@ -3334,6 +2646,540 @@ void Event_drag_not_propagated_to_unrelated_target(void) {
     w = ecs_get_id(world, b, mut);
     test_assert(w != NULL);
     test_int(w->count, 0);
+
+    ecs_fini(world);
+}
+
+void Event_propagation_screen_coords_without_to_local(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut x: f32 = 0"
+        LINE "  mut y: f32 = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.press(this)"
+        LINE "      x = e.local_x"
+        LINE "      y = e.local_y"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e { Widget child {} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+    test_assert(child != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .screen_x = 10, .screen_y = 20,
+        .local_x = 1, .local_y = 2, .buttons = 1
+    });
+
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(mut != 0);
+
+    const float *child_xy = ecs_get_id(world, child, mut);
+    test_assert(child_xy != NULL);
+    test_flt(child_xy[0], 1);
+    test_flt(child_xy[1], 2);
+
+    const float *e_xy = ecs_get_id(world, e, mut);
+    test_assert(e_xy != NULL);
+    test_flt(e_xy[0], 10);
+    test_flt(e_xy[1], 20);
+
+    ecs_fini(world);
+}
+
+void Event_stop_propagation_press(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.press(this)"
+        LINE "      count = count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "template Stopper {"
+        LINE "  mut count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.press(this)"
+        LINE "      count = count + 1"
+        LINE "      await e.stop_propagation()"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e { Stopper child { Widget grandchild {} } }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    ecs_entity_t grandchild = ecs_lookup(world, "e.child.grandchild");
+    test_assert(e != 0);
+    test_assert(child != 0);
+    test_assert(grandchild != 0);
+
+    test_int(ecs_script_tasks_progress(world), 3);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = grandchild, .buttons = 1 });
+
+    ecs_entity_t widget_mut = ecs_lookup(world, "Widget.mut");
+    ecs_entity_t stopper_mut = ecs_lookup(world, "Stopper.mut");
+    test_assert(widget_mut != 0);
+    test_assert(stopper_mut != 0);
+
+    test_int(*(const int64_t*)ecs_get_id(world, grandchild, widget_mut), 1);
+    test_int(*(const int64_t*)ecs_get_id(world, child, stopper_mut), 1);
+    test_int(*(const int64_t*)ecs_get_id(world, e, widget_mut), 0);
+
+    ecs_fini(world);
+}
+
+void Event_stop_propagation_same_level(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.press(this)"
+        LINE "      count = count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "template Stopper {"
+        LINE "  mut count = 0"
+        LINE "  mut other = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.press(this)"
+        LINE "      count = count + 1"
+        LINE "      await e.stop_propagation()"
+        LINE "    }"
+        LINE "  }"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.press(this)"
+        LINE "      other = other + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e { Stopper child {} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+    test_assert(child != 0);
+
+    test_int(ecs_script_tasks_progress(world), 3);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .buttons = 1 });
+
+    ecs_entity_t widget_mut = ecs_lookup(world, "Widget.mut");
+    ecs_entity_t stopper_mut = ecs_lookup(world, "Stopper.mut");
+    test_assert(widget_mut != 0);
+    test_assert(stopper_mut != 0);
+
+    const int64_t *stopper = ecs_get_id(world, child, stopper_mut);
+    test_assert(stopper != NULL);
+    test_int(stopper[0], 1);
+    test_int(stopper[1], 1);
+    test_int(*(const int64_t*)ecs_get_id(world, e, widget_mut), 0);
+
+    ecs_fini(world);
+}
+
+void Event_stop_propagation_once(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.press(this)"
+        LINE "      count = count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "template Stopper {"
+        LINE "  mut count = 0"
+        LINE "  async {"
+        LINE "    const e = await on.press(this)"
+        LINE "    count = count + 1"
+        LINE "    await e.stop_propagation()"
+        LINE "    while true {"
+        LINE "      await on.press(this)"
+        LINE "      count = count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e { Stopper child {} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+    test_assert(child != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_entity_t widget_mut = ecs_lookup(world, "Widget.mut");
+    ecs_entity_t stopper_mut = ecs_lookup(world, "Stopper.mut");
+    test_assert(widget_mut != 0);
+    test_assert(stopper_mut != 0);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .buttons = 1 });
+    test_int(*(const int64_t*)ecs_get_id(world, child, stopper_mut), 1);
+    test_int(*(const int64_t*)ecs_get_id(world, e, widget_mut), 0);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .buttons = 0 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .buttons = 1 });
+    test_int(*(const int64_t*)ecs_get_id(world, child, stopper_mut), 2);
+    test_int(*(const int64_t*)ecs_get_id(world, e, widget_mut), 1);
+
+    ecs_fini(world);
+}
+
+void Event_stop_propagation_result(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut inside = false"
+        LINE "  mut stale = true"
+        LINE "  async {"
+        LINE "    const e = await on.press(this)"
+        LINE "    const a = await e.stop_propagation()"
+        LINE "    inside = a"
+        LINE "    await on.release(this)"
+        LINE "    const b = await e.stop_propagation()"
+        LINE "    stale = b"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(mut != 0);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = e, .buttons = 1 });
+
+    const bool *w = ecs_get_id(world, e, mut);
+    test_assert(w != NULL);
+    test_bool(w[0], true);
+    test_bool(w[1], true);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = e, .buttons = 0 });
+
+    w = ecs_get_id(world, e, mut);
+    test_assert(w != NULL);
+    test_bool(w[0], true);
+    test_bool(w[1], false);
+
+    ecs_fini(world);
+}
+
+void Event_stop_propagation_key(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut downs = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.key_down(this)"
+        LINE "      downs = downs + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "template Stopper {"
+        LINE "  mut downs = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.key_down(this)"
+        LINE "      downs = downs + 1"
+        LINE "      await e.stop_propagation()"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e { Stopper child { Widget grandchild {} } }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    ecs_entity_t grandchild = ecs_lookup(world, "e.child.grandchild");
+    test_assert(e != 0);
+    test_assert(child != 0);
+    test_assert(grandchild != 0);
+
+    test_int(ecs_script_tasks_progress(world), 3);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = grandchild, .buttons = 1 });
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "a"), .down = true
+    });
+
+    ecs_entity_t widget_mut = ecs_lookup(world, "Widget.mut");
+    ecs_entity_t stopper_mut = ecs_lookup(world, "Stopper.mut");
+    test_assert(widget_mut != 0);
+    test_assert(stopper_mut != 0);
+
+    test_int(*(const int64_t*)ecs_get_id(world, grandchild, widget_mut), 1);
+    test_int(*(const int64_t*)ecs_get_id(world, child, stopper_mut), 1);
+    test_int(*(const int64_t*)ecs_get_id(world, e, widget_mut), 0);
+
+    ecs_fini(world);
+}
+
+void Event_stop_propagation_keeps_enter(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut enters = 0"
+        LINE "  mut moves = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.enter(this)"
+        LINE "      enters = enters + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.move(this)"
+        LINE "      moves = moves + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "template Stopper {"
+        LINE "  mut moves = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.move(this)"
+        LINE "      moves = moves + 1"
+        LINE "      await e.stop_propagation()"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e { Stopper child {} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+    test_assert(child != 0);
+
+    test_int(ecs_script_tasks_progress(world), 3);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .screen_x = 1, .screen_y = 1 });
+
+    ecs_entity_t widget_mut = ecs_lookup(world, "Widget.mut");
+    ecs_entity_t stopper_mut = ecs_lookup(world, "Stopper.mut");
+    test_assert(widget_mut != 0);
+    test_assert(stopper_mut != 0);
+
+    test_int(*(const int64_t*)ecs_get_id(world, child, stopper_mut), 1);
+
+    const int64_t *w = ecs_get_id(world, e, widget_mut);
+    test_assert(w != NULL);
+    test_int(w[0], 1);
+    test_int(w[1], 0);
+
+    ecs_fini(world);
+}
+
+void Event_stop_propagation_stale_event(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.press(this)"
+        LINE "      count = count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "template Stopper {"
+        LINE "  mut result = true"
+        LINE "  async {"
+        LINE "    const first = await on.press(this)"
+        LINE "    await on.release(this)"
+        LINE "    await on.press(this)"
+        LINE "    const r = await first.stop_propagation()"
+        LINE "    result = r"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e { Stopper child {} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+    test_assert(child != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .buttons = 1 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .buttons = 0 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .buttons = 1 });
+
+    ecs_entity_t widget_mut = ecs_lookup(world, "Widget.mut");
+    ecs_entity_t stopper_mut = ecs_lookup(world, "Stopper.mut");
+    test_assert(widget_mut != 0);
+    test_assert(stopper_mut != 0);
+
+    test_bool(*(const bool*)ecs_get_id(world, child, stopper_mut), false);
+    test_int(*(const int64_t*)ecs_get_id(world, e, widget_mut), 2);
+
+    ecs_fini(world);
+}
+
+void Event_stop_propagation_enter_event(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut moves = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.move(this)"
+        LINE "      moves = moves + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "template Stopper {"
+        LINE "  mut result = true"
+        LINE "  async {"
+        LINE "    const e = await on.enter(this)"
+        LINE "    const r = await e.stop_propagation()"
+        LINE "    result = r"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e { Stopper child {} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+    test_assert(child != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .screen_x = 1, .screen_y = 1 });
+
+    ecs_entity_t widget_mut = ecs_lookup(world, "Widget.mut");
+    ecs_entity_t stopper_mut = ecs_lookup(world, "Stopper.mut");
+    test_assert(widget_mut != 0);
+    test_assert(stopper_mut != 0);
+
+    test_bool(*(const bool*)ecs_get_id(world, child, stopper_mut), false);
+    test_int(*(const int64_t*)ecs_get_id(world, e, widget_mut), 1);
 
     ecs_fini(world);
 }

@@ -7,12 +7,67 @@
 
 static ecs_world_t *playground_world;
 
-/* Called by the page for pointer events on the 2D/3D views. The target is the
- * path of the entity the event is delivered to (empty when there is none), x
- * and y the pointer position relative to that entity. Returns whether the
- * page should propagate the event to the parent of the target. */
+typedef struct {
+    ecs_entity_t entity;
+    float x;
+    float y;
+} playground_local_t;
+
+#define PLAYGROUND_MAX_LOCALS (64)
+
+static playground_local_t playground_locals[PLAYGROUND_MAX_LOCALS];
+static int32_t playground_local_count;
+
 EMSCRIPTEN_KEEPALIVE
-int flecs_playground_mouse(
+void flecs_playground_local(
+    const char *path,
+    float x,
+    float y)
+{
+    if (!playground_world || !path ||
+        playground_local_count == PLAYGROUND_MAX_LOCALS)
+    {
+        return;
+    }
+
+    ecs_entity_t e = ecs_lookup(playground_world, path);
+    if (!e) {
+        return;
+    }
+
+    playground_locals[playground_local_count ++] =
+        (playground_local_t){ e, x, y };
+}
+
+static void playground_to_local(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    float screen_x,
+    float screen_y,
+    float *local_x,
+    float *local_y,
+    void *ctx)
+{
+    (void)world;
+    (void)screen_x;
+    (void)screen_y;
+    (void)ctx;
+    for (int32_t i = 0; i < playground_local_count; i ++) {
+        if (playground_locals[i].entity == entity) {
+            *local_x = playground_locals[i].x;
+            *local_y = playground_locals[i].y;
+            return;
+        }
+    }
+}
+
+/* Called by the page for pointer events on the 2D/3D views. The target is the
+ * path of the entity under the pointer (empty when there is none), x and y the
+ * pointer position relative to that entity. The module propagates the event to
+ * the parents of the target, with the positions passed to
+ * flecs_playground_local. */
+EMSCRIPTEN_KEEPALIVE
+void flecs_playground_mouse(
     const char *target,
     float screen_x,
     float screen_y,
@@ -27,10 +82,11 @@ int flecs_playground_mouse(
 {
     ecs_world_t *world = playground_world;
     if (!world) {
-        return 0;
+        playground_local_count = 0;
+        return;
     }
 
-    return ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
         .target = target && target[0] ? ecs_lookup(world, target) : 0,
         .screen_x = screen_x,
         .screen_y = screen_y,
@@ -43,6 +99,8 @@ int flecs_playground_mouse(
         .alt = alt != 0,
         .meta = meta != 0
     });
+
+    playground_local_count = 0;
 }
 
 /* Called by the page for keyboard events while a view has focus. */
@@ -136,6 +194,8 @@ int main(void) {
         .code = ""
     });
 
+    ecs_script_set_to_local(world, playground_to_local, NULL);
+
     ecs_app_set_run_action(playground_run);
 
     /* Expose the input entry points to the page. The explorer's flecs.js
@@ -143,8 +203,10 @@ int main(void) {
      * functions on the window object. */
     EM_ASM({
         var bridge = {};
-        bridge.mouse = Module.cwrap("flecs_playground_mouse", "number",
+        bridge.mouse = Module.cwrap("flecs_playground_mouse", null,
             "string number number number number number number number number number number".split(" "));
+        bridge.local = Module.cwrap("flecs_playground_local", null,
+            "string number number".split(" "));
         bridge.key = Module.cwrap("flecs_playground_key", null,
             "string number number number number number number".split(" "));
         bridge.request = Module.cwrap("flecs_explorer_request", "string",

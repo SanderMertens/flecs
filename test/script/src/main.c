@@ -976,6 +976,7 @@ void Await_await_export_const(void);
 void Await_await_export_mut(void);
 void Await_interleaved_tasks(void);
 void Await_await_method_receiver(void);
+void Await_await_async_method_init(void);
 void Await_task_component_added_on_task_new(void);
 void Await_task_component_not_added_without_entity(void);
 void Await_task_component_two_tasks(void);
@@ -1123,12 +1124,19 @@ void Event_enter_leave_between_children(void);
 void Event_enter_leave_children_listen(void);
 void Event_enter_leave_while_dragging(void);
 void Event_leave_deleted_hover_target(void);
-void Event_returns_true(void);
-void Event_no_propagation_without_host(void);
 void Event_propagation_translates_coordinates(void);
 void Event_propagation_keeps_deltas(void);
 void Event_propagation_press_once_per_level(void);
 void Event_drag_not_propagated_to_unrelated_target(void);
+void Event_propagation_screen_coords_without_to_local(void);
+void Event_stop_propagation_press(void);
+void Event_stop_propagation_same_level(void);
+void Event_stop_propagation_once(void);
+void Event_stop_propagation_result(void);
+void Event_stop_propagation_key(void);
+void Event_stop_propagation_keeps_enter(void);
+void Event_stop_propagation_stale_event(void);
+void Event_stop_propagation_enter_event(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_setup(void);
@@ -7801,6 +7809,10 @@ bake_test_case Await_testcases[] = {
         Await_await_method_receiver
     },
     {
+        "await_async_method_init",
+        Await_await_async_method_init
+    },
+    {
         "task_component_added_on_task_new",
         Await_task_component_added_on_task_new
     },
@@ -8371,14 +8383,6 @@ bake_test_case Event_testcases[] = {
         Event_leave_deleted_hover_target
     },
     {
-        "returns_true",
-        Event_returns_true
-    },
-    {
-        "no_propagation_without_host",
-        Event_no_propagation_without_host
-    },
-    {
         "propagation_translates_coordinates",
         Event_propagation_translates_coordinates
     },
@@ -8393,6 +8397,42 @@ bake_test_case Event_testcases[] = {
     {
         "drag_not_propagated_to_unrelated_target",
         Event_drag_not_propagated_to_unrelated_target
+    },
+    {
+        "propagation_screen_coords_without_to_local",
+        Event_propagation_screen_coords_without_to_local
+    },
+    {
+        "stop_propagation_press",
+        Event_stop_propagation_press
+    },
+    {
+        "stop_propagation_same_level",
+        Event_stop_propagation_same_level
+    },
+    {
+        "stop_propagation_once",
+        Event_stop_propagation_once
+    },
+    {
+        "stop_propagation_result",
+        Event_stop_propagation_result
+    },
+    {
+        "stop_propagation_key",
+        Event_stop_propagation_key
+    },
+    {
+        "stop_propagation_keeps_enter",
+        Event_stop_propagation_keeps_enter
+    },
+    {
+        "stop_propagation_stale_event",
+        Event_stop_propagation_stale_event
+    },
+    {
+        "stop_propagation_enter_event",
+        Event_stop_propagation_enter_event
     }
 };
 
@@ -19627,7 +19667,7 @@ static bake_test_suite suites[] = {
         "Await",
         Await_setup,
         NULL,
-        63,
+        64,
         Await_testcases,
         1,
         Await_params
@@ -19645,7 +19685,7 @@ static bake_test_suite suites[] = {
         "Event",
         Event_setup,
         NULL,
-        40,
+        47,
         Event_testcases,
         1,
         Event_params
