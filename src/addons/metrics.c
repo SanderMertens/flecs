@@ -186,7 +186,7 @@ static void flecs_metrics_on_id_metric(ecs_iter_t *it) {
 
         EcsMetricIdInstance *src = ecs_emplace(
             world, m, EcsMetricIdInstance, NULL);
-        src->r = ecs_record_find(world, e);
+        src->r = flecs_entities_get(it->world, e);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricIdInstance);
         ecs_set(world, m, EcsMetricValue, { 0 });
@@ -212,7 +212,7 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
 
         EcsMetricOneOfInstance *src = ecs_emplace(
             world, m, EcsMetricOneOfInstance, NULL);
-        src->r = ecs_record_find(world, e);
+        src->r = flecs_entities_get(it->world, e);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricOneOfInstance);
         ecs_add_pair(world, m, ctx->metric.metric, ecs_id(EcsMetricValue));

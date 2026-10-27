@@ -90,6 +90,14 @@ ecs_record_t* flecs_entity_index_get(
     return r;
 }
 
+ecs_record_t* flecs_entities_get(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    return flecs_entity_index_get(ecs_eis(world), entity);
+}
+
 ecs_record_t* flecs_entity_index_try_get_any(
     const ecs_entity_index_t *index,
     uint64_t entity)

@@ -33,7 +33,7 @@ static ecs_component_record_t* flecs_json_type_next(
             if (it->index == table->type.count) {
                 it->index ++;
                 ecs_record_t *r = it->entity ?
-                    ecs_record_find(it->world, it->entity) : NULL;
+                    flecs_entities_get(it->world, it->entity) : NULL;
                 cr = r && (r->row & EcsEntityHasDontFragment) ?
                     it->world->cr_non_fragmenting_head : NULL;
             } else {
@@ -354,7 +354,7 @@ static int flecs_json_serialize_table_inherited_type(
     int32_t i, start = tr->index, end = start + tr->count;
     for (i = start; i < end; i ++) {
         ecs_entity_t base = ecs_pair_second(world, table->type.array[i]);
-        ecs_record_t *base_record = ecs_record_find(world, base);
+        ecs_record_t *base_record = flecs_entities_get(world, base);
         if (!base_record || !base_record->table) {
             continue;
         }

@@ -1830,47 +1830,22 @@ error:
     return NULL;
 }
 
-ecs_entity_t ecs_record_get_entity(
-    const ecs_record_t *record)
+ecs_entity_t flecs_entity_get_id(
+    const ecs_record_t *r)
 {
-    ecs_check(record != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_table_t *table = record->table;
+    ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_table_t *table = r->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    return table->data.entities[ECS_RECORD_TO_ROW(record->row)];
+    return table->data.entities[ECS_RECORD_TO_ROW(r->row)];
 error:
     return 0;
 }
 
-const void* ecs_record_get_id(
-    const ecs_world_t *stage,
+const void* flecs_entity_get(
+    const ecs_world_t *world,
     const ecs_record_t *r,
     ecs_id_t component)
 {
-    const ecs_world_t *world = ecs_get_world(stage);
-    ecs_component_record_t *cr = flecs_components_get(world, component);
-    return flecs_get_component(
-        world, r->table, ECS_RECORD_TO_ROW(r->row), cr);
-}
-
-bool ecs_record_has_id(
-    ecs_world_t *stage,
-    const ecs_record_t *r,
-    ecs_id_t component)
-{
-    const ecs_world_t *world = ecs_get_world(stage);
-    if (r->table) {
-        return ecs_table_has_id(world, r->table, component);
-    }
-
-    return false;
-}
-
-void* ecs_record_ensure_id(
-    ecs_world_t *stage,
-    ecs_record_t *r,
-    ecs_id_t component)
-{
-    const ecs_world_t *world = ecs_get_world(stage);
     ecs_component_record_t *cr = flecs_components_get(world, component);
     return flecs_get_component(
         world, r->table, ECS_RECORD_TO_ROW(r->row), cr);

@@ -580,7 +580,6 @@ const uint64_t* flecs_entity_index_ids(
 #define ecs_eis(world) (&((world)->store.entity_index))
 #define flecs_entities_init(world) flecs_entity_index_init(&world->allocator, ecs_eis(world))
 #define flecs_entities_fini(world) flecs_entity_index_fini(ecs_eis(world))
-#define flecs_entities_get(world, entity) flecs_entity_index_get(ecs_eis(world), entity)
 #define flecs_entities_try(world, entity) flecs_entity_index_try_get(ecs_eis(world), entity)
 #define flecs_entities_get_any(world, entity) flecs_entity_index_get_any(ecs_eis(world), entity)
 #define flecs_entities_ensure(world, entity) flecs_entity_index_ensure(ecs_eis(world), entity)
@@ -8517,47 +8516,22 @@ error:
     return NULL;
 }
 
-ecs_entity_t ecs_record_get_entity(
-    const ecs_record_t *record)
+ecs_entity_t flecs_entity_get_id(
+    const ecs_record_t *r)
 {
-    ecs_check(record != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_table_t *table = record->table;
+    ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_table_t *table = r->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    return table->data.entities[ECS_RECORD_TO_ROW(record->row)];
+    return table->data.entities[ECS_RECORD_TO_ROW(r->row)];
 error:
     return 0;
 }
 
-const void* ecs_record_get_id(
-    const ecs_world_t *stage,
+const void* flecs_entity_get(
+    const ecs_world_t *world,
     const ecs_record_t *r,
     ecs_id_t component)
 {
-    const ecs_world_t *world = ecs_get_world(stage);
-    ecs_component_record_t *cr = flecs_components_get(world, component);
-    return flecs_get_component(
-        world, r->table, ECS_RECORD_TO_ROW(r->row), cr);
-}
-
-bool ecs_record_has_id(
-    ecs_world_t *stage,
-    const ecs_record_t *r,
-    ecs_id_t component)
-{
-    const ecs_world_t *world = ecs_get_world(stage);
-    if (r->table) {
-        return ecs_table_has_id(world, r->table, component);
-    }
-
-    return false;
-}
-
-void* ecs_record_ensure_id(
-    ecs_world_t *stage,
-    ecs_record_t *r,
-    ecs_id_t component)
-{
-    const ecs_world_t *world = ecs_get_world(stage);
     ecs_component_record_t *cr = flecs_components_get(world, component);
     return flecs_get_component(
         world, r->table, ECS_RECORD_TO_ROW(r->row), cr);
@@ -27576,6 +27550,14 @@ ecs_record_t* flecs_entity_index_get(
     return r;
 }
 
+ecs_record_t* flecs_entities_get(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    return flecs_entity_index_get(ecs_eis(world), entity);
+}
+
 ecs_record_t* flecs_entity_index_try_get_any(
     const ecs_entity_index_t *index,
     uint64_t entity)
@@ -31486,7 +31468,7 @@ void ecs_table_swap_rows(
     flecs_table_swap(world, table, row_1, row_2);
 }
 
-void* ecs_record_get_by_column(
+void* flecs_entity_get_column(
     const ecs_record_t *r,
     int32_t index,
     size_t c_size)
@@ -31502,24 +31484,6 @@ void* ecs_record_get_by_column(
         ECS_INVALID_PARAMETER, NULL);
 
     return ECS_ELEM(column->data, size, ECS_RECORD_TO_ROW(r->row));
-error:
-    return NULL;
-}
-
-ecs_record_t* ecs_record_find(
-    const ecs_world_t *world,
-    ecs_entity_t entity)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
-
-    world = ecs_get_world(world);
-
-    ecs_record_t *r = flecs_entities_get(world, entity);
-    if (r) {
-        return r;
-    }
-
 error:
     return NULL;
 }
