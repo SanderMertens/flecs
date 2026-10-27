@@ -393,7 +393,12 @@
                 "commands_memory",
                 "table_memory_histogram",
                 "sparse_component_memory",
-                "sparse_tag_memory"
+                "sparse_tag_memory",
+                "root_table_memory",
+                "toggle_bitset_memory",
+                "wildcard_observer_memory",
+                "entity_range_memory",
+                "world_memory_collection_time"
             ]
         }, {
             "id": "Run",

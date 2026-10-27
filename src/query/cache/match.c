@@ -7,7 +7,7 @@
 
 #ifdef FLECS_CACHED_QUERIES
 
-static bool flecs_query_cache_borrows_columns(
+bool flecs_query_cache_borrows_columns(
     const ecs_query_cache_t *cache)
 {
     const ecs_query_t *query = cache->query;

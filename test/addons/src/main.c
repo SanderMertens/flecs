@@ -364,6 +364,11 @@ void Memory_commands_memory(void);
 void Memory_table_memory_histogram(void);
 void Memory_sparse_component_memory(void);
 void Memory_sparse_tag_memory(void);
+void Memory_root_table_memory(void);
+void Memory_toggle_bitset_memory(void);
+void Memory_wildcard_observer_memory(void);
+void Memory_entity_range_memory(void);
+void Memory_world_memory_collection_time(void);
 
 // Testsuite 'Run'
 void Run_setup(void);
@@ -1963,6 +1968,26 @@ bake_test_case Memory_testcases[] = {
     {
         "sparse_tag_memory",
         Memory_sparse_tag_memory
+    },
+    {
+        "root_table_memory",
+        Memory_root_table_memory
+    },
+    {
+        "toggle_bitset_memory",
+        Memory_toggle_bitset_memory
+    },
+    {
+        "wildcard_observer_memory",
+        Memory_wildcard_observer_memory
+    },
+    {
+        "entity_range_memory",
+        Memory_entity_range_memory
+    },
+    {
+        "world_memory_collection_time",
+        Memory_world_memory_collection_time
     }
 };
 
@@ -3015,7 +3040,7 @@ static bake_test_suite suites[] = {
         "Memory",
         NULL,
         NULL,
-        10,
+        15,
         Memory_testcases
     },
     {

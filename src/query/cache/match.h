@@ -14,4 +14,7 @@ bool flecs_query_cache_match_next(
     ecs_query_cache_t *cache,
     ecs_iter_t *it);
 
+bool flecs_query_cache_borrows_columns(
+    const ecs_query_cache_t *cache);
+
 #endif
