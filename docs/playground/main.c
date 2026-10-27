@@ -194,7 +194,9 @@ int main(void) {
         .code = ""
     });
 
-    ecs_script_set_to_local(world, playground_to_local, NULL);
+    ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
+        .to_local = playground_to_local
+    });
 
     ecs_app_set_run_action(playground_run);
 

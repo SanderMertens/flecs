@@ -1,0 +1,9 @@
+{
+    "id": "events",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ]
+    }
+}

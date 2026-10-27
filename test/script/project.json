@@ -1168,7 +1168,25 @@
                 "stop_propagation_key",
                 "stop_propagation_keeps_enter",
                 "stop_propagation_stale_event",
-                "stop_propagation_enter_event"
+                "stop_propagation_enter_event",
+                "import_focus",
+                "set_get_focus",
+                "get_focus_after_press",
+                "key_to_set_focus",
+                "focus_blur_on_press",
+                "focus_blur_on_set_focus",
+                "focus_unchanged_no_events",
+                "focus_between_children_reaches_parent",
+                "stop_propagation_focus",
+                "to_focus_reject_press",
+                "to_focus_redirect",
+                "to_focus_not_invoked_when_unchanged",
+                "remove_event_hooks",
+                "script_focus",
+                "script_focus_returns_to_focus_result",
+                "script_focus_clear",
+                "script_focus_resumes_listeners",
+                "delete_focus"
             ]
         }, {
             "id": "TryCatch",

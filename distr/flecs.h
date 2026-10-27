@@ -16554,7 +16554,7 @@ void FlecsScriptPlatformImport(
 /**
  * @defgroup c_addons_script_event Script Event
  * @ingroup c_addons
- * Mouse and keyboard events for Flecs script.
+ * Mouse, keyboard and focus events for Flecs script.
  * @{
  */
 
@@ -16570,8 +16570,8 @@ extern "C" {
  * and provides local_x and local_y relative to that entity. The module delivers
  * the event to the target and then to its parents, until a script calls
  * stop_propagation() on the event. Parents receive local_x and local_y from the
- * callback set with ecs_script_set_to_local(), or the screen position when no
- * callback is set. The target member is the entity under the pointer for every
+ * to_local hook set with ecs_script_set_event_hooks(), or the screen position
+ * when no hook is set. The target member is the entity under the pointer for every
  * entity that receives the event.
  *
  * The module derives the kind of event from the button state of the previous
@@ -16583,6 +16583,8 @@ extern "C" {
  * the pointer and enter to the entities that newly are, so that moving
  * between children of an entity does not leave and enter the entity. Stopping
  * propagation does not affect enter and leave.
+ *
+ * When a mouse button goes down, the focus moves to the target.
  */
 typedef struct EcsScriptMouseEvent {
     ecs_entity_t target; /**< Entity under the pointer, 0 if none. */
@@ -16608,9 +16610,8 @@ typedef struct EcsScriptMouseEvent {
 } EcsScriptMouseEvent;
 
 /** Keyboard event.
- * Keyboard events are delivered to the entity that received the last mouse
- * press and then to its parents, until a script calls stop_propagation() on
- * the event.
+ * Keyboard events are delivered to the focus and then to its parents, until a
+ * script calls stop_propagation() on the event.
  */
 typedef struct EcsScriptKeyboardEvent {
     char *key;         /**< Key value, for example "a", "Enter" or "ArrowLeft". Not owned. */
@@ -16625,6 +16626,25 @@ typedef struct EcsScriptKeyboardEvent {
     uint64_t id;       /**< Set by the module. */
 } EcsScriptKeyboardEvent;
 
+/** Focus event.
+ * When the focus moves, blur is delivered to the entity that lost the focus
+ * and focus to the entity that gained it. Both events are also delivered to
+ * the parents of these entities, until a script calls stop_propagation().
+ */
+typedef struct EcsScriptFocusEvent {
+    ecs_entity_t target;  /**< Entity that gained (focus) or lost (blur) the focus. */
+    ecs_entity_t related; /**< The other entity of the change, 0 if none. */
+
+    uint64_t id;          /**< Set by the module. */
+} EcsScriptFocusEvent;
+
+/** What caused a focus change. */
+typedef enum ecs_script_focus_source_t {
+    EcsScriptFocusPress,  /**< A mouse button went down. */
+    EcsScriptFocusSet,    /**< ecs_script_set_focus(). */
+    EcsScriptFocusScript  /**< The focus() script function. */
+} ecs_script_focus_source_t;
+
 /** Converts a screen position to a position relative to an entity.
  * Called for each parent a mouse event propagates to. local_x and local_y are
  * initialized to the screen position.
@@ -16635,7 +16655,7 @@ typedef struct EcsScriptKeyboardEvent {
  * @param screen_y Y position in window coordinates.
  * @param local_x Out: X position relative to entity.
  * @param local_y Out: Y position relative to entity.
- * @param ctx Context passed to ecs_script_set_to_local().
+ * @param ctx Context of the event hooks.
  */
 typedef void (*ecs_script_to_local_t)(
     ecs_world_t *world,
@@ -16646,11 +16666,43 @@ typedef void (*ecs_script_to_local_t)(
     float *local_y,
     void *ctx);
 
+/** Decides which entity receives the focus.
+ * Called before the focus changes. Return the entity that should receive the
+ * focus. To keep the focus where it is, return current.
+ *
+ * This lets an application decide which entities can have the focus. For
+ * example, a click on the label of a button can focus the button instead of
+ * the label, and a click on a background panel can leave the focus unchanged.
+ *
+ * @param world The world.
+ * @param entity The entity that would receive the focus, 0 if none.
+ * @param current The entity that has the focus, 0 if none.
+ * @param source What caused the change.
+ * @param ctx Context of the event hooks.
+ * @return The entity that receives the focus, 0 for none.
+ */
+typedef ecs_entity_t (*ecs_script_to_focus_t)(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t current,
+    ecs_script_focus_source_t source,
+    void *ctx);
+
+/** Application hooks of the script event module. */
+typedef struct ecs_script_event_hooks_t {
+    ecs_script_to_local_t to_local; /**< Converts positions for parents. */
+    ecs_script_to_focus_t to_focus; /**< Decides which entity receives the focus. */
+    void *ctx;                      /**< Context passed to the hooks. */
+} ecs_script_event_hooks_t;
+
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptMouseEvent);
 
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptKeyboardEvent);
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptFocusEvent);
 
 /** Emit mouse event.
  * Resolves the on.press, on.drag, on.release, on.click, on.move, on.enter and
@@ -16680,18 +16732,37 @@ void ecs_script_keyboard_event(
     ecs_world_t *world,
     const EcsScriptKeyboardEvent *evt);
 
-/** Set callback for local positions of parents.
- * Without a callback, parents receive the screen position.
+/** Set application hooks of the script event module.
+ * Replaces the hooks that were set before.
  *
  * @param world The world.
- * @param callback The callback, NULL to remove.
- * @param ctx Context passed to the callback.
+ * @param hooks The hooks, NULL to remove all hooks.
  */
 FLECS_API
-void ecs_script_set_to_local(
+void ecs_script_set_event_hooks(
     ecs_world_t *world,
-    ecs_script_to_local_t callback,
-    void *ctx);
+    const ecs_script_event_hooks_t *hooks);
+
+/** Set the focus.
+ * The focus receives keyboard events.
+ *
+ * @param world The world.
+ * @param entity The entity, 0 to clear the focus.
+ * @return The focus after the call, which the to_focus hook may change.
+ */
+FLECS_API
+ecs_entity_t ecs_script_set_focus(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get the focus.
+ *
+ * @param world The world.
+ * @return The focus, 0 if there is none.
+ */
+FLECS_API
+ecs_entity_t ecs_script_get_focus(
+    const ecs_world_t *world);
 
 /** Script event import function.
  * Usage:

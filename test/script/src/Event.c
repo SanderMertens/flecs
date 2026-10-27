@@ -35,6 +35,38 @@ static void Event_to_local(
     *local_y = screen_y + 100;
 }
 
+typedef struct {
+    int64_t focus_count;
+    int64_t blur_count;
+    ecs_entity_t focus_target;
+    ecs_entity_t focus_related;
+    ecs_entity_t blur_target;
+    ecs_entity_t blur_related;
+} ev_Focus;
+
+static int32_t to_focus_invoked = 0;
+static ecs_entity_t to_focus_entity = 0;
+static ecs_entity_t to_focus_current = 0;
+static ecs_script_focus_source_t to_focus_source = EcsScriptFocusPress;
+
+static ecs_entity_t Event_to_focus(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t current,
+    ecs_script_focus_source_t source,
+    void *ctx)
+{
+    (void)world;
+    to_focus_invoked ++;
+    to_focus_entity = entity;
+    to_focus_current = current;
+    to_focus_source = source;
+    if (ctx) {
+        return *(ecs_entity_t*)ctx;
+    }
+    return entity;
+}
+
 void Event_import(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScriptEvent);
@@ -2388,7 +2420,9 @@ void Event_propagation_translates_coordinates(void) {
 
     to_local_invoked = 0;
     to_local_entity = 0;
-    ecs_script_set_to_local(world, Event_to_local, NULL);
+    ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
+        .to_local = Event_to_local
+    });
 
     EcsScriptMouseEvent evt = {
         .target = child, .screen_x = 2, .screen_y = 3,
@@ -2455,7 +2489,9 @@ void Event_propagation_keeps_deltas(void) {
 
     test_int(ecs_script_tasks_progress(world), 1);
 
-    ecs_script_set_to_local(world, Event_to_local, NULL);
+    ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
+        .to_local = Event_to_local
+    });
 
     EcsScriptMouseEvent evt = {
         .target = child, .screen_x = 0, .screen_y = 0,
@@ -3180,6 +3216,958 @@ void Event_stop_propagation_enter_event(void) {
 
     test_bool(*(const bool*)ecs_get_id(world, child, stopper_mut), false);
     test_int(*(const int64_t*)ecs_get_id(world, e, widget_mut), 1);
+
+    ecs_fini(world);
+}
+
+void Event_import_focus(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    test_assert(ecs_lookup(world, "flecs.script.event.FocusEvent") ==
+        ecs_id(EcsScriptFocusEvent));
+    test_assert(ecs_lookup(world, "flecs.script.on.focus") != 0);
+    test_assert(ecs_lookup(world, "flecs.script.on.blur") != 0);
+    test_assert(ecs_lookup(world, "flecs.script.focus") != 0);
+    test_uint(ecs_script_get_focus(world), 0);
+
+    ecs_fini(world);
+}
+
+void Event_set_get_focus(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    test_uint(ecs_script_get_focus(world), 0);
+    test_uint(ecs_script_set_focus(world, a), a);
+    test_uint(ecs_script_get_focus(world), a);
+    test_uint(ecs_script_set_focus(world, b), b);
+    test_uint(ecs_script_get_focus(world), b);
+    test_uint(ecs_script_set_focus(world, 0), 0);
+    test_uint(ecs_script_get_focus(world), 0);
+
+    ecs_fini(world);
+}
+
+void Event_get_focus_after_press(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = a, .buttons = 1 });
+    test_uint(ecs_script_get_focus(world), a);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){ .target = a });
+    test_uint(ecs_script_get_focus(world), a);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = b, .buttons = 1 });
+    test_uint(ecs_script_get_focus(world), b);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){ .target = b });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = 0, .buttons = 1 });
+    test_uint(ecs_script_get_focus(world), 0);
+
+    ecs_fini(world);
+}
+
+void Event_key_to_set_focus(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut downs = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.key_down(this)"
+        LINE "      downs = downs + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget a"
+        LINE "Widget b",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t b = ecs_lookup(world, "b");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = a, .buttons = 1 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){ .target = a });
+
+    ecs_script_set_focus(world, b);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "a"), .down = true
+    });
+
+    test_int(*(const int64_t*)ecs_get_id(world, a, mut), 0);
+    test_int(*(const int64_t*)ecs_get_id(world, b, mut), 1);
+
+    ecs_fini(world);
+}
+
+void Event_focus_blur_on_press(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut focus_count = 0"
+        LINE "  mut blur_count = 0"
+        LINE "  mut focus_target: entity = 0"
+        LINE "  mut focus_related: entity = 0"
+        LINE "  mut blur_target: entity = 0"
+        LINE "  mut blur_related: entity = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.focus(this)"
+        LINE "      focus_count = focus_count + 1"
+        LINE "      focus_target = e.target"
+        LINE "      focus_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.blur(this)"
+        LINE "      blur_count = blur_count + 1"
+        LINE "      blur_target = e.target"
+        LINE "      blur_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget a"
+        LINE "Widget b",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t b = ecs_lookup(world, "b");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 4);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = a, .buttons = 1 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){ .target = a });
+
+    const ev_Focus *fa = ecs_get_id(world, a, mut);
+    const ev_Focus *fb = ecs_get_id(world, b, mut);
+    test_int(fa->focus_count, 1);
+    test_uint(fa->focus_target, a);
+    test_uint(fa->focus_related, 0);
+    test_int(fa->blur_count, 0);
+    test_int(fb->focus_count, 0);
+    test_int(fb->blur_count, 0);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = b, .buttons = 1 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){ .target = b });
+
+    fa = ecs_get_id(world, a, mut);
+    fb = ecs_get_id(world, b, mut);
+    test_int(fa->focus_count, 1);
+    test_int(fa->blur_count, 1);
+    test_uint(fa->blur_target, a);
+    test_uint(fa->blur_related, b);
+    test_int(fb->focus_count, 1);
+    test_uint(fb->focus_target, b);
+    test_uint(fb->focus_related, a);
+    test_int(fb->blur_count, 0);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = 0, .buttons = 1 });
+
+    fa = ecs_get_id(world, a, mut);
+    fb = ecs_get_id(world, b, mut);
+    test_int(fa->focus_count, 1);
+    test_int(fa->blur_count, 1);
+    test_int(fb->focus_count, 1);
+    test_int(fb->blur_count, 1);
+    test_uint(fb->blur_target, b);
+    test_uint(fb->blur_related, 0);
+
+    ecs_fini(world);
+}
+
+void Event_focus_blur_on_set_focus(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut focus_count = 0"
+        LINE "  mut blur_count = 0"
+        LINE "  mut focus_target: entity = 0"
+        LINE "  mut focus_related: entity = 0"
+        LINE "  mut blur_target: entity = 0"
+        LINE "  mut blur_related: entity = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.focus(this)"
+        LINE "      focus_count = focus_count + 1"
+        LINE "      focus_target = e.target"
+        LINE "      focus_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.blur(this)"
+        LINE "      blur_count = blur_count + 1"
+        LINE "      blur_target = e.target"
+        LINE "      blur_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget a"
+        LINE "Widget b",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t b = ecs_lookup(world, "b");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 4);
+
+    ecs_script_set_focus(world, a);
+
+    const ev_Focus *fa = ecs_get_id(world, a, mut);
+    test_int(fa->focus_count, 1);
+    test_uint(fa->focus_target, a);
+    test_uint(fa->focus_related, 0);
+
+    ecs_script_set_focus(world, b);
+
+    fa = ecs_get_id(world, a, mut);
+    const ev_Focus *fb = ecs_get_id(world, b, mut);
+    test_int(fa->blur_count, 1);
+    test_uint(fa->blur_target, a);
+    test_uint(fa->blur_related, b);
+    test_int(fb->focus_count, 1);
+    test_uint(fb->focus_target, b);
+    test_uint(fb->focus_related, a);
+
+    ecs_script_set_focus(world, 0);
+
+    fb = ecs_get_id(world, b, mut);
+    test_int(fb->blur_count, 1);
+    test_uint(fb->blur_target, b);
+    test_uint(fb->blur_related, 0);
+
+    ecs_fini(world);
+}
+
+void Event_focus_unchanged_no_events(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut focus_count = 0"
+        LINE "  mut blur_count = 0"
+        LINE "  mut focus_target: entity = 0"
+        LINE "  mut focus_related: entity = 0"
+        LINE "  mut blur_target: entity = 0"
+        LINE "  mut blur_related: entity = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.focus(this)"
+        LINE "      focus_count = focus_count + 1"
+        LINE "      focus_target = e.target"
+        LINE "      focus_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.blur(this)"
+        LINE "      blur_count = blur_count + 1"
+        LINE "      blur_target = e.target"
+        LINE "      blur_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget a",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(a != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = a, .buttons = 1 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){ .target = a });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = a, .buttons = 1 });
+    ecs_script_set_focus(world, a);
+
+    const ev_Focus *fa = ecs_get_id(world, a, mut);
+    test_int(fa->focus_count, 1);
+    test_int(fa->blur_count, 0);
+
+    ecs_fini(world);
+}
+
+void Event_focus_between_children_reaches_parent(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut focus_count = 0"
+        LINE "  mut blur_count = 0"
+        LINE "  mut focus_target: entity = 0"
+        LINE "  mut focus_related: entity = 0"
+        LINE "  mut blur_target: entity = 0"
+        LINE "  mut blur_related: entity = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.focus(this)"
+        LINE "      focus_count = focus_count + 1"
+        LINE "      focus_target = e.target"
+        LINE "      focus_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.blur(this)"
+        LINE "      blur_count = blur_count + 1"
+        LINE "      blur_target = e.target"
+        LINE "      blur_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget p {"
+        LINE "  c1 {}"
+        LINE "  c2 {}"
+        LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t p = ecs_lookup(world, "p");
+    ecs_entity_t c1 = ecs_lookup(world, "p.c1");
+    ecs_entity_t c2 = ecs_lookup(world, "p.c2");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(p != 0);
+    test_assert(c1 != 0);
+    test_assert(c2 != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_script_set_focus(world, c1);
+
+    const ev_Focus *fp = ecs_get_id(world, p, mut);
+    test_int(fp->focus_count, 1);
+    test_uint(fp->focus_target, c1);
+    test_int(fp->blur_count, 0);
+
+    ecs_script_set_focus(world, c2);
+
+    fp = ecs_get_id(world, p, mut);
+    test_int(fp->blur_count, 1);
+    test_uint(fp->blur_target, c1);
+    test_uint(fp->blur_related, c2);
+    test_int(fp->focus_count, 2);
+    test_uint(fp->focus_target, c2);
+    test_uint(fp->focus_related, c1);
+
+    ecs_fini(world);
+}
+
+void Event_stop_propagation_focus(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut focus_count = 0"
+        LINE "  mut blur_count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.focus(this)"
+        LINE "      focus_count = focus_count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.blur(this)"
+        LINE "      blur_count = blur_count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "template Stopper {"
+        LINE "  mut stops = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.focus(this)"
+        LINE "      stops = stops + 1"
+        LINE "      await e.stop_propagation()"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e { Stopper child { grandchild {} } }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    ecs_entity_t grandchild = ecs_lookup(world, "e.child.grandchild");
+    ecs_entity_t widget_mut = ecs_lookup(world, "Widget.mut");
+    ecs_entity_t stopper_mut = ecs_lookup(world, "Stopper.mut");
+    test_assert(e != 0);
+    test_assert(child != 0);
+    test_assert(grandchild != 0);
+    test_assert(widget_mut != 0);
+    test_assert(stopper_mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 3);
+
+    ecs_script_set_focus(world, grandchild);
+
+    test_int(*(const int64_t*)ecs_get_id(world, child, stopper_mut), 1);
+    const int64_t *w = ecs_get_id(world, e, widget_mut);
+    test_int(w[0], 0);
+    test_int(w[1], 0);
+
+    ecs_script_set_focus(world, 0);
+
+    w = ecs_get_id(world, e, widget_mut);
+    test_int(w[0], 0);
+    test_int(w[1], 1);
+
+    ecs_fini(world);
+}
+
+void Event_to_focus_reject_press(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut focus_count = 0"
+        LINE "  mut blur_count = 0"
+        LINE "  mut focus_target: entity = 0"
+        LINE "  mut focus_related: entity = 0"
+        LINE "  mut blur_target: entity = 0"
+        LINE "  mut blur_related: entity = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.focus(this)"
+        LINE "      focus_count = focus_count + 1"
+        LINE "      focus_target = e.target"
+        LINE "      focus_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.blur(this)"
+        LINE "      blur_count = blur_count + 1"
+        LINE "      blur_target = e.target"
+        LINE "      blur_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget a"
+        LINE "Widget b",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t b = ecs_lookup(world, "b");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 4);
+
+    ecs_script_set_focus(world, a);
+
+    to_focus_invoked = 0;
+    to_focus_entity = 0;
+    ecs_entity_t keep = a;
+    ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
+        .to_focus = Event_to_focus,
+        .ctx = &keep
+    });
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = b, .buttons = 1 });
+
+    test_int(to_focus_invoked, 1);
+    test_uint(to_focus_entity, b);
+    test_uint(to_focus_current, a);
+    test_int(to_focus_source, EcsScriptFocusPress);
+    test_uint(ecs_script_get_focus(world), a);
+
+    const ev_Focus *fa = ecs_get_id(world, a, mut);
+    const ev_Focus *fb = ecs_get_id(world, b, mut);
+    test_int(fa->focus_count, 1);
+    test_int(fa->blur_count, 0);
+    test_int(fb->focus_count, 0);
+    test_int(fb->blur_count, 0);
+
+    ecs_fini(world);
+}
+
+void Event_to_focus_redirect(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut focus_count = 0"
+        LINE "  mut blur_count = 0"
+        LINE "  mut focus_target: entity = 0"
+        LINE "  mut focus_related: entity = 0"
+        LINE "  mut blur_target: entity = 0"
+        LINE "  mut blur_related: entity = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.focus(this)"
+        LINE "      focus_count = focus_count + 1"
+        LINE "      focus_target = e.target"
+        LINE "      focus_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.blur(this)"
+        LINE "      blur_count = blur_count + 1"
+        LINE "      blur_target = e.target"
+        LINE "      blur_related = e.related"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget a"
+        LINE "Widget b",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t b = ecs_lookup(world, "b");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 4);
+
+    to_focus_invoked = 0;
+    to_focus_entity = 0;
+    ecs_entity_t redirect = b;
+    ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
+        .to_focus = Event_to_focus,
+        .ctx = &redirect
+    });
+
+    test_uint(ecs_script_set_focus(world, a), b);
+    test_int(to_focus_invoked, 1);
+    test_uint(to_focus_entity, a);
+    test_uint(to_focus_current, 0);
+    test_int(to_focus_source, EcsScriptFocusSet);
+    test_uint(ecs_script_get_focus(world), b);
+
+    const ev_Focus *fa = ecs_get_id(world, a, mut);
+    const ev_Focus *fb = ecs_get_id(world, b, mut);
+    test_int(fa->focus_count, 0);
+    test_int(fb->focus_count, 1);
+    test_uint(fb->focus_target, b);
+
+    ecs_fini(world);
+}
+
+void Event_to_focus_not_invoked_when_unchanged(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t a = ecs_new(world);
+
+    to_focus_invoked = 0;
+    ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
+        .to_focus = Event_to_focus
+    });
+
+    ecs_script_set_focus(world, a);
+    test_int(to_focus_invoked, 1);
+
+    ecs_script_set_focus(world, a);
+    test_int(to_focus_invoked, 1);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = a, .buttons = 1 });
+    test_int(to_focus_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Event_remove_event_hooks(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_entity_t keep = 0;
+    to_focus_invoked = 0;
+    ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
+        .to_focus = Event_to_focus,
+        .ctx = &keep
+    });
+
+    test_uint(ecs_script_set_focus(world, a), 0);
+    test_int(to_focus_invoked, 1);
+
+    ecs_script_set_event_hooks(world, NULL);
+
+    test_uint(ecs_script_set_focus(world, b), b);
+    test_int(to_focus_invoked, 1);
+    test_uint(ecs_script_get_focus(world), b);
+
+    ecs_fini(world);
+}
+
+void Event_script_focus(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut downs = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.key_down(this)"
+        LINE "      downs = downs + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget b"
+        LINE "template Caller {"
+        LINE "  prop other: entity = b"
+        LINE "  mut result: entity = 0"
+        LINE "  async {"
+        LINE "    await on.press(this)"
+        LINE "    const r = await focus(other)"
+        LINE "    result = r"
+        LINE "  }"
+        LINE "}"
+        LINE "Caller a",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t b = ecs_lookup(world, "b");
+    ecs_entity_t widget_mut = ecs_lookup(world, "Widget.mut");
+    ecs_entity_t caller_mut = ecs_lookup(world, "Caller.mut");
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_assert(widget_mut != 0);
+    test_assert(caller_mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    to_focus_invoked = 0;
+    ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
+        .to_focus = Event_to_focus
+    });
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = a, .buttons = 1 });
+
+    test_int(to_focus_invoked, 2);
+    test_uint(to_focus_entity, b);
+    test_int(to_focus_source, EcsScriptFocusScript);
+    test_uint(ecs_script_get_focus(world), b);
+    test_uint(*(const ecs_entity_t*)ecs_get_id(world, a, caller_mut), b);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "a"), .down = true
+    });
+
+    test_int(*(const int64_t*)ecs_get_id(world, b, widget_mut), 1);
+
+    ecs_fini(world);
+}
+
+void Event_script_focus_returns_to_focus_result(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "b {}"
+        LINE "template Caller {"
+        LINE "  prop other: entity = b"
+        LINE "  mut result: entity = 0"
+        LINE "  async {"
+        LINE "    await on.press(this)"
+        LINE "    const r = await focus(other)"
+        LINE "    result = r"
+        LINE "  }"
+        LINE "}"
+        LINE "Caller a",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t b = ecs_lookup(world, "b");
+    ecs_entity_t mut = ecs_lookup(world, "Caller.mut");
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_script_set_focus(world, a);
+
+    ecs_entity_t keep = a;
+    ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
+        .to_focus = Event_to_focus,
+        .ctx = &keep
+    });
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = a, .buttons = 1 });
+
+    test_uint(ecs_script_get_focus(world), a);
+    test_uint(*(const ecs_entity_t*)ecs_get_id(world, a, mut), a);
+
+    ecs_fini(world);
+}
+
+void Event_script_focus_clear(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Caller {"
+        LINE "  mut result: entity = 0"
+        LINE "  mut done = false"
+        LINE "  async {"
+        LINE "    await on.release(this)"
+        LINE "    const r = await focus(0)"
+        LINE "    result = r"
+        LINE "    done = true"
+        LINE "  }"
+        LINE "}"
+        LINE "Caller a",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t mut = ecs_lookup(world, "Caller.mut");
+    test_assert(a != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = a, .buttons = 1 });
+    test_uint(ecs_script_get_focus(world), a);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){ .target = a });
+    test_uint(ecs_script_get_focus(world), 0);
+
+    const ecs_entity_t *result = ecs_get_id(world, a, mut);
+    test_uint(result[0], 0);
+    test_bool(*(const bool*)&result[1], true);
+
+    ecs_fini(world);
+}
+
+void Event_script_focus_resumes_listeners(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Listener {"
+        LINE "  mut focus_count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.focus(this)"
+        LINE "      focus_count = focus_count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Listener b"
+        LINE "template Caller {"
+        LINE "  prop other: entity = b"
+        LINE "  async {"
+        LINE "    await on.press(this)"
+        LINE "    await focus(other)"
+        LINE "  }"
+        LINE "}"
+        LINE "Caller a",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t b = ecs_lookup(world, "b");
+    ecs_entity_t mut = ecs_lookup(world, "Listener.mut");
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = a, .buttons = 1 });
+
+    test_uint(ecs_script_get_focus(world), b);
+    test_int(*(const int64_t*)ecs_get_id(world, b, mut), 1);
+
+    ecs_fini(world);
+}
+
+void Event_delete_focus(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut downs = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.key_down(this)"
+        LINE "      downs = downs + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget p { child {} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t p = ecs_lookup(world, "p");
+    ecs_entity_t child = ecs_lookup(world, "p.child");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(p != 0);
+    test_assert(child != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_script_set_focus(world, child);
+    test_uint(ecs_script_get_focus(world), child);
+
+    ecs_delete(world, child);
+    test_uint(ecs_script_get_focus(world), 0);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "a"), .down = true
+    });
+
+    test_int(*(const int64_t*)ecs_get_id(world, p, mut), 0);
+
+    ecs_script_set_focus(world, p);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "a"), .down = true
+    });
+
+    test_int(*(const int64_t*)ecs_get_id(world, p, mut), 1);
 
     ecs_fini(world);
 }
