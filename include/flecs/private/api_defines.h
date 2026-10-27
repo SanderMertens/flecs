@@ -31,6 +31,11 @@
 #elif defined(__EMSCRIPTEN__)
 #define ECS_TARGET_EM
 #define ECS_TARGET_POSIX
+#elif defined(__wasm__)
+/* WebAssembly without Emscripten (e.g. wasm32-unknown-unknown or WASI). The
+ * C library, if any, provides POSIX string functions but no backtraces. */
+#define ECS_TARGET_WASM
+#define ECS_TARGET_POSIX
 #endif
 
 #if defined(__MINGW32__) || defined(__MINGW64__)
