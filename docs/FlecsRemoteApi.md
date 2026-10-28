@@ -132,6 +132,8 @@ world
 
 When the application is running, navigate to this URL: https://flecs.dev/explorer . The explorer should connect automatically to the application.
 
+To let clients inspect the world without changing it, set `readonly` on the `EcsRest` component (`ecs_singleton_set(world, EcsRest, { .readonly = true })`). A readonly server replies 403 to every request other than `GET`, and to function calls (`GET /call/...`).
+
 ## Usage
 The following sections describe how the Flecs Remote API can be used by applications.
 

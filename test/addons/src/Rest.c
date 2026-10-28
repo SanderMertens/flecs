@@ -1415,3 +1415,64 @@ void Rest_app_enable_rest(void) {
 
     ecs_fini(world);
 }
+
+void Rest_readonly(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_singleton_set(world, EcsRest, { .port = 27762, .readonly = true });
+
+    const EcsRest *rest = ecs_singleton_get(world, EcsRest);
+    test_assert(rest != NULL);
+    test_assert(rest->impl != NULL);
+    test_bool(rest->impl->readonly, true);
+    ecs_http_server_t *srv = rest->impl->srv;
+    test_assert(srv != NULL);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "foo" });
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        test_int(ecs_http_server_request(srv, "GET",
+            "/entity/foo", NULL, &reply), 0);
+        test_int(reply.code, 200);
+        ecs_os_free(ecs_strbuf_get(&reply.body));
+    }
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        test_int(ecs_http_server_request(srv, "PUT",
+            "/entity/bar", NULL, &reply), -1);
+        test_int(reply.code, 403);
+        ecs_os_free(ecs_strbuf_get(&reply.body));
+        test_assert(ecs_lookup(world, "bar") == 0);
+    }
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        test_int(ecs_http_server_request(srv, "DELETE",
+            "/entity/foo", NULL, &reply), -1);
+        test_int(reply.code, 403);
+        ecs_os_free(ecs_strbuf_get(&reply.body));
+        test_assert(ecs_is_alive(world, e));
+    }
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        test_int(ecs_http_server_request(srv, "PUT",
+            "/script/my_script.flecs", "bar {}", &reply), -1);
+        test_int(reply.code, 403);
+        ecs_os_free(ecs_strbuf_get(&reply.body));
+        test_assert(ecs_lookup(world, "my_script.flecs") == 0);
+        test_assert(ecs_lookup(world, "bar") == 0);
+    }
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        test_int(ecs_http_server_request(srv, "GET",
+            "/call/flecs/script/math/sqr?v=7", NULL, &reply), -1);
+        test_int(reply.code, 403);
+        ecs_os_free(ecs_strbuf_get(&reply.body));
+    }
+
+    ecs_fini(world);
+}

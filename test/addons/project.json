@@ -592,7 +592,8 @@
                 "world_modules",
                 "world_builtin_and_modules",
                 "world_explicit_false",
-                "app_enable_rest"
+                "app_enable_rest",
+                "readonly"
             ]
         }, {
             "id": "Metrics",

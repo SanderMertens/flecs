@@ -13531,6 +13531,7 @@ typedef struct {
     int32_t rc;                    /**< Reference count. */
     ecs_map_t cmd_captures;        /**< Map of command captures. */
     double last_time;              /**< Last processing time. */
+    bool readonly;                 /**< Refuse requests that modify the world. */
 } ecs_rest_ctx_t;
 
 /** Component that creates a REST API server when instantiated. */
@@ -13538,6 +13539,7 @@ typedef struct {
     uint16_t port;      /**< Port of server (optional, default = 27750). */
     char *ipaddr;       /**< Interface address (optional, default = 0.0.0.0). */
     ecs_rest_ctx_t *impl; /**< Private implementation data. */
+    bool readonly;      /**< Refuse requests that modify the world (optional, default = false). */
 } EcsRest;
 
 /** Create HTTP server for REST API.
