@@ -34,6 +34,18 @@ typedef struct flecs_log_capture_frame_t {
 
 static flecs_log_capture_frame_t *flecs_log_capture_frames = NULL;
 
+typedef struct flecs_log_collect_frame_t {
+    ecs_vec_t *errors;
+    ecs_os_api_log_t prev_log;
+    int prev_level;
+    bool prev_color;
+    int32_t capture_depth;
+    struct flecs_log_collect_frame_t *prev;
+} flecs_log_collect_frame_t;
+
+static flecs_log_collect_frame_t *flecs_log_collect_frames = NULL;
+static bool flecs_log_uncaptured_active = false;
+
 static void flecs_set_prev_log(
     ecs_os_api_log_t prev_log,
     bool try)
@@ -139,6 +151,70 @@ char* ecs_log_stop_capture(void) {
     return flecs_log_get_captured_log();
 }
 
+static void flecs_log_collect_log(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    flecs_log_collect_frame_t *frame = flecs_log_collect_frames;
+    if (!frame) {
+        return;
+    }
+
+    if (level <= -4 && frame->prev_log) {
+        frame->prev_log(level, file, line, msg);
+    }
+
+    if (level <= -3) {
+        if (flecs_log_capture_depth > frame->capture_depth &&
+            !flecs_log_uncaptured_active)
+        {
+            return;
+        }
+
+        ecs_vec_append_t(NULL, frame->errors, char*)[0] = ecs_os_strdup(msg);
+        return;
+    }
+
+    if (frame->prev_log && level <= frame->prev_level) {
+        frame->prev_log(level, file, line, msg);
+    }
+}
+
+void ecs_log_start_collect_errors(
+    ecs_vec_t *errors)
+{
+    ecs_assert(errors != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_log_collect_frame_t *frame =
+        ecs_os_calloc_t(flecs_log_collect_frame_t);
+    frame->errors = errors;
+    frame->prev_log = ecs_os_api.log_;
+    frame->prev_level = ecs_os_api.log_level_;
+    frame->prev_color = ecs_log_enable_colors(false);
+    frame->capture_depth = flecs_log_capture_depth;
+    frame->prev = flecs_log_collect_frames;
+    flecs_log_collect_frames = frame;
+
+    ecs_os_api.log_ = flecs_log_collect_log;
+    if (ecs_os_api.log_level_ < -1) {
+        ecs_os_api.log_level_ = -1;
+    }
+}
+
+void ecs_log_stop_collect_errors(void) {
+    flecs_log_collect_frame_t *frame = flecs_log_collect_frames;
+    ecs_assert(frame != NULL, ECS_INVALID_OPERATION,
+        "error collection not active");
+    ecs_assert(frame->capture_depth == flecs_log_capture_depth,
+        ECS_INVALID_OPERATION, "mismatching log capture calls");
+    ecs_os_api.log_ = frame->prev_log;
+    ecs_os_api.log_level_ = frame->prev_level;
+    ecs_log_enable_colors(frame->prev_color);
+    flecs_log_collect_frames = frame->prev;
+    ecs_os_free(frame);
+}
+
 void flecs_log_capture_push(bool try) {
     ecs_log_start_capture(try);
     if (flecs_log_capture_depth == 1) {
@@ -194,6 +270,8 @@ void flecs_log_uncaptured(
 {
     va_list args;
     va_start(args, fmt);
+    bool prev_active = flecs_log_uncaptured_active;
+    flecs_log_uncaptured_active = true;
     if (!flecs_log_capture_depth) {
         if (level <= ecs_os_api.log_level_) {
             ecs_printv_(level, NULL, 0, fmt, args);
@@ -203,6 +281,7 @@ void flecs_log_uncaptured(
         flecs_log_prev_fatal_log(level, NULL, 0, msg);
         ecs_os_free(msg);
     }
+    flecs_log_uncaptured_active = prev_active;
     va_end(args);
 }
 
@@ -830,6 +909,14 @@ void ecs_log_start_capture(bool try) {
 char* ecs_log_stop_capture(void) {
     return NULL;
 }
+
+void ecs_log_start_collect_errors(
+    ecs_vec_t *errors)
+{
+    (void)errors;
+}
+
+void ecs_log_stop_collect_errors(void) { }
 
 void flecs_log_capture_push(bool try) {
     (void)try;

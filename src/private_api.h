@@ -184,6 +184,10 @@ int flecs_id_qsort_cmp(
 char* flecs_load_from_file(
     const char *filename);
 
+bool flecs_strstr_i(
+    const char *str,
+    const char *match);
+
 /* Test whether entity name is an entity id (starts with a #). */
 bool flecs_name_is_id(
     const char *name);

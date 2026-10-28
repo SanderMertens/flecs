@@ -1188,6 +1188,10 @@ void Event_activate_once_per_activation(void);
 void Event_activate_modifiers(void);
 void Event_activate_and_click(void);
 void Event_stop_propagation_activate(void);
+void Event_get_mouse_state(void);
+void Event_listeners(void);
+void Event_emit_result(void);
+void Event_emit_result_stopped(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_setup(void);
@@ -1328,6 +1332,12 @@ void Function_struct_return_w_dtor_no_move(void);
 void Function_struct_component_from_fn_w_dtor_no_move(void);
 void Function_match_struct_w_dtor_no_move(void);
 void Function_struct_member_from_fn_w_dtor_no_move(void);
+void Function_optional_params(void);
+void Function_optional_params_missing_required(void);
+void Function_optional_params_call(void);
+void Function_param_brief(void);
+void Function_void_return_call(void);
+void Function_void_return_in_expr(void);
 
 // Testsuite 'Template'
 void Template_setup(void);
@@ -2498,6 +2508,8 @@ void Expr_entity_method_on_dead_entity(void);
 void Expr_collection_literal_types_w_same_short_name(void);
 void Expr_id_var_eq_literal(void);
 void Expr_vector_func_array_of_struct_error_type_name(void);
+void Expr_partial_initializer(void);
+void Expr_partial_nested_initializer(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_setup(void);
@@ -3937,7 +3949,6 @@ void Edit_clear_unknown_edit(void);
 void Edit_set_after_clear(void);
 void Edit_count_edits(void);
 void Edit_set_for_recreated_entity_after_clear(void);
-void Edit_set_10k_statements(void);
 void Edit_from_scene_no_changes(void);
 void Edit_from_scene_no_changes_float_literal(void);
 void Edit_from_scene_changed_value(void);
@@ -4014,6 +4025,143 @@ void Reload_from_file_parse_error_keeps_world(void);
 void Reload_without_filename(void);
 void Reload_not_a_script(void);
 void Reload_keeps_entities_outside_script(void);
+void Reload_saved_code_from_file(void);
+void Reload_saved_code_from_code(void);
+void Reload_undo(void);
+void Reload_undo_same_code(void);
+void Reload_undo_bounded(void);
+
+// Testsuite 'Command'
+void Command_setup(void);
+void Command_session_init(void);
+void Command_session_init_w_desc(void);
+void Command_get_session_outside_command(void);
+void Command_get_session_in_command(void);
+void Command_custom_command_optional_args(void);
+void Command_custom_command_error(void);
+void Command_history(void);
+void Command_history_bounded(void);
+void Command_clear(void);
+void Command_invalid_session(void);
+void Command_unknown_command(void);
+void Command_empty_command(void);
+void Command_too_many_args(void);
+void Command_missing_arg(void);
+void Command_invalid_arg(void);
+void Command_quoted_arg(void);
+void Command_quoted_arg_w_escape(void);
+void Command_backtick_arg(void);
+void Command_unterminated_quote(void);
+void Command_grouped_arg(void);
+void Command_unbalanced_group(void);
+void Command_lookup_relative_to_scope(void);
+void Command_command_does_not_set_scope(void);
+void Command_singleton_arg(void);
+void Command_singleton_arg_no_component(void);
+void Command_pair_arg(void);
+void Command_help(void);
+void Command_help_command(void);
+void Command_help_unknown(void);
+void Command_ls(void);
+void Command_ls_root(void);
+void Command_ls_session_scope(void);
+void Command_invalid_entity(void);
+void Command_tree(void);
+void Command_tree_root_skips_flecs(void);
+void Command_cat(void);
+void Command_schema(void);
+void Command_schema_not_a_type(void);
+void Command_schema_value(void);
+void Command_cd_pwd(void);
+void Command_get(void);
+void Command_get_not_present(void);
+void Command_set(void);
+void Command_set_partial(void);
+void Command_set_nested_partial(void);
+void Command_set_invalid_value(void);
+void Command_add_remove(void);
+void Command_new(void);
+void Command_new_in_scope(void);
+void Command_new_existing(void);
+void Command_delete(void);
+void Command_mv(void);
+void Command_mv_errors(void);
+void Command_man(void);
+void Command_eval(void);
+void Command_eval_error(void);
+void Command_query(void);
+void Command_query_error(void);
+void Command_quit(void);
+void Command_find(void);
+void Command_find_root_skips_flecs(void);
+void Command_grep(void);
+void Command_grep_i(void);
+void Command_scripts(void);
+void Command_scripts_unsaved(void);
+void Command_script_read(void);
+void Command_script_read_not_a_script(void);
+void Command_script_grep(void);
+void Command_script_where(void);
+void Command_script_where_not_declared(void);
+void Command_script_errors(void);
+void Command_script_replace(void);
+void Command_script_replace_not_found(void);
+void Command_script_replace_multiple(void);
+void Command_script_replace_all(void);
+void Command_script_write(void);
+void Command_script_write_in_scope(void);
+void Command_script_patch(void);
+void Command_script_patch_anchor(void);
+void Command_script_patch_insert_after_anchor(void);
+void Command_script_patch_multiple_hunks(void);
+void Command_script_patch_no_match(void);
+void Command_script_patch_ambiguous(void);
+void Command_script_patch_all_or_nothing(void);
+void Command_script_patch_anchor_not_found(void);
+void Command_script_edit_reload_error(void);
+void Command_script_set(void);
+void Command_script_set_not_declared(void);
+void Command_script_remove(void);
+void Command_script_delete(void);
+void Command_script_sync(void);
+void Command_script_diff(void);
+void Command_script_diff_patch_roundtrip(void);
+void Command_script_save(void);
+void Command_script_save_conflict(void);
+void Command_script_save_as(void);
+void Command_script_reload(void);
+void Command_script_undo(void);
+void Command_focus_blur(void);
+void Command_click(void);
+void Command_press_release(void);
+void Command_move_drag(void);
+void Command_move_to_screen(void);
+void Command_key(void);
+void Command_key_plus(void);
+void Command_invalid_button(void);
+void Command_mouse_keyboard_event(void);
+void Command_listeners(void);
+void Command_call_from_script(void);
+
+// Testsuite 'SerializeType'
+void SerializeType_struct(void);
+void SerializeType_struct_w_deps(void);
+void SerializeType_struct_w_array_member(void);
+void SerializeType_struct_w_unit(void);
+void SerializeType_struct_inheritance(void);
+void SerializeType_enum(void);
+void SerializeType_enum_underlying_type(void);
+void SerializeType_bitmask(void);
+void SerializeType_vector(void);
+void SerializeType_array(void);
+void SerializeType_map(void);
+void SerializeType_scoped(void);
+void SerializeType_shared_dep(void);
+void SerializeType_builtin_dep(void);
+void SerializeType_roundtrip(void);
+void SerializeType_primitive(void);
+void SerializeType_not_a_type(void);
+void SerializeType_opaque_dep(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -8691,6 +8839,22 @@ bake_test_case Event_testcases[] = {
     {
         "stop_propagation_activate",
         Event_stop_propagation_activate
+    },
+    {
+        "get_mouse_state",
+        Event_get_mouse_state
+    },
+    {
+        "listeners",
+        Event_listeners
+    },
+    {
+        "emit_result",
+        Event_emit_result
+    },
+    {
+        "emit_result_stopped",
+        Event_emit_result_stopped
     }
 };
 
@@ -9233,6 +9397,30 @@ bake_test_case Function_testcases[] = {
     {
         "struct_member_from_fn_w_dtor_no_move",
         Function_struct_member_from_fn_w_dtor_no_move
+    },
+    {
+        "optional_params",
+        Function_optional_params
+    },
+    {
+        "optional_params_missing_required",
+        Function_optional_params_missing_required
+    },
+    {
+        "optional_params_call",
+        Function_optional_params_call
+    },
+    {
+        "param_brief",
+        Function_param_brief
+    },
+    {
+        "void_return_call",
+        Function_void_return_call
+    },
+    {
+        "void_return_in_expr",
+        Function_void_return_in_expr
     }
 };
 
@@ -13868,6 +14056,14 @@ bake_test_case Expr_testcases[] = {
     {
         "vector_func_array_of_struct_error_type_name",
         Expr_vector_func_array_of_struct_error_type_name
+    },
+    {
+        "partial_initializer",
+        Expr_partial_initializer
+    },
+    {
+        "partial_nested_initializer",
+        Expr_partial_nested_initializer
     }
 };
 
@@ -19481,10 +19677,6 @@ bake_test_case Edit_testcases[] = {
         Edit_set_for_recreated_entity_after_clear
     },
     {
-        "set_10k_statements",
-        Edit_set_10k_statements
-    },
-    {
         "from_scene_no_changes",
         Edit_from_scene_no_changes
     },
@@ -19769,6 +19961,540 @@ bake_test_case Reload_testcases[] = {
     {
         "keeps_entities_outside_script",
         Reload_keeps_entities_outside_script
+    },
+    {
+        "saved_code_from_file",
+        Reload_saved_code_from_file
+    },
+    {
+        "saved_code_from_code",
+        Reload_saved_code_from_code
+    },
+    {
+        "undo",
+        Reload_undo
+    },
+    {
+        "undo_same_code",
+        Reload_undo_same_code
+    },
+    {
+        "undo_bounded",
+        Reload_undo_bounded
+    }
+};
+
+bake_test_case Command_testcases[] = {
+    {
+        "session_init",
+        Command_session_init
+    },
+    {
+        "session_init_w_desc",
+        Command_session_init_w_desc
+    },
+    {
+        "get_session_outside_command",
+        Command_get_session_outside_command
+    },
+    {
+        "get_session_in_command",
+        Command_get_session_in_command
+    },
+    {
+        "custom_command_optional_args",
+        Command_custom_command_optional_args
+    },
+    {
+        "custom_command_error",
+        Command_custom_command_error
+    },
+    {
+        "history",
+        Command_history
+    },
+    {
+        "history_bounded",
+        Command_history_bounded
+    },
+    {
+        "clear",
+        Command_clear
+    },
+    {
+        "invalid_session",
+        Command_invalid_session
+    },
+    {
+        "unknown_command",
+        Command_unknown_command
+    },
+    {
+        "empty_command",
+        Command_empty_command
+    },
+    {
+        "too_many_args",
+        Command_too_many_args
+    },
+    {
+        "missing_arg",
+        Command_missing_arg
+    },
+    {
+        "invalid_arg",
+        Command_invalid_arg
+    },
+    {
+        "quoted_arg",
+        Command_quoted_arg
+    },
+    {
+        "quoted_arg_w_escape",
+        Command_quoted_arg_w_escape
+    },
+    {
+        "backtick_arg",
+        Command_backtick_arg
+    },
+    {
+        "unterminated_quote",
+        Command_unterminated_quote
+    },
+    {
+        "grouped_arg",
+        Command_grouped_arg
+    },
+    {
+        "unbalanced_group",
+        Command_unbalanced_group
+    },
+    {
+        "lookup_relative_to_scope",
+        Command_lookup_relative_to_scope
+    },
+    {
+        "command_does_not_set_scope",
+        Command_command_does_not_set_scope
+    },
+    {
+        "singleton_arg",
+        Command_singleton_arg
+    },
+    {
+        "singleton_arg_no_component",
+        Command_singleton_arg_no_component
+    },
+    {
+        "pair_arg",
+        Command_pair_arg
+    },
+    {
+        "help",
+        Command_help
+    },
+    {
+        "help_command",
+        Command_help_command
+    },
+    {
+        "help_unknown",
+        Command_help_unknown
+    },
+    {
+        "ls",
+        Command_ls
+    },
+    {
+        "ls_root",
+        Command_ls_root
+    },
+    {
+        "ls_session_scope",
+        Command_ls_session_scope
+    },
+    {
+        "invalid_entity",
+        Command_invalid_entity
+    },
+    {
+        "tree",
+        Command_tree
+    },
+    {
+        "tree_root_skips_flecs",
+        Command_tree_root_skips_flecs
+    },
+    {
+        "cat",
+        Command_cat
+    },
+    {
+        "schema",
+        Command_schema
+    },
+    {
+        "schema_not_a_type",
+        Command_schema_not_a_type
+    },
+    {
+        "schema_value",
+        Command_schema_value
+    },
+    {
+        "cd_pwd",
+        Command_cd_pwd
+    },
+    {
+        "get",
+        Command_get
+    },
+    {
+        "get_not_present",
+        Command_get_not_present
+    },
+    {
+        "set",
+        Command_set
+    },
+    {
+        "set_partial",
+        Command_set_partial
+    },
+    {
+        "set_nested_partial",
+        Command_set_nested_partial
+    },
+    {
+        "set_invalid_value",
+        Command_set_invalid_value
+    },
+    {
+        "add_remove",
+        Command_add_remove
+    },
+    {
+        "new",
+        Command_new
+    },
+    {
+        "new_in_scope",
+        Command_new_in_scope
+    },
+    {
+        "new_existing",
+        Command_new_existing
+    },
+    {
+        "delete",
+        Command_delete
+    },
+    {
+        "mv",
+        Command_mv
+    },
+    {
+        "mv_errors",
+        Command_mv_errors
+    },
+    {
+        "man",
+        Command_man
+    },
+    {
+        "eval",
+        Command_eval
+    },
+    {
+        "eval_error",
+        Command_eval_error
+    },
+    {
+        "query",
+        Command_query
+    },
+    {
+        "query_error",
+        Command_query_error
+    },
+    {
+        "quit",
+        Command_quit
+    },
+    {
+        "find",
+        Command_find
+    },
+    {
+        "find_root_skips_flecs",
+        Command_find_root_skips_flecs
+    },
+    {
+        "grep",
+        Command_grep
+    },
+    {
+        "grep_i",
+        Command_grep_i
+    },
+    {
+        "scripts",
+        Command_scripts
+    },
+    {
+        "scripts_unsaved",
+        Command_scripts_unsaved
+    },
+    {
+        "script_read",
+        Command_script_read
+    },
+    {
+        "script_read_not_a_script",
+        Command_script_read_not_a_script
+    },
+    {
+        "script_grep",
+        Command_script_grep
+    },
+    {
+        "script_where",
+        Command_script_where
+    },
+    {
+        "script_where_not_declared",
+        Command_script_where_not_declared
+    },
+    {
+        "script_errors",
+        Command_script_errors
+    },
+    {
+        "script_replace",
+        Command_script_replace
+    },
+    {
+        "script_replace_not_found",
+        Command_script_replace_not_found
+    },
+    {
+        "script_replace_multiple",
+        Command_script_replace_multiple
+    },
+    {
+        "script_replace_all",
+        Command_script_replace_all
+    },
+    {
+        "script_write",
+        Command_script_write
+    },
+    {
+        "script_write_in_scope",
+        Command_script_write_in_scope
+    },
+    {
+        "script_patch",
+        Command_script_patch
+    },
+    {
+        "script_patch_anchor",
+        Command_script_patch_anchor
+    },
+    {
+        "script_patch_insert_after_anchor",
+        Command_script_patch_insert_after_anchor
+    },
+    {
+        "script_patch_multiple_hunks",
+        Command_script_patch_multiple_hunks
+    },
+    {
+        "script_patch_no_match",
+        Command_script_patch_no_match
+    },
+    {
+        "script_patch_ambiguous",
+        Command_script_patch_ambiguous
+    },
+    {
+        "script_patch_all_or_nothing",
+        Command_script_patch_all_or_nothing
+    },
+    {
+        "script_patch_anchor_not_found",
+        Command_script_patch_anchor_not_found
+    },
+    {
+        "script_edit_reload_error",
+        Command_script_edit_reload_error
+    },
+    {
+        "script_set",
+        Command_script_set
+    },
+    {
+        "script_set_not_declared",
+        Command_script_set_not_declared
+    },
+    {
+        "script_remove",
+        Command_script_remove
+    },
+    {
+        "script_delete",
+        Command_script_delete
+    },
+    {
+        "script_sync",
+        Command_script_sync
+    },
+    {
+        "script_diff",
+        Command_script_diff
+    },
+    {
+        "script_diff_patch_roundtrip",
+        Command_script_diff_patch_roundtrip
+    },
+    {
+        "script_save",
+        Command_script_save
+    },
+    {
+        "script_save_conflict",
+        Command_script_save_conflict
+    },
+    {
+        "script_save_as",
+        Command_script_save_as
+    },
+    {
+        "script_reload",
+        Command_script_reload
+    },
+    {
+        "script_undo",
+        Command_script_undo
+    },
+    {
+        "focus_blur",
+        Command_focus_blur
+    },
+    {
+        "click",
+        Command_click
+    },
+    {
+        "press_release",
+        Command_press_release
+    },
+    {
+        "move_drag",
+        Command_move_drag
+    },
+    {
+        "move_to_screen",
+        Command_move_to_screen
+    },
+    {
+        "key",
+        Command_key
+    },
+    {
+        "key_plus",
+        Command_key_plus
+    },
+    {
+        "invalid_button",
+        Command_invalid_button
+    },
+    {
+        "mouse_keyboard_event",
+        Command_mouse_keyboard_event
+    },
+    {
+        "listeners",
+        Command_listeners
+    },
+    {
+        "call_from_script",
+        Command_call_from_script
+    }
+};
+
+bake_test_case SerializeType_testcases[] = {
+    {
+        "struct",
+        SerializeType_struct
+    },
+    {
+        "struct_w_deps",
+        SerializeType_struct_w_deps
+    },
+    {
+        "struct_w_array_member",
+        SerializeType_struct_w_array_member
+    },
+    {
+        "struct_w_unit",
+        SerializeType_struct_w_unit
+    },
+    {
+        "struct_inheritance",
+        SerializeType_struct_inheritance
+    },
+    {
+        "enum",
+        SerializeType_enum
+    },
+    {
+        "enum_underlying_type",
+        SerializeType_enum_underlying_type
+    },
+    {
+        "bitmask",
+        SerializeType_bitmask
+    },
+    {
+        "vector",
+        SerializeType_vector
+    },
+    {
+        "array",
+        SerializeType_array
+    },
+    {
+        "map",
+        SerializeType_map
+    },
+    {
+        "scoped",
+        SerializeType_scoped
+    },
+    {
+        "shared_dep",
+        SerializeType_shared_dep
+    },
+    {
+        "builtin_dep",
+        SerializeType_builtin_dep
+    },
+    {
+        "roundtrip",
+        SerializeType_roundtrip
+    },
+    {
+        "primitive",
+        SerializeType_primitive
+    },
+    {
+        "not_a_type",
+        SerializeType_not_a_type
+    },
+    {
+        "opaque_dep",
+        SerializeType_opaque_dep
     }
 };
 
@@ -19955,7 +20681,7 @@ static bake_test_suite suites[] = {
         "Event",
         Event_setup,
         NULL,
-        78,
+        82,
         Event_testcases,
         1,
         Event_params
@@ -19973,7 +20699,7 @@ static bake_test_suite suites[] = {
         "Function",
         Function_setup,
         NULL,
-        96,
+        102,
         Function_testcases,
         1,
         Function_params
@@ -20018,7 +20744,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        449,
+        451,
         Expr_testcases,
         2,
         Expr_params
@@ -20167,7 +20893,7 @@ static bake_test_suite suites[] = {
         "Edit",
         Edit_setup,
         NULL,
-        123,
+        122,
         Edit_testcases,
         1,
         Edit_params
@@ -20185,11 +20911,25 @@ static bake_test_suite suites[] = {
         "Reload",
         Reload_setup,
         NULL,
-        12,
+        17,
         Reload_testcases
+    },
+    {
+        "Command",
+        Command_setup,
+        NULL,
+        109,
+        Command_testcases
+    },
+    {
+        "SerializeType",
+        NULL,
+        NULL,
+        18,
+        SerializeType_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 31);
+    return bake_test_run("script", argc, argv, suites, 33);
 }

@@ -783,6 +783,12 @@ ecs_script_t* ecs_expr_parse(
     impl->next_token = &expr[ptr - script->code];
     impl->token_remaining = parser.token_cur;
 
+    if (priv_desc.partial && (impl->expr->kind == EcsExprInitializer ||
+        impl->expr->kind == EcsExprEmptyInitializer))
+    {
+        ((ecs_expr_initializer_t*)impl->expr)->is_partial = true;
+    }
+
     if (flecs_expr_visit_type(script, &impl->expr, &priv_desc)) {
         goto error;
     }

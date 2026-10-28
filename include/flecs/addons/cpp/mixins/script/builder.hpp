@@ -37,7 +37,7 @@ struct function_builder {
     function_builder& param(const char *name, flecs::entity_t type) {
         ecs_assert(param_count_ < FLECS_SCRIPT_FUNCTION_ARGS_MAX - is_method_,
             ECS_INVALID_PARAMETER, "too many function parameters");
-        desc_.params[param_count_++] = {name, type};
+        desc_.params[param_count_++] = {name, type, false, nullptr};
         return *this;
     }
 

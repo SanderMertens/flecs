@@ -5201,15 +5201,22 @@ static void func_1_array_arg_callback(
 }
 
 void Expr_root_func_void_return(void) {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
 
-    test_expect_abort();
-    ecs_function(world, {
+    ecs_entity_t func = ecs_function(world, {
         .name = "func",
         .callback = func_callback
     });
+    test_assert(func != 0);
+
+    int32_t v = 0;
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_expr_run(
+        world, "func()", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
 }
 
 void Expr_root_func(void) {
@@ -13878,6 +13885,75 @@ void Expr_vector_func_array_of_struct_error_type_name(void) {
     test_assert(strstr(result.error, "type 'Points'") != NULL);
     test_assert(strstr(result.error, "type 'Point' is not") != NULL);
     ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Expr_partial_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    Position p = {1, 2};
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = disable_folding,
+        .partial = true
+    };
+
+    const char *ptr = ecs_expr_run(
+        world, "{y: 20}", &ecs_value_ptr(Position, &p), &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+    test_int(p.x, 1);
+    test_int(p.y, 20);
+
+    ptr = ecs_expr_run(
+        world, "{x: 10 + 5}", &ecs_value_ptr(Position, &p), &desc);
+    test_assert(ptr != NULL);
+    test_int(p.x, 15);
+    test_int(p.y, 20);
+
+    ecs_fini(world);
+}
+
+void Expr_partial_nested_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t line = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Line" }),
+        .members = {
+            {"start", ecs_id(Position)},
+            {"stop", ecs_id(Position)}
+        }
+    });
+
+    Position l[2] = {{1, 2}, {3, 4}};
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = disable_folding,
+        .partial = true
+    };
+
+    ecs_value_t v = { .type = line, .ptr = l };
+    const char *ptr = ecs_expr_run(world, "{stop: {30, 40}}", &v, &desc);
+    test_assert(ptr != NULL);
+    test_int(l[0].x, 1);
+    test_int(l[0].y, 2);
+    test_int(l[1].x, 30);
+    test_int(l[1].y, 40);
 
     ecs_fini(world);
 }

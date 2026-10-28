@@ -543,6 +543,15 @@ void Rest_world_modules(void);
 void Rest_world_builtin_and_modules(void);
 void Rest_world_explicit_false(void);
 void Rest_app_enable_rest(void);
+void Rest_readonly(void);
+void Rest_command_new_session(void);
+void Rest_command_run(void);
+void Rest_command_run_error(void);
+void Rest_command_run_offset_limit(void);
+void Rest_command_run_string_lines(void);
+void Rest_command_history(void);
+void Rest_command_delete_session(void);
+void Rest_command_invalid_session(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2633,6 +2642,42 @@ bake_test_case Rest_testcases[] = {
     {
         "app_enable_rest",
         Rest_app_enable_rest
+    },
+    {
+        "readonly",
+        Rest_readonly
+    },
+    {
+        "command_new_session",
+        Rest_command_new_session
+    },
+    {
+        "command_run",
+        Rest_command_run
+    },
+    {
+        "command_run_error",
+        Rest_command_run_error
+    },
+    {
+        "command_run_offset_limit",
+        Rest_command_run_offset_limit
+    },
+    {
+        "command_run_string_lines",
+        Rest_command_run_string_lines
+    },
+    {
+        "command_history",
+        Rest_command_history
+    },
+    {
+        "command_delete_session",
+        Rest_command_delete_session
+    },
+    {
+        "command_invalid_session",
+        Rest_command_invalid_session
     }
 };
 
@@ -3093,7 +3138,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        50,
+        59,
         Rest_testcases
     },
     {

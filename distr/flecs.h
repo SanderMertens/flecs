@@ -246,6 +246,7 @@
 // #define FLECS_SCRIPT_MATH /**< Math functions for Flecs script (may require linking with libm). */
 // #define FLECS_SCRIPT_PLATFORM /**< Platform constants for Flecs script. */
 #define FLECS_SCRIPT_EVENT   /**< Mouse and keyboard events for Flecs script. */
+#define FLECS_SCRIPT_COMMAND /**< Command line interface for interacting with a world. */
 #define FLECS_SYSTEM         /**< System support. */
 #define FLECS_STATS          /**< Track runtime statistics. */
 #define FLECS_TIMER          /**< Timer support. */
@@ -304,6 +305,9 @@
 #ifdef FLECS_NO_SCRIPT_EVENT
 #undef FLECS_SCRIPT_EVENT
 #endif
+#ifdef FLECS_NO_SCRIPT_COMMAND
+#undef FLECS_SCRIPT_COMMAND
+#endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
 #endif
@@ -356,6 +360,12 @@
 /* Resolve addon dependencies before addon-dependent API declarations. The
  * order of these blocks follows the addon dependency graph, from addons with
  * the most dependencies to addons with the least dependencies. */
+#ifdef FLECS_SCRIPT_COMMAND
+#ifndef FLECS_QUERY_DSL
+#define FLECS_QUERY_DSL
+#endif
+#endif
+
 #ifdef FLECS_SCRIPT_EVENT
 #ifndef FLECS_SCRIPT_ASYNC
 #define FLECS_SCRIPT_ASYNC
@@ -363,7 +373,8 @@
 #endif
 
 #if defined(FLECS_SCRIPT_ASYNC) || defined(FLECS_SCRIPT_MATH) || \
-    defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_EVENT)
+    defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_EVENT) || \
+    defined(FLECS_SCRIPT_COMMAND)
 #ifndef FLECS_SCRIPT
 #define FLECS_SCRIPT
 #endif
@@ -520,7 +531,7 @@
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
     defined(FLECS_JSON) || defined(FLECS_METRICS) || defined(FLECS_PIPELINE) || \
     defined(FLECS_REST) || defined(FLECS_STATS) || defined(FLECS_SYSTEM) || \
-    defined(FLECS_TIMER)
+    defined(FLECS_TIMER) || defined(FLECS_SCRIPT_COMMAND)
 #ifndef FLECS_FRAME
 #define FLECS_FRAME
 #endif
@@ -3756,6 +3767,14 @@ size_t (*ecs_os_api_fread_t)(
     size_t count,
     FILE *file);
 
+/** OS API fwrite function type. */
+typedef
+size_t (*ecs_os_api_fwrite_t)(
+    const void *ptr,
+    size_t size,
+    size_t count,
+    FILE *file);
+
 /** OS API performance tracing function type.
  *
  * @param filename The source file name.
@@ -3847,6 +3866,7 @@ typedef struct ecs_os_api_t {
     ecs_os_api_fopen_t fopen_;                     /**< fopen callback. */
     ecs_os_api_fclose_t fclose_;                   /**< fclose callback. */
     ecs_os_api_fread_t fread_;                     /**< fread callback. */
+    ecs_os_api_fwrite_t fwrite_;                   /**< fwrite callback. */
 
     /* Performance tracing */
     ecs_os_api_perf_trace_t perf_trace_push_; /**< perf_trace_push callback. */
@@ -4004,6 +4024,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_fopen(file, mode) ecs_os_api.fopen_(file, mode)
 #define ecs_os_fclose(file) ecs_os_api.fclose_(file)
 #define ecs_os_fread(ptr, size, count, file) ecs_os_api.fread_(ptr, size, count, file)
+#define ecs_os_fwrite(ptr, size, count, file) ecs_os_api.fwrite_(ptr, size, count, file)
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new_(callback, param)
@@ -12615,6 +12636,33 @@ void ecs_log_start_capture(bool capture_try);
 FLECS_API
 char* ecs_log_stop_capture(void);
 
+/** Start collecting errors.
+ * Errors that are logged after this call are appended to the provided vector
+ * as separate strings, instead of being written to the log. Warnings and other
+ * messages are forwarded to the log. Errors that are captured by a nested call
+ * to ecs_log_start_capture() are not collected, as the code that started the
+ * nested capture handles them.
+ *
+ * Calls to ecs_log_start_collect_errors() can be nested, where errors are
+ * collected by the innermost call. Each call must be matched with a call to
+ * ecs_log_stop_collect_errors().
+ *
+ * The strings in the vector must be freed by the application with
+ * ecs_os_free().
+ *
+ * @param errors An initialized vector (vec<char*>) that receives the errors.
+ */
+FLECS_API
+void ecs_log_start_collect_errors(
+    ecs_vec_t *errors);
+
+/** Stop collecting errors.
+ * Stops collecting errors started by the last call to
+ * ecs_log_start_collect_errors().
+ */
+FLECS_API
+void ecs_log_stop_collect_errors(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Error codes
 ////////////////////////////////////////////////////////////////////////////////
@@ -16707,6 +16755,29 @@ typedef void (*ecs_script_to_local_t)(
     float *local_y,
     void *ctx);
 
+/** Converts a position relative to an entity to a screen position.
+ * This is the inverse of ecs_script_to_local_t. It is used by code that
+ * emits events for a position relative to an entity, such as the move command
+ * of the script command addon. screen_x and screen_y are initialized to the
+ * local position.
+ *
+ * @param world The world.
+ * @param entity The entity the position is relative to.
+ * @param local_x X position relative to entity.
+ * @param local_y Y position relative to entity.
+ * @param screen_x Out: X position in window coordinates.
+ * @param screen_y Out: Y position in window coordinates.
+ * @param ctx Context of the event hooks.
+ */
+typedef void (*ecs_script_to_screen_t)(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    float local_x,
+    float local_y,
+    float *screen_x,
+    float *screen_y,
+    void *ctx);
+
 /** Decides which entity receives the focus.
  * Called before the focus changes. Return the entity that should receive the
  * focus. To keep the focus where it is, return current.
@@ -16731,10 +16802,17 @@ typedef ecs_entity_t (*ecs_script_to_focus_t)(
 
 /** Application hooks of the script event module. */
 typedef struct ecs_script_event_hooks_t {
-    ecs_script_to_local_t to_local; /**< Converts positions for parents. */
-    ecs_script_to_focus_t to_focus; /**< Decides which entity receives the focus. */
-    void *ctx;                      /**< Context passed to the hooks. */
+    ecs_script_to_local_t to_local;   /**< Converts positions for parents. */
+    ecs_script_to_focus_t to_focus;   /**< Decides which entity receives the focus. */
+    ecs_script_to_screen_t to_screen; /**< Converts local positions to screen positions. */
+    void *ctx;                        /**< Context passed to the hooks. */
 } ecs_script_event_hooks_t;
+
+/** Result of emitting an event. */
+typedef struct ecs_script_event_result_t {
+    int32_t resolved; /**< Number of listeners that received the event. */
+    bool stopped;     /**< Whether a listener stopped propagation of the event. */
+} ecs_script_event_result_t;
 
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptMouseEvent);
@@ -16757,9 +16835,11 @@ extern ECS_COMPONENT_DECLARE(EcsScriptActivateEvent);
  *
  * @param world The world.
  * @param evt The event.
+ * @return The number of listeners that received the event, including enter
+ *   and leave, and whether propagation was stopped.
  */
 FLECS_API
-void ecs_script_mouse_event(
+ecs_script_event_result_t ecs_script_mouse_event(
     ecs_world_t *world,
     const EcsScriptMouseEvent *evt);
 
@@ -16770,9 +16850,11 @@ void ecs_script_mouse_event(
  *
  * @param world The world.
  * @param evt The event.
+ * @return The number of listeners that received the event, including
+ *   on.activate, and whether propagation was stopped.
  */
 FLECS_API
-void ecs_script_keyboard_event(
+ecs_script_event_result_t ecs_script_keyboard_event(
     ecs_world_t *world,
     const EcsScriptKeyboardEvent *evt);
 
@@ -16808,6 +16890,40 @@ FLECS_API
 ecs_entity_t ecs_script_get_focus(
     const ecs_world_t *world);
 
+/** Get the state of the mouse.
+ * Returns the last mouse event that was emitted with ecs_script_mouse_event()
+ * and the entity that received the press of the buttons that are held down.
+ *
+ * @param world The world.
+ * @param last_out Out: the last mouse event (optional).
+ * @param pressed_out Out: the entity that was pressed while buttons are held
+ *   down, 0 if no buttons are held down (optional).
+ * @return True if a mouse event was emitted, false if not.
+ */
+FLECS_API
+bool ecs_script_get_mouse_state(
+    const ecs_world_t *world,
+    EcsScriptMouseEvent *last_out,
+    ecs_entity_t *pressed_out);
+
+/** Get the kinds of events that scripts wait for on an entity.
+ * Writes the names of the event kinds (for example "press" or "key_down") of
+ * the on.* calls that are waiting for an event on the entity. Each kind is
+ * written once. The names are statically allocated.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param kinds_out Array that receives the event kinds (optional).
+ * @param count Size of the kinds_out array.
+ * @return The number of event kinds, which may be larger than count.
+ */
+FLECS_API
+int32_t ecs_script_event_listeners(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    const char **kinds_out,
+    int32_t count);
+
 /** Script event import function.
  * Usage:
  * @code
@@ -16818,6 +16934,274 @@ ecs_entity_t ecs_script_get_focus(
  */
 FLECS_API
 void FlecsScriptEventImport(
+    ecs_world_t *world);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+/** @} */
+
+#endif
+
+#endif
+
+#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_NO_SCRIPT_COMMAND
+#error "FLECS_NO_SCRIPT_COMMAND failed: SCRIPT_COMMAND is required by other addons"
+#endif
+
+#ifdef FLECS_SCRIPT_COMMAND
+
+#ifndef FLECS_SCRIPT
+#define FLECS_SCRIPT
+#endif
+
+#ifndef FLECS_QUERY_DSL
+#define FLECS_QUERY_DSL
+#endif
+
+#ifndef FLECS_FRAME
+#define FLECS_FRAME
+#endif
+
+/**
+ * @defgroup c_addons_script_command Script Command
+ * @ingroup c_addons
+ * Command line interface for interacting with a world.
+ *
+ * Commands are script functions in the flecs.script.command scope. Each
+ * command has typed parameters and a typed return value. A command line is
+ * parsed into a command name and arguments, where arguments are separated by
+ * whitespace:
+ *
+ * - A token that starts with `"` ends at the next unescaped `"`. The quotes are
+ *   removed and escape sequences (`\n`, `\t`, ...) are processed.
+ * - A token that starts with three backticks ends at the next three backticks.
+ *   The backticks are removed, the text in between is not processed.
+ * - `()`, `{}` and `[]` group a token and can be nested. They are passed to
+ *   the command unchanged.
+ *
+ * Arguments for string parameters are passed as is. Arguments for other
+ * parameters are parsed as expressions of the parameter type. Identifiers are
+ * resolved relative to the scope of the session. For entity parameters `$`
+ * means the singleton, which uses the component argument as entity.
+ *
+ * Commands with optional parameters can be called with fewer arguments. Use
+ * the help command to list the commands and their parameters.
+ * @{
+ */
+
+#ifndef FLECS_SCRIPT_COMMAND_H
+#define FLECS_SCRIPT_COMMAND_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Default number of commands kept in the history of a session. */
+#ifndef FLECS_SCRIPT_COMMAND_HISTORY_SIZE
+#define FLECS_SCRIPT_COMMAND_HISTORY_SIZE (256)
+#endif
+
+/** Result of running a command. */
+typedef struct ecs_command_result_t {
+    /** Value returned by the command. Empty when the command has no return
+     * value or failed. Commands that edit script code are the exception: when
+     * the edit was applied but reloading the script failed, the result is set
+     * together with the errors of the reload. */
+    ecs_value_t result;
+
+    /** Errors logged while the command ran, one entry per error (vec<char*>). */
+    ecs_vec_t errors;
+} ecs_command_result_t;
+
+/** Command session.
+ * A session stores the scope relative to which commands resolve identifiers,
+ * and a bounded history of the commands that ran in the session.
+ */
+typedef struct EcsCommandSession {
+    ecs_entity_t scope;      /**< Current scope, 0 for the root. */
+    ecs_vec_t history;       /**< Commands that ran, oldest first (vec<char*>). */
+    int32_t history_size;    /**< Maximum number of commands in the history. */
+} EcsCommandSession;
+
+/** Used with ecs_command_session_init(). */
+typedef struct ecs_command_session_desc_t {
+    ecs_entity_t entity;     /**< Entity to use for the session (optional). */
+    ecs_entity_t scope;      /**< Initial scope (optional, default is root). */
+    int32_t history_size;    /**< History size (optional, default is FLECS_SCRIPT_COMMAND_HISTORY_SIZE). */
+} ecs_command_session_desc_t;
+
+/** Parameter of a command, returned by help. */
+typedef struct ecs_command_param_info_t {
+    char *name;              /**< Parameter name. */
+    ecs_entity_t type;       /**< Parameter type. */
+    bool optional;           /**< Whether the parameter is optional. */
+    char *brief;             /**< Parameter description. */
+} ecs_command_param_info_t;
+
+/** Command, returned by help. */
+typedef struct ecs_command_info_t {
+    char *name;              /**< Command name. */
+    char *brief;             /**< Command description. */
+    ecs_vec_t params;        /**< Parameters (vec<ecs_command_param_info_t>). */
+    ecs_entity_t return_type; /**< Return type, 0 if the command has no result. */
+} ecs_command_info_t;
+
+/** Entity in a tree, returned by tree. */
+typedef struct ecs_command_tree_node_t {
+    ecs_entity_t entity;     /**< The entity. */
+    int32_t depth;           /**< Depth relative to the scope, 0 for children. */
+} ecs_command_tree_node_t;
+
+/** Component and value. */
+typedef struct ecs_command_component_value_t {
+    ecs_id_t id;             /**< Component id. */
+    ecs_value_t value;       /**< Component value. */
+} ecs_command_component_value_t;
+
+/** Entity information, returned by cat. */
+typedef struct ecs_command_entity_info_t {
+    ecs_entity_t entity;     /**< The entity. */
+    uint64_t id;             /**< Numeric entity id. */
+    ecs_vec_t components;    /**< Components with values (vec<ecs_command_component_value_t>). */
+    ecs_vec_t ids;           /**< Ids without values (vec<ecs_id_t>). */
+} ecs_command_entity_info_t;
+
+/** Documentation, returned by man. */
+typedef struct ecs_command_doc_info_t {
+    ecs_entity_t entity;     /**< The entity. */
+    char *name;              /**< Doc name. */
+    char *brief;             /**< Brief description. */
+    char *detail;            /**< Detailed description. */
+    char *link;              /**< Link to external documentation. */
+    char *color;             /**< Color. */
+} ecs_command_doc_info_t;
+
+/** Query result row, returned by query. */
+typedef struct ecs_command_query_row_t {
+    ecs_entity_t entity;     /**< Matched entity, 0 if the query has no $this. */
+    ecs_vec_t fields;        /**< Fields with a value (vec<ecs_command_component_value_t>). */
+} ecs_command_query_row_t;
+
+/** Match returned by grep. */
+typedef struct ecs_command_grep_match_t {
+    ecs_entity_t entity;     /**< Entity that matched. */
+    ecs_id_t id;             /**< Component that matched, 0 for the name. */
+    char *text;              /**< Text that matched (name, id or value). */
+} ecs_command_grep_match_t;
+
+/** Script, returned by scripts. */
+typedef struct ecs_command_script_info_t {
+    ecs_entity_t script;     /**< Script entity. */
+    char *filename;          /**< Filename, NULL if not loaded from a file. */
+    int32_t lines;           /**< Number of lines. */
+    bool unsaved;            /**< Whether the code differs from the saved code. */
+    char *error;             /**< Error of last evaluation, NULL if none. */
+} ecs_command_script_info_t;
+
+/** Line of script code. */
+typedef struct ecs_command_script_line_t {
+    int32_t line;            /**< Line number (1 based). */
+    char *text;              /**< Text of the line. */
+} ecs_command_script_line_t;
+
+/** Match returned by script_grep. */
+typedef struct ecs_command_script_match_t {
+    ecs_entity_t script;     /**< Script entity. */
+    int32_t line;            /**< Line number (1 based). */
+    char *text;              /**< Text of the line. */
+} ecs_command_script_match_t;
+
+/** Location of an entity statement, returned by script_where. */
+typedef struct ecs_command_script_location_t {
+    ecs_entity_t script;     /**< Script that declares the entity. */
+    int32_t line;            /**< Line of the statement (1 based). */
+    int32_t column;          /**< Column of the statement (1 based). */
+    ecs_entity_t template_;  /**< Template that declares the statement, if any. */
+    char *statement;         /**< First line of the statement. */
+} ecs_command_script_location_t;
+
+/** Script error, returned by script_errors. */
+typedef struct ecs_command_script_error_t {
+    ecs_entity_t script;     /**< Script entity. */
+    char *error;             /**< Error message. */
+} ecs_command_script_error_t;
+
+#ifdef FLECS_SCRIPT_EVENT
+/** Pointer state, returned by pointer. */
+typedef struct ecs_command_pointer_state_t {
+    EcsScriptMouseEvent event; /**< Last mouse event. */
+    ecs_entity_t pressed;    /**< Entity pressed by held buttons, 0 if none. */
+} ecs_command_pointer_state_t;
+#endif
+
+/** Session component. */
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsCommandSession);
+
+/** Create a command session.
+ * When no entity is provided, the session is created in the
+ * script.command.sessions scope.
+ *
+ * @param world The world.
+ * @param desc Session parameters (optional).
+ * @return The session entity, 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_command_session_init(
+    ecs_world_t *world,
+    const ecs_command_session_desc_t *desc);
+
+/** Run a command.
+ * Parses the command line, runs the command and returns its result and the
+ * errors that were logged while it ran. The command is added to the history
+ * of the session. The result must be freed with ecs_command_result_fini().
+ *
+ * @param world The world.
+ * @param session The session.
+ * @param cmd The command line.
+ * @return The result of the command.
+ */
+FLECS_API
+ecs_command_result_t ecs_command_run(
+    ecs_world_t *world,
+    ecs_entity_t session,
+    const char *cmd);
+
+/** Free the resources of a command result.
+ *
+ * @param world The world.
+ * @param result The result.
+ */
+FLECS_API
+void ecs_command_result_fini(
+    ecs_world_t *world,
+    ecs_command_result_t *result);
+
+/** Get the session of the running command.
+ * Commands use this to access the session that they run in.
+ *
+ * @param world The world.
+ * @return The session, or 0 when called outside of ecs_command_run().
+ */
+FLECS_API
+ecs_entity_t ecs_command_get_session(
+    const ecs_world_t *world);
+
+/** Script command import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsScriptCommand)
+ * @endcode
+ *
+ * @param world The world.
+ */
+FLECS_API
+void FlecsScriptCommandImport(
     ecs_world_t *world);
 
 #ifdef __cplusplus
@@ -16987,7 +17371,21 @@ typedef struct EcsScript {
     ecs_vec_t dyn_observers;            /**< Observers for refs resolved at runtime. */
     bool skip_unknown;                  /**< Skip unknown components when loading. */
     bool ir;                            /**< Evaluate script with IR runtime. */
+
+    /** Code as it was last loaded or saved. For scripts loaded from a file
+     * this is the content of the file when it was last read or written. Used
+     * to detect unsaved changes and changes to the file on disk. */
+    char *saved_code;
+
+    /** Previous versions of the code, most recent last (vec<char*>). Updating
+     * the code of the script appends the replaced code. See ecs_script_undo(). */
+    ecs_vec_t undo;
 } EcsScript;
+
+/** Maximum number of versions kept in the undo history of a script. */
+#ifndef FLECS_SCRIPT_UNDO_MAX
+#define FLECS_SCRIPT_UNDO_MAX (64)
+#endif
 
 /** Script function context. */
 typedef struct ecs_function_ctx_t {
@@ -17016,6 +17414,13 @@ typedef void(*ecs_vector_function_callback_t)(
 typedef struct ecs_script_parameter_t {
     const char *name;       /**< Parameter name. */
     ecs_entity_t type;      /**< Parameter type. */
+
+    /** Parameter may be omitted by the caller. Optional parameters must come
+     * after the required parameters. The argc argument of the function callback
+     * indicates how many arguments were provided. */
+    bool optional;
+
+    const char *brief;      /**< Short description of the parameter (optional). */
 } ecs_script_parameter_t;
 
 /** Used with ecs_script_parse() and ecs_script_eval(). */
@@ -18220,6 +18625,23 @@ int ecs_script_reload(
     ecs_entity_t script,
     const char *code);
 
+/** Undo the last change to the code of a managed script.
+ * Each time the code of a managed script is replaced with different code (for
+ * example by ecs_script_update() or ecs_script_reload()), the previous code is
+ * added to the undo history of the script (see EcsScript::undo). This operation
+ * removes the most recent version from the undo history and reloads the
+ * script with it. The undo history holds up to FLECS_SCRIPT_UNDO_MAX versions.
+ *
+ * @param world The world.
+ * @param script The script entity.
+ * @return Zero if success, non-zero if the history is empty or the reload
+ *   failed.
+ */
+FLECS_API
+int ecs_script_undo(
+    ecs_world_t *world,
+    ecs_entity_t script);
+
 /** Clear all entities associated with script.
  *
  * @param world The world.
@@ -18260,8 +18682,9 @@ int ecs_script_from_scene(
     ecs_entity_t script);
 
 /** Save the code of a managed script to the file it was loaded from.
- * This operation writes EcsScript::code to EcsScript::filename. When the
- * script was not loaded from a file the operation does nothing.
+ * This operation writes EcsScript::code to EcsScript::filename, and updates
+ * EcsScript::saved_code. When the script was not loaded from a file the
+ * operation does nothing.
  *
  * @param world The world.
  * @param script The script entity.
@@ -18489,6 +18912,12 @@ typedef struct ecs_expr_eval_desc_t {
     /** Allow for unresolved identifiers when parsing. Useful when entities can
      * be created in between parsing and evaluating. */
     bool allow_unresolved_identifiers;
+
+    /** When the expression is an initializer, only assign the members that
+     * the initializer sets. Other members keep the value they had in the
+     * output value, the same as a partial component assignment in a script
+     * ("Position = {x: 10}"). */
+    bool partial;
 
     ecs_script_runtime_t *runtime;   /**< Reusable runtime (optional). */
 
@@ -18836,7 +19265,8 @@ typedef struct ecs_function_desc_t {
     /** Function parameters. */
     ecs_script_parameter_t params[FLECS_SCRIPT_FUNCTION_ARGS_MAX];
 
-    /** Function return type. */
+    /** Function return type. Set to 0 for functions that do not return a
+     * value. Functions without a return value cannot be used in expressions. */
     ecs_entity_t return_type;
 
     /** Function implementation. */
@@ -19012,6 +19442,26 @@ int ecs_ptr_to_str_buf(
     ecs_entity_t type,
     const void *data,
     ecs_strbuf_t *buf);
+
+/** Serialize a type to script.
+ * This operation returns script code that declares the type with the struct,
+ * enum, bitmask, vector, array or map declaration syntax. User-defined types
+ * that the type depends on (types that are not stored in the flecs scope) are
+ * declared first. Types that are stored in the scope of another entity are
+ * declared in an entity scope for each parent. Running the returned code in a
+ * world without the types recreates them.
+ *
+ * Primitive and opaque types cannot be declared by a script. The operation
+ * fails when the type, or a user-defined type it depends on, is of such a kind.
+ *
+ * @param world The world.
+ * @param type The type to serialize.
+ * @return The script code, or NULL if failed. Must be freed with ecs_os_free().
+ */
+FLECS_API
+char* ecs_type_to_script(
+    const ecs_world_t *world,
+    ecs_entity_t type);
 
 typedef struct ecs_expr_node_t ecs_expr_node_t; 
 
@@ -25071,7 +25521,7 @@ struct function_builder {
     function_builder& param(const char *name, flecs::entity_t type) {
         ecs_assert(param_count_ < FLECS_SCRIPT_FUNCTION_ARGS_MAX - is_method_,
             ECS_INVALID_PARAMETER, "too many function parameters");
-        desc_.params[param_count_++] = {name, type};
+        desc_.params[param_count_++] = {name, type, false, nullptr};
         return *this;
     }
 

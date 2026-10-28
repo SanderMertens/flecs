@@ -2639,3 +2639,186 @@ void Function_struct_member_from_fn_w_dtor_no_move(void) {
 
     ecs_fini(world);
 }
+
+static void Function_optional_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    int32_t sum = argc * 100;
+    int32_t i;
+    for (i = 0; i < argc; i ++) {
+        sum += *(int32_t*)argv[i].ptr;
+    }
+    *(int32_t*)result->ptr = sum;
+}
+
+static int32_t Function_void_invoked = 0;
+
+static void Function_void_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    (void)argv;
+    test_assert(result != NULL);
+    test_assert(result->ptr == NULL);
+    Function_void_invoked ++;
+}
+
+void Function_optional_params(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_function(world, {
+        .name = "sum",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            { "a", ecs_id(ecs_i32_t) },
+            { "b", ecs_id(ecs_i32_t), true, "Second value" },
+            { "c", ecs_id(ecs_i32_t), true }
+        },
+        .callback = Function_optional_callback
+    });
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "a { Position: {sum(1), sum(1, 2)} }"
+    LINE "b { Position: {sum(1, 2, 3), 0} }";
+
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) == 0);
+
+    const Position *p = ecs_get(world, ecs_lookup(world, "a"), Position);
+    test_assert(p != NULL);
+    test_int(p->x, 101);
+    test_int(p->y, 203);
+
+    p = ecs_get(world, ecs_lookup(world, "b"), Position);
+    test_assert(p != NULL);
+    test_int(p->x, 306);
+
+    ecs_fini(world);
+}
+
+void Function_optional_params_missing_required(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_function(world, {
+        .name = "sum",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            { "a", ecs_id(ecs_i32_t) },
+            { "b", ecs_id(ecs_i32_t), true }
+        },
+        .callback = Function_optional_callback
+    });
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "const v = sum()", &ir_desc, NULL) != 0);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "const v = sum(1, 2, 3)", &ir_desc, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Function_optional_params_call(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t function = ecs_function(world, {
+        .name = "sum",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            { "a", ecs_id(ecs_i32_t) },
+            { "b", ecs_id(ecs_i32_t), true }
+        },
+        .callback = Function_optional_callback
+    });
+
+    const EcsScriptFunction *f = ecs_get(world, function, EcsScriptFunction);
+    test_assert(f != NULL);
+    const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
+    test_bool(params[0].optional, false);
+    test_bool(params[1].optional, true);
+
+    int32_t a = 5;
+    ecs_value_t argv[] = {{ .type = ecs_id(ecs_i32_t), .ptr = &a }};
+    int32_t v = 0;
+    ecs_value_t result = { .type = ecs_id(ecs_i32_t), .ptr = &v };
+    test_int(ecs_function_call(world, function, 1, argv, &result), 0);
+    test_int(v, 105);
+
+    ecs_fini(world);
+}
+
+void Function_param_brief(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t function = ecs_function(world, {
+        .name = "sum",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            { "a", ecs_id(ecs_i32_t), false, "First value" },
+            { "b", ecs_id(ecs_i32_t) }
+        },
+        .callback = Function_optional_callback
+    });
+
+    const EcsScriptFunction *f = ecs_get(world, function, EcsScriptFunction);
+    const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
+    test_str(params[0].brief, "First value");
+    test_str(params[1].brief, NULL);
+
+    ecs_entity_t copy = ecs_clone(world, 0, function, true);
+    f = ecs_get(world, copy, EcsScriptFunction);
+    test_assert(f != NULL);
+    params = ecs_vec_first(&f->params);
+    test_str(params[0].brief, "First value");
+    test_str(params[0].name, "a");
+
+    ecs_fini(world);
+}
+
+void Function_void_return_call(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t function = ecs_function(world, {
+        .name = "noop",
+        .callback = Function_void_callback
+    });
+
+    ecs_value_t result = {0};
+    test_int(ecs_function_call(world, function, 0, NULL, &result), 0);
+    test_int(Function_void_invoked, 1);
+    test_uint(result.type, 0);
+    test_assert(result.ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Function_void_return_in_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_function(world, {
+        .name = "noop",
+        .callback = Function_void_callback
+    });
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL,
+        "const v = noop()", &ir_desc, NULL) != 0);
+    test_int(Function_void_invoked, 0);
+
+    ecs_fini(world);
+}

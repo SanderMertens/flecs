@@ -268,6 +268,9 @@
 #ifdef FLECS_NO_SCRIPT_EVENT
 #undef FLECS_SCRIPT_EVENT
 #endif
+#ifdef FLECS_NO_SCRIPT_COMMAND
+#undef FLECS_SCRIPT_COMMAND
+#endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
 #endif
@@ -322,7 +325,8 @@
  * the most dependencies to addons with the least dependencies. */
 
 #if defined(FLECS_SCRIPT_ASYNC) || defined(FLECS_SCRIPT_MATH) || \
-    defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_EVENT)
+    defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_EVENT) || \
+    defined(FLECS_SCRIPT_COMMAND)
 #endif
 
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_TIMER)
@@ -341,7 +345,7 @@
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
     defined(FLECS_JSON) || defined(FLECS_METRICS) || defined(FLECS_PIPELINE) || \
     defined(FLECS_REST) || defined(FLECS_STATS) || defined(FLECS_SYSTEM) || \
-    defined(FLECS_TIMER)
+    defined(FLECS_TIMER) || defined(FLECS_SCRIPT_COMMAND)
 #endif
 
 #if defined(FLECS_FRAME) || defined(FLECS_HTTP)
@@ -3553,6 +3557,14 @@ size_t (*ecs_os_api_fread_t)(
     size_t count,
     FILE *file);
 
+/** OS API fwrite function type. */
+typedef
+size_t (*ecs_os_api_fwrite_t)(
+    const void *ptr,
+    size_t size,
+    size_t count,
+    FILE *file);
+
 /** OS API performance tracing function type.
  *
  * @param filename The source file name.
@@ -3644,6 +3656,7 @@ typedef struct ecs_os_api_t {
     ecs_os_api_fopen_t fopen_;                     /**< fopen callback. */
     ecs_os_api_fclose_t fclose_;                   /**< fclose callback. */
     ecs_os_api_fread_t fread_;                     /**< fread callback. */
+    ecs_os_api_fwrite_t fwrite_;                   /**< fwrite callback. */
 
     /* Performance tracing */
     ecs_os_api_perf_trace_t perf_trace_push_; /**< perf_trace_push callback. */
@@ -3801,6 +3814,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_fopen(file, mode) ecs_os_api.fopen_(file, mode)
 #define ecs_os_fclose(file) ecs_os_api.fclose_(file)
 #define ecs_os_fread(ptr, size, count, file) ecs_os_api.fread_(ptr, size, count, file)
+#define ecs_os_fwrite(ptr, size, count, file) ecs_os_api.fwrite_(ptr, size, count, file)
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new_(callback, param)
@@ -11667,6 +11681,33 @@ void ecs_log_start_capture(bool capture_try);
  */
 FLECS_API
 char* ecs_log_stop_capture(void);
+
+/** Start collecting errors.
+ * Errors that are logged after this call are appended to the provided vector
+ * as separate strings, instead of being written to the log. Warnings and other
+ * messages are forwarded to the log. Errors that are captured by a nested call
+ * to ecs_log_start_capture() are not collected, as the code that started the
+ * nested capture handles them.
+ *
+ * Calls to ecs_log_start_collect_errors() can be nested, where errors are
+ * collected by the innermost call. Each call must be matched with a call to
+ * ecs_log_stop_collect_errors().
+ *
+ * The strings in the vector must be freed by the application with
+ * ecs_os_free().
+ *
+ * @param errors An initialized vector (vec<char*>) that receives the errors.
+ */
+FLECS_API
+void ecs_log_start_collect_errors(
+    ecs_vec_t *errors);
+
+/** Stop collecting errors.
+ * Stops collecting errors started by the last call to
+ * ecs_log_start_collect_errors().
+ */
+FLECS_API
+void ecs_log_stop_collect_errors(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Error codes

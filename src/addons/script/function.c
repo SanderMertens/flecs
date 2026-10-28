@@ -22,6 +22,7 @@ static void ecs_script_params_free(ecs_vec_t *params) {
     for (i = 0; i < count; i ++) {
         /* Safe, component owns string */
         ecs_os_free(ECS_CONST_CAST(char*, array[i].name));
+        ecs_os_free(ECS_CONST_CAST(char*, array[i].brief));
     }
 
     ecs_vec_fini_t(NULL, params, ecs_script_parameter_t);
@@ -45,6 +46,8 @@ static void ecs_script_params_copy(
             NULL, dst, ecs_script_parameter_t);
         p->type = src_array[i].type;
         p->name = src_array[i].name ? ecs_os_strdup(src_array[i].name) : NULL;
+        p->optional = src_array[i].optional;
+        p->brief = src_array[i].brief ? ecs_os_strdup(src_array[i].brief) : NULL;
     }
 }
 
@@ -409,7 +412,19 @@ static int flecs_script_function_validate_desc(
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!async || desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t i;
+    bool optional = false;
+    for (i = 0; i < FLECS_SCRIPT_FUNCTION_ARGS_MAX; i ++) {
+        if (!desc->params[i].name) {
+            break;
+        }
+
+        ecs_check(!optional || desc->params[i].optional, ECS_INVALID_PARAMETER,
+            "function '%s': optional parameters must come last", desc->name);
+        optional = desc->params[i].optional;
+    }
 
     if (!flecs_script_function_has_vector_args(desc)) {
         ecs_check(async || desc->callback != NULL,
@@ -419,7 +434,6 @@ static int flecs_script_function_validate_desc(
             "at least one argument is of type flecs.script.vector",
                 desc->name);
     } else {
-        int32_t i;
         for (i = 0; i < EcsPrimitiveKindLast; i ++) {
             if (desc->vector_callbacks[i]) {
                 break;
@@ -457,6 +471,9 @@ static void flecs_script_function_parse_args(
             NULL, params, ecs_script_parameter_t);
         p->type = desc->params[i].type;
         p->name = ecs_os_strdup(desc->params[i].name);
+        p->optional = desc->params[i].optional;
+        p->brief = desc->params[i].brief ?
+            ecs_os_strdup(desc->params[i].brief) : NULL;
     }
 }
 
@@ -580,6 +597,20 @@ ecs_entity_t ecs_method_init(
     return result;
 }
 
+int32_t flecs_script_function_required_params(
+    const struct ecs_script_function_t *f)
+{
+    const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
+    int32_t i, count = ecs_vec_count(&f->params);
+    for (i = 0; i < count; i ++) {
+        if (params[i].optional) {
+            break;
+        }
+    }
+
+    return i;
+}
+
 static int flecs_script_function_check_args(
     const struct ecs_script_function_t *f,
     int32_t argc,
@@ -587,8 +618,11 @@ static int flecs_script_function_check_args(
 {
     (void)argv;
     ecs_check(argc >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(argc == ecs_vec_count(&f->params), ECS_INVALID_PARAMETER,
+    ecs_check(argc <= ecs_vec_count(&f->params), ECS_INVALID_PARAMETER,
         "expected %d arguments, got %d", ecs_vec_count(&f->params), argc);
+    ecs_check(argc >= flecs_script_function_required_params(f),
+        ECS_INVALID_PARAMETER, "expected at least %d arguments, got %d",
+        flecs_script_function_required_params(f), argc);
     ecs_check(!argc || argv != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
@@ -646,12 +680,12 @@ static int flecs_script_function_call(
         ECS_INVALID_PARAMETER, "result type does not match function return type");
 
     bool result_allocated = false;
-    if (!result->ptr) {
+    if (f->return_type && !result->ptr) {
         *result = ecs_value_new(world, f->return_type);
         ecs_check(result->ptr != NULL, ECS_INVALID_PARAMETER,
             "function return type is not a valid value type");
         result_allocated = true;
-    } else if (!result->type) {
+    } else if (f->return_type && !result->type) {
         result->type = f->return_type;
     }
 

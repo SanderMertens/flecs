@@ -453,6 +453,15 @@ static size_t ecs_os_api_fread(void *ptr, size_t size, size_t count, FILE *file)
     return fread(ptr, size, count, file);
 }
 
+static size_t ecs_os_api_fwrite(
+    const void *ptr,
+    size_t size,
+    size_t count,
+    FILE *file)
+{
+    return fwrite(ptr, size, count, file);
+}
+
 char* ecs_os_strdup_(const char *str) {
     if (!str) {
         return NULL;
@@ -564,6 +573,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.fopen_ = ecs_os_api_fopen;
     ecs_os_api.fclose_ = ecs_os_api_fclose;
     ecs_os_api.fread_ = ecs_os_api_fread;
+    ecs_os_api.fwrite_ = ecs_os_api_fwrite;
 
     /* Time */
     ecs_os_api.get_time_ = ecs_os_gettime;

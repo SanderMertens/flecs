@@ -39,6 +39,7 @@
                 "FLECS_SCRIPT_MATH",
                 "FLECS_SCRIPT_PLATFORM",
                 "FLECS_SCRIPT_EVENT",
+                "FLECS_SCRIPT_COMMAND",
                 "FLECS_SYSTEM",
                 "FLECS_STATS",
                 "FLECS_TIMER",
