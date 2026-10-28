@@ -2217,3 +2217,50 @@ void Observer_set_w_on_add_adding_other_w_stage(void) {
     test_int(p.x, 10);
     test_int(p.y, 20);
 }
+
+void Observer_no_terms_custom_event(void) {
+    flecs::world ecs;
+
+    struct Evt { };
+
+    flecs::entity e = ecs.entity();
+
+    int32_t count = 0;
+    flecs::entity last;
+
+    ecs.observer()
+        .event<Evt>()
+        .each([&](flecs::entity src) {
+            last = src;
+            count ++;
+        });
+
+    test_int(count, 0);
+
+    ecs.event<Evt>().entity(e).emit();
+
+    test_int(count, 1);
+    test_assert(last == e);
+}
+
+void Observer_no_terms_on_add(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    int32_t count = 0;
+    flecs::entity last;
+
+    ecs.observer()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity src) {
+            last = src;
+            count ++;
+        });
+
+    flecs::entity e = ecs.entity();
+    e.add<Position>();
+
+    test_int(count, 1);
+    test_assert(last == e);
+}

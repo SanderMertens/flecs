@@ -2631,6 +2631,9 @@ void Observer_not_term_on_remove_add_negated_id_in_populated_table_w_data(void);
 void Observer_not_term_on_add_remove_negated_id_in_populated_table_w_data(void);
 void Observer_on_remove_delete_other_in_same_table_on_delete(void);
 void Observer_on_remove_delete_other_in_same_table_on_remove(void);
+void Observer_no_terms_custom_event(void);
+void Observer_no_terms_custom_event_w_src(void);
+void Observer_no_terms_on_add(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -14026,6 +14029,18 @@ bake_test_case Observer_testcases[] = {
     {
         "on_remove_delete_other_in_same_table_on_remove",
         Observer_on_remove_delete_other_in_same_table_on_remove
+    },
+    {
+        "no_terms_custom_event",
+        Observer_no_terms_custom_event
+    },
+    {
+        "no_terms_custom_event_w_src",
+        Observer_no_terms_custom_event_w_src
+    },
+    {
+        "no_terms_on_add",
+        Observer_no_terms_on_add
     }
 };
 
@@ -18454,7 +18469,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        415,
+        418,
         Observer_testcases
     },
     {

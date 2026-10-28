@@ -1217,6 +1217,8 @@ void Observer_remove_w_on_remove_removing_other_w_world(void);
 void Observer_remove_w_on_remove_removing_other_w_stage(void);
 void Observer_set_w_on_add_adding_other_w_world(void);
 void Observer_set_w_on_add_adding_other_w_stage(void);
+void Observer_no_terms_custom_event(void);
+void Observer_no_terms_on_add(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -6540,6 +6542,14 @@ bake_test_case Observer_testcases[] = {
     {
         "set_w_on_add_adding_other_w_stage",
         Observer_set_w_on_add_adding_other_w_stage
+    },
+    {
+        "no_terms_custom_event",
+        Observer_no_terms_custom_event
+    },
+    {
+        "no_terms_on_add",
+        Observer_no_terms_on_add
     }
 };
 
@@ -8859,7 +8869,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        90,
+        92,
         Observer_testcases
     },
     {

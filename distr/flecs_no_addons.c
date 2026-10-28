@@ -14916,6 +14916,13 @@ ecs_observer_t* flecs_observer_init(
     query_desc.entity = 0;
     query_desc.cache_kind = EcsQueryCacheNone;
 
+    if ((!query_desc.expr || !query_desc.expr[0]) &&
+        !ecs_term_is_initialized(&query_desc.terms[0]))
+    {
+        query_desc.expr = NULL;
+        query_desc.terms[0].id = EcsAny;
+    }
+
     ecs_term_t trivial_term;
     ecs_term_t *terms = &trivial_term;
     int32_t term_count = 1;

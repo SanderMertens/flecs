@@ -1256,7 +1256,9 @@
                 "remove_w_on_remove_removing_other_w_world",
                 "remove_w_on_remove_removing_other_w_stage",
                 "set_w_on_add_adding_other_w_world",
-                "set_w_on_add_adding_other_w_stage"
+                "set_w_on_add_adding_other_w_stage",
+                "no_terms_custom_event",
+                "no_terms_on_add"
             ]
         }, {
             "id": "ComponentLifecycle",
