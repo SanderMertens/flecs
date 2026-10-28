@@ -493,7 +493,7 @@ void TemplateParent_parent_is_immediate(void) {
 
 void TemplateParent_radio_events(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
     test_int(ecs_script_run_w_desc(world, NULL,
         HEAD "using flecs.script"
         LINE "template RadioGroup {"

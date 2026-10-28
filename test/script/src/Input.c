@@ -2,7 +2,7 @@
 
 static bool ir_enabled = false;
 
-void Event_setup(void) {
+void Input_setup(void) {
     const char *ir_param = test_param("ir");
     ir_enabled = ir_param && !strcmp(ir_param, "enabled");
 }
@@ -18,7 +18,7 @@ typedef struct {
 static int32_t to_local_invoked = 0;
 static ecs_entity_t to_local_entity = 0;
 
-static void Event_to_local(
+static void Input_to_local(
     ecs_world_t *world,
     ecs_entity_t entity,
     float screen_x,
@@ -49,7 +49,7 @@ static ecs_entity_t to_focus_entity = 0;
 static ecs_entity_t to_focus_current = 0;
 static ecs_script_focus_source_t to_focus_source = EcsScriptFocusPress;
 
-static ecs_entity_t Event_to_focus(
+static ecs_entity_t Input_to_focus(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t current,
@@ -67,14 +67,14 @@ static ecs_entity_t Event_to_focus(
     return entity;
 }
 
-void Event_import(void) {
+void Input_import(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
-    test_assert(ecs_lookup(world, "flecs.script.event") != 0);
-    test_assert(ecs_lookup(world, "flecs.script.event.MouseEvent") ==
+    test_assert(ecs_lookup(world, "flecs.script.input") != 0);
+    test_assert(ecs_lookup(world, "flecs.script.input.MouseEvent") ==
         ecs_id(EcsScriptMouseEvent));
-    test_assert(ecs_lookup(world, "flecs.script.event.KeyboardEvent") ==
+    test_assert(ecs_lookup(world, "flecs.script.input.KeyboardEvent") ==
         ecs_id(EcsScriptKeyboardEvent));
     test_assert(ecs_lookup(world, "flecs.script.on.press") != 0);
     test_assert(ecs_lookup(world, "flecs.script.on.drag") != 0);
@@ -87,9 +87,9 @@ void Event_import(void) {
     ecs_fini(world);
 }
 
-void Event_press(void) {
+void Input_press(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -154,9 +154,9 @@ void Event_press(void) {
     ecs_fini(world);
 }
 
-void Event_press_other_target(void) {
+void Input_press_other_target(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -230,9 +230,9 @@ void Event_press_other_target(void) {
     ecs_fini(world);
 }
 
-void Event_press_no_target(void) {
+void Input_press_no_target(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -292,9 +292,9 @@ void Event_press_no_target(void) {
     ecs_fini(world);
 }
 
-void Event_press_bubbles_to_parent(void) {
+void Input_press_bubbles_to_parent(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -352,9 +352,9 @@ void Event_press_bubbles_to_parent(void) {
     ecs_fini(world);
 }
 
-void Event_press_two_listeners(void) {
+void Input_press_two_listeners(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -397,9 +397,9 @@ void Event_press_two_listeners(void) {
     ecs_fini(world);
 }
 
-void Event_press_two_widgets(void) {
+void Input_press_two_widgets(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -485,9 +485,9 @@ void Event_press_two_widgets(void) {
     ecs_fini(world);
 }
 
-void Event_press_while_other_button_held(void) {
+void Input_press_while_other_button_held(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -565,9 +565,9 @@ void Event_press_while_other_button_held(void) {
     ecs_fini(world);
 }
 
-void Event_drag(void) {
+void Input_drag(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -702,9 +702,9 @@ void Event_drag(void) {
     ecs_fini(world);
 }
 
-void Event_no_drag_without_button(void) {
+void Input_no_drag_without_button(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -764,9 +764,9 @@ void Event_no_drag_without_button(void) {
     ecs_fini(world);
 }
 
-void Event_release(void) {
+void Input_release(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -865,9 +865,9 @@ void Event_release(void) {
     ecs_fini(world);
 }
 
-void Event_click(void) {
+void Input_click(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -933,9 +933,9 @@ void Event_click(void) {
     ecs_fini(world);
 }
 
-void Event_no_click_when_released_elsewhere(void) {
+void Input_no_click_when_released_elsewhere(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -1015,9 +1015,9 @@ void Event_no_click_when_released_elsewhere(void) {
     ecs_fini(world);
 }
 
-void Event_move(void) {
+void Input_move(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -1106,9 +1106,9 @@ void Event_move(void) {
     ecs_fini(world);
 }
 
-void Event_delta_from_event(void) {
+void Input_delta_from_event(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -1162,9 +1162,9 @@ void Event_delta_from_event(void) {
     ecs_fini(world);
 }
 
-void Event_button_and_modifiers(void) {
+void Input_button_and_modifiers(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -1225,9 +1225,9 @@ void Event_button_and_modifiers(void) {
     ecs_fini(world);
 }
 
-void Event_key_down_up(void) {
+void Input_key_down_up(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -1305,9 +1305,9 @@ void Event_key_down_up(void) {
     ecs_fini(world);
 }
 
-void Event_key_modifiers(void) {
+void Input_key_modifiers(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -1364,9 +1364,9 @@ void Event_key_modifiers(void) {
     ecs_fini(world);
 }
 
-void Event_key_focus_follows_press(void) {
+void Input_key_focus_follows_press(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -1458,9 +1458,9 @@ void Event_key_focus_follows_press(void) {
     ecs_fini(world);
 }
 
-void Event_key_bubbles_to_parent(void) {
+void Input_key_bubbles_to_parent(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -1501,9 +1501,9 @@ void Event_key_bubbles_to_parent(void) {
     ecs_fini(world);
 }
 
-void Event_slider(void) {
+void Input_slider(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -1563,9 +1563,9 @@ void Event_slider(void) {
     ecs_fini(world);
 }
 
-void Event_wrong_arg_fails(void) {
+void Input_wrong_arg_fails(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run_w_desc(world, NULL,
@@ -1578,9 +1578,9 @@ void Event_wrong_arg_fails(void) {
     ecs_fini(world);
 }
 
-void Event_delete_listener(void) {
+void Input_delete_listener(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -1641,9 +1641,9 @@ void Event_delete_listener(void) {
     ecs_fini(world);
 }
 
-void Event_delete_listener_while_pressed(void) {
+void Input_delete_listener_while_pressed(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -1711,9 +1711,9 @@ void Event_delete_listener_while_pressed(void) {
     ecs_fini(world);
 }
 
-void Event_fini_w_pending_listener(void) {
+void Input_fini_w_pending_listener(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -1752,9 +1752,9 @@ void Event_fini_w_pending_listener(void) {
     ecs_fini(world);
 }
 
-void Event_script_update_w_pending_listener(void) {
+void Input_script_update_w_pending_listener(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -1836,9 +1836,9 @@ void Event_script_update_w_pending_listener(void) {
     ecs_fini(world);
 }
 
-void Event_mouse_event_w_stage(void) {
+void Input_mouse_event_w_stage(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -1892,9 +1892,9 @@ void Event_mouse_event_w_stage(void) {
     ecs_fini(world);
 }
 
-void Event_mouse_event_in_progress(void) {
+void Input_mouse_event_in_progress(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -1968,9 +1968,9 @@ void Event_mouse_event_in_progress(void) {
     ecs_fini(world);
 }
 
-void Event_import_enter_leave(void) {
+void Input_import_enter_leave(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     test_assert(ecs_lookup(world, "flecs.script.on.enter") != 0);
     test_assert(ecs_lookup(world, "flecs.script.on.leave") != 0);
@@ -1978,9 +1978,9 @@ void Event_import_enter_leave(void) {
     ecs_fini(world);
 }
 
-void Event_enter_leave(void) {
+void Input_enter_leave(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -2088,9 +2088,9 @@ void Event_enter_leave(void) {
     ecs_fini(world);
 }
 
-void Event_enter_leave_between_children(void) {
+void Input_enter_leave_between_children(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -2175,9 +2175,9 @@ void Event_enter_leave_between_children(void) {
     ecs_fini(world);
 }
 
-void Event_enter_leave_children_listen(void) {
+void Input_enter_leave_children_listen(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -2242,9 +2242,9 @@ void Event_enter_leave_children_listen(void) {
     ecs_fini(world);
 }
 
-void Event_enter_leave_while_dragging(void) {
+void Input_enter_leave_while_dragging(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -2324,9 +2324,9 @@ void Event_enter_leave_while_dragging(void) {
     ecs_fini(world);
 }
 
-void Event_leave_deleted_hover_target(void) {
+void Input_leave_deleted_hover_target(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code = HEAD "using flecs.script"
@@ -2375,9 +2375,9 @@ void Event_leave_deleted_hover_target(void) {
     ecs_fini(world);
 }
 
-void Event_propagation_translates_coordinates(void) {
+void Input_propagation_translates_coordinates(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -2421,7 +2421,7 @@ void Event_propagation_translates_coordinates(void) {
     to_local_invoked = 0;
     to_local_entity = 0;
     ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
-        .to_local = Event_to_local
+        .to_local = Input_to_local
     });
 
     EcsScriptMouseEvent evt = {
@@ -2446,9 +2446,9 @@ void Event_propagation_translates_coordinates(void) {
     ecs_fini(world);
 }
 
-void Event_propagation_keeps_deltas(void) {
+void Input_propagation_keeps_deltas(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -2490,7 +2490,7 @@ void Event_propagation_keeps_deltas(void) {
     test_int(ecs_script_tasks_progress(world), 1);
 
     ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
-        .to_local = Event_to_local
+        .to_local = Input_to_local
     });
 
     EcsScriptMouseEvent evt = {
@@ -2518,9 +2518,9 @@ void Event_propagation_keeps_deltas(void) {
     ecs_fini(world);
 }
 
-void Event_propagation_press_once_per_level(void) {
+void Input_propagation_press_once_per_level(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -2614,9 +2614,9 @@ void Event_propagation_press_once_per_level(void) {
     ecs_fini(world);
 }
 
-void Event_drag_not_propagated_to_unrelated_target(void) {
+void Input_drag_not_propagated_to_unrelated_target(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -2686,9 +2686,9 @@ void Event_drag_not_propagated_to_unrelated_target(void) {
     ecs_fini(world);
 }
 
-void Event_propagation_screen_coords_without_to_local(void) {
+void Input_propagation_screen_coords_without_to_local(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -2740,9 +2740,9 @@ void Event_propagation_screen_coords_without_to_local(void) {
     ecs_fini(world);
 }
 
-void Event_stop_propagation_press(void) {
+void Input_stop_propagation_press(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -2798,9 +2798,9 @@ void Event_stop_propagation_press(void) {
     ecs_fini(world);
 }
 
-void Event_stop_propagation_same_level(void) {
+void Input_stop_propagation_same_level(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -2863,9 +2863,9 @@ void Event_stop_propagation_same_level(void) {
     ecs_fini(world);
 }
 
-void Event_stop_propagation_once(void) {
+void Input_stop_propagation_once(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -2926,9 +2926,9 @@ void Event_stop_propagation_once(void) {
     ecs_fini(world);
 }
 
-void Event_stop_propagation_result(void) {
+void Input_stop_propagation_result(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -2980,9 +2980,9 @@ void Event_stop_propagation_result(void) {
     ecs_fini(world);
 }
 
-void Event_stop_propagation_key(void) {
+void Input_stop_propagation_key(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3042,9 +3042,9 @@ void Event_stop_propagation_key(void) {
     ecs_fini(world);
 }
 
-void Event_stop_propagation_keeps_enter(void) {
+void Input_stop_propagation_keeps_enter(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3108,9 +3108,9 @@ void Event_stop_propagation_keeps_enter(void) {
     ecs_fini(world);
 }
 
-void Event_stop_propagation_stale_event(void) {
+void Input_stop_propagation_stale_event(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3167,9 +3167,9 @@ void Event_stop_propagation_stale_event(void) {
     ecs_fini(world);
 }
 
-void Event_stop_propagation_enter_event(void) {
+void Input_stop_propagation_enter_event(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3220,11 +3220,11 @@ void Event_stop_propagation_enter_event(void) {
     ecs_fini(world);
 }
 
-void Event_import_focus(void) {
+void Input_import_focus(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
-    test_assert(ecs_lookup(world, "flecs.script.event.FocusEvent") ==
+    test_assert(ecs_lookup(world, "flecs.script.input.FocusEvent") ==
         ecs_id(EcsScriptFocusEvent));
     test_assert(ecs_lookup(world, "flecs.script.on.focus") != 0);
     test_assert(ecs_lookup(world, "flecs.script.on.blur") != 0);
@@ -3234,9 +3234,9 @@ void Event_import_focus(void) {
     ecs_fini(world);
 }
 
-void Event_set_get_focus(void) {
+void Input_set_get_focus(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t a = ecs_new(world);
     ecs_entity_t b = ecs_new(world);
@@ -3252,9 +3252,9 @@ void Event_set_get_focus(void) {
     ecs_fini(world);
 }
 
-void Event_get_focus_after_press(void) {
+void Input_get_focus_after_press(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t a = ecs_new(world);
     ecs_entity_t b = ecs_new(world);
@@ -3278,9 +3278,9 @@ void Event_get_focus_after_press(void) {
     ecs_fini(world);
 }
 
-void Event_key_to_set_focus(void) {
+void Input_key_to_set_focus(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3328,9 +3328,9 @@ void Event_key_to_set_focus(void) {
     ecs_fini(world);
 }
 
-void Event_focus_blur_on_press(void) {
+void Input_focus_blur_on_press(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3420,9 +3420,9 @@ void Event_focus_blur_on_press(void) {
     ecs_fini(world);
 }
 
-void Event_focus_blur_on_set_focus(void) {
+void Input_focus_blur_on_set_focus(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3497,9 +3497,9 @@ void Event_focus_blur_on_set_focus(void) {
     ecs_fini(world);
 }
 
-void Event_focus_unchanged_no_events(void) {
+void Input_focus_unchanged_no_events(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3557,9 +3557,9 @@ void Event_focus_unchanged_no_events(void) {
     ecs_fini(world);
 }
 
-void Event_focus_between_children_reaches_parent(void) {
+void Input_focus_between_children_reaches_parent(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3630,9 +3630,9 @@ void Event_focus_between_children_reaches_parent(void) {
     ecs_fini(world);
 }
 
-void Event_stop_propagation_focus(void) {
+void Input_stop_propagation_focus(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3700,9 +3700,9 @@ void Event_stop_propagation_focus(void) {
     ecs_fini(world);
 }
 
-void Event_to_focus_reject_press(void) {
+void Input_to_focus_reject_press(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3755,7 +3755,7 @@ void Event_to_focus_reject_press(void) {
     to_focus_entity = 0;
     ecs_entity_t keep = a;
     ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
-        .to_focus = Event_to_focus,
+        .to_focus = Input_to_focus,
         .ctx = &keep
     });
 
@@ -3778,9 +3778,9 @@ void Event_to_focus_reject_press(void) {
     ecs_fini(world);
 }
 
-void Event_to_focus_redirect(void) {
+void Input_to_focus_redirect(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3831,7 +3831,7 @@ void Event_to_focus_redirect(void) {
     to_focus_entity = 0;
     ecs_entity_t redirect = b;
     ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
-        .to_focus = Event_to_focus,
+        .to_focus = Input_to_focus,
         .ctx = &redirect
     });
 
@@ -3851,15 +3851,15 @@ void Event_to_focus_redirect(void) {
     ecs_fini(world);
 }
 
-void Event_to_focus_not_invoked_when_unchanged(void) {
+void Input_to_focus_not_invoked_when_unchanged(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t a = ecs_new(world);
 
     to_focus_invoked = 0;
     ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
-        .to_focus = Event_to_focus
+        .to_focus = Input_to_focus
     });
 
     ecs_script_set_focus(world, a);
@@ -3875,9 +3875,9 @@ void Event_to_focus_not_invoked_when_unchanged(void) {
     ecs_fini(world);
 }
 
-void Event_remove_event_hooks(void) {
+void Input_remove_event_hooks(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t a = ecs_new(world);
     ecs_entity_t b = ecs_new(world);
@@ -3885,7 +3885,7 @@ void Event_remove_event_hooks(void) {
     ecs_entity_t keep = 0;
     to_focus_invoked = 0;
     ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
-        .to_focus = Event_to_focus,
+        .to_focus = Input_to_focus,
         .ctx = &keep
     });
 
@@ -3901,9 +3901,9 @@ void Event_remove_event_hooks(void) {
     ecs_fini(world);
 }
 
-void Event_script_focus(void) {
+void Input_script_focus(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -3948,7 +3948,7 @@ void Event_script_focus(void) {
 
     to_focus_invoked = 0;
     ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
-        .to_focus = Event_to_focus
+        .to_focus = Input_to_focus
     });
 
     ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
@@ -3969,9 +3969,9 @@ void Event_script_focus(void) {
     ecs_fini(world);
 }
 
-void Event_script_focus_returns_to_focus_result(void) {
+void Input_script_focus_returns_to_focus_result(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4007,7 +4007,7 @@ void Event_script_focus_returns_to_focus_result(void) {
 
     ecs_entity_t keep = a;
     ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
-        .to_focus = Event_to_focus,
+        .to_focus = Input_to_focus,
         .ctx = &keep
     });
 
@@ -4020,9 +4020,9 @@ void Event_script_focus_returns_to_focus_result(void) {
     ecs_fini(world);
 }
 
-void Event_script_focus_clear(void) {
+void Input_script_focus_clear(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4066,9 +4066,9 @@ void Event_script_focus_clear(void) {
     ecs_fini(world);
 }
 
-void Event_script_focus_resumes_listeners(void) {
+void Input_script_focus_resumes_listeners(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4116,9 +4116,9 @@ void Event_script_focus_resumes_listeners(void) {
     ecs_fini(world);
 }
 
-void Event_delete_focus(void) {
+void Input_delete_focus(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4172,20 +4172,20 @@ void Event_delete_focus(void) {
     ecs_fini(world);
 }
 
-void Event_import_activate(void) {
+void Input_import_activate(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
-    test_assert(ecs_lookup(world, "flecs.script.event.ActivateEvent") ==
+    test_assert(ecs_lookup(world, "flecs.script.input.ActivateEvent") ==
         ecs_id(EcsScriptActivateEvent));
     test_assert(ecs_lookup(world, "flecs.script.on.activate") != 0);
 
     ecs_fini(world);
 }
 
-void Event_activate_click(void) {
+void Input_activate_click(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4252,9 +4252,9 @@ void Event_activate_click(void) {
     ecs_fini(world);
 }
 
-void Event_no_activate_when_released_elsewhere(void) {
+void Input_no_activate_when_released_elsewhere(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4305,9 +4305,9 @@ void Event_no_activate_when_released_elsewhere(void) {
     ecs_fini(world);
 }
 
-void Event_activate_enter(void) {
+void Input_activate_enter(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4374,9 +4374,9 @@ void Event_activate_enter(void) {
     ecs_fini(world);
 }
 
-void Event_activate_space_on_release(void) {
+void Input_activate_space_on_release(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4455,9 +4455,9 @@ void Event_activate_space_on_release(void) {
     ecs_fini(world);
 }
 
-void Event_no_activate_without_focus(void) {
+void Input_no_activate_without_focus(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4516,9 +4516,9 @@ void Event_no_activate_without_focus(void) {
     ecs_fini(world);
 }
 
-void Event_no_activate_space_focus_changed(void) {
+void Input_no_activate_space_focus_changed(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4573,9 +4573,9 @@ void Event_no_activate_space_focus_changed(void) {
     ecs_fini(world);
 }
 
-void Event_no_activate_enter_repeat(void) {
+void Input_no_activate_enter_repeat(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4623,9 +4623,9 @@ void Event_no_activate_enter_repeat(void) {
     ecs_fini(world);
 }
 
-void Event_activate_bubbles_to_parent(void) {
+void Input_activate_bubbles_to_parent(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4670,7 +4670,7 @@ void Event_activate_bubbles_to_parent(void) {
     test_assert(mut != 0);
 
     ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
-        .to_local = Event_to_local
+        .to_local = Input_to_local
     });
 
     test_int(ecs_script_tasks_progress(world), 1);
@@ -4705,9 +4705,9 @@ void Event_activate_bubbles_to_parent(void) {
     ecs_fini(world);
 }
 
-void Event_activate_once_per_activation(void) {
+void Input_activate_once_per_activation(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4765,9 +4765,9 @@ void Event_activate_once_per_activation(void) {
     ecs_fini(world);
 }
 
-void Event_activate_modifiers(void) {
+void Input_activate_modifiers(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4835,9 +4835,9 @@ void Event_activate_modifiers(void) {
     ecs_fini(world);
 }
 
-void Event_activate_and_click(void) {
+void Input_activate_and_click(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4896,9 +4896,9 @@ void Event_activate_and_click(void) {
     ecs_fini(world);
 }
 
-void Event_stop_propagation_activate(void) {
+void Input_stop_propagation_activate(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -4978,9 +4978,9 @@ void Event_stop_propagation_activate(void) {
     ecs_fini(world);
 }
 
-void Event_get_mouse_state(void) {
+void Input_get_mouse_state(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t e = ecs_new(world);
 
@@ -5011,9 +5011,9 @@ void Event_get_mouse_state(void) {
     ecs_fini(world);
 }
 
-void Event_listeners(void) {
+void Input_listeners(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -5053,9 +5053,9 @@ void Event_listeners(void) {
     ecs_fini(world);
 }
 
-void Event_emit_result(void) {
+void Input_emit_result(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =
@@ -5092,9 +5092,9 @@ void Event_emit_result(void) {
     ecs_fini(world);
 }
 
-void Event_emit_result_stopped(void) {
+void Input_emit_result_stopped(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ecs_entity_t s = ecs_script(world, {
         .code =

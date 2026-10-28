@@ -1,8 +1,8 @@
-#ifndef SCRIPT_EVENT_H
-#define SCRIPT_EVENT_H
+#ifndef SCRIPT_INPUT_H
+#define SCRIPT_INPUT_H
 
 /* This generated file contains includes for project dependencies */
-#include "script_event/bake_config.h"
+#include "script_input/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

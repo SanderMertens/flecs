@@ -1,10 +1,10 @@
-#include <script_event.h>
+#include <script_input.h>
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     assert(ecs_lookup(world, "flecs.script.on.press") != 0);
     assert(ecs_lookup(world, "flecs.script.on.key_down") != 0);

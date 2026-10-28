@@ -245,7 +245,7 @@
 #define FLECS_SCRIPT_ASYNC   /**< Async/await support for Flecs script. */
 // #define FLECS_SCRIPT_MATH /**< Math functions for Flecs script (may require linking with libm). */
 // #define FLECS_SCRIPT_PLATFORM /**< Platform constants for Flecs script. */
-#define FLECS_SCRIPT_EVENT   /**< Mouse and keyboard events for Flecs script. */
+#define FLECS_SCRIPT_INPUT   /**< Mouse and keyboard events for Flecs script. */
 #define FLECS_SCRIPT_COMMAND /**< Command line interface for interacting with a world. */
 #define FLECS_SYSTEM         /**< System support. */
 #define FLECS_STATS          /**< Track runtime statistics. */
@@ -302,8 +302,8 @@
 #ifdef FLECS_NO_SCRIPT_PLATFORM
 #undef FLECS_SCRIPT_PLATFORM
 #endif
-#ifdef FLECS_NO_SCRIPT_EVENT
-#undef FLECS_SCRIPT_EVENT
+#ifdef FLECS_NO_SCRIPT_INPUT
+#undef FLECS_SCRIPT_INPUT
 #endif
 #ifdef FLECS_NO_SCRIPT_COMMAND
 #undef FLECS_SCRIPT_COMMAND
@@ -366,14 +366,14 @@
 #endif
 #endif
 
-#ifdef FLECS_SCRIPT_EVENT
+#ifdef FLECS_SCRIPT_INPUT
 #ifndef FLECS_SCRIPT_ASYNC
 #define FLECS_SCRIPT_ASYNC
 #endif
 #endif
 
 #if defined(FLECS_SCRIPT_ASYNC) || defined(FLECS_SCRIPT_MATH) || \
-    defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_EVENT) || \
+    defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_INPUT) || \
     defined(FLECS_SCRIPT_COMMAND)
 #ifndef FLECS_SCRIPT
 #define FLECS_SCRIPT
@@ -16600,12 +16600,12 @@ void FlecsScriptPlatformImport(
 
 #endif
 
-#ifdef FLECS_SCRIPT_EVENT
-#ifdef FLECS_NO_SCRIPT_EVENT
-#error "FLECS_NO_SCRIPT_EVENT failed: SCRIPT_EVENT is required by other addons"
+#ifdef FLECS_SCRIPT_INPUT
+#ifdef FLECS_NO_SCRIPT_INPUT
+#error "FLECS_NO_SCRIPT_INPUT failed: SCRIPT_INPUT is required by other addons"
 #endif
 
-#ifdef FLECS_SCRIPT_EVENT
+#ifdef FLECS_SCRIPT_INPUT
 
 #ifndef FLECS_SCRIPT
 #define FLECS_SCRIPT
@@ -16616,14 +16616,14 @@ void FlecsScriptPlatformImport(
 #endif
 
 /**
- * @defgroup c_addons_script_event Script Event
+ * @defgroup c_addons_script_input Script Input
  * @ingroup c_addons
  * Mouse, keyboard and focus events for Flecs script.
  * @{
  */
 
-#ifndef FLECS_SCRIPT_EVENT_H
-#define FLECS_SCRIPT_EVENT_H
+#ifndef FLECS_SCRIPT_INPUT_H
+#define FLECS_SCRIPT_INPUT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -16800,7 +16800,7 @@ typedef ecs_entity_t (*ecs_script_to_focus_t)(
     ecs_script_focus_source_t source,
     void *ctx);
 
-/** Application hooks of the script event module. */
+/** Application hooks of the script input module. */
 typedef struct ecs_script_event_hooks_t {
     ecs_script_to_local_t to_local;   /**< Converts positions for parents. */
     ecs_script_to_focus_t to_focus;   /**< Decides which entity receives the focus. */
@@ -16858,7 +16858,7 @@ ecs_script_event_result_t ecs_script_keyboard_event(
     ecs_world_t *world,
     const EcsScriptKeyboardEvent *evt);
 
-/** Set application hooks of the script event module.
+/** Set application hooks of the script input module.
  * Replaces the hooks that were set before.
  *
  * @param world The world.
@@ -16927,13 +16927,13 @@ int32_t ecs_script_event_listeners(
 /** Script event import function.
  * Usage:
  * @code
- * ECS_IMPORT(world, FlecsScriptEvent)
+ * ECS_IMPORT(world, FlecsScriptInput)
  * @endcode
  *
  * @param world The world.
  */
 FLECS_API
-void FlecsScriptEventImport(
+void FlecsScriptInputImport(
     ecs_world_t *world);
 
 #ifdef __cplusplus
@@ -17131,7 +17131,7 @@ typedef struct ecs_command_script_error_t {
     char *error;             /**< Error message. */
 } ecs_command_script_error_t;
 
-#ifdef FLECS_SCRIPT_EVENT
+#ifdef FLECS_SCRIPT_INPUT
 /** Pointer state, returned by pointer. */
 typedef struct ecs_command_pointer_state_t {
     EcsScriptMouseEvent event; /**< Last mouse event. */

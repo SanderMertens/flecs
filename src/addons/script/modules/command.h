@@ -25,7 +25,7 @@ extern ECS_COMPONENT_DECLARE(ecs_command_script_line_t);
 extern ECS_COMPONENT_DECLARE(ecs_command_script_match_t);
 extern ECS_COMPONENT_DECLARE(ecs_command_script_location_t);
 extern ECS_COMPONENT_DECLARE(ecs_command_script_error_t);
-#ifdef FLECS_SCRIPT_EVENT
+#ifdef FLECS_SCRIPT_INPUT
 extern ECS_COMPONENT_DECLARE(ecs_command_pointer_state_t);
 extern ECS_COMPONENT_DECLARE(ecs_script_event_result_t);
 #endif
@@ -125,8 +125,8 @@ void flecs_command_core_import(
 void flecs_command_script_import(
     ecs_world_t *world);
 
-#ifdef FLECS_SCRIPT_EVENT
-void flecs_command_event_import(
+#ifdef FLECS_SCRIPT_INPUT
+void flecs_command_input_import(
     ecs_world_t *world);
 #endif
 

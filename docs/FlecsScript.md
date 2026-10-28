@@ -2351,7 +2351,7 @@ RadioGroup() {
 }
 ```
 
-`on.activate` is provided by the `flecs.script.event` module. It resolves when the entity is clicked (like `on.click`), when Enter goes down while the entity has the focus, or when Space comes up after it went down while the entity had the focus. This makes widgets work with both a mouse and a keyboard without handling keys in each widget. The event has the activated `target`, a `keyboard` flag that is `false` for a click, the `local_x` and `local_y` position of a click (`0` for keys), and the `ctrl`, `shift`, `alt` and `meta` modifiers. Like other events, activation propagates to the parents of the activated entity until an async block calls `stop_propagation()`.
+`on.activate` is provided by the `flecs.script.input` module. It resolves when the entity is clicked (like `on.click`), when Enter goes down while the entity has the focus, or when Space comes up after it went down while the entity had the focus. This makes widgets work with both a mouse and a keyboard without handling keys in each widget. The event has the activated `target`, a `keyboard` flag that is `false` for a click, the `local_x` and `local_y` position of a click (`0` for keys), and the `ctrl`, `shift`, `alt` and `meta` modifiers. Like other events, activation propagates to the parents of the activated entity until an async block calls `stop_propagation()`.
 
 Use `parent.active = label` if a local variable masks `active`. Changes to parent muts update reactive output without restarting the child's async blocks; subsequent reads in those blocks use the current parent state.
 

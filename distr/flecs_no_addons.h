@@ -265,8 +265,8 @@
 #ifdef FLECS_NO_SCRIPT_PLATFORM
 #undef FLECS_SCRIPT_PLATFORM
 #endif
-#ifdef FLECS_NO_SCRIPT_EVENT
-#undef FLECS_SCRIPT_EVENT
+#ifdef FLECS_NO_SCRIPT_INPUT
+#undef FLECS_SCRIPT_INPUT
 #endif
 #ifdef FLECS_NO_SCRIPT_COMMAND
 #undef FLECS_SCRIPT_COMMAND
@@ -325,7 +325,7 @@
  * the most dependencies to addons with the least dependencies. */
 
 #if defined(FLECS_SCRIPT_ASYNC) || defined(FLECS_SCRIPT_MATH) || \
-    defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_EVENT) || \
+    defined(FLECS_SCRIPT_PLATFORM) || defined(FLECS_SCRIPT_INPUT) || \
     defined(FLECS_SCRIPT_COMMAND)
 #endif
 

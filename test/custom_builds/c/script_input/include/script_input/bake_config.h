@@ -14,8 +14,8 @@
  * dependencies will automatically show up in this file. Include bake_config.h
  * in your main project file. Do not edit! */
 
-#ifndef SCRIPT_EVENT_BAKE_CONFIG_H
-#define SCRIPT_EVENT_BAKE_CONFIG_H
+#ifndef SCRIPT_INPUT_BAKE_CONFIG_H
+#define SCRIPT_INPUT_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
 #include "../../deps/flecs.h"
