@@ -110,9 +110,9 @@ template Dropdown {
 
   async {
     while true {
-      const e = await on.click(this)
+      const e = await on.activate(this)
       if expanded {
-        if e.local_y < optionCount * height {
+        if !e.keyboard && e.local_y < optionCount * height {
           const row: i32 = e.local_y / height
           selected = math.clamp(optionCount - 1 - row, 0, optionCount - 1)
         }

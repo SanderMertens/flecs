@@ -59,7 +59,7 @@ template Checkbox {
 
   async {
     while true {
-      await on.click(this)
+      await on.activate(this)
       checked = !checked
     }
   }

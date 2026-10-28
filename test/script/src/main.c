@@ -1175,6 +1175,19 @@ void Event_script_focus_returns_to_focus_result(void);
 void Event_script_focus_clear(void);
 void Event_script_focus_resumes_listeners(void);
 void Event_delete_focus(void);
+void Event_import_activate(void);
+void Event_activate_click(void);
+void Event_no_activate_when_released_elsewhere(void);
+void Event_activate_enter(void);
+void Event_activate_space_on_release(void);
+void Event_no_activate_without_focus(void);
+void Event_no_activate_space_focus_changed(void);
+void Event_no_activate_enter_repeat(void);
+void Event_activate_bubbles_to_parent(void);
+void Event_activate_once_per_activation(void);
+void Event_activate_modifiers(void);
+void Event_activate_and_click(void);
+void Event_stop_propagation_activate(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_setup(void);
@@ -8626,6 +8639,58 @@ bake_test_case Event_testcases[] = {
     {
         "delete_focus",
         Event_delete_focus
+    },
+    {
+        "import_activate",
+        Event_import_activate
+    },
+    {
+        "activate_click",
+        Event_activate_click
+    },
+    {
+        "no_activate_when_released_elsewhere",
+        Event_no_activate_when_released_elsewhere
+    },
+    {
+        "activate_enter",
+        Event_activate_enter
+    },
+    {
+        "activate_space_on_release",
+        Event_activate_space_on_release
+    },
+    {
+        "no_activate_without_focus",
+        Event_no_activate_without_focus
+    },
+    {
+        "no_activate_space_focus_changed",
+        Event_no_activate_space_focus_changed
+    },
+    {
+        "no_activate_enter_repeat",
+        Event_no_activate_enter_repeat
+    },
+    {
+        "activate_bubbles_to_parent",
+        Event_activate_bubbles_to_parent
+    },
+    {
+        "activate_once_per_activation",
+        Event_activate_once_per_activation
+    },
+    {
+        "activate_modifiers",
+        Event_activate_modifiers
+    },
+    {
+        "activate_and_click",
+        Event_activate_and_click
+    },
+    {
+        "stop_propagation_activate",
+        Event_stop_propagation_activate
     }
 };
 
@@ -19890,7 +19955,7 @@ static bake_test_suite suites[] = {
         "Event",
         Event_setup,
         NULL,
-        65,
+        78,
         Event_testcases,
         1,
         Event_params

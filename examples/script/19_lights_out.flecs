@@ -119,7 +119,7 @@ template LightsOut {
 
         async {
           while true {
-            await on.click(this)
+            await on.activate(this)
             if board != 0 {
               for i in 0..16 {
                 const neighborRow: i32 = i / 4
@@ -149,7 +149,7 @@ template LightsOut {
 
     async {
       while true {
-        await on.click(this)
+        await on.activate(this)
         if board == 0 {
           level = (level + 1) % 3
         }
