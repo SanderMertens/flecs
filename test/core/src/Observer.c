@@ -16069,3 +16069,92 @@ void Observer_on_remove_delete_other_in_same_table_on_remove(void) {
 
     ecs_fini(world);
 }
+
+void Observer_no_terms_custom_event(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Evt = ecs_new(world);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .events = { Evt },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .event = Evt,
+        .entity = e
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, Evt);
+    test_int(ctx.term_count, 1);
+    test_int(ctx.e[0], e);
+
+    ecs_fini(world);
+}
+
+void Observer_no_terms_custom_event_w_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t Evt = ecs_new(world);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .events = { Evt },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_w(world, TagA);
+
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .event = Evt,
+        .entity = e,
+        .ids = &(ecs_type_t){ .count = 1, .array = (ecs_id_t[]){ TagA } }
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, Evt);
+    test_int(ctx.e[0], e);
+
+    ecs_fini(world);
+}
+
+void Observer_no_terms_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, TagA);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+
+    ecs_fini(world);
+}

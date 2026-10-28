@@ -2697,7 +2697,10 @@
                 "not_term_on_remove_add_negated_id_in_populated_table_w_data",
                 "not_term_on_add_remove_negated_id_in_populated_table_w_data",
                 "on_remove_delete_other_in_same_table_on_delete",
-                "on_remove_delete_other_in_same_table_on_remove"
+                "on_remove_delete_other_in_same_table_on_remove",
+                "no_terms_custom_event",
+                "no_terms_custom_event_w_src",
+                "no_terms_on_add"
             ]
         }, {
             "id": "ObserverOnSet",
