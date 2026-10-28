@@ -35,7 +35,7 @@ template RadioButton : parent RadioGroup {
 
   async {
     while true {
-      await on.click(this)
+      await on.activate(this)
       active = label
     }
   }

@@ -4171,3 +4171,809 @@ void Event_delete_focus(void) {
 
     ecs_fini(world);
 }
+
+void Event_import_activate(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    test_assert(ecs_lookup(world, "flecs.script.event.ActivateEvent") ==
+        ecs_id(EcsScriptActivateEvent));
+    test_assert(ecs_lookup(world, "flecs.script.on.activate") != 0);
+
+    ecs_fini(world);
+}
+
+void Event_activate_click(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  mut keyboard = true"
+        LINE "  mut x: f32 = 0"
+        LINE "  mut y: f32 = 0"
+        LINE "  mut target: entity = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.activate(this)"
+        LINE "      count = count + 1"
+        LINE "      keyboard = e.keyboard"
+        LINE "      x = e.local_x"
+        LINE "      y = e.local_y"
+        LINE "      target = e.target"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    typedef struct {
+        int64_t count;
+        bool keyboard;
+        float x, y;
+        ecs_entity_t target;
+    } Mut;
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = e, .screen_x = 3, .screen_y = 4,
+        .local_x = 3, .local_y = 4, .buttons = 1
+    });
+
+    const Mut *m = ecs_get_id(world, e, mut);
+    test_int(m->count, 0);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = e, .screen_x = 5, .screen_y = 6,
+        .local_x = 5, .local_y = 6, .buttons = 0
+    });
+
+    m = ecs_get_id(world, e, mut);
+    test_int(m->count, 1);
+    test_bool(m->keyboard, false);
+    test_flt(m->x, 5);
+    test_flt(m->y, 6);
+    test_uint(m->target, e);
+
+    ecs_fini(world);
+}
+
+void Event_no_activate_when_released_elsewhere(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.activate(this)"
+        LINE "      count = count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e"
+        LINE "Widget other",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t other = ecs_lookup(world, "other");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(e != 0);
+    test_assert(other != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = e, .buttons = 1 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = other, .buttons = 0 });
+
+    test_int(*(const int64_t*)ecs_get_id(world, e, mut), 0);
+    test_int(*(const int64_t*)ecs_get_id(world, other, mut), 0);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = e, .buttons = 1 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = 0, .buttons = 0 });
+
+    test_int(*(const int64_t*)ecs_get_id(world, e, mut), 0);
+    test_int(*(const int64_t*)ecs_get_id(world, other, mut), 0);
+
+    ecs_fini(world);
+}
+
+void Event_activate_enter(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  mut keyboard = false"
+        LINE "  mut x: f32 = -1"
+        LINE "  mut y: f32 = -1"
+        LINE "  mut target: entity = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.activate(this)"
+        LINE "      count = count + 1"
+        LINE "      keyboard = e.keyboard"
+        LINE "      x = e.local_x"
+        LINE "      y = e.local_y"
+        LINE "      target = e.target"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    typedef struct {
+        int64_t count;
+        bool keyboard;
+        float x, y;
+        ecs_entity_t target;
+    } Mut;
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_script_set_focus(world, e);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = true
+    });
+
+    const Mut *m = ecs_get_id(world, e, mut);
+    test_int(m->count, 1);
+    test_bool(m->keyboard, true);
+    test_flt(m->x, 0);
+    test_flt(m->y, 0);
+    test_uint(m->target, e);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = false
+    });
+
+    m = ecs_get_id(world, e, mut);
+    test_int(m->count, 1);
+
+    ecs_fini(world);
+}
+
+void Event_activate_space_on_release(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  mut keyboard = false"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.activate(this)"
+        LINE "      count = count + 1"
+        LINE "      keyboard = e.keyboard"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    typedef struct {
+        int64_t count;
+        bool keyboard;
+    } Mut;
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_script_set_focus(world, e);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = true
+    });
+
+    test_int(((const Mut*)ecs_get_id(world, e, mut))->count, 0);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = true, .repeat = true
+    });
+
+    test_int(((const Mut*)ecs_get_id(world, e, mut))->count, 0);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = false
+    });
+
+    const Mut *m = ecs_get_id(world, e, mut);
+    test_int(m->count, 1);
+    test_bool(m->keyboard, true);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Space"), .down = true
+    });
+
+    test_int(((const Mut*)ecs_get_id(world, e, mut))->count, 1);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Space"), .down = false
+    });
+
+    test_int(((const Mut*)ecs_get_id(world, e, mut))->count, 2);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = false
+    });
+
+    test_int(((const Mut*)ecs_get_id(world, e, mut))->count, 2);
+
+    ecs_fini(world);
+}
+
+void Event_no_activate_without_focus(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.activate(this)"
+        LINE "      count = count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e"
+        LINE "other {}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t other = ecs_lookup(world, "other");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(e != 0);
+    test_assert(other != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = true });
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = false });
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = true });
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = false });
+
+    test_int(*(const int64_t*)ecs_get_id(world, e, mut), 0);
+
+    ecs_script_set_focus(world, other);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = true });
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = false });
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = true });
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = false });
+
+    test_int(*(const int64_t*)ecs_get_id(world, e, mut), 0);
+
+    ecs_fini(world);
+}
+
+void Event_no_activate_space_focus_changed(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.activate(this)"
+        LINE "      count = count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget a"
+        LINE "Widget b",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t a = ecs_lookup(world, "a");
+    ecs_entity_t b = ecs_lookup(world, "b");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(a != 0);
+    test_assert(b != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_script_set_focus(world, a);
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = true });
+    ecs_script_set_focus(world, b);
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = true, .repeat = true });
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = false });
+
+    test_int(*(const int64_t*)ecs_get_id(world, a, mut), 0);
+    test_int(*(const int64_t*)ecs_get_id(world, b, mut), 0);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = true });
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = false });
+
+    test_int(*(const int64_t*)ecs_get_id(world, a, mut), 0);
+    test_int(*(const int64_t*)ecs_get_id(world, b, mut), 1);
+
+    ecs_fini(world);
+}
+
+void Event_no_activate_enter_repeat(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.activate(this)"
+        LINE "      count = count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(e != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_script_set_focus(world, e);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = true });
+    test_int(*(const int64_t*)ecs_get_id(world, e, mut), 1);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = true, .repeat = true });
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = true, .repeat = true });
+    test_int(*(const int64_t*)ecs_get_id(world, e, mut), 1);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = false });
+    test_int(*(const int64_t*)ecs_get_id(world, e, mut), 1);
+
+    ecs_fini(world);
+}
+
+void Event_activate_bubbles_to_parent(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  mut keyboard = true"
+        LINE "  mut x: f32 = 0"
+        LINE "  mut y: f32 = 0"
+        LINE "  mut target: entity = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.activate(this)"
+        LINE "      count = count + 1"
+        LINE "      keyboard = e.keyboard"
+        LINE "      x = e.local_x"
+        LINE "      y = e.local_y"
+        LINE "      target = e.target"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e { child {} }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(e != 0);
+    test_assert(child != 0);
+
+    typedef struct {
+        int64_t count;
+        bool keyboard;
+        float x, y;
+        ecs_entity_t target;
+    } Mut;
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(mut != 0);
+
+    ecs_script_set_event_hooks(world, &(ecs_script_event_hooks_t){
+        .to_local = Event_to_local
+    });
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .screen_x = 5, .screen_y = 6,
+        .local_x = 1, .local_y = 2, .buttons = 1
+    });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .screen_x = 5, .screen_y = 6,
+        .local_x = 1, .local_y = 2, .buttons = 0
+    });
+
+    const Mut *m = ecs_get_id(world, e, mut);
+    test_int(m->count, 1);
+    test_bool(m->keyboard, false);
+    test_flt(m->x, 105);
+    test_flt(m->y, 106);
+    test_uint(m->target, child);
+
+    ecs_script_set_focus(world, child);
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = true });
+
+    m = ecs_get_id(world, e, mut);
+    test_int(m->count, 2);
+    test_bool(m->keyboard, true);
+    test_flt(m->x, 0);
+    test_flt(m->y, 0);
+    test_uint(m->target, child);
+
+    ecs_fini(world);
+}
+
+void Event_activate_once_per_activation(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.activate(this)"
+        LINE "      count = count + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e { Widget child }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(e != 0);
+    test_assert(child != 0);
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .buttons = 1 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = child, .buttons = 0 });
+
+    test_int(*(const int64_t*)ecs_get_id(world, e, mut), 1);
+    test_int(*(const int64_t*)ecs_get_id(world, child, mut), 1);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = true });
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = false });
+
+    test_int(*(const int64_t*)ecs_get_id(world, e, mut), 2);
+    test_int(*(const int64_t*)ecs_get_id(world, child, mut), 2);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = true });
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, " "), .down = false });
+
+    test_int(*(const int64_t*)ecs_get_id(world, e, mut), 3);
+    test_int(*(const int64_t*)ecs_get_id(world, child, mut), 3);
+
+    ecs_fini(world);
+}
+
+void Event_activate_modifiers(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut count = 0"
+        LINE "  mut ctrl = false"
+        LINE "  mut shift = false"
+        LINE "  mut alt = false"
+        LINE "  mut meta = false"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.activate(this)"
+        LINE "      count = count + 1"
+        LINE "      ctrl = e.ctrl"
+        LINE "      shift = e.shift"
+        LINE "      alt = e.alt"
+        LINE "      meta = e.meta"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    typedef struct {
+        int64_t count;
+        bool ctrl, shift, alt, meta;
+    } Mut;
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 1);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = e, .buttons = 1, .ctrl = true, .alt = true });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = e, .buttons = 0, .ctrl = true, .alt = true });
+
+    const Mut *m = ecs_get_id(world, e, mut);
+    test_int(m->count, 1);
+    test_bool(m->ctrl, true);
+    test_bool(m->shift, false);
+    test_bool(m->alt, true);
+    test_bool(m->meta, false);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = true,
+        .shift = true, .meta = true });
+
+    m = ecs_get_id(world, e, mut);
+    test_int(m->count, 2);
+    test_bool(m->ctrl, false);
+    test_bool(m->shift, true);
+    test_bool(m->alt, false);
+    test_bool(m->meta, true);
+
+    ecs_fini(world);
+}
+
+void Event_activate_and_click(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  mut activates = 0"
+        LINE "  mut clicks = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.activate(this)"
+        LINE "      activates = activates + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.click(this)"
+        LINE "      clicks = clicks + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Widget e",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    typedef struct {
+        int64_t activates, clicks;
+    } Mut;
+    ecs_entity_t mut = ecs_lookup(world, "Widget.mut");
+    test_assert(mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 2);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = e, .buttons = 1 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = e, .buttons = 0 });
+
+    const Mut *m = ecs_get_id(world, e, mut);
+    test_int(m->activates, 1);
+    test_int(m->clicks, 1);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = true });
+
+    m = ecs_get_id(world, e, mut);
+    test_int(m->activates, 2);
+    test_int(m->clicks, 1);
+
+    ecs_fini(world);
+}
+
+void Event_stop_propagation_activate(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Parent {"
+        LINE "  mut activates = 0"
+        LINE "  mut keys = 0"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.activate(this)"
+        LINE "      activates = activates + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      await on.key_down(this)"
+        LINE "      keys = keys + 1"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "template Child {"
+        LINE "  mut stopped = false"
+        LINE "  async {"
+        LINE "    while true {"
+        LINE "      const e = await on.activate(this)"
+        LINE "      const r = await e.stop_propagation()"
+        LINE "      stopped = r"
+        LINE "    }"
+        LINE "  }"
+        LINE "}"
+        LINE "Parent p { Child c }",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    const EcsScript *comp = ecs_get(world, s, EcsScript);
+    test_assert(comp != NULL);
+    test_assert(comp->error == NULL);
+
+    ecs_entity_t p = ecs_lookup(world, "p");
+    ecs_entity_t c = ecs_lookup(world, "p.c");
+    test_assert(p != 0);
+    test_assert(c != 0);
+
+    typedef struct {
+        int64_t activates, keys;
+    } ParentMut;
+    ecs_entity_t parent_mut = ecs_lookup(world, "Parent.mut");
+    ecs_entity_t child_mut = ecs_lookup(world, "Child.mut");
+    test_assert(parent_mut != 0);
+    test_assert(child_mut != 0);
+
+    test_int(ecs_script_tasks_progress(world), 3);
+
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = c, .buttons = 1 });
+    ecs_script_mouse_event(world, &(EcsScriptMouseEvent){
+        .target = c, .buttons = 0 });
+
+    test_bool(*(const bool*)ecs_get_id(world, c, child_mut), true);
+    const ParentMut *m = ecs_get_id(world, p, parent_mut);
+    test_int(m->activates, 0);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "Enter"), .down = true });
+
+    m = ecs_get_id(world, p, parent_mut);
+    test_int(m->activates, 0);
+    test_int(m->keys, 0);
+
+    ecs_script_keyboard_event(world, &(EcsScriptKeyboardEvent){
+        .key = ECS_CONST_CAST(char*, "a"), .down = true });
+
+    m = ecs_get_id(world, p, parent_mut);
+    test_int(m->activates, 0);
+    test_int(m->keys, 1);
+
+    ecs_fini(world);
+}

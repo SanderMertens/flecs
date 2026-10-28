@@ -113450,6 +113450,7 @@ char* ecs_script_ir_profile_str(void)
 ECS_COMPONENT_DECLARE(EcsScriptMouseEvent);
 ECS_COMPONENT_DECLARE(EcsScriptKeyboardEvent);
 ECS_COMPONENT_DECLARE(EcsScriptFocusEvent);
+ECS_COMPONENT_DECLARE(EcsScriptActivateEvent);
 
 #define FLECS_SCRIPT_EVENT_PROGRESS_MAX (16)
 
@@ -113465,12 +113466,13 @@ typedef enum {
     FlecsScriptEventKeyUp,
     FlecsScriptEventFocus,
     FlecsScriptEventBlur,
+    FlecsScriptEventActivate,
     FlecsScriptEventKindCount
 } flecs_script_event_kind_t;
 
 static const char *flecs_script_event_names[] = {
     "press", "drag", "release", "click", "move", "enter", "leave",
-    "key_down", "key_up", "focus", "blur"
+    "key_down", "key_up", "focus", "blur", "activate"
 };
 
 typedef struct {
@@ -113489,6 +113491,7 @@ typedef struct EcsScriptEventState {
     ecs_entity_t focus;         /* Receives keyboard events */
     ecs_entity_t hover;         /* Target of the last event */
     ecs_entity_t prev_hover;    /* Target of the event before that */
+    ecs_entity_t space;
     ecs_script_event_hooks_t hooks;
     uint64_t last_id;
     uint64_t current;
@@ -113621,7 +113624,8 @@ static EcsScriptEventState* flecs_script_event_bubble(
     ecs_entity_t target,
     ecs_entity_t type,
     void *value,
-    uint64_t id)
+    uint64_t id,
+    EcsScriptActivateEvent *activate)
 {
     EcsScriptEventState *state = flecs_script_event_state(world);
     uint64_t current = state->current;
@@ -113632,7 +113636,15 @@ static EcsScriptEventState* flecs_script_event_bubble(
     ecs_entity_t cur = target;
     while (cur && ecs_is_alive(world, cur) && !state->stopped) {
         ecs_entity_t parent = ecs_get_target(world, cur, EcsChildOf, 0);
-        if (flecs_script_event_deliver_one(state, kind, cur, type, value)) {
+        int32_t resolved = flecs_script_event_deliver_one(
+            state, kind, cur, type, value);
+        if (activate) {
+            resolved += flecs_script_event_deliver_one(state,
+                FlecsScriptEventActivate, cur,
+                ecs_id(EcsScriptActivateEvent), activate);
+        }
+
+        if (resolved) {
             state = flecs_script_event_progress(world);
         }
 
@@ -113683,14 +113695,15 @@ static ecs_entity_t flecs_script_event_set_focus(
         EcsScriptFocusEvent blur = {
             .target = from, .related = entity, .id = ++ state->last_id };
         state = flecs_script_event_bubble(
-            world, FlecsScriptEventBlur, from, type, &blur, blur.id);
+            world, FlecsScriptEventBlur, from, type, &blur, blur.id, NULL);
     }
 
     if (entity) {
         EcsScriptFocusEvent focus = {
             .target = entity, .related = from, .id = ++ state->last_id };
         flecs_script_event_bubble(
-            world, FlecsScriptEventFocus, entity, type, &focus, focus.id);
+            world, FlecsScriptEventFocus, entity, type, &focus, focus.id,
+            NULL);
     }
 
     return entity;
@@ -113826,6 +113839,17 @@ void ecs_script_mouse_event(
             }
         }
 
+        if (bubble && released && click) {
+            EcsScriptActivateEvent activate = {
+                .target = e.target,
+                .local_x = level.local_x, .local_y = level.local_y,
+                .ctrl = e.ctrl, .shift = e.shift, .alt = e.alt, .meta = e.meta,
+                .id = e.id
+            };
+            flecs_script_event_deliver_one(state, FlecsScriptEventActivate,
+                cur, ecs_id(EcsScriptActivateEvent), &activate);
+        }
+
         state = flecs_script_event_progress(world);
         cur = parent;
     }
@@ -113852,9 +113876,31 @@ void ecs_script_keyboard_event(
     e.id = ++ state->last_id;
     flecs_script_event_kind_t kind = e.down
         ? FlecsScriptEventKeyDown : FlecsScriptEventKeyUp;
-    flecs_script_event_bubble(world, kind,
-        flecs_script_event_get_focus(world, state),
-        ecs_id(EcsScriptKeyboardEvent), &e, e.id);
+    ecs_entity_t focus = flecs_script_event_get_focus(world, state);
+
+    bool activate = false;
+    if (e.key && (!ecs_os_strcmp(e.key, " ") ||
+        !ecs_os_strcmp(e.key, "Space")))
+    {
+        if (!e.down) {
+            activate = state->space == focus;
+            state->space = 0;
+        } else if (!e.repeat) {
+            state->space = focus;
+        }
+    } else if (e.key && !ecs_os_strcmp(e.key, "Enter")) {
+        activate = e.down && !e.repeat;
+    }
+
+    EcsScriptActivateEvent act = {
+        .target = focus, .keyboard = true,
+        .ctrl = e.ctrl, .shift = e.shift, .alt = e.alt, .meta = e.meta,
+        .id = e.id
+    };
+
+    flecs_script_event_bubble(world, kind, focus,
+        ecs_id(EcsScriptKeyboardEvent), &e, e.id,
+        activate && focus ? &act : NULL);
 error:
     return;
 }
@@ -113966,6 +114012,7 @@ void FlecsScriptEventImport(
     ECS_COMPONENT_DEFINE(world, EcsScriptMouseEvent);
     ECS_COMPONENT_DEFINE(world, EcsScriptKeyboardEvent);
     ECS_COMPONENT_DEFINE(world, EcsScriptFocusEvent);
+    ECS_COMPONENT_DEFINE(world, EcsScriptActivateEvent);
     ECS_COMPONENT_DEFINE(world, EcsScriptEventState);
 
     ecs_set_hooks(world, EcsScriptEventState, {
@@ -114017,12 +114064,29 @@ void FlecsScriptEventImport(
         }
     });
 
+    ecs_struct(world, {
+        .entity = ecs_id(EcsScriptActivateEvent),
+        .members = {
+            { .name = "target", .type = ecs_id(ecs_entity_t) },
+            { .name = "keyboard", .type = ecs_id(ecs_bool_t) },
+            { .name = "local_x", .type = ecs_id(ecs_f32_t) },
+            { .name = "local_y", .type = ecs_id(ecs_f32_t) },
+            { .name = "ctrl", .type = ecs_id(ecs_bool_t) },
+            { .name = "shift", .type = ecs_id(ecs_bool_t) },
+            { .name = "alt", .type = ecs_id(ecs_bool_t) },
+            { .name = "meta", .type = ecs_id(ecs_bool_t) },
+            { .name = "id", .type = ecs_id(ecs_u64_t) }
+        }
+    });
+
     ecs_entity_t script = ecs_lookup(world, "flecs.script");
     ecs_entity_t on = ecs_entity(world, { .name = "on", .parent = script });
 
     for (int32_t i = 0; i < FlecsScriptEventKindCount; i ++) {
         ecs_entity_t return_type = ecs_id(EcsScriptMouseEvent);
-        if (i >= FlecsScriptEventFocus) {
+        if (i == FlecsScriptEventActivate) {
+            return_type = ecs_id(EcsScriptActivateEvent);
+        } else if (i >= FlecsScriptEventFocus) {
             return_type = ecs_id(EcsScriptFocusEvent);
         } else if (i >= FlecsScriptEventKeyDown) {
             return_type = ecs_id(EcsScriptKeyboardEvent);
@@ -114061,6 +114125,14 @@ void FlecsScriptEventImport(
         .return_type = ecs_id(ecs_bool_t),
         .callback = flecs_script_event_stop_propagation,
         .ctx = (void*)offsetof(EcsScriptFocusEvent, id)
+    });
+
+    ecs_async_method(world, {
+        .name = "stop_propagation",
+        .parent = ecs_id(EcsScriptActivateEvent),
+        .return_type = ecs_id(ecs_bool_t),
+        .callback = flecs_script_event_stop_propagation,
+        .ctx = (void*)offsetof(EcsScriptActivateEvent, id)
     });
 
     ecs_async_function(world, {

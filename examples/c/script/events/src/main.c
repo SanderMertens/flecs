@@ -25,24 +25,21 @@ const char *code =
     "using flecs.script\n"
     "\n"
 
-    // A button counts how often it is clicked. A click on a child of the button
-    // (like its label) propagates to the button. The button can also be
-    // activated with Enter when it has the focus.
+    // A button counts how often it is activated. The activate event is sent
+    // when the button is clicked, and when Enter or Space is pressed while the
+    // button has the focus. A click on a child of the button (like its label)
+    // propagates to the button.
     "template Button {\n"
     "  Focusable\n"
-    "  mut clicks = 0\n"
+    "  mut count = 0\n"
     "  async {\n"
     "    while true {\n"
-    "      await on.click(this)\n"
-    "      clicks = clicks + 1\n"
-    "      await print(\"{this.name()}: clicked {clicks} time(s)\")\n"
-    "    }\n"
-    "  }\n"
-    "  async {\n"
-    "    while true {\n"
-    "      const e = await on.key_down(this)\n"
-    "      if e.key == \"Enter\" {\n"
-    "        await print(\"{this.name()}: activated with Enter\")\n"
+    "      const e = await on.activate(this)\n"
+    "      count = count + 1\n"
+    "      if e.keyboard {\n"
+    "        await print(\"{this.name()}: activated by key ({count})\")\n"
+    "      } else {\n"
+    "        await print(\"{this.name()}: activated by click ({count})\")\n"
     "      }\n"
     "    }\n"
     "  }\n"
@@ -353,7 +350,7 @@ int main(int argc, char *argv[]) {
     //  Click the label of the ok button:
     //    panel: focus moved to ok
     //    panel: press at 17, 77
-    //    ok: clicked 1 time(s)
+    //    ok: activated by click (1)
     //    [app] focus is ok
     //
     //  Click the name field and type:
@@ -380,7 +377,7 @@ int main(int argc, char *argv[]) {
     //
     //  Move the focus from the application:
     //    panel: focus moved to ok
-    //    ok: activated with Enter
+    //    ok: activated by key (2)
     //    panel: received key Enter
     //
     //  Press Escape:

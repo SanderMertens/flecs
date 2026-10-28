@@ -1201,7 +1201,20 @@
                 "script_focus_returns_to_focus_result",
                 "script_focus_clear",
                 "script_focus_resumes_listeners",
-                "delete_focus"
+                "delete_focus",
+                "import_activate",
+                "activate_click",
+                "no_activate_when_released_elsewhere",
+                "activate_enter",
+                "activate_space_on_release",
+                "no_activate_without_focus",
+                "no_activate_space_focus_changed",
+                "no_activate_enter_repeat",
+                "activate_bubbles_to_parent",
+                "activate_once_per_activation",
+                "activate_modifiers",
+                "activate_and_click",
+                "stop_propagation_activate"
             ]
         }, {
             "id": "TryCatch",

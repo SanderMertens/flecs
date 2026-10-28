@@ -100,6 +100,31 @@ typedef struct EcsScriptFocusEvent {
     uint64_t id;          /**< Set by the module. */
 } EcsScriptFocusEvent;
 
+/** Activate event.
+ * An entity is activated when it is clicked, when Enter goes down (not on a
+ * repeat) while it has the focus, or when Space comes up after it went down
+ * while the entity had the focus. The key names "Space" and " " are both
+ * accepted for Space.
+ *
+ * Activation is delivered to the activated entity and then to its parents,
+ * together with the mouse or keyboard event that caused it. Calling
+ * stop_propagation() on either event stops both.
+ */
+typedef struct EcsScriptActivateEvent {
+    ecs_entity_t target;  /**< Entity that was activated. */
+    bool keyboard;        /**< True when activated by a key, false for a click. */
+
+    float local_x;        /**< X position of the click relative to the receiving entity, 0 for keys. */
+    float local_y;        /**< Y position of the click relative to the receiving entity, 0 for keys. */
+
+    bool ctrl;            /**< Control key is held down. */
+    bool shift;           /**< Shift key is held down. */
+    bool alt;             /**< Alt/Option key is held down. */
+    bool meta;            /**< Meta (Command/Windows) key is held down. */
+
+    uint64_t id;          /**< Set by the module. */
+} EcsScriptActivateEvent;
+
 /** What caused a focus change. */
 typedef enum ecs_script_focus_source_t {
     EcsScriptFocusPress,  /**< A mouse button went down. */
@@ -166,12 +191,15 @@ extern ECS_COMPONENT_DECLARE(EcsScriptKeyboardEvent);
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptFocusEvent);
 
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptActivateEvent);
+
 /** Emit mouse event.
- * Resolves the on.press, on.drag, on.release, on.click, on.move, on.enter and
- * on.leave calls that wait for the event on its target and its parents. The
- * async blocks that became ready are resumed after each entity, before the
- * event propagates to its parent. When delta_x and delta_y are both zero they
- * are computed from the previous event.
+ * Resolves the on.press, on.drag, on.release, on.click, on.activate, on.move,
+ * on.enter and on.leave calls that wait for the event on its target and its
+ * parents. The async blocks that became ready are resumed after each entity,
+ * before the event propagates to its parent. When delta_x and delta_y are both
+ * zero they are computed from the previous event.
  *
  * @param world The world.
  * @param evt The event.
@@ -183,7 +211,7 @@ void ecs_script_mouse_event(
 
 /** Emit keyboard event.
  * Resolves the on.key_down and on.key_up calls that wait for the event on the
- * focus and its parents. The async blocks that became ready are resumed after
+ * focus and its parents, and on.activate for Enter and Space. The async blocks that became ready are resumed after
  * each entity, before the event propagates to its parent.
  *
  * @param world The world.
