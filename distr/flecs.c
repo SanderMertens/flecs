@@ -27819,6 +27819,7 @@ static ECS_COPY(EcsRest, dst, src, {
     ecs_os_strset(&dst->ipaddr, src->ipaddr);
     dst->port = src->port;
     dst->impl = impl;
+    dst->readonly = src->readonly;
 })
 
 static ECS_MOVE(EcsRest, dst, src, {
@@ -29894,6 +29895,18 @@ static bool flecs_rest_reply(
         return false;
     }
 
+    /* A readonly server only serves requests that do not modify the world.
+     * Function calls are GET requests, but a function can do anything. */
+    if (impl->readonly && ((req->method != EcsHttpGet) ||
+        !ecs_os_strncmp(req->path, "call/", 5)))
+    {
+        ecs_dbg("rest: refused %s request on readonly server", req->path);
+        flecs_reply_error(reply, "server is readonly");
+        reply->code = 403;
+        reply->status = "Forbidden";
+        return true;
+    }
+
     if (req->method == EcsHttpGet) {
         /* Root endpoint */
         if (!req->path[0]) {
@@ -30067,6 +30080,7 @@ static void flecs_on_set_rest(ecs_iter_t *it) {
         flecs_rest_set_build_info(it->stage);
 
         rest[i].impl = ecs_http_server_ctx(srv);
+        rest[i].impl->readonly = rest[i].readonly;
 
         ecs_http_server_start(srv);
     }
