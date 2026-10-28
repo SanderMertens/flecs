@@ -138,6 +138,13 @@
 #include "../addons/script_event.h"
 #endif
 
+#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_NO_SCRIPT_COMMAND
+#error "FLECS_NO_SCRIPT_COMMAND failed: SCRIPT_COMMAND is required by other addons"
+#endif
+#include "../addons/script_command.h"
+#endif
+
 #ifdef FLECS_PARSER
 #ifdef FLECS_NO_PARSER
 #error "FLECS_NO_PARSER failed: PARSER is required by other addons"

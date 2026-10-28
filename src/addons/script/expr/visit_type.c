@@ -2379,10 +2379,24 @@ try_function:
     node->calldata.ctx = func_data->ctx;
     node->calldata.vector_elem_count = 0;
 
+    if (!func_data->return_type) {
+        flecs_expr_visit_error(script, node,
+            "function '%s' does not return a value",
+            flecs_errstr(ecs_get_path(world, func)));
+        goto error;
+    }
+
     int32_t count = ecs_vec_count(&node->args->elements);
-    if (count != ecs_vec_count(&func_data->params)) {
-        flecs_expr_visit_error(script, node, "expected %d arguments, got %d",
-            ecs_vec_count(&func_data->params), count);
+    int32_t required = flecs_script_function_required_params(func_data);
+    if (count > ecs_vec_count(&func_data->params) || count < required) {
+        if (required == ecs_vec_count(&func_data->params)) {
+            flecs_expr_visit_error(script, node,
+                "expected %d arguments, got %d", required, count);
+        } else {
+            flecs_expr_visit_error(script, node,
+                "expected %d to %d arguments, got %d", required,
+                ecs_vec_count(&func_data->params), count);
+        }
         goto error;
     }
 

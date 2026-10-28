@@ -222,6 +222,19 @@ ecs_script_vars_t* flecs_script_vars_push(
 void flecs_script_register_builtin_functions(
     ecs_world_t *world);
 
+#ifdef FLECS_SCRIPT_EVENT
+void flecs_script_event_to_screen(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    float local_x,
+    float local_y,
+    float *screen_x,
+    float *screen_y);
+#endif
+
+int32_t flecs_script_function_required_params(
+    const struct ecs_script_function_t *f);
+
 void flecs_function_import(
     ecs_world_t *world);
 

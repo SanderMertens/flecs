@@ -16,6 +16,37 @@ ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
 ECS_DECLARE(EcsScriptVectorType);
 
+static void flecs_script_undo_fini(
+    ecs_vec_t *undo)
+{
+    char **versions = ecs_vec_first(undo);
+    int32_t i, count = ecs_vec_count(undo);
+    for (i = 0; i < count; i ++) {
+        ecs_os_free(versions[i]);
+    }
+
+    ecs_vec_fini_t(NULL, undo, char*);
+}
+
+static void flecs_script_undo_push(
+    EcsScript *s,
+    const char *code)
+{
+    if (!s->code || !ecs_os_strcmp(s->code, code)) {
+        return;
+    }
+
+    ecs_vec_init_if_t(&s->undo, char*);
+
+    if (ecs_vec_count(&s->undo) >= FLECS_SCRIPT_UNDO_MAX) {
+        ecs_os_free(ecs_vec_first_t(&s->undo, char*)[0]);
+        ecs_vec_remove_ordered_t(&s->undo, char*, 0);
+    }
+
+    ecs_vec_append_t(NULL, &s->undo, char*)[0] = s->code;
+    s->code = NULL;
+}
+
 static void flecs_script_component_fini(
     EcsScript *ptr)
 {
@@ -37,6 +68,8 @@ static void flecs_script_component_fini(
     ecs_os_free(ptr->filename);
     ecs_os_free(ptr->code);
     ecs_os_free(ptr->error);
+    ecs_os_free(ptr->saved_code);
+    flecs_script_undo_fini(&ptr->undo);
     flecs_script_ref_observers_fini(&ptr->observers);
     flecs_script_ref_observers_fini(&ptr->dyn_observers);
 }
@@ -372,7 +405,8 @@ static int flecs_script_update_parse(
     ecs_entity_t e,
     ecs_entity_t instance,
     const char *code,
-    ecs_script_t *parsed)
+    ecs_script_t *parsed,
+    bool push_undo)
 {
     EcsScript *s = ecs_ensure(world, e, EcsScript);
     if (s->template_) {
@@ -387,6 +421,10 @@ static int flecs_script_update_parse(
             ecs_script_free(parsed);
         }
         return -1;
+    }
+
+    if (push_undo && !instance) {
+        flecs_script_undo_push(s, code);
     }
 
     ecs_os_free(s->code);
@@ -478,7 +516,8 @@ static int flecs_script_update_impl(
     ecs_entity_t instance,
     const char *code,
     ecs_script_runtime_t *eval_runtime,
-    bool preparse)
+    bool preparse,
+    bool push_undo)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(code != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -505,7 +544,9 @@ static int flecs_script_update_impl(
     }
 
     const char *name = ecs_get_name(world, e);
-    if (flecs_script_update_parse(world, e, instance, code, preparsed)) {
+    if (flecs_script_update_parse(
+        world, e, instance, code, preparsed, push_undo))
+    {
         result = -1;
         goto done;
     }
@@ -570,7 +611,7 @@ int flecs_script_update(
     ecs_script_runtime_t *eval_runtime)
 {
     return flecs_script_update_impl(
-        world, e, instance, code, eval_runtime, false);
+        world, e, instance, code, eval_runtime, false, true);
 }
 
 int ecs_script_update(
@@ -608,11 +649,47 @@ int ecs_script_reload(
             goto error;
         }
 
+        ecs_os_strset(&ecs_ensure(world, e, EcsScript)->saved_code, file_code);
         code = file_code;
     }
 
-    int result = flecs_script_update_impl(world, e, 0, code, NULL, true);
+    int result = flecs_script_update_impl(world, e, 0, code, NULL, true, true);
     ecs_os_free(file_code);
+    return result;
+error:
+    return -1;
+}
+
+int ecs_script_undo(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(e != 0, ECS_INVALID_PARAMETER, NULL);
+
+    EcsScript *s = ecs_get_mut(world, e, EcsScript);
+    if (!s) {
+        ecs_err("entity is not a script, cannot undo");
+        goto error;
+    }
+
+    if (!ecs_vec_count(&s->undo)) {
+        ecs_err("undo history of script is empty");
+        goto error;
+    }
+
+    char *code = ecs_vec_last_t(&s->undo, char*)[0];
+    ecs_vec_remove_last(&s->undo);
+
+    int result = flecs_script_update_impl(
+        world, e, 0, code, NULL, false, false);
+    s = ecs_get_mut(world, e, EcsScript);
+    if (s && s->code && ecs_os_strcmp(s->code, code)) {
+        ecs_vec_append_t(NULL, &s->undo, char*)[0] = code;
+    } else {
+        ecs_os_free(code);
+    }
+
     return result;
 error:
     return -1;
@@ -653,6 +730,12 @@ ecs_entity_t ecs_script_init(
 
         EcsScript *comp = ecs_ensure(world, e, EcsScript);
         ecs_os_strset(&comp->filename, desc->filename);
+        ecs_os_strset(&comp->saved_code, script);
+    } else if (script) {
+        EcsScript *comp = ecs_ensure(world, e, EcsScript);
+        if (!comp->saved_code) {
+            comp->saved_code = ecs_os_strdup(script);
+        }
     }
 
     ecs_script_update(world, e, 0, script);

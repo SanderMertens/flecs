@@ -4977,3 +4977,149 @@ void Event_stop_propagation_activate(void) {
 
     ecs_fini(world);
 }
+
+void Event_get_mouse_state(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t e = ecs_new(world);
+
+    EcsScriptMouseEvent last;
+    ecs_entity_t pressed = 1;
+    test_bool(ecs_script_get_mouse_state(world, &last, &pressed), false);
+    test_uint(pressed, 0);
+
+    EcsScriptMouseEvent evt = {
+        .target = e, .screen_x = 1, .screen_y = 2, .buttons = 1
+    };
+    ecs_script_mouse_event(world, &evt);
+
+    test_bool(ecs_script_get_mouse_state(world, &last, &pressed), true);
+    test_uint(last.target, e);
+    test_flt(last.screen_x, 1);
+    test_flt(last.screen_y, 2);
+    test_uint(last.buttons, 1);
+    test_assert(last.id != 0);
+    test_uint(pressed, e);
+
+    evt.buttons = 0;
+    ecs_script_mouse_event(world, &evt);
+    test_bool(ecs_script_get_mouse_state(world, &last, &pressed), true);
+    test_uint(last.buttons, 0);
+    test_uint(pressed, 0);
+
+    ecs_fini(world);
+}
+
+void Event_listeners(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  async { await on.click(this) }"
+        LINE "  async { await on.key_up(this) }"
+        LINE "  async { await on.click(this) }"
+        LINE "}"
+        LINE "Widget e"
+        LINE "f {}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    ecs_script_tasks_progress(world);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t f = ecs_lookup(world, "f");
+
+    const char *kinds[4] = {0};
+    test_int(ecs_script_event_listeners(world, e, kinds, 4), 2);
+    test_str(kinds[0], "click");
+    test_str(kinds[1], "key_up");
+
+    test_int(ecs_script_event_listeners(world, e, kinds, 1), 2);
+    test_int(ecs_script_event_listeners(world, e, NULL, 0), 2);
+    test_int(ecs_script_event_listeners(world, f, kinds, 4), 0);
+
+    EcsScriptMouseEvent evt = { .target = e, .buttons = 1 };
+    ecs_script_mouse_event(world, &evt);
+    evt.buttons = 0;
+    ecs_script_mouse_event(world, &evt);
+
+    test_int(ecs_script_event_listeners(world, e, kinds, 4), 1);
+    test_str(kinds[0], "key_up");
+
+    ecs_fini(world);
+}
+
+void Event_emit_result(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  async { while true { await on.press(this) } }"
+        LINE "  async { while true { await on.key_down(this) } }"
+        LINE "}"
+        LINE "Widget parent {"
+        LINE "  Widget child {}"
+        LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    ecs_script_tasks_progress(world);
+
+    ecs_entity_t child = ecs_lookup(world, "parent.child");
+    test_assert(child != 0);
+
+    EcsScriptMouseEvent evt = { .target = child, .buttons = 1 };
+    ecs_script_event_result_t r = ecs_script_mouse_event(world, &evt);
+    test_int(r.resolved, 2);
+    test_bool(r.stopped, false);
+
+    EcsScriptKeyboardEvent key = { .key = "a", .down = true };
+    r = ecs_script_keyboard_event(world, &key);
+    test_int(r.resolved, 2);
+    test_bool(r.stopped, false);
+
+    evt.buttons = 0;
+    r = ecs_script_mouse_event(world, &evt);
+    test_int(r.resolved, 0);
+
+    ecs_fini(world);
+}
+
+void Event_emit_result_stopped(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScriptEvent);
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+        HEAD "using flecs.script"
+        LINE "template Widget {"
+        LINE "  async { while true {"
+        LINE "    const e = await on.press(this)"
+        LINE "    await e.stop_propagation()"
+        LINE "  } }"
+        LINE "}"
+        LINE "Widget parent {"
+        LINE "  Widget child {}"
+        LINE "}",
+        .ir = ir_enabled
+    });
+    test_assert(s != 0);
+    ecs_script_tasks_progress(world);
+
+    ecs_entity_t child = ecs_lookup(world, "parent.child");
+    test_assert(child != 0);
+
+    EcsScriptMouseEvent evt = { .target = child, .buttons = 1 };
+    ecs_script_event_result_t r = ecs_script_mouse_event(world, &evt);
+    test_int(r.resolved, 1);
+    test_bool(r.stopped, true);
+
+    ecs_fini(world);
+}

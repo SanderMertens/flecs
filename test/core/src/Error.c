@@ -131,3 +131,84 @@ void Error_log_capture_nested_recursion(void) {
     test_str(outer, "captured error");
     ecs_os_free(outer);
 }
+
+void Error_log_collect_errors(void) {
+    ecs_vec_t errors;
+    ecs_vec_init_t(NULL, &errors, char*, 0);
+
+    ecs_log_start_collect_errors(&errors);
+    ecs_err("first error");
+    ecs_err("second error %d", 2);
+    ecs_log_stop_collect_errors();
+
+    test_int(ecs_vec_count(&errors), 2);
+    test_str(ecs_vec_get_t(&errors, char*, 0)[0], "first error");
+    test_str(ecs_vec_get_t(&errors, char*, 1)[0], "second error 2");
+
+    ecs_os_free(ecs_vec_get_t(&errors, char*, 0)[0]);
+    ecs_os_free(ecs_vec_get_t(&errors, char*, 1)[0]);
+    ecs_vec_fini_t(NULL, &errors, char*);
+}
+
+void Error_log_collect_errors_nested_capture(void) {
+    ecs_vec_t errors;
+    ecs_vec_init_t(NULL, &errors, char*, 0);
+
+    ecs_log_start_collect_errors(&errors);
+    ecs_log_start_capture(false);
+    ecs_err("captured error");
+    char *captured = ecs_log_stop_capture();
+    ecs_err("collected error");
+    ecs_log_stop_collect_errors();
+
+    test_str(captured, "captured error");
+    ecs_os_free(captured);
+
+    test_int(ecs_vec_count(&errors), 1);
+    test_str(ecs_vec_get_t(&errors, char*, 0)[0], "collected error");
+
+    ecs_os_free(ecs_vec_get_t(&errors, char*, 0)[0]);
+    ecs_vec_fini_t(NULL, &errors, char*);
+}
+
+void Error_log_collect_errors_nested(void) {
+    ecs_vec_t outer, inner;
+    ecs_vec_init_t(NULL, &outer, char*, 0);
+    ecs_vec_init_t(NULL, &inner, char*, 0);
+
+    ecs_log_start_collect_errors(&outer);
+    ecs_err("outer error");
+    ecs_log_start_collect_errors(&inner);
+    ecs_err("inner error");
+    ecs_log_stop_collect_errors();
+    ecs_err("outer error 2");
+    ecs_log_stop_collect_errors();
+
+    test_int(ecs_vec_count(&outer), 2);
+    test_str(ecs_vec_get_t(&outer, char*, 0)[0], "outer error");
+    test_str(ecs_vec_get_t(&outer, char*, 1)[0], "outer error 2");
+    test_int(ecs_vec_count(&inner), 1);
+    test_str(ecs_vec_get_t(&inner, char*, 0)[0], "inner error");
+
+    ecs_os_free(ecs_vec_get_t(&outer, char*, 0)[0]);
+    ecs_os_free(ecs_vec_get_t(&outer, char*, 1)[0]);
+    ecs_os_free(ecs_vec_get_t(&inner, char*, 0)[0]);
+    ecs_vec_fini_t(NULL, &outer, char*);
+    ecs_vec_fini_t(NULL, &inner, char*);
+}
+
+void Error_log_collect_errors_restores_level(void) {
+    ecs_vec_t errors;
+    ecs_vec_init_t(NULL, &errors, char*, 0);
+
+    int prev = ecs_log_set_level(-4);
+    ecs_log_start_collect_errors(&errors);
+    ecs_err("error");
+    ecs_log_stop_collect_errors();
+    test_int(ecs_log_get_level(), -4);
+    ecs_log_set_level(prev);
+
+    test_int(ecs_vec_count(&errors), 1);
+    ecs_os_free(ecs_vec_get_t(&errors, char*, 0)[0]);
+    ecs_vec_fini_t(NULL, &errors, char*);
+}

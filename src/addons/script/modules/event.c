@@ -57,6 +57,7 @@ typedef struct EcsScriptEventState {
     uint64_t last_id;
     uint64_t current;
     int32_t resolved;
+    int32_t resolved_total;
     bool stopped;
 } EcsScriptEventState;
 
@@ -157,6 +158,7 @@ static int32_t flecs_script_event_deliver_one(
     }
 
     state->resolved += resolved;
+    state->resolved_total += resolved;
     return resolved;
 }
 
@@ -186,7 +188,8 @@ static EcsScriptEventState* flecs_script_event_bubble(
     ecs_entity_t type,
     void *value,
     uint64_t id,
-    EcsScriptActivateEvent *activate)
+    EcsScriptActivateEvent *activate,
+    bool *stopped_out)
 {
     EcsScriptEventState *state = flecs_script_event_state(world);
     uint64_t current = state->current;
@@ -210,6 +213,10 @@ static EcsScriptEventState* flecs_script_event_bubble(
         }
 
         cur = parent;
+    }
+
+    if (stopped_out) {
+        *stopped_out = state->stopped;
     }
 
     state->current = current;
@@ -255,16 +262,15 @@ static ecs_entity_t flecs_script_event_set_focus(
     if (from) {
         EcsScriptFocusEvent blur = {
             .target = from, .related = entity, .id = ++ state->last_id };
-        state = flecs_script_event_bubble(
-            world, FlecsScriptEventBlur, from, type, &blur, blur.id, NULL);
+        state = flecs_script_event_bubble(world, FlecsScriptEventBlur,
+            from, type, &blur, blur.id, NULL, NULL);
     }
 
     if (entity) {
         EcsScriptFocusEvent focus = {
             .target = entity, .related = from, .id = ++ state->last_id };
-        flecs_script_event_bubble(
-            world, FlecsScriptEventFocus, entity, type, &focus, focus.id,
-            NULL);
+        flecs_script_event_bubble(world, FlecsScriptEventFocus,
+            entity, type, &focus, focus.id, NULL, NULL);
     }
 
     return entity;
@@ -300,7 +306,40 @@ static void flecs_script_event_to_local(
     }
 }
 
-void ecs_script_mouse_event(
+void flecs_script_event_to_screen(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    float local_x,
+    float local_y,
+    float *screen_x,
+    float *screen_y)
+{
+    *screen_x = local_x;
+    *screen_y = local_y;
+
+    EcsScriptEventState *state = flecs_script_event_state(world);
+    if (state && state->hooks.to_screen) {
+        state->hooks.to_screen(world, entity, local_x, local_y,
+            screen_x, screen_y, state->hooks.ctx);
+    }
+}
+
+static ecs_script_event_result_t flecs_script_event_result(
+    ecs_world_t *world,
+    int32_t prev_resolved,
+    bool stopped)
+{
+    EcsScriptEventState *state = flecs_script_event_state(world);
+    ecs_script_event_result_t result = {
+        .resolved = state->resolved_total,
+        .stopped = stopped
+    };
+
+    state->resolved_total += prev_resolved;
+    return result;
+}
+
+ecs_script_event_result_t ecs_script_mouse_event(
     ecs_world_t *world,
     const EcsScriptMouseEvent *evt)
 {
@@ -310,6 +349,9 @@ void ecs_script_mouse_event(
     EcsScriptEventState *state = flecs_script_event_state(world);
     ecs_check(state != NULL, ECS_INVALID_OPERATION,
         "script event module is not imported");
+
+    int32_t prev_resolved = state->resolved_total;
+    state->resolved_total = 0;
 
     EcsScriptMouseEvent e = *evt;
     e.id = ++ state->last_id;
@@ -416,13 +458,15 @@ void ecs_script_mouse_event(
     }
 
     state = flecs_script_event_progress(world);
+    bool result_stopped = state->stopped;
     state->current = current;
     state->stopped = stopped;
+    return flecs_script_event_result(world, prev_resolved, result_stopped);
 error:
-    return;
+    return (ecs_script_event_result_t){0};
 }
 
-void ecs_script_keyboard_event(
+ecs_script_event_result_t ecs_script_keyboard_event(
     ecs_world_t *world,
     const EcsScriptKeyboardEvent *evt)
 {
@@ -432,6 +476,9 @@ void ecs_script_keyboard_event(
     EcsScriptEventState *state = flecs_script_event_state(world);
     ecs_check(state != NULL, ECS_INVALID_OPERATION,
         "script event module is not imported");
+
+    int32_t prev_resolved = state->resolved_total;
+    state->resolved_total = 0;
 
     EcsScriptKeyboardEvent e = *evt;
     e.id = ++ state->last_id;
@@ -459,11 +506,13 @@ void ecs_script_keyboard_event(
         .id = e.id
     };
 
+    bool result_stopped = false;
     flecs_script_event_bubble(world, kind, focus,
         ecs_id(EcsScriptKeyboardEvent), &e, e.id,
-        activate && focus ? &act : NULL);
+        activate && focus ? &act : NULL, &result_stopped);
+    return flecs_script_event_result(world, prev_resolved, result_stopped);
 error:
-    return;
+    return (ecs_script_event_result_t){0};
 }
 
 void ecs_script_set_event_hooks(
@@ -515,6 +564,77 @@ ecs_entity_t ecs_script_get_focus(
     if (state->focus && ecs_is_alive(world, state->focus)) {
         return state->focus;
     }
+error:
+    return 0;
+}
+
+bool ecs_script_get_mouse_state(
+    const ecs_world_t *world,
+    EcsScriptMouseEvent *last_out,
+    ecs_entity_t *pressed_out)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+    ecs_check(ecs_id(EcsScriptEventState) != 0, ECS_INVALID_OPERATION,
+        "script event module is not imported");
+    const EcsScriptEventState *state = ecs_singleton_get(
+        world, EcsScriptEventState);
+    ecs_check(state != NULL, ECS_INVALID_OPERATION,
+        "script event module is not imported");
+
+    if (last_out) {
+        *last_out = state->last;
+    }
+
+    if (pressed_out) {
+        ecs_entity_t pressed = state->last.buttons ? state->pressed : 0;
+        if (pressed && !ecs_is_alive(world, pressed)) {
+            pressed = 0;
+        }
+        *pressed_out = pressed;
+    }
+
+    return state->last.id != 0;
+error:
+    return false;
+}
+
+int32_t ecs_script_event_listeners(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    const char **kinds_out,
+    int32_t count)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!count || kinds_out != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+    ecs_check(ecs_id(EcsScriptEventState) != 0, ECS_INVALID_OPERATION,
+        "script event module is not imported");
+    const EcsScriptEventState *state = ecs_singleton_get(
+        world, EcsScriptEventState);
+    ecs_check(state != NULL, ECS_INVALID_OPERATION,
+        "script event module is not imported");
+
+    bool found[FlecsScriptEventKindCount] = {0};
+    const flecs_script_event_waiter_t *waiters = ecs_vec_first(&state->waiters);
+    int32_t i, waiter_count = ecs_vec_count(&state->waiters);
+    for (i = 0; i < waiter_count; i ++) {
+        if (waiters[i].target == entity) {
+            found[waiters[i].kind] = true;
+        }
+    }
+
+    int32_t result = 0;
+    for (i = 0; i < FlecsScriptEventKindCount; i ++) {
+        if (found[i]) {
+            if (result < count) {
+                kinds_out[result] = flecs_script_event_names[i];
+            }
+            result ++;
+        }
+    }
+
+    return result;
 error:
     return 0;
 }
@@ -657,7 +777,7 @@ void FlecsScriptEventImport(
             .name = flecs_script_event_names[i],
             .parent = on,
             .return_type = return_type,
-            .params = {{ "target", ecs_id(ecs_entity_t) }},
+            .params = {{ .name = "target", .type = ecs_id(ecs_entity_t) }},
             .callback = flecs_script_event_wait,
             .cancel = flecs_script_event_cancel,
             .ctx = (void*)(uintptr_t)i
@@ -700,7 +820,7 @@ void FlecsScriptEventImport(
         .name = "focus",
         .parent = script,
         .return_type = ecs_id(ecs_entity_t),
-        .params = {{ "entity", ecs_id(ecs_entity_t) }},
+        .params = {{ .name = "entity", .type = ecs_id(ecs_entity_t) }},
         .callback = flecs_script_event_focus_call
     });
 

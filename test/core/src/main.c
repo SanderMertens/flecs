@@ -3713,6 +3713,10 @@ void Error_log_error(void);
 void Error_set_log_level_return(void);
 void Error_print_backtrace(void);
 void Error_log_capture_nested_recursion(void);
+void Error_log_collect_errors(void);
+void Error_log_collect_errors_nested_capture(void);
+void Error_log_collect_errors_nested(void);
+void Error_log_collect_errors_restores_level(void);
 
 // Testsuite 'StackAlloc'
 void StackAlloc_init_fini(void);
@@ -18240,6 +18244,22 @@ bake_test_case Error_testcases[] = {
     {
         "log_capture_nested_recursion",
         Error_log_capture_nested_recursion
+    },
+    {
+        "log_collect_errors",
+        Error_log_collect_errors
+    },
+    {
+        "log_collect_errors_nested_capture",
+        Error_log_collect_errors_nested_capture
+    },
+    {
+        "log_collect_errors_nested",
+        Error_log_collect_errors_nested
+    },
+    {
+        "log_collect_errors_restores_level",
+        Error_log_collect_errors_restores_level
     }
 };
 
@@ -18588,7 +18608,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        14,
+        18,
         Error_testcases
     },
     {

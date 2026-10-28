@@ -1476,3 +1476,292 @@ void Rest_readonly(void) {
 
     ecs_fini(world);
 }
+
+void Rest_command_new_session(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/command/session", NULL, &reply));
+    test_int(reply.code, 200);
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    test_assert(ecs_is_alive(world, (ecs_entity_t)session));
+    test_assert(ecs_has(world, (ecs_entity_t)session, EcsCommandSession));
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_run(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "parent.child" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/command/session", NULL, &reply));
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/command/session/%llu", session);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT", path, "ls parent", &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"type\":\"flecs.script.typecache.vector<entity>\", "
+        "\"result\":[\"parent.child\"], \"more\":false, \"errors\":[]}");
+    ecs_os_free(reply_str);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT", path, "pwd", &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"type\":\"flecs.meta.entity\", \"result\":\"#0\", "
+        "\"errors\":[]}");
+    ecs_os_free(reply_str);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT", path, "rm parent.child",
+        &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"errors\":[]}");
+    ecs_os_free(reply_str);
+    test_assert(ecs_lookup(world, "parent.child") == 0);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_run_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/command/session", NULL, &reply));
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/command/session/%llu", session);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT", path, "foo", &reply));
+    test_int(reply.code, 400);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"errors\":[\"unknown command 'foo'\"]}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_run_offset_limit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "parent.a" });
+    ecs_entity(world, { .name = "parent.b" });
+    ecs_entity(world, { .name = "parent.c" });
+    ecs_entity(world, { .name = "parent.d" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/command/session", NULL, &reply));
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/command/session/%llu?offset=1&limit=2",
+        session);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT", path, "ls parent", &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"type\":\"flecs.script.typecache.vector<entity>\", "
+        "\"result\":[\"parent.b\", \"parent.c\"], \"more\":true, "
+        "\"errors\":[]}");
+    ecs_os_free(reply_str);
+
+    ecs_os_snprintf(path, 128, "/command/session/%llu?offset=2&limit=2",
+        session);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT", path, "ls parent", &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"type\":\"flecs.script.typecache.vector<entity>\", "
+        "\"result\":[\"parent.c\", \"parent.d\"], \"more\":false, "
+        "\"errors\":[]}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_run_string_lines(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    test_int(ecs_script_run(world, NULL,
+        "struct A(x: f32)\n"
+        "struct B(a: A)\n"
+        "struct C(b: B)\n", NULL), 0);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/command/session", NULL, &reply));
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/command/session/%llu?offset=1&limit=1",
+        session);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT", path, "schema C", &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"type\":\"flecs.meta.string\", "
+        "\"result\":\"struct B(a: A)\\n\", \"more\":true, \"errors\":[]}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_history(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/command/session", NULL, &reply));
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/command/session/%llu", session);
+
+    const char *cmds[] = { "pwd", "ls", "tree" };
+    int i;
+    for (i = 0; i < 3; i ++) {
+        reply = ECS_HTTP_REPLY_INIT;
+        test_int(0, ecs_http_server_request(srv, "PUT", path, cmds[i], &reply));
+        ecs_strbuf_reset(&reply.body);
+    }
+
+    ecs_os_snprintf(path, 128, "/command/session/%llu/history", session);
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET", path, NULL, &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str,
+        "{\"history\":[\"pwd\", \"ls\", \"tree\"], \"more\":false}");
+    ecs_os_free(reply_str);
+
+    ecs_os_snprintf(path, 128, "/command/session/%llu/history?limit=2",
+        session);
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET", path, NULL, &reply));
+    test_int(reply.code, 200);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"history\":[\"pwd\", \"ls\"], \"more\":true}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_delete_session(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "PUT",
+        "/command/session", NULL, &reply));
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    unsigned long long session = 0;
+    test_int(sscanf(reply_str, "{\"session\":%llu}", &session), 1);
+    ecs_os_free(reply_str);
+
+    char path[128];
+    ecs_os_snprintf(path, 128, "/command/session/%llu", session);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "DELETE", path, NULL, &reply));
+    test_int(reply.code, 200);
+    ecs_strbuf_reset(&reply.body);
+    test_assert(!ecs_is_alive(world, (ecs_entity_t)session));
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT", path, "pwd", &reply));
+    test_int(reply.code, 404);
+    reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"error\":\"invalid command session\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_command_invalid_session(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    char path[128];
+    ecs_os_snprintf(path, 128, "/command/session/%u", (uint32_t)e);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT", path, "pwd", &reply));
+    test_int(reply.code, 404);
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_str(reply_str, "{\"error\":\"invalid command session\"}");
+    ecs_os_free(reply_str);
+
+    reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/command/session/foo/history", NULL, &reply));
+    test_int(reply.code, 404);
+    ecs_strbuf_reset(&reply.body);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}

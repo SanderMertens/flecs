@@ -153,6 +153,29 @@ typedef void (*ecs_script_to_local_t)(
     float *local_y,
     void *ctx);
 
+/** Converts a position relative to an entity to a screen position.
+ * This is the inverse of ecs_script_to_local_t. It is used by code that
+ * emits events for a position relative to an entity, such as the move command
+ * of the script command addon. screen_x and screen_y are initialized to the
+ * local position.
+ *
+ * @param world The world.
+ * @param entity The entity the position is relative to.
+ * @param local_x X position relative to entity.
+ * @param local_y Y position relative to entity.
+ * @param screen_x Out: X position in window coordinates.
+ * @param screen_y Out: Y position in window coordinates.
+ * @param ctx Context of the event hooks.
+ */
+typedef void (*ecs_script_to_screen_t)(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    float local_x,
+    float local_y,
+    float *screen_x,
+    float *screen_y,
+    void *ctx);
+
 /** Decides which entity receives the focus.
  * Called before the focus changes. Return the entity that should receive the
  * focus. To keep the focus where it is, return current.
@@ -177,10 +200,17 @@ typedef ecs_entity_t (*ecs_script_to_focus_t)(
 
 /** Application hooks of the script event module. */
 typedef struct ecs_script_event_hooks_t {
-    ecs_script_to_local_t to_local; /**< Converts positions for parents. */
-    ecs_script_to_focus_t to_focus; /**< Decides which entity receives the focus. */
-    void *ctx;                      /**< Context passed to the hooks. */
+    ecs_script_to_local_t to_local;   /**< Converts positions for parents. */
+    ecs_script_to_focus_t to_focus;   /**< Decides which entity receives the focus. */
+    ecs_script_to_screen_t to_screen; /**< Converts local positions to screen positions. */
+    void *ctx;                        /**< Context passed to the hooks. */
 } ecs_script_event_hooks_t;
+
+/** Result of emitting an event. */
+typedef struct ecs_script_event_result_t {
+    int32_t resolved; /**< Number of listeners that received the event. */
+    bool stopped;     /**< Whether a listener stopped propagation of the event. */
+} ecs_script_event_result_t;
 
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptMouseEvent);
@@ -203,9 +233,11 @@ extern ECS_COMPONENT_DECLARE(EcsScriptActivateEvent);
  *
  * @param world The world.
  * @param evt The event.
+ * @return The number of listeners that received the event, including enter
+ *   and leave, and whether propagation was stopped.
  */
 FLECS_API
-void ecs_script_mouse_event(
+ecs_script_event_result_t ecs_script_mouse_event(
     ecs_world_t *world,
     const EcsScriptMouseEvent *evt);
 
@@ -216,9 +248,11 @@ void ecs_script_mouse_event(
  *
  * @param world The world.
  * @param evt The event.
+ * @return The number of listeners that received the event, including
+ *   on.activate, and whether propagation was stopped.
  */
 FLECS_API
-void ecs_script_keyboard_event(
+ecs_script_event_result_t ecs_script_keyboard_event(
     ecs_world_t *world,
     const EcsScriptKeyboardEvent *evt);
 
@@ -253,6 +287,40 @@ ecs_entity_t ecs_script_set_focus(
 FLECS_API
 ecs_entity_t ecs_script_get_focus(
     const ecs_world_t *world);
+
+/** Get the state of the mouse.
+ * Returns the last mouse event that was emitted with ecs_script_mouse_event()
+ * and the entity that received the press of the buttons that are held down.
+ *
+ * @param world The world.
+ * @param last_out Out: the last mouse event (optional).
+ * @param pressed_out Out: the entity that was pressed while buttons are held
+ *   down, 0 if no buttons are held down (optional).
+ * @return True if a mouse event was emitted, false if not.
+ */
+FLECS_API
+bool ecs_script_get_mouse_state(
+    const ecs_world_t *world,
+    EcsScriptMouseEvent *last_out,
+    ecs_entity_t *pressed_out);
+
+/** Get the kinds of events that scripts wait for on an entity.
+ * Writes the names of the event kinds (for example "press" or "key_down") of
+ * the on.* calls that are waiting for an event on the entity. Each kind is
+ * written once. The names are statically allocated.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param kinds_out Array that receives the event kinds (optional).
+ * @param count Size of the kinds_out array.
+ * @return The number of event kinds, which may be larger than count.
+ */
+FLECS_API
+int32_t ecs_script_event_listeners(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    const char **kinds_out,
+    int32_t count);
 
 /** Script event import function.
  * Usage:

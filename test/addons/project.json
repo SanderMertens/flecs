@@ -593,7 +593,15 @@
                 "world_builtin_and_modules",
                 "world_explicit_false",
                 "app_enable_rest",
-                "readonly"
+                "readonly",
+                "command_new_session",
+                "command_run",
+                "command_run_error",
+                "command_run_offset_limit",
+                "command_run_string_lines",
+                "command_history",
+                "command_delete_session",
+                "command_invalid_session"
             ]
         }, {
             "id": "Metrics",

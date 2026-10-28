@@ -174,6 +174,30 @@ char* flecs_asprintf(
     return result;
 }
 
+bool flecs_strstr_i(
+    const char *str,
+    const char *match)
+{
+    if (!match[0]) {
+        return true;
+    }
+
+    for (; *str; str ++) {
+        const char *n = str, *m = match;
+        while (*n && *m && (tolower((unsigned char)*n) ==
+            tolower((unsigned char)*m)))
+        {
+            n ++;
+            m ++;
+        }
+        if (!*m) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 char* flecs_to_snake_case(const char *str) {
     int32_t upper_count = 0, len = 1;
     const char *ptr = str;

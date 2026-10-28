@@ -661,6 +661,33 @@ void ecs_log_start_capture(bool capture_try);
 FLECS_API
 char* ecs_log_stop_capture(void);
 
+/** Start collecting errors.
+ * Errors that are logged after this call are appended to the provided vector
+ * as separate strings, instead of being written to the log. Warnings and other
+ * messages are forwarded to the log. Errors that are captured by a nested call
+ * to ecs_log_start_capture() are not collected, as the code that started the
+ * nested capture handles them.
+ *
+ * Calls to ecs_log_start_collect_errors() can be nested, where errors are
+ * collected by the innermost call. Each call must be matched with a call to
+ * ecs_log_stop_collect_errors().
+ *
+ * The strings in the vector must be freed by the application with
+ * ecs_os_free().
+ *
+ * @param errors An initialized vector (vec<char*>) that receives the errors.
+ */
+FLECS_API
+void ecs_log_start_collect_errors(
+    ecs_vec_t *errors);
+
+/** Stop collecting errors.
+ * Stops collecting errors started by the last call to
+ * ecs_log_start_collect_errors().
+ */
+FLECS_API
+void ecs_log_stop_collect_errors(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Error codes
 ////////////////////////////////////////////////////////////////////////////////

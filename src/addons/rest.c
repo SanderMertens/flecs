@@ -546,7 +546,7 @@ static bool flecs_rest_script(
 
     if (s && s->filename && save_file) {
         FILE *f = ecs_os_fopen(s->filename, "w");
-        fwrite(code, strlen(code), 1, f);
+        ecs_os_fwrite(code, strlen(code), 1, f);
         ecs_os_fclose(f);
     }
 
@@ -710,6 +710,266 @@ done:
     return false;
 #endif
 }
+
+#ifdef FLECS_SCRIPT_COMMAND
+static void flecs_rest_command_import(
+    ecs_world_t *world)
+{
+    if (!ecs_lookup(world, "flecs.script.command")) {
+        ecs_import_c(world, FlecsScriptCommandImport, "FlecsScriptCommand");
+    }
+}
+
+static ecs_entity_t flecs_rest_command_session(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply,
+    const char *id_str,
+    const char **remainder)
+{
+    char *end = NULL;
+    ecs_entity_t session = (ecs_entity_t)strtoull(id_str, &end, 10);
+    if (end == id_str || !session || !ecs_is_alive(world, session) ||
+        !ecs_has(world, session, EcsCommandSession))
+    {
+        flecs_reply_error(reply, "invalid command session");
+        reply->code = 404;
+        return 0;
+    }
+
+    *remainder = end;
+    return session;
+}
+
+static void flecs_rest_command_string(
+    ecs_world_t *world,
+    const char *str,
+    ecs_strbuf_t *buf)
+{
+    ecs_ptr_to_json_buf(world, ecs_id(ecs_string_t), &str, buf);
+}
+
+static void flecs_rest_command_elems_to_json(
+    ecs_world_t *world,
+    ecs_entity_t elem_type,
+    const void *elems,
+    int32_t count,
+    int32_t offset,
+    int32_t limit,
+    ecs_strbuf_t *buf,
+    bool *more)
+{
+    const ecs_type_info_t *ti = ecs_get_type_info(world, elem_type);
+    int32_t i, end = count;
+    if (limit >= 0 && (offset + limit) < count) {
+        end = offset + limit;
+    }
+
+    ecs_strbuf_appendch(buf, '[');
+    for (i = offset; i < end; i ++) {
+        if (i != offset) {
+            ecs_strbuf_appendlit(buf, ", ");
+        }
+
+        ecs_ptr_to_json_buf(world, elem_type,
+            ECS_ELEM(elems, ti->size, i), buf);
+    }
+    ecs_strbuf_appendch(buf, ']');
+
+    *more = end < count;
+}
+
+static void flecs_rest_command_lines_to_json(
+    ecs_world_t *world,
+    const char *str,
+    int32_t offset,
+    int32_t limit,
+    ecs_strbuf_t *buf,
+    bool *more)
+{
+    ecs_strbuf_t lines = ECS_STRBUF_INIT;
+    const char *ptr = str ? str : "";
+    int32_t line = 0;
+    *more = false;
+    while (ptr[0]) {
+        const char *end = strchr(ptr, '\n');
+        if (!end) {
+            end = ptr + ecs_os_strlen(ptr);
+        }
+
+        if (limit >= 0 && line >= (offset + limit)) {
+            *more = true;
+            break;
+        }
+
+        if (line >= offset) {
+            ecs_strbuf_appendstrn(&lines, ptr,
+                flecs_ito(int32_t, end - ptr + (end[0] ? 1 : 0)));
+        }
+
+        line ++;
+        ptr = end[0] ? end + 1 : end;
+    }
+
+    char *result = ecs_strbuf_get(&lines);
+    flecs_rest_command_string(world, result ? result : "", buf);
+    ecs_os_free(result);
+}
+
+static void flecs_rest_command_value_to_json(
+    ecs_world_t *world,
+    const ecs_value_t *value,
+    int32_t offset,
+    int32_t limit,
+    ecs_strbuf_t *buf)
+{
+    bool more = false, sliced = true;
+    ecs_strbuf_appendlit(buf, "\"type\":\"");
+    char *type_path = ecs_get_path(world, value->type);
+    ecs_strbuf_appendstr(buf, type_path);
+    ecs_os_free(type_path);
+    ecs_strbuf_appendlit(buf, "\", \"result\":");
+
+    const EcsVector *vt = ecs_get(world, value->type, EcsVector);
+    const EcsArray *at = ecs_get(world, value->type, EcsArray);
+    if (value->type == ecs_id(ecs_string_t)) {
+        flecs_rest_command_lines_to_json(world, *(char**)value->ptr,
+            offset, limit, buf, &more);
+    } else if (vt) {
+        const ecs_vec_t *v = value->ptr;
+        flecs_rest_command_elems_to_json(world, vt->type, v->array,
+            ecs_vec_count(v), offset, limit, buf, &more);
+    } else if (at) {
+        flecs_rest_command_elems_to_json(world, at->type, value->ptr,
+            at->count, offset, limit, buf, &more);
+    } else {
+        sliced = false;
+        if (ecs_ptr_to_json_buf(world, value->type, value->ptr, buf)) {
+            ecs_strbuf_appendlit(buf, "null");
+        }
+    }
+
+    if (sliced) {
+        ecs_strbuf_append(buf, ", \"more\":%s", more ? "true" : "false");
+    }
+}
+
+static bool flecs_rest_command_new_session(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply)
+{
+    flecs_rest_command_import(world);
+    ecs_entity_t session = ecs_command_session_init(world, NULL);
+    ecs_strbuf_append(&reply->body, "{\"session\":%llu}", (unsigned long long)session);
+    return true;
+}
+
+static bool flecs_rest_command_delete_session(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    flecs_rest_command_import(world);
+    const char *remainder;
+    ecs_entity_t session = flecs_rest_command_session(
+        world, reply, path, &remainder);
+    if (session) {
+        ecs_delete(world, session);
+        ecs_strbuf_appendlit(&reply->body, "{}");
+    }
+
+    return true;
+}
+
+static bool flecs_rest_command_history(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    flecs_rest_command_import(world);
+    const char *remainder;
+    ecs_entity_t session = flecs_rest_command_session(
+        world, reply, path, &remainder);
+    if (!session) {
+        return true;
+    }
+
+    if (ecs_os_strcmp(remainder, "/history")) {
+        return false;
+    }
+
+    int32_t offset = 0, limit = -1;
+    flecs_rest_int_param(req, "offset", &offset);
+    flecs_rest_int_param(req, "limit", &limit);
+    if (offset < 0) {
+        offset = 0;
+    }
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    bool more = false;
+    ecs_strbuf_appendlit(&reply->body, "{\"history\":");
+    flecs_rest_command_elems_to_json(world, ecs_id(ecs_string_t),
+        s->history.array, ecs_vec_count(&s->history), offset, limit,
+        &reply->body, &more);
+    ecs_strbuf_append(&reply->body, ", \"more\":%s}",
+        more ? "true" : "false");
+    return true;
+}
+
+static bool flecs_rest_command_run(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    flecs_rest_command_import(world);
+    const char *remainder;
+    ecs_entity_t session = flecs_rest_command_session(
+        world, reply, path, &remainder);
+    if (!session) {
+        return true;
+    }
+
+    if (remainder[0]) {
+        return false;
+    }
+
+    int32_t offset = 0, limit = -1;
+    flecs_rest_int_param(req, "offset", &offset);
+    flecs_rest_int_param(req, "limit", &limit);
+    if (offset < 0) {
+        offset = 0;
+    }
+
+    ecs_command_result_t result = ecs_command_run(
+        world, session, req->body ? req->body : "");
+
+    ecs_strbuf_appendch(&reply->body, '{');
+    if (result.result.type) {
+        flecs_rest_command_value_to_json(
+            world, &result.result, offset, limit, &reply->body);
+        ecs_strbuf_appendlit(&reply->body, ", ");
+    }
+
+    ecs_strbuf_appendlit(&reply->body, "\"errors\":[");
+    char **errors = ecs_vec_first(&result.errors);
+    int32_t i, count = ecs_vec_count(&result.errors);
+    for (i = 0; i < count; i ++) {
+        if (i) {
+            ecs_strbuf_appendlit(&reply->body, ", ");
+        }
+        flecs_rest_command_string(world, errors[i], &reply->body);
+    }
+    ecs_strbuf_appendlit(&reply->body, "]}");
+
+    if (count && !result.result.type) {
+        reply->code = 400;
+    }
+
+    ecs_command_result_fini(world, &result);
+    return true;
+}
+#endif
 
 static void flecs_rest_shrink_memory(
     ecs_world_t *world,
@@ -2171,6 +2431,12 @@ static bool flecs_rest_reply(
         /* Commands request endpoint (request commands from specific frame) */
         } else if (!ecs_os_strncmp(req->path, "commands/frame/", 15)) {
             return flecs_rest_get_commands_request(world, impl, req, reply);
+
+#ifdef FLECS_SCRIPT_COMMAND
+        } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
+            return flecs_rest_command_history(
+                world, req, reply, &req->path[16]);
+#endif
         }
 
     } else if (req->method == EcsHttpPut) {
@@ -2193,6 +2459,13 @@ static bool flecs_rest_reply(
         /* Action endpoint */
         } else if (!ecs_os_strncmp(req->path, "action/", 7)) {
             return flecs_rest_action(world, req, reply, &req->path[7]);
+
+#ifdef FLECS_SCRIPT_COMMAND
+        } else if (!ecs_os_strcmp(req->path, "command/session")) {
+            return flecs_rest_command_new_session(world, reply);
+        } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
+            return flecs_rest_command_run(world, req, reply, &req->path[16]);
+#endif
         }
     } else if (req->method == EcsHttpDelete) {
         /* Entity DELETE endpoint */
@@ -2202,6 +2475,12 @@ static bool flecs_rest_reply(
         /* Component DELETE endpoint */
         } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
             return flecs_rest_delete_component(world, req, reply, &req->path[10]);
+
+#ifdef FLECS_SCRIPT_COMMAND
+        } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
+            return flecs_rest_command_delete_session(
+                world, reply, &req->path[16]);
+#endif
         }
     }
 

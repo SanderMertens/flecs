@@ -356,3 +356,92 @@ void Reload_keeps_entities_outside_script(void) {
 
     ecs_fini(world);
 }
+
+void Reload_saved_code_from_file(void) {
+    ecs_world_t *world = ecs_init();
+
+    reload_files[0].name = "s.flecs";
+    reload_files[0].content = "a {}\n";
+
+    ecs_entity_t s = ecs_script(world, { .filename = "s.flecs" });
+    test_assert(s != 0);
+    test_str(ecs_get(world, s, EcsScript)->saved_code, "a {}\n");
+
+    ecs_script_update(world, s, 0, "b {}\n");
+    test_str(ecs_get(world, s, EcsScript)->saved_code, "a {}\n");
+
+    reload_files[0].content = "c {}\n";
+    test_int(ecs_script_reload(world, s, NULL), 0);
+    test_str(ecs_get(world, s, EcsScript)->saved_code, "c {}\n");
+    test_str(ecs_get(world, s, EcsScript)->code, "c {}\n");
+
+    ecs_fini(world);
+}
+
+void Reload_saved_code_from_code(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, { .code = "a {}" });
+    test_str(ecs_get(world, s, EcsScript)->saved_code, "a {}");
+
+    ecs_script(world, { .entity = s, .code = "b {}" });
+    test_str(ecs_get(world, s, EcsScript)->saved_code, "a {}");
+    test_str(ecs_get(world, s, EcsScript)->code, "b {}");
+
+    ecs_fini(world);
+}
+
+void Reload_undo(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, { .code = "a {}" });
+    ecs_script_update(world, s, 0, "b {}");
+    ecs_script_reload(world, s, "c {}");
+    test_int(ecs_vec_count(&ecs_get(world, s, EcsScript)->undo), 2);
+
+    test_int(ecs_script_undo(world, s), 0);
+    test_str(ecs_get(world, s, EcsScript)->code, "b {}");
+    test_assert(ecs_lookup(world, "b") != 0);
+    test_assert(ecs_lookup(world, "c") == 0);
+
+    test_int(ecs_script_undo(world, s), 0);
+    test_str(ecs_get(world, s, EcsScript)->code, "a {}");
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_int(ecs_vec_count(&ecs_get(world, s, EcsScript)->undo), 0);
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_undo(world, s) != 0);
+    test_str(ecs_get(world, s, EcsScript)->code, "a {}");
+
+    ecs_fini(world);
+}
+
+void Reload_undo_same_code(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, { .code = "a {}" });
+    ecs_script_update(world, s, 0, "a {}");
+    ecs_script_reload(world, s, "a {}");
+    test_int(ecs_vec_count(&ecs_get(world, s, EcsScript)->undo), 0);
+
+    ecs_fini(world);
+}
+
+void Reload_undo_bounded(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, { .code = "e0 {}" });
+    int32_t i;
+    for (i = 1; i <= FLECS_SCRIPT_UNDO_MAX + 5; i ++) {
+        char code[32];
+        ecs_os_snprintf(code, 32, "e%d {}", i);
+        ecs_script_update(world, s, 0, code);
+    }
+
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_int(ecs_vec_count(&script->undo), FLECS_SCRIPT_UNDO_MAX);
+    test_str(ecs_vec_first_t(&script->undo, char*)[0], "e5 {}");
+
+    ecs_fini(world);
+}

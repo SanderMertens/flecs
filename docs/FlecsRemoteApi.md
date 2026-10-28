@@ -2047,3 +2047,37 @@ ecs_script_update(world, s, 0, "SpaceShip{}");
 </li>
 </ul>
 </div>
+
+### Command sessions
+Run commands of the script command addon (`FLECS_SCRIPT_COMMAND`). A session stores the scope relative to which commands resolve identifiers, and a bounded command history. Use the `help` command to list the available commands.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `PUT` | `/command/session` | Create a session. Returns `{"session": <id>}`. |
+| `DELETE` | `/command/session/<id>` | Delete a session. |
+| `GET` | `/command/session/<id>/history` | Get the history. Supports `offset`/`limit`. |
+| `PUT` | `/command/session/<id>` | Run the command in the request body. Supports `offset`/`limit`. |
+
+`offset`/`limit` select lines of a string result and elements of a vector or array result, and are ignored for other types. When they apply, the `more` member indicates whether more lines or elements exist.
+
+#### Example
+
+```
+PUT /command/session/42?limit=2
+ls game
+```
+
+```json
+{
+  "type": "flecs.script.typecache.vector<entity>",
+  "result": ["game.player", "game.enemy"],
+  "more": true,
+  "errors": []
+}
+```
+
+When a command fails, the response has no result and contains the errors that were logged while the command ran:
+
+```json
+{"errors": ["unknown command 'foo'"]}
+```

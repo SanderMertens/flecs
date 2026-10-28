@@ -1776,12 +1776,17 @@ int ecs_script_save(
     const char *code = s->code ? s->code : "";
     size_t len = (size_t)ecs_os_strlen(code);
     int result = 0;
-    if (len && fwrite(code, len, 1, file) != 1) {
+    if (len && ecs_os_fwrite(code, len, 1, file) != 1) {
         ecs_err("failed to write file '%s'", s->filename);
         result = -1;
     }
 
     ecs_os_fclose(file);
+
+    if (!result) {
+        EcsScript *ms = ecs_get_mut(world, script, EcsScript);
+        ecs_os_strset(&ms->saved_code, code);
+    }
 
     return result;
 error:

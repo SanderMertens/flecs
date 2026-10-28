@@ -137,7 +137,21 @@ typedef struct EcsScript {
     ecs_vec_t dyn_observers;            /**< Observers for refs resolved at runtime. */
     bool skip_unknown;                  /**< Skip unknown components when loading. */
     bool ir;                            /**< Evaluate script with IR runtime. */
+
+    /** Code as it was last loaded or saved. For scripts loaded from a file
+     * this is the content of the file when it was last read or written. Used
+     * to detect unsaved changes and changes to the file on disk. */
+    char *saved_code;
+
+    /** Previous versions of the code, most recent last (vec<char*>). Updating
+     * the code of the script appends the replaced code. See ecs_script_undo(). */
+    ecs_vec_t undo;
 } EcsScript;
+
+/** Maximum number of versions kept in the undo history of a script. */
+#ifndef FLECS_SCRIPT_UNDO_MAX
+#define FLECS_SCRIPT_UNDO_MAX (64)
+#endif
 
 /** Script function context. */
 typedef struct ecs_function_ctx_t {
@@ -166,6 +180,13 @@ typedef void(*ecs_vector_function_callback_t)(
 typedef struct ecs_script_parameter_t {
     const char *name;       /**< Parameter name. */
     ecs_entity_t type;      /**< Parameter type. */
+
+    /** Parameter may be omitted by the caller. Optional parameters must come
+     * after the required parameters. The argc argument of the function callback
+     * indicates how many arguments were provided. */
+    bool optional;
+
+    const char *brief;      /**< Short description of the parameter (optional). */
 } ecs_script_parameter_t;
 
 /** Used with ecs_script_parse() and ecs_script_eval(). */
@@ -854,6 +875,23 @@ int ecs_script_reload(
     ecs_entity_t script,
     const char *code);
 
+/** Undo the last change to the code of a managed script.
+ * Each time the code of a managed script is replaced with different code (for
+ * example by ecs_script_update() or ecs_script_reload()), the previous code is
+ * added to the undo history of the script (see EcsScript::undo). This operation
+ * removes the most recent version from the undo history and reloads the
+ * script with it. The undo history holds up to FLECS_SCRIPT_UNDO_MAX versions.
+ *
+ * @param world The world.
+ * @param script The script entity.
+ * @return Zero if success, non-zero if the history is empty or the reload
+ *   failed.
+ */
+FLECS_API
+int ecs_script_undo(
+    ecs_world_t *world,
+    ecs_entity_t script);
+
 /** Clear all entities associated with script.
  *
  * @param world The world.
@@ -894,8 +932,9 @@ int ecs_script_from_scene(
     ecs_entity_t script);
 
 /** Save the code of a managed script to the file it was loaded from.
- * This operation writes EcsScript::code to EcsScript::filename. When the
- * script was not loaded from a file the operation does nothing.
+ * This operation writes EcsScript::code to EcsScript::filename, and updates
+ * EcsScript::saved_code. When the script was not loaded from a file the
+ * operation does nothing.
  *
  * @param world The world.
  * @param script The script entity.
@@ -1125,6 +1164,12 @@ typedef struct ecs_expr_eval_desc_t {
     /** Allow for unresolved identifiers when parsing. Useful when entities can
      * be created in between parsing and evaluating. */
     bool allow_unresolved_identifiers;
+
+    /** When the expression is an initializer, only assign the members that
+     * the initializer sets. Other members keep the value they had in the
+     * output value, the same as a partial component assignment in a script
+     * ("Position = {x: 10}"). */
+    bool partial;
 
     ecs_script_runtime_t *runtime;   /**< Reusable runtime (optional). */
 
@@ -1476,7 +1521,8 @@ typedef struct ecs_function_desc_t {
     /** Function parameters. */
     ecs_script_parameter_t params[FLECS_SCRIPT_FUNCTION_ARGS_MAX];
 
-    /** Function return type. */
+    /** Function return type. Set to 0 for functions that do not return a
+     * value. Functions without a return value cannot be used in expressions. */
     ecs_entity_t return_type;
 
     /** Function implementation. */
@@ -1653,6 +1699,26 @@ int ecs_ptr_to_str_buf(
     ecs_entity_t type,
     const void *data,
     ecs_strbuf_t *buf);
+
+/** Serialize a type to script.
+ * This operation returns script code that declares the type with the struct,
+ * enum, bitmask, vector, array or map declaration syntax. User-defined types
+ * that the type depends on (types that are not stored in the flecs scope) are
+ * declared first. Types that are stored in the scope of another entity are
+ * declared in an entity scope for each parent. Running the returned code in a
+ * world without the types recreates them.
+ *
+ * Primitive and opaque types cannot be declared by a script. The operation
+ * fails when the type, or a user-defined type it depends on, is of such a kind.
+ *
+ * @param world The world.
+ * @param type The type to serialize.
+ * @return The script code, or NULL if failed. Must be freed with ecs_os_free().
+ */
+FLECS_API
+char* ecs_type_to_script(
+    const ecs_world_t *world,
+    ecs_entity_t type);
 
 typedef struct ecs_expr_node_t ecs_expr_node_t; 
 
