@@ -240,26 +240,12 @@ static int flecs_expr_initializer_eval_static(
             goto error;
         }
 
-        if (!elem->operator) {
-            if (expr->owned) {
-                flecs_expr_value_move(ECS_OFFSET(value, elem->offset),
-                    expr->value.ptr, elem->value->type_info);
-            } else {
-                if (ecs_ptr_copy(ctx->world, type, 
-                    ECS_OFFSET(value, elem->offset), expr->value.ptr))
-                {
-                    goto error;
-                }
-            }
+        if (expr->owned) {
+            flecs_expr_value_move(ECS_OFFSET(value, elem->offset),
+                expr->value.ptr, elem->value->type_info);
         } else {
-            ecs_value_t dst = { 
-                .type = type, 
-                .ptr = ECS_OFFSET(value, elem->offset) 
-            };
-
-            if (flecs_value_binary(
-                ctx->script, &node->node, NULL, &expr->value, &dst,
-                elem->operator))
+            if (ecs_ptr_copy(ctx->world, type, 
+                ECS_OFFSET(value, elem->offset), expr->value.ptr))
             {
                 goto error;
             }

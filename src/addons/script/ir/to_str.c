@@ -82,7 +82,6 @@ static const struct {
     [EcsIrInitAlloc] = {"InitAlloc", {"dst"}},
     [EcsIrInitConst] = {"InitConst", {"dst", "offset"}},
     [EcsIrInitAssign] = {"InitAssign", {"dst", "offset", "src"}},
-    [EcsIrInitOp] = {"InitOp", {"dst", "offset", "src"}},
     [EcsIrInitSwizzle] = {"InitSwizzle", {"dst", "offset", "src"}},
     [EcsIrDynBegin] = {"DynBegin", {"dst"}},
     [EcsIrDynPush] = {"DynPush", {"dst"}},
@@ -217,9 +216,7 @@ static void flecs_irs_payload_to_buf(
         break;
     }
 
-    if ((op->kind >= EcsIrBinary && op->kind <= EcsIrBinaryF64) ||
-        op->kind == EcsIrInitOp)
-    {
+    if (op->kind >= EcsIrBinary && op->kind <= EcsIrBinaryF64) {
         ecs_strbuf_append(buf, " operator=%s", flecs_token_str(
             (ecs_token_kind_t)(op->flags & ~EcsIrBinaryInPlace)));
     }

@@ -314,8 +314,6 @@ static bool flecs_expr_oper_valid_for_type(
     case EcsTokMul:
     case EcsTokDiv:
     case EcsTokMod:
-    case EcsTokAddAssign:
-    case EcsTokMulAssign:
         return flecs_expr_is_type_number(type);
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
@@ -1297,7 +1295,7 @@ static int flecs_expr_initializer_visit_type(
             }
         }
 
-        bool swizzle_expand_allowed = !elem->operator && !is_dynamic;
+        bool swizzle_expand_allowed = !is_dynamic;
 
         if (is_dynamic && elem->value->kind == EcsExprInitializer) {
             /* A push for a nested initializer may have to allocate elements in
@@ -1347,12 +1345,11 @@ static int flecs_expr_initializer_visit_type(
         }
 
         ecs_entity_t value_type = elem->value->type;
-        if (value_type != elem_type && (elem->operator ||
-            !flecs_expr_is_inline_array(
-                script->world, cur, value_type, elem_type)))
+        if (value_type != elem_type && !flecs_expr_is_inline_array(
+            script->world, cur, value_type, elem_type))
         {
             bool single_value = count == 1 && !node->is_collection &&
-                !elem->member && !elem->key && !elem->operator;
+                !elem->member && !elem->key;
             if (single_value && (value_type == type ||
                 flecs_struct_is_derived_from(script->world, value_type, type)))
             {
@@ -1385,15 +1382,6 @@ static int flecs_expr_initializer_visit_type(
             if (flecs_expr_cast_to(script, &elem->value, elem_type)) {
                 goto error;
             }
-        }
-
-        if (elem->operator && !flecs_expr_oper_valid_for_type(
-            script->world, elem_type, elem->operator))
-        {
-            flecs_expr_visit_error(script, node,
-                "invalid operator for type '%s'",
-                flecs_errstr(ecs_get_path(script->world, elem_type)));
-            goto error;
         }
 
         if (!is_dynamic) {

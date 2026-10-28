@@ -15,14 +15,6 @@
     case '\n':\
     case '\0'
 
-static void flecs_script_initializer_set_full(
-    ecs_expr_node_t *node)
-{
-    if (node->kind == EcsExprInitializer) {
-        ((ecs_expr_initializer_t*)node)->is_partial = false;
-    }
-}
-
 /* Parse scope (statements inside {}) */
 static const char* flecs_script_scope(
     ecs_parser_t *parser,
@@ -252,7 +244,6 @@ with_id:
                 flecs_script_insert_pair_component(parser, first, second);
             component->node.kind = EcsAstWithComponent;
             component->expr = INITIALIZER;
-            flecs_script_initializer_set_full(component->expr);
             EndOfRule;
         )
     )
@@ -313,7 +304,6 @@ static const char* flecs_script_paren_expr(
             ecs_script_component_t *component =
                 flecs_script_insert_component(parser, kind);
             component->expr = INITIALIZER;
-            flecs_script_initializer_set_full(component->expr);
         )
 
         // Position spaceship (expr) {
@@ -686,6 +676,7 @@ static const char* flecs_script_stmt_parse(
 
     const char *component_first = NULL, *component_second = NULL;
     bool component_collection = false;
+    bool component_partial = false;
     ecs_expr_node_t *component_index = NULL;
 
     parser->stmt_pos = NULL;
@@ -1023,7 +1014,11 @@ async_stmt: {
     // async {
     Parse_1('{', {
         ecs_script_async_t *stmt = flecs_script_insert_async(parser);
-        return flecs_script_scope(parser, stmt->scope, pos);
+        bool async_scope = parser->async_scope;
+        parser->async_scope = true;
+        pos = flecs_script_scope(parser, stmt->scope, pos);
+        parser->async_scope = async_scope;
+        return pos;
     })
 }
 
@@ -1043,7 +1038,14 @@ while_stmt: {
 }
 
 // value =
+// Position =
 identifier_assign: {
+    if (!parser->async_scope) {
+        component_first = Token(0);
+        component_partial = true;
+        goto component_assign;
+    }
+
     ecs_script_assign_t *stmt = flecs_script_insert_assign(parser, Token(0));
 
     // value = expr\n
@@ -1154,6 +1156,13 @@ paren: {
     LookAhead_1(':',
         Consume();
         goto component_expr;
+    )
+
+    // (Likes, Apples) =
+    LookAhead_1('=',
+        Consume();
+        component_partial = true;
+        goto component_assign;
     )
 
     // (IsA, Machine) {
@@ -1331,12 +1340,21 @@ identifier_paren: {
         flecs_script_insert_entity(parser, NULL), pos);
 }
 
+component_assign: {
+    LookAhead_1('[',
+        component_collection = true;
+    )
+
+    goto component_expr;
+}
+
 component_expr: {
     Expr({
         ecs_script_component_t *comp = flecs_script_insert_pair_component(
             parser, component_first, component_second);
         comp->expr = EXPR;
         comp->is_collection = component_collection;
+        comp->is_partial = component_partial;
         comp->id.index_expr = component_index;
         EndOfRule;
     })

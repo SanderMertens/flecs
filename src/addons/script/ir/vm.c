@@ -737,6 +737,12 @@ static int flecs_ir_component_alloc(
         return -1;
     }
 
+    if ((op->flags & EcsIrComponentPartial) &&
+        flecs_script_eval_partial_check(v, node, id, vm->dirty))
+    {
+        return -1;
+    }
+
     ecs_script_ir_reg_t *tmp = flecs_ir_reg(vm, op->b);
     void *ptr = flecs_ir_reg_alloc(vm, tmp, ti);
 
@@ -1509,26 +1515,6 @@ static int flecs_ir_init_assign(
     }
 
     return 0;
-}
-
-static int flecs_ir_init_op(
-    ecs_script_ir_vm_t *vm,
-    const ecs_script_ir_op_t *op)
-{
-    const ecs_expr_node_t *node = op->node;
-    ecs_script_ir_reg_t *dst = flecs_ir_reg(vm, op->a);
-    ecs_script_ir_reg_t *src = flecs_ir_reg(vm, op->c);
-    const ecs_type_info_t *ti = node->type_info;
-    if (flecs_ir_init_check(vm, op, op->imm.ptr, dst, ti)) {
-        return -1;
-    }
-
-    ecs_value_t out = {
-        .type = node->type,
-        .ptr = ECS_OFFSET(dst->value.ptr, op->b)
-    };
-    return flecs_value_binary(&vm->v.base.script->pub, op->imm.ptr,
-        NULL, &src->value, &out, (ecs_token_kind_t)op->flags);
 }
 
 static int flecs_ir_init_swizzle(
@@ -2339,9 +2325,6 @@ static flecs_script_run_status_t flecs_ir_exec(
             break;
         case EcsIrInitAssign:
             res = flecs_ir_init_assign(vm, op);
-            break;
-        case EcsIrInitOp:
-            res = flecs_ir_init_op(vm, op);
             break;
         case EcsIrInitSwizzle:
             res = flecs_ir_init_swizzle(vm, op);

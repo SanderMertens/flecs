@@ -77,7 +77,6 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrInitAlloc,
     EcsIrInitConst,
     EcsIrInitAssign,
-    EcsIrInitOp,
     EcsIrInitSwizzle,
     EcsIrDynBegin,
     EcsIrDynPush,

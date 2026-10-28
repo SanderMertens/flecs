@@ -49,8 +49,6 @@ typedef enum ecs_token_kind_t {
     EcsTokRange,
     EcsTokShiftLeft,
     EcsTokShiftRight,
-    EcsTokAddAssign,
-    EcsTokMulAssign,
     EcsTokHasBracketOpen,
     EcsTokArrow,
     EcsTokIdentifier,

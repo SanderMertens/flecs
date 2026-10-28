@@ -47563,6 +47563,7 @@ typedef struct ecs_parser_t {
     char *token_keep;
     bool significant_newline;
     bool merge_variable_members;
+    bool async_scope;
     int16_t scope_depth;
     int16_t expr_depth;
     int16_t elem_depth;
@@ -47625,8 +47626,6 @@ typedef enum ecs_token_kind_t {
     EcsTokRange,
     EcsTokShiftLeft,
     EcsTokShiftRight,
-    EcsTokAddAssign,
-    EcsTokMulAssign,
     EcsTokHasBracketOpen,
     EcsTokArrow,
     EcsTokIdentifier,
@@ -48097,6 +48096,7 @@ typedef struct ecs_script_component_t {
     const char *value_end;
     int32_t component_slot;
     bool is_collection;
+    bool is_partial;
 } ecs_script_component_t;
 
 struct ecs_script_entity_t {
@@ -48507,7 +48507,6 @@ typedef struct ecs_expr_initializer_element_t {
     ecs_expr_node_t *key;
     ecs_expr_node_t *value;
     uintptr_t offset;
-    ecs_token_kind_t operator;
 } ecs_expr_initializer_element_t;
 
 typedef struct ecs_expr_initializer_t {
@@ -49514,6 +49513,12 @@ int flecs_script_eval_component_check(
     ecs_id_t id,
     bool resolved);
 
+int flecs_script_eval_partial_check(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_component_t *node,
+    ecs_id_t id,
+    bool check_released);
+
 int flecs_script_eval_component_visit(
     ecs_script_eval_visitor_t *v,
     const ecs_script_component_t *node,
@@ -49700,6 +49705,11 @@ void flecs_script_track_component(
 bool flecs_script_scope_visited(
     ecs_script_eval_visitor_t *v,
     int32_t slot);
+
+bool flecs_script_component_released(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t src,
+    ecs_id_t component);
 
 /* Functions shared between type and eval visitor */
 
@@ -50386,7 +50396,6 @@ typedef enum ecs_script_ir_op_kind_t {
     EcsIrInitAlloc,
     EcsIrInitConst,
     EcsIrInitAssign,
-    EcsIrInitOp,
     EcsIrInitSwizzle,
     EcsIrDynBegin,
     EcsIrDynPush,
@@ -61935,8 +61944,6 @@ static const struct {
     [EcsTokRange] = {"..", ""},
     [EcsTokShiftLeft] = {"<<", ""},
     [EcsTokShiftRight] = {">>", ""},
-    [EcsTokAddAssign] = {"+=", ""},
-    [EcsTokMulAssign] = {"*=", ""},
     [EcsTokHasBracketOpen] = {"?[", ""},
     [EcsTokKeywordWith] = {"with", "keyword "},
     [EcsTokKeywordUsing] = {"using", "keyword "},
@@ -61972,8 +61979,6 @@ static const struct {
 };
 
 static const ecs_token_kind_t flecs_token_pairs[128][2] = {
-    ['+'] = {EcsTokAddAssign},
-    ['*'] = {EcsTokMulAssign},
     ['-'] = {EcsTokArrow},
     ['?'] = {EcsTokHasBracketOpen},
     ['.'] = {EcsTokRange},
@@ -68907,14 +68912,6 @@ void flecs_script_register_builtin_functions(
     case '\n':\
     case '\0'
 
-static void flecs_script_initializer_set_full(
-    ecs_expr_node_t *node)
-{
-    if (node->kind == EcsExprInitializer) {
-        ((ecs_expr_initializer_t*)node)->is_partial = false;
-    }
-}
-
 /* Parse scope (statements inside {}) */
 static const char* flecs_script_scope(
     ecs_parser_t *parser,
@@ -69144,7 +69141,6 @@ with_id:
                 flecs_script_insert_pair_component(parser, first, second);
             component->node.kind = EcsAstWithComponent;
             component->expr = INITIALIZER;
-            flecs_script_initializer_set_full(component->expr);
             EndOfRule;
         )
     )
@@ -69205,7 +69201,6 @@ static const char* flecs_script_paren_expr(
             ecs_script_component_t *component =
                 flecs_script_insert_component(parser, kind);
             component->expr = INITIALIZER;
-            flecs_script_initializer_set_full(component->expr);
         )
 
         // Position spaceship (expr) {
@@ -69578,6 +69573,7 @@ static const char* flecs_script_stmt_parse(
 
     const char *component_first = NULL, *component_second = NULL;
     bool component_collection = false;
+    bool component_partial = false;
     ecs_expr_node_t *component_index = NULL;
 
     parser->stmt_pos = NULL;
@@ -69915,7 +69911,11 @@ async_stmt: {
     // async {
     Parse_1('{', {
         ecs_script_async_t *stmt = flecs_script_insert_async(parser);
-        return flecs_script_scope(parser, stmt->scope, pos);
+        bool async_scope = parser->async_scope;
+        parser->async_scope = true;
+        pos = flecs_script_scope(parser, stmt->scope, pos);
+        parser->async_scope = async_scope;
+        return pos;
     })
 }
 
@@ -69935,7 +69935,14 @@ while_stmt: {
 }
 
 // value =
+// Position =
 identifier_assign: {
+    if (!parser->async_scope) {
+        component_first = Token(0);
+        component_partial = true;
+        goto component_assign;
+    }
+
     ecs_script_assign_t *stmt = flecs_script_insert_assign(parser, Token(0));
 
     // value = expr\n
@@ -70046,6 +70053,13 @@ paren: {
     LookAhead_1(':',
         Consume();
         goto component_expr;
+    )
+
+    // (Likes, Apples) =
+    LookAhead_1('=',
+        Consume();
+        component_partial = true;
+        goto component_assign;
     )
 
     // (IsA, Machine) {
@@ -70223,12 +70237,21 @@ identifier_paren: {
         flecs_script_insert_entity(parser, NULL), pos);
 }
 
+component_assign: {
+    LookAhead_1('[',
+        component_collection = true;
+    )
+
+    goto component_expr;
+}
+
 component_expr: {
     Expr({
         ecs_script_component_t *comp = flecs_script_insert_pair_component(
             parser, component_first, component_second);
         comp->expr = EXPR;
         comp->is_collection = component_collection;
+        comp->is_partial = component_partial;
         comp->id.index_expr = component_index;
         EndOfRule;
     })
@@ -72019,7 +72042,7 @@ static void flecs_script_stmt_to_str(
         ecs_script_component_t *stmt = (ecs_script_component_t*)node;
         flecs_script_id_to_str(v, &stmt->id);
         if (stmt->expr) {
-            flecs_scriptbuf_appendstr(v, ": ");
+            flecs_scriptbuf_appendstr(v, stmt->is_partial ? " = " : ": ");
             flecs_expr_to_str(v, stmt->expr);
         }
 
@@ -93697,12 +93720,6 @@ static int flecs_script_meta_type_visit(
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
 
-        if (elem->operator) {
-            flecs_expr_visit_error(script, elem->value,
-                "invalid operator for %s '%s'", kind_str, name);
-            return -1;
-        }
-
         if (!elem->value) {
             flecs_expr_visit_error(script, NULL,
                 "missing value for %s '%s'", kind_str, name);
@@ -94023,10 +94040,6 @@ static int flecs_script_constants_visit(
             }
 
             name = ((ecs_expr_identifier_t*)elem->value)->value;
-        } else if (elem->operator) {
-            flecs_expr_visit_error(script, elem->value,
-                "invalid operator for constant '%s'", elem->member);
-            return -1;
         }
 
         ecs_entity_t c = flecs_script_create_entity(v, name);
@@ -95453,6 +95466,25 @@ int flecs_script_eval_component_check(
     return 0;
 }
 
+int flecs_script_eval_partial_check(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_component_t *node,
+    ecs_id_t id,
+    bool check_released)
+{
+    ecs_entity_t src = flecs_script_get_src(v->world, v->entity->eval, id);
+    if (!ecs_has_id(v->world, src, id) ||
+        (check_released && flecs_script_component_released(v, src, id)))
+    {
+        flecs_script_eval_error(v, node,
+            "cannot assign to '%s': entity does not have component",
+            flecs_errstr(ecs_id_str(v->world, id)));
+        return -1;
+    }
+
+    return 0;
+}
+
 int flecs_script_eval_component_visit(
     ecs_script_eval_visitor_t *v,
     const ecs_script_component_t *node,
@@ -95536,6 +95568,12 @@ static int flecs_script_eval_component(
         return -1;
     }
 
+    if (node->is_partial &&
+        flecs_script_eval_partial_check(v, node, node->id.eval, true))
+    {
+        return -1;
+    }
+
     ecs_entity_t src = flecs_script_get_src(
         v->world, v->entity->eval, node->id.eval);
 
@@ -95548,13 +95586,8 @@ static int flecs_script_eval_component(
 
         bool needs_set = ti->hooks.on_replace != NULL;
 
-        bool partial = false;
-        if (node->expr->kind == EcsExprInitializer) {
-            partial = ((ecs_expr_initializer_t*)node->expr)->is_partial;
-        }
-
         const void *existing = NULL;
-        if (partial) {
+        if (node->is_partial) {
             existing = ecs_get_id(v->world, src, node->id.eval);
         }
 
@@ -97086,6 +97119,33 @@ bool flecs_script_scope_visited(
     return flecs_script_slot_visited(&v->state->scope_slots, v->visit, slot);
 }
 
+bool flecs_script_component_released(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t src,
+    ecs_id_t component)
+{
+    const ecs_script_component_slot_t *slots = ecs_vec_first(
+        &v->state->component_slots);
+    int32_t i, count = ecs_vec_count(&v->state->component_slots);
+    bool released = false;
+    for (i = 0; i < count; i ++) {
+        const ecs_script_component_slot_t *slot = &slots[i];
+        if (slot->component != component ||
+            flecs_script_state_component_src(v->world, v->state, slot) != src)
+        {
+            continue;
+        }
+
+        if (flecs_script_scope_visited(v, slot->scope_slot)) {
+            return false;
+        }
+
+        released = true;
+    }
+
+    return released;
+}
+
 static void flecs_script_cleanup_slots(
     ecs_script_eval_visitor_t *v)
 {
@@ -97995,12 +98055,6 @@ int flecs_script_struct_visit(
         if (!elem->member) {
             flecs_expr_visit_error(script, elem->value,
                 "missing name for struct member (expected 'name: type')");
-            return -1;
-        }
-
-        if (elem->operator) {
-            flecs_expr_visit_error(script, elem->value,
-                "invalid operator for struct member '%s'", elem->member);
             return -1;
         }
 
@@ -99060,11 +99114,16 @@ static int flecs_script_type_struct_expr(
     ecs_expr_initializer_element_t *elems = ecs_vec_first(
         &initializer->elements);
     for (i = 0; i < count; i ++) {
-        ecs_entity_t type = elems[i].value &&
+        bool is_init = elems[i].value &&
             (elems[i].value->kind == EcsExprInitializer ||
-             elems[i].value->kind == EcsExprEmptyInitializer)
-                ? ecs_id(EcsMember)
-                : ecs_id(ecs_entity_t);
+             elems[i].value->kind == EcsExprEmptyInitializer);
+        ecs_entity_t type = is_init
+            ? ecs_id(EcsMember)
+            : ecs_id(ecs_entity_t);
+        if (is_init) {
+            ((ecs_expr_initializer_t*)elems[i].value)->is_partial = true;
+        }
+
         if (elems[i].value) {
             int result = flecs_script_type_check_expr(
                 t, &elems[i].value, &type);
@@ -99220,15 +99279,17 @@ static int flecs_script_type_check_component_expr(
     ecs_entity_t *type)
 {
     ecs_expr_initializer_t *init = NULL;
-    if (node->id.interface && node->expr &&
-        (node->expr->kind == EcsExprInitializer ||
+    if (node->expr && (node->expr->kind == EcsExprInitializer ||
          node->expr->kind == EcsExprEmptyInitializer))
     {
         init = (ecs_expr_initializer_t*)node->expr;
-        if (init->is_partial) {
-            init = NULL;
-        } else {
+        if (node->is_partial || init->is_partial) {
             init->is_partial = true;
+            init = NULL;
+        } else if (node->id.interface) {
+            init->is_partial = true;
+        } else {
+            init = NULL;
         }
     }
 
@@ -99351,11 +99412,19 @@ static int flecs_script_type_component(
         return -1;
     }
 
-    flecs_script_type_check_overwrite(t, node);
+    if (!node->is_partial) {
+        flecs_script_type_check_overwrite(t, node);
+    }
 
     if (!node->id.second && node->id.eval && ecs_has(
         t->v->world, node->id.eval, EcsScriptVisitor))
     {
+        if (node->is_partial) {
+            flecs_script_eval_error(t->v, node,
+                "cannot partially assign '%s'", node->id.first);
+            return -1;
+        }
+
         return flecs_script_type_visitor_expr(t, node);
     }
 
@@ -101869,11 +101938,8 @@ const char* flecs_script_parse_initializer(
         ecs_os_zeromem(elem);
 
         if (until != ']') {
-            LookAheadAny_2(case EcsTokIdentifier: EcsTokKeyword:,
-                case ':': case EcsTokAddAssign: case EcsTokMulAssign:,
+            LookAheadAny_2(case EcsTokIdentifier: EcsTokKeyword:, case ':':,
                 elem->member = Token(0);
-                elem->operator = lookahead_token.kind == ':'
-                    ? 0 : lookahead_token.kind;
                 Consume();
             )
         }
@@ -101933,16 +101999,6 @@ const char* flecs_script_parse_initializer(
                     EndOfRule;
                 })
             }
-        }
-
-        if (elem->member) {
-            node->is_partial = true;
-        }
-
-        if (elem->value && elem->value->kind == EcsExprInitializer &&
-            ((ecs_expr_initializer_t*)elem->value)->is_partial)
-        {
-            node->is_partial = true;
         }
 
         {
@@ -102947,9 +103003,9 @@ int flecs_value_unary(
 #define FLECS_VALUE_FLOAT(T)
 
 #define FLECS_VALUE_ARITHMETIC(T)\
-    case EcsTokAdd: case EcsTokAddAssign: *(T*)out = (T)(l + r); return 0;\
+    case EcsTokAdd: *(T*)out = (T)(l + r); return 0;\
     case EcsTokSub: *(T*)out = (T)(l - r); return 0;\
-    case EcsTokMul: case EcsTokMulAssign: *(T*)out = (T)(l * r); return 0;\
+    case EcsTokMul: *(T*)out = (T)(l * r); return 0;\
     case EcsTokDiv: *(T*)out = (T)(l / r); return 0;
 
 #define FLECS_VALUE_BINARY(T, ARITHMETIC, INTEGER)\
@@ -103005,10 +103061,6 @@ int flecs_value_binary(
     ecs_value_t *out,
     ecs_token_kind_t operator)
 {
-    if (operator == EcsTokAddAssign || operator == EcsTokMulAssign) {
-        left = out;
-    }
-
     if ((operator == EcsTokDiv || operator == EcsTokMod) && flecs_value_is_0(right)) {
         flecs_expr_visit_error(script, node, "division by zero");
         return -1;
@@ -103031,8 +103083,7 @@ int flecs_value_binary(
 
     if (operator == EcsTokAdd || operator == EcsTokSub || operator == EcsTokMul ||
         operator == EcsTokDiv || operator == EcsTokMod || operator == EcsTokBitwiseAnd ||
-        operator == EcsTokBitwiseOr || operator == EcsTokShiftLeft || operator == EcsTokShiftRight ||
-        operator == EcsTokAddAssign || operator == EcsTokMulAssign)
+        operator == EcsTokBitwiseOr || operator == EcsTokShiftLeft || operator == EcsTokShiftRight)
     {
         ecs_assert(out->type == right->type, ECS_INTERNAL_ERROR, NULL);
     }
@@ -103634,26 +103685,12 @@ static int flecs_expr_initializer_eval_static(
             goto error;
         }
 
-        if (!elem->operator) {
-            if (expr->owned) {
-                flecs_expr_value_move(ECS_OFFSET(value, elem->offset),
-                    expr->value.ptr, elem->value->type_info);
-            } else {
-                if (ecs_ptr_copy(ctx->world, type, 
-                    ECS_OFFSET(value, elem->offset), expr->value.ptr))
-                {
-                    goto error;
-                }
-            }
+        if (expr->owned) {
+            flecs_expr_value_move(ECS_OFFSET(value, elem->offset),
+                expr->value.ptr, elem->value->type_info);
         } else {
-            ecs_value_t dst = { 
-                .type = type, 
-                .ptr = ECS_OFFSET(value, elem->offset) 
-            };
-
-            if (flecs_value_binary(
-                ctx->script, &node->node, NULL, &expr->value, &dst,
-                elem->operator))
+            if (ecs_ptr_copy(ctx->world, type, 
+                ECS_OFFSET(value, elem->offset), expr->value.ptr))
             {
                 goto error;
             }
@@ -104826,7 +104863,7 @@ static int flecs_expr_initializer_pre_fold(
             goto error;
         }
 
-        if (elem->value->kind != EcsExprValue || elem->operator) {
+        if (elem->value->kind != EcsExprValue) {
             *can_fold = false;
         }
     }
@@ -106019,8 +106056,6 @@ static bool flecs_expr_oper_valid_for_type(
     case EcsTokMul:
     case EcsTokDiv:
     case EcsTokMod:
-    case EcsTokAddAssign:
-    case EcsTokMulAssign:
         return flecs_expr_is_type_number(type);
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
@@ -107002,7 +107037,7 @@ static int flecs_expr_initializer_visit_type(
             }
         }
 
-        bool swizzle_expand_allowed = !elem->operator && !is_dynamic;
+        bool swizzle_expand_allowed = !is_dynamic;
 
         if (is_dynamic && elem->value->kind == EcsExprInitializer) {
             /* A push for a nested initializer may have to allocate elements in
@@ -107052,12 +107087,11 @@ static int flecs_expr_initializer_visit_type(
         }
 
         ecs_entity_t value_type = elem->value->type;
-        if (value_type != elem_type && (elem->operator ||
-            !flecs_expr_is_inline_array(
-                script->world, cur, value_type, elem_type)))
+        if (value_type != elem_type && !flecs_expr_is_inline_array(
+            script->world, cur, value_type, elem_type))
         {
             bool single_value = count == 1 && !node->is_collection &&
-                !elem->member && !elem->key && !elem->operator;
+                !elem->member && !elem->key;
             if (single_value && (value_type == type ||
                 flecs_struct_is_derived_from(script->world, value_type, type)))
             {
@@ -107090,15 +107124,6 @@ static int flecs_expr_initializer_visit_type(
             if (flecs_expr_cast_to(script, &elem->value, elem_type)) {
                 goto error;
             }
-        }
-
-        if (elem->operator && !flecs_expr_oper_valid_for_type(
-            script->world, elem_type, elem->operator))
-        {
-            flecs_expr_visit_error(script, node,
-                "invalid operator for type '%s'",
-                flecs_errstr(ecs_get_path(script->world, elem_type)));
-            goto error;
         }
 
         if (!is_dynamic) {
@@ -109153,7 +109178,7 @@ static void flecs_irc_compile_static_initializer(
             continue;
         }
 
-        if (!elem->operator && elem->value->kind == EcsExprValue) {
+        if (elem->value->kind == EcsExprValue) {
             ecs_expr_value_node_t *value = (ecs_expr_value_node_t*)elem->value;
             int32_t op = flecs_irc_emit(
                 c, EcsIrInitConst, dst, offset, 0, elem->value);
@@ -109163,9 +109188,7 @@ static void flecs_irc_compile_static_initializer(
 
         int32_t value = flecs_irc_compile_tmp(c, elem->value);
         int32_t op = flecs_irc_emit(c,
-            elem->operator ? EcsIrInitOp : EcsIrInitAssign,
-            dst, offset, value, elem->value);
-        flecs_irc_op(c, op)->flags = (uint16_t)elem->operator;
+            EcsIrInitAssign, dst, offset, value, elem->value);
         flecs_irc_op(c, op)->imm.ptr = node;
     }
 }
@@ -109701,11 +109724,6 @@ static void flecs_irc_compile_component(
     const ecs_script_ir_id_t *desc = ecs_vec_get_t(
         &c->ir->ids, ecs_script_ir_id_t, id);
 
-    bool partial = false;
-    if (node->expr && node->expr->kind == EcsExprInitializer) {
-        partial = ((ecs_expr_initializer_t*)node->expr)->is_partial;
-    }
-
     int32_t visitor = -1;
     if (!with && !desc->has_second && (desc->visitor || desc->dynamic)) {
         visitor = flecs_irc_emit(c, EcsIrComponentVisitor, id, 0, 0, node);
@@ -109720,7 +109738,7 @@ static void flecs_irc_compile_component(
         int32_t op = flecs_irc_emit(c,
             with ? EcsIrWithComponentBegin : EcsIrComponentBegin,
             id, tmp, 0, node);
-        flecs_irc_op(c, op)->flags = partial ? EcsIrComponentPartial : 0;
+        flecs_irc_op(c, op)->flags = node->is_partial ? EcsIrComponentPartial : 0;
 
         bool in_place;
         if (desc->ti) {
@@ -110400,7 +110418,6 @@ static const struct {
     [EcsIrInitAlloc] = {"InitAlloc", {"dst"}},
     [EcsIrInitConst] = {"InitConst", {"dst", "offset"}},
     [EcsIrInitAssign] = {"InitAssign", {"dst", "offset", "src"}},
-    [EcsIrInitOp] = {"InitOp", {"dst", "offset", "src"}},
     [EcsIrInitSwizzle] = {"InitSwizzle", {"dst", "offset", "src"}},
     [EcsIrDynBegin] = {"DynBegin", {"dst"}},
     [EcsIrDynPush] = {"DynPush", {"dst"}},
@@ -110535,9 +110552,7 @@ static void flecs_irs_payload_to_buf(
         break;
     }
 
-    if ((op->kind >= EcsIrBinary && op->kind <= EcsIrBinaryF64) ||
-        op->kind == EcsIrInitOp)
-    {
+    if (op->kind >= EcsIrBinary && op->kind <= EcsIrBinaryF64) {
         ecs_strbuf_append(buf, " operator=%s", flecs_token_str(
             (ecs_token_kind_t)(op->flags & ~EcsIrBinaryInPlace)));
     }
@@ -111348,6 +111363,12 @@ static int flecs_ir_component_alloc(
         return -1;
     }
 
+    if ((op->flags & EcsIrComponentPartial) &&
+        flecs_script_eval_partial_check(v, node, id, vm->dirty))
+    {
+        return -1;
+    }
+
     ecs_script_ir_reg_t *tmp = flecs_ir_reg(vm, op->b);
     void *ptr = flecs_ir_reg_alloc(vm, tmp, ti);
 
@@ -112120,26 +112141,6 @@ static int flecs_ir_init_assign(
     }
 
     return 0;
-}
-
-static int flecs_ir_init_op(
-    ecs_script_ir_vm_t *vm,
-    const ecs_script_ir_op_t *op)
-{
-    const ecs_expr_node_t *node = op->node;
-    ecs_script_ir_reg_t *dst = flecs_ir_reg(vm, op->a);
-    ecs_script_ir_reg_t *src = flecs_ir_reg(vm, op->c);
-    const ecs_type_info_t *ti = node->type_info;
-    if (flecs_ir_init_check(vm, op, op->imm.ptr, dst, ti)) {
-        return -1;
-    }
-
-    ecs_value_t out = {
-        .type = node->type,
-        .ptr = ECS_OFFSET(dst->value.ptr, op->b)
-    };
-    return flecs_value_binary(&vm->v.base.script->pub, op->imm.ptr,
-        NULL, &src->value, &out, (ecs_token_kind_t)op->flags);
 }
 
 static int flecs_ir_init_swizzle(
@@ -112950,9 +112951,6 @@ static flecs_script_run_status_t flecs_ir_exec(
             break;
         case EcsIrInitAssign:
             res = flecs_ir_init_assign(vm, op);
-            break;
-        case EcsIrInitOp:
-            res = flecs_ir_init_op(vm, op);
             break;
         case EcsIrInitSwizzle:
             res = flecs_ir_init_swizzle(vm, op);
@@ -115013,6 +115011,8 @@ typedef struct flecs_script_component_owner_t {
     ecs_script_entity_t *entity;
     ecs_script_id_t *id;
     ecs_script_scope_t *scope;
+    uint64_t input;
+    uint64_t internal;
     int32_t entity_symbol;
     int32_t next;
 } flecs_script_component_owner_t;
@@ -115043,6 +115043,8 @@ typedef struct flecs_script_dep_ctx_t {
     bool reactive;
     bool no_deps;
     int32_t conditional;
+    uint64_t enclosing_input;
+    uint64_t enclosing_internal;
     ecs_script_entity_t *entity;
     ecs_script_scope_t *scope;
 } flecs_script_dep_ctx_t;
@@ -115362,48 +115364,6 @@ static bool flecs_script_dep_component_already_owned(
     return first_scope == second_scope;
 }
 
-static bool flecs_script_dep_initializer_is_complete(
-    const ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_expr_initializer_t *initializer)
-{
-    if (!component) {
-        return false;
-    }
-
-    ecs_entity_t type = ecs_get_typeid(world, component);
-    if (!type) {
-        return false;
-    }
-
-    const EcsStruct *st = ecs_get(world, type, EcsStruct);
-    if (!st) {
-        return false;
-    }
-
-    const ecs_expr_initializer_element_t *elements = ecs_vec_first(
-        &initializer->elements);
-    int32_t i, count = ecs_vec_count(&initializer->elements);
-    if (count != ecs_vec_count(&st->members)) {
-        return false;
-    }
-
-    for (i = 0; i < count; i ++) {
-        if (!elements[i].member) {
-            return false;
-        }
-
-        const ecs_expr_node_t *value = elements[i].value;
-        if (value && value->kind == EcsExprInitializer &&
-            ((const ecs_expr_initializer_t*)value)->is_partial)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 static bool flecs_script_dep_owner_key(
     const ecs_script_entity_t *entity,
     int32_t entity_symbol,
@@ -115499,6 +115459,8 @@ static int flecs_script_dep_component_owner(
         if (owner->scope == ctx->scope ||
             flecs_script_dep_component_already_owned(owner, ctx))
         {
+            owner->input |= ctx->enclosing_input | node->direct_input;
+            owner->internal |= ctx->enclosing_internal | node->direct_internal;
             *already_owned = true;
             return 0;
         }
@@ -115520,6 +115482,8 @@ static int flecs_script_dep_component_owner(
     owner->entity_symbol = ctx->entity_symbol;
     owner->id = id;
     owner->scope = ctx->scope;
+    owner->input = ctx->enclosing_input | node->direct_input;
+    owner->internal = ctx->enclosing_internal | node->direct_internal;
     owner->next = -1;
     owners = ecs_vec_first(&ctx->component_owners);
     if (scan_all) {
@@ -115534,6 +115498,42 @@ static int flecs_script_dep_component_owner(
     }
 
     return 0;
+}
+
+static void flecs_script_dep_component_partial(
+    flecs_script_dep_ctx_t *ctx,
+    ecs_script_node_t *node,
+    ecs_script_id_t *id)
+{
+    if (!ctx->v->base.script->entity) {
+        return;
+    }
+
+    flecs_script_component_owner_t *owners = ecs_vec_first(
+        &ctx->component_owners);
+    int32_t count = ecs_vec_count(&ctx->component_owners);
+    uint64_t key = 0;
+    bool scan_all = !flecs_script_dep_owner_key(
+        ctx->entity, ctx->entity_symbol, &key);
+    int32_t cur[2] = {0, -1};
+    if (!scan_all) {
+        ecs_map_val_t *val = ecs_map_get(&ctx->owner_index, key);
+        cur[0] = val ? (int32_t)(*val >> 32) - 1 : -1;
+        cur[1] = ctx->entity ? ctx->owner_fuzzy_first : -1;
+    }
+
+    int32_t i;
+    while ((i = flecs_script_dep_owner_next(
+        owners, count, cur, scan_all)) != -1)
+    {
+        flecs_script_component_owner_t *owner = &owners[i];
+        if (flecs_script_dep_same_entity(owner, ctx) &&
+            flecs_script_dep_ids_may_match(owner->id, id))
+        {
+            node->direct_input |= owner->input;
+            node->direct_internal |= owner->internal;
+        }
+    }
 }
 
 static int flecs_script_dep_input_new(
@@ -115760,38 +115760,18 @@ static int flecs_script_dep_child(
     ecs_script_scope_t *scope,
     bool conditional)
 {
+    uint64_t enclosing_input = ctx->enclosing_input;
+    uint64_t enclosing_internal = ctx->enclosing_internal;
+    ctx->enclosing_input |= node->direct_input;
+    ctx->enclosing_internal |= node->direct_internal;
     ctx->conditional += conditional;
     int result = flecs_script_dep_scope(ctx, scope);
     ctx->conditional -= conditional;
+    ctx->enclosing_input = enclosing_input;
+    ctx->enclosing_internal = enclosing_internal;
     node->input |= scope->node.input;
     node->internal |= scope->node.internal;
     return result;
-}
-
-static bool flecs_script_dep_component_partial(
-    flecs_script_dep_ctx_t *ctx,
-    ecs_script_component_t *node)
-{
-    if (!node->expr || node->expr->kind != EcsExprInitializer) {
-        return false;
-    }
-
-    ecs_expr_initializer_t *initializer = (ecs_expr_initializer_t*)node->expr;
-    bool partial = initializer->is_partial;
-    if (!partial) {
-        ecs_expr_initializer_element_t *elements =
-            ecs_vec_first(&initializer->elements);
-        int32_t i, count = ecs_vec_count(&initializer->elements);
-        for (i = 0; i < count; i ++) {
-            if (elements[i].member) {
-                partial = true;
-                break;
-            }
-        }
-    }
-
-    return partial && !flecs_script_dep_initializer_is_complete(
-        ctx->v->world, node->id.eval, initializer);
 }
 
 static int flecs_script_dep_node_impl(
@@ -115838,15 +115818,20 @@ static int flecs_script_dep_node_impl(
         }
 
         if (node->kind == EcsAstComponent) {
-            bool partial = flecs_script_dep_component_partial(ctx, n);
+            if (n->is_partial) {
+                flecs_script_dep_component_partial(ctx, node, &n->id);
+                n->component_slot = -1;
+                break;
+            }
+
             bool already_owned = false;
-            if (!partial && flecs_script_dep_component_owner(
+            if (flecs_script_dep_component_owner(
                 ctx, node, &n->id, &already_owned))
             {
                 return -1;
             }
 
-            n->component_slot = partial || already_owned
+            n->component_slot = already_owned
                 ? -1
                 : ctx->component_count ++;
         }

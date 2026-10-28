@@ -208,7 +208,7 @@ static int flecs_expr_initializer_pre_fold(
             goto error;
         }
 
-        if (elem->value->kind != EcsExprValue || elem->operator) {
+        if (elem->value->kind != EcsExprValue) {
             *can_fold = false;
         }
     }

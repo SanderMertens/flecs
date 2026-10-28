@@ -460,8 +460,6 @@ void Eval_const_assign_empty_collection_initializer(void);
 void Eval_const_i32_assign_empty_initializer(void);
 void Eval_const_i32_assign_empty_collection_initializer(void);
 void Eval_unknown_annotation(void);
-void Eval_component_w_assign_add(void);
-void Eval_component_w_assign_mul(void);
 void Eval_opaque_struct_component(void);
 void Eval_opaque_string_component(void);
 void Eval_add_component_w_invalid_ctor(void);
@@ -622,8 +620,6 @@ void Eval_component_expr_swizzle_initializer_r(void);
 void Eval_component_expr_swizzle_initializer_rg(void);
 void Eval_component_expr_swizzle_initializer_rgb(void);
 void Eval_component_expr_swizzle_initializer_rgba(void);
-void Eval_component_expr_swizzle_initializer_add_assign(void);
-void Eval_component_expr_swizzle_initializer_mul_assign(void);
 void Eval_component_expr_member_no_var(void);
 void Eval_map_i64_i32_component(void);
 void Eval_map_i64_string_component(void);
@@ -1415,8 +1411,6 @@ void Template_template_w_child_component_w_undefined_identifier(void);
 void Template_template_w_anonymous_child_component_w_undefined_identifier(void);
 void Template_clear_script_w_template_w_on_remove_observer(void);
 void Template_clear_script_w_template_w_on_remove_observer_added_after(void);
-void Template_component_w_assign_add(void);
-void Template_component_w_assign_mul(void);
 void Template_prop_after_const(void);
 void Template_const_from_prop(void);
 void Template_redefine_nested_template_w_prefab(void);
@@ -1581,8 +1575,6 @@ void Mut_module(void);
 void Mut_multiple_templates(void);
 void Mut_anonymous_children(void);
 void Mut_fold_const(void);
-void Mut_assign_add(void);
-void Mut_assign_mul(void);
 void Mut_script_component(void);
 void Mut_script_pair_component(void);
 void Mut_tree_parent(void);
@@ -2700,9 +2692,6 @@ void Deserialize_struct_w_2_array_type_struct(void);
 void Deserialize_struct_w_newline(void);
 void Deserialize_struct_w_members_newline(void);
 void Deserialize_struct_w_trailing_comma(void);
-void Deserialize_struct_w_add_assign_expr(void);
-void Deserialize_struct_w_mul_assign_expr(void);
-void Deserialize_struct_w_add_assign_expr_invalid_type(void);
 void Deserialize_array_w_trailing_comma(void);
 void Deserialize_array_i32_2(void);
 void Deserialize_array_string_2(void);
@@ -3316,6 +3305,8 @@ void Reactivity_template_reeval_error_stored_on_template(void);
 void Reactivity_template_reeval_error_in_other_script_eval(void);
 void Reactivity_template_first_instantiation_error_from_c(void);
 void Reactivity_script_reeval_error_in_other_script_eval(void);
+void Reactivity_if_else_switch_keeps_component_w_fewer_members(void);
+void Reactivity_partial_after_conditional_owner_reapplied(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_setup(void);
@@ -5813,14 +5804,6 @@ bake_test_case Eval_testcases[] = {
         Eval_unknown_annotation
     },
     {
-        "component_w_assign_add",
-        Eval_component_w_assign_add
-    },
-    {
-        "component_w_assign_mul",
-        Eval_component_w_assign_mul
-    },
-    {
         "opaque_struct_component",
         Eval_opaque_struct_component
     },
@@ -6459,14 +6442,6 @@ bake_test_case Eval_testcases[] = {
     {
         "component_expr_swizzle_initializer_rgba",
         Eval_component_expr_swizzle_initializer_rgba
-    },
-    {
-        "component_expr_swizzle_initializer_add_assign",
-        Eval_component_expr_swizzle_initializer_add_assign
-    },
-    {
-        "component_expr_swizzle_initializer_mul_assign",
-        Eval_component_expr_swizzle_initializer_mul_assign
     },
     {
         "component_expr_member_no_var",
@@ -9570,14 +9545,6 @@ bake_test_case Template_testcases[] = {
         Template_clear_script_w_template_w_on_remove_observer_added_after
     },
     {
-        "component_w_assign_add",
-        Template_component_w_assign_add
-    },
-    {
-        "component_w_assign_mul",
-        Template_component_w_assign_mul
-    },
-    {
         "prop_after_const",
         Template_prop_after_const
     },
@@ -10223,14 +10190,6 @@ bake_test_case Mut_testcases[] = {
     {
         "fold_const",
         Mut_fold_const
-    },
-    {
-        "assign_add",
-        Mut_assign_add
-    },
-    {
-        "assign_mul",
-        Mut_assign_mul
     },
     {
         "script_component",
@@ -14646,18 +14605,6 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_struct_w_trailing_comma
     },
     {
-        "struct_w_add_assign_expr",
-        Deserialize_struct_w_add_assign_expr
-    },
-    {
-        "struct_w_mul_assign_expr",
-        Deserialize_struct_w_mul_assign_expr
-    },
-    {
-        "struct_w_add_assign_expr_invalid_type",
-        Deserialize_struct_w_add_assign_expr_invalid_type
-    },
-    {
         "array_w_trailing_comma",
         Deserialize_array_w_trailing_comma
     },
@@ -17072,6 +17019,14 @@ bake_test_case Reactivity_testcases[] = {
     {
         "script_reeval_error_in_other_script_eval",
         Reactivity_script_reeval_error_in_other_script_eval
+    },
+    {
+        "if_else_switch_keeps_component_w_fewer_members",
+        Reactivity_if_else_switch_keeps_component_w_fewer_members
+    },
+    {
+        "partial_after_conditional_owner_reapplied",
+        Reactivity_partial_after_conditional_owner_reapplied
     }
 };
 
@@ -19899,7 +19854,7 @@ static bake_test_suite suites[] = {
         "Eval",
         Eval_setup,
         NULL,
-        820,
+        816,
         Eval_testcases,
         1,
         Eval_params
@@ -19962,7 +19917,7 @@ static bake_test_suite suites[] = {
         "Template",
         Template_setup,
         NULL,
-        226,
+        224,
         Template_testcases,
         1,
         Template_params
@@ -19971,7 +19926,7 @@ static bake_test_suite suites[] = {
         "Mut",
         Mut_setup,
         NULL,
-        77,
+        75,
         Mut_testcases,
         1,
         Mut_params
@@ -20030,7 +19985,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        162,
+        159,
         Deserialize_testcases,
         1,
         Deserialize_params
@@ -20066,7 +20021,7 @@ static bake_test_suite suites[] = {
         "Reactivity",
         Reactivity_setup,
         NULL,
-        175,
+        177,
         Reactivity_testcases,
         1,
         Reactivity_params

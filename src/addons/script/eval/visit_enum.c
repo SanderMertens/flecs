@@ -155,10 +155,6 @@ static int flecs_script_constants_visit(
             }
 
             name = ((ecs_expr_identifier_t*)elem->value)->value;
-        } else if (elem->operator) {
-            flecs_expr_visit_error(script, elem->value,
-                "invalid operator for constant '%s'", elem->member);
-            return -1;
         }
 
         ecs_entity_t c = flecs_script_create_entity(v, name);

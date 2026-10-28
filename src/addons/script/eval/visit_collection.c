@@ -62,12 +62,6 @@ static int flecs_script_meta_type_visit(
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
 
-        if (elem->operator) {
-            flecs_expr_visit_error(script, elem->value,
-                "invalid operator for %s '%s'", kind_str, name);
-            return -1;
-        }
-
         if (!elem->value) {
             flecs_expr_visit_error(script, NULL,
                 "missing value for %s '%s'", kind_str, name);

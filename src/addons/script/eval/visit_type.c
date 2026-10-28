@@ -987,11 +987,16 @@ static int flecs_script_type_struct_expr(
     ecs_expr_initializer_element_t *elems = ecs_vec_first(
         &initializer->elements);
     for (i = 0; i < count; i ++) {
-        ecs_entity_t type = elems[i].value &&
+        bool is_init = elems[i].value &&
             (elems[i].value->kind == EcsExprInitializer ||
-             elems[i].value->kind == EcsExprEmptyInitializer)
-                ? ecs_id(EcsMember)
-                : ecs_id(ecs_entity_t);
+             elems[i].value->kind == EcsExprEmptyInitializer);
+        ecs_entity_t type = is_init
+            ? ecs_id(EcsMember)
+            : ecs_id(ecs_entity_t);
+        if (is_init) {
+            ((ecs_expr_initializer_t*)elems[i].value)->is_partial = true;
+        }
+
         if (elems[i].value) {
             int result = flecs_script_type_check_expr(
                 t, &elems[i].value, &type);
@@ -1147,15 +1152,17 @@ static int flecs_script_type_check_component_expr(
     ecs_entity_t *type)
 {
     ecs_expr_initializer_t *init = NULL;
-    if (node->id.interface && node->expr &&
-        (node->expr->kind == EcsExprInitializer ||
+    if (node->expr && (node->expr->kind == EcsExprInitializer ||
          node->expr->kind == EcsExprEmptyInitializer))
     {
         init = (ecs_expr_initializer_t*)node->expr;
-        if (init->is_partial) {
-            init = NULL;
-        } else {
+        if (node->is_partial || init->is_partial) {
             init->is_partial = true;
+            init = NULL;
+        } else if (node->id.interface) {
+            init->is_partial = true;
+        } else {
+            init = NULL;
         }
     }
 
@@ -1278,11 +1285,19 @@ static int flecs_script_type_component(
         return -1;
     }
 
-    flecs_script_type_check_overwrite(t, node);
+    if (!node->is_partial) {
+        flecs_script_type_check_overwrite(t, node);
+    }
 
     if (!node->id.second && node->id.eval && ecs_has(
         t->v->world, node->id.eval, EcsScriptVisitor))
     {
+        if (node->is_partial) {
+            flecs_script_eval_error(t->v, node,
+                "cannot partially assign '%s'", node->id.first);
+            return -1;
+        }
+
         return flecs_script_type_visitor_expr(t, node);
     }
 

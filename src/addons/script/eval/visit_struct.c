@@ -70,12 +70,6 @@ int flecs_script_struct_visit(
             return -1;
         }
 
-        if (elem->operator) {
-            flecs_expr_visit_error(script, elem->value,
-                "invalid operator for struct member '%s'", elem->member);
-            return -1;
-        }
-
         if (!elem->value) {
             flecs_expr_visit_error(script, NULL,
                 "missing type for struct member '%s'", elem->member);
