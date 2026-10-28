@@ -181,7 +181,7 @@ typedef struct ecs_command_script_error_t {
     char *error;             /**< Error message. */
 } ecs_command_script_error_t;
 
-#ifdef FLECS_SCRIPT_EVENT
+#ifdef FLECS_SCRIPT_INPUT
 /** Pointer state, returned by pointer. */
 typedef struct ecs_command_pointer_state_t {
     EcsScriptMouseEvent event; /**< Last mouse event. */

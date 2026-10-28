@@ -1,9 +1,9 @@
 /**
- * @file addons/script_event.h
+ * @file addons/script_input.h
  * @brief Mouse, keyboard and focus events for Flecs script.
  */
 
-#ifdef FLECS_SCRIPT_EVENT
+#ifdef FLECS_SCRIPT_INPUT
 
 #ifndef FLECS_SCRIPT
 #define FLECS_SCRIPT
@@ -14,14 +14,14 @@
 #endif
 
 /**
- * @defgroup c_addons_script_event Script Event
+ * @defgroup c_addons_script_input Script Input
  * @ingroup c_addons
  * Mouse, keyboard and focus events for Flecs script.
  * @{
  */
 
-#ifndef FLECS_SCRIPT_EVENT_H
-#define FLECS_SCRIPT_EVENT_H
+#ifndef FLECS_SCRIPT_INPUT_H
+#define FLECS_SCRIPT_INPUT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -198,7 +198,7 @@ typedef ecs_entity_t (*ecs_script_to_focus_t)(
     ecs_script_focus_source_t source,
     void *ctx);
 
-/** Application hooks of the script event module. */
+/** Application hooks of the script input module. */
 typedef struct ecs_script_event_hooks_t {
     ecs_script_to_local_t to_local;   /**< Converts positions for parents. */
     ecs_script_to_focus_t to_focus;   /**< Decides which entity receives the focus. */
@@ -256,7 +256,7 @@ ecs_script_event_result_t ecs_script_keyboard_event(
     ecs_world_t *world,
     const EcsScriptKeyboardEvent *evt);
 
-/** Set application hooks of the script event module.
+/** Set application hooks of the script input module.
  * Replaces the hooks that were set before.
  *
  * @param world The world.
@@ -325,13 +325,13 @@ int32_t ecs_script_event_listeners(
 /** Script event import function.
  * Usage:
  * @code
- * ECS_IMPORT(world, FlecsScriptEvent)
+ * ECS_IMPORT(world, FlecsScriptInput)
  * @endcode
  *
  * @param world The world.
  */
 FLECS_API
-void FlecsScriptEventImport(
+void FlecsScriptInputImport(
     ecs_world_t *world);
 
 #ifdef __cplusplus

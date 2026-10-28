@@ -22,7 +22,7 @@ ECS_COMPONENT_DECLARE(ecs_command_script_line_t);
 ECS_COMPONENT_DECLARE(ecs_command_script_match_t);
 ECS_COMPONENT_DECLARE(ecs_command_script_location_t);
 ECS_COMPONENT_DECLARE(ecs_command_script_error_t);
-#ifdef FLECS_SCRIPT_EVENT
+#ifdef FLECS_SCRIPT_INPUT
 ECS_COMPONENT_DECLARE(ecs_command_pointer_state_t);
 ECS_COMPONENT_DECLARE(ecs_script_event_result_t);
 #endif
@@ -920,7 +920,7 @@ static void flecs_command_register_types(
         { .name = "error", .type = string_t }
     });
 
-#ifdef FLECS_SCRIPT_EVENT
+#ifdef FLECS_SCRIPT_INPUT
     flecs_command_struct(world, ecs_command_pointer_state_t, "PointerState", {
         { .name = "event", .type = ecs_id(EcsScriptMouseEvent) },
         { .name = "pressed", .type = entity_t }
@@ -939,8 +939,8 @@ void FlecsScriptCommandImport(
     ECS_MODULE(world, FlecsScriptCommand);
     ECS_IMPORT(world, FlecsScript);
     ECS_IMPORT(world, FlecsDoc);
-#ifdef FLECS_SCRIPT_EVENT
-    ECS_IMPORT(world, FlecsScriptEvent);
+#ifdef FLECS_SCRIPT_INPUT
+    ECS_IMPORT(world, FlecsScriptInput);
 #endif
 
     ecs_set_name_prefix(world, "Ecs");
@@ -974,8 +974,8 @@ void FlecsScriptCommandImport(
     flecs_command_register_types(world);
     flecs_command_core_import(world);
     flecs_command_script_import(world);
-#ifdef FLECS_SCRIPT_EVENT
-    flecs_command_event_import(world);
+#ifdef FLECS_SCRIPT_INPUT
+    flecs_command_input_import(world);
 #endif
 
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);

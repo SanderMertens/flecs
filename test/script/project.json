@@ -1131,7 +1131,7 @@
                 "error_assign_to_export_const"
             ]
         }, {
-            "id": "Event",
+            "id": "Input",
             "params": {
                 "ir": ["disabled", "enabled"]
             },

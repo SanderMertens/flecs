@@ -20,7 +20,7 @@ if ! command -v emcc >/dev/null 2>&1; then
 fi
 
 mkdir -p "$OUT"
-emcc -O2 -DNDEBUG -DFLECS_SCRIPT_MATH -DFLECS_SCRIPT_PLATFORM -DFLECS_SCRIPT_EVENT \
+emcc -O2 -DNDEBUG -DFLECS_SCRIPT_MATH -DFLECS_SCRIPT_PLATFORM -DFLECS_SCRIPT_INPUT \
     -I distr \
     distr/flecs.c docs/playground/main.c \
     -s ALLOW_MEMORY_GROWTH=1 \

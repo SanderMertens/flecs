@@ -1,5 +1,5 @@
 {
-    "id": "script_event",
+    "id": "script_input",
     "type": "application",
     "value": {
         "public": false,
@@ -9,6 +9,6 @@
         "standalone": true
     },
     "lang.c": {
-        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_SCRIPT_EVENT"]
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_SCRIPT_INPUT"]
     }
 }

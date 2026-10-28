@@ -1108,90 +1108,90 @@ void AsyncBlock_assign_export_mut_from_template(void);
 void AsyncBlock_assign_extern_mut_var(void);
 void AsyncBlock_error_assign_to_export_const(void);
 
-// Testsuite 'Event'
-void Event_setup(void);
-void Event_import(void);
-void Event_press(void);
-void Event_press_other_target(void);
-void Event_press_no_target(void);
-void Event_press_bubbles_to_parent(void);
-void Event_press_two_listeners(void);
-void Event_press_two_widgets(void);
-void Event_press_while_other_button_held(void);
-void Event_drag(void);
-void Event_no_drag_without_button(void);
-void Event_release(void);
-void Event_click(void);
-void Event_no_click_when_released_elsewhere(void);
-void Event_move(void);
-void Event_delta_from_event(void);
-void Event_button_and_modifiers(void);
-void Event_key_down_up(void);
-void Event_key_modifiers(void);
-void Event_key_focus_follows_press(void);
-void Event_key_bubbles_to_parent(void);
-void Event_slider(void);
-void Event_wrong_arg_fails(void);
-void Event_delete_listener(void);
-void Event_delete_listener_while_pressed(void);
-void Event_fini_w_pending_listener(void);
-void Event_script_update_w_pending_listener(void);
-void Event_mouse_event_w_stage(void);
-void Event_mouse_event_in_progress(void);
-void Event_import_enter_leave(void);
-void Event_enter_leave(void);
-void Event_enter_leave_between_children(void);
-void Event_enter_leave_children_listen(void);
-void Event_enter_leave_while_dragging(void);
-void Event_leave_deleted_hover_target(void);
-void Event_propagation_translates_coordinates(void);
-void Event_propagation_keeps_deltas(void);
-void Event_propagation_press_once_per_level(void);
-void Event_drag_not_propagated_to_unrelated_target(void);
-void Event_propagation_screen_coords_without_to_local(void);
-void Event_stop_propagation_press(void);
-void Event_stop_propagation_same_level(void);
-void Event_stop_propagation_once(void);
-void Event_stop_propagation_result(void);
-void Event_stop_propagation_key(void);
-void Event_stop_propagation_keeps_enter(void);
-void Event_stop_propagation_stale_event(void);
-void Event_stop_propagation_enter_event(void);
-void Event_import_focus(void);
-void Event_set_get_focus(void);
-void Event_get_focus_after_press(void);
-void Event_key_to_set_focus(void);
-void Event_focus_blur_on_press(void);
-void Event_focus_blur_on_set_focus(void);
-void Event_focus_unchanged_no_events(void);
-void Event_focus_between_children_reaches_parent(void);
-void Event_stop_propagation_focus(void);
-void Event_to_focus_reject_press(void);
-void Event_to_focus_redirect(void);
-void Event_to_focus_not_invoked_when_unchanged(void);
-void Event_remove_event_hooks(void);
-void Event_script_focus(void);
-void Event_script_focus_returns_to_focus_result(void);
-void Event_script_focus_clear(void);
-void Event_script_focus_resumes_listeners(void);
-void Event_delete_focus(void);
-void Event_import_activate(void);
-void Event_activate_click(void);
-void Event_no_activate_when_released_elsewhere(void);
-void Event_activate_enter(void);
-void Event_activate_space_on_release(void);
-void Event_no_activate_without_focus(void);
-void Event_no_activate_space_focus_changed(void);
-void Event_no_activate_enter_repeat(void);
-void Event_activate_bubbles_to_parent(void);
-void Event_activate_once_per_activation(void);
-void Event_activate_modifiers(void);
-void Event_activate_and_click(void);
-void Event_stop_propagation_activate(void);
-void Event_get_mouse_state(void);
-void Event_listeners(void);
-void Event_emit_result(void);
-void Event_emit_result_stopped(void);
+// Testsuite 'Input'
+void Input_setup(void);
+void Input_import(void);
+void Input_press(void);
+void Input_press_other_target(void);
+void Input_press_no_target(void);
+void Input_press_bubbles_to_parent(void);
+void Input_press_two_listeners(void);
+void Input_press_two_widgets(void);
+void Input_press_while_other_button_held(void);
+void Input_drag(void);
+void Input_no_drag_without_button(void);
+void Input_release(void);
+void Input_click(void);
+void Input_no_click_when_released_elsewhere(void);
+void Input_move(void);
+void Input_delta_from_event(void);
+void Input_button_and_modifiers(void);
+void Input_key_down_up(void);
+void Input_key_modifiers(void);
+void Input_key_focus_follows_press(void);
+void Input_key_bubbles_to_parent(void);
+void Input_slider(void);
+void Input_wrong_arg_fails(void);
+void Input_delete_listener(void);
+void Input_delete_listener_while_pressed(void);
+void Input_fini_w_pending_listener(void);
+void Input_script_update_w_pending_listener(void);
+void Input_mouse_event_w_stage(void);
+void Input_mouse_event_in_progress(void);
+void Input_import_enter_leave(void);
+void Input_enter_leave(void);
+void Input_enter_leave_between_children(void);
+void Input_enter_leave_children_listen(void);
+void Input_enter_leave_while_dragging(void);
+void Input_leave_deleted_hover_target(void);
+void Input_propagation_translates_coordinates(void);
+void Input_propagation_keeps_deltas(void);
+void Input_propagation_press_once_per_level(void);
+void Input_drag_not_propagated_to_unrelated_target(void);
+void Input_propagation_screen_coords_without_to_local(void);
+void Input_stop_propagation_press(void);
+void Input_stop_propagation_same_level(void);
+void Input_stop_propagation_once(void);
+void Input_stop_propagation_result(void);
+void Input_stop_propagation_key(void);
+void Input_stop_propagation_keeps_enter(void);
+void Input_stop_propagation_stale_event(void);
+void Input_stop_propagation_enter_event(void);
+void Input_import_focus(void);
+void Input_set_get_focus(void);
+void Input_get_focus_after_press(void);
+void Input_key_to_set_focus(void);
+void Input_focus_blur_on_press(void);
+void Input_focus_blur_on_set_focus(void);
+void Input_focus_unchanged_no_events(void);
+void Input_focus_between_children_reaches_parent(void);
+void Input_stop_propagation_focus(void);
+void Input_to_focus_reject_press(void);
+void Input_to_focus_redirect(void);
+void Input_to_focus_not_invoked_when_unchanged(void);
+void Input_remove_event_hooks(void);
+void Input_script_focus(void);
+void Input_script_focus_returns_to_focus_result(void);
+void Input_script_focus_clear(void);
+void Input_script_focus_resumes_listeners(void);
+void Input_delete_focus(void);
+void Input_import_activate(void);
+void Input_activate_click(void);
+void Input_no_activate_when_released_elsewhere(void);
+void Input_activate_enter(void);
+void Input_activate_space_on_release(void);
+void Input_no_activate_without_focus(void);
+void Input_no_activate_space_focus_changed(void);
+void Input_no_activate_enter_repeat(void);
+void Input_activate_bubbles_to_parent(void);
+void Input_activate_once_per_activation(void);
+void Input_activate_modifiers(void);
+void Input_activate_and_click(void);
+void Input_stop_propagation_activate(void);
+void Input_get_mouse_state(void);
+void Input_listeners(void);
+void Input_emit_result(void);
+void Input_emit_result_stopped(void);
 
 // Testsuite 'TryCatch'
 void TryCatch_setup(void);
@@ -8527,334 +8527,334 @@ bake_test_case AsyncBlock_testcases[] = {
     }
 };
 
-bake_test_case Event_testcases[] = {
+bake_test_case Input_testcases[] = {
     {
         "import",
-        Event_import
+        Input_import
     },
     {
         "press",
-        Event_press
+        Input_press
     },
     {
         "press_other_target",
-        Event_press_other_target
+        Input_press_other_target
     },
     {
         "press_no_target",
-        Event_press_no_target
+        Input_press_no_target
     },
     {
         "press_bubbles_to_parent",
-        Event_press_bubbles_to_parent
+        Input_press_bubbles_to_parent
     },
     {
         "press_two_listeners",
-        Event_press_two_listeners
+        Input_press_two_listeners
     },
     {
         "press_two_widgets",
-        Event_press_two_widgets
+        Input_press_two_widgets
     },
     {
         "press_while_other_button_held",
-        Event_press_while_other_button_held
+        Input_press_while_other_button_held
     },
     {
         "drag",
-        Event_drag
+        Input_drag
     },
     {
         "no_drag_without_button",
-        Event_no_drag_without_button
+        Input_no_drag_without_button
     },
     {
         "release",
-        Event_release
+        Input_release
     },
     {
         "click",
-        Event_click
+        Input_click
     },
     {
         "no_click_when_released_elsewhere",
-        Event_no_click_when_released_elsewhere
+        Input_no_click_when_released_elsewhere
     },
     {
         "move",
-        Event_move
+        Input_move
     },
     {
         "delta_from_event",
-        Event_delta_from_event
+        Input_delta_from_event
     },
     {
         "button_and_modifiers",
-        Event_button_and_modifiers
+        Input_button_and_modifiers
     },
     {
         "key_down_up",
-        Event_key_down_up
+        Input_key_down_up
     },
     {
         "key_modifiers",
-        Event_key_modifiers
+        Input_key_modifiers
     },
     {
         "key_focus_follows_press",
-        Event_key_focus_follows_press
+        Input_key_focus_follows_press
     },
     {
         "key_bubbles_to_parent",
-        Event_key_bubbles_to_parent
+        Input_key_bubbles_to_parent
     },
     {
         "slider",
-        Event_slider
+        Input_slider
     },
     {
         "wrong_arg_fails",
-        Event_wrong_arg_fails
+        Input_wrong_arg_fails
     },
     {
         "delete_listener",
-        Event_delete_listener
+        Input_delete_listener
     },
     {
         "delete_listener_while_pressed",
-        Event_delete_listener_while_pressed
+        Input_delete_listener_while_pressed
     },
     {
         "fini_w_pending_listener",
-        Event_fini_w_pending_listener
+        Input_fini_w_pending_listener
     },
     {
         "script_update_w_pending_listener",
-        Event_script_update_w_pending_listener
+        Input_script_update_w_pending_listener
     },
     {
         "mouse_event_w_stage",
-        Event_mouse_event_w_stage
+        Input_mouse_event_w_stage
     },
     {
         "mouse_event_in_progress",
-        Event_mouse_event_in_progress
+        Input_mouse_event_in_progress
     },
     {
         "import_enter_leave",
-        Event_import_enter_leave
+        Input_import_enter_leave
     },
     {
         "enter_leave",
-        Event_enter_leave
+        Input_enter_leave
     },
     {
         "enter_leave_between_children",
-        Event_enter_leave_between_children
+        Input_enter_leave_between_children
     },
     {
         "enter_leave_children_listen",
-        Event_enter_leave_children_listen
+        Input_enter_leave_children_listen
     },
     {
         "enter_leave_while_dragging",
-        Event_enter_leave_while_dragging
+        Input_enter_leave_while_dragging
     },
     {
         "leave_deleted_hover_target",
-        Event_leave_deleted_hover_target
+        Input_leave_deleted_hover_target
     },
     {
         "propagation_translates_coordinates",
-        Event_propagation_translates_coordinates
+        Input_propagation_translates_coordinates
     },
     {
         "propagation_keeps_deltas",
-        Event_propagation_keeps_deltas
+        Input_propagation_keeps_deltas
     },
     {
         "propagation_press_once_per_level",
-        Event_propagation_press_once_per_level
+        Input_propagation_press_once_per_level
     },
     {
         "drag_not_propagated_to_unrelated_target",
-        Event_drag_not_propagated_to_unrelated_target
+        Input_drag_not_propagated_to_unrelated_target
     },
     {
         "propagation_screen_coords_without_to_local",
-        Event_propagation_screen_coords_without_to_local
+        Input_propagation_screen_coords_without_to_local
     },
     {
         "stop_propagation_press",
-        Event_stop_propagation_press
+        Input_stop_propagation_press
     },
     {
         "stop_propagation_same_level",
-        Event_stop_propagation_same_level
+        Input_stop_propagation_same_level
     },
     {
         "stop_propagation_once",
-        Event_stop_propagation_once
+        Input_stop_propagation_once
     },
     {
         "stop_propagation_result",
-        Event_stop_propagation_result
+        Input_stop_propagation_result
     },
     {
         "stop_propagation_key",
-        Event_stop_propagation_key
+        Input_stop_propagation_key
     },
     {
         "stop_propagation_keeps_enter",
-        Event_stop_propagation_keeps_enter
+        Input_stop_propagation_keeps_enter
     },
     {
         "stop_propagation_stale_event",
-        Event_stop_propagation_stale_event
+        Input_stop_propagation_stale_event
     },
     {
         "stop_propagation_enter_event",
-        Event_stop_propagation_enter_event
+        Input_stop_propagation_enter_event
     },
     {
         "import_focus",
-        Event_import_focus
+        Input_import_focus
     },
     {
         "set_get_focus",
-        Event_set_get_focus
+        Input_set_get_focus
     },
     {
         "get_focus_after_press",
-        Event_get_focus_after_press
+        Input_get_focus_after_press
     },
     {
         "key_to_set_focus",
-        Event_key_to_set_focus
+        Input_key_to_set_focus
     },
     {
         "focus_blur_on_press",
-        Event_focus_blur_on_press
+        Input_focus_blur_on_press
     },
     {
         "focus_blur_on_set_focus",
-        Event_focus_blur_on_set_focus
+        Input_focus_blur_on_set_focus
     },
     {
         "focus_unchanged_no_events",
-        Event_focus_unchanged_no_events
+        Input_focus_unchanged_no_events
     },
     {
         "focus_between_children_reaches_parent",
-        Event_focus_between_children_reaches_parent
+        Input_focus_between_children_reaches_parent
     },
     {
         "stop_propagation_focus",
-        Event_stop_propagation_focus
+        Input_stop_propagation_focus
     },
     {
         "to_focus_reject_press",
-        Event_to_focus_reject_press
+        Input_to_focus_reject_press
     },
     {
         "to_focus_redirect",
-        Event_to_focus_redirect
+        Input_to_focus_redirect
     },
     {
         "to_focus_not_invoked_when_unchanged",
-        Event_to_focus_not_invoked_when_unchanged
+        Input_to_focus_not_invoked_when_unchanged
     },
     {
         "remove_event_hooks",
-        Event_remove_event_hooks
+        Input_remove_event_hooks
     },
     {
         "script_focus",
-        Event_script_focus
+        Input_script_focus
     },
     {
         "script_focus_returns_to_focus_result",
-        Event_script_focus_returns_to_focus_result
+        Input_script_focus_returns_to_focus_result
     },
     {
         "script_focus_clear",
-        Event_script_focus_clear
+        Input_script_focus_clear
     },
     {
         "script_focus_resumes_listeners",
-        Event_script_focus_resumes_listeners
+        Input_script_focus_resumes_listeners
     },
     {
         "delete_focus",
-        Event_delete_focus
+        Input_delete_focus
     },
     {
         "import_activate",
-        Event_import_activate
+        Input_import_activate
     },
     {
         "activate_click",
-        Event_activate_click
+        Input_activate_click
     },
     {
         "no_activate_when_released_elsewhere",
-        Event_no_activate_when_released_elsewhere
+        Input_no_activate_when_released_elsewhere
     },
     {
         "activate_enter",
-        Event_activate_enter
+        Input_activate_enter
     },
     {
         "activate_space_on_release",
-        Event_activate_space_on_release
+        Input_activate_space_on_release
     },
     {
         "no_activate_without_focus",
-        Event_no_activate_without_focus
+        Input_no_activate_without_focus
     },
     {
         "no_activate_space_focus_changed",
-        Event_no_activate_space_focus_changed
+        Input_no_activate_space_focus_changed
     },
     {
         "no_activate_enter_repeat",
-        Event_no_activate_enter_repeat
+        Input_no_activate_enter_repeat
     },
     {
         "activate_bubbles_to_parent",
-        Event_activate_bubbles_to_parent
+        Input_activate_bubbles_to_parent
     },
     {
         "activate_once_per_activation",
-        Event_activate_once_per_activation
+        Input_activate_once_per_activation
     },
     {
         "activate_modifiers",
-        Event_activate_modifiers
+        Input_activate_modifiers
     },
     {
         "activate_and_click",
-        Event_activate_and_click
+        Input_activate_and_click
     },
     {
         "stop_propagation_activate",
-        Event_stop_propagation_activate
+        Input_stop_propagation_activate
     },
     {
         "get_mouse_state",
-        Event_get_mouse_state
+        Input_get_mouse_state
     },
     {
         "listeners",
-        Event_listeners
+        Input_listeners
     },
     {
         "emit_result",
-        Event_emit_result
+        Input_emit_result
     },
     {
         "emit_result_stopped",
-        Event_emit_result_stopped
+        Input_emit_result_stopped
     }
 };
 
@@ -20518,9 +20518,9 @@ bake_test_param AsyncBlock_params[] = {
     {"ir", (char**)AsyncBlock_ir_param, 2}
 };
 
-const char* Event_ir_param[] = {"disabled", "enabled"};
-bake_test_param Event_params[] = {
-    {"ir", (char**)Event_ir_param, 2}
+const char* Input_ir_param[] = {"disabled", "enabled"};
+bake_test_param Input_params[] = {
+    {"ir", (char**)Input_ir_param, 2}
 };
 
 const char* TryCatch_ir_param[] = {"disabled", "enabled"};
@@ -20678,13 +20678,13 @@ static bake_test_suite suites[] = {
         AsyncBlock_params
     },
     {
-        "Event",
-        Event_setup,
+        "Input",
+        Input_setup,
         NULL,
         82,
-        Event_testcases,
+        Input_testcases,
         1,
-        Event_params
+        Input_params
     },
     {
         "TryCatch",

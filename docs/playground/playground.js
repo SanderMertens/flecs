@@ -970,7 +970,7 @@
     editor.addCommand("run", { win: "Ctrl-Enter", mac: "Command-Enter" }, function () { run(true); });
 
     /* Mouse and keyboard events on the 2D/3D views go to the wasm image, where
-     * the flecs.script.event module delivers them to the async blocks of the
+     * the flecs.script.input module delivers them to the async blocks of the
      * script (on.press, on.drag, on.key_down, ...). The tree and views are
      * refreshed once per frame while events come in. */
     var refreshQueued = false;

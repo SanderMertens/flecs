@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     // Import the module that adds the on.* functions to scripts
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
 
     ECS_TAG_DEFINE(world, Focusable);
     ECS_COMPONENT_DEFINE(world, Position);

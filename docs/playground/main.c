@@ -2,7 +2,7 @@
 #include <emscripten.h>
 
 /* Host application for the Flecs playground wasm image. Mouse and keyboard
- * events from the page are forwarded to the flecs.script.event module, which
+ * events from the page are forwarded to the flecs.script.input module, which
  * delivers them to the async blocks of scripts. */
 
 static ecs_world_t *playground_world;
@@ -185,7 +185,7 @@ int main(void) {
     ECS_IMPORT(world, FlecsUnits);
     ECS_IMPORT(world, FlecsScriptMath);
     ECS_IMPORT(world, FlecsScriptPlatform);
-    ECS_IMPORT(world, FlecsScriptEvent);
+    ECS_IMPORT(world, FlecsScriptInput);
     ECS_IMPORT(world, FlecsAlerts);
     ECS_IMPORT(world, FlecsMetrics);
 

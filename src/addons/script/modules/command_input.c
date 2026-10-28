@@ -1,11 +1,12 @@
 /**
- * @file addons/script/modules/command_event.c
+ * @file addons/script/modules/command_input.c
  * @brief Commands for emitting mouse, keyboard and focus events.
  */
 
 #include "flecs.h"
 
-#if defined(FLECS_SCRIPT_COMMAND) && defined(FLECS_SCRIPT_EVENT)
+#ifdef FLECS_SCRIPT_COMMAND
+#ifdef FLECS_SCRIPT_INPUT
 #include "command.h"
 
 static const char* flecs_command_parse_modifiers(
@@ -70,7 +71,7 @@ static void flecs_command_pointer_event(
 
     evt->local_x = has_position ? x : 0;
     evt->local_y = has_position ? y : 0;
-    flecs_script_event_to_screen(world, entity, evt->local_x, evt->local_y,
+    flecs_script_input_to_screen(world, entity, evt->local_x, evt->local_y,
         &evt->screen_x, &evt->screen_y);
 }
 
@@ -467,7 +468,7 @@ static void flecs_command_listeners(
     }
 }
 
-void flecs_command_event_import(
+void flecs_command_input_import(
     ecs_world_t *world)
 {
     ecs_entity_t string_t = ecs_id(ecs_string_t);
@@ -537,4 +538,5 @@ void flecs_command_event_import(
         ECS_SIZEOF(commands) / ECS_SIZEOF(flecs_command_desc_t));
 }
 
+#endif
 #endif

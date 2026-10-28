@@ -661,7 +661,7 @@
 
   /* 2D view */
 
-  /* Pointer events are sent to the script event module with the shape under
+  /* Pointer events are sent to the script input module with the shape under
    * the pointer as target and the pointer position relative to the lower left
    * corner of that shape; the module derives press, drag, release and click
    * from the button state. A gesture that starts on a shape captures the
