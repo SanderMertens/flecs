@@ -184,6 +184,22 @@ my_entity {
 }
 ```
 
+#### Partial assignments
+A component assignment with `:` assigns the entire component value. Members that are not specified by the initializer are reset to their default value, so `Position: {x: 10}` and `Position: {10}` are equivalent and both set `y` to `0`.
+
+To only assign some members of a component, use `=` instead of `:`. Members that are not specified by the initializer keep their current value:
+
+```cpp
+my_entity {
+  Position: {10, 20}
+  Position = {y: 30}
+}
+
+// my_entity will have Position{10, 30}
+```
+
+A partial assignment requires the entity to already have the component. If the entity does not have the component, script evaluation fails.
+
 ### Namespacing
 When referring to child entities or components, identifiers need to include the parent path as well as the entity name. Paths are provided as lists of identifiers separated by a dot (`.`):
 
@@ -389,7 +405,6 @@ Initializers are values that are used to initialize composite and collection mem
 {start: {x: 10, y: 20}, stop: {x: 10, y: 20}}
 [10, 20, 30]
 [{10, 20}, {30, 40}, {50, 60}]
-{x += 10, y *= 2}
 ```
 
 Composite initializers must always be assigned to an lvalue of a well defined type. This can either be a typed variable, component assignment, function parameter or in the case of nested initializers, an element of another initializer. For example, this is a valid usage of an initializer:
@@ -432,35 +447,6 @@ Tree: {color: color, height: height}
 
 // Shorthand notation
 Tree: {color: $, height: $}
-```
-
-Initializer expressions may contain add assignment (`+=`) or multiply assignment (`*=`) operators. These operators allow an initializer to modify an existing value. An example:
-
-```cpp
-e {
-  Position: {10, 20}
-  Position: {x += 1, y += 2}
-}
-
-// e will have Position{11, 22}
-```
-
-This can be especially useful when used in combination with templates (see below):
-
-```cpp
-template Tree {
-  prop height: f32 = 4
-
-  // Make sure tree doesn't sink through the ground
-  Position: {y += height} 
-}
-
-e {
-  Position: {10, 0}
-  Tree: {height: 3}
-}
-
-// e will have Position{10, 3}
 ```
 
 ### Match expressions
@@ -1940,11 +1926,11 @@ light {
   Emissive: {0} // scope that owns the component
 
   if game?[Lights] {
-    Emissive: {daylight: game[Lights].value} // partial assignment
+    Emissive = {daylight: game[Lights].value} // partial assignment
   }
 
   if game[TimeOfDay].daylight < 0.5 {
-    Emissive: {daylight: 1} // partial assignment
+    Emissive = {daylight: 1} // partial assignment
   }
 }
 ```

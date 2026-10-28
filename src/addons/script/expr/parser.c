@@ -163,11 +163,8 @@ const char* flecs_script_parse_initializer(
         ecs_os_zeromem(elem);
 
         if (until != ']') {
-            LookAheadAny_2(case EcsTokIdentifier: EcsTokKeyword:,
-                case ':': case EcsTokAddAssign: case EcsTokMulAssign:,
+            LookAheadAny_2(case EcsTokIdentifier: EcsTokKeyword:, case ':':,
                 elem->member = Token(0);
-                elem->operator = lookahead_token.kind == ':'
-                    ? 0 : lookahead_token.kind;
                 Consume();
             )
         }
@@ -227,16 +224,6 @@ const char* flecs_script_parse_initializer(
                     EndOfRule;
                 })
             }
-        }
-
-        if (elem->member) {
-            node->is_partial = true;
-        }
-
-        if (elem->value && elem->value->kind == EcsExprInitializer &&
-            ((ecs_expr_initializer_t*)elem->value)->is_partial)
-        {
-            node->is_partial = true;
         }
 
         {

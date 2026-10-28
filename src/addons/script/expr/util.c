@@ -201,9 +201,9 @@ int flecs_value_unary(
 #define FLECS_VALUE_FLOAT(T)
 
 #define FLECS_VALUE_ARITHMETIC(T)\
-    case EcsTokAdd: case EcsTokAddAssign: *(T*)out = (T)(l + r); return 0;\
+    case EcsTokAdd: *(T*)out = (T)(l + r); return 0;\
     case EcsTokSub: *(T*)out = (T)(l - r); return 0;\
-    case EcsTokMul: case EcsTokMulAssign: *(T*)out = (T)(l * r); return 0;\
+    case EcsTokMul: *(T*)out = (T)(l * r); return 0;\
     case EcsTokDiv: *(T*)out = (T)(l / r); return 0;
 
 #define FLECS_VALUE_BINARY(T, ARITHMETIC, INTEGER)\
@@ -259,10 +259,6 @@ int flecs_value_binary(
     ecs_value_t *out,
     ecs_token_kind_t operator)
 {
-    if (operator == EcsTokAddAssign || operator == EcsTokMulAssign) {
-        left = out;
-    }
-
     if ((operator == EcsTokDiv || operator == EcsTokMod) && flecs_value_is_0(right)) {
         flecs_expr_visit_error(script, node, "division by zero");
         return -1;
@@ -285,8 +281,7 @@ int flecs_value_binary(
 
     if (operator == EcsTokAdd || operator == EcsTokSub || operator == EcsTokMul ||
         operator == EcsTokDiv || operator == EcsTokMod || operator == EcsTokBitwiseAnd ||
-        operator == EcsTokBitwiseOr || operator == EcsTokShiftLeft || operator == EcsTokShiftRight ||
-        operator == EcsTokAddAssign || operator == EcsTokMulAssign)
+        operator == EcsTokBitwiseOr || operator == EcsTokShiftLeft || operator == EcsTokShiftRight)
     {
         ecs_assert(out->type == right->type, ECS_INTERNAL_ERROR, NULL);
     }

@@ -1374,7 +1374,7 @@ void Reactivity_partial_assignment_does_not_own_component(void) {
             HEAD "item {"
             LINE "  Position: {owner[Mass].value, 2}"
             LINE "  if condition[Mass].value > 0 {"
-            LINE "    Position: {x: 10}"
+            LINE "    Position = {x: 10}"
             LINE "  }"
             LINE "}"
     });
@@ -7794,10 +7794,10 @@ void Reactivity_partial_component_in_two_non_exclusive_scopes(void) {
             LINE "  Position: {1, 2}"
             LINE "}"
             LINE "if a {"
-            LINE "  item { Position: {x: 10} }"
+            LINE "  item { Position = {x: 10} }"
             LINE "}"
             LINE "if b {"
-            LINE "  item { Position: {y: 20} }"
+            LINE "  item { Position = {y: 20} }"
             LINE "}"
     });
 
@@ -9841,6 +9841,96 @@ void Reactivity_script_reeval_error_in_other_script_eval(void) {
     test_assert(ecs_get(world, a, EcsScript)->error == NULL);
     test_assert(ecs_lookup(world, "ok") != 0);
     test_assert(ecs_get(world, b, EcsScript)->error != NULL);
+
+    ecs_fini(world);
+}
+
+void Reactivity_if_else_switch_keeps_component_w_fewer_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "struct Border(width: f32, radius: f32, extra: f32)"
+            LINE "template Toggle {"
+            LINE "  prop on: bool = false"
+            LINE "  if on {"
+            LINE "    Border: {width: 2, radius: 4, extra: 5}"
+            LINE "  } else {"
+            LINE "    Border: {width: 1}"
+            LINE "  }"
+            LINE "}"
+            LINE "Toggle x()"
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t border = ecs_lookup(world, "Border");
+    ecs_entity_t toggle = ecs_lookup(world, "Toggle");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(border != 0);
+    test_assert(toggle != 0);
+    test_assert(x != 0);
+    test_assert(ecs_has_id(world, x, border));
+
+    bool on = true;
+    ecs_set_id(world, x, toggle, sizeof(bool), &on);
+    test_assert(ecs_has_id(world, x, border));
+    test_flt(((const float*)ecs_get_id(world, x, border))[0], 2);
+
+    on = false;
+    ecs_set_id(world, x, toggle, sizeof(bool), &on);
+    test_assert(ecs_has_id(world, x, border));
+    test_flt(((const float*)ecs_get_id(world, x, border))[0], 1);
+
+    ecs_fini(world);
+}
+
+void Reactivity_partial_after_conditional_owner_reapplied(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t script = ecs_script(world, { .ir = ir_enabled,
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "struct Border(width: f32, radius: f32, extra: f32)"
+            LINE "template Toggle {"
+            LINE "  prop on: bool = false"
+            LINE "  if on {"
+            LINE "    Border: {width: 2, radius: 4, extra: 5}"
+            LINE "  }"
+            LINE "  Border = {width: 1}"
+            LINE "}"
+            LINE "Toggle x(on: true)"
+    });
+    test_assert(script != 0);
+    test_assert(ecs_get(world, script, EcsScript)->error == NULL);
+
+    ecs_entity_t border = ecs_lookup(world, "Border");
+    ecs_entity_t toggle = ecs_lookup(world, "Toggle");
+    ecs_entity_t x = ecs_lookup(world, "x");
+    test_assert(border != 0);
+    test_assert(toggle != 0);
+    test_assert(x != 0);
+
+    const float *b = ecs_get_id(world, x, border);
+    test_assert(b != NULL);
+    test_flt(b[0], 1);
+    test_flt(b[1], 4);
+    test_flt(b[2], 5);
+
+    ecs_log_set_level(-4);
+    bool on = false;
+    ecs_set_id(world, x, toggle, sizeof(bool), &on);
+    ecs_log_set_level(-1);
+    test_assert(ecs_get(world, toggle, EcsScript)->error != NULL);
+
+    on = true;
+    ecs_set_id(world, x, toggle, sizeof(bool), &on);
+    test_assert(ecs_get(world, toggle, EcsScript)->error == NULL);
+    b = ecs_get_id(world, x, border);
+    test_assert(b != NULL);
+    test_flt(b[0], 1);
+    test_flt(b[1], 4);
+    test_flt(b[2], 5);
 
     ecs_fini(world);
 }

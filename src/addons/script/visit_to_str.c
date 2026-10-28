@@ -205,7 +205,7 @@ static void flecs_script_stmt_to_str(
         ecs_script_component_t *stmt = (ecs_script_component_t*)node;
         flecs_script_id_to_str(v, &stmt->id);
         if (stmt->expr) {
-            flecs_scriptbuf_appendstr(v, ": ");
+            flecs_scriptbuf_appendstr(v, stmt->is_partial ? " = " : ": ");
             flecs_expr_to_str(v, stmt->expr);
         }
 

@@ -256,7 +256,7 @@ static void flecs_irc_compile_static_initializer(
             continue;
         }
 
-        if (!elem->operator && elem->value->kind == EcsExprValue) {
+        if (elem->value->kind == EcsExprValue) {
             ecs_expr_value_node_t *value = (ecs_expr_value_node_t*)elem->value;
             int32_t op = flecs_irc_emit(
                 c, EcsIrInitConst, dst, offset, 0, elem->value);
@@ -266,9 +266,7 @@ static void flecs_irc_compile_static_initializer(
 
         int32_t value = flecs_irc_compile_tmp(c, elem->value);
         int32_t op = flecs_irc_emit(c,
-            elem->operator ? EcsIrInitOp : EcsIrInitAssign,
-            dst, offset, value, elem->value);
-        flecs_irc_op(c, op)->flags = (uint16_t)elem->operator;
+            EcsIrInitAssign, dst, offset, value, elem->value);
         flecs_irc_op(c, op)->imm.ptr = node;
     }
 }
@@ -804,11 +802,6 @@ static void flecs_irc_compile_component(
     const ecs_script_ir_id_t *desc = ecs_vec_get_t(
         &c->ir->ids, ecs_script_ir_id_t, id);
 
-    bool partial = false;
-    if (node->expr && node->expr->kind == EcsExprInitializer) {
-        partial = ((ecs_expr_initializer_t*)node->expr)->is_partial;
-    }
-
     int32_t visitor = -1;
     if (!with && !desc->has_second && (desc->visitor || desc->dynamic)) {
         visitor = flecs_irc_emit(c, EcsIrComponentVisitor, id, 0, 0, node);
@@ -823,7 +816,7 @@ static void flecs_irc_compile_component(
         int32_t op = flecs_irc_emit(c,
             with ? EcsIrWithComponentBegin : EcsIrComponentBegin,
             id, tmp, 0, node);
-        flecs_irc_op(c, op)->flags = partial ? EcsIrComponentPartial : 0;
+        flecs_irc_op(c, op)->flags = node->is_partial ? EcsIrComponentPartial : 0;
 
         bool in_place;
         if (desc->ti) {

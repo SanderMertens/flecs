@@ -330,6 +330,12 @@ int flecs_script_eval_component_check(
     ecs_id_t id,
     bool resolved);
 
+int flecs_script_eval_partial_check(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_component_t *node,
+    ecs_id_t id,
+    bool check_released);
+
 int flecs_script_eval_component_visit(
     ecs_script_eval_visitor_t *v,
     const ecs_script_component_t *node,
@@ -516,6 +522,11 @@ void flecs_script_track_component(
 bool flecs_script_scope_visited(
     ecs_script_eval_visitor_t *v,
     int32_t slot);
+
+bool flecs_script_component_released(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t src,
+    ecs_id_t component);
 
 /* Functions shared between type and eval visitor */
 

@@ -1371,6 +1371,25 @@ int flecs_script_eval_component_check(
     return 0;
 }
 
+int flecs_script_eval_partial_check(
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_component_t *node,
+    ecs_id_t id,
+    bool check_released)
+{
+    ecs_entity_t src = flecs_script_get_src(v->world, v->entity->eval, id);
+    if (!ecs_has_id(v->world, src, id) ||
+        (check_released && flecs_script_component_released(v, src, id)))
+    {
+        flecs_script_eval_error(v, node,
+            "cannot assign to '%s': entity does not have component",
+            flecs_errstr(ecs_id_str(v->world, id)));
+        return -1;
+    }
+
+    return 0;
+}
+
 int flecs_script_eval_component_visit(
     ecs_script_eval_visitor_t *v,
     const ecs_script_component_t *node,
@@ -1454,6 +1473,12 @@ static int flecs_script_eval_component(
         return -1;
     }
 
+    if (node->is_partial &&
+        flecs_script_eval_partial_check(v, node, node->id.eval, true))
+    {
+        return -1;
+    }
+
     ecs_entity_t src = flecs_script_get_src(
         v->world, v->entity->eval, node->id.eval);
 
@@ -1466,13 +1491,8 @@ static int flecs_script_eval_component(
 
         bool needs_set = ti->hooks.on_replace != NULL;
 
-        bool partial = false;
-        if (node->expr->kind == EcsExprInitializer) {
-            partial = ((ecs_expr_initializer_t*)node->expr)->is_partial;
-        }
-
         const void *existing = NULL;
-        if (partial) {
+        if (node->is_partial) {
             existing = ecs_get_id(v->world, src, node->id.eval);
         }
 
@@ -3002,6 +3022,33 @@ bool flecs_script_scope_visited(
     int32_t slot)
 {
     return flecs_script_slot_visited(&v->state->scope_slots, v->visit, slot);
+}
+
+bool flecs_script_component_released(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t src,
+    ecs_id_t component)
+{
+    const ecs_script_component_slot_t *slots = ecs_vec_first(
+        &v->state->component_slots);
+    int32_t i, count = ecs_vec_count(&v->state->component_slots);
+    bool released = false;
+    for (i = 0; i < count; i ++) {
+        const ecs_script_component_slot_t *slot = &slots[i];
+        if (slot->component != component ||
+            flecs_script_state_component_src(v->world, v->state, slot) != src)
+        {
+            continue;
+        }
+
+        if (flecs_script_scope_visited(v, slot->scope_slot)) {
+            return false;
+        }
+
+        released = true;
+    }
+
+    return released;
 }
 
 static void flecs_script_cleanup_slots(

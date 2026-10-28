@@ -7,6 +7,8 @@ typedef struct flecs_script_component_owner_t {
     ecs_script_entity_t *entity;
     ecs_script_id_t *id;
     ecs_script_scope_t *scope;
+    uint64_t input;
+    uint64_t internal;
     int32_t entity_symbol;
     int32_t next;
 } flecs_script_component_owner_t;
@@ -37,6 +39,8 @@ typedef struct flecs_script_dep_ctx_t {
     bool reactive;
     bool no_deps;
     int32_t conditional;
+    uint64_t enclosing_input;
+    uint64_t enclosing_internal;
     ecs_script_entity_t *entity;
     ecs_script_scope_t *scope;
 } flecs_script_dep_ctx_t;
@@ -356,48 +360,6 @@ static bool flecs_script_dep_component_already_owned(
     return first_scope == second_scope;
 }
 
-static bool flecs_script_dep_initializer_is_complete(
-    const ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_expr_initializer_t *initializer)
-{
-    if (!component) {
-        return false;
-    }
-
-    ecs_entity_t type = ecs_get_typeid(world, component);
-    if (!type) {
-        return false;
-    }
-
-    const EcsStruct *st = ecs_get(world, type, EcsStruct);
-    if (!st) {
-        return false;
-    }
-
-    const ecs_expr_initializer_element_t *elements = ecs_vec_first(
-        &initializer->elements);
-    int32_t i, count = ecs_vec_count(&initializer->elements);
-    if (count != ecs_vec_count(&st->members)) {
-        return false;
-    }
-
-    for (i = 0; i < count; i ++) {
-        if (!elements[i].member) {
-            return false;
-        }
-
-        const ecs_expr_node_t *value = elements[i].value;
-        if (value && value->kind == EcsExprInitializer &&
-            ((const ecs_expr_initializer_t*)value)->is_partial)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 static bool flecs_script_dep_owner_key(
     const ecs_script_entity_t *entity,
     int32_t entity_symbol,
@@ -493,6 +455,8 @@ static int flecs_script_dep_component_owner(
         if (owner->scope == ctx->scope ||
             flecs_script_dep_component_already_owned(owner, ctx))
         {
+            owner->input |= ctx->enclosing_input | node->direct_input;
+            owner->internal |= ctx->enclosing_internal | node->direct_internal;
             *already_owned = true;
             return 0;
         }
@@ -514,6 +478,8 @@ static int flecs_script_dep_component_owner(
     owner->entity_symbol = ctx->entity_symbol;
     owner->id = id;
     owner->scope = ctx->scope;
+    owner->input = ctx->enclosing_input | node->direct_input;
+    owner->internal = ctx->enclosing_internal | node->direct_internal;
     owner->next = -1;
     owners = ecs_vec_first(&ctx->component_owners);
     if (scan_all) {
@@ -528,6 +494,42 @@ static int flecs_script_dep_component_owner(
     }
 
     return 0;
+}
+
+static void flecs_script_dep_component_partial(
+    flecs_script_dep_ctx_t *ctx,
+    ecs_script_node_t *node,
+    ecs_script_id_t *id)
+{
+    if (!ctx->v->base.script->entity) {
+        return;
+    }
+
+    flecs_script_component_owner_t *owners = ecs_vec_first(
+        &ctx->component_owners);
+    int32_t count = ecs_vec_count(&ctx->component_owners);
+    uint64_t key = 0;
+    bool scan_all = !flecs_script_dep_owner_key(
+        ctx->entity, ctx->entity_symbol, &key);
+    int32_t cur[2] = {0, -1};
+    if (!scan_all) {
+        ecs_map_val_t *val = ecs_map_get(&ctx->owner_index, key);
+        cur[0] = val ? (int32_t)(*val >> 32) - 1 : -1;
+        cur[1] = ctx->entity ? ctx->owner_fuzzy_first : -1;
+    }
+
+    int32_t i;
+    while ((i = flecs_script_dep_owner_next(
+        owners, count, cur, scan_all)) != -1)
+    {
+        flecs_script_component_owner_t *owner = &owners[i];
+        if (flecs_script_dep_same_entity(owner, ctx) &&
+            flecs_script_dep_ids_may_match(owner->id, id))
+        {
+            node->direct_input |= owner->input;
+            node->direct_internal |= owner->internal;
+        }
+    }
 }
 
 static int flecs_script_dep_input_new(
@@ -754,38 +756,18 @@ static int flecs_script_dep_child(
     ecs_script_scope_t *scope,
     bool conditional)
 {
+    uint64_t enclosing_input = ctx->enclosing_input;
+    uint64_t enclosing_internal = ctx->enclosing_internal;
+    ctx->enclosing_input |= node->direct_input;
+    ctx->enclosing_internal |= node->direct_internal;
     ctx->conditional += conditional;
     int result = flecs_script_dep_scope(ctx, scope);
     ctx->conditional -= conditional;
+    ctx->enclosing_input = enclosing_input;
+    ctx->enclosing_internal = enclosing_internal;
     node->input |= scope->node.input;
     node->internal |= scope->node.internal;
     return result;
-}
-
-static bool flecs_script_dep_component_partial(
-    flecs_script_dep_ctx_t *ctx,
-    ecs_script_component_t *node)
-{
-    if (!node->expr || node->expr->kind != EcsExprInitializer) {
-        return false;
-    }
-
-    ecs_expr_initializer_t *initializer = (ecs_expr_initializer_t*)node->expr;
-    bool partial = initializer->is_partial;
-    if (!partial) {
-        ecs_expr_initializer_element_t *elements =
-            ecs_vec_first(&initializer->elements);
-        int32_t i, count = ecs_vec_count(&initializer->elements);
-        for (i = 0; i < count; i ++) {
-            if (elements[i].member) {
-                partial = true;
-                break;
-            }
-        }
-    }
-
-    return partial && !flecs_script_dep_initializer_is_complete(
-        ctx->v->world, node->id.eval, initializer);
 }
 
 static int flecs_script_dep_node_impl(
@@ -832,15 +814,20 @@ static int flecs_script_dep_node_impl(
         }
 
         if (node->kind == EcsAstComponent) {
-            bool partial = flecs_script_dep_component_partial(ctx, n);
+            if (n->is_partial) {
+                flecs_script_dep_component_partial(ctx, node, &n->id);
+                n->component_slot = -1;
+                break;
+            }
+
             bool already_owned = false;
-            if (!partial && flecs_script_dep_component_owner(
+            if (flecs_script_dep_component_owner(
                 ctx, node, &n->id, &already_owned))
             {
                 return -1;
             }
 
-            n->component_slot = partial || already_owned
+            n->component_slot = already_owned
                 ? -1
                 : ctx->component_count ++;
         }

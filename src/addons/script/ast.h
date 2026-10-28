@@ -115,6 +115,7 @@ typedef struct ecs_script_component_t {
     const char *value_end;
     int32_t component_slot;
     bool is_collection;
+    bool is_partial;
 } ecs_script_component_t;
 
 struct ecs_script_entity_t {

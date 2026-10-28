@@ -4563,7 +4563,7 @@ void TemplateProp_string_prop_in_consts_reassign(void) {
     test_str(ptr[0], "<a>ONE</a><b>TWO</b><c>ONETWO</c></svg>");
 
     test_assert(ecs_script_run_w_desc(world, NULL,
-        "a { Sign: {l1: \"AAA\"} }", &ir_desc, NULL) == 0);
+        "a { Sign = {l1: \"AAA\"} }", &ir_desc, NULL) == 0);
 
     e = ecs_lookup(world, "a");
     test_assert(e != 0);
@@ -4577,7 +4577,7 @@ void TemplateProp_string_prop_in_consts_reassign(void) {
     test_str(ptr[0], "<a>AAA</a><b>TWO</b><c>AAATWO</c></svg>");
 
     test_assert(ecs_script_run_w_desc(world, NULL,
-        "a { Sign: {l2: \"BBB\"} }", &ir_desc, NULL) == 0);
+        "a { Sign = {l2: \"BBB\"} }", &ir_desc, NULL) == 0);
 
     e = ecs_lookup(world, "a");
     test_assert(e != 0);

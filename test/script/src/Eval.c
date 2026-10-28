@@ -10808,7 +10808,7 @@ void Eval_partial_assign_to_existing(void) {
 
     const char *expr =
     HEAD "foo { Position: {10, 20} }"
-    LINE "foo { Position: {y: 30} }";
+    LINE "foo { Position = {y: 30} }";
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
@@ -10830,7 +10830,7 @@ void Eval_partial_assign_to_existing(void) {
 void Eval_partial_assign_to_new(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+    ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -10839,21 +10839,10 @@ void Eval_partial_assign_to_new(void) {
     });
 
     const char *expr =
-    HEAD "foo { Position: {y: 30} }";
+    HEAD "foo { Position = {y: 30} }";
 
-    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
-        .entity = ecs_entity(world, { .name = "main" }),
-        .code = expr
-    });
-    test_assert(s != 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "foo");
-    test_assert(foo != 0);
-
-    const Position *p = ecs_get(world, foo, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 0);
-    test_int(p->y, 30);
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -10880,7 +10869,7 @@ void Eval_partial_assign_to_existing_nontrivial(void) {
 
     const char *expr =
     HEAD "foo { Strings: {a: \"hello\", b: \"world\"} }"
-    LINE "foo { Strings: {b: \"bar\"} }";
+    LINE "foo { Strings = {b: \"bar\"} }";
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
@@ -10920,21 +10909,10 @@ void Eval_partial_assign_to_new_nontrivial(void) {
     });
 
     const char *expr =
-    HEAD "foo { Strings: {b: \"bar\"} }";
+    HEAD "foo { Strings = {b: \"bar\"} }";
 
-    ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
-        .entity = ecs_entity(world, { .name = "main" }),
-        .code = expr
-    });
-    test_assert(s != 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "foo");
-    test_assert(foo != 0);
-
-    const Strings *p = ecs_get(world, foo, Strings);
-    test_assert(p != NULL);
-    test_str(p->a, NULL);
-    test_str(p->b, "bar");
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -10953,7 +10931,7 @@ void Eval_partial_assign_to_existing_w_var(void) {
     const char *expr =
     HEAD "foo { Position: {10, 20} }"
     LINE "const v = 30"
-    LINE "foo { Position: {y: v} }";
+    LINE "foo { Position = {y: v} }";
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
@@ -11116,7 +11094,7 @@ void Eval_partial_assign_to_existing_w_expr(void) {
     const char *expr =
     HEAD "foo { Position: {10, 20} }"
     LINE "bar { Position: {30, 40} }"
-    LINE "foo { Position: {y: bar[Position].x} }";
+    LINE "foo { Position = {y: bar[Position].x} }";
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
@@ -11214,7 +11192,7 @@ void Eval_partial_assign_to_existing_pair(void) {
 
     const char *expr =
     HEAD "foo { (Eats, Apples): {amount: 10, quality: 20} }"
-    LINE "foo { (Eats, Apples): {quality: 30} }";
+    LINE "foo { (Eats, Apples) = {quality: 30} }";
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
@@ -11254,7 +11232,7 @@ void Eval_partial_assign_nested_to_existing(void) {
 
     const char *expr =
     HEAD "foo { Line: {{1, 2}, {3, 4}} }"
-    LINE "foo { Line: {start: {y: 10}} }";
+    LINE "foo { Line = {start: {y: 10}} }";
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
@@ -11293,7 +11271,7 @@ void Eval_partial_assign_to_inherited(void) {
 
     const char *expr =
     HEAD "prefab base { Position: {1, 2} }"
-    LINE "inst : base { Position: {y: 10} }";
+    LINE "inst : base { Position = {y: 10} }";
 
     ecs_entity_t s = ecs_script(world, { .ir = ir_enabled,
         .entity = ecs_entity(world, { .name = "main" }),
@@ -12395,74 +12373,6 @@ void Eval_unknown_annotation(void) {
 
     test_assert(ecs_script_run_w_desc(world, NULL,
         "@tree Bogus\ne2 {}", &ir_desc, NULL) != 0);
-
-    ecs_fini(world);
-}
-
-void Eval_component_w_assign_add(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "Foo {"
-    LINE "  Position: {10, 20}"
-    LINE "  Position: {x += 1, y += 2}"
-    LINE "}"
-    ;
-
-    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
-    test_assert(s != NULL);
-
-    test_assert(ecs_script_eval(s, &ir_desc, NULL) == 0);
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    test_assert(foo != 0);
-    const Position *ptr = ecs_get(world, foo, Position);
-    test_assert(ptr != NULL);
-    test_int(ptr->x, 11);
-    test_int(ptr->y, 22);
-
-    ecs_script_free(s);
-
-    ecs_fini(world);
-}
-
-void Eval_component_w_assign_mul(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "Foo {"
-    LINE "  Position: {10, 20}"
-    LINE "  Position: {x *= 2, y *= 4}"
-    LINE "}"
-    ;
-
-    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &ir_desc, NULL);
-    test_assert(s != NULL);
-
-    test_assert(ecs_script_eval(s, &ir_desc, NULL) == 0);
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    test_assert(foo != 0);
-    const Position *ptr = ecs_get(world, foo, Position);
-    test_assert(ptr != NULL);
-    test_int(ptr->x, 20);
-    test_int(ptr->y, 80);
-
-    ecs_script_free(s);
 
     ecs_fini(world);
 }
@@ -17542,98 +17452,6 @@ void Eval_component_expr_swizzle_initializer_rgba(void) {
     test_int(ptr->g, 2);
     test_int(ptr->b, 3);
     test_int(ptr->a, 4);
-
-    ecs_fini(world);
-}
-
-void Eval_component_expr_swizzle_initializer_add_assign(void) {
-    typedef struct { float r; float g; float b; float a; } Rgba;
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Rgba) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Rgba" }),
-        .members = {
-            {"r", ecs_id(ecs_f32_t)},
-            {"g", ecs_id(ecs_f32_t)},
-            {"b", ecs_id(ecs_f32_t)},
-            {"a", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    test_assert(ecs_id(Rgba) != 0);
-
-    const char *init =
-    HEAD "e {"
-    LINE "  Rgba: {100, 100, 100, 100}"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, init, &ir_desc, NULL) == 0);
-
-    ecs_log_set_level(-4);
-
-    const char *expr =
-    HEAD "const color: Rgba = {1, 2, 3, 4}"
-    LINE "e {"
-    LINE "  Rgba: {r += color.rgb}"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    const Rgba *ptr = ecs_get(world, e, Rgba);
-    test_assert(ptr != NULL);
-    test_int(ptr->r, 100);
-    test_int(ptr->g, 100);
-    test_int(ptr->b, 100);
-    test_int(ptr->a, 100);
-
-    ecs_fini(world);
-}
-
-void Eval_component_expr_swizzle_initializer_mul_assign(void) {
-    typedef struct { float r; float g; float b; float a; } Rgba;
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Rgba) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Rgba" }),
-        .members = {
-            {"r", ecs_id(ecs_f32_t)},
-            {"g", ecs_id(ecs_f32_t)},
-            {"b", ecs_id(ecs_f32_t)},
-            {"a", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    test_assert(ecs_id(Rgba) != 0);
-
-    const char *init =
-    HEAD "e {"
-    LINE "  Rgba: {10, 10, 10, 10}"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, init, &ir_desc, NULL) == 0);
-
-    ecs_log_set_level(-4);
-
-    const char *expr =
-    HEAD "const color: Rgba = {2, 3, 4, 5}"
-    LINE "e {"
-    LINE "  Rgba: {r *= color.rgb}"
-    LINE "}";
-
-    test_assert(ecs_script_run_w_desc(world, NULL, expr, &ir_desc, NULL) != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    const Rgba *ptr = ecs_get(world, e, Rgba);
-    test_assert(ptr != NULL);
-    test_int(ptr->r, 10);
-    test_int(ptr->g, 10);
-    test_int(ptr->b, 10);
-    test_int(ptr->a, 10);
 
     ecs_fini(world);
 }
