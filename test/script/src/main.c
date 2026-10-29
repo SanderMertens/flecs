@@ -4163,6 +4163,26 @@ void Command_help_custom_command_path(void);
 void Command_no_command_paths(void);
 void Command_command_path_from_script(void);
 
+// Testsuite 'CommandResource'
+void CommandResource_setup(void);
+void CommandResource_lookup_type(void);
+void CommandResource_create(void);
+void CommandResource_create_multiple(void);
+void CommandResource_create_default_content_type(void);
+void CommandResource_create_empty(void);
+void CommandResource_create_not_a_session(void);
+void CommandResource_no_dir_without_resource(void);
+void CommandResource_names_per_session(void);
+void CommandResource_read(void);
+void CommandResource_read_binary(void);
+void CommandResource_read_unknown(void);
+void CommandResource_read_other_session(void);
+void CommandResource_read_not_a_session(void);
+void CommandResource_delete_session(void);
+void CommandResource_delete_session_keeps_other_session(void);
+void CommandResource_world_fini(void);
+void CommandResource_command_returns_resource(void);
+
 // Testsuite 'SerializeType'
 void SerializeType_struct(void);
 void SerializeType_struct_w_deps(void);
@@ -20523,6 +20543,77 @@ bake_test_case Command_testcases[] = {
     }
 };
 
+bake_test_case CommandResource_testcases[] = {
+    {
+        "lookup_type",
+        CommandResource_lookup_type
+    },
+    {
+        "create",
+        CommandResource_create
+    },
+    {
+        "create_multiple",
+        CommandResource_create_multiple
+    },
+    {
+        "create_default_content_type",
+        CommandResource_create_default_content_type
+    },
+    {
+        "create_empty",
+        CommandResource_create_empty
+    },
+    {
+        "create_not_a_session",
+        CommandResource_create_not_a_session
+    },
+    {
+        "no_dir_without_resource",
+        CommandResource_no_dir_without_resource
+    },
+    {
+        "names_per_session",
+        CommandResource_names_per_session
+    },
+    {
+        "read",
+        CommandResource_read
+    },
+    {
+        "read_binary",
+        CommandResource_read_binary
+    },
+    {
+        "read_unknown",
+        CommandResource_read_unknown
+    },
+    {
+        "read_other_session",
+        CommandResource_read_other_session
+    },
+    {
+        "read_not_a_session",
+        CommandResource_read_not_a_session
+    },
+    {
+        "delete_session",
+        CommandResource_delete_session
+    },
+    {
+        "delete_session_keeps_other_session",
+        CommandResource_delete_session_keeps_other_session
+    },
+    {
+        "world_fini",
+        CommandResource_world_fini
+    },
+    {
+        "command_returns_resource",
+        CommandResource_command_returns_resource
+    }
+};
+
 bake_test_case SerializeType_testcases[] = {
     {
         "struct",
@@ -21022,6 +21113,13 @@ static bake_test_suite suites[] = {
         Command_testcases
     },
     {
+        "CommandResource",
+        CommandResource_setup,
+        NULL,
+        17,
+        CommandResource_testcases
+    },
+    {
         "SerializeType",
         NULL,
         NULL,
@@ -21031,5 +21129,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 33);
+    return bake_test_run("script", argc, argv, suites, 34);
 }

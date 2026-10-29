@@ -56,6 +56,19 @@
  *
  * Commands with optional parameters can be called with fewer arguments. Use
  * the help command to list the commands and their parameters.
+ *
+ * Commands can store files, like images, as resources of the session with
+ * ecs_command_resource_create(). A command signals that it returned a resource
+ * by returning the flecs.script.shell.resource type (ecs_command_resource_t).
+ * Clients can then fetch the content of the resource with the REST API:
+ *
+ * @code
+ * GET /shell/session/<session>/resource/<name>
+ * @endcode
+ *
+ * Resources are stored in CWD/.flecs/shell/<session>/<name>. The directory is
+ * created when the first resource of a session is created, and is deleted
+ * together with the session.
  * @{
  */
 
@@ -83,6 +96,12 @@ typedef struct ecs_command_result_t {
     ecs_vec_t errors;
 } ecs_command_result_t;
 
+/** Resource created by a command, see ecs_command_resource_create(). */
+typedef struct ecs_command_resource_t {
+    char *name;              /**< Name of the resource, unique within the session. */
+    char *content_type;      /**< Content type (for example "image/png"). */
+} ecs_command_resource_t;
+
 /** Command session.
  * A session stores the scope relative to which commands resolve identifiers,
  * and a bounded history of the commands that ran in the session together with
@@ -96,13 +115,15 @@ typedef struct ecs_command_result_t {
  * @endcode
  *
  * The type and result members are omitted when the command did not return a
- * value. The results member is not reflected, as it can be large.
+ * value. The results and resources members are not reflected.
  */
 typedef struct EcsCommandSession {
     ecs_entity_t scope;      /**< Current scope, 0 for the root. */
     ecs_vec_t history;       /**< Commands that ran, oldest first (vec<char*>). */
     int32_t history_size;    /**< Maximum number of commands in the history. */
     ecs_vec_t results;       /**< JSON results of the commands in the history (vec<char*>). */
+    ecs_vec_t resources;     /**< Resources created by commands (vec<ecs_command_resource_t>). */
+    char *resource_path;     /**< Directory with the resource files, NULL if no resources were created. */
 } EcsCommandSession;
 
 /** Shell singleton. */
@@ -229,6 +250,10 @@ extern ECS_COMPONENT_DECLARE(EcsScriptShell);
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsCommandSession);
 
+/** Resource type (flecs.script.shell.resource). */
+FLECS_API
+extern ECS_COMPONENT_DECLARE(ecs_command_resource_t);
+
 /** Create a command session.
  * When no entity is provided, the session is created in the
  * script.shell.sessions scope.
@@ -277,6 +302,56 @@ void ecs_command_result_fini(
 FLECS_API
 ecs_entity_t ecs_command_get_session(
     const ecs_world_t *world);
+
+/** Create a resource in a session.
+ * Writes the data to a new file in the resource directory of the session, and
+ * adds the resource to the session. The resource directory is created when the
+ * first resource is created. Files are written with the OS API.
+ *
+ * A command that returns a resource typically does:
+ *
+ * @code
+ * ecs_command_resource_create(ctx->world, ecs_command_get_session(ctx->world),
+ *     "image/png", data, size, result->ptr);
+ * @endcode
+ *
+ * @param world The world.
+ * @param session The session.
+ * @param content_type The content type of the data (optional).
+ * @param data The data to store.
+ * @param size The size of the data.
+ * @param resource Out parameter for the created resource (optional). The
+ *        members must be freed by the caller.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_command_resource_create(
+    ecs_world_t *world,
+    ecs_entity_t session,
+    const char *content_type,
+    const void *data,
+    ecs_size_t size,
+    ecs_command_resource_t *resource);
+
+/** Read a resource of a session.
+ * Only resources that were created in the session can be read.
+ *
+ * @param world The world.
+ * @param session The session.
+ * @param name The name of the resource.
+ * @param size Out parameter for the size of the data.
+ * @param content_type Out parameter for the content type (optional). The
+ *        string is owned by the session.
+ * @return The data, NULL if the resource does not exist or could not be read.
+ *         The data must be freed with ecs_os_free().
+ */
+FLECS_API
+void* ecs_command_resource_read(
+    const ecs_world_t *world,
+    ecs_entity_t session,
+    const char *name,
+    ecs_size_t *size,
+    const char **content_type);
 
 /** Script shell import function.
  * Usage:

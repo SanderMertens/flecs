@@ -10,6 +10,7 @@
 
 ECS_COMPONENT_DECLARE(EcsScriptShell);
 ECS_COMPONENT_DECLARE(EcsCommandSession);
+ECS_COMPONENT_DECLARE(ecs_command_resource_t);
 ECS_COMPONENT_DECLARE(ecs_command_param_info_t);
 ECS_COMPONENT_DECLARE(ecs_command_info_t);
 ECS_COMPONENT_DECLARE(ecs_command_tree_node_t);
@@ -34,6 +35,9 @@ typedef struct EcsCommandState {
 
 static ECS_COMPONENT_DECLARE(EcsCommandState);
 
+#define FLECS_COMMAND_RESOURCE_ROOT ".flecs"
+#define FLECS_COMMAND_RESOURCE_DIR ".flecs/shell"
+
 static void flecs_command_strings_fini(
     ecs_vec_t *strings)
 {
@@ -44,6 +48,28 @@ static void flecs_command_strings_fini(
     }
 
     ecs_vec_fini_t(NULL, strings, char*);
+}
+
+static void flecs_command_resources_fini(
+    EcsCommandSession *s)
+{
+    ecs_command_resource_t *array = ecs_vec_first(&s->resources);
+    int32_t i, count = ecs_vec_count(&s->resources);
+    for (i = 0; i < count; i ++) {
+        char *file = flecs_asprintf("%s/%s", s->resource_path, array[i].name);
+        ecs_os_remove(file);
+        ecs_os_free(file);
+        ecs_os_free(array[i].name);
+        ecs_os_free(array[i].content_type);
+    }
+
+    ecs_vec_fini_t(NULL, &s->resources, ecs_command_resource_t);
+
+    if (s->resource_path) {
+        ecs_os_rmdir(s->resource_path);
+        ecs_os_free(s->resource_path);
+        s->resource_path = NULL;
+    }
 }
 
 static ECS_COPY(EcsScriptShell, dst, src, {
@@ -65,6 +91,7 @@ static ECS_DTOR(EcsScriptShell, ptr, {
 static ECS_MOVE(EcsCommandSession, dst, src, {
     flecs_command_strings_fini(&dst->history);
     flecs_command_strings_fini(&dst->results);
+    flecs_command_resources_fini(dst);
     *dst = *src;
     ecs_os_zeromem(src);
 })
@@ -72,6 +99,7 @@ static ECS_MOVE(EcsCommandSession, dst, src, {
 static ECS_DTOR(EcsCommandSession, ptr, {
     flecs_command_strings_fini(&ptr->history);
     flecs_command_strings_fini(&ptr->results);
+    flecs_command_resources_fini(ptr);
 })
 
 ecs_entity_t ecs_command_get_session(
@@ -973,6 +1001,157 @@ error:
     return 0;
 }
 
+int ecs_command_resource_create(
+    ecs_world_t *world,
+    ecs_entity_t session,
+    const char *content_type,
+    const void *data,
+    ecs_size_t size,
+    ecs_command_resource_t *resource)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(size >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(data != NULL || !size, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id(EcsCommandSession) != 0, ECS_INVALID_OPERATION,
+        "script command module is not imported");
+
+    EcsCommandSession *s = NULL;
+    if (session && ecs_is_alive(world, session)) {
+        s = ecs_get_mut(world, session, EcsCommandSession);
+    }
+
+    if (!s) {
+        ecs_err("entity #%u is not a command session", (uint32_t)session);
+        return -1;
+    }
+
+    if (!ecs_os_has_dirs()) {
+        ecs_err("cannot create resource: OS API has no directory support");
+        return -1;
+    }
+
+    if (!s->resource_path) {
+        char *path = flecs_asprintf("%s/%llu", FLECS_COMMAND_RESOURCE_DIR,
+            (unsigned long long)session);
+        if (ecs_os_mkdir(FLECS_COMMAND_RESOURCE_ROOT) ||
+            ecs_os_mkdir(FLECS_COMMAND_RESOURCE_DIR) ||
+            ecs_os_mkdir(path))
+        {
+            ecs_err("failed to create resource directory '%s'", path);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        s->resource_path = path;
+    }
+
+    char *name = flecs_asprintf("%d", ecs_vec_count(&s->resources) + 1);
+    char *file = flecs_asprintf("%s/%s", s->resource_path, name);
+    FILE *f = ecs_os_fopen(file, "wb");
+    if (!f) {
+        ecs_err("failed to open resource file '%s'", file);
+        ecs_os_free(file);
+        ecs_os_free(name);
+        return -1;
+    }
+
+    bool written = !size || ecs_os_fwrite(data, (size_t)size, 1, f) == 1;
+    ecs_os_fclose(f);
+    if (!written) {
+        ecs_err("failed to write resource file '%s'", file);
+        ecs_os_remove(file);
+        ecs_os_free(file);
+        ecs_os_free(name);
+        return -1;
+    }
+
+    ecs_os_free(file);
+
+    ecs_vec_init_if_t(&s->resources, ecs_command_resource_t);
+    ecs_command_resource_t *r = ecs_vec_append_t(
+        NULL, &s->resources, ecs_command_resource_t);
+    r->name = name;
+    r->content_type = ecs_os_strdup(
+        content_type ? content_type : "application/octet-stream");
+
+    if (resource) {
+        resource->name = ecs_os_strdup(r->name);
+        resource->content_type = ecs_os_strdup(r->content_type);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+void* ecs_command_resource_read(
+    const ecs_world_t *world,
+    ecs_entity_t session,
+    const char *name,
+    ecs_size_t *size,
+    const char **content_type)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(size != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    *size = 0;
+    world = ecs_get_world(world);
+    if (!ecs_id(EcsCommandSession) || !session ||
+        !ecs_is_alive(world, session))
+    {
+        return NULL;
+    }
+
+    const EcsCommandSession *s = ecs_get(world, session, EcsCommandSession);
+    if (!s) {
+        return NULL;
+    }
+
+    const ecs_command_resource_t *array = ecs_vec_first(&s->resources);
+    int32_t i, count = ecs_vec_count(&s->resources);
+    for (i = 0; i < count; i ++) {
+        if (!ecs_os_strcmp(array[i].name, name)) {
+            break;
+        }
+    }
+
+    if (i == count) {
+        return NULL;
+    }
+
+    char *file = flecs_asprintf("%s/%s", s->resource_path, array[i].name);
+    FILE *f = ecs_os_fopen(file, "rb");
+    ecs_os_free(file);
+    if (!f) {
+        return NULL;
+    }
+
+    char *result = NULL;
+    ecs_size_t len = 0, cap = 0;
+    size_t read;
+    do {
+        if (len == cap) {
+            cap = cap ? cap * 2 : 4096;
+            result = ecs_os_realloc(result, cap);
+        }
+
+        read = ecs_os_fread(&result[len], 1, (size_t)(cap - len), f);
+        len += flecs_uto(ecs_size_t, read);
+    } while (read);
+
+    ecs_os_fclose(f);
+
+    *size = len;
+    if (content_type) {
+        *content_type = array[i].content_type;
+    }
+
+    return result;
+error:
+    return NULL;
+}
+
 void flecs_command_register(
     ecs_world_t *world,
     ecs_entity_t scope,
@@ -1013,6 +1192,11 @@ static void flecs_command_register_types(
     ecs_entity_t id_t = ecs_id(ecs_id_t);
     ecs_entity_t i32_t = ecs_id(ecs_i32_t);
     ecs_entity_t bool_t = ecs_id(ecs_bool_t);
+
+    flecs_command_struct(world, ecs_command_resource_t, "resource", {
+        { .name = "name", .type = string_t },
+        { .name = "content_type", .type = string_t }
+    });
 
     flecs_command_struct(world, ecs_command_param_info_t, "ParamInfo", {
         { .name = "name", .type = string_t },

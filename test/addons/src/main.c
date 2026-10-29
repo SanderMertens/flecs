@@ -493,6 +493,7 @@ void Http_headers_and_body(void);
 void Http_headers_max_with_body(void);
 
 // Testsuite 'Rest'
+void Rest_setup(void);
 void Rest_teardown(void);
 void Rest_get(void);
 void Rest_get_cached(void);
@@ -553,6 +554,12 @@ void Rest_command_history(void);
 void Rest_command_history_results(void);
 void Rest_command_delete_session(void);
 void Rest_command_invalid_session(void);
+void Rest_shell_resource(void);
+void Rest_shell_resource_binary(void);
+void Rest_shell_resource_unknown(void);
+void Rest_shell_resource_other_session(void);
+void Rest_shell_resource_deleted_session(void);
+void Rest_shell_resource_command(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2683,6 +2690,30 @@ bake_test_case Rest_testcases[] = {
     {
         "command_invalid_session",
         Rest_command_invalid_session
+    },
+    {
+        "shell_resource",
+        Rest_shell_resource
+    },
+    {
+        "shell_resource_binary",
+        Rest_shell_resource_binary
+    },
+    {
+        "shell_resource_unknown",
+        Rest_shell_resource_unknown
+    },
+    {
+        "shell_resource_other_session",
+        Rest_shell_resource_other_session
+    },
+    {
+        "shell_resource_deleted_session",
+        Rest_shell_resource_deleted_session
+    },
+    {
+        "shell_resource_command",
+        Rest_shell_resource_command
     }
 };
 
@@ -3141,9 +3172,9 @@ static bake_test_suite suites[] = {
     },
     {
         "Rest",
+        Rest_setup,
         NULL,
-        NULL,
-        60,
+        66,
         Rest_testcases
     },
     {

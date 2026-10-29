@@ -329,9 +329,6 @@
     defined(FLECS_SCRIPT_SHELL)
 #endif
 
-#if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_TIMER)
-#endif
-
 #if defined(FLECS_DOC) || defined(FLECS_META) || defined(FLECS_SYSTEM) || \
     defined(FLECS_TIMER)
 #endif
@@ -339,19 +336,11 @@
 /* With prefabs, the observers that meta creates (the units monitor and the
  * struct base observer) match inherited components and transitive IsA pairs,
  * which needs query plans. */
-#if defined(FLECS_META) && defined(FLECS_PREFAB)
-#endif
 
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
     defined(FLECS_JSON) || defined(FLECS_METRICS) || defined(FLECS_PIPELINE) || \
     defined(FLECS_REST) || defined(FLECS_STATS) || defined(FLECS_SYSTEM) || \
     defined(FLECS_TIMER) || defined(FLECS_SCRIPT_SHELL)
-#endif
-
-#if defined(FLECS_FRAME) || defined(FLECS_HTTP)
-#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
-#define FLECS_OS_API_IMPL
-#endif
 #endif
 
 #endif
@@ -3565,6 +3554,21 @@ size_t (*ecs_os_api_fwrite_t)(
     size_t count,
     FILE *file);
 
+/** OS API mkdir function type.
+ * Returns 0 if the directory was created or already exists.
+ */
+typedef
+int (*ecs_os_api_mkdir_t)(
+    const char *path);
+
+/** OS API remove function type.
+ * Used to remove a file (remove_) or an empty directory (rmdir_). Returns 0 if
+ * the file or directory was removed.
+ */
+typedef
+int (*ecs_os_api_remove_t)(
+    const char *path);
+
 /** OS API performance tracing function type.
  *
  * @param filename The source file name.
@@ -3657,6 +3661,9 @@ typedef struct ecs_os_api_t {
     ecs_os_api_fclose_t fclose_;                   /**< fclose callback. */
     ecs_os_api_fread_t fread_;                     /**< fread callback. */
     ecs_os_api_fwrite_t fwrite_;                   /**< fwrite callback. */
+    ecs_os_api_mkdir_t mkdir_;                     /**< mkdir callback. */
+    ecs_os_api_remove_t rmdir_;                    /**< rmdir callback. */
+    ecs_os_api_remove_t remove_;                   /**< remove callback. */
 
     /* Performance tracing */
     ecs_os_api_perf_trace_t perf_trace_push_; /**< perf_trace_push callback. */
@@ -3815,6 +3822,9 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_fclose(file) ecs_os_api.fclose_(file)
 #define ecs_os_fread(ptr, size, count, file) ecs_os_api.fread_(ptr, size, count, file)
 #define ecs_os_fwrite(ptr, size, count, file) ecs_os_api.fwrite_(ptr, size, count, file)
+#define ecs_os_mkdir(path) ecs_os_api.mkdir_(path)
+#define ecs_os_rmdir(path) ecs_os_api.rmdir_(path)
+#define ecs_os_remove(path) ecs_os_api.remove_(path)
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new_(callback, param)
@@ -4091,6 +4101,10 @@ bool ecs_os_has_dl(void);
 /** Are module path functions available? */
 FLECS_API
 bool ecs_os_has_modules(void);
+
+/** Are directory and file removal functions available? */
+FLECS_API
+bool ecs_os_has_dirs(void);
 
 #ifdef __cplusplus
 }

@@ -16203,6 +16203,13 @@ void ecs_remove_all(
     flecs_journal_end();
 }
 
+#if defined(ECS_TARGET_WINDOWS)
+#include <direct.h>
+#elif defined(ECS_TARGET_POSIX) && !defined(ECS_TARGET_WASM)
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+
 void ecs_os_api_impl(ecs_os_api_t *api);
 
 static bool ecs_os_api_initialized = false;
@@ -16655,6 +16662,34 @@ static size_t ecs_os_api_fwrite(
     return fwrite(ptr, size, count, file);
 }
 
+#if defined(ECS_TARGET_WINDOWS) || \
+    (defined(ECS_TARGET_POSIX) && !defined(ECS_TARGET_WASM))
+static int ecs_os_api_mkdir(const char *path) {
+#ifdef ECS_TARGET_WINDOWS
+    int result = _mkdir(path);
+#else
+    int result = mkdir(path, 0777);
+#endif
+    if (result && errno == EEXIST) {
+        return 0;
+    }
+
+    return result;
+}
+
+static int ecs_os_api_rmdir(const char *path) {
+#ifdef ECS_TARGET_WINDOWS
+    return _rmdir(path);
+#else
+    return rmdir(path);
+#endif
+}
+
+static int ecs_os_api_remove(const char *path) {
+    return remove(path);
+}
+#endif
+
 char* ecs_os_strdup_(const char *str) {
     if (!str) {
         return NULL;
@@ -16767,6 +16802,12 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.fclose_ = ecs_os_api_fclose;
     ecs_os_api.fread_ = ecs_os_api_fread;
     ecs_os_api.fwrite_ = ecs_os_api_fwrite;
+#if defined(ECS_TARGET_WINDOWS) || \
+    (defined(ECS_TARGET_POSIX) && !defined(ECS_TARGET_WASM))
+    ecs_os_api.mkdir_ = ecs_os_api_mkdir;
+    ecs_os_api.rmdir_ = ecs_os_api_rmdir;
+    ecs_os_api.remove_ = ecs_os_api_remove;
+#endif
 
     /* Time */
     ecs_os_api.get_time_ = ecs_os_gettime;
@@ -16856,6 +16897,13 @@ bool ecs_os_has_modules(void) {
     return 
         (ecs_os_api.module_to_dl_ != NULL) &&
         (ecs_os_api.module_to_etc_ != NULL);
+}
+
+bool ecs_os_has_dirs(void) {
+    return 
+        (ecs_os_api.mkdir_ != NULL) &&
+        (ecs_os_api.rmdir_ != NULL) &&
+        (ecs_os_api.remove_ != NULL);
 }
 
 #if defined(ECS_TARGET_WINDOWS)
@@ -29266,11 +29314,6 @@ static void flecs_table_init_flags(
             } else if (r == ecs_id(EcsPoly)) {
                 table->flags |= EcsTableHasModule;
             }
-#if defined(FLECS_DEBUG_INFO) && defined(FLECS_DOC)
-            else if (id == ecs_pair_t(EcsDocDescription, EcsName)) {
-                table->_->doc_name_column = flecs_ito(int16_t, i);
-            }
-#endif
         } else {
             if (ECS_HAS_ID_FLAG(id, TOGGLE)) {
                 ecs_table__t *meta = table->_;
@@ -33969,9 +34012,6 @@ yield:
 static void flecs_query_iter_fini(
     ecs_iter_t *it)
 {
-#if defined(FLECS_CACHED_QUERIES) || defined(FLECS_QUERY_PLANS)
-    ecs_query_iter_t *qit = &it->priv_.iter.query;
-#endif
     const ecs_query_t *q = it->query;
     (void)q;
     ecs_assert(q != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -33995,9 +34035,6 @@ ecs_iter_t flecs_query_iter(
 #endif
 
     flecs_poly_assert(q, ecs_query_t);
-#if defined(FLECS_CACHED_QUERIES) || defined(FLECS_QUERY_PLANS)
-    ecs_query_impl_t *impl = flecs_query_impl(q);
-#endif
 
     it.stage = ECS_CONST_CAST(ecs_world_t*, world);
 

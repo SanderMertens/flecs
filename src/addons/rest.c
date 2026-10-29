@@ -880,7 +880,29 @@ static bool flecs_rest_command_delete_session(
     return true;
 }
 
-static bool flecs_rest_command_history(
+static bool flecs_rest_command_resource(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply,
+    ecs_entity_t session,
+    const char *name)
+{
+    ecs_size_t size = 0;
+    const char *content_type = NULL;
+    void *data = ecs_command_resource_read(
+        world, session, name, &size, &content_type);
+    if (!data) {
+        flecs_reply_error(reply, "invalid resource");
+        reply->code = 404;
+        return true;
+    }
+
+    ecs_strbuf_appendstrn(&reply->body, data, size);
+    reply->content_type = content_type;
+    ecs_os_free(data);
+    return true;
+}
+
+static bool flecs_rest_command_get(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
@@ -892,6 +914,11 @@ static bool flecs_rest_command_history(
         world, reply, path, &remainder);
     if (!session) {
         return true;
+    }
+
+    if (!ecs_os_strncmp(remainder, "/resource/", 10)) {
+        return flecs_rest_command_resource(
+            world, reply, session, &remainder[10]);
     }
 
     if (ecs_os_strcmp(remainder, "/history")) {
@@ -2458,9 +2485,9 @@ static bool flecs_rest_reply(
             return flecs_rest_get_commands_request(world, impl, req, reply);
 
 #ifdef FLECS_SCRIPT_SHELL
-        } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
-            return flecs_rest_command_history(
-                world, req, reply, &req->path[16]);
+        } else if (!ecs_os_strncmp(req->path, "shell/session/", 14)) {
+            return flecs_rest_command_get(
+                world, req, reply, &req->path[14]);
 #endif
         }
 
@@ -2486,10 +2513,10 @@ static bool flecs_rest_reply(
             return flecs_rest_action(world, req, reply, &req->path[7]);
 
 #ifdef FLECS_SCRIPT_SHELL
-        } else if (!ecs_os_strcmp(req->path, "command/session")) {
+        } else if (!ecs_os_strcmp(req->path, "shell/session")) {
             return flecs_rest_command_new_session(world, reply);
-        } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
-            return flecs_rest_command_run(world, req, reply, &req->path[16]);
+        } else if (!ecs_os_strncmp(req->path, "shell/session/", 14)) {
+            return flecs_rest_command_run(world, req, reply, &req->path[14]);
 #endif
         }
     } else if (req->method == EcsHttpDelete) {
@@ -2502,9 +2529,9 @@ static bool flecs_rest_reply(
             return flecs_rest_delete_component(world, req, reply, &req->path[10]);
 
 #ifdef FLECS_SCRIPT_SHELL
-        } else if (!ecs_os_strncmp(req->path, "command/session/", 16)) {
+        } else if (!ecs_os_strncmp(req->path, "shell/session/", 14)) {
             return flecs_rest_command_delete_session(
-                world, reply, &req->path[16]);
+                world, reply, &req->path[14]);
 #endif
         }
     }

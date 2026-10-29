@@ -542,6 +542,7 @@
             ]
         }, {
             "id": "Rest",
+            "setup": true,
             "testcases": [
                 "teardown",
                 "get",
@@ -602,7 +603,13 @@
                 "command_history",
                 "command_history_results",
                 "command_delete_session",
-                "command_invalid_session"
+                "command_invalid_session",
+                "shell_resource",
+                "shell_resource_binary",
+                "shell_resource_unknown",
+                "shell_resource_other_session",
+                "shell_resource_deleted_session",
+                "shell_resource_command"
             ]
         }, {
             "id": "Metrics",
